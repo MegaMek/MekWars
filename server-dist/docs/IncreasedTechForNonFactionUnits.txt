@@ -1,0 +1,47 @@
+How to enable Non-Faction Units costing more techs
+
+Server Configuration
+	- In the Advanced Repairs tab, select "Use Techs" and check "Non-Faction Units cost extra techs"
+	- In the Techs tab, enter a value in the "Non-House Unit Increased Techs" field.
+		- This is a multiplier, so if you have medium mechs costing 4 techs, and want non-house units to cost 6, enter 1.5 in this field
+
+File System
+	- Create a directory under ./campaign/factions called "support"
+	- The ./campaign/factions/support directory will be where you store your supported units files
+	
+Support files
+	- For any units that are to be considered supported for all factions, create a file called common_meks.txt and fill it with the required data
+	- Do the same for common_vehicles.txt, common_infantry.txt, common_battlearmor.txt, and common_protomeks.txt
+	- For each faction, create files called [House Name]_weightclass_unittype.txt
+		- For example, for house Davion, you'd have:
+			Davion_light_meks.txt
+			Davion_medium_meks.txt
+			Davion_heavy_meks.txt
+			Davion_assault_meks.txt
+			Davion_light_vehicles.txt
+			Davion_medium_vehicles.txt
+				- etc
+			Davion_light_infantry.txt
+				- etc.
+			Davion_light_battlearmor.txt
+				- etc.
+			Davion_light_protomeks.txt
+				- etc.
+		- The house name must be exactly as it is in the Server, including spaces and capitalization
+	- In the support files, units are laid out one-per-line, with no file extension
+		- Just lop the file extension off the name of the file
+			- So, if your build tables contain "Catapult CPLT-C4.mtf", you'd enter "Catapult CPLT-C4" on one line
+			- An example, on my local server, for the Capellan Confederation heavy mechs:
+				- Capellan Confederation_heavy_mek.txt:
+					Ostroc OSR-2L
+					Catapult CPLT-A1
+					Catapult CPLT-C1
+					Catapult CPLT-C4
+					Crusader CRD-3L
+					Jagermech JM6-S
+					Thunderbolt TDR-5S
+					Archer ARC-2R
+					Cataphract CTF-1X
+					Cataphract CTF-2X
+					Warhammer WHM-6L
+					Marauder MAD-3L

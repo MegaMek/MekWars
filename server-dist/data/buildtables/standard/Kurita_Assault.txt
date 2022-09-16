@@ -1,0 +1,9 @@
+50 Common
+1 Rare
+2 Davion
+2 Steiner
+5 Charger CGR-1A9.mtf
+5 Atlas AS7-K.mtf
+5 Cyclops CP-10-K.mtf
+5 Atlas AS7-D.mtf
+5 Battlemaster BLR-1G.mtf

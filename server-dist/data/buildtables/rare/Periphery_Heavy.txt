@@ -1,0 +1,9 @@
+50 Common
+1 Rare
+2 Steiner
+2 Marik
+2 Liao
+2 Kurita
+2 Davion
+5 Merlin MLN-1A.mtf
+5 Merlin MLN-1B.mtf

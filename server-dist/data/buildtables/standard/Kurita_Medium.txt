@@ -1,0 +1,9 @@
+50 Common
+1 Rare
+2 Davion
+2 Steiner
+5 Shadow Hawk SHD-2K.mtf
+5 Hermes III HER-4K.mtf
+5 Phoenix Hawk PXH-1K.mtf
+5 Trebuchet TBT-5K.mtf
+5 Wolverine WVR-6K.mtf

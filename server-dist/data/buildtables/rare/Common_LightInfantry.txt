@@ -1,0 +1,25 @@
+5 Foot Platoon (SRM).blk
+5 Foot Platoon (Rifle).blk
+5 Foot Platoon (Laser).blk
+5 Foot Platoon (MG).blk
+5 Foot Platoon (Flamer).blk
+5 Motorized Platoon (SRM).blk
+5 Motorized Platoon (Rifle).blk
+5 Motorized Platoon (Laser).blk
+5 Motorized Platoon (MG).blk
+5 Motorized Platoon (Flamer).blk
+5 Jump Platoon (SRM).blk
+5 Jump Platoon (Laser).blk
+5 Jump Platoon (MG).blk
+5 Jump Platoon (Flamer).blk
+5 Jump Platoon (Rifle).blk
+3 Anti-Mech Foot Platoon (SRM).blk
+3 Anti-Mech Foot Platoon (Laser).blk
+3 Anti-Mech Motorized Platoon (SRM).blk
+3 Anti-Mech Motorized Platoon (Laser).blk
+3 Anti-Mech Motorized Platoon (MG).blk
+3 Anti-Mech Motorized Platoon (Flamer).blk
+3 Anti-Mech Jump Platoon (SRM).blk
+3 Anti-Mech Jump Platoon (Laser).blk
+3 Anti-Mech Jump Platoon (MG).blk
+3 Anti-Mech Jump Platoon (Flamer).blk

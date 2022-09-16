@@ -1,0 +1,12 @@
+50 Common
+1 Rare
+2 Davion
+2 Marik
+4 Ostroc OSR-2L.mtf
+4 Cataphract CTF-1X.mtf
+4 Cataphract CTF-2X.mtf
+4 Catapult CPLT-A1.mtf
+4 Catapult CPLT-C4.mtf
+4 Warhammer WHM-6L.mtf
+4 Marauder MAD-3L.mtf
+4 Crusader CRD-3L.mtf

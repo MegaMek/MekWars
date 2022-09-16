@@ -1,0 +1,10 @@
+50 Common
+1 Rare
+2 Steiner
+2 Liao
+2 Orion ON1-K.mtf
+5 Orion ON1-V.mtf
+5 Orion ON1-VA.mtf
+5 Marauder MAD-3M.mtf
+5 Ostroc OSR-2M.mtf
+5 Ostsol OTL-4D.mtf

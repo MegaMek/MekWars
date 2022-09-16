@@ -1,0 +1,9 @@
+50 Common
+1 Rare
+2 Liao
+2 Kurita
+5 Battlemaster BLR-1D.mtf
+5 Banshee BNC-3D.mtf
+5 Victor VTR-9D.mtf
+5 Victor VTR-9B.mtf
+5 Atlas AS7-D.mtf

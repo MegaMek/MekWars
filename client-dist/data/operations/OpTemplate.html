@@ -1,0 +1,386 @@
+%%ANCHOR%factions%Factions%% %%ANCHOR%requirements%Requirements%%
+%%ANCHOR%units%Units%% %%ANCHOR%costs%Costs%% %%ANCHOR%payout%Payout%%
+%%ANCHOR%metaRewards%Faction Rewards%%
+<a name='top'></a>
+<h1>%%OPName%%</h1>
+<a name='requirements'></a>
+<h2>Requirements</h2>
+<table border=1>
+	<tr>
+		<th>&nbsp;</th>
+		<th>&nbsp;&nbsp;&nbsp;&nbsp;</th>
+		<th>Attacker</th>
+		<th>&nbsp;&nbsp;&nbsp;&nbsp;</th>
+		<th>Defender</th>
+	</tr>
+	<tr>
+		<td>Min/Max ELO</td>
+		<td>&nbsp;</td>
+		<td>%%OP%MinAttackerRating%% / %%OP%MaxAttackerRating%%</td>
+		<td>&nbsp;</td>
+		<td>%%OP%MinDefenderRating%% / %%OP%MaxDefenderRating%%</td>
+	</tr>
+	<tr>
+		<td>Min/Max Experience</td>
+		<td>&nbsp;</td>
+		<td>%%OP%MinAttackerXP%% / %%OP%MaxAttackerXP%%</td>
+		<td>&nbsp;</td>
+		<td>%%OP%MinDefenderXP%% / %%OP%MaxDefenderXP%%</td>
+	</tr>
+</table>
+
+Range: %%OP%OperationRange%%
+<br />
+Min/Max Ownership: %%OP%MinPlanetOwnership%% / %%OP%MaxPlanetOwnership%%
+<br />
+Planet Flags Required: %%OP%AllowPlanetFlags%%
+<br />
+Only from Reserve? %%OP%OnlyAllowedFromReserve%%
+<br />
+Only from Active? %%OP%OnlyAllowedFromActive%%
+<br />
+Max ELO Difference: %%OP%MaxELODifference%%
+<br />
+Max BV Difference (Flat): %%OP%MaxBVDifference%%
+<br />
+Max BV Difference (Percent): %%OP%MaxBVPercent%%
+<br />
+
+<a name='factions'></a>
+<h2>Faction Access</h2>
+</br />
+Legal Attack Factions: %%OP%LegalAttackFactions%%
+<br />
+Illegal Attack Factions: %%OP%IllegalAttackFactions%%
+<br />
+Legal Defend Factions: %%OP%LegalDefendFactions%%
+<br />
+Illegal Defend Factions: %%OP%IllegalDefendFactions%%
+<br />
+
+<a name='units'></a>
+<h2>Units</h2>
+<table border=1>
+	<tr>
+		<th>&nbsp;</th>
+		<th>&nbsp;&nbsp;&nbsp;&nbsp;</th>
+		<th>Attacker</th>
+		<th>&nbsp;&nbsp;&nbsp;&nbsp;</th>
+		<th>Defender</th>
+	</tr>
+	<tr>
+		<td>Min Walk</td>
+		<td>&nbsp;</td>
+		<td>%%OP%MinAttackerWalk%%</td>
+		<td>&nbsp;</td>
+		<td>%%OP%MinDefenderWalk%%</td>
+	</tr>
+	<tr>
+		<td>Min/Max Jump</td>
+		<td>&nbsp;</td>
+		<td>%%OP%MinAttackerJump%%</td>
+		<td>&nbsp;</td>
+		<td>%%OP%MinDefenderJump%%</td>
+	</tr>
+	<tr>
+		<td>Min/Max Unit BV</td>
+		<td>&nbsp;</td>
+		<td>%%OP%MinAttackerUnitBV%%/%%OP%MaxAttackerUnitBV%%</td>
+		<td>&nbsp;</td>
+		<td>%%OP%MinDefenderUnitBV%%/%%OP%MaxDefenderUnitBV%%</td>
+	</tr>
+	<tr>
+		<td>Min/Max Total BV</td>
+		<td>&nbsp;</td>
+		<td>%%OP%MinAttackerBV%%/%%OP%MaxAttackerBV%%</td>
+		<td>&nbsp;</td>
+		<td>%%OP%MinDefenderBV%%/%%OP%MaxDefenderBV%%</td>
+	</tr>
+	<tr>
+		<td>Min/Max Meks</td>
+		<td>&nbsp;</td>
+		<td>%%OP%MinAttackerMeks%%/%%OP%MaxAttackerMeks%%</td>
+		<td>&nbsp;</td>
+		<td>%%OP%MinDefenderMeks%%/%%OP%MaxDefenderMeks%%</td>
+	</tr>
+	<tr>
+		<td>Min/Max Vehicles</td>
+		<td>&nbsp;</td>
+		<td>%%OP%MinAttackerVehicles%%/%%OP%MaxAttackerVehicles%%</td>
+		<td>&nbsp;</td>
+		<td>%%OP%MinDefenderVehicles%%/%%OP%MaxDefenderVehicles%%</td>
+	</tr>
+	<tr>
+		<td>Min/Max Aero</td>
+		<td>&nbsp;</td>
+		<td>%%OP%MinAttackerAero%%/%%OP%MaxAttackerAero%%</td>
+		<td>&nbsp;</td>
+		<td>%%OP%MinDefenderAero%%/%%OP%MaxDefenderAero%%</td>
+	</tr>
+	<tr>
+		<td>Min/Max Infantry</td>
+		<td>&nbsp;</td>
+		<td>%%OP%MinAttackerInfantry%%/%%OP%MaxAttackerInfantry%%</td>
+		<td>&nbsp;</td>
+		<td>%%OP%MinDefenderInfantry%%/%%OP%MaxDefenderInfantry%%</td>
+	</tr>
+	<tr>
+		<td>Min/Max Non-Infantry</td>
+		<td>&nbsp;</td>
+		<td>%%OP%MinAttackerNonInfantry%%/%%OP%MaxAttackerNonInfantry%%</td>
+		<td>&nbsp;</td>
+		<td>%%OP%MinDefenderNonInfantry%%/%%OP%MaxDefenderNonInfantry%%</td>
+	</tr>
+	<tr>
+		<td>Min/Max Unit Tons</td>
+		<td>&nbsp;</td>
+		<td>%%OP%MinAttackerUnitTonnage%%/%%OP%MaxAttackerUnitTonnage%%</td>
+		<td>&nbsp;</td>
+		<td>%%OP%MinDefenderUnitTonnage%%/%%OP%MaxDefenderUnitTonnage%%</td>
+	</tr>
+	<tr>
+		<td>Min/Max Total Tons</td>
+		<td>&nbsp;</td>
+		<td>%%OP%MinTotalAttackerTonnage%%/%%OP%MaxTotalAttackerTonnage%%</td>
+		<td>&nbsp;</td>
+		<td>%%OP%MinTotalDefenderTonnage%%/%%OP%MaxTotalDefenderTonnage%%</td>
+	</tr>
+	<tr>
+		<td>Min/Max BV Spread</td>
+		<td>&nbsp;</td>
+		<td>%%OP%MinAttackerUnitBVSpread%%/%%OP%MaxAttackerUnitBVSpread%%</td>
+		<td>&nbsp;</td>
+		<td>%%OP%MinDefenderUnitBVSpread%%/%%OP%MaxDefenderUnitBVSpread%%</td>
+	</tr>
+	<tr>
+		<td>Use % BV Spread?</td>
+		<td>&nbsp;</td>
+		<td>%%OP%AttackerUsePercentageBVSpread%%</td>
+		<td>&nbsp;</td>
+		<td>%%OP%DefenderUsePercentageBVSpread%%</td>
+	</tr>
+</table>
+<br />
+<a name='costs'></a>
+<h2>Costs</h2>
+<table border=1>
+	<tr>
+		<th>&nbsp;</th>
+		<th>&nbsp;&nbsp;&nbsp;&nbsp;</th>
+		<th>Attacker</th>
+		<th>&nbsp;&nbsp;&nbsp;&nbsp;</th>
+		<th>Defender</th>
+	</tr>
+	<tr>
+		<td>CBills</td>
+		<td>&nbsp;</td>
+		<td>%%OP%AttackerCostMoney%%</td>
+		<td>&nbsp;</td>
+		<td>%%OP%DefenderCostMoney%%</td>
+	</tr>
+	<tr>
+		<td>Influence</td>
+		<td>&nbsp;</td>
+		<td>%%OP%AttackerCostInfluence%%</td>
+		<td>&nbsp;</td>
+		<td>%%OP%DefenderCostInfluence%%</td>
+	</tr>
+	<tr>
+		<td>Reward Points</td>
+		<td>&nbsp;</td>
+		<td>%%OP%AttackerCostReward%%</td>
+		<td>&nbsp;</td>
+		<td>%%OP%DefenderCostReward%%</td>
+	</tr>
+</table>
+<br />
+<a name='payout'></a>
+<h2>Payout</h2>
+<table border=1>
+	<tr>
+		<th>&nbsp;</th>
+		<th>&nbsp;&nbsp;&nbsp;&nbsp;</th>
+		<th>Attacker</th>
+		<th>&nbsp;&nbsp;&nbsp;&nbsp;</th>
+		<th>Defender</th>
+	</tr>
+	<tr>
+		<td>Base Money</td>
+		<td>&nbsp;</td>
+		<td>%%OP%BaseAttackerPayCBills%%</td>
+		<td>&nbsp;</td>
+		<td>%%OP%BaseDefenderPayCBills%%</td>
+	</tr>
+	<tr>
+		<td>&nbsp;&nbsp;Win (Flat)</td>
+		<td>&nbsp;</td>
+		<td>+%%OP%AttackerWinModifierCBillsFlat%%</td>
+		<td>&nbsp;</td>
+		<td>+%%OP%DefenderWinModifierCBillsFlat%%</td>
+	</tr>
+	<tr>
+		<td>&nbsp;&nbsp;Win (Percent)</td>
+		<td>&nbsp;</td>
+		<td>+%%OP%AttackerWinModifierCBillsPercent%%</td>
+		<td>&nbsp;</td>
+		<td>+%%OP%DefenderWinModifierCBillsPercent%%</td>
+	</tr>
+	<tr>
+		<td>&nbsp;&nbsp;Loss (Flat)</td>
+		<td>&nbsp;</td>
+		<td>-%%OP%AttackerLossModifierCBillsFlat%%</td>
+		<td>&nbsp;</td>
+		<td>-%%OP%DefenderLossModifierCBillsFlat%%</td>
+	</tr>
+	<tr>
+		<td>&nbsp;&nbsp;Loss (Percent)</td>
+		<td>&nbsp;</td>
+		<td>-%%OP%AttackerLossModifierCBillsPercent%%</td>
+		<td>&nbsp;</td>
+		<td>-%%OP%DefenderLossModifierCBillsPercent%%</td>
+	</tr>
+
+	<tr>
+		<td>Base Experience</td>
+		<td>&nbsp;</td>
+		<td>%%OP%BaseAttackerPayExperience%%</td>
+		<td>&nbsp;</td>
+		<td>%%OP%BaseDefenderPayExperience%%</td>
+	</tr>
+	<tr>
+		<td>&nbsp;&nbsp;Win (Flat)</td>
+		<td>&nbsp;</td>
+		<td>+%%OP%AttackerWinModifierExperienceFlat%%</td>
+		<td>&nbsp;</td>
+		<td>+%%OP%DefenderWinModifierExperienceFlat%%</td>
+	</tr>
+	<tr>
+		<td>&nbsp;&nbsp;Win (Percent)</td>
+		<td>&nbsp;</td>
+		<td>+%%OP%AttackerWinModifierExperiencePercent%%</td>
+		<td>&nbsp;</td>
+		<td>+%%OP%DefenderWinModifierExperiencePercent%%</td>
+	</tr>
+	<tr>
+		<td>&nbsp;&nbsp;Loss (Flat)</td>
+		<td>&nbsp;</td>
+		<td>-%%OP%AttackerLossModifierExperienceFlat%%</td>
+		<td>&nbsp;</td>
+		<td>-%%OP%DefenderLossModifierExperienceFlat%%</td>
+	</tr>
+	<tr>
+		<td>&nbsp;&nbsp;Loss (Percent)</td>
+		<td>&nbsp;</td>
+		<td>-%%OP%AttackerLossModifierExperiencePercent%%</td>
+		<td>&nbsp;</td>
+		<td>-%%OP%DefenderLossModifierExperiencePercent%%</td>
+	</tr>
+
+	<tr>
+		<td>Base Influence</td>
+		<td>&nbsp;</td>
+		<td>%%OP%BaseAttackerPayInfluence%%</td>
+		<td>&nbsp;</td>
+		<td>%%OP%BaseDefenderPayInfluence%%</td>
+	</tr>
+	<tr>
+		<td>&nbsp;&nbsp;Win (Flat)</td>
+		<td>&nbsp;</td>
+		<td>+%%OP%AttackerWinModifierInfluenceFlat%%</td>
+		<td>&nbsp;</td>
+		<td>+%%OP%DefenderWinModifierInfluenceFlat%%</td>
+	</tr>
+	<tr>
+		<td>&nbsp;&nbsp;Win (Percent)</td>
+		<td>&nbsp;</td>
+		<td>+%%OP%AttackerWinModifierInfluencePercent%%</td>
+		<td>&nbsp;</td>
+		<td>+%%OP%DefenderWinModifierInfluencePercent%%</td>
+	</tr>
+	<tr>
+		<td>&nbsp;&nbsp;Loss (Flat)</td>
+		<td>&nbsp;</td>
+		<td>-%%OP%AttackerLossModifierInfluenceFlat%%</td>
+		<td>&nbsp;</td>
+		<td>-%%OP%DefenderLossModifierInfluenceFlat%%</td>
+	</tr>
+	<tr>
+		<td>&nbsp;&nbsp;Loss (Percent)</td>
+		<td>&nbsp;</td>
+		<td>-%%OP%AttackerLossModifierInfluencePercent%%</td>
+		<td>&nbsp;</td>
+		<td>-%%OP%DefenderLossModifierInfluencePercent%%</td>
+	</tr>
+</table>
+
+<table border=1>
+	<tr>
+		<th colspan=5>Reward Points</th>
+	</tr>
+	<tr>
+		<td>Attacker</td>
+		<td>%%OP%RPForAttacker%%</td>
+		<td>&nbsp;&nbsp;&nbsp;&nbsp;</td>
+		<td>Defender</td>
+		<td>%%OP%RPForDefender%%</td>
+	</tr>
+	<tr>
+		<td>Winner</td>
+		<td>%%OP%RPForWinner%%</td>
+		<td>&nbsp;&nbsp;&nbsp;&nbsp;</td>
+		<td>Loser</td>
+		<td>%%OP%RPForLoser%%</td>
+	</tr>
+	<tr>
+		<td colspan=2>RP to Winner Only?</td>
+		<td>&nbsp;&nbsp;&nbsp;&nbsp;</td>
+		<td colspan=2>%%OP%OnlyGiveRPtoWinners%%</td>
+	</tr>
+</table>
+
+<a name='metaRewards'></a>
+<h2>Faction Rewards</h2>
+<table border=1>
+	<tr>
+		<th>Attacker</th>
+	</tr>
+	<tr>
+		<td>&nbsp;</td>
+		<td>&nbsp;&nbsp;&nbsp;&nbsp;</td>
+		<td>Land</td>
+		<td>Delay</td>
+		<td>Components</td>
+		<td>Units from<br />Bays
+		</td>
+		<td>Units from<br />Factories
+		</td>
+	</tr>
+	<tr>
+		<td>Base:</td>
+		<td>&nbsp;</td>
+		<td>%%OP%AttackerBaseConquestAmount%%</td>
+		<td>%%OP%AttackerBaseDelayAmount%%</td>
+		<td>%%OP%AttackerBasePPAmount%%</td>
+		<td>%%OP%AttackerBaseUnitsTaken%%</td>
+		<td>%%OP%AttackerBaseFactoryUnitsTaken%%</td>
+	</tr>
+	<tr>
+		<td>&nbsp;&nbsp;BV Mod:</td>
+		<td>&nbsp;</td>
+		<td>%%OP%AttackerConquestBVAdjustment%%</td>
+		<td>%%OP%AttackerDelayBVAdjustment%%</td>
+		<td>%%OP%AttackerPPBVAdjustment%%</td>
+		<td>%%OP%AttackerUnitsBVAdjustment%%</td>
+		<td>%%OP%AttackerFactoryUnitsBVAdjustment%%</td>
+	</tr>
+	<tr>
+		<td>&nbsp;&nbsp;Units Mod:</td>
+		<td>&nbsp;</td>
+		<td>%%OP%AttackerConquestUnitAdjustment%%</td>
+		<td>%%OP%AttackerDelayUnitAdjustment%%</td>
+		<td>%%OP%AttackerPPUnitAdjustment%%</td>
+		<td>%%OP%AttackerUnitsUnitAdjustment%%</td>
+		<td>%%OP%AttackerFactoryUnitsUnitAdjustment%%</td>
+	</tr>
+
+</table>

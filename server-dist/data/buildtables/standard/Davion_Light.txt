@@ -1,0 +1,10 @@
+50 Common
+1 Rare
+2 Liao
+2 Kurita
+5 Spider SDR-5D.blk
+5 Valkyrie VLK-QF.blk
+5 Valkyrie VLK-QA.blk
+5 Wasp WSP-1D.blk
+5 Hornet HNT-151.blk
+5 Locust LCT-1M.blk

@@ -1,0 +1,3 @@
+Manifest-Version: 1.1
+Main-Class: server.campaign.tools.PlanetDatConverter.PlanetDatConverter
+Class-Path: PlanetDatConverter.jar MekWarsServer.jar ./lib/kunststoff.jar ./lib/locales.jar ./lib/xstream.jar ./lib/metouia.jar ./lib/looks-1.3.1.jar ./lib/skinlf.jar

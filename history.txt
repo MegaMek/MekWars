@@ -1,0 +1,4 @@
+VERSION HISTORY:
+0.8.0.0
+Updated to be compatible with openjdk11.  Please note new lib files both client and server-side
+New MM 0.49

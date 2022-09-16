@@ -1,0 +1,101 @@
+ MekWars code:
+  Nathan Morris     (urgru@users.sourceforge.net)
+  Jason Tighe       (torren@users.sourceforge.net)
+  Sebastian Brocks  (beerockxs@users.sourceforge.net)
+  coelocanth        (coelocanth@users.sourceforge.net)
+  Mikhail           (redzed260@users.sourceforge.net)
+  Bob Eldred		(billypinhead@users.sourceforge.net)
+  Targ
+  Kestrel
+  fahr				(eventsbeyondme@users.sourceforge.net)
+  BarukKhazad!
+  James Allred 		(wildj79)
+  TubeAlloy
+  Nick Pettinato	(TigerShark)
+  Salient
+  
+ MekWars testing and documentation (a few of many):
+  Alan Bell         (Carpe Mortis)
+  John Byrnes       (El Kabong)
+  Brian Gallagher   (fishslayer)
+  Daniel Walker     (Bremmond)
+  Francesco Munda   (Vertigo)
+  
+ MekWars default data files:
+  Alan Bell         (CarpeMortis)
+  Thomas Derryberry (Hunter)
+  Andrew L. Gray    (Ajax)
+  Francesco Munda   (Vertigo)
+  Travis Shade		(Malganis)
+
+ ------
+ MekWars makes extensive use of MegaMek (original author: Ben Mazur)
+ code and mechanisms (Battle Value calculations, unit loading, actual
+ gameplay and in innumerable other ways).
+ ------
+  Additonal MegaMek information may be found in the "MegaMek Docs" directory
+  of a MekWars Client package. Project details and source may be found at:
+  http://www.sourceforge.net/projects/megamek
+  
+ ------
+ MekWars uses code derived from NFCChat to send messages between
+ the client and server.
+ ------
+  NFCChat: http://sourceforge.net/projects/nfcchat
+ 
+ ------
+ MekWars uses Tom Gibara's TinyXML to
+ parse data and configuration files.
+ ------
+ Tiny XML:
+  Tom Gibara (original URL: http://www.grinninglizard.com/tinyxml/index.html)
+  
+ ------
+ MekWars uses two look and feel libraries. Licenses
+ for these libs may be found in /mekwarsdocs/otherlicenses/
+ ------
+ JGoodies Looks:
+  JGoodies (URL: http://www.jgoodies.com/freeware/looks/)
+ Metouia:
+  Taoufik Romdhane (URL: http://mlf.sourceforge.net/)
+
+ ------
+ Many thanks to all those who worked on MegaMekNET,
+ the project from which MekWars was derived.
+ ------
+ Original MMNET Author/Maintainer:
+  Helge Richter (McWizard)
+
+ Additional MMNET Code:
+  Sebastian Brocks (BeeRockxs)
+  James Damour (Suvarov)
+  Steven Hawkins (Steve)
+  Nathan Morris (urgru)
+  Dima Nemchenko (nemchenk)
+  John Rowat (Kai)
+  Jonathan Schattke (WizWom)
+  Immanuel Scholz (Imi)
+  Pawel Sobocinski (Enkel)
+  Jason Tighe (Torren)
+  Geyrat Baliset (Northway)
+
+ Yet More MMNET Code (by nick only):
+  BobTheDull
+  Flolo
+  Northway
+  VEGETA
+  
+ Other NET contributors (datafiles, docs, etc.):
+  Steve Gore (Orca)
+  Francesco Munda (Vertigo)
+  Ariseall
+  ploppy
+  Surreal
+  TheMadMan
+  
+  -----
+  If anyone has been missed or details have changed, please accept 
+  apologies and contact the current contribs maintainer to update.
+  -----
+  
+  Contribs maintainer: urgru@users.sourceforge.net

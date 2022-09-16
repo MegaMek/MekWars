@@ -1,0 +1,9 @@
+50 Common
+1 Rare
+2 Kurita
+2 Marik
+5 Archer ARC-2S.mtf
+5 Thunderbolt TDR-5SS.mtf
+5 Marauder MAD-3S.mtf
+5 Orion ON1-S.mtf
+5 Crusader CRD-3R.mtf

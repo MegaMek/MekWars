@@ -1,0 +1,23 @@
+1 Annihilator ANH-1A.mtf
+4 Crockett CRK-5003-0.mtf
+1 Goliath GOL-1H.mtf
+1 Mackie MSK-6S.mtf
+4 Highlander HGN-733.mtf
+4 King Crab KGC-0000.mtf
+3 Imp IMP-2E.mtf
+4 Linesman LMN-1PT.MTF
+3 Marauder II MAD-4A.mtf
+4 Shogun SHG-2E.mtf
+4 Thug THG-10E.mtf
+1 Charger CGR-SB.mtf
+3 Atlas AS7-N.mtf
+3 Awesome AWS-8A.mtf
+3 Awesome AWS-8G.mtf
+3 Banshee BNC-3C.mtf
+3 Cyclops CP-10-D.mtf
+3 Goliath GOL-1AA.mtf
+3 Goliath GOL-1M.mtf
+3 Stalker STK-3D.mtf
+3 Stalker STK-3K.mtf
+3 Victor VTR-8A.mtf
+3 Zeus ZEU-6D.mtf

@@ -1,0 +1,9 @@
+50 Common
+1 Rare
+2 Steiner
+2 Liao
+5 Hermes II HER-2M.mtf
+5 Hermes II HER-2S.mtf
+5 Wolverine WVR-6M.mtf
+5 Trebuchet TBT-5J.mtf
+5 Shadow Hawk SHD-2M.mtf

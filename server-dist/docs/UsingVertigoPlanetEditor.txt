@@ -1,0 +1,14 @@
+1) make sure you have the correct access level.
+2) right click on the planet to edit, select Vertigos tool
+3) fill out the changes you wish to make (add factories, remove factories, change terrain/advancedTerrain)
+4) click save
+5) exit the tool
+6) run options->reload data
+7) run campaign->save->saveTheUniverse
+8) move on to the next planet to be edited.
+
+known issues:
+Removing all terrains isn't working, so remove them one at a time
+changing percents on terrains isn't working, so just remove and re-add them to change the percentages, you don't have to actually end up at 100%, the display will show the correct percent as a portion of the available percents used (ie if you set one terrain at 30, and another at 10, then stop they will display as 75% and 25% respectively)
+
+

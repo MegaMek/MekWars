@@ -1,0 +1,24 @@
+Using links in MOTDs
+
+Due to security/stability problems with MOTDs, I've implemented 
+an HTML sanitizer.  One side-effect of this is that link handling 
+has changed.
+
+If you wish to put a link to a web server in, you must include
+the "http" in the url:
+
+This will work:
+<a href="http://www.mekwars.org/forum">Forum</a>
+
+This, however, will not:
+<a href="www.mekwars.org/forum">Forum</a>
+
+If you wish to include a JUMPTOPLANET link, you have to use
+a custom planet tag:
+
+This will work:
+<planet name="Misery">Misery</planet>
+
+This, however, will not, even though it was proper form until this
+version:
+<a href="JUMPTOPLANETMisery">Misery</a>

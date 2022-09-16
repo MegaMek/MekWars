@@ -1,0 +1,20 @@
+Using Player Flags in operations
+
+Creating Flags:
+  This should be done through the admin interface, under server
+  configs.
+  
+  Do not use spaces, #, or $ in your flag names
+  
+Assigning flags in Operations
+  The OpEditor now has a new tab for Player Flags.  Here, you can
+  require certain combinations of flags and settings for both
+  the attacker and/or the defender.  There are also two tables for
+  setting winner/loser flags.  Here, you can set flags based on
+  a winning/losing attacker/defender
+  
+  Right/click to add/delete a flag from any of the 4 tables
+  
+Remember, please, that as with any new feature, feedback is important.
+If there are issues, and I'd be surprised if there were not, please
+submit a bug report.

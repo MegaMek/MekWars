@@ -1,0 +1,21 @@
+20
+A UNIT has been redeployed outside of your jurisdiction.
+A UNIT has been stolen from the house bays. The incident is under investigation by local law enforcement.
+A UNIT has been scrapped due to a balky leg actuator package.
+A UNIT has been scrapped to finish repairs on another mek.
+A UNIT was destroyed during a training mission.
+A UNIT was lost in a peacekeeping incident gone awry.
+A UNIT became hopelessly mired in a swamp and had to be abandoned
+A UNIT was crushed in an accident involving the Dropship bay doors.
+A UNIT was damaged beyond repair in a live-fire exercise.
+A UNIT was seized by the local duke for his militia unit.
+A UNIT was destroyed when the fusion reactor lost containment and detonated unexpectedly
+A UNIT mysteriously disappeared. The incident is under investigation by local law enforcement.
+PILOT defected, and took his/her UNIT with them.
+A UNIT has not been accounted for. It has not been seen since the last field training exercise. Investigation is underway.
+A UNIT was destroyed by sabotage. Investigation is underway.
+A UNIT is being given to the Public Relations dept. for a photoshoot and follow-up luncheon.
+A UNIT was given as material support to foreign radicals in order to destablize the enemy's homefront.
+A UNIT has been refitted into an AgroMek for a local farm.
+A UNIT was severely damaged in a riot, and has been scrapped.
+A UNIT was given to the mercenary outfit Wilson's Hussars, as payment for services rendered.

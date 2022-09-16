@@ -1,0 +1,23 @@
+5 Chameleon CLN-7V.mtf
+5 Clint CLNT-2-3T.mtf
+5 Clint CLNT-1-2R.mtf
+5 Clint CLNT-2-4T.mtf
+5 Crab CRB-20.mtf
+5 Hoplite HOP-4B.mtf
+5 Hoplite HOP-4C.mtf
+5 Kintaro KTO-18.mtf
+5 Scorpion SCP-1N.mtf
+5 Sentinel STN-3K.mtf
+5 Centurion CN9-YLW.mtf
+5 Wyvern WVE-6N.mtf
+5 Centurion CN9-AX.mtf
+5 Centurion CN9-DB.mtf
+5 Enforcer ENF-4A.mtf
+5 Griffin GRF-2M.mtf
+5 Hunchback HBK-4F.mtf
+5 Phoenix Hawk PXH-1S.mtf
+5 Shadow Hawk SHD-2HM.mtf
+5 Shadow Hawk SHD-2IC.mtf
+5 Vindicator VND-1L.mtf
+5 Wolverine WVR-6L.mtf
+5 Wolverine WVR-6S.mtf

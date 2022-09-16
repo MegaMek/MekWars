@@ -1,0 +1,5 @@
+<html>
+<head>
+<title>MekWars Servers</title>
+<LINK href='templates/tracker.css' rel='stylesheet' type='text/css'>
+</head>

@@ -1,0 +1,62 @@
+@CHARSET "ISO-8859-1";
+
+body {
+	font-family: Verdana, Arial;
+	font-size: 14px;
+}
+
+.header {
+	
+}
+
+.playerStatusHeader {
+	padding: 0;
+	margin: 0;
+	width: 50px;
+	display: inline-block;
+	border-bottom: 1px dashed black;
+}
+
+.playerStatus {
+	width: 50px;
+	padding: 0;
+	margin: 0;
+	display: inline-block;
+	padding-left: 15px;
+}
+
+.playerEntry {
+	width: 500px;
+	padding: 0;
+	margin: 0;
+	align: left;
+	display: inline-block;
+}
+
+.playerNameHeader {
+	width: 500px;
+	padding: 0;
+	margin: 0;
+	align: left;
+	display: inline-block;
+	padding-left: 20px;
+	border-bottom: 1px dashed black;
+}
+
+.playerLine {
+	line-height: 70%;
+}
+
+//
+Faction classes  - add /subtract these as needed
+
+.SOLplayer {
+	color: #33CCCC;
+	align: left;
+	margin: 0;
+	padding: 0;
+}
+
+.footer {
+	
+}

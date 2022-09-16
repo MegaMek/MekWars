@@ -1,0 +1,20 @@
+5 GAL-100 Galleon Light Tank.blk
+5 Heavy APC (Hover).blk
+5 Heavy APC (Hover-LRM).blk
+5 Heavy APC (Hover-MG).blk
+5 Heavy APC (Hover-SRM).blk
+5 Heavy APC (Tracked).blk
+5 Heavy APC (Tracked-LRM).blk
+5 Heavy APC (Tracked-MG).blk
+5 Heavy APC (Tracked-SRM).blk
+5 Heavy APC (Wheeled).blk
+5 Heavy APC (Wheeled-LRM).blk
+5 Heavy APC (Wheeled-MG).blk
+5 Heavy APC (Wheeled-SRM).blk
+5 Hunter Light Support Tank.blk
+5 PKR-T5 Packrat LRPV.blk
+5 Scorpion Light Tank.blk
+5 Scorpion (SRM Variant).blk
+5 Skulker Wheeled Scout Tank.blk
+5 Striker Light Tank.blk
+5 Striker (LRM).blk

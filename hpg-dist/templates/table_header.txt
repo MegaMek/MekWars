@@ -1,0 +1,15 @@
+<body>
+<table cellspacing="1%" cellpadding="6%" align=left border=0 width="100%">
+<tr><td><h1 style="font-size: 220%;">MekWars Servers</h1>
+<table cellspacing="1%" cellpadding="6%" align=left border=0 style="background-color: #2E4F8E;">
+
+<tr>
+<th>Server</th>
+<th>Version</th>
+<th>Current Players</th>
+<th>Current Games</th>
+<th>Max Players<br></th>
+<th>Total Games<br></th>
+<th>Description</th>
+<th>Last Tracked</th>
+</tr>

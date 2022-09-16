@@ -1,0 +1,18 @@
+How to convert an existing set of planet.dat files to the new 0.4.x.x format
+
+1) download newest code, change to the main directory
+2) from a command prompt run:ant clean
+3) from a command prompt run:ant PlanetDatConverter-jar
+4) from a command prompt run:ant server-jar
+5) copy PlanetDatConverter.jar to your servers running directory
+6) copy advTerr.xml and advTerr.dtd to the /data directory of your running server
+7) from your server working directory run: java -jar PlanetDatConverter.jar
+8) there should now be a new folder named "./campaign/newplanets/" where the new planet.dat files have been copied
+9) check that your planets are in that new folder
+10) move the old ./campaign/planets floder to a new name (I like ./campaign/oldplanets) then move the ./campaign/newplanets folder to ./campaign/planets 
+11) move the rest of the server jars over to the servers working directory
+12) you should be able to start the server now and it should load all the planets correctly.
+
+
+
+

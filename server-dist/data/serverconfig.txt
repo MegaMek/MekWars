@@ -1,0 +1,48 @@
+#Server Config File
+#Mon Jun 12 20:54:16 CET 2006
+
+#SERVER NAME
+#-----------
+SERVERNAME=ExampleTech
+
+#CHAT SERVER SETUP
+#
+#Set RESOLVECOUNTRY to YES to show each player's country of origin (as
+#determined by IP mapping) when they log in to chat.
+#
+#Only uncomment SERVERIP if you need to bind to a specific IP on a
+#multi-homed server. By default, the server will bind to all IPs on
+#a host. If you don't know what this means, leave the line commented.
+#-----------------
+SERVERPORT=2347
+RESOLVECOUNTRY=NO
+#SERVERIP=-1
+
+#DATA PROVIDER PORT
+#------------------
+DATAPORT=4867
+
+#TRACKER SETUP
+#
+#This has been moved to CampaignConfig.  Please configure it in the Tracker tab
+
+#CAMPAIGN CONFIG PATH
+#
+#Path to the campaign configuration files for READING. The server
+#will WRITE to this path regardless of what is set here. Change this
+#only if you're very comfortable maintaining your server by hand and
+#don't intend to use the admin GUI.
+#--------------------
+CAMPAIGNCONFIG=./data/campaignconfig.txt
+
+#INFO MESSAGE, aka: MOTD
+#
+#HTML formatted message which will be shown to your players
+#when they log in to the server. If color is not set, clients
+#will use system message color. Client will make all text bold.
+#
+#The message may be as long as you like, but must be on one line
+#in order for the Java.Properties to read it in correctly.
+#-----------------------
+INFOMESSAGE=<a href="http://www.sourceforge.net/projects/mekwars">Click here to visit the MekWars project page.</a> This is a default message.<br> to make yourself an admin register your player name and then type in the following commands: /adminpassword level#your name#200<br>/Adminsetcommandlevel adminpassword#200<br>/Adminsavecommandlevels Server admins --- you may edit this message in serverconfig.txt
+

@@ -1,0 +1,7 @@
+50 Common
+1 Rare
+2 Davion
+2 Marik
+4 Urbanmech UM-R60L.mtf
+3 Wasp WSP-1L.mtf
+5 Raven RVN-1L.mtf

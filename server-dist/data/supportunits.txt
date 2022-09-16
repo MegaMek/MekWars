@@ -1,0 +1,3 @@
+[SupportUnits]
+# Add unit file names here, 1 per line, that the SO wants
+# considered as support units

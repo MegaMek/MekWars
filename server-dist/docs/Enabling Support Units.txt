@@ -1,0 +1,8 @@
+To enable support units:
+
+1) Create a text file in ./data called supportunits.txt
+   or copy supportunits from server-dist
+
+2) Add unit file names, 1 per line to the text file
+   A) As with everything else, case matters
+   B) Lines starting with a # are treated as comments

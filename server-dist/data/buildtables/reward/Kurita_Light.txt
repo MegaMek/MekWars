@@ -1,0 +1,10 @@
+50 Common
+1 Rare
+2 Davion
+2 Steiner
+5 Jenner JR7-D.blk
+2 Jenner JR7-F.blk
+2 Panther PNT-8X.MTF
+5 Panther PNT-9R.blk
+5 Spider SDR-5K.blk
+5 Wasp WSP-1K.blk

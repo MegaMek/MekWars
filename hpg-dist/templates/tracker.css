@@ -1,0 +1,82 @@
+body { 
+	background-color: #849EC6; 
+	color: #2E4F8E; 
+	margin-top: 2%; 
+	margin-left: 2%; 
+	margin-right: 2%; 
+	margin-bottom: 2%; 
+}
+
+table {
+	cellspacing: 1%;
+	cellpadding: 6%;
+	align: left;
+	border: 0;
+	width: 100%;
+}
+
+th {
+	background-color: #2E4F8E;
+	text-align: center;
+	font-family: Verdana, serif; 
+	color: #FFFFFF; 
+	font-size: 9pt;
+	font-weight: bold; 
+}
+
+td { 
+	font-family: Verdana, serif; 
+	color: #FFFFFF; 
+	background-color: #849EC6; 
+	font-size: 9pt; 
+}
+
+a { 
+	color: #FFFFFF; 
+	text-decoration: none; 
+}
+
+a:hover { 
+	color: #2E4F8E; 
+	text-decoration: none; 
+}
+
+tr.red td .date {
+	float:left;
+	display: inline;	
+}
+
+tr.red td .red {
+	float: right;
+	display: inline;
+}
+
+tr.red td .yellow {
+	display: none;
+}
+
+tr.yellow td .date {
+	float:left;
+	display: inline;	
+}
+
+tr.yellow td .red {
+	display: none;
+}
+
+tr.yellow td .yellow {
+	float: right;
+	display: inline;
+}
+tr.green td .date {
+	float:left;
+	display: inline;	
+}
+
+tr.green td .red {
+	display: none;
+}
+
+tr.green td .yellow {
+	display: none;
+}

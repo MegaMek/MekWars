@@ -1,0 +1,8 @@
+50 Common
+1 Rare
+2 Steiner
+2 Liao
+5 Urbanmech UM-R60M.mtf
+4 Javelin JVN-10M.mtf
+3 Javelin JVN-10N.mtf
+3 Locust LCT-1V.mtf

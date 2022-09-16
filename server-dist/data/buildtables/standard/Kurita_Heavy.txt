@@ -1,0 +1,13 @@
+50 Common
+1 Rare
+2 Davion
+2 Steiner
+3 Dragon DRG-1N.mtf
+1 Dragon DRG-1C.mtf
+4 Grand Dragon DRG-1G.mtf
+3 Dragon DRG-1K.mtf
+4 Catapult CPLT-K2.mtf
+4 Archer ARC-2K.mtf
+4 Marauder MAD-3K.mtf
+5 Crusader CRD-3K.mtf
+1 Guillotine GLT-4L.mtf

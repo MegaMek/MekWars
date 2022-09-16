@@ -1,0 +1,10 @@
+50 Common
+1 Rare
+2 Kurita
+2 Marik
+5 Hatchetman HCT-3F.mtf
+5 Centurion CN9-AL.mtf
+5 Trebuchet TBT-5S.mtf
+5 Hatchetman HCT-3S.mtf
+5 Griffin GRF-1S.mtf
+5 Whitworth WTH-1S.mtf

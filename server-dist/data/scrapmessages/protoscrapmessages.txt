@@ -1,0 +1,21 @@
+20
+A UNIT was lost in a training accident.
+A UNIT's commanding officers were court-martialed, and the unit's soldiers are being detained for investigation involving civilian deaths.
+A UNIT took heavy casualties in a traffic accident while proceeding to their new headquarters, and are now recalled from active duty.
+A UNIT has been recalled from active duty due to battle fatigue, and no replacement unit is currently enroute.
+A UNIT has not been heard from since their transport Dropship encountered a previously unknown asteroid field. Rescue attempts are underway.
+A UNIT has deserted following a dispute involving the current chain-of-command.
+A UNIT was killed when the AWS-8Q the unit was training with fell on the entire detachement of troops.
+A UNIT was exposed to high levels of radiation. The entire unit will be hospitalized for some time.
+A UNIT's commanding officer was killed in a mutiny. The entire unit is being imprisoned, with interrogation still underway.
+A UNIT was lost during hazardous environment survival training. The troops, alive or dead, have not yet been located.
+The majority of troops in a UNIT were burned in a Dropship Firefighting Procedure live exercise.
+A UNIT was neutralized in a raid by unknown forces. No evidence as to the attackers has been located, other than the infantrymen's bodies.
+A UNIT's equipment was destroyed in an earthquake. The unit has been removed from active rosters until the equipement has been replaced.
+A UNIT has been rotated out of Active Duty status for a period of 6 months.
+The soldiers in a UNIT have not reported for their Active Duty rotation.
+An entire UNIT was slaughtered by unknown special operations forces.
+Most of the soldiers in a UNIT have retired recently, and so the unit is being disbanded.
+A UNIT has been tasked with a covert operation, and the soldiers are not expected to be heard from again.
+Due to the incompetence of the UNIT's commanding officer, the entire unit was killed in a skirmish with local radicals.
+A UNIT has been ordered to undergo additional training, and will not be available for deployment for some time.

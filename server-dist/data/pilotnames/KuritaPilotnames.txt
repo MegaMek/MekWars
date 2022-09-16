@@ -1,0 +1,102 @@
+101
+Heishi Aiko Yuasa
+Gunjin Aki Yoshitomi
+Go-cho Akiko Yoshikawa
+Gunsho Akina Yoshihara
+Shujin Aneko Yokoyama
+Kashira Atsuko Yokokawa
+Sho-ko Ayame Yanagawa
+Chu-i Emiko "Ouka" Yasuhiro
+Tai-i Eriko Yano
+Heishi Hanako Yamazaki
+Gunjin Haru Yamashita
+Go-cho Haruko Yamaoka
+Gunsho Hisa Yamamoto
+Shujin Hoshiko Yamaguchi
+Kashira Junko Yamada
+Sho-ko Kaede Watanabe
+Chu-i Kameko "Geisha" Wakatsuki
+Tai-i Kaori Tsukada
+Heishi Kaya Tsujimoto
+Gunjin Kazu Toyoshima
+Go-cho Kei Tomimoto
+Gunsho Keiko Takashi
+Shujin Kimi Takagawa
+Kashira Kohana Takahashi
+Sho-ko Kumi Shirokawa
+Chu-i Kumiko "Bara" Shiratori
+Tai-i Kyoko Shimamura
+Heishi Machiko Sato
+Gunjin Maeko Sano
+Go-cho Maemi Sakamoto
+Gunsho Mariko Saito
+Shujin Masako Saiki
+Kashira Matsuko Otake
+Sho-ko Michiko Okamura
+Chu-i Miki "Byakko" Okamoto
+Tai-i Nariko Ogura
+Heishi Natsuko Nozaki
+Gunjin Naoko Nomura
+Go-cho Noriko Nobunaga
+Gunsho Nyoko Nishimura
+Shujin Sachi Nishikawa
+Kashira Sachiko Nakayama
+Sho-ko Sakura Nakao
+Chu-i Shizuka "Houou" Nakamura
+Tai-i Tomoko Morioka
+Heishi Yumiko Moriguchi
+Gunjin Yoshiko Miyamoto
+Go-cho Yukiko Miura
+Gunsho Yuriko Miyazaki
+Sho-sa Hana Yuriko
+Sho-sa Ryu "Gokeiken" Nobunaga
+Sho-ko Akeno Matsuzawa
+Chu-i Benjiro "Taka" Matsuoka
+Tai-i Danno Kurosawa
+Heishi Goro Kuramoto
+Gunjin Haru Kuga
+Go-cho Hiroshi Koizumi
+Gunsho Ichiro Kitamura
+Shujin Isoroku Yamamoto
+Kashira Jomei Kanagaki
+Sho-ko Juro Kamioka
+Chu-i Kaemon "Ookami" Kaminaga
+Tai-i Kanaye Kakimoto
+Heishi Kazuo Izumi
+Gunjin Keiji Ishiyama
+Go-cho Kenichi Ishimura
+Gunsho Kenji Ishimaru
+Shujin Kenjiro Ishikawa
+Kashira Kisho Ishihara
+Sho-ko Kyoshi Isayama
+Chu-i Makato "Araebisu" Inoue
+Tai-i Maro Inoguchi
+Heishi Montaro Imamura
+Gunjin Reizo Imagawa
+Go-cho Ryozo Imada
+Gunsho Ryuichi Ichikawa
+Shujin Ryuji Hiroyuki
+Kashira Saburo Hideyoshi
+Sho-ko Seiji Hideki
+Chu-i Seiichi "Kamikaze" Hayata
+Tai-i Senichi Hatakeda
+Heishi Shijo Hashimoto
+Gunjin Shiro Hasegawa
+Go-cho Tadao Hamaguchi
+Gunsho Sho-sa Takeda Insei
+Shujin Taku Hamada
+Kashira Tanjiro Hamacho
+Sho-ko Taro Hagiwara
+Chu-i Toru "Oushi" Gensai
+Tai-i Toshiro Genji
+Heishi Yasuo Fujiwara
+Gunjin Yoshi Fujita
+Go-cho Yukio Fujishima
+Gunsho Kazuo Fujioka
+Shujin Keiji Fujimoto
+Kashira Kenichi Fujimaki
+Sho-ko Kenji Fujikage
+Chu-i Kenjiro "Fuka" Fugunaga
+Tai-i Kisho Fuchida
+Heishi Kyoshi Eto
+Chu-i Matti Vanninen

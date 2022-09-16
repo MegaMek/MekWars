@@ -1,0 +1,14 @@
+5 Falcon FLC-4N.mtf
+5 Firefly FFL-4A.mtf
+5 Flea FLE-15.mtf
+5 Flea FLE-4.mtf
+5 Hermes HER-1A.mtf
+5 Hornet HNT-151.mtf
+5 Hussar HSR-300-D.mtf
+5 Valkyrie VLK-QC.mtf
+5 Jenner JR7-C.mtf
+5 Mercury MCY-98.mtf
+5 Mongoose MON-67.mtf
+5 Thorn THE-S.mtf
+5 Wasp WSP-1W.mtf
+5 Urbanmech UM-R60M2.mtf
