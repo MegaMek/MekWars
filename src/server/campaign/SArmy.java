@@ -28,7 +28,6 @@ import common.util.TokenReader;
 import megamek.common.Aero;
 import megamek.common.AmmoType;
 import megamek.common.BattleArmor;
-import megamek.common.Crew;
 import megamek.common.Entity;
 import megamek.common.Infantry;
 import megamek.common.Mech;
@@ -36,6 +35,7 @@ import megamek.common.Mounted;
 import megamek.common.Protomech;
 import megamek.common.Tank;
 import megamek.common.VTOL;
+import megamek.common.battlevalue.BvMultiplier;
 
 /**
  * @author Helge Richter
@@ -290,14 +290,14 @@ public class SArmy extends Army {
 
             // Arrow IV adjustments
             if (hasTAGHomingCombo) {
-                double temp = subTotal / Crew.getBVSkillMultiplier(u.getEntity().getCrew().getGunnery(), u.getEntity().getCrew().getPiloting());
+                double temp = subTotal / BvMultiplier.bvSkillMultiplier(u.getEntity().getCrew().getGunnery(), u.getEntity().getCrew().getPiloting());
                 if (u.hasTAG()) {
                     temp += 200;
                 }
                 if (u.hasHoming()) {
                     temp += 200;
                 }
-                temp *= Crew.getBVSkillMultiplier(u.getEntity().getCrew().getGunnery(), u.getEntity().getCrew().getPiloting());
+                temp *= BvMultiplier.bvSkillMultiplier(u.getEntity().getCrew().getGunnery(), u.getEntity().getCrew().getPiloting());
                 subTotal = (int) temp;
             }
             total += subTotal;

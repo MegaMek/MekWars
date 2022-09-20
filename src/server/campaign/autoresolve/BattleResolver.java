@@ -19,6 +19,7 @@ import megamek.common.Report;
 import megamek.common.ToHitData;
 import megamek.common.util.BoardUtilities;
 import megamek.common.weapons.Weapon;
+import megamek.server.GameManager;
 import megamek.server.Server;
 import server.campaign.CampaignMain;
 import server.campaign.SArmy;
@@ -35,7 +36,7 @@ public class BattleResolver {
 	
 	private BattleResolver(){
 		try {
-			server = new Server("", 50000);
+			server = new Server("", 50000, new GameManager());
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -268,14 +269,15 @@ public class BattleResolver {
 		//Determine location
 		HitData hd = ent.rollHitLocation(ToHitData.HIT_NORMAL, ToHitData.SIDE_FRONT);
 		
+		// TODO recode auto resolver.
 		//Do damage
-		Vector<Report> report = server.damageEntity(ent, hd, damage);
+		// Vector<Report> report = server.damageEntity(ent, hd, damage);
 		
 		//Prepare Output
-		for (Report r: report){
-			String text = r.getText();
-			bf.getBattleReport().addFireEvent(unit, text);
-		}
+		// for (Report r: report){
+		// 	String text = r.getText();
+		// 	bf.getBattleReport().addFireEvent(unit, text);
+		// }
 	}
 
 }

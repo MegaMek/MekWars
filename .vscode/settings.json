@@ -1,0 +1,12 @@
+{
+    "java.project.referencedLibraries": [
+        "lib/**/*.jar",
+        "server-dist/lib/**/*.jar",
+        "client-dist/lib/**/*.jar",
+        "hpg-dist/lib/**/*.jar",
+        "MegaMek.jar"
+    ],
+    "java.project.sourcePaths": [
+        "src"
+    ]
+}

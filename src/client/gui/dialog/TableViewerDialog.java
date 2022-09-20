@@ -70,10 +70,10 @@ import common.util.SpringLayoutHelper;
 import common.util.UnitUtils;
 import megamek.client.ui.swing.unitDisplay.UnitDisplay;
 import megamek.common.Entity;
-import megamek.common.EntityListFile;
 import megamek.common.MechFileParser;
 import megamek.common.MechSummary;
 import megamek.common.MechSummaryCache;
+import megamek.common.MULParser;
 
 /**
  * 
@@ -572,7 +572,7 @@ public class TableViewerDialog extends JFrame implements ItemListener {
                                 File entityFile = new File("data/armies/" + Filename);
 
                                 try {
-                                    loadedUnits = EntityListFile.loadFrom(entityFile);
+                                    loadedUnits = new MULParser(entityFile,null).getEntities();
                                     loadedUnits.trimToSize();
                                     frequency /= loadedUnits.size();
                                 } catch (Exception ex) {

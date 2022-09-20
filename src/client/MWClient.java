@@ -141,26 +141,25 @@ import megamek.common.CriticalSlot;
 import megamek.common.Entity;
 import megamek.common.EquipmentType;
 import megamek.common.Game;
+import megamek.common.GameTurn;
 import megamek.common.IGame;
-//import megamek.common.IGame;
-//import megamek.common.IGame.Phase;
 import megamek.common.Mech;
 import megamek.common.MechWarrior;
+import megamek.common.Player;
+import megamek.common.Team;
+import megamek.common.enums.GamePhase;
 import megamek.common.event.GameCFREvent;
-//import megamek.common.event.GameEntityRemoveEvent;
 import megamek.common.event.GameEvent;
-//import megamek.common.event.GamePhaseChangeEvent;
-//import megamek.common.event.GameTurnChangeEvent;
-//import megamek.common.event.GameVictoryEvent;
 import megamek.common.options.GameOptions;
 import megamek.common.options.IBasicOption;
-import megamek.common.preference.IClientPreferences;
+import megamek.common.preference.ClientPreferences;
 import megamek.common.preference.PreferenceManager;
+import megamek.server.GameManager;
 import megamek.server.Server;
 import net.sourceforge.mlf.metouia.MetouiaLookAndFeel;
 
 
-public final class MWClient extends GameHost implements IClient, IGameHost {
+public final class MWClient extends GameHost implements IClient {
 
     /**
      *
@@ -209,7 +208,7 @@ public final class MWClient extends GameHost implements IClient, IGameHost {
     int mapMedium = 0;
 
     SplashWindow splash = null;
-    private IGame game = new Game();
+    private Game game = new Game();
 
     public static final String GUI_PREFIX = "/"; // prefix for commands in GUI
 
@@ -270,7 +269,7 @@ public final class MWClient extends GameHost implements IClient, IGameHost {
 
     private HashMap<String, Equipment> blackMarketEquipmentList = new HashMap<String, Equipment>();
 
-    private static MWLogger logger = MWLogger.getInstance();
+    //private static MWLogger logger = MWLogger.getInstance();
     // Main-Method
     public static void main(String[] args) {
 
@@ -2485,7 +2484,7 @@ public final class MWClient extends GameHost implements IClient, IGameHost {
 
         String MMVersion = getserverConfigs("AllowedMegaMekVersion");
         if (!MMVersion.equals("-1")
-                && !MMVersion.equalsIgnoreCase(MegaMek.VERSION)) {
+                && !MMVersion.equalsIgnoreCase(megamek.SuiteConstants.VERSION.toString())) {
             if (isDedicated()) {
                 MWLogger.errLog("You are using an invalid version of MegaMek. Please use version "
                                 + MMVersion);
@@ -2526,7 +2525,7 @@ public final class MWClient extends GameHost implements IClient, IGameHost {
             gpassword = "";
         }
         try {
-            myServer = new Server(gpassword, myPort);
+            myServer = new Server(gpassword, myPort, new GameManager());
             if (loadSavegame) {
                 FileDialog f = new FileDialog(MainFrame, "Load Savegame");
                 f.setDirectory(System.getProperty("user.dir") + "/savegames");
@@ -2551,11 +2550,11 @@ public final class MWClient extends GameHost implements IClient, IGameHost {
             return;
         }
 
-        myServer.getGame().addGameListener(this);
+       ((Game)myServer.getGame()).addGameListener(this);
         // Send the new game info to the Server
         serverSend("NG|"
                 + new MMGame(myUsername, ip, myPort, MaxPlayers,
-                        MegaMek.VERSION + " " + MegaMek.TIMESTAMP, comment)
+                        megamek.SuiteConstants.VERSION.toString() , comment)
                         .toString());
         if (!dedicated) {
 
@@ -2576,7 +2575,7 @@ public final class MWClient extends GameHost implements IClient, IGameHost {
         } else {
             clearSavedGames();
             purgeOldLogs();
-            IClientPreferences cs = PreferenceManager.getClientPreferences();
+            ClientPreferences cs = PreferenceManager.getClientPreferences();
             cs.setStampFilenames(Boolean
                     .parseBoolean(getserverConfigs("MMTimeStampLogFile")));
         }
@@ -2598,8 +2597,8 @@ public final class MWClient extends GameHost implements IClient, IGameHost {
     public void resetGame() { // reset hosted game
         if (myServer != null) {
             myServer.resetGame();
-            myServer.getGame().purgeGameListeners();
-            myServer.getGame().addGameListener(this);
+            ((Game)myServer.getGame()).purgeGameListeners();
+            ((Game)myServer.getGame()).addGameListener(this);
         }
     }
 
@@ -2607,7 +2606,7 @@ public final class MWClient extends GameHost implements IClient, IGameHost {
         if ((myServer != null) && (filename != null) && !filename.equals("")) {
             boolean loaded = myServer.loadGame(new File("./savegames/",
                     filename));
-            myServer.getGame().addGameListener(this);
+                    ((Game)myServer.getGame()).addGameListener(this);
             return loaded;
         }
 
@@ -2627,7 +2626,7 @@ public final class MWClient extends GameHost implements IClient, IGameHost {
     public boolean loadGameWithFullPath(String filename) {// load saved game
         if ((myServer != null) && (filename != null) && !filename.equals("")) {
             boolean loaded = myServer.loadGame(new File(filename));
-            myServer.getGame().addGameListener(this);
+            ((Game)myServer.getGame()).addGameListener(this);
             return loaded;
 
         }
@@ -3883,7 +3882,7 @@ public final class MWClient extends GameHost implements IClient, IGameHost {
         // Only send data for units currently on the board.
         // any units removed from play will have already sent thier final
         // update.
-        Iterator<Entity> en = myServer.getGame().getEntities();
+        Iterator<Entity> en = ((Game)myServer.getGame()).getEntities();
         while (en.hasNext()) {
             Entity ent = en.next();
             if (ent.getOwner().getName().startsWith("War Bot")
@@ -3913,7 +3912,7 @@ public final class MWClient extends GameHost implements IClient, IGameHost {
         }
 
         StringBuilder result = prepareReport(
-                new GameWrapper(myServer.getGame()), isUsingAdvanceRepairs(),
+                new GameWrapper(((Game)myServer.getGame())), isUsingAdvanceRepairs(),
                 getBuildingTemplate());
 
         // send the autoreport
@@ -4060,14 +4059,15 @@ public final class MWClient extends GameHost implements IClient, IGameHost {
 		
 	}
 
-	public IGame getGame() {
+	public Game getGame() {
 		return game;
 	}
 
-	public void setGame(IGame game) {
+	public void setGame(Game game) {
 		this.game = game;
 	}
 
+    
 }
 
 /**

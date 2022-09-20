@@ -6,7 +6,7 @@ import megamek.client.ui.swing.ClientGUI;
 import megamek.client.ui.swing.unitDisplay.UnitDisplay;
 import megamek.client.ui.swing.util.MegaMekController;
 import megamek.common.Entity;
-import megamek.common.IPlayer;
+import megamek.common.Player;
 import megamek.common.annotations.Nullable;
 
 public class MWUnitDisplay extends UnitDisplay {
@@ -35,7 +35,7 @@ public class MWUnitDisplay extends UnitDisplay {
 	public void displayEntity(Entity theEntity) {
         if(theEntity.getGame() == null) {
         	if(client.getGame().getNoOfPlayers() == 0) {
-        		IPlayer p = new FakePlayer(client.getUsername(), client.getUser(client.getUsername()).getName());
+        		Player p = new Player(0,client.getUsername());
         		p.setTeam(0);
         		theEntity.setOwner(p);
         	}

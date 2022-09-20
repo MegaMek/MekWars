@@ -16,7 +16,7 @@ public class QuirkHandler
 {
 	private static QuirkHandler handler;
 	
-	protected QuirkHandler() throws IOException
+	protected QuirkHandler() throws Exception
 	{
 		if(CampaignMain.cm.getBooleanConfig("EnableQuirks"))
 		{
@@ -33,7 +33,7 @@ public class QuirkHandler
 			{
 				handler = new QuirkHandler();
 			} 
-			catch (IOException e) 
+			catch (Exception e) 
 			{
 				MWLogger.errLog(e);
 			}

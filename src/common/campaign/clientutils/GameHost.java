@@ -19,8 +19,9 @@ import common.campaign.clientutils.protocol.TransportCodec;
 import common.campaign.clientutils.protocol.commands.IProtCommand;
 import common.util.MWLogger;
 import megamek.common.Building;
+import megamek.common.Game;
 import megamek.common.IGame;
-import megamek.common.IGame.Phase;
+import megamek.common.enums.GamePhase;
 import megamek.common.event.GameBoardChangeEvent;
 import megamek.common.event.GameBoardNewEvent;
 import megamek.common.event.GameCFREvent;
@@ -72,7 +73,7 @@ public abstract class GameHost implements GameListener, IGameHost {
     protected int savedGamesMaxDays = 30; // max number of days a save game can be before
     // its deleted.
     
-    protected Phase currentPhase = IGame.Phase.PHASE_DEPLOYMENT;
+    protected GamePhase currentPhase = GamePhase.DEPLOYMENT;
     protected int turn = 0;
     
 	@Override
@@ -251,7 +252,7 @@ public abstract class GameHost implements GameListener, IGameHost {
     protected abstract IClientUser getUser(String name);
     
     public int getBuildingsLeft() {
-        Enumeration<Building> buildings = myServer.getGame().getBoard()
+        Enumeration<Building> buildings = ((Game)myServer.getGame()).getBoard()
                 .getBuildings();
         int buildingCount = 0;
         while (buildings.hasMoreElements()) {

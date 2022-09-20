@@ -7,15 +7,15 @@ import java.util.List;
 
 import common.util.MWLogger;
 import megamek.common.Entity;
-import megamek.common.IGame;
-import megamek.common.IPlayer;
+import megamek.common.Game;
+import megamek.common.Player;
 
 
 public class GameWrapper implements GameInterface {
 	
-	private final IGame game;
+	private final Game game;
 	
-	public GameWrapper(IGame game) {
+	public GameWrapper(Game game) {
 		this.game = game;
 	}
 
@@ -40,13 +40,13 @@ public class GameWrapper implements GameInterface {
 		
 		//TODO: Winners sometimes coming up empty. Let's see why
 		
-		Enumeration<IPlayer> en = game.getPlayers();
+		Enumeration<Player> en = game.getPlayers();
 		
 		MWLogger.errLog("  :: game.getPlayers(): " + en.toString());
 		MWLogger.errLog("  :: VictoryTeam: " + game.getVictoryTeam());
 		
 		while (en.hasMoreElements()){
-			final IPlayer player = en.nextElement();
+			final Player player = en.nextElement();
 			MWLogger.errLog("  :: ==> Player: " + player.getName().trim() + " :: Team: " + player.getTeam());
 			
 			if (player.getTeam() == game.getVictoryTeam()){
@@ -57,7 +57,7 @@ public class GameWrapper implements GameInterface {
 	}
 
 	public boolean hasWinner() {
-		return game.getVictoryTeam() != IPlayer.TEAM_NONE;
+		return game.getVictoryTeam() != Player.TEAM_NONE;
 	}
 
 

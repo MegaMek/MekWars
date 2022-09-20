@@ -44,15 +44,19 @@ import megamek.common.Crew;
 import megamek.common.CrewType;
 import megamek.common.Entity;
 import megamek.common.IGame;
-import megamek.common.IPlayer;
+import megamek.common.Player;
+import megamek.common.enums.GamePhase;
 import megamek.common.KeyBindParser;
 import megamek.common.MapSettings;
 import megamek.common.OffBoardDirection;
 import megamek.common.PlanetaryConditions;
 import megamek.common.icons.Camouflage;
-import megamek.common.logging.LogLevel;
+
+import org.apache.log4j.lf5.LogLevel;
+import org.apache.logging.log4j.Level;
+import org.apache.logging.log4j.LogManager;
 import megamek.common.options.IBasicOption;
-import megamek.common.preference.IClientPreferences;
+import megamek.common.preference.ClientPreferences;
 import megamek.common.preference.PreferenceManager;
 import megamek.common.util.BuildingTemplate;
 
@@ -187,13 +191,13 @@ public class ClientThread extends Thread implements CloseClientListener {
 
             // if game is running, shouldn't do the following, so detect the
             // phase
-            for (int i = 0; (i < 1000) && (client.getGame().getPhase() == IGame.Phase.PHASE_UNKNOWN); i++) {
+            for (int i = 0; (i < 1000) && (client.getGame().getPhase() == GamePhase.UNKNOWN); i++) {
                 Thread.sleep(50);
             }
 
             // Lets start with the environment set first then do everything
             // else.
-            if ((mwclient.getCurrentEnvironment() != null) && (client.getGame().getPhase() == IGame.Phase.PHASE_LOUNGE)) {
+            if ((mwclient.getCurrentEnvironment() != null) && (client.getGame().getPhase() == GamePhase.LOUNGE)) {
                 // creates the playboard*/
                 MapSettings mySettings = MapSettings.getInstance();
                 mySettings.setBoardSize((int)mwclient.getMapSize().getWidth(), (int)mwclient.getMapSize().getHeight());
@@ -405,7 +409,7 @@ public class ClientThread extends Thread implements CloseClientListener {
              */
             if (mwclient.isUsingBots()) {
                 String name = "War Bot" + client.getLocalPlayer().getId();
-                bot = new Princess(name, client.getHost(), client.getPort(), LogLevel.ERROR);
+                bot = new Princess(name, client.getHost(), client.getPort());
                 bot.getGame().addGameListener(new BotGUI(bot));
                 try {
                     bot.connect();
@@ -415,7 +419,7 @@ public class ClientThread extends Thread implements CloseClientListener {
                     }
                     // if game is running, shouldn't do the following, so detect
                     // the phase
-                    for (int i = 0; (i < 1000) && (bot.getGame().getPhase() == IGame.Phase.PHASE_UNKNOWN); i++) {
+                    for (int i = 0; (i < 1000) && (bot.getGame().getPhase() == GamePhase.UNKNOWN); i++) {
                         Thread.sleep(50);
                     }
                 } catch (Exception ex) {
@@ -437,14 +441,14 @@ public class ClientThread extends Thread implements CloseClientListener {
                 Thread.sleep(125);
             }
 
-            if (((client.getGame() != null) && (client.getGame().getPhase() == IGame.Phase.PHASE_LOUNGE))) {
+            if (((client.getGame() != null) && (client.getGame().getPhase() == GamePhase.LOUNGE))) {
 
                 client.getGame().getOptions().loadOptions();
                 if ((mechs.size() > 0) && (xmlGameOptions.size() > 0)) {
                     client.sendGameOptions("", xmlGameOptions);
                 }
 
-                IClientPreferences cs = PreferenceManager.getClientPreferences();
+                ClientPreferences cs = PreferenceManager.getClientPreferences();
                 cs.setStampFilenames(Boolean.parseBoolean(mwclient.getserverConfigs("MMTimeStampLogFile")));
                 cs.setShowUnitId(Boolean.parseBoolean(mwclient.getserverConfigs("MMShowUnitId")));
                 cs.setKeepGameLog(Boolean.parseBoolean(mwclient.getserverConfigs("MMKeepGameLog")));

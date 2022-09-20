@@ -46,6 +46,7 @@ import megamek.common.CriticalSlot;
 import megamek.common.Entity;
 import megamek.common.EntityListFile;
 import megamek.common.Infantry;
+import megamek.common.MULParser;
 import megamek.common.Mech;
 import megamek.common.MechFileParser;
 import megamek.common.MechSummary;
@@ -1277,7 +1278,7 @@ public final class SUnit extends Unit implements Comparable<SUnit> {
         File entityFile = new File("data/armies/" + filename);
 
         try {
-            loadedUnits = EntityListFile.loadFrom(entityFile);
+            loadedUnits = new MULParser(entityFile,null).getEntities();
             loadedUnits.trimToSize();
         } catch (Exception ex) {
             MWLogger.errLog("Unable to load file " + entityFile.getName());

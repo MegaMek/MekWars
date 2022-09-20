@@ -2642,7 +2642,7 @@ public class CMainFrame extends JFrame {
 
         // set the text up.
         JLabel mekwars = new JLabel("MekWars Client Version: " + MWClient.CLIENT_VERSION);
-        JLabel version = new JLabel("MegaMek Version: " + MegaMek.VERSION);
+        JLabel version = new JLabel("MegaMek Version: " + megamek.SuiteConstants.VERSION);
         JLabel license1 = new JLabel("MekWars Client software is under GPL. See");
         JLabel license2 = new JLabel("license.txt in ./MekWars Docs/ for details.");
         JLabel license3 = new JLabel("Project Info and Server Packages:");

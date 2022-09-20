@@ -28,6 +28,7 @@ import common.Unit;
 import common.campaign.pilot.Pilot;
 import megamek.common.Entity;
 import megamek.common.Mounted;
+import megamek.common.battlevalue.BvMultiplier;
 import server.campaign.CampaignMain;
 import server.campaign.SHouse;
 import server.campaign.pilot.SPilot;
@@ -87,8 +88,8 @@ public class WeaponSpecialistSkill extends SPilotSkill {
     	double sumWeaponBV = 0;
     	double effectedWeaponBV = 0;
         double bvSkillDelta = 
-        		megamek.common.Crew.getBVSkillMultiplier(unit.getCrew().getGunnery() - 2, unit.getCrew().getPiloting())
-        		/megamek.common.Crew.getBVSkillMultiplier(unit.getCrew().getGunnery() , unit.getCrew().getPiloting())
+		BvMultiplier.bvSkillMultiplier(unit.getCrew().getGunnery() - 2, unit.getCrew().getPiloting())
+        		/BvMultiplier.bvSkillMultiplier(unit.getCrew().getGunnery() , unit.getCrew().getPiloting())
         		;
         for (Mounted weapon : unit.getWeaponList()) {
         	sumWeaponBV += weapon.getType().getBV(unit);

@@ -1,0 +1,112 @@
+{
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "type": "java",
+            "name": "Launch Current File",
+            "request": "launch",
+            "mainClass": "${file}"
+        },
+        {
+            "type": "java",
+            "name": "Launch MainOperations",
+            "request": "launch",
+            "mainClass": "OperationsEditor.MainOperations",
+            "projectName": "MekWars_3386c484"
+        },
+        {
+            "type": "java",
+            "name": "Launch MWClient",
+            "request": "launch",
+            "mainClass": "client.MWClient",
+            "projectName": "MekWars_3386c484"
+        },
+        {
+            "type": "java",
+            "name": "Launch Browser",
+            "request": "launch",
+            "mainClass": "client.gui.Browser",
+            "projectName": "MekWars_3386c484"
+        },
+        {
+            "type": "java",
+            "name": "Launch MWDedHost",
+            "request": "launch",
+            "mainClass": "dedicatedhost.MWDedHost",
+            "projectName": "MekWars_3386c484"
+        },
+        {
+            "type": "java",
+            "name": "Launch HPGNet",
+            "request": "launch",
+            "mainClass": "hpgnet.HPGNet",
+            "projectName": "MekWars_3386c484"
+        },
+        {
+            "type": "java",
+            "name": "Launch jcrypt",
+            "request": "launch",
+            "mainClass": "server.MWChatServer.translator.jcrypt",
+            "projectName": "MekWars_3386c484"
+        },
+        {
+            "type": "java",
+            "name": "Launch MWServ",
+            "request": "launch",
+            "mainClass": "server.MWServ",
+            "projectName": "MekWars_3386c484"
+        },
+        {
+            "type": "java",
+            "name": "Launch MWPasswd",
+            "request": "launch",
+            "mainClass": "server.util.MWPasswd",
+            "projectName": "MekWars_3386c484"
+        },
+        {
+            "type": "java",
+            "name": "Launch MWTracker",
+            "request": "launch",
+            "mainClass": "tracker.MWTracker",
+            "projectName": "MekWars_3386c484"
+        },
+        {
+            "type": "java",
+            "name": "Launch AutoUpdater",
+            "request": "launch",
+            "mainClass": "updaters.AutoUpdater",
+            "projectName": "MekWars_3386c484"
+        },
+        {
+            "type": "java",
+            "name": "Launch MekWarsAutoUpdate",
+            "request": "launch",
+            "mainClass": "updaters.MekWarsAutoUpdate",
+            "projectName": "MekWars_3386c484"
+        },
+        {
+            "type": "java",
+            "name": "Launch VersionManifest",
+            "request": "launch",
+            "mainClass": "updaters.VersionManifest",
+            "projectName": "MekWars_3386c484"
+        },
+        {
+            "type": "java",
+            "name": "Launch IOUtil",
+            "request": "launch",
+            "mainClass": "updaters.utils.IOUtil",
+            "projectName": "MekWars_3386c484"
+        },
+        {
+            "type": "java",
+            "name": "Launch Terminator",
+            "request": "launch",
+            "mainClass": "updaters.utils.Terminator",
+            "projectName": "MekWars_3386c484"
+        }
+    ]
+}

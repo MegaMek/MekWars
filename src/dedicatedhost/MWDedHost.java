@@ -63,21 +63,22 @@ import dedicatedhost.cmd.Command;
 import dedicatedhost.protocol.DataFetchClient;
 import megamek.MegaMek;
 import megamek.common.Entity;
-import megamek.common.IGame;
-import megamek.common.IGame.Phase;
+import megamek.common.Game;
 import megamek.common.Mech;
 import megamek.common.MechWarrior;
+import megamek.common.enums.GamePhase;
 import megamek.common.event.GameCFREvent;
 import megamek.common.options.IOption;
-import megamek.common.preference.IClientPreferences;
+import megamek.common.preference.ClientPreferences;
 import megamek.common.preference.PreferenceManager;
+import megamek.server.GameManager;
 import megamek.server.Server;
 
 
 // This is the Client used for connecting to the master server.
 // @Author: Helge Richter (McWizard@gmx.de)
 
-public final class MWDedHost extends GameHost implements IClient, IGameHost {
+public final class MWDedHost extends GameHost implements IClient {
 
     DataFetchClient dataFetcher;
 
@@ -105,7 +106,7 @@ public final class MWDedHost extends GameHost implements IClient, IGameHost {
     long LastPing = 0;
     int Status = 0;
 
-    private Phase currentPhase = IGame.Phase.PHASE_DEPLOYMENT;
+    private GamePhase currentPhase = GamePhase.DEPLOYMENT;
     private int turn = 0;
 
     Dimension MapSize;
@@ -1174,7 +1175,7 @@ public final class MWDedHost extends GameHost implements IClient, IGameHost {
         }
 
         String MMVersion = getserverConfigs("AllowedMegaMekVersion");
-        if (!MMVersion.equals("-1") && !MMVersion.equalsIgnoreCase(MegaMek.VERSION)) {
+        if (!MMVersion.equals("-1") && !MMVersion.equalsIgnoreCase(megamek.SuiteConstants.VERSION.toString())) {
             MWLogger.errLog("You are using an invalid version of MegaMek. Please use version " + MMVersion);
             stopHost();
             updateDed();
@@ -1200,7 +1201,7 @@ public final class MWDedHost extends GameHost implements IClient, IGameHost {
             gpassword = "";
         }
         try {
-            myServer = new Server(gpassword, myPort);
+            myServer = new Server(gpassword, myPort, new GameManager());
         } catch (Exception ex) {
             try {
                 if (myServer == null) {
@@ -1219,12 +1220,12 @@ public final class MWDedHost extends GameHost implements IClient, IGameHost {
             return;
         }
 
-        myServer.getGame().addGameListener(this);
+        ((Game)myServer.getGame()).addGameListener(this);
         // Send the new game info to the Server
-        serverSend("NG|" + new MMGame(myUsername, ip, myPort, MaxPlayers, MegaMek.VERSION + " " + MegaMek.TIMESTAMP, comment).toString());
+        serverSend("NG|" + new MMGame(myUsername, ip, myPort, MaxPlayers, megamek.SuiteConstants.VERSION.toString(), comment).toString());
         clearSavedGames();
         purgeOldLogs();
-        IClientPreferences cs = PreferenceManager.getClientPreferences();
+        ClientPreferences cs = PreferenceManager.getClientPreferences();
         cs.setStampFilenames(Boolean.parseBoolean(getserverConfigs("MMTimeStampLogFile")));
     }
 
@@ -1246,15 +1247,15 @@ public final class MWDedHost extends GameHost implements IClient, IGameHost {
     public void resetGame() { // reset hosted game
         if (myServer != null) {
             myServer.resetGame();
-            myServer.getGame().purgeGameListeners();
-            myServer.getGame().addGameListener(this);
+            ((Game)myServer.getGame()).purgeGameListeners();
+            ((Game)myServer.getGame()).addGameListener(this);
         }
     }
 
     public boolean loadGame(String filename) {// load saved game
         if ((myServer != null) && (filename != null) && !filename.equals("")) {
             boolean loaded = myServer.loadGame(new File("./savegames/", filename));
-            myServer.getGame().addGameListener(this);
+            ((Game)myServer.getGame()).addGameListener(this);
             return loaded;
         }
 
@@ -1274,7 +1275,7 @@ public final class MWDedHost extends GameHost implements IClient, IGameHost {
     public boolean loadGameWithFullPath(String filename) {// load saved game
         if ((myServer != null) && (filename != null) && !filename.equals("")) {
             boolean loaded = myServer.loadGame(new File(filename));
-            myServer.getGame().addGameListener(this);
+            ((Game)myServer.getGame()).addGameListener(this);
             return loaded;
 
         }
@@ -1645,7 +1646,7 @@ public final class MWDedHost extends GameHost implements IClient, IGameHost {
         // Only send data for units currently on the board.
         // any units removed from play will have already sent thier final
         // update.
-        Iterator<Entity> en = myServer.getGame().getEntities();
+        Iterator<Entity> en = ((Game)myServer.getGame()).getEntities();
         while (en.hasNext()) {
             Entity ent = en.next();
             if (ent.getOwner().getName().startsWith("War Bot")
@@ -1772,21 +1773,21 @@ public final class MWDedHost extends GameHost implements IClient, IGameHost {
         
         //GameReporter.prepareReport(myGame, usingAdvancedRepairs, buildingTemplate)
 
-        StringBuilder result = prepareReport(new GameWrapper(myServer.getGame()), isUsingAdvanceRepairs(), buildingTemplate);
+        StringBuilder result = prepareReport(new GameWrapper(((Game)myServer.getGame())), isUsingAdvanceRepairs(), buildingTemplate);
         serverSend("CR|" + result.toString());
         
 /*        StringBuilder result = new StringBuilder();
         String name = "";
         // Parse the real playername from the Modified In game one..
         String winnerName = "";
-        if (myServer.getGame().getVictoryTeam() != Player.TEAM_NONE) {
+        if (((Game)myServer.getGame()).getVictoryTeam() != Player.TEAM_NONE) {
 
             int numberOfWinners = 0;
             // Multiple Winners
-            Enumeration<Player> en = myServer.getGame().getPlayers();
+            Enumeration<Player> en = ((Game)myServer.getGame()).getPlayers();
             while (en.hasMoreElements()) {
                 Player p = en.nextElement();
-                if (p.getTeam() == myServer.getGame().getVictoryTeam()) {
+                if (p.getTeam() == ((Game)myServer.getGame()).getVictoryTeam()) {
                     StringTokenizer st = new StringTokenizer(p.getName().trim(), "~");
                     name = "";
                     while (st.hasMoreElements()) {
@@ -1810,10 +1811,10 @@ public final class MWDedHost extends GameHost implements IClient, IGameHost {
 
         // Only one winner
         else {
-            if (myServer.getGame().getVictoryPlayerId() == Player.PLAYER_NONE) {
+            if (((Game)myServer.getGame()).getVictoryPlayerId() == Player.PLAYER_NONE) {
                 winnerName = "DRAW#";
             } else {
-                winnerName = myServer.getGame().getPlayer(myServer.getGame().getVictoryPlayerId()).getName();
+                winnerName = ((Game)myServer.getGame()).getPlayer(((Game)myServer.getGame()).getVictoryPlayerId()).getName();
                 StringTokenizer st = new StringTokenizer(winnerName, "~");
                 name = "";
                 while (st.hasMoreElements()) {
@@ -1826,7 +1827,7 @@ public final class MWDedHost extends GameHost implements IClient, IGameHost {
         result.append(winnerName);
 
         // Report the mech stat
-        Enumeration<Entity> en = myServer.getGame().getDevastatedEntities();
+        Enumeration<Entity> en = ((Game)myServer.getGame()).getDevastatedEntities();
         while (en.hasMoreElements()) {
             Entity ent = en.nextElement();
             if (ent.getOwner().getName().startsWith("War Bot")) {
@@ -1835,7 +1836,7 @@ public final class MWDedHost extends GameHost implements IClient, IGameHost {
             result.append(SerializeEntity.serializeEntity(ent, true, false, isUsingAdvanceRepairs()));
             result.append("#");
         }
-        en = myServer.getGame().getGraveyardEntities();
+        en = ((Game)myServer.getGame()).getGraveyardEntities();
         while (en.hasMoreElements()) {
             Entity ent = en.nextElement();
             if (ent.getOwner().getName().startsWith("War Bot")) {
@@ -1845,7 +1846,7 @@ public final class MWDedHost extends GameHost implements IClient, IGameHost {
             result.append("#");
 
         }
-        en = myServer.getGame().getEntities();
+        en = ((Game)myServer.getGame()).getEntities();
         while (en.hasMoreElements()) {
             Entity ent = en.nextElement();
             if (ent.getOwner().getName().startsWith("War Bot")) {
@@ -1854,7 +1855,7 @@ public final class MWDedHost extends GameHost implements IClient, IGameHost {
             result.append(SerializeEntity.serializeEntity(ent, true, false, isUsingAdvanceRepairs()));
             result.append("#");
         }
-        en = myServer.getGame().getRetreatedEntities();
+        en = ((Game)myServer.getGame()).getRetreatedEntities();
         while (en.hasMoreElements()) {
             Entity ent = en.nextElement();
             if (ent.getOwner().getName().startsWith("War Bot")) {
