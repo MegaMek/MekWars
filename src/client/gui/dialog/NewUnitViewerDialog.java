@@ -750,7 +750,7 @@ import megamek.common.loaders.EntityLoadingException;
 	                return;
 	            }
 	            e.calculateBattleValue();
-	            tEditorPane.setText(e.getBVText());
+	            tEditorPane.setText((e.getUseManualBV() ? e.getManualBV() : e.getInitialBV())+"");
 	            tEditorPane.setCaretPosition(0);
 	            JScrollPane tScroll = new JScrollPane(tEditorPane,
 	                    ScrollPaneConstants.VERTICAL_SCROLLBAR_AS_NEEDED,
