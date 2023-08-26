@@ -1,0 +1,14 @@
+rootProject.name = 'MekWarsRoot'
+
+include 'mekwars'
+
+
+includeBuild('../megamek')
+includeBuild('../megameklab')
+includeBuild('../mekhq')
+
+
+def localSettings = file('settings_local.gradle')
+if (localSettings.exists()) {
+    apply from: localSettings
+}
