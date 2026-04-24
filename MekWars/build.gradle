@@ -15,12 +15,18 @@ ant.importBuild('build.xml') { String oldTargetName ->
 sourceSets {
     main {
         java {
-            srcDirs = [ant.properties['src.dir']]
-            destinationDirectory = file(ant.properties['build.dir'])
+            srcDirs = ['src']
+        }
+        resources {
+            srcDirs = ['resources']
+        }
+    }
+    test {
+        java {
+            srcDirs = ['unittests']
+        }
+        resources {
+            srcDirs = ['testresources']
         }
     }
 }
-
-compileJava.dependsOn 'prepare'
-tasks.named('package') { dependsOn = ['compileJava'] }
-assemble.dependsOn = ['package']
