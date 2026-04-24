@@ -1,5 +1,4 @@
 plugins {
-    id 'application'
     id 'org.ajoberstar.grgit' version '5.0.0'
     id 'java'
 }
@@ -10,15 +9,11 @@ java {
     }
 }
 
-allprojects {
-    apply plugin: 'java'
-
-    repositories {
-        mavenLocal()
-        mavenCentral()
-        maven {
-            url 'https://jitpack.io'
-        }
+repositories {
+    mavenLocal()
+    mavenCentral()
+    maven {
+        url 'https://jitpack.io'
     }
 }
 

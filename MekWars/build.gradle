@@ -1,0 +1,26 @@
+plugins {
+    id 'java-library'
+}
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(21)
+    }
+}
+
+ant.importBuild('build.xml') { String oldTargetName ->
+    return oldTargetName == 'build' ? 'ant_build' : oldTargetName
+}
+
+sourceSets {
+    main {
+        java {
+            srcDirs = [ant.properties['src.dir']]
+            destinationDirectory = file(ant.properties['build.dir'])
+        }
+    }
+}
+
+compileJava.dependsOn 'prepare'
+tasks.named('package') { dependsOn = ['compileJava'] }
+assemble.dependsOn = ['package']
