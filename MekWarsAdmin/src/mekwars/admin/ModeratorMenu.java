@@ -13,7 +13,7 @@
  * FOR A PARTICULAR PURPOSE. See the GNU General Public License for more
  * details.
  */
-package admin;
+package mekwars.admin;
 
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -383,7 +383,9 @@ public class ModeratorMenu extends JMenu {
 
         String name = "";
         if (player == null) {
-            PlayerNameDialog playerDialog = new PlayerNameDialog(mwclient, "Choose a Player", PlayerNameDialog.ANY_PLAYER);
+            PlayerNameDialog playerDialog = new PlayerNameDialog(mwclient,
+                  "Choose a Player",
+                  PlayerNameDialog.ANY_PLAYER);
             playerDialog.setVisible(true);
             name = playerDialog.getPlayerName();
             playerDialog.dispose();
@@ -406,7 +408,9 @@ public class ModeratorMenu extends JMenu {
 
         String name = null;
         if (player == null) {
-            PlayerNameDialog playerDialog = new PlayerNameDialog(mwclient, "Choose a Player", PlayerNameDialog.ANY_PLAYER);
+            PlayerNameDialog playerDialog = new PlayerNameDialog(mwclient,
+                  "Choose a Player",
+                  PlayerNameDialog.ANY_PLAYER);
             playerDialog.setVisible(true);
             name = playerDialog.getPlayerName();
             playerDialog.dispose();
@@ -417,7 +421,8 @@ public class ModeratorMenu extends JMenu {
         if ((name == null) || (name.length() == 0)) {
             return;
         }
-        String exp = JOptionPane.showInputDialog(mwclient.getMainFrame(), mwclient.moneyOrFluMessage(true, true, -1) + " Amount,- to remove");
+        String exp = JOptionPane.showInputDialog(mwclient.getMainFrame(),
+              mwclient.moneyOrFluMessage(true, true, -1) + " Amount,- to remove");
         if ((exp == null) || (exp.length() == 0)) {
             return;
         }
@@ -428,7 +433,9 @@ public class ModeratorMenu extends JMenu {
     public void jMenuModGrantInfluence_actionPerformed(ActionEvent e, String player) {
         String name = null;
         if (player == null) {
-            PlayerNameDialog playerDialog = new PlayerNameDialog(mwclient, "Choose a Player", PlayerNameDialog.ANY_PLAYER);
+            PlayerNameDialog playerDialog = new PlayerNameDialog(mwclient,
+                  "Choose a Player",
+                  PlayerNameDialog.ANY_PLAYER);
             playerDialog.setVisible(true);
             name = playerDialog.getPlayerName();
             playerDialog.dispose();
@@ -439,7 +446,8 @@ public class ModeratorMenu extends JMenu {
         if ((name == null) || (name.length() == 0)) {
             return;
         }
-        String exp = JOptionPane.showInputDialog(mwclient.getMainFrame(), mwclient.moneyOrFluMessage(false, true, -1) + " Amount,- to remove");
+        String exp = JOptionPane.showInputDialog(mwclient.getMainFrame(),
+              mwclient.moneyOrFluMessage(false, true, -1) + " Amount,- to remove");
         if ((exp == null) || (exp.length() == 0)) {
             return;
         }
@@ -450,7 +458,9 @@ public class ModeratorMenu extends JMenu {
     public void jMenuModGrantReward_actionPerformed(ActionEvent e, String player) {
         String name = null;
         if (player == null) {
-            PlayerNameDialog playerDialog = new PlayerNameDialog(mwclient, "Choose a Player", PlayerNameDialog.ANY_PLAYER);
+            PlayerNameDialog playerDialog = new PlayerNameDialog(mwclient,
+                  "Choose a Player",
+                  PlayerNameDialog.ANY_PLAYER);
             playerDialog.setVisible(true);
             name = playerDialog.getPlayerName();
             playerDialog.dispose();
@@ -487,7 +497,9 @@ public class ModeratorMenu extends JMenu {
     }
 
     public void jMenuModDeactivate_actionPerformed(ActionEvent e) {
-        PlayerNameDialog playerDialog = new PlayerNameDialog(mwclient, "Choose Player to Deactivate", PlayerNameDialog.ANY_PLAYER);
+        PlayerNameDialog playerDialog = new PlayerNameDialog(mwclient,
+              "Choose Player to Deactivate",
+              PlayerNameDialog.ANY_PLAYER);
         playerDialog.setVisible(true);
         String name = playerDialog.getPlayerName();
         playerDialog.dispose();
@@ -499,7 +511,8 @@ public class ModeratorMenu extends JMenu {
     }
 
     public void jMenuModLog_actionPerformed(ActionEvent e) {
-        String name = JOptionPane.showInputDialog(mwclient.getMainFrame(), "Enter comments you would like to add the the mod log");
+        String name = JOptionPane.showInputDialog(mwclient.getMainFrame(),
+              "Enter comments you would like to add the the mod log");
         if ((name == null) || (name.length() == 0)) {
             return;
         }
@@ -607,7 +620,10 @@ public class ModeratorMenu extends JMenu {
 
     public void jMenuModCreateUnit_actionPerformed(ActionEvent e) {
         UnitLoadingDialog unitLoadingDialog = new UnitLoadingDialog(mwclient.getMainFrame());
-        NewUnitViewerDialog unitSelector = new NewUnitViewerDialog(mwclient.getMainFrame(), unitLoadingDialog, mwclient,NewUnitViewerDialog.UNIT_SELECTOR);
+        NewUnitViewerDialog unitSelector = new NewUnitViewerDialog(mwclient.getMainFrame(),
+              unitLoadingDialog,
+              mwclient,
+              NewUnitViewerDialog.UNIT_SELECTOR);
         unitSelector.setName("Unit Selector");
         new Thread(unitSelector).start();
     }
@@ -644,7 +660,11 @@ public class ModeratorMenu extends JMenu {
             return;
         }
 
-        mwclient.sendChat(MWClient.CAMPAIGN_PREFIX + "c modrefreshFactory#" + planetNamestr + "#" + combo.getSelectedItem().toString());
+        mwclient.sendChat(MWClient.CAMPAIGN_PREFIX +
+                                "c modrefreshFactory#" +
+                                planetNamestr +
+                                "#" +
+                                combo.getSelectedItem().toString());
     }
 
 }// end AdminMenu class

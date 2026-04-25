@@ -13,7 +13,7 @@
  * details.
  */
 
-package admin;
+package mekwars.admin;
 
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -440,23 +440,23 @@ public class AdminMenu extends JMenu {
 
         jMenuAdminSetServerTargetBan.setText("Set Server Target System Ban");
         jMenuAdminSetServerTargetBan.addActionListener(new ActionListener() {
-        	public void actionPerformed(ActionEvent e) {
-        		jMenuAdminServerTargetBan_actionPerformed(e);
-        	}
+            public void actionPerformed(ActionEvent e) {
+                jMenuAdminServerTargetBan_actionPerformed(e);
+            }
         });
 
         jMenuAdminReloadSupportUnits.setText("Reload supportunits.txt");
         jMenuAdminReloadSupportUnits.addActionListener(new ActionListener() {
-        	public void actionPerformed(ActionEvent e) {
-        		jMenuAdminReloadSupportUnits_actionPerformed(e);
-        	}
+            public void actionPerformed(ActionEvent e) {
+                jMenuAdminReloadSupportUnits_actionPerformed(e);
+            }
         });
 
         jMenuAdminReloadSanitizerConfigs.setText("Reload HTML Sanitizer");
         jMenuAdminReloadSanitizerConfigs.addActionListener(new ActionListener() {
-        	public void actionPerformed(ActionEvent e) {
-        		jMenuAdminReloadSanitizer_actionPerformed(e);
-        	}
+            public void actionPerformed(ActionEvent e) {
+                jMenuAdminReloadSanitizer_actionPerformed(e);
+            }
         });
 
         jMenuAdminUploadBuildTable.setText("Upload a build table");
@@ -588,9 +588,9 @@ public class AdminMenu extends JMenu {
 
         jMenuAdminPlayerFlags.setText("Player Flags");
         jMenuAdminPlayerFlags.addActionListener(new ActionListener() {
-        	public void actionPerformed(ActionEvent e) {
-        		new DefaultPlayerFlagListDialog(mwclient);
-        	}
+            public void actionPerformed(ActionEvent e) {
+                new DefaultPlayerFlagListDialog(mwclient);
+            }
         });
 
         // clear the entire menu, incase this is a reconstruction call
@@ -610,11 +610,11 @@ public class AdminMenu extends JMenu {
         }
 
         if (userLevel >= mwclient.getData().getAccessLevel("AdminReloadSupportUnits")) {
-        	this.add(jMenuAdminReloadSupportUnits);
+            this.add(jMenuAdminReloadSupportUnits);
         }
 
         if (userLevel >= mwclient.getData().getAccessLevel("AdminReloadHTMLSanitizerConfig")) {
-        	this.add(jMenuAdminReloadSanitizerConfigs);
+            this.add(jMenuAdminReloadSanitizerConfigs);
         }
 
         if (getItemCount() > 0) {
@@ -674,7 +674,8 @@ public class AdminMenu extends JMenu {
         if (userLevel >= mwclient.getData().getAccessLevel("AddTrait")) {
             jMenuAdminSubSetHouse.add(jMenuAdminSetFactionTraits);
         }
-        if ((userLevel >= mwclient.getData().getAccessLevel("CreateSubFaction")) && (userLevel >= mwclient.getData().getAccessLevel("SetSubFactionConfig"))) {
+        if ((userLevel >= mwclient.getData().getAccessLevel("CreateSubFaction")) &&
+                  (userLevel >= mwclient.getData().getAccessLevel("SetSubFactionConfig"))) {
             jMenuAdminSubSetHouse.add(jMenuAdminSetSubFactionConfigs);
         }
         if (userLevel >= mwclient.getData().getAccessLevel("SetFactionToFactionRewardPointMultiplier")) {
@@ -720,7 +721,7 @@ public class AdminMenu extends JMenu {
             jMenuAdminSubSet.add(jMenuAdminSetServerAmmoBan);
         }
         if (userLevel >= mwclient.getData().getAccessLevel("AdminSetServerTargetBan")) {
-        	jMenuAdminSubSet.add(jMenuAdminSetServerTargetBan);
+            jMenuAdminSubSet.add(jMenuAdminSetServerTargetBan);
         }
         if (userLevel >= mwclient.getData().getAccessLevel("AdminSetCommandLevel")) {
             jMenuAdminSubSet.add(jMenuAdminSetCommandLevel);
@@ -805,7 +806,7 @@ public class AdminMenu extends JMenu {
         }
 
         if (userLevel >= 101) {
-        	this.add(jMenuAdminPlayerFlags);
+            this.add(jMenuAdminPlayerFlags);
         }
     }// end CreateMenu();
 
@@ -835,7 +836,14 @@ public class AdminMenu extends JMenu {
             return;
         }
 
-        mwclient.sendChat(MWClient.CAMPAIGN_PREFIX + "c admincreateplanet#" + planetName + "#" + xcord + "#" + ycord + "#");
+        mwclient.sendChat(MWClient.CAMPAIGN_PREFIX +
+                                "c admincreateplanet#" +
+                                planetName +
+                                "#" +
+                                xcord +
+                                "#" +
+                                ycord +
+                                "#");
         mwclient.reloadData();
         int id = CampaignData.cd.getPlanetByName(planetName).getId();
         new PlanetEditorDialog(mwclient, planetName, id);
@@ -857,7 +865,19 @@ public class AdminMenu extends JMenu {
     }
 
     public void jMenuAdminCreateFactory_actionPerformed(ActionEvent e) {
-        Object[] factoryTypes = { "All", "Mek", "Vehicles", "Mek & Vehicles", "Infantry", "Mek & Infantry", "Vehicles & Infantry", "Mek & Infantry & Vehicles", "ProtoMeks", "Mek & ProtoMeks", "Vehicles & ProtoMek", "Mek & Vehicles & ProtoMek", "Infantry & ProtoMek", "Mek & Infantry & ProtoMek", "Vehicles & Infantry & ProtoMek", "Mek & Vehicles & Infantry & ProtoMek", "BattleArmor", "Mek & BattleArmor", "Vehicles & BattleArmor", "Mek & Vehicles & BattleArmor", "Infantry & BattleArmor", "Mek & Infantry & BattleArmor", "Vehicles & Infantry & BattleArmor", "Mek & Vehicles & Infantry & BattleArmor", "ProtoMeks & BattleArmor", "Mek & ProtoMeks & BattleArmor", "Vehicles & ProtoMek & BattleArmor", "Mek & Vehicles & ProtoMek & BattleArmor", "Infantry & ProtoMek & BattleArmor", "Mek & Infantry & ProtoMek & BattleArmor", "Vehicles & Infantry & ProtoMek & BattleArmor", "Mek & Vehicles & Infantry & ProtoMek & BattleArmor", "VTOL", "Aero" };
+        Object[] factoryTypes = { "All", "Mek", "Vehicles", "Mek & Vehicles", "Infantry", "Mek & Infantry",
+                                  "Vehicles & Infantry", "Mek & Infantry & Vehicles", "ProtoMeks", "Mek & ProtoMeks",
+                                  "Vehicles & ProtoMek", "Mek & Vehicles & ProtoMek", "Infantry & ProtoMek",
+                                  "Mek & Infantry & ProtoMek", "Vehicles & Infantry & ProtoMek",
+                                  "Mek & Vehicles & Infantry & ProtoMek", "BattleArmor", "Mek & BattleArmor",
+                                  "Vehicles & BattleArmor", "Mek & Vehicles & BattleArmor", "Infantry & BattleArmor",
+                                  "Mek & Infantry & BattleArmor", "Vehicles & Infantry & BattleArmor",
+                                  "Mek & Vehicles & Infantry & BattleArmor", "ProtoMeks & BattleArmor",
+                                  "Mek & ProtoMeks & BattleArmor", "Vehicles & ProtoMek & BattleArmor",
+                                  "Mek & Vehicles & ProtoMek & BattleArmor", "Infantry & ProtoMek & BattleArmor",
+                                  "Mek & Infantry & ProtoMek & BattleArmor",
+                                  "Vehicles & Infantry & ProtoMek & BattleArmor",
+                                  "Mek & Vehicles & Infantry & ProtoMek & BattleArmor", "VTOL", "Aero" };
 
         Object[] factorySize = { "Light", "Medium", "Heavy", "Assault" };
         int i;
@@ -886,7 +906,13 @@ public class AdminMenu extends JMenu {
             return;
         }
 
-        String factoryTypestr = (String) JOptionPane.showInputDialog(mwclient.getMainFrame(), "Select factory production", "Factory Production", JOptionPane.INFORMATION_MESSAGE, null, factoryTypes, factoryTypes[0]);
+        String factoryTypestr = (String) JOptionPane.showInputDialog(mwclient.getMainFrame(),
+              "Select factory production",
+              "Factory Production",
+              JOptionPane.INFORMATION_MESSAGE,
+              null,
+              factoryTypes,
+              factoryTypes[0]);
 
         if ((factoryTypestr == null) || (factoryTypestr.length() == 0)) {
             return;
@@ -900,7 +926,13 @@ public class AdminMenu extends JMenu {
 
         int factoryTypeint = i;
 
-        String factorySizestr = (String) JOptionPane.showInputDialog(mwclient.getMainFrame(), "Select a factory size", "FactorySize", JOptionPane.INFORMATION_MESSAGE, null, factorySize, factorySize[0]);
+        String factorySizestr = (String) JOptionPane.showInputDialog(mwclient.getMainFrame(),
+              "Select a factory size",
+              "FactorySize",
+              JOptionPane.INFORMATION_MESSAGE,
+              null,
+              factorySize,
+              factorySize[0]);
 
         if ((factorySizestr == null) || (factorySizestr.length() == 0)) {
             return;
@@ -919,7 +951,15 @@ public class AdminMenu extends JMenu {
         }
 
         StringBuilder sendCommand = new StringBuilder();
-        sendCommand.append(planetNamestr.trim() + "#" + factoryName.trim() + "#" + factorySizestr.trim() + "#" + factionName.trim() + "#" + factoryTypeint);
+        sendCommand.append(planetNamestr.trim() +
+                                 "#" +
+                                 factoryName.trim() +
+                                 "#" +
+                                 factorySizestr.trim() +
+                                 "#" +
+                                 factionName.trim() +
+                                 "#" +
+                                 factoryTypeint);
         sendCommand.append("#");
         sendCommand.append(factoryBuildTable);
         sendCommand.append("#");
@@ -1024,7 +1064,13 @@ public class AdminMenu extends JMenu {
             return;
         }
 
-        mwclient.sendChat(MWClient.CAMPAIGN_PREFIX + "c admincreateterrain#" + planetNamestr + "#" + terrainType + "#" + terrainChance);
+        mwclient.sendChat(MWClient.CAMPAIGN_PREFIX +
+                                "c admincreateterrain#" +
+                                planetNamestr +
+                                "#" +
+                                terrainType +
+                                "#" +
+                                terrainChance);
         mwclient.reloadData();
 
     }
@@ -1040,7 +1086,8 @@ public class AdminMenu extends JMenu {
             return;
         }
 
-        String terrainType = JOptionPane.showInputDialog(mwclient.getMainFrame(), "Select the Terrain position: start with 0 for the top most terrain in the information box");
+        String terrainType = JOptionPane.showInputDialog(mwclient.getMainFrame(),
+              "Select the Terrain position: start with 0 for the top most terrain in the information box");
 
         if ((terrainType == null) || (terrainType.length() == 0)) {
             return;
@@ -1085,7 +1132,9 @@ public class AdminMenu extends JMenu {
             return;
         }
 
-        String points = JOptionPane.showInputDialog(mwclient.getMainFrame(), "Number of Points(Negative to remove Points)", "0");
+        String points = JOptionPane.showInputDialog(mwclient.getMainFrame(),
+              "Number of Points(Negative to remove Points)",
+              "0");
 
         if ((points == null) || (points.length() == 0)) {
             return;
@@ -1096,7 +1145,8 @@ public class AdminMenu extends JMenu {
     }
 
     public void jMenuAdminTerminateAll_actionPerformed(ActionEvent e) {
-        int confirm = JOptionPane.showConfirmDialog(mwclient.getMainFrame(), "Are you sure you want to terminate all waiting/running games?");
+        int confirm = JOptionPane.showConfirmDialog(mwclient.getMainFrame(),
+              "Are you sure you want to terminate all waiting/running games?");
         if (confirm != JOptionPane.YES_OPTION) {
             return;
         }
@@ -1114,7 +1164,8 @@ public class AdminMenu extends JMenu {
             return;
         }
 
-        String fluFilePrefix = JOptionPane.showInputDialog(mwclient.getMainFrame(), mwclient.moneyOrFluMessage(false, true, -1) + " File Prefix:");
+        String fluFilePrefix = JOptionPane.showInputDialog(mwclient.getMainFrame(),
+              mwclient.moneyOrFluMessage(false, true, -1) + " File Prefix:");
 
         if ((fluFilePrefix == null) || (fluFilePrefix.length() == 0)) {
             return;
@@ -1137,23 +1188,44 @@ public class AdminMenu extends JMenu {
             return;
         }
 
-        String Typestr = (String) JOptionPane.showInputDialog(mwclient.getMainFrame(), "Select component type", "Component Type", JOptionPane.INFORMATION_MESSAGE, null, Types, Types[0]);
+        String Typestr = (String) JOptionPane.showInputDialog(mwclient.getMainFrame(),
+              "Select component type",
+              "Component Type",
+              JOptionPane.INFORMATION_MESSAGE,
+              null,
+              Types,
+              Types[0]);
 
         if ((Typestr == null) || (Typestr.length() == 0)) {
             return;
         }
 
-        String Sizestr = (String) JOptionPane.showInputDialog(mwclient.getMainFrame(), "Select a component size", "Component Size", JOptionPane.INFORMATION_MESSAGE, null, Size, Size[0]);
+        String Sizestr = (String) JOptionPane.showInputDialog(mwclient.getMainFrame(),
+              "Select a component size",
+              "Component Size",
+              JOptionPane.INFORMATION_MESSAGE,
+              null,
+              Size,
+              Size[0]);
         if ((Sizestr == null) || (Sizestr.length() == 0)) {
             return;
         }
 
-        String components = JOptionPane.showInputDialog(mwclient.getMainFrame(), "Amount of Components to add(negative number to subtract)");
+        String components = JOptionPane.showInputDialog(mwclient.getMainFrame(),
+              "Amount of Components to add(negative number to subtract)");
         if ((components == null) || (components.length() == 0)) {
             return;
         }
 
-        mwclient.sendChat(MWClient.CAMPAIGN_PREFIX + "c admingrantcomponents#" + factionName + "#" + Typestr + "#" + Sizestr + "#" + components);
+        mwclient.sendChat(MWClient.CAMPAIGN_PREFIX +
+                                "c admingrantcomponents#" +
+                                factionName +
+                                "#" +
+                                Typestr +
+                                "#" +
+                                Sizestr +
+                                "#" +
+                                components);
     }
 
     public void jMenuAdminExchangePlanetOwnership_actionPerformed(ActionEvent e) {
@@ -1190,7 +1262,15 @@ public class AdminMenu extends JMenu {
             return;
         }
 
-        mwclient.sendChat(MWClient.CAMPAIGN_PREFIX + "c adminexchangeplanetownership#" + planetName + "#" + winningHouseName + "#" + losingHouseName + "#" + amount);
+        mwclient.sendChat(MWClient.CAMPAIGN_PREFIX +
+                                "c adminexchangeplanetownership#" +
+                                planetName +
+                                "#" +
+                                winningHouseName +
+                                "#" +
+                                losingHouseName +
+                                "#" +
+                                amount);
     }
 
     public void jMenuAdminSetHousePriceMod_actionPerformed(ActionEvent e) {
@@ -1206,13 +1286,25 @@ public class AdminMenu extends JMenu {
             return;
         }
 
-        String unitTypestr = (String) JOptionPane.showInputDialog(mwclient.getMainFrame(), "Select Unit Type", "Unit Type", JOptionPane.INFORMATION_MESSAGE, null, unitTypes, unitTypes[0]);
+        String unitTypestr = (String) JOptionPane.showInputDialog(mwclient.getMainFrame(),
+              "Select Unit Type",
+              "Unit Type",
+              JOptionPane.INFORMATION_MESSAGE,
+              null,
+              unitTypes,
+              unitTypes[0]);
 
         if ((unitTypestr == null) || (unitTypestr.length() == 0)) {
             return;
         }
 
-        String unitClassstr = (String) JOptionPane.showInputDialog(mwclient.getMainFrame(), "Select Unit Class", "Unit Class", JOptionPane.INFORMATION_MESSAGE, null, unitClass, unitClass[0]);
+        String unitClassstr = (String) JOptionPane.showInputDialog(mwclient.getMainFrame(),
+              "Select Unit Class",
+              "Unit Class",
+              JOptionPane.INFORMATION_MESSAGE,
+              null,
+              unitClass,
+              unitClass[0]);
 
         if ((unitClassstr == null) || (unitClassstr.length() == 0)) {
             return;
@@ -1224,7 +1316,15 @@ public class AdminMenu extends JMenu {
             return;
         }
 
-        mwclient.sendChat(MWClient.CAMPAIGN_PREFIX + "c adminsethousepricemod#" + factionName + "#" + unitTypestr + "#" + unitClassstr + "#" + priceMod);
+        mwclient.sendChat(MWClient.CAMPAIGN_PREFIX +
+                                "c adminsethousepricemod#" +
+                                factionName +
+                                "#" +
+                                unitTypestr +
+                                "#" +
+                                unitClassstr +
+                                "#" +
+                                priceMod);
     }
 
     public void jMenuAdminSetHouseFluMod_actionPerformed(ActionEvent e) {
@@ -1240,13 +1340,25 @@ public class AdminMenu extends JMenu {
             return;
         }
 
-        String unitTypestr = (String) JOptionPane.showInputDialog(mwclient.getMainFrame(), "Select Unit Type", "Unit Type", JOptionPane.INFORMATION_MESSAGE, null, unitTypes, unitTypes[0]);
+        String unitTypestr = (String) JOptionPane.showInputDialog(mwclient.getMainFrame(),
+              "Select Unit Type",
+              "Unit Type",
+              JOptionPane.INFORMATION_MESSAGE,
+              null,
+              unitTypes,
+              unitTypes[0]);
 
         if ((unitTypestr == null) || (unitTypestr.length() == 0)) {
             return;
         }
 
-        String unitClassstr = (String) JOptionPane.showInputDialog(mwclient.getMainFrame(), "Select Unit Class", "Unit Class", JOptionPane.INFORMATION_MESSAGE, null, unitClass, unitClass[0]);
+        String unitClassstr = (String) JOptionPane.showInputDialog(mwclient.getMainFrame(),
+              "Select Unit Class",
+              "Unit Class",
+              JOptionPane.INFORMATION_MESSAGE,
+              null,
+              unitClass,
+              unitClass[0]);
 
         if ((unitClassstr == null) || (unitClassstr.length() == 0)) {
             return;
@@ -1258,7 +1370,15 @@ public class AdminMenu extends JMenu {
             return;
         }
 
-        mwclient.sendChat(MWClient.CAMPAIGN_PREFIX + "c adminsethouseflumod#" + factionName + "#" + unitTypestr + "#" + unitClassstr + "#" + fluMod);
+        mwclient.sendChat(MWClient.CAMPAIGN_PREFIX +
+                                "c adminsethouseflumod#" +
+                                factionName +
+                                "#" +
+                                unitTypestr +
+                                "#" +
+                                unitClassstr +
+                                "#" +
+                                fluMod);
     }
 
     public void jMenuAdminSetHouseTechLevel_actionPerformed(ActionEvent e) {
@@ -1286,7 +1406,11 @@ public class AdminMenu extends JMenu {
             return;
         }
 
-        mwclient.sendChat(MWClient.CAMPAIGN_PREFIX + "c adminsethousetechlevel#" + factionName + "#" + techCombo.getSelectedIndex());
+        mwclient.sendChat(MWClient.CAMPAIGN_PREFIX +
+                                "c adminsethousetechlevel#" +
+                                factionName +
+                                "#" +
+                                techCombo.getSelectedIndex());
     }
 
     public void jMenuAdminSaveTheUniverse_actionPerformed(ActionEvent e) {
@@ -1303,7 +1427,10 @@ public class AdminMenu extends JMenu {
 
     public void jMenuAdminOmniVariantMod_actionPerformed(ActionEvent e) {
         UnitLoadingDialog unitLoadingDialog = new UnitLoadingDialog(mwclient.getMainFrame());
-        NewUnitViewerDialog unitSelector = new NewUnitViewerDialog(mwclient.getMainFrame(), unitLoadingDialog, mwclient,NewUnitViewerDialog.OMNI_VARIANT_SELECTOR);
+        NewUnitViewerDialog unitSelector = new NewUnitViewerDialog(mwclient.getMainFrame(),
+              unitLoadingDialog,
+              mwclient,
+              NewUnitViewerDialog.OMNI_VARIANT_SELECTOR);
         unitSelector.setName("Unit Selector");
         new Thread(unitSelector).start();
     }
@@ -1313,7 +1440,7 @@ public class AdminMenu extends JMenu {
     }
 
     public void jMenuAdminServerTargetBan_actionPerformed(ActionEvent e) {
-    	new BannedTargetingDialog(mwclient);
+        new BannedTargetingDialog(mwclient);
     }
 
     public void jMenuAdminListMuls_actionPerformed(ActionEvent e) {
@@ -1439,7 +1566,13 @@ public class AdminMenu extends JMenu {
 
         Object[] unitTypes = { "Mek", "Vehicles", "Infantry", "ProtoMeks", "BattleArmor", "Aero" };
 
-        String unitTypestr = (String) JOptionPane.showInputDialog(mwclient.getMainFrame(), "Select Unit Type", "Unit Type", JOptionPane.INFORMATION_MESSAGE, null, unitTypes, unitTypes[0]);
+        String unitTypestr = (String) JOptionPane.showInputDialog(mwclient.getMainFrame(),
+              "Select Unit Type",
+              "Unit Type",
+              JOptionPane.INFORMATION_MESSAGE,
+              null,
+              unitTypes,
+              unitTypes[0]);
 
         if ((unitTypestr == null) || (unitTypestr.length() == 0)) {
             return;
@@ -1553,7 +1686,13 @@ public class AdminMenu extends JMenu {
             return;
         }
 
-        mwclient.sendChat(MWClient.CAMPAIGN_PREFIX + "c adminsetplanetmapsize#" + planetNamestr + "#" + xSize + "#" + ySize);
+        mwclient.sendChat(MWClient.CAMPAIGN_PREFIX +
+                                "c adminsetplanetmapsize#" +
+                                planetNamestr +
+                                "#" +
+                                xSize +
+                                "#" +
+                                ySize);
         mwclient.reloadData();
     }
 
@@ -1567,7 +1706,10 @@ public class AdminMenu extends JMenu {
             return;
         }
 
-        int result = JOptionPane.showConfirmDialog(null, "Set as HomeWorld?", "Set HomeWorld", JOptionPane.YES_NO_CANCEL_OPTION);
+        int result = JOptionPane.showConfirmDialog(null,
+              "Set as HomeWorld?",
+              "Set HomeWorld",
+              JOptionPane.YES_NO_CANCEL_OPTION);
 
         if (result == JOptionPane.CANCEL_OPTION) {
             return;
@@ -1605,7 +1747,13 @@ public class AdminMenu extends JMenu {
             return;
         }
 
-        mwclient.sendChat(MWClient.CAMPAIGN_PREFIX + "c adminsetplanetboardsize#" + planetNamestr + "#" + xSize + "#" + ySize);
+        mwclient.sendChat(MWClient.CAMPAIGN_PREFIX +
+                                "c adminsetplanetboardsize#" +
+                                planetNamestr +
+                                "#" +
+                                xSize +
+                                "#" +
+                                ySize);
         mwclient.reloadData();
     }
 
@@ -1655,7 +1803,13 @@ public class AdminMenu extends JMenu {
             return;
         }
 
-        mwclient.sendChat(MWClient.CAMPAIGN_PREFIX + "c adminsetplanettemperature#" + planetNamestr + "#" + lowTemp + "#" + hiTemp);
+        mwclient.sendChat(MWClient.CAMPAIGN_PREFIX +
+                                "c adminsetplanettemperature#" +
+                                planetNamestr +
+                                "#" +
+                                lowTemp +
+                                "#" +
+                                hiTemp);
         mwclient.reloadData();
     }
 
@@ -1703,12 +1857,12 @@ public class AdminMenu extends JMenu {
         mwclient.sendChat(MWClient.CAMPAIGN_PREFIX + "listmuls CAFM");
     }
 
-	private void jMenuAdminReloadSupportUnits_actionPerformed(ActionEvent e) {
-		mwclient.sendChat(MWClient.CAMPAIGN_PREFIX + "adminReloadSupportUnits");
-	}
+    private void jMenuAdminReloadSupportUnits_actionPerformed(ActionEvent e) {
+        mwclient.sendChat(MWClient.CAMPAIGN_PREFIX + "adminReloadSupportUnits");
+    }
 
-	private void jMenuAdminReloadSanitizer_actionPerformed(ActionEvent e) {
-		mwclient.sendChat(MWClient.CAMPAIGN_PREFIX + "adminReloadHTMLSanitizerConfigs");
-	}
+    private void jMenuAdminReloadSanitizer_actionPerformed(ActionEvent e) {
+        mwclient.sendChat(MWClient.CAMPAIGN_PREFIX + "adminReloadHTMLSanitizerConfigs");
+    }
 
 }// end AdminMenu class

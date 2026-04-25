@@ -9,7 +9,7 @@
  * A PARTICULAR PURPOSE. See the GNU General Public License for more details.
  */
 
-package admin.dialog.serverConfigDialogs;
+package mekwars.admin.dialog.serverConfigDialogs;
 
 import java.awt.Component;
 import java.awt.GridLayout;
@@ -28,19 +28,19 @@ import common.util.SpringLayoutHelper;
 /**
  * @author jtighe
  * @author Spork
- *
- * Server Configuration Page. All new Server Options need to be added to this page or subPanels as well.
+ *       <p>
+ *       Server Configuration Page. All new Server Options need to be added to this page or subPanels as well.
  */
 public class RewardPanel extends JPanel {
 
 
-	private static final long serialVersionUID = 3402880281077089882L;
+    private static final long serialVersionUID = 3402880281077089882L;
 
-	private JTextField baseTextField = new JTextField(5);
+    private JTextField baseTextField = new JTextField(5);
     private JCheckBox BaseCheckBox = new JCheckBox();
 
     public RewardPanel(MWClient mwclient) {
-		super();
+        super();
         /*
          * REWARD MENU CONSTRUCTION
          */
@@ -66,12 +66,12 @@ public class RewardPanel extends JPanel {
         BaseCheckBox.setName("AllowInfluenceForRewards");
         rewardCBoxGrid.add(BaseCheckBox);
 
-		// @Author Salient (mwosux@gmail.com) , Add RP for CBills
-		BaseCheckBox = new JCheckBox(mwclient.moneyOrFluMessage(true, true, -1));
+        // @Author Salient (mwosux@gmail.com) , Add RP for CBills
+        BaseCheckBox = new JCheckBox(mwclient.moneyOrFluMessage(true, true, -1));
 
-		BaseCheckBox.setToolTipText("Check to allow players to exchange RP for CBills");
-		BaseCheckBox.setName("AllowCBillsForRewards");
-		rewardCBoxGrid.add(BaseCheckBox);
+        BaseCheckBox.setToolTipText("Check to allow players to exchange RP for CBills");
+        BaseCheckBox.setName("AllowCBillsForRewards");
+        rewardCBoxGrid.add(BaseCheckBox);
 
         BaseCheckBox = new JCheckBox("Techs");
 
@@ -93,7 +93,8 @@ public class RewardPanel extends JPanel {
 
         BaseCheckBox = new JCheckBox("Repods");
 
-        BaseCheckBox.setToolTipText("<html>Check to allow players to repod units with RP<br>This allows a player to repod a unit<br>even if its not on their build table<br>Random repod options based<br>on the random repod settings</html>");
+        BaseCheckBox.setToolTipText(
+              "<html>Check to allow players to repod units with RP<br>This allows a player to repod a unit<br>even if its not on their build table<br>Random repod options based<br>on the random repod settings</html>");
         BaseCheckBox.setName("GlobalRepodAllowed");
         rewardCBoxGrid.add(BaseCheckBox);
 
@@ -136,17 +137,21 @@ public class RewardPanel extends JPanel {
         rewardSpring1.add(baseTextField);
 
         baseTextField = new JTextField(5);
-        rewardSpring1.add(new JLabel(mwclient.moneyOrFluMessage(false, true, -1) + " per " + mwclient.getserverConfigs("RPShortName"), SwingConstants.TRAILING));
+        rewardSpring1.add(new JLabel(mwclient.moneyOrFluMessage(false, true, -1) +
+                                           " per " +
+                                           mwclient.getserverConfigs("RPShortName"), SwingConstants.TRAILING));
         baseTextField.setToolTipText("Amount of flu given in exhcange for 1 RP");
         baseTextField.setName("InfluenceForARewardPoint");
         rewardSpring1.add(baseTextField);
 
-		// @Author Salient (mwosux@gmail.com) , Add RP for CBills
-		baseTextField = new JTextField(5);
-		rewardSpring1.add(new JLabel(mwclient.moneyOrFluMessage(true, true, -1) + " per " + mwclient.getserverConfigs("RPShortName"), SwingConstants.TRAILING));
-		baseTextField.setToolTipText("Amount of CBills given in exhcange for 1 RP");
-		baseTextField.setName("CBillsForARewardPoint");
-		rewardSpring1.add(baseTextField);
+        // @Author Salient (mwosux@gmail.com) , Add RP for CBills
+        baseTextField = new JTextField(5);
+        rewardSpring1.add(new JLabel(mwclient.moneyOrFluMessage(true, true, -1) +
+                                           " per " +
+                                           mwclient.getserverConfigs("RPShortName"), SwingConstants.TRAILING));
+        baseTextField.setToolTipText("Amount of CBills given in exhcange for 1 RP");
+        baseTextField.setName("CBillsForARewardPoint");
+        rewardSpring1.add(baseTextField);
 
         baseTextField = new JTextField(5);
         rewardSpring1.add(new JLabel("Rare Multiplier:", SwingConstants.TRAILING));
@@ -238,5 +243,5 @@ public class RewardPanel extends JPanel {
         rewardBox.add(rewardCBoxGrid);
         rewardBox.add(rewardGrid);
         add(rewardBox);
-	}
+    }
 }

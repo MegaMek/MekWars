@@ -1,15 +1,15 @@
 /*
  * MekWars - Copyright (C) 2011
- * 
- * 
+ *
+ *
  * This program is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software
  * Foundation; either version 2 of the License, or (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
  * A PARTICULAR PURPOSE. See the GNU General Public License for more details.
  */
 
-package admin.dialog.serverConfigDialogs;
+package mekwars.admin.dialog.serverConfigDialogs;
 
 import javax.swing.BoxLayout;
 import javax.swing.JCheckBox;
@@ -27,12 +27,12 @@ import common.util.SpringLayoutHelper;
  */
 public class DefectionPanel extends JPanel {
 
-	private static final long serialVersionUID = 4431690943581192710L;
-	private JTextField baseTextField = new JTextField(5);
-	private JCheckBox BaseCheckBox = new JCheckBox();
-	
-	public DefectionPanel() {
-		super();
+    private static final long serialVersionUID = 4431690943581192710L;
+    private JTextField baseTextField = new JTextField(5);
+    private JCheckBox BaseCheckBox = new JCheckBox();
+
+    public DefectionPanel() {
+        super();
         /*
          * DEFECTION PANEL CONSTRUCTION Panel which controls most defection-related matter. Some SOL-specific things handled in Newbie panel.
          */
@@ -74,31 +74,36 @@ public class DefectionPanel extends JPanel {
         // set up defection flat loss boxes
         baseTextField = new JTextField(5);
         defectionTextPanel2.add(new JLabel("Unit Loss Flat:", SwingConstants.TRAILING));
-        baseTextField.setToolTipText("<HTML>Amount of player's units lost during defection.<br>No effect if % is > 0!</HTML>");
+        baseTextField.setToolTipText(
+              "<HTML>Amount of player's units lost during defection.<br>No effect if % is > 0!</HTML>");
         baseTextField.setName("DefectionUnitLossFlat");
         defectionTextPanel2.add(baseTextField);
 
         baseTextField = new JTextField(5);
         defectionTextPanel2.add(new JLabel("Flu Loss Flat:", SwingConstants.TRAILING));
-        baseTextField.setToolTipText("<HTML>Amount of player's influence lost during defection.<br>No effect if % is > 0!</HTML>");
+        baseTextField.setToolTipText(
+              "<HTML>Amount of player's influence lost during defection.<br>No effect if % is > 0!</HTML>");
         baseTextField.setName("DefectionInfluenceLossFlat");
         defectionTextPanel2.add(baseTextField);
 
         baseTextField = new JTextField(5);
         defectionTextPanel2.add(new JLabel("RP Loss Flat:", SwingConstants.TRAILING));
-        baseTextField.setToolTipText("<HTML>Amount of player's RP lost during defection.<br>No effect if % is > 0!</HTML>");
+        baseTextField.setToolTipText(
+              "<HTML>Amount of player's RP lost during defection.<br>No effect if % is > 0!</HTML>");
         baseTextField.setName("DefectionRewardLossFlat");
         defectionTextPanel2.add(baseTextField);
 
         baseTextField = new JTextField(5);
         defectionTextPanel2.add(new JLabel("Money Loss Flat:", SwingConstants.TRAILING));
-        baseTextField.setToolTipText("<HTML>Amount of player's money lost during defection.<br>No effect if % is > 0!</HTML>");
+        baseTextField.setToolTipText(
+              "<HTML>Amount of player's money lost during defection.<br>No effect if % is > 0!</HTML>");
         baseTextField.setName("DefectionCBillLossFlat");
         defectionTextPanel2.add(baseTextField);
 
         baseTextField = new JTextField(5);
         defectionTextPanel2.add(new JLabel("XP Loss Flat:", SwingConstants.TRAILING));
-        baseTextField.setToolTipText("<HTML>Amount of player's XP lost during defection.<br>No effect if % is > 0!</HTML>");
+        baseTextField.setToolTipText(
+              "<HTML>Amount of player's XP lost during defection.<br>No effect if % is > 0!</HTML>");
         baseTextField.setName("DefectionEXPLossFlat");
         defectionTextPanel2.add(baseTextField);
 
@@ -127,7 +132,8 @@ public class DefectionPanel extends JPanel {
 
         BaseCheckBox = new JCheckBox("SOL Faction Units");
 
-        BaseCheckBox.setToolTipText("<HTML>" + "If both this box and \"Reset Leaving SOL\" are checked, players will<br>receive faction units drawn from their new faction's tables instead of<br> SOL units on defection. Units will be taken from the Standard Folder ONLY.</HTML>");
+        BaseCheckBox.setToolTipText("<HTML>" +
+                                          "If both this box and \"Reset Leaving SOL\" are checked, players will<br>receive faction units drawn from their new faction's tables instead of<br> SOL units on defection. Units will be taken from the Standard Folder ONLY.</HTML>");
         BaseCheckBox.setName("FactionUnitsLeavingSOL");
         defectionBoxPanel.add(BaseCheckBox);
 
@@ -146,6 +152,6 @@ public class DefectionPanel extends JPanel {
         defectTemp.add(defectionBoxPanel);
 
         add(defectTemp);
-	}
+    }
 
 }

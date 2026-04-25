@@ -130,8 +130,7 @@ public class AutoUpdater {
     }
 
     /**
-     * Builds a list of file objects using the correct localDir from the
-     * list of expected file offsets in the manifest.
+     * Builds a list of file objects using the correct localDir from the list of expected file offsets in the manifest.
      */
     public List<File> getExpectedClientFileStructure(VersionManifest manifest) {
         //get the list of file offsets that the manifest says should

@@ -1,15 +1,15 @@
 /*
  * MekWars - Copyright (C) 2011
- * 
- * 
+ *
+ *
  * This program is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software
  * Foundation; either version 2 of the License, or (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
  * A PARTICULAR PURPOSE. See the GNU General Public License for more details.
  */
 
-package admin.dialog.serverConfigDialogs;
+package mekwars.admin.dialog.serverConfigDialogs;
 
 import javax.swing.BoxLayout;
 import javax.swing.JCheckBox;
@@ -28,12 +28,12 @@ import common.util.SpringLayoutHelper;
  */
 public class SinglePlayerFactionPanel extends JPanel {
 
-	private static final long serialVersionUID = -6458150681823841221L;
-	private JTextField baseTextField = new JTextField(5);
-	private JCheckBox BaseCheckBox = new JCheckBox();
-	
-	public SinglePlayerFactionPanel() {
-		super();
+    private static final long serialVersionUID = -6458150681823841221L;
+    private JTextField baseTextField = new JTextField(5);
+    private JCheckBox BaseCheckBox = new JCheckBox();
+
+    public SinglePlayerFactionPanel() {
+        super();
         /*
          * Single Player Faction Configuration Panel Construction
          */
@@ -77,7 +77,8 @@ public class SinglePlayerFactionPanel extends JPanel {
 
         baseTextField = new JTextField(5);
         playerFactionPanel.add(new JLabel("Base Common Table Chances:", SwingConstants.TRAILING));
-        baseTextField.setToolTipText("<HTML>Base number of shares for the common build table<br>in all of the starting factions build tables.</html>");
+        baseTextField.setToolTipText(
+              "<HTML>Base number of shares for the common build table<br>in all of the starting factions build tables.</html>");
         baseTextField.setName("BaseCommonBuildTableShares");
         playerFactionPanel.add(baseTextField);
 
@@ -92,9 +93,20 @@ public class SinglePlayerFactionPanel extends JPanel {
         for (int type = 0; type < Unit.MAXBUILD; type++) {
             for (int weight = 0; weight <= Unit.ASSAULT; weight++) {
                 baseTextField = new JTextField(5);
-                playerFactionPanel2.add(new JLabel("Starting " + Unit.getWeightClassDesc(weight) + " " + Unit.getTypeClassDesc(type) + " Factory:", SwingConstants.TRAILING));
-                baseTextField.setToolTipText("Number of " + Unit.getWeightClassDesc(weight) + " " + Unit.getTypeClassDesc(type) + " factories a new faction starts with.");
-                baseTextField.setName("Starting" + Unit.getWeightClassDesc(weight) + Unit.getTypeClassDesc(type) + "Factory");
+                playerFactionPanel2.add(new JLabel("Starting " +
+                                                         Unit.getWeightClassDesc(weight) +
+                                                         " " +
+                                                         Unit.getTypeClassDesc(type) +
+                                                         " Factory:", SwingConstants.TRAILING));
+                baseTextField.setToolTipText("Number of " +
+                                                   Unit.getWeightClassDesc(weight) +
+                                                   " " +
+                                                   Unit.getTypeClassDesc(type) +
+                                                   " factories a new faction starts with.");
+                baseTextField.setName("Starting" +
+                                            Unit.getWeightClassDesc(weight) +
+                                            Unit.getTypeClassDesc(type) +
+                                            "Factory");
                 playerFactionPanel2.add(baseTextField);
             }
         }
@@ -105,6 +117,6 @@ public class SinglePlayerFactionPanel extends JPanel {
         masterPanel.add(playerFactionPanel);
         masterPanel.add(playerFactionPanel2);
         add(masterPanel);
-	}
+    }
 
 }

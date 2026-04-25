@@ -1,10 +1,10 @@
 /*
  * MekWars - Copyright (C) 2011
- * 
- * 
+ *
+ *
  * This program is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software
  * Foundation; either version 2 of the License, or (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
  * A PARTICULAR PURPOSE. See the GNU General Public License for more details.
  */
@@ -14,7 +14,7 @@
  * @author jtighe
  */
 
-package admin.dialog.serverConfigDialogs;
+package mekwars.admin.dialog.serverConfigDialogs;
 
 import javax.swing.BoxLayout;
 import javax.swing.JCheckBox;
@@ -33,8 +33,8 @@ public class TechnicianPanel extends JPanel {
     private JCheckBox BaseCheckBox = new JCheckBox();
     private static final long serialVersionUID = 4472081938721953252L;
 
-	public TechnicianPanel(MWClient mwclient) {
-		super();
+    public TechnicianPanel(MWClient mwclient) {
+        super();
         /*
          * TECH PANEL CONSTRUCTION Technician (and bays from XP) options.
          */
@@ -93,7 +93,8 @@ public class TechnicianPanel extends JPanel {
 
         baseTextField = new JTextField(5);
         techSpring.add(new JLabel("XP for Decrease:", SwingConstants.TRAILING));
-        baseTextField.setToolTipText("Amount of XP required to reduce hiring cost by 1 " + mwclient.moneyOrFluMessage(true, true, -1));
+        baseTextField.setToolTipText("Amount of XP required to reduce hiring cost by 1 " +
+                                           mwclient.moneyOrFluMessage(true, true, -1));
         baseTextField.setName("XPForDecrease");
         techSpring.add(baseTextField);
 
@@ -105,7 +106,14 @@ public class TechnicianPanel extends JPanel {
 
         baseTextField = new JTextField(5);
         techSpring.add(new JLabel("Additive Per Tech:", SwingConstants.TRAILING));
-        baseTextField.setToolTipText("<HTML>" + "Use additive costs -- each tech costs as much as the last one, plus the additive. EG -<br>" + "with .05 set, the first tech would cost .05, the second .10, the third .15, the fourth .20,<br>" + "such that your first 4 techs cost haf a Cbill (total) to maintain, while the 10th tech costs<br>" + "half a " + mwclient.moneyOrFluMessage(true, true, -1) + " all by himself. A cap on this price can be set, after which there is no further<br>" + "increase. The ceiling ABSOLUTELY MUST be a multiple of the additive.</HTML>");
+        baseTextField.setToolTipText("<HTML>" +
+                                           "Use additive costs -- each tech costs as much as the last one, plus the additive. EG -<br>" +
+                                           "with .05 set, the first tech would cost .05, the second .10, the third .15, the fourth .20,<br>" +
+                                           "such that your first 4 techs cost haf a Cbill (total) to maintain, while the 10th tech costs<br>" +
+                                           "half a " +
+                                           mwclient.moneyOrFluMessage(true, true, -1) +
+                                           " all by himself. A cap on this price can be set, after which there is no further<br>" +
+                                           "increase. The ceiling ABSOLUTELY MUST be a multiple of the additive.</HTML>");
         baseTextField.setName("AdditivePerTech");
         techSpring.add(baseTextField);
 
@@ -141,13 +149,19 @@ public class TechnicianPanel extends JPanel {
 
         baseTextField = new JTextField(5);
         techSpring.add(new JLabel("Unmaintain Penalty:", SwingConstants.TRAILING));
-        baseTextField.setToolTipText("" + "<HTML>Maintainance reduction for units which are already below 100. If the BaseLevel is lower than current<br>" + "level minus penalty, it is used instead. Example1: A unit has a maintainance level of 90 and is set to<br>" + "unmaintained status. The unmaint penalty is 10 and base elvel is 75. 90-10 = 80, so the base level of 75 is<br>" + "set. Example2: A unit has an mlevel of 80 and is set to unmaintained. 80 - 10 = 70. 70 is set and the base<br>" + "level (75) is ignored.</HTML>");
+        baseTextField.setToolTipText("" +
+                                           "<HTML>Maintainance reduction for units which are already below 100. If the BaseLevel is lower than current<br>" +
+                                           "level minus penalty, it is used instead. Example1: A unit has a maintainance level of 90 and is set to<br>" +
+                                           "unmaintained status. The unmaint penalty is 10 and base elvel is 75. 90-10 = 80, so the base level of 75 is<br>" +
+                                           "set. Example2: A unit has an mlevel of 80 and is set to unmaintained. 80 - 10 = 70. 70 is set and the base<br>" +
+                                           "level (75) is ignored.</HTML>");
         baseTextField.setName("UnmaintainedPenalty");
         techSpring.add(baseTextField);
 
         baseTextField = new JTextField(5);
         techSpring.add(new JLabel("Transfer Scrap Level:", SwingConstants.TRAILING));
-        baseTextField.setToolTipText("<HTML>Units @ or under this maint. level must survive a scrap check<br>to be transfered. Set to 0 to disable</HTML>");
+        baseTextField.setToolTipText(
+              "<HTML>Units @ or under this maint. level must survive a scrap check<br>to be transfered. Set to 0 to disable</HTML>");
         baseTextField.setName("TransferScrapLevel");
         techSpring.add(baseTextField);
 
@@ -279,13 +293,15 @@ public class TechnicianPanel extends JPanel {
 
         baseTextField = new JTextField(5);
         techSpring.add(new JLabel("Non-House Unit Increased Techs:", SwingConstants.TRAILING));
-        baseTextField.setToolTipText("Float field.  Multiplier to tech cost of non-house units.  Only used with Tech Repair.");
+        baseTextField.setToolTipText(
+              "Float field.  Multiplier to tech cost of non-house units.  Only used with Tech Repair.");
         baseTextField.setName("NonFactionUnitsIncreasedTechs");
         techSpring.add(baseTextField);
 
         baseTextField = new JTextField(5);
         techSpring.add(new JLabel("Max Techs to Hire:", SwingConstants.TRAILING));
-        baseTextField.setToolTipText("Integer field.  Max number of techs that can be hired.  Set to -1 for unlimited.  Users with more than this number of techs will lose them at next login.");
+        baseTextField.setToolTipText(
+              "Integer field.  Max number of techs that can be hired.  Set to -1 for unlimited.  Users with more than this number of techs will lose them at next login.");
         baseTextField.setName("MaxTechsToHire");
         techSpring.add(baseTextField);
 
@@ -295,5 +311,5 @@ public class TechnicianPanel extends JPanel {
         add(techsBox);
 
 
-	}
+    }
 }

@@ -14,7 +14,7 @@
  * for more details.
  */
 
-package admin.dialog;
+package mekwars.admin.dialog;
 
 import java.awt.Dimension;
 import java.awt.event.ActionEvent;
@@ -23,18 +23,7 @@ import java.text.DecimalFormat;
 import java.util.Enumeration;
 import java.util.StringTokenizer;
 import java.util.TreeMap;
-
-import javax.swing.BoxLayout;
-import javax.swing.JButton;
-import javax.swing.JDialog;
-import javax.swing.JLabel;
-import javax.swing.JOptionPane;
-import javax.swing.JPanel;
-import javax.swing.JScrollPane;
-import javax.swing.JTabbedPane;
-import javax.swing.JTextField;
-import javax.swing.ScrollPaneConstants;
-import javax.swing.SpringLayout;
+import javax.swing.*;
 
 import client.MWClient;
 import common.Equipment;
@@ -74,12 +63,12 @@ public final class ComponentDisplayDialog extends JDialog implements ActionListe
     private JScrollPane MasterPanel = new JScrollPane();
 
     private int displayType = 0;
-    
+
     // Text boxes
     JTabbedPane ConfigPane = new JTabbedPane();
 
     public ComponentDisplayDialog(MWClient c, int type) {
-    	
+
         super(c.getMainFrame(), "Component Display Dialog", true);
 
         // save the client
@@ -91,7 +80,7 @@ public final class ComponentDisplayDialog extends JDialog implements ActionListe
         MWLogger.errLog("Year: " + mwclient.getserverConfigs("CampaignYear"));
         int year = Integer.parseInt(mwclient.getserverConfigs("CampaignYear"));
 
-        
+
         // Set the tooltips and actions for dialouge buttons
         okayButton.setActionCommand(okayCommand);
         cancelButton.setActionCommand(cancelCommand);
@@ -880,11 +869,10 @@ public final class ComponentDisplayDialog extends JDialog implements ActionListe
     }
 
     /**
-     * This Method tunnels through all of the panels to find the textfields and
-     * checkboxes. Once it find one it grabs the Name() param of the object and
-     * uses that to find out what the setting should be from the
+     * This Method tunnels through all of the panels to find the textfields and checkboxes. Once it find one it grabs
+     * the Name() param of the object and uses that to find out what the setting should be from the
      * mwclient.getserverConfigs() method.
-     * 
+     *
      * @param panel
      */
     public void findAndPopulateTextAndCheckBoxes(JPanel panel) {
@@ -940,16 +928,26 @@ public final class ComponentDisplayDialog extends JDialog implements ActionListe
             Equipment bme = mwclient.getBlackMarketEquipmentList().get(key);
 
             if (bme.isUpdated()) {
-                mwclient.sendChat(MWClient.CAMPAIGN_PREFIX + "c AdminSetBlackMarketSetting#" + key + "#" + bme.getMinCost() + "#" + bme.getMaxCost() + "#" + bme.getMinProduction() + "#" + bme.getMaxProduction());
+                mwclient.sendChat(MWClient.CAMPAIGN_PREFIX +
+                                        "c AdminSetBlackMarketSetting#" +
+                                        key +
+                                        "#" +
+                                        bme.getMinCost() +
+                                        "#" +
+                                        bme.getMaxCost() +
+                                        "#" +
+                                        bme.getMinProduction() +
+                                        "#" +
+                                        bme.getMaxProduction());
             }
         }
 
     }
 
     /**
-     * This method will tunnel through all of the panels of the config UI to
-     * find any changed text fields. The data is saved to the Equipment Hashmap
-     * 
+     * This method will tunnel through all of the panels of the config UI to find any changed text fields. The data is
+     * saved to the Equipment Hashmap
+     *
      * @param panel
      */
     public void findAndSaveConfigs(JPanel panel) {

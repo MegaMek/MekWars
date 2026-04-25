@@ -25,6 +25,8 @@ import common.campaign.pilot.Pilot;
 import common.util.MWLogger;
 import common.util.StringUtils;
 import megamek.client.ui.swing.UnitLoadingDialog;
+import mekwars.client.gui.sounds.MenuPopupSound;
+import mekwars.client.gui.sounds.MenuSound;
 
 //import client.gui.dialog.TableViewerDialog;
 
@@ -185,8 +187,8 @@ public class CMainFrame extends javax.swing.JFrame {
     boolean useAdvanceRepairs = false;
     boolean usePersonalPilotQueues = false;
 
-    private mekwars.client.gui.menuSound sound;
-    private mekwars.client.gui.menuPopupSound popupSound;
+    private MenuSound sound;
+    private MenuPopupSound popupSound;
 
     // CONSTRUCTOR
     public CMainFrame(client.MWClient myC) {
@@ -197,8 +199,8 @@ public class CMainFrame extends javax.swing.JFrame {
 
         useAdvanceRepairs = mwclient.isUsingAdvanceRepairs();
         usePersonalPilotQueues = Boolean.parseBoolean(mwclient.getserverConfigs("AllowPersonalPilotQueues"));
-        sound = new mekwars.client.gui.menuSound(mwclient);
-        popupSound = new mekwars.client.gui.menuPopupSound(mwclient);
+        sound = new MenuSound(mwclient);
+        popupSound = new MenuPopupSound(mwclient);
 
         /*
          * ATTACK/GAME Menu is a class unto itself and needs constant update
@@ -3650,47 +3652,3 @@ public class CMainFrame extends javax.swing.JFrame {
     }
 }
 
-class menuSound implements javax.swing.event.MenuListener {
-
-    client.MWClient mwclient = null;
-
-    public menuSound(client.MWClient mwclient) {
-        this.mwclient = mwclient;
-    }
-
-    public void menuCanceled(javax.swing.event.MenuEvent arg0) {
-    }
-
-    public void menuDeselected(javax.swing.event.MenuEvent arg0) {
-    }
-
-    public void menuSelected(javax.swing.event.MenuEvent arg0) {
-
-        if (mwclient.getConfig().isParam("ENABLEMENUSOUND")) {
-            mwclient.doPlaySound(mwclient.getConfigParam("SOUNDONMENU"));
-        }
-    }
-}
-
-class menuPopupSound implements javax.swing.event.MenuListener {
-
-    client.MWClient mwclient = null;
-
-    public menuPopupSound(client.MWClient mwclient) {
-        this.mwclient = mwclient;
-    }
-
-    public void menuCanceled(javax.swing.event.MenuEvent arg0) {
-    }
-
-    public void menuDeselected(javax.swing.event.MenuEvent arg0) {
-    }
-
-    public void menuSelected(javax.swing.event.MenuEvent arg0) {
-
-        if (mwclient.getConfig().isParam("ENABLEMENUPOPUPSOUND")) {
-            mwclient.doPlaySound(mwclient.getConfigParam("SOUNDONMENUPOPUP"));
-        }
-    }
-
-}

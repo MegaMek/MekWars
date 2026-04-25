@@ -1,15 +1,15 @@
 /*
  * MekWars - Copyright (C) 2011
- * 
- * 
+ *
+ *
  * This program is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software
  * Foundation; either version 2 of the License, or (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
  * A PARTICULAR PURPOSE. See the GNU General Public License for more details.
  */
 
-package admin.dialog.serverConfigDialogs;
+package mekwars.admin.dialog.serverConfigDialogs;
 
 import java.awt.GridLayout;
 
@@ -30,13 +30,14 @@ import common.util.SpringLayoutHelper;
 public class ProductionPanel extends JPanel {
 
     /**
-	 * 
-	 */
-	private static final long serialVersionUID = 9048716063514829354L;
-	private JTextField baseTextField = new JTextField(5);
+     *
+     */
+    private static final long serialVersionUID = 9048716063514829354L;
+    private JTextField baseTextField = new JTextField(5);
     private JCheckBox BaseCheckBox = new JCheckBox();
+
     public ProductionPanel() {
-		super();
+        super();
         /*
          * PRODUCTION/FACTORY PANEL CONSTRUCTION
          */
@@ -112,13 +113,16 @@ public class ProductionPanel extends JPanel {
 
         baseTextField = new JTextField(5);
         prodMiscPanel.add(new JLabel("Comp Gain Every:", SwingConstants.TRAILING));
-        baseTextField.setToolTipText("<HTML>" + "Number of ticks which should pass before component gains<br>" + "are aggregated and displayed to a faction. Recommended: 4</HTML>");
+        baseTextField.setToolTipText("<HTML>" +
+                                           "Number of ticks which should pass before component gains<br>" +
+                                           "are aggregated and displayed to a faction. Recommended: 4</HTML>");
         baseTextField.setName("ShowComponentGainEvery");
         prodMiscPanel.add(baseTextField);
 
         baseTextField = new JTextField(5);
         prodMiscPanel.add(new JLabel("Disputed Planet Color:", SwingConstants.TRAILING));
-        baseTextField.setToolTipText("<html>Hex color a planet will show up as<br>When no single faction owns more<br>then the minimum amount of land.</html");
+        baseTextField.setToolTipText(
+              "<html>Hex color a planet will show up as<br>When no single faction owns more<br>then the minimum amount of land.</html");
         baseTextField.setName("DisputedPlanetColor");
         prodMiscPanel.add(baseTextField);
 
@@ -136,7 +140,8 @@ public class ProductionPanel extends JPanel {
         // Check Box Spring
         BaseCheckBox = new JCheckBox();
         prodCBoxSpring.add(new JLabel("Produce w/o factory:", SwingConstants.TRAILING));
-        BaseCheckBox.setToolTipText("If checked, components will be produced even if no factory of a type/weightclass is owned");
+        BaseCheckBox.setToolTipText(
+              "If checked, components will be produced even if no factory of a type/weightclass is owned");
         BaseCheckBox.setName("ProduceComponentsWithNoFactory");
         prodCBoxSpring.add(BaseCheckBox);
 
@@ -226,5 +231,5 @@ public class ProductionPanel extends JPanel {
         add(prodGrid);
         add(prodCBoxSpring);
         add(prodCrit);
-	}
+    }
 }

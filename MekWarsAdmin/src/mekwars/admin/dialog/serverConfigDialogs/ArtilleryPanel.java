@@ -1,15 +1,15 @@
 /*
  * MekWars - Copyright (C) 2011
- * 
- * 
+ *
+ *
  * This program is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software
  * Foundation; either version 2 of the License, or (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
  * A PARTICULAR PURPOSE. See the GNU General Public License for more details.
  */
 
-package admin.dialog.serverConfigDialogs;
+package mekwars.admin.dialog.serverConfigDialogs;
 
 import java.awt.GridLayout;
 
@@ -29,15 +29,15 @@ import common.util.SpringLayoutHelper;
  */
 public class ArtilleryPanel extends JPanel {
 
-	/**
-	 * 
-	 */
-	private static final long serialVersionUID = -2029107013395017158L;
-	private JTextField baseTextField = new JTextField(5);
-	private JCheckBox BaseCheckBox = new JCheckBox();
-	
-	public ArtilleryPanel() {
-		super();
+    /**
+     *
+     */
+    private static final long serialVersionUID = -2029107013395017158L;
+    private JTextField baseTextField = new JTextField(5);
+    private JCheckBox BaseCheckBox = new JCheckBox();
+
+    public ArtilleryPanel() {
+        super();
         /*
          * ARTILLERY TAB CONSTRUCTION Enable autoassigned artillery, and set up loadout options.
          */
@@ -136,7 +136,8 @@ public class ArtilleryPanel extends JPanel {
 
         baseTextField = new JTextField(5);
         artySpring.add(new JLabel("Artillery Over Run:", SwingConstants.TRAILING));
-        baseTextField.setToolTipText("<HTML><BODY>The chance of an offboard unit getting over run.<BR>This is modified by the number of hexs the unit is off the board</HTML></BODY>");
+        baseTextField.setToolTipText(
+              "<HTML><BODY>The chance of an offboard unit getting over run.<BR>This is modified by the number of hexs the unit is off the board</HTML></BODY>");
         baseTextField.setName("ArtilleryOffBoardOverRun");
         artySpring.add(baseTextField);
 
@@ -238,6 +239,6 @@ public class ArtilleryPanel extends JPanel {
         artyBox.add(gunEmplacementSpring);
 
         add(artyBox);
-	}
+    }
 
 }

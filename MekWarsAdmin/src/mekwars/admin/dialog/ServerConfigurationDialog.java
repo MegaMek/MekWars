@@ -12,11 +12,11 @@
 /**
  * @author jtighe
  * @author Spork
- *
- * Server Configuration Page. All new Server Options need to be added to this page or subPanels as well.
+ *       <p>
+ *       Server Configuration Page. All new Server Options need to be added to this page or subPanels as well.
  */
 
-package admin.dialog;
+package mekwars.admin.dialog;
 
 import java.awt.Dimension;
 import java.awt.Toolkit;
@@ -26,63 +26,12 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
+import javax.swing.*;
 
-import javax.swing.JButton;
-import javax.swing.JCheckBox;
-import javax.swing.JDialog;
-import javax.swing.JOptionPane;
-import javax.swing.JPanel;
-import javax.swing.JRadioButton;
-import javax.swing.JScrollPane;
-import javax.swing.JTabbedPane;
-import javax.swing.JTextArea;
-import javax.swing.JTextField;
-import javax.swing.SwingConstants;
-import javax.swing.ToolTipManager;
-
-import org.jdatepicker.impl.JDatePickerImpl;
-
-import admin.dialog.serverConfigDialogs.AdvancedRepairPanel;
-import admin.dialog.serverConfigDialogs.ArtilleryPanel;
-import admin.dialog.serverConfigDialogs.AutoProdPanel;
-import admin.dialog.serverConfigDialogs.BattleValuePanel;
-import admin.dialog.serverConfigDialogs.BlackMarketPanel;
-import admin.dialog.serverConfigDialogs.ChristmasPanel;
-import admin.dialog.serverConfigDialogs.CombatPanel;
-import admin.dialog.serverConfigDialogs.DefectionPanel;
-import admin.dialog.serverConfigDialogs.DirectSellPanel;
-import admin.dialog.serverConfigDialogs.DisconnectionPanel;
-import admin.dialog.serverConfigDialogs.DiscordAndDjangoPanel;
-import admin.dialog.serverConfigDialogs.FactionPanel;
-import admin.dialog.serverConfigDialogs.FactoryPurchasePanel;
-import admin.dialog.serverConfigDialogs.FreebuildPanel;
-import admin.dialog.serverConfigDialogs.InfluencePanel;
-import admin.dialog.serverConfigDialogs.LinksPanel;
-import admin.dialog.serverConfigDialogs.LossCompensationPanel;
-import admin.dialog.serverConfigDialogs.MiniCampaignPanel;
-import admin.dialog.serverConfigDialogs.MiscOptionsPanel;
-import admin.dialog.serverConfigDialogs.NewbieHousePanel;
-import admin.dialog.serverConfigDialogs.NoPlayPanel;
-import admin.dialog.serverConfigDialogs.PathsPanel;
-import admin.dialog.serverConfigDialogs.PayoutModPanel;
-import admin.dialog.serverConfigDialogs.PilotSkillsCardPanel;
-import admin.dialog.serverConfigDialogs.PilotSkillsPanel;
-import admin.dialog.serverConfigDialogs.PilotsPanel;
-import admin.dialog.serverConfigDialogs.ProductionPanel;
-import admin.dialog.serverConfigDialogs.RepodPanel;
-import admin.dialog.serverConfigDialogs.RewardPanel;
-import admin.dialog.serverConfigDialogs.SchedulerPanel;
-import admin.dialog.serverConfigDialogs.SinglePlayerFactionPanel;
-import admin.dialog.serverConfigDialogs.TechnicianPanel;
-import admin.dialog.serverConfigDialogs.TechnologyResearchPanel;
-import admin.dialog.serverConfigDialogs.TrackerPanel;
-import admin.dialog.serverConfigDialogs.UnitLimitsPanel;
-import admin.dialog.serverConfigDialogs.UnitResearchPanel;
-import admin.dialog.serverConfigDialogs.UnitsCardPanel;
-import admin.dialog.serverConfigDialogs.UnitsPanel;
-import admin.dialog.serverConfigDialogs.VotingPanel;
+import admin.dialog.serverConfigDialogs.*;
 import client.MWClient;
 import common.util.MWLogger;
+import org.jdatepicker.impl.JDatePickerImpl;
 
 public final class ServerConfigurationDialog implements ActionListener {
 
@@ -125,11 +74,11 @@ public final class ServerConfigurationDialog implements ActionListener {
         // Get the screen dimensions - the Units tab is too tall for smaller than 1280 x 1024
         Toolkit toolkit = Toolkit.getDefaultToolkit();
         screenSize = toolkit.getScreenSize();
-        
+
         // @salient adding tooltip settings
-		ToolTipManager.sharedInstance().setDismissDelay(7000);
-		ToolTipManager.sharedInstance().setInitialDelay(400);
-		//ToolTipManager.sharedInstance().setReshowDelay(100);
+        ToolTipManager.sharedInstance().setDismissDelay(7000);
+        ToolTipManager.sharedInstance().setInitialDelay(400);
+        //ToolTipManager.sharedInstance().setReshowDelay(100);
 
         // TAB PANELS (these are added to the root pane as tabs)
         JPanel unitsPanel;
@@ -139,11 +88,11 @@ public final class ServerConfigurationDialog implements ActionListener {
         RepodPanel repodPanel = new RepodPanel(mwclient);
         TechnicianPanel technicianPanel = new TechnicianPanel(mwclient);
         if (screenSize.height >= 1024) {
-        	unitsPanel = new UnitsPanel(mwclient);
-        	pilotSkillsPanel = new PilotSkillsPanel(mwclient);
+            unitsPanel = new UnitsPanel(mwclient);
+            pilotSkillsPanel = new PilotSkillsPanel(mwclient);
         } else {
-        	unitsPanel = new UnitsCardPanel(mwclient);
-        	pilotSkillsPanel = new PilotSkillsCardPanel(mwclient);
+            unitsPanel = new UnitsCardPanel(mwclient);
+            pilotSkillsPanel = new PilotSkillsCardPanel(mwclient);
         }
         FactionPanel factionPanel = new FactionPanel(mwclient);
         DirectSellPanel directSellPanel = new DirectSellPanel();
@@ -208,7 +157,10 @@ public final class ServerConfigurationDialog implements ActionListener {
         ConfigPane.addTab("Free Build", null, freebuildPanel, "Free Build"); //@salient
         ConfigPane.addTab("Influence", null, influencePanel, "Influence");
         ConfigPane.addTab("Links & Rules", null, linksPanel, "Configure/Enable Links Area and Rules Panel"); //@salient
-        ConfigPane.addTab("Loss Compensation", null, lossCompensationPanel, "Extra Payments for salvaged/destroyed units.");
+        ConfigPane.addTab("Loss Compensation",
+              null,
+              lossCompensationPanel,
+              "Extra Payments for salvaged/destroyed units.");
         ConfigPane.addTab("Mini Campaigns", null, miniCampaignPanel, "Mini Campaigns"); //@salient
         ConfigPane.addTab("Misc Options", null, miscOptionsPanel, "Misc Stuff");
         ConfigPane.addTab("No Play", null, noPlayPanel, "Personal Blacklist/Exclusion options");
@@ -217,13 +169,16 @@ public final class ServerConfigurationDialog implements ActionListener {
         ConfigPane.addTab("Pilot Skills", null, pilotSkillsPanel, "Server Configurable Pilot Skills");
         ConfigPane.addTab("Repodding", null, repodPanel, "Repod");
         ConfigPane.addTab("Rewards", null, rewardPanel, "Reward Points");
-        ConfigPane.addTab("Scheduler",  null, schedulerPanel, "Repeating Tasks");
+        ConfigPane.addTab("Scheduler", null, schedulerPanel, "Repeating Tasks");
         ConfigPane.addTab("Single Player", null, singlePlayerFactionPanel, "Single Player Faction Configuration");
         ConfigPane.addTab("SOL Units", null, newbieHousePanel, "SOL Units and Attack Limits");
         ConfigPane.addTab("Support Units", null, artilleryPanel, "Artillery and Gun Emplacements and Mines oh my!");
         ConfigPane.addTab("Techs", null, technicianPanel, "Techs");
         ConfigPane.addTab("Tech Research", null, technologyResearchPanel, "Technology Research Configuration");
-        ConfigPane.addTab("Tracker", null, trackerPanel, "Comstar HPGNet - enabling inter-server communiation and activity tracking");
+        ConfigPane.addTab("Tracker",
+              null,
+              trackerPanel,
+              "Comstar HPGNet - enabling inter-server communiation and activity tracking");
         ConfigPane.addTab("Voting", null, votingPanel, "Voting Stuff");
         ConfigPane.addTab("Unit Limits", null, unitLimitsPanel, "Limits to unit ownership based on unit weightclass");
         ConfigPane.addTab("Unit Research", null, unitResearchPanel, "Unit Research Configuration");
@@ -330,43 +285,43 @@ public final class ServerConfigurationDialog implements ActionListener {
                 radioButton.setSelected(Boolean.parseBoolean(mwclient.getserverConfigs(key)));
 
             } else if (field instanceof JDatePickerImpl) {
-            	JDatePickerImpl picker = (JDatePickerImpl) field;
+                JDatePickerImpl picker = (JDatePickerImpl) field;
 
-            	key = picker.getName();
-            	if (key == null) {
-            		MWLogger.errLog("Null JDatePickerImpl: " + picker.getToolTipText());
-            		continue;
-            	}
-            	String s = mwclient.getserverConfigs(key);
-            	SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
-            	Date date = new Date();
-				try {
-					date = sdf.parse(s);
-				} catch (ParseException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				}
-            	Calendar cal = Calendar.getInstance();
-            	cal.setTime(date);
-            	int year = cal.get(Calendar.YEAR);
-            	int month = cal.get(Calendar.MONTH);
-            	int day = cal.get(Calendar.DAY_OF_MONTH);
+                key = picker.getName();
+                if (key == null) {
+                    MWLogger.errLog("Null JDatePickerImpl: " + picker.getToolTipText());
+                    continue;
+                }
+                String s = mwclient.getserverConfigs(key);
+                SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
+                Date date = new Date();
+                try {
+                    date = sdf.parse(s);
+                } catch (ParseException e) {
+                    // TODO Auto-generated catch block
+                    e.printStackTrace();
+                }
+                Calendar cal = Calendar.getInstance();
+                cal.setTime(date);
+                int year = cal.get(Calendar.YEAR);
+                int month = cal.get(Calendar.MONTH);
+                int day = cal.get(Calendar.DAY_OF_MONTH);
 
-            	picker.getModel().setYear(year);
-            	picker.getModel().setMonth(month);
-            	picker.getModel().setDay(day);
-            	picker.getModel().setSelected(true);
+                picker.getModel().setYear(year);
+                picker.getModel().setMonth(month);
+                picker.getModel().setDay(day);
+                picker.getModel().setSelected(true);
 
             } else if (field instanceof JScrollPane) {
-            	JScrollPane pane = (JScrollPane) field;
-            	JTextArea area = (JTextArea)pane.getViewport().getView();
-            	key = area.getName();
-            	if(key == null) {
-            		continue;
-            	}
-            	String s = mwclient.getserverConfigs(key);
-            	String text = s.replace('$', '\n');
-            	area.setText(text);
+                JScrollPane pane = (JScrollPane) field;
+                JTextArea area = (JTextArea) pane.getViewport().getView();
+                key = area.getName();
+                if (key == null) {
+                    continue;
+                }
+                String s = mwclient.getserverConfigs(key);
+                String text = s.replace('$', '\n');
+                area.setText(text);
             } // else continue
         }
     }
@@ -405,7 +360,12 @@ public final class ServerConfigurationDialog implements ActionListener {
 
                 // reduce bandwidth only send things that have changed.
                 if (!mwclient.getserverConfigs(key).equalsIgnoreCase(value)) {
-                    mwclient.sendChat(MWClient.CAMPAIGN_PREFIX + "c AdminChangeServerConfig#" + key + "#" + value + "#CONFIRM");
+                    mwclient.sendChat(MWClient.CAMPAIGN_PREFIX +
+                                            "c AdminChangeServerConfig#" +
+                                            key +
+                                            "#" +
+                                            value +
+                                            "#CONFIRM");
                 }
             } else if (field instanceof JCheckBox) {
                 JCheckBox checkBox = (JCheckBox) field;
@@ -418,7 +378,12 @@ public final class ServerConfigurationDialog implements ActionListener {
                 }
                 // reduce bandwidth only send things that have changed.
                 if (!mwclient.getserverConfigs(key).equalsIgnoreCase(value)) {
-                    mwclient.sendChat(MWClient.CAMPAIGN_PREFIX + "c AdminChangeServerConfig#" + key + "#" + value + "#CONFIRM");
+                    mwclient.sendChat(MWClient.CAMPAIGN_PREFIX +
+                                            "c AdminChangeServerConfig#" +
+                                            key +
+                                            "#" +
+                                            value +
+                                            "#CONFIRM");
                 }
             } else if (field instanceof JRadioButton) {
                 JRadioButton radioButton = (JRadioButton) field;
@@ -431,25 +396,40 @@ public final class ServerConfigurationDialog implements ActionListener {
                 }
                 // reduce bandwidth only send things that have changed.
                 if (!mwclient.getserverConfigs(key).equalsIgnoreCase(value)) {
-                    mwclient.sendChat(MWClient.CAMPAIGN_PREFIX + "c AdminChangeServerConfig#" + key + "#" + value + "#CONFIRM");
+                    mwclient.sendChat(MWClient.CAMPAIGN_PREFIX +
+                                            "c AdminChangeServerConfig#" +
+                                            key +
+                                            "#" +
+                                            value +
+                                            "#CONFIRM");
                 }
             } else if (field instanceof JDatePickerImpl) {
-            	JDatePickerImpl picker = (JDatePickerImpl) field;
-            	value = picker.getJFormattedTextField().getText();
-            	key = picker.getName();
-            	// reduce bandwidth only send things that have changed.
+                JDatePickerImpl picker = (JDatePickerImpl) field;
+                value = picker.getJFormattedTextField().getText();
+                key = picker.getName();
+                // reduce bandwidth only send things that have changed.
                 if (!mwclient.getserverConfigs(key).equalsIgnoreCase(value)) {
-                    mwclient.sendChat(MWClient.CAMPAIGN_PREFIX + "c AdminChangeServerConfig#" + key + "#" + value + "#CONFIRM");
+                    mwclient.sendChat(MWClient.CAMPAIGN_PREFIX +
+                                            "c AdminChangeServerConfig#" +
+                                            key +
+                                            "#" +
+                                            value +
+                                            "#CONFIRM");
                 }
             } else if (field instanceof JScrollPane) {
-            	JScrollPane pane = (JScrollPane) field;
-            	JTextArea area = (JTextArea)pane.getViewport().getView();
-            	value = area.getText();
-            	key = area.getName();
-            	if (!mwclient.getserverConfigs(key).equalsIgnoreCase(value)) {
-            		String toSend = value.replace('\n', '$');
-            		mwclient.sendChat(MWClient.CAMPAIGN_PREFIX + "c AdminChangeServerConfig#" + key + "#" + toSend + "#CONFIRM");
-            	}
+                JScrollPane pane = (JScrollPane) field;
+                JTextArea area = (JTextArea) pane.getViewport().getView();
+                value = area.getText();
+                key = area.getName();
+                if (!mwclient.getserverConfigs(key).equalsIgnoreCase(value)) {
+                    String toSend = value.replace('\n', '$');
+                    mwclient.sendChat(MWClient.CAMPAIGN_PREFIX +
+                                            "c AdminChangeServerConfig#" +
+                                            key +
+                                            "#" +
+                                            toSend +
+                                            "#CONFIRM");
+                }
             } // else continue
         }
     }

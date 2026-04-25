@@ -1,15 +1,15 @@
 /*
  * MekWars - Copyright (C) 2011
- * 
- * 
+ *
+ *
  * This program is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software
  * Foundation; either version 2 of the License, or (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
  * A PARTICULAR PURPOSE. See the GNU General Public License for more details.
  */
 
-package admin.dialog.serverConfigDialogs;
+package mekwars.admin.dialog.serverConfigDialogs;
 
 import javax.swing.BoxLayout;
 import javax.swing.ButtonGroup;
@@ -29,13 +29,13 @@ import common.util.SpringLayoutHelper;
  */
 public class AdvancedRepairPanel extends JPanel {
 
-	private static final long serialVersionUID = -8614798115843988091L;
-	private JTextField baseTextField = new JTextField(5);
-	private JCheckBox BaseCheckBox = new JCheckBox();
-	private JRadioButton baseRadioButton = new JRadioButton();
-    
-	public AdvancedRepairPanel() {
-		super();
+    private static final long serialVersionUID = -8614798115843988091L;
+    private JTextField baseTextField = new JTextField(5);
+    private JCheckBox BaseCheckBox = new JCheckBox();
+    private JRadioButton baseRadioButton = new JRadioButton();
+
+    public AdvancedRepairPanel() {
+        super();
         /*
          * ADVANCE REPAIR setup
          */
@@ -49,14 +49,16 @@ public class AdvancedRepairPanel extends JPanel {
 
         baseRadioButton = new JRadioButton("Use Techs");
 
-        baseRadioButton.setToolTipText("<html>Use Techs as bays<br>NOTE: Save all player files and reboot<br>When turning on or off.</html>");
+        baseRadioButton.setToolTipText(
+              "<html>Use Techs as bays<br>NOTE: Save all player files and reboot<br>When turning on or off.</html>");
         baseRadioButton.setName("UseTechRepair");
         repairTypes.add(baseRadioButton);
         repairSpring.add(baseRadioButton);
 
         baseRadioButton = new JRadioButton("Use Statistcal Repair");
 
-        baseRadioButton.setToolTipText("<html>Units Get damaged but they are repair all at once if the player chooses so.<br>NOTE: Save all player files and reboot<br>When turning on or off.</html>");
+        baseRadioButton.setToolTipText(
+              "<html>Units Get damaged but they are repair all at once if the player chooses so.<br>NOTE: Save all player files and reboot<br>When turning on or off.</html>");
         baseRadioButton.setName("UseSimpleRepair");
         baseRadioButton.setSelected(true);
         repairTypes.add(baseRadioButton);
@@ -64,7 +66,8 @@ public class AdvancedRepairPanel extends JPanel {
 
         baseRadioButton = new JRadioButton("Use Advanced Repair");
 
-        baseRadioButton.setToolTipText("<html>Use Advanced Repair?<br>NOTE: Save all player files and reboot<br>When turning on or off.</html>");
+        baseRadioButton.setToolTipText(
+              "<html>Use Advanced Repair?<br>NOTE: Save all player files and reboot<br>When turning on or off.</html>");
         baseRadioButton.setName("UseAdvanceRepair");
         repairTypes.add(baseRadioButton);
         repairSpring.add(baseRadioButton);
@@ -99,7 +102,7 @@ public class AdvancedRepairPanel extends JPanel {
         BaseCheckBox.setToolTipText("Only used with Tech Repairs.  Increases the tech cost of non-faction units.");
         BaseCheckBox.setName("UseNonFactionUnitsIncreasedTechs");
         repairSpring.add(BaseCheckBox);
-        
+
         BaseCheckBox = new JCheckBox("Do not allow salvage of undamaged units");
         BaseCheckBox.setToolTipText("Only used with Tech Repairs.  Players may not salvage undamaged units");
         BaseCheckBox.setName("DisallowFreshUnitSalvage");
@@ -124,25 +127,29 @@ public class AdvancedRepairPanel extends JPanel {
         // The base cost for each of these techs to do a job.
         baseTextField = new JTextField(5);
         repairSpring2.add(new JLabel("Green Tech Pay:", SwingConstants.TRAILING));
-        baseTextField.setToolTipText("<html>The base cost for a green tech to do a repair per crit.<br>Cost is doubled for the first crit.<br>i.e. if set to 1 it would cost 4 for 3 crits.</html>");
+        baseTextField.setToolTipText(
+              "<html>The base cost for a green tech to do a repair per crit.<br>Cost is doubled for the first crit.<br>i.e. if set to 1 it would cost 4 for 3 crits.</html>");
         baseTextField.setName("GreenTechRepairCost");
         repairSpring2.add(baseTextField);
 
         baseTextField = new JTextField(5);
         repairSpring2.add(new JLabel("Reg Tech Pay:", SwingConstants.TRAILING));
-        baseTextField.setToolTipText("<html>The base cost for a reg tech to do a repair per crit.<br>Cost is doubled for the first crit.<br>i.e. if set to 1 it would cost 4 for 3 crits.</html>");
+        baseTextField.setToolTipText(
+              "<html>The base cost for a reg tech to do a repair per crit.<br>Cost is doubled for the first crit.<br>i.e. if set to 1 it would cost 4 for 3 crits.</html>");
         baseTextField.setName("RegTechRepairCost");
         repairSpring2.add(baseTextField);
 
         baseTextField = new JTextField(5);
         repairSpring2.add(new JLabel("Vet Tech Pay:", SwingConstants.TRAILING));
-        baseTextField.setToolTipText("<html>The base cost for a vet tech to do a repair per crit.<br>Cost is doubled for the first crit.<br>i.e. if set to 1 it would cost 4 for 3 crits.</html>");
+        baseTextField.setToolTipText(
+              "<html>The base cost for a vet tech to do a repair per crit.<br>Cost is doubled for the first crit.<br>i.e. if set to 1 it would cost 4 for 3 crits.</html>");
         baseTextField.setName("VetTechRepairCost");
         repairSpring2.add(baseTextField);
 
         baseTextField = new JTextField(5);
         repairSpring2.add(new JLabel("Elite Tech Pay:", SwingConstants.TRAILING));
-        baseTextField.setToolTipText("<html>The base cost for a elite tech to do a repair per crit.<br>Cost is doubled for the first crit.<br>i.e. if set to 1 it would cost 4 for 3 crits.</html>");
+        baseTextField.setToolTipText(
+              "<html>The base cost for a elite tech to do a repair per crit.<br>Cost is doubled for the first crit.<br>i.e. if set to 1 it would cost 4 for 3 crits.</html>");
         baseTextField.setName("EliteTechRepairCost");
         repairSpring2.add(baseTextField);
 
@@ -161,19 +168,22 @@ public class AdvancedRepairPanel extends JPanel {
 
         baseTextField = new JTextField(5);
         repairSpring2.add(new JLabel("Max Bays to Lease:", SwingConstants.TRAILING));
-        baseTextField.setToolTipText("<html>The Maximum number of bays a player can buy<br>Set to -1 for unlimited.<br>A player with more then the max will lose all the bays above the max.</html>");
+        baseTextField.setToolTipText(
+              "<html>The Maximum number of bays a player can buy<br>Set to -1 for unlimited.<br>A player with more then the max will lose all the bays above the max.</html>");
         baseTextField.setName("MaxBaysToBuy");
         repairSpring2.add(baseTextField);
 
         baseTextField = new JTextField(5);
         repairSpring2.add(new JLabel("Time for Each Repair:", SwingConstants.TRAILING));
-        baseTextField.setToolTipText("<html>amount of time, in seconds, that it takes to repair each damaged crit<br>Note:When repairing engines all crits are counted<br>no matter how many are damaged</html>");
+        baseTextField.setToolTipText(
+              "<html>amount of time, in seconds, that it takes to repair each damaged crit<br>Note:When repairing engines all crits are counted<br>no matter how many are damaged</html>");
         baseTextField.setName("TimeForEachRepairPoint");
         repairSpring2.add(baseTextField);
 
         baseTextField = new JTextField(5);
         repairSpring2.add(new JLabel("Chance Tech Dies:", SwingConstants.TRAILING));
-        baseTextField.setToolTipText("<html>The chance out of 100 that a tech dies when a 2 is rolled on a repair roll</html>");
+        baseTextField.setToolTipText(
+              "<html>The chance out of 100 that a tech dies when a 2 is rolled on a repair roll</html>");
         baseTextField.setName("ChanceTechDiesOnFailedRepair");
         repairSpring2.add(baseTextField);
 
@@ -193,61 +203,71 @@ public class AdvancedRepairPanel extends JPanel {
 
         baseTextField = new JTextField(5);
         armorPanel.add(new JLabel("Standard:", SwingConstants.TRAILING));
-        baseTextField.setToolTipText("<html>Cost to repair 1 point of standard armor.<br>Note This is a double field!</html>");
+        baseTextField.setToolTipText(
+              "<html>Cost to repair 1 point of standard armor.<br>Note This is a double field!</html>");
         baseTextField.setName("CostPointStandard");
         armorPanel.add(baseTextField);
 
         baseTextField = new JTextField(5);
         armorPanel.add(new JLabel("FF:", SwingConstants.TRAILING));
-        baseTextField.setToolTipText("<html>Cost to repair 1 point of Ferro-Fibrous armor..<br>Note This is a double field!</html>");
+        baseTextField.setToolTipText(
+              "<html>Cost to repair 1 point of Ferro-Fibrous armor..<br>Note This is a double field!</html>");
         baseTextField.setName("CostPointFF");
         armorPanel.add(baseTextField);
 
         baseTextField = new JTextField(5);
         armorPanel.add(new JLabel("Reactive:", SwingConstants.TRAILING));
-        baseTextField.setToolTipText("<html>Cost to repair 1 point of reactive armor..<br>Note This is a double field!</html>");
+        baseTextField.setToolTipText(
+              "<html>Cost to repair 1 point of reactive armor..<br>Note This is a double field!</html>");
         baseTextField.setName("CostPointReactive");
         armorPanel.add(baseTextField);
 
         baseTextField = new JTextField(5);
         armorPanel.add(new JLabel("Reflective:", SwingConstants.TRAILING));
-        baseTextField.setToolTipText("<html>Cost to repair 1 point of reflective armor..<br>Note This is a double field!</html>");
+        baseTextField.setToolTipText(
+              "<html>Cost to repair 1 point of reflective armor..<br>Note This is a double field!</html>");
         baseTextField.setName("CostPointReflective");
         armorPanel.add(baseTextField);
 
         baseTextField = new JTextField(5);
         armorPanel.add(new JLabel("Hardened:", SwingConstants.TRAILING));
-        baseTextField.setToolTipText("<html>Cost to repair 1 point of hardened armor..<br>Note This is a double field!</html>");
+        baseTextField.setToolTipText(
+              "<html>Cost to repair 1 point of hardened armor..<br>Note This is a double field!</html>");
         baseTextField.setName("CostPointHardened");
         armorPanel.add(baseTextField);
 
         baseTextField = new JTextField(5);
         armorPanel.add(new JLabel("Light FF:", SwingConstants.TRAILING));
-        baseTextField.setToolTipText("<html>Cost to repair 1 point of light FF armor..<br>Note This is a double field!</html>");
+        baseTextField.setToolTipText(
+              "<html>Cost to repair 1 point of light FF armor..<br>Note This is a double field!</html>");
         baseTextField.setName("CostPointLFF");
         armorPanel.add(baseTextField);
 
         baseTextField = new JTextField(5);
         armorPanel.add(new JLabel("Heavy FF:", SwingConstants.TRAILING));
-        baseTextField.setToolTipText("<html>Cost to repair 1 point of heavy FF armor..<br>Note This is a double field!</html>");
+        baseTextField.setToolTipText(
+              "<html>Cost to repair 1 point of heavy FF armor..<br>Note This is a double field!</html>");
         baseTextField.setName("CostPointHFF");
         armorPanel.add(baseTextField);
 
         baseTextField = new JTextField(5);
         armorPanel.add(new JLabel("Patchwork:", SwingConstants.TRAILING));
-        baseTextField.setToolTipText("<html>Cost to repair 1 point of patchwork armor..<br>Note This is a double field!</html>");
+        baseTextField.setToolTipText(
+              "<html>Cost to repair 1 point of patchwork armor..<br>Note This is a double field!</html>");
         baseTextField.setName("CostPointPatchwork");
         armorPanel.add(baseTextField);
 
         baseTextField = new JTextField(5);
         armorPanel.add(new JLabel("Stealth:", SwingConstants.TRAILING));
-        baseTextField.setToolTipText("<html>Cost to repair 1 point of stealth armor..<br>Note This is a double field!</html>");
+        baseTextField.setToolTipText(
+              "<html>Cost to repair 1 point of stealth armor..<br>Note This is a double field!</html>");
         baseTextField.setName("CostPointStealth");
         armorPanel.add(baseTextField);
 
         baseTextField = new JTextField(5);
         armorPanel.add(new JLabel("FF Proto:", SwingConstants.TRAILING));
-        baseTextField.setToolTipText("<html>Cost to repair 1 point of Ferro-Fibrous Prototype armor..<br>Note This is a double field!</html>");
+        baseTextField.setToolTipText(
+              "<html>Cost to repair 1 point of Ferro-Fibrous Prototype armor..<br>Note This is a double field!</html>");
         baseTextField.setName("CostPointFFProto");
         armorPanel.add(baseTextField);
 
@@ -258,31 +278,36 @@ public class AdvancedRepairPanel extends JPanel {
 
         baseTextField = new JTextField(5);
         internalPanel.add(new JLabel("Standard:", SwingConstants.TRAILING));
-        baseTextField.setToolTipText("<html>Cost to repair 1 point of standard internal..<br>Note This is a double field!</html>");
+        baseTextField.setToolTipText(
+              "<html>Cost to repair 1 point of standard internal..<br>Note This is a double field!</html>");
         baseTextField.setName("CostPointStandardIS");
         internalPanel.add(baseTextField);
 
         baseTextField = new JTextField(5);
         internalPanel.add(new JLabel("Endo:", SwingConstants.TRAILING));
-        baseTextField.setToolTipText("<html>Cost to repair 1 point of endo internal..<br>Note This is a double field!</html>");
+        baseTextField.setToolTipText(
+              "<html>Cost to repair 1 point of endo internal..<br>Note This is a double field!</html>");
         baseTextField.setName("CostPointEndoIS");
         internalPanel.add(baseTextField);
 
         baseTextField = new JTextField(5);
         internalPanel.add(new JLabel("Endo Proto:", SwingConstants.TRAILING));
-        baseTextField.setToolTipText("<html>Cost to repair 1 point of endo prototype internal.<br>Note This is a double field!</html>");
+        baseTextField.setToolTipText(
+              "<html>Cost to repair 1 point of endo prototype internal.<br>Note This is a double field!</html>");
         baseTextField.setName("CostPointEndoProtoIS");
         internalPanel.add(baseTextField);
 
         baseTextField = new JTextField(5);
         internalPanel.add(new JLabel("Reinforced:", SwingConstants.TRAILING));
-        baseTextField.setToolTipText("<html>Cost to repair 1 point of reinforced internal.<br>Note This is a double field!</html>");
+        baseTextField.setToolTipText(
+              "<html>Cost to repair 1 point of reinforced internal.<br>Note This is a double field!</html>");
         baseTextField.setName("CostPointReinforcedIS");
         internalPanel.add(baseTextField);
 
         baseTextField = new JTextField(5);
         internalPanel.add(new JLabel("Composite:", SwingConstants.TRAILING));
-        baseTextField.setToolTipText("<html>Cost to repair 1 point of composite internal.<br>Note This is a double field!</html>");
+        baseTextField.setToolTipText(
+              "<html>Cost to repair 1 point of composite internal.<br>Note This is a double field!</html>");
         baseTextField.setName("CostPointCompositeIS");
         internalPanel.add(baseTextField);
 
@@ -312,13 +337,15 @@ public class AdvancedRepairPanel extends JPanel {
 
         baseTextField = new JTextField(5);
         equipmentPanel.add(new JLabel("Equipment:", SwingConstants.TRAILING));
-        baseTextField.setToolTipText("<html>Cost to repair each misc equipment crit, i.e. heat sinks, actuators, ammo bins<br>Note Double Field</html>");
+        baseTextField.setToolTipText(
+              "<html>Cost to repair each misc equipment crit, i.e. heat sinks, actuators, ammo bins<br>Note Double Field</html>");
         baseTextField.setName("EquipmentCritRepairCost");
         equipmentPanel.add(baseTextField);
 
         baseTextField = new JTextField(5);
         equipmentPanel.add(new JLabel("Engine:", SwingConstants.TRAILING));
-        baseTextField.setToolTipText("<html>Cost to repair each engine crit.<br>Note when repairing engines all crits are counted<br>I.E. XL engines will be more expensive then Standard<br>Note Double Field</html>");
+        baseTextField.setToolTipText(
+              "<html>Cost to repair each engine crit.<br>Note when repairing engines all crits are counted<br>I.E. XL engines will be more expensive then Standard<br>Note Double Field</html>");
         baseTextField.setName("EngineCritRepairCost");
         equipmentPanel.add(baseTextField);
 
@@ -351,7 +378,8 @@ public class AdvancedRepairPanel extends JPanel {
 
         baseTextField = new JTextField(5);
         replacementPanel.add(new JLabel("Equipment:", SwingConstants.TRAILING));
-        baseTextField.setToolTipText("<html>Cost to replace each misc replacement crit, i.e. heat sinks, actuators, ammo bins<br>Note Double Field</html>");
+        baseTextField.setToolTipText(
+              "<html>Cost to replace each misc replacement crit, i.e. heat sinks, actuators, ammo bins<br>Note Double Field</html>");
         baseTextField.setName("EquipmentCritReplaceCost");
         replacementPanel.add(baseTextField);
 
@@ -389,19 +417,22 @@ public class AdvancedRepairPanel extends JPanel {
 
         baseTextField = new JTextField(5);
         CostModPanel.add(new JLabel("Armor:", SwingConstants.TRAILING));
-        baseTextField.setToolTipText("<Html>Cost Modifier to buy a used unit with armor damage<br>Note Double Field</html>");
+        baseTextField.setToolTipText(
+              "<Html>Cost Modifier to buy a used unit with armor damage<br>Note Double Field</html>");
         baseTextField.setName("CostModifierToBuyArmorDamagedUnit");
         CostModPanel.add(baseTextField);
 
         baseTextField = new JTextField(5);
         CostModPanel.add(new JLabel("Crit:", SwingConstants.TRAILING));
-        baseTextField.setToolTipText("<html>Cost Modifier to buy a used unit with damaged crits<br>Note Double Field</html>");
+        baseTextField.setToolTipText(
+              "<html>Cost Modifier to buy a used unit with damaged crits<br>Note Double Field</html>");
         baseTextField.setName("CostModifierToBuyCritDamagedUnit");
         CostModPanel.add(baseTextField);
 
         baseTextField = new JTextField(5);
         CostModPanel.add(new JLabel("Engined:", SwingConstants.TRAILING));
-        baseTextField.setToolTipText("<html>Cost Modifier to buy a used unit that has been engined.<br>Note Double Field</html>");
+        baseTextField.setToolTipText(
+              "<html>Cost Modifier to buy a used unit that has been engined.<br>Note Double Field</html>");
         baseTextField.setName("CostModifierToBuyEnginedUnit");
         CostModPanel.add(baseTextField);
 
@@ -417,6 +448,6 @@ public class AdvancedRepairPanel extends JPanel {
         masterBox.add(masterCostModPanel);
 
         add(masterBox);
-	}
+    }
 
 }

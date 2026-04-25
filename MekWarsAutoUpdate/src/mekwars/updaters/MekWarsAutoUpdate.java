@@ -200,29 +200,3 @@ public class MekWarsAutoUpdate {
 
 }
 
-class JCopy {
-
-    JCopy() {
-    }
-
-    public void copyFile(File in, File out) throws Exception {
-
-        System.err
-              .println("Copying " + in.toString() + " to " + out.toString());
-        FileInputStream fis = new FileInputStream(in);
-        FileOutputStream fos = new FileOutputStream(out);
-        try {
-            byte[] buf = new byte[1024];
-            int i = 0;
-            while ((i = fis.read(buf)) != -1) {
-                fos.write(buf, 0, i);
-            }
-        } catch (Exception ex) {
-            ex.printStackTrace();
-        } finally {
-            fis.close();
-            fos.close();
-            in.delete();
-        }
-    }
-}

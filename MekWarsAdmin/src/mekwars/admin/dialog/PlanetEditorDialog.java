@@ -1,6 +1,6 @@
 /*
- * MekWars - Copyright (C) 2004 
- * 
+ * MekWars - Copyright (C) 2004
+ *
  * Derived from MegaMekNET (http://www.sourceforge.net/projects/megameknet)
  * Original author Helge Richter (McWizard)
  *
@@ -15,7 +15,7 @@
  * for more details.
  */
 
-package admin.dialog;
+package mekwars.admin.dialog;
 
 import java.awt.Color;
 import java.awt.Dimension;
@@ -28,20 +28,7 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.TreeSet;
-
-import javax.swing.BorderFactory;
-import javax.swing.BoxLayout;
-import javax.swing.JButton;
-import javax.swing.JCheckBox;
-import javax.swing.JComboBox;
-import javax.swing.JDialog;
-import javax.swing.JLabel;
-import javax.swing.JOptionPane;
-import javax.swing.JPanel;
-import javax.swing.JTabbedPane;
-import javax.swing.JTextField;
-import javax.swing.SpringLayout;
-import javax.swing.SwingConstants;
+import javax.swing.*;
 
 import client.MWClient;
 import common.AdvancedTerrain;
@@ -65,8 +52,8 @@ public final class PlanetEditorDialog implements ActionListener, KeyListener {
     private ArrayList<String> removedOwners = new ArrayList<String>();
     private HashMap<String, Integer> ownersMap = new HashMap<String, Integer>();
     private ArrayList<String> removedTerrain = new ArrayList<String>();
-    private ArrayList<String> removedAdvTerrain = new ArrayList<String>();    
-    private HashMap<String,Continent> ContinentMap = new HashMap<String, Continent>();
+    private ArrayList<String> removedAdvTerrain = new ArrayList<String>();
+    private HashMap<String, Continent> ContinentMap = new HashMap<String, Continent>();
     private HashMap<String, Integer> terrainMap = new HashMap<String, Integer>();
     private HashMap<String, Integer> advTerrainMap = new HashMap<String, Integer>();
     private ArrayList<String> removedFactory = new ArrayList<String>();
@@ -167,14 +154,21 @@ public final class PlanetEditorDialog implements ActionListener, KeyListener {
     private JPanel planetTerrain;
     private JPanel planetAdvancedTerrain;
     private JTabbedPane ConfigPane = new JTabbedPane(SwingConstants.TOP);
-    private String[] factoryTypes = { "All", "Mek", "Vee", "Mek & Vee", "Inf", "Mek & Inf", "Vee & Inf", "Mek & Inf & Vee", "Proto", "Mek & Proto", "Vee & Proto", "Mek & Vee & Proto", "Inf & Proto", "Mek & Inf & Proto", "Vee & Inf & Proto", "Mek & Vee & Inf & Proto", "BA", "Mek & BA", "Vee & BA", "Mek & Vee & BA", "Inf & BA", "Mek & Inf & BA", "Vee & Inf & BA", "Mek & Vee & Inf & BA", "Proto & BA", "Mek & Proto & BA", "Vee & Proto & BA", "Mek & Vee & Proto & BA", "Inf & Proto & BA", "Mek & Inf & Proto & BA", "Vee & Inf & Proto & BA", "Mek & Vee & Inf & Proto & BA", "VTOL", "Aero" };
+    private String[] factoryTypes = { "All", "Mek", "Vee", "Mek & Vee", "Inf", "Mek & Inf", "Vee & Inf",
+                                      "Mek & Inf & Vee", "Proto", "Mek & Proto", "Vee & Proto", "Mek & Vee & Proto",
+                                      "Inf & Proto", "Mek & Inf & Proto", "Vee & Inf & Proto",
+                                      "Mek & Vee & Inf & Proto", "BA", "Mek & BA", "Vee & BA", "Mek & Vee & BA",
+                                      "Inf & BA", "Mek & Inf & BA", "Vee & Inf & BA", "Mek & Vee & Inf & BA",
+                                      "Proto & BA", "Mek & Proto & BA", "Vee & Proto & BA", "Mek & Vee & Proto & BA",
+                                      "Inf & Proto & BA", "Mek & Inf & Proto & BA", "Vee & Inf & Proto & BA",
+                                      "Mek & Vee & Inf & Proto & BA", "VTOL", "Aero" };
 
     private String[] factorySizes = { "Light", "Medium", "Heavy", "Assault" };
 
     ArrayList<String> terrainList = new ArrayList<String>();
     ArrayList<String> advTerrainList = new ArrayList<String>();
-    
-    
+
+
     // Combo boxes
     private JComboBox planetNames;
     private JComboBox houseNames;
@@ -273,12 +267,13 @@ public final class PlanetEditorDialog implements ActionListener, KeyListener {
             removedFactory.clear();
             refreshAllPanels();
         } else if (command.equals(planetTerrainsCombo)) {
-        		//int indexToComboBox = planetTerrains.getSelectedIndex();
-        		//Continent C = ContinentMap.get(indexToComboBox);
-            	//currentTerrainPercent.setText(Integer.toString(C.getSize()));
+            //int indexToComboBox = planetTerrains.getSelectedIndex();
+            //Continent C = ContinentMap.get(indexToComboBox);
+            //currentTerrainPercent.setText(Integer.toString(C.getSize()));
         } else if (command.equals(planetOwnersListCommand)) {
             try {
-                currentFactionOwnerShip.setText(Integer.toString(ownersMap.get(planetOwnersList.getSelectedItem().toString())));
+                currentFactionOwnerShip.setText(Integer.toString(ownersMap.get(planetOwnersList.getSelectedItem()
+                                                                                     .toString())));
             } catch (Exception ex) {
                 currentFactionOwnerShip.setText("");
             }
@@ -335,7 +330,14 @@ public final class PlanetEditorDialog implements ActionListener, KeyListener {
 
         } else if (command.equals(addFactoryCommand)) {
             String factoryName = newFactoryName.getText().trim();
-            String factoryDesc = factoryName + "#" + factorySize.getSelectedItem().toString() + "#" + factoryOwners.getSelectedItem().toString() + "#" + factoryType.getSelectedIndex() + "#";
+            String factoryDesc = factoryName +
+                                       "#" +
+                                       factorySize.getSelectedItem().toString() +
+                                       "#" +
+                                       factoryOwners.getSelectedItem().toString() +
+                                       "#" +
+                                       factoryType.getSelectedIndex() +
+                                       "#";
             if (newFactoryBuildTable.getText().trim().length() > 1) {
                 factoryDesc += newFactoryBuildTable.getText().trim();
             } else {
@@ -343,7 +345,17 @@ public final class PlanetEditorDialog implements ActionListener, KeyListener {
             }
             factoryDesc += "#" + newFactoryAccessLevel.getText();
 
-            String fullFactoryName = factorySize.getSelectedItem().toString() + " " + factoryType.getSelectedItem().toString() + " " + newFactoryName.getText().trim() + " " + factoryOwners.getSelectedItem().toString() + " " + newFactoryBuildTable.getText() + " " + newFactoryAccessLevel.getText();
+            String fullFactoryName = factorySize.getSelectedItem().toString() +
+                                           " " +
+                                           factoryType.getSelectedItem().toString() +
+                                           " " +
+                                           newFactoryName.getText().trim() +
+                                           " " +
+                                           factoryOwners.getSelectedItem().toString() +
+                                           " " +
+                                           newFactoryBuildTable.getText() +
+                                           " " +
+                                           newFactoryAccessLevel.getText();
             factoryMap.put(factoryName, factoryDesc);
             planetFactories.addItem(fullFactoryName);
             newFactoryName.setText("");
@@ -358,7 +370,17 @@ public final class PlanetEditorDialog implements ActionListener, KeyListener {
             }
             String factoryName = "";
             for (UnitFactory factory : selectedPlanet.getUnitFactories()) {
-                factoryName = factory.getSize() + " " + factory.getFullTypeString().trim() + " " + factory.getName() + " " + factory.getFounder() + " " + factory.getBuildTableFolder() + " " + factory.getAccessLevel();
+                factoryName = factory.getSize() +
+                                    " " +
+                                    factory.getFullTypeString().trim() +
+                                    " " +
+                                    factory.getName() +
+                                    " " +
+                                    factory.getFounder() +
+                                    " " +
+                                    factory.getBuildTableFolder() +
+                                    " " +
+                                    factory.getAccessLevel();
                 if (planetFactories.getSelectedItem().toString().trim().equals(factoryName)) {
                     removedFactory.add(factory.getName());
                     factoryMap.remove(factory.getName());
@@ -378,8 +400,8 @@ public final class PlanetEditorDialog implements ActionListener, KeyListener {
                 String ATname = allAdvancedTerrains.getSelectedItem().toString().trim();
                 Terrain T = mwclient.getData().getTerrainByName(Tname);
                 AdvancedTerrain A = mwclient.getData().getAdvancedTerrainByName(ATname);
-                Continent C = new Continent(percent,T,A);
-                String displayName =  C.getDropBoxName();
+                Continent C = new Continent(percent, T, A);
+                String displayName = C.getDropBoxName();
                 planetTerrains.addItem(displayName);
                 ContinentMap.put(displayName, C);
             } catch (Exception ex) {
@@ -387,14 +409,14 @@ public final class PlanetEditorDialog implements ActionListener, KeyListener {
             }
         } else if (command.equals(RemoveTerrainCommand)) {
             if (planetTerrains.getItemCount() > 0) {
-            	ContinentMap.remove(planetTerrains.getSelectedItem());
+                ContinentMap.remove(planetTerrains.getSelectedItem());
                 planetTerrains.removeItemAt(planetTerrains.getSelectedIndex());
-                saveTerrain();                                
+                saveTerrain();
             }
         } else if (command.equals(removeAllTerrainsCommand)) {
-        	ContinentMap.clear();
+            ContinentMap.clear();
             planetTerrains.removeAllItems();
-        } 
+        }
     }
 
     private void loadAllPanels() {
@@ -418,7 +440,7 @@ public final class PlanetEditorDialog implements ActionListener, KeyListener {
         loadPlanetInfoData();
         loadPlanetProductionData();
         loadPlanetTerrainData();
-        
+
         advanceTerrainId = getTerrainId();
 
         //loadAdvancedTerrainsData();
@@ -582,8 +604,29 @@ public final class PlanetEditorDialog implements ActionListener, KeyListener {
 
         TreeSet<String> factoryList = new TreeSet<String>();
         for (UnitFactory factory : selectedPlanet.getUnitFactories()) {
-            factoryList.add(factory.getSize() + " " + factory.getFullTypeString().trim() + " " + factory.getName() + " " + factory.getFounder() + " " + factory.getBuildTableFolder() + " " + factory.getAccessLevel());
-            factoryMap.put(factory.getName(), factory.getName() + "#" + factory.getSize() + "#" + factory.getFounder() + "#" + factory.getType() + "#" + factory.getBuildTableFolder() + "#" + factory.getAccessLevel());
+            factoryList.add(factory.getSize() +
+                                  " " +
+                                  factory.getFullTypeString().trim() +
+                                  " " +
+                                  factory.getName() +
+                                  " " +
+                                  factory.getFounder() +
+                                  " " +
+                                  factory.getBuildTableFolder() +
+                                  " " +
+                                  factory.getAccessLevel());
+            factoryMap.put(factory.getName(),
+                  factory.getName() +
+                        "#" +
+                        factory.getSize() +
+                        "#" +
+                        factory.getFounder() +
+                        "#" +
+                        factory.getType() +
+                        "#" +
+                        factory.getBuildTableFolder() +
+                        "#" +
+                        factory.getAccessLevel());
         }
 
         planetFactories = new JComboBox(factoryList.toArray());
@@ -645,19 +688,19 @@ public final class PlanetEditorDialog implements ActionListener, KeyListener {
         Iterator<Continent> terrains = selectedPlanet.getEnvironments().iterator();
         planetTerrains = new JComboBox();
         int indexer = 0;
-        while (terrains.hasNext()) {        	
+        while (terrains.hasNext()) {
             Continent terrain = terrains.next();
-            String displayName =  terrain.getDropBoxName();
+            String displayName = terrain.getDropBoxName();
             planetTerrains.addItem(displayName);
             ContinentMap.put(displayName, terrain);
         }
-        
+
         panel1.add(planetTerrains);
 
         JPanel panel2 = new JPanel();
         allTerrains = new JComboBox();
         allAdvancedTerrains = new JComboBox();
-        
+
         ArrayList<String> allTerrainList = new ArrayList<String>();
         allTerrainList = new ArrayList<String>();
         for (Terrain terrain : mwclient.getData().getAllTerrains()) {
@@ -673,17 +716,17 @@ public final class PlanetEditorDialog implements ActionListener, KeyListener {
         ArrayList<String> allAdvTerrainList = new ArrayList<String>();
         Collection<AdvancedTerrain> AdvTerrainCollection = mwclient.getData().getAllAdvancedTerrains();
         Object[] at = AdvTerrainCollection.toArray();
-        for (int x = 0;x < at.length; x++) {
-        	if((AdvancedTerrain)at[x] != null) {
-        		AdvancedTerrain AdvTer = (AdvancedTerrain)at[x];
-        		allAdvTerrainList.add(AdvTer.getName());
-        	}
+        for (int x = 0; x < at.length; x++) {
+            if ((AdvancedTerrain) at[x] != null) {
+                AdvancedTerrain AdvTer = (AdvancedTerrain) at[x];
+                allAdvTerrainList.add(AdvTer.getName());
+            }
         }
 
         addAllItems(allAdvancedTerrains, allAdvTerrainList);
         panel2.add(allAdvancedTerrains);
 
-        
+
         newTerrainPercent.setToolTipText("Enter the % Chance for this new Terrain");
         panel2.add(newTerrainPercent);
 
@@ -809,8 +852,29 @@ public final class PlanetEditorDialog implements ActionListener, KeyListener {
             if (removedFactory.contains(factory.getName())) {
                 continue;
             }
-            factoryList.add(factory.getSize() + " " + factory.getFullTypeString().trim() + " " + factory.getName() + " " + factory.getFounder() + " " + factory.getBuildTableFolder() + " " + factory.getAccessLevel());
-            factoryMap.put(factory.getName(), factory.getName() + "#" + factory.getSize() + "#" + factory.getFounder() + "#" + factory.getType() + "#" + factory.getBuildTableFolder() + "#" + factory.getAccessLevel());
+            factoryList.add(factory.getSize() +
+                                  " " +
+                                  factory.getFullTypeString().trim() +
+                                  " " +
+                                  factory.getName() +
+                                  " " +
+                                  factory.getFounder() +
+                                  " " +
+                                  factory.getBuildTableFolder() +
+                                  " " +
+                                  factory.getAccessLevel());
+            factoryMap.put(factory.getName(),
+                  factory.getName() +
+                        "#" +
+                        factory.getSize() +
+                        "#" +
+                        factory.getFounder() +
+                        "#" +
+                        factory.getType() +
+                        "#" +
+                        factory.getBuildTableFolder() +
+                        "#" +
+                        factory.getAccessLevel());
         }
 
         planetFactories.removeAllItems();
@@ -819,17 +883,17 @@ public final class PlanetEditorDialog implements ActionListener, KeyListener {
 
     private void loadPlanetTerrainData() {
 
-    	
+
         ContinentMap.clear();
-    	ArrayList<String> terrainList = new ArrayList<String>();
+        ArrayList<String> terrainList = new ArrayList<String>();
         Iterator<Continent> terrains = selectedPlanet.getEnvironments().iterator();
 
         planetTerrains.removeActionListener(this);
         planetTerrains.removeAllItems();
         int indexer = 0;
-        while (terrains.hasNext()) {        	
+        while (terrains.hasNext()) {
             Continent terrain = terrains.next();
-            String displayName =  terrain.getDropBoxName();
+            String displayName = terrain.getDropBoxName();
             planetTerrains.addItem(displayName);
             ContinentMap.put(displayName, terrain);
         }
@@ -856,11 +920,11 @@ public final class PlanetEditorDialog implements ActionListener, KeyListener {
         advTerrainList = new ArrayList<String>();
         Collection<AdvancedTerrain> AdvTerrainCollection = mwclient.getData().getAllAdvancedTerrains();
         Object[] at = AdvTerrainCollection.toArray();
-        for (int x = 0;x < at.length; x++) {
-        	if((AdvancedTerrain)at[x] != null) {
-        		AdvancedTerrain AdvTer = (AdvancedTerrain)at[x];
-        		advTerrainList.add(AdvTer.getName());
-        	}
+        for (int x = 0; x < at.length; x++) {
+            if ((AdvancedTerrain) at[x] != null) {
+                AdvancedTerrain AdvTer = (AdvancedTerrain) at[x];
+                advTerrainList.add(AdvTer.getName());
+            }
         }
     }
 
@@ -960,7 +1024,7 @@ public final class PlanetEditorDialog implements ActionListener, KeyListener {
         }
     }
 */
-    
+
     private void loadPlanetNamesData() {
 
         // setup the a list of names to feed into a list
@@ -982,7 +1046,7 @@ public final class PlanetEditorDialog implements ActionListener, KeyListener {
 
     private void populateHouseNames(JComboBox combo) {
 
-    	ArrayList<String> factionNames = new ArrayList<String>();// tree to alpha
+        ArrayList<String> factionNames = new ArrayList<String>();// tree to alpha
         // sort
         for (House house : mwclient.getData().getAllHouses()) {
             factionNames.add(house.getName());
@@ -1001,8 +1065,8 @@ public final class PlanetEditorDialog implements ActionListener, KeyListener {
 
     private int getTerrainId() {
         try {
-        	int indexToComboBox = planetTerrains.getSelectedIndex();
-        	String terrainToLookup = terrainList.get(indexToComboBox);
+            int indexToComboBox = planetTerrains.getSelectedIndex();
+            String terrainToLookup = terrainList.get(indexToComboBox);
 
             return mwclient.getData().getTerrainByName(terrainToLookup).getId();
         } catch (Exception ex) {
@@ -1025,59 +1089,59 @@ public final class PlanetEditorDialog implements ActionListener, KeyListener {
             } catch (Exception ex) {
                 MWLogger.errLog(ex);
             }
-        } 
+        }
     }
 
     public void keyTyped(KeyEvent e) {
     }
 
-/*    private void updateAdvancedTerrain() {
-        AdvancedTerrain aTerrain = advancedTerrainMap.get(planetTerrains.getSelectedItem().toString());
-        if (aTerrain == null) {
-            aTerrain = new AdvancedTerrain();
-            advancedTerrainMap.put(planetTerrains.getSelectedItem().toString(), aTerrain);
+    /*    private void updateAdvancedTerrain() {
+            AdvancedTerrain aTerrain = advancedTerrainMap.get(planetTerrains.getSelectedItem().toString());
+            if (aTerrain == null) {
+                aTerrain = new AdvancedTerrain();
+                advancedTerrainMap.put(planetTerrains.getSelectedItem().toString(), aTerrain);
+            }
+
+            aTerrain.setDisplayName(DisplayNameText.getText());
+            aTerrain.setStaticMapName(StaticMapNameText.getText());
+            aTerrain.setXSize(Integer.parseInt(XSizeText.getText()));
+            aTerrain.setYSize(Integer.parseInt(YSizeText.getText()));
+            aTerrain.setXBoardSize(Integer.parseInt(XBoardSizeText.getText()));
+            aTerrain.setYBoardSize(Integer.parseInt(YBoardSizeText.getText()));
+            aTerrain.setLowTemp(Integer.parseInt(LowTempText.getText()));
+            aTerrain.setHighTemp(Integer.parseInt(HighTempText.getText()));
+            aTerrain.setGravity(Double.parseDouble(GravityText.getText()));
+            aTerrain.setNightChance(Integer.parseInt(NightChanceText.getText()));
+            aTerrain.setNightTempMod(Integer.parseInt(NightTempModText.getText()));
+            aTerrain.setHeavySnowfallChance(Integer.parseInt(heavySnowfallChanceText.getText()));
+            aTerrain.setLightRainfallChance(Integer.parseInt(lightRainfallChanceText.getText()));
+            aTerrain.setHeavyRainfallChance(Integer.parseInt(heavyRainfallChanceText.getText()));
+            aTerrain.setModerateWindsChance(Integer.parseInt(moderateWindsChanceText.getText()));
+            aTerrain.setStaticMap(isStaticMapCB.isSelected());
+            aTerrain.setDuskChance(Integer.parseInt(DuskChanceText.getText()));
+            aTerrain.setMoonLessNightChance(Integer.parseInt(MoonLessNightChanceText.getText()));
+            aTerrain.setPitchBlackNightChance(Integer.parseInt(PitchBlackNightChanceText.getText()));
+            aTerrain.setModerateRainFallChance(Integer.parseInt(moderateRainfallChanceText.getText()));
+            aTerrain.setDownPourChance(Integer.parseInt(downPourChanceText.getText()));
+            aTerrain.setLightSnowfallChance(Integer.parseInt(lightSnowfallChanceText.getText()));
+            aTerrain.setModerateSnowFallChance(Integer.parseInt(moderateSnowfallChanceText.getText()));
+            aTerrain.setSleetChance(Integer.parseInt(sleetChanceText.getText()));
+            aTerrain.setIceStormChance(Integer.parseInt(iceStormChanceText.getText()));
+            aTerrain.setLightHailChance(Integer.parseInt(lightHailChanceText.getText()));
+            aTerrain.setHeavyHailChance(Integer.parseInt(heavyHailChanceText.getText()));
+            aTerrain.setLightFogChance(Integer.parseInt(lightFogChanceText.getText()));
+            aTerrain.setHeavyfogChance(Integer.parseInt(heavyFogChanceText.getText()));
+            aTerrain.setEMIChance(Integer.parseInt(emiChanceText.getText()));
+            aTerrain.setLightWindChance(Integer.parseInt(lightWindsChanceText.getText()));
+            aTerrain.setStrongWindsChance(Integer.parseInt(strongWindsChanceText.getText()));
+            aTerrain.setStormWindsChance(Integer.parseInt(stormWindsChanceText.getText()));
+            aTerrain.setTornadoF13WindChance(Integer.parseInt(tornadoF13WindsChanceText.getText()));
+            aTerrain.setTornadoF4WindsChance(Integer.parseInt(tornadoF4ChanceText.getText()));
+
+            aTerrain.setAtmosphere(atmosphere.getSelectedIndex());
+
         }
-
-        aTerrain.setDisplayName(DisplayNameText.getText());
-        aTerrain.setStaticMapName(StaticMapNameText.getText());
-        aTerrain.setXSize(Integer.parseInt(XSizeText.getText()));
-        aTerrain.setYSize(Integer.parseInt(YSizeText.getText()));
-        aTerrain.setXBoardSize(Integer.parseInt(XBoardSizeText.getText()));
-        aTerrain.setYBoardSize(Integer.parseInt(YBoardSizeText.getText()));
-        aTerrain.setLowTemp(Integer.parseInt(LowTempText.getText()));
-        aTerrain.setHighTemp(Integer.parseInt(HighTempText.getText()));
-        aTerrain.setGravity(Double.parseDouble(GravityText.getText()));
-        aTerrain.setNightChance(Integer.parseInt(NightChanceText.getText()));
-        aTerrain.setNightTempMod(Integer.parseInt(NightTempModText.getText()));
-        aTerrain.setHeavySnowfallChance(Integer.parseInt(heavySnowfallChanceText.getText()));
-        aTerrain.setLightRainfallChance(Integer.parseInt(lightRainfallChanceText.getText()));
-        aTerrain.setHeavyRainfallChance(Integer.parseInt(heavyRainfallChanceText.getText()));
-        aTerrain.setModerateWindsChance(Integer.parseInt(moderateWindsChanceText.getText()));
-        aTerrain.setStaticMap(isStaticMapCB.isSelected());
-        aTerrain.setDuskChance(Integer.parseInt(DuskChanceText.getText()));
-        aTerrain.setMoonLessNightChance(Integer.parseInt(MoonLessNightChanceText.getText()));
-        aTerrain.setPitchBlackNightChance(Integer.parseInt(PitchBlackNightChanceText.getText()));
-        aTerrain.setModerateRainFallChance(Integer.parseInt(moderateRainfallChanceText.getText()));
-        aTerrain.setDownPourChance(Integer.parseInt(downPourChanceText.getText()));
-        aTerrain.setLightSnowfallChance(Integer.parseInt(lightSnowfallChanceText.getText()));
-        aTerrain.setModerateSnowFallChance(Integer.parseInt(moderateSnowfallChanceText.getText()));
-        aTerrain.setSleetChance(Integer.parseInt(sleetChanceText.getText()));
-        aTerrain.setIceStormChance(Integer.parseInt(iceStormChanceText.getText()));
-        aTerrain.setLightHailChance(Integer.parseInt(lightHailChanceText.getText()));
-        aTerrain.setHeavyHailChance(Integer.parseInt(heavyHailChanceText.getText()));
-        aTerrain.setLightFogChance(Integer.parseInt(lightFogChanceText.getText()));
-        aTerrain.setHeavyfogChance(Integer.parseInt(heavyFogChanceText.getText()));
-        aTerrain.setEMIChance(Integer.parseInt(emiChanceText.getText()));
-        aTerrain.setLightWindChance(Integer.parseInt(lightWindsChanceText.getText()));
-        aTerrain.setStrongWindsChance(Integer.parseInt(strongWindsChanceText.getText()));
-        aTerrain.setStormWindsChance(Integer.parseInt(stormWindsChanceText.getText()));
-        aTerrain.setTornadoF13WindChance(Integer.parseInt(tornadoF13WindsChanceText.getText()));
-        aTerrain.setTornadoF4WindsChance(Integer.parseInt(tornadoF4ChanceText.getText()));
-
-        aTerrain.setAtmosphere(atmosphere.getSelectedIndex());
-
-    }
-*/
+    */
     private boolean saveAllData() {
 
         try {
@@ -1121,13 +1185,19 @@ public final class PlanetEditorDialog implements ActionListener, KeyListener {
     private void saveOwners() {
 
         for (String owner : ownersMap.keySet()) {
-            mwclient.sendChat(MWClient.CAMPAIGN_PREFIX + "c AdminUpdatePlanetOwnership#" + planetName + "#" + owner + "#" + ownersMap.get(owner));
+            mwclient.sendChat(MWClient.CAMPAIGN_PREFIX +
+                                    "c AdminUpdatePlanetOwnership#" +
+                                    planetName +
+                                    "#" +
+                                    owner +
+                                    "#" +
+                                    ownersMap.get(owner));
         }
     }
 
     private void saveFactories() {
         for (String factory : factoryMap.keySet()) {
-        	String FactoryData = factoryMap.get(factory);
+            String FactoryData = factoryMap.get(factory);
             mwclient.sendChat(MWClient.CAMPAIGN_PREFIX + "c AdminCreateFactory#" + planetName + "#" + FactoryData);
         }
 
@@ -1135,9 +1205,17 @@ public final class PlanetEditorDialog implements ActionListener, KeyListener {
 
     private void saveTerrain() {
         for (String terrainIndex : ContinentMap.keySet()) {
-        	Continent terrain = ContinentMap.get(terrainIndex);
-        	//TODO fix this to send the advancedterrain as well
-        	mwclient.sendChat(MWClient.CAMPAIGN_PREFIX + "c AdminCreateTerrain#" + planetName + "#" + terrain.getEnvironment().getName() + "#" + terrain.getAdvancedTerrain().getName()+ "#" + terrain.getSize());
+            Continent terrain = ContinentMap.get(terrainIndex);
+            //TODO fix this to send the advancedterrain as well
+            mwclient.sendChat(MWClient.CAMPAIGN_PREFIX +
+                                    "c AdminCreateTerrain#" +
+                                    planetName +
+                                    "#" +
+                                    terrain.getEnvironment().getName() +
+                                    "#" +
+                                    terrain.getAdvancedTerrain().getName() +
+                                    "#" +
+                                    terrain.getSize());
         }
 
     }
@@ -1148,31 +1226,66 @@ public final class PlanetEditorDialog implements ActionListener, KeyListener {
 
     private void saveMisc() {
 
-        if (!planetXPosition.getText().equals(Double.toString(selectedPlanet.getPosition().getX())) || !planetYPosition.getText().equals(Double.toString(selectedPlanet.getPosition().getY()))) {
-            mwclient.sendChat(MWClient.CAMPAIGN_PREFIX + "c AdminMovePlanet#" + planetName + "#" + planetXPosition.getText() + "#" + planetYPosition.getText());
+        if (!planetXPosition.getText().equals(Double.toString(selectedPlanet.getPosition().getX())) ||
+                  !planetYPosition.getText().equals(Double.toString(selectedPlanet.getPosition().getY()))) {
+            mwclient.sendChat(MWClient.CAMPAIGN_PREFIX +
+                                    "c AdminMovePlanet#" +
+                                    planetName +
+                                    "#" +
+                                    planetXPosition.getText() +
+                                    "#" +
+                                    planetYPosition.getText());
         }
         if (!houseNames.getSelectedItem().toString().equals(selectedPlanet.getOriginalOwner())) {
-            mwclient.sendChat(MWClient.CAMPAIGN_PREFIX + "c AdminSetPlanetOriginalOwner#" + planetName + "#" + houseNames.getSelectedItem().toString());
+            mwclient.sendChat(MWClient.CAMPAIGN_PREFIX +
+                                    "c AdminSetPlanetOriginalOwner#" +
+                                    planetName +
+                                    "#" +
+                                    houseNames.getSelectedItem().toString());
         }
         if (!minPlanetOwnerShip.getText().equals(Integer.toString(selectedPlanet.getMinPlanetOwnerShip()))) {
-            mwclient.sendChat(MWClient.CAMPAIGN_PREFIX + "c SetPlanetMinOwnerShip#" + planetName + "#" + minPlanetOwnerShip.getText());
+            mwclient.sendChat(MWClient.CAMPAIGN_PREFIX +
+                                    "c SetPlanetMinOwnerShip#" +
+                                    planetName +
+                                    "#" +
+                                    minPlanetOwnerShip.getText());
         }
         if (!planetConquerPoints.getText().equals(Integer.toString(selectedPlanet.getConquestPoints()))) {
-            mwclient.sendChat(MWClient.CAMPAIGN_PREFIX + "c SetPlanetConquerPoints#" + planetName + "#" + planetConquerPoints.getText());
+            mwclient.sendChat(MWClient.CAMPAIGN_PREFIX +
+                                    "c SetPlanetConquerPoints#" +
+                                    planetName +
+                                    "#" +
+                                    planetConquerPoints.getText());
         }
         if (isHomeWorldCB.isSelected() != selectedPlanet.isHomeWorld()) {
-            mwclient.sendChat(MWClient.CAMPAIGN_PREFIX + "c Adminsethomeworld#" + planetName + "#" + isHomeWorldCB.isSelected());
+            mwclient.sendChat(MWClient.CAMPAIGN_PREFIX +
+                                    "c Adminsethomeworld#" +
+                                    planetName +
+                                    "#" +
+                                    isHomeWorldCB.isSelected());
         }
 
         if (isConquerable.isSelected() != selectedPlanet.isConquerable()) {
-            mwclient.sendChat(MWClient.CAMPAIGN_PREFIX + "c SetPlanetConquer#" + planetName + "#" + isConquerable.isSelected());
+            mwclient.sendChat(MWClient.CAMPAIGN_PREFIX +
+                                    "c SetPlanetConquer#" +
+                                    planetName +
+                                    "#" +
+                                    isConquerable.isSelected());
         }
 
         if (!planetBays.getText().equals(Integer.toString(selectedPlanet.getBaysProvided()))) {
-            mwclient.sendChat(MWClient.CAMPAIGN_PREFIX + "c Setplanetwarehouse#" + planetName + "#" + planetBays.getText());
+            mwclient.sendChat(MWClient.CAMPAIGN_PREFIX +
+                                    "c Setplanetwarehouse#" +
+                                    planetName +
+                                    "#" +
+                                    planetBays.getText());
         }
         if (!planetComps.getText().equals(Integer.toString(selectedPlanet.getCompProduction()))) {
-            mwclient.sendChat(MWClient.CAMPAIGN_PREFIX + "c Setplanetcompproduction#" + planetName + "#" + planetComps.getText());
+            mwclient.sendChat(MWClient.CAMPAIGN_PREFIX +
+                                    "c Setplanetcompproduction#" +
+                                    planetName +
+                                    "#" +
+                                    planetComps.getText());
         }
 
     }

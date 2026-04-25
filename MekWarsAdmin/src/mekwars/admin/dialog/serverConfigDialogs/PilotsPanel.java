@@ -1,15 +1,15 @@
 /*
  * MekWars - Copyright (C) 2011
- * 
- * 
+ *
+ *
  * This program is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software
  * Foundation; either version 2 of the License, or (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
  * A PARTICULAR PURPOSE. See the GNU General Public License for more details.
  */
 
-package admin.dialog.serverConfigDialogs;
+package mekwars.admin.dialog.serverConfigDialogs;
 
 import java.awt.GridLayout;
 
@@ -29,15 +29,15 @@ import common.util.SpringLayoutHelper;
  */
 public class PilotsPanel extends JPanel {
 
-	/**
-	 * 
-	 */
-	private static final long serialVersionUID = 5196079223646097482L;
-	private JTextField baseTextField = new JTextField(5);
-	private JCheckBox BaseCheckBox = new JCheckBox();
-	
-	public PilotsPanel(MWClient mwclient) {
-		super();
+    /**
+     *
+     */
+    private static final long serialVersionUID = 5196079223646097482L;
+    private JTextField baseTextField = new JTextField(5);
+    private JCheckBox BaseCheckBox = new JCheckBox();
+
+    public PilotsPanel(MWClient mwclient) {
+        super();
         /*
          * Pilots options panel
          */
@@ -54,7 +54,8 @@ public class PilotsPanel extends JPanel {
 
         baseTextField = new JTextField(5);
         pilotOptionsSpring1.add(new JLabel("Skill Gain:", SwingConstants.TRAILING));
-        baseTextField.setToolTipText("<html>% chance for a pilot to get a skill<br>instead of a gunnery/piloting upgrade</html>");
+        baseTextField.setToolTipText(
+              "<html>% chance for a pilot to get a skill<br>instead of a gunnery/piloting upgrade</html>");
         baseTextField.setName("SkillLevelChance");
         pilotOptionsSpring1.add(baseTextField);
 
@@ -72,31 +73,37 @@ public class PilotsPanel extends JPanel {
 
         baseTextField = new JTextField(5);
         pilotOptionsSpring1.add(new JLabel("Max Pilots From House:", SwingConstants.TRAILING));
-        baseTextField.setToolTipText("<html>Cap for pilots in a players personal queue<br>if they have less they can purchase<br>from the faction pools<br>if Allow Players to Buy<br>with full Queues is checked");
+        baseTextField.setToolTipText(
+              "<html>Cap for pilots in a players personal queue<br>if they have less they can purchase<br>from the faction pools<br>if Allow Players to Buy<br>with full Queues is checked");
         baseTextField.setName("MaxAllowedPilotsInQueueToBuyFromHouse");
         pilotOptionsSpring1.add(baseTextField);
 
         baseTextField = new JTextField(5);
         pilotOptionsSpring1.add(new JLabel("Base Pilot Survival:", SwingConstants.TRAILING));
-        baseTextField.setToolTipText("<html>Base Survival Rate for an ejected pilot<br>If the %planet control is less then this this<br>amount is used.</html>");
+        baseTextField.setToolTipText(
+              "<html>Base Survival Rate for an ejected pilot<br>If the %planet control is less then this this<br>amount is used.</html>");
         baseTextField.setName("BasePilotSurvival");
         pilotOptionsSpring1.add(baseTextField);
 
         baseTextField = new JTextField(5);
         pilotOptionsSpring1.add(new JLabel("Trapped In Mech Survival:", SwingConstants.TRAILING));
-        baseTextField.setToolTipText("<html>Unique to in-mech pilots (engine kills). Penalty" + "<br>for being in a stationary unit when the capture" + "<br>crews come around and sweep the field.</html>");
+        baseTextField.setToolTipText("<html>Unique to in-mech pilots (engine kills). Penalty" +
+                                           "<br>for being in a stationary unit when the capture" +
+                                           "<br>crews come around and sweep the field.</html>");
         baseTextField.setName("TrappedInMechSurvivalMod");
         pilotOptionsSpring1.add(baseTextField);
 
         baseTextField = new JTextField(5);
         pilotOptionsSpring1.add(new JLabel("Convert Pilots:", SwingConstants.TRAILING));
-        baseTextField.setToolTipText("<html>% Chance that captured pilots are converted<br>and sent to faction/player pools</html>");
+        baseTextField.setToolTipText(
+              "<html>% Chance that captured pilots are converted<br>and sent to faction/player pools</html>");
         baseTextField.setName("ChanceToConvertCapturedPilots");
         pilotOptionsSpring1.add(baseTextField);
 
         baseTextField = new JTextField(5);
         pilotOptionsSpring1.add(new JLabel("Damage Per Hit:", SwingConstants.TRAILING));
-        baseTextField.setToolTipText("<html>Amount of damage the pilot will take per hit they receive in game<br>NOTE: This amount will be translated back into CBT hits<br>When sent back to the clients.</html>");
+        baseTextField.setToolTipText(
+              "<html>Amount of damage the pilot will take per hit they receive in game<br>NOTE: This amount will be translated back into CBT hits<br>When sent back to the clients.</html>");
         baseTextField.setName("AmountOfDamagePerPilotHit");
         pilotOptionsSpring1.add(baseTextField);
 
@@ -108,23 +115,32 @@ public class PilotsPanel extends JPanel {
 
         baseTextField = new JTextField(5);
         pilotOptionsSpring1.add(new JLabel("Pilot Skil Sell Back Mod:", SwingConstants.TRAILING));
-        baseTextField.setToolTipText("<html>Sets what percent of the original cost the pilot gets back in exp<br>when a skill is sold.<br>NOTE: This is a double filed .5 = 50%</html>");
+        baseTextField.setToolTipText(
+              "<html>Sets what percent of the original cost the pilot gets back in exp<br>when a skill is sold.<br>NOTE: This is a double filed .5 = 50%</html>");
         baseTextField.setName("PilotUpgradeSellBackPercent");
         pilotOptionsSpring1.add(baseTextField);
 
         // PilotSpring2 - 8 elements
         baseTextField = new JTextField(5);
         pilotOptionsSpring2.add(new JLabel("Total Skill to Retire:", SwingConstants.TRAILING));
-        baseTextField.setToolTipText("<html>Total skill (Piloting + Gunnery) of pilot must be equal to or less than this number in order to retire for free.</html>");
+        baseTextField.setToolTipText(
+              "<html>Total skill (Piloting + Gunnery) of pilot must be equal to or less than this number in order to retire for free.</html>");
         baseTextField.setName("TotalSkillForFreeRetirement");
         pilotOptionsSpring2.add(baseTextField);
 
         baseTextField = new JTextField(5);
         pilotOptionsSpring2.add(new JLabel("Early Retire Cost:", SwingConstants.TRAILING));
-        baseTextField.setToolTipText("<html>" + mwclient.moneyOrFluMessage(true, true, -1) + " cost PER LEVEL to retire a pilot before free. For<br>" + "example, if Skill to Retire is 6, a pilot is 4/5 (Total:9)<br>" + "and the cost is 10, it will cost (9-6)*10=30 " + mwclient.moneyOrFluMessage(true, true, -1) + " to<br>" + "retire the 4/5.</html>");
+        baseTextField.setToolTipText("<html>" +
+                                           mwclient.moneyOrFluMessage(true, true, -1) +
+                                           " cost PER LEVEL to retire a pilot before free. For<br>" +
+                                           "example, if Skill to Retire is 6, a pilot is 4/5 (Total:9)<br>" +
+                                           "and the cost is 10, it will cost (9-6)*10=30 " +
+                                           mwclient.moneyOrFluMessage(true, true, -1) +
+                                           " to<br>" +
+                                           "retire the 4/5.</html>");
         baseTextField.setName("CostPerLevelToRetireEarly");
         pilotOptionsSpring2.add(baseTextField);
-        
+
         baseTextField = new JTextField(5);
         pilotOptionsSpring2.add(new JLabel("Retired Pilot Takes Mech Chance:", SwingConstants.TRAILING));
         baseTextField.setToolTipText("<html> Chance a retiring pilot takes his unit with him.</html>");
@@ -151,31 +167,39 @@ public class PilotsPanel extends JPanel {
 
         baseTextField = new JTextField(5);
         pilotOptionsSpring2.add(new JLabel("Base level Up Roll", SwingConstants.TRAILING));
-        baseTextField.setToolTipText("<html>" + "Basic 1dX required used for level up. If roll<br>" + "is less than pilot XP, pilot gains a level.</html>");
+        baseTextField.setToolTipText("<html>" +
+                                           "Basic 1dX required used for level up. If roll<br>" +
+                                           "is less than pilot XP, pilot gains a level.</html>");
         baseTextField.setName("BaseRollToLevel");
         pilotOptionsSpring2.add(baseTextField);
 
         baseTextField = new JTextField(5);
         pilotOptionsSpring2.add(new JLabel("Roll Multiplier", SwingConstants.TRAILING));
-        baseTextField.setToolTipText("<html>" + "Base * Multiplier * (10 - total skill). If Base is 1000, and<br>" + "multiplier is 2, and skill is 3/4 (7), pilot will need to roll<br>" + "lower than his XP on 1d6000 (1000Base * 2Multi * 3Levels = 6000).</html>");
+        baseTextField.setToolTipText("<html>" +
+                                           "Base * Multiplier * (10 - total skill). If Base is 1000, and<br>" +
+                                           "multiplier is 2, and skill is 3/4 (7), pilot will need to roll<br>" +
+                                           "lower than his XP on 1d6000 (1000Base * 2Multi * 3Levels = 6000).</html>");
         baseTextField.setName("MultiplierPerPreviousLevel");
         pilotOptionsSpring2.add(baseTextField);
 
         baseTextField = new JTextField(5);
         pilotOptionsSpring2.add(new JLabel("Health per Tick", SwingConstants.TRAILING));
-        baseTextField.setToolTipText("<html>The number of points a pilot will heal in one tick<br>NOTE: with PPQ on pilots must be in the queue to heal<br>With PPQ off pilots will heal while in their units.</html>");
+        baseTextField.setToolTipText(
+              "<html>The number of points a pilot will heal in one tick<br>NOTE: with PPQ on pilots must be in the queue to heal<br>With PPQ off pilots will heal while in their units.</html>");
         baseTextField.setName("PilotAmountHealedPerTick");
         pilotOptionsSpring2.add(baseTextField);
 
         baseTextField = new JTextField(5);
         pilotOptionsSpring2.add(new JLabel("MedTech per Tick", SwingConstants.TRAILING));
-        baseTextField.setToolTipText("<html>The number of points a pilot will heal in one tick if they have the medtech skill<br>NOTE: with PPQ on pilots must be in the queue to heal<br>With PPQ off pilots will heal while in their units.</html>");
+        baseTextField.setToolTipText(
+              "<html>The number of points a pilot will heal in one tick if they have the medtech skill<br>NOTE: with PPQ on pilots must be in the queue to heal<br>With PPQ off pilots will heal while in their units.</html>");
         baseTextField.setName("MedTechAmountHealedPerTick");
         pilotOptionsSpring2.add(baseTextField);
 
         baseTextField = new JTextField(5);
         pilotOptionsSpring2.add(new JLabel("Max Pilot Upgrades:", SwingConstants.TRAILING));
-        baseTextField.setToolTipText("<html>Set the maximum numbers of skills a player can give a pilot.<br>Set to -1 for unlimited.</html>");
+        baseTextField.setToolTipText(
+              "<html>Set the maximum numbers of skills a player can give a pilot.<br>Set to -1 for unlimited.</html>");
         baseTextField.setName("MaxPilotUpgrades");
         pilotOptionsSpring2.add(baseTextField);
 
@@ -194,7 +218,9 @@ public class PilotsPanel extends JPanel {
         pilotCBoxGrid.add(BaseCheckBox);
 
         BaseCheckBox = new JCheckBox("Unlevel@Queue");
-        BaseCheckBox.setToolTipText("<HTML>" + "Unchecking allows Pilots to keep skills and XP in queue<br>" + "after their rides die.</HTML>");
+        BaseCheckBox.setToolTipText("<HTML>" +
+                                          "Unchecking allows Pilots to keep skills and XP in queue<br>" +
+                                          "after their rides die.</HTML>");
         BaseCheckBox.setName("ReduceSkillsInQue");
         pilotCBoxGrid.add(BaseCheckBox);
 
@@ -209,17 +235,20 @@ public class PilotsPanel extends JPanel {
         pilotCBoxGrid.add(BaseCheckBox);
 
         BaseCheckBox = new JCheckBox("Allow PPQ");
-        BaseCheckBox.setToolTipText("<HTML>Allow Personal Pilot Queues<br>Players are allowed to keep their own pilots instead of them going to the faction pools</HTML>");
+        BaseCheckBox.setToolTipText(
+              "<HTML>Allow Personal Pilot Queues<br>Players are allowed to keep their own pilots instead of them going to the faction pools</HTML>");
         BaseCheckBox.setName("AllowPersonalPilotQueues");
         pilotCBoxGrid.add(BaseCheckBox);
 
         BaseCheckBox = new JCheckBox("Allow Extra Pilots");
-        BaseCheckBox.setToolTipText("<HTML>When checked the players can buy<br>pilots from the faction pool<br>even if they already have pilots of that<br>type/class in their pools</HTML>");
+        BaseCheckBox.setToolTipText(
+              "<HTML>When checked the players can buy<br>pilots from the faction pool<br>even if they already have pilots of that<br>type/class in their pools</HTML>");
         BaseCheckBox.setName("AllowPlayerToBuyPilotsFromHouseWhenPoolIsFull");
         pilotCBoxGrid.add(BaseCheckBox);
 
         BaseCheckBox = new JCheckBox("Downed Pilots Roll");
-        BaseCheckBox.setToolTipText("<HTML>When checked a downed pilot must make a survival roll<br>to see if they make it home<br>or are captured</HTML>");
+        BaseCheckBox.setToolTipText(
+              "<HTML>When checked a downed pilot must make a survival roll<br>to see if they make it home<br>or are captured</HTML>");
         BaseCheckBox.setName("DownPilotsMustRollForSurvival");
         pilotCBoxGrid.add(BaseCheckBox);
 
@@ -234,7 +263,10 @@ public class PilotsPanel extends JPanel {
         pilotCBoxGrid.add(BaseCheckBox);
 
         BaseCheckBox = new JCheckBox("Elite Retirements");
-        BaseCheckBox.setToolTipText("<html>Randomly retire elite pilots who can't level any more. Rolls to retire are<br>" + "against the same target as their final level up. This automated retirement is separate<br>" + "from player-initiated retirement and will work even if \"Allow Retirement\" is disabled.</html>");
+        BaseCheckBox.setToolTipText(
+              "<html>Randomly retire elite pilots who can't level any more. Rolls to retire are<br>" +
+                    "against the same target as their final level up. This automated retirement is separate<br>" +
+                    "from player-initiated retirement and will work even if \"Allow Retirement\" is disabled.</html>");
         BaseCheckBox.setName("RandomRetirementOfElites");
         pilotCBoxGrid.add(BaseCheckBox);
 
@@ -244,12 +276,16 @@ public class PilotsPanel extends JPanel {
         pilotCBoxGrid.add(BaseCheckBox);
 
         BaseCheckBox = new JCheckBox("Random Pilot Levels");
-        BaseCheckBox.setToolTipText("<html>" + "Disable to use RPG style pilot levelling. Pilots must gain<br>" + "Base * Multiplier * (10-Skill) XP to reach next level.<br>" + "Random roll to level up is removed - only raw XP is used.</html>");
+        BaseCheckBox.setToolTipText("<html>" +
+                                          "Disable to use RPG style pilot levelling. Pilots must gain<br>" +
+                                          "Base * Multiplier * (10-Skill) XP to reach next level.<br>" +
+                                          "Random roll to level up is removed - only raw XP is used.</html>");
         BaseCheckBox.setName("UseRandomPilotLevelups");
         pilotCBoxGrid.add(BaseCheckBox);
 
         BaseCheckBox = new JCheckBox("Pilot Damage Transfers");
-        BaseCheckBox.setToolTipText("<html>If a pilot takes damage in a game it'll transfer back to the campaign<br>and the pilot will need to heal up.</html>");
+        BaseCheckBox.setToolTipText(
+              "<html>If a pilot takes damage in a game it'll transfer back to the campaign<br>and the pilot will need to heal up.</html>");
         BaseCheckBox.setName("AllowPilotDamageToTransfer");
         pilotCBoxGrid.add(BaseCheckBox);
 
@@ -264,27 +300,30 @@ public class PilotsPanel extends JPanel {
         pilotCBoxGrid.add(BaseCheckBox);
 
         BaseCheckBox = new JCheckBox("Players Level Pilots");
-        BaseCheckBox.setToolTipText("<html>If Checked Then pilots do not check for leveling after each Operation<br> instead they players can buy skills and attributes with the pilots exp.</html>");
+        BaseCheckBox.setToolTipText(
+              "<html>If Checked Then pilots do not check for leveling after each Operation<br> instead they players can buy skills and attributes with the pilots exp.</html>");
         BaseCheckBox.setName("PlayersCanBuyPilotUpgrades");
         pilotCBoxGrid.add(BaseCheckBox);
 
         BaseCheckBox = new JCheckBox("Pilots Must level Evenly");
-        BaseCheckBox.setToolTipText("<html>If Checked then players must level their pilots skills via stair step.<br>This means no more then 1 difference between gunnery and piloting<br>unless the Pilot has NAG or NAP.</html>");
+        BaseCheckBox.setToolTipText(
+              "<html>If Checked then players must level their pilots skills via stair step.<br>This means no more then 1 difference between gunnery and piloting<br>unless the Pilot has NAG or NAP.</html>");
         BaseCheckBox.setName("PilotsMustLevelEvenly");
         pilotCBoxGrid.add(BaseCheckBox);
 
         BaseCheckBox = new JCheckBox("Players Demote Pilots");
-        BaseCheckBox.setToolTipText("<html>If Checked, as well as Players Level Pilots, Then players can sell back pilots skills.</html>");
+        BaseCheckBox.setToolTipText(
+              "<html>If Checked, as well as Players Level Pilots, Then players can sell back pilots skills.</html>");
         BaseCheckBox.setName("PlayersCanSellPilotUpgrades");
         pilotCBoxGrid.add(BaseCheckBox);
 
         BaseCheckBox = new JCheckBox("Allow Asymmetric Levelling");
-        BaseCheckBox.setToolTipText("<html>If checked, pilots will be able to level up asymmetrically (2/5, 1/5, 4/2, etc)</html>");
+        BaseCheckBox.setToolTipText(
+              "<html>If checked, pilots will be able to level up asymmetrically (2/5, 1/5, 4/2, etc)</html>");
         BaseCheckBox.setName("AllowAsymmetricPilotLevels");
         pilotCBoxGrid.add(BaseCheckBox);
-        
-        
-        
+
+
         // finalize the layout
         JPanel pilotBox = new JPanel(new SpringLayout());
         JPanel pilotFlow = new JPanel();
@@ -296,6 +335,6 @@ public class PilotsPanel extends JPanel {
         SpringLayoutHelper.setupSpringGrid(pilotBox, 2, 1);
 
         add(pilotBox);
-	}
+    }
 
 }
