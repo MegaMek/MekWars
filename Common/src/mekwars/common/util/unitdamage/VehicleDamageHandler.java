@@ -3,18 +3,19 @@ package mekwars.common.util.unitdamage;
 import java.util.Iterator;
 import java.util.StringTokenizer;
 
-import common.util.MWLogger;
-import common.util.UnitUtils;
 import megamek.common.CriticalSlot;
-import megamek.common.Entity;
-import megamek.common.IArmorState;
-import megamek.common.Mounted;
-import megamek.common.Tank;
+import megamek.common.equipment.AmmoMounted;
+import megamek.common.equipment.IArmorState;
+import megamek.common.equipment.Mounted;
+import megamek.common.units.Entity;
+import megamek.common.units.Tank;
+import mekwars.common.util.MWLogger;
+import mekwars.common.util.UnitUtils;
 
 public class VehicleDamageHandler extends AbstractUnitDamageHandler {
 
-	@Override
-	public String buildDamageString(Entity unit, boolean sendAmmo) {
+    @Override
+    public String buildDamageString(Entity unit, boolean sendAmmo) {
         StringBuilder result = new StringBuilder();
         String delimiter = "-";
         String delimiter2 = "%";
@@ -98,15 +99,6 @@ public class VehicleDamageHandler extends AbstractUnitDamageHandler {
                         cs.setMissing(true);
                     }
 
-                    /*
-                     * Mounted mount = cs.getMount(); //makes
-                     * sure that a destroyed split weapon is marked destroyed
-                     * //in all locations --Torren if ( mount != null &&
-                     * mount.isSplitable() && mount.isSplit()){
-                     * cs.setMissing(mount.isMissing());
-                     * cs.setDestroyed(mount.isDestroyed());
-                     * cs.setBreached(mount.isBreached()); }
-                     */
                     // Missing items do not need to worry about damage or
                     // breach.
                     if (cs.isMissing()) {
@@ -149,18 +141,18 @@ public class VehicleDamageHandler extends AbstractUnitDamageHandler {
 
             if (sendAmmo) {
                 int location = 0;
-                for (Mounted weap : unit.getAmmo()) {
-                    if (weap.isDestroyed()) {
+                for (AmmoMounted ammoMounted : unit.getAmmo()) {
+                    if (ammoMounted.isDestroyed()) {
                         hasData = true;
                         result.append(location);
                         result.append(delimiter2);
                         result.append(0);
                         result.append(delimiter2);
-                    } else if (weap.getUsableShotsLeft() != UnitUtils.getShots(weap)) {
+                    } else if (ammoMounted.getUsableShotsLeft() != UnitUtils.getShots(ammoMounted)) {
                         hasData = true;
                         result.append(location);
                         result.append(delimiter2);
-                        result.append(Math.max(0, weap.getUsableShotsLeft()));
+                        result.append(Math.max(0, ammoMounted.getUsableShotsLeft()));
                         result.append(delimiter2);
                     }
 
@@ -181,11 +173,11 @@ public class VehicleDamageHandler extends AbstractUnitDamageHandler {
         }
         return result.toString();
 
-	}
+    }
 
-	@Override
-	public void applyDamageString(Entity unit, String report, boolean isRepairing) {
-		// MWLogger.errLog(System.currentTimeMillis()+" Unit "+unit.getModel()+" applyBattleDamage: "+report);
+    @Override
+    public void applyDamageString(Entity unit, String report, boolean isRepairing) {
+        // MWLogger.errLog(System.currentTimeMillis()+" Unit "+unit.getModel()+" applyBattleDamage: "+report);
         StringTokenizer entry = new StringTokenizer(report, "-");
 
         StringTokenizer externalArmor = new StringTokenizer(entry.nextToken(), "%");
@@ -239,7 +231,7 @@ public class VehicleDamageHandler extends AbstractUnitDamageHandler {
             if (damageType.equals("^")) {
                 critSlot.setDestroyed(true);
                 if (critSlot.getType() == CriticalSlot.TYPE_EQUIPMENT) {
-                    Mounted mounted = critSlot.getMount();
+                    Mounted<?> mounted = critSlot.getMount();
                     // check to see if it has ammo. If so set it 0 as the
                     // ammobin has gone bye bye.
                     if (mounted.getUsableShotsLeft() > 0) {
@@ -253,7 +245,7 @@ public class VehicleDamageHandler extends AbstractUnitDamageHandler {
                     if (!critSlot.isBreached() && !critSlot.isDamaged()) {
                         critSlot.setDestroyed(true);
                         if (critSlot.getType() == CriticalSlot.TYPE_EQUIPMENT) {
-                            Mounted mounted = critSlot.getMount();
+                            Mounted<?> mounted = critSlot.getMount();
                             // check to see if it has ammo. If so set it 0 as
                             // the ammobin has gone bye bye.
                             if (mounted.getUsableShotsLeft() > 0) {
@@ -295,6 +287,6 @@ public class VehicleDamageHandler extends AbstractUnitDamageHandler {
                 }
             }
         }
-	}
+    }
 
 }

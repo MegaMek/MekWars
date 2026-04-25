@@ -300,7 +300,7 @@ v 0.3.5.x
 R Released Ded v0.3.5.5, Client v0.3.5.20
 + BUG 344: Dedicated Client uses mwconfig.txt.bak instead of mwconfig.txt
 + RFE 405: Increase DEDMEMORY in cconfig.java to 256
-+ BUG 345: Memory hardcoded in mwclient when turned into a ded
++ BUG 345: Memory hardcoded in client when turned into a ded
 + updated MM.jar
 R Released Server v0.3.5.27
 + Bug 343: Unknown Unit Type in UnitDamageHandlerFactory for Infantry
@@ -4689,7 +4689,7 @@ Release Server 0.1.0.1
 + Disabled UseCalculatedCosts as MM does not caluclate costs for Protomeks or
   some Infantry/BA.
 + Removed (ALPHA) text from CMainFrame.jMenuHelpHelp_actionPerformed
-+ Added mwclient.getserverConfigs("NewbieHouseName") to CMainFrame.
++ Added client.getserverConfigs("NewbieHouseName") to CMainFrame.
   jMenuHelpHelp_actionPerformed to send Newbie house name instead of SOL
 + Removed ONLINEHELP tag from MMNetHyperLinkListener as it was duplicated in
   CMainFrame.jMenuHelpHelp_actionPerformed and used.
@@ -5411,7 +5411,7 @@ Release Server 0.1.0.1
 + Disabled UseCalculatedCosts as MM does not caluclate costs for Protomeks or
   some Infantry/BA.
 + Removed (ALPHA) text from CMainFrame.jMenuHelpHelp_actionPerformed
-+ Added mwclient.getserverConfigs("NewbieHouseName") to CMainFrame.
++ Added client.getserverConfigs("NewbieHouseName") to CMainFrame.
   jMenuHelpHelp_actionPerformed to send Newbie house name instead of SOL
 + Removed ONLINEHELP tag from MMNetHyperLinkListener as it was duplicated in
   CMainFrame.jMenuHelpHelp_actionPerformed and used.
@@ -5875,7 +5875,7 @@ R Client / Server 0.0.18.0
 + BUG: players who've just logged in sometimes logged out by idle-checker
 + BUG: loading savegames not working
 + Use one link-listener for all chat tabs, instead of creating individual listeners
-+ Massive rename of MMClient to MWClient, standardized on "mwclient" as ivar name in classes
++ Massive rename of MMClient to MWClient, standardized on "client" as ivar name in classes
 0 Made above change in order to stop MW and MMNET from grouping together in taskbar
 + Removed unecessary task param IArmy.matches in prep for Ops
 + Hide "Add to No-Play" option in userlist popup no-play max size is < 1

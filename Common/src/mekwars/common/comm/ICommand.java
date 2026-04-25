@@ -25,13 +25,16 @@ package mekwars.common.comm;
 
 /**
  *
- * @author  Administrator
+ * @author Administrator
  */
 public interface ICommand {
 
-  public String getPrefix();
-  public boolean hasError();
-  public String getErrorMessage();
-  public void reset();
+    String getPrefix();
+
+    boolean hasError();
+
+    String getErrorMessage();
+
+    void reset();
 
 }

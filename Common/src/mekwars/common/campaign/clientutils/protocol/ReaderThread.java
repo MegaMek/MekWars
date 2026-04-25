@@ -36,11 +36,12 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.Socket;
+import java.nio.charset.StandardCharsets;
 import java.util.StringTokenizer;
 import java.util.Vector;
 import java.util.zip.Inflater;
 
-import common.util.MWLogger;
+import mekwars.common.util.MWLogger;
 
 /**
  * Constantly read from the socket's input stream
@@ -48,19 +49,13 @@ import common.util.MWLogger;
 public class ReaderThread extends Thread {
     private boolean keepGoing = true;
 
-    //private BufferedReader _in;
-
     private InputStream _sis;
 
     private IConnectionListener _listener;
 
-    private IConnectionHandler _connectionHandler;
+    private final IConnectionHandler _connectionHandler;
 
-    private byte[] compressedBytes = null;
-
-    private byte[] rawBytes = null;
-
-    private Inflater inflater = new Inflater();
+    private final Inflater inflater = new Inflater();
 
     //private Checksum checksum = new CRC32();
 
@@ -79,11 +74,11 @@ public class ReaderThread extends Thread {
         _listener = listener;
     }
 
-    private byte[] rlBuffer = new byte[256 * 256];
+    private final byte[] rlBuffer = new byte[256 * 256];
 
     private static final int NL = 10; // "\n" in ASCII and UTF8
 
-    private String readLine() throws IOException{
+    private String readLine() throws IOException {
         try {
             int n = 0;
             int i;
@@ -93,20 +88,19 @@ public class ReaderThread extends Thread {
             // rlBuffer[n++] = (byte) NL;
             byte[] a = new byte[n];
             System.arraycopy(rlBuffer, 0, a, 0, n);
-            return new String(a, "UTF8");
+            return new String(a, StandardCharsets.UTF_8);
         } catch (Exception e) {
             throw new IOException();
         }
     }
 
     /**
-     * Decompose a raw message into an array of String, splitting on the
-     * DELIMITER defined in ICommands.
+     * Decompose a raw message into an array of String, splitting on the DELIMITER defined in ICommands.
      */
 
     private String[] decompose(String input) {
         StringTokenizer st = new StringTokenizer(input, IClient.DELIMITER);
-        Vector<String> v = new Vector<String>(5,1);
+        Vector<String> v = new Vector<>(5, 1);
         while (st.hasMoreTokens()) {
             v.addElement(st.nextToken());
         }
@@ -121,11 +115,10 @@ public class ReaderThread extends Thread {
         int fullSize = 29999;
 
         //just in case
-        if ( args.length > 2 )
-            fullSize = Integer.parseInt(args[2]);
+        if (args.length > 2) {fullSize = Integer.parseInt(args[2]);}
 
-        compressedBytes = new byte[size];
-        rawBytes = new byte[fullSize];
+        byte[] compressedBytes = new byte[size];
+        byte[] rawBytes = new byte[fullSize];
         // use an Inflater instead of InflaterInputStream so we don't
         // have to worry about the internal IIS buffers screwing our stream
         // position.
@@ -135,26 +128,12 @@ public class ReaderThread extends Thread {
             ConnectionHandlerLocal.DEBUG("< Read " + totalRead + " of " + size);
         }
 
-        // debugging output
-        /*
-         * checksum.reset(); checksum.update(compressedBytes, 0, size);
-         * MWLogger.infoLog("\t...Checksum of /deflated is " +
-         * checksum.getValue()); BufferedReader cbr = new BufferedReader(new
-         * InputStreamReader(new ByteArrayInputStream(compressedBytes, 0,
-         * size))); // ... more debugging StringBuilder sb2 = new StringBuilder();
-         * for (int i = 0; i < Math.min(size, 10); i++) {
-         * sb2.append(compressedBytes[i]); sb2.append(" "); }
-         * //MWLogger.infoLog("\tfirst bytes are " +
-         * sb2.toString()); // ... still more String s;
-         * //MWLogger.infoLog("Probably useless /deflate
-         * payload follows:"); while ((s = cbr.readLine()) != null) {
-         * MWLogger.infoLog("\t" + s); }
-         */
         inflater.reset();
         inflater.setInput(compressedBytes, 0, size);
         int textLength = inflater.inflate(rawBytes);
 
-        BufferedReader br = new BufferedReader(new InputStreamReader(new ByteArrayInputStream(rawBytes, 0, textLength), "UTF8"));
+        BufferedReader br = new BufferedReader(new InputStreamReader(new ByteArrayInputStream(rawBytes, 0, textLength),
+              StandardCharsets.UTF_8));
         while ((command = br.readLine()) != null) {
             ConnectionHandlerLocal.DEBUG("< inflated: " + command);
             _listener.incomingMessage(command);
@@ -162,20 +141,20 @@ public class ReaderThread extends Thread {
     }
 
     @Override
-	public void run() {
+    public void run() {
         try {
             String newLine;
             while (keepGoing) {
 
-            	newLine = readLine();
-            	if (newLine == null) {
+                newLine = readLine();
+                if (newLine == null) {
                     pleaseStop();
                     continue;
                 }
 
-            	if (_listener != null) {
+                if (_listener != null) {
 
-            		if (newLine.startsWith(IClient.DEFLATED)) {
+                    if (newLine.startsWith(IClient.DEFLATED)) {
                         String[] args = decompose(newLine);
                         if (args.length > 0) { // can be 0 if server is having problems
                             try {
@@ -187,8 +166,8 @@ public class ReaderThread extends Thread {
                         }
                     }
 
-            		//else
-            		ConnectionHandlerLocal.DEBUG("< " + newLine);
+                    //else
+                    ConnectionHandlerLocal.DEBUG("< " + newLine);
                     _listener.incomingMessage(newLine);
 
                 } else {
@@ -199,7 +178,7 @@ public class ReaderThread extends Thread {
 
         } catch (IOException e) {
             if (keepGoing) {
-            	pleaseStop();
+                pleaseStop();
                 MWLogger.errLog("ReaderThread Error");
                 MWLogger.errLog(e);
                 _connectionHandler.shutdown(true);

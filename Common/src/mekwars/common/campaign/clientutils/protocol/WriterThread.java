@@ -1,37 +1,41 @@
 package mekwars.common.campaign.clientutils.protocol;
 
+import java.io.PrintStream;
+import java.util.Vector;
+
+import mekwars.common.util.MWLogger;
+
 /**
  * Write the messages in the queue to the socket's output stream
  */
-class WriterThread extends Thread {
+public class WriterThread extends Thread {
     private boolean keepGoing = true;
-    private java.util.Vector<String> outgoingMessages;
-    private java.io.PrintStream _out;
+    private final Vector<String> outgoingMessages;
+    private final PrintStream _out;
 
-    WriterThread(java.io.PrintStream out) {
+    WriterThread(PrintStream out) {
         super("ConnectionHandler$WriterThread");
         _out = out;
-        outgoingMessages = new java.util.Vector<String>(1, 1);
+        outgoingMessages = new Vector<>(1, 1);
     }
 
     @Override
     public synchronized void run() {
-        //        MMClient.mwClientLog.clientErrLog("ConnectionHandlerLocal$WriterThread: running");
         try {
             while (keepGoing) {
                 flushOutputQueue();
                 // wait until there are more messages
                 wait(1000);
             }
-            common.util.MWLogger.errLog("WriterThread: stopping gracefully.");
+            MWLogger.errLog("WriterThread: stopping gracefully.");
         } catch (InterruptedException e) {
-            common.util.MWLogger.errLog("ConnectionHandlerLocal$WriterThread.run(): Interrupted!");
+            MWLogger.errLog("ConnectionHandlerLocal$WriterThread.run(): Interrupted!");
         }
     }
 
     void flushOutputQueue() {
-        while (outgoingMessages.size() > 0) {
-            String message = (String) outgoingMessages.elementAt(0);
+        while (!outgoingMessages.isEmpty()) {
+            String message = outgoingMessages.elementAt(0);
             outgoingMessages.removeElementAt(0);
             mekwars.common.campaign.clientutils.protocol.ConnectionHandlerLocal.DEBUG("> " + message);
             _out.print(message + "\r\n");

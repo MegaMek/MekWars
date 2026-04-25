@@ -3,29 +3,29 @@ package mekwars.common.util.unitdamage;
 import java.util.Iterator;
 import java.util.StringTokenizer;
 
-import common.util.MWLogger;
-import common.util.UnitUtils;
-import megamek.common.AmmoType;
 import megamek.common.CriticalSlot;
-import megamek.common.Entity;
-import megamek.common.IArmorState;
-import megamek.common.Mech;
-import megamek.common.MiscType;
-import megamek.common.Mounted;
+import megamek.common.equipment.AmmoMounted;
+import megamek.common.equipment.IArmorState;
+import megamek.common.equipment.MiscType;
+import megamek.common.equipment.Mounted;
+import megamek.common.units.Entity;
+import megamek.common.units.Mek;
+import mekwars.common.util.MWLogger;
+import mekwars.common.util.UnitUtils;
 
 
 public class MekDamageHandler extends AbstractUnitDamageHandler {
 
-	@Override
-	public String buildDamageString(Entity unit, boolean sendAmmo) {
-		StringBuilder result = new StringBuilder();
+    @Override
+    public String buildDamageString(Entity unit, boolean sendAmmo) {
+        StringBuilder result = new StringBuilder();
         String delimiter = "-";
         String delimiter2 = "%";
         boolean hasData = false;
 
         try {
             // External armor
-            for (int loc = Mech.LOC_HEAD; loc <= Mech.LOC_LLEG; loc++) {
+            for (int loc = Mek.LOC_HEAD; loc <= Mek.LOC_LEFT_LEG; loc++) {
 
                 if (unit.getArmor(loc) == unit.getOArmor(loc)) {
                     continue;
@@ -33,43 +33,35 @@ public class MekDamageHandler extends AbstractUnitDamageHandler {
                 hasData = true;
                 result.append(loc);
                 result.append(delimiter2);
-                if (unit.getArmor(loc) < 0) {
-                    result.append(0);
-                } else {
-                    result.append(unit.getArmor(loc));
-                }
+                result.append(Math.max(unit.getArmor(loc), 0));
                 result.append(delimiter2);
 
             }
-            if (unit.getArmor(Mech.LOC_CT, true) != unit.getOArmor(Mech.LOC_CT, true)) {
+            if (unit.getArmor(Mek.LOC_CENTER_TORSO, true) != unit.getOArmor(Mek.LOC_CENTER_TORSO, true)) {
                 result.append(UnitUtils.LOC_CTR);
                 result.append(delimiter2);
-                if (unit.getArmor(Mech.LOC_CT, true) < 0) {
-                    result.append(0);
-                } else {
-                    result.append(unit.getArmor(Mech.LOC_CT, true));
-                }
+                result.append(Math.max(unit.getArmor(Mek.LOC_CENTER_TORSO, true), 0));
                 result.append(delimiter2);
                 hasData = true;
             }
-            if (unit.getArmor(Mech.LOC_LT, true) != unit.getOArmor(Mech.LOC_LT, true)) {
+            if (unit.getArmor(Mek.LOC_LEFT_TORSO, true) != unit.getOArmor(Mek.LOC_LEFT_TORSO, true)) {
                 result.append(UnitUtils.LOC_LTR);
                 result.append(delimiter2);
-                if (unit.getArmor(Mech.LOC_LT, true) < 0) {
+                if (unit.getArmor(Mek.LOC_LEFT_TORSO, true) < 0) {
                     result.append(0);
                 } else {
-                    result.append(unit.getArmor(Mech.LOC_LT, true));
+                    result.append(unit.getArmor(Mek.LOC_LEFT_TORSO, true));
                 }
                 result.append(delimiter2);
                 hasData = true;
             }
-            if (unit.getArmor(Mech.LOC_RT, true) != unit.getOArmor(Mech.LOC_RT, true)) {
+            if (unit.getArmor(Mek.LOC_RIGHT_TORSO, true) != unit.getOArmor(Mek.LOC_RIGHT_TORSO, true)) {
                 result.append(UnitUtils.LOC_RTR);
                 result.append(delimiter2);
-                if (unit.getArmor(Mech.LOC_RT, true) < 0) {
+                if (unit.getArmor(Mek.LOC_RIGHT_TORSO, true) < 0) {
                     result.append(0);
                 } else {
-                    result.append(unit.getArmor(Mech.LOC_RT, true));
+                    result.append(unit.getArmor(Mek.LOC_RIGHT_TORSO, true));
                 }
                 result.append(delimiter2);
                 hasData = true;
@@ -81,18 +73,14 @@ public class MekDamageHandler extends AbstractUnitDamageHandler {
             result.append(delimiter);
             hasData = false;
             // Internal Armor
-            for (int loc = Mech.LOC_HEAD; loc <= Mech.LOC_LLEG; loc++) {
+            for (int loc = Mek.LOC_HEAD; loc <= Mek.LOC_LEFT_LEG; loc++) {
 
                 if (unit.getInternal(loc) == unit.getOInternal(loc)) {
                     continue;
                 }
                 result.append(loc);
                 result.append(delimiter2);
-                if (unit.getInternal(loc) < 0) {
-                    result.append(0);
-                } else {
-                    result.append(unit.getInternal(loc));
-                }
+                result.append(Math.max(unit.getInternal(loc), 0));
                 result.append(delimiter2);
                 hasData = true;
 
@@ -112,7 +100,7 @@ public class MekDamageHandler extends AbstractUnitDamageHandler {
                 // of a blown-off arm or what have you should not be marked missing for
                 // MW purposes.  If it's missing, and there is IS left, it should
                 // be unmarked instead.
-                boolean hasISLeft = (unit.getInternal(x)>0);
+                boolean hasISLeft = (unit.getInternal(x) > 0);
 
                 for (int y = 0; y < unit.getNumberOfCriticals(x); y++) {
                     CriticalSlot cs = unit.getCritical(x, y);
@@ -126,17 +114,22 @@ public class MekDamageHandler extends AbstractUnitDamageHandler {
                         continue;
                     }
 
-                    Mounted m = cs.getMount();
-                    if ((m != null) && (m.getType() instanceof MiscType) && ((MiscType) m.getType()).isShield() && (m.getBaseDamageCapacity() != m.getCurrentDamageCapacity(unit, x)) && (shieldHitsLeft == -1) && ((x == Mech.LOC_LARM) || (x == Mech.LOC_RARM))) {
-                        float shieldcrits = Math.max(1, UnitUtils.getNumberOfCrits(unit, cs));
+                    Mounted<?> m = cs.getMount();
+                    if ((m != null) &&
+                              (m.getType() instanceof MiscType) &&
+                              ((MiscType) m.getType()).isShield() &&
+                              (m.getBaseDamageCapacity() != m.getCurrentDamageCapacity(unit, x)) &&
+                              (shieldHitsLeft == -1) &&
+                              ((x == Mek.LOC_LEFT_ARM) || (x == Mek.LOC_RIGHT_ARM))) {
+                        float shieldCrits = Math.max(1, UnitUtils.getNumberOfCrits(unit, cs));
                         float basePoints = m.getBaseDamageCapacity();
                         float currentPoints = m.getCurrentDamageCapacity(unit, x);
                         float tempHits = 0;
 
-                        tempHits = shieldcrits / basePoints;
+                        tempHits = shieldCrits / basePoints;
                         tempHits *= currentPoints;
 
-                        tempHits = Math.abs(tempHits - shieldcrits);
+                        tempHits = Math.abs(tempHits - shieldCrits);
 
                         shieldHitsLeft = Math.max(1, Math.round(tempHits));
                     }
@@ -167,7 +160,8 @@ public class MekDamageHandler extends AbstractUnitDamageHandler {
                         result.append("^");
                         result.append(delimiter2);
                         hasData = true;
-                    } else if (cs.isMissing() && !hasISLeft) {  // Experimental addition of hasISLeft - if testing doesn't work, remove it
+                    } else if (cs.isMissing() &&
+                                     !hasISLeft) {  // Experimental addition of hasISLeft - if testing doesn't work, remove it
                         result.append(x);
                         result.append(delimiter2);
                         result.append(y);
@@ -183,7 +177,11 @@ public class MekDamageHandler extends AbstractUnitDamageHandler {
                         result.append("X");
                         result.append(delimiter2);
                         hasData = true;
-                    } else if ((m != null) && (m.getType() instanceof MiscType) && ((MiscType) m.getType()).isShield() && ((x == Mech.LOC_LARM) || (x == Mech.LOC_RARM)) && (shieldHitsLeft > 0)) {
+                    } else if ((m != null) &&
+                                     (m.getType() instanceof MiscType) &&
+                                     ((MiscType) m.getType()).isShield() &&
+                                     ((x == Mech.LOC_LARM) || (x == Mech.LOC_RARM)) &&
+                                     (shieldHitsLeft > 0)) {
                         result.append(x);
                         result.append(delimiter2);
                         result.append(y);
@@ -204,24 +202,24 @@ public class MekDamageHandler extends AbstractUnitDamageHandler {
             hasData = false;
             if (sendAmmo) {
                 int location = 0;
-                for (Mounted weap : unit.getAmmo()) {
+                for (AmmoMounted ammoMounted : unit.getAmmo()) {
                     int shots = 0;
-                    if (weap.byShot()) {
-                    	shots = weap.getOriginalShots();
+                    if (ammoMounted.byShot()) {
+                        shots = ammoMounted.getOriginalShots();
                     } else {
-                    	shots = ((AmmoType) weap.getType()).getShots();
+                        shots = ammoMounted.getType().getShots();
                     }
-                    if (weap.isDestroyed()) {
+                    if (ammoMounted.isDestroyed()) {
                         hasData = true;
                         result.append(location);
                         result.append(delimiter2);
                         result.append(0);
                         result.append(delimiter2);
-                    } else if (weap.getUsableShotsLeft() != shots) {
+                    } else if (ammoMounted.getUsableShotsLeft() != shots) {
                         hasData = true;
                         result.append(location);
                         result.append(delimiter2);
-                        result.append(Math.max(0, weap.getUsableShotsLeft()));
+                        result.append(Math.max(0, ammoMounted.getUsableShotsLeft()));
                         result.append(delimiter2);
                     }
 
@@ -242,10 +240,10 @@ public class MekDamageHandler extends AbstractUnitDamageHandler {
         }
         return result.toString();
 
-	}
+    }
 
-	@Override
-	public void applyDamageString(Entity unit, String report, boolean isRepairing) {
+    @Override
+    public void applyDamageString(Entity unit, String report, boolean isRepairing) {
 
         StringTokenizer entry = new StringTokenizer(report, "-");
 
@@ -374,6 +372,6 @@ public class MekDamageHandler extends AbstractUnitDamageHandler {
                 }
             }
         }
-	}
+    }
 
 }

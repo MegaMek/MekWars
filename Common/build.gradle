@@ -27,3 +27,7 @@ sourceSets {
         }
     }
 }
+
+dependencies {
+    implementation "org.megamek:megamek"
+}

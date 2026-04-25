@@ -54,45 +54,43 @@ import java.util.Properties;
 
 public class ModifyingOperation {
 
-	//IVARS
-	private String opName;
-	private Properties modValues;
+    //IVARS
+    private final String opName;
+    private final Properties modValues;
 
-	/**
-	 * ModifyingOperation CONSTRUCTOR. Takes a name (same as used to
-	 * assemble filenames for param loading) and a set of param values.
-	 *
-	 * ModifyingOperations are constructed in OperationLoader.java
-	 */
-	public ModifyingOperation(String opName, Properties modValues) {
-		this.opName = opName;
-		this.modValues = modValues;
-	}
+    /**
+     * ModifyingOperation CONSTRUCTOR. Takes a name (same as used to assemble filenames for param loading) and a set of
+     * param values.
+     * <p>
+     * ModifyingOperations are constructed in OperationLoader.java
+     */
+    public ModifyingOperation(String opName, Properties modValues) {
+        this.opName = opName;
+        this.modValues = modValues;
+    }
 
-	//METHODS
-	/**
-	 * Method which attempts to look up the value of a given Paramater
-	 * in an ModOperation's local Tree. If the value is unavailable, a
-	 * null is returned.
-	 */
-	public Object getModValue(String valToGet) {
-		Object toReturn = modValues.get(valToGet);
-		return toReturn;
-	}
+    //METHODS
 
-	/**
-	 * Method which returns values, pre-cast to string.
-	 */
-	public String getValueAsString(String valToGet) {
-		return (String)getModValue(valToGet);
-	}
+    /**
+     * Method which attempts to look up the value of a given Paramater in an ModOperation's local Tree. If the value is
+     * unavailable, a null is returned.
+     */
+    public Object getModValue(String valToGet) {
+        return modValues.get(valToGet);
+    }
 
-	/**
-	 * Method which returns name of ModOp, as
-	 * derived from filename @ loadtime.
-	 */
-	public String getName() {
-		return this.opName;
-	}
+    /**
+     * Method which returns values, pre-cast to string.
+     */
+    public String getValueAsString(String valToGet) {
+        return (String) getModValue(valToGet);
+    }
+
+    /**
+     * Method which returns name of ModOp, as derived from filename @ loadtime.
+     */
+    public String getName() {
+        return this.opName;
+    }
 
 }//end OperationsManager class

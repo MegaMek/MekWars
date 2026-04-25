@@ -23,8 +23,7 @@
  * Derived from NFCChat, a GPL chat client/server.
  * Original code can be found @ http://nfcchat.sourceforge.net
  * Our thanks to the original authors.
- */
-/**
+ *
  *
  * @author Torren (Jason Tighe) 11.5.05
  *
@@ -38,24 +37,23 @@ public interface IConnectionHandler {
     /**
      * Queue a message headed outbound.
      */
-    public void queueMessage(String message);
+    void queueMessage(String message);
 
     /**
      * Send a message immediately.
      */
-    public void sendImmediately(String message);
+    void sendImmediately(String message);
 
     /**
-     * Shutdown this connection listener.  The notify parameter
-     * indicates whether or not the client (ConnectionListener) should
-     * be notified of the shutdown.  Basically, notify should only be
-     * false if the client itself called us.
+     * Shutdown this connection listener.  The notify parameter indicates whether or not the client (ConnectionListener)
+     * should be notified of the shutdown.  Basically, notify should only be false if the client itself called us.
+     *
      * @param notify to notify the ConnectionListener
      */
-    public void shutdown(boolean notify);
+    void shutdown(boolean notify);
 
     /**
      * Set the connection listener for this connection handler
      */
-    public void setListener(common.campaign.clientutils.protocol.IConnectionListener listener);
+    void setListener(IConnectionListener listener);
 }

@@ -25,6 +25,7 @@
 package mekwars.common.campaign.operations;
 
 // IMPORTS
+
 import java.util.TreeMap;
 
 public class DefaultOperation {
@@ -38,7 +39,7 @@ public class DefaultOperation {
     public DefaultOperation() {
 
         // create the treemap
-        operationsDefaults = new TreeMap<String, String>();
+        operationsDefaults = new TreeMap<>();
 
         // ADD DEFAULTS
 
@@ -1627,6 +1628,7 @@ public class DefaultOperation {
     }
 
     // METHODS
+
     /**
      * Method which returns the default value of a given operation paramater. @urgru 5/30/05
      */

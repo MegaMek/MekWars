@@ -36,192 +36,187 @@
 package mekwars.common.campaign.operations;
 
 //IMPORTS
+
 import java.util.Properties;
 import java.util.TreeMap;
 
-import common.MWXMLWriter;
-import common.MWXmlSerializable;
-import common.util.MMNetXStream;
-import common.util.MWLogger;
+import mekwars.common.MWXMLWriter;
+import mekwars.common.MWXmlSerializable;
+import mekwars.common.util.MMNetXStream;
+import mekwars.common.util.MWLogger;
 
 public class Operation implements MWXmlSerializable {
 
-	//IVARS
+    //IVARS
 
-	/*
-	 * Static ints, used as quick indicators. In particualar:
-	 * - indicate that op is pure short (no long portion)
-	 * - indicate that modifiers can be used with an op
-	 * [Expect more over time ???]
-	 */
-	public static int TYPE_SHORTONLY = 0;//default
-	public static int TYPE_SHORTANDLONG = 1;
+    /*
+     * Static ints, used as quick indicators. In particular:
+     * - indicate that op is pure short (no long portion)
+     * - indicate that modifiers can be used with an op
+     * [Expect more over time ???]
+     */
+    public static int TYPE_SHORT_ONLY = 0; //default
+    public static int TYPE_SHORT_AND_LONG = 1;
 
-	public static int MODS_NOTACCEPTED = 0;//default
-	public static int MODS_ACCEPTED = 1;
+    public static int MODS_NOT_ACCEPTED = 0;//default
+    public static int MODS_ACCEPTED = 1;
 
-	//private ints which hold current state
-	private int type_indicator;
-	private int mods_indicator;
+    //private ints which hold current state
+    private int type_indicator;
+    private int mods_indicator;
 
-	//TreeMap of modifiers. As modifiers are loaded, those
-	//targetting an operation are added to this map.
-	TreeMap<String,ModifyingOperation> modifyingOperations;
+    //TreeMap of modifiers. As modifiers are loaded, those
+    //targeting an operation are added to this map.
+    TreeMap<String, ModifyingOperation> modifyingOperations;
 
-	//Operation properties (hashtable of configured params)
-	Properties opValues;
+    //Operation properties (hashtable of configured params)
+    Properties opValues;
 
-	//other loads ...
-	DefaultOperation opsDefaults;
-	String opName;//Name of this op. EG - "Assault"
+    //other loads ...
+    DefaultOperation opsDefaults;
+    String opName;//Name of this op. EG - "Assault"
 
-	/**
-	 * Operation CONSTRUCTOR. Takes a name (used to assemble
-	 * filenames for param loading) and a set of default vals.
-	 *
-	 * Operations are constructed in OperationLoader.java
-	 */
-	public Operation(String opName, DefaultOperation defaults, Properties params) {
+    /**
+     * Operation CONSTRUCTOR. Takes a name (used to assemble filenames for param loading) and a set of default vals.
+     * <p>
+     * Operations are constructed in OperationLoader.java
+     */
+    public Operation(String opName, DefaultOperation defaults, Properties params) {
 
-		//save name
-		this.opName = opName;
+        //save name
+        this.opName = opName;
 
-		//save the default paramaters
-		opsDefaults = defaults;
+        //save the default parameters
+        opsDefaults = defaults;
 
-		//set the default indicators
-		type_indicator = Operation.TYPE_SHORTONLY;
-		mods_indicator = Operation.MODS_NOTACCEPTED;
+        //set the default indicators
+        type_indicator = Operation.TYPE_SHORT_ONLY;
+        mods_indicator = Operation.MODS_NOT_ACCEPTED;
 
-		//create mod map
-		modifyingOperations = new TreeMap<String, ModifyingOperation>();
+        //create mod map
+        modifyingOperations = new TreeMap<String, ModifyingOperation>();
 
-		//set the value tables
-		opValues = params;
+        //set the value tables
+        opValues = params;
+    }
 
-	}
+    public String getValue(String valToGet) {
+        return getValue(valToGet, true);
+    }
 
-	public String getValue(String valToGet) {
-		return getValue(valToGet, true);
-	}
+    /**
+     * Method which attempts to look up the value of a given Paramater in an Operation's local Tree. If the value is
+     * unavailable, for any reason (typo, intentionally unset), a default value is checked and returned.
+     */
+    public String getValue(String valToGet, boolean log) {
 
-	/**
-	 * Method which attempts to look up the value of a given Paramater
-	 * in an Operation's local Tree. If the value is unavailable, for
-	 * any reason (typo, intentionally unset), a default value is checked
-	 * and returned.
-	 */
-	public String getValue(String valToGet, boolean log) {
+        //look in the short list every time
+        String toReturn = (String) opValues.get(valToGet);
 
-		//look in the short list every time
-		String toReturn = (String)opValues.get(valToGet);
+        //if not present, load a default
+        if (toReturn == null) {toReturn = opsDefaults.getDefault(valToGet);}
 
-		//if not present, load a default
-		if (toReturn == null)
-			toReturn = opsDefaults.getDefault(valToGet);
+        //catastrophic failure. sysexit.
+        if (toReturn == null && log) {
+            MWLogger.errLog("Failed getting value \"" +
+                                  valToGet +
+                                  "\" from " +
+                                  this.getName() +
+                                  " and DefaultOp. Returning null.");
+            try {
+                throw new Exception();
+            } catch (Exception ex) {
+                MWLogger.errLog(ex);
+            }
+        }
 
-		//catastrophic failue. sysexit.
-		if (toReturn == null && log) {
-			MWLogger.errLog("Failed getting value \"" + valToGet + "\" from " + this.getName() + " and DefaultOp. Returning null.");
-			try{
-				throw new Exception();
-			}catch(Exception ex){
-				MWLogger.errLog(ex);
-			}
-		}
+        return toReturn;
+    }
 
-		return toReturn;
-	}
+    public boolean getBooleanValue(String valToGet) {
+        try {
+            return Boolean.parseBoolean(getValue(valToGet));
+        } catch (Exception ex) {
+            return false;
+        }
+    }
 
-	public boolean getBooleanValue(String valToGet) {
-		try {
-			return Boolean.parseBoolean(getValue(valToGet));
-		}catch (Exception ex) {
-			return false;
-		}
-	}
+    public int getIntValue(String valToGet) {
+        try {
+            return Integer.parseInt(getValue(valToGet));
+        } catch (Exception ex) {
+            return -1;
+        }
+    }
 
-	public int getIntValue(String valToGet) {
-		try {
-			return Integer.parseInt(getValue(valToGet));
-		}catch (Exception ex) {
-			return -1;
-		}
-	}
+    public double getDoubleValue(String valToGet) {
+        try {
+            return Double.parseDouble(getValue(valToGet));
+        } catch (Exception ex) {
+            return -1;
+        }
+    }
 
-	public double getDoubleValue(String valToGet) {
-		try {
-			return Double.parseDouble(getValue(valToGet));
-		}catch (Exception ex) {
-			return -1;
-		}
-	}
+    public float getFloatValue(String valToGet) {
+        try {
+            return Float.parseFloat(getValue(valToGet));
+        } catch (Exception ex) {
+            return -1;
+        }
+    }
 
-	public float getFloatValue(String valToGet) {
-		try {
-			return Float.parseFloat(getValue(valToGet));
-		}catch (Exception ex) {
-			return -1;
-		}
-	}
-
-	/**
-	 * Method which adds a mod op to this operation's
-	 * tree of valid mods. Set from OperationManager @
-	 * load time, drawn from modops' target params.
-	 *
-	 * Toggle mods indicator to show that this op does
-	 * have potential mods to check for @ startup and
-	 * during resolution.
-	 */
-	public void addModifyingOperation(ModifyingOperation m) {
-		modifyingOperations.put(m.getName(), m);
-		mods_indicator = Operation.MODS_ACCEPTED;
-	}
+    /**
+     * Method which adds a mod op to this operation's tree of valid mods. Set from OperationManager @ load time, drawn
+     * from modops' target params.
+     * <p>
+     * Toggle mods indicator to show that this op does have potential mods to check for @ startup and during
+     * resolution.
+     */
+    public void addModifyingOperation(ModifyingOperation m) {
+        modifyingOperations.put(m.getName(), m);
+        mods_indicator = Operation.MODS_ACCEPTED;
+    }
 
 
-	/**
-	 * Methods which return and set type info via a
-	 * boolean (short only, long+short, etc.)
-	 */
-	public int getTypeIndicator() {
-		return type_indicator;
-	}
+    /**
+     * Methods which return and set type info via a boolean (short only, long+short, etc.)
+     */
+    public int getTypeIndicator() {
+        return type_indicator;
+    }
 
-	public void setTypeIndicator(int i) {
-		type_indicator = i;
-	}
+    public void setTypeIndicator(int i) {
+        type_indicator = i;
+    }
 
-	/**
-	 * Methods which set and returns modifier status
-	 * (accepts or no-mods, etc)
-	 */
-	public int getModsIndicator() {
-		return mods_indicator;
-	}
+    /**
+     * Methods which set and returns modifier status (accepts or no-mods, etc)
+     */
+    public int getModsIndicator() {
+        return mods_indicator;
+    }
 
-	public void setModsIndicator(int i) {
-		mods_indicator = i;
-	}
+    public void setModsIndicator(int i) {
+        mods_indicator = i;
+    }
 
-	/**
-	 * Method which returns name of an operation,
-	 * as drawn from filename.
-	 */
-	public String getName() {
-		return this.opName;
-	}
+    /**
+     * Method which returns name of an operation, as drawn from filename.
+     */
+    public String getName() {
+        return this.opName;
+    }
 
-	@Override
-	public void writeToXmlFile(String folderName, String fileName) {
-		MWXMLWriter writer = new MWXMLWriter(folderName, fileName, opValues);
-		writer.writeToFile();
-	}
+    @Override
+    public void writeToXmlFile(String folderName, String fileName) {
+        MWXMLWriter writer = new MWXMLWriter(folderName, fileName, opValues);
+        writer.writeToFile();
+    }
 
-	@Override
-	public String getXmlString() {
-		MMNetXStream xml = new MMNetXStream();
-		return xml.toXML(opValues);
-	}
+    @Override
+    public String getXmlString() {
+        MMNetXStream xml = new MMNetXStream();
+        return xml.toXML(opValues);
+    }
 
 }//end OperationsManager class

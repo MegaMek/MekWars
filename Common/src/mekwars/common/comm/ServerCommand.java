@@ -23,17 +23,20 @@
 
 package mekwars.common.comm;
 
-import server.MWServ;
+import mekwars.common.interfaces.IServer;
 
 /**
  *
- * @author  Administrator
+ * @author Administrator
  */
 public interface ServerCommand extends ICommand {
 
-  public void parseArguments(String s);
-  public void setServer(MWServ server);
-  public void setUsername(String name);
-  public void clientSend(String txt);
+    void parseArguments(String s);
+
+    void setServer(IServer server);
+
+    void setUsername(String name);
+
+    void clientSend(String txt);
 
 }

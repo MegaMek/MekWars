@@ -27,6 +27,7 @@ package mekwars.common.campaign.pilot.skills;
  *
  */
 public interface IPilotSkill {
-	public String getName();
-	public int getLevel();
+    String getName();
+
+    int getLevel();
 }

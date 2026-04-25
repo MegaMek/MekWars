@@ -23,18 +23,19 @@
 
 package mekwars.common.comm;
 
-import client.MWClient;
+import mekwars.common.interfaces.IClient;
 
 /**
  *
- * @author  Administrator
+ * @author Administrator
  */
-public interface ClientCommand extends common.comm.ICommand {
+public interface ClientCommand extends ICommand {
 
-  public void parseReply(String s);
-  public void timeout();
-  public void send(boolean blocking);
-  public void setClient(MWClient mwclient);
-  //public void setControlSocket(MMControlSocket control);
+    void parseReply(String s);
 
+    void timeout();
+
+    void send(boolean blocking);
+
+    void setClient(IClient mwClient);
 }

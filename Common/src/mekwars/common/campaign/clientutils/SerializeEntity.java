@@ -18,171 +18,164 @@ package mekwars.common.campaign.clientutils;
 
 import java.util.Enumeration;
 
-import common.Unit;
-import common.util.UnitUtils;
-import megamek.common.Aero;
-import megamek.common.BattleArmor;
-import megamek.common.BipedMech;
 import megamek.common.CriticalSlot;
-import megamek.common.EjectedCrew;
-import megamek.common.Entity;
-import megamek.common.IEntityRemovalConditions;
-import megamek.common.Mech;
-import megamek.common.MechWarrior;
-import megamek.common.Protomech;
-import megamek.common.QuadMech;
-import megamek.common.Tank;
+import megamek.common.battleArmor.BattleArmor;
+import megamek.common.interfaces.IEntityRemovalConditions;
+import megamek.common.units.Aero;
+import megamek.common.units.BipedMek;
+import megamek.common.units.EjectedCrew;
+import megamek.common.units.Entity;
+import megamek.common.units.Mek;
+import megamek.common.units.MekWarrior;
+import megamek.common.units.ProtoMek;
+import megamek.common.units.QuadMek;
+import megamek.common.units.Tank;
+import mekwars.common.Unit;
+import mekwars.common.util.UnitUtils;
 
-public class SerializeEntity{
-	public static String serializeEntity (Entity e, boolean fullStatus, boolean forceDevastate, boolean useRepairs) {
+public class SerializeEntity {
+    public static String serializeEntity(Entity entity, boolean fullStatus, boolean forceDevastate,
+          boolean useRepairs) {
 
-		StringBuilder result = new StringBuilder();
+        StringBuilder result = new StringBuilder();
 
-		int externalID;
+        int externalID;
 
-		 /*
-		  * James Allred (wildj79@gmail.com) 2016-08-09
-		  *
-		  * MM was changed to assign a UUID to the externalID field of
-		  * an entity when it was created in MM. This was causing issues
-		  * with Mekwars, because MW uses integers to keep track of Unit ID's
-		  * internally. This block of code would attempt to call Entity.getExternalId
-		  * and would fail because Integer.parse() won't parse a UUID that is stored as
-		  * a string correctly.  The fix is to catch the exception, assign a sane default
-		  * and then let MW go on it's way.
-		  */
-		try {
-			externalID = e.getExternalId();
-		} catch (NumberFormatException ex) {
-			externalID = -1;
-		}
+        /*
+         * James Allred (wildj79@gmail.com) 2016-08-09
+         *
+         * MM was changed to assign a UUID to the externalID field of
+         * an entity when it was created in MM. This was causing issues
+         * with Mekwars, because MW uses integers to keep track of Unit ID's
+         * internally. This block of code would attempt to call Entity.getExternalId
+         * and would fail because Integer.parse() won't parse a UUID that is stored as
+         * a string correctly.  The fix is to catch the exception, assign a sane default
+         * and then let MW go on it's way.
+         */
+        try {
+            externalID = entity.getExternalId();
+        } catch (NumberFormatException ex) {
+            externalID = -1;
+        }
 
-		if (fullStatus) {
-			if ( !(e instanceof MechWarrior) && !(e instanceof EjectedCrew))
-			{
-				result.append(externalID + "*");
-				result.append(e.getOwner().getName().trim() + "*");
-				result.append(e.getCrew().getHits() + "*");
+        if (fullStatus) {
+            if (!(entity instanceof EjectedCrew)) {
+                result.append(externalID).append("*");
+                result.append(entity.getOwner().getName().trim()).append("*");
+                result.append(entity.getCrew().getHits()).append("*");
 
-				if (forceDevastate)
-					result.append(IEntityRemovalConditions.REMOVE_DEVASTATED + "*");
-				else
-					result.append(e.getRemovalCondition() + "*");
+                if (forceDevastate) {result.append(IEntityRemovalConditions.REMOVE_DEVASTATED + "*");} else {
+                    result.append(entity.getRemovalCondition()).append("*");
+                }
 
-				if ( e instanceof BipedMech )
-					result.append(Unit.MEK +"*");
-				else if ( e instanceof QuadMech )
-					result.append(Unit.QUAD + "*");
-				else if ( e instanceof Tank)
-					result.append(Unit.VEHICLE +"*");
-				else if ( e instanceof Protomech)
-					result.append(Unit.PROTOMEK +"*");
-				else if ( e instanceof BattleArmor )
-					result.append(Unit.BATTLEARMOR+"*");
-                else if ( e instanceof Aero )
-                    result.append(Unit.AERO+"*");
-				else
-					result.append(Unit.INFANTRY +"*");
-				//result.append(e.getMovementType() + "*"); bad code
-				//Collect kills
-				Enumeration<Entity> en = e.getKills();
-				//No kills? Add an empty space
-				if (!en.hasMoreElements())
-					result.append(" *");
-				while (en.hasMoreElements()) {
-					Entity kill = en.nextElement();
+                switch (entity) {
+                    case BipedMek ignored -> result.append(Unit.MEK + "*");
+                    case QuadMek ignored -> result.append(Unit.QUAD + "*");
+                    case Tank ignored -> result.append(Unit.VEHICLE + "*");
+                    case ProtoMek ignored -> result.append(Unit.PROTOMEK + "*");
+                    case BattleArmor ignored -> result.append(Unit.BATTLEARMOR + "*");
+                    case Aero ignored -> result.append(Unit.AERO + "*");
+                    default -> result.append(Unit.INFANTRY + "*");
+                }
 
-					// James Allred (wildj79@gmail.com) 2016-08-09
-					// Same issue as above. UUID's and int's don't mix.
-					try {
-						externalID = kill.getExternalId();
-					} catch (NumberFormatException ex) {
-						externalID = -1;
-					}
-					result.append(externalID);
-					if (en.hasMoreElements())
-						result.append("~");
-					else
-						result.append("*");
-				}
-			}
+                //Collect kills
+                Enumeration<Entity> en = entity.getKills();
+                //No kills? Add an empty space
+                if (!en.hasMoreElements()) {result.append(" *");}
+                while (en.hasMoreElements()) {
+                    Entity kill = en.nextElement();
 
-			if (e instanceof Mech ) {
-				result.append(e.getCrew().isUnconscious() + "*");
-				result.append(e.getInternal(Mech.LOC_CT) + "*");
-				result.append(e.getInternal(Mech.LOC_HEAD) + "*");
-				result.append(e.getInternal(Mech.LOC_LLEG) + "*");
-				result.append(e.getInternal(Mech.LOC_RLEG) + "*");
-				result.append(e.getInternal(Mech.LOC_LARM) + "*");
-				result.append(e.getInternal(Mech.LOC_RARM) + "*");
-				result.append(e.getBadCriticals(CriticalSlot.TYPE_SYSTEM, Mech.SYSTEM_GYRO, Mech.LOC_CT) + "*");
-				result.append(((Mech)e).getCockpitType()+"*");
-				if ( useRepairs ){
-					result.append(UnitUtils.unitBattleDamage(e, true)+"*");
-				}
-	            result.append(UnitUtils.getEntityFileName(e));
-			} else if (e instanceof Tank ) {
-				result.append(e.isRepairable() + "*");
-				result.append(e.isImmobile() + "*");
-				result.append(e.getCrew().isDead() + "*");
-				if ( useRepairs ){
-					result.append(UnitUtils.unitBattleDamage(e, true)+"*");
-				}
-	            result.append(UnitUtils.getEntityFileName(e));
-			}else if (e instanceof Aero ) {
-                result.append(e.isRepairable() + "*");
-                result.append(e.isImmobile() + "*");
-                result.append(e.getCrew().isDead() + "*");
-                result.append(UnitUtils.getEntityFileName(e));
+                    // James Allred (wildj79@gmail.com) 2016-08-09
+                    // Same issue as above. UUID's and int's don't mix.
+                    try {
+                        externalID = kill.getExternalId();
+                    } catch (NumberFormatException ex) {
+                        externalID = -1;
+                    }
+                    result.append(externalID);
+                    if (en.hasMoreElements()) {result.append("~");} else {result.append("*");}
+                }
             }
-			else if (e instanceof MechWarrior) {
-				MechWarrior mw = (MechWarrior)e;
-				result.append("MW*");
-				result.append(mw.getOriginalRideExternalId() + "*");
-				result.append(mw.getPickedUpByExternalId() + "*");
-				result.append(mw.isDestroyed()+"*");
-			}
 
-			if (  e.isOffBoard() ){
-				result.append("*" + e.getOffBoardDistance());
-			}
-		}
+            switch (entity) {
+                case Mek ignored -> {
+                    result.append(entity.getCrew().isUnconscious()).append("*");
+                    result.append(entity.getInternal(Mek.LOC_CENTER_TORSO)).append("*");
+                    result.append(entity.getInternal(Mek.LOC_HEAD)).append("*");
+                    result.append(entity.getInternal(Mek.LOC_LEFT_LEG)).append("*");
+                    result.append(entity.getInternal(Mek.LOC_RIGHT_LEG)).append("*");
+                    result.append(entity.getInternal(Mek.LOC_LEFT_ARM)).append("*");
+                    result.append(entity.getInternal(Mek.LOC_RIGHT_ARM)).append("*");
+                    result.append(entity.getBadCriticals(CriticalSlot.TYPE_SYSTEM,
+                                Mek.SYSTEM_GYRO,
+                                Mek.LOC_CENTER_TORSO))
+                          .append("*");
+                    result.append(((Mek) entity).getCockpitType()).append("*");
+                    if (useRepairs) {
+                        result.append(UnitUtils.unitBattleDamage(entity, true)).append("*");
+                    }
+                    result.append(UnitUtils.getEntityFileName(entity));
+                }
+                case Tank ignored -> {
+                    result.append(entity.isRepairable()).append("*");
+                    result.append(entity.isImmobile()).append("*");
+                    result.append(entity.getCrew().isDead()).append("*");
+                    if (useRepairs) {
+                        result.append(UnitUtils.unitBattleDamage(entity, true)).append("*");
+                    }
+                    result.append(UnitUtils.getEntityFileName(entity));
+                }
+                case Aero ignored -> {
+                    result.append(entity.isRepairable()).append("*");
+                    result.append(entity.isImmobile()).append("*");
+                    result.append(entity.getCrew().isDead()).append("*");
+                    result.append(UnitUtils.getEntityFileName(entity));
+                }
+                case MekWarriorWarrior mw -> {
+                    result.append("MW*");
+                    result.append(mw.getOriginalRideExternalId()).append("*");
+                    result.append(mw.getPickedUpByExternalId()).append("*");
+                    result.append(mw.isDestroyed()).append("*");
+                }
+                default -> {
+                }
+            }
 
-		/*
-		 * FullStatus is used when autoreporting. This status, which
-		 * sends less information, is used for InProgressUpdates.
-		 */
-		else {
-			//if the entity is a mechwarrior, send an IPU command
-			//(InProgressUpdate) to the server.
-			if (e instanceof MechWarrior) {
-				MechWarrior mw = (MechWarrior)e;
-				result.append("MW*" + mw.getOriginalRideExternalId() + "*");
-				result.append(mw.getPickedUpByExternalId() + "*");
-				result.append(mw.isDestroyed()+"*");
-			}
+            if (entity.isOffBoard()) {
+                result.append("*").append(entity.getOffBoardDistance());
+            }
+        }
 
-			//else (the entity is a real unit)
-			else {
-				result.append(e.getOwner().getName() + "*");
-				result.append(externalID + "*");
+        /*
+         * FullStatus is used when auto reporting. This status, which
+         * sends less information, is used for InProgressUpdates.
+         */
+        else {
+            //if the entity is a mechwarrior, send an IPU command
+            //(InProgressUpdate) to the server.
+            if (entity instanceof MekWarrior mw) {
+                result.append("MW*").append(mw.getOriginalRideExternalId()).append("*");
+                result.append(mw.getPickedUpByExternalId()).append("*");
+                result.append(mw.isDestroyed()).append("*");
+            } else {
+                result.append(entity.getOwner().getName()).append("*");
+                result.append(externalID).append("*");
 
-				if (forceDevastate)
-					result.append(IEntityRemovalConditions.REMOVE_DEVASTATED + "*");
-				else
-					result.append(e.getRemovalCondition() + "*");
+                if (forceDevastate) {result.append(IEntityRemovalConditions.REMOVE_DEVASTATED + "*");} else {
+                    result.append(entity.getRemovalCondition()).append("*");
+                }
 
-				if (e instanceof Mech ) {
-					result.append(e.getInternal(Mech.LOC_CT) + "*");
-					result.append(e.getInternal(Mech.LOC_HEAD) + "*");
-				} else {
-					result.append("1*");
-					result.append("1*");
-				}
-				result.append(e.isRepairable() + "*");
-			}
-		} //end else(un-full status)
+                if (entity instanceof Mek) {
+                    result.append(entity.getInternal(Mek.LOC_CENTER_TORSO)).append("*");
+                    result.append(entity.getInternal(Mek.LOC_HEAD)).append("*");
+                } else {
+                    result.append("1*");
+                    result.append("1*");
+                }
+                result.append(entity.isRepairable()).append("*");
+            }
+        } //end else(un-full status)
 
-		return result.toString();
-	}
+        return result.toString();
+    }
 }

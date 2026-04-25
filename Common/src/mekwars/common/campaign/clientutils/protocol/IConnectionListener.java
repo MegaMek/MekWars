@@ -34,10 +34,10 @@ public interface IConnectionListener {
     /**
      * Notification that a new line was read from the socket
      */
-    public void incomingMessage(String message);
+    void incomingMessage(String message);
 
     /**
      * Notification that the socket got closed.
      */
-    public void socketClosed();
+    void socketClosed();
 }

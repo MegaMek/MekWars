@@ -35,24 +35,23 @@ import java.io.IOException;
 import java.io.PrintStream;
 import java.net.Socket;
 
-import common.util.MWLogger;
+import mekwars.common.util.MWLogger;
 
 /**
- * The keeper of the Socket on the client side.
- * Using deprecated JDK1.0.2 I/O methods on purpose, because this may be running in a crappy
- * browser.
+ * The keeper of the Socket on the client side. Using deprecated JDK1.0.2 I/O methods on purpose, because this may be
+ * running in a crappy browser.
+ * <p>
+ * This method spawns two threads: One for reading and one for writing.  When new messages are read, they are passed to
+ * the ChatServerLocal via it's incomingMessage() method
  *
- * This method spawns two threads: One for reading and one for writing.  When new messages are read,
- * they are passed to the ChatServerLocal via it's incomingMessage() method
  * @see ChatServerLocal#incomingMessage
  */
 
-public class ConnectionHandlerLocal implements common.campaign.clientutils.protocol.IConnectionHandler {
+public class ConnectionHandlerLocal implements IConnectionHandler {
     protected PrintStream _out;
     protected Socket _socket;
-    //protected BufferedReader _in;
-    protected common.campaign.clientutils.protocol.IConnectionListener _listener;
-    protected common.campaign.clientutils.protocol.ReaderThread _reader;
+    protected IConnectionListener _listener;
+    protected ReaderThread _reader;
     protected WriterThread _writer;
 
     static final boolean DEBUG = false;
@@ -63,16 +62,12 @@ public class ConnectionHandlerLocal implements common.campaign.clientutils.proto
     public ConnectionHandlerLocal(Socket s) throws IOException {
         _socket = s;
         _out = new PrintStream(s.getOutputStream());
-        //_in = new BufferedReader(new InputStreamReader(s.getInputStream()));
-        _reader = new common.campaign.clientutils.protocol.ReaderThread(this,_socket);
-
+        _reader = new ReaderThread(this, _socket);
         _writer = new WriterThread(_out);
         _writer.start();
-
-//        setListener(listener);
     }
 
-    public void setListener(common.campaign.clientutils.protocol.IConnectionListener listener) {
+    public void setListener(IConnectionListener listener) {
         _listener = listener;
         _reader.setListener(listener);
         _reader.start();
@@ -91,25 +86,25 @@ public class ConnectionHandlerLocal implements common.campaign.clientutils.proto
     }
 
     /**
-     * Try to stop the threads gracefully, close the socket, then call connectionLost() on the
-     * ChatServerLocal.
-     * This method is typically called by the ReaderThread when it has detected the the
-     * connection died.
+     * Try to stop the threads gracefully, close the socket, then call connectionLost() on the ChatServerLocal. This
+     * method is typically called by the ReaderThread when it has detected the the connection died.
      */
     public void shutdown(boolean notify) {
         _reader.pleaseStop();
         _writer.pleaseStop();
         _writer.flushOutputQueue();
-        try {_socket.close();}
-        catch (IOException e)
-        {
-          MWLogger.errLog("Error closing socket.");
-          MWLogger.errLog(e);
+
+        try {_socket.close();} catch (IOException e) {
+            MWLogger.errLog("Error closing socket.");
+            MWLogger.errLog(e);
         }
-        if (notify) {_listener.socketClosed();}
+
+        if (notify) {
+            _listener.socketClosed();
+        }
     }
 
-    public static final void DEBUG(String s) {
+    public static void DEBUG(String s) {
         if (DEBUG) {
             MWLogger.errLog(s);
         }
