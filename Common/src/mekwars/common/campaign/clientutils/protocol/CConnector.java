@@ -29,7 +29,7 @@
  * @author Torren (Jason Tighe) 11.5.05
  *
  */
-package common.campaign.clientutils.protocol;
+package mekwars.common.campaign.clientutils.protocol;
 
 import java.io.IOException;
 import java.net.Socket;
@@ -41,21 +41,21 @@ import common.util.MWLogger;
  *
  *
  */
-public class CConnector implements IConnectionListener
+public class CConnector implements common.campaign.clientutils.protocol.IConnectionListener
 {
-    protected IClient Client;
+    protected common.campaign.clientutils.protocol.IClient Client;
 
     protected String _host = "";
     protected int _port = -1;
     protected boolean _connected = false;
-    protected IConnectionHandler _connectionHandler;
+    protected common.campaign.clientutils.protocol.IConnectionHandler _connectionHandler;
     private SplashWindow splash;
 
-    public CConnector(IClient client) {
+    public CConnector(common.campaign.clientutils.protocol.IClient client) {
         Client = client;
     }
 
-    public CConnector(IClient client, String host, int port) {
+    public CConnector(common.campaign.clientutils.protocol.IClient client, String host, int port) {
         Client = client;
         _host = host;
         _port = port;
@@ -95,7 +95,7 @@ public class CConnector implements IConnectionListener
     /**
      * Make a socket connection to the server (if we're not already connected).
      * Once connected, create a ConnectionHandlerLocal, that will handle I/O.
-     * @see ConnectionHandlerLocal
+     * @see common.campaign.clientutils.protocol.ConnectionHandlerLocal
      */
 
     public void connect(String host, int port) {
@@ -127,7 +127,7 @@ public class CConnector implements IConnectionListener
           MWLogger.errLog("CConnector: connected to " + _host + ":" + _port);
           //MWLogger.errLog("setting NO_DELAY = true");
           s.setTcpNoDelay(true);
-          _connectionHandler = new ConnectionHandlerLocal(s);
+          _connectionHandler = new common.campaign.clientutils.protocol.ConnectionHandlerLocal(s);
           _connectionHandler.setListener(this);
           _connected = true;
           Client.connectionEstablished();

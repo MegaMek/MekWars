@@ -1,6 +1,6 @@
 /*
- * MekWars - Copyright (C) 2004 
- * 
+ * MekWars - Copyright (C) 2004
+ *
  * Derived from MegaMekNET (http://www.sourceforge.net/projects/megameknet)
  *
  * This program is free software; you can redistribute it and/or modify it
@@ -14,7 +14,7 @@
  * for more details.
  */
 
-package common;
+package mekwars.common;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -27,12 +27,11 @@ import common.util.BinWriter;
 
 /**
  * Represents a collection of continents, usually for one planet
- * 
- * @author Imi (immanuel.scholz@gmx.de)
- * seen, modified and made totally bad by McWizard
  *
- * Imi: *crhm*..."totally bad"... ;-)
- * TODO: simplify this class. subclass it from ArrayList or something like that   
+ * @author Imi (immanuel.scholz@gmx.de) seen, modified and made totally bad by McWizard
+ *       <p>
+ *       Imi: *crhm*..."totally bad"... ;-)
+ *       TODO: simplify this class. subclass it from ArrayList or something like that
  */
 
 public class PlanetEnvironments {
@@ -40,7 +39,7 @@ public class PlanetEnvironments {
     /**
      * An terrain provider to get terrain information from.
      */
-    public static transient TerrainProvider data;
+    public static transient common.TerrainProvider data;
 
     /**
      * The list of all continents. Type=Continent
@@ -51,7 +50,7 @@ public class PlanetEnvironments {
      * Iterate over all terrains in this set.
      */
     public Iterator<Continent> iterator() {
-    	return continents.iterator();
+        return continents.iterator();
     }
 
     /**
@@ -62,24 +61,23 @@ public class PlanetEnvironments {
     }
 
     /**
-     * Return all Environments as an array. You get a copy of the actual data,
-     * so modifying is pointless!
+     * Return all Environments as an array. You get a copy of the actual data, so modifying is pointless!
      */
     public Continent[] toArray() {
-    	
-    	int size = continents.size();
-    	Continent Conts[] = new Continent[size];
-    	for (int x = 0;x < size;x++)
-    	{	
-    		Conts[x] = continents.get(x);
-    	}
-    	return Conts;
+
+        int size = continents.size();
+        Continent Conts[] = new Continent[size];
+        for (int x = 0; x < size; x++) {
+            Conts[x] = continents.get(x);
+        }
+        return Conts;
     }
 
     /**
-     * Add a terrain to the current set. This will vanish, when Terrains are
-     * initialized through XStream.
-     * @TODO You should not need this and you should only initialize the terrain set with either XStream or binIn()
+     * Add a terrain to the current set. This will vanish, when Terrains are initialized through XStream.
+     *
+     * @TODO You should not need this and you should only initialize the terrain set with either XStream or
+     *       binIn()
      */
     synchronized public void add(Continent newPE) {
         continents.add(newPE);
@@ -87,33 +85,33 @@ public class PlanetEnvironments {
 
     synchronized public void remove(String terrain) {
 
-    	int count = 0;
-    	for ( Object land : continents ){
+        int count = 0;
+        for (Object land : continents) {
 
-    		//Check for multiple terrains with the same name.
-    		if ( ((Continent)land).getEnvironment().getName().equals(terrain) ){
-    			break;
-    		}
-    		count++;
-    	}
-    	
-    	if ( count < continents.size() ) {
-			continents.remove(count);
-			continents.trimToSize();
-    	}
+            //Check for multiple terrains with the same name.
+            if (((Continent) land).getEnvironment().getName().equals(terrain)) {
+                break;
+            }
+            count++;
+        }
+
+        if (count < continents.size()) {
+            continents.remove(count);
+            continents.trimToSize();
+        }
     }
 
     synchronized public void removeAll() {
-		continents.clear();
+        continents.clear();
     }
 
     /**
      * Return the environment with the most probability to occour.
      */
     public Continent getBiggestEnvironment() {
-        Continent result = new Continent(0,new Terrain(),new AdvancedTerrain());
-        for (Continent p:continents) {
-            if (p.getSize() > result.getSize()) result = p;
+        Continent result = new Continent(0, new common.Terrain(), new AdvancedTerrain());
+        for (Continent p : continents) {
+            if (p.getSize() > result.getSize()) {result = p;}
         }
         return result;
     }
@@ -123,24 +121,22 @@ public class PlanetEnvironments {
      */
     public int getTotalEnivronmentPropabilities() {
         int result = 0;
-        for (Continent C:continents)
-            result += C.getSize();
+        for (Continent C : continents) {result += C.getSize();}
         return result;
     }
 
     /**
-     * Returns a randomEnvironment based on the probability of each
-     * Environment.
+     * Returns a randomEnvironment based on the probability of each Environment.
      */
     public Continent getRandomEnvironment(Random r) {
         // use the skewer draw algorithm from Knuth.
         int probs = getTotalEnivronmentPropabilities();
-        for (Continent pe:continents) {
-            if (r.nextInt(probs) < pe.getSize()){
-                
+        for (Continent pe : continents) {
+            if (r.nextInt(probs) < pe.getSize()) {
+
                 probs = pe.getEnvironment().getTotalEnvironmentProbabilities();
-                for ( PlanetEnvironment env : pe.getEnvironment().getEnvironments() ){
-                    if (r.nextInt(probs) < env.getEnvironmentalProb()){
+                for (common.PlanetEnvironment env : pe.getEnvironment().getEnvironments()) {
+                    if (r.nextInt(probs) < env.getEnvironmentalProb()) {
                         return pe;
                     }
                     probs -= env.getEnvironmentalProb();
@@ -148,19 +144,18 @@ public class PlanetEnvironments {
             }
             probs -= pe.getSize();
         }
-        return new Continent(0,null,null);
+        return new Continent(0, null, null);
     }
 
     /**
      * Writes as binary stream
      */
-    public void binOut(BinWriter out){
-        out.println(continents.size(), "terrain.size");      
-        for (Continent C: continents)
-        {        
-            out.println(C.getSize(),"size");
-            out.println(C.getEnvironment().getId(),"id");
-            out.println(C.getAdvancedTerrain().getId(),"aid");
+    public void binOut(BinWriter out) {
+        out.println(continents.size(), "terrain.size");
+        for (Continent C : continents) {
+            out.println(C.getSize(), "size");
+            out.println(C.getEnvironment().getId(), "id");
+            out.println(C.getAdvancedTerrain().getId(), "aid");
         }
     }
 
@@ -169,16 +164,15 @@ public class PlanetEnvironments {
      */
     public void binIn(BinReader in, CampaignData data) throws IOException {
         int size = in.readInt("terrain.size");
-        for (int i = 0; i < size; ++i)
-        {
-        	int percent = in.readInt("size");
-        	int id =  in.readInt("id");
-        	int aid = in.readInt("aid");
-        	Terrain T = data.getTerrain(id);
-        	AdvancedTerrain AT = data.getAdvancedTerrain(aid);
-        	Continent C = new Continent(percent, T, AT);
-        	add(C);
-        	
+        for (int i = 0; i < size; ++i) {
+            int percent = in.readInt("size");
+            int id = in.readInt("id");
+            int aid = in.readInt("aid");
+            common.Terrain T = data.getTerrain(id);
+            AdvancedTerrain AT = data.getAdvancedTerrain(aid);
+            Continent C = new Continent(percent, T, AT);
+            add(C);
+
         }
     }
 
@@ -186,20 +180,20 @@ public class PlanetEnvironments {
      * @see common.persistence.MMNetSerializable#binOut(common.persistence.TreeWriter)
      *
     public void binOut(TreeWriter out) {
-        out.write(size(), "terrain.size");
-        for (Iterator it = continents.iterator(); it.hasNext();) {
-            Continent cont = (Continent)it.next(); 
-            out.write(cont.getSize(),"size");
-            out.write(cont.getEnvironment().getId(),"id");
-        }
+    out.write(size(), "terrain.size");
+    for (Iterator it = continents.iterator(); it.hasNext();) {
+    Continent cont = (Continent)it.next();
+    out.write(cont.getSize(),"size");
+    out.write(cont.getEnvironment().getId(),"id");
+    }
     }
 
     /**
      * @see common.persistence.MMNetSerializable#binIn(common.persistence.TreeReader, common.CampaignData)
      *
     public void binIn(TreeReader in, CampaignData dataProvider) throws IOException {
-        int size = in.readInt("terrain.size");
-        for (int i = 0; i < size; ++i)
-            add(new Continent(in.readInt("size"),dataProvider.getTerrain(in.readInt("id"))));
+    int size = in.readInt("terrain.size");
+    for (int i = 0; i < size; ++i)
+    add(new Continent(in.readInt("size"),dataProvider.getTerrain(in.readInt("id"))));
     }*/
 }

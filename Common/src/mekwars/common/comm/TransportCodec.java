@@ -4,7 +4,7 @@
  * Created on June 13, 2002, 5:11 PM
  */
 
-package common.comm;
+package mekwars.common.comm;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -20,7 +20,7 @@ import common.util.MWLogger;
  * encoded as %HH escapes.
  */
 public class TransportCodec {
-  
+
   final static String[] hex = {
     "%00", "%01", "%02", "%03", "%04", "%05", "%06", "%07",
     "%08", "%09", "%0a", "%0b", "%0c", "%0d", "%0e", "%0f",
@@ -55,7 +55,7 @@ public class TransportCodec {
     "%f0", "%f1", "%f2", "%f3", "%f4", "%f5", "%f6", "%f7",
     "%f8", "%f9", "%fa", "%fb", "%fc", "%fd", "%fe", "%ff"
   };
-  
+
   public static String encode(Object obj) {
     try {
       ByteArrayOutputStream baos = new ByteArrayOutputStream();
@@ -68,7 +68,7 @@ public class TransportCodec {
     }
     return "";
   }
-  
+
   public static Object decode(String s) {
     Object result = null;
     String sobj = TransportCodec.unescape(s);
@@ -83,7 +83,7 @@ public class TransportCodec {
     }
     return null;
   }
-  
+
   /**
    * Encode a string to the "x-www-form-urlencoded" form, enhanced
    * with the UTF-8-in-URL proposal. This is what happens:
@@ -141,7 +141,7 @@ public class TransportCodec {
     }
     return sbuf.toString();
   }
-  
+
   public static String unescape(String s) {
     StringBuilder sbuf = new StringBuilder() ;
     int l  = s.length() ;
@@ -193,5 +193,5 @@ public class TransportCodec {
     }
     return sbuf.toString() ;
   }
-  
+
 }

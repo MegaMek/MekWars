@@ -1,6 +1,6 @@
 /*
- * MekWars - Copyright (C) 2004 
- * 
+ * MekWars - Copyright (C) 2004
+ *
  * Derived from MegaMekNET (http://www.sourceforge.net/projects/megameknet)
  *
  * This program is free software; you can redistribute it and/or modify it
@@ -14,20 +14,18 @@
  * for more details.
  */
 
-package common.persistence;
+package mekwars.common.persistence;
 
 import java.io.PrintWriter;
 
 import org.mekwars.libpk.converters.HTML;
 
-
-
 /**
- * BinWriter is a minimal textual based writer optimized to output as few 
+ * BinWriter is a minimal textual based writer optimized to output as few
  * characters as possible. To do so, the structure information is silently
  * ignored. So no error handling is provided and invalid data structures will
  * not be detectable by BinReader.
- * 
+ *
  * @author Imi (immanuel.scholz@gmx.de)
  */
 public class BinWriter{
@@ -36,7 +34,7 @@ public class BinWriter{
      * Output goes here
      */
     private PrintWriter out;
-    
+
     /**
      * Construct a BinWriter.
      * @param out The place to write the output to.
@@ -44,7 +42,7 @@ public class BinWriter{
     public BinWriter(PrintWriter out) {
         this.out = out;
     }
-    
+
     /**
      * @see common.persistence.TreeWriter#write(int, java.lang.String)
      */
@@ -70,7 +68,7 @@ public class BinWriter{
      * @see common.persistence.TreeWriter#write(java.lang.String, java.lang.String)
      */
     public void write(String v, String name) {
-        // TODO: This encoding is not safe. If there are <br> in the 
+        // TODO: This encoding is not safe. If there are <br> in the
         // string, they will be converted back in BinReader.
         out.println(HTML.cr2br(v));
     }

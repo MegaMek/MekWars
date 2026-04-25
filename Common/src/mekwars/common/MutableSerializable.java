@@ -1,6 +1,6 @@
 /*
- * MekWars - Copyright (C) 2004 
- * 
+ * MekWars - Copyright (C) 2004
+ *
  * Derived from MegaMekNET (http://www.sourceforge.net/projects/megameknet)
  *
  * This program is free software; you can redistribute it and/or modify it
@@ -14,7 +14,7 @@
  * for more details.
  */
 
-package common;
+package mekwars.common;
 
 import java.io.IOException;
 
@@ -22,16 +22,13 @@ import common.util.BinReader;
 import common.util.BinWriter;
 
 
-
 /**
- * Implementing this interface allows the object to be serialized with only
- * mutable fields. Mutable fields are those which change often and thus 
- * required to be transferred between Server and Client a lot.
- * 
- * Since it could be impossible to decide which data to be transfered (when 
- * encoding) or what object instance should be created (decoding), a data
- * provider is given as argument to retrieve necessary cross references. 
- * 
+ * Implementing this interface allows the object to be serialized with only mutable fields. Mutable fields are those
+ * which change often and thus required to be transferred between Server and Client a lot.
+ * <p>
+ * Since it could be impossible to decide which data to be transfered (when encoding) or what object instance should be
+ * created (decoding), a data provider is given as argument to retrieve necessary cross references.
+ *
  * @author Imi (immanuel.scholz@gmx.de)
  */
 public interface MutableSerializable {
@@ -39,11 +36,11 @@ public interface MutableSerializable {
      * Encode all mutable fields into the stream. Use as few bits as possible.
      */
     public void encodeMutableFields(BinWriter out,
-            CampaignData dataProvider) throws IOException;
+          CampaignData dataProvider) throws IOException;
 
     /**
      * Decode all mutable fields from the stream.
      */
     public void decodeMutableFields(BinReader in,
-            CampaignData dataProvider) throws IOException;
+          CampaignData dataProvider) throws IOException;
 }

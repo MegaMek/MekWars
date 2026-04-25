@@ -1,4 +1,4 @@
-package common.util.unitdamage;
+package mekwars.common.util.unitdamage;
 
 import megamek.common.Entity;
 

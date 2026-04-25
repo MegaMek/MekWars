@@ -1,6 +1,6 @@
 /*
- * MekWars - Copyright (C) 2004 
- * 
+ * MekWars - Copyright (C) 2004
+ *
  * Derived from MegaMekNET (http://www.sourceforge.net/projects/megameknet)
  * Original author Helge Richter (McWizard)
  *
@@ -19,7 +19,7 @@
  * Created on 24.03.2004
  *
  */
-package common.campaign.pilot;
+package mekwars.common.campaign.pilot;
 
 import java.util.Iterator;
 import java.util.LinkedList;
@@ -41,7 +41,7 @@ public class Pilot {
 	private int piloting = 5;
 	private String name = "John Doe";
 	private int experience = 0;
-	private int hits = 0; 
+	private int hits = 0;
 	private LinkedList<MegaMekPilotOption> megamekOptions = new LinkedList<MegaMekPilotOption>();
 	private String weapon = "Default";//for Weapon Specialist skill
 	private String currentFaction = "none";
@@ -52,7 +52,7 @@ public class Pilot {
     boolean edge_when_ko = true;
     boolean edge_when_headhit = true;
     boolean edge_when_explosion = true;
-    
+
     /**
      * List of skills this pilot has obtained.
      */
@@ -61,7 +61,7 @@ public class Pilot {
 	private int bayModifier = 0;
 	private int kills = 0;
 	private int unitType = 0; //set the units type good for checking stuff
-	
+
 
 
 	public Pilot(String name,int gunnery, int piloting) {
@@ -89,25 +89,25 @@ public class Pilot {
 	public void setGunnery(int gunnery) {
 		this.gunnery = gunnery;
 	}
-	
+
 	public String getSkillString(boolean abbreviated) {
 		return getSkillString(abbreviated,"");
 	}
-	
+
 	public String getSkillString(boolean abbreviated, String houseSkills) {
-		
+
 		StringBuilder result = new StringBuilder();
-		
+
 		Iterator<PilotSkill> i = getSkills().getSkillIterator();
 		if (!i.hasNext())
 			return "";
-		
+
 		while (i.hasNext()) {
 			PilotSkill skill = (PilotSkill) i.next();
 			//Do not list house skills for pilots
 			if ( houseSkills.indexOf(skill.getName()) >= 0)
 				continue;
-			
+
 			String lvl = "";
 			if (skill.getLevel() != -1)
 				lvl += skill.getLevel();
@@ -129,7 +129,7 @@ public class Pilot {
 				if (!abbreviated) {result.append(" ");}
 			}
 		}
-		
+
 		if ( result.toString().trim().endsWith(",") )
 			result.deleteCharAt(result.lastIndexOf(","));
 		return result.toString().trim();
@@ -190,11 +190,11 @@ public class Pilot {
 	public void setExperience(int experience) {
 		this.experience = experience;
 	}
-	
+
 	public void addMegamekOption (MegaMekPilotOption op) {
 		megamekOptions.add(op);
 	}
-	
+
 	/**
 	 * @return Returns the bvMod.
 	 */
@@ -219,7 +219,7 @@ public class Pilot {
 	public void setBayModifier(int bayModifier) {
 		this.bayModifier = bayModifier;
 	}
-    
+
     /**
      * @return Returns the skills.
      */
@@ -232,55 +232,55 @@ public class Pilot {
 	public LinkedList<MegaMekPilotOption> getMegamekOptions() {
 		return megamekOptions;
 	}
-	
+
     public int getKills(){
         return kills;
     }
-    
+
     public void setKills(int kill){
         kills = kill;
     }
-    
+
     public void addKill(int kill){
         setKills(getKills()+kill);
     }
-    
+
     public void setWeapon(String weapon){
         this.weapon = weapon;
     }
-    
+
     public String getWeapon(){
         return this.weapon;
     }
-    
+
     public void setUnitType(int type){
         this.unitType = type;
     }
-    
+
     public int getUnitType(){
         return this.unitType;
     }
-    
+
     public String getCurrentFaction(){
         return currentFaction;
     }
-    
+
     public void setCurrentFaction(String faction){
         currentFaction = faction;
     }
-    
+
     public String getTraitName(){
         return traitName;
     }
-    
+
     public void setTraitName(String Trait){
         traitName = Trait;
     }
-    
+
     public int getPilotId(){
         return this.id;
     }
-    
+
     public void setPilotId(int id){
         this.id = id;
     }
@@ -288,11 +288,11 @@ public class Pilot {
     public int getDBId() {
     	return this.DBId;
     }
-    
+
     public void setDBId(int i) {
     	this.DBId = i;
     }
-    
+
     public boolean getTac(){return edge_when_tac;}
     public boolean getKO(){return edge_when_ko;}
     public boolean getHeadHit(){return edge_when_headhit;}

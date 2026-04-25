@@ -3,8 +3,8 @@
  * Used by permission
  */
 /*
- * MekWars - Copyright (C) 2005 
- * 
+ * MekWars - Copyright (C) 2005
+ *
  * Original author - Torren (torren@users.sourceforge.net)
  *
  * This program is free software; you can redistribute it and/or modify it
@@ -20,16 +20,16 @@
 
 
 /*
- * Derived from NFCChat, a GPL chat client/server. 
+ * Derived from NFCChat, a GPL chat client/server.
  * Original code can be found @ http://nfcchat.sourceforge.net
  * Our thanks to the original authors.
- */ 
-/**
- * 
- * @author Torren (Jason Tighe) 11.5.05 
- * 
  */
-package common.campaign.clientutils.protocol;
+/**
+ *
+ * @author Torren (Jason Tighe) 11.5.05
+ *
+ */
+package mekwars.common.campaign.clientutils.protocol;
 
 /**
  * Interface that ConnectionHandlers must implement
@@ -57,5 +57,5 @@ public interface IConnectionHandler {
     /**
      * Set the connection listener for this connection handler
      */
-    public void setListener(IConnectionListener listener);
+    public void setListener(common.campaign.clientutils.protocol.IConnectionListener listener);
 }

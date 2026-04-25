@@ -1,4 +1,4 @@
-package common.util.unitdamage;
+package mekwars.common.util.unitdamage;
 
 import common.util.MWLogger;
 import megamek.common.Aero;
@@ -14,29 +14,29 @@ public final class UnitDamageHandlerFactory {
 		if (e instanceof Mech) {
 			return new MekDamageHandler();
 		}
-		
+
 		if (e instanceof BattleArmor) {
 			return new BattleArmorDamageHandler();
 		}
-		
+
 		if (e instanceof Aero) {
 			return new AeroDamageHandler();
 		}
-		
+
 		if (e instanceof Protomech) {
-			return new ProtoDamageHandler();
+			return new common.util.unitdamage.ProtoDamageHandler();
 		}
-		
+
 		if (e instanceof Tank) {
-			return new VehicleDamageHandler();
+			return new common.util.unitdamage.VehicleDamageHandler();
 		}
-		
+
 		if (e instanceof Infantry) {
 			return new InfantryDamageHandler();
 		}
-		
+
 		MWLogger.errLog("Unknown Unit Type in UnitDamageHandlerFactory.getHandler(): " + e.getModel());
-		
+
 		return new GenericDamageHandler();
 	}
 }

@@ -17,16 +17,8 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout Data Repo
+      - name: "Check out MekWars"
         uses: actions/checkout@v6
-        with:
-          repository: megamek/mm-data
-          path: mm-data
-
-      - name: "Check out MegaMek"
-        uses: actions/checkout@v6
-        with:
-          path: megamek
 
       - name: Set up Temurin JDK 21
         uses: actions/setup-java@v5
@@ -42,7 +34,6 @@ jobs:
           build-scan-terms-of-use-agree: "yes"
 
       - name: Build with Gradle
-        working-directory: megamek
         run: ./gradlew javadoc
 
       - name: Upload static files as artifact

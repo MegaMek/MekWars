@@ -1,6 +1,6 @@
 /*
- * MekWars - Copyright (C) 2005 
- * 
+ * MekWars - Copyright (C) 2005
+ *
  * Original author - nmorris (urgru@users.sourceforge.net)
  *
  * This program is free software; you can redistribute it and/or modify it
@@ -18,50 +18,50 @@
  * ModifyingOperaions are much more closely related to Operations
  * proper than the functional ops (Long and Small). Modifiers are
  * like the basic Op in several ways:
- * 
+ *
  *  - generally only a single instance created per server
  *  - store campaign related entry requirements (XP, etc)
  *  - read configs from disk instead of another class
- * 
+ *
  * What exactly is a modifying operation? In practice, it should
  * have more restrictive entry requirements than an operation, and
  * modify an Operation's variables.
- * 
+ *
  * Example: There is a "Planetary Assault" operation which is generally
  * available. The ModifyingOperation "Fast Mover" has Planetary Assault
  * set as a legal target. A player who meets the Fast Mover requirements
  * can choose to use is modifiers.
- * 
+ *
  * Modifiers should be used to:
  * 1) create high risk games. require pay-ins or disincentives (salvage
  *    reductions, CBill costs) for higher payouts, or
  * 2) Encourage diversity of play. Use modifier requirements and advantages
  *    to get players to use unusual or otherwise undesirable forces, offer
  *    incentives for games w/ no assault units, etc.
- * 
+ *
  * ModOp params SUPERCEDE those set in an Operation. Some things are 0-checked;
  * however, many paramaters will accept potentially damaging negative settings or
  * params which strongly conflict with the underlying Operation. This is an
  * Operator request (maximum flexibility), but will require strenuous testing
- * of ModOp settings. 
+ * of ModOp settings.
  */
 
-package common.campaign.operations;
+package mekwars.common.campaign.operations;
 
 import java.util.Properties;
 
 //IMPORTS
 
 public class ModifyingOperation {
-	
+
 	//IVARS
 	private String opName;
 	private Properties modValues;
-	
+
 	/**
 	 * ModifyingOperation CONSTRUCTOR. Takes a name (same as used to
 	 * assemble filenames for param loading) and a set of param values.
-	 * 
+	 *
 	 * ModifyingOperations are constructed in OperationLoader.java
 	 */
 	public ModifyingOperation(String opName, Properties modValues) {
@@ -79,14 +79,14 @@ public class ModifyingOperation {
 		Object toReturn = modValues.get(valToGet);
 		return toReturn;
 	}
-	
+
 	/**
 	 * Method which returns values, pre-cast to string.
 	 */
 	public String getValueAsString(String valToGet) {
 		return (String)getModValue(valToGet);
 	}
-	
+
 	/**
 	 * Method which returns name of ModOp, as
 	 * derived from filename @ loadtime.
@@ -94,5 +94,5 @@ public class ModifyingOperation {
 	public String getName() {
 		return this.opName;
 	}
-	
+
 }//end OperationsManager class

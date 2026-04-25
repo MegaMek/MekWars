@@ -3,8 +3,8 @@
  * Used by permission
  */
 /*
- * MekWars - Copyright (C) 2005 
- * 
+ * MekWars - Copyright (C) 2005
+ *
  * Original author - Torren (torren@users.sourceforge.net)
  *
  * This program is free software; you can redistribute it and/or modify it
@@ -19,16 +19,16 @@
  */
 
 /*
- * Derived from NFCChat, a GPL chat client/server. 
+ * Derived from NFCChat, a GPL chat client/server.
  * Original code can be found @ http://nfcchat.sourceforge.net
  * Our thanks to the original authors.
  */
 /**
- * 
- * @author Torren (Jason Tighe) 11.5.05 
- * 
+ *
+ * @author Torren (Jason Tighe) 11.5.05
+ *
  */
-package common.campaign.clientutils.protocol;
+package mekwars.common.campaign.clientutils.protocol;
 
 import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
@@ -119,7 +119,7 @@ public class ReaderThread extends Thread {
         String[] args = decompose(command);
         int size = Integer.parseInt(args[1]);
         int fullSize = 29999;
-        
+
         //just in case
         if ( args.length > 2 )
             fullSize = Integer.parseInt(args[2]);
@@ -166,15 +166,15 @@ public class ReaderThread extends Thread {
         try {
             String newLine;
             while (keepGoing) {
-                
+
             	newLine = readLine();
             	if (newLine == null) {
                     pleaseStop();
                     continue;
                 }
-                
+
             	if (_listener != null) {
-                    
+
             		if (newLine.startsWith(IClient.DEFLATED)) {
                         String[] args = decompose(newLine);
                         if (args.length > 0) { // can be 0 if server is having problems
@@ -186,17 +186,17 @@ public class ReaderThread extends Thread {
                             continue;
                         }
                     }
-            		
+
             		//else
             		ConnectionHandlerLocal.DEBUG("< " + newLine);
                     _listener.incomingMessage(newLine);
-                    
+
                 } else {
                     MWLogger.errLog("Null listener: " + newLine);
                 }
             }
             MWLogger.errLog("ReaderThread: stopping gracefully.");
-            
+
         } catch (IOException e) {
             if (keepGoing) {
             	pleaseStop();

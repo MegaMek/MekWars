@@ -1,4 +1,4 @@
-package common.campaign.clientutils.protocol.commands;
+package mekwars.common.campaign.clientutils.protocol.commands;
 
 import common.campaign.clientutils.protocol.CConnector;
 import common.campaign.clientutils.protocol.IClient;
@@ -7,7 +7,7 @@ import common.campaign.clientutils.protocol.IClient;
  * Abstract class for protocol Commands
  */
 
-public abstract class CProtCommand implements IProtCommand
+public abstract class CProtCommand implements common.campaign.clientutils.protocol.commands.IProtCommand
 {
   String name = "";
   String prefix = "";
@@ -18,39 +18,39 @@ public abstract class CProtCommand implements IProtCommand
   public void setName(String name) {
 	  this.name = name;
   }
-  
+
   public IClient getClient() {
 	  return client;
   }
-  
+
   public void setClient(IClient c) {
 	  client = c;
   }
-  
+
   public String getPrefix() {
 	  return prefix;
   }
-  
+
   public void setPrefix(String prefix) {
 	  this.prefix = prefix;
   }
-  
+
   public String getDelimiter() {
 	  return delimiter;
   }
-  
+
   public void setDelimiter(String delimiter) {
 	  this.delimiter = delimiter;
   }
-  
+
   public void setConnector (CConnector connector) {
 	  Connector = connector;
   }
-  
+
   public CConnector getConnector() {
 	  return Connector;
   }
-  
+
   public CProtCommand(IClient client)
   {
     this.client = client;

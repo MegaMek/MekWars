@@ -1,4 +1,4 @@
-name: MegaMek CI with Gradle
+name: MekWars CI with Gradle
 
 on:
   pull_request:
@@ -20,28 +20,8 @@ jobs:
       fail-fast: false
 
     steps:
-      - name: Checkout Data Repo
+      - name: "Check out MekWars"
         uses: actions/checkout@v6
-        with:
-          repository: megamek/mm-data
-          path: mm-data
-
-      - name: "Check out MegaMek"
-        uses: actions/checkout@v6
-        with:
-          path: megamek
-
-      - name: Set short git commit SHA
-        id: vars
-        run: |
-          cd megamek
-          calculatedSha=$(git rev-parse --short ${{ github.sha }})
-          echo "COMMIT_SHORT_SHA=$calculatedSha" >> $GITHUB_ENV
-
-      - name: "Output branch information to Version file"
-        run: |
-          echo "branch=PR-${{ github.event.number }}" >> megamek/megamek/resources/extraVersion.properties
-          echo "gitHash=${{ env.COMMIT_SHORT_SHA }}" >> megamek/megamek/resources/extraVersion.properties
 
       - name: Set up ${{ matrix.java-distribution }} JDK ${{ matrix.java-version }}
         uses: actions/setup-java@v5
@@ -53,7 +33,6 @@ jobs:
         uses: gradle/actions/setup-gradle@v6
 
       - name: Test
-        working-directory: megamek
         run: ./gradlew test -x checkstyleMain -x checkstyleTest
 
       - name: Upload Test Logs on Failure

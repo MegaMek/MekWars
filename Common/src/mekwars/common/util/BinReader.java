@@ -1,6 +1,6 @@
 /*
- * MekWars - Copyright (C) 2004 
- * 
+ * MekWars - Copyright (C) 2004
+ *
  * Derived from MegaMekNET (http://www.sourceforge.net/projects/megameknet)
  *
  * This program is free software; you can redistribute it and/or modify it
@@ -14,7 +14,7 @@
  * for more details.
  */
 
-package common.util;
+package mekwars.common.util;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -31,7 +31,7 @@ import org.mekwars.libpk.converters.HTML;
  * - int
  * - String
  * - double
- *  
+ *
  * @author Imi (immanuel.scholz@gmx.de)
  */
 public class BinReader {
@@ -39,7 +39,7 @@ public class BinReader {
     private BufferedReader in;
     private boolean debug;
 
-    
+
     private String read(String debugName) throws IOException {
 //        if ( !in.ready() )
   //          throw new IOException("EOF");
@@ -51,7 +51,7 @@ public class BinReader {
         }
         return s;
     }
-    
+
     /**
      * Construct an BinReader
      */
@@ -64,7 +64,7 @@ public class BinReader {
             if (!debug)
                 this.in.reset();
         } catch (IOException e) {
-            MWLogger.errLog(e);
+            common.util.MWLogger.errLog(e);
             debug = false;
         }
     }

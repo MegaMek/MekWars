@@ -1,4 +1,4 @@
-package common.campaign.clientutils.protocol.commands;
+package mekwars.common.campaign.clientutils.protocol.commands;
 
 import java.util.StringTokenizer;
 
@@ -9,7 +9,7 @@ import common.util.MWLogger;
  * AckSignon command
  */
 
-public class AckSignonPCmd extends CProtCommand {
+public class AckSignonPCmd extends common.campaign.clientutils.protocol.commands.CProtCommand {
 
 	public AckSignonPCmd(IClient mwclient) {
 		super(mwclient);
@@ -26,10 +26,10 @@ public class AckSignonPCmd extends CProtCommand {
 			client.setUsername(ST.nextToken());
 			echo(input);
 			if (client.isDedicated()) {
-				
+
 				try {Thread.sleep(5000);}
 				catch (Exception ex) {MWLogger.errLog(ex);}
-				
+
 				try {
 					client.startHost(true,false,false);
 				} catch (Exception ex) {
@@ -37,11 +37,11 @@ public class AckSignonPCmd extends CProtCommand {
 					MWLogger.errLog(ex);
 				}
 			}
-			
+
 			return true;
 		}
 		//else
-		return false; 
+		return false;
 	}
 
 	// echo command in GUI

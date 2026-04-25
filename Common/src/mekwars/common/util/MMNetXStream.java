@@ -1,6 +1,6 @@
 /*
- * MekWars - Copyright (C) 2004 
- * 
+ * MekWars - Copyright (C) 2004
+ *
  * Derived from MegaMekNET (http://www.sourceforge.net/projects/megameknet)
  *
  * This program is free software; you can redistribute it and/or modify it
@@ -14,7 +14,7 @@
  * for more details.
  */
 
-package common.util;
+package mekwars.common.util;
 
 
 import com.thoughtworks.xstream.XStream;
@@ -27,23 +27,23 @@ import common.Planet;
 
 
 /**
- * 
+ *
  * @author Imi (immanuel.scholz@gmx.de)
  */
 public class MMNetXStream extends XStream {
     public MMNetXStream() {
         super(new PureJavaReflectionProvider());
-        // you may add shortcuts here, so XStream will not 
+        // you may add shortcuts here, so XStream will not
         // write the whole class name each time ;-)
         alias("faction",House.class);
         alias("planet",Planet.class);
         // Enables reference marshalling.
         setMarshallingStrategy(new ReferenceByIdMarshallingStrategy());
     }
-    
+
     public MMNetXStream(HierarchicalStreamDriver hierarchicalStreamDriver){
     	super(hierarchicalStreamDriver);
-        // you may add shortcuts here, so XStream will not 
+        // you may add shortcuts here, so XStream will not
         // write the whole class name each time ;-)
         alias("faction",House.class);
         alias("planet",Planet.class);

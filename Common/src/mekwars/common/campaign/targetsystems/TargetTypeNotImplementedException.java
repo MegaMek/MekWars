@@ -1,9 +1,9 @@
-package common.campaign.targetsystems;
+package mekwars.common.campaign.targetsystems;
 
 public class TargetTypeNotImplementedException extends Exception {
 
 	/**
-	 * 
+	 *
 	 */
 	private static final long serialVersionUID = -6789705609508538769L;
 
@@ -27,7 +27,7 @@ public class TargetTypeNotImplementedException extends Exception {
 	}
 
 	public TargetTypeNotImplementedException(int type) {
-		// TODO 
+		// TODO
 	}
-	
+
 }

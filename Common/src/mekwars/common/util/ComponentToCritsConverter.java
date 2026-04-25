@@ -1,6 +1,6 @@
 /*
- * MekWars - Copyright (C) 2008 
- * 
+ * MekWars - Copyright (C) 2008
+ *
  * Original author - Torren (torren@users.sourceforge.net)
  *
  * This program is free software; you can redistribute it and/or modify it
@@ -15,12 +15,12 @@
  */
 
 /**
- * 
- * @author Torren (Jason Tighe) 3.9.08 
- * 
+ *
+ * @author Torren (Jason Tighe) 3.9.08
+ *
  */
 
-package common.util;
+package mekwars.common.util;
 
 import common.Unit;
 
@@ -30,25 +30,25 @@ public class ComponentToCritsConverter{
     private int componentUsedType = Unit.MEK;
     private int componentUsedWeight = Unit.LIGHT;
     private String critName = "All";
-    
+
     /**
-     * 
+     *
      * @param int level
      */
     public void setMinCritLevel(int level) {
         this.minCritLevel = level;
     }
-    
+
     /**
-     * 
+     *
      * @return int
      */
     public int getMinCritLevel() {
         return this.minCritLevel;
     }
-    
+
     /**
-     * 
+     *
      * @param int type
      */
     public void setComponentUsedType(int type) {
@@ -56,39 +56,39 @@ public class ComponentToCritsConverter{
     }
 
     /**
-     * 
+     *
      * @return int
      */
     public int getComponentUsedType() {
         return this.componentUsedType;
     }
-    
+
     /**
-     * 
+     *
      * @param int weight
      */
     public void setComponentUsedWeight(int weight) {
         this.componentUsedWeight = weight;
     }
-    
+
     /**
-     * 
+     *
      * @return int
      */
     public int getComponentUsedWeight() {
         return this.componentUsedWeight;
     }
-    
+
     /**
-     * 
+     *
      * @param String crit
      */
     public void setCritName(String crit) {
         this.critName = crit;
     }
-    
+
     /**
-     * 
+     *
      * @return string
      */
     public String getCritName() {
@@ -98,10 +98,10 @@ public class ComponentToCritsConverter{
     public String toString() {
         return this.toString("|");
     }
-    
+
     public String toString(String token) {
         StringBuffer results = new StringBuffer();
-        
+
         results.append(critName);
         results.append(" ");
         results.append(token);
@@ -111,8 +111,8 @@ public class ComponentToCritsConverter{
         results.append(token);
         results.append(componentUsedWeight);
         results.append(token);
-        
+
         return results.toString();
     }
-    
+
 }

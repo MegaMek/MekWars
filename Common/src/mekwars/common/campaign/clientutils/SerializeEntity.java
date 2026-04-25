@@ -1,6 +1,6 @@
 /*
- * MekWars - Copyright (C) 2007 
- * 
+ * MekWars - Copyright (C) 2007
+ *
  * Original author - Torren (torren@users.sourceforge.net)
  *
  * This program is free software; you can redistribute it and/or modify it
@@ -14,7 +14,7 @@
  * for more details.
  */
 
-package common.campaign.clientutils;
+package mekwars.common.campaign.clientutils;
 
 import java.util.Enumeration;
 
@@ -35,7 +35,7 @@ import megamek.common.Tank;
 
 public class SerializeEntity{
 	public static String serializeEntity (Entity e, boolean fullStatus, boolean forceDevastate, boolean useRepairs) {
-		
+
 		StringBuilder result = new StringBuilder();
 
 		int externalID;
@@ -63,12 +63,12 @@ public class SerializeEntity{
 				result.append(externalID + "*");
 				result.append(e.getOwner().getName().trim() + "*");
 				result.append(e.getCrew().getHits() + "*");
-				
+
 				if (forceDevastate)
 					result.append(IEntityRemovalConditions.REMOVE_DEVASTATED + "*");
 				else
 					result.append(e.getRemovalCondition() + "*");
-				
+
 				if ( e instanceof BipedMech )
 					result.append(Unit.MEK +"*");
 				else if ( e instanceof QuadMech )
@@ -106,7 +106,7 @@ public class SerializeEntity{
 						result.append("*");
 				}
 			}
-			
+
 			if (e instanceof Mech ) {
 				result.append(e.getCrew().isUnconscious() + "*");
 				result.append(e.getInternal(Mech.LOC_CT) + "*");
@@ -142,14 +142,14 @@ public class SerializeEntity{
 				result.append(mw.getPickedUpByExternalId() + "*");
 				result.append(mw.isDestroyed()+"*");
 			}
-			
+
 			if (  e.isOffBoard() ){
 				result.append("*" + e.getOffBoardDistance());
 			}
 		}
-		
+
 		/*
-		 * FullStatus is used when autoreporting. This status, which 
+		 * FullStatus is used when autoreporting. This status, which
 		 * sends less information, is used for InProgressUpdates.
 		 */
 		else {
@@ -160,18 +160,18 @@ public class SerializeEntity{
 				result.append("MW*" + mw.getOriginalRideExternalId() + "*");
 				result.append(mw.getPickedUpByExternalId() + "*");
 				result.append(mw.isDestroyed()+"*");
-			} 
-			
+			}
+
 			//else (the entity is a real unit)
 			else {
 				result.append(e.getOwner().getName() + "*");
 				result.append(externalID + "*");
-				
+
 				if (forceDevastate)
 					result.append(IEntityRemovalConditions.REMOVE_DEVASTATED + "*");
 				else
 					result.append(e.getRemovalCondition() + "*");
-				
+
 				if (e instanceof Mech ) {
 					result.append(e.getInternal(Mech.LOC_CT) + "*");
 					result.append(e.getInternal(Mech.LOC_HEAD) + "*");
@@ -182,7 +182,7 @@ public class SerializeEntity{
 				result.append(e.isRepairable() + "*");
 			}
 		} //end else(un-full status)
-		
+
 		return result.toString();
 	}
 }

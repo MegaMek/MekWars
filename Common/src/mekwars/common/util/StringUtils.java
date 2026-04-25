@@ -1,10 +1,10 @@
-package common.util;
+package mekwars.common.util;
 
 import java.awt.Color;
 
 /*
- * MekWars - Copyright (C) 2005 
- * 
+ * MekWars - Copyright (C) 2005
+ *
  * Original author - nmorris (urgru@users.sourceforge.net)
  *
  * This program is free software; you can redistribute it and/or modify it
@@ -61,7 +61,7 @@ public final class StringUtils {
 
     /**
      * Converts a html-color reference to a java.awt.Color. Will attempt to append a missing "#". If all else fails, will return a light grey.
-     * 
+     *
      * @param htmlColor
      *            color in format "#rrggbb"
      */
@@ -85,7 +85,7 @@ public final class StringUtils {
 
     /**
      * Converts a java.awt.Color to a html-color
-     * 
+     *
      * @return Color as String in format "#rrggbb"
      */
     public static String color2html(Color color) {
@@ -129,7 +129,7 @@ public final class StringUtils {
         try{
             newColor = new Color(red,green,blue);
         }catch(Exception ex){
-            
+
         }
         return newColor;
 
@@ -138,25 +138,25 @@ public final class StringUtils {
     public static String hasBadChars(String string){
         return StringUtils.hasBadChars(string,false);
     }
-    
+
     public static String hasBadChars(String string, boolean pilot){
-        
+
         char[] badChars = {'%','~', '$', '|', '*', '#' , '@', '&', '^', '+', '=',
                             ';', ':', '\'', '"', '/', '\\', '{', '}' };
 
         for (int pos = badChars.length -1; pos >= 0; pos-- ){
             if (string.indexOf(badChars[pos]) != -1) {
                 return "AM:Illegal string("+badChars[pos]+" forbidden).";
-                
+
             }
         }
 
         if (string.toLowerCase().startsWith("vacant") && pilot) {
             return "AM:Illegal pilot name (\"vacant\" forbidden).";
-            
+
         }
-        
-        
+
+
         return "";
     }
 }// end AorAnChecker class

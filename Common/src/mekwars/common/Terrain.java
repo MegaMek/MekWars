@@ -1,19 +1,19 @@
 /*
  * MekWars - Copyright (C) 2008
- * 
+ *
  * Original author - jtighe (torren@users.sourceforge.net)
- * 
+ *
  * This program is free software; you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software
  * Foundation; either version 2 of the License, or (at your option) any later
  * version.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT
  * FOR A PARTICULAR PURPOSE. See the GNU General Public License for more
  * details.
  */
 
-package common;
+package mekwars.common;
 
 import java.io.IOException;
 import java.util.StringTokenizer;
@@ -23,7 +23,8 @@ import common.util.BinReader;
 import common.util.BinWriter;
 
 /**
- * A Terrain Base Terrain container for all environments. Each environment can be a different theme to allow for different times of year.
+ * A Terrain Base Terrain container for all environments. Each environment can be a different theme to allow for
+ * different times of year.
  */
 
 final public class Terrain {
@@ -107,7 +108,7 @@ final public class Terrain {
      */
     public void setId(int id) {
         this.id = id;
-        for ( PlanetEnvironment pe : environments ){
+        for (PlanetEnvironment pe : environments) {
             pe.setId(id);
         }
     }
@@ -120,8 +121,7 @@ final public class Terrain {
     }
 
     /**
-     * @param name
-     *            The name to set.
+     * @param name The name to set.
      */
     public void setName(String name) {
         Name = name;
@@ -135,26 +135,23 @@ final public class Terrain {
     }
 
     public String toImageDescription() {
-        if (environments.size() > 0)
-            return environments.get(0).toImageDescription();
+        if (environments.size() > 0) {return environments.get(0).toImageDescription();}
 
         return "";
     }
 
     public String toImageAbsolutePathDescription() {
-        if (environments.size() > 0)
-            return environments.get(0).toImageAbsolutePathDescription();
+        if (environments.size() > 0) {return environments.get(0).toImageAbsolutePathDescription();}
 
         return "";
     }
-    
+
     /**
      * Return the total probability of all environments.
      */
     public int getTotalEnvironmentProbabilities() {
         int result = 0;
-        for (PlanetEnvironment pe : environments )
-            result += pe.getEnvironmentalProb();
+        for (PlanetEnvironment pe : environments) {result += pe.getEnvironmentalProb();}
         return result;
     }
 

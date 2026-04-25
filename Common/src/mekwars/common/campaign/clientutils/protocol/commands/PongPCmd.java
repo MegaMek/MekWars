@@ -1,4 +1,4 @@
-package common.campaign.clientutils.protocol.commands;
+package mekwars.common.campaign.clientutils.protocol.commands;
 
 import java.util.StringTokenizer;
 
@@ -27,7 +27,7 @@ public class PongPCmd extends CProtCommand {
 		}
 
 		//else
-		return false; 
+		return false;
 	}
 
 	// echo command in GUI

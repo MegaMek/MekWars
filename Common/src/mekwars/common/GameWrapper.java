@@ -1,4 +1,4 @@
-package common;
+package mekwars.common;
 
 import java.util.ArrayList;
 import java.util.Enumeration;
@@ -12,53 +12,53 @@ import megamek.common.Player;
 
 
 public class GameWrapper implements GameInterface {
-	
-	private final Game game;
-	
-	public GameWrapper(Game game) {
-		this.game = game;
-	}
 
-	public Enumeration<Entity> getDevastatedEntities() {
-		return game.getDevastatedEntities();
-	}
+    private final Game game;
 
-	public Enumeration<Entity> getGraveyardEntities() {
-		return game.getGraveyardEntities();
-	}
+    public GameWrapper(Game game) {
+        this.game = game;
+    }
 
-	public Iterator<Entity> getEntities() {
-		return game.getEntities();
-	}
+    public Enumeration<Entity> getDevastatedEntities() {
+        return game.getDevastatedEntities();
+    }
 
-	public Enumeration<Entity> getRetreatedEntities() {
-		return game.getRetreatedEntities();
-	}
+    public Enumeration<Entity> getGraveyardEntities() {
+        return game.getGraveyardEntities();
+    }
 
-	public List<String> getWinners() {
-		ArrayList<String> result = new ArrayList<String>();
-		
-		//TODO: Winners sometimes coming up empty. Let's see why
-		
-		Enumeration<Player> en = game.getPlayers();
-		
-		MWLogger.errLog("  :: game.getPlayers(): " + en.toString());
-		MWLogger.errLog("  :: VictoryTeam: " + game.getVictoryTeam());
-		
-		while (en.hasMoreElements()){
-			final Player player = en.nextElement();
-			MWLogger.errLog("  :: ==> Player: " + player.getName().trim() + " :: Team: " + player.getTeam());
-			
-			if (player.getTeam() == game.getVictoryTeam()){
-				result.add(player.getName().trim());
-			}
-		}
-		return result;
-	}
+    public Iterator<Entity> getEntities() {
+        return game.getEntities();
+    }
 
-	public boolean hasWinner() {
-		return game.getVictoryTeam() != Player.TEAM_NONE;
-	}
+    public Enumeration<Entity> getRetreatedEntities() {
+        return game.getRetreatedEntities();
+    }
+
+    public List<String> getWinners() {
+        ArrayList<String> result = new ArrayList<String>();
+
+        //TODO: Winners sometimes coming up empty. Let's see why
+
+        Enumeration<Player> en = game.getPlayers();
+
+        MWLogger.errLog("  :: game.getPlayers(): " + en.toString());
+        MWLogger.errLog("  :: VictoryTeam: " + game.getVictoryTeam());
+
+        while (en.hasMoreElements()) {
+            final Player player = en.nextElement();
+            MWLogger.errLog("  :: ==> Player: " + player.getName().trim() + " :: Team: " + player.getTeam());
+
+            if (player.getTeam() == game.getVictoryTeam()) {
+                result.add(player.getName().trim());
+            }
+        }
+        return result;
+    }
+
+    public boolean hasWinner() {
+        return game.getVictoryTeam() != Player.TEAM_NONE;
+    }
 
 
 }

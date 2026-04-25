@@ -18,18 +18,17 @@
  * Created on 23.03.2004
  *
  */
-package common;
+package mekwars.common;
 
 import java.io.IOException;
 import java.util.Hashtable;
 import java.util.Vector;
 import java.util.concurrent.ConcurrentHashMap;
 
-import org.mekwars.libpk.converters.HTML;
-
 import common.util.BinReader;
 import common.util.BinWriter;
 import megamek.common.TechConstants;
+import org.mekwars.libpk.converters.HTML;
 
 /**
  * @author Helge Richter
@@ -47,15 +46,15 @@ public class House {
 
     private Integer id;
     private int dbId = 0;
-    private Vector<Integer> baseGunner = new Vector<Integer>(Unit.MAXBUILD, 1);
-    private Vector<Integer> basePilot = new Vector<Integer>(Unit.MAXBUILD, 1);
-    private Vector<String> basePilotSkills = new Vector<String>(Unit.MAXBUILD, 1);
+    private Vector<Integer> baseGunner = new Vector<Integer>(common.Unit.MAXBUILD, 1);
+    private Vector<Integer> basePilot = new Vector<Integer>(common.Unit.MAXBUILD, 1);
+    private Vector<String> basePilotSkills = new Vector<String>(common.Unit.MAXBUILD, 1);
 
     // private int factionPlayerColors[] = new int[3]; // [red,green,blue]
 
-    private int factionUnitPriceMod[][] = new int[Unit.MAXBUILD][4]; // [Type][Weight]
-    private int factionUnitFluMod[][] = new int[Unit.MAXBUILD][4]; // [Type][Weight]
-    private int factionUnitComponentMod[][] = new int[Unit.MAXBUILD][4]; // [Type][Weight]
+    private int factionUnitPriceMod[][] = new int[common.Unit.MAXBUILD][4]; // [Type][Weight]
+    private int factionUnitFluMod[][] = new int[common.Unit.MAXBUILD][4]; // [Type][Weight]
+    private int factionUnitComponentMod[][] = new int[common.Unit.MAXBUILD][4]; // [Type][Weight]
 
     private String factionColor = "#000000";
     private String abbreviation = "";
@@ -68,7 +67,7 @@ public class House {
     private boolean allowDefectionsFrom = true;
     private boolean allowDefectionsTo = true;
 
-    private ConcurrentHashMap<String, SubFaction> subFactionList = new ConcurrentHashMap<String, SubFaction>();
+    private ConcurrentHashMap<String, common.SubFaction> subFactionList = new ConcurrentHashMap<String, common.SubFaction>();
 
     public float usedMekBayMultiplier;
 
@@ -286,7 +285,7 @@ public class House {
      */
     public House(int id) {
         this.id = id;
-        for (int pos = 0; pos < Unit.MAXBUILD; pos++) {
+        for (int pos = 0; pos < common.Unit.MAXBUILD; pos++) {
             baseGunner.add(4);
             basePilot.add(5);
             basePilotSkills.add(" ");
@@ -297,7 +296,7 @@ public class House {
      * Constructor used for serialization
      */
     public House() {
-        for (int pos = 0; pos < Unit.MAXBUILD; pos++) {
+        for (int pos = 0; pos < common.Unit.MAXBUILD; pos++) {
             baseGunner.add(4);
             basePilot.add(5);
             basePilotSkills.add(" ");
@@ -321,17 +320,17 @@ public class House {
         out.println(abbreviation, "abbreviation");
         out.println(conquerable, "conquerable");
 
-        for (int type = 0; type < Unit.MAXBUILD; type++) {
+        for (int type = 0; type < common.Unit.MAXBUILD; type++) {
             for (int weight = 0; weight < 4; weight++) {
                 out.println(this.getHouseUnitComponentMod(type, weight), "componentMod" + type + weight);
             }
         }
-        for (int type = 0; type < Unit.MAXBUILD; type++) {
+        for (int type = 0; type < common.Unit.MAXBUILD; type++) {
             for (int weight = 0; weight < 4; weight++) {
                 out.println(this.getHouseUnitPriceMod(type, weight), "priceMod" + type + weight);
             }
         }
-        for (int type = 0; type < Unit.MAXBUILD; type++) {
+        for (int type = 0; type < common.Unit.MAXBUILD; type++) {
             for (int weight = 0; weight < 4; weight++) {
                 out.println(this.getHouseUnitFluMod(type, weight), "fluMod" + type + weight);
             }
@@ -342,7 +341,7 @@ public class House {
             out.println(munition, "munition");
         }
 
-        for (int pos = 0; pos < Unit.MAXBUILD; pos++) {
+        for (int pos = 0; pos < common.Unit.MAXBUILD; pos++) {
             out.println(basePilotSkills.elementAt(pos), "factionBasePilotSkill");
         }
 
@@ -353,14 +352,14 @@ public class House {
 
         out.println(this.getSubFactionList().size(), "subfactionsize");
 
-        for (SubFaction subFaction : this.getSubFactionList().values()) {
+        for (common.SubFaction subFaction : this.getSubFactionList().values()) {
             out.println(subFaction.getConfig("Name"), "SubFactionName");
             out.println(subFaction.getConfig("AccessLevel"), "SubFactionAccessLevel");
-            for (int type = 0; type < Unit.MAXBUILD; type++) {
-                for (int weight = 0; weight <= Unit.ASSAULT; weight++) {
-                    String setting = "CanBuyNew" + Unit.getWeightClassDesc(weight) + Unit.getTypeClassDesc(type);
+            for (int type = 0; type < common.Unit.MAXBUILD; type++) {
+                for (int weight = 0; weight <= common.Unit.ASSAULT; weight++) {
+                    String setting = "CanBuyNew" + common.Unit.getWeightClassDesc(weight) + common.Unit.getTypeClassDesc(type);
                     out.println(subFaction.getConfig(setting), setting);
-                    setting = "CanBuyUsed" + Unit.getWeightClassDesc(weight) + Unit.getTypeClassDesc(type);
+                    setting = "CanBuyUsed" + common.Unit.getWeightClassDesc(weight) + common.Unit.getTypeClassDesc(type);
                     out.println(subFaction.getConfig(setting), setting);
                 }
             }
@@ -374,7 +373,7 @@ public class House {
      */
     public House(BinReader in) throws IOException {
 
-        for (int pos = 0; pos < Unit.MAXBUILD; pos++) {
+        for (int pos = 0; pos < common.Unit.MAXBUILD; pos++) {
             baseGunner.add(4);
             basePilot.add(5);
             basePilotSkills.add(" ");
@@ -392,17 +391,17 @@ public class House {
         abbreviation = in.readLine("abbreviation");
         conquerable = in.readBoolean("conquerable");
 
-        for (int type = 0; type < Unit.MAXBUILD; type++) {
+        for (int type = 0; type < common.Unit.MAXBUILD; type++) {
             for (int weight = 0; weight < 4; weight++) {
                 this.setHouseUnitComponentMod(type, weight, in.readInt("componentMod" + type + weight));
             }
         }
-        for (int type = 0; type < Unit.MAXBUILD; type++) {
+        for (int type = 0; type < common.Unit.MAXBUILD; type++) {
             for (int weight = 0; weight < 4; weight++) {
                 this.setHouseUnitPriceMod(type, weight, in.readInt("priceMod" + type + weight));
             }
         }
-        for (int type = 0; type < Unit.MAXBUILD; type++) {
+        for (int type = 0; type < common.Unit.MAXBUILD; type++) {
             for (int weight = 0; weight < 4; weight++) {
                 this.setHouseUnitFluMod(type, weight, in.readInt("fluMod" + type + weight));
             }
@@ -411,7 +410,7 @@ public class House {
         int size = in.readInt("factionbannedammosize");
         for (; size > 0; size--) {BannedAmmo.put(in.readLine("munition"), "Banned");}
 
-        for (int pos = 0; pos < Unit.MAXBUILD; pos++) {
+        for (int pos = 0; pos < common.Unit.MAXBUILD; pos++) {
             basePilotSkills.set(pos, in.readLine("factionBasePilotSkill"));
         }
 
@@ -424,13 +423,13 @@ public class House {
 
         this.subFactionList.clear();
         for (; size > 0; size--) {
-            SubFaction subFaction = new SubFaction(in.readLine("SubFactionName"));
+            common.SubFaction subFaction = new common.SubFaction(in.readLine("SubFactionName"));
             subFaction.setConfig("AccessLevel", in.readLine("SubFactionAccessLevel"));
-            for (int type = 0; type < Unit.MAXBUILD; type++) {
-                for (int weight = 0; weight <= Unit.ASSAULT; weight++) {
-                    String setting = "CanBuyNew" + Unit.getWeightClassDesc(weight) + Unit.getTypeClassDesc(type);
+            for (int type = 0; type < common.Unit.MAXBUILD; type++) {
+                for (int weight = 0; weight <= common.Unit.ASSAULT; weight++) {
+                    String setting = "CanBuyNew" + common.Unit.getWeightClassDesc(weight) + common.Unit.getTypeClassDesc(type);
                     subFaction.setConfig(setting, in.readLine(setting));
-                    setting = "CanBuyUsed" + Unit.getWeightClassDesc(weight) + Unit.getTypeClassDesc(type);
+                    setting = "CanBuyUsed" + common.Unit.getWeightClassDesc(weight) + common.Unit.getTypeClassDesc(type);
                     subFaction.setConfig(setting, in.readLine(setting));
                 }
             }
@@ -612,7 +611,7 @@ public class House {
         return this.usedMekBayMultiplier;
     }
 
-    public ConcurrentHashMap<String, SubFaction> getSubFactionList() {
+    public ConcurrentHashMap<String, common.SubFaction> getSubFactionList() {
         return subFactionList;
     }
 

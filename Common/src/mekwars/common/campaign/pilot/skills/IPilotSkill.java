@@ -1,6 +1,6 @@
 /*
- * MekWars - Copyright (C) 2004 
- * 
+ * MekWars - Copyright (C) 2004
+ *
  * Derived from MegaMekNET (http://www.sourceforge.net/projects/megameknet)
  * Original author Helge Richter (McWizard)
  *
@@ -19,7 +19,7 @@
  * Created on 18.04.2004
  *
  */
-package common.campaign.pilot.skills;
+package mekwars.common.campaign.pilot.skills;
 
 
 /**

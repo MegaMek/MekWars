@@ -1,6 +1,6 @@
 /*
- * MekWars - Copyright (C) 2008 
- * 
+ * MekWars - Copyright (C) 2008
+ *
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the Free
@@ -15,16 +15,16 @@
 
 /**
  * @author jtighe
- * 
+ *
  * Allows for the reading of a StringTokenizer Token and for easy to use Error Trapping
  */
 
-package common.util;
+package mekwars.common.util;
 
 import java.util.StringTokenizer;
 
 public class TokenReader{
-    
+
     public static String readString(StringTokenizer st){
         try{
             return st.nextToken().trim();
@@ -42,7 +42,7 @@ public class TokenReader{
             return -1;
         }
     }
-    
+
     public static long readLong(StringTokenizer st){
         try{
             return Long.parseLong(st.nextToken());
@@ -51,7 +51,7 @@ public class TokenReader{
             return -1;
         }
     }
-    
+
     public static float readFloat(StringTokenizer st){
         try{
             return Float.parseFloat(st.nextToken());
@@ -60,7 +60,7 @@ public class TokenReader{
             return -1;
         }
     }
-    
+
     public static double readDouble(StringTokenizer st){
         try{
             return Double.parseDouble(st.nextToken());
@@ -69,7 +69,7 @@ public class TokenReader{
             return -1;
         }
     }
-    
+
     public static Boolean readBoolean(StringTokenizer st){
         try{
             return Boolean.parseBoolean(st.nextToken());
@@ -78,5 +78,5 @@ public class TokenReader{
             return false;
         }
     }
-    
+
 }

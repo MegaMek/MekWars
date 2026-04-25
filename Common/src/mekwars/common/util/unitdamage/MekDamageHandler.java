@@ -1,4 +1,4 @@
-package common.util.unitdamage;
+package mekwars.common.util.unitdamage;
 
 import java.util.Iterator;
 import java.util.StringTokenizer;
@@ -113,11 +113,11 @@ public class MekDamageHandler extends AbstractUnitDamageHandler {
                 // MW purposes.  If it's missing, and there is IS left, it should
                 // be unmarked instead.
                 boolean hasISLeft = (unit.getInternal(x)>0);
-                
+
                 for (int y = 0; y < unit.getNumberOfCriticals(x); y++) {
                     CriticalSlot cs = unit.getCritical(x, y);
 
-                    
+
                     if (cs == null) {
                         continue;
                     }
@@ -246,7 +246,7 @@ public class MekDamageHandler extends AbstractUnitDamageHandler {
 
 	@Override
 	public void applyDamageString(Entity unit, String report, boolean isRepairing) {
-		
+
         StringTokenizer entry = new StringTokenizer(report, "-");
 
         StringTokenizer externalArmor = new StringTokenizer(entry.nextToken(), "%");

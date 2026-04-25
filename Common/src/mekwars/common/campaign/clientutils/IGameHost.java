@@ -1,4 +1,4 @@
-package common.campaign.clientutils;
+package mekwars.common.campaign.clientutils;
 
 import megamek.common.event.GameCFREvent;
 

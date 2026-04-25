@@ -1,6 +1,6 @@
 /*
- * MekWars - Copyright (C) 2004 
- * 
+ * MekWars - Copyright (C) 2004
+ *
  * Derived from MegaMekNET (http://www.sourceforge.net/projects/megameknet)
  * Original author Helge Richter (McWizard)
  *
@@ -15,7 +15,7 @@
  * for more details.
  */
 
-package common;
+package mekwars.common;
 
 import java.io.IOException;
 import java.util.StringTokenizer;
@@ -27,7 +27,7 @@ import megamek.common.PlanetaryConditions;
 
 /**
  * Advanced Environment for planets.
- * 
+ *
  * @@author Torren (Jason Tighe) allows So's to set up each individual terrain on a planet.
  */
 
@@ -36,7 +36,7 @@ final public class AdvancedTerrain {
     private String displayName = "none";
     private int id = 0;
     private String Name = "none";
-    
+
     private int lowTemp = 25;
     private int highTemp = 25;
     private double gravity = 1.0;
@@ -303,7 +303,7 @@ final public class AdvancedTerrain {
 
     public void setDisplayName(String name) {
         displayName = name;
-        Name = name; 
+        Name = name;
     }
 
 
@@ -314,7 +314,7 @@ final public class AdvancedTerrain {
 
     @Deprecated
     public void setVacuum(boolean vacuum) {
-        this.vacuum = vacuum;        	
+        this.vacuum = vacuum;
     }
 
 
@@ -581,7 +581,7 @@ final public class AdvancedTerrain {
         clone.setWeatherConditions(weatherConditions);
         clone.setWindDirection(windDirection);
         clone.setWindStrength(windStrength);
-       
+
         return clone;
     }
 
@@ -740,27 +740,27 @@ final public class AdvancedTerrain {
         return maxWindStrength;
     }
 
-	public int getId() {
-		return id;
-	}
+    public int getId() {
+        return id;
+    }
 
-	public void setId(int unusedTerrainID) {
-		id = unusedTerrainID;		
-	}
+    public void setId(int unusedTerrainID) {
+        id = unusedTerrainID;
+    }
 
-	public String getName() {
-		return Name;
-	}
-	
-	public void setName(String name) {
-		displayName = name;
-		Name = name;
-	}
+    public String getName() {
+        return Name;
+    }
 
-	public String toImageDescription() {
-		 StringBuilder results = new StringBuilder();
-		
-		results.append("<table><TR>");
+    public void setName(String name) {
+        displayName = name;
+        Name = name;
+    }
+
+    public String toImageDescription() {
+        StringBuilder results = new StringBuilder();
+
+        results.append("<table><TR>");
         results.append("<TD>");
         results.append("lightConditions");
         results.append("</TD><TD>");
@@ -782,7 +782,7 @@ final public class AdvancedTerrain {
         results.append("</TD><TD>");
         results.append("terrainAffected");
         results.append("</TD><TD>");
-        results.append("maxWindStrength");		
+        results.append("maxWindStrength");
         results.append("</TD></TR><TR><TD>");
         results.append(PlanetaryConditions.getLightDisplayableName(lightConditions));
         results.append("</TD><TD>");
@@ -804,245 +804,240 @@ final public class AdvancedTerrain {
         results.append("</TD><TD>");
         results.append(terrainAffected);
         results.append("</TD><TD>");
-        results.append(PlanetaryConditions.getWindDisplayableName(maxWindStrength));	
+        results.append(PlanetaryConditions.getWindDisplayableName(maxWindStrength));
         results.append("</TR><table>");
-        
-        
-        
+
+
         return results.toString();
 
-	}
+    }
 
-	public String WeatherForcast()
-	{
-		int worstLight = PlanetaryConditions.L_DAY;
-		float worstLightProb = 0;
-		int likelyLight = PlanetaryConditions.L_DAY;
-		float lightProb = 0;
-		int worstWeather = PlanetaryConditions.WE_NONE;
-		float worstWeatherProb = 0;
-		int likelyWeather = PlanetaryConditions.WE_NONE;
-		float weatherProb = 0;
-		int worstWind = PlanetaryConditions.WI_NONE;
-		float worstWindProb = 0;
-		int likelyWind = PlanetaryConditions.WI_NONE;
-		float windProb = 0;
-		
-		StringBuilder results = new StringBuilder();
-		
-		//find the worst light conditions and the most likely conditions (other than day)
-		if(duskChance > 0) {
-			likelyLight = worstLight = PlanetaryConditions.L_DUSK;
-			lightProb = worstLightProb = duskChance;
-		}
-		if(fullMoonChance > 0) {
-			if(fullMoonChance > lightProb ) {
-				likelyLight = PlanetaryConditions.L_FULL_MOON;
-				lightProb = fullMoonChance;
-			}
-			worstLight = PlanetaryConditions.L_FULL_MOON;
-			worstLightProb = fullMoonChance;
-		}
-		if(moonlessChance > 0) {
-			if(moonlessChance > lightProb ) {
-				likelyLight = PlanetaryConditions.L_MOONLESS;
-				lightProb = moonlessChance;
-			}
-			worstLight = PlanetaryConditions.L_MOONLESS;
-			worstLightProb = moonlessChance;
-		}
-		if(pitchBlackChance > 0) {
-			if(pitchBlackChance > lightProb ) {
-				likelyLight = PlanetaryConditions.L_PITCH_BLACK;
-				lightProb = pitchBlackChance ;
-			}
-			worstLight = PlanetaryConditions.L_PITCH_BLACK;
-			worstLightProb = pitchBlackChance ;
-		}
+    public String WeatherForcast() {
+        int worstLight = PlanetaryConditions.L_DAY;
+        float worstLightProb = 0;
+        int likelyLight = PlanetaryConditions.L_DAY;
+        float lightProb = 0;
+        int worstWeather = PlanetaryConditions.WE_NONE;
+        float worstWeatherProb = 0;
+        int likelyWeather = PlanetaryConditions.WE_NONE;
+        float weatherProb = 0;
+        int worstWind = PlanetaryConditions.WI_NONE;
+        float worstWindProb = 0;
+        int likelyWind = PlanetaryConditions.WI_NONE;
+        float windProb = 0;
 
-		results.append("likely / worst <br>");
-		results.append("Light:");
-		if(lightProb > 0){
-			results.append(lightProb/10);
-			results.append("% ");
-			results.append(PlanetaryConditions.getLightDisplayableName(likelyLight));
-			results.append(" / ");
-			results.append(worstLightProb/10);
-			results.append("% ");
-			results.append(PlanetaryConditions.getLightDisplayableName(worstLight));
-			results.append("<br>");			
-		} else {
-			results.append("100% Daylight");			
-			results.append("<br>");						
-		}
-			
-		if(lightRainfallChance > 0) {
-			likelyWeather = worstWeather= PlanetaryConditions.WE_LIGHT_RAIN;
-			weatherProb = worstWeatherProb = lightRainfallChance;
-		}
-		if(lightSnowfallChance > 0) {
-			if(lightSnowfallChance > weatherProb ) {
-				likelyWeather= PlanetaryConditions.WE_LIGHT_SNOW;
-				weatherProb = lightSnowfallChance;
-			}
-			worstWeather = PlanetaryConditions.WE_LIGHT_SNOW;
-			worstWeatherProb = lightSnowfallChance;
-		}	
-		if(moderateRainfallChance > 0) {
-			if(moderateRainfallChance > weatherProb ) {
-				likelyWeather= PlanetaryConditions.WE_MOD_RAIN;
-				weatherProb = moderateRainfallChance;
-			}
-			worstWeather = PlanetaryConditions.WE_MOD_RAIN;
-			worstWeatherProb = moderateRainfallChance;
-		}	
-		if(moderateSnowfallChance > 0) {
-			if(moderateSnowfallChance > weatherProb ) {
-				likelyWeather= PlanetaryConditions.WE_MOD_SNOW;
-				weatherProb = moderateSnowfallChance;
-			}
-			worstWeather = PlanetaryConditions.WE_MOD_SNOW;
-			worstWeatherProb = moderateSnowfallChance;
-		}	
-		if(heavyRainfallChance> 0) {
-			if(heavyRainfallChance> weatherProb ) {
-				likelyWeather = PlanetaryConditions.WE_HEAVY_RAIN;
-				weatherProb = heavyRainfallChance;
-			}
-			worstWeather = PlanetaryConditions.WE_HEAVY_RAIN;
-			worstWeatherProb = heavyRainfallChance;
-		}	
-		if(heavySnowfallChance> 0) {
-			if(heavySnowfallChance > weatherProb ) {
-				likelyWeather = PlanetaryConditions.WE_HEAVY_SNOW;
-				weatherProb = heavySnowfallChance ;
-			}
-			worstWeather = PlanetaryConditions.WE_HEAVY_SNOW;
-			worstWeatherProb = heavySnowfallChance ;
-		}	
-		if(downPourChance > 0) {
-			if(downPourChance > weatherProb ) {
-				likelyWeather = PlanetaryConditions.WE_DOWNPOUR;
-				weatherProb = downPourChance;
-			}
-			worstWeather = PlanetaryConditions.WE_DOWNPOUR;
-			worstWeatherProb = downPourChance ;
-		}	
+        StringBuilder results = new StringBuilder();
 
-		results.append("Weather:");
-		if(weatherProb > 0) {
-			results.append(weatherProb/10);
-			results.append("% ");
-			results.append(PlanetaryConditions.getWeatherDisplayableName(likelyWeather));
-			results.append(" / ");
-			results.append(worstWeatherProb/10);
-			results.append("% ");
-			results.append(PlanetaryConditions.getWeatherDisplayableName(worstWeather));
-			if(lightHailChance > 0 || heavyHailChance > 0)
-				results.append(" (hail)");							
-			if(sleetChance > 0)
-				results.append(" (sleet)");		
-			if(iceStormChance > 0)
-				results.append(" (ice storm)");		
-			results.append("<br>");									
-		} else {
-			results.append("100% Clear");			
-			results.append("<br>");						
-		}
-		
-		if(lightWindsChance > 0) {
-			likelyWind = worstWind = PlanetaryConditions.WI_LIGHT_GALE;
-			windProb = worstWindProb = lightWindsChance;
-		}
-		if(moderateWindsChance > 0) {
-			if(moderateWindsChance > weatherProb ) {
-				likelyWind = PlanetaryConditions.WI_MOD_GALE;
-				windProb = moderateWindsChance;
-			}
-			worstWind = PlanetaryConditions.WI_MOD_GALE;
-			worstWindProb = moderateWindsChance;
-		}	
-		if(strongWindsChance > 0) {
-			if(strongWindsChance> weatherProb ) {
-				likelyWind = PlanetaryConditions.WI_STRONG_GALE;
-				windProb = strongWindsChance;
-			}
-			worstWind = PlanetaryConditions.WI_STRONG_GALE;
-			worstWindProb = strongWindsChance;
-		}	
-		if(stormWindsChance > 0) {
-			if(stormWindsChance > weatherProb ) {
-				likelyWind = PlanetaryConditions.WI_STORM;
-				windProb = stormWindsChance ;
-			}
-			worstWind = PlanetaryConditions.WI_STORM;
-			worstWindProb = stormWindsChance;
-		}	
-		if(tornadoF13WindsChance > 0) {
-			if(tornadoF13WindsChance > weatherProb ) {
-				likelyWind = PlanetaryConditions.WI_TORNADO_F13;
-				windProb = tornadoF13WindsChance;
-			}
-			worstWind = PlanetaryConditions.WI_TORNADO_F13;
-			worstWindProb = tornadoF13WindsChance;
-		}	
-		if(tornadoF4WindsChance > 0) {
-			if(tornadoF4WindsChance > weatherProb ) {
-				likelyWind = PlanetaryConditions.WI_TORNADO_F4;
-				windProb = tornadoF4WindsChance;
-			}
-			worstWind = PlanetaryConditions.WI_TORNADO_F4;
-			worstWindProb = tornadoF4WindsChance;
-		}	
+        //find the worst light conditions and the most likely conditions (other than day)
+        if (duskChance > 0) {
+            likelyLight = worstLight = PlanetaryConditions.L_DUSK;
+            lightProb = worstLightProb = duskChance;
+        }
+        if (fullMoonChance > 0) {
+            if (fullMoonChance > lightProb) {
+                likelyLight = PlanetaryConditions.L_FULL_MOON;
+                lightProb = fullMoonChance;
+            }
+            worstLight = PlanetaryConditions.L_FULL_MOON;
+            worstLightProb = fullMoonChance;
+        }
+        if (moonlessChance > 0) {
+            if (moonlessChance > lightProb) {
+                likelyLight = PlanetaryConditions.L_MOONLESS;
+                lightProb = moonlessChance;
+            }
+            worstLight = PlanetaryConditions.L_MOONLESS;
+            worstLightProb = moonlessChance;
+        }
+        if (pitchBlackChance > 0) {
+            if (pitchBlackChance > lightProb) {
+                likelyLight = PlanetaryConditions.L_PITCH_BLACK;
+                lightProb = pitchBlackChance;
+            }
+            worstLight = PlanetaryConditions.L_PITCH_BLACK;
+            worstLightProb = pitchBlackChance;
+        }
 
-		results.append("Wind:");
-		if(windProb > 0) {
-			results.append(windProb/10);
-			results.append("% ");
-			results.append(PlanetaryConditions.getWindDisplayableName(likelyWind));
-			results.append(" / ");
-			results.append(worstWindProb/10);
-			results.append("% ");
-			results.append(PlanetaryConditions.getWindDisplayableName(worstWind));
-			results.append("<br>");			
-		} else {
-			results.append("100% Calm");			
-			results.append("<br>");						
-		}
-		
-		
-		if(lightFogChance > 0 || heavyFogChance > 0) {
-			results.append("Fog:");
-			results.append((float)Math.max(lightFogChance, heavyFogChance)/10);
-			results.append("% ");
-		}
-		results.append("<br>");						
-		
-		
+        results.append("likely / worst <br>");
+        results.append("Light:");
+        if (lightProb > 0) {
+            results.append(lightProb / 10);
+            results.append("% ");
+            results.append(PlanetaryConditions.getLightDisplayableName(likelyLight));
+            results.append(" / ");
+            results.append(worstLightProb / 10);
+            results.append("% ");
+            results.append(PlanetaryConditions.getLightDisplayableName(worstLight));
+            results.append("<br>");
+        } else {
+            results.append("100% Daylight");
+            results.append("<br>");
+        }
+
+        if (lightRainfallChance > 0) {
+            likelyWeather = worstWeather = PlanetaryConditions.WE_LIGHT_RAIN;
+            weatherProb = worstWeatherProb = lightRainfallChance;
+        }
+        if (lightSnowfallChance > 0) {
+            if (lightSnowfallChance > weatherProb) {
+                likelyWeather = PlanetaryConditions.WE_LIGHT_SNOW;
+                weatherProb = lightSnowfallChance;
+            }
+            worstWeather = PlanetaryConditions.WE_LIGHT_SNOW;
+            worstWeatherProb = lightSnowfallChance;
+        }
+        if (moderateRainfallChance > 0) {
+            if (moderateRainfallChance > weatherProb) {
+                likelyWeather = PlanetaryConditions.WE_MOD_RAIN;
+                weatherProb = moderateRainfallChance;
+            }
+            worstWeather = PlanetaryConditions.WE_MOD_RAIN;
+            worstWeatherProb = moderateRainfallChance;
+        }
+        if (moderateSnowfallChance > 0) {
+            if (moderateSnowfallChance > weatherProb) {
+                likelyWeather = PlanetaryConditions.WE_MOD_SNOW;
+                weatherProb = moderateSnowfallChance;
+            }
+            worstWeather = PlanetaryConditions.WE_MOD_SNOW;
+            worstWeatherProb = moderateSnowfallChance;
+        }
+        if (heavyRainfallChance > 0) {
+            if (heavyRainfallChance > weatherProb) {
+                likelyWeather = PlanetaryConditions.WE_HEAVY_RAIN;
+                weatherProb = heavyRainfallChance;
+            }
+            worstWeather = PlanetaryConditions.WE_HEAVY_RAIN;
+            worstWeatherProb = heavyRainfallChance;
+        }
+        if (heavySnowfallChance > 0) {
+            if (heavySnowfallChance > weatherProb) {
+                likelyWeather = PlanetaryConditions.WE_HEAVY_SNOW;
+                weatherProb = heavySnowfallChance;
+            }
+            worstWeather = PlanetaryConditions.WE_HEAVY_SNOW;
+            worstWeatherProb = heavySnowfallChance;
+        }
+        if (downPourChance > 0) {
+            if (downPourChance > weatherProb) {
+                likelyWeather = PlanetaryConditions.WE_DOWNPOUR;
+                weatherProb = downPourChance;
+            }
+            worstWeather = PlanetaryConditions.WE_DOWNPOUR;
+            worstWeatherProb = downPourChance;
+        }
+
+        results.append("Weather:");
+        if (weatherProb > 0) {
+            results.append(weatherProb / 10);
+            results.append("% ");
+            results.append(PlanetaryConditions.getWeatherDisplayableName(likelyWeather));
+            results.append(" / ");
+            results.append(worstWeatherProb / 10);
+            results.append("% ");
+            results.append(PlanetaryConditions.getWeatherDisplayableName(worstWeather));
+            if (lightHailChance > 0 || heavyHailChance > 0) {results.append(" (hail)");}
+            if (sleetChance > 0) {results.append(" (sleet)");}
+            if (iceStormChance > 0) {results.append(" (ice storm)");}
+            results.append("<br>");
+        } else {
+            results.append("100% Clear");
+            results.append("<br>");
+        }
+
+        if (lightWindsChance > 0) {
+            likelyWind = worstWind = PlanetaryConditions.WI_LIGHT_GALE;
+            windProb = worstWindProb = lightWindsChance;
+        }
+        if (moderateWindsChance > 0) {
+            if (moderateWindsChance > weatherProb) {
+                likelyWind = PlanetaryConditions.WI_MOD_GALE;
+                windProb = moderateWindsChance;
+            }
+            worstWind = PlanetaryConditions.WI_MOD_GALE;
+            worstWindProb = moderateWindsChance;
+        }
+        if (strongWindsChance > 0) {
+            if (strongWindsChance > weatherProb) {
+                likelyWind = PlanetaryConditions.WI_STRONG_GALE;
+                windProb = strongWindsChance;
+            }
+            worstWind = PlanetaryConditions.WI_STRONG_GALE;
+            worstWindProb = strongWindsChance;
+        }
+        if (stormWindsChance > 0) {
+            if (stormWindsChance > weatherProb) {
+                likelyWind = PlanetaryConditions.WI_STORM;
+                windProb = stormWindsChance;
+            }
+            worstWind = PlanetaryConditions.WI_STORM;
+            worstWindProb = stormWindsChance;
+        }
+        if (tornadoF13WindsChance > 0) {
+            if (tornadoF13WindsChance > weatherProb) {
+                likelyWind = PlanetaryConditions.WI_TORNADO_F13;
+                windProb = tornadoF13WindsChance;
+            }
+            worstWind = PlanetaryConditions.WI_TORNADO_F13;
+            worstWindProb = tornadoF13WindsChance;
+        }
+        if (tornadoF4WindsChance > 0) {
+            if (tornadoF4WindsChance > weatherProb) {
+                likelyWind = PlanetaryConditions.WI_TORNADO_F4;
+                windProb = tornadoF4WindsChance;
+            }
+            worstWind = PlanetaryConditions.WI_TORNADO_F4;
+            worstWindProb = tornadoF4WindsChance;
+        }
+
+        results.append("Wind:");
+        if (windProb > 0) {
+            results.append(windProb / 10);
+            results.append("% ");
+            results.append(PlanetaryConditions.getWindDisplayableName(likelyWind));
+            results.append(" / ");
+            results.append(worstWindProb / 10);
+            results.append("% ");
+            results.append(PlanetaryConditions.getWindDisplayableName(worstWind));
+            results.append("<br>");
+        } else {
+            results.append("100% Calm");
+            results.append("<br>");
+        }
+
+
+        if (lightFogChance > 0 || heavyFogChance > 0) {
+            results.append("Fog:");
+            results.append((float) Math.max(lightFogChance, heavyFogChance) / 10);
+            results.append("% ");
+        }
+        results.append("<br>");
+
+
         return results.toString();
-	}
+    }
 
-	public String getHumanReadableWeather() {
-		StringBuilder results = new StringBuilder();
-		int adverse = 0;
-		
-		results.append(PlanetaryConditions.getLightDisplayableName(lightConditions));
-		results.append("/" + PlanetaryConditions.getWeatherDisplayableName(weatherConditions));
-		results.append("/" + PlanetaryConditions.getWindDisplayableName(windStrength));
-		results.append("/" + PlanetaryConditions.getFogDisplayableName(fog));
-		results.append("/" + PlanetaryConditions.getAtmosphereDisplayableName(atmosphere));
-		results.append("/");
-		results.append(gravity);
-		if (lightConditions != PlanetaryConditions.L_DAY) adverse++;
-		if (weatherConditions != PlanetaryConditions.WE_NONE) adverse++;
-		if (windStrength != PlanetaryConditions.WI_NONE) adverse++;
-		if (fog != PlanetaryConditions.FOG_NONE) adverse++;
-		if (atmosphere != PlanetaryConditions.ATMO_STANDARD) adverse++;
-		if (gravity != 1.0) adverse++;
-		
-		results.append("/" + adverse);
-		
-		return results.toString();
-	}
+    public String getHumanReadableWeather() {
+        StringBuilder results = new StringBuilder();
+        int adverse = 0;
+
+        results.append(PlanetaryConditions.getLightDisplayableName(lightConditions));
+        results.append("/" + PlanetaryConditions.getWeatherDisplayableName(weatherConditions));
+        results.append("/" + PlanetaryConditions.getWindDisplayableName(windStrength));
+        results.append("/" + PlanetaryConditions.getFogDisplayableName(fog));
+        results.append("/" + PlanetaryConditions.getAtmosphereDisplayableName(atmosphere));
+        results.append("/");
+        results.append(gravity);
+        if (lightConditions != PlanetaryConditions.L_DAY) {adverse++;}
+        if (weatherConditions != PlanetaryConditions.WE_NONE) {adverse++;}
+        if (windStrength != PlanetaryConditions.WI_NONE) {adverse++;}
+        if (fog != PlanetaryConditions.FOG_NONE) {adverse++;}
+        if (atmosphere != PlanetaryConditions.ATMO_STANDARD) {adverse++;}
+        if (gravity != 1.0) {adverse++;}
+
+        results.append("/" + adverse);
+
+        return results.toString();
+    }
 
 }

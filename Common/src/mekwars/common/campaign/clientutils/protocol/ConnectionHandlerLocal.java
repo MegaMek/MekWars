@@ -3,8 +3,8 @@
  * Used by permission
  */
 /*
- * MekWars - Copyright (C) 2005 
- * 
+ * MekWars - Copyright (C) 2005
+ *
  * Original author - Torren (torren@users.sourceforge.net)
  *
  * This program is free software; you can redistribute it and/or modify it
@@ -20,21 +20,20 @@
 
 
 /*
- * Derived from NFCChat, a GPL chat client/server. 
+ * Derived from NFCChat, a GPL chat client/server.
  * Original code can be found @ http://nfcchat.sourceforge.net
  * Our thanks to the original authors.
- */ 
-/**
- * 
- * @author Torren (Jason Tighe) 11.5.05 
- * 
  */
-package common.campaign.clientutils.protocol;
+/**
+ *
+ * @author Torren (Jason Tighe) 11.5.05
+ *
+ */
+package mekwars.common.campaign.clientutils.protocol;
 
 import java.io.IOException;
 import java.io.PrintStream;
 import java.net.Socket;
-import java.util.Vector;
 
 import common.util.MWLogger;
 
@@ -48,12 +47,12 @@ import common.util.MWLogger;
  * @see ChatServerLocal#incomingMessage
  */
 
-public class ConnectionHandlerLocal implements IConnectionHandler {
+public class ConnectionHandlerLocal implements common.campaign.clientutils.protocol.IConnectionHandler {
     protected PrintStream _out;
     protected Socket _socket;
     //protected BufferedReader _in;
-    protected IConnectionListener _listener;
-    protected ReaderThread _reader;
+    protected common.campaign.clientutils.protocol.IConnectionListener _listener;
+    protected common.campaign.clientutils.protocol.ReaderThread _reader;
     protected WriterThread _writer;
 
     static final boolean DEBUG = false;
@@ -65,15 +64,15 @@ public class ConnectionHandlerLocal implements IConnectionHandler {
         _socket = s;
         _out = new PrintStream(s.getOutputStream());
         //_in = new BufferedReader(new InputStreamReader(s.getInputStream()));
-        _reader = new ReaderThread(this,_socket);
-        
+        _reader = new common.campaign.clientutils.protocol.ReaderThread(this,_socket);
+
         _writer = new WriterThread(_out);
         _writer.start();
 
 //        setListener(listener);
     }
 
-    public void setListener(IConnectionListener listener) {
+    public void setListener(common.campaign.clientutils.protocol.IConnectionListener listener) {
         _listener = listener;
         _reader.setListener(listener);
         _reader.start();
@@ -102,7 +101,7 @@ public class ConnectionHandlerLocal implements IConnectionHandler {
         _writer.pleaseStop();
         _writer.flushOutputQueue();
         try {_socket.close();}
-        catch (IOException e) 
+        catch (IOException e)
         {
           MWLogger.errLog("Error closing socket.");
           MWLogger.errLog(e);
@@ -117,55 +116,3 @@ public class ConnectionHandlerLocal implements IConnectionHandler {
     }
 }
 
-/**
- * Write the messages in the queue to the socket's output stream
- */
-class WriterThread extends Thread {
-    private boolean keepGoing = true;
-    private Vector<String> outgoingMessages;
-    private PrintStream _out;
-
-    WriterThread(PrintStream out) {
-        super("ConnectionHandler$WriterThread");
-        _out = out;
-        outgoingMessages = new Vector<String>(1,1);
-    }
-
-    @Override
-	public synchronized void run() {
-//        MMClient.mwClientLog.clientErrLog("ConnectionHandlerLocal$WriterThread: running");
-        try {
-            while (keepGoing) {
-                flushOutputQueue();
-                // wait until there are more messages
-                wait(1000);
-            }
-            MWLogger.errLog("WriterThread: stopping gracefully.");
-        }
-        catch (InterruptedException e) {
-            MWLogger.errLog("ConnectionHandlerLocal$WriterThread.run(): Interrupted!");
-        }
-    }
-
-    void flushOutputQueue() {
-        while (outgoingMessages.size() > 0) {
-            String message = (String)outgoingMessages.elementAt(0);
-            outgoingMessages.removeElementAt(0);
-            ConnectionHandlerLocal.DEBUG("> " + message);
-            _out.print(message + "\r\n");
-        }
-        _out.flush();
-    }
-
-    
-    synchronized void queueMessage(String s) {
-        outgoingMessages.addElement(s);
-        // notify the writer thread that there is at least one new message
-        notify();
-    }
-
-    void pleaseStop() {
-        keepGoing = false;
-    }
-
-}

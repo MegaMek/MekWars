@@ -1,6 +1,6 @@
 /*
- * MekWars - Copyright (C) 2004 
- * 
+ * MekWars - Copyright (C) 2004
+ *
  * Derived from MegaMekNET (http://www.sourceforge.net/projects/megameknet)
  * Original author Helge Richter (McWizard)
  *
@@ -21,7 +21,7 @@
  * Created on June 3, 2002, 7:18 AM
  */
 
-package common.comm;
+package mekwars.common.comm;
 
 import client.MWClient;
 
@@ -29,7 +29,7 @@ import client.MWClient;
  *
  * @author  Administrator
  */
-public interface ClientCommand extends ICommand {
+public interface ClientCommand extends common.comm.ICommand {
 
   public void parseReply(String s);
   public void timeout();

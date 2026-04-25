@@ -1,6 +1,6 @@
 /*
- * MekWars - Copyright (C) 2004 
- * 
+ * MekWars - Copyright (C) 2004
+ *
  * Derived from MegaMekNET (http://www.sourceforge.net/projects/megameknet)
  * Original author Helge Richter (McWizard)
  *
@@ -15,11 +15,11 @@
  * for more details.
  */
 
-package common.campaign.pilot.skills;
+package mekwars.common.campaign.pilot.skills;
 
 /**
  * A description of a pilot skill visible to both, server and client.
- * 
+ *
  * @author Helge Richter and Immanuel Scholz
  */
 public class PilotSkill {
@@ -53,7 +53,7 @@ public class PilotSkill {
      * The unique ID of this skill
      */
     private int id;
-    
+
     /**
      * Each skill has a name to display.
      */
@@ -62,7 +62,7 @@ public class PilotSkill {
     * Each skill has an abbreviation to display for when the name takes too much space.
     */
 	private String abbreviation = "US";
-	
+
 
     private String description = "None";
 
@@ -70,7 +70,7 @@ public class PilotSkill {
 	 * A level if the skill has one or -1 if it doesn't have levels
 	 */
 	private int level = -1;
-	
+
 	/**
 	 * get the Name of this skill
 	 * @return
@@ -78,7 +78,7 @@ public class PilotSkill {
 	final public String getName() {
 		return name;
 	}
-	
+
 
 	/**
 	 * get the Abbreviation of this skill
@@ -88,28 +88,28 @@ public class PilotSkill {
 		return abbreviation;
 	}
 
-    
+
     /**
      * Creates a skill with a given name and id.
      */
-	
+
 	public PilotSkill(int id, String name, int level) {
 		this(id, name, level, "");
 	}
-    
+
     public PilotSkill(int id, String name, int level, String abbreviation) {
     	this.name = name;
     	this.id = id;
     	this.level = level;
     	this.abbreviation = abbreviation;
     }
-    
+
     /**
      * Needed for serialization. Creates an unamed skill.
      */
     public PilotSkill() {
     }
-    
+
     /**
      * @return Returns the id.
      */
@@ -134,18 +134,18 @@ public class PilotSkill {
  	public void setLevel(int level) {
        this.level = level;
  	}
-    
+
     public String getDescription(){
         return description;
     }
-    
+
     public void setDescription(String description){
         this.description = description;
     }
-    
+
     public static int getMMSkillID(String skill) {
     	int skillID = -1;
-    	
+
         if ( skill.equals("dodge_maneuver") )
         	return PilotSkill.DodgeManeuverSkillID;
         if ( skill.equals("maneuvering_ace") )
@@ -179,7 +179,7 @@ public class PilotSkill {
         if ( skill.equals("pain_shunt") )
             return PilotSkill.PainShuntID;
 
-    	
+
     	return skillID;
     }
 }

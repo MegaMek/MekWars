@@ -1,4 +1,4 @@
-package common.campaign.targetsystems;
+package mekwars.common.campaign.targetsystems;
 
 import java.util.Vector;
 
@@ -12,15 +12,16 @@ public class TargetSystem {
 	public final static int TS_TYPE_SHORT = 2;
 	public final static int TS_TYPE_MEDIUM = 3;
 	public final static int TS_TYPE_LONG = 4;
-	
+
 	public final static int TS_TYPE_MAX = 4;
-	
+
 	private Entity entity;
 	private int currentType = TS_TYPE_STANDARD;
-	
-	public void setTargetSystem(int type) throws TargetTypeOutOfBoundsException, TargetTypeNotImplementedException {
+
+	public void setTargetSystem(int type) throws common.campaign.targetsystems.TargetTypeOutOfBoundsException,
+                                                       common.campaign.targetsystems.TargetTypeNotImplementedException {
 		if (type < 0 || type > TS_TYPE_MAX) {
-			throw new TargetTypeOutOfBoundsException(type);
+			throw new common.campaign.targetsystems.TargetTypeOutOfBoundsException(type);
 		}
 		if (type == TS_TYPE_ANTIAIR) {
 			setTargetSystem("anti_air", true);
@@ -68,13 +69,15 @@ public class TargetSystem {
 			setTargetSystem("poor_target_long", false);
 			currentType = TS_TYPE_LONG;
 		} else {
-			throw new TargetTypeNotImplementedException(type);
+			throw new common.campaign.targetsystems.TargetTypeNotImplementedException(type);
 		}
 	}
-	
-	public String getTypeName(int type) throws TargetTypeOutOfBoundsException, TargetTypeNotImplementedException {
+
+	public String getTypeName(int type) throws
+          common.campaign.targetsystems.TargetTypeOutOfBoundsException,
+                common.campaign.targetsystems.TargetTypeNotImplementedException {
 		if (type < 0 || type > TS_TYPE_MAX) {
-			throw new TargetTypeOutOfBoundsException(type);
+			throw new common.campaign.targetsystems.TargetTypeOutOfBoundsException(type);
 		} else if (type == TS_TYPE_STANDARD) {
 			return "Standard";
 		} else if (type == TS_TYPE_ANTIAIR) {
@@ -86,10 +89,10 @@ public class TargetSystem {
 		} else if (type == TS_TYPE_LONG) {
 			return "Long-Range";
 		} else {
-			throw new TargetTypeNotImplementedException(type);
+			throw new common.campaign.targetsystems.TargetTypeNotImplementedException(type);
 		}
 	}
-	
+
 	public int getTypeByName(String name) {
 		if (name.equalsIgnoreCase("anti-air")) {
 			return TS_TYPE_ANTIAIR;
@@ -105,32 +108,32 @@ public class TargetSystem {
 			return 0;
 		}
 	}
-	
+
 	private void setTargetSystem(String type, boolean on) {
 		if (entity != null)
 			entity.getQuirks().getOption(type).setValue(on);
 	}
-	
+
 	public void setEntity(Entity e) {
 		entity = e;
 	}
-	
+
 	public int getCurrentType() {
 		return currentType;
 	}
-	
+
 	public TargetSystem() {
-		
+
 	}
 
 	public String getCurrentTypeName() {
 		String name = "";
 		try {
 			name = getTypeName(currentType);
-		} catch (TargetTypeOutOfBoundsException e) {
+		} catch (common.campaign.targetsystems.TargetTypeOutOfBoundsException e) {
 			// TODO Auto-generated catch block
 			MWLogger.errLog(e);
-		} catch (TargetTypeNotImplementedException e) {
+		} catch (common.campaign.targetsystems.TargetTypeNotImplementedException e) {
 			// TODO Auto-generated catch block
 			MWLogger.errLog(e);
 		}
@@ -139,13 +142,13 @@ public class TargetSystem {
 
 	public String[] getNameArray() {
 		Vector<String> names = new Vector<String>(1,1);
-		
+
 		for (int i = TS_TYPE_STANDARD; i <= TS_TYPE_MAX; i++) {
 			try {
 				names.add(getTypeName(i));
-			} catch (TargetTypeOutOfBoundsException e) {
+			} catch (common.campaign.targetsystems.TargetTypeOutOfBoundsException e) {
 				MWLogger.errLog(e);
-			} catch (TargetTypeNotImplementedException e) {
+			} catch (common.campaign.targetsystems.TargetTypeNotImplementedException e) {
 				MWLogger.errLog(e);
 			}
 		}
@@ -161,9 +164,9 @@ public class TargetSystem {
 				if(!bans.contains(i)) {
 					names.add(getTypeName(i));
 				}
-			} catch (TargetTypeOutOfBoundsException e) {
+			} catch (common.campaign.targetsystems.TargetTypeOutOfBoundsException e) {
 				MWLogger.errLog(e);
-			} catch (TargetTypeNotImplementedException e) {
+			} catch (common.campaign.targetsystems.TargetTypeNotImplementedException e) {
 				MWLogger.errLog(e);
 			}
 		}

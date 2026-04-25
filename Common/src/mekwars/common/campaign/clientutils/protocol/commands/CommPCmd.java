@@ -1,4 +1,4 @@
-package common.campaign.clientutils.protocol.commands;
+package mekwars.common.campaign.clientutils.protocol.commands;
 
 import java.util.StringTokenizer;
 
@@ -9,9 +9,9 @@ import common.campaign.clientutils.protocol.TransportCodec;
  * Comm command
  */
 
-public class CommPCmd extends CProtCommand
+public class CommPCmd extends common.campaign.clientutils.protocol.commands.CProtCommand
 {
-	public CommPCmd(IClient mwclient) 
+	public CommPCmd(IClient mwclient)
 	{
 		super(mwclient);
 		name = "comm";
@@ -20,7 +20,7 @@ public class CommPCmd extends CProtCommand
 	// execute command
 	@Override
 	public boolean execute(String input) {
-		
+
 		StringTokenizer ST = new StringTokenizer(input, delimiter);
 		if (check(ST.nextToken()) && ST.hasMoreTokens()) {
 			input = TransportCodec.unescape(ST.nextToken());
@@ -28,9 +28,9 @@ public class CommPCmd extends CProtCommand
 			else {client.parseDedDataInput(input);}
 			return true;
 		}
-		
+
 		//else
-		return false; 
+		return false;
 	}
 
 	// echo command in GUI

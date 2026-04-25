@@ -1,4 +1,4 @@
-package common.flags;
+package mekwars.common.flags;
 
 import java.util.Map;
 import java.util.StringTokenizer;
@@ -8,15 +8,15 @@ import common.util.MWLogger;
 
 public class ResultsFlags extends PlayerFlags {
 	private Map<Integer, Integer> flagsApplyTo;
-	
+
 	public static final int APPLIESTO_ATTACKER = 1;
 	public static final int APPLIESTO_DEFENDER = 2;
-	
+
 	/**
 	 * Builds the string that is imported by load(String data) above
 	 * Used server-side only, as I envision it, so I might move this
 	 * method to SPlayer
-	 * 
+	 *
 	 * @return String flag settings - name, ID, and value
 	 */
 	public String export() {
@@ -33,7 +33,7 @@ public class ResultsFlags extends PlayerFlags {
 		}
 		return toReturn.toString();
 	}
-	
+
 	/**
 	 * Adds a flag to the list
 	 * @param name
@@ -53,7 +53,7 @@ public class ResultsFlags extends PlayerFlags {
 		flagsApplyTo.put(id, appliesTo);
 		//MWLogger.debugLog("Setting flag " + name + "(id: " + id + ") to value " + value);
 	}
-	
+
 	/**
 	 * Clears a single flag, removing it from the names and flags
 	 * @param name
@@ -68,7 +68,7 @@ public class ResultsFlags extends PlayerFlags {
 		flags.clear(id);
 		flagsApplyTo.remove(id);
 	}
-	
+
 	public boolean flagAppliesToDefender(String name) {
 		int id = getFlagKey(name);
 		if (id == -1) {
@@ -82,7 +82,7 @@ public class ResultsFlags extends PlayerFlags {
 			return false;
 		}
 	}
-	
+
 	public boolean flagAppliesToAttacker(String name) {
 		int id = getFlagKey(name);
 		if (id == -1) {
@@ -96,7 +96,7 @@ public class ResultsFlags extends PlayerFlags {
 			return false;
 		}
 	}
-	
+
 	/**
 	 * Loads personally set flags from a string.  This should only
 	 * be called after defaults are set, as any flags that are listed
@@ -104,7 +104,7 @@ public class ResultsFlags extends PlayerFlags {
 	 * will be ignored.  This way, old flags that may have been
 	 * deleted by the admins will not continue to hang around, but
 	 * will be pruned every time a player loads.
-	 * 
+	 *
 	 * @param data
 	 */
 	public void loadPersonal(String data) {
@@ -128,12 +128,12 @@ public class ResultsFlags extends PlayerFlags {
     			// PlayerFlags
     			appliesTo = Integer.parseInt(elementToken.nextToken());
     		}
-    		
+
 		}
 	}
-	
-	
-	
+
+
+
 	/**
 	 * Sets a named flag to true or false
 	 * @param name
@@ -147,11 +147,11 @@ public class ResultsFlags extends PlayerFlags {
 			MWLogger.errLog("Unknown Flag checked: " + name);
 		}
 	}
-	
+
 	public ResultsFlags() {
 		super();
 		flagsApplyTo = new TreeMap<Integer, Integer>();
 		flagType = FLAGTYPE_RESULTS;
 	}
-	
+
 }

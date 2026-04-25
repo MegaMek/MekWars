@@ -1,6 +1,6 @@
 /*
- * MekWars - Copyright (C) 2007 
- * 
+ * MekWars - Copyright (C) 2007
+ *
  * Original author - Torren (torren@users.sourceforge.net)
  *
  * This program is free software; you can redistribute it and/or modify it
@@ -16,28 +16,28 @@
 
 /*
  * Created on 10.30.2007
- *   
+ *
  */
 
-package common.util;
+package mekwars.common.util;
 
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 public class ThreadManager{
-	
+
 	private static ThreadManager instance = new ThreadManager();
-	
+
 	private ExecutorService executor;
-	
+
 	protected ThreadManager(){
 		executor = Executors.newCachedThreadPool();
 	}
-	
+
 	public static ThreadManager getInstance(){
 		return instance;
 	}
-	
+
 	public void runInThreadFromPool(Thread runnable){
 		try{
 			executor.execute(runnable);
@@ -45,8 +45,8 @@ public class ThreadManager{
 			MWLogger.errLog(ex);
 		}
 	}
-	
-	
+
+
 	public void shutdown(){
 		executor.shutdown();
 	}

@@ -1,6 +1,6 @@
 /*
- * MekWars - Copyright (C) 2005 
- * 
+ * MekWars - Copyright (C) 2005
+ *
  * Original author - Torren (torren@users.sourceforge.net)
  *
  * This program is free software; you can redistribute it and/or modify it
@@ -16,16 +16,16 @@
 
 
 /*
- * Derived from NFCChat, a GPL chat client/server. 
+ * Derived from NFCChat, a GPL chat client/server.
  * Original code can be found @ http://nfcchat.sourceforge.net
  * Our thanks to the original authors.
- */ 
-/**
- * 
- * @author Torren (Jason Tighe) 11.5.05 
- * 
  */
-package common.campaign.clientutils.protocol;
+/**
+ *
+ * @author Torren (Jason Tighe) 11.5.05
+ *
+ */
+package mekwars.common.campaign.clientutils.protocol;
 
 /**
  * Interface the implement when you want to get raw messages from the socket connection

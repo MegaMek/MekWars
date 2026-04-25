@@ -1,4 +1,4 @@
-package common.campaign.clientutils.protocol;
+package mekwars.common.campaign.clientutils.protocol;
 
 public interface IClient
 {
@@ -6,7 +6,7 @@ public interface IClient
      * The delimiter.  A tab character.
      */
     public static final String DELIMITER = "\t";
-    
+
     public static final String PROTOCOL_DELIMITER = "\t"; // delimiter for protocol commands
     public static final String PROTOCOL_PREFIX = "/"; // prefix for protocol commands
 
@@ -31,7 +31,7 @@ public interface IClient
 
     // called when connection is established
     public void connectionEstablished();
-    
+
     public CConnector getConnector();
 
 	public void startHost(boolean dedicated, boolean deploy, boolean loadSavedGame);

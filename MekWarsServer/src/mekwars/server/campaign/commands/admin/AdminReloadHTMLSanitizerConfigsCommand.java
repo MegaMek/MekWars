@@ -1,0 +1,50 @@
+/*
+ * MekWars - Copyright (C) 2011
+ *
+ * Original author - coelocanth
+ *
+ * This program is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU General Public License as published by the Free
+ * Software Foundation; either version 2 of the License, or (at your option)
+ * any later version.
+ *
+ * This program is distributed in the hope that it will be useful, but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
+ * or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License
+ * for more details.
+ */
+
+package mekwars.server.campaign.commands.admin;
+
+import server.util.StringUtil;
+
+public class AdminReloadHTMLSanitizerConfigsCommand implements server.campaign.commands.Command {
+
+    int accessLevel = server.MWChatServer.auth.IAuthenticator.ADMIN;
+    String syntax = "";
+
+    public int getExecutionLevel() {return accessLevel;}
+
+    public void setExecutionLevel(int i) {accessLevel = i;}
+
+    public String getSyntax() {return syntax;}
+
+    //calculate faction rankings by comparing with original owner
+    public void process(java.util.StringTokenizer command, String Username) {
+
+        //access level check
+        int userLevel = server.campaign.CampaignMain.cm.getServer().getUserLevel(Username);
+        if (userLevel < getExecutionLevel()) {
+            server.campaign.CampaignMain.cm.toUser("AM:Insufficient access level for command. Level: " +
+                                                         userLevel +
+                                                         ". Required: " +
+                                                         accessLevel +
+                                                         ".", Username, true);
+            return;
+        }
+
+        StringUtil.reloadSanitizer();
+        server.campaign.CampaignMain.cm.doSendModMail("NOTE", Username + " has reloaded the HTML Sanitizer configs");
+        server.campaign.CampaignMain.cm.toUser("You have reloaded the HTML Sanitizer configs", Username, true);
+    }
+}

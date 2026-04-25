@@ -5,7 +5,7 @@ on:
     branches: [ main ]
 
 env:
-  GRADLE_OPTS: "-Dscan.link.VCS=https://github.com/MegaMek/megamek/commit/${{ github.sha }}"
+  GRADLE_OPTS: "-Dscan.link.VCS=https://github.com/MegaMek/mekwars/commit/${{ github.sha }}"
 
 jobs:
   code_coverage:
@@ -18,16 +18,8 @@ jobs:
         java-version: [ 21, 25 ]
 
     steps:
-      - name: Checkout Data Repo
+      - name: "Check out MekWars"
         uses: actions/checkout@v6
-        with:
-          repository: megamek/mm-data
-          path: mm-data
-
-      - name: "Check out MegaMek"
-        uses: actions/checkout@v6
-        with:
-          path: megamek
 
       - name: Set up ${{ matrix.java-distribution }} JDK ${{ matrix.java-version }}
         uses: actions/setup-java@v5
@@ -39,7 +31,6 @@ jobs:
         uses: gradle/actions/setup-gradle@v6
 
       - name: Build with Gradle
-        working-directory: megamek
         run: ./gradlew test
 
       - name: Upload Test Logs on Failure

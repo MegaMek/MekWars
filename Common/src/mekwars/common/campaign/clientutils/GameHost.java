@@ -1,4 +1,4 @@
-package common.campaign.clientutils;
+package mekwars.common.campaign.clientutils;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -44,78 +44,78 @@ import megamek.common.event.GameTurnChangeEvent;
 import megamek.common.event.GameVictoryEvent;
 import megamek.server.Server;
 
-public abstract class GameHost implements GameListener, IGameHost {
+public abstract class GameHost implements GameListener, common.campaign.clientutils.IGameHost {
     public static final int STATUS_DISCONNECTED = 0;
     public static final int STATUS_LOGGEDOUT = 1;
     public static final int STATUS_RESERVE = 2;
     public static final int STATUS_ACTIVE = 3;
     public static final int STATUS_FIGHTING = 4;
-    
+
     public static final String CAMPAIGN_PREFIX = "/"; // prefix for campaign commands
     public static final String CAMPAIGN_PATH = "data/campaign/";
     public static final String COMMAND_DELIMITER = "|"; // delimiter for client commands
-    
+
     public String myUsername = "";// public b/c used in RGTS command to set server status. HACK!
-    
+
     protected TreeMap<String, IProtCommand> ProtCommands;
-    
-    protected IClientConfig Config;
+
+    protected common.campaign.clientutils.IClientConfig Config;
 
     protected CConnector Connector;
-    
+
     protected Server myServer = null;
     protected Date mytime = new Date(System.currentTimeMillis());
     protected TreeMap<String, MMGame> servers = new TreeMap<String, MMGame>();// hostname,mmgame
     protected Vector<String> decodeBuffer = new Vector<String>(1, 1);// used to buffer incoming data until CMainFrame is built
 
     protected Buildings buildingTemplate = null;
-    
+
     protected int savedGamesMaxDays = 30; // max number of days a save game can be before
     // its deleted.
-    
+
     protected GamePhase currentPhase = GamePhase.DEPLOYMENT;
     protected int turn = 0;
-    
+
 	@Override
 	public void gameBoardChanged(GameBoardChangeEvent arg0) {
 		// TODO Auto-generated method stub
-		
+
 	}
 
 	@Override
 	public void gameBoardNew(GameBoardNewEvent arg0) {
 		// TODO Auto-generated method stub
-		
+
 	}
 
 	@Override
 	public void gameClientFeedbackRquest(GameCFREvent arg0) {
 		// TODO Auto-generated method stub
-		
+
 	}
 
 	@Override
 	public void gameEnd(GameEndEvent arg0) {
 		// TODO Auto-generated method stub
-		
+
 	}
 
 	@Override
 	public void gameEntityChange(GameEntityChangeEvent arg0) {
 		// TODO Auto-generated method stub
-		
+
 	}
 
 	@Override
 	public void gameEntityNew(GameEntityNewEvent arg0) {
 		// TODO Auto-generated method stub
-		
+
 	}
 
 	@Override
 	public void gameEntityNewOffboard(GameEntityNewOffboardEvent arg0) {
 		// TODO Auto-generated method stub
-		
+
 	}
 
     /*
@@ -138,7 +138,7 @@ public abstract class GameHost implements GameListener, IGameHost {
             return;
         }
 
-        String toSend = SerializeEntity.serializeEntity(removedE, true, false, isUsingAdvanceRepairs());
+        String toSend = common.campaign.clientutils.SerializeEntity.serializeEntity(removedE, true, false, isUsingAdvanceRepairs());
         serverSend("IPU|" + toSend);
     }
 
@@ -147,13 +147,13 @@ public abstract class GameHost implements GameListener, IGameHost {
 	@Override
 	public void gameMapQuery(GameMapQueryEvent arg0) {
 		// TODO Auto-generated method stub
-		
+
 	}
 
 	@Override
 	public void gameNewAction(GameNewActionEvent arg0) {
 		// TODO Auto-generated method stub
-		
+
 	}
 
     public void gamePhaseChange(GamePhaseChangeEvent e) {
@@ -179,37 +179,37 @@ public abstract class GameHost implements GameListener, IGameHost {
 	@Override
 	public void gamePlayerChange(GamePlayerChangeEvent arg0) {
 		// TODO Auto-generated method stub
-		
+
 	}
 
 	@Override
 	public void gamePlayerChat(GamePlayerChatEvent arg0) {
 		// TODO Auto-generated method stub
-		
+
 	}
 
 	@Override
 	public void gamePlayerConnected(GamePlayerConnectedEvent arg0) {
 		// TODO Auto-generated method stub
-		
+
 	}
 
 	@Override
 	public void gamePlayerDisconnected(GamePlayerDisconnectedEvent arg0) {
 		// TODO Auto-generated method stub
-		
+
 	}
 
 	@Override
 	public void gameReport(GameReportEvent arg0) {
 		// TODO Auto-generated method stub
-		
+
 	}
 
 	@Override
 	public void gameSettingsChange(GameSettingsChangeEvent arg0) {
 		// TODO Auto-generated method stub
-		
+
 	}
 
     @Override
@@ -232,9 +232,9 @@ public abstract class GameHost implements GameListener, IGameHost {
 
 	public void gameVictory(GameVictoryEvent e) {
         sendGameReport();
-        MWLogger.infoLog("GAME END");	
+        MWLogger.infoLog("GAME END");
 	}
-    
+
     protected abstract void sendGameReport();
 
 	public boolean isAdmin() {
@@ -244,13 +244,13 @@ public abstract class GameHost implements GameListener, IGameHost {
     public boolean isMod() {
         return getUser(getUsername()).getUserlevel() >= 100;
     }
-	
+
     public String getUsername() {
         return myUsername;
     }
-    
-    protected abstract IClientUser getUser(String name);
-    
+
+    protected abstract common.campaign.clientutils.IClientUser getUser(String name);
+
     public int getBuildingsLeft() {
         Enumeration<Building> buildings = ((Game)myServer.getGame()).getBoard()
                 .getBuildings();
@@ -261,7 +261,7 @@ public abstract class GameHost implements GameListener, IGameHost {
         }
         return buildingCount;
     }
-    
+
     public void purgeOldLogs() {
 
         long daysInSeconds = ((long) savedGamesMaxDays) * 24 * 60 * 60 * 1000;
@@ -289,7 +289,7 @@ public abstract class GameHost implements GameListener, IGameHost {
             }
         }
     }
-    
+
     public void sendGameOptionsToServer() {
         StringBuilder packet = new StringBuilder();
 
@@ -307,12 +307,12 @@ public abstract class GameHost implements GameListener, IGameHost {
 
         sendChat(GameHost.CAMPAIGN_PREFIX + "c servergameoptions#" + packet.toString());
     }
-    
+
 
     public TreeMap<String, MMGame> getServers() {
         return servers;
     }
-    
+
     public void sendChat(String s) {
         // Sends the content of the Chatfield to the server
         // We need the StringTokenizer to enable Mulitline comments
@@ -326,7 +326,7 @@ public abstract class GameHost implements GameListener, IGameHost {
             }
         }
     }
-    
+
     public String doEscape(String str) {
 
         if (str.indexOf("<a href=\"MEKINFO") != -1) {
@@ -340,7 +340,7 @@ public abstract class GameHost implements GameListener, IGameHost {
         str = doEscapeString(str, '>', "&gt;");
         return str;
     }
-    
+
     public String doEscapeString(String t, int character, String replace) {
 
         // find all occurences of character in t and replace them with replace
@@ -358,7 +358,7 @@ public abstract class GameHost implements GameListener, IGameHost {
         }
         return t;
     }
-    
+
     public CConnector getConnector() {
         return Connector;
     }

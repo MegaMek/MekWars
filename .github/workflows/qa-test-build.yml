@@ -22,31 +22,7 @@ jobs:
     name: QA Test Build
 
     steps:
-      - name: Checkout Data Repo
-        uses: actions/checkout@v6
-        with:
-          repository: megamek/mm-data
-          path: mm-data
-
       - uses: actions/checkout@v6
-        with:
-          path: megamek
-
-      - name: Set short git commit SHA
-        id: vars
-        run: |
-          cd megamek
-          calculatedSha=$(git rev-parse --short ${{ github.sha }})
-          echo "COMMIT_SHORT_SHA=$calculatedSha" >> $GITHUB_ENV
-
-      - name: "Output branch information to Version file"
-        run: |
-          if [ -n "${{ inputs.pr_number }}" ]; then
-            echo "branch=QA-PR-${{ inputs.pr_number }}" >> megamek/megamek/resources/extraVersion.properties
-          else
-            echo "branch=QA-Build" >> megamek/megamek/resources/extraVersion.properties
-          fi
-          echo "gitHash=${{ env.COMMIT_SHORT_SHA }}" >> megamek/megamek/resources/extraVersion.properties
 
       - name: Set up JDK 21
         uses: actions/setup-java@v5

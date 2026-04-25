@@ -1,4 +1,4 @@
-package common.campaign.clientutils.protocol.commands;
+package mekwars.common.campaign.clientutils.protocol.commands;
 
 import java.util.StringTokenizer;
 
@@ -34,7 +34,7 @@ public class PingPCmd extends CProtCommand {
 			return true;
 		}
 		//else
-		return false; 
+		return false;
 	}
 
 	// echo command in GUI
@@ -43,7 +43,7 @@ public class PingPCmd extends CProtCommand {
 
 		StringTokenizer ST = new StringTokenizer(input, getDelimiter());
 		String sender = ST.nextToken();
-		getClient().systemMessage("Ping request from " + sender); 
+		getClient().systemMessage("Ping request from " + sender);
 	}
 
 }

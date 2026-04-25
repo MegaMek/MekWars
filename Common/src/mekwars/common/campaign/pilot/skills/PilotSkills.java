@@ -1,6 +1,6 @@
 /*
- * MekWars - Copyright (C) 2004 
- * 
+ * MekWars - Copyright (C) 2004
+ *
  * Derived from MegaMekNET (http://www.sourceforge.net/projects/megameknet)
  * Original author Helge Richter (McWizard)
  *
@@ -15,7 +15,7 @@
  * for more details.
  */
 
-package common.campaign.pilot.skills;
+package mekwars.common.campaign.pilot.skills;
 
 import java.util.Iterator;
 import java.util.LinkedList;
@@ -39,7 +39,7 @@ public class PilotSkills {
             return false;
         return skills.contains(p);
     }
-    
+
     public boolean has(int id) {
     	Iterator<PilotSkill> it = getSkillIterator();
     	while (it.hasNext()) {
@@ -56,7 +56,7 @@ public class PilotSkills {
         if (p != null && !has(p))
             skills.add(p);
     }
-    
+
     /**
      * Removes a skill from the pilot's skill list
      */
@@ -64,7 +64,7 @@ public class PilotSkills {
         if (p != null)
             skills.remove(p);
     }
-    
+
     /**
      * Returns the amount of Skills
      * @author Helge Richter
@@ -73,26 +73,26 @@ public class PilotSkills {
     public int size() {
     	return skills.size();
     }
-    
+
     /**
      * Returns an Iterator for the skills
-     * 
+     *
      * @author Helge Richter
      *
      */
     public Iterator<PilotSkill> getSkillIterator() {
     	return skills.iterator();
     }
-    
+
     public LinkedList<PilotSkill> getPilotSkills(){
     	return skills;
     }
-    
+
     public PilotSkill getPilotSkill(int skillid){
-        
+
     	PilotSkill pSkill;
         Iterator<PilotSkill> skills = this.getSkillIterator();
-        
+
         while (skills.hasNext()){
             pSkill = (PilotSkill)skills.next();
             if ( pSkill.getId() == skillid )

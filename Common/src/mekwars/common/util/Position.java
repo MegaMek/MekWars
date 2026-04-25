@@ -15,7 +15,7 @@
  * for more details.
  */
 
-package common.util;
+package mekwars.common.util;
 
 public class Position {
 	public double x, y;

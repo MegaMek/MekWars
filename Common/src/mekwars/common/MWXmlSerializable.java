@@ -1,6 +1,6 @@
 /*
- * MekWars - Copyright (C) 2013 
- * 
+ * MekWars - Copyright (C) 2013
+ *
  * Derived from MegaMekNET (http://www.sourceforge.net/projects/megameknet)
  *
  * This program is free software; you can redistribute it and/or modify it
@@ -14,9 +14,10 @@
  * for more details.
  *
  */
-package common;
+package mekwars.common;
 
 public interface MWXmlSerializable {
-	public abstract void writeToXmlFile(String folderName, String fileName);
-	public abstract String getXmlString();
+    public abstract void writeToXmlFile(String folderName, String fileName);
+
+    public abstract String getXmlString();
 }

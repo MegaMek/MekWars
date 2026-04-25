@@ -1,6 +1,6 @@
 /*
- * MekWars - Copyright (C) 2004 
- * 
+ * MekWars - Copyright (C) 2004
+ *
  * Derived from MegaMekNET (http://www.sourceforge.net/projects/megameknet)
  *
  * This program is free software; you can redistribute it and/or modify it
@@ -14,14 +14,14 @@
  * for more details.
  */
 
-package common.persistence;
+package mekwars.common.persistence;
 
 import java.io.BufferedReader;
 import java.io.IOException;
 
 /**
  * Reads compact data from a stream written with BinWriter. No data structure
- * information is written/read, so expect bad results, if the data structure 
+ * information is written/read, so expect bad results, if the data structure
  * does not match.
  *
  * @author Imi (immanuel.scholz@gmx.de)
@@ -31,7 +31,7 @@ public class BinReader {
     private BufferedReader in;
 
     /**
-     * Constructs a new BinReader from an buffered reader and start reading 
+     * Constructs a new BinReader from an buffered reader and start reading
      * from it
      */
     public BinReader(BufferedReader in) {
@@ -72,7 +72,7 @@ public class BinReader {
     public String readString(String name) throws IOException {
         return read();
     }
-    
+
     private String read() throws IOException {
         return in.readLine();
     }
@@ -91,10 +91,10 @@ public class BinReader {
      * @see common.persistence.TreeReader#readCollection(java.util.Collection, java.lang.String)
      *
     public void readCollection(
-            Collection col, 
-            Class cl, 
-            CampaignData 
-            dataProvider, 
+            Collection col,
+            Class cl,
+            CampaignData
+            dataProvider,
             String name) throws IOException {
         int size = readInt(null);
         for (int i = 0; i < size; ++i) {

@@ -1,4 +1,4 @@
-package common.util.unitdamage;
+package mekwars.common.util.unitdamage;
 
 import java.util.Iterator;
 import java.util.StringTokenizer;

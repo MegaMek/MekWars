@@ -1,6 +1,6 @@
 /*
- * MekWars - Copyright (C) 2004 
- * 
+ * MekWars - Copyright (C) 2004
+ *
  * Derived from MegaMekNET (http://www.sourceforge.net/projects/megameknet)
  *
  * This program is free software; you can redistribute it and/or modify it
@@ -14,7 +14,7 @@
  * for more details.
  */
 
-package common.util;
+package mekwars.common.util;
 
 import java.io.FileWriter;
 import java.io.IOException;
@@ -28,57 +28,57 @@ import org.mekwars.libpk.converters.HTML;
  * @author Imi (immanuel.scholz@gmx.de)
  */
 public class BinWriter {
-	
+
     private PrintWriter out;
     private boolean debug;
     private BinWriter dataBlock = null;
     private boolean open = true;
-    
+
     public BinWriter(PrintWriter out) {
         this.out = out;
         debug = false;
     }
-    
+
     public BinWriter(PrintWriter out, String debugFilename) {
         try {
             String ls = System.getProperty("line.seperator");
             System.setProperty("line.seperator",String.valueOf((char)13));
-            this.out = new PrintWriter(new TeePrinter(out,new FileWriter(debugFilename)));
+            this.out = new PrintWriter(new common.util.TeePrinter(out,new FileWriter(debugFilename)));
             System.setProperty("line.seperator",ls);
         } catch (IOException e) {
-            MWLogger.errLog(e);
+            common.util.MWLogger.errLog(e);
             this.out = new PrintWriter(out);
         }
         debug = true;
         this.out.println("###DEBUG_ON###");
     }
-    
-    
+
+
     public void println(int v, String debugName) {
         if (debug) out.print(debugName+"=");
         out.println(v);
     }
-    
+
     public void println(double v, String debugName) {
         if (debug) out.print(debugName+"=");
         out.println(v);
     }
-    
+
     public void println(String v, String debugName) {
         if (debug) out.print(debugName+"=");
         out.println(HTML.cr2br(v));
     }
-    
+
     public void println(boolean v, String debugName) {
         if (debug) out.print(debugName+"=");
         out.println(v);
     }
-    
+
     public void printStringln(String v, String debugName) {
         if (debug) out.print(debugName+"=");
         out.println(v);
     }
-    
+
     public void close() {
         if (dataBlock != null && dataBlock.open) {
             dataBlock.close();
@@ -87,7 +87,7 @@ public class BinWriter {
         out.close();
         open = false;
     }
-    
+
     public void flush() {
         if (dataBlock != null && dataBlock.open) {
             dataBlock.close(); // yes, close it, not flush it.
@@ -99,16 +99,16 @@ public class BinWriter {
     /**
      * Signals a new data block within the stream. Use the returned object to
      * write to this data block. If you write once to this one again, the data
-     * block is considered closed and you may not write to the returned 
-     * BinWriter again. Flushing this stream also closes the data block. 
-     * 
+     * block is considered closed and you may not write to the returned
+     * BinWriter again. Flushing this stream also closes the data block.
+     *
      * Of course, if this writer is closed, so is the returned writer.
-     * 
+     *
      * @param name Name of the new datablock
-     * @return An Writer to use for writing to the new data block. 
+     * @return An Writer to use for writing to the new data block.
      */
     public BinWriter newBlock(String name) {
         return new BinWriter(out);
     }
-    
+
 }

@@ -1,0 +1,60 @@
+/*
+ * MekWars - Copyright (C) 2004
+ *
+ * Derived from MegaMekNET (http://www.sourceforge.net/projects/megameknet)
+ *
+ * This program is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU General Public License as published by the Free
+ * Software Foundation; either version 2 of the License, or (at your option)
+ * any later version.
+ *
+ * This program is distributed in the hope that it will be useful, but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
+ * or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License
+ * for more details.
+ */
+
+package mekwars.server.campaign.commands.mod;
+
+
+public class TouchCommand implements server.campaign.commands.Command {
+
+    int accessLevel = server.MWChatServer.auth.IAuthenticator.MODERATOR;
+    String syntax = "Player Name";
+
+    public int getExecutionLevel() {return accessLevel;}
+
+    public void setExecutionLevel(int i) {accessLevel = i;}
+
+    public String getSyntax() {return syntax;}
+
+    public void process(java.util.StringTokenizer command, String Username) {
+
+        //access level check
+        int userLevel = server.campaign.CampaignMain.cm.getServer().getUserLevel(Username);
+        if (userLevel < getExecutionLevel()) {
+            server.campaign.CampaignMain.cm.toUser("AM:Insufficient access level for command. Level: " +
+                                                         userLevel +
+                                                         ". Required: " +
+                                                         accessLevel +
+                                                         ".", Username, true);
+            return;
+        }
+
+        String player = command.nextToken();
+        server.campaign.SPlayer p = server.campaign.CampaignMain.cm.getPlayer(player);
+        if (p.getDutyStatus() != server.campaign.SPlayer.STATUS_LOGGEDOUT) {
+            server.campaign.CampaignMain.cm.toUser(p.getName() + " is already on-line and doesn't need a pfile update.",
+                  Username);
+            return;
+        }
+
+        p.setLastOnline(System.currentTimeMillis());
+        p.setSave();
+
+        server.campaign.CampaignMain.cm.toUser("AM:You touched " + p.getName() + ".", Username, true);
+        //server.MWLogger.modLog(Username + " touched " + p.getName() + ".");
+        server.campaign.CampaignMain.cm.doSendModMail("NOTE", Username + " touched " + p.getName() + ".");
+
+    }
+}

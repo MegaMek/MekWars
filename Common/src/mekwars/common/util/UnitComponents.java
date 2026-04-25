@@ -14,7 +14,7 @@
  * for more details.
  */
 
-package common.util;
+package mekwars.common.util;
 
 import java.util.Collections;
 import java.util.Comparator;
@@ -184,7 +184,7 @@ public class UnitComponents{
                     continue;
                 }
 
-                part = UnitUtils.getCritName(mainUnit, slot, location, false);
+                part = common.util.UnitUtils.getCritName(mainUnit, slot, location, false);
 
                 if ( part.equalsIgnoreCase("Ammo Bin") ) {
                     Mounted mount = crit.getMount();
@@ -211,11 +211,11 @@ public class UnitComponents{
             }
         }
 
-        part = UnitUtils.getCritName(mainUnit, UnitUtils.LOC_CT, 0, true);
+        part = common.util.UnitUtils.getCritName(mainUnit, common.util.UnitUtils.LOC_CT, 0, true);
 
         mainUnitParts.put(part, armor+rear);
 
-        part = UnitUtils.getCritName(mainUnit, UnitUtils.LOC_INTERNAL_ARMOR, 0, true);
+        part = common.util.UnitUtils.getCritName(mainUnit, common.util.UnitUtils.LOC_INTERNAL_ARMOR, 0, true);
         mainUnitParts.put(part, IS);
 
 
@@ -233,7 +233,7 @@ public class UnitComponents{
                     continue;
                 }
 
-                part = UnitUtils.getCritName(repodUnit, slot, location, false);
+                part = common.util.UnitUtils.getCritName(repodUnit, slot, location, false);
 
                 if ( part.equalsIgnoreCase("Ammo Bin") ) {
                     Mounted mount = crit.getMount();
@@ -259,11 +259,11 @@ public class UnitComponents{
             }
         }
 
-        part = UnitUtils.getCritName(repodUnit, UnitUtils.LOC_FRONT_ARMOR, 0, true);
+        part = common.util.UnitUtils.getCritName(repodUnit, common.util.UnitUtils.LOC_FRONT_ARMOR, 0, true);
 
         repodUnitParts.put(part, armor+rear);
 
-        part = UnitUtils.getCritName(repodUnit, UnitUtils.LOC_INTERNAL_ARMOR, 0, true);
+        part = common.util.UnitUtils.getCritName(repodUnit, common.util.UnitUtils.LOC_INTERNAL_ARMOR, 0, true);
 
         repodUnitParts.put(part, IS);
 
@@ -334,7 +334,7 @@ public class UnitComponents{
                     continue;
                 }
 
-                part = UnitUtils.getCritName(mainUnit, slot, location, false);
+                part = common.util.UnitUtils.getCritName(mainUnit, slot, location, false);
 
                 if ( part.indexOf("Ammo") > -1 ) {
                     Mounted mount = crit.getMount();
@@ -347,11 +347,11 @@ public class UnitComponents{
             }
         }
 
-        part = UnitUtils.getCritName(mainUnit, UnitUtils.LOC_FRONT_ARMOR, 0, true);
+        part = common.util.UnitUtils.getCritName(mainUnit, common.util.UnitUtils.LOC_FRONT_ARMOR, 0, true);
 
         this.add(part, armor+rear);
 
-        part = UnitUtils.getCritName(mainUnit, UnitUtils.LOC_INTERNAL_ARMOR, 0, true);
+        part = common.util.UnitUtils.getCritName(mainUnit, common.util.UnitUtils.LOC_INTERNAL_ARMOR, 0, true);
         this.add(part, IS);
 
         IS = 0;
@@ -367,7 +367,7 @@ public class UnitComponents{
                 if ( crit == null ) {
                     continue;
                 }
-                part = UnitUtils.getCritName(repodUnit, slot, location, false);
+                part = common.util.UnitUtils.getCritName(repodUnit, slot, location, false);
 
                 if ( part.indexOf("Ammo") > -1 ) {
                     Mounted mount = crit.getMount();
@@ -392,11 +392,11 @@ public class UnitComponents{
             }
         }
 
-        part = UnitUtils.getCritName(repodUnit, UnitUtils.LOC_FRONT_ARMOR, 0, true);
+        part = common.util.UnitUtils.getCritName(repodUnit, common.util.UnitUtils.LOC_FRONT_ARMOR, 0, true);
 
         repodUnitParts.put(part, armor+rear);
 
-        part = UnitUtils.getCritName(repodUnit, UnitUtils.LOC_INTERNAL_ARMOR, 0, true);
+        part = common.util.UnitUtils.getCritName(repodUnit, common.util.UnitUtils.LOC_INTERNAL_ARMOR, 0, true);
 
         repodUnitParts.put(part, IS);
 
@@ -458,7 +458,7 @@ public class UnitComponents{
             return "All";
         }else {
 
-            if ( UnitUtils.isClanEQ(eq, year) ) {
+            if ( common.util.UnitUtils.isClanEQ(eq, year) ) {
                 return "Clan";
             }
             if ( (eq.getTechLevel(year) == TechConstants.T_ALL) ||

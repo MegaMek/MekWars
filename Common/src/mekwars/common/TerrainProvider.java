@@ -1,6 +1,6 @@
 /*
- * MekWars - Copyright (C) 2004 
- * 
+ * MekWars - Copyright (C) 2004
+ *
  * Derived from MegaMekNET (http://www.sourceforge.net/projects/megameknet)
  *
  * This program is free software; you can redistribute it and/or modify it
@@ -14,15 +14,15 @@
  * for more details.
  */
 
-package common;
+package mekwars.common;
 
 import java.util.Collection;
 
 
 /**
- * This interface enables the class to provide information about terrains. It
- * is used, as example by PlanetEnvironments to retrieve the real terrains 
- * behind the terrain id.
+ * This interface enables the class to provide information about terrains. It is used, as example by PlanetEnvironments
+ * to retrieve the real terrains behind the terrain id.
+ *
  * @author Imi (immanuel.scholz@gmx.de)
  */
 public interface TerrainProvider {
@@ -40,8 +40,9 @@ public interface TerrainProvider {
      * Add a terrain to the list
      */
     public void addAdvancedTerrain(AdvancedTerrain terrain);
-    
+
     /*add the advanced terrain provisions*/
+
     /**
      * Return the terrain to a given id.
      */
@@ -52,5 +53,5 @@ public interface TerrainProvider {
      */
     public Collection<AdvancedTerrain> getAllAdvancedTerrains();
 
-    
+
 }

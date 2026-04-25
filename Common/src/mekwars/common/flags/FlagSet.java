@@ -1,4 +1,4 @@
-package common.flags;
+package mekwars.common.flags;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
@@ -17,19 +17,19 @@ import java.util.Vector;
 import common.util.MWLogger;
 
 /**
- * 
+ *
  */
 public class FlagSet {
 	protected BitSet flags = new BitSet();
 	protected Map<Integer, String> flagNames;
 	protected int flagType;
-	
+
 	// Flag Types - since they load differently and all
 	public static final int FLAGTYPE_PLAYER = 0;
 	public static final int FLAGTYPE_RESULTS = 1;
-	
+
 	/**
-	 * Adds the flag name to the map.  Used so that the SOs can 
+	 * Adds the flag name to the map.  Used so that the SOs can
 	 * use flag names that make sense to them, rather than integers
 	 * @param key
 	 * @param name
@@ -37,7 +37,7 @@ public class FlagSet {
 	public void setFlagName(int key, String name) {
 		flagNames.put(key, name);
 	}
-	
+
 	/**
 	 * Returns a Vector<String> of all flag names.  Used to create
 	 * menus and such with the names
@@ -50,7 +50,7 @@ public class FlagSet {
 		}
 		return v;
 	}
-	
+
 	/**
 	 * Returns the integer key for a given name.  Needed to map
 	 * between a flag name and the actual bitset
@@ -68,7 +68,7 @@ public class FlagSet {
 		}
 		return -1;
 	}
-	
+
 	/**
 	 * Sets a named flag to true or false
 	 * @param name
@@ -82,7 +82,7 @@ public class FlagSet {
 			MWLogger.errLog("Unknown Flag checked: " + name);
 		}
 	}
-	
+
 	/**
 	 * Gets the boolean status of a named flag
 	 * @param name
@@ -97,11 +97,11 @@ public class FlagSet {
 			return false;
 		}
 	}
-	
+
 	/**
 	 * Loads a set of flags from a string.  This will be called only
 	 * at player logon.  This should only be used to load the defaults
-	 * so we can make sure all the proper flags exist.  If you're 
+	 * so we can make sure all the proper flags exist.  If you're
 	 * loading personal flags, use loadPersonal() instead
 	 * @see loadPersonal
 	 * @param data
@@ -111,7 +111,7 @@ public class FlagSet {
 			return;
 		}
 		// clear out the existing flags, just in case
-		
+
 		empty();
     	StringTokenizer st = new StringTokenizer(data, "$");
     	while (st.hasMoreTokens()) {
@@ -123,7 +123,7 @@ public class FlagSet {
     		addFlag(name, id, value);
     	}
 	}
-	
+
 	/**
 	 * Loads personally set flags from a string.  This should only
 	 * be called after defaults are set, as any flags that are listed
@@ -131,14 +131,14 @@ public class FlagSet {
 	 * will be ignored.  This way, old flags that may have been
 	 * deleted by the admins will not continue to hang around, but
 	 * will be pruned every time a player loads.
-	 * 
+	 *
 	 * @param data
 	 */
 	public void loadPersonal(String data) {
 		if (data.equalsIgnoreCase(" ")) {
 			return;
 		}
-		
+
 		StringTokenizer st = new StringTokenizer(data, "$");
 		while (st.hasMoreTokens()) {
     		String element = st.nextToken();
@@ -151,7 +151,7 @@ public class FlagSet {
     		}
 		}
 	}
-	
+
 	/**
 	 * Removes all player flags
 	 */
@@ -159,7 +159,7 @@ public class FlagSet {
 		flagNames.clear();
 		flags.clear();
 	}
-	
+
 	/**
 	 * Adds a flag to the list
 	 * @param name
@@ -169,10 +169,10 @@ public class FlagSet {
 	public void addFlag(String name, int id, boolean value) {
 		setFlagName(id, name);
 		setFlag(name, value);
-		
+
 		//MWLogger.debugLog("Setting flag " + name + "(id: " + id + ") to value " + value);
 	}
-	
+
 	/**
 	 * Clears a single flag, removing it from the names and flags
 	 * @param name
@@ -186,12 +186,12 @@ public class FlagSet {
 		flagNames.remove(id);
 		flags.clear(id);
 	}
-	
+
 	/**
 	 * Builds the string that is imported by load(String data) above
 	 * Used server-side only, as I envision it, so I might move this
 	 * method to SPlayer
-	 * 
+	 *
 	 * @return String flag settings - name, ID, and value
 	 */
 	public String export() {
@@ -206,7 +206,7 @@ public class FlagSet {
 		}
 		return toReturn.toString();
 	}
-	
+
 	/**
 	 * Saves the flags to disk.  This should be overloaded in any
 	 * class that extends the FlagSet, so a simple ".save()" can be sent
@@ -233,10 +233,10 @@ public class FlagSet {
 			MWLogger.errLog(e);
 			MWLogger.errLog("Error saving pFlags.dat");
 		}
-		
+
 	}
-	
-	
+
+
 	/**
 	 * Reads data file from disk.  This should be overloaded
 	 * by any class extending FlagSet to allow for a simple
@@ -261,7 +261,7 @@ public class FlagSet {
 			return;
 		}
 	}
-	
+
 	public int getAvailableID() {
 		int toReturn = -1;
 		for(int i = 0; i <= flagNames.size(); i++) {
@@ -271,7 +271,7 @@ public class FlagSet {
 		}
 		return toReturn;
 	}
-	
+
 	public FlagSet() {
 		flagNames = new TreeMap<Integer, String>();
 	}

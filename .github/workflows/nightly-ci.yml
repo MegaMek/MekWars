@@ -19,18 +19,10 @@ jobs:
         java-version: [ 21, 25 ]
       fail-fast: false
 
-    name: Nightly MegaMek CI ${{ matrix.os }} on ${{ matrix.java-distribution }} JDK ${{ matrix.java-version }}
+    name: Nightly MekWars CI ${{ matrix.os }} on ${{ matrix.java-distribution }} JDK ${{ matrix.java-version }}
 
     steps:
-      - name: Checkout Data Repo
-        uses: actions/checkout@v6
-        with:
-          repository: megamek/mm-data
-          path: mm-data
-
       - uses: actions/checkout@v6
-        with:
-          path: megamek
 
       - name: "Output branch information to Version file"
         run: |
@@ -51,7 +43,6 @@ jobs:
           build-scan-terms-of-use-agree: "yes"
 
       - name: Testing Nightly
-        working-directory: megamek
         run: ./gradlew test
 
       - name: Upload Test Logs on Failure

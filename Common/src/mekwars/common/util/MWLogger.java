@@ -1,6 +1,6 @@
 /*
- * MekWars - Copyright (C) 2004 
- * 
+ * MekWars - Copyright (C) 2004
+ *
  * Derived from MegaMekNET (http://www.sourceforge.net/projects/megameknet)
  *
  * This program is free software; you can redistribute it and/or modify it
@@ -14,7 +14,7 @@
  * for more details.
  */
 
-package common.util;
+package mekwars.common.util;
 
 import java.io.File;
 
@@ -30,9 +30,9 @@ public final class MWLogger {// final - no extension of the server logger
     private File logDir;
     // private static PKLogManager logmanager = null;
     private static MWLogger logger = null;
-    
+
     private MWLogger() {
-        
+
         // logmanager = PKLogManager.getInstance();
         // logDir = new File("logs");
         LogManager.getLogger().info("MWLogger Started");
@@ -58,66 +58,66 @@ public final class MWLogger {// final - no extension of the server logger
     //         return;
     //     }
     }
-    
+
     public static MWLogger getInstance() {
         if (logger == null) {
             logger = new MWLogger();
         }
         return logger;
     }
-    
+
     public static void errLog(String message) {
        LogManager.getLogger().error(message);
     }
-    
+
     public static void mainLog(String message) {
         LogManager.getLogger().log(Level.ALL, message);
     }
-    
+
     public static void modLog(String message) {
         LogManager.getLogger().log(Level.INFO, message);
     }
-    
+
     public static void debugLog(String message) {
         LogManager.getLogger().debug(message);
     }
-    
+
     public static void ipLog(String message) {
         LogManager.getLogger().info( message);
     }
-    
+
     public static void cmdLog(String message) {
         LogManager.getLogger().error(message);
     }
-    
+
     public static void errLog(Exception e) {
         LogManager.getLogger().error(e);
     }
-    
+
     public static void mainLog(Exception e) {
         LogManager.getLogger().info(e);
     }
-    
+
     public static void modLog(Exception e) {
         LogManager.getLogger().info(e);
     }
-    
+
     public static void debugLog(Exception e) {
         LogManager.getLogger().info(e);
     }
-    
+
     public static void ipLog(Exception e) {
         LogManager.getLogger().info(e);
     }
-    
+
     public static void cmdLog(Exception e) {
         LogManager.getLogger().info(e);
     }
-    
+
     public static void infoLog(String message) {
         LogManager.getLogger().info(message);
     }
-    
+
     public static void infoLog(Exception e) {
         LogManager.getLogger().info(e);
     }
@@ -125,7 +125,7 @@ public final class MWLogger {// final - no extension of the server logger
     public static void bmLog(String message) {
         LogManager.getLogger().info(message);
     }
-    
+
     public static void bmLog(Exception e) {
         LogManager.getLogger().info(e);
     }
@@ -133,7 +133,7 @@ public final class MWLogger {// final - no extension of the server logger
         final Marker results = MarkerManager.getMarker("resutlsLog");
         LogManager.getLogger().info(results, message);
     }
-    
+
     public static void resultsLog(Exception e) {
         LogManager.getLogger().info(e);
     }
@@ -142,51 +142,51 @@ public final class MWLogger {// final - no extension of the server logger
         final Marker game = MarkerManager.getMarker("gameLog");
         LogManager.getLogger().info(game, message);
     }
-    
+
     public static void gameLog(Exception e) {
         LogManager.getLogger().info(e);
     }
-    
+
     public static void testLog(String message) {
         final Marker test = MarkerManager.getMarker("testLog");
         LogManager.getLogger().info(test, message);
     }
-    
+
     public static void testLog(Exception e) {
         LogManager.getLogger().info(e);
     }
-    
+
     public static void tickLog(String message) {
         final Marker tick = MarkerManager.getMarker("tickLog");
         LogManager.getLogger().info(tick, message);
     }
-    
+
     public static void tickLog(Exception e) {
         LogManager.getLogger().info(e);
     }
-    
+
     public static void warnLog(String message) {
         LogManager.getLogger().warn(message);
     }
-    
+
     public static void warnLog(Exception e) {
         LogManager.getLogger().warn(e);
     }
-    
+
     public static void pmLog(String message) {
         final Marker pm = MarkerManager.getMarker("pmLog");
         LogManager.getLogger().info(pm, message);
     }
-    
+
     public static void pmLog(Exception e) {
         LogManager.getLogger().info(e);
     }
-    
+
     public static void factionLog(String factionName, String message) {
         final Marker faction = MarkerManager.getMarker(factionName);
         LogManager.getLogger().info(faction, message);
     }
-    
+
     public static void factionLog(String factionName, Exception e) {
         final Marker factiondebug = MarkerManager.getMarker(factionName);
         LogManager.getLogger().debug(factiondebug, e.getMessage());

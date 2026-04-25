@@ -13,7 +13,7 @@ coverage:
         informational: true
 
 fixes:
-  - "megamek/::"
+  - "mekwars/::"
 
 github_checks:
   annotations: false
