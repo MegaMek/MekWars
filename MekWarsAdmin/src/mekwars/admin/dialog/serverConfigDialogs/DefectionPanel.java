@@ -11,6 +11,7 @@
 
 package mekwars.admin.dialog.serverConfigDialogs;
 
+import java.io.Serial;
 import javax.swing.BoxLayout;
 import javax.swing.JCheckBox;
 import javax.swing.JLabel;
@@ -19,7 +20,8 @@ import javax.swing.JTextField;
 import javax.swing.SpringLayout;
 import javax.swing.SwingConstants;
 
-import common.util.SpringLayoutHelper;
+import mekwars.common.util.SpringLayoutHelper;
+
 
 /**
  * @author jtighe
@@ -27,9 +29,8 @@ import common.util.SpringLayoutHelper;
  */
 public class DefectionPanel extends JPanel {
 
+    @Serial
     private static final long serialVersionUID = 4431690943581192710L;
-    private JTextField baseTextField = new JTextField(5);
-    private JCheckBox BaseCheckBox = new JCheckBox();
 
     public DefectionPanel() {
         super();
@@ -41,7 +42,7 @@ public class DefectionPanel extends JPanel {
         JPanel defectionBoxPanel = new JPanel(new SpringLayout());
 
         // set up the defection percent loss text boxes
-        baseTextField = new JTextField(5);
+        JTextField baseTextField = new JTextField(5);
         defectionTextPanel1.add(new JLabel("Unit Loss Percent:", SwingConstants.TRAILING));
         baseTextField.setToolTipText("Percentage of a player's units lost during defection.");
         baseTextField.setName("DefectionUnitLossPercent");
@@ -112,30 +113,30 @@ public class DefectionPanel extends JPanel {
         SpringLayoutHelper.setupSpringGrid(defectionTextPanel2, 5, 2);
 
         // set up checkboxen
-        BaseCheckBox = new JCheckBox("Merc Penalty");
+        JCheckBox baseCheckBox = new JCheckBox("Merc Penalty");
 
-        BaseCheckBox.setToolTipText("Check to penalize players joining Mercenary factions.");
-        BaseCheckBox.setName("PenalizeDefectToMerc");
-        defectionBoxPanel.add(BaseCheckBox);
+        baseCheckBox.setToolTipText("Check to penalize players joining Mercenary factions.");
+        baseCheckBox.setName("PenalizeDefectToMerc");
+        defectionBoxPanel.add(baseCheckBox);
 
-        BaseCheckBox = new JCheckBox("Non-Conq Penalty");
+        baseCheckBox = new JCheckBox("Non-Conq Penalty");
 
-        BaseCheckBox.setToolTipText("Check to penalize players joining non-conquer factions.");
-        BaseCheckBox.setName("PenalizeDefectToNonConq");
-        defectionBoxPanel.add(BaseCheckBox);
+        baseCheckBox.setToolTipText("Check to penalize players joining non-conquer factions.");
+        baseCheckBox.setName("PenalizeDefectToNonConq");
+        defectionBoxPanel.add(baseCheckBox);
 
-        BaseCheckBox = new JCheckBox("Reset SOL");
+        baseCheckBox = new JCheckBox("Reset SOL");
 
-        BaseCheckBox.setToolTipText("Check to reset player's units and PPQ when they leave training.");
-        BaseCheckBox.setName("ReplaceUnitsLeavingSOL");
-        defectionBoxPanel.add(BaseCheckBox);
+        baseCheckBox.setToolTipText("Check to reset player's units and PPQ when they leave training.");
+        baseCheckBox.setName("ReplaceUnitsLeavingSOL");
+        defectionBoxPanel.add(baseCheckBox);
 
-        BaseCheckBox = new JCheckBox("SOL Faction Units");
+        baseCheckBox = new JCheckBox("SOL Faction Units");
 
-        BaseCheckBox.setToolTipText("<HTML>" +
+        baseCheckBox.setToolTipText("<HTML>" +
                                           "If both this box and \"Reset Leaving SOL\" are checked, players will<br>receive faction units drawn from their new faction's tables instead of<br> SOL units on defection. Units will be taken from the Standard Folder ONLY.</HTML>");
-        BaseCheckBox.setName("FactionUnitsLeavingSOL");
-        defectionBoxPanel.add(BaseCheckBox);
+        baseCheckBox.setName("FactionUnitsLeavingSOL");
+        defectionBoxPanel.add(baseCheckBox);
 
         // set up the springs for the check boxes
         SpringLayoutHelper.setupSpringGrid(defectionBoxPanel, 4);

@@ -18,19 +18,18 @@
 package mekwars.common.util;
 
 public class Position {
-	public double x, y;
+    public double x, y;
 
-	private Integer id;
+    private Integer id;
     private String color;
 
-	public Position(double xpos, double ypos){
-		x = xpos;
-		y = ypos;
-	}
+    public Position(double xpos, double ypos) {
+        x = xpos;
+        y = ypos;
+    }
 
     /**
      *
-     * @return
      */
     public String getColor() {
         return color;
@@ -38,7 +37,6 @@ public class Position {
 
     /**
      *
-     * @param color
      */
     public void setColor(String color) {
 
@@ -53,44 +51,44 @@ public class Position {
     /**
      * @return Integer
      */
-	public Integer getId() {
-		return id;
-	}
+    public Integer getId() {
+        return id;
+    }
 
-	/**
-	 * @param id The id to set.
-	 */
-	public void setId(Integer id) {
-		this.id = id;
-	}
+    /**
+     * @param id The id to set.
+     */
+    public void setId(Integer id) {
+        this.id = id;
+    }
 
-	public double getX() {
-		return x;
-	}
+    public double getX() {
+        return x;
+    }
 
-	/**
-	 * @param x The x to set.
-	 */
-	public void setX(double x) {
-		this.x = x;
-	}
+    /**
+     * @param x The x to set.
+     */
+    public void setX(double x) {
+        this.x = x;
+    }
 
-	public double getY() {
-		return y;
-	}
+    public double getY() {
+        return y;
+    }
 
-	/**
-	 * @param y The y to set.
-	 */
-	public void setY(double y) {
-		this.y = y;
-	}
+    /**
+     * @param y The y to set.
+     */
+    public void setY(double y) {
+        this.y = y;
+    }
 
-	public double distanceSq(double xpos, double ypos){
-		return Math.sqrt(Math.pow(x - xpos,2) + Math.pow(y - ypos,2));
-	}
+    public double distanceSq(double xpos, double ypos) {
+        return Math.sqrt(Math.pow(x - xpos, 2) + Math.pow(y - ypos, 2));
+    }
 
-	public double distanceSq(Position p){
-		return distanceSq(p.x, p.y);
-	}
+    public double distanceSq(Position p) {
+        return distanceSq(p.x, p.y);
+    }
 }

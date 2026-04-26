@@ -11,6 +11,7 @@
 
 package mekwars.admin.dialog.serverConfigDialogs;
 
+import java.io.Serial;
 import javax.swing.BoxLayout;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
@@ -18,9 +19,9 @@ import javax.swing.JTextField;
 import javax.swing.SpringLayout;
 import javax.swing.SwingConstants;
 
-import client.MWClient;
-import common.Unit;
-import common.util.SpringLayoutHelper;
+import mekwars.common.Unit;
+import mekwars.common.campaign.clientutils.protocol.IClient;
+import mekwars.common.util.SpringLayoutHelper;
 
 /**
  * @author jtighe
@@ -28,11 +29,10 @@ import common.util.SpringLayoutHelper;
  */
 public class FactoryPurchasePanel extends JPanel {
 
+    @Serial
     private static final long serialVersionUID = 1471237707053913762L;
 
-    private JTextField baseTextField = new JTextField(5);
-
-    public FactoryPurchasePanel(MWClient mwclient) {
+    public FactoryPurchasePanel(IClient client) {
         super();
         /*
          * Unit Research Configuration Panel Construction
@@ -43,34 +43,34 @@ public class FactoryPurchasePanel extends JPanel {
         JPanel masterPanel = new JPanel();
         masterPanel.setLayout(new BoxLayout(masterPanel, BoxLayout.Y_AXIS));
 
-        baseTextField = new JTextField(5);
-        mainPurchasePanel.add(new JLabel("New Factory " + mwclient.moneyOrFluMessage(true, false, -1, false) + ":",
+        JTextField baseTextField = new JTextField(5);
+        mainPurchasePanel.add(new JLabel("New Factory " + client.moneyOrFluMessage(true, false, -1, false) + ":",
               SwingConstants.TRAILING));
         baseTextField.setToolTipText("<HTML>" +
-                                           mwclient.moneyOrFluMessage(true, false, -1, false) +
+                                           client.moneyOrFluMessage(true, false, -1, false) +
                                            " to buy 1 factory</html>");
         baseTextField.setName("NewFactoryBaseCost");
         mainPurchasePanel.add(baseTextField);
 
         baseTextField = new JTextField(5);
-        mainPurchasePanel.add(new JLabel("New Factory " + mwclient.moneyOrFluMessage(false, false, -1, false) + ":",
+        mainPurchasePanel.add(new JLabel("New Factory " + client.moneyOrFluMessage(false, false, -1, false) + ":",
               SwingConstants.TRAILING));
         baseTextField.setToolTipText("<HTML>" +
-                                           mwclient.moneyOrFluMessage(true, false, -1, false) +
+                                           client.moneyOrFluMessage(true, false, -1, false) +
                                            " to buy 1 factory</html>");
         baseTextField.setName("NewFactoryBaseFlu");
         mainPurchasePanel.add(baseTextField);
 
         SpringLayoutHelper.setupSpringGrid(mainPurchasePanel, 4);
 
-        for (int type = 0; type < Unit.MAXBUILD; type++) {
+        for (int type = 0; type < Unit.MAX_BUILD; type++) {
             baseTextField = new JTextField(5);
             purchasePanel1.add(new JLabel(Unit.getTypeClassDesc(type) +
                                                 " unit " +
-                                                mwclient.moneyOrFluMessage(true, false, -1, false) +
+                                                client.moneyOrFluMessage(true, false, -1, false) +
                                                 ":", SwingConstants.TRAILING));
             baseTextField.setToolTipText("<HTML>" +
-                                               mwclient.moneyOrFluMessage(true, false, -1, false) +
+                                               client.moneyOrFluMessage(true, false, -1, false) +
                                                " modifier for " +
                                                Unit.getTypeClassDesc(type) +
                                                " unit factory</html>");
@@ -82,10 +82,10 @@ public class FactoryPurchasePanel extends JPanel {
             baseTextField = new JTextField(5);
             purchasePanel1.add(new JLabel(Unit.getWeightClassDesc(size) +
                                                 " unit " +
-                                                mwclient.moneyOrFluMessage(true, false, -1, false) +
+                                                client.moneyOrFluMessage(true, false, -1, false) +
                                                 ":", SwingConstants.TRAILING));
             baseTextField.setToolTipText("<HTML>" +
-                                               mwclient.moneyOrFluMessage(true, false, -1, false) +
+                                               client.moneyOrFluMessage(true, false, -1, false) +
                                                " modifier for " +
                                                Unit.getWeightClassDesc(size) +
                                                " unit factory</html>");
@@ -94,14 +94,14 @@ public class FactoryPurchasePanel extends JPanel {
         }
         SpringLayoutHelper.setupSpringGrid(purchasePanel1, 6);
 
-        for (int type = 0; type < Unit.MAXBUILD; type++) {
+        for (int type = 0; type < Unit.MAX_BUILD; type++) {
             baseTextField = new JTextField(5);
             purchasePanel2.add(new JLabel(Unit.getTypeClassDesc(type) +
                                                 " unit " +
-                                                mwclient.moneyOrFluMessage(false, false, -1, false) +
+                                                client.moneyOrFluMessage(false, false, -1, false) +
                                                 ":", SwingConstants.TRAILING));
             baseTextField.setToolTipText("<HTML>" +
-                                               mwclient.moneyOrFluMessage(true, false, -1, false) +
+                                               client.moneyOrFluMessage(true, false, -1, false) +
                                                " modifier for " +
                                                Unit.getTypeClassDesc(type) +
                                                " unit factory</html>");
@@ -113,10 +113,10 @@ public class FactoryPurchasePanel extends JPanel {
             baseTextField = new JTextField(5);
             purchasePanel2.add(new JLabel(Unit.getWeightClassDesc(size) +
                                                 " unit " +
-                                                mwclient.moneyOrFluMessage(false, false, -1, false) +
+                                                client.moneyOrFluMessage(false, false, -1, false) +
                                                 ":", SwingConstants.TRAILING));
             baseTextField.setToolTipText("<HTML>" +
-                                               mwclient.moneyOrFluMessage(false, false, -1, false) +
+                                               client.moneyOrFluMessage(false, false, -1, false) +
                                                " modifier for " +
                                                Unit.getWeightClassDesc(size) +
                                                " unit factory</html>");

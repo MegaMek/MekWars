@@ -12,6 +12,7 @@
 package mekwars.admin.dialog.serverConfigDialogs;
 
 import java.awt.GridLayout;
+import java.io.Serial;
 
 import javax.swing.BorderFactory;
 import javax.swing.BoxLayout;
@@ -24,9 +25,9 @@ import javax.swing.JTextField;
 import javax.swing.SwingConstants;
 import javax.swing.border.EtchedBorder;
 
-import client.MWClient;
-import common.Unit;
-import common.VerticalLayout;
+import mekwars.common.Unit;
+import mekwars.common.VerticalLayout;
+import mekwars.common.campaign.clientutils.protocol.IClient;
 
 /**
  * @author Spork
@@ -37,12 +38,10 @@ public class AutoProdPanel extends JPanel {
     /**
      *
      */
+    @Serial
     private static final long serialVersionUID = -2593134010133363970L;
 
-    private JTextField baseTextField = new JTextField(5);
-    private JCheckBox BaseCheckBox = new JCheckBox();
-
-    public AutoProdPanel(MWClient mwclient) {
+    public AutoProdPanel(IClient client) {
         super();
         /*
          * AutoProduction Panel
@@ -62,13 +61,12 @@ public class AutoProdPanel extends JPanel {
         apTypeNew.setName("UseAutoProdNew");
         autoProdType.add(apTypeNew);
 
-
         JPanel selectionPanel = new JPanel();
         selectionPanel.setBorder(BorderFactory.createEtchedBorder(EtchedBorder.RAISED));
         selectionPanel.add(apTypeClassic);
         selectionPanel.add(apTypeNew);
 
-        if (Boolean.parseBoolean(mwclient.getserverConfigs("UseAutoProdNew"))) {
+        if (Boolean.parseBoolean(client.getserverConfigs("UseAutoProdNew"))) {
             apTypeClassic.setSelected(false);
             apTypeNew.setSelected(true);
         } else {
@@ -76,7 +74,6 @@ public class AutoProdPanel extends JPanel {
             apTypeClassic.setSelected(true);
         }
 
-        //selectionPanel.setPreferredSize(new Dimension(selectionPanel.getMinimumSize()));
         JPanel apTopPanel = new JPanel();
         apTopPanel.add(selectionPanel);
 
@@ -87,9 +84,8 @@ public class AutoProdPanel extends JPanel {
         JLabel l = new JLabel("Classic AP");
         apClassicPanel.add(l);
         JPanel apClassicBoxPanel = new JPanel();
-        //apClassicBoxPanel.setLayout(new BoxLayout(apClassicBoxPanel, BoxLayout.X_AXIS));
 
-        baseTextField = new JTextField(5);
+        JTextField baseTextField = new JTextField(5);
         apClassicBoxPanel.add(new JLabel("Lights to AP:", SwingConstants.TRAILING));
         baseTextField.setToolTipText(
               "Number of units worth of stored components to trigger an AP attempt for light units");
@@ -164,6 +160,7 @@ public class AutoProdPanel extends JPanel {
                 if (j == 0) {
                     apNewBoxPanel.add(new JLabel(Unit.getTypeClassDesc(i)));
                 }
+                
                 baseTextField = new JTextField();
                 baseTextField.setName("APAtMax" + Unit.getWeightClassDesc(j) + Unit.getTypeClassDesc(i));
                 baseTextField.setToolTipText("Number of units worth of stored components to trigger an AP attempt for " +
@@ -190,17 +187,17 @@ public class AutoProdPanel extends JPanel {
         JPanel checkBoxPanel = new JPanel();
         checkBoxPanel.setBorder(BorderFactory.createEtchedBorder());
         checkBoxPanel.add(new JLabel("Scrap Oldest Units First:", SwingConstants.TRAILING));
-        BaseCheckBox = new JCheckBox();
-        BaseCheckBox.setName("ScrapOldestUnitsFirst");
-        BaseCheckBox.setToolTipText(
+        JCheckBox baseCheckBox = new JCheckBox();
+        baseCheckBox.setName("ScrapOldestUnitsFirst");
+        baseCheckBox.setToolTipText(
               "<html>If checked, bay units will be scrapped/sold in order of unitID<br>If not checked, the unit chosen will be random.</html>");
-        checkBoxPanel.add(BaseCheckBox);
+        checkBoxPanel.add(baseCheckBox);
 
-        BaseCheckBox = new JCheckBox();
-        BaseCheckBox.setName("OnlyUseOriginalFactoriesForAutoprod");
-        BaseCheckBox.setToolTipText("<html>If checked, autoproduction will only happen from originally-owned factories.");
+        baseCheckBox = new JCheckBox();
+        baseCheckBox.setName("OnlyUseOriginalFactoriesForAutoprod");
+        baseCheckBox.setToolTipText("<html>If checked, autoproduction will only happen from originally-owned factories.");
         checkBoxPanel.add(new JLabel("Restrict Autoproduction to Faction-original factories"));
-        checkBoxPanel.add(BaseCheckBox);
+        checkBoxPanel.add(baseCheckBox);
 
         add(apTopPanel);
         add(apMiddlePanel);

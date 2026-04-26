@@ -4,7 +4,7 @@ import java.util.Enumeration;
 import java.util.Iterator;
 import java.util.List;
 
-import megamek.common.Entity;
+import megamek.common.units.Entity;
 
 public interface GameInterface {
     List<String> getWinners();

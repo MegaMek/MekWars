@@ -16,6 +16,7 @@
 
 package mekwars.admin.dialog.serverConfigDialogs;
 
+import java.io.Serial;
 import javax.swing.BoxLayout;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
@@ -23,19 +24,18 @@ import javax.swing.JTextField;
 import javax.swing.SpringLayout;
 import javax.swing.SwingConstants;
 
-import client.MWClient;
-import common.util.SpringLayoutHelper;
+import mekwars.common.campaign.clientutils.protocol.IClient;
+import mekwars.common.util.SpringLayoutHelper;
 
 public class InfluencePanel extends JPanel {
 
     /**
      *
      */
+    @Serial
     private static final long serialVersionUID = -5359808432287239311L;
 
-    private JTextField baseTextField = new JTextField(5);
-
-    public InfluencePanel(MWClient mwclient) {
+    public InfluencePanel(IClient client) {
         super();
         /*
          * INFLUENCE PANEL CONSTRUCTION Influence panel, where admins set influence gain controls (bv limits, etc) and action costs (bm bid, attack, and so on). Use nested layouts. A Box containing a Flow, which in turn contains two Springs
@@ -50,10 +50,10 @@ public class InfluencePanel extends JPanel {
         influenceFlowPanel.add(influenceSpring2);
 
         // load spring1 first
-        baseTextField = new JTextField(5);
-        influenceSpring1.add(new JLabel("Max Player " + mwclient.moneyOrFluMessage(false, false, -1) + ":",
+        JTextField baseTextField = new JTextField(5);
+        influenceSpring1.add(new JLabel("Max Player " + client.moneyOrFluMessage(false, false, -1) + ":",
               SwingConstants.TRAILING));
-        baseTextField.setToolTipText(mwclient.moneyOrFluMessage(false, false, -1) + " ceiling");
+        baseTextField.setToolTipText(client.moneyOrFluMessage(false, false, -1) + " ceiling");
         baseTextField.setName("InfluenceCeiling");
         influenceSpring1.add(baseTextField);
 
@@ -64,7 +64,7 @@ public class InfluencePanel extends JPanel {
         influenceSpring1.add(baseTextField);
 
         baseTextField = new JTextField(5);
-        influenceSpring1.add(new JLabel("Min Time for " + mwclient.moneyOrFluMessage(false, true, -1) + ":",
+        influenceSpring1.add(new JLabel("Min Time for " + client.moneyOrFluMessage(false, true, -1) + ":",
               SwingConstants.TRAILING));
         baseTextField.setToolTipText("Minimum active time to receive flu @ check.");
         baseTextField.setName("InfluenceTimeMin");
@@ -77,29 +77,23 @@ public class InfluencePanel extends JPanel {
         influenceSpring1.add(baseTextField);
 
         baseTextField = new JTextField(5); //@salient
-        influenceSpring1.add(new JLabel(mwclient.moneyOrFluMessage(true, true, -1) +
+        influenceSpring1.add(new JLabel(client.moneyOrFluMessage(true, true, -1) +
                                               " per " +
-                                              mwclient.moneyOrFluMessage(false, true, -1), SwingConstants.TRAILING));
+                                              client.moneyOrFluMessage(false, true, -1), SwingConstants.TRAILING));
         baseTextField.setToolTipText(
               "The ability to convert Flu to CB and the number of CB given per 1 flu. Disabled if set to zero. ");
         baseTextField.setName("Cbills_Per_Flu");
         influenceSpring1.add(baseTextField);
 
         baseTextField = new JTextField(5); //@salient
-        influenceSpring1.add(new JLabel(mwclient.moneyOrFluMessage(false, true, -1) + " to refresh",
+        influenceSpring1.add(new JLabel(client.moneyOrFluMessage(false, true, -1) + " to refresh",
               SwingConstants.TRAILING));
         baseTextField.setToolTipText("The amount of " +
-                                           mwclient.moneyOrFluMessage(false, true, -1) +
+                                           client.moneyOrFluMessage(false, true, -1) +
                                            " needed to refresh a factory. Disabled if set to zero.");
         baseTextField.setName("FluToRefreshFactory");
         influenceSpring1.add(baseTextField);
-
-        //		baseTextField = new JTextField(5);
-        //		influenceSpring1.add(new JLabel("Repod Cost:", SwingConstants.TRAILING));
-        //		baseTextField.setToolTipText("<html>Set to 0 to disable.<br>How much flu needed to repod omni mech<br>Random repods costs 1/2 this value</html>");
-        //		baseTextField.setName("FluToRepod");
-        //		influenceSpring1.add(baseTextField);
-
+        
         SpringLayoutHelper.setupSpringGrid(influenceSpring1, 2);
 
         // then set up spring2
@@ -116,10 +110,10 @@ public class InfluencePanel extends JPanel {
         influenceSpring2.add(baseTextField);
 
         baseTextField = new JTextField(5);
-        influenceSpring2.add(new JLabel(mwclient.moneyOrFluMessage(false, true, -1) + " Per Army:",
+        influenceSpring2.add(new JLabel(client.moneyOrFluMessage(false, true, -1) + " Per Army:",
               SwingConstants.TRAILING));
         baseTextField.setToolTipText("Base amount of " +
-                                           mwclient.moneyOrFluMessage(false, false, -1) +
+                                           client.moneyOrFluMessage(false, false, -1) +
                                            " given for each army");
         baseTextField.setName("BaseInfluence");
         influenceSpring2.add(baseTextField);

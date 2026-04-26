@@ -20,43 +20,18 @@ import java.io.File;
 
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.MarkerManager;
-// import org.mekwars.libpk.logging.PKLogManager;
 import org.apache.logging.log4j.Marker;
+import org.apache.logging.log4j.MarkerManager;
 
 
 public final class MWLogger {// final - no extension of the server logger
 
     private File logDir;
-    // private static PKLogManager logmanager = null;
+    // private static PKLogManager log manager = null;
     private static MWLogger logger = null;
 
     private MWLogger() {
-
-        // logmanager = PKLogManager.getInstance();
-        // logDir = new File("logs");
         LogManager.getLogger().info("MWLogger Started");
-    //     if (!logDir.exists()) {
-    //         try {
-    //             if (!logDir.mkdirs()) {
-    //                 System.err.println("WARNING: logging directory cannot be created!");
-    //                 System.err.println("WARNING: disabling log subsystem");
-    //                 return;
-    //             }
-    //         } catch (Exception e) {
-    //             e.printStackTrace();
-    //         }
-    //     } else if (!logDir.isDirectory()) {
-    //         System.err.println("WARNING: logging directory is not a directory!");
-    //         System.err.println("WARNING: disabling log subsystem");
-    //         return;
-    //     }
-
-    //     if (!logDir.canWrite()) {
-    //         System.err.println("WARNING: cannot write in logging directory!");
-    //         System.err.println("WARNING: disabling log subsystem");
-    //         return;
-    //     }
     }
 
     public static MWLogger getInstance() {
@@ -67,7 +42,7 @@ public final class MWLogger {// final - no extension of the server logger
     }
 
     public static void errLog(String message) {
-       LogManager.getLogger().error(message);
+        LogManager.getLogger().error(message);
     }
 
     public static void mainLog(String message) {
@@ -83,7 +58,7 @@ public final class MWLogger {// final - no extension of the server logger
     }
 
     public static void ipLog(String message) {
-        LogManager.getLogger().info( message);
+        LogManager.getLogger().info(message);
     }
 
     public static void cmdLog(String message) {
@@ -129,6 +104,7 @@ public final class MWLogger {// final - no extension of the server logger
     public static void bmLog(Exception e) {
         LogManager.getLogger().info(e);
     }
+
     public static void resultsLog(String message) {
         final Marker results = MarkerManager.getMarker("resutlsLog");
         LogManager.getLogger().info(results, message);
@@ -188,7 +164,7 @@ public final class MWLogger {// final - no extension of the server logger
     }
 
     public static void factionLog(String factionName, Exception e) {
-        final Marker factiondebug = MarkerManager.getMarker(factionName);
-        LogManager.getLogger().debug(factiondebug, e.getMessage());
+        final Marker factionDebug = MarkerManager.getMarker(factionName);
+        LogManager.getLogger().debug(factionDebug, e.getMessage());
     }
 }

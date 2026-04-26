@@ -11,6 +11,7 @@
 
 package mekwars.admin.dialog.serverConfigDialogs;
 
+import java.io.Serial;
 import javax.swing.BoxLayout;
 import javax.swing.JCheckBox;
 import javax.swing.JLabel;
@@ -19,7 +20,7 @@ import javax.swing.JTextField;
 import javax.swing.SpringLayout;
 import javax.swing.SwingConstants;
 
-import common.util.SpringLayoutHelper;
+import mekwars.common.util.SpringLayoutHelper;
 
 /**
  * @author Spork
@@ -30,9 +31,8 @@ public class VotingPanel extends JPanel {
     /**
      *
      */
+    @Serial
     private static final long serialVersionUID = -7561000786384497587L;
-    private JTextField baseTextField = new JTextField(5);
-    private JCheckBox BaseCheckBox = new JCheckBox();
 
     public VotingPanel() {
         /*
@@ -43,14 +43,14 @@ public class VotingPanel extends JPanel {
         JPanel voteSpring = new JPanel(new SpringLayout());
 
         // set up voting CBox
-        BaseCheckBox = new JCheckBox("Enable Voting");
+        JCheckBox baseCheckBox = new JCheckBox("Enable Voting");
 
-        BaseCheckBox.setToolTipText("If checked, players are able to cast votes.");
-        BaseCheckBox.setName("VotingEnabled");
-        voteBoxPanel.add(BaseCheckBox);
+        baseCheckBox.setToolTipText("If checked, players are able to cast votes.");
+        baseCheckBox.setName("VotingEnabled");
+        voteBoxPanel.add(baseCheckBox);
 
         // set up vote spring
-        baseTextField = new JTextField(5);
+        JTextField baseTextField = new JTextField(5);
         voteSpring.add(new JLabel("Base Votes:", SwingConstants.TRAILING));
         baseTextField.setToolTipText("Starting number of votes");
         baseTextField.setName("StartingVotes");

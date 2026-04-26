@@ -16,13 +16,14 @@
 
 package mekwars.hpgnet;
 
+import java.io.Serial;
+import java.io.Serializable;
 import java.time.Instant;
 import java.time.Period;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.Date;
-import java.util.Iterator;
 
 import com.google.common.collect.EvictingQueue;
 import com.google.gson.annotations.Expose;
@@ -35,49 +36,50 @@ import com.google.gson.annotations.Expose;
  *
  */
 
-public class HPGSubscriber implements Comparable<HPGSubscriber> {
+public class HPGSubscriber implements Comparable<HPGSubscriber>, Serializable {
 
+    @Serial
     @Expose(serialize = false, deserialize = false)
     private static final long serialVersionUID = -6353737452488309978L;
-    @Expose(serialize = true, deserialize = true)
+    @Expose()
     private String name;
-    @Expose(serialize = true, deserialize = true)
+    @Expose()
     private String url;
-    @Expose(serialize = true, deserialize = true)
+    @Expose()
     private String description;
-    @Expose(serialize = true, deserialize = true)
+    @Expose()
     private EvictingQueue<Integer> historicalPlayers;
-    @Expose(serialize = true, deserialize = true)
+    @Expose()
     private EvictingQueue<Integer> historicalGames;
-    @Expose(serialize = true, deserialize = true)
+    @Expose()
     private EvictingQueue<Integer> historicalCompletedGames;
-    @Expose(serialize = true, deserialize = true)
+    @Expose()
     private int maxPlayers;
-    @Expose(serialize = true, deserialize = true)
+    @Expose()
     private int maxGames;
     @Expose(serialize = false, deserialize = false)
     private int currentPlayers;
     @Expose(serialize = false, deserialize = false)
     private int currentGames;
-    @Expose(serialize = true, deserialize = true)
+    @Expose()
     private int port;  // The port over which inter-server mail will happen
-    @Expose(serialize = true, deserialize = true)
+    @Expose()
     private String ipAddress;
-    @Expose(serialize = true, deserialize = true)
+    @Expose()
     private String domain; // the part after the user name when sending inter-server mail
-    @Expose(serialize = true, deserialize = true)
+    @Expose()
     private Date lastUpdated;
     @Expose(serialize = false, deserialize = false)
     private String trackerEntry;
-    @Expose(serialize = true, deserialize = true)
+    @Expose()
     private String MWVersion;
-    @Expose(serialize = true, deserialize = true)
+    @Expose()
     private String uuid;
-    @Expose(serialize = true, deserialize = true)
+    @Expose()
     private String password;
-    @Expose(serialize = true, deserialize = true)
+    @Expose()
     private boolean isLegacy = false;
-    @Expose(serialize = true, deserialize = true)
+    @Expose()
     private int totalGames;
     @Expose(serialize = false, deserialize = false)
     private int threatLevel;
@@ -391,7 +393,6 @@ public class HPGSubscriber implements Comparable<HPGSubscriber> {
     /**
      * Adds a game to the CompletedGames EvictingQueue
      *
-     * @param completedGames
      */
     public void addHistoricalCompletedGamesElement(int completedGames) {
         historicalCompletedGames.add(completedGames);
@@ -401,7 +402,6 @@ public class HPGSubscriber implements Comparable<HPGSubscriber> {
     /**
      * Adds a game to the EvictingQueue
      *
-     * @param games
      */
     public void addHistoricalGamesElement(int games) {
         historicalGames.add(games);
@@ -411,7 +411,6 @@ public class HPGSubscriber implements Comparable<HPGSubscriber> {
     /**
      * Adds a player entry to the EvictingQueue
      *
-     * @param players
      */
     public void addHistoricalPlayersElement(int players) {
         historicalPlayers.add(players);
@@ -423,10 +422,11 @@ public class HPGSubscriber implements Comparable<HPGSubscriber> {
      */
     private void calculateMaxPlayers() {
         int max = 0;
-        Iterator<Integer> iter = historicalPlayers.iterator();
-        while (iter.hasNext()) {
-            max = Math.max(max, iter.next());
+
+        for (Integer historicalPlayer : historicalPlayers) {
+            max = Math.max(max, historicalPlayer);
         }
+
         setMaxPlayers(max);
     }
 
@@ -435,10 +435,11 @@ public class HPGSubscriber implements Comparable<HPGSubscriber> {
      */
     private void calculateMaxGames() {
         int max = 0;
-        Iterator<Integer> iter = historicalGames.iterator();
-        while (iter.hasNext()) {
-            max = Math.max(max, iter.next());
+
+        for (Integer historicalGame : historicalGames) {
+            max = Math.max(max, historicalGame);
         }
+
         setMaxGames(max);
     }
 
@@ -447,10 +448,11 @@ public class HPGSubscriber implements Comparable<HPGSubscriber> {
      */
     private void calculateCompletedGames() {
         int total = 0;
-        Iterator<Integer> iter = historicalCompletedGames.iterator();
-        while (iter.hasNext()) {
-            total += iter.next();
+
+        for (Integer historicalCompletedGame : historicalCompletedGames) {
+            total += historicalCompletedGame;
         }
+
         setTotalGames(total);
     }
 
@@ -477,6 +479,7 @@ public class HPGSubscriber implements Comparable<HPGSubscriber> {
     public void generateHTMLString() {
         StringBuilder sb = new StringBuilder();
         sb.append("<tr class='");
+
         if (getThreatLevel() == THREAT_LEVEL_RED) {
             sb.append("red");
         } else if (getThreatLevel() == THREAT_LEVEL_YELLOW) {
@@ -486,15 +489,15 @@ public class HPGSubscriber implements Comparable<HPGSubscriber> {
         } else {
             sb.append("green");
         }
+
         sb.append("'>");
-        sb.append("<td><a href=\"" + getUrl() + "\">" + getName() + "</a></td>");
+        sb.append("<td><a href=\"").append(getUrl()).append("\">").append(getName()).append("</a></td>");
         sb.append(buildColumn(getMWVersion()));
         sb.append(buildColumn(Integer.toString(getCurrentPlayers())));
         sb.append(buildColumn(Integer.toString(getCurrentGames())));
         sb.append(buildColumn(Integer.toString(getMaxPlayers())));
         sb.append(buildColumn(Integer.toString(getTotalGames())));
         sb.append(buildColumn(getDescription()));
-        //sb.append(buildColumn(getLastUpdated().toString()));
         sb.append(buildDateColumn(getLastUpdated().toString()));
         sb.append("</tr>\n");
         setTrackerEntry(sb.toString());
@@ -521,9 +524,6 @@ public class HPGSubscriber implements Comparable<HPGSubscriber> {
     /**
      * Another helper method. This puts in images that will get hidden based on what the threat level is.
      *
-     * @param data
-     *
-     * @return
      */
     private String buildDateColumn(String data) {
         int purgeDays = Integer.parseInt((String) tracker.getConfig().get("purgedays"));
@@ -572,9 +572,9 @@ public class HPGSubscriber implements Comparable<HPGSubscriber> {
         ZoneId zoneId = ZoneId.systemDefault();
         ZonedDateTime subDate = ZonedDateTime.ofInstant(getLastUpdated().toInstant(), zoneId);
         ZonedDateTime zdt = ZonedDateTime.ofInstant(instant, zoneId);
-        ZonedDateTime firstWarn = zdt.minus(firstWarnDays, ChronoUnit.DAYS);
-        ZonedDateTime lastWarn = zdt.minus(lastWarnDays, ChronoUnit.DAYS);
-        ZonedDateTime purge = zdt.minus(purgeDays, ChronoUnit.DAYS);
+        ZonedDateTime firstWarn = zdt.minusDays(firstWarnDays);
+        ZonedDateTime lastWarn = zdt.minusDays(lastWarnDays);
+        ZonedDateTime purge = zdt.minusDays(purgeDays);
 
         if (subDate.isBefore(purge)) {
             setThreatLevel(THREAT_LEVEL_PURGE);
@@ -585,7 +585,5 @@ public class HPGSubscriber implements Comparable<HPGSubscriber> {
         } else {
             setThreatLevel(THREAT_LEVEL_NONE);
         }
-
     }
-
 }

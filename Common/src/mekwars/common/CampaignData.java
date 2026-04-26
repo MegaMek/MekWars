@@ -26,16 +26,15 @@ import java.util.Properties;
 import java.util.TreeMap;
 import java.util.Vector;
 
-import common.util.BinReader;
-import common.util.BinWriter;
-import common.util.MWLogger;
-import megamek.common.AmmoType;
+import megamek.common.equipment.AmmoType;
+import mekwars.common.persistence.BinReader;
+import mekwars.common.persistence.BinWriter;
+import mekwars.common.util.MWLogger;
 
 
 /**
- * TODO: It seems, that all operations done here are needed independly of the
- * semantic of the underlying structure. Planets are handled equal to factions
- * and each function is doubled. If this is true, it should be managed in an
+ * TODO: It seems, that all operations done here are needed independent of the semantic of the underlying structure.
+ * Planets are handled equal to factions and each function is doubled. If this is true, it should be managed in an
  * generic way to reduce code bloat and code replication.
  * <p>
  * Campaign is the base of the data holding classes for client and server. Here
@@ -43,50 +42,49 @@ import megamek.common.AmmoType;
  * stored.
  * <p>
  * In this base class some methods are provided to retrieve these informations
- * to use in common data classes like House or Planet when reffering to
- * ressources.
+ * to use in common data classes like House or Planet when referring to
+ * resources.
  * <p>
  * Notice: Please read the doc to binOut before adding new data types.
  *
  * @author Imi (immanuel.scholz@gmx.de)
  */
-public class CampaignData implements common.TerrainProvider {
+public class CampaignData implements TerrainProvider {
 
     public static CampaignData cd;
-    //public static final PKLogManager mwlog = PKLogManager.getInstance();
 
     /**
      * All different Houses are stored here. key=Integer (id), value=House
      */
-    private TreeMap<Integer, common.House> factions = new TreeMap<Integer, common.House>();
+    private final TreeMap<Integer, House> factions = new TreeMap<>();
 
     /**
      * All different House ids are stored here key=String (name), value=int id
      */
-    private TreeMap<String, Integer> factionid = new TreeMap<String, Integer>();
+    private final TreeMap<String, Integer> factionID = new TreeMap<>();
 
     /**
      * This is a list with all planet information stored. key=Integer (id), value=Planet (or subclasses for server and
      * client)
      */
-    private TreeMap<Integer, common.Planet> planets = new TreeMap<Integer, common.Planet>();
+    private final TreeMap<Integer, Planet> planets = new TreeMap<>();
 
     /**
      * This is a list with planet id stored. key=String (name), value=int id
      */
-    private TreeMap<String, Integer> planetid = new TreeMap<String, Integer>();
+    private final TreeMap<String, Integer> planetID = new TreeMap<>();
 
     /**
      * List of all terrains that can occur on surfaces of planets.
      */
-    private ArrayList<common.Terrain> terrains = new ArrayList<common.Terrain>();
-    private ArrayList<AdvancedTerrain> advTerrains = new ArrayList<AdvancedTerrain>();
+    private final ArrayList<Terrain> terrains = new ArrayList<>();
+    private final ArrayList<AdvancedTerrain> advTerrains = new ArrayList<>();
 
 
-    private Hashtable<String, String> ServerBannedAmmo = new Hashtable<String, String>();
-    private Vector<Integer> bannedTargetingSystems = new Vector<Integer>();
-    private Hashtable<String, Integer> commands = new Hashtable<String, Integer>();
-    private TreeMap<String, String> planetOpFlags = new TreeMap<String, String>();
+    private Hashtable<String, String> ServerBannedAmmo = new Hashtable<>();
+    private Vector<Integer> bannedTargetingSystems = new Vector<>();
+    private Hashtable<String, Integer> commands = new Hashtable<>();
+    private final TreeMap<String, String> planetOpFlags = new TreeMap<>();
 
     private Properties serverConfigs = new Properties();
 
@@ -97,7 +95,7 @@ public class CampaignData implements common.TerrainProvider {
      *
      * @return The requested Planet. This is usually a subclass of Planet.
      */
-    public common.Planet getPlanet(int id) {
+    public Planet getPlanet(int id) {
         return planets.get(id);
     }
 
@@ -105,14 +103,13 @@ public class CampaignData implements common.TerrainProvider {
      * Retrieve a planet by its name. Please try to use planet Id's when lookup for a planet instead (if you have the
      * choice).
      */
-    public common.Planet getPlanetByName(String name) {
+    public Planet getPlanetByName(String name) {
 
         try {
-            Integer planetID = planetid.get(name.toLowerCase());
+            Integer planetID = this.planetID.get(name.toLowerCase());
             return getPlanet(planetID);
         } catch (Exception ex) {
             MWLogger.errLog("Looking for planet: " + name);
-            // MWLogger.errLog(ex);
             return null;
         }
     }
@@ -121,8 +118,8 @@ public class CampaignData implements common.TerrainProvider {
      * @author jtighe Retrieve a factory by its name.
      *
      */
-    public common.UnitFactory getFactoryByName(common.Planet p, String name) {
-        for (common.UnitFactory e : p.getUnitFactories()) {
+    public UnitFactory getFactoryByName(Planet planet, String name) {
+        for (UnitFactory e : planet.getUnitFactories()) {
             if (e.getName().equalsIgnoreCase(name)) {
                 return e;
             }
@@ -131,28 +128,27 @@ public class CampaignData implements common.TerrainProvider {
     }
 
     /**
-     * @param planet
-     * @param Factory Updates the Client side factories Useful for the factory Refresh with RP
+     * @param factory Updates the Client side factories Useful for the factory Refresh with RP
      *
      * @author Torren (Jason Tighe)
      */
-    public void updateFactoryTick(String planet, String factory, int tick) {
-        common.Planet p = getPlanetByName(planet);
-        common.UnitFactory unitFactory = getFactoryByName(p, factory);
+    public void updateFactoryTick(String planetString, String factory, int tick) {
+        Planet planet = getPlanetByName(planetString);
+        UnitFactory unitFactory = getFactoryByName(planet, factory);
         unitFactory.setTicksUntilRefresh(tick);
     }
 
     /**
      * Check if the planet name was only partial and complete it..
      */
-    public common.Planet getPlanetByPartialName(String name) {
-        for (common.Planet p : getAllPlanets()) {
-            if (p.getName().equals(name)) {
-                return p;
+    public Planet getPlanetByPartialName(String name) {
+        for (Planet planet : getAllPlanets()) {
+            if (planet.getName().equals(name)) {
+                return planet;
             }
 
-            if (p.getName().indexOf(name) != -1) {
-                return p;
+            if (planet.getName().contains(name)) {
+                return planet;
             }
         }
         return null;
@@ -161,7 +157,7 @@ public class CampaignData implements common.TerrainProvider {
     /**
      * Retrieves all planets.
      */
-    public Collection<common.Planet> getAllPlanets() {
+    public Collection<Planet> getAllPlanets() {
         return planets.values();
     }
 
@@ -169,15 +165,16 @@ public class CampaignData implements common.TerrainProvider {
      * Adds a planet to the campaign storage. If it was already within the storage, it replaces the old object.
      *
      * @param planet The planet to hold.
-     *
-     * @see You should use XStream to initialize CampaignData
+     *               <p>
+     *               see You should use XStream to initialize CampaignData
      */
-    public void addPlanet(common.Planet planet) {
+    public void addPlanet(Planet planet) {
         if (planet.getId() == -1) {
             planet.setId(getUnusedPlanetID());
         }
+
         planets.put(planet.getId(), planet);
-        planetid.put(planet.getName().toLowerCase(), planet.getId());
+        planetID.put(planet.getName().toLowerCase(), planet.getId());
     }
 
     /**
@@ -186,7 +183,7 @@ public class CampaignData implements common.TerrainProvider {
      * @param id The id of the blown up planet.
      */
     public void removePlanet(int id) {
-        planetid.remove(getPlanet(id).getName().toLowerCase());
+        planetID.remove(getPlanet(id).getName().toLowerCase());
         planets.remove(id);
     }
 
@@ -201,13 +198,13 @@ public class CampaignData implements common.TerrainProvider {
      * Retrieve an unused id for planets.
      *
      * @return An Planet id not used yet.
-     *
-     * @TODO There should be no need for such function, since ID's should extracted from ressource files. This
-     *       function will vanish if ids are part of the ressource.
+     *       <p>
+     *                                                                                                                                                                                                                                                       TODO There should be no need for such function, since ID's should extracted from resource files. This
+     *                                                                                                                                                                                                                                                             function will vanish if ids are part of the resource.
      */
     public int getUnusedPlanetID() {
         int id = 0;
-        while (planets.keySet().contains(id)) {
+        while (planets.containsKey(id)) {
             id++;
         }
         return id;
@@ -220,40 +217,39 @@ public class CampaignData implements common.TerrainProvider {
      *
      * @return The requested faction.
      */
-    public common.House getHouse(int ID) {
-        return factions.get(ID);
+    public House getHouse(int id) {
+        return factions.get(id);
     }
 
     /**
      * Retrieves all factions.
      */
-    public Collection<common.House> getAllHouses() {
+    public Collection<House> getAllHouses() {
         return factions.values();
     }
 
     /**
      * Adds a faction to the campaign storage. If it was already within the storage, it replaces the old object.
      *
-     * @param planet The faction to hold.
-     *
-     * @TODO You should use XStream to initialize CampaignData
+     * @param faction The faction to hold.
+     *                <p>
+     *                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            TODO You should use XStream to initialize CampaignData
      */
-    public void addHouse(common.House faction) {
+    public void addHouse(House faction) {
         if (faction.getId() == -1 && !faction.getName().equalsIgnoreCase("None")) {
             faction.setId(getUnusedHouseID());
         }
         factions.put(faction.getId(), faction);
-        factionid.put(faction.getName().toLowerCase(), faction.getId());
+        factionID.put(faction.getName().toLowerCase(), faction.getId());
     }
 
     /**
      * Remove a house from the server this is normally only for single faction servers
      *
-     * @param Integer id
      */
     public void removeHouse(int id) {
         String factionName = getHouse(id).getName().toLowerCase();
-        factionid.remove(factionName);
+        factionID.remove(factionName);
         factions.remove(id);
 
         File factionFile = new File("./campaign/factions/" + factionName + ".dat");
@@ -269,18 +265,13 @@ public class CampaignData implements common.TerrainProvider {
 
     /**
      * Retrieve a faction by its name.
-     *
-     * @param name
-     *
-     * @return
-     *
-     * @TODO This seems to be only needed, because some serialization work with transmitting the factions name
+     * <p>
+     * TODO This seems to be only needed, because some serialization work with transmitting the factions name
      *       instead of its id.
      */
-    public common.House getHouseByName(String name) {
+    public House getHouseByName(String name) {
         try {
-            common.House h = getHouse(factionid.get(name.toLowerCase()));
-            return h;
+            return getHouse(factionID.get(name.toLowerCase()));
         } catch (Exception ex) {
             return null;
         }
@@ -297,14 +288,14 @@ public class CampaignData implements common.TerrainProvider {
      * Retrieve an unused id for factions.
      *
      * @return An House id not used yet.
-     *
-     * @TODO There should be no need for such function, since ID's should extracted from ressource files. This
-     *       function will vanish if ids are part of the ressource.
+     *       <p>
+     *                         TODO There should be no need for such function, since ID's should extracted from resource files. This
+     *                               function will vanish if ids are part of the resource.
      */
     public int getUnusedHouseID() {
         int id = -1;
-        int hid = 0;
-        for (common.House e : factions.values()) {
+        int hid;
+        for (House e : factions.values()) {
             hid = e.getId();
             if (hid > id) {
                 id = hid;
@@ -321,9 +312,9 @@ public class CampaignData implements common.TerrainProvider {
      */
     public int getUnusedTerrainID() {
         int id = -1;
-        int hid = -1;
-        for (common.Terrain e : terrains) {
-            hid = e.getId();
+        int hid;
+        for (Terrain terrain : terrains) {
+            hid = terrain.getId();
             if (hid > id) {
                 id = hid;
             }
@@ -333,7 +324,7 @@ public class CampaignData implements common.TerrainProvider {
     }
 
     /**
-     * Retrieve an unused id for advterrains. Only used upon start up of a new server using XML files.
+     * Retrieve an unused id for adv terrains. Only used upon start up of a new server using XML files.
      *
      * @return An terrain id not used yet.
      */
@@ -352,7 +343,7 @@ public class CampaignData implements common.TerrainProvider {
 
     /**
      * Since I have no idea how TinyXML is operating and since McWizard does not allow me to use my loved JDom and
-     * finally since Enkel does not like XML-Transfer anyway, I use this to encode/decode the whole object.. (Imi)
+     * finally, since Enkel does not like XML-Transfer anyway, I use this to encode/decode the whole object.. (Imi)
      * <p>
      * There is another aspect of binOut to keep in mind. Since a MD5 hash is build after each differential update to
      * keep the data in sync, this function has to provide THE SAME output each time it is run, regardless of the
@@ -372,11 +363,11 @@ public class CampaignData implements common.TerrainProvider {
     /**
      * Outputs all factions
      *
-     * @see CampaignData.binOut()
+     * @see CampaignData#binOut(BinWriter)
      */
     public void binHousesOut(BinWriter out) throws IOException {
         out.println(factions.size(), "factions.size");
-        for (common.House house : factions.values()) {
+        for (House house : factions.values()) {
             house.binOut(out);
         }
     }
@@ -384,11 +375,11 @@ public class CampaignData implements common.TerrainProvider {
     /**
      * Outputs updated houses
      *
-     * @see CampaignData.binOut()
+     * @see CampaignData#binOut(BinWriter)
      */
-    public void binHousesOut(ArrayList<common.House> houses, BinWriter out) throws IOException {
+    public void binHousesOut(ArrayList<House> houses, BinWriter out) throws IOException {
         out.println(houses.size(), "houses.size");
-        for (common.House house : houses) {
+        for (House house : houses) {
             house.binOut(out);
         }
     }
@@ -396,11 +387,11 @@ public class CampaignData implements common.TerrainProvider {
     /**
      * Outputs all terrains
      *
-     * @see CampaignData.binOut()
+     * @see CampaignData#binOut(BinWriter)
      */
     public void binTerrainsOut(BinWriter out) throws IOException {
         out.println(terrains.size(), "terrains.size");
-        for (common.Terrain pe : terrains) {
+        for (Terrain pe : terrains) {
             pe.binOut(out);
         }
         out.println(advTerrains.size(), "advTerrains.size");
@@ -413,11 +404,11 @@ public class CampaignData implements common.TerrainProvider {
     /**
      * Outputs all planets
      *
-     * @see CampaignData.binOut()
+     * @see CampaignData#binOut(BinWriter)
      */
     public void binPlanetsOut(BinWriter out) throws IOException {
         out.println(planets.size(), "planets.size");
-        for (common.Planet p : planets.values()) {
+        for (Planet p : planets.values()) {
             p.binOut(out);
         }
     }
@@ -425,11 +416,11 @@ public class CampaignData implements common.TerrainProvider {
     /**
      * Outputs all planets
      *
-     * @see CampaignData.binOut()
+     * @see CampaignData#binOut(BinWriter)
      */
-    public void binPlanetsOut(ArrayList<common.Planet> planets, BinWriter out) throws IOException {
+    public void binPlanetsOut(ArrayList<Planet> planets, BinWriter out) throws IOException {
         out.println(planets.size(), "planets.size");
-        for (common.Planet planet : planets) {
+        for (Planet planet : planets) {
             planet.binOut(out);
         }
     }
@@ -439,7 +430,7 @@ public class CampaignData implements common.TerrainProvider {
      */
     public CampaignData() {
         cd = this;
-        common.PlanetEnvironments.data = this;
+        PlanetEnvironments.data = this;
     }
 
     /**
@@ -447,28 +438,28 @@ public class CampaignData implements common.TerrainProvider {
      */
     public CampaignData(BinReader in) throws IOException {
         cd = this;
-        common.PlanetEnvironments.data = this;
+        PlanetEnvironments.data = this;
         int size = in.readInt("terrains.size");
         for (int i = 0; i < size; ++i) {
-            common.Terrain pe = new common.Terrain();
-            pe.binIn(in, this);
-            addTerrain(pe);
+            Terrain terrain = new Terrain();
+            terrain.binIn(in, this);
+            addTerrain(terrain);
         }
-        int Advsize = in.readInt("advTerrains.size");
-        for (int i = 0; i < Advsize; ++i) {
-            AdvancedTerrain pe = new AdvancedTerrain();
-            pe.binIn(in);
-            addAdvancedTerrain(pe);
+        int advTerrainSize = in.readInt("advTerrains.size");
+        for (int i = 0; i < advTerrainSize; ++i) {
+            AdvancedTerrain advancedTerrain = new AdvancedTerrain();
+            advancedTerrain.binIn(in);
+            addAdvancedTerrain(advancedTerrain);
         }
 
         size = in.readInt("factions.size");
         for (int i = 0; i < size; ++i) {
-            addHouse(new common.House(in));
+            addHouse(new House(in));
         }
 
         size = in.readInt("planets.size");
         for (int i = 0; i < size; ++i) {
-            addPlanet(new common.Planet(in, factions, this));
+            addPlanet(new Planet(in, factions, this));
         }
     }
 
@@ -478,16 +469,16 @@ public class CampaignData implements common.TerrainProvider {
      * @param changesSinceLastRefresh A map to hold the change in planet ids that got updated this refresh. Structure is
      *                                as follows: key=planetID(Integer), value=Influences(differential)
      */
-    public void decodeMutablePlanets(BinReader in, Map<Integer, common.Influences> changesSinceLastRefresh)
+    public void decodeMutablePlanets(BinReader in, Map<Integer, Influences> changesSinceLastRefresh)
           throws IOException {
         int count = in.readInt("mutableplanetsize");
         System.out.println("retrieving " + count + " planets due differential update.");
         changesSinceLastRefresh.clear();
         for (int i = 0; i < count; ++i) {
-            int id = in.readInt("planetid");
-            common.Influences infOld = new common.Influences(getPlanet(id).getInfluence());
+            int id = in.readInt("planetID");
+            Influences infOld = new Influences(getPlanet(id).getInfluence());
             getPlanet(id).decodeMutableFields(in, this);
-            common.Influences infNew = getPlanet(id).getInfluence();
+            Influences infNew = getPlanet(id).getInfluence();
             changesSinceLastRefresh.put(id, infNew.difference(infOld));
         }
     }
@@ -500,7 +491,7 @@ public class CampaignData implements common.TerrainProvider {
     public void encodeMutablePlanets(BinWriter out, Collection<Integer> ids) throws IOException {
         out.println(ids.size(), "mutableplanetsize");
         for (Integer id : ids) {
-            out.println(id, "planetid");
+            out.println(id, "planetID");
             getPlanet(id).encodeMutableFields(out, this);
         }
     }
@@ -525,10 +516,10 @@ public class CampaignData implements common.TerrainProvider {
      */
 
     /**
-     * @see common.TerrainProvider#getTerrain(int)
+     * @see TerrainProvider#getTerrain(int)
      */
-    public common.Terrain getTerrain(int id) {
-        for (common.Terrain env : terrains) {
+    public Terrain getTerrain(int id) {
+        for (Terrain env : terrains) {
             if (env.getId() == id) {
                 return env;
             }
@@ -538,23 +529,23 @@ public class CampaignData implements common.TerrainProvider {
     }
 
     /**
-     * @see common.TerrainProvider#getAllTerrains()
+     * @see TerrainProvider#getAllTerrains()
      */
-    public Collection<common.Terrain> getAllTerrains() {
+    public Collection<Terrain> getAllTerrains() {
         return terrains;
     }
 
     /**
-     * @see common.TerrainProvider#addTerrain(common.PlanetEnvironment)
+     * @see TerrainProvider#addTerrain(PlanetEnvironment)
      */
-    public void addTerrain(common.Terrain terrain) {
+    public void addTerrain(Terrain terrain) {
         terrain.setId(getUnusedTerrainID());
         terrains.add(terrain);
         terrains.trimToSize();
     }
 
-    public common.Terrain getTerrainByName(String TerrainName) {
-        for (common.Terrain env : terrains) {
+    public Terrain getTerrainByName(String TerrainName) {
+        for (Terrain env : terrains) {
             if (env.getName().equalsIgnoreCase(TerrainName)) {
                 return env;
             }
@@ -565,7 +556,7 @@ public class CampaignData implements common.TerrainProvider {
     /*adding the advanced terrain to the campaign data*/
 
     /**
-     * @see common.TerrainProvider#getAdvancedTerrain(int)
+     * @see TerrainProvider#getAdvancedTerrain(int)
      */
     public AdvancedTerrain getAdvancedTerrain(int id) {
         for (AdvancedTerrain env : advTerrains) {
@@ -578,14 +569,14 @@ public class CampaignData implements common.TerrainProvider {
     }
 
     /**
-     * @see common.TerrainProvider#getAllTerrains()
+     * @see TerrainProvider#getAllTerrains()
      */
     public Collection<AdvancedTerrain> getAllAdvancedTerrains() {
         return advTerrains;
     }
 
     /**
-     * @see common.TerrainProvider#addTerrain(common.PlanetEnvironment)
+     * @see TerrainProvider#addTerrain(PlanetEnvironment)
      */
     public void addAdvancedTerrain(AdvancedTerrain newAdvTerrain) {
         newAdvTerrain.setId(getUnusedAdvTerrainID());
@@ -602,45 +593,6 @@ public class CampaignData implements common.TerrainProvider {
         return new AdvancedTerrain();
     }
 
-
-    /**
-     * @see common.persistence.MMNetSerializable#binOut(common.persistence.TreeWriter)
-     *
-    public void binOut(TreeWriter out) { out.write(terrains, "terrains");
-     *      out.startDataBlock("factions"); out.write(factions.size(),
-     *      "factionsCount"); for (House h : factions.values()) {
-     *      out.write(h.getClass().getName(), "factionType"); out.write(h,
-     *      "faction"); } out.endDataBlock("factions");
-     *      out.startDataBlock("planets"); out.write(factions.size(),
-     *      "planetsCount"); for (Planet p : planets.values()) {
-     *      out.write(p.getClass().getName(), "planetType"); out.write(p,
-     *      "planet"); } out.endDataBlock("planets"); }
-     */
-
-    /**
-     * @see common.persistence.MMNetSerializable#binIn(common.persistence.TreeReader)
-     *
-    public void binIn(TreeReader in, CampaignData dataProvider) throws
-     *      IOException { terrains.clear(); in.startDataBlock("factions");
-     *      factions.clear(); int size = in.readInt("factionsCount"); for (int i
-     *      = 0; i < size; ++i) { String type = in.readString("factionType");
-     *      try { House h = (House) Class.forName(type).newInstance();
-     *      in.readObject(h, this, "faction"); factions.put(new
-     *      Integer(h.getId()), h); } catch (InstantiationException e) {
-     *      MWLogger.errLog(e); } catch (IllegalAccessException e) {
-     *      MWLogger.errLog(e); } catch (ClassNotFoundException e) {
-     *      MWLogger.errLog(e); } } in.endDataBlock("factions");
-     *
-     *      in.startDataBlock("planets"); planets.clear(); size =
-     *      in.readInt("planetsCount"); for (int i = 0; i < size; ++i) { String
-     *      type = in.readString("planetsType"); try { Planet p = (Planet)
-     *      Class.forName(type).newInstance(); in.readObject(p, this, "planet");
-     *      planets.put(new Integer(p.getId()), p); } catch
-     *      (InstantiationException e) { MWLogger.errLog(e); } catch
-     *      (IllegalAccessException e) { MWLogger.errLog(e); } catch
-     *      (ClassNotFoundException e) { MWLogger.errLog(e); } }
-     *      in.endDataBlock("planets"); }
-     */
     /**
      * @return Hashtable
      *
@@ -648,71 +600,71 @@ public class CampaignData implements common.TerrainProvider {
      *       <p>
      *       this returns a hashtable of all current MM munitions 06/10/05 using the Name of the munition as the key
      */
-    public Hashtable<String, Long> getMunitionsByName() {
-        Hashtable<String, Long> munitions = new Hashtable<String, Long>();
+    public Hashtable<String, AmmoType.Munitions> getMunitionsByName() {
+        Hashtable<String, AmmoType.Munitions> munitions = new Hashtable<>();
 
-        munitions.put("Standard", AmmoType.M_STANDARD);
+        munitions.put("Standard", AmmoType.Munitions.M_STANDARD);
 
         // AC Munition Types
-        munitions.put("LBX Cluster", AmmoType.M_CLUSTER);
-        munitions.put("AC Armor Piercing", AmmoType.M_ARMOR_PIERCING);
-        munitions.put("AC Flechette", AmmoType.M_FLECHETTE);
-        munitions.put("AC Incendiary", AmmoType.M_INCENDIARY_AC);
-        munitions.put("AC Precision", AmmoType.M_PRECISION);
-        munitions.put("AC Tracer", AmmoType.M_TRACER);
+        munitions.put("LBX Cluster", AmmoType.Munitions.M_CLUSTER);
+        munitions.put("AC Armor Piercing", AmmoType.Munitions.M_ARMOR_PIERCING);
+        munitions.put("AC Flechette", AmmoType.Munitions.M_FLECHETTE);
+        munitions.put("AC Incendiary", AmmoType.Munitions.M_INCENDIARY_AC);
+        munitions.put("AC Precision", AmmoType.Munitions.M_PRECISION);
+        munitions.put("AC Tracer", AmmoType.Munitions.M_TRACER);
 
         // ATM Munition Types
-        munitions.put("ATM Extended Range", AmmoType.M_EXTENDED_RANGE);
-        munitions.put("ATM High Explosive", AmmoType.M_HIGH_EXPLOSIVE);
+        munitions.put("ATM Extended Range", AmmoType.Munitions.M_EXTENDED_RANGE);
+        munitions.put("ATM High Explosive", AmmoType.Munitions.M_HIGH_EXPLOSIVE);
 
         // LRM & SRM Munition Types
-        munitions.put("LRM/SRM Fragmentation", AmmoType.M_FRAGMENTATION);
-        munitions.put("LRM/SRM Listen Kill", AmmoType.M_LISTEN_KILL);
-        munitions.put("LRM/SRM Anti-TSM", AmmoType.M_ANTI_TSM);
-        munitions.put("LRM/SRM Narc", AmmoType.M_NARC_CAPABLE);
-        munitions.put("LRM/SRM Artemis", AmmoType.M_ARTEMIS_CAPABLE);
-        munitions.put("LRM/SRM Heat-Seeking", AmmoType.M_HEAT_SEEKING);
-        munitions.put("LRM/SRM Dead-Fire", AmmoType.M_DEAD_FIRE);
-        munitions.put("LRM/SRM Tandem-Charge", AmmoType.M_TANDEM_CHARGE);
+        munitions.put("LRM/SRM Fragmentation", AmmoType.Munitions.M_FRAGMENTATION);
+        munitions.put("LRM/SRM Listen Kill", AmmoType.Munitions.M_LISTEN_KILL);
+        munitions.put("LRM/SRM Anti-TSM", AmmoType.Munitions.M_ANTI_TSM);
+        munitions.put("LRM/SRM Narc", AmmoType.Munitions.M_NARC_CAPABLE);
+        munitions.put("LRM/SRM Artemis", AmmoType.Munitions.M_ARTEMIS_CAPABLE);
+        munitions.put("LRM/SRM Heat-Seeking", AmmoType.Munitions.M_HEAT_SEEKING);
+        munitions.put("LRM/SRM Dead-Fire", AmmoType.Munitions.M_DEAD_FIRE);
+        munitions.put("LRM/SRM Tandem-Charge", AmmoType.Munitions.M_TANDEM_CHARGE);
 
         // LRM Munition Types
         // Incendiary is special, though...
-        munitions.put("LRM Incendiary", AmmoType.M_INCENDIARY_LRM);
-        munitions.put("LRM Flare", AmmoType.M_FLARE);
-        munitions.put("LRM SemiGuided", AmmoType.M_SEMIGUIDED);
-        munitions.put("LRM Swarm", AmmoType.M_SWARM);
-        munitions.put("LRM Swarm I", AmmoType.M_SWARM_I);
-        munitions.put("LRM Thunder", AmmoType.M_THUNDER);
-        munitions.put("LRM Thunder Augmented", AmmoType.M_THUNDER_AUGMENTED);
-        munitions.put("LRM Thunder Inferno", AmmoType.M_THUNDER_INFERNO);
-        munitions.put("LRM Thunder VibraBomb", AmmoType.M_THUNDER_VIBRABOMB);
-        munitions.put("LRM Thunder Active", AmmoType.M_THUNDER_ACTIVE);
-        munitions.put("LRM Follow The Leader", AmmoType.M_FOLLOW_THE_LEADER);
-        munitions.put("Multi Purpose", AmmoType.M_MULTI_PURPOSE);
+        munitions.put("LRM Incendiary", AmmoType.Munitions.M_INCENDIARY_LRM);
+        munitions.put("LRM Flare", AmmoType.Munitions.M_FLARE);
+        munitions.put("LRM SemiGuided", AmmoType.Munitions.M_SEMIGUIDED);
+        munitions.put("LRM Swarm", AmmoType.Munitions.M_SWARM);
+        munitions.put("LRM Swarm I", AmmoType.Munitions.M_SWARM_I);
+        munitions.put("LRM Thunder", AmmoType.Munitions.M_THUNDER);
+        munitions.put("LRM Thunder Augmented", AmmoType.Munitions.M_THUNDER_AUGMENTED);
+        munitions.put("LRM Thunder Inferno", AmmoType.Munitions.M_THUNDER_INFERNO);
+        munitions.put("LRM Thunder VibraBomb", AmmoType.Munitions.M_THUNDER_VIBRABOMB);
+        munitions.put("LRM Thunder Active", AmmoType.Munitions.M_THUNDER_ACTIVE);
+        munitions.put("LRM Follow The Leader", AmmoType.Munitions.M_FOLLOW_THE_LEADER);
+        munitions.put("Multi Purpose", AmmoType.Munitions.M_MULTI_PURPOSE);
 
         // SRM Munition Types
-        munitions.put("SRM Inferno", AmmoType.M_INFERNO);
-        munitions.put("SRM Acid", AmmoType.M_AX_HEAD);
+        munitions.put("SRM Inferno", AmmoType.Munitions.M_INFERNO);
+        munitions.put("SRM Acid", AmmoType.Munitions.M_AX_HEAD);
 
         // Torps
-        munitions.put("LRT/SRT", AmmoType.M_TORPEDO);
+        munitions.put("LRT/SRT", AmmoType.Munitions.M_TORPEDO);
 
         // iNarc Munition Types
-        munitions.put("iNarc Explosive", AmmoType.M_EXPLOSIVE);
-        munitions.put("iNarc ECM", AmmoType.M_ECM);
-        munitions.put("iNarc HayWire", AmmoType.M_HAYWIRE);
-        munitions.put("iNarc Nemesis", AmmoType.M_NEMESIS);
+        munitions.put("iNarc Explosive", AmmoType.Munitions.M_EXPLOSIVE);
+        munitions.put("iNarc ECM", AmmoType.Munitions.M_ECM);
+        munitions.put("iNarc HayWire", AmmoType.Munitions.M_HAYWIRE);
+        munitions.put("iNarc Nemesis", AmmoType.Munitions.M_NEMESIS);
 
         // Narc Munition Types
-        munitions.put("Narc Explosive", AmmoType.M_NARC_EX);
+        munitions.put("Narc Explosive", AmmoType.Munitions.M_NARC_EX);
 
         // Arrow IV Munition Types
-        munitions.put("Arrow IV Homing", AmmoType.M_HOMING);
-        munitions.put("Arrow IV FASCAM", AmmoType.M_FASCAM);
-        munitions.put("Arrow IV Inferno", AmmoType.M_INFERNO_IV);
-        munitions.put("Arrow IV VibraBomb", AmmoType.M_VIBRABOMB_IV);
-        munitions.put("Arrow IV Smoke", AmmoType.M_SMOKE);
-        munitions.put("Arrow IV Davy Crockett", AmmoType.M_DAVY_CROCKETT_M);
+        munitions.put("Arrow IV Homing", AmmoType.Munitions.M_HOMING);
+        munitions.put("Arrow IV FASCAM", AmmoType.Munitions.M_FASCAM);
+        munitions.put("Arrow IV Inferno", AmmoType.Munitions.M_INFERNO_IV);
+        munitions.put("Arrow IV VibraBomb", AmmoType.Munitions.M_VIBRABOMB_IV);
+        munitions.put("Arrow IV Smoke", AmmoType.Munitions.M_SMOKE);
+        munitions.put("Arrow IV Davy Crockett", AmmoType.Munitions.M_DAVY_CROCKETT_M);
         return munitions;
     }
 
@@ -723,71 +675,71 @@ public class CampaignData implements common.TerrainProvider {
      *       <p>
      *       this returns a hashtable of all current MM munitions 06/10/05 using the Number of the munition as the key
      */
-    public Hashtable<Long, String> getMunitionsByNumber() {
-        Hashtable<Long, String> munitions = new Hashtable<Long, String>();
+    public Hashtable<AmmoType.Munitions, String> getMunitionsByNumber() {
+        Hashtable<AmmoType.Munitions, String> munitions = new Hashtable<>();
 
-        munitions.put(AmmoType.M_STANDARD, "Standard");
+        munitions.put(AmmoType.Munitions.M_STANDARD, "Standard");
 
         // AC Munition Types
-        munitions.put(AmmoType.M_CLUSTER, "LBX Cluster");
-        munitions.put(AmmoType.M_ARMOR_PIERCING, "AC Armor Piercing");
-        munitions.put(AmmoType.M_FLECHETTE, "AC Flechette");
-        munitions.put(AmmoType.M_INCENDIARY_AC, "AC Incendiary");
-        munitions.put(AmmoType.M_PRECISION, "AC Precision");
-        munitions.put(AmmoType.M_TRACER, "AC Tracer");
+        munitions.put(AmmoType.Munitions.M_CLUSTER, "LBX Cluster");
+        munitions.put(AmmoType.Munitions.M_ARMOR_PIERCING, "AC Armor Piercing");
+        munitions.put(AmmoType.Munitions.M_FLECHETTE, "AC Flechette");
+        munitions.put(AmmoType.Munitions.M_INCENDIARY_AC, "AC Incendiary");
+        munitions.put(AmmoType.Munitions.M_PRECISION, "AC Precision");
+        munitions.put(AmmoType.Munitions.M_TRACER, "AC Tracer");
 
         // ATM Munition Types
-        munitions.put(AmmoType.M_EXTENDED_RANGE, "ATM Extended Range");
-        munitions.put(AmmoType.M_HIGH_EXPLOSIVE, "ATM High Explosive");
+        munitions.put(AmmoType.Munitions.M_EXTENDED_RANGE, "ATM Extended Range");
+        munitions.put(AmmoType.Munitions.M_HIGH_EXPLOSIVE, "ATM High Explosive");
 
         // LRM & SRM Munition Types
-        munitions.put(AmmoType.M_FRAGMENTATION, "LRM/SRM Fragmentation");
-        munitions.put(AmmoType.M_LISTEN_KILL, "LRM/SRM Listen Kill");
-        munitions.put(AmmoType.M_ANTI_TSM, "LRM/SRM Anti-TSM");
-        munitions.put(AmmoType.M_NARC_CAPABLE, "LRM/SRM Narc");
-        munitions.put(AmmoType.M_ARTEMIS_CAPABLE, "LRM/SRM Artemis");
-        munitions.put(AmmoType.M_HEAT_SEEKING, "LRM/SRM Heat-Seeking");
-        munitions.put(AmmoType.M_TANDEM_CHARGE, "LRM/SRM Tandem-Charge");
-        munitions.put(AmmoType.M_DEAD_FIRE, "LRM/SRM Dead-Fire");
+        munitions.put(AmmoType.Munitions.M_FRAGMENTATION, "LRM/SRM Fragmentation");
+        munitions.put(AmmoType.Munitions.M_LISTEN_KILL, "LRM/SRM Listen Kill");
+        munitions.put(AmmoType.Munitions.M_ANTI_TSM, "LRM/SRM Anti-TSM");
+        munitions.put(AmmoType.Munitions.M_NARC_CAPABLE, "LRM/SRM Narc");
+        munitions.put(AmmoType.Munitions.M_ARTEMIS_CAPABLE, "LRM/SRM Artemis");
+        munitions.put(AmmoType.Munitions.M_HEAT_SEEKING, "LRM/SRM Heat-Seeking");
+        munitions.put(AmmoType.Munitions.M_TANDEM_CHARGE, "LRM/SRM Tandem-Charge");
+        munitions.put(AmmoType.Munitions.M_DEAD_FIRE, "LRM/SRM Dead-Fire");
 
         // LRM Munition Types
         // Incendiary is special though...
-        munitions.put(AmmoType.M_INCENDIARY_LRM, "LRM Incendiary");
-        munitions.put(AmmoType.M_FLARE, "LRM Flare");
-        munitions.put(AmmoType.M_SEMIGUIDED, "LRM SemiGuided");
-        munitions.put(AmmoType.M_SWARM, "LRM Swarm");
-        munitions.put(AmmoType.M_SWARM_I, "LRM Swarm I");
-        munitions.put(AmmoType.M_THUNDER, "LRM Thunder");
-        munitions.put(AmmoType.M_THUNDER_AUGMENTED, "LRM Thunder Augmented");
-        munitions.put(AmmoType.M_THUNDER_INFERNO, "LRM Thunder Inferno");
-        munitions.put(AmmoType.M_THUNDER_VIBRABOMB, "LRM Thunder VibraBomb");
-        munitions.put(AmmoType.M_THUNDER_ACTIVE, "LRM Thunder Active");
-        munitions.put(AmmoType.M_FOLLOW_THE_LEADER, "LRM Follow The Leader");
-        munitions.put(AmmoType.M_MULTI_PURPOSE, "Multi Purpose");
+        munitions.put(AmmoType.Munitions.M_INCENDIARY_LRM, "LRM Incendiary");
+        munitions.put(AmmoType.Munitions.M_FLARE, "LRM Flare");
+        munitions.put(AmmoType.Munitions.M_SEMIGUIDED, "LRM SemiGuided");
+        munitions.put(AmmoType.Munitions.M_SWARM, "LRM Swarm");
+        munitions.put(AmmoType.Munitions.M_SWARM_I, "LRM Swarm I");
+        munitions.put(AmmoType.Munitions.M_THUNDER, "LRM Thunder");
+        munitions.put(AmmoType.Munitions.M_THUNDER_AUGMENTED, "LRM Thunder Augmented");
+        munitions.put(AmmoType.Munitions.M_THUNDER_INFERNO, "LRM Thunder Inferno");
+        munitions.put(AmmoType.Munitions.M_THUNDER_VIBRABOMB, "LRM Thunder VibraBomb");
+        munitions.put(AmmoType.Munitions.M_THUNDER_ACTIVE, "LRM Thunder Active");
+        munitions.put(AmmoType.Munitions.M_FOLLOW_THE_LEADER, "LRM Follow The Leader");
+        munitions.put(AmmoType.Munitions.M_MULTI_PURPOSE, "Multi Purpose");
 
         // SRM Munition Types
-        munitions.put(AmmoType.M_INFERNO, "SRM Inferno");
-        munitions.put(AmmoType.M_AX_HEAD, "SRM Acid");
+        munitions.put(AmmoType.Munitions.M_INFERNO, "SRM Inferno");
+        munitions.put(AmmoType.Munitions.M_AX_HEAD, "SRM Acid");
 
-        // Torps
-        munitions.put(AmmoType.M_TORPEDO, "LRT/SRT");
+        // Torpedoes
+        munitions.put(AmmoType.Munitions.M_TORPEDO, "LRT/SRT");
 
         // iNarc Munition Types
-        munitions.put(AmmoType.M_EXPLOSIVE, "iNarc Explosive");
-        munitions.put(AmmoType.M_ECM, "iNarc ECM");
-        munitions.put(AmmoType.M_HAYWIRE, "iNarc HayWire");
-        munitions.put(AmmoType.M_NEMESIS, "iNarc Nemesis");
+        munitions.put(AmmoType.Munitions.M_EXPLOSIVE, "iNarc Explosive");
+        munitions.put(AmmoType.Munitions.M_ECM, "iNarc ECM");
+        munitions.put(AmmoType.Munitions.M_HAYWIRE, "iNarc HayWire");
+        munitions.put(AmmoType.Munitions.M_NEMESIS, "iNarc Nemesis");
 
         // Narc Munition Types
-        munitions.put(AmmoType.M_NARC_EX, "Narc Explosive");
+        munitions.put(AmmoType.Munitions.M_NARC_EX, "Narc Explosive");
 
         // Arrow IV Munition Types
-        munitions.put(AmmoType.M_HOMING, "Arrow IV Homing");
-        munitions.put(AmmoType.M_FASCAM, "Arrow IV FASCAM");
-        munitions.put(AmmoType.M_INFERNO_IV, "Arrow IV Inferno");
-        munitions.put(AmmoType.M_VIBRABOMB_IV, "Arrow IV VibraBomb");
-        munitions.put(AmmoType.M_SMOKE, "Arrow IV Smoke");
-        munitions.put(AmmoType.M_DAVY_CROCKETT_M, "Arrow IV Davy Crockett");
+        munitions.put(AmmoType.Munitions.M_HOMING, "Arrow IV Homing");
+        munitions.put(AmmoType.Munitions.M_FASCAM, "Arrow IV FASCAM");
+        munitions.put(AmmoType.Munitions.M_INFERNO_IV, "Arrow IV Inferno");
+        munitions.put(AmmoType.Munitions.M_VIBRABOMB_IV, "Arrow IV VibraBomb");
+        munitions.put(AmmoType.Munitions.M_SMOKE, "Arrow IV Smoke");
+        munitions.put(AmmoType.Munitions.M_DAVY_CROCKETT_M, "Arrow IV Davy Crockett");
         return munitions;
     }
 
@@ -811,7 +763,6 @@ public class CampaignData implements common.TerrainProvider {
      * extracts data from the BinReader and places it into the client side hash table.
      *
      * @param in
-     * @param userLevel
      */
     public void importAccessLevels(BinReader in) {
         Hashtable<String, Integer> commandTemp = getCommandTable();

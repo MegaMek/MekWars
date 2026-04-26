@@ -18,23 +18,17 @@
 
 package mekwars.admin.dialog;
 
-//awt imports
-
 import java.awt.Dimension;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.io.Serial;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.TreeSet;
 import javax.swing.*;
-import javax.swing.event.CaretEvent;
-import javax.swing.event.CaretListener;
 
-import client.MWClient;
-import common.util.SpringLayoutHelper;
-//util imports
-//swing imports
-//mekwars imports
+import mekwars.common.campaign.clientutils.protocol.IClient;
+import mekwars.common.util.SpringLayoutHelper;
 
 /*
  * Base dialog, derived from MMNET's SearchHouseListener, allows players
@@ -59,111 +53,105 @@ public class CommandNameDialog extends JDialog implements ActionListener {
     /**
      *
      */
+    @Serial
     private static final long serialVersionUID = -1024120117465498506L;
     //variables
     private final Collection<String> commands;
-    private final TreeSet<String> CommandNames;
 
-    private JList<String> matchingCommandList;
-    private JScrollPane scrollPane;//holds the JList
-    private JTextField nameField;//input field
-    private final JButton okayButton = new JButton("OK");
-    private final JButton cancelButton = new JButton("Cancel");
+    private final JList<String> matchingCommandList;
+    private final JTextField nameField;//input field
     private final String okayCommand = "Okay";
 
     private String commandName = null;
-    private int accessLevel = 0;
 
     //constructor
-    public CommandNameDialog(MWClient mwclient, String boxText) {
+    public CommandNameDialog(IClient client, String boxText) {
 
         /*
-         * NOTE: variables are final in order to
+         * NOTE: variables are final to
          * allow access by caretUpdate()
          */
 
         //super, and variable saves
-        super(mwclient.getMainFrame(), boxText, true);//dummy frame as owner
-        loadCommands(mwclient);
-        accessLevel = mwclient.getUser(mwclient.getPlayer().getName()).getUserlevel();
-        commands = mwclient.getData().getCommandTable().keySet();
+        super(client.getMainFrame(), boxText, true);//dummy frame as owner
+        loadCommands(client);
+        int accessLevel = client.getUser(client.getPlayer().getName()).getUserLevel();
+        commands = client.getData().getCommandTable().keySet();
         //setup the a list of names to feed into a list
-        CommandNames = new TreeSet<String>();//tree to alpha sort
+        TreeSet<String> commandNames = new TreeSet<>();//tree to alpha sort
         for (String command : commands) {
 
             if (command.equalsIgnoreCase("SendClientDataCommand")) {continue;}
-            if (accessLevel >= mwclient.getData().getCommandTable().get(command)) {
-                CommandNames.add(command.substring(0, 1) + command.substring(1).toLowerCase());
+            if (accessLevel >= client.getData().getCommandTable().get(command)) {
+                commandNames.add(command.charAt(0) + command.substring(1).toLowerCase());
             }
 
         }
-        final String[] allCommandNames = CommandNames.toArray(new String[CommandNames.size()]);
+        final String[] allCommandNames = commandNames.toArray(new String[commandNames.size()]);
 
         //construct the command name list
-        matchingCommandList = new JList<String>(allCommandNames);
+        matchingCommandList = new JList<>(allCommandNames);
         matchingCommandList.setVisibleRowCount(10);
         matchingCommandList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
 
         //the name field, for user input. caretUpdate
         //does most of the work to update list contents
         nameField = new JTextField();//field for user input
-        nameField.addCaretListener(new CaretListener() {
-
-            public void caretUpdate(CaretEvent e) {
-                new Thread() {
-                    @Override
-                    public void run() {
-                        String text = nameField.getText();
-                        if (text == null || text.equals("")) {
-                            matchingCommandList.setListData(allCommandNames);
-                            return;
-                        }
-                        ArrayList<String> possibleCommands = new ArrayList<String>();
-                        text = text.toLowerCase();
-                        for (String curCommand : commands) {
-                            if (curCommand.toLowerCase().indexOf(text) != -1) {
-                                possibleCommands.add(curCommand.substring(0, 1) +
-                                                           curCommand.substring(1).toLowerCase());
-                            }
-                        }
-                        matchingCommandList.setListData(possibleCommands.toArray(new String[possibleCommands.size()]));
-
-                        /*
-                         * Try to select a command with a STARTING string which matched
-                         * the seach index. If none is available, use the first command.
-                         *
-                         * Hacky, but functional. @urgru 5.2.05
-                         */
-                        boolean shouldContinue = true;
-                        int element = 0;
-                        for (String name : possibleCommands) {
-                            if (name.toLowerCase().startsWith(text)) {
-                                matchingCommandList.setSelectedIndex(element);
-                                shouldContinue = false;
-                                break;
-                            }
-                            element++;
-                        }
-                        // MWLogger.errLog("7");
-
-                        //looped through without finding a starting match. set 0.
-                        if (shouldContinue) {
-                            matchingCommandList.setSelectedIndex(0);
-                        }
-
+        nameField.addCaretListener(e -> new Thread() {
+            @Override
+            public void run() {
+                String text = nameField.getText();
+                if (text == null || text.isEmpty()) {
+                    matchingCommandList.setListData(allCommandNames);
+                    return;
+                }
+                ArrayList<String> possibleCommands = new ArrayList<>();
+                text = text.toLowerCase();
+                for (String curCommand : commands) {
+                    if (curCommand.toLowerCase().contains(text)) {
+                        possibleCommands.add(curCommand.charAt(0) +
+                                                   curCommand.substring(1).toLowerCase());
                     }
-                }.start();
+                }
+                matchingCommandList.setListData(possibleCommands.toArray(new String[possibleCommands.size()]));
+
+                /*
+                 * Try to select a command with a STARTING string which matched
+                 * the seach index. If none is available, use the first command.
+                 *
+                 * Hacky, but functional. @urgru 5.2.05
+                 */
+                boolean shouldContinue = true;
+                int element = 0;
+                for (String name : possibleCommands) {
+                    if (name.toLowerCase().startsWith(text)) {
+                        matchingCommandList.setSelectedIndex(element);
+                        shouldContinue = false;
+                        break;
+                    }
+                    element++;
+                }
+                // MWLogger.errLog("7");
+
+                //looped through without finding a starting match. set 0.
+                if (shouldContinue) {
+                    matchingCommandList.setSelectedIndex(0);
+                }
+
             }
-        });
+        }.start());
 
         //put the list in a scroll pane
-        scrollPane = new JScrollPane(matchingCommandList);
+        //holds the JList
+        JScrollPane scrollPane = new JScrollPane(matchingCommandList);
         scrollPane.setAlignmentX(LEFT_ALIGNMENT);
         scrollPane.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
 
         //set up listeners for the buttons
+        JButton okayButton = new JButton("OK");
         okayButton.setActionCommand(okayCommand);
         okayButton.addActionListener(this);
+        JButton cancelButton = new JButton("Cancel");
         cancelButton.addActionListener(this);
 
         //do some formatting. rawr.
@@ -196,18 +184,18 @@ public class CommandNameDialog extends JDialog implements ActionListener {
 
 
     /**
-     * OK or CANCEL buttons pressed. Handle any changes and then close the dialouge.
+     * OK or CANCEL buttons pressed. Handle any changes and then close the dialog.
      */
     public void actionPerformed(ActionEvent event) {
 
         String command = event.getActionCommand();
 
         if (command.equals(okayCommand)) {
-            String selectedCommand = (String) matchingCommandList.getSelectedValue();
+            String selectedCommand = matchingCommandList.getSelectedValue();
             if (selectedCommand == null) {selectedCommand = nameField.getText();}
-            if (selectedCommand == null || selectedCommand.equals("")) {return;}
+            if (selectedCommand == null || selectedCommand.isEmpty()) {return;}
             if (matchingCommandList.getModel().getSize() == 1) {
-                selectedCommand = (String) matchingCommandList.getModel().getElementAt(0);
+                selectedCommand = matchingCommandList.getModel().getElementAt(0);
             }
             for (String commandName : commands) {
                 if (selectedCommand.equalsIgnoreCase(commandName)) {
@@ -229,8 +217,8 @@ public class CommandNameDialog extends JDialog implements ActionListener {
 
         Dimension curDim = this.getSize();
 
-        int height = 0;
-        int width = 0;
+        int height;
+        int width;
         boolean shouldRedraw = false;
 
         if (curDim.getWidth() < 300) {
@@ -250,14 +238,14 @@ public class CommandNameDialog extends JDialog implements ActionListener {
     }//end checkMinimumSize
 
     private void setCommandName(String name) {
-        this.commandName = name.substring(0, 1) + name.toLowerCase().substring(1);
+        this.commandName = name.charAt(0) + name.toLowerCase().substring(1);
     }
 
     public String getCommandName() {
         return this.commandName;
     }
 
-    private void loadCommands(MWClient mwclient) {
-        mwclient.loadServerCommmands();
+    private void loadCommands(IClient client) {
+        client.loadServerCommands();
     }
 }

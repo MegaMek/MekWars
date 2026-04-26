@@ -16,6 +16,7 @@
 
 package mekwars.admin.dialog.serverConfigDialogs;
 
+import java.io.Serial;
 import javax.swing.BoxLayout;
 import javax.swing.JCheckBox;
 import javax.swing.JLabel;
@@ -24,16 +25,15 @@ import javax.swing.JTextField;
 import javax.swing.SpringLayout;
 import javax.swing.SwingConstants;
 
-import client.MWClient;
-import common.util.SpringLayoutHelper;
+import mekwars.common.campaign.clientutils.protocol.IClient;
+import mekwars.common.util.SpringLayoutHelper;
 
 public class TechnicianPanel extends JPanel {
 
-    private JTextField baseTextField = new JTextField(5);
-    private JCheckBox BaseCheckBox = new JCheckBox();
+    @Serial
     private static final long serialVersionUID = 4472081938721953252L;
 
-    public TechnicianPanel(MWClient mwclient) {
+    public TechnicianPanel(IClient client) {
         super();
         /*
          * TECH PANEL CONSTRUCTION Technician (and bays from XP) options.
@@ -48,44 +48,44 @@ public class TechnicianPanel extends JPanel {
         techsBox.add(techSpring);
 
         // the basic CBox flow
-        BaseCheckBox = new JCheckBox("Use Techs");
-        BaseCheckBox.setToolTipText("Unchecking disables technicians. Not advised.");
+        JCheckBox baseCheckBox = new JCheckBox("Use Techs");
+        baseCheckBox.setToolTipText("Unchecking disables technicians. Not advised.");
 
-        BaseCheckBox.setName("UseTechnicians");
-        techsCBoxFlow.add(BaseCheckBox);
+        baseCheckBox.setName("UseTechnicians");
+        techsCBoxFlow.add(baseCheckBox);
 
-        BaseCheckBox = new JCheckBox("Use XP");
+        baseCheckBox = new JCheckBox("Use XP");
 
-        BaseCheckBox.setToolTipText("Check grants additional technicians w/ XP.");
-        BaseCheckBox.setName("UseExperience");
-        techsCBoxFlow.add(BaseCheckBox);
+        baseCheckBox.setToolTipText("Check grants additional technicians w/ XP.");
+        baseCheckBox.setName("UseExperience");
+        techsCBoxFlow.add(baseCheckBox);
 
-        BaseCheckBox = new JCheckBox("Decreasing Cost");
+        baseCheckBox = new JCheckBox("Decreasing Cost");
 
-        BaseCheckBox.setToolTipText("Checking lowers tech hiring costs w/ XP.");
-        BaseCheckBox.setName("DecreasingTechCost");
-        techsCBoxFlow.add(BaseCheckBox);
+        baseCheckBox.setToolTipText("Checking lowers tech hiring costs w/ XP.");
+        baseCheckBox.setName("DecreasingTechCost");
+        techsCBoxFlow.add(baseCheckBox);
 
-        BaseCheckBox = new JCheckBox("Disable Tech Advancement");
-        BaseCheckBox.setToolTipText("Checking disables tech advancement and retiring");
-        BaseCheckBox.setName("DisableTechAdvancement");
-        techsCBoxFlow.add(BaseCheckBox);
+        baseCheckBox = new JCheckBox("Disable Tech Advancement");
+        baseCheckBox.setToolTipText("Checking disables tech advancement and retiring");
+        baseCheckBox.setName("DisableTechAdvancement");
+        techsCBoxFlow.add(baseCheckBox);
 
         // the sendRecPay flow.
-        BaseCheckBox = new JCheckBox("Sender Pays");
+        baseCheckBox = new JCheckBox("Sender Pays");
 
-        BaseCheckBox.setToolTipText("If checked, a player sending a unit will pay techs.");
-        BaseCheckBox.setName("SenderPaysOnTransfer");
-        techsSendRecPayFlow.add(BaseCheckBox);
+        baseCheckBox.setToolTipText("If checked, a player sending a unit will pay techs.");
+        baseCheckBox.setName("SenderPaysOnTransfer");
+        techsSendRecPayFlow.add(baseCheckBox);
 
-        BaseCheckBox = new JCheckBox("Recipient Pays");
+        baseCheckBox = new JCheckBox("Recipient Pays");
 
-        BaseCheckBox.setToolTipText("If checked, a player receiving a unit will pay techs.");
-        BaseCheckBox.setName("ReceiverPaysOnTransfer");
-        techsSendRecPayFlow.add(BaseCheckBox);
+        baseCheckBox.setToolTipText("If checked, a player receiving a unit will pay techs.");
+        baseCheckBox.setName("ReceiverPaysOnTransfer");
+        techsSendRecPayFlow.add(baseCheckBox);
 
         // set up the spring
-        baseTextField = new JTextField(5);
+        JTextField baseTextField = new JTextField(5);
         techSpring.add(new JLabel("Base Tech Cost:", SwingConstants.TRAILING));
         baseTextField.setToolTipText("Starting cost to hire a technician");
         baseTextField.setName("BaseTechCost");
@@ -94,7 +94,7 @@ public class TechnicianPanel extends JPanel {
         baseTextField = new JTextField(5);
         techSpring.add(new JLabel("XP for Decrease:", SwingConstants.TRAILING));
         baseTextField.setToolTipText("Amount of XP required to reduce hiring cost by 1 " +
-                                           mwclient.moneyOrFluMessage(true, true, -1));
+                                           client.moneyOrFluMessage(true, true, -1));
         baseTextField.setName("XPForDecrease");
         techSpring.add(baseTextField);
 
@@ -111,7 +111,7 @@ public class TechnicianPanel extends JPanel {
                                            "with .05 set, the first tech would cost .05, the second .10, the third .15, the fourth .20,<br>" +
                                            "such that your first 4 techs cost haf a Cbill (total) to maintain, while the 10th tech costs<br>" +
                                            "half a " +
-                                           mwclient.moneyOrFluMessage(true, true, -1) +
+                                           client.moneyOrFluMessage(true, true, -1) +
                                            " all by himself. A cap on this price can be set, after which there is no further<br>" +
                                            "increase. The ceiling ABSOLUTELY MUST be a multiple of the additive.</HTML>");
         baseTextField.setName("AdditivePerTech");

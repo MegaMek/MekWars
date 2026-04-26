@@ -38,7 +38,7 @@ public class MekDamageHandler extends AbstractUnitDamageHandler {
 
             }
             if (unit.getArmor(Mek.LOC_CENTER_TORSO, true) != unit.getOArmor(Mek.LOC_CENTER_TORSO, true)) {
-                result.append(UnitUtils.LOC_CTR);
+                result.append(UnitUtils.LOC_CENTER_TORSO);
                 result.append(delimiter2);
                 result.append(Math.max(unit.getArmor(Mek.LOC_CENTER_TORSO, true), 0));
                 result.append(delimiter2);
@@ -102,7 +102,7 @@ public class MekDamageHandler extends AbstractUnitDamageHandler {
                 // be unmarked instead.
                 boolean hasISLeft = (unit.getInternal(x) > 0);
 
-                for (int y = 0; y < unit.getNumberOfCriticals(x); y++) {
+                for (int y = 0; y < unit.getNumberOfCriticalSlots(x); y++) {
                     CriticalSlot cs = unit.getCritical(x, y);
 
 
@@ -114,16 +114,16 @@ public class MekDamageHandler extends AbstractUnitDamageHandler {
                         continue;
                     }
 
-                    Mounted<?> m = cs.getMount();
-                    if ((m != null) &&
-                              (m.getType() instanceof MiscType) &&
-                              ((MiscType) m.getType()).isShield() &&
-                              (m.getBaseDamageCapacity() != m.getCurrentDamageCapacity(unit, x)) &&
+                    Mounted<?> mounted = cs.getMount();
+                    if ((mounted != null) &&
+                              (mounted.getType() instanceof MiscType) &&
+                              ((MiscType) mounted.getType()).isShield() &&
+                              (mounted.getBaseDamageCapacity() != mounted.getCurrentDamageCapacity(unit, x)) &&
                               (shieldHitsLeft == -1) &&
                               ((x == Mek.LOC_LEFT_ARM) || (x == Mek.LOC_RIGHT_ARM))) {
                         float shieldCrits = Math.max(1, UnitUtils.getNumberOfCrits(unit, cs));
-                        float basePoints = m.getBaseDamageCapacity();
-                        float currentPoints = m.getCurrentDamageCapacity(unit, x);
+                        float basePoints = mounted.getBaseDamageCapacity();
+                        float currentPoints = mounted.getCurrentDamageCapacity(unit, x);
                         float tempHits = 0;
 
                         tempHits = shieldCrits / basePoints;
@@ -177,10 +177,10 @@ public class MekDamageHandler extends AbstractUnitDamageHandler {
                         result.append("X");
                         result.append(delimiter2);
                         hasData = true;
-                    } else if ((m != null) &&
-                                     (m.getType() instanceof MiscType) &&
-                                     ((MiscType) m.getType()).isShield() &&
-                                     ((x == Mech.LOC_LARM) || (x == Mech.LOC_RARM)) &&
+                    } else if ((mounted != null) &&
+                                     (mounted.getType() instanceof MiscType) &&
+                                     ((MiscType) mounted.getType()).isShield() &&
+                                     ((x == Mek.LOC_LEFT_ARM) || (x == Mek.LOC_RIGHT_ARM)) &&
                                      (shieldHitsLeft > 0)) {
                         result.append(x);
                         result.append(delimiter2);
@@ -204,7 +204,7 @@ public class MekDamageHandler extends AbstractUnitDamageHandler {
                 int location = 0;
                 for (AmmoMounted ammoMounted : unit.getAmmo()) {
                     int shots = 0;
-                    if (ammoMounted.byShot()) {
+                    if (ammoMounted.getUsableShotsLeft() > 0) {
                         shots = ammoMounted.getOriginalShots();
                     } else {
                         shots = ammoMounted.getType().getShots();
@@ -259,7 +259,7 @@ public class MekDamageHandler extends AbstractUnitDamageHandler {
         while (externalArmor.hasMoreTokens()) {
             int location = Integer.parseInt(externalArmor.nextToken());
             int armor = Integer.parseInt(externalArmor.nextToken());
-            if (location >= UnitUtils.LOC_CTR) {
+            if (location >= UnitUtils.LOC_CENTER_TORSO) {
                 unit.setArmor(armor, location - 7, true);
                 if (!isRepairing) {
                     UnitUtils.removeArmorRepair(unit, UnitUtils.LOC_REAR_ARMOR, location - 7);
@@ -348,7 +348,7 @@ public class MekDamageHandler extends AbstractUnitDamageHandler {
 
         if ((ammo != null) && ammo.hasMoreTokens()) {
             int locationCount = 0;
-            Iterator<Mounted> munitions = unit.getAmmo().iterator();
+            Iterator<AmmoMounted> munitions = unit.getAmmo().iterator();
 
             // make sure the unit actually has ammo.
             if (munitions.hasNext()) {

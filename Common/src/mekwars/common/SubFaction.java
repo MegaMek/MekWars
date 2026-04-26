@@ -19,12 +19,12 @@ package mekwars.common;
 import java.util.Properties;
 import java.util.StringTokenizer;
 
-import common.util.MWLogger;
+import mekwars.common.util.MWLogger;
 
 public class SubFaction {
 
-    private static Properties defaultSettings = new Properties();
-    private Properties factionSettings = null;
+    private static final Properties defaultSettings = new Properties();
+    private final Properties factionSettings;
     public int DBId = 0;
 
     public SubFaction() {
@@ -45,13 +45,13 @@ public class SubFaction {
     public static Properties getDefault() {
         defaultSettings.setProperty("Name", "");
         defaultSettings.setProperty("AccessLevel", "0");
-        for (int type = 0; type < common.Unit.MAXBUILD; type++) {
-            for (int weight = 0; weight <= common.Unit.ASSAULT; weight++) {
+        for (int type = 0; type < Unit.MAX_BUILD; type++) {
+            for (int weight = 0; weight <= Unit.ASSAULT; weight++) {
                 String setting = "CanBuyNew" +
-                                       common.Unit.getWeightClassDesc(weight) +
-                                       common.Unit.getTypeClassDesc(type);
+                                       Unit.getWeightClassDesc(weight) +
+                                       Unit.getTypeClassDesc(type);
                 defaultSettings.setProperty(setting, "true");
-                setting = "CanBuyUsed" + common.Unit.getWeightClassDesc(weight) + common.Unit.getTypeClassDesc(type);
+                setting = "CanBuyUsed" + Unit.getWeightClassDesc(weight) + Unit.getTypeClassDesc(type);
                 defaultSettings.setProperty(setting, "true");
             }
         }
@@ -65,7 +65,9 @@ public class SubFaction {
 
         if (!factionSettings.containsKey(key)) {
 
-            if (SubFaction.getDefault().containsKey(key)) {return SubFaction.getDefault().getProperty(key);}
+            if (SubFaction.getDefault().containsKey(key)) {
+                return SubFaction.getDefault().getProperty(key);
+            }
 
             MWLogger.errLog("Unable to find subfaction config: " + key);
             return "-1";
@@ -79,9 +81,12 @@ public class SubFaction {
     }
 
     public String toString() {
-        StringBuffer result = new StringBuffer();
+        StringBuilder result = new StringBuilder();
 
-        if (factionSettings.size() < 1) {return "# #";}
+        if (factionSettings.isEmpty()) {
+            return "# #";
+        }
+
         for (Object key : factionSettings.keySet()) {
             result.append(key.toString());
             result.append("#");

@@ -21,9 +21,8 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.Random;
 
-import common.util.BinReader;
-import common.util.BinWriter;
-
+import mekwars.common.persistence.BinReader;
+import mekwars.common.persistence.BinWriter;
 
 /**
  * Represents a collection of continents, usually for one planet
@@ -31,20 +30,20 @@ import common.util.BinWriter;
  * @author Imi (immanuel.scholz@gmx.de) seen, modified and made totally bad by McWizard
  *       <p>
  *       Imi: *crhm*..."totally bad"... ;-)
- *       TODO: simplify this class. subclass it from ArrayList or something like that
+ *                                                                                                                         TODO: simplify this class. subclass it from ArrayList or something like that
  */
 
 public class PlanetEnvironments {
 
     /**
-     * An terrain provider to get terrain information from.
+     * A terrain provider to get terrain information from.
      */
-    public static transient common.TerrainProvider data;
+    public static TerrainProvider data;
 
     /**
      * The list of all continents. Type=Continent
      */
-    private ArrayList<Continent> continents = new ArrayList<Continent>();
+    private final ArrayList<Continent> continents = new ArrayList<>();
 
     /**
      * Iterate over all terrains in this set.
@@ -66,17 +65,17 @@ public class PlanetEnvironments {
     public Continent[] toArray() {
 
         int size = continents.size();
-        Continent Conts[] = new Continent[size];
+        Continent[] Counts = new Continent[size];
         for (int x = 0; x < size; x++) {
-            Conts[x] = continents.get(x);
+            Counts[x] = continents.get(x);
         }
-        return Conts;
+        return Counts;
     }
 
     /**
      * Add a terrain to the current set. This will vanish, when Terrains are initialized through XStream.
-     *
-     * @TODO You should not need this and you should only initialize the terrain set with either XStream or
+     * <p>
+     * TODO You should not need this and you should only initialize the terrain set with either XStream or
      *       binIn()
      */
     synchronized public void add(Continent newPE) {
@@ -86,10 +85,10 @@ public class PlanetEnvironments {
     synchronized public void remove(String terrain) {
 
         int count = 0;
-        for (Object land : continents) {
+        for (Continent land : continents) {
 
             //Check for multiple terrains with the same name.
-            if (((Continent) land).getEnvironment().getName().equals(terrain)) {
+            if (land.getEnvironment().getName().equals(terrain)) {
                 break;
             }
             count++;
@@ -106,12 +105,14 @@ public class PlanetEnvironments {
     }
 
     /**
-     * Return the environment with the most probability to occour.
+     * Return the environment with the most probability to occur.
      */
     public Continent getBiggestEnvironment() {
-        Continent result = new Continent(0, new common.Terrain(), new AdvancedTerrain());
-        for (Continent p : continents) {
-            if (p.getSize() > result.getSize()) {result = p;}
+        Continent result = new Continent(0, new Terrain(), new AdvancedTerrain());
+        for (Continent continent : continents) {
+            if (continent.getSize() > result.getSize()) {
+                result = continent;
+            }
         }
         return result;
     }
@@ -119,9 +120,13 @@ public class PlanetEnvironments {
     /**
      * Return the total probability of all environments.
      */
-    public int getTotalEnivronmentPropabilities() {
+    public int getTotalEnvironmentProbabilities() {
         int result = 0;
-        for (Continent C : continents) {result += C.getSize();}
+
+        for (Continent continent : continents) {
+            result += continent.getSize();
+        }
+
         return result;
     }
 
@@ -130,20 +135,24 @@ public class PlanetEnvironments {
      */
     public Continent getRandomEnvironment(Random r) {
         // use the skewer draw algorithm from Knuth.
-        int probs = getTotalEnivronmentPropabilities();
-        for (Continent pe : continents) {
-            if (r.nextInt(probs) < pe.getSize()) {
+        int probabilities = getTotalEnvironmentProbabilities();
+        for (Continent continent : continents) {
+            if (r.nextInt(probabilities) < continent.getSize()) {
 
-                probs = pe.getEnvironment().getTotalEnvironmentProbabilities();
-                for (common.PlanetEnvironment env : pe.getEnvironment().getEnvironments()) {
-                    if (r.nextInt(probs) < env.getEnvironmentalProb()) {
-                        return pe;
+                probabilities = continent.getEnvironment().getTotalEnvironmentProbabilities();
+                for (PlanetEnvironment planetEnvironment : continent.getEnvironment().getEnvironments()) {
+
+                    if (r.nextInt(probabilities) < planetEnvironment.getEnvironmentalProb()) {
+                        return continent;
                     }
-                    probs -= env.getEnvironmentalProb();
+
+                    probabilities -= planetEnvironment.getEnvironmentalProb();
                 }
             }
-            probs -= pe.getSize();
+
+            probabilities -= continent.getSize();
         }
+
         return new Continent(0, null, null);
     }
 
@@ -152,10 +161,10 @@ public class PlanetEnvironments {
      */
     public void binOut(BinWriter out) {
         out.println(continents.size(), "terrain.size");
-        for (Continent C : continents) {
-            out.println(C.getSize(), "size");
-            out.println(C.getEnvironment().getId(), "id");
-            out.println(C.getAdvancedTerrain().getId(), "aid");
+        for (Continent continent : continents) {
+            out.println(continent.getSize(), "size");
+            out.println(continent.getEnvironment().getId(), "id");
+            out.println(continent.getAdvancedTerrain().getId(), "aid");
         }
     }
 
@@ -168,11 +177,10 @@ public class PlanetEnvironments {
             int percent = in.readInt("size");
             int id = in.readInt("id");
             int aid = in.readInt("aid");
-            common.Terrain T = data.getTerrain(id);
+            Terrain T = data.getTerrain(id);
             AdvancedTerrain AT = data.getAdvancedTerrain(aid);
-            Continent C = new Continent(percent, T, AT);
-            add(C);
-
+            Continent continent = new Continent(percent, T, AT);
+            add(continent);
         }
     }
 

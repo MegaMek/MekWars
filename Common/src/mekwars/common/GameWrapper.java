@@ -5,10 +5,10 @@ import java.util.Enumeration;
 import java.util.Iterator;
 import java.util.List;
 
-import common.util.MWLogger;
-import megamek.common.Entity;
-import megamek.common.Game;
 import megamek.common.Player;
+import megamek.common.game.Game;
+import megamek.common.units.Entity;
+import mekwars.common.util.MWLogger;
 
 
 public class GameWrapper implements GameInterface {
@@ -28,7 +28,7 @@ public class GameWrapper implements GameInterface {
     }
 
     public Iterator<Entity> getEntities() {
-        return game.getEntities();
+        return game.getEntitiesVector().iterator();
     }
 
     public Enumeration<Entity> getRetreatedEntities() {
@@ -36,17 +36,16 @@ public class GameWrapper implements GameInterface {
     }
 
     public List<String> getWinners() {
-        ArrayList<String> result = new ArrayList<String>();
+        ArrayList<String> result = new ArrayList<>();
 
         //TODO: Winners sometimes coming up empty. Let's see why
 
-        Enumeration<Player> en = game.getPlayers();
+        List<Player> playersList = game.getPlayersList();
 
-        MWLogger.errLog("  :: game.getPlayers(): " + en.toString());
+        MWLogger.errLog("  :: game.getPlayers(): " + playersList.toString());
         MWLogger.errLog("  :: VictoryTeam: " + game.getVictoryTeam());
 
-        while (en.hasMoreElements()) {
-            final Player player = en.nextElement();
+        for (Player player : playersList) {
             MWLogger.errLog("  :: ==> Player: " + player.getName().trim() + " :: Team: " + player.getTeam());
 
             if (player.getTeam() == game.getVictoryTeam()) {

@@ -28,7 +28,6 @@ import java.util.Hashtable;
 import java.util.StringTokenizer;
 import java.util.Vector;
 
-import mekwars.common.interfaces.IClient;
 import mekwars.common.interfaces.IServer;
 
 /**

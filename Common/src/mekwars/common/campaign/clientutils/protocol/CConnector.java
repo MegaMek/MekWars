@@ -34,7 +34,7 @@ package mekwars.common.campaign.clientutils.protocol;
 import java.io.IOException;
 import java.net.Socket;
 
-import client.gui.SplashWindow;
+import mekwars.common.gui.SplashWindow;
 import mekwars.common.util.MWLogger;
 
 /**
@@ -125,7 +125,7 @@ public class CConnector implements IConnectionListener {
                 s = new Socket(_host, _port);
                 MWLogger.errLog("CConnector: connected to " + _host + ":" + _port);
                 s.setTcpNoDelay(true);
-                _connectionHandler = new common.campaign.clientutils.protocol.ConnectionHandlerLocal(s);
+                _connectionHandler = new ConnectionHandlerLocal(s);
                 _connectionHandler.setListener(this);
                 _connected = true;
                 Client.connectionEstablished();
@@ -139,7 +139,7 @@ public class CConnector implements IConnectionListener {
             throw ioexception;
         } catch (IOException e) {
             if (splash != null) {
-                splash.setStatus(splash.STATUS_CONNECTFAILED);
+                splash.setStatus(splash.STATUS_CONNECT_FAILED);
             }
 
             MWLogger.errLog(e);

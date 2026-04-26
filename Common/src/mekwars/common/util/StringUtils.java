@@ -20,8 +20,15 @@ import java.awt.Color;
 
 public final class StringUtils {
 
-    private static String[] colorWheel = { "blue", "BLUE", "black", "BLACK", "yellow", "YELLOW", "green", "GREEN", "red", "RED", "cyan", "CYAN", "gray", "GRAY", "darkGray", "DARK_GRAY", "lightGray", "LIGHT_GRAY", "orange", "ORANGE", "pink", "PINK", "magenta", "MAGENTA", "white", "WHITE" };
-    private static Color[] colors = { Color.blue, Color.BLUE, Color.black, Color.BLACK, Color.yellow, Color.YELLOW, Color.green, Color.GREEN, Color.red, Color.RED, Color.cyan, Color.CYAN, Color.gray, Color.GRAY, Color.darkGray, Color.DARK_GRAY, Color.lightGray, Color.LIGHT_GRAY, Color.orange, Color.ORANGE, Color.pink, Color.PINK, Color.magenta, Color.MAGENTA, Color.white, Color.WHITE };
+    private static final String[] colorWheel = { "blue", "BLUE", "black", "BLACK", "yellow", "YELLOW", "green", "GREEN",
+                                                 "red", "RED", "cyan", "CYAN", "gray", "GRAY", "darkGray", "DARK_GRAY",
+                                                 "lightGray", "LIGHT_GRAY", "orange", "ORANGE", "pink", "PINK",
+                                                 "magenta", "MAGENTA", "white", "WHITE" };
+    private static final Color[] colors = { Color.blue, Color.BLUE, Color.black, Color.BLACK, Color.yellow,
+                                            Color.YELLOW, Color.green, Color.GREEN, Color.red, Color.RED, Color.cyan,
+                                            Color.CYAN, Color.gray, Color.GRAY, Color.darkGray, Color.DARK_GRAY,
+                                            Color.lightGray, Color.LIGHT_GRAY, Color.orange, Color.ORANGE, Color.pink,
+                                            Color.PINK, Color.magenta, Color.MAGENTA, Color.white, Color.WHITE };
 
     public static String aOrAn(String s, boolean lowerCase) {
         return aOrAn(s, lowerCase, true);
@@ -35,15 +42,17 @@ public final class StringUtils {
         // get proper into ("A" or "An")
         String AorAn = "A ";
         String checkString = s.toLowerCase();
-        if (checkString.toLowerCase().startsWith("a") || checkString.startsWith("e") || checkString.startsWith("i") || checkString.startsWith("o") || checkString.startsWith("u")) {
+        if (checkString.toLowerCase().startsWith("a") ||
+                  checkString.startsWith("e") ||
+                  checkString.startsWith("i") ||
+                  checkString.startsWith("o") ||
+                  checkString.startsWith("u")) {
             AorAn = "An ";
         }
 
-        if (lowerCase)
-            AorAn = AorAn.toLowerCase();
+        if (lowerCase) {AorAn = AorAn.toLowerCase();}
 
-        if (returnString)
-            return AorAn + " " + s;
+        if (returnString) {return AorAn + " " + s;}
         // else
         return AorAn;
     }
@@ -53,17 +62,16 @@ public final class StringUtils {
      */
     public static String addAnS(int i) {
 
-        if (i > 1)
-            return "s";
+        if (i > 1) {return "s";}
         // else
         return "";
     }
 
     /**
-     * Converts a html-color reference to a java.awt.Color. Will attempt to append a missing "#". If all else fails, will return a light grey.
+     * Converts a html-color reference to a java.awt.Color. Will attempt to append a missing "#". If all else fails,
+     * will return a light grey.
      *
-     * @param htmlColor
-     *            color in format "#rrggbb"
+     * @param htmlColor color in format "#rrggbb"
      */
     public static Color html2Color(String htmlColor) {
         try {
@@ -74,8 +82,7 @@ public final class StringUtils {
             } catch (RuntimeException ex) {
 
                 for (int pos = 0; pos < colorWheel.length; pos++) {
-                    if (colorWheel[pos].equals(htmlColor))
-                        return colors[pos];
+                    if (colorWheel[pos].equals(htmlColor)) {return colors[pos];}
                 }
                 return Color.lightGray;
             }
@@ -126,27 +133,27 @@ public final class StringUtils {
             green -= 128;
         }
 
-        try{
-            newColor = new Color(red,green,blue);
-        }catch(Exception ex){
+        try {
+            newColor = new Color(red, green, blue);
+        } catch (Exception ex) {
 
         }
         return newColor;
 
     }
 
-    public static String hasBadChars(String string){
-        return StringUtils.hasBadChars(string,false);
+    public static String hasBadChars(String string) {
+        return StringUtils.hasBadChars(string, false);
     }
 
-    public static String hasBadChars(String string, boolean pilot){
+    public static String hasBadChars(String string, boolean pilot) {
 
-        char[] badChars = {'%','~', '$', '|', '*', '#' , '@', '&', '^', '+', '=',
+        char[] badChars = { '%', '~', '$', '|', '*', '#', '@', '&', '^', '+', '=',
                             ';', ':', '\'', '"', '/', '\\', '{', '}' };
 
-        for (int pos = badChars.length -1; pos >= 0; pos-- ){
+        for (int pos = badChars.length - 1; pos >= 0; pos--) {
             if (string.indexOf(badChars[pos]) != -1) {
-                return "AM:Illegal string("+badChars[pos]+" forbidden).";
+                return "AM:Illegal string(" + badChars[pos] + " forbidden).";
 
             }
         }

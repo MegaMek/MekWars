@@ -22,9 +22,9 @@
 
 package mekwars.common.util;
 
-import common.Unit;
+import mekwars.common.Unit;
 
-public class ComponentToCritsConverter{
+public class ComponentToCritsConverter {
 
     private int minCritLevel = 10;
     private int componentUsedType = Unit.MEK;
@@ -33,7 +33,6 @@ public class ComponentToCritsConverter{
 
     /**
      *
-     * @param int level
      */
     public void setMinCritLevel(int level) {
         this.minCritLevel = level;
@@ -41,7 +40,6 @@ public class ComponentToCritsConverter{
 
     /**
      *
-     * @return int
      */
     public int getMinCritLevel() {
         return this.minCritLevel;
@@ -49,7 +47,6 @@ public class ComponentToCritsConverter{
 
     /**
      *
-     * @param int type
      */
     public void setComponentUsedType(int type) {
         this.componentUsedType = type;
@@ -65,7 +62,6 @@ public class ComponentToCritsConverter{
 
     /**
      *
-     * @param int weight
      */
     public void setComponentUsedWeight(int weight) {
         this.componentUsedWeight = weight;
@@ -81,7 +77,6 @@ public class ComponentToCritsConverter{
 
     /**
      *
-     * @param String crit
      */
     public void setCritName(String crit) {
         this.critName = crit;
@@ -100,19 +95,16 @@ public class ComponentToCritsConverter{
     }
 
     public String toString(String token) {
-        StringBuffer results = new StringBuffer();
 
-        results.append(critName);
-        results.append(" ");
-        results.append(token);
-        results.append(minCritLevel);
-        results.append(token);
-        results.append(componentUsedType);
-        results.append(token);
-        results.append(componentUsedWeight);
-        results.append(token);
-
-        return results.toString();
+        return critName +
+                     " " +
+                     token +
+                     minCritLevel +
+                     token +
+                     componentUsedType +
+                     token +
+                     componentUsedWeight +
+                     token;
     }
 
 }

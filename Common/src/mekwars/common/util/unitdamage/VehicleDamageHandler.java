@@ -72,7 +72,7 @@ public class VehicleDamageHandler extends AbstractUnitDamageHandler {
             // * for Damaged X for Breached
             // location#Crit Number#Damage
             for (int x = 0; x < unit.locations(); x++) {
-                for (int y = 0; y < unit.getNumberOfCriticals(x); y++) {
+                for (int y = 0; y < unit.getNumberOfCriticalSlots(x); y++) {
                     CriticalSlot cs = unit.getCritical(x, y);
                     if (cs == null) {
                         continue;
@@ -263,7 +263,7 @@ public class VehicleDamageHandler extends AbstractUnitDamageHandler {
 
         if ((ammo != null) && ammo.hasMoreTokens()) {
             int locationCount = 0;
-            Iterator<Mounted> munitions = unit.getAmmo().iterator();
+            Iterator<AmmoMounted> munitions = unit.getAmmo().iterator();
 
             // make sure the unit actually has ammo.
             if (munitions.hasNext()) {

@@ -1,20 +1,21 @@
-package mekwars.client.gui;
+package mekwars.common.gui;
+
+import javax.swing.Icon;
+import javax.swing.JButton;
 
 class ActivationThread extends Thread {
 
-    javax.swing.Icon flashIcon = null;
-    javax.swing.Icon startIcon = null;
-    javax.swing.Icon finishIcon = null;
-    javax.swing.Icon rollOverIcon = null;
+    Icon flashIcon = null;
+    Icon startIcon = null;
+    Icon finishIcon = null;
+    Icon rollOverIcon = null;
 
-    client.MWClient mwclient = null;
-    javax.swing.JButton button = null;
+    IClient iClient = null;
+    JButton button = null;
 
-    public ActivationThread(
-          client.MWClient mwclient, javax.swing.JButton activityButton, javax.swing.Icon flash, javax.swing.Icon end,
-          javax.swing.Icon roll) {
-        ;
-        this.mwclient = mwclient;
+    public ActivationThread(IClient iClient, JButton activityButton, Icon flash, Icon end, Icon roll) {
+
+        this.iClient = iClient;
         this.button = activityButton;
         this.startIcon = this.button.getIcon();
         this.flashIcon = flash;

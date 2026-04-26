@@ -16,10 +16,10 @@
 
 package mekwars.common;
 
-import megamek.common.AmmoType;
-import megamek.common.EquipmentType;
 import megamek.common.TechConstants;
-import megamek.common.WeaponType;
+import megamek.common.equipment.AmmoType;
+import megamek.common.equipment.EquipmentType;
+import megamek.common.equipment.WeaponType;
 
 /**
  * Unit Equipment Container
@@ -54,7 +54,7 @@ public class BMEquipment {
 
     public String getEquipmentName() {
 
-        if (equipmentName.trim().length() < 1) {
+        if (equipmentName.trim().isEmpty()) {
             EquipmentType eq = EquipmentType.get(getEquipmentInternalName());
 
             // Armor,IS,Engines,Actuators,Cockpit,Sensors anything that doesn't
@@ -62,7 +62,7 @@ public class BMEquipment {
             if (eq == null) {
                 setEquipmentName(getEquipmentInternalName());
 
-                if ((getEquipmentName().toLowerCase().indexOf("armor") > -1) ||
+                if ((getEquipmentName().toLowerCase().contains("armor")) ||
                           getEquipmentName().equalsIgnoreCase("IS (STD)") ||
                           (EquipmentType.getArmorType(eq) != EquipmentType.T_ARMOR_UNKNOWN) ||
                           (EquipmentType.getStructureType(eq) != EquipmentType.T_STRUCTURE_UNKNOWN)) {
@@ -81,7 +81,7 @@ public class BMEquipment {
                     if (eq.hasFlag(WeaponType.F_BA_WEAPON)) {
                         setEquipmentName(eq.getName() + " (BA)");
                     }
-                } else if ((getEquipmentName().toLowerCase().indexOf("armor") > -1) ||
+                } else if ((getEquipmentName().toLowerCase().contains("armor")) ||
                                  (EquipmentType.getArmorType(eq) != EquipmentType.T_ARMOR_UNKNOWN) ||
                                  (EquipmentType.getStructureType(eq) != EquipmentType.T_STRUCTURE_UNKNOWN)) {
                     setEquipmentType(BMEquipment.PART_ARMOR);
@@ -135,7 +135,7 @@ public class BMEquipment {
     }
 
     public String getTech(int year) {
-        if (tech.trim().length() > 0) {
+        if (!tech.trim().isEmpty()) {
             return tech;
         }
 
@@ -160,7 +160,7 @@ public class BMEquipment {
                       (eq.getTechLevel(year) == TechConstants.T_CLAN_UNOFFICIAL)) {
                 tech = "Clan";
             } else if ((eq.getTechLevel(year) == TechConstants.T_ALL) ||
-                             (eq.getTechLevel(year) < TechConstants.T_INTRO_BOXSET)) {
+                             (eq.getTechLevel(year) < TechConstants.T_INTRO_BOX_SET)) {
                 tech = "All";
             } else {
                 tech = "IS";

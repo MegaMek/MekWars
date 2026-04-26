@@ -11,6 +11,7 @@
 
 package mekwars.admin.dialog.serverConfigDialogs;
 
+import java.io.Serial;
 import javax.swing.BoxLayout;
 import javax.swing.JCheckBox;
 import javax.swing.JLabel;
@@ -19,8 +20,8 @@ import javax.swing.JTextField;
 import javax.swing.SpringLayout;
 import javax.swing.SwingConstants;
 
-import client.MWClient;
-import common.util.SpringLayoutHelper;
+import mekwars.common.campaign.clientutils.protocol.IClient;
+import mekwars.common.util.SpringLayoutHelper;
 
 /**
  * @author jtighe
@@ -28,11 +29,10 @@ import common.util.SpringLayoutHelper;
  */
 public class NoPlayPanel extends JPanel {
 
+    @Serial
     private static final long serialVersionUID = -1623867291283606083L;
-    private JTextField baseTextField = new JTextField(5);
-    private JCheckBox BaseCheckBox = new JCheckBox();
 
-    public NoPlayPanel(MWClient mwclient) {
+    public NoPlayPanel(IClient client) {
         super();
         /*
          * NO PLAY setup
@@ -42,16 +42,16 @@ public class NoPlayPanel extends JPanel {
 
         JPanel noPlaySpring = new JPanel(new SpringLayout());
 
-        baseTextField = new JTextField(5);
+        JTextField baseTextField = new JTextField(5);
         noPlaySpring.add(new JLabel("Max Player No-Plays:", SwingConstants.TRAILING));
         baseTextField.setToolTipText("Max number of players someone can add to no-play list.");
         baseTextField.setName("NoPlayListSize");
         noPlaySpring.add(baseTextField);
 
         baseTextField = new JTextField(5);
-        noPlaySpring.add(new JLabel("No-Play " + mwclient.moneyOrFluMessage(true, true, -1) + " Cost:",
+        noPlaySpring.add(new JLabel("No-Play " + client.moneyOrFluMessage(true, true, -1) + " Cost:",
               SwingConstants.TRAILING));
-        baseTextField.setToolTipText(mwclient.moneyOrFluMessage(true, true, -1) +
+        baseTextField.setToolTipText(client.moneyOrFluMessage(true, true, -1) +
                                            " charged to remove a player from the no-play list.");
         baseTextField.setName("NoPlayMUCost");
         noPlaySpring.add(baseTextField);
@@ -63,23 +63,23 @@ public class NoPlayPanel extends JPanel {
         noPlaySpring.add(baseTextField);
 
         baseTextField = new JTextField(5);
-        noPlaySpring.add(new JLabel("No-Play " + mwclient.moneyOrFluMessage(false, true, -1) + " Cost:",
+        noPlaySpring.add(new JLabel("No-Play " + client.moneyOrFluMessage(false, true, -1) + " Cost:",
               SwingConstants.TRAILING));
-        baseTextField.setToolTipText(mwclient.moneyOrFluMessage(false, false, -1) +
+        baseTextField.setToolTipText(client.moneyOrFluMessage(false, false, -1) +
                                            " charged to remove a player from the no-play list.");
         baseTextField.setName("NoPlayInfluenceCost");
         noPlaySpring.add(baseTextField);
 
-        BaseCheckBox = new JCheckBox("Admin No-Plays Count");
-        BaseCheckBox.setToolTipText("<HTML>" +
+        JCheckBox baseCheckBox = new JCheckBox("Admin No-Plays Count");
+        baseCheckBox.setToolTipText("<HTML>" +
                                           "Check to have no-plays added by admins count towards the<br>" +
                                           "maximum. Note that admins can add no-plays in excess of<br>" +
                                           "the cap. Enabling this simply prevents players from adding<br>" +
                                           "their own choices to their no-play lists if admins have<br>" +
                                           "been forced to make additions equal to, or in excess of,<br>" +
                                           "the max.</HTML>");
-        BaseCheckBox.setName("NoPlaysFromAdminsCountForMax");
-        noPlaySpring.add(BaseCheckBox);
+        baseCheckBox.setName("NoPlaysFromAdminsCountForMax");
+        noPlaySpring.add(baseCheckBox);
 
         SpringLayoutHelper.setupSpringGrid(noPlaySpring, 2);
 

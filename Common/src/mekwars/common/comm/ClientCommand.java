@@ -23,8 +23,6 @@
 
 package mekwars.common.comm;
 
-import mekwars.common.interfaces.IClient;
-
 /**
  *
  * @author Administrator

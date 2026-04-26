@@ -23,17 +23,15 @@ package mekwars.admin.dialog;
 import java.awt.Dimension;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.io.Serial;
 import java.util.ArrayList;
 import java.util.TreeSet;
 import javax.swing.*;
 import javax.swing.event.CaretEvent;
 import javax.swing.event.CaretListener;
 
-import client.MWClient;
-import common.util.SpringLayoutHelper;
-//util imports
-//swing imports
-//mekwars imports
+import mekwars.common.campaign.clientutils.protocol.IClient;
+import mekwars.common.util.SpringLayoutHelper;
 
 /*
  * Base dialog, derived from MMNET's SearchHouseListener, allows players
@@ -62,21 +60,19 @@ public class OpFlagSelectionDialog extends JDialog implements ActionListener {
     /**
      *
      */
+    @Serial
     private static final long serialVersionUID = -1024120117465498506L;
     //variables
     private final TreeSet<String> names;
 
-    private JList<String> matchingCommandList;
-    private JScrollPane scrollPane;//holds the JList
-    private JTextField nameField;//input field
-    private final JButton okayButton = new JButton("OK");
-    private final JButton cancelButton = new JButton("Cancel");
+    private final JList<String> matchingCommandList;
+    private final JTextField nameField;//input field
     private final String okayCommand = "Okay";
-    private MWClient client = null;
+    private final IClient client;
     private Object[] commandName = null;
 
     //constructor
-    public OpFlagSelectionDialog(MWClient mwclient, String boxText) {
+    public OpFlagSelectionDialog(IClient client, String boxText) {
 
         /*
          * NOTE: variables are final in order to
@@ -86,10 +82,10 @@ public class OpFlagSelectionDialog extends JDialog implements ActionListener {
         //super, and variable saves
         super(new JFrame(), boxText, true);//dummy frame as owner
 
-        client = mwclient;
+        this.client = client;
         loadOpFlags();
-        names = new TreeSet<String>();
-        for (String key : mwclient.getData().getPlanetOpFlags().values()) {names.add(key);}
+        names = new TreeSet<>();
+        for (String key : client.getData().getPlanetOpFlags().values()) {names.add(key);}
 
         final String[] allCommandNames = names.toArray(new String[names.size()]);
 
@@ -151,13 +147,16 @@ public class OpFlagSelectionDialog extends JDialog implements ActionListener {
         });
 
         //put the list in a scroll pane
-        scrollPane = new JScrollPane(matchingCommandList);
+        //holds the JList
+        JScrollPane scrollPane = new JScrollPane(matchingCommandList);
         scrollPane.setAlignmentX(LEFT_ALIGNMENT);
         scrollPane.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
 
         //set up listeners for the buttons
+        JButton okayButton = new JButton("OK");
         okayButton.setActionCommand(okayCommand);
         okayButton.addActionListener(this);
+        JButton cancelButton = new JButton("Cancel");
         cancelButton.addActionListener(this);
 
         //do some formatting. rawr.
@@ -247,7 +246,7 @@ public class OpFlagSelectionDialog extends JDialog implements ActionListener {
     private void loadOpFlags() {
         client.getData().getPlanetOpFlags().clear();
 
-        client.sendChat(MWClient.CAMPAIGN_PREFIX + "c getserveropflags");
+        client.sendChat(IClient.CAMPAIGN_PREFIX + "c getserveropflags");
 
         int count = 0;
         while (client.getData().getPlanetOpFlags().isEmpty() && count < 1000) {

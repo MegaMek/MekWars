@@ -5,34 +5,31 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.io.Serial;
 import java.util.Vector;
 import javax.swing.*;
 import javax.swing.event.TableModelEvent;
 import javax.swing.event.TableModelListener;
 import javax.swing.table.DefaultTableModel;
 
-import client.MWClient;
-import common.VerticalLayout;
-import common.flags.PlayerFlags;
+import mekwars.common.VerticalLayout;
+import mekwars.common.campaign.clientutils.protocol.IClient;
+import mekwars.common.flags.PlayerFlags;
 
 public class DefaultPlayerFlagListDialog extends JDialog implements ActionListener {
 
-    /**
-     *
-     */
+    @Serial
     private static final long serialVersionUID = -6517948686402015985L;
 
-    private MWClient mwclient;
-    private PlayerFlags flags = new PlayerFlags();
-    private JScrollPane scrollPane;
-    private JButton addButton = new JButton("Add");
-    private Vector<String> pendingFlags = new Vector<String>();
-    private Vector<String> flagNames = new Vector<String>();
-    private Vector<String> deletedFlags = new Vector<String>();
-    private JPanel mainPanel;
-    private JTable flagTable;
+    private final IClient mwClient;
+    private final PlayerFlags flags = new PlayerFlags();
+    private final JButton addButton = new JButton("Add");
+    private final Vector<String> pendingFlags = new Vector<>();
+    private Vector<String> flagNames = new Vector<>();
+    private final Vector<String> deletedFlags = new Vector<>();
+    private final JTable flagTable;
 
-    private JPopupMenu popup;
+    private final JPopupMenu popup;
 
     private void loadPlayerFlags(String f) {
         flags.loadDefaults(f);
@@ -40,14 +37,14 @@ public class DefaultPlayerFlagListDialog extends JDialog implements ActionListen
     }
 
     private void buildGUI() {
-        scrollPane = new JScrollPane(flagTable);
+        JScrollPane scrollPane = new JScrollPane(flagTable);
         scrollPane.setAlignmentX(LEFT_ALIGNMENT);
         scrollPane.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
 
         addButton.setActionCommand("add");
         addButton.addActionListener(this);
 
-        mainPanel = new JPanel();
+        JPanel mainPanel = new JPanel();
         mainPanel.setLayout(new VerticalLayout());
         mainPanel.add(scrollPane);
 
@@ -107,7 +104,7 @@ public class DefaultPlayerFlagListDialog extends JDialog implements ActionListen
         if (command.equalsIgnoreCase("Add")) {
             String input = JOptionPane.showInputDialog("New Player Flag Name");
             // now validate the input
-            if (input.trim().length() > 0) {
+            if (!input.trim().isEmpty()) {
                 input = input.trim().toUpperCase();
                 // Replace all spaces with underscores - spaces are causing issues
                 input = input.replace(' ', '_');
@@ -131,24 +128,24 @@ public class DefaultPlayerFlagListDialog extends JDialog implements ActionListen
             this.dispose();
         } else if (command.equalsIgnoreCase("Save")) {
             StringBuilder sb = new StringBuilder();
-            sb.append(MWClient.CAMPAIGN_PREFIX + "c adminUpdateDefaultPlayerFlags#");
-            if (deletedFlags.size() > 0) {
+            sb.append(IClient.CAMPAIGN_PREFIX).append("c adminUpdateDefaultPlayerFlags#");
+            if (!deletedFlags.isEmpty()) {
                 for (String s : deletedFlags) {
-                    sb.append("D#" + s + "#");
+                    sb.append("D#").append(s).append("#");
                 }
             }
 
-            if (pendingFlags.size() > 0) {
+            if (!pendingFlags.isEmpty()) {
                 for (String s : pendingFlags) {
-                    boolean value = false;
+                    boolean value;
                     int tableRow = searchTable(s);
                     if (tableRow >= 0) {
                         value = (Boolean) flagTable.getValueAt(searchTable(s), 1);
-                        sb.append("S#" + s + "#" + Boolean.toString(value) + "#");
+                        sb.append("S#").append(s).append("#").append(value).append("#");
                     }
                 }
             }
-            mwclient.sendChat(sb.toString());
+            mwClient.sendChat(sb.toString());
             this.dispose();
         }
     }
@@ -162,17 +159,17 @@ public class DefaultPlayerFlagListDialog extends JDialog implements ActionListen
         return -1;
     }
 
-    public DefaultPlayerFlagListDialog(MWClient c) {
+    public DefaultPlayerFlagListDialog(IClient iClient) {
         super(new JFrame(), "Player Flags", true);
-        mwclient = c;
-        loadPlayerFlags(mwclient.getPlayer().getDefaultPlayerFlags().export());
+        mwClient = iClient;
+        loadPlayerFlags(mwClient.getPlayer().getDefaultPlayerFlags().export());
         //flagTable = new JTable();
         String[] columnNames = { "Flag Name", "Set by Default" };
 
         PFTableModel model = new PFTableModel(columnNames);
 
-        for (int i = 0; i < flagNames.size(); i++) {
-            model.addRow(new Object[] { flagNames.get(i), flags.getFlagStatus(flagNames.get(i)) });
+        for (String flagName : flagNames) {
+            model.addRow(new Object[] { flagName, flags.getFlagStatus(flagName) });
         }
 
         popup = new JPopupMenu();

@@ -20,6 +20,7 @@ package mekwars.common;
 //@Author Helge Richter (McWizard@gmx.de)
 //@Version 0.1
 
+import java.io.Serial;
 import java.io.Serializable;
 import java.util.StringTokenizer;
 import java.util.TreeSet;
@@ -30,6 +31,7 @@ public class MMGame implements Serializable {
     /**
      *
      */
+    @Serial
     private static final long serialVersionUID = -7500735952739732172L;
     //VARIABLES
     int port;
@@ -39,7 +41,7 @@ public class MMGame implements Serializable {
     String comment = "";
     String hostName;
     String Status = "Open";
-    TreeSet<String> currentPlayers = new TreeSet<String>();
+    TreeSet<String> currentPlayers = new TreeSet<>();
 
     //CONSTRUCTORS
     public MMGame(String s) {
@@ -55,47 +57,64 @@ public class MMGame implements Serializable {
         while (ST.hasMoreTokens()) {currentPlayers.add(ST.nextToken());}
     }
 
-    //This constructor is used only by clients, when opening a new host.
-    public MMGame(String name, String ip, int port, int maxpplayers, String version, String comment) {
+    //This constructor is used only by clients when opening a new host.
+    public MMGame(String name, String ip, int port, int maxPlayers, String version, String comment) {
 
         this.hostName = name;
         this.ip = ip;
         this.port = port;
-        this.maxPlayers = maxpplayers;
+        this.maxPlayers = maxPlayers;
         this.version = version;
         this.comment = comment;
-        if (comment.trim().length() == 0) {comment = " ";}
-
+        if (comment.trim().isEmpty()) {
+            comment = " ";
+        }
     }
 
     //METHODS
     @Override
     public String toString() {
 
-        StringBuffer result = new StringBuffer();
-        result.append(hostName + "~" + ip + "~" + port + "~" + maxPlayers + "~" + version + "~");
+        StringBuilder result = new StringBuilder();
+        result.append(hostName)
+              .append("~")
+              .append(ip)
+              .append("~")
+              .append(port)
+              .append("~")
+              .append(maxPlayers)
+              .append("~")
+              .append(version)
+              .append("~");
 
         //don't send empty comment
-        if (comment == null || comment.length() == 0) {result.append(" ~");} else {result.append(comment + "~");}
+        if (comment == null || comment.isEmpty()) {
+            result.append(" ~");
+        } else {
+            result.append(comment).append("~");
+        }
 
-        for (String currName : currentPlayers) {result.append(currName + "~");}
+        for (String currName : currentPlayers) {
+            result.append(currName).append("~");
+        }
+
         return result.toString();
 
     }
 
     @Override
     public boolean equals(Object o) {
+        if (o instanceof MMGame) {
+            MMGame game;
+            try {
+                game = (MMGame) o;
+            } catch (ClassCastException e) {
+                return false;
+            }
 
-        if (o == null) {return false;}
-
-        MMGame game;
-        try {
-            game = (MMGame) o;
-        } catch (ClassCastException e) {
-            return false;
+            return game.getHostName().equalsIgnoreCase(this.getHostName());
         }
 
-        if (game.getHostName().equalsIgnoreCase(this.getHostName())) {return true;}
         return false;
     }
 

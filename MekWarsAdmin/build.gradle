@@ -27,3 +27,9 @@ sourceSets {
         }
     }
 }
+
+dependencies {
+    implementation project(":Common")
+    implementation "org.megamek:megamek"
+    implementation 'org.jdatepicker:jdatepicker:2.0.0'
+}

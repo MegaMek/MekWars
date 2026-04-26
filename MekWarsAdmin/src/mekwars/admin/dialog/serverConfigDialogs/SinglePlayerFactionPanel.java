@@ -11,6 +11,7 @@
 
 package mekwars.admin.dialog.serverConfigDialogs;
 
+import java.io.Serial;
 import javax.swing.BoxLayout;
 import javax.swing.JCheckBox;
 import javax.swing.JLabel;
@@ -19,8 +20,8 @@ import javax.swing.JTextField;
 import javax.swing.SpringLayout;
 import javax.swing.SwingConstants;
 
-import common.Unit;
-import common.util.SpringLayoutHelper;
+import mekwars.common.Unit;
+import mekwars.common.util.SpringLayoutHelper;
 
 /**
  * @author jtighe
@@ -28,9 +29,8 @@ import common.util.SpringLayoutHelper;
  */
 public class SinglePlayerFactionPanel extends JPanel {
 
+    @Serial
     private static final long serialVersionUID = -6458150681823841221L;
-    private JTextField baseTextField = new JTextField(5);
-    private JCheckBox BaseCheckBox = new JCheckBox();
 
     public SinglePlayerFactionPanel() {
         super();
@@ -44,14 +44,14 @@ public class SinglePlayerFactionPanel extends JPanel {
         JPanel masterPanel = new JPanel();
         masterPanel.setLayout(new BoxLayout(masterPanel, BoxLayout.Y_AXIS));
 
-        BaseCheckBox = new JCheckBox("Single Player Factions");
-        BaseCheckBox.setToolTipText("If this is checked then each player will have their own faction");
-        BaseCheckBox.setName("AllowSinglePlayerFactions");
-        checkBoxPanel.add(BaseCheckBox);
+        JCheckBox baseCheckBox = new JCheckBox("Single Player Factions");
+        baseCheckBox.setToolTipText("If this is checked then each player will have their own faction");
+        baseCheckBox.setName("AllowSinglePlayerFactions");
+        checkBoxPanel.add(baseCheckBox);
 
         SpringLayoutHelper.setupSpringGrid(checkBoxPanel, 1);
 
-        baseTextField = new JTextField(5);
+        JTextField baseTextField = new JTextField(5);
         playerFactionPanel.add(new JLabel("Max Faction Name:", SwingConstants.TRAILING));
         baseTextField.setToolTipText("Max Length for a faction name.");
         baseTextField.setName("MaxFactionName");
@@ -90,7 +90,7 @@ public class SinglePlayerFactionPanel extends JPanel {
 
         SpringLayoutHelper.setupSpringGrid(playerFactionPanel, 4);
 
-        for (int type = 0; type < Unit.MAXBUILD; type++) {
+        for (int type = 0; type < Unit.MAX_BUILD; type++) {
             for (int weight = 0; weight <= Unit.ASSAULT; weight++) {
                 baseTextField = new JTextField(5);
                 playerFactionPanel2.add(new JLabel("Starting " +

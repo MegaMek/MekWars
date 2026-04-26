@@ -12,31 +12,29 @@ import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.SpringLayout;
 
-import client.MWClient;
-import common.campaign.targetsystems.TargetSystem;
-import common.campaign.targetsystems.TargetTypeNotImplementedException;
-import common.campaign.targetsystems.TargetTypeOutOfBoundsException;
-import common.util.SpringLayoutHelper;
+import mekwars.common.campaign.clientutils.protocol.IClient;
+import mekwars.common.campaign.targetsystems.TargetSystem;
+import mekwars.common.campaign.targetsystems.TargetTypeNotImplementedException;
+import mekwars.common.campaign.targetsystems.TargetTypeOutOfBoundsException;
+import mekwars.common.util.SpringLayoutHelper;
 
 public class BannedTargetingDialog implements ActionListener {
 
-    private TargetSystem ts = new TargetSystem();
-    private JDialog dialog;
-    private MWClient mwclient = null;
+    private final JDialog dialog;
+    private final IClient client;
     private final static String okayCommand = "Add";
     private final static String cancelCommand = "Close";
 
-    private String windowName = "Server Banned Target System Editor";
-    private final JButton okayButton = new JButton("Save");
-    private final JButton cancelButton = new JButton("Close");
-    private JOptionPane pane;
+    private final String windowName = "Server Banned Target System Editor";
 
-    private HashMap<Integer, JCheckBox> newBans = new HashMap<Integer, JCheckBox>();
+    private final HashMap<Integer, JCheckBox> newBans = new HashMap<>();
 
-    public BannedTargetingDialog(MWClient c) {
-        mwclient = c;
+    public BannedTargetingDialog(IClient client) {
+        this.client = client;
 
+        JButton okayButton = new JButton("Save");
         okayButton.setActionCommand(okayCommand);
+        JButton cancelButton = new JButton("Close");
         cancelButton.setActionCommand(cancelCommand);
 
         okayButton.addActionListener(this);
@@ -56,15 +54,13 @@ public class BannedTargetingDialog implements ActionListener {
         int max = TargetSystem.TS_TYPE_MAX;
         for (int i = 0; i <= max; i++) {
             try {
-                baseCheckBox = new JCheckBox(ts.getTypeName(i));
+                TargetSystem targetSystem = new TargetSystem();
+                baseCheckBox = new JCheckBox(targetSystem.getTypeName(i));
                 baseCheckBox.setSelected(getTargetSystemBanStatus(i));
                 tsPanel.add(baseCheckBox);
                 newBans.put(i, baseCheckBox);
 
-            } catch (TargetTypeOutOfBoundsException e) {
-                // TODO Auto-generated catch block
-                e.printStackTrace();
-            } catch (TargetTypeNotImplementedException e) {
+            } catch (TargetTypeOutOfBoundsException | TargetTypeNotImplementedException e) {
                 // TODO Auto-generated catch block
                 e.printStackTrace();
             }
@@ -76,7 +72,12 @@ public class BannedTargetingDialog implements ActionListener {
         Object[] options = { okayButton, cancelButton };
 
         // Create the pane containing the buttons
-        pane = new JOptionPane(banPanel, JOptionPane.PLAIN_MESSAGE, JOptionPane.DEFAULT_OPTION, null, options, null);
+        JOptionPane pane = new JOptionPane(banPanel,
+              JOptionPane.PLAIN_MESSAGE,
+              JOptionPane.DEFAULT_OPTION,
+              null,
+              options,
+              null);
 
         //if ( house != null  )
         //   windowName = this.house.getName() +" Banned Ammo Dialog";
@@ -98,21 +99,19 @@ public class BannedTargetingDialog implements ActionListener {
             StringBuilder bans = new StringBuilder("/adminsetservertargetban ");
             for (int i = 0; i <= max; i++) {
                 if (newBans.get(i).isSelected()) {
-                    bans.append(i + "#");
+                    bans.append(i).append("#");
                 }
             }
-            mwclient.sendChat(bans.toString());
+            client.sendChat(bans.toString());
             dialog.dispose();
-            return;
         } else {
             // Kill it
             dialog.dispose();
-            return;
         }
 
     }
 
     private boolean getTargetSystemBanStatus(int type) {
-        return mwclient.getTargetSystemBanStatus(type);
+        return client.getTargetSystemBanStatus(type);
     }
 }

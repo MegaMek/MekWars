@@ -22,11 +22,9 @@ public class HPGPurgeThread extends Thread {
 
     HPGNet tracker;
 
-
     /**
      * Waits.  Because that's what threads do
      *
-     * @param time
      */
     private void extendedWait(long time) {
         try {
@@ -39,7 +37,6 @@ public class HPGPurgeThread extends Thread {
     /**
      * The thread in charge of deleting expired tracker entries
      *
-     * @param tracker
      */
     public HPGPurgeThread(HPGNet tracker) {
         this.tracker = tracker;
@@ -56,14 +53,16 @@ public class HPGPurgeThread extends Thread {
          */
         this.extendedWait(600000);
 
-        if (tracker.isBusy()) {this.extendedWait(90000);}
+        if (tracker.isBusy()) {
+            this.extendedWait(90000);
+        }
 
         /*
          * Begin blocking
          */
         tracker.getPurgingThreads().add(this);
 
-        Vector<HPGSubscriber> toDelete = new Vector<HPGSubscriber>();
+        Vector<HPGSubscriber> toDelete = new Vector<>();
 
         for (HPGSubscriber sub : tracker.getSubscribers()) {
             sub.calculateThreatLevel();
@@ -72,7 +71,7 @@ public class HPGPurgeThread extends Thread {
             }
         }
 
-        if (toDelete.size() > 0) {
+        if (!toDelete.isEmpty()) {
             for (HPGSubscriber sub : toDelete) {
                 tracker.delete(sub);
             }
@@ -84,7 +83,7 @@ public class HPGPurgeThread extends Thread {
         tracker.getPurgingThreads().remove(this);
 
         int hours = Integer.parseInt(tracker.getConfig().getProperty("purgefrequency", "12"));
-        int waittime = hours * 60 * 60 * 1000;
-        extendedWait(waittime);
+        int waitTime = hours * 60 * 60 * 1000;
+        extendedWait(waitTime);
     }
 }

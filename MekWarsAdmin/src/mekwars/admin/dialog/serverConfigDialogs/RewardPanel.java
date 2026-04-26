@@ -13,6 +13,7 @@ package mekwars.admin.dialog.serverConfigDialogs;
 
 import java.awt.Component;
 import java.awt.GridLayout;
+import java.io.Serial;
 
 import javax.swing.BoxLayout;
 import javax.swing.JCheckBox;
@@ -22,8 +23,8 @@ import javax.swing.JTextField;
 import javax.swing.SpringLayout;
 import javax.swing.SwingConstants;
 
-import client.MWClient;
-import common.util.SpringLayoutHelper;
+import mekwars.common.campaign.clientutils.protocol.IClient;
+import mekwars.common.util.SpringLayoutHelper;
 
 /**
  * @author jtighe
@@ -34,12 +35,10 @@ import common.util.SpringLayoutHelper;
 public class RewardPanel extends JPanel {
 
 
+    @Serial
     private static final long serialVersionUID = 3402880281077089882L;
 
-    private JTextField baseTextField = new JTextField(5);
-    private JCheckBox BaseCheckBox = new JCheckBox();
-
-    public RewardPanel(MWClient mwclient) {
+    public RewardPanel(IClient client) {
         super();
         /*
          * REWARD MENU CONSTRUCTION
@@ -54,71 +53,71 @@ public class RewardPanel extends JPanel {
         JLabel rewardAllowHeader = new JLabel("Allow rewards to be used for:");
         rewardAllowHeader.setAlignmentX(Component.CENTER_ALIGNMENT);
 
-        BaseCheckBox = new JCheckBox("DISPLAY");
+        JCheckBox baseCheckBox = new JCheckBox("DISPLAY");
 
-        BaseCheckBox.setToolTipText("If checked, reward levels are shown to players. RECOMMENDED.");
-        BaseCheckBox.setName("ShowReward");
-        rewardCBoxGrid.add(BaseCheckBox);
+        baseCheckBox.setToolTipText("If checked, reward levels are shown to players. RECOMMENDED.");
+        baseCheckBox.setName("ShowReward");
+        rewardCBoxGrid.add(baseCheckBox);
 
-        BaseCheckBox = new JCheckBox(mwclient.moneyOrFluMessage(false, true, -1));
+        baseCheckBox = new JCheckBox(client.moneyOrFluMessage(false, true, -1));
 
-        BaseCheckBox.setToolTipText("Check to allow players to exchange RP for flu");
-        BaseCheckBox.setName("AllowInfluenceForRewards");
-        rewardCBoxGrid.add(BaseCheckBox);
+        baseCheckBox.setToolTipText("Check to allow players to exchange RP for flu");
+        baseCheckBox.setName("AllowInfluenceForRewards");
+        rewardCBoxGrid.add(baseCheckBox);
 
         // @Author Salient (mwosux@gmail.com) , Add RP for CBills
-        BaseCheckBox = new JCheckBox(mwclient.moneyOrFluMessage(true, true, -1));
+        baseCheckBox = new JCheckBox(client.moneyOrFluMessage(true, true, -1));
 
-        BaseCheckBox.setToolTipText("Check to allow players to exchange RP for CBills");
-        BaseCheckBox.setName("AllowCBillsForRewards");
-        rewardCBoxGrid.add(BaseCheckBox);
+        baseCheckBox.setToolTipText("Check to allow players to exchange RP for CBills");
+        baseCheckBox.setName("AllowCBillsForRewards");
+        rewardCBoxGrid.add(baseCheckBox);
 
-        BaseCheckBox = new JCheckBox("Techs");
+        baseCheckBox = new JCheckBox("Techs");
 
-        BaseCheckBox.setToolTipText("Check to allow players to exchange RP for techs");
-        BaseCheckBox.setName("AllowTechsForRewards");
-        rewardCBoxGrid.add(BaseCheckBox);
+        baseCheckBox.setToolTipText("Check to allow players to exchange RP for techs");
+        baseCheckBox.setName("AllowTechsForRewards");
+        rewardCBoxGrid.add(baseCheckBox);
 
-        BaseCheckBox = new JCheckBox("Units");
+        baseCheckBox = new JCheckBox("Units");
 
-        BaseCheckBox.setToolTipText("Check to allow players to exchange RP for units");
-        BaseCheckBox.setName("AllowUnitsForRewards");
-        rewardCBoxGrid.add(BaseCheckBox);
+        baseCheckBox.setToolTipText("Check to allow players to exchange RP for units");
+        baseCheckBox.setName("AllowUnitsForRewards");
+        rewardCBoxGrid.add(baseCheckBox);
 
-        BaseCheckBox = new JCheckBox("Rares");
+        baseCheckBox = new JCheckBox("Rares");
 
-        BaseCheckBox.setToolTipText("Check to allow players to get RARE units with RP");
-        BaseCheckBox.setName("AllowRareUnitsForRewards");
-        rewardCBoxGrid.add(BaseCheckBox);
+        baseCheckBox.setToolTipText("Check to allow players to get RARE units with RP");
+        baseCheckBox.setName("AllowRareUnitsForRewards");
+        rewardCBoxGrid.add(baseCheckBox);
 
-        BaseCheckBox = new JCheckBox("Repods");
+        baseCheckBox = new JCheckBox("Repods");
 
-        BaseCheckBox.setToolTipText(
+        baseCheckBox.setToolTipText(
               "<html>Check to allow players to repod units with RP<br>This allows a player to repod a unit<br>even if its not on their build table<br>Random repod options based<br>on the random repod settings</html>");
-        BaseCheckBox.setName("GlobalRepodAllowed");
-        rewardCBoxGrid.add(BaseCheckBox);
+        baseCheckBox.setName("GlobalRepodAllowed");
+        rewardCBoxGrid.add(baseCheckBox);
 
-        BaseCheckBox = new JCheckBox("Refresh");
+        baseCheckBox = new JCheckBox("Refresh");
 
-        BaseCheckBox.setToolTipText("Check to allow players to refresh factories with RP");
-        BaseCheckBox.setName("AllowFactoryRefreshForRewards");
-        rewardCBoxGrid.add(BaseCheckBox);
+        baseCheckBox.setToolTipText("Check to allow players to refresh factories with RP");
+        baseCheckBox.setName("AllowFactoryRefreshForRewards");
+        rewardCBoxGrid.add(baseCheckBox);
 
-        BaseCheckBox = new JCheckBox("Repairs");
+        baseCheckBox = new JCheckBox("Repairs");
 
-        BaseCheckBox.setToolTipText("Check to allow players to repair units with RP");
-        BaseCheckBox.setName("AllowRepairsForRewards");
-        rewardCBoxGrid.add(BaseCheckBox);
+        baseCheckBox.setToolTipText("Check to allow players to repair units with RP");
+        baseCheckBox.setName("AllowRepairsForRewards");
+        rewardCBoxGrid.add(baseCheckBox);
 
-        BaseCheckBox = new JCheckBox("Crit Repairs");
-        BaseCheckBox.setToolTipText("Check to allow players to individual crits with RP");
-        BaseCheckBox.setName("AllowCritRepairsForRewards");
-        rewardCBoxGrid.add(BaseCheckBox);
+        baseCheckBox = new JCheckBox("Crit Repairs");
+        baseCheckBox.setToolTipText("Check to allow players to individual crits with RP");
+        baseCheckBox.setName("AllowCritRepairsForRewards");
+        rewardCBoxGrid.add(baseCheckBox);
 
         SpringLayoutHelper.setupSpringGrid(rewardCBoxGrid, 4);
 
         // set up spring1
-        baseTextField = new JTextField(5);
+        JTextField baseTextField = new JTextField(5);
         rewardSpring1.add(new JLabel("Max Reward Points:", SwingConstants.TRAILING));
         baseTextField.setToolTipText("RP Cap");
         baseTextField.setName("XPRewardCap");
@@ -131,25 +130,25 @@ public class RewardPanel extends JPanel {
         rewardSpring1.add(baseTextField);
 
         baseTextField = new JTextField(5);
-        rewardSpring1.add(new JLabel("Techs per " + mwclient.getserverConfigs("RPShortName"), SwingConstants.TRAILING));
+        rewardSpring1.add(new JLabel("Techs per " + client.getServerConfigs("RPShortName"), SwingConstants.TRAILING));
         baseTextField.setToolTipText("Number of techs hired with 1 RP");
         baseTextField.setName("TechsForARewardPoint");
         rewardSpring1.add(baseTextField);
 
         baseTextField = new JTextField(5);
-        rewardSpring1.add(new JLabel(mwclient.moneyOrFluMessage(false, true, -1) +
+        rewardSpring1.add(new JLabel(client.moneyOrFluMessage(false, true, -1) +
                                            " per " +
-                                           mwclient.getserverConfigs("RPShortName"), SwingConstants.TRAILING));
-        baseTextField.setToolTipText("Amount of flu given in exhcange for 1 RP");
+                                           client.getServerConfigs("RPShortName"), SwingConstants.TRAILING));
+        baseTextField.setToolTipText("Amount of flu given in exchange for 1 RP");
         baseTextField.setName("InfluenceForARewardPoint");
         rewardSpring1.add(baseTextField);
 
         // @Author Salient (mwosux@gmail.com) , Add RP for CBills
         baseTextField = new JTextField(5);
-        rewardSpring1.add(new JLabel(mwclient.moneyOrFluMessage(true, true, -1) +
+        rewardSpring1.add(new JLabel(client.moneyOrFluMessage(true, true, -1) +
                                            " per " +
-                                           mwclient.getserverConfigs("RPShortName"), SwingConstants.TRAILING));
-        baseTextField.setToolTipText("Amount of CBills given in exhcange for 1 RP");
+                                           client.getServerConfigs("RPShortName"), SwingConstants.TRAILING));
+        baseTextField.setToolTipText("Amount of CBills given in exchange for 1 RP");
         baseTextField.setName("CBillsForARewardPoint");
         rewardSpring1.add(baseTextField);
 
@@ -165,7 +164,7 @@ public class RewardPanel extends JPanel {
         baseTextField.setName("RewardPointNonHouseMultiplier");
         rewardSpring1.add(baseTextField);
 
-        if (Boolean.parseBoolean(mwclient.getserverConfigs("UseAdvanceRepair"))) {
+        if (Boolean.parseBoolean(client.getServerConfigs("UseAdvanceRepair"))) {
             baseTextField = new JTextField(5);
             rewardSpring1.add(new JLabel("RP to buy Green Tech:", SwingConstants.TRAILING));
             baseTextField.setToolTipText("RP to buy 1 green tech.");
@@ -201,7 +200,7 @@ public class RewardPanel extends JPanel {
         baseTextField.setName("RewardPointToRefreshFactory");
         rewardSpring2.add(baseTextField);
 
-        if (Boolean.parseBoolean(mwclient.getserverConfigs("UseAdvanceRepair"))) {
+        if (Boolean.parseBoolean(client.getServerConfigs("UseAdvanceRepair"))) {
             baseTextField = new JTextField(5);
             rewardSpring2.add(new JLabel("RP to buy Reg Tech:", SwingConstants.TRAILING));
             baseTextField.setToolTipText("RP to buy 1 reg tech.");

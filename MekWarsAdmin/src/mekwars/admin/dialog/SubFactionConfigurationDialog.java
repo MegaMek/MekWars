@@ -251,7 +251,7 @@ public final class SubFactionConfigurationDialog implements ActionListener {
     /**
      * This Method tunnels through all of the panels to find the textfields and checkboxes. Once it find one it grabs
      * the Name() param of the object and uses that to find out what the setting should be from the
-     * mwclient.getserverConfigs() method.
+     * client.getserverConfigs() method.
      *
      * @param panel
      */

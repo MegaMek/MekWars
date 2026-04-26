@@ -15,17 +15,16 @@ import java.awt.LayoutManager;
 
 /**
  *
- * A vertical layout manager similar to java.awt.FlowLayout.
- * Like FlowLayout components do not expand to fill available space except when the horizontal alignment
- * is <code>BOTH</code>
- * in which case components are stretched horizontally. Unlike FlowLayout, components will not wrap to form another
- * column if there isn't enough space vertically. VerticalLayout can optionally anchor components to the top or bottom
- * of the display area or center them between the top and bottom.
- *
+ * A vertical layout manager similar to java.awt.FlowLayout. Like FlowLayout components do not expand to fill available
+ * space except when the horizontal alignment is <code>BOTH</code> in which case components are stretched horizontally.
+ * Unlike FlowLayout, components will not wrap to form another column if there isn't enough space vertically.
+ * VerticalLayout can optionally anchor components to the top or bottom of the display area or center them between the
+ * top and bottom.
+ * <p>
  * Revision date 12th July 2001
  *
- * @author Colin Mummery  e-mail: colin_mummery@yahoo.com Homepage:www.kagi.com/equitysoft -
- * Based on 'FlexLayout' in Java class libraries Vol 2 Chan/Lee Addison-Wesley 1998
+ * @author Colin Mummery  e-mail: colin_mummery@yahoo.com Homepage:www.kagi.com/equitysoft - Based on 'FlexLayout' in
+ *       Java class libraries Vol 2 Chan/Lee Addison-Wesley 1998
  */
 
 public class VerticalLayout implements LayoutManager {
@@ -55,50 +54,53 @@ public class VerticalLayout implements LayoutManager {
      * The anchoring constant that designates anchoring to the bottom of the display area
      */
     public final static int BOTTOM = 2;
-    private int vgap; //the vertical vgap between components...defaults to 5
-    private int alignment; //LEFT, RIGHT, CENTER or BOTH...how the components are justified
-    private int anchor; //TOP, BOTTOM or CENTER ...where are the components positioned in an overlarge space
+    private final int verticalGap; //the vertical verticalGap between components...defaults to 5
+    private final int alignment; //LEFT, RIGHT, CENTER or BOTH...how the components are justified
+    private final int anchor; //TOP, BOTTOM or CENTER ...where are the components positioned in an overlarge space
     //private Hashtable comps;
 
     //Constructors
 
     /**
-     * Constructs an instance of VerticalLayout with a vertical vgap of 5 pixels, horizontal centering and anchored to
-     * the top of the display area.
+     * Constructs an instance of VerticalLayout with a vertical verticalGap of 5 pixels, horizontal centering and
+     * anchored to the top of the display area.
      */
     public VerticalLayout() {
         this(5, CENTER, TOP);
     }
 
     /**
-     * Constructs a VerticalLayout instance with horizontal centering, anchored to the top with the specified vgap
+     * Constructs a VerticalLayout instance with horizontal centering, anchored to the top with the specified
+     * verticalGap
      *
-     * @param vgap An int value indicating the vertical seperation of the components
+     * @param verticalGap An int value indicating the vertical seperation of the components
      */
-    public VerticalLayout(int vgap) {
-        this(vgap, CENTER, TOP);
+    public VerticalLayout(int verticalGap) {
+        this(verticalGap, CENTER, TOP);
     }
 
     /**
-     * Constructs a VerticalLayout instance anchored to the top with the specified vgap and horizontal alignment
+     * Constructs a VerticalLayout instance anchored to the top with the specified verticalGap and horizontal alignment
      *
-     * @param vgap An int value indicating the vertical seperation of the components
-     * @param alignment An int value which is one of <code>RIGHT, LEFT, CENTER, BOTH</code> for the horizontal alignment.
+     * @param verticalGap An int value indicating the vertical seperation of the components
+     * @param alignment   An int value which is one of <code>RIGHT, LEFT, CENTER, BOTH</code> for the horizontal
+     *                    alignment.
      */
-    public VerticalLayout(int vgap, int alignment) {
-        this(vgap, alignment, TOP);
+    public VerticalLayout(int verticalGap, int alignment) {
+        this(verticalGap, alignment, TOP);
     }
 
     /**
-     * Constructs a VerticalLayout instance with the specified vgap, horizontal alignment and anchoring
+     * Constructs a VerticalLayout instance with the specified verticalGap, horizontal alignment and anchoring
      *
-     * @param vgap An int value indicating the vertical seperation of the components
-     * @param alignment An int value which is one of <code>RIGHT, LEFT, CENTER, BOTH</code> for the horizontal alignment.
-     * @param anchor An int value which is one of <code>TOP, BOTTOM, CENTER</code> indicating where the components are
-     * to appear if the display area exceeds the minimum necessary.
+     * @param verticalGap An int value indicating the vertical seperation of the components
+     * @param alignment   An int value which is one of <code>RIGHT, LEFT, CENTER, BOTH</code> for the horizontal
+     *                    alignment.
+     * @param anchor      An int value which is one of <code>TOP, BOTTOM, CENTER</code> indicating where the components
+     *                    are to appear if the display area exceeds the minimum necessary.
      */
-    public VerticalLayout(int vgap, int alignment, int anchor) {
-        this.vgap = vgap;
+    public VerticalLayout(int verticalGap, int alignment, int anchor) {
+        this.verticalGap = verticalGap;
         this.alignment = alignment;
         this.anchor = anchor;
     }
@@ -115,13 +117,13 @@ public class VerticalLayout implements LayoutManager {
                     d = minimum ? c.getMinimumSize() : c.getPreferredSize();
                     dim.width = Math.max(dim.width, d.width);
                     dim.height += d.height;
-                    if (i > 0) {dim.height += vgap;}
+                    if (i > 0) {dim.height += verticalGap;}
                 }
             }
         }
         Insets insets = parent.getInsets();
         dim.width += insets.left + insets.right;
-        dim.height += insets.top + insets.bottom + vgap + vgap;
+        dim.height += insets.top + insets.bottom + verticalGap + verticalGap;
         return dim;
     }
     //-----------------------------------------------------------------------------
@@ -139,9 +141,9 @@ public class VerticalLayout implements LayoutManager {
             for (int i = 0; i < n; i++) {
                 Component c = parent.getComponent(i);
                 Dimension d = c.getPreferredSize();
-                y += d.height + vgap;
+                y += d.height + verticalGap;
             }
-            y -= vgap; //otherwise there's a vgap too many
+            y -= verticalGap; //otherwise there's a verticalGap too many
             //Work out the anchor paint
             if (anchor == TOP) {y = insets.top;} else if (anchor == CENTER) {y = (pd.height - y) / 2;} else {
                 y = pd.height - y - insets.bottom;
@@ -158,7 +160,7 @@ public class VerticalLayout implements LayoutManager {
                     wid = pd.width - insets.left - insets.right;
                 }
                 c.setBounds(x, y, wid, d.height);
-                y += d.height + vgap;
+                y += d.height + verticalGap;
             }
         }
     }
@@ -184,8 +186,8 @@ public class VerticalLayout implements LayoutManager {
     //-----------------------------------------------------------------------------
     public String toString() {
         return getClass().getName() +
-                     "[vgap=" +
-                     vgap +
+                     "[verticalGap=" +
+                     verticalGap +
                      " align=" +
                      alignment +
                      " anchor=" +

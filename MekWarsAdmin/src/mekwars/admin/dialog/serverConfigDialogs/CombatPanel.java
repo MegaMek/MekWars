@@ -12,6 +12,7 @@
 package mekwars.admin.dialog.serverConfigDialogs;
 
 import java.awt.GridLayout;
+import java.io.Serial;
 
 import javax.swing.BoxLayout;
 import javax.swing.JCheckBox;
@@ -21,7 +22,8 @@ import javax.swing.JTextField;
 import javax.swing.SpringLayout;
 import javax.swing.SwingConstants;
 
-import common.util.SpringLayoutHelper;
+import mekwars.common.util.SpringLayoutHelper;
+
 
 /**
  * @author Spork
@@ -29,9 +31,8 @@ import common.util.SpringLayoutHelper;
  */
 public class CombatPanel extends JPanel {
 
+    @Serial
     private static final long serialVersionUID = 1556861707519790557L;
-    private JTextField baseTextField = new JTextField(5);
-    private JCheckBox BaseCheckBox = new JCheckBox();
 
     public CombatPanel() {
         super();
@@ -55,91 +56,91 @@ public class CombatPanel extends JPanel {
         combatSpringFlow.add(combatSpring3);
         combatSpringFlow.add(combatSpring4);
 
-        BaseCheckBox = new JCheckBox("Probe In Reserve");
+        JCheckBox baseCheckBox = new JCheckBox("Probe In Reserve");
 
-        BaseCheckBox.setToolTipText("Allow /c ca in reserve mode?");
-        BaseCheckBox.setName("ProbeInReserve");
-        combatCBoxGrid.add(BaseCheckBox);
+        baseCheckBox.setToolTipText("Allow /c ca in reserve mode?");
+        baseCheckBox.setName("ProbeInReserve");
+        combatCBoxGrid.add(baseCheckBox);
 
-        BaseCheckBox = new JCheckBox("Use Real_Blind_Drops");
+        baseCheckBox = new JCheckBox("Use Real_Blind_Drops");
 
-        BaseCheckBox.setToolTipText(
+        baseCheckBox.setToolTipText(
               "<HTML>Check in order to use real_blind_drop option in MM,<br> hiding units from players until they appear on the map.<br>If this option is enabled, /c tasks and join messages will not show army composition.</HTML>");
-        BaseCheckBox.setName("UseBlindDrops");
-        combatCBoxGrid.add(BaseCheckBox);
+        baseCheckBox.setName("UseBlindDrops");
+        combatCBoxGrid.add(baseCheckBox);
 
-        BaseCheckBox = new JCheckBox("Show unit type counts");
-        BaseCheckBox.setName("ShowUnitTypeCounts");
-        BaseCheckBox.setToolTipText(
+        baseCheckBox = new JCheckBox("Show unit type counts");
+        baseCheckBox.setName("ShowUnitTypeCounts");
+        baseCheckBox.setToolTipText(
               "<HTML>If checked, unit type totals will be<br>shown in the attack / defend notifications <br>in blind operations</HTML>");
-        combatCBoxGrid.add(BaseCheckBox);
+        combatCBoxGrid.add(baseCheckBox);
 
-        BaseCheckBox = new JCheckBox("Selectable Salvage");
-        BaseCheckBox.setToolTipText("If set to true then players can recoup repair costs by scrapping salvaged units");
+        baseCheckBox = new JCheckBox("Selectable Salvage");
+        baseCheckBox.setToolTipText("If set to true then players can recoup repair costs by scrapping salvaged units");
 
-        BaseCheckBox.setName("SelectableSalvage");
-        combatCBoxGrid.add(BaseCheckBox);
+        baseCheckBox.setName("SelectableSalvage");
+        combatCBoxGrid.add(baseCheckBox);
 
-        BaseCheckBox = new JCheckBox("Use Force Salvage");
+        baseCheckBox = new JCheckBox("Use Force Salvage");
 
-        BaseCheckBox.setToolTipText("Count Mechs without a leg or 2 gyro hits as salvage?");
-        BaseCheckBox.setName("ForceSalvage");
-        combatCBoxGrid.add(BaseCheckBox);
+        baseCheckBox.setToolTipText("Count Mechs without a leg or 2 gyro hits as salvage?");
+        baseCheckBox.setName("ForceSalvage");
+        combatCBoxGrid.add(baseCheckBox);
 
-        BaseCheckBox = new JCheckBox("Use Static Maps");
+        baseCheckBox = new JCheckBox("Use Static Maps");
 
-        BaseCheckBox.setToolTipText("Use Already built maps vs terrain and RMG");
-        BaseCheckBox.setName("UseStaticMaps");
-        combatCBoxGrid.add(BaseCheckBox);
+        baseCheckBox.setToolTipText("Use Already built maps vs terrain and RMG");
+        baseCheckBox.setName("UseStaticMaps");
+        combatCBoxGrid.add(baseCheckBox);
 
-        BaseCheckBox = new JCheckBox("Disable Weather");
-        BaseCheckBox.setToolTipText("Disable all weather conditions");
-        BaseCheckBox.setName("DisableWeather");
-        combatCBoxGrid.add(BaseCheckBox);
+        baseCheckBox = new JCheckBox("Disable Weather");
+        baseCheckBox.setToolTipText("Disable all weather conditions");
+        baseCheckBox.setName("DisableWeather");
+        combatCBoxGrid.add(baseCheckBox);
 
-        BaseCheckBox = new JCheckBox("Show Inf In /c ca");
+        baseCheckBox = new JCheckBox("Show Inf In /c ca");
 
-        BaseCheckBox.setName("ShowInfInCheckAttack");
-        combatCBoxGrid.add(BaseCheckBox);
+        baseCheckBox.setName("ShowInfInCheckAttack");
+        combatCBoxGrid.add(baseCheckBox);
 
-        BaseCheckBox = new JCheckBox("Allow Limiters");
+        baseCheckBox = new JCheckBox("Allow Limiters");
 
-        BaseCheckBox.setName("AllowLimiters");
-        combatCBoxGrid.add(BaseCheckBox);
+        baseCheckBox.setName("AllowLimiters");
+        combatCBoxGrid.add(baseCheckBox);
 
-        BaseCheckBox = new JCheckBox("Count Inf For Limits");
+        baseCheckBox = new JCheckBox("Count Inf For Limits");
 
-        BaseCheckBox.setName("CountInfForLimiters");
-        combatCBoxGrid.add(BaseCheckBox);
+        baseCheckBox.setName("CountInfForLimiters");
+        combatCBoxGrid.add(baseCheckBox);
 
-        BaseCheckBox = new JCheckBox("Allow Unit Ratios");
+        baseCheckBox = new JCheckBox("Allow Unit Ratios");
 
-        BaseCheckBox.setToolTipText("If checked ratios will be followed otherwise anything goes.");
-        BaseCheckBox.setName("AllowRatios");
-        combatCBoxGrid.add(BaseCheckBox);
+        baseCheckBox.setToolTipText("If checked ratios will be followed otherwise anything goes.");
+        baseCheckBox.setName("AllowRatios");
+        combatCBoxGrid.add(baseCheckBox);
 
-        BaseCheckBox = new JCheckBox("Use Prelim Op Report");
+        baseCheckBox = new JCheckBox("Use Prelim Op Report");
 
-        BaseCheckBox.setToolTipText(
+        baseCheckBox.setToolTipText(
               "<html>Check this to allow the players a chance<br>of receiving prelim data on a task they've accepted</html>");
-        BaseCheckBox.setName("AllowPreliminaryOperationsReports");
-        combatCBoxGrid.add(BaseCheckBox);
+        baseCheckBox.setName("AllowPreliminaryOperationsReports");
+        combatCBoxGrid.add(baseCheckBox);
 
-        BaseCheckBox = new JCheckBox("Display Op Name");
+        baseCheckBox = new JCheckBox("Display Op Name");
 
-        BaseCheckBox.setToolTipText("Display the Op name to the defender");
-        BaseCheckBox.setName("DisplayOperationName");
-        combatCBoxGrid.add(BaseCheckBox);
+        baseCheckBox.setToolTipText("Display the Op name to the defender");
+        baseCheckBox.setName("DisplayOperationName");
+        combatCBoxGrid.add(baseCheckBox);
 
-        BaseCheckBox = new JCheckBox("Force Deactivate Players");
+        baseCheckBox = new JCheckBox("Force Deactivate Players");
 
-        BaseCheckBox.setToolTipText(
+        baseCheckBox.setToolTipText(
               "<html>If this is checked then after combat players are<br>automatically deactivated immunity time is also ignored.</html>");
-        BaseCheckBox.setName("ForcedDeactivation");
-        combatCBoxGrid.add(BaseCheckBox);
+        baseCheckBox.setName("ForcedDeactivation");
+        combatCBoxGrid.add(baseCheckBox);
 
         // spring1. 6 elements.
-        baseTextField = new JTextField(5);
+        JTextField baseTextField = new JTextField(5);
         combatSpring1.add(new JLabel("Upper Limit Buffer"));
         baseTextField.setToolTipText("<HTML>" +
                                            "Min Buffer On Upper Limiter. For example, a<br>" +
@@ -249,7 +250,7 @@ public class CombatPanel extends JPanel {
         baseTextField = new JTextField(5);
         combatSpring3.add(new JLabel("Mek to Vehicle Ratio:", SwingConstants.TRAILING));
         baseTextField.setToolTipText(
-              "<html><body>Only Used if AllowRatios is checked<br>Set the %Ratio for vehicle to Mek if set at 50% 1 vehcile to every 2 Meks<br>If set at 200% 2 Vehicles to 1 Mek is allowed</body></html>");
+              "<html><body>Only Used if AllowRatios is checked<br>Set the %Ratio for vehicle to Mek if set at 50% 1 vehicle to every 2 Meks<br>If set at 200% 2 Vehicles to 1 Mek is allowed</body></html>");
         baseTextField.setName("MekToVehicleRatio");
         combatSpring3.add(baseTextField);
 
@@ -258,54 +259,54 @@ public class CombatPanel extends JPanel {
         SpringLayoutHelper.setupSpringGrid(combatSpring2, 2);
         SpringLayoutHelper.setupSpringGrid(combatSpring3, 2);
 
-        BaseCheckBox = new JCheckBox("Show Unit Id?");
+        baseCheckBox = new JCheckBox("Show Unit Id?");
 
-        BaseCheckBox.setToolTipText("Unit ID are displayed to help ID units");
-        BaseCheckBox.setName("MMShowUnitId");
-        combatMMOptionsSpring.add(BaseCheckBox);
+        baseCheckBox.setToolTipText("Unit ID are displayed to help ID units");
+        baseCheckBox.setName("MMShowUnitId");
+        combatMMOptionsSpring.add(baseCheckBox);
 
-        BaseCheckBox = new JCheckBox("Time Stamp Save Games?");
+        baseCheckBox = new JCheckBox("Time Stamp Save Games?");
 
-        BaseCheckBox.setToolTipText("All Save Games will have a timestamp on them");
-        BaseCheckBox.setName("MMTimeStampLogFile");
-        combatMMOptionsSpring.add(BaseCheckBox);
+        baseCheckBox.setToolTipText("All Save Games will have a timestamp on them");
+        baseCheckBox.setName("MMTimeStampLogFile");
+        combatMMOptionsSpring.add(baseCheckBox);
 
-        BaseCheckBox = new JCheckBox("Keep Game Log?");
+        baseCheckBox = new JCheckBox("Keep Game Log?");
 
-        BaseCheckBox.setToolTipText("Save game log to users system");
-        BaseCheckBox.setName("MMKeepGameLog");
-        combatMMOptionsSpring.add(BaseCheckBox);
+        baseCheckBox.setToolTipText("Save game log to users system");
+        baseCheckBox.setName("MMKeepGameLog");
+        combatMMOptionsSpring.add(baseCheckBox);
 
-        BaseCheckBox = new JCheckBox("Allow partial bins?");
+        baseCheckBox = new JCheckBox("Allow partial bins?");
 
-        BaseCheckBox.setToolTipText(
-              "<html>Allow units in any army<br>to go active if they have partially full ammobins.</html>");
-        BaseCheckBox.setName("AllowUnitsToActivateWithPartialBins");
-        combatMMOptionsSpring.add(BaseCheckBox);
+        baseCheckBox.setToolTipText(
+              "<html>Allow units in any army<br>to go active if they have partially full ammo bins.</html>");
+        baseCheckBox.setName("AllowUnitsToActivateWithPartialBins");
+        combatMMOptionsSpring.add(baseCheckBox);
 
-        BaseCheckBox = new JCheckBox("Allow damaged units to activate?");
-        BaseCheckBox.setToolTipText("<html>Allow units in an army<br>to go active if they are damaged.</html>");
-        BaseCheckBox.setName("AllowActivationWithDamagedUnits");
-        combatMMOptionsSpring.add(BaseCheckBox);
+        baseCheckBox = new JCheckBox("Allow damaged units to activate?");
+        baseCheckBox.setToolTipText("<html>Allow units in an army<br>to go active if they are damaged.</html>");
+        baseCheckBox.setName("AllowActivationWithDamagedUnits");
+        combatMMOptionsSpring.add(baseCheckBox);
 
-        BaseCheckBox = new JCheckBox("Require attack-capable armies?");
-        BaseCheckBox.setName("RequireAttackCapableArmiesForActivation");
-        BaseCheckBox.setToolTipText(
+        baseCheckBox = new JCheckBox("Require attack-capable armies?");
+        baseCheckBox.setName("RequireAttackCapableArmiesForActivation");
+        baseCheckBox.setToolTipText(
               "<html>Require all armies to be attack capable in order or disallow activation.</html>");
-        combatMMOptionsSpring.add(BaseCheckBox);
+        combatMMOptionsSpring.add(baseCheckBox);
 
-        BaseCheckBox = new JCheckBox("Ignore pilots for BV calcs");
-        BaseCheckBox.setName("UseBaseBVForMatching");
-        BaseCheckBox.setToolTipText("<html>Checking this will always use a base 4/5 pilot for BV calcs</html>");
-        combatMMOptionsSpring.add(BaseCheckBox);
+        baseCheckBox = new JCheckBox("Ignore pilots for BV calcs");
+        baseCheckBox.setName("UseBaseBVForMatching");
+        baseCheckBox.setToolTipText("<html>Checking this will always use a base 4/5 pilot for BV calcs</html>");
+        combatMMOptionsSpring.add(baseCheckBox);
 
         SpringLayoutHelper.setupSpringGrid(combatMMOptionsSpring, 3);
 
-        BaseCheckBox = new JCheckBox("Allow Attacks From Reserve?");
+        baseCheckBox = new JCheckBox("Allow Attacks From Reserve?");
 
-        BaseCheckBox.setToolTipText("Allows players to arrange games and attack while in reserve");
-        BaseCheckBox.setName("AllowAttackFromReserve");
-        combatSpring4.add(BaseCheckBox);
+        baseCheckBox.setToolTipText("Allows players to arrange games and attack while in reserve");
+        baseCheckBox.setName("AllowAttackFromReserve");
+        combatSpring4.add(baseCheckBox);
 
         baseTextField = new JTextField(5);
         combatSpring4.add(new JLabel("Response Time:", SwingConstants.TRAILING));

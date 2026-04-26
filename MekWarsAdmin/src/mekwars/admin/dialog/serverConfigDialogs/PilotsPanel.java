@@ -12,6 +12,7 @@
 package mekwars.admin.dialog.serverConfigDialogs;
 
 import java.awt.GridLayout;
+import java.io.Serial;
 
 import javax.swing.JCheckBox;
 import javax.swing.JLabel;
@@ -20,8 +21,9 @@ import javax.swing.JTextField;
 import javax.swing.SpringLayout;
 import javax.swing.SwingConstants;
 
-import client.MWClient;
-import common.util.SpringLayoutHelper;
+import mekwars.common.campaign.clientutils.protocol.IClient;
+import mekwars.common.util.SpringLayoutHelper;
+
 
 /**
  * @author jtighe
@@ -32,11 +34,10 @@ public class PilotsPanel extends JPanel {
     /**
      *
      */
+    @Serial
     private static final long serialVersionUID = 5196079223646097482L;
-    private JTextField baseTextField = new JTextField(5);
-    private JCheckBox BaseCheckBox = new JCheckBox();
 
-    public PilotsPanel(MWClient mwclient) {
+    public PilotsPanel(IClient client) {
         super();
         /*
          * Pilots options panel
@@ -46,7 +47,7 @@ public class PilotsPanel extends JPanel {
         JPanel pilotOptionsSpring2 = new JPanel(new SpringLayout());
 
         // pilotSpring1, 8 elements
-        baseTextField = new JTextField(5);
+        JTextField baseTextField = new JTextField(5);
         pilotOptionsSpring1.add(new JLabel("Skill Change:", SwingConstants.TRAILING));
         baseTextField.setToolTipText("% chance for a new pilot to have a maxtech skill");
         baseTextField.setName("BornSkillChance");
@@ -131,11 +132,11 @@ public class PilotsPanel extends JPanel {
         baseTextField = new JTextField(5);
         pilotOptionsSpring2.add(new JLabel("Early Retire Cost:", SwingConstants.TRAILING));
         baseTextField.setToolTipText("<html>" +
-                                           mwclient.moneyOrFluMessage(true, true, -1) +
+                                           client.moneyOrFluMessage(true, true, -1) +
                                            " cost PER LEVEL to retire a pilot before free. For<br>" +
                                            "example, if Skill to Retire is 6, a pilot is 4/5 (Total:9)<br>" +
                                            "and the cost is 10, it will cost (9-6)*10=30 " +
-                                           mwclient.moneyOrFluMessage(true, true, -1) +
+                                           client.moneyOrFluMessage(true, true, -1) +
                                            " to<br>" +
                                            "retire the 4/5.</html>");
         baseTextField.setName("CostPerLevelToRetireEarly");
@@ -207,121 +208,121 @@ public class PilotsPanel extends JPanel {
         SpringLayoutHelper.setupSpringGrid(pilotOptionsSpring2, 2);
 
         // pilot cboxes
-        BaseCheckBox = new JCheckBox("Elite BV Mod");
-        BaseCheckBox.setToolTipText("Increase BV of units which are <2/X or X/<2 above FASA levels.");
-        BaseCheckBox.setName("ElitePilotsBVMod");
-        pilotCBoxGrid.add(BaseCheckBox);
+        JCheckBox baseCheckBox = new JCheckBox("Elite BV Mod");
+        baseCheckBox.setToolTipText("Increase BV of units which are <2/X or X/<2 above FASA levels.");
+        baseCheckBox.setName("ElitePilotsBVMod");
+        pilotCBoxGrid.add(baseCheckBox);
 
-        BaseCheckBox = new JCheckBox("MaxTech Skills");
-        BaseCheckBox.setName("PilotSkills");
-        BaseCheckBox.setToolTipText("Allow MaxTech pilot skills (Manuv. Ace, Pain Resist, etc)");
-        pilotCBoxGrid.add(BaseCheckBox);
+        baseCheckBox = new JCheckBox("MaxTech Skills");
+        baseCheckBox.setName("PilotSkills");
+        baseCheckBox.setToolTipText("Allow MaxTech pilot skills (Manuv. Ace, Pain Resist, etc)");
+        pilotCBoxGrid.add(baseCheckBox);
 
-        BaseCheckBox = new JCheckBox("Unlevel@Queue");
-        BaseCheckBox.setToolTipText("<HTML>" +
+        baseCheckBox = new JCheckBox("Unlevel@Queue");
+        baseCheckBox.setToolTipText("<HTML>" +
                                           "Unchecking allows Pilots to keep skills and XP in queue<br>" +
                                           "after their rides die.</HTML>");
-        BaseCheckBox.setName("ReduceSkillsInQue");
-        pilotCBoxGrid.add(BaseCheckBox);
+        baseCheckBox.setName("ReduceSkillsInQue");
+        pilotCBoxGrid.add(baseCheckBox);
 
-        BaseCheckBox = new JCheckBox("Allow Green Pilots");
-        BaseCheckBox.setToolTipText("Check in order to allow green pilots. 4/6, 5/5, etc.");
-        BaseCheckBox.setName("AllowGreenPilots");
-        pilotCBoxGrid.add(BaseCheckBox);
+        baseCheckBox = new JCheckBox("Allow Green Pilots");
+        baseCheckBox.setToolTipText("Check in order to allow green pilots. 4/6, 5/5, etc.");
+        baseCheckBox.setName("AllowGreenPilots");
+        pilotCBoxGrid.add(baseCheckBox);
 
-        BaseCheckBox = new JCheckBox("Allow Vet Pilots");
-        BaseCheckBox.setToolTipText("Check in order to allow vet pilots. 3/5, 4/4, etc.");
-        BaseCheckBox.setName("AllowVetPilots");
-        pilotCBoxGrid.add(BaseCheckBox);
+        baseCheckBox = new JCheckBox("Allow Vet Pilots");
+        baseCheckBox.setToolTipText("Check in order to allow vet pilots. 3/5, 4/4, etc.");
+        baseCheckBox.setName("AllowVetPilots");
+        pilotCBoxGrid.add(baseCheckBox);
 
-        BaseCheckBox = new JCheckBox("Allow PPQ");
-        BaseCheckBox.setToolTipText(
+        baseCheckBox = new JCheckBox("Allow PPQ");
+        baseCheckBox.setToolTipText(
               "<HTML>Allow Personal Pilot Queues<br>Players are allowed to keep their own pilots instead of them going to the faction pools</HTML>");
-        BaseCheckBox.setName("AllowPersonalPilotQueues");
-        pilotCBoxGrid.add(BaseCheckBox);
+        baseCheckBox.setName("AllowPersonalPilotQueues");
+        pilotCBoxGrid.add(baseCheckBox);
 
-        BaseCheckBox = new JCheckBox("Allow Extra Pilots");
-        BaseCheckBox.setToolTipText(
+        baseCheckBox = new JCheckBox("Allow Extra Pilots");
+        baseCheckBox.setToolTipText(
               "<HTML>When checked the players can buy<br>pilots from the faction pool<br>even if they already have pilots of that<br>type/class in their pools</HTML>");
-        BaseCheckBox.setName("AllowPlayerToBuyPilotsFromHouseWhenPoolIsFull");
-        pilotCBoxGrid.add(BaseCheckBox);
+        baseCheckBox.setName("AllowPlayerToBuyPilotsFromHouseWhenPoolIsFull");
+        pilotCBoxGrid.add(baseCheckBox);
 
-        BaseCheckBox = new JCheckBox("Downed Pilots Roll");
-        BaseCheckBox.setToolTipText(
+        baseCheckBox = new JCheckBox("Downed Pilots Roll");
+        baseCheckBox.setToolTipText(
               "<HTML>When checked a downed pilot must make a survival roll<br>to see if they make it home<br>or are captured</HTML>");
-        BaseCheckBox.setName("DownPilotsMustRollForSurvival");
-        pilotCBoxGrid.add(BaseCheckBox);
+        baseCheckBox.setName("DownPilotsMustRollForSurvival");
+        pilotCBoxGrid.add(baseCheckBox);
 
-        BaseCheckBox = new JCheckBox("Allow Retirement");
-        BaseCheckBox.setToolTipText("Allow players to retire their pilots.");
-        BaseCheckBox.setName("PilotRetirementAllowed");
-        pilotCBoxGrid.add(BaseCheckBox);
+        baseCheckBox = new JCheckBox("Allow Retirement");
+        baseCheckBox.setToolTipText("Allow players to retire their pilots.");
+        baseCheckBox.setName("PilotRetirementAllowed");
+        pilotCBoxGrid.add(baseCheckBox);
 
-        BaseCheckBox = new JCheckBox("Early Retirement");
-        BaseCheckBox.setToolTipText("Allow players to pay a fee in order to retire their pilots earlier than normal.");
-        BaseCheckBox.setName("EarlyRetirementAllowed");
-        pilotCBoxGrid.add(BaseCheckBox);
+        baseCheckBox = new JCheckBox("Early Retirement");
+        baseCheckBox.setToolTipText("Allow players to pay a fee in order to retire their pilots earlier than normal.");
+        baseCheckBox.setName("EarlyRetirementAllowed");
+        pilotCBoxGrid.add(baseCheckBox);
 
-        BaseCheckBox = new JCheckBox("Elite Retirements");
-        BaseCheckBox.setToolTipText(
+        baseCheckBox = new JCheckBox("Elite Retirements");
+        baseCheckBox.setToolTipText(
               "<html>Randomly retire elite pilots who can't level any more. Rolls to retire are<br>" +
                     "against the same target as their final level up. This automated retirement is separate<br>" +
                     "from player-initiated retirement and will work even if \"Allow Retirement\" is disabled.</html>");
-        BaseCheckBox.setName("RandomRetirementOfElites");
-        pilotCBoxGrid.add(BaseCheckBox);
+        baseCheckBox.setName("RandomRetirementOfElites");
+        pilotCBoxGrid.add(baseCheckBox);
 
-        BaseCheckBox = new JCheckBox("Common Names Only");
-        BaseCheckBox.setToolTipText("Pilot names are only pulled from the Pilotnames.txt");
-        BaseCheckBox.setName("UseCommonPilotNameFileOnly");
-        pilotCBoxGrid.add(BaseCheckBox);
+        baseCheckBox = new JCheckBox("Common Names Only");
+        baseCheckBox.setToolTipText("Pilot names are only pulled from the Pilotnames.txt");
+        baseCheckBox.setName("UseCommonPilotNameFileOnly");
+        pilotCBoxGrid.add(baseCheckBox);
 
-        BaseCheckBox = new JCheckBox("Random Pilot Levels");
-        BaseCheckBox.setToolTipText("<html>" +
+        baseCheckBox = new JCheckBox("Random Pilot Levels");
+        baseCheckBox.setToolTipText("<html>" +
                                           "Disable to use RPG style pilot levelling. Pilots must gain<br>" +
                                           "Base * Multiplier * (10-Skill) XP to reach next level.<br>" +
                                           "Random roll to level up is removed - only raw XP is used.</html>");
-        BaseCheckBox.setName("UseRandomPilotLevelups");
-        pilotCBoxGrid.add(BaseCheckBox);
+        baseCheckBox.setName("UseRandomPilotLevelups");
+        pilotCBoxGrid.add(baseCheckBox);
 
-        BaseCheckBox = new JCheckBox("Pilot Damage Transfers");
-        BaseCheckBox.setToolTipText(
+        baseCheckBox = new JCheckBox("Pilot Damage Transfers");
+        baseCheckBox.setToolTipText(
               "<html>If a pilot takes damage in a game it'll transfer back to the campaign<br>and the pilot will need to heal up.</html>");
-        BaseCheckBox.setName("AllowPilotDamageToTransfer");
-        pilotCBoxGrid.add(BaseCheckBox);
+        baseCheckBox.setName("AllowPilotDamageToTransfer");
+        pilotCBoxGrid.add(baseCheckBox);
 
-        BaseCheckBox = new JCheckBox("Crews Stay With Units");
-        BaseCheckBox.setToolTipText("<html>If Checked Crews stay with thier units after being donated.</html>");
-        BaseCheckBox.setName("CrewsStayWithUnits");
-        pilotCBoxGrid.add(BaseCheckBox);
+        baseCheckBox = new JCheckBox("Crews Stay With Units");
+        baseCheckBox.setToolTipText("<html>If Checked Crews stay with thier units after being donated.</html>");
+        baseCheckBox.setName("CrewsStayWithUnits");
+        pilotCBoxGrid.add(baseCheckBox);
 
-        BaseCheckBox = new JCheckBox("All Pilots Level");
-        BaseCheckBox.setToolTipText("<html>If Checked Then even losing pilots will have a chance to level.</html>");
-        BaseCheckBox.setName("LosingPilotsCheckToLevel");
-        pilotCBoxGrid.add(BaseCheckBox);
+        baseCheckBox = new JCheckBox("All Pilots Level");
+        baseCheckBox.setToolTipText("<html>If Checked Then even losing pilots will have a chance to level.</html>");
+        baseCheckBox.setName("LosingPilotsCheckToLevel");
+        pilotCBoxGrid.add(baseCheckBox);
 
-        BaseCheckBox = new JCheckBox("Players Level Pilots");
-        BaseCheckBox.setToolTipText(
+        baseCheckBox = new JCheckBox("Players Level Pilots");
+        baseCheckBox.setToolTipText(
               "<html>If Checked Then pilots do not check for leveling after each Operation<br> instead they players can buy skills and attributes with the pilots exp.</html>");
-        BaseCheckBox.setName("PlayersCanBuyPilotUpgrades");
-        pilotCBoxGrid.add(BaseCheckBox);
+        baseCheckBox.setName("PlayersCanBuyPilotUpgrades");
+        pilotCBoxGrid.add(baseCheckBox);
 
-        BaseCheckBox = new JCheckBox("Pilots Must level Evenly");
-        BaseCheckBox.setToolTipText(
+        baseCheckBox = new JCheckBox("Pilots Must level Evenly");
+        baseCheckBox.setToolTipText(
               "<html>If Checked then players must level their pilots skills via stair step.<br>This means no more then 1 difference between gunnery and piloting<br>unless the Pilot has NAG or NAP.</html>");
-        BaseCheckBox.setName("PilotsMustLevelEvenly");
-        pilotCBoxGrid.add(BaseCheckBox);
+        baseCheckBox.setName("PilotsMustLevelEvenly");
+        pilotCBoxGrid.add(baseCheckBox);
 
-        BaseCheckBox = new JCheckBox("Players Demote Pilots");
-        BaseCheckBox.setToolTipText(
+        baseCheckBox = new JCheckBox("Players Demote Pilots");
+        baseCheckBox.setToolTipText(
               "<html>If Checked, as well as Players Level Pilots, Then players can sell back pilots skills.</html>");
-        BaseCheckBox.setName("PlayersCanSellPilotUpgrades");
-        pilotCBoxGrid.add(BaseCheckBox);
+        baseCheckBox.setName("PlayersCanSellPilotUpgrades");
+        pilotCBoxGrid.add(baseCheckBox);
 
-        BaseCheckBox = new JCheckBox("Allow Asymmetric Levelling");
-        BaseCheckBox.setToolTipText(
+        baseCheckBox = new JCheckBox("Allow Asymmetric Levelling");
+        baseCheckBox.setToolTipText(
               "<html>If checked, pilots will be able to level up asymmetrically (2/5, 1/5, 4/2, etc)</html>");
-        BaseCheckBox.setName("AllowAsymmetricPilotLevels");
-        pilotCBoxGrid.add(BaseCheckBox);
+        baseCheckBox.setName("AllowAsymmetricPilotLevels");
+        pilotCBoxGrid.add(baseCheckBox);
 
 
         // finalize the layout

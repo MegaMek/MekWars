@@ -1,5 +1,6 @@
 package mekwars.admin.dialog.serverConfigDialogs;
 
+import java.io.Serial;
 import javax.swing.BoxLayout;
 import javax.swing.JCheckBox;
 import javax.swing.JLabel;
@@ -8,16 +9,16 @@ import javax.swing.JTextField;
 import javax.swing.SpringLayout;
 import javax.swing.SwingConstants;
 
-import common.util.SpringLayoutHelper;
+import mekwars.common.util.SpringLayoutHelper;
+
 
 public class PathsPanel extends JPanel {
 
     /**
      *
      */
+    @Serial
     private static final long serialVersionUID = 5411927593664279713L;
-    private JTextField baseTextField = new JTextField(5);
-    private JCheckBox BaseCheckBox = new JCheckBox();
 
     public PathsPanel() {
 
@@ -27,7 +28,7 @@ public class PathsPanel extends JPanel {
         // and a sub panel to put a spring layout into.
         JPanel pathsSubPanel = new JPanel(new SpringLayout());
 
-        baseTextField = new JTextField(5);
+        JTextField baseTextField = new JTextField(5);
 
         pathsSubPanel.add(new JLabel("ELO Ranking Path:", SwingConstants.TRAILING));
         baseTextField.setToolTipText("Path to Ranking.htm");
@@ -91,11 +92,11 @@ public class PathsPanel extends JPanel {
 
         // thats all the path naming options. put the HTML CBox here, as it
         // was in the old UI, for now. Should be moved eventually.
-        BaseCheckBox = new JCheckBox("Enable HTML Output");
+        JCheckBox baseCheckBox = new JCheckBox("Enable HTML Output");
 
-        BaseCheckBox.setToolTipText("Uncheck to disable html output [ranking, etc.]");
-        BaseCheckBox.setName("HTMLOUTPUT");
-        pathsBox.add(BaseCheckBox);
+        baseCheckBox.setToolTipText("Uncheck to disable html output [ranking, etc.]");
+        baseCheckBox.setName("HTMLOUTPUT");
+        pathsBox.add(baseCheckBox);
 
         //        BaseCheckBox = new JCheckBox("Enable Discord Integration");
         //        BaseCheckBox.setName("DiscordEnable");

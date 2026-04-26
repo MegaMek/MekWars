@@ -21,7 +21,7 @@ import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
 
-import common.util.MWLogger;
+import mekwars.common.util.MWLogger;
 
 /**
  * HPGListenerThread listens for connections from MekWars servers, makes the connections and hands them off to
@@ -59,7 +59,7 @@ public class HPGListenerThread extends Thread {
         int listenPort = hpgnet.getPort();
 
         try {
-            hpgnet.addToLog("attempt to open a serversocket on port " + listenPort);
+            hpgnet.addToLog("attempt to open a server socket on port " + listenPort);
             server = new ServerSocket(listenPort, 0, InetAddress.getLocalHost());
             while (true) {//always listen for calls
                 Socket sock = server.accept();

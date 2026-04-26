@@ -11,6 +11,7 @@
 
 package mekwars.admin.dialog.serverConfigDialogs;
 
+import java.io.Serial;
 import javax.swing.BorderFactory;
 import javax.swing.JCheckBox;
 import javax.swing.JLabel;
@@ -19,9 +20,10 @@ import javax.swing.JTextField;
 import javax.swing.SpringLayout;
 import javax.swing.SwingConstants;
 
-import client.MWClient;
-import common.VerticalLayout;
-import common.util.SpringLayoutHelper;
+import mekwars.common.VerticalLayout;
+import mekwars.common.campaign.clientutils.protocol.IClient;
+import mekwars.common.util.SpringLayoutHelper;
+
 
 /**
  *
@@ -29,12 +31,10 @@ import common.util.SpringLayoutHelper;
  */
 public class MiniCampaignPanel extends JPanel {
 
+    @Serial
     private static final long serialVersionUID = -4626004179999981829L;
 
-    private JTextField baseTextField = new JTextField(5);
-    private JCheckBox baseCheckBox = new JCheckBox();
-
-    public MiniCampaignPanel(MWClient mwclient) {
+    public MiniCampaignPanel(IClient client) {
         super();
 
         setLayout(new VerticalLayout(5, VerticalLayout.CENTER, VerticalLayout.TOP));
@@ -65,9 +65,9 @@ public class MiniCampaignPanel extends JPanel {
         JPanel panel5b = new JPanel();
         //JPanel panel5c = new JPanel();
 
-        String fluName = mwclient.getserverConfigs("FluShortName").toUpperCase();
-        String rpName = mwclient.getserverConfigs("RPShortName").toUpperCase();
-        String cbName = mwclient.getserverConfigs("MoneyShortName").toUpperCase();
+        String fluName = client.getServerConfigs("FluShortName").toUpperCase();
+        String rpName = client.getServerConfigs("RPShortName").toUpperCase();
+        String cbName = client.getServerConfigs("MoneyShortName").toUpperCase();
 
         panel0.setBorder(BorderFactory.createTitledBorder("Mini Campaign"));
 
@@ -76,7 +76,7 @@ public class MiniCampaignPanel extends JPanel {
         panel4.setBorder(BorderFactory.createTitledBorder("Options"));
         panel4.setLayout(new VerticalLayout(5, VerticalLayout.CENTER, VerticalLayout.TOP));
 
-        baseCheckBox = new JCheckBox("Enable Mini Campaigns");
+        JCheckBox baseCheckBox = new JCheckBox("Enable Mini Campaigns");
         baseCheckBox.setToolTipText(
               "<HTML>!!Do NOT reward selected currencies ANY other way or you will break MC.!! Do NOT use xmas code!! <br> After a certain point, allows player to rebuild forces. Can only use units once per mini campaign.</HTML>");
         baseCheckBox.setName("Enable_MiniCampaign");
@@ -84,7 +84,7 @@ public class MiniCampaignPanel extends JPanel {
 
         panel4b.setBorder(BorderFactory.createTitledBorder("Restock Triggers (what causes the mini campaign to end)"));
 
-        baseTextField = new JTextField(5);
+        JTextField baseTextField = new JTextField(5);
         panel4b.add(new JLabel("% Hangar BV", SwingConstants.TRAILING));
         baseTextField.setToolTipText(
               "<HTML>(-1 to disable) Initiate 'restock' of players hangar when hangar bv drops below this percentage </HTML>");

@@ -1,12 +1,14 @@
 package mekwars.admin.dialog.serverConfigDialogs;
 
 import java.awt.Dimension;
+import java.io.Serial;
 
 import javax.swing.JTextField;
 import javax.swing.text.Document;
 
 public class PilotSkillTextField extends JTextField {
 
+    @Serial
     private static final long serialVersionUID = -312611296349397491L;
 
     public PilotSkillTextField() {

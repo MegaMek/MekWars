@@ -1,5 +1,6 @@
 package mekwars.admin.dialog.serverConfigDialogs;
 
+import java.io.Serial;
 import javax.swing.ButtonGroup;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
@@ -10,8 +11,8 @@ import javax.swing.JTextField;
 import javax.swing.SpringLayout;
 import javax.swing.SwingConstants;
 
-import common.VerticalLayout;
-import common.util.SpringLayoutHelper;
+import mekwars.common.VerticalLayout;
+import mekwars.common.util.SpringLayoutHelper;
 
 
 /**
@@ -22,6 +23,7 @@ import common.util.SpringLayoutHelper;
  */
 public class ChristmasUnitPanel extends JPanel {
 
+    @Serial
     private static final long serialVersionUID = 3237635461980154996L;
     JTextField hiddenField;
 

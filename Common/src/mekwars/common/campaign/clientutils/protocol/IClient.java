@@ -1,5 +1,13 @@
 package mekwars.common.campaign.clientutils.protocol;
 
+import java.awt.Dialog;
+import java.util.Map;
+
+import mekwars.common.CampaignData;
+import mekwars.common.Equipment;
+import mekwars.common.Player;
+import mekwars.common.campaign.clientutils.IClientUser;
+
 public interface IClient {
     /**
      * The delimiter.  A tab character.
@@ -8,11 +16,13 @@ public interface IClient {
 
     String PROTOCOL_DELIMITER = "\t"; // delimiter for protocol commands
     String PROTOCOL_PREFIX = "/"; // prefix for protocol commands
+    String CLIENT_VERSION = "0.8.0.0"; // change this with
+    String CAMPAIGN_PREFIX = "/"; // prefix for campaign commands
 
     /**
-     * if you understand this you are a 1.1-compliant client. Following DEFLATED + DELIMITER is the number of bytes in
-     * the undeflated text. This will be a maximum of 29999, so you don't have to buffer more than that.
-     * com.carnageblender.chat.net gives an example implemenation.
+     * If you understand this, you are a 1.1-compliant client. Following DEFLATED + DELIMITER is the number of bytes in
+     * the undeflated text. This will be a maximum of 29,999, so you don't have to buffer more than that.
+     * com.carnageblender.chat.net gives an example implementation.
      */
     String DEFLATED = "/deflated";
 
@@ -44,4 +54,38 @@ public interface IClient {
     void parseDedDataInput(String input);
 
     void setLastPing(long lastPing);
+
+    void sendChat(String string);
+
+    Player getPlayer();
+
+    String moneyOrFluMessage(boolean b, boolean b1, int i);
+
+    String moneyOrFluMessage(boolean b, boolean b1, int i, boolean b2);
+
+    String getServerConfigs(String rpShortName);
+
+    CampaignData getData();
+
+    void loadBannedAmmo();
+
+    boolean getTargetSystemBanStatus(int type);
+
+    Dialog getMainFrame();
+
+    void loadServerCommands();
+
+    IClientUser getUser(String name);
+
+    void getBlackMarketSettings();
+
+    Map<String, Equipment> getBlackMarketEquipmentList();
+
+    void reloadData();
+
+    void getServerConfigData();
+
+    void putServerConfigs(String config, String text);
+
+    void refreshData();
 }

@@ -12,6 +12,7 @@
 package mekwars.admin.dialog.serverConfigDialogs;
 
 import java.awt.GridLayout;
+import java.io.Serial;
 
 import javax.swing.BoxLayout;
 import javax.swing.JCheckBox;
@@ -21,7 +22,7 @@ import javax.swing.JTextField;
 import javax.swing.SpringLayout;
 import javax.swing.SwingConstants;
 
-import common.util.SpringLayoutHelper;
+import mekwars.common.util.SpringLayoutHelper;
 
 /**
  * @author jtighe
@@ -32,9 +33,8 @@ public class ProductionPanel extends JPanel {
     /**
      *
      */
+    @Serial
     private static final long serialVersionUID = 9048716063514829354L;
-    private JTextField baseTextField = new JTextField(5);
-    private JCheckBox BaseCheckBox = new JCheckBox();
 
     public ProductionPanel() {
         super();
@@ -49,7 +49,7 @@ public class ProductionPanel extends JPanel {
         JPanel prodCrit = new JPanel(new SpringLayout());
 
         // refresh spring
-        baseTextField = new JTextField(5);
+        JTextField baseTextField = new JTextField(5);
         refreshSpringPanel.add(new JLabel("Light Refresh:", SwingConstants.TRAILING));
         baseTextField.setToolTipText("Miniticks to refresh a light factory");
         baseTextField.setName("LightRefresh");
@@ -138,18 +138,18 @@ public class ProductionPanel extends JPanel {
         prodMiscPanel.add(baseTextField);
 
         // Check Box Spring
-        BaseCheckBox = new JCheckBox();
+        JCheckBox baseCheckBox = new JCheckBox();
         prodCBoxSpring.add(new JLabel("Produce w/o factory:", SwingConstants.TRAILING));
-        BaseCheckBox.setToolTipText(
+        baseCheckBox.setToolTipText(
               "If checked, components will be produced even if no factory of a type/weightclass is owned");
-        BaseCheckBox.setName("ProduceComponentsWithNoFactory");
-        prodCBoxSpring.add(BaseCheckBox);
+        baseCheckBox.setName("ProduceComponentsWithNoFactory");
+        prodCBoxSpring.add(baseCheckBox);
 
-        BaseCheckBox = new JCheckBox();
+        baseCheckBox = new JCheckBox();
         prodCBoxSpring.add(new JLabel("Output Multipliers:", SwingConstants.TRAILING));
-        BaseCheckBox.setToolTipText("If checked, personal production multipliers will be shown on ticks");
-        BaseCheckBox.setName("ShowOutputMultiplierOnTick");
-        prodCBoxSpring.add(BaseCheckBox);
+        baseCheckBox.setToolTipText("If checked, personal production multipliers will be shown on ticks");
+        baseCheckBox.setName("ShowOutputMultiplierOnTick");
+        prodCBoxSpring.add(baseCheckBox);
 
         baseTextField = new JTextField(5);
         prodCrit.add(new JLabel("Base Component to Money:", SwingConstants.TRAILING));

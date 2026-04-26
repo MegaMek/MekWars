@@ -18,15 +18,15 @@ package mekwars.common;
 
 import java.io.IOException;
 
-import common.util.BinReader;
-import common.util.BinWriter;
+import mekwars.common.persistence.BinReader;
+import mekwars.common.persistence.BinWriter;
 
 
 /**
  * Implementing this interface allows the object to be serialized with only mutable fields. Mutable fields are those
  * which change often and thus required to be transferred between Server and Client a lot.
  * <p>
- * Since it could be impossible to decide which data to be transfered (when encoding) or what object instance should be
+ * Since it could be impossible to decide which data to be transferred (when encoding) or what object instance should be
  * created (decoding), a data provider is given as argument to retrieve necessary cross references.
  *
  * @author Imi (immanuel.scholz@gmx.de)
@@ -35,12 +35,12 @@ public interface MutableSerializable {
     /**
      * Encode all mutable fields into the stream. Use as few bits as possible.
      */
-    public void encodeMutableFields(BinWriter out,
+    void encodeMutableFields(BinWriter out,
           CampaignData dataProvider) throws IOException;
 
     /**
      * Decode all mutable fields from the stream.
      */
-    public void decodeMutableFields(BinReader in,
+    void decodeMutableFields(BinReader in,
           CampaignData dataProvider) throws IOException;
 }

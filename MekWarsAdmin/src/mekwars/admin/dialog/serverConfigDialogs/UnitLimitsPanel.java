@@ -12,6 +12,7 @@
 package mekwars.admin.dialog.serverConfigDialogs;
 
 import java.awt.GridLayout;
+import java.io.Serial;
 
 import javax.swing.BorderFactory;
 import javax.swing.BoxLayout;
@@ -20,8 +21,8 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
 
-import common.Unit;
-import common.VerticalLayout;
+import mekwars.common.Unit;
+import mekwars.common.VerticalLayout;
 
 /**
  * @author Spork
@@ -31,9 +32,8 @@ public class UnitLimitsPanel extends JPanel {
     /**
      *
      */
+    @Serial
     private static final long serialVersionUID = -8530331266870414139L;
-    private JTextField baseTextField = new JTextField(5);
-    private JCheckBox BaseCheckBox = new JCheckBox();
 
     public UnitLimitsPanel() {
         super();
@@ -52,7 +52,8 @@ public class UnitLimitsPanel extends JPanel {
         ulBottomPanel.add(new JLabel("Heavy"));
         ulBottomPanel.add(new JLabel("Assault"));
 
-        for (int type = Unit.MEK; type < Unit.MAXBUILD; type++) {
+        JTextField baseTextField;
+        for (int type = Unit.MEK; type < Unit.MAX_BUILD; type++) {
             ulBottomPanel.add(new JLabel(Unit.getTypeClassDesc(type)));
             for (int weight = Unit.LIGHT; weight <= Unit.ASSAULT; weight++) {
                 baseTextField = new JTextField(5);
@@ -61,7 +62,7 @@ public class UnitLimitsPanel extends JPanel {
                                                    Unit.getWeightClassDesc(weight) +
                                                    " " +
                                                    Unit.getTypeClassDesc(type) +
-                                                   ((Unit.getTypeClassDesc(type) == "Infantry") ? "" : "s") +
+                                                   ((Unit.getTypeClassDesc(type).equals("Infantry")) ? "" : "s") +
                                                    ".  -1 to disable limit");
                 ulBottomPanel.add(baseTextField);
             }
@@ -80,20 +81,20 @@ public class UnitLimitsPanel extends JPanel {
         ulAPTop.setBorder(BorderFactory.createEmptyBorder(0, 5, 0, 5));
         ulAPBottom.setBorder(BorderFactory.createEmptyBorder(0, 5, 0, 5));
 
-        BaseCheckBox = new JCheckBox("Disable Activation");
-        BaseCheckBox.setName("DisableActivationIfOverHangarLimits");
-        BaseCheckBox.setToolTipText("Players over the limits cannot go active.");
-        ulAPTop.add(BaseCheckBox);
-        BaseCheckBox = new JCheckBox("Disable AFR");
-        BaseCheckBox.setName("DisableAFRIfOverHangarLimits");
-        BaseCheckBox.setToolTipText("Players over the limits cannot initiate or defend Attack From Reserve.");
-        ulAPTop.add(BaseCheckBox);
+        JCheckBox baseCheckBox = new JCheckBox("Disable Activation");
+        baseCheckBox.setName("DisableActivationIfOverHangarLimits");
+        baseCheckBox.setToolTipText("Players over the limits cannot go active.");
+        ulAPTop.add(baseCheckBox);
+        baseCheckBox = new JCheckBox("Disable AFR");
+        baseCheckBox.setName("DisableAFRIfOverHangarLimits");
+        baseCheckBox.setToolTipText("Players over the limits cannot initiate or defend Attack From Reserve.");
+        ulAPTop.add(baseCheckBox);
 
-        BaseCheckBox = new JCheckBox("Use Sliding Hangar Limits");
-        BaseCheckBox.setName("UseSlidingHangarLimits");
-        BaseCheckBox.setToolTipText(
+        baseCheckBox = new JCheckBox("Use Sliding Hangar Limits");
+        baseCheckBox.setName("UseSlidingHangarLimits");
+        baseCheckBox.setToolTipText(
               "<html>Checking this box enables modified limits that increase in cost as more units are purchased.<br>See 'Using Sliding Hangar Limits.pdf'<br><br>Please note that at this time, this is an on/off switch - the per fight and on purchase options do nothing.</html>");
-        ulAPBottom.add(BaseCheckBox);
+        ulAPBottom.add(baseCheckBox);
 
         ulAPBottom.add(new JLabel("Multiplier:"));
         baseTextField = new JTextField(5);
@@ -101,15 +102,15 @@ public class UnitLimitsPanel extends JPanel {
         baseTextField.setToolTipText("Multiplier for sliding hangar limits");
         ulAPBottom.add(baseTextField);
 
-        BaseCheckBox = new JCheckBox("Apply to Purchase");
-        BaseCheckBox.setName("SlidingHangarLimitsAffectPurchase");
-        BaseCheckBox.setToolTipText("The over-limit penalty will be applied to purchase price");
-        ulAPBottom.add(BaseCheckBox);
+        baseCheckBox = new JCheckBox("Apply to Purchase");
+        baseCheckBox.setName("SlidingHangarLimitsAffectPurchase");
+        baseCheckBox.setToolTipText("The over-limit penalty will be applied to purchase price");
+        ulAPBottom.add(baseCheckBox);
 
-        BaseCheckBox = new JCheckBox("Apply to Payout");
-        BaseCheckBox.setName("SlidingHangarLimitsAffectPayout");
-        BaseCheckBox.setToolTipText("The over-limit penalty will be applied to game payout");
-        ulAPBottom.add(BaseCheckBox);
+        baseCheckBox = new JCheckBox("Apply to Payout");
+        baseCheckBox.setName("SlidingHangarLimitsAffectPayout");
+        baseCheckBox.setToolTipText("The over-limit penalty will be applied to game payout");
+        ulAPBottom.add(baseCheckBox);
 
         ulActionsPanel.setLayout(new VerticalLayout());
         ulActionsPanel.add(ulAPTop);
@@ -131,135 +132,135 @@ public class UnitLimitsPanel extends JPanel {
 
         bmLimitsPanel.add(new JLabel("Mechs: "));
 
-        BaseCheckBox = new JCheckBox();
-        BaseCheckBox.setName("CanBuyBMLightMeks");
-        BaseCheckBox.setToolTipText("Players can buy Light Meks from the BM");
-        bmLimitsPanel.add(BaseCheckBox);
+        baseCheckBox = new JCheckBox();
+        baseCheckBox.setName("CanBuyBMLightMeks");
+        baseCheckBox.setToolTipText("Players can buy Light Meks from the BM");
+        bmLimitsPanel.add(baseCheckBox);
 
-        BaseCheckBox = new JCheckBox();
-        BaseCheckBox.setName("CanBuyBMMediumMeks");
-        BaseCheckBox.setToolTipText("Players can buy Medium Meks from the BM");
-        bmLimitsPanel.add(BaseCheckBox);
+        baseCheckBox = new JCheckBox();
+        baseCheckBox.setName("CanBuyBMMediumMeks");
+        baseCheckBox.setToolTipText("Players can buy Medium Meks from the BM");
+        bmLimitsPanel.add(baseCheckBox);
 
-        BaseCheckBox = new JCheckBox();
-        BaseCheckBox.setName("CanBuyBMHeavyMeks");
-        BaseCheckBox.setToolTipText("Players can buy Heavy Meks from the BM");
-        bmLimitsPanel.add(BaseCheckBox);
+        baseCheckBox = new JCheckBox();
+        baseCheckBox.setName("CanBuyBMHeavyMeks");
+        baseCheckBox.setToolTipText("Players can buy Heavy Meks from the BM");
+        bmLimitsPanel.add(baseCheckBox);
 
-        BaseCheckBox = new JCheckBox();
-        BaseCheckBox.setName("CanBuyBMAssaultMeks");
-        BaseCheckBox.setToolTipText("Players can buy Assault Meks from the BM");
-        bmLimitsPanel.add(BaseCheckBox);
+        baseCheckBox = new JCheckBox();
+        baseCheckBox.setName("CanBuyBMAssaultMeks");
+        baseCheckBox.setToolTipText("Players can buy Assault Meks from the BM");
+        bmLimitsPanel.add(baseCheckBox);
 
         bmLimitsPanel.add(new JLabel("Vehicles: "));
 
-        BaseCheckBox = new JCheckBox();
-        BaseCheckBox.setName("CanBuyBMLightVehicles");
-        BaseCheckBox.setToolTipText("Players can buy Light Vehicles from the BM");
-        bmLimitsPanel.add(BaseCheckBox);
+        baseCheckBox = new JCheckBox();
+        baseCheckBox.setName("CanBuyBMLightVehicles");
+        baseCheckBox.setToolTipText("Players can buy Light Vehicles from the BM");
+        bmLimitsPanel.add(baseCheckBox);
 
-        BaseCheckBox = new JCheckBox();
-        BaseCheckBox.setName("CanBuyBMMediumVehicles");
-        BaseCheckBox.setToolTipText("Players can buy Medium Vehicles from the BM");
-        bmLimitsPanel.add(BaseCheckBox);
+        baseCheckBox = new JCheckBox();
+        baseCheckBox.setName("CanBuyBMMediumVehicles");
+        baseCheckBox.setToolTipText("Players can buy Medium Vehicles from the BM");
+        bmLimitsPanel.add(baseCheckBox);
 
-        BaseCheckBox = new JCheckBox();
-        BaseCheckBox.setName("CanBuyBMHeavyVehicles");
-        BaseCheckBox.setToolTipText("Players can buy Heavy Vehicles from the BM");
-        bmLimitsPanel.add(BaseCheckBox);
+        baseCheckBox = new JCheckBox();
+        baseCheckBox.setName("CanBuyBMHeavyVehicles");
+        baseCheckBox.setToolTipText("Players can buy Heavy Vehicles from the BM");
+        bmLimitsPanel.add(baseCheckBox);
 
-        BaseCheckBox = new JCheckBox();
-        BaseCheckBox.setName("CanBuyBMAssaultVehicles");
-        BaseCheckBox.setToolTipText("Players can buy Assault Vehicles from the BM");
-        bmLimitsPanel.add(BaseCheckBox);
+        baseCheckBox = new JCheckBox();
+        baseCheckBox.setName("CanBuyBMAssaultVehicles");
+        baseCheckBox.setToolTipText("Players can buy Assault Vehicles from the BM");
+        bmLimitsPanel.add(baseCheckBox);
 
         bmLimitsPanel.add(new JLabel("Infantry: "));
 
-        BaseCheckBox = new JCheckBox();
-        BaseCheckBox.setName("CanBuyBMLightInfantry");
-        BaseCheckBox.setToolTipText("Players can buy Light Infantry from the BM");
-        bmLimitsPanel.add(BaseCheckBox);
+        baseCheckBox = new JCheckBox();
+        baseCheckBox.setName("CanBuyBMLightInfantry");
+        baseCheckBox.setToolTipText("Players can buy Light Infantry from the BM");
+        bmLimitsPanel.add(baseCheckBox);
 
-        BaseCheckBox = new JCheckBox();
-        BaseCheckBox.setName("CanBuyBMMediumInfantry");
-        BaseCheckBox.setToolTipText("Players can buy Medium Infantry from the BM");
-        bmLimitsPanel.add(BaseCheckBox);
+        baseCheckBox = new JCheckBox();
+        baseCheckBox.setName("CanBuyBMMediumInfantry");
+        baseCheckBox.setToolTipText("Players can buy Medium Infantry from the BM");
+        bmLimitsPanel.add(baseCheckBox);
 
-        BaseCheckBox = new JCheckBox();
-        BaseCheckBox.setName("CanBuyBMHeavyInfantry");
-        BaseCheckBox.setToolTipText("Players can buy Heavy Infantry from the BM");
-        bmLimitsPanel.add(BaseCheckBox);
+        baseCheckBox = new JCheckBox();
+        baseCheckBox.setName("CanBuyBMHeavyInfantry");
+        baseCheckBox.setToolTipText("Players can buy Heavy Infantry from the BM");
+        bmLimitsPanel.add(baseCheckBox);
 
-        BaseCheckBox = new JCheckBox();
-        BaseCheckBox.setName("CanBuyBMAssaultInfantry");
-        BaseCheckBox.setToolTipText("Players can buy Assault Infantry from the BM");
-        bmLimitsPanel.add(BaseCheckBox);
+        baseCheckBox = new JCheckBox();
+        baseCheckBox.setName("CanBuyBMAssaultInfantry");
+        baseCheckBox.setToolTipText("Players can buy Assault Infantry from the BM");
+        bmLimitsPanel.add(baseCheckBox);
 
         bmLimitsPanel.add(new JLabel("BattleArmor: "));
 
-        BaseCheckBox = new JCheckBox();
-        BaseCheckBox.setName("CanBuyBMLightBA");
-        BaseCheckBox.setToolTipText("Players can buy Light BA from the BM");
-        bmLimitsPanel.add(BaseCheckBox);
+        baseCheckBox = new JCheckBox();
+        baseCheckBox.setName("CanBuyBMLightBA");
+        baseCheckBox.setToolTipText("Players can buy Light BA from the BM");
+        bmLimitsPanel.add(baseCheckBox);
 
-        BaseCheckBox = new JCheckBox();
-        BaseCheckBox.setName("CanBuyBMMediumBA");
-        BaseCheckBox.setToolTipText("Players can buy Medium BA from the BM");
-        bmLimitsPanel.add(BaseCheckBox);
+        baseCheckBox = new JCheckBox();
+        baseCheckBox.setName("CanBuyBMMediumBA");
+        baseCheckBox.setToolTipText("Players can buy Medium BA from the BM");
+        bmLimitsPanel.add(baseCheckBox);
 
-        BaseCheckBox = new JCheckBox();
-        BaseCheckBox.setName("CanBuyBMHeavyBA");
-        BaseCheckBox.setToolTipText("Players can buy Heavy BA from the BM");
-        bmLimitsPanel.add(BaseCheckBox);
+        baseCheckBox = new JCheckBox();
+        baseCheckBox.setName("CanBuyBMHeavyBA");
+        baseCheckBox.setToolTipText("Players can buy Heavy BA from the BM");
+        bmLimitsPanel.add(baseCheckBox);
 
-        BaseCheckBox = new JCheckBox();
-        BaseCheckBox.setName("CanBuyBMAssaultBA");
-        BaseCheckBox.setToolTipText("Players can buy Assault BA from the BM");
-        bmLimitsPanel.add(BaseCheckBox);
+        baseCheckBox = new JCheckBox();
+        baseCheckBox.setName("CanBuyBMAssaultBA");
+        baseCheckBox.setToolTipText("Players can buy Assault BA from the BM");
+        bmLimitsPanel.add(baseCheckBox);
 
         bmLimitsPanel.add(new JLabel("Protomeks: "));
 
-        BaseCheckBox = new JCheckBox();
-        BaseCheckBox.setName("CanBuyBMLightProtomeks");
-        BaseCheckBox.setToolTipText("Players can buy Light Protomeks from the BM");
-        bmLimitsPanel.add(BaseCheckBox);
+        baseCheckBox = new JCheckBox();
+        baseCheckBox.setName("CanBuyBMLightProtomeks");
+        baseCheckBox.setToolTipText("Players can buy Light Protomeks from the BM");
+        bmLimitsPanel.add(baseCheckBox);
 
-        BaseCheckBox = new JCheckBox();
-        BaseCheckBox.setName("CanBuyBMMediumProtomeks");
-        BaseCheckBox.setToolTipText("Players can buy Medium Protomeks from the BM");
-        bmLimitsPanel.add(BaseCheckBox);
+        baseCheckBox = new JCheckBox();
+        baseCheckBox.setName("CanBuyBMMediumProtomeks");
+        baseCheckBox.setToolTipText("Players can buy Medium Protomeks from the BM");
+        bmLimitsPanel.add(baseCheckBox);
 
-        BaseCheckBox = new JCheckBox();
-        BaseCheckBox.setName("CanBuyBMHeavyProtomeks");
-        BaseCheckBox.setToolTipText("Players can buy Heavy Protomeks from the BM");
-        bmLimitsPanel.add(BaseCheckBox);
+        baseCheckBox = new JCheckBox();
+        baseCheckBox.setName("CanBuyBMHeavyProtomeks");
+        baseCheckBox.setToolTipText("Players can buy Heavy Protomeks from the BM");
+        bmLimitsPanel.add(baseCheckBox);
 
-        BaseCheckBox = new JCheckBox();
-        BaseCheckBox.setName("CanBuyBMAssaultProtomeks");
-        BaseCheckBox.setToolTipText("Players can buy Assault Protomeks from the BM");
-        bmLimitsPanel.add(BaseCheckBox);
+        baseCheckBox = new JCheckBox();
+        baseCheckBox.setName("CanBuyBMAssaultProtomeks");
+        baseCheckBox.setToolTipText("Players can buy Assault Protomeks from the BM");
+        bmLimitsPanel.add(baseCheckBox);
 
         bmLimitsPanel.add(new JLabel("Aero: "));
 
-        BaseCheckBox = new JCheckBox();
-        BaseCheckBox.setName("CanBuyBMLightAero");
-        BaseCheckBox.setToolTipText("Players can buy Light Aero from the BM");
-        bmLimitsPanel.add(BaseCheckBox);
+        baseCheckBox = new JCheckBox();
+        baseCheckBox.setName("CanBuyBMLightAero");
+        baseCheckBox.setToolTipText("Players can buy Light Aero from the BM");
+        bmLimitsPanel.add(baseCheckBox);
 
-        BaseCheckBox = new JCheckBox();
-        BaseCheckBox.setName("CanBuyBMMediumAero");
-        BaseCheckBox.setToolTipText("Players can buy Medium Aero from the BM");
-        bmLimitsPanel.add(BaseCheckBox);
+        baseCheckBox = new JCheckBox();
+        baseCheckBox.setName("CanBuyBMMediumAero");
+        baseCheckBox.setToolTipText("Players can buy Medium Aero from the BM");
+        bmLimitsPanel.add(baseCheckBox);
 
-        BaseCheckBox = new JCheckBox();
-        BaseCheckBox.setName("CanBuyBMHeavyAero");
-        BaseCheckBox.setToolTipText("Players can buy Heavy Aero from the BM");
-        bmLimitsPanel.add(BaseCheckBox);
+        baseCheckBox = new JCheckBox();
+        baseCheckBox.setName("CanBuyBMHeavyAero");
+        baseCheckBox.setToolTipText("Players can buy Heavy Aero from the BM");
+        bmLimitsPanel.add(baseCheckBox);
 
-        BaseCheckBox = new JCheckBox();
-        BaseCheckBox.setName("CanBuyBMAssaultAero");
-        BaseCheckBox.setToolTipText("Players can buy Assault Aero from the BM");
-        bmLimitsPanel.add(BaseCheckBox);
+        baseCheckBox = new JCheckBox();
+        baseCheckBox.setName("CanBuyBMAssaultAero");
+        baseCheckBox.setToolTipText("Players can buy Assault Aero from the BM");
+        bmLimitsPanel.add(baseCheckBox);
 
         JPanel bmLimitsBox = new JPanel();
         bmLimitsBox.setLayout(new BoxLayout(bmLimitsBox, BoxLayout.Y_AXIS));

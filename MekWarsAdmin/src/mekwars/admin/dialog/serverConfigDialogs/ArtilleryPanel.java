@@ -12,6 +12,7 @@
 package mekwars.admin.dialog.serverConfigDialogs;
 
 import java.awt.GridLayout;
+import java.io.Serial;
 
 import javax.swing.BoxLayout;
 import javax.swing.JCheckBox;
@@ -21,7 +22,7 @@ import javax.swing.JTextField;
 import javax.swing.SpringLayout;
 import javax.swing.SwingConstants;
 
-import common.util.SpringLayoutHelper;
+import mekwars.common.util.SpringLayoutHelper;
 
 /**
  * @author jtighe
@@ -32,14 +33,13 @@ public class ArtilleryPanel extends JPanel {
     /**
      *
      */
+    @Serial
     private static final long serialVersionUID = -2029107013395017158L;
-    private JTextField baseTextField = new JTextField(5);
-    private JCheckBox BaseCheckBox = new JCheckBox();
 
     public ArtilleryPanel() {
         super();
         /*
-         * ARTILLERY TAB CONSTRUCTION Enable autoassigned artillery, and set up loadout options.
+         * ARTILLERY TAB CONSTRUCTION Enable auto-assigned artillery and set up loadout options.
          */
         JPanel artyBox = new JPanel();
         artyBox.setLayout(new BoxLayout(artyBox, BoxLayout.Y_AXIS));
@@ -49,14 +49,14 @@ public class ArtilleryPanel extends JPanel {
         JPanel gunEmplacementSpring = new JPanel(new SpringLayout());
 
         // set up check boxes
-        BaseCheckBox = new JCheckBox("Heavy First");
+        JCheckBox baseCheckBox = new JCheckBox("Heavy First");
 
-        BaseCheckBox.setToolTipText("If checked, server tries to assign assault pieces before light");
-        BaseCheckBox.setName("HeaviestArtilleryFirst");
-        artyCBoxGrid.add(BaseCheckBox);
+        baseCheckBox.setToolTipText("If checked, server tries to assign assault pieces before light");
+        baseCheckBox.setName("HeaviestArtilleryFirst");
+        artyCBoxGrid.add(baseCheckBox);
 
         // set up the spring
-        baseTextField = new JTextField(5);
+        JTextField baseTextField = new JTextField(5);
         artySpring.add(new JLabel("Assault File:", SwingConstants.TRAILING));
         baseTextField.setToolTipText("Filename of the units to load as assault artillery seperated by $");
         baseTextField.setName("AssaultArtilleryFile");
@@ -150,11 +150,11 @@ public class ArtilleryPanel extends JPanel {
         SpringLayoutHelper.setupSpringGrid(artySpring, 8, 4);
 
         // set up check boxes
-        BaseCheckBox = new JCheckBox("Heavy First");
+        baseCheckBox = new JCheckBox("Heavy First");
 
-        BaseCheckBox.setToolTipText("If checked, server tries to assign assault pieces before light");
-        BaseCheckBox.setName("HeaviestGunEmplacementFirst");
-        gunEmplacementCBoxGrid.add(BaseCheckBox);
+        baseCheckBox.setToolTipText("If checked, server tries to assign assault pieces before light");
+        baseCheckBox.setName("HeaviestGunEmplacementFirst");
+        gunEmplacementCBoxGrid.add(baseCheckBox);
 
         // set up the spring
         baseTextField = new JTextField(5);

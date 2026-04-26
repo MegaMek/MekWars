@@ -15,6 +15,7 @@
 
 package mekwars.admin.dialog.serverConfigDialogs;
 
+import java.io.Serial;
 import javax.swing.BorderFactory;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
@@ -22,7 +23,7 @@ import javax.swing.JTextField;
 import javax.swing.SpringLayout;
 import javax.swing.SwingConstants;
 
-import common.util.SpringLayoutHelper;
+import mekwars.common.util.SpringLayoutHelper;
 
 /**
  * A JPanel for scheduled tasks.  In this panel, admins can set the frequency with which tasks will execute.
@@ -31,7 +32,7 @@ import common.util.SpringLayoutHelper;
  * @version 2016.10.06
  */
 public class SchedulerPanel extends JPanel {
-    private JTextField tf;
+    @Serial
     private static final long serialVersionUID = 4836798646993460609L;
 
     public SchedulerPanel() {
@@ -43,7 +44,7 @@ public class SchedulerPanel extends JPanel {
         factionsPanel.setBorder(BorderFactory.createTitledBorder("Factions"));
         //factionsPanel.setLayout(new SpringLayout());
 
-        tf = new JTextField(5);
+        JTextField tf = new JTextField(5);
         tf.setName("Scheduler_FactionSave");
         tf.setToolTipText("How often (in seconds) factions save their status");
         //label = new JLabel("Save every");

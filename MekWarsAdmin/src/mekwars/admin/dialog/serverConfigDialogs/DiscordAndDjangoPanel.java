@@ -1,5 +1,6 @@
 package mekwars.admin.dialog.serverConfigDialogs;
 
+import java.io.Serial;
 import javax.swing.BorderFactory;
 import javax.swing.JCheckBox;
 import javax.swing.JLabel;
@@ -7,15 +8,12 @@ import javax.swing.JPanel;
 import javax.swing.JTextField;
 import javax.swing.SwingConstants;
 
-import common.VerticalLayout;
+import mekwars.common.VerticalLayout;
 
 public class DiscordAndDjangoPanel extends JPanel {
 
+    @Serial
     private static final long serialVersionUID = -4629994177197999929L;
-
-    private JTextField baseTextField = new JTextField(5);
-    private JCheckBox baseCheckBox = new JCheckBox();
-    private JLabel baseLabel = new JLabel();
 
     private void init() {
 
@@ -47,12 +45,12 @@ public class DiscordAndDjangoPanel extends JPanel {
 
         panel1.setBorder(BorderFactory.createTitledBorder("Discord Webhooks"));
 
-        baseCheckBox = new JCheckBox("Enable Discord Webhooks");
+        JCheckBox baseCheckBox = new JCheckBox("Enable Discord Webhooks");
         baseCheckBox.setName("DiscordEnable");
         baseCheckBox.setToolTipText("Enable rankings and game output to be sent to a Discord channel");
         panel1.add(baseCheckBox);
 
-        baseTextField = new JTextField(25);
+        JTextField baseTextField = new JTextField(25);
         panel1.add(new JLabel("Discord Webhook Address", SwingConstants.TRAILING));
         baseTextField.setToolTipText("Address for the webhook to which game results and such should be sent.");
         baseTextField.setName("DiscordWebHookAddress");
@@ -74,7 +72,7 @@ public class DiscordAndDjangoPanel extends JPanel {
         panel2a.add(baseCheckBox);
 
 
-        baseLabel = new JLabel("Chat Buffer Location:");
+        JLabel baseLabel = new JLabel("Chat Buffer Location:");
         baseLabel.setHorizontalAlignment(JLabel.RIGHT);
         baseTextField = new JTextField(30);
         baseTextField.setToolTipText(

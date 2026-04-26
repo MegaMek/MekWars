@@ -17,7 +17,7 @@
 package mekwars.admin.dialog.serverConfigDialogs;
 
 import java.awt.GridLayout;
-
+import java.io.Serial;
 import javax.swing.BoxLayout;
 import javax.swing.JCheckBox;
 import javax.swing.JLabel;
@@ -26,19 +26,18 @@ import javax.swing.JTextField;
 import javax.swing.SpringLayout;
 import javax.swing.SwingConstants;
 
-import client.MWClient;
-import common.util.SpringLayoutHelper;
+import mekwars.common.campaign.clientutils.protocol.IClient;
+import mekwars.common.util.SpringLayoutHelper;
 
-public class RepodPanel extends JPanel {
+public class RePodPanel extends JPanel {
 
     /**
      *
      */
+    @Serial
     private static final long serialVersionUID = 8749341330457544463L;
-    private JTextField baseTextField = new JTextField(5);
-    private JCheckBox BaseCheckBox = new JCheckBox();
 
-    public RepodPanel(MWClient mwclient) {
+    public RePodPanel(IClient client) {
         super();
         /*
          * REPOD PANEL CONSTRUCTION Repod contols. Costs, factory usage, table options, etc. Use nested layouts. A Box containing a Flow and 3 Springs.
@@ -59,99 +58,99 @@ public class RepodPanel extends JPanel {
         repodBoxPanel.add(repodSpringGrid);
 
         // set up the flow panel
-        BaseCheckBox = new JCheckBox("Cost " + mwclient.moneyOrFluMessage(true, true, -1));
+        JCheckBox baseCheckBox = new JCheckBox("Cost " + client.moneyOrFluMessage(true, true, -1));
 
-        BaseCheckBox.setToolTipText("Check to enable " +
-                                          mwclient.moneyOrFluMessage(true, true, -1) +
+        baseCheckBox.setToolTipText("Check to enable " +
+                                          client.moneyOrFluMessage(true, true, -1) +
                                           " charges for repods");
-        BaseCheckBox.setName("DoesRepodCost");
-        repodCBoxGridPanel.add(BaseCheckBox);
+        baseCheckBox.setName("DoesRepodCost");
+        repodCBoxGridPanel.add(baseCheckBox);
 
-        BaseCheckBox = new JCheckBox("Use Factory");
+        baseCheckBox = new JCheckBox("Use Factory");
 
-        BaseCheckBox.setToolTipText("Check to have repodding use a factory");
-        BaseCheckBox.setName("RepodUsesFactory");
-        repodCBoxGridPanel.add(BaseCheckBox);
+        baseCheckBox.setToolTipText("Check to have repodding use a factory");
+        baseCheckBox.setName("RepodUsesFactory");
+        repodCBoxGridPanel.add(baseCheckBox);
 
-        BaseCheckBox = new JCheckBox("Uses Comps");
+        baseCheckBox = new JCheckBox("Uses Comps");
 
-        BaseCheckBox.setToolTipText("Check to have repodding consume components");
-        BaseCheckBox.setName("RepodUsesComp");
-        repodCBoxGridPanel.add(BaseCheckBox);
+        baseCheckBox.setToolTipText("Check to have repodding consume components");
+        baseCheckBox.setName("RepodUsesComp");
+        repodCBoxGridPanel.add(baseCheckBox);
 
-        BaseCheckBox = new JCheckBox("Common Table");
+        baseCheckBox = new JCheckBox("Common Table");
 
-        BaseCheckBox.setToolTipText("Check to allow all factions to repod from common table.");
-        BaseCheckBox.setName("UseCommonTableForRepod");
-        repodCBoxGridPanel.add(BaseCheckBox);
+        baseCheckBox.setToolTipText("Check to allow all factions to repod from common table.");
+        baseCheckBox.setName("UseCommonTableForRepod");
+        repodCBoxGridPanel.add(baseCheckBox);
 
-        BaseCheckBox = new JCheckBox("Allow Random");
+        baseCheckBox = new JCheckBox("Allow Random");
 
-        BaseCheckBox.setToolTipText("Check to allow random repods.");
-        BaseCheckBox.setName("RandomRepodAllowed");
-        repodCBoxGridPanel.add(BaseCheckBox);
+        baseCheckBox.setToolTipText("Check to allow random repods.");
+        baseCheckBox.setName("RandomRepodAllowed");
+        repodCBoxGridPanel.add(baseCheckBox);
 
-        BaseCheckBox = new JCheckBox("Random Only");
+        baseCheckBox = new JCheckBox("Random Only");
 
-        BaseCheckBox.setToolTipText("If checked, only random repods are allowed.");
-        BaseCheckBox.setName("RandomRepodOnly");
-        repodCBoxGridPanel.add(BaseCheckBox);
+        baseCheckBox.setToolTipText("If checked, only random repods are allowed.");
+        baseCheckBox.setName("RandomRepodOnly");
+        repodCBoxGridPanel.add(baseCheckBox);
 
         // and then the various springs. MU first.
-        baseTextField = new JTextField(5);
-        cbillSpring.add(new JLabel("Light " + mwclient.moneyOrFluMessage(true, true, -1) + ":",
+        JTextField baseTextField = new JTextField(5);
+        cbillSpring.add(new JLabel("Light " + client.moneyOrFluMessage(true, true, -1) + ":",
               SwingConstants.TRAILING));
-        baseTextField.setToolTipText(mwclient.moneyOrFluMessage(true, true, -1) + " required to repod a light unit");
+        baseTextField.setToolTipText(client.moneyOrFluMessage(true, true, -1) + " required to repod a light unit");
         baseTextField.setName("RepodCostLight");
         cbillSpring.add(baseTextField);
 
         baseTextField = new JTextField(5);
-        cbillSpring.add(new JLabel("Medium " + mwclient.moneyOrFluMessage(true, true, -1) + ":",
+        cbillSpring.add(new JLabel("Medium " + client.moneyOrFluMessage(true, true, -1) + ":",
               SwingConstants.TRAILING));
-        baseTextField.setToolTipText(mwclient.moneyOrFluMessage(true, true, -1) + " required to repod a medium unit");
+        baseTextField.setToolTipText(client.moneyOrFluMessage(true, true, -1) + " required to repod a medium unit");
         baseTextField.setName("RepodCostMedium");
         cbillSpring.add(baseTextField);
 
         baseTextField = new JTextField(5);
-        cbillSpring.add(new JLabel("Heavy " + mwclient.moneyOrFluMessage(true, true, -1) + ":",
+        cbillSpring.add(new JLabel("Heavy " + client.moneyOrFluMessage(true, true, -1) + ":",
               SwingConstants.TRAILING));
-        baseTextField.setToolTipText(mwclient.moneyOrFluMessage(true, true, -1) + " required to repod a heavy unit");
+        baseTextField.setToolTipText(client.moneyOrFluMessage(true, true, -1) + " required to repod a heavy unit");
         baseTextField.setName("RepodCostHeavy");
         cbillSpring.add(baseTextField);
 
         baseTextField = new JTextField(5);
-        cbillSpring.add(new JLabel("Assault " + mwclient.moneyOrFluMessage(true, true, -1) + ":",
+        cbillSpring.add(new JLabel("Assault " + client.moneyOrFluMessage(true, true, -1) + ":",
               SwingConstants.TRAILING));
-        baseTextField.setToolTipText(mwclient.moneyOrFluMessage(true, true, -1) + " required to repod an assault unit");
+        baseTextField.setToolTipText(client.moneyOrFluMessage(true, true, -1) + " required to repod an assault unit");
         baseTextField.setName("RepodCostAssault");
         cbillSpring.add(baseTextField);
 
         // now the flu spring
         baseTextField = new JTextField(5);
-        fluSpring.add(new JLabel("Light " + mwclient.moneyOrFluMessage(false, true, -1) + ":",
+        fluSpring.add(new JLabel("Light " + client.moneyOrFluMessage(false, true, -1) + ":",
               SwingConstants.TRAILING));
-        baseTextField.setToolTipText(mwclient.moneyOrFluMessage(false, true, -1) + " required to repod a light unit");
+        baseTextField.setToolTipText(client.moneyOrFluMessage(false, true, -1) + " required to repod a light unit");
         baseTextField.setName("RepodFluLight");
         fluSpring.add(baseTextField);
 
         baseTextField = new JTextField(5);
-        fluSpring.add(new JLabel("Medium " + mwclient.moneyOrFluMessage(false, true, -1) + ":",
+        fluSpring.add(new JLabel("Medium " + client.moneyOrFluMessage(false, true, -1) + ":",
               SwingConstants.TRAILING));
-        baseTextField.setToolTipText(mwclient.moneyOrFluMessage(false, true, -1) + " required to repod a medium unit");
+        baseTextField.setToolTipText(client.moneyOrFluMessage(false, true, -1) + " required to repod a medium unit");
         baseTextField.setName("RepodFluMedium");
         fluSpring.add(baseTextField);
 
         baseTextField = new JTextField(5);
-        fluSpring.add(new JLabel("Heavy " + mwclient.moneyOrFluMessage(false, true, -1) + ":",
+        fluSpring.add(new JLabel("Heavy " + client.moneyOrFluMessage(false, true, -1) + ":",
               SwingConstants.TRAILING));
-        baseTextField.setToolTipText(mwclient.moneyOrFluMessage(false, true, -1) + " required to repod a heavy unit");
+        baseTextField.setToolTipText(client.moneyOrFluMessage(false, true, -1) + " required to repod a heavy unit");
         baseTextField.setName("RepodFluHeavy");
         fluSpring.add(baseTextField);
 
         baseTextField = new JTextField(5);
-        fluSpring.add(new JLabel("Assault " + mwclient.moneyOrFluMessage(false, true, -1) + ":",
+        fluSpring.add(new JLabel("Assault " + client.moneyOrFluMessage(false, true, -1) + ":",
               SwingConstants.TRAILING));
-        baseTextField.setToolTipText(mwclient.moneyOrFluMessage(false, true, -1) +
+        baseTextField.setToolTipText(client.moneyOrFluMessage(false, true, -1) +
                                            " required to repod an assault unit");
         baseTextField.setName("RepodFluAssault");
         fluSpring.add(baseTextField);

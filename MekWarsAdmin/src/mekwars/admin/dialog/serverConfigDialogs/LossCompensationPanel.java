@@ -11,13 +11,14 @@
 
 package mekwars.admin.dialog.serverConfigDialogs;
 
+import java.io.Serial;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
 import javax.swing.SpringLayout;
 import javax.swing.SwingConstants;
 
-import common.util.SpringLayoutHelper;
+import mekwars.common.util.SpringLayoutHelper;
 
 /**
  * @author jtighe
@@ -25,8 +26,8 @@ import common.util.SpringLayoutHelper;
  */
 public class LossCompensationPanel extends JPanel {
 
+    @Serial
     private static final long serialVersionUID = 5752395790893721813L;
-    private JTextField baseTextField = new JTextField(5);
 
     public LossCompensationPanel() {
         super();
@@ -35,7 +36,7 @@ public class LossCompensationPanel extends JPanel {
          */
         JPanel lossCompSpring = new JPanel(new SpringLayout());
 
-        baseTextField = new JTextField(5);
+        JTextField baseTextField = new JTextField(5);
         lossCompSpring.add(new JLabel("Base Loss Payment:", SwingConstants.TRAILING));
         baseTextField.setToolTipText("Base compensation given for losses. float value.");
         baseTextField.setName("BaseUnitLossPayment");

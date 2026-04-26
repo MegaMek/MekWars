@@ -21,10 +21,10 @@
 
 package mekwars.common;
 
-import common.flags.PlayerFlags;
+import mekwars.common.campaign.clientutils.IPlayer;
+import mekwars.common.flags.PlayerFlags;
 
-
-public class Player {
+public class Player implements IPlayer {
 
     private int technicians = 0;//@urgru 7/17/04
     private int currentTechPayment = -1;//num Cbills owed to techs after games
@@ -33,7 +33,7 @@ public class Player {
     private boolean autoReorderParts = false;
     protected PlayerFlags flags = new PlayerFlags();
     protected PlayerFlags defaultPlayerFlags = new PlayerFlags(); // This is only going to be set for staff
-    protected int mekToken = 0; // A counter for how many meks a player is allowed to create in freebuild
+    protected int mekToken = 0; // A counter for how many meks a player is allowed to create in free build
     protected int bvTracker = 0; // used to track hangar BV in mini campaigns
 
     /**
@@ -44,7 +44,7 @@ public class Player {
     }
 
     /**
-     * @param set the bvTracker value
+     * @param bvtracker the bvTracker value
      */
     public void setBVTracker(int bvtracker) {
         bvTracker = bvtracker;
@@ -86,35 +86,36 @@ public class Player {
     }//end getTechnicians()
 
     /**
-     * @param int to set technicians to.
+     * @param technicians to set technicians to.
      */
-    public void setTechnicians(int t) {
+    public void setTechnicians(int technicians) {
 
-        if (t < 0)//dont allow negative techs. always set negatives back to 0.
-        {t = 0;}
-        technicians = t;
+        if (technicians < 0) {
+            technicians = 0;
+        }
+
+        this.technicians = technicians;
 
         //clear the tech payment any time a new number of techs is set
         currentTechPayment = -1;
     }//end setTechnicians()
 
     /**
-     * @param the number of technicians to add (subtract) from the player's total
-     *            <p>
-     *            NOTE: sub-zero cases are checked in setTechs(). no check here.
+     * @param technician number of technicians to add (subtract) from the player's total
+     *                   <p>
+     *                   NOTE: subzero cases are checked in setTechs(). no check here.
      */
-    public void addTechnicians(int t) {
-        this.setTechnicians(technicians + t);
+    public void addTechnicians(int technician) {
+        this.setTechnicians(technicians + technician);
     }
 
     /**
-     * Sets that a player now has the invis flag. of course players with access levels >= this player will still beable
-     * to see them.
+     * Sets that a player now has the invisible flag. Of course, players with access levels >= this player will still
+     * beable to see them.
      *
-     * @param invis
      */
-    public void setInvisible(boolean invis) {
-        isInvisible = invis;
+    public void setInvisible(boolean invisible) {
+        isInvisible = invisible;
     }
 
     /**
@@ -129,7 +130,6 @@ public class Player {
     /**
      * Returns players team number
      *
-     * @return
      */
     public int getTeamNumber() {
         return teamNumber;
@@ -138,7 +138,6 @@ public class Player {
     /**
      * Set Players team number for the current op.
      *
-     * @param team
      */
     public void setTeamNumber(int team) {
         this.teamNumber = team;
@@ -147,7 +146,6 @@ public class Player {
     /**
      * Sets if the player wants to reorder parts.
      *
-     * @param reorder
      */
     public void setAutoReorder(boolean reorder) {
         this.autoReorderParts = reorder;
@@ -156,7 +154,6 @@ public class Player {
     /**
      * Returns if the player has auto reorder parts turned on.
      *
-     * @return
      */
     public boolean getAutoReorder() {
         return this.autoReorderParts;
@@ -197,7 +194,6 @@ public class Player {
      * Loads the set of server-defined players flags from a string. This should probably only be called during player
      * logon, and then each flag can be set individually
      *
-     * @param data
      */
     public void loadFlags(String data) {
         flags.loadDefaults(data);
@@ -224,5 +220,10 @@ public class Player {
      */
     public PlayerFlags getFlags() {
         return flags;
+    }
+
+    @Override
+    public String getName() {
+        return "";
     }
 }//End Class Player

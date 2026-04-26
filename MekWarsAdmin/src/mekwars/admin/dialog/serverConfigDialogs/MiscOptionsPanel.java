@@ -12,6 +12,7 @@
 package mekwars.admin.dialog.serverConfigDialogs;
 
 import java.awt.GridLayout;
+import java.io.Serial;
 
 import javax.swing.BoxLayout;
 import javax.swing.JCheckBox;
@@ -21,7 +22,7 @@ import javax.swing.JTextField;
 import javax.swing.SpringLayout;
 import javax.swing.SwingConstants;
 
-import common.util.SpringLayoutHelper;
+import mekwars.common.util.SpringLayoutHelper;
 
 /**
  * @author jtighe
@@ -29,9 +30,8 @@ import common.util.SpringLayoutHelper;
  */
 public class MiscOptionsPanel extends JPanel {
 
+    @Serial
     private static final long serialVersionUID = -5493634146928452778L;
-    private JTextField baseTextField = new JTextField(5);
-    private JCheckBox BaseCheckBox = new JCheckBox();
 
     public MiscOptionsPanel() {
         super();
@@ -46,7 +46,7 @@ public class MiscOptionsPanel extends JPanel {
         JPanel miscCBoxSpring = new JPanel(new SpringLayout());
 
         // set up spring 1
-        baseTextField = new JTextField(5);
+        JTextField baseTextField = new JTextField(5);
         miscSpring1.add(new JLabel("Campaign Year:", SwingConstants.TRAILING));
         baseTextField.setToolTipText("Year of Campaign.  This will modify the TechLevel ratings in MM");
         baseTextField.setName("CampaignYear");
@@ -209,86 +209,86 @@ public class MiscOptionsPanel extends JPanel {
         SpringLayoutHelper.setupSpringGrid(miscSpring2, 2);
 
         // set up CBoxen
-        BaseCheckBox = new JCheckBox("IP Check");
+        JCheckBox baseCheckBox = new JCheckBox("IP Check");
 
-        BaseCheckBox.setToolTipText("<HTML>" +
+        baseCheckBox.setToolTipText("<HTML>" +
                                           "If checked, players who share an IP will not be" +
                                           "able to play games against each other, transfer" +
                                           "units, send money, etc.</HTML>");
-        BaseCheckBox.setName("IPCheck");
-        miscCBoxSpring.add(BaseCheckBox);
+        baseCheckBox.setName("IPCheck");
+        miscCBoxSpring.add(baseCheckBox);
 
-        BaseCheckBox = new JCheckBox("Hide Active");
+        baseCheckBox = new JCheckBox("Hide Active");
 
-        BaseCheckBox.setToolTipText("If checked, all players are shown as active in the player list.");
-        BaseCheckBox.setName("HideActiveStatus");
-        miscCBoxSpring.add(BaseCheckBox);
+        baseCheckBox.setToolTipText("If checked, all players are shown as active in the player list.");
+        baseCheckBox.setName("HideActiveStatus");
+        miscCBoxSpring.add(baseCheckBox);
 
-        BaseCheckBox = new JCheckBox("Hide ELO");
-        BaseCheckBox.setToolTipText("If checked, rating/ELO will not be shown to players.");
-        BaseCheckBox.setName("HideELO");
-        miscCBoxSpring.add(BaseCheckBox);
+        baseCheckBox = new JCheckBox("Hide ELO");
+        baseCheckBox.setToolTipText("If checked, rating/ELO will not be shown to players.");
+        baseCheckBox.setName("HideELO");
+        miscCBoxSpring.add(baseCheckBox);
 
-        BaseCheckBox = new JCheckBox("Ranks on Tick");
-        BaseCheckBox.setToolTipText("Disable to stop showing Faction Ranks on Tick");
-        BaseCheckBox.setName("ShowFactionRanks");
-        miscCBoxSpring.add(BaseCheckBox);
+        baseCheckBox = new JCheckBox("Ranks on Tick");
+        baseCheckBox.setToolTipText("Disable to stop showing Faction Ranks on Tick");
+        baseCheckBox.setName("ShowFactionRanks");
+        miscCBoxSpring.add(baseCheckBox);
 
-        BaseCheckBox = new JCheckBox("Veh Weightclass in challenges");
-        BaseCheckBox.setToolTipText("Enable to show Veh Weightclass in challenges");
-        BaseCheckBox.setName("ShowVehWeightclassInChallenges");
-        miscCBoxSpring.add(BaseCheckBox);
+        baseCheckBox = new JCheckBox("Veh Weightclass in challenges");
+        baseCheckBox.setToolTipText("Enable to show Veh Weightclass in challenges");
+        baseCheckBox.setName("ShowVehWeightclassInChallenges");
+        miscCBoxSpring.add(baseCheckBox);
 
-        BaseCheckBox = new JCheckBox("Allow Staff to See all Messages");
-        BaseCheckBox.setToolTipText(
+        baseCheckBox = new JCheckBox("Allow Staff to See all Messages");
+        baseCheckBox.setToolTipText(
               "<HTML>If checked all Staff Memebers<br>, despite user level, will be able to see all command messages<br>from other staff</html>");
-        BaseCheckBox.setName("AllowLowerLevelUsersToSeeUpperLevelUsersDoings");
-        miscCBoxSpring.add(BaseCheckBox);
+        baseCheckBox.setName("AllowLowerLevelUsersToSeeUpperLevelUsersDoings");
+        miscCBoxSpring.add(baseCheckBox);
 
-        BaseCheckBox = new JCheckBox("House ticks done at slice");
-        BaseCheckBox.setToolTipText(
+        baseCheckBox = new JCheckBox("House ticks done at slice");
+        baseCheckBox.setToolTipText(
               "<HTML>If checked house ticks are done incrementally each slice from 1 to X<br>will be done depending on how many can be processed in the 1/2 the slice time.</html>");
-        BaseCheckBox.setName("ProcessHouseTicksAtSlice");
-        miscCBoxSpring.add(BaseCheckBox);
+        baseCheckBox.setName("ProcessHouseTicksAtSlice");
+        miscCBoxSpring.add(baseCheckBox);
 
-        BaseCheckBox = new JCheckBox("Send single commands at a time");
-        BaseCheckBox.setToolTipText(
+        baseCheckBox = new JCheckBox("Send single commands at a time");
+        baseCheckBox.setToolTipText(
               "<HTML>If checked the first message in the message queue is sent to the player instead of appending<br>the whole queue to a single message sent to the player<br>NOTE: This could slow down the messages a player receives</html>");
-        BaseCheckBox.setName("SendSingleCommandAtATime");
-        miscCBoxSpring.add(BaseCheckBox);
+        baseCheckBox.setName("SendSingleCommandAtATime");
+        miscCBoxSpring.add(baseCheckBox);
 
-        BaseCheckBox = new JCheckBox("Allow RP transfer");
-        BaseCheckBox.setToolTipText(
+        baseCheckBox = new JCheckBox("Allow RP transfer");
+        baseCheckBox.setToolTipText(
               "<HTML>Allow players to transfer reward points in the same manner as they can transfer cbills</html>");
-        BaseCheckBox.setName("AllowRPTransfer");
-        miscCBoxSpring.add(BaseCheckBox);
+        baseCheckBox.setName("AllowRPTransfer");
+        miscCBoxSpring.add(baseCheckBox);
 
-        BaseCheckBox = new JCheckBox("Allow Flu transfer");
-        BaseCheckBox.setToolTipText(
+        baseCheckBox = new JCheckBox("Allow Flu transfer");
+        baseCheckBox.setToolTipText(
               "<HTML>Allow players to transfer influence in the same manner as they can transfer cbills</html>");
-        BaseCheckBox.setName("AllowFluTransfer");
-        miscCBoxSpring.add(BaseCheckBox);
+        baseCheckBox.setName("AllowFluTransfer");
+        miscCBoxSpring.add(baseCheckBox);
 
-        BaseCheckBox = new JCheckBox("Disconnect idle users");
-        BaseCheckBox.setToolTipText(
+        baseCheckBox = new JCheckBox("Disconnect idle users");
+        baseCheckBox.setToolTipText(
               "<html>Disconnect users after [MAXIDLETIME]?<br>Unchecked logs them out, but leaves them connected.</html>");
-        BaseCheckBox.setName("DisconnectIdleUsers");
-        miscCBoxSpring.add(BaseCheckBox);
+        baseCheckBox.setName("DisconnectIdleUsers");
+        miscCBoxSpring.add(baseCheckBox);
 
-        BaseCheckBox = new JCheckBox("Show full capacity in unit popups");
-        BaseCheckBox.setToolTipText("<html>Show the complete capacity description for units in the overlay popup</html>");
-        BaseCheckBox.setName("UseFullCapacityDescription");
-        miscCBoxSpring.add(BaseCheckBox);
+        baseCheckBox = new JCheckBox("Show full capacity in unit popups");
+        baseCheckBox.setToolTipText("<html>Show the complete capacity description for units in the overlay popup</html>");
+        baseCheckBox.setName("UseFullCapacityDescription");
+        miscCBoxSpring.add(baseCheckBox);
 
-        BaseCheckBox = new JCheckBox("Show full capacity in detail display");
-        BaseCheckBox.setToolTipText("<html>Show the complete capacity description for units when viewing</html>");
-        BaseCheckBox.setName("UseFullCapacityInDetailDisplay");
-        miscCBoxSpring.add(BaseCheckBox);
+        baseCheckBox = new JCheckBox("Show full capacity in detail display");
+        baseCheckBox.setToolTipText("<html>Show the complete capacity description for units when viewing</html>");
+        baseCheckBox.setName("UseFullCapacityInDetailDisplay");
+        miscCBoxSpring.add(baseCheckBox);
 
-        BaseCheckBox = new JCheckBox("Enable Emojis");
-        BaseCheckBox.setToolTipText("<html>allows use of the emoji commands, see /ec#list </html>");
-        BaseCheckBox.setName("AllowEmoji");
-        miscCBoxSpring.add(BaseCheckBox);
+        baseCheckBox = new JCheckBox("Enable Emojis");
+        baseCheckBox.setToolTipText("<html>allows use of the emoji commands, see /ec#list </html>");
+        baseCheckBox.setName("AllowEmoji");
+        miscCBoxSpring.add(baseCheckBox);
 
 
         SpringLayoutHelper.setupSpringGrid(miscCBoxSpring, 3);

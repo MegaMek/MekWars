@@ -19,8 +19,9 @@ import java.io.IOException;
 import java.util.StringTokenizer;
 import java.util.Vector;
 
-import common.util.BinReader;
-import common.util.BinWriter;
+import mekwars.common.persistence.BinReader;
+import mekwars.common.persistence.BinWriter;
+
 
 /**
  * A Terrain Base Terrain container for all environments. Each environment can be a different theme to allow for
@@ -31,7 +32,7 @@ final public class Terrain {
     // id
     private int id = -1;
     private String Name = "";
-    private Vector<PlanetEnvironment> environments = new Vector<PlanetEnvironment>(10, 1);
+    private final Vector<PlanetEnvironment> environments = new Vector<>(10, 1);
 
     /**
      * For Serialisation.
@@ -54,13 +55,14 @@ final public class Terrain {
     }
 
     public String toString() {
-        String result = "TE$";
-        result += Name + "$";
+        StringBuilder result = new StringBuilder("TE$");
+        result.append(Name).append("$");
 
         for (PlanetEnvironment env : environments) {
-            result += env.toString();
+            result.append(env.toString());
         }
-        return result;
+
+        return result.toString();
     }
 
     /**
@@ -104,7 +106,7 @@ final public class Terrain {
     }
 
     /**
-     * @param id
+     *
      */
     public void setId(int id) {
         this.id = id;
@@ -135,13 +137,17 @@ final public class Terrain {
     }
 
     public String toImageDescription() {
-        if (environments.size() > 0) {return environments.get(0).toImageDescription();}
+        if (!environments.isEmpty()) {
+            return environments.getFirst().toImageDescription();
+        }
 
         return "";
     }
 
     public String toImageAbsolutePathDescription() {
-        if (environments.size() > 0) {return environments.get(0).toImageAbsolutePathDescription();}
+        if (!environments.isEmpty()) {
+            return environments.getFirst().toImageAbsolutePathDescription();
+        }
 
         return "";
     }

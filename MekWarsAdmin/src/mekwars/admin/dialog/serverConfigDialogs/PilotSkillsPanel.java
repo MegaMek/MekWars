@@ -13,14 +13,15 @@ package mekwars.admin.dialog.serverConfigDialogs;
 
 import java.awt.Dimension;
 import java.awt.GridLayout;
+import java.io.Serial;
 
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.SpringLayout;
 import javax.swing.SwingConstants;
 
-import client.MWClient;
-import common.util.SpringLayoutHelper;
+import mekwars.common.campaign.clientutils.protocol.IClient;
+import mekwars.common.util.SpringLayoutHelper;
 
 /**
  * @author jtighe
@@ -28,10 +29,10 @@ import common.util.SpringLayoutHelper;
  */
 public class PilotSkillsPanel extends JPanel {
 
+    @Serial
     private static final long serialVersionUID = -841047215777559815L;
-    private admin.dialog.serverConfigDialogs.PilotSkillTextField baseTextField = null;
 
-    public PilotSkillsPanel(MWClient mwclient) {
+    public PilotSkillsPanel(IClient client) {
         super();
         /*
          * PILOT SKILLS Panel
@@ -45,7 +46,7 @@ public class PilotSkillsPanel extends JPanel {
         JPanel bannedWSWeaponsSpring = new JPanel(new SpringLayout());
         Dimension fieldSize = new Dimension(5, 10);
 
-        PilotSkillsModPanel psModPanel = new PilotSkillsModPanel(mwclient);
+        PilotSkillsModPanel psModPanel = new PilotSkillsModPanel(client);
 
         JPanel mainSpring = new JPanel(new SpringLayout());
 
@@ -56,11 +57,12 @@ public class PilotSkillsPanel extends JPanel {
         mekPilotSkillsSpring.add(new JLabel("Mek", SwingConstants.TRAILING));
         mekPilotSkillsSpring.add(new JLabel("Pilot Skills", SwingConstants.LEADING));
 
-        baseTextField = new admin.dialog.serverConfigDialogs.PilotSkillTextField(3);
+        PilotSkillTextField baseTextField = new PilotSkillTextField(
+              3);
 
 
         mekPilotSkillsSpring.add(new JLabel("DM", SwingConstants.TRAILING));
-        if (Boolean.parseBoolean(mwclient.getserverConfigs("PlayersCanBuyPilotUpgrades"))) {
+        if (Boolean.parseBoolean(client.getServerConfigs("PlayersCanBuyPilotUpgrades"))) {
             baseTextField.setToolTipText(
                   "<html><body>Set cost for a pilot to gain dodge maneuver. Zero to disable</body></html>");
         } else {
@@ -69,11 +71,11 @@ public class PilotSkillsPanel extends JPanel {
         baseTextField.setName("chanceforDMforMek");
         mekPilotSkillsSpring.add(baseTextField);
 
-        baseTextField = new admin.dialog.serverConfigDialogs.PilotSkillTextField(3);
+        baseTextField = new PilotSkillTextField(3);
 
 
         mekPilotSkillsSpring.add(new JLabel("MS", SwingConstants.TRAILING));
-        if (Boolean.parseBoolean(mwclient.getserverConfigs("PlayersCanBuyPilotUpgrades"))) {
+        if (Boolean.parseBoolean(client.getServerConfigs("PlayersCanBuyPilotUpgrades"))) {
             baseTextField.setToolTipText(
                   "<html><body>Set cost for a pilot to gain melee specialist. Zero to disable</body></html>");
         } else {
@@ -82,11 +84,11 @@ public class PilotSkillsPanel extends JPanel {
         baseTextField.setName("chanceforMSforMek");
         mekPilotSkillsSpring.add(baseTextField);
 
-        baseTextField = new admin.dialog.serverConfigDialogs.PilotSkillTextField(3);
+        baseTextField = new PilotSkillTextField(3);
 
 
         mekPilotSkillsSpring.add(new JLabel("PR", SwingConstants.TRAILING));
-        if (Boolean.parseBoolean(mwclient.getserverConfigs("PlayersCanBuyPilotUpgrades"))) {
+        if (Boolean.parseBoolean(client.getServerConfigs("PlayersCanBuyPilotUpgrades"))) {
             baseTextField.setToolTipText(
                   "<html><body>Set cost for a pilot to gain pain resistance. Zero to disable</body></html>");
         } else {
@@ -95,11 +97,11 @@ public class PilotSkillsPanel extends JPanel {
         baseTextField.setName("chanceforPRforMek");
         mekPilotSkillsSpring.add(baseTextField);
 
-        baseTextField = new admin.dialog.serverConfigDialogs.PilotSkillTextField(3);
+        baseTextField = new PilotSkillTextField(3);
 
 
         mekPilotSkillsSpring.add(new JLabel("SV", SwingConstants.TRAILING));
-        if (Boolean.parseBoolean(mwclient.getserverConfigs("PlayersCanBuyPilotUpgrades"))) {
+        if (Boolean.parseBoolean(client.getServerConfigs("PlayersCanBuyPilotUpgrades"))) {
             baseTextField.setToolTipText(
                   "<html><body>Set cost for a pilot to gain survivalist. Zero to disable</body></html>");
         } else {
@@ -108,11 +110,11 @@ public class PilotSkillsPanel extends JPanel {
         baseTextField.setName("chanceforSVforMek");
         mekPilotSkillsSpring.add(baseTextField);
 
-        baseTextField = new admin.dialog.serverConfigDialogs.PilotSkillTextField(3);
+        baseTextField = new PilotSkillTextField(3);
 
 
         mekPilotSkillsSpring.add(new JLabel("IM", SwingConstants.TRAILING));
-        if (Boolean.parseBoolean(mwclient.getserverConfigs("PlayersCanBuyPilotUpgrades"))) {
+        if (Boolean.parseBoolean(client.getServerConfigs("PlayersCanBuyPilotUpgrades"))) {
             baseTextField.setToolTipText(
                   "<html><body>Set cost for a pilot to gain iron man. Zero to disable</body></html>");
         } else {
@@ -121,11 +123,11 @@ public class PilotSkillsPanel extends JPanel {
         baseTextField.setName("chanceforIMforMek");
         mekPilotSkillsSpring.add(baseTextField);
 
-        baseTextField = new admin.dialog.serverConfigDialogs.PilotSkillTextField(3);
+        baseTextField = new PilotSkillTextField(3);
 
 
         mekPilotSkillsSpring.add(new JLabel("MA", SwingConstants.TRAILING));
-        if (Boolean.parseBoolean(mwclient.getserverConfigs("PlayersCanBuyPilotUpgrades"))) {
+        if (Boolean.parseBoolean(client.getServerConfigs("PlayersCanBuyPilotUpgrades"))) {
             baseTextField.setToolTipText(
                   "<html><body>Set cost for a pilot to gain maneuvering ace. Zero to disable</body></html>");
         } else {
@@ -134,11 +136,11 @@ public class PilotSkillsPanel extends JPanel {
         baseTextField.setName("chanceforMAforMek");
         mekPilotSkillsSpring.add(baseTextField);
 
-        baseTextField = new admin.dialog.serverConfigDialogs.PilotSkillTextField(3);
+        baseTextField = new PilotSkillTextField(3);
 
 
         mekPilotSkillsSpring.add(new JLabel("NAP", SwingConstants.TRAILING));
-        if (Boolean.parseBoolean(mwclient.getserverConfigs("PlayersCanBuyPilotUpgrades"))) {
+        if (Boolean.parseBoolean(client.getServerConfigs("PlayersCanBuyPilotUpgrades"))) {
             baseTextField.setToolTipText(
                   "<html><body>Set cost for a pilot to gain Natural Aptitude Piloting. Zero to disable</body></html>");
         } else {
@@ -148,11 +150,11 @@ public class PilotSkillsPanel extends JPanel {
         baseTextField.setName("chanceforNAPforMek");
         mekPilotSkillsSpring.add(baseTextField);
 
-        baseTextField = new admin.dialog.serverConfigDialogs.PilotSkillTextField(3);
+        baseTextField = new PilotSkillTextField(3);
 
 
         mekPilotSkillsSpring.add(new JLabel("NAG", SwingConstants.TRAILING));
-        if (Boolean.parseBoolean(mwclient.getserverConfigs("PlayersCanBuyPilotUpgrades"))) {
+        if (Boolean.parseBoolean(client.getServerConfigs("PlayersCanBuyPilotUpgrades"))) {
             baseTextField.setToolTipText(
                   "<html><body>Set cost for a pilot to gain Natural Aptitude Gunnery. Zero to disable</body></html>");
         } else {
@@ -162,11 +164,11 @@ public class PilotSkillsPanel extends JPanel {
         baseTextField.setName("chanceforNAGforMek");
         mekPilotSkillsSpring.add(baseTextField);
 
-        baseTextField = new admin.dialog.serverConfigDialogs.PilotSkillTextField(3);
+        baseTextField = new PilotSkillTextField(3);
 
 
         mekPilotSkillsSpring.add(new JLabel("AT", SwingConstants.TRAILING));
-        if (Boolean.parseBoolean(mwclient.getserverConfigs("PlayersCanBuyPilotUpgrades"))) {
+        if (Boolean.parseBoolean(client.getServerConfigs("PlayersCanBuyPilotUpgrades"))) {
             baseTextField.setToolTipText(
                   "<html><body>Set cost for a pilot to gain Astech. Zero to disable</body></html>");
         } else {
@@ -175,11 +177,11 @@ public class PilotSkillsPanel extends JPanel {
         baseTextField.setName("chanceforATforMek");
         mekPilotSkillsSpring.add(baseTextField);
 
-        baseTextField = new admin.dialog.serverConfigDialogs.PilotSkillTextField(3);
+        baseTextField = new PilotSkillTextField(3);
 
 
         mekPilotSkillsSpring.add(new JLabel("TG", SwingConstants.TRAILING));
-        if (Boolean.parseBoolean(mwclient.getserverConfigs("PlayersCanBuyPilotUpgrades"))) {
+        if (Boolean.parseBoolean(client.getServerConfigs("PlayersCanBuyPilotUpgrades"))) {
             baseTextField.setToolTipText(
                   "<html><body>Set cost for a pilot to gain tactical genius. Zero to disable</body></html>");
         } else {
@@ -188,11 +190,11 @@ public class PilotSkillsPanel extends JPanel {
         baseTextField.setName("chanceforTGforMek");
         mekPilotSkillsSpring.add(baseTextField);
 
-        baseTextField = new admin.dialog.serverConfigDialogs.PilotSkillTextField(3);
+        baseTextField = new PilotSkillTextField(3);
 
 
         mekPilotSkillsSpring.add(new JLabel("WS", SwingConstants.TRAILING));
-        if (Boolean.parseBoolean(mwclient.getserverConfigs("PlayersCanBuyPilotUpgrades"))) {
+        if (Boolean.parseBoolean(client.getServerConfigs("PlayersCanBuyPilotUpgrades"))) {
             baseTextField.setToolTipText(
                   "<html><body>Set cost for a pilot to gain weapon specialist. Zero to disable</body></html>");
         } else {
@@ -201,11 +203,11 @@ public class PilotSkillsPanel extends JPanel {
         baseTextField.setName("chanceforWSforMek");
         mekPilotSkillsSpring.add(baseTextField);
 
-        baseTextField = new admin.dialog.serverConfigDialogs.PilotSkillTextField(3);
+        baseTextField = new PilotSkillTextField(3);
 
 
         mekPilotSkillsSpring.add(new JLabel("G/B", SwingConstants.TRAILING));
-        if (Boolean.parseBoolean(mwclient.getserverConfigs("PlayersCanBuyPilotUpgrades"))) {
+        if (Boolean.parseBoolean(client.getServerConfigs("PlayersCanBuyPilotUpgrades"))) {
             baseTextField.setToolTipText(
                   "<html><body>Set cost for a pilot to gain gunnery/Ballistic. Zero to disable</body></html>");
         } else {
@@ -214,11 +216,11 @@ public class PilotSkillsPanel extends JPanel {
         baseTextField.setName("chanceforGBforMek");
         mekPilotSkillsSpring.add(baseTextField);
 
-        baseTextField = new admin.dialog.serverConfigDialogs.PilotSkillTextField(3);
+        baseTextField = new PilotSkillTextField(3);
 
 
         mekPilotSkillsSpring.add(new JLabel("G/L", SwingConstants.TRAILING));
-        if (Boolean.parseBoolean(mwclient.getserverConfigs("PlayersCanBuyPilotUpgrades"))) {
+        if (Boolean.parseBoolean(client.getServerConfigs("PlayersCanBuyPilotUpgrades"))) {
             baseTextField.setToolTipText(
                   "<html><body>Set cost for a pilot to gain gunnery/laser. Zero to disable</body></html>");
         } else {
@@ -227,11 +229,11 @@ public class PilotSkillsPanel extends JPanel {
         baseTextField.setName("chanceforGLforMek");
         mekPilotSkillsSpring.add(baseTextField);
 
-        baseTextField = new admin.dialog.serverConfigDialogs.PilotSkillTextField(3);
+        baseTextField = new PilotSkillTextField(3);
 
 
         mekPilotSkillsSpring.add(new JLabel("G/M", SwingConstants.TRAILING));
-        if (Boolean.parseBoolean(mwclient.getserverConfigs("PlayersCanBuyPilotUpgrades"))) {
+        if (Boolean.parseBoolean(client.getServerConfigs("PlayersCanBuyPilotUpgrades"))) {
             baseTextField.setToolTipText(
                   "<html><body>Set cost for a pilot to gain gunnery/missile. Zero to disable</body></html>");
         } else {
@@ -240,11 +242,11 @@ public class PilotSkillsPanel extends JPanel {
         baseTextField.setName("chanceforGMforMek");
         mekPilotSkillsSpring.add(baseTextField);
 
-        baseTextField = new admin.dialog.serverConfigDialogs.PilotSkillTextField(3);
+        baseTextField = new PilotSkillTextField(3);
 
 
         mekPilotSkillsSpring.add(new JLabel("Trait", SwingConstants.TRAILING));
-        if (Boolean.parseBoolean(mwclient.getserverConfigs("PlayersCanBuyPilotUpgrades"))) {
+        if (Boolean.parseBoolean(client.getServerConfigs("PlayersCanBuyPilotUpgrades"))) {
             baseTextField.setToolTipText(
                   "<html><body>Set cost for a pilot to gain a trait. Zero to disable</body></html>");
         } else {
@@ -253,11 +255,11 @@ public class PilotSkillsPanel extends JPanel {
         baseTextField.setName("chanceforTNforMek");
         mekPilotSkillsSpring.add(baseTextField);
 
-        baseTextField = new admin.dialog.serverConfigDialogs.PilotSkillTextField(3);
+        baseTextField = new PilotSkillTextField(3);
 
 
         mekPilotSkillsSpring.add(new JLabel("EI", SwingConstants.TRAILING));
-        if (Boolean.parseBoolean(mwclient.getserverConfigs("PlayersCanBuyPilotUpgrades"))) {
+        if (Boolean.parseBoolean(client.getServerConfigs("PlayersCanBuyPilotUpgrades"))) {
             baseTextField.setToolTipText(
                   "<html><body>Set cost for a pilot to gain Enhanced Interface. Zero to disable</body></html>");
         } else {
@@ -266,11 +268,11 @@ public class PilotSkillsPanel extends JPanel {
         baseTextField.setName("chanceforEIforMek");
         mekPilotSkillsSpring.add(baseTextField);
 
-        baseTextField = new admin.dialog.serverConfigDialogs.PilotSkillTextField(3);
+        baseTextField = new PilotSkillTextField(3);
 
 
         mekPilotSkillsSpring.add(new JLabel("GT", SwingConstants.TRAILING));
-        if (Boolean.parseBoolean(mwclient.getserverConfigs("PlayersCanBuyPilotUpgrades"))) {
+        if (Boolean.parseBoolean(client.getServerConfigs("PlayersCanBuyPilotUpgrades"))) {
             baseTextField.setToolTipText(
                   "<html><body>Set cost for a pilot to gain gifted. Zero to disable</body></html>");
         } else {
@@ -279,11 +281,11 @@ public class PilotSkillsPanel extends JPanel {
         baseTextField.setName("chanceforGTforMek");
         mekPilotSkillsSpring.add(baseTextField);
 
-        baseTextField = new admin.dialog.serverConfigDialogs.PilotSkillTextField(3);
+        baseTextField = new PilotSkillTextField(3);
 
 
         mekPilotSkillsSpring.add(new JLabel("QS", SwingConstants.TRAILING));
-        if (Boolean.parseBoolean(mwclient.getserverConfigs("PlayersCanBuyPilotUpgrades"))) {
+        if (Boolean.parseBoolean(client.getServerConfigs("PlayersCanBuyPilotUpgrades"))) {
             baseTextField.setToolTipText(
                   "<html><body>Set cost for a pilot to gain Quick Study. Zero to disable</body></html>");
         } else {
@@ -292,11 +294,11 @@ public class PilotSkillsPanel extends JPanel {
         baseTextField.setName("chanceforQSforMek");
         mekPilotSkillsSpring.add(baseTextField);
 
-        baseTextField = new admin.dialog.serverConfigDialogs.PilotSkillTextField(3);
+        baseTextField = new PilotSkillTextField(3);
 
 
         mekPilotSkillsSpring.add(new JLabel("MT", SwingConstants.TRAILING));
-        if (Boolean.parseBoolean(mwclient.getserverConfigs("PlayersCanBuyPilotUpgrades"))) {
+        if (Boolean.parseBoolean(client.getServerConfigs("PlayersCanBuyPilotUpgrades"))) {
             baseTextField.setToolTipText(
                   "<html><body>Set cost for a pilot to gain the Med Tech skill. Zero to disable</body></html>");
         } else {
@@ -305,11 +307,11 @@ public class PilotSkillsPanel extends JPanel {
         baseTextField.setName("chanceforMTforMek");
         mekPilotSkillsSpring.add(baseTextField);
 
-        baseTextField = new admin.dialog.serverConfigDialogs.PilotSkillTextField(3);
+        baseTextField = new PilotSkillTextField(3);
 
 
         mekPilotSkillsSpring.add(new JLabel("Edge", SwingConstants.TRAILING));
-        if (Boolean.parseBoolean(mwclient.getserverConfigs("PlayersCanBuyPilotUpgrades"))) {
+        if (Boolean.parseBoolean(client.getServerConfigs("PlayersCanBuyPilotUpgrades"))) {
             baseTextField.setToolTipText(
                   "<html><body>Set cost for a pilot to gain the Edge skill. Zero to disable</body></html>");
         } else {
@@ -318,11 +320,11 @@ public class PilotSkillsPanel extends JPanel {
         baseTextField.setName("chanceforEDforMek");
         mekPilotSkillsSpring.add(baseTextField);
 
-        baseTextField = new admin.dialog.serverConfigDialogs.PilotSkillTextField(3);
+        baseTextField = new PilotSkillTextField(3);
 
 
         mekPilotSkillsSpring.add(new JLabel("VDNI", SwingConstants.TRAILING));
-        if (Boolean.parseBoolean(mwclient.getserverConfigs("PlayersCanBuyPilotUpgrades"))) {
+        if (Boolean.parseBoolean(client.getServerConfigs("PlayersCanBuyPilotUpgrades"))) {
             baseTextField.setToolTipText(
                   "<html><body>Set cost for a pilot to gain the VDNI skill. Zero to disable</body></html>");
         } else {
@@ -331,11 +333,11 @@ public class PilotSkillsPanel extends JPanel {
         baseTextField.setName("chanceforVDNIforMek");
         mekPilotSkillsSpring.add(baseTextField);
 
-        baseTextField = new admin.dialog.serverConfigDialogs.PilotSkillTextField(3);
+        baseTextField = new PilotSkillTextField(3);
 
 
         mekPilotSkillsSpring.add(new JLabel("BVDNI", SwingConstants.TRAILING));
-        if (Boolean.parseBoolean(mwclient.getserverConfigs("PlayersCanBuyPilotUpgrades"))) {
+        if (Boolean.parseBoolean(client.getServerConfigs("PlayersCanBuyPilotUpgrades"))) {
             baseTextField.setToolTipText(
                   "<html><body>Set cost for a pilot to gain the buffered VDNI skill. Zero to disable</body></html>");
         } else {
@@ -345,11 +347,11 @@ public class PilotSkillsPanel extends JPanel {
         baseTextField.setName("chanceforBVDNIforMek");
         mekPilotSkillsSpring.add(baseTextField);
 
-        baseTextField = new admin.dialog.serverConfigDialogs.PilotSkillTextField(3);
+        baseTextField = new PilotSkillTextField(3);
 
 
         mekPilotSkillsSpring.add(new JLabel("PS", SwingConstants.TRAILING));
-        if (Boolean.parseBoolean(mwclient.getserverConfigs("PlayersCanBuyPilotUpgrades"))) {
+        if (Boolean.parseBoolean(client.getServerConfigs("PlayersCanBuyPilotUpgrades"))) {
             baseTextField.setToolTipText(
                   "<html><body>Set cost for a pilot to gain the Pain Shunt skill. Zero to disable</body></html>");
         } else {
@@ -364,11 +366,11 @@ public class PilotSkillsPanel extends JPanel {
         vehiclePilotSkillsSpring.add(new JLabel("Vee", SwingConstants.TRAILING));
         vehiclePilotSkillsSpring.add(new JLabel("Crew Skills", SwingConstants.LEADING));
 
-        baseTextField = new admin.dialog.serverConfigDialogs.PilotSkillTextField(3);
+        baseTextField = new PilotSkillTextField(3);
 
 
         vehiclePilotSkillsSpring.add(new JLabel("MA", SwingConstants.TRAILING));
-        if (Boolean.parseBoolean(mwclient.getserverConfigs("PlayersCanBuyPilotUpgrades"))) {
+        if (Boolean.parseBoolean(client.getServerConfigs("PlayersCanBuyPilotUpgrades"))) {
             baseTextField.setToolTipText(
                   "<html><body>Set cost for a pilot to gain maneuvering ace. Zero to disable skill</body></html>");
         } else {
@@ -377,11 +379,11 @@ public class PilotSkillsPanel extends JPanel {
         baseTextField.setName("chanceforMAforVehicle");
         vehiclePilotSkillsSpring.add(baseTextField);
 
-        baseTextField = new admin.dialog.serverConfigDialogs.PilotSkillTextField(3);
+        baseTextField = new PilotSkillTextField(3);
 
 
         vehiclePilotSkillsSpring.add(new JLabel("NAP", SwingConstants.TRAILING));
-        if (Boolean.parseBoolean(mwclient.getserverConfigs("PlayersCanBuyPilotUpgrades"))) {
+        if (Boolean.parseBoolean(client.getServerConfigs("PlayersCanBuyPilotUpgrades"))) {
             baseTextField.setToolTipText(
                   "<html><body>Set cost for a pilot to gain Natural Aptitude Piloting. Zero to disable skill</body></html>");
         } else {
@@ -391,11 +393,11 @@ public class PilotSkillsPanel extends JPanel {
         baseTextField.setName("chanceforNAPforVehicle");
         vehiclePilotSkillsSpring.add(baseTextField);
 
-        baseTextField = new admin.dialog.serverConfigDialogs.PilotSkillTextField(3);
+        baseTextField = new PilotSkillTextField(3);
 
 
         vehiclePilotSkillsSpring.add(new JLabel("NAG", SwingConstants.TRAILING));
-        if (Boolean.parseBoolean(mwclient.getserverConfigs("PlayersCanBuyPilotUpgrades"))) {
+        if (Boolean.parseBoolean(client.getServerConfigs("PlayersCanBuyPilotUpgrades"))) {
             baseTextField.setToolTipText(
                   "<html><body>Set cost for a pilot to gain Natural Aptitude Gunnery. Zero to disable skill</body></html>");
         } else {
@@ -405,11 +407,11 @@ public class PilotSkillsPanel extends JPanel {
         baseTextField.setName("chanceforNAGforVehicle");
         vehiclePilotSkillsSpring.add(baseTextField);
 
-        baseTextField = new admin.dialog.serverConfigDialogs.PilotSkillTextField(3);
+        baseTextField = new PilotSkillTextField(3);
 
 
         vehiclePilotSkillsSpring.add(new JLabel("AT", SwingConstants.TRAILING));
-        if (Boolean.parseBoolean(mwclient.getserverConfigs("PlayersCanBuyPilotUpgrades"))) {
+        if (Boolean.parseBoolean(client.getServerConfigs("PlayersCanBuyPilotUpgrades"))) {
             baseTextField.setToolTipText(
                   "<html><body>Set cost for a pilot to gain gunnery/missile. Zero to disable skill</body></html>");
         } else {
@@ -418,11 +420,11 @@ public class PilotSkillsPanel extends JPanel {
         baseTextField.setName("chanceforATforVehicle");
         vehiclePilotSkillsSpring.add(baseTextField);
 
-        baseTextField = new admin.dialog.serverConfigDialogs.PilotSkillTextField(3);
+        baseTextField = new PilotSkillTextField(3);
 
 
         vehiclePilotSkillsSpring.add(new JLabel("TG", SwingConstants.TRAILING));
-        if (Boolean.parseBoolean(mwclient.getserverConfigs("PlayersCanBuyPilotUpgrades"))) {
+        if (Boolean.parseBoolean(client.getServerConfigs("PlayersCanBuyPilotUpgrades"))) {
             baseTextField.setToolTipText(
                   "<html><body>Set cost for a pilot to gain tactical genius. Zero to disable skill</body></html>");
         } else {
@@ -431,11 +433,11 @@ public class PilotSkillsPanel extends JPanel {
         baseTextField.setName("chanceforTGforVehicle");
         vehiclePilotSkillsSpring.add(baseTextField);
 
-        baseTextField = new admin.dialog.serverConfigDialogs.PilotSkillTextField(3);
+        baseTextField = new PilotSkillTextField(3);
 
 
         vehiclePilotSkillsSpring.add(new JLabel("WS", SwingConstants.TRAILING));
-        if (Boolean.parseBoolean(mwclient.getserverConfigs("PlayersCanBuyPilotUpgrades"))) {
+        if (Boolean.parseBoolean(client.getServerConfigs("PlayersCanBuyPilotUpgrades"))) {
             baseTextField.setToolTipText(
                   "<html><body>Set cost for a pilot to gain weapon specialist.  Zero to disable skill</body></html>");
         } else {
@@ -444,11 +446,11 @@ public class PilotSkillsPanel extends JPanel {
         baseTextField.setName("chanceforWSforVehicle");
         vehiclePilotSkillsSpring.add(baseTextField);
 
-        baseTextField = new admin.dialog.serverConfigDialogs.PilotSkillTextField(3);
+        baseTextField = new PilotSkillTextField(3);
 
 
         vehiclePilotSkillsSpring.add(new JLabel("G/B", SwingConstants.TRAILING));
-        if (Boolean.parseBoolean(mwclient.getserverConfigs("PlayersCanBuyPilotUpgrades"))) {
+        if (Boolean.parseBoolean(client.getServerConfigs("PlayersCanBuyPilotUpgrades"))) {
             baseTextField.setToolTipText(
                   "<html><body>Set cost for a pilot to gain gunnery/ballistic. Zero to disable skill</body></html>");
         } else {
@@ -457,11 +459,11 @@ public class PilotSkillsPanel extends JPanel {
         baseTextField.setName("chanceforGBforVehicle");
         vehiclePilotSkillsSpring.add(baseTextField);
 
-        baseTextField = new admin.dialog.serverConfigDialogs.PilotSkillTextField(3);
+        baseTextField = new PilotSkillTextField(3);
 
 
         vehiclePilotSkillsSpring.add(new JLabel("G/L", SwingConstants.TRAILING));
-        if (Boolean.parseBoolean(mwclient.getserverConfigs("PlayersCanBuyPilotUpgrades"))) {
+        if (Boolean.parseBoolean(client.getServerConfigs("PlayersCanBuyPilotUpgrades"))) {
             baseTextField.setToolTipText(
                   "<html><body>Set cost for a pilot to gain gunnery/laser. Zero to disable skill</body></html>");
         } else {
@@ -470,11 +472,11 @@ public class PilotSkillsPanel extends JPanel {
         baseTextField.setName("chanceforGLforVehicle");
         vehiclePilotSkillsSpring.add(baseTextField);
 
-        baseTextField = new admin.dialog.serverConfigDialogs.PilotSkillTextField(3);
+        baseTextField = new PilotSkillTextField(3);
 
 
         vehiclePilotSkillsSpring.add(new JLabel("G/M", SwingConstants.TRAILING));
-        if (Boolean.parseBoolean(mwclient.getserverConfigs("PlayersCanBuyPilotUpgrades"))) {
+        if (Boolean.parseBoolean(client.getServerConfigs("PlayersCanBuyPilotUpgrades"))) {
             baseTextField.setToolTipText(
                   "<html><body>Set cost for a pilot to gain gunnery/missile. Zero to disable skill</body></html>");
         } else {
@@ -483,11 +485,11 @@ public class PilotSkillsPanel extends JPanel {
         baseTextField.setName("chanceforGMforVehicle");
         vehiclePilotSkillsSpring.add(baseTextField);
 
-        baseTextField = new admin.dialog.serverConfigDialogs.PilotSkillTextField(3);
+        baseTextField = new PilotSkillTextField(3);
 
 
         vehiclePilotSkillsSpring.add(new JLabel("Trait", SwingConstants.TRAILING));
-        if (Boolean.parseBoolean(mwclient.getserverConfigs("PlayersCanBuyPilotUpgrades"))) {
+        if (Boolean.parseBoolean(client.getServerConfigs("PlayersCanBuyPilotUpgrades"))) {
             baseTextField.setToolTipText("<html><body>Set cost for a pilot to gain trait. Zero to disable</body></html>");
         } else {
             baseTextField.setToolTipText("<html><body>Set Chance for a pilot to gain trait</body></html>");
@@ -495,11 +497,11 @@ public class PilotSkillsPanel extends JPanel {
         baseTextField.setName("chanceforTNforVehicle");
         vehiclePilotSkillsSpring.add(baseTextField);
 
-        baseTextField = new admin.dialog.serverConfigDialogs.PilotSkillTextField(3);
+        baseTextField = new PilotSkillTextField(3);
 
 
         vehiclePilotSkillsSpring.add(new JLabel("EI", SwingConstants.TRAILING));
-        if (Boolean.parseBoolean(mwclient.getserverConfigs("PlayersCanBuyPilotUpgrades"))) {
+        if (Boolean.parseBoolean(client.getServerConfigs("PlayersCanBuyPilotUpgrades"))) {
             baseTextField.setToolTipText(
                   "<html><body>Set cost for a pilot to gain Enhanced Interface. Zero to disable</body></html>");
         } else {
@@ -508,11 +510,11 @@ public class PilotSkillsPanel extends JPanel {
         baseTextField.setName("chanceforEIforVehicle");
         vehiclePilotSkillsSpring.add(baseTextField);
 
-        baseTextField = new admin.dialog.serverConfigDialogs.PilotSkillTextField(3);
+        baseTextField = new PilotSkillTextField(3);
 
 
         vehiclePilotSkillsSpring.add(new JLabel("GT", SwingConstants.TRAILING));
-        if (Boolean.parseBoolean(mwclient.getserverConfigs("PlayersCanBuyPilotUpgrades"))) {
+        if (Boolean.parseBoolean(client.getServerConfigs("PlayersCanBuyPilotUpgrades"))) {
             baseTextField.setToolTipText(
                   "<html><body>Set cost for a pilot to gain gifted. Zero to disable skill</body></html>");
         } else {
@@ -521,11 +523,11 @@ public class PilotSkillsPanel extends JPanel {
         baseTextField.setName("chanceforGTforVehicle");
         vehiclePilotSkillsSpring.add(baseTextField);
 
-        baseTextField = new admin.dialog.serverConfigDialogs.PilotSkillTextField(3);
+        baseTextField = new PilotSkillTextField(3);
 
 
         vehiclePilotSkillsSpring.add(new JLabel("QS", SwingConstants.TRAILING));
-        if (Boolean.parseBoolean(mwclient.getserverConfigs("PlayersCanBuyPilotUpgrades"))) {
+        if (Boolean.parseBoolean(client.getServerConfigs("PlayersCanBuyPilotUpgrades"))) {
             baseTextField.setToolTipText(
                   "<html><body>Set cost for a pilot to gain Quick Study. Zero to disable skill</body></html>");
         } else {
@@ -534,11 +536,11 @@ public class PilotSkillsPanel extends JPanel {
         baseTextField.setName("chanceforQSforVehicle");
         vehiclePilotSkillsSpring.add(baseTextField);
 
-        baseTextField = new admin.dialog.serverConfigDialogs.PilotSkillTextField(3);
+        baseTextField = new PilotSkillTextField(3);
 
 
         vehiclePilotSkillsSpring.add(new JLabel("VDNI", SwingConstants.TRAILING));
-        if (Boolean.parseBoolean(mwclient.getserverConfigs("PlayersCanBuyPilotUpgrades"))) {
+        if (Boolean.parseBoolean(client.getServerConfigs("PlayersCanBuyPilotUpgrades"))) {
             baseTextField.setToolTipText(
                   "<html><body>Set cost for a pilot to gain the VDNI skill. Zero to disable</body></html>");
         } else {
@@ -547,11 +549,11 @@ public class PilotSkillsPanel extends JPanel {
         baseTextField.setName("chanceforVDNIforVehicle");
         vehiclePilotSkillsSpring.add(baseTextField);
 
-        baseTextField = new admin.dialog.serverConfigDialogs.PilotSkillTextField(3);
+        baseTextField = new PilotSkillTextField(3);
 
 
         vehiclePilotSkillsSpring.add(new JLabel("BVDNI", SwingConstants.TRAILING));
-        if (Boolean.parseBoolean(mwclient.getserverConfigs("PlayersCanBuyPilotUpgrades"))) {
+        if (Boolean.parseBoolean(client.getServerConfigs("PlayersCanBuyPilotUpgrades"))) {
             baseTextField.setToolTipText(
                   "<html><body>Set cost for a pilot to gain the buffered VDNI skill. Zero to disable</body></html>");
         } else {
@@ -561,11 +563,11 @@ public class PilotSkillsPanel extends JPanel {
         baseTextField.setName("chanceforBVDNIforVehicle");
         vehiclePilotSkillsSpring.add(baseTextField);
 
-        baseTextField = new admin.dialog.serverConfigDialogs.PilotSkillTextField(3);
+        baseTextField = new PilotSkillTextField(3);
 
 
         vehiclePilotSkillsSpring.add(new JLabel("PS", SwingConstants.TRAILING));
-        if (Boolean.parseBoolean(mwclient.getserverConfigs("PlayersCanBuyPilotUpgrades"))) {
+        if (Boolean.parseBoolean(client.getServerConfigs("PlayersCanBuyPilotUpgrades"))) {
             baseTextField.setToolTipText(
                   "<html><body>Set cost for a pilot to gain the Pain Shunt skill. Zero to disable</body></html>");
         } else {
@@ -577,11 +579,11 @@ public class PilotSkillsPanel extends JPanel {
         infantryPilotSkillsSpring.add(new JLabel("Inf", SwingConstants.TRAILING));
         infantryPilotSkillsSpring.add(new JLabel("Squad Skills", SwingConstants.LEADING));
 
-        baseTextField = new admin.dialog.serverConfigDialogs.PilotSkillTextField(3);
+        baseTextField = new PilotSkillTextField(3);
 
 
         infantryPilotSkillsSpring.add(new JLabel("MA", SwingConstants.TRAILING));
-        if (Boolean.parseBoolean(mwclient.getserverConfigs("PlayersCanBuyPilotUpgrades"))) {
+        if (Boolean.parseBoolean(client.getServerConfigs("PlayersCanBuyPilotUpgrades"))) {
             baseTextField.setToolTipText(
                   "<html><body>Set cost for a pilot to gain maneuvering ace. Zero to disable</body></html>");
         } else {
@@ -590,11 +592,11 @@ public class PilotSkillsPanel extends JPanel {
         baseTextField.setName("chanceforMAforInfantry");
         infantryPilotSkillsSpring.add(baseTextField);
 
-        baseTextField = new admin.dialog.serverConfigDialogs.PilotSkillTextField(3);
+        baseTextField = new PilotSkillTextField(3);
 
 
         infantryPilotSkillsSpring.add(new JLabel("NAP", SwingConstants.TRAILING));
-        if (Boolean.parseBoolean(mwclient.getserverConfigs("PlayersCanBuyPilotUpgrades"))) {
+        if (Boolean.parseBoolean(client.getServerConfigs("PlayersCanBuyPilotUpgrades"))) {
             baseTextField.setToolTipText(
                   "<html><body>Set cost for a pilot to gain Natural Aptitude Piloting. Zero to disable</body></html>");
         } else {
@@ -604,11 +606,11 @@ public class PilotSkillsPanel extends JPanel {
         baseTextField.setName("chanceforNAPforInfantry");
         infantryPilotSkillsSpring.add(baseTextField);
 
-        baseTextField = new admin.dialog.serverConfigDialogs.PilotSkillTextField(3);
+        baseTextField = new PilotSkillTextField(3);
 
 
         infantryPilotSkillsSpring.add(new JLabel("NAG", SwingConstants.TRAILING));
-        if (Boolean.parseBoolean(mwclient.getserverConfigs("PlayersCanBuyPilotUpgrades"))) {
+        if (Boolean.parseBoolean(client.getServerConfigs("PlayersCanBuyPilotUpgrades"))) {
             baseTextField.setToolTipText(
                   "<html><body>Set cost for a pilot to gain Natural Aptitude Gunnery. Zero to disable</body></html>");
         } else {
@@ -618,11 +620,11 @@ public class PilotSkillsPanel extends JPanel {
         baseTextField.setName("chanceforNAGforInfantry");
         infantryPilotSkillsSpring.add(baseTextField);
 
-        baseTextField = new admin.dialog.serverConfigDialogs.PilotSkillTextField(3);
+        baseTextField = new PilotSkillTextField(3);
 
 
         infantryPilotSkillsSpring.add(new JLabel("AT", SwingConstants.TRAILING));
-        if (Boolean.parseBoolean(mwclient.getserverConfigs("PlayersCanBuyPilotUpgrades"))) {
+        if (Boolean.parseBoolean(client.getServerConfigs("PlayersCanBuyPilotUpgrades"))) {
             baseTextField.setToolTipText(
                   "<html><body>Set cost for a pilot to gain astech. Zero to disable</body></html>");
         } else {
@@ -631,11 +633,11 @@ public class PilotSkillsPanel extends JPanel {
         baseTextField.setName("chanceforATforInfantry");
         infantryPilotSkillsSpring.add(baseTextField);
 
-        baseTextField = new admin.dialog.serverConfigDialogs.PilotSkillTextField(3);
+        baseTextField = new PilotSkillTextField(3);
 
 
         infantryPilotSkillsSpring.add(new JLabel("TG", SwingConstants.TRAILING));
-        if (Boolean.parseBoolean(mwclient.getserverConfigs("PlayersCanBuyPilotUpgrades"))) {
+        if (Boolean.parseBoolean(client.getServerConfigs("PlayersCanBuyPilotUpgrades"))) {
             baseTextField.setToolTipText(
                   "<html><body>Set cost for a pilot to gain tactical genius. Zero to disable</body></html>");
         } else {
@@ -644,11 +646,11 @@ public class PilotSkillsPanel extends JPanel {
         baseTextField.setName("chanceforTGforInfantry");
         infantryPilotSkillsSpring.add(baseTextField);
 
-        baseTextField = new admin.dialog.serverConfigDialogs.PilotSkillTextField(3);
+        baseTextField = new PilotSkillTextField(3);
 
 
         infantryPilotSkillsSpring.add(new JLabel("WS", SwingConstants.TRAILING));
-        if (Boolean.parseBoolean(mwclient.getserverConfigs("PlayersCanBuyPilotUpgrades"))) {
+        if (Boolean.parseBoolean(client.getServerConfigs("PlayersCanBuyPilotUpgrades"))) {
             baseTextField.setToolTipText(
                   "<html><body>Set cost for a pilot to gain weapon specialist. Zero to disable</body></html>");
         } else {
@@ -657,11 +659,11 @@ public class PilotSkillsPanel extends JPanel {
         baseTextField.setName("chanceforWSforInfantry");
         infantryPilotSkillsSpring.add(baseTextField);
 
-        baseTextField = new admin.dialog.serverConfigDialogs.PilotSkillTextField(3);
+        baseTextField = new PilotSkillTextField(3);
 
 
         infantryPilotSkillsSpring.add(new JLabel("G/B", SwingConstants.TRAILING));
-        if (Boolean.parseBoolean(mwclient.getserverConfigs("PlayersCanBuyPilotUpgrades"))) {
+        if (Boolean.parseBoolean(client.getServerConfigs("PlayersCanBuyPilotUpgrades"))) {
             baseTextField.setToolTipText(
                   "<html><body>Set cost for a pilot to gain gunnery/ballistic. Zero to disable</body></html>");
         } else {
@@ -670,11 +672,11 @@ public class PilotSkillsPanel extends JPanel {
         baseTextField.setName("chanceforGBforInfantry");
         infantryPilotSkillsSpring.add(baseTextField);
 
-        baseTextField = new admin.dialog.serverConfigDialogs.PilotSkillTextField(3);
+        baseTextField = new PilotSkillTextField(3);
 
 
         infantryPilotSkillsSpring.add(new JLabel("G/L", SwingConstants.TRAILING));
-        if (Boolean.parseBoolean(mwclient.getserverConfigs("PlayersCanBuyPilotUpgrades"))) {
+        if (Boolean.parseBoolean(client.getServerConfigs("PlayersCanBuyPilotUpgrades"))) {
             baseTextField.setToolTipText(
                   "<html><body>Set cost for a pilot to gain gunnery/laser. Zero to disable</body></html>");
         } else {
@@ -683,11 +685,11 @@ public class PilotSkillsPanel extends JPanel {
         baseTextField.setName("chanceforGLforInfantry");
         infantryPilotSkillsSpring.add(baseTextField);
 
-        baseTextField = new admin.dialog.serverConfigDialogs.PilotSkillTextField(3);
+        baseTextField = new PilotSkillTextField(3);
 
 
         infantryPilotSkillsSpring.add(new JLabel("G/M", SwingConstants.TRAILING));
-        if (Boolean.parseBoolean(mwclient.getserverConfigs("PlayersCanBuyPilotUpgrades"))) {
+        if (Boolean.parseBoolean(client.getServerConfigs("PlayersCanBuyPilotUpgrades"))) {
             baseTextField.setToolTipText(
                   "<html><body>Set cost for a pilot to gain gunnery/missile. Zero to disable</body></html>");
         } else {
@@ -696,11 +698,11 @@ public class PilotSkillsPanel extends JPanel {
         baseTextField.setName("chanceforGMforInfantry");
         infantryPilotSkillsSpring.add(baseTextField);
 
-        baseTextField = new admin.dialog.serverConfigDialogs.PilotSkillTextField(3);
+        baseTextField = new PilotSkillTextField(3);
 
 
         infantryPilotSkillsSpring.add(new JLabel("Trait", SwingConstants.TRAILING));
-        if (Boolean.parseBoolean(mwclient.getserverConfigs("PlayersCanBuyPilotUpgrades"))) {
+        if (Boolean.parseBoolean(client.getServerConfigs("PlayersCanBuyPilotUpgrades"))) {
             baseTextField.setToolTipText(
                   "<html><body>Set cost for a pilot to gain a trait. Zero to disable</body></html>");
         } else {
@@ -709,11 +711,11 @@ public class PilotSkillsPanel extends JPanel {
         baseTextField.setName("chanceforTNforInfantry");
         infantryPilotSkillsSpring.add(baseTextField);
 
-        baseTextField = new admin.dialog.serverConfigDialogs.PilotSkillTextField(3);
+        baseTextField = new PilotSkillTextField(3);
 
 
         infantryPilotSkillsSpring.add(new JLabel("EI", SwingConstants.TRAILING));
-        if (Boolean.parseBoolean(mwclient.getserverConfigs("PlayersCanBuyPilotUpgrades"))) {
+        if (Boolean.parseBoolean(client.getServerConfigs("PlayersCanBuyPilotUpgrades"))) {
             baseTextField.setToolTipText(
                   "<html><body>Set cost for a pilot to gain Enhanced Interface. Zero to disable</body></html>");
         } else {
@@ -722,11 +724,11 @@ public class PilotSkillsPanel extends JPanel {
         baseTextField.setName("chanceforEIforInfantry");
         infantryPilotSkillsSpring.add(baseTextField);
 
-        baseTextField = new admin.dialog.serverConfigDialogs.PilotSkillTextField(3);
+        baseTextField = new PilotSkillTextField(3);
 
 
         infantryPilotSkillsSpring.add(new JLabel("GT", SwingConstants.TRAILING));
-        if (Boolean.parseBoolean(mwclient.getserverConfigs("PlayersCanBuyPilotUpgrades"))) {
+        if (Boolean.parseBoolean(client.getServerConfigs("PlayersCanBuyPilotUpgrades"))) {
             baseTextField.setToolTipText(
                   "<html><body>Set cost for a pilot to gain gifted. Zero to disable</body></html>");
         } else {
@@ -735,11 +737,11 @@ public class PilotSkillsPanel extends JPanel {
         baseTextField.setName("chanceforGTforInfantry");
         infantryPilotSkillsSpring.add(baseTextField);
 
-        baseTextField = new admin.dialog.serverConfigDialogs.PilotSkillTextField(3);
+        baseTextField = new PilotSkillTextField(3);
 
 
         infantryPilotSkillsSpring.add(new JLabel("QS", SwingConstants.TRAILING));
-        if (Boolean.parseBoolean(mwclient.getserverConfigs("PlayersCanBuyPilotUpgrades"))) {
+        if (Boolean.parseBoolean(client.getServerConfigs("PlayersCanBuyPilotUpgrades"))) {
             baseTextField.setToolTipText(
                   "<html><body>Set cost for a pilot to gain Quick Study. Zero to disable</body></html>");
         } else {
@@ -748,11 +750,11 @@ public class PilotSkillsPanel extends JPanel {
         baseTextField.setName("chanceforQSforInfantry");
         infantryPilotSkillsSpring.add(baseTextField);
 
-        baseTextField = new admin.dialog.serverConfigDialogs.PilotSkillTextField(3);
+        baseTextField = new PilotSkillTextField(3);
 
 
         infantryPilotSkillsSpring.add(new JLabel("PS", SwingConstants.TRAILING));
-        if (Boolean.parseBoolean(mwclient.getserverConfigs("PlayersCanBuyPilotUpgrades"))) {
+        if (Boolean.parseBoolean(client.getServerConfigs("PlayersCanBuyPilotUpgrades"))) {
             baseTextField.setToolTipText(
                   "<html><body>Set cost for a pilot to gain the Pain Shunt skill. Zero to disable</body></html>");
         } else {
@@ -764,11 +766,11 @@ public class PilotSkillsPanel extends JPanel {
         protomechPilotSkillsSpring.add(new JLabel("Proto", SwingConstants.TRAILING));
         protomechPilotSkillsSpring.add(new JLabel("Pilot Skills", SwingConstants.LEADING));
 
-        baseTextField = new admin.dialog.serverConfigDialogs.PilotSkillTextField(3);
+        baseTextField = new PilotSkillTextField(3);
 
 
         protomechPilotSkillsSpring.add(new JLabel("MA", SwingConstants.TRAILING));
-        if (Boolean.parseBoolean(mwclient.getserverConfigs("PlayersCanBuyPilotUpgrades"))) {
+        if (Boolean.parseBoolean(client.getServerConfigs("PlayersCanBuyPilotUpgrades"))) {
             baseTextField.setToolTipText(
                   "<html><body>Set cost for a pilot to gain maneuvering ace. Zero to disable</body></html>");
         } else {
@@ -777,11 +779,11 @@ public class PilotSkillsPanel extends JPanel {
         baseTextField.setName("chanceforMAforProtoMek");
         protomechPilotSkillsSpring.add(baseTextField);
 
-        baseTextField = new admin.dialog.serverConfigDialogs.PilotSkillTextField(3);
+        baseTextField = new PilotSkillTextField(3);
 
 
         protomechPilotSkillsSpring.add(new JLabel("NAP", SwingConstants.TRAILING));
-        if (Boolean.parseBoolean(mwclient.getserverConfigs("PlayersCanBuyPilotUpgrades"))) {
+        if (Boolean.parseBoolean(client.getServerConfigs("PlayersCanBuyPilotUpgrades"))) {
             baseTextField.setToolTipText(
                   "<html><body>Set cost for a pilot to gain Natural Aptitude Piloting. Zero to disable</body></html>");
         } else {
@@ -791,11 +793,11 @@ public class PilotSkillsPanel extends JPanel {
         baseTextField.setName("chanceforNAPforProtoMek");
         protomechPilotSkillsSpring.add(baseTextField);
 
-        baseTextField = new admin.dialog.serverConfigDialogs.PilotSkillTextField(3);
+        baseTextField = new PilotSkillTextField(3);
 
 
         protomechPilotSkillsSpring.add(new JLabel("NAG", SwingConstants.TRAILING));
-        if (Boolean.parseBoolean(mwclient.getserverConfigs("PlayersCanBuyPilotUpgrades"))) {
+        if (Boolean.parseBoolean(client.getServerConfigs("PlayersCanBuyPilotUpgrades"))) {
             baseTextField.setToolTipText(
                   "<html><body>Set cost for a pilot to gain Natural Aptitude Gunnery. Zero to disable</body></html>");
         } else {
@@ -805,11 +807,11 @@ public class PilotSkillsPanel extends JPanel {
         baseTextField.setName("chanceforNAGforProtoMek");
         protomechPilotSkillsSpring.add(baseTextField);
 
-        baseTextField = new admin.dialog.serverConfigDialogs.PilotSkillTextField(3);
+        baseTextField = new PilotSkillTextField(3);
 
 
         protomechPilotSkillsSpring.add(new JLabel("AT", SwingConstants.TRAILING));
-        if (Boolean.parseBoolean(mwclient.getserverConfigs("PlayersCanBuyPilotUpgrades"))) {
+        if (Boolean.parseBoolean(client.getServerConfigs("PlayersCanBuyPilotUpgrades"))) {
             baseTextField.setToolTipText(
                   "<html><body>Set cost for a pilot to gain astech. Zero to disable</body></html>");
         } else {
@@ -818,11 +820,11 @@ public class PilotSkillsPanel extends JPanel {
         baseTextField.setName("chanceforATforProtoMek");
         protomechPilotSkillsSpring.add(baseTextField);
 
-        baseTextField = new admin.dialog.serverConfigDialogs.PilotSkillTextField(3);
+        baseTextField = new PilotSkillTextField(3);
 
 
         protomechPilotSkillsSpring.add(new JLabel("TG", SwingConstants.TRAILING));
-        if (Boolean.parseBoolean(mwclient.getserverConfigs("PlayersCanBuyPilotUpgrades"))) {
+        if (Boolean.parseBoolean(client.getServerConfigs("PlayersCanBuyPilotUpgrades"))) {
             baseTextField.setToolTipText(
                   "<html><body>Set cost for a pilot to gain tactical genius. Zero to disable</body></html>");
         } else {
@@ -831,11 +833,11 @@ public class PilotSkillsPanel extends JPanel {
         baseTextField.setName("chanceforTGforProtoMek");
         protomechPilotSkillsSpring.add(baseTextField);
 
-        baseTextField = new admin.dialog.serverConfigDialogs.PilotSkillTextField(3);
+        baseTextField = new PilotSkillTextField(3);
 
 
         protomechPilotSkillsSpring.add(new JLabel("WS", SwingConstants.TRAILING));
-        if (Boolean.parseBoolean(mwclient.getserverConfigs("PlayersCanBuyPilotUpgrades"))) {
+        if (Boolean.parseBoolean(client.getServerConfigs("PlayersCanBuyPilotUpgrades"))) {
             baseTextField.setToolTipText(
                   "<html><body>Set cost for a pilot to gain weapon specialist. Zero to disable</body></html>");
         } else {
@@ -844,11 +846,11 @@ public class PilotSkillsPanel extends JPanel {
         baseTextField.setName("chanceforWSforProtoMek");
         protomechPilotSkillsSpring.add(baseTextField);
 
-        baseTextField = new admin.dialog.serverConfigDialogs.PilotSkillTextField(3);
+        baseTextField = new PilotSkillTextField(3);
 
 
         protomechPilotSkillsSpring.add(new JLabel("G/B", SwingConstants.TRAILING));
-        if (Boolean.parseBoolean(mwclient.getserverConfigs("PlayersCanBuyPilotUpgrades"))) {
+        if (Boolean.parseBoolean(client.getServerConfigs("PlayersCanBuyPilotUpgrades"))) {
             baseTextField.setToolTipText(
                   "<html><body>Set cost for a pilot to gain gunnery/ballistic. Zero to disable</body></html>");
         } else {
@@ -857,11 +859,11 @@ public class PilotSkillsPanel extends JPanel {
         baseTextField.setName("chanceforGBforProtoMek");
         protomechPilotSkillsSpring.add(baseTextField);
 
-        baseTextField = new admin.dialog.serverConfigDialogs.PilotSkillTextField(3);
+        baseTextField = new PilotSkillTextField(3);
 
 
         protomechPilotSkillsSpring.add(new JLabel("G/L", SwingConstants.TRAILING));
-        if (Boolean.parseBoolean(mwclient.getserverConfigs("PlayersCanBuyPilotUpgrades"))) {
+        if (Boolean.parseBoolean(client.getServerConfigs("PlayersCanBuyPilotUpgrades"))) {
             baseTextField.setToolTipText(
                   "<html><body>Set cost for a pilot to gain gunnery/laser. Zero to disable</body></html>");
         } else {
@@ -870,11 +872,11 @@ public class PilotSkillsPanel extends JPanel {
         baseTextField.setName("chanceforGLforProtoMek");
         protomechPilotSkillsSpring.add(baseTextField);
 
-        baseTextField = new admin.dialog.serverConfigDialogs.PilotSkillTextField(3);
+        baseTextField = new PilotSkillTextField(3);
 
 
         protomechPilotSkillsSpring.add(new JLabel("G/M", SwingConstants.TRAILING));
-        if (Boolean.parseBoolean(mwclient.getserverConfigs("PlayersCanBuyPilotUpgrades"))) {
+        if (Boolean.parseBoolean(client.getServerConfigs("PlayersCanBuyPilotUpgrades"))) {
             baseTextField.setToolTipText(
                   "<html><body>Set cost for a pilot to gain gunnery/missile. Zero to disable</body></html>");
         } else {
@@ -883,11 +885,11 @@ public class PilotSkillsPanel extends JPanel {
         baseTextField.setName("chanceforGMforProtoMek");
         protomechPilotSkillsSpring.add(baseTextField);
 
-        baseTextField = new admin.dialog.serverConfigDialogs.PilotSkillTextField(3);
+        baseTextField = new PilotSkillTextField(3);
 
 
         protomechPilotSkillsSpring.add(new JLabel("Trait", SwingConstants.TRAILING));
-        if (Boolean.parseBoolean(mwclient.getserverConfigs("PlayersCanBuyPilotUpgrades"))) {
+        if (Boolean.parseBoolean(client.getServerConfigs("PlayersCanBuyPilotUpgrades"))) {
             baseTextField.setToolTipText("<html><body>Set cost for a pilot to a trait. Zero to disable</body></html>");
         } else {
             baseTextField.setToolTipText("<html><body>Set Chance for a pilot to a trait</body></html>");
@@ -895,11 +897,11 @@ public class PilotSkillsPanel extends JPanel {
         baseTextField.setName("chanceforTNforProtoMek");
         protomechPilotSkillsSpring.add(baseTextField);
 
-        baseTextField = new admin.dialog.serverConfigDialogs.PilotSkillTextField(3);
+        baseTextField = new PilotSkillTextField(3);
 
 
         protomechPilotSkillsSpring.add(new JLabel("EI", SwingConstants.TRAILING));
-        if (Boolean.parseBoolean(mwclient.getserverConfigs("PlayersCanBuyPilotUpgrades"))) {
+        if (Boolean.parseBoolean(client.getServerConfigs("PlayersCanBuyPilotUpgrades"))) {
             baseTextField.setToolTipText(
                   "<html><body>Set cost for a pilot to gain Enhanced Interface. Zero to disable</body></html>");
         } else {
@@ -908,11 +910,11 @@ public class PilotSkillsPanel extends JPanel {
         baseTextField.setName("chanceforEIforProtoMek");
         protomechPilotSkillsSpring.add(baseTextField);
 
-        baseTextField = new admin.dialog.serverConfigDialogs.PilotSkillTextField(3);
+        baseTextField = new PilotSkillTextField(3);
 
 
         protomechPilotSkillsSpring.add(new JLabel("GT", SwingConstants.TRAILING));
-        if (Boolean.parseBoolean(mwclient.getserverConfigs("PlayersCanBuyPilotUpgrades"))) {
+        if (Boolean.parseBoolean(client.getServerConfigs("PlayersCanBuyPilotUpgrades"))) {
             baseTextField.setToolTipText(
                   "<html><body>Set cost for a pilot to gain gifted. Zero to disable</body></html>");
         } else {
@@ -921,11 +923,11 @@ public class PilotSkillsPanel extends JPanel {
         baseTextField.setName("chanceforGTforProtoMek");
         protomechPilotSkillsSpring.add(baseTextField);
 
-        baseTextField = new admin.dialog.serverConfigDialogs.PilotSkillTextField(3);
+        baseTextField = new PilotSkillTextField(3);
 
 
         protomechPilotSkillsSpring.add(new JLabel("QS", SwingConstants.TRAILING));
-        if (Boolean.parseBoolean(mwclient.getserverConfigs("PlayersCanBuyPilotUpgrades"))) {
+        if (Boolean.parseBoolean(client.getServerConfigs("PlayersCanBuyPilotUpgrades"))) {
             baseTextField.setToolTipText(
                   "<html><body>Set cost for a pilot to gain Quick Study. Zero to disable</body></html>");
         } else {
@@ -934,11 +936,11 @@ public class PilotSkillsPanel extends JPanel {
         baseTextField.setName("chanceforQSforProtoMek");
         protomechPilotSkillsSpring.add(baseTextField);
 
-        baseTextField = new admin.dialog.serverConfigDialogs.PilotSkillTextField(3);
+        baseTextField = new PilotSkillTextField(3);
 
 
         protomechPilotSkillsSpring.add(new JLabel("MT", SwingConstants.TRAILING));
-        if (Boolean.parseBoolean(mwclient.getserverConfigs("PlayersCanBuyPilotUpgrades"))) {
+        if (Boolean.parseBoolean(client.getServerConfigs("PlayersCanBuyPilotUpgrades"))) {
             baseTextField.setToolTipText(
                   "<html><body>Set cost for a pilot to gain the Med Tech Skill. Zero to disable</body></html>");
         } else {
@@ -950,11 +952,11 @@ public class PilotSkillsPanel extends JPanel {
         battlearmorPilotSkillsSpring.add(new JLabel("BA", SwingConstants.TRAILING));
         battlearmorPilotSkillsSpring.add(new JLabel("Squad Skills", SwingConstants.LEADING));
 
-        baseTextField = new admin.dialog.serverConfigDialogs.PilotSkillTextField(3);
+        baseTextField = new PilotSkillTextField(3);
 
 
         battlearmorPilotSkillsSpring.add(new JLabel("MA", SwingConstants.TRAILING));
-        if (Boolean.parseBoolean(mwclient.getserverConfigs("PlayersCanBuyPilotUpgrades"))) {
+        if (Boolean.parseBoolean(client.getServerConfigs("PlayersCanBuyPilotUpgrades"))) {
             baseTextField.setToolTipText(
                   "<html><body>Set cost for a pilot to gain maneuvering ace. Zero to disable</body></html>");
         } else {
@@ -963,11 +965,11 @@ public class PilotSkillsPanel extends JPanel {
         baseTextField.setName("chanceforMAforBattleArmor");
         battlearmorPilotSkillsSpring.add(baseTextField);
 
-        baseTextField = new admin.dialog.serverConfigDialogs.PilotSkillTextField(3);
+        baseTextField = new PilotSkillTextField(3);
 
 
         battlearmorPilotSkillsSpring.add(new JLabel("NAP", SwingConstants.TRAILING));
-        if (Boolean.parseBoolean(mwclient.getserverConfigs("PlayersCanBuyPilotUpgrades"))) {
+        if (Boolean.parseBoolean(client.getServerConfigs("PlayersCanBuyPilotUpgrades"))) {
             baseTextField.setToolTipText(
                   "<html><body>Set cost for a pilot to gain Natural Aptitude Piloting. Zero to disable</body></html>");
         } else {
@@ -977,11 +979,11 @@ public class PilotSkillsPanel extends JPanel {
         baseTextField.setName("chanceforNAPforBattleArmor");
         battlearmorPilotSkillsSpring.add(baseTextField);
 
-        baseTextField = new admin.dialog.serverConfigDialogs.PilotSkillTextField(3);
+        baseTextField = new PilotSkillTextField(3);
 
 
         battlearmorPilotSkillsSpring.add(new JLabel("NAG", SwingConstants.TRAILING));
-        if (Boolean.parseBoolean(mwclient.getserverConfigs("PlayersCanBuyPilotUpgrades"))) {
+        if (Boolean.parseBoolean(client.getServerConfigs("PlayersCanBuyPilotUpgrades"))) {
             baseTextField.setToolTipText(
                   "<html><body>Set cost for a pilot to gain Natural Aptitude Gunnery. Zero to disable</body></html>");
         } else {
@@ -991,11 +993,11 @@ public class PilotSkillsPanel extends JPanel {
         baseTextField.setName("chanceforNAGforBattleArmor");
         battlearmorPilotSkillsSpring.add(baseTextField);
 
-        baseTextField = new admin.dialog.serverConfigDialogs.PilotSkillTextField(3);
+        baseTextField = new PilotSkillTextField(3);
 
 
         battlearmorPilotSkillsSpring.add(new JLabel("AT", SwingConstants.TRAILING));
-        if (Boolean.parseBoolean(mwclient.getserverConfigs("PlayersCanBuyPilotUpgrades"))) {
+        if (Boolean.parseBoolean(client.getServerConfigs("PlayersCanBuyPilotUpgrades"))) {
             baseTextField.setToolTipText(
                   "<html><body>Set cost for a pilot to gain astech. Zero to disable</body></html>");
         } else {
@@ -1004,11 +1006,11 @@ public class PilotSkillsPanel extends JPanel {
         baseTextField.setName("chanceforATforBattleArmor");
         battlearmorPilotSkillsSpring.add(baseTextField);
 
-        baseTextField = new admin.dialog.serverConfigDialogs.PilotSkillTextField(3);
+        baseTextField = new PilotSkillTextField(3);
 
 
         battlearmorPilotSkillsSpring.add(new JLabel("TG", SwingConstants.TRAILING));
-        if (Boolean.parseBoolean(mwclient.getserverConfigs("PlayersCanBuyPilotUpgrades"))) {
+        if (Boolean.parseBoolean(client.getServerConfigs("PlayersCanBuyPilotUpgrades"))) {
             baseTextField.setToolTipText(
                   "<html><body>Set cost for a pilot to gain tactical genius. Zero to disable</body></html>");
         } else {
@@ -1017,11 +1019,11 @@ public class PilotSkillsPanel extends JPanel {
         baseTextField.setName("chanceforTGforBattleArmor");
         battlearmorPilotSkillsSpring.add(baseTextField);
 
-        baseTextField = new admin.dialog.serverConfigDialogs.PilotSkillTextField(3);
+        baseTextField = new PilotSkillTextField(3);
 
 
         battlearmorPilotSkillsSpring.add(new JLabel("WS", SwingConstants.TRAILING));
-        if (Boolean.parseBoolean(mwclient.getserverConfigs("PlayersCanBuyPilotUpgrades"))) {
+        if (Boolean.parseBoolean(client.getServerConfigs("PlayersCanBuyPilotUpgrades"))) {
             baseTextField.setToolTipText(
                   "<html><body>Set cost for a pilot to gain weapon specialist. Zero to disable</body></html>");
         } else {
@@ -1030,11 +1032,11 @@ public class PilotSkillsPanel extends JPanel {
         baseTextField.setName("chanceforWSforBattleArmor");
         battlearmorPilotSkillsSpring.add(baseTextField);
 
-        baseTextField = new admin.dialog.serverConfigDialogs.PilotSkillTextField(3);
+        baseTextField = new PilotSkillTextField(3);
 
 
         battlearmorPilotSkillsSpring.add(new JLabel("G/B", SwingConstants.TRAILING));
-        if (Boolean.parseBoolean(mwclient.getserverConfigs("PlayersCanBuyPilotUpgrades"))) {
+        if (Boolean.parseBoolean(client.getServerConfigs("PlayersCanBuyPilotUpgrades"))) {
             baseTextField.setToolTipText(
                   "<html><body>Set cost for a pilot to gain gunnery/ballistic. Zero to disable</body></html>");
         } else {
@@ -1043,11 +1045,11 @@ public class PilotSkillsPanel extends JPanel {
         baseTextField.setName("chanceforGBforBattleArmor");
         battlearmorPilotSkillsSpring.add(baseTextField);
 
-        baseTextField = new admin.dialog.serverConfigDialogs.PilotSkillTextField(3);
+        baseTextField = new PilotSkillTextField(3);
 
 
         battlearmorPilotSkillsSpring.add(new JLabel("G/L", SwingConstants.TRAILING));
-        if (Boolean.parseBoolean(mwclient.getserverConfigs("PlayersCanBuyPilotUpgrades"))) {
+        if (Boolean.parseBoolean(client.getServerConfigs("PlayersCanBuyPilotUpgrades"))) {
             baseTextField.setToolTipText(
                   "<html><body>Set cost for a pilot to gain gunnery/laser. Zero to disable</body></html>");
         } else {
@@ -1056,11 +1058,11 @@ public class PilotSkillsPanel extends JPanel {
         baseTextField.setName("chanceforGLforBattleArmor");
         battlearmorPilotSkillsSpring.add(baseTextField);
 
-        baseTextField = new admin.dialog.serverConfigDialogs.PilotSkillTextField(3);
+        baseTextField = new PilotSkillTextField(3);
 
 
         battlearmorPilotSkillsSpring.add(new JLabel("G/M", SwingConstants.TRAILING));
-        if (Boolean.parseBoolean(mwclient.getserverConfigs("PlayersCanBuyPilotUpgrades"))) {
+        if (Boolean.parseBoolean(client.getServerConfigs("PlayersCanBuyPilotUpgrades"))) {
             baseTextField.setToolTipText(
                   "<html><body>Set cost for a pilot to gain gunnery/missile. Zero to disable</body></html>");
         } else {
@@ -1069,11 +1071,11 @@ public class PilotSkillsPanel extends JPanel {
         baseTextField.setName("chanceforGMforBattleArmor");
         battlearmorPilotSkillsSpring.add(baseTextField);
 
-        baseTextField = new admin.dialog.serverConfigDialogs.PilotSkillTextField(3);
+        baseTextField = new PilotSkillTextField(3);
 
 
         battlearmorPilotSkillsSpring.add(new JLabel("Trait", SwingConstants.TRAILING));
-        if (Boolean.parseBoolean(mwclient.getserverConfigs("PlayersCanBuyPilotUpgrades"))) {
+        if (Boolean.parseBoolean(client.getServerConfigs("PlayersCanBuyPilotUpgrades"))) {
             baseTextField.setToolTipText(
                   "<html><body>Set cost for a pilot to gain a trait. Zero to disable</body></html>");
         } else {
@@ -1082,11 +1084,11 @@ public class PilotSkillsPanel extends JPanel {
         baseTextField.setName("chanceforTNforBattleArmor");
         battlearmorPilotSkillsSpring.add(baseTextField);
 
-        baseTextField = new admin.dialog.serverConfigDialogs.PilotSkillTextField(3);
+        baseTextField = new PilotSkillTextField(3);
 
 
         battlearmorPilotSkillsSpring.add(new JLabel("EI", SwingConstants.TRAILING));
-        if (Boolean.parseBoolean(mwclient.getserverConfigs("PlayersCanBuyPilotUpgrades"))) {
+        if (Boolean.parseBoolean(client.getServerConfigs("PlayersCanBuyPilotUpgrades"))) {
             baseTextField.setToolTipText(
                   "<html><body>Set cost for a pilot to gain Enhanced Interface. Zero to disable</body></html>");
         } else {
@@ -1095,11 +1097,11 @@ public class PilotSkillsPanel extends JPanel {
         baseTextField.setName("chanceforEIforBattleArmor");
         battlearmorPilotSkillsSpring.add(baseTextField);
 
-        baseTextField = new admin.dialog.serverConfigDialogs.PilotSkillTextField(3);
+        baseTextField = new PilotSkillTextField(3);
 
 
         battlearmorPilotSkillsSpring.add(new JLabel("GT", SwingConstants.TRAILING));
-        if (Boolean.parseBoolean(mwclient.getserverConfigs("PlayersCanBuyPilotUpgrades"))) {
+        if (Boolean.parseBoolean(client.getServerConfigs("PlayersCanBuyPilotUpgrades"))) {
             baseTextField.setToolTipText(
                   "<html><body>Set cost for a pilot to gain gifted. Zero to disable</body></html>");
         } else {
@@ -1108,11 +1110,11 @@ public class PilotSkillsPanel extends JPanel {
         baseTextField.setName("chanceforGTforBattleArmor");
         battlearmorPilotSkillsSpring.add(baseTextField);
 
-        baseTextField = new admin.dialog.serverConfigDialogs.PilotSkillTextField(3);
+        baseTextField = new PilotSkillTextField(3);
 
 
         battlearmorPilotSkillsSpring.add(new JLabel("QS", SwingConstants.TRAILING));
-        if (Boolean.parseBoolean(mwclient.getserverConfigs("PlayersCanBuyPilotUpgrades"))) {
+        if (Boolean.parseBoolean(client.getServerConfigs("PlayersCanBuyPilotUpgrades"))) {
             baseTextField.setToolTipText(
                   "<html><body>Set cost for a pilot to gain Quick Study. Zero to disable</body></html>");
         } else {
@@ -1121,11 +1123,11 @@ public class PilotSkillsPanel extends JPanel {
         baseTextField.setName("chanceforQSforBattleArmor");
         battlearmorPilotSkillsSpring.add(baseTextField);
 
-        baseTextField = new admin.dialog.serverConfigDialogs.PilotSkillTextField(3);
+        baseTextField = new PilotSkillTextField(3);
 
 
         battlearmorPilotSkillsSpring.add(new JLabel("PS", SwingConstants.TRAILING));
-        if (Boolean.parseBoolean(mwclient.getserverConfigs("PlayersCanBuyPilotUpgrades"))) {
+        if (Boolean.parseBoolean(client.getServerConfigs("PlayersCanBuyPilotUpgrades"))) {
             baseTextField.setToolTipText(
                   "<html><body>Set cost for a pilot to gain the Pain Shunt skill. Zero to disable</body></html>");
         } else {
@@ -1137,12 +1139,12 @@ public class PilotSkillsPanel extends JPanel {
         aeroPilotSkillsSpring.add(new JLabel("Aero", SwingConstants.TRAILING));
         aeroPilotSkillsSpring.add(new JLabel("Pilot Skills", SwingConstants.LEADING));
 
-        baseTextField = new admin.dialog.serverConfigDialogs.PilotSkillTextField(3);
+        baseTextField = new PilotSkillTextField(3);
 
 
         baseTextField.setMinimumSize(fieldSize);
         aeroPilotSkillsSpring.add(new JLabel("MA", SwingConstants.TRAILING));
-        if (Boolean.parseBoolean(mwclient.getserverConfigs("PlayersCanBuyPilotUpgrades"))) {
+        if (Boolean.parseBoolean(client.getServerConfigs("PlayersCanBuyPilotUpgrades"))) {
             baseTextField.setToolTipText(
                   "<html><body>Set cost for a pilot to gain maneuvering ace. Zero to disable</body></html>");
         } else {
@@ -1151,11 +1153,11 @@ public class PilotSkillsPanel extends JPanel {
         baseTextField.setName("chanceforMAforAero");
         aeroPilotSkillsSpring.add(baseTextField);
 
-        baseTextField = new admin.dialog.serverConfigDialogs.PilotSkillTextField(3);
+        baseTextField = new PilotSkillTextField(3);
 
 
         aeroPilotSkillsSpring.add(new JLabel("NAP", SwingConstants.TRAILING));
-        if (Boolean.parseBoolean(mwclient.getserverConfigs("PlayersCanBuyPilotUpgrades"))) {
+        if (Boolean.parseBoolean(client.getServerConfigs("PlayersCanBuyPilotUpgrades"))) {
             baseTextField.setToolTipText(
                   "<html><body>Set cost for a pilot to gain Natural Aptitude Piloting. Zero to disable</body></html>");
         } else {
@@ -1165,11 +1167,11 @@ public class PilotSkillsPanel extends JPanel {
         baseTextField.setName("chanceforNAPforAero");
         aeroPilotSkillsSpring.add(baseTextField);
 
-        baseTextField = new admin.dialog.serverConfigDialogs.PilotSkillTextField(3);
+        baseTextField = new PilotSkillTextField(3);
 
 
         aeroPilotSkillsSpring.add(new JLabel("NAG", SwingConstants.TRAILING));
-        if (Boolean.parseBoolean(mwclient.getserverConfigs("PlayersCanBuyPilotUpgrades"))) {
+        if (Boolean.parseBoolean(client.getServerConfigs("PlayersCanBuyPilotUpgrades"))) {
             baseTextField.setToolTipText(
                   "<html><body>Set cost for a pilot to gain Natural Aptitude Gunnery. Zero to disable</body></html>");
         } else {
@@ -1179,11 +1181,11 @@ public class PilotSkillsPanel extends JPanel {
         baseTextField.setName("chanceforNAGforAero");
         aeroPilotSkillsSpring.add(baseTextField);
 
-        baseTextField = new admin.dialog.serverConfigDialogs.PilotSkillTextField(3);
+        baseTextField = new PilotSkillTextField(3);
 
 
         aeroPilotSkillsSpring.add(new JLabel("AT", SwingConstants.TRAILING));
-        if (Boolean.parseBoolean(mwclient.getserverConfigs("PlayersCanBuyPilotUpgrades"))) {
+        if (Boolean.parseBoolean(client.getServerConfigs("PlayersCanBuyPilotUpgrades"))) {
             baseTextField.setToolTipText(
                   "<html><body>Set cost for a pilot to gain gunnery/missile. Zero to disable</body></html>");
         } else {
@@ -1192,11 +1194,11 @@ public class PilotSkillsPanel extends JPanel {
         baseTextField.setName("chanceforATforAero");
         aeroPilotSkillsSpring.add(baseTextField);
 
-        baseTextField = new admin.dialog.serverConfigDialogs.PilotSkillTextField(3);
+        baseTextField = new PilotSkillTextField(3);
 
 
         aeroPilotSkillsSpring.add(new JLabel("TG", SwingConstants.TRAILING));
-        if (Boolean.parseBoolean(mwclient.getserverConfigs("PlayersCanBuyPilotUpgrades"))) {
+        if (Boolean.parseBoolean(client.getServerConfigs("PlayersCanBuyPilotUpgrades"))) {
             baseTextField.setToolTipText(
                   "<html><body>Set cost for a pilot to gain tactical genius. Zero to disable</body></html>");
         } else {
@@ -1205,11 +1207,11 @@ public class PilotSkillsPanel extends JPanel {
         baseTextField.setName("chanceforTGforAero");
         aeroPilotSkillsSpring.add(baseTextField);
 
-        baseTextField = new admin.dialog.serverConfigDialogs.PilotSkillTextField(3);
+        baseTextField = new PilotSkillTextField(3);
 
 
         aeroPilotSkillsSpring.add(new JLabel("WS", SwingConstants.TRAILING));
-        if (Boolean.parseBoolean(mwclient.getserverConfigs("PlayersCanBuyPilotUpgrades"))) {
+        if (Boolean.parseBoolean(client.getServerConfigs("PlayersCanBuyPilotUpgrades"))) {
             baseTextField.setToolTipText(
                   "<html><body>Set cost for a pilot to gain weapon specialist. Zero to disable</body></html>");
         } else {
@@ -1218,11 +1220,11 @@ public class PilotSkillsPanel extends JPanel {
         baseTextField.setName("chanceforWSforAero");
         aeroPilotSkillsSpring.add(baseTextField);
 
-        baseTextField = new admin.dialog.serverConfigDialogs.PilotSkillTextField(3);
+        baseTextField = new PilotSkillTextField(3);
 
 
         aeroPilotSkillsSpring.add(new JLabel("G/B", SwingConstants.TRAILING));
-        if (Boolean.parseBoolean(mwclient.getserverConfigs("PlayersCanBuyPilotUpgrades"))) {
+        if (Boolean.parseBoolean(client.getServerConfigs("PlayersCanBuyPilotUpgrades"))) {
             baseTextField.setToolTipText(
                   "<html><body>Set cost for a pilot to gain gunnery/ballistic. Zero to disable</body></html>");
         } else {
@@ -1231,11 +1233,11 @@ public class PilotSkillsPanel extends JPanel {
         baseTextField.setName("chanceforGBforAero");
         aeroPilotSkillsSpring.add(baseTextField);
 
-        baseTextField = new admin.dialog.serverConfigDialogs.PilotSkillTextField(3);
+        baseTextField = new PilotSkillTextField(3);
 
 
         aeroPilotSkillsSpring.add(new JLabel("G/L", SwingConstants.TRAILING));
-        if (Boolean.parseBoolean(mwclient.getserverConfigs("PlayersCanBuyPilotUpgrades"))) {
+        if (Boolean.parseBoolean(client.getServerConfigs("PlayersCanBuyPilotUpgrades"))) {
             baseTextField.setToolTipText(
                   "<html><body>Set cost for a pilot to gain gunnery/laser. Zero to disable</body></html>");
         } else {
@@ -1244,11 +1246,11 @@ public class PilotSkillsPanel extends JPanel {
         baseTextField.setName("chanceforGLforAero");
         aeroPilotSkillsSpring.add(baseTextField);
 
-        baseTextField = new admin.dialog.serverConfigDialogs.PilotSkillTextField(3);
+        baseTextField = new PilotSkillTextField(3);
 
 
         aeroPilotSkillsSpring.add(new JLabel("G/M", SwingConstants.TRAILING));
-        if (Boolean.parseBoolean(mwclient.getserverConfigs("PlayersCanBuyPilotUpgrades"))) {
+        if (Boolean.parseBoolean(client.getServerConfigs("PlayersCanBuyPilotUpgrades"))) {
             baseTextField.setToolTipText(
                   "<html><body>Set cost for a pilot to gain gunnery/missile. Zero to disable</body></html>");
         } else {
@@ -1257,11 +1259,11 @@ public class PilotSkillsPanel extends JPanel {
         baseTextField.setName("chanceforGMforAero");
         aeroPilotSkillsSpring.add(baseTextField);
 
-        baseTextField = new admin.dialog.serverConfigDialogs.PilotSkillTextField(3);
+        baseTextField = new PilotSkillTextField(3);
 
 
         aeroPilotSkillsSpring.add(new JLabel("Trait", SwingConstants.TRAILING));
-        if (Boolean.parseBoolean(mwclient.getserverConfigs("PlayersCanBuyPilotUpgrades"))) {
+        if (Boolean.parseBoolean(client.getServerConfigs("PlayersCanBuyPilotUpgrades"))) {
             baseTextField.setToolTipText("<html><body>Set cost for a pilot to gain trait. Zero to disable</body></html>");
         } else {
             baseTextField.setToolTipText("<html><body>Set Chance for a pilot to gain trait</body></html>");
@@ -1269,11 +1271,11 @@ public class PilotSkillsPanel extends JPanel {
         baseTextField.setName("chanceforTNforAero");
         aeroPilotSkillsSpring.add(baseTextField);
 
-        baseTextField = new admin.dialog.serverConfigDialogs.PilotSkillTextField(3);
+        baseTextField = new PilotSkillTextField(3);
 
 
         aeroPilotSkillsSpring.add(new JLabel("EI", SwingConstants.TRAILING));
-        if (Boolean.parseBoolean(mwclient.getserverConfigs("PlayersCanBuyPilotUpgrades"))) {
+        if (Boolean.parseBoolean(client.getServerConfigs("PlayersCanBuyPilotUpgrades"))) {
             baseTextField.setToolTipText(
                   "<html><body>Set cost for a pilot to gain Enhanced Interface. Zero to disable</body></html>");
         } else {
@@ -1282,11 +1284,11 @@ public class PilotSkillsPanel extends JPanel {
         baseTextField.setName("chanceforEIforAero");
         aeroPilotSkillsSpring.add(baseTextField);
 
-        baseTextField = new admin.dialog.serverConfigDialogs.PilotSkillTextField(3);
+        baseTextField = new PilotSkillTextField(3);
 
 
         aeroPilotSkillsSpring.add(new JLabel("GT", SwingConstants.TRAILING));
-        if (Boolean.parseBoolean(mwclient.getserverConfigs("PlayersCanBuyPilotUpgrades"))) {
+        if (Boolean.parseBoolean(client.getServerConfigs("PlayersCanBuyPilotUpgrades"))) {
             baseTextField.setToolTipText(
                   "<html><body>Set cost for a pilot to gain gifted. Zero to disable</body></html>");
         } else {
@@ -1295,11 +1297,11 @@ public class PilotSkillsPanel extends JPanel {
         baseTextField.setName("chanceforGTforAero");
         aeroPilotSkillsSpring.add(baseTextField);
 
-        baseTextField = new admin.dialog.serverConfigDialogs.PilotSkillTextField(3);
+        baseTextField = new PilotSkillTextField(3);
 
 
         aeroPilotSkillsSpring.add(new JLabel("QS", SwingConstants.TRAILING));
-        if (Boolean.parseBoolean(mwclient.getserverConfigs("PlayersCanBuyPilotUpgrades"))) {
+        if (Boolean.parseBoolean(client.getServerConfigs("PlayersCanBuyPilotUpgrades"))) {
             baseTextField.setToolTipText(
                   "<html><body>Set cost for a pilot to gain Quick Study. Zero to disable</body></html>");
         } else {
@@ -1308,11 +1310,11 @@ public class PilotSkillsPanel extends JPanel {
         baseTextField.setName("chanceforQSforAero");
         aeroPilotSkillsSpring.add(baseTextField);
 
-        baseTextField = new admin.dialog.serverConfigDialogs.PilotSkillTextField(3);
+        baseTextField = new PilotSkillTextField(3);
 
 
         aeroPilotSkillsSpring.add(new JLabel("VDNI", SwingConstants.TRAILING));
-        if (Boolean.parseBoolean(mwclient.getserverConfigs("PlayersCanBuyPilotUpgrades"))) {
+        if (Boolean.parseBoolean(client.getServerConfigs("PlayersCanBuyPilotUpgrades"))) {
             baseTextField.setToolTipText(
                   "<html><body>Set cost for a pilot to gain the VDNI skill. Zero to disable</body></html>");
         } else {
@@ -1321,11 +1323,11 @@ public class PilotSkillsPanel extends JPanel {
         baseTextField.setName("chanceforVDNIforAero");
         aeroPilotSkillsSpring.add(baseTextField);
 
-        baseTextField = new admin.dialog.serverConfigDialogs.PilotSkillTextField(3);
+        baseTextField = new PilotSkillTextField(3);
 
 
         aeroPilotSkillsSpring.add(new JLabel("BVDNI", SwingConstants.TRAILING));
-        if (Boolean.parseBoolean(mwclient.getserverConfigs("PlayersCanBuyPilotUpgrades"))) {
+        if (Boolean.parseBoolean(client.getServerConfigs("PlayersCanBuyPilotUpgrades"))) {
             baseTextField.setToolTipText(
                   "<html><body>Set cost for a pilot to gain the buffered VDNI skill. Zero to disable</body></html>");
         } else {
@@ -1335,11 +1337,11 @@ public class PilotSkillsPanel extends JPanel {
         baseTextField.setName("chanceforBVDNIforAero");
         aeroPilotSkillsSpring.add(baseTextField);
 
-        baseTextField = new admin.dialog.serverConfigDialogs.PilotSkillTextField(3);
+        baseTextField = new PilotSkillTextField(3);
 
 
         aeroPilotSkillsSpring.add(new JLabel("PS", SwingConstants.TRAILING));
-        if (Boolean.parseBoolean(mwclient.getserverConfigs("PlayersCanBuyPilotUpgrades"))) {
+        if (Boolean.parseBoolean(client.getServerConfigs("PlayersCanBuyPilotUpgrades"))) {
             baseTextField.setToolTipText(
                   "<html><body>Set cost for a pilot to gain the Pain Shunt skill. Zero to disable</body></html>");
         } else {
@@ -1348,9 +1350,9 @@ public class PilotSkillsPanel extends JPanel {
         baseTextField.setName("chanceforPSforAero");
         aeroPilotSkillsSpring.add(baseTextField);
 
-        baseTextField = new admin.dialog.serverConfigDialogs.PilotSkillTextField(3);
+        baseTextField = new PilotSkillTextField(3);
         aeroPilotSkillsSpring.add(new JLabel("MT", SwingConstants.TRAILING));
-        if (Boolean.parseBoolean(mwclient.getserverConfigs("PlayersCanBuyPilotUpgrades"))) {
+        if (Boolean.parseBoolean(client.getServerConfigs("PlayersCanBuyPilotUpgrades"))) {
             baseTextField.setToolTipText(
                   "<html><body>Set cost for a pilot to gain the Med Tech skill. Zero to disable</body></html>");
         } else {
@@ -1366,7 +1368,7 @@ public class PilotSkillsPanel extends JPanel {
         SpringLayoutHelper.setupSpringGrid(aeroPilotSkillsSpring, 2);
         SpringLayoutHelper.setupSpringGrid(mekPilotSkillsSpring, 2);
 
-        baseTextField = new admin.dialog.serverConfigDialogs.PilotSkillTextField(5, new Dimension(5, 20));
+        baseTextField = new PilotSkillTextField(5, new Dimension(5, 20));
         bannedWSWeaponsSpring.add(new JLabel("Banned WS Weapons:", SwingConstants.TRAILING));
         baseTextField.setToolTipText(
               "<html><body>Add what Weapons you do not want pilots to get Weapon Specalist in/body></html>");

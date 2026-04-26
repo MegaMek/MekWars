@@ -12,12 +12,14 @@
 package mekwars.admin.dialog.serverConfigDialogs;
 
 import java.awt.GridLayout;
+import java.io.Serial;
 import javax.swing.*;
 
-import client.MWClient;
-import common.Unit;
-import common.VerticalLayout;
-import common.util.SpringLayoutHelper;
+import mekwars.common.Unit;
+import mekwars.common.VerticalLayout;
+import mekwars.common.campaign.clientutils.protocol.IClient;
+import mekwars.common.util.SpringLayoutHelper;
+
 
 /**
  * @author jtighe
@@ -25,19 +27,15 @@ import common.util.SpringLayoutHelper;
  */
 public class BlackMarketPanel extends JPanel {
 
+    @Serial
     private static final long serialVersionUID = 9055477134344550739L;
 
-    private JTextField baseTextField = new JTextField(5);
-    private JCheckBox BaseCheckBox = new JCheckBox();
-    private JRadioButton baseRadioButton = new JRadioButton();
-
-    public BlackMarketPanel(MWClient mwclient) {
+    public BlackMarketPanel(IClient client) {
         super();
         /*
          * BLACK MARKET setup
          */
         JPanel bmBox = new JPanel();
-        //bmBox.setLayout(new BoxLayout(bmBox, BoxLayout.Y_AXIS));
 
         bmBox.setLayout(new VerticalLayout());
 
@@ -48,7 +46,7 @@ public class BlackMarketPanel extends JPanel {
         bmTextSpring.setBorder(BorderFactory.createEtchedBorder());
 
         // small text spring
-        baseTextField = new JTextField(10);
+        JTextField baseTextField = new JTextField(10);
         bmTextSpring.add(new JLabel("Min BM Sale Length:", SwingConstants.TRAILING));
         baseTextField.setToolTipText("Minimum sale time, in ticks.");
         baseTextField.setName("MinBMSalesTicks");
@@ -85,26 +83,26 @@ public class BlackMarketPanel extends JPanel {
         bmTextSpring.add(baseTextField);
 
         baseTextField = new JTextField(10);
-        bmTextSpring.add(new JLabel("BM Bid " + mwclient.moneyOrFluMessage(false, true, -1) + " Cost:",
+        bmTextSpring.add(new JLabel("BM Bid " + client.moneyOrFluMessage(false, true, -1) + " Cost:",
               SwingConstants.TRAILING));
-        baseTextField.setToolTipText(mwclient.moneyOrFluMessage(false, false, -1) + " charge for bidding on the BM.");
+        baseTextField.setToolTipText(client.moneyOrFluMessage(false, false, -1) + " charge for bidding on the BM.");
         baseTextField.setName("BMBidFlu");
         bmTextSpring.add(baseTextField);
 
         baseTextField = new JTextField(10);
-        bmTextSpring.add(new JLabel("BM Sale " + mwclient.moneyOrFluMessage(false, true, -1) + " Cost:",
+        bmTextSpring.add(new JLabel("BM Sale " + client.moneyOrFluMessage(false, true, -1) + " Cost:",
               SwingConstants.TRAILING));
         baseTextField.setToolTipText("Base " +
-                                           mwclient.moneyOrFluMessage(false, true, -1) +
+                                           client.moneyOrFluMessage(false, true, -1) +
                                            " cost for a BM sale. Modified by weight.");
         baseTextField.setName("BMSellFlu");
         bmTextSpring.add(baseTextField);
 
         baseTextField = new JTextField(10);
-        bmTextSpring.add(new JLabel("BM Size " + mwclient.moneyOrFluMessage(false, true, -1) + " Cost:",
+        bmTextSpring.add(new JLabel("BM Size " + client.moneyOrFluMessage(false, true, -1) + " Cost:",
               SwingConstants.TRAILING));
-        baseTextField.setToolTipText("[SizeCost] * [Unit Weightclass] added to " +
-                                           mwclient.moneyOrFluMessage(false, true, -1) +
+        baseTextField.setToolTipText("[SizeCost] * [Unit WeightClass] added to " +
+                                           client.moneyOrFluMessage(false, true, -1) +
                                            " cost of a BM sale.");
         baseTextField.setName("BMFluSizeCost");
         bmTextSpring.add(baseTextField);
@@ -112,7 +110,7 @@ public class BlackMarketPanel extends JPanel {
         baseTextField = new JTextField(10);
         bmTextSpring.add(new JLabel("Auction Fee:", SwingConstants.TRAILING));
         baseTextField.setToolTipText(
-              "<html>Auction fee charged to the seller after a sucessful sale<br>This is a double number i.e. 0.15 is 15%</html>");
+              "<html>Auction fee charged to the seller after a successful sale<br>This is a double number i.e. 0.15 is 15%</html>");
         baseTextField.setName("AuctionFee");
         bmTextSpring.add(baseTextField);
 
@@ -140,7 +138,7 @@ public class BlackMarketPanel extends JPanel {
         baseTextField = new JTextField();
         bmTextSpring.add(new JLabel("No Sales:", SwingConstants.TRAILING));
         baseTextField.setToolTipText("<html>" +
-                                           "List of factions that cannot sell on BM. $ deliminted and<br>" +
+                                           "List of factions that cannot sell on BM. $ delimited and<br>" +
                                            "case sensitive. This stops all players in the faction from<br>" +
                                            "selling on the market as well as all sales from the faction<br>" +
                                            "when hangars/bays are full. Example: Liao$Davion$Marik$</html>");
@@ -150,7 +148,7 @@ public class BlackMarketPanel extends JPanel {
         baseTextField = new JTextField();
         bmTextSpring.add(new JLabel("No Bids:", SwingConstants.TRAILING));
         baseTextField.setToolTipText("<html>" +
-                                           "List of factions that cannot buy from BM. $ deliminted and<br>" +
+                                           "List of factions that cannot buy from BM. $ delimited and<br>" +
                                            "case sensitive. This stops players from placing bids on units.<br>" +
                                            "Example: Trinity Alliance$Lyran Alliance$Word of Blake$</html>");
         baseTextField.setName("BMNoBuy");
@@ -159,66 +157,66 @@ public class BlackMarketPanel extends JPanel {
         SpringLayoutHelper.setupSpringGrid(bmTextSpring, 8);
 
         // cbox spring - 5 elements in a 3*2 arrangement
-        BaseCheckBox = new JCheckBox("Infantry Allowed");
+        JCheckBox baseCheckBox = new JCheckBox("Infantry Allowed");
 
-        BaseCheckBox.setToolTipText("Check to allow player&houses to sell Infantry on the BM");
-        BaseCheckBox.setName("InfantryMayBeSoldOnBM");
-        bmCBoxSpring.add(BaseCheckBox);
+        baseCheckBox.setToolTipText("Check to allow player&houses to sell Infantry on the BM");
+        baseCheckBox.setName("InfantryMayBeSoldOnBM");
+        bmCBoxSpring.add(baseCheckBox);
 
-        BaseCheckBox = new JCheckBox("BA Allowed");
+        baseCheckBox = new JCheckBox("BA Allowed");
 
-        BaseCheckBox.setToolTipText("Check to allow player&houses to sell BA on the BM");
-        BaseCheckBox.setName("BAMayBeSoldOnBM");
-        bmCBoxSpring.add(BaseCheckBox);
+        baseCheckBox.setToolTipText("Check to allow player&houses to sell BA on the BM");
+        baseCheckBox.setName("BAMayBeSoldOnBM");
+        bmCBoxSpring.add(baseCheckBox);
 
-        BaseCheckBox = new JCheckBox("Protos Allowed");
+        baseCheckBox = new JCheckBox("Protos Allowed");
 
-        BaseCheckBox.setToolTipText("Check to allow player&houses to sell Protos on the BM");
-        BaseCheckBox.setName("ProtosMayBeSoldOnBM");
-        bmCBoxSpring.add(BaseCheckBox);
+        baseCheckBox.setToolTipText("Check to allow player&houses to sell Protos on the BM");
+        baseCheckBox.setName("ProtosMayBeSoldOnBM");
+        bmCBoxSpring.add(baseCheckBox);
 
-        BaseCheckBox = new JCheckBox("Vehs Allowed");
+        baseCheckBox = new JCheckBox("Vehs Allowed");
 
-        BaseCheckBox.setToolTipText("Check to allow player&houses to sell Vehs on the BM");
-        BaseCheckBox.setName("VehsMayBeSoldOnBM");
-        bmCBoxSpring.add(BaseCheckBox);
+        baseCheckBox.setToolTipText("Check to allow player&houses to sell Vehs on the BM");
+        baseCheckBox.setName("VehsMayBeSoldOnBM");
+        bmCBoxSpring.add(baseCheckBox);
 
-        BaseCheckBox = new JCheckBox("Meks Allowed");
+        baseCheckBox = new JCheckBox("Meks Allowed");
 
-        BaseCheckBox.setToolTipText("Check to allow player&houses to sell Meks on the BM");
-        BaseCheckBox.setName("MeksMayBeSoldOnBM");
-        bmCBoxSpring.add(BaseCheckBox);
+        baseCheckBox.setToolTipText("Check to allow player&houses to sell Meks on the BM");
+        baseCheckBox.setName("MeksMayBeSoldOnBM");
+        bmCBoxSpring.add(baseCheckBox);
 
-        BaseCheckBox = new JCheckBox("Aeros Allowed");
+        baseCheckBox = new JCheckBox("Aeros Allowed");
 
-        BaseCheckBox.setToolTipText("Check to allow player&houses to sell Aeros on the BM");
-        BaseCheckBox.setName("AerosMayBeSoldOnBM");
-        bmCBoxSpring.add(BaseCheckBox);
+        baseCheckBox.setToolTipText("Check to allow player&houses to sell Aeros on the BM");
+        baseCheckBox.setName("AerosMayBeSoldOnBM");
+        bmCBoxSpring.add(baseCheckBox);
 
-        BaseCheckBox = new JCheckBox("Clan Unit Ban");
+        baseCheckBox = new JCheckBox("Clan Unit Ban");
 
-        BaseCheckBox.setToolTipText("<html>" +
+        baseCheckBox.setToolTipText("<html>" +
                                           "Check to stop players from selling clan units on the<br>" +
                                           "BM. Faction overflow and random rares can include clan<br>" +
                                           "tech. Block faction sales entirely to stop overflow.</html>");
-        BaseCheckBox.setName("BMNoClan");
-        bmCBoxSpring.add(BaseCheckBox);
+        baseCheckBox.setName("BMNoClan");
+        bmCBoxSpring.add(baseCheckBox);
 
-        BaseCheckBox = new JCheckBox("Use Parts Market");
-        BaseCheckBox.setToolTipText("Use the parts blackmarket this coencides with using parts to repair");
-        BaseCheckBox.setName("UsePartsBlackMarket");
-        bmCBoxSpring.add(BaseCheckBox);
+        baseCheckBox = new JCheckBox("Use Parts Market");
+        baseCheckBox.setToolTipText("Use the parts black market this coincides with using parts to repair");
+        baseCheckBox.setName("UsePartsBlackMarket");
+        bmCBoxSpring.add(baseCheckBox);
 
-        BaseCheckBox = new JCheckBox("Allow Tech Cross Over");
+        baseCheckBox = new JCheckBox("Allow Tech Cross Over");
 
-        BaseCheckBox.setToolTipText("If checked IS Player are allowed to buy clan tech on the BM and visa versa.");
-        BaseCheckBox.setName("AllowCrossOverTech");
-        bmCBoxSpring.add(BaseCheckBox);
+        baseCheckBox.setToolTipText("If checked IS Player are allowed to buy clan tech on the BM and visa versa.");
+        baseCheckBox.setName("AllowCrossOverTech");
+        bmCBoxSpring.add(baseCheckBox);
 
-        BaseCheckBox = new JCheckBox("Hide BM Units");
-        BaseCheckBox.setToolTipText("If checked, unit models and BVs are hidden from the players");
-        BaseCheckBox.setName("HiddenBMUnits");
-        bmCBoxSpring.add(BaseCheckBox);
+        baseCheckBox = new JCheckBox("Hide BM Units");
+        baseCheckBox.setToolTipText("If checked, unit models and BVs are hidden from the players");
+        baseCheckBox.setName("HiddenBMUnits");
+        bmCBoxSpring.add(baseCheckBox);
 
         SpringLayoutHelper.setupSpringGrid(bmCBoxSpring, 5);
 
@@ -227,10 +225,10 @@ public class BlackMarketPanel extends JPanel {
 
         ButtonGroup auctionTypes = new ButtonGroup();
 
-        baseRadioButton = new JRadioButton("Vickery");
+        JRadioButton baseRadioButton = new JRadioButton("Vickery");
 
         baseRadioButton.setName("UseVickeryAuctionType");
-        baseRadioButton.setToolTipText("<html>Vickrey auction is a modified highest sealed bid auction. Winner<br>" +
+        baseRadioButton.setToolTipText("<html>Victory auction is a modified highest sealed bid auction. Winner<br>" +
                                              "determination is the same (highest bid, earliest placement in the<br>" +
                                              "event of a tie), but the winner pays 2nd highest bid, plus one, in<br>" +
                                              "lieu of the amount he offered.<br>" +
@@ -243,7 +241,7 @@ public class BlackMarketPanel extends JPanel {
 
         baseRadioButton.setName("UseHighestSealedBidAuctionType");
         baseRadioButton.setToolTipText("<html>Winner is simply the highest offering person who can<br>" +
-                                             "afford to pay. This, codewise, is a truncated Vickrey<br>" +
+                                             "afford to pay. This, codewise, is a truncated Victory<br>" +
                                              "Auction. Same mechanism to find highest bidder, but no<br>" +
                                              "downward adjustment.<br>" +
                                              "NOTE: You must restart the server for this to take effect!</html>");
@@ -257,9 +255,9 @@ public class BlackMarketPanel extends JPanel {
         BMWeightPanel.setLayout(new BoxLayout(BMWeightPanel, BoxLayout.Y_AXIS));
         BMWeightPanel.setBorder(BorderFactory.createEtchedBorder());
 
-        BaseCheckBox = new JCheckBox("Use BM Weighting Tables");
-        BaseCheckBox.setName("UseBMWeightingTables");
-        BMWeightPanel.add(BaseCheckBox);
+        baseCheckBox = new JCheckBox("Use BM Weighting Tables");
+        baseCheckBox.setName("UseBMWeightingTables");
+        BMWeightPanel.add(baseCheckBox);
 
         JPanel MekWeightPanel = new JPanel();
 
@@ -304,7 +302,7 @@ public class BlackMarketPanel extends JPanel {
         BMPMPanel.add(new JLabel("Heavy"));
         BMPMPanel.add(new JLabel("Assault"));
 
-        for (int type = Unit.MEK; type < Unit.MAXBUILD; type++) {
+        for (int type = Unit.MEK; type < Unit.MAX_BUILD; type++) {
             BMPMPanel.add(new JLabel(Unit.getTypeClassDesc(type)));
             for (int weight = Unit.LIGHT; weight <= Unit.ASSAULT; weight++) {
                 baseTextField = new JTextField(5);

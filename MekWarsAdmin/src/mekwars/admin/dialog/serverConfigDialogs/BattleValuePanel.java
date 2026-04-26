@@ -12,6 +12,7 @@
 package mekwars.admin.dialog.serverConfigDialogs;
 
 import java.awt.GridLayout;
+import java.io.Serial;
 
 import javax.swing.BoxLayout;
 import javax.swing.JCheckBox;
@@ -21,7 +22,7 @@ import javax.swing.JTextField;
 import javax.swing.SpringLayout;
 import javax.swing.SwingConstants;
 
-import common.util.SpringLayoutHelper;
+import mekwars.common.util.SpringLayoutHelper;
 
 /**
  * @author jtighe
@@ -32,9 +33,8 @@ public class BattleValuePanel extends JPanel {
     /**
      *
      */
+    @Serial
     private static final long serialVersionUID = 5581787185856926691L;
-    private JTextField baseTextField = new JTextField(5);
-    private JCheckBox BaseCheckBox = new JCheckBox();
 
     public BattleValuePanel() {
         super();
@@ -46,13 +46,13 @@ public class BattleValuePanel extends JPanel {
         JPanel battleValueCBoxGrid = new JPanel(new GridLayout(1, -1));
         JPanel battleValueSpring = new JPanel(new SpringLayout());
 
-        BaseCheckBox = new JCheckBox("Use Force Size Rules");
-        BaseCheckBox.setToolTipText("Use the Tech Manual Force Size BV Adjustments?");
+        JCheckBox baseCheckBox = new JCheckBox("Use Force Size Rules");
+        baseCheckBox.setToolTipText("Use the Tech Manual Force Size BV Adjustments?");
 
-        BaseCheckBox.setName("UseOperationsRule");
-        battleValueCBoxGrid.add(BaseCheckBox);
+        baseCheckBox.setName("UseOperationsRule");
+        battleValueCBoxGrid.add(baseCheckBox);
 
-        baseTextField = new JTextField(5);
+        JTextField baseTextField = new JTextField(5);
         battleValueSpring.add(new JLabel("Mek Force Size:", SwingConstants.TRAILING));
         baseTextField.setToolTipText(
               "<html>This is how much of an element a mek counts as for the Force Size Calculation<br>Note this is a double field.</html>");

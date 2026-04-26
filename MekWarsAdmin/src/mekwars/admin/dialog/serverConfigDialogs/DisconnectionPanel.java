@@ -11,13 +11,15 @@
 
 package mekwars.admin.dialog.serverConfigDialogs;
 
+import java.io.Serial;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
 import javax.swing.SpringLayout;
 import javax.swing.SwingConstants;
 
-import common.util.SpringLayoutHelper;
+import mekwars.common.util.SpringLayoutHelper;
+
 
 /**
  * @author jtighe
@@ -28,8 +30,8 @@ public class DisconnectionPanel extends JPanel {
     /**
      *
      */
+    @Serial
     private static final long serialVersionUID = -8909645618097617084L;
-    private JTextField baseTextField = new JTextField(5);
 
     public DisconnectionPanel() {
         super();
@@ -38,7 +40,7 @@ public class DisconnectionPanel extends JPanel {
          */
         JPanel discoSpring = new JPanel(new SpringLayout());
 
-        baseTextField = new JTextField(5);
+        JTextField baseTextField = new JTextField(5);
         discoSpring.add(new JLabel("Additional Units Destroyed:", SwingConstants.TRAILING));
         baseTextField.setToolTipText("<html>" +
                                            "Number of disconnecting players' units destoyed,<br>" +

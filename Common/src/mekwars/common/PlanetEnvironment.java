@@ -21,9 +21,8 @@ import java.io.File;
 import java.io.IOException;
 import java.util.StringTokenizer;
 
-import common.util.BinReader;
-import common.util.BinWriter;
-
+import mekwars.common.persistence.BinReader;
+import mekwars.common.persistence.BinWriter;
 
 /**
  * A Planet's Environment.
@@ -44,7 +43,7 @@ final public class PlanetEnvironment {
     private int CraterMaxRadius = 0;
 
     //Hills
-    private int Hillyness = 100;
+    private int Hilliness = 100;
     private int HillElevationRange = 3;
     private int HillInvertProb = 0;
 
@@ -173,7 +172,7 @@ final public class PlanetEnvironment {
         CraterMaxNum = Integer.parseInt(ST.nextToken());
         CraterMinRadius = Integer.parseInt(ST.nextToken());
         CraterMaxRadius = Integer.parseInt(ST.nextToken());
-        Hillyness = Integer.parseInt(ST.nextToken());
+        Hilliness = Integer.parseInt(ST.nextToken());
         HillElevationRange = Integer.parseInt(ST.nextToken());
         HillInvertProb = Integer.parseInt(ST.nextToken());
         WaterMinSpots = Integer.parseInt(ST.nextToken());
@@ -271,7 +270,7 @@ final public class PlanetEnvironment {
         CraterMaxNum = Integer.parseInt(ST.nextToken());
         CraterMinRadius = Integer.parseInt(ST.nextToken());
         CraterMaxRadius = Integer.parseInt(ST.nextToken());
-        Hillyness = Integer.parseInt(ST.nextToken());
+        Hilliness = Integer.parseInt(ST.nextToken());
         HillElevationRange = Integer.parseInt(ST.nextToken());
         HillInvertProb = Integer.parseInt(ST.nextToken());
         WaterMinSpots = Integer.parseInt(ST.nextToken());
@@ -375,10 +374,10 @@ final public class PlanetEnvironment {
         */
         /* generate the hilliness/crater description */
         result += "The landscape is ";
-        if (Hillyness < 200) {result += "plain";}
-        if ((Hillyness < 500) && (Hillyness >= 200)) {result += "uneven";}
-        if ((Hillyness >= 500) && (Hillyness <= 800)) {result += "hilly";}
-        if (Hillyness > 800) {result += "mountainous";}
+        if (Hilliness < 200) {result += "plain";}
+        if ((Hilliness < 500) && (Hilliness >= 200)) {result += "uneven";}
+        if ((Hilliness >= 500) && (Hilliness <= 800)) {result += "hilly";}
+        if (Hilliness > 800) {result += "mountainous";}
         if (CraterProb == 0) {
             result += ". <br> ";
             if (rough > 0) {
@@ -432,10 +431,10 @@ final public class PlanetEnvironment {
                 (PavementMinHexes+PavementMaxSpots)/2);
         */
         /* generate the hilliness/crater description */
-        if (Hillyness < 200) {result += "<img src=\"data/images/hill0.gif\">";}
-        if ((Hillyness < 500) && (Hillyness >= 200)) {result += "<img src=\"data/images/hill1.gif\">";}
-        if ((Hillyness >= 500) && (Hillyness <= 800)) {result += "<img src=\"data/images/hill2.gif\">";}
-        if (Hillyness > 800) {result += "<img src=\"data/images/hill3.gif\">";}
+        if (Hilliness < 200) {result += "<img src=\"data/images/hill0.gif\">";}
+        if ((Hilliness < 500) && (Hilliness >= 200)) {result += "<img src=\"data/images/hill1.gif\">";}
+        if ((Hilliness >= 500) && (Hilliness <= 800)) {result += "<img src=\"data/images/hill2.gif\">";}
+        if (Hilliness > 800) {result += "<img src=\"data/images/hill3.gif\">";}
         if (rough > 8) {result += "<img src=\"data/images/roug1.gif\">";}
         if (CraterProb > 30) {result += "<img src=\"data/images/crtr1.gif\">";}
 
@@ -515,7 +514,7 @@ final public class PlanetEnvironment {
         result += CraterMaxNum + "$";
         result += CraterMinRadius + "$";
         result += CraterMaxRadius + "$";
-        result += Hillyness + "$";
+        result += Hilliness + "$";
         result += HillElevationRange + "$";
         result += HillInvertProb + "$";
         result += WaterMinSpots + "$";
@@ -625,7 +624,7 @@ final public class PlanetEnvironment {
         result += CraterMaxNum + "$";
         result += CraterMinRadius + "$";
         result += CraterMaxRadius + "$";
-        result += Hillyness + "$";
+        result += Hilliness + "$";
         result += HillElevationRange + "$";
         result += HillInvertProb + "$";
         result += WaterMinSpots + "$";
@@ -876,7 +875,7 @@ final public class PlanetEnvironment {
     }
 
     public int getHillyness() {
-        return Hillyness;
+        return Hilliness;
     }
 
     public int getForestMinSpots() {
@@ -1020,7 +1019,7 @@ final public class PlanetEnvironment {
     }
 
     public void setHillyness(int Hillyness) {
-        this.Hillyness = Hillyness;
+        this.Hilliness = Hillyness;
     }
 
     public void setRoadProb(int RoadProb) {
@@ -1278,7 +1277,7 @@ final public class PlanetEnvironment {
         out.println(CraterMaxNum, "CraterMaxNum");
         out.println(CraterMinRadius, "CraterMinRadius");
         out.println(CraterMaxRadius, "CraterMaxRadius");
-        out.println(Hillyness, "Hillyness");
+        out.println(Hilliness, "Hilliness");
         out.println(HillElevationRange, "HillElevationRange");
         out.println(HillInvertProb, "HillInvertProb");
         out.println(WaterMinSpots, "WaterMinSpots");
@@ -1375,7 +1374,7 @@ final public class PlanetEnvironment {
         CraterMaxNum = in.readInt("CraterMaxNum");
         CraterMinRadius = in.readInt("CraterMinRadius");
         CraterMaxRadius = in.readInt("CraterMaxRadius");
-        Hillyness = in.readInt("Hillyness");
+        Hilliness = in.readInt("Hilliness");
         HillElevationRange = in.readInt("HillElevationRange");
         HillInvertProb = in.readInt("HillInvertProb");
         WaterMinSpots = in.readInt("WaterMinSpots");

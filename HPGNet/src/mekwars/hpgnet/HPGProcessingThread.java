@@ -57,7 +57,7 @@ public class HPGProcessingThread extends Thread {
             sock.close();
             tracker.addToLog("- line read, socket closed.");
         } catch (Exception e) {
-            tracker.addToLog("- line read failed. terminating this processingthread.");
+            tracker.addToLog("- line read failed. terminating this processing thread.");
             return;//kill this processing attempt if cant read line
         }
 
@@ -78,8 +78,8 @@ public class HPGProcessingThread extends Thread {
 
         /*
          * Now that we're going to start processing the line, add
-         * to the vector in order to block other operations. Note that
-         * multiple processing threads can be run simultanously as they
+         * to the vector to block other operations. Note that
+         * multiple processing threads can be run simultaneously as they
          * will be writing to different files.
          */
         //add this thread to the processing vector
@@ -90,15 +90,15 @@ public class HPGProcessingThread extends Thread {
         tracker.addToLog(line);
 
         //break out if there's no actual text in line
-        if (line == null || line.trim().equals("")) {
+        if (line == null || line.trim().isEmpty()) {
             tracker.addToLog("- empty line. stop processing. unblock.");
             tracker.getProcessingThreads().remove(this);
             return;
         }
 
         //Create tokenizer and draw header
-        StringTokenizer st = new StringTokenizer(line, "%");
-        String lead = st.nextToken();
+        StringTokenizer stringTokenizer = new StringTokenizer(line, "%");
+        String lead = stringTokenizer.nextToken();
 
         /*
          * If the header is SS%, this is a server starting up. Delete
@@ -107,115 +107,121 @@ public class HPGProcessingThread extends Thread {
          * This indicates a legacy system.  Not all the functionality will
          * be available
          */
-        if (lead.equals("SS")) {
-            String name = st.nextToken();
-            HPGSubscriber sub = tracker.getSubscriber(name);
+        switch (lead) {
+            case "SS" -> {
+                String name = stringTokenizer.nextToken();
+                HPGSubscriber sub = tracker.getSubscriber(name);
 
-            boolean isNew = false;
+                boolean isNew = false;
 
-            if (sub == null) {
-                sub = new HPGSubscriber();
-                sub.setTracker(tracker);
-                isNew = true;
-            }
+                if (sub == null) {
+                    sub = new HPGSubscriber();
+                    sub.setTracker(tracker);
+                    isNew = true;
+                }
 
-            String url = st.nextToken();
-            String version = st.nextToken();
-            String desc = st.nextToken();
+                String url = stringTokenizer.nextToken();
+                String version = stringTokenizer.nextToken();
+                String desc = stringTokenizer.nextToken();
 
-            sub.setName(name);
-            sub.setUrl(url);
-            sub.setMWVersion(version);
-            sub.setDescription(desc);
-            sub.setLegacy(true);
-            sub.update(0, 0, 0);
-
-            if (isNew) {
-                tracker.registerNewSubscriber(sub);
-            }
-
-            sub.setLastUpdated(new Date());
-            sub.calculateThreatLevel();
-            sub.generateHTMLString();
-            tracker.save(sub);
-
-        }//end "SS"
-
-        /*
-         * If the header begins with UI%, update link and
-         * description but leave server name in-tact.
-         *
-         * Also for legacy servers
-         */
-        else if (lead.equals("UI")) {
-            String name = st.nextToken();
-            String url = st.nextToken();
-            String version = st.nextToken();
-            String desc = st.nextToken();
-
-            tracker.addToLog("Updating " + name);
-
-            HPGSubscriber sub = tracker.getSubscriber(name);
-
-            boolean isNew = false;
-
-            if (sub == null) {
-                sub = new HPGSubscriber();
-                sub.setTracker(tracker);
-                isNew = true;
-            }
-
-            sub.setName(name);
-            sub.setUrl(url);
-            sub.setMWVersion(version);
-            sub.setDescription(desc);
-            sub.setLegacy(true);
-
-            if (isNew) {
+                sub.setName(name);
+                sub.setUrl(url);
+                sub.setMWVersion(version);
+                sub.setDescription(desc);
+                sub.setLegacy(true);
                 sub.update(0, 0, 0);
-                tracker.registerNewSubscriber(sub);
+
+                if (isNew) {
+                    tracker.registerNewSubscriber(sub);
+                }
+
+                sub.setLastUpdated(new Date());
+                sub.calculateThreatLevel();
+                sub.generateHTMLString();
+                tracker.save(sub);
+
             }
 
-            sub.setLastUpdated(new Date());
-            tracker.save(sub);
-        }//end "UI"
 
-        /*
-         * Phone Home - update the players, etc
-         *
-         * This is for legacy systems
-         */
-        else if (lead.equals("PH")) {
-            String name = st.nextToken();
-            tracker.addToLog("PH% from " + name);
-            String numPlayers = st.nextToken();
-            String numGames = st.nextToken();
-            String completedGames = st.nextToken();
+            /*
+             * If the header begins with UI%, update link and
+             * description but leave server name in-tact.
+             *
+             * Also for legacy servers
+             */
+            case "UI" -> {
+                String name = stringTokenizer.nextToken();
+                String url = stringTokenizer.nextToken();
+                String version = stringTokenizer.nextToken();
+                String desc = stringTokenizer.nextToken();
 
-            HPGSubscriber sub = tracker.getSubscriber(name);
+                tracker.addToLog("Updating " + name);
 
-            boolean isNew = false;
+                HPGSubscriber sub = tracker.getSubscriber(name);
 
-            if (sub == null) {
-                sub = new HPGSubscriber();
-                sub.setTracker(tracker);
-                isNew = true;
+                boolean isNew = false;
+
+                if (sub == null) {
+                    sub = new HPGSubscriber();
+                    sub.setTracker(tracker);
+                    isNew = true;
+                }
+
+                sub.setName(name);
+                sub.setUrl(url);
+                sub.setMWVersion(version);
+                sub.setDescription(desc);
+                sub.setLegacy(true);
+
+                if (isNew) {
+                    sub.update(0, 0, 0);
+                    tracker.registerNewSubscriber(sub);
+                }
+
+                sub.setLastUpdated(new Date());
+                tracker.save(sub);
             }
 
-            sub.setName(name);
-            sub.setLegacy(true);
-            //sub.setCompletedGames(Integer.parseInt(completedGames));
 
-            if (isNew) {
-                sub.update(0, 0, 0);
-                tracker.registerNewSubscriber(sub);
-            } else {
-                sub.update(Integer.parseInt(numPlayers), Integer.parseInt(numGames), Integer.parseInt(completedGames));
+            /*
+             * Phone Home - update the players, etc
+             *
+             * This is for legacy systems
+             */
+            case "PH" -> {
+                String name = stringTokenizer.nextToken();
+                tracker.addToLog("PH% from " + name);
+                String numPlayers = stringTokenizer.nextToken();
+                String numGames = stringTokenizer.nextToken();
+                String completedGames = stringTokenizer.nextToken();
+
+                HPGSubscriber sub = tracker.getSubscriber(name);
+
+                boolean isNew = false;
+
+                if (sub == null) {
+                    sub = new HPGSubscriber();
+                    sub.setTracker(tracker);
+                    isNew = true;
+                }
+
+                sub.setName(name);
+                sub.setLegacy(true);
+                //sub.setCompletedGames(Integer.parseInt(completedGames));
+
+                if (isNew) {
+                    sub.update(0, 0, 0);
+                    tracker.registerNewSubscriber(sub);
+                } else {
+                    sub.update(Integer.parseInt(numPlayers),
+                          Integer.parseInt(numGames),
+                          Integer.parseInt(completedGames));
+                }
+
+                sub.setLastUpdated(new Date());
+                tracker.save(sub);
             }
-
-            sub.setLastUpdated(new Date());
-            tracker.save(sub);
-        }//end "PH"
+        }
 
         // Things have been updated, let's generate some HTML.  I don't see a need to
         // wait on a schedule

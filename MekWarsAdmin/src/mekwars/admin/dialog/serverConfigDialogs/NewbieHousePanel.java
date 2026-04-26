@@ -12,6 +12,7 @@
 package mekwars.admin.dialog.serverConfigDialogs;
 
 import java.awt.GridLayout;
+import java.io.Serial;
 import java.util.HashMap;
 
 import javax.swing.BorderFactory;
@@ -20,8 +21,9 @@ import javax.swing.JPanel;
 import javax.swing.JTextField;
 import javax.swing.SwingConstants;
 
-import common.Unit;
-import common.VerticalLayout;
+import mekwars.common.Unit;
+import mekwars.common.VerticalLayout;
+
 
 /**
  * @author Spork
@@ -29,16 +31,14 @@ import common.VerticalLayout;
  */
 public class NewbieHousePanel extends JPanel {
 
+    @Serial
     private static final long serialVersionUID = -4626004177197981829L;
-
-    private JTextField baseTextField = new JTextField(5);
-    //private JCheckBox BaseCheckBox = new JCheckBox();
 
     private void init() {
 
         setLayout(new VerticalLayout(5, VerticalLayout.CENTER, VerticalLayout.TOP));
 
-        HashMap<Integer, String> abbreviations = new HashMap<Integer, String>();
+        HashMap<Integer, String> abbreviations = new HashMap<>();
         abbreviations.put(Unit.MEK, "Meks");
         abbreviations.put(Unit.VEHICLE, "Vehs");
         abbreviations.put(Unit.INFANTRY, "Inf");
@@ -57,7 +57,8 @@ public class NewbieHousePanel extends JPanel {
         topPanel.add(new JLabel("Heavy"));
         topPanel.add(new JLabel("Assault"));
 
-        for (int type = Unit.MEK; type < Unit.MAXBUILD; type++) {
+        JTextField baseTextField;
+        for (int type = Unit.MEK; type < Unit.MAX_BUILD; type++) {
             topPanel.add(new JLabel(Unit.getTypeClassDesc(type)));
             for (int weight = Unit.LIGHT; weight <= Unit.ASSAULT; weight++) {
                 baseTextField = new JTextField(5);

@@ -29,46 +29,42 @@ import javax.swing.JCheckBox;
 import javax.swing.JDialog;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
-import javax.swing.JTabbedPane;
 import javax.swing.SpringLayout;
 
-import client.MWClient;
-import common.House;
-import common.util.MWLogger;
-import common.util.SpringLayoutHelper;
+import megamek.common.equipment.AmmoType;
+import mekwars.common.House;
+import mekwars.common.campaign.clientutils.protocol.IClient;
+import mekwars.common.util.MWLogger;
+import mekwars.common.util.SpringLayoutHelper;
 
 public final class BannedAmmoDialog implements ActionListener {
 
     //store the client backlink for other things to use
-    private MWClient mwclient = null;
-    private House house = null;
+    private final IClient client;
+    private final House house;
 
     private final static String okayCommand = "Add";
     private final static String cancelCommand = "Close";
 
     private String windowName = "Server Banned Ammo Editor";
-    private ArrayList<JCheckBox> cBoxArrayList = new ArrayList<JCheckBox>();
+    private final ArrayList<JCheckBox> cBoxArrayList = new ArrayList<>();
 
-    //BUTTONS
-    private final JButton okayButton = new JButton("Save");
-    private final JButton cancelButton = new JButton("Close");
+    //STOCK DIALOG AND PANE
+    private final JDialog dialog;
 
-    //STOCK DIALOUG AND PANE
-    private JDialog dialog;
-    private JOptionPane pane;
-
-    JTabbedPane ConfigPane = new JTabbedPane();
-
-    public BannedAmmoDialog(MWClient c, House house) {
+    public BannedAmmoDialog(IClient client, House house) {
 
         //save the client
-        this.mwclient = c;
+        this.client = client;
         this.house = house;
 
         //stored values.
 
-        //Set the tooltips and actions for dialouge buttons
+        //Set the tooltips and actions for dialogue buttons
+        //
+        JButton okayButton = new JButton("Save");
         okayButton.setActionCommand(okayCommand);
+        JButton cancelButton = new JButton("Close");
         cancelButton.setActionCommand(cancelCommand);
 
         okayButton.addActionListener(this);
@@ -89,9 +85,8 @@ public final class BannedAmmoDialog implements ActionListener {
 
         loadBannedAmmo();
 
-        TreeSet<String> munitions = new TreeSet<String>(mwclient.getData().getMunitionsByName().keySet());
+        TreeSet<String> munitions = new TreeSet<>(this.client.getData().getMunitionsByName().keySet());
         for (String munitionName : munitions) {
-            //String munitionName = munitionNames.nextElement();
             JCheckBox cBox = new JCheckBox();
             cBox.setText(munitionName);
             cBox.setSelected(checkAmmoBan(munitionName));
@@ -107,7 +102,12 @@ public final class BannedAmmoDialog implements ActionListener {
         Object[] options = { okayButton, cancelButton };
 
         // Create the pane containing the buttons
-        pane = new JOptionPane(banPanel, JOptionPane.PLAIN_MESSAGE, JOptionPane.DEFAULT_OPTION, null, options, null);
+        JOptionPane pane = new JOptionPane(banPanel,
+              JOptionPane.PLAIN_MESSAGE,
+              JOptionPane.DEFAULT_OPTION,
+              null,
+              options,
+              null);
 
         if (house != null) {windowName = this.house.getName() + " Banned Ammo Dialog";}
         // Create the main dialog and set the default button
@@ -124,46 +124,45 @@ public final class BannedAmmoDialog implements ActionListener {
 
     public void actionPerformed(ActionEvent e) {
         String command = e.getActionCommand();
-        Hashtable<String, Long> munitionTypes = mwclient.getData().getMunitionsByName();
+        Hashtable<String, AmmoType.Munitions> munitionTypes = client.getData().getMunitionsByName();
 
         if (command.equals(okayCommand)) {
             if (house == null) {
-                Hashtable<String, String> bannedAmmo = mwclient.getData().getServerBannedAmmo();
+                Hashtable<String, String> bannedAmmo = client.getData().getServerBannedAmmo();
                 for (JCheckBox tempBox : cBoxArrayList) {
-                    String ammo = Long.toString(munitionTypes.get(tempBox.getText()));
+                    String ammo = munitionTypes.get(tempBox.getText()).toString();
 
                     //Check box has been selected and should be updated to the server
                     if (tempBox.isSelected() && !bannedAmmo.containsKey(ammo)) {
-                        mwclient.sendChat(MWClient.CAMPAIGN_PREFIX + "c adminsetserverammoban#"
-                                                + munitionTypes.get(tempBox.getText()));
+                        client.sendChat(IClient.CAMPAIGN_PREFIX + "c adminsetserverammoban#"
+                                              + munitionTypes.get(tempBox.getText()));
                     }
                     //Checkbox has been unselected and should be updated to the server
                     else if (!tempBox.isSelected() && bannedAmmo.containsKey(ammo)) {
-                        mwclient.sendChat(MWClient.CAMPAIGN_PREFIX + "c adminsetserverammoban#"
-                                                + munitionTypes.get(tempBox.getText()));
+                        client.sendChat(IClient.CAMPAIGN_PREFIX + "c adminsetserverammoban#"
+                                              + munitionTypes.get(tempBox.getText()));
                     }
                 }
             } else {
                 Hashtable<String, String> bannedAmmo = house.getBannedAmmo();
                 for (JCheckBox tempBox : cBoxArrayList) {
-                    String ammo = Long.toString(munitionTypes.get(tempBox.getText()));
+                    String ammo = munitionTypes.get(tempBox.getText()).toString();
 
                     //Check box has been selected and should be updated to the server
                     if (tempBox.isSelected() && !bannedAmmo.containsKey(ammo)) {
-                        mwclient.sendChat(MWClient.CAMPAIGN_PREFIX + "c adminsethouseammoban#"
-                                                + house.getName() + "#" + munitionTypes.get(tempBox.getText()));
+                        client.sendChat(IClient.CAMPAIGN_PREFIX + "c adminsethouseammoban#"
+                                              + house.getName() + "#" + munitionTypes.get(tempBox.getText()));
                     }
                     //Checkbox has been unselected and should be updated to the server
                     else if (!tempBox.isSelected() && bannedAmmo.containsKey(ammo)) {
-                        mwclient.sendChat(MWClient.CAMPAIGN_PREFIX + "c adminsethouseammoban#"
-                                                + house.getName() + "#" + munitionTypes.get(tempBox.getText()));
+                        client.sendChat(IClient.CAMPAIGN_PREFIX + "c adminsethouseammoban#"
+                                              + house.getName() + "#" + munitionTypes.get(tempBox.getText()));
                     }
 
                 }
             }
 
             dialog.dispose();
-            return;
         } else if (command.equals(cancelCommand)) {
             dialog.dispose();
         }
@@ -171,7 +170,7 @@ public final class BannedAmmoDialog implements ActionListener {
     }
 
     public void loadBannedAmmo() {
-        mwclient.loadBannedAmmo();
+        client.loadBannedAmmo();
     }
 
     public boolean checkAmmoBan(String ammo) {
@@ -182,18 +181,16 @@ public final class BannedAmmoDialog implements ActionListener {
                 //I did this for some silly reason. and now I'm paying for it.
                 //But I don't want to change all the code to long,string hashes
                 //Generics would make it easy but I'm lazy and it works. --Torren.
-                String munition = Long.toString(mwclient.getData().getMunitionsByName().get(ammo));
-                if (mwclient.getData().getServerBannedAmmo().containsKey(munition)) {return true;}
-                return false;
+                String munition = client.getData().getMunitionsByName().get(ammo).toString();
+                return client.getData().getServerBannedAmmo().containsKey(munition);
             } catch (Exception ex) {
                 MWLogger.errLog("Unable to find ammo " + ammo);
                 return false;
             }
         }
         try {
-            String munition = Long.toString(mwclient.getData().getMunitionsByName().get(ammo));
-            if (house.getBannedAmmo().containsKey(munition)) {return true;}
-            return false;
+            String munition = client.getData().getMunitionsByName().get(ammo).toString();
+            return house.getBannedAmmo().containsKey(munition);
         } catch (Exception ex) {
             MWLogger.errLog("Unable to find ammo " + ammo);
             return false;

@@ -23,11 +23,12 @@ package mekwars.common;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.Serial;
 import java.io.Serializable;
 
-import common.campaign.operations.Operation;
-import common.util.BinReader;
-import common.util.BinWriter;
+import mekwars.common.campaign.operations.Operation;
+import mekwars.common.persistence.BinReader;
+import mekwars.common.persistence.BinWriter;
 
 /**
  * @author Helge Richter
@@ -39,6 +40,7 @@ public class UnitFactory implements Serializable {
     /**
      *
      */
+    @Serial
     private static final long serialVersionUID = -5221016867627976085L;
     private String name;
     private String size;
@@ -47,40 +49,40 @@ public class UnitFactory implements Serializable {
     private int ticksUntilRefresh;
     private int refreshSpeed = 100;//The Speed this factory refreshes
 
-    static public final int BUILDALL = 0;
-    static public final int BUILDMEK = 1;
-    static public final int BUILDVEHICLES = 2;
-    static public final int BUILDMEKnVEHICLES = 3;
-    static public final int BUILDINFANTRY = 4;
-    static public final int BUILDMEKNInFANTRY = 5;
-    static public final int BUILDVEHICLESnINFANTRY = 6;
-    static public final int BUILDMEKnINFANTRYnVEHICLES = 7;
-    static public final int BUILDPROTOMECHS = 8;
-    static public final int BUILDMEKnPROTOMECHS = 9;
-    static public final int BUILDVEHICLESnPROTOMECH = 10;
-    static public final int BUILDMEKnVEHICLESnPROTOMECH = 11;
-    static public final int BUILDINFANTRYnPROTOMECH = 12;
-    static public final int BUILDMEKnINFANTRYnPROTOMECH = 13;
-    static public final int BUILDVEHICLESnINFANTRYnPROTOMECH = 14;
-    static public final int BUILDMEKnVEHICLESnINFANTRYnPROTOMECH = 15;
-    static public final int BUILDBATTLEARMOR = 16;
-    static public final int BUILDMEKnBATTLEARMOR = 17;
-    static public final int BUILDVEHICLESnBATTLEARMOR = 18;
-    static public final int BUILDMEKnVEHICLEsnBATTLEARMOR = 19;
-    static public final int BUILDINFANTRYnBATTLEARMOR = 20;
-    static public final int BUILDMEKnINFANTRYnBATTLEARMOR = 21;
-    static public final int BUILDVEHICLESnINFANTRYnBATTLEARMOR = 22;
-    static public final int BUILDMEKnVEHICLESnINFANTRYnBATTLEARMOR = 23;
-    static public final int BUILDPROTOMECHSnBATTLEARMOR = 24;
-    static public final int BUILDMEKnPROTOMECHSnBATTLEARMOR = 25;
-    static public final int BUILDVEHICLESnPROTOMECHnBATTLEARMOR = 26;
-    static public final int BUILDMEKnVEHICLESnPROTOMECHnBATTLEARMOR = 27;
-    static public final int BUILDINFANTRYnPROTOMECHnBATTLEARMOR = 28;
-    static public final int BUILDMEKnINFANTRYnPROTOMECHnBATTLEARMOR = 29;
-    static public final int BUILDVEHICLESnINFANTRYnPROTOMECHnBATTLEARMOR = 30;
-    static public final int BUILDMEKnVEHICLESnINFANTRYnPROTOMECHnBATTLEARMOR = 31;
-    static public final int BUILDVTOL = 32;
-    static public final int BUILDAERO = 33;
+    static public final int BUILD_ALL = 0;
+    static public final int BUILD_MEK = 1;
+    static public final int BUILD_VEHICLES = 2;
+    static public final int BUILD_MEK_AND_VEHICLES = 3;
+    static public final int BUILD_INFANTRY = 4;
+    static public final int BUILD_MEK_AND_INFANTRY = 5;
+    static public final int BUILD_VEHICLES_AND_INFANTRY = 6;
+    static public final int BUILD_MEK_AND_INFANTRY_AND_VEHICLES = 7;
+    static public final int BUILD_PROTOMEKS = 8;
+    static public final int BUILD_MEK_AND_PROTOMEKS = 9;
+    static public final int BUILD_VEHICLES_AND_PROTOMEK = 10;
+    static public final int BUILD_MEK_AND_VEHICLES_AND_PROTOMEK = 11;
+    static public final int BUILD_INFANTRY_AND_PROTOMEK = 12;
+    static public final int BUILD_MEK_AND_INFANTRY_AND_PROTOMEK = 13;
+    static public final int BUILD_VEHICLES_AND_INFANTRY_AND_PROTOMEK = 14;
+    static public final int BUILD_MEK_AND_VEHICLES_AND_INFANTRY_AND_PROTOMEK = 15;
+    static public final int BUILD_BATTLEARMOR = 16;
+    static public final int BUILD_MEK_AND_BATTLEARMOR = 17;
+    static public final int BUILD_VEHICLES_AND_BATTLEARMOR = 18;
+    static public final int BUILD_MEK_AND_VEHICLES_AND_nBATTLEARMOR = 19;
+    static public final int BUILD_INFANTRY_AND_BATTLEARMOR = 20;
+    static public final int BUILD_MEK_AND_INFANTRY_AND_BATTLEARMOR = 21;
+    static public final int BUILD_VEHICLES_AND_INFANTRY_AND_BATTLEARMOR = 22;
+    static public final int BUILD_MEK_AND_VEHICLES_AND_INFANTRY_AND_BATTLEARMOR = 23;
+    static public final int BUILD_PROTOMEKS_AND_BATTLEARMOR = 24;
+    static public final int BUILD_MEK_AND_PROTOMEKS_AND_BATTLEARMOR = 25;
+    static public final int BUILD_VEHICLES_AND_PROTOMEK_AND_BATTLEARMOR = 26;
+    static public final int BUILD_MEK_AND_VEHICLES_AND_PROTOMEK_AND_BATTLEARMOR = 27;
+    static public final int BUILD_INFANTRY_AND_PROTOMEK_AND_BATTLEARMOR = 28;
+    static public final int BUILD_MEK_AND_INFANTRY_AND_PROTOMEK_AND_BATTLEARMOR = 29;
+    static public final int BUILD_VEHICLES_AND_INFANTRY_AND_PROTOMEK_AND_BATTLEARMOR = 30;
+    static public final int BUILD_MEK_AND_VEHICLES_AND_INFANTRY_AND_PROTOMEK_AND_BATTLEARMOR = 31;
+    static public final int BUILD_VTOL = 32;
+    static public final int BUILD_AERO = 33;
 
 
     /**
@@ -89,9 +91,8 @@ public class UnitFactory implements Serializable {
     private int type;
 
     /**
-     * @author jtighe
-     *       <p>
-     *       This will allow admins to lock this factory
+     * <p>
+     * This will allow admins to lock this factory
      */
     private boolean factoryLocked = false;
 
@@ -175,11 +176,12 @@ public class UnitFactory implements Serializable {
      * @return Returns the ticksUntilRefresh, but hides any negative values.
      */
     public int getTicksUntilRefresh() {
-        if (isLocked()) {return Integer.MAX_VALUE;}
+        if (isLocked()) {
+            return Integer.MAX_VALUE;
+        }
 
-        if (ticksUntilRefresh < 0) {return 0;}
+        return Math.max(ticksUntilRefresh, 0);
         //else
-        return ticksUntilRefresh;
     }
 
     /**
@@ -201,7 +203,7 @@ public class UnitFactory implements Serializable {
      */
     public void setType(int type) {
 
-        if (type < BUILDALL || type > BUILDAERO) {this.type = BUILDMEK;} else {this.type = type;}
+        if (type < BUILD_ALL || type > BUILD_AERO) {this.type = BUILD_MEK;} else {this.type = type;}
     }
 
     /**
@@ -212,40 +214,40 @@ public class UnitFactory implements Serializable {
     public boolean canProduce(int type_id) {
         int test = getType();
 
-        if (test == BUILDALL) {return true;}
+        if (test == BUILD_ALL) {return true;}
 
-        if (test - BUILDAERO >= 0) {
-            test -= BUILDAERO;
+        if (test - BUILD_AERO >= 0) {
+            test -= BUILD_AERO;
             if (type_id == Unit.AERO) {
                 return true;
             }
         }
 
-        if (test - BUILDBATTLEARMOR >= 0) {
+        if (test - BUILD_BATTLEARMOR >= 0) {
 
-            test -= BUILDBATTLEARMOR;
+            test -= BUILD_BATTLEARMOR;
             if (type_id == Unit.BATTLEARMOR) {return true;}
         }
 
-        if (test - BUILDPROTOMECHS >= 0) {
+        if (test - BUILD_PROTOMEKS >= 0) {
 
-            test -= BUILDPROTOMECHS;
+            test -= BUILD_PROTOMEKS;
             if (type_id == Unit.PROTOMEK) {return true;}
         }
 
 
-        if (test - BUILDINFANTRY >= 0) {
-            test -= BUILDINFANTRY;
+        if (test - BUILD_INFANTRY >= 0) {
+            test -= BUILD_INFANTRY;
             if (type_id == Unit.INFANTRY) {return true;}
         }
 
-        if (test - BUILDVEHICLES >= 0) {
-            test -= BUILDVEHICLES;
+        if (test - BUILD_VEHICLES >= 0) {
+            test -= BUILD_VEHICLES;
             if (type_id == Unit.VEHICLE) {return true;}
         }
 
-        if (test - BUILDMEK >= 0) {
-            if (type_id == Unit.MEK) {return true;}
+        if (test - BUILD_MEK >= 0) {
+            return type_id == Unit.MEK;
         }
 
         return false;
@@ -270,30 +272,24 @@ public class UnitFactory implements Serializable {
             return false;
         }
 
-        if (getType() == BUILDALL) {
+        if (getType() == BUILD_ALL) {
             return true;
         }
 
-        switch (type_id) {
-            case Unit.MEK:
-                return capMeks && canProduce(type_id);
-            case Unit.VEHICLE:
-                return capVees && canProduce(type_id);
-            case Unit.INFANTRY:
-                return capInfs && canProduce(type_id);
-            case Unit.PROTOMEK:
-                return capProtos && canProduce(type_id);
-            case Unit.BATTLEARMOR:
-                return capBAs && canProduce(type_id);
-            case Unit.AERO:
-                return capAeros && canProduce(type_id);
-        }
+        return switch (type_id) {
+            case Unit.MEK -> capMeks && canProduce(type_id);
+            case Unit.VEHICLE -> capVees && canProduce(type_id);
+            case Unit.INFANTRY -> capInfs && canProduce(type_id);
+            case Unit.PROTOMEK -> capProtos && canProduce(type_id);
+            case Unit.BATTLEARMOR -> capBAs && canProduce(type_id);
+            case Unit.AERO -> capAeros && canProduce(type_id);
+            default -> false;
+        };
 
-        return false;
     }
 
     /**
-     * Writes as binary stream
+     * Writes as a binary stream
      */
     public void binOut(BinWriter out) {
         out.println(name, "name");
@@ -429,14 +425,14 @@ public class UnitFactory implements Serializable {
 
         if (folder.equals("0") || folder.equals("standard")) {return;}
 
-        buildTableFolder = folder.replaceAll("standard" + "\\" + File.separatorChar, "");
+        buildTableFolder = folder.replaceAll("standard" + "/" + File.separatorChar, "");
 
         if (buildTableFolder.equals("standard")) {buildTableFolder = "";}
     }
 
     public String getBuildTableFolder() {
 
-        if (buildTableFolder.trim().length() < 1) {return "standard";}
+        if (buildTableFolder.trim().isEmpty()) {return "standard";}
 
         return "standard" + File.separatorChar + buildTableFolder.trim();
     }

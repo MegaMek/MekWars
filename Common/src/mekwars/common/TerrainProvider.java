@@ -29,29 +29,29 @@ public interface TerrainProvider {
     /**
      * Return the terrain to a given id.
      */
-    public Terrain getTerrain(int id);
+    Terrain getTerrain(int id);
 
     /**
      * Return all terrains
      */
-    public Collection<Terrain> getAllTerrains();
+    Collection<Terrain> getAllTerrains();
 
     /**
      * Add a terrain to the list
      */
-    public void addAdvancedTerrain(AdvancedTerrain terrain);
+    void addAdvancedTerrain(AdvancedTerrain terrain);
 
     /*add the advanced terrain provisions*/
 
     /**
      * Return the terrain to a given id.
      */
-    public AdvancedTerrain getAdvancedTerrain(int id);
+    AdvancedTerrain getAdvancedTerrain(int id);
 
     /**
      * Return all terrains
      */
-    public Collection<AdvancedTerrain> getAllAdvancedTerrains();
+    Collection<AdvancedTerrain> getAllAdvancedTerrains();
 
 
 }

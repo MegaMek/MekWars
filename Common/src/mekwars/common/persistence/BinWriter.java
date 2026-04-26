@@ -16,65 +16,100 @@
 
 package mekwars.common.persistence;
 
+import java.io.FileWriter;
+import java.io.IOException;
 import java.io.PrintWriter;
 
+import mekwars.common.util.MWLogger;
+import mekwars.common.util.TeePrinter;
+
 /**
- * BinWriter is a minimal textual based writer optimized to output as few characters as possible. To do so, the
- * structure information is silently ignored. So no error handling is provided and invalid data structures will not be
- * detectable by BinReader.
+ * Used to write the data fields of common data classes
  *
  * @author Imi (immanuel.scholz@gmx.de)
  */
 public class BinWriter {
 
-    /**
-     * Output goes here
-     */
     private PrintWriter out;
+    private boolean debug;
+    private BinWriter dataBlock = null;
+    private boolean open = true;
 
-    /**
-     * Construct a BinWriter.
-     *
-     * @param out The place to write the output to.
-     */
     public BinWriter(PrintWriter out) {
         this.out = out;
+        debug = false;
     }
 
-    public void write(int v, String name) {
+    public BinWriter(PrintWriter out, String debugFilename) {
+        try {
+            String ls = System.getProperty("line.seperator");
+            System.setProperty("line.seperator", String.valueOf((char) 13));
+            this.out = new PrintWriter(new TeePrinter(out, new FileWriter(debugFilename)));
+            System.setProperty("line.seperator", ls);
+        } catch (IOException e) {
+            MWLogger.errLog(e);
+            this.out = new PrintWriter(out);
+        }
+        debug = true;
+        this.out.println("###DEBUG_ON###");
+    }
+
+
+    public void println(int v, String debugName) {
+        if (debug) {out.print(debugName + "=");}
         out.println(v);
     }
 
-    public void write(boolean v, String name) {
+    public void println(double v, String debugName) {
+        if (debug) {out.print(debugName + "=");}
         out.println(v);
     }
 
-    public void write(double v, String name) {
+    public void println(String v, String debugName) {
+        if (debug) {out.print(debugName + "=");}
         out.println(v);
     }
 
-    public void write(String v, String name) {
-        // TODO: This encoding is not safe. If there are <br> in the string, they will be converted back in BinReader.
-        out.println();
+    public void println(boolean v, String debugName) {
+        if (debug) {out.print(debugName + "=");}
+        out.println(v);
     }
 
-    public void flush() {
-        out.flush();
+    public void printStringln(String v, String debugName) {
+        if (debug) {out.print(debugName + "=");}
+        out.println(v);
     }
 
     public void close() {
+        if (dataBlock != null && dataBlock.open) {
+            dataBlock.close();
+            dataBlock = null;
+        }
         out.close();
+        open = false;
+    }
+
+    public void flush() {
+        if (dataBlock != null && dataBlock.open) {
+            dataBlock.close(); // yes, close it, not flush it.
+            dataBlock = null;
+        }
+        out.flush();
     }
 
     /**
-     * Ignored, since no additional structure information is saved anyway...
+     * Signals a new data block within the stream. Use the returned object to write to this data block. If you write
+     * once to this one again, the data block is considered closed and you may not write to the returned BinWriter
+     * again. Flushing this stream also closes the data block.
+     * <p>
+     * Of course, if this writer is closed, so is the returned writer.
+     *
+     * @param name Name of the new datablock
+     *
+     * @return An Writer to use for writing to the new data block.
      */
-    public void startDataBlock(String name) {
+    public BinWriter newBlock(String name) {
+        return new BinWriter(out);
     }
 
-    /**
-     * Ignored, since no additional structure information is saved anyway...
-     */
-    public void endDataBlock(String name) {
-    }
 }

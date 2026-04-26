@@ -30,34 +30,34 @@ import java.util.Iterator;
 import java.util.TreeSet;
 import javax.swing.*;
 
-import client.MWClient;
-import common.AdvancedTerrain;
-import common.CampaignData;
-import common.Continent;
-import common.House;
-import common.Planet;
-import common.Terrain;
-import common.UnitFactory;
-import common.util.MWLogger;
-import common.util.SpringLayoutHelper;
-import megamek.common.PlanetaryConditions;
+import megamek.common.planetaryConditions.Atmosphere;
+import mekwars.common.AdvancedTerrain;
+import mekwars.common.CampaignData;
+import mekwars.common.Continent;
+import mekwars.common.House;
+import mekwars.common.Planet;
+import mekwars.common.Terrain;
+import mekwars.common.UnitFactory;
+import mekwars.common.campaign.clientutils.protocol.IClient;
+import mekwars.common.util.MWLogger;
+import mekwars.common.util.SpringLayoutHelper;
 
 public final class PlanetEditorDialog implements ActionListener, KeyListener {
 
     // store the client backlink for other things to use
-    private MWClient mwclient = null;
-    private String planetName = "";
+    private final IClient client;
+    private String planetName;
     private int advanceTerrainId = -1;
     private Planet selectedPlanet;
-    private ArrayList<String> removedOwners = new ArrayList<String>();
-    private HashMap<String, Integer> ownersMap = new HashMap<String, Integer>();
-    private ArrayList<String> removedTerrain = new ArrayList<String>();
-    private ArrayList<String> removedAdvTerrain = new ArrayList<String>();
-    private HashMap<String, Continent> ContinentMap = new HashMap<String, Continent>();
-    private HashMap<String, Integer> terrainMap = new HashMap<String, Integer>();
-    private HashMap<String, Integer> advTerrainMap = new HashMap<String, Integer>();
-    private ArrayList<String> removedFactory = new ArrayList<String>();
-    private HashMap<String, String> factoryMap = new HashMap<String, String>();
+    private final ArrayList<String> removedOwners = new ArrayList<>();
+    private final HashMap<String, Integer> ownersMap = new HashMap<>();
+    private final ArrayList<String> removedTerrain = new ArrayList<>();
+    private ArrayList<String> removedAdvTerrain = new ArrayList<>();
+    private final HashMap<String, Continent> continentMap = new HashMap<>();
+    private HashMap<String, Integer> terrainMap = new HashMap<>();
+    private HashMap<String, Integer> advTerrainMap = new HashMap<>();
+    private final ArrayList<String> removedFactory = new ArrayList<>();
+    private final HashMap<String, String> factoryMap = new HashMap<>();
 
     private final static String okayCommand = "Save";
     private final static String cancelCommand = "Cancel";
@@ -178,18 +178,18 @@ public final class PlanetEditorDialog implements ActionListener, KeyListener {
     private JComboBox planetAdvancedTerrains;
     private JComboBox allTerrains;
     private JComboBox allAdvancedTerrains;
-    private JComboBox factorySize = new JComboBox(factorySizes);
-    private JComboBox factoryType = new JComboBox(factoryTypes);
+    private final JComboBox<String> factorySize = new JComboBox<>(factorySizes);
+    private final JComboBox<String> factoryType = new JComboBox<>(factoryTypes);
     private JComboBox factoryOwners;
     private JComboBox ownerNames;
-    private JComboBox atmosphere = new JComboBox(PlanetaryConditions.atmoNames);
+    private JComboBox<Atmosphere> atmosphere = new JComboBox<>(Atmosphere.values());
 
-    public PlanetEditorDialog(MWClient c, String planetName, int planetID) {
+    public PlanetEditorDialog(IClient client, String planetName, int planetID) {
 
         // save the client
-        mwclient = c;
+        this.client = client;
         this.planetName = planetName;
-        // Set the tooltips and actions for dialouge buttons
+        // Set the tooltips and actions for dialogue buttons
         okayButton.setActionCommand(okayCommand);
         cancelButton.setActionCommand(cancelCommand);
         refreshButton.setActionCommand(refreshCommand);
@@ -235,7 +235,7 @@ public final class PlanetEditorDialog implements ActionListener, KeyListener {
         // Show the dialog and get the user's input
         dialog.setModal(true);
         dialog.pack();
-        dialog.setLocationRelativeTo(c.getMainFrame());
+        dialog.setLocationRelativeTo(client.getMainFrame());
         dialog.setVisible(true);
 
     }
@@ -245,10 +245,10 @@ public final class PlanetEditorDialog implements ActionListener, KeyListener {
 
         if (command.equals(okayCommand)) {
             if (!saveAllData()) {
-                JOptionPane.showMessageDialog(mwclient.getMainFrame(), "Unable to Save Data, Check Error Logs");
+                JOptionPane.showMessageDialog(client.getMainFrame(), "Unable to Save Data, Check Error Logs");
             }
             try {
-                mwclient.refreshData();
+                client.refreshData();
                 removedFactory.clear();
                 removedTerrain.clear();
                 removedOwners.clear();
@@ -261,14 +261,14 @@ public final class PlanetEditorDialog implements ActionListener, KeyListener {
             dialog.dispose();
         } else if (command.equals(refreshCommand)) {
             planetName = planetNames.getSelectedItem().toString();
-            selectedPlanet = mwclient.getData().getPlanetByName(planetName);
+            selectedPlanet = client.getData().getPlanetByName(planetName);
             removedOwners.clear();
             removedTerrain.clear();
             removedFactory.clear();
             refreshAllPanels();
         } else if (command.equals(planetTerrainsCombo)) {
             //int indexToComboBox = planetTerrains.getSelectedIndex();
-            //Continent C = ContinentMap.get(indexToComboBox);
+            //Continent C = continentMap.get(indexToComboBox);
             //currentTerrainPercent.setText(Integer.toString(C.getSize()));
         } else if (command.equals(planetOwnersListCommand)) {
             try {
@@ -398,30 +398,30 @@ public final class PlanetEditorDialog implements ActionListener, KeyListener {
                 int percent = Integer.parseInt(newTerrainPercent.getText().trim().replaceAll("%", ""));
                 String Tname = allTerrains.getSelectedItem().toString().trim();
                 String ATname = allAdvancedTerrains.getSelectedItem().toString().trim();
-                Terrain T = mwclient.getData().getTerrainByName(Tname);
-                AdvancedTerrain A = mwclient.getData().getAdvancedTerrainByName(ATname);
+                Terrain T = client.getData().getTerrainByName(Tname);
+                AdvancedTerrain A = client.getData().getAdvancedTerrainByName(ATname);
                 Continent C = new Continent(percent, T, A);
                 String displayName = C.getDropBoxName();
                 planetTerrains.addItem(displayName);
-                ContinentMap.put(displayName, C);
+                continentMap.put(displayName, C);
             } catch (Exception ex) {
                 MWLogger.errLog(ex);
             }
         } else if (command.equals(RemoveTerrainCommand)) {
             if (planetTerrains.getItemCount() > 0) {
-                ContinentMap.remove(planetTerrains.getSelectedItem());
+                continentMap.remove(planetTerrains.getSelectedItem());
                 planetTerrains.removeItemAt(planetTerrains.getSelectedIndex());
                 saveTerrain();
             }
         } else if (command.equals(removeAllTerrainsCommand)) {
-            ContinentMap.clear();
+            continentMap.clear();
             planetTerrains.removeAllItems();
         }
     }
 
     private void loadAllPanels() {
 
-        selectedPlanet = mwclient.getData().getPlanetByName(planetName);
+        selectedPlanet = client.getData().getPlanetByName(planetName);
 
         loadPlanetNames();
         loadPlanetInfo();
@@ -692,7 +692,7 @@ public final class PlanetEditorDialog implements ActionListener, KeyListener {
             Continent terrain = terrains.next();
             String displayName = terrain.getDropBoxName();
             planetTerrains.addItem(displayName);
-            ContinentMap.put(displayName, terrain);
+            continentMap.put(displayName, terrain);
         }
 
         panel1.add(planetTerrains);
@@ -703,7 +703,7 @@ public final class PlanetEditorDialog implements ActionListener, KeyListener {
 
         ArrayList<String> allTerrainList = new ArrayList<String>();
         allTerrainList = new ArrayList<String>();
-        for (Terrain terrain : mwclient.getData().getAllTerrains()) {
+        for (Terrain terrain : client.getData().getAllTerrains()) {
             if (allTerrainList.contains(terrain.getName())) {
                 continue;
             }
@@ -714,7 +714,7 @@ public final class PlanetEditorDialog implements ActionListener, KeyListener {
         panel2.add(allTerrains);
 
         ArrayList<String> allAdvTerrainList = new ArrayList<String>();
-        Collection<AdvancedTerrain> AdvTerrainCollection = mwclient.getData().getAllAdvancedTerrains();
+        Collection<AdvancedTerrain> AdvTerrainCollection = client.getData().getAllAdvancedTerrains();
         Object[] at = AdvTerrainCollection.toArray();
         for (int x = 0; x < at.length; x++) {
             if ((AdvancedTerrain) at[x] != null) {
@@ -768,7 +768,7 @@ public final class PlanetEditorDialog implements ActionListener, KeyListener {
     private void loadPlanetNames() {
 
         planets = new JPanel();
-        Collection<Planet> planets = mwclient.getData().getAllPlanets();
+        Collection<Planet> planets = client.getData().getAllPlanets();
         //Dimension comboBoxSize = new Dimension(200, 22);
         // setup the a list of names to feed into a list
         TreeSet<String> pNames = new TreeSet<String>();// tree to alpha sort
@@ -884,7 +884,7 @@ public final class PlanetEditorDialog implements ActionListener, KeyListener {
     private void loadPlanetTerrainData() {
 
 
-        ContinentMap.clear();
+        continentMap.clear();
         ArrayList<String> terrainList = new ArrayList<String>();
         Iterator<Continent> terrains = selectedPlanet.getEnvironments().iterator();
 
@@ -895,13 +895,13 @@ public final class PlanetEditorDialog implements ActionListener, KeyListener {
             Continent terrain = terrains.next();
             String displayName = terrain.getDropBoxName();
             planetTerrains.addItem(displayName);
-            ContinentMap.put(displayName, terrain);
+            continentMap.put(displayName, terrain);
         }
 
 
         allTerrains.removeAllItems();
         terrainList = new ArrayList<String>();
-        for (Terrain terrain : mwclient.getData().getAllTerrains()) {
+        for (Terrain terrain : client.getData().getAllTerrains()) {
             terrainList.add(terrain.getName());
         }
 
@@ -918,7 +918,7 @@ public final class PlanetEditorDialog implements ActionListener, KeyListener {
 
         allAdvancedTerrains.removeAllItems();
         advTerrainList = new ArrayList<String>();
-        Collection<AdvancedTerrain> AdvTerrainCollection = mwclient.getData().getAllAdvancedTerrains();
+        Collection<AdvancedTerrain> AdvTerrainCollection = client.getData().getAllAdvancedTerrains();
         Object[] at = AdvTerrainCollection.toArray();
         for (int x = 0; x < at.length; x++) {
             if ((AdvancedTerrain) at[x] != null) {
@@ -1031,7 +1031,7 @@ public final class PlanetEditorDialog implements ActionListener, KeyListener {
         planetNames.removeActionListener(this);
         planetNames.removeAllItems();
         ArrayList<String> pNames = new ArrayList<String>();// tree to alpha sort
-        for (Planet planet : mwclient.getData().getAllPlanets()) {
+        for (Planet planet : client.getData().getAllPlanets()) {
             pNames.add(planet.getName());
         }
 
@@ -1048,7 +1048,7 @@ public final class PlanetEditorDialog implements ActionListener, KeyListener {
 
         ArrayList<String> factionNames = new ArrayList<String>();// tree to alpha
         // sort
-        for (House house : mwclient.getData().getAllHouses()) {
+        for (House house : client.getData().getAllHouses()) {
             factionNames.add(house.getName());
         }
 
@@ -1068,7 +1068,7 @@ public final class PlanetEditorDialog implements ActionListener, KeyListener {
             int indexToComboBox = planetTerrains.getSelectedIndex();
             String terrainToLookup = terrainList.get(indexToComboBox);
 
-            return mwclient.getData().getTerrainByName(terrainToLookup).getId();
+            return client.getData().getTerrainByName(terrainToLookup).getId();
         } catch (Exception ex) {
             return -1;
         }
@@ -1165,57 +1165,57 @@ public final class PlanetEditorDialog implements ActionListener, KeyListener {
 
     private void removeOwners() {
 
-        if (removedOwners.size() < 1) {
+        if (removedOwners.isEmpty()) {
             return;
         }
 
         for (String owner : removedOwners) {
-            mwclient.sendChat(MWClient.CAMPAIGN_PREFIX + "c AdminRemovePlanetOwnership#" + planetName + "#" + owner);
+            client.sendChat(IClient.CAMPAIGN_PREFIX + "c AdminRemovePlanetOwnership#" + planetName + "#" + owner);
         }
     }
 
     private void removeFactories() {
-        mwclient.sendChat(MWClient.CAMPAIGN_PREFIX + "c AdminRemoveAllFactories#" + planetName);
+        client.sendChat(IClient.CAMPAIGN_PREFIX + "c AdminRemoveAllFactories#" + planetName);
     }
 
     private void removeTerrain() {
-        mwclient.sendChat(MWClient.CAMPAIGN_PREFIX + "c AdminRemoveAllTerrain#" + planetName);
+        client.sendChat(IClient.CAMPAIGN_PREFIX + "c AdminRemoveAllTerrain#" + planetName);
     }
 
     private void saveOwners() {
 
         for (String owner : ownersMap.keySet()) {
-            mwclient.sendChat(MWClient.CAMPAIGN_PREFIX +
-                                    "c AdminUpdatePlanetOwnership#" +
-                                    planetName +
-                                    "#" +
-                                    owner +
-                                    "#" +
-                                    ownersMap.get(owner));
+            client.sendChat(IClient.CAMPAIGN_PREFIX +
+                                  "c AdminUpdatePlanetOwnership#" +
+                                  planetName +
+                                  "#" +
+                                  owner +
+                                  "#" +
+                                  ownersMap.get(owner));
         }
     }
 
     private void saveFactories() {
         for (String factory : factoryMap.keySet()) {
             String FactoryData = factoryMap.get(factory);
-            mwclient.sendChat(MWClient.CAMPAIGN_PREFIX + "c AdminCreateFactory#" + planetName + "#" + FactoryData);
+            client.sendChat(IClient.CAMPAIGN_PREFIX + "c AdminCreateFactory#" + planetName + "#" + FactoryData);
         }
 
     }
 
     private void saveTerrain() {
-        for (String terrainIndex : ContinentMap.keySet()) {
-            Continent terrain = ContinentMap.get(terrainIndex);
+        for (String terrainIndex : continentMap.keySet()) {
+            Continent terrain = continentMap.get(terrainIndex);
             //TODO fix this to send the advancedterrain as well
-            mwclient.sendChat(MWClient.CAMPAIGN_PREFIX +
-                                    "c AdminCreateTerrain#" +
-                                    planetName +
-                                    "#" +
-                                    terrain.getEnvironment().getName() +
-                                    "#" +
-                                    terrain.getAdvancedTerrain().getName() +
-                                    "#" +
-                                    terrain.getSize());
+            client.sendChat(IClient.CAMPAIGN_PREFIX +
+                                  "c AdminCreateTerrain#" +
+                                  planetName +
+                                  "#" +
+                                  terrain.getEnvironment().getName() +
+                                  "#" +
+                                  terrain.getAdvancedTerrain().getName() +
+                                  "#" +
+                                  terrain.getSize());
         }
 
     }
@@ -1228,65 +1228,105 @@ public final class PlanetEditorDialog implements ActionListener, KeyListener {
 
         if (!planetXPosition.getText().equals(Double.toString(selectedPlanet.getPosition().getX())) ||
                   !planetYPosition.getText().equals(Double.toString(selectedPlanet.getPosition().getY()))) {
-            mwclient.sendChat(MWClient.CAMPAIGN_PREFIX +
-                                    "c AdminMovePlanet#" +
-                                    planetName +
-                                    "#" +
-                                    planetXPosition.getText() +
-                                    "#" +
-                                    planetYPosition.getText());
+            client.sendChat(IClient.CAMPAIGN_PREFIX +
+                                  "c AdminMovePlanet#" +
+                                  planetName +
+                                  "#" +
+                                  planetXPosition.getText() +
+                                  "#" +
+                                  planetYPosition.getText());
         }
         if (!houseNames.getSelectedItem().toString().equals(selectedPlanet.getOriginalOwner())) {
-            mwclient.sendChat(MWClient.CAMPAIGN_PREFIX +
-                                    "c AdminSetPlanetOriginalOwner#" +
-                                    planetName +
-                                    "#" +
-                                    houseNames.getSelectedItem().toString());
+            client.sendChat(IClient.CAMPAIGN_PREFIX +
+                                  "c AdminSetPlanetOriginalOwner#" +
+                                  planetName +
+                                  "#" +
+                                  houseNames.getSelectedItem().toString());
         }
         if (!minPlanetOwnerShip.getText().equals(Integer.toString(selectedPlanet.getMinPlanetOwnerShip()))) {
-            mwclient.sendChat(MWClient.CAMPAIGN_PREFIX +
-                                    "c SetPlanetMinOwnerShip#" +
-                                    planetName +
-                                    "#" +
-                                    minPlanetOwnerShip.getText());
+            client.sendChat(IClient.CAMPAIGN_PREFIX +
+                                  "c SetPlanetMinOwnerShip#" +
+                                  planetName +
+                                  "#" +
+                                  minPlanetOwnerShip.getText());
         }
         if (!planetConquerPoints.getText().equals(Integer.toString(selectedPlanet.getConquestPoints()))) {
-            mwclient.sendChat(MWClient.CAMPAIGN_PREFIX +
-                                    "c SetPlanetConquerPoints#" +
-                                    planetName +
-                                    "#" +
-                                    planetConquerPoints.getText());
+            client.sendChat(IClient.CAMPAIGN_PREFIX +
+                                  "c SetPlanetConquerPoints#" +
+                                  planetName +
+                                  "#" +
+                                  planetConquerPoints.getText());
         }
         if (isHomeWorldCB.isSelected() != selectedPlanet.isHomeWorld()) {
-            mwclient.sendChat(MWClient.CAMPAIGN_PREFIX +
-                                    "c Adminsethomeworld#" +
-                                    planetName +
-                                    "#" +
-                                    isHomeWorldCB.isSelected());
+            client.sendChat(IClient.CAMPAIGN_PREFIX +
+                                  "c Adminsethomeworld#" +
+                                  planetName +
+                                  "#" +
+                                  isHomeWorldCB.isSelected());
         }
 
         if (isConquerable.isSelected() != selectedPlanet.isConquerable()) {
-            mwclient.sendChat(MWClient.CAMPAIGN_PREFIX +
-                                    "c SetPlanetConquer#" +
-                                    planetName +
-                                    "#" +
-                                    isConquerable.isSelected());
+            client.sendChat(IClient.CAMPAIGN_PREFIX +
+                                  "c SetPlanetConquer#" +
+                                  planetName +
+                                  "#" +
+                                  isConquerable.isSelected());
         }
 
         if (!planetBays.getText().equals(Integer.toString(selectedPlanet.getBaysProvided()))) {
-            mwclient.sendChat(MWClient.CAMPAIGN_PREFIX +
-                                    "c Setplanetwarehouse#" +
-                                    planetName +
-                                    "#" +
-                                    planetBays.getText());
+            client.sendChat(IClient.CAMPAIGN_PREFIX +
+                                  "c Setplanetwarehouse#" +
+                                  planetName +
+                                  "#" +
+                                  planetBays.getText());
         }
         if (!planetComps.getText().equals(Integer.toString(selectedPlanet.getCompProduction()))) {
-            mwclient.sendChat(MWClient.CAMPAIGN_PREFIX +
-                                    "c Setplanetcompproduction#" +
-                                    planetName +
-                                    "#" +
-                                    planetComps.getText());
+            client.sendChat(IClient.CAMPAIGN_PREFIX +
+                                  "c Setplanetcompproduction#" +
+                                  planetName +
+                                  "#" +
+                                  planetComps.getText());
         }
 
+    }
+
+    public int getAdvanceTerrainId() {
+        return advanceTerrainId;
+    }
+
+    public void setAdvanceTerrainId(int advanceTerrainId) {
+        this.advanceTerrainId = advanceTerrainId;
+    }
+
+    public ArrayList<String> getRemovedAdvTerrain() {
+        return removedAdvTerrain;
+    }
+
+    public void setRemovedAdvTerrain(ArrayList<String> removedAdvTerrain) {
+        this.removedAdvTerrain = removedAdvTerrain;
+    }
+
+    public HashMap<String, Integer> getTerrainMap() {
+        return terrainMap;
+    }
+
+    public void setTerrainMap(HashMap<String, Integer> terrainMap) {
+        this.terrainMap = terrainMap;
+    }
+
+    public HashMap<String, Integer> getAdvTerrainMap() {
+        return advTerrainMap;
+    }
+
+    public void setAdvTerrainMap(HashMap<String, Integer> advTerrainMap) {
+        this.advTerrainMap = advTerrainMap;
+    }
+
+    public JComboBox getAtmosphere() {
+        return atmosphere;
+    }
+
+    public void setAtmosphere(JComboBox atmosphere) {
+        this.atmosphere = atmosphere;
     }
 }// end PlanetEditorDialog.java

@@ -106,7 +106,7 @@ public class SerializeEntity {
                     result.append(entity.getInternal(Mek.LOC_RIGHT_LEG)).append("*");
                     result.append(entity.getInternal(Mek.LOC_LEFT_ARM)).append("*");
                     result.append(entity.getInternal(Mek.LOC_RIGHT_ARM)).append("*");
-                    result.append(entity.getBadCriticals(CriticalSlot.TYPE_SYSTEM,
+                    result.append(entity.getBadCriticalSlots(CriticalSlot.TYPE_SYSTEM,
                                 Mek.SYSTEM_GYRO,
                                 Mek.LOC_CENTER_TORSO))
                           .append("*");
@@ -131,7 +131,7 @@ public class SerializeEntity {
                     result.append(entity.getCrew().isDead()).append("*");
                     result.append(UnitUtils.getEntityFileName(entity));
                 }
-                case MekWarriorWarrior mw -> {
+                case MekWarrior mw -> {
                     result.append("MW*");
                     result.append(mw.getOriginalRideExternalId()).append("*");
                     result.append(mw.getPickedUpByExternalId()).append("*");

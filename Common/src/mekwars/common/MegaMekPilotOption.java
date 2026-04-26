@@ -27,7 +27,7 @@ package mekwars.common;
  *
  */
 public class MegaMekPilotOption {
-    private String mmname;
+    private String megaMekName;
     private boolean value;
 
     public MegaMekPilotOption() {
@@ -35,15 +35,15 @@ public class MegaMekPilotOption {
     }
 
     public MegaMekPilotOption(String name, boolean value) {
-        mmname = name;
+        megaMekName = name;
         this.value = value;
     }
 
     /**
-     * @return Returns the mmname.
+     * @return Returns the megaMekName.
      */
-    public String getMmname() {
-        return mmname;
+    public String getMegaMekName() {
+        return megaMekName;
     }
 
     /**

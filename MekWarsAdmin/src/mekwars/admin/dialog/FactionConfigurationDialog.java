@@ -31,32 +31,29 @@ import java.util.Date;
 import javax.swing.*;
 import javax.swing.border.EtchedBorder;
 
-import client.MWClient;
-import common.Unit;
-import common.VerticalLayout;
-import common.util.MWLogger;
-import common.util.SpringLayoutHelper;
+import mekwars.common.Unit;
+import mekwars.common.VerticalLayout;
+import mekwars.common.campaign.clientutils.protocol.IClient;
+import mekwars.common.util.MWLogger;
+import mekwars.common.util.SpringLayoutHelper;
 
 public final class FactionConfigurationDialog implements ActionListener {
 
     private final static String okayCommand = "okay";
     private final static String cancelCommand = "cancel";
-    private String windowName = "";
-
-    private JTextField baseTextField = new JTextField(5);
-    private JCheckBox BaseCheckBox = new JCheckBox();
+    private final String windowName;
 
     private final JButton okayButton = new JButton("OK");
     private final JButton cancelButton = new JButton("Cancel");
 
-    private JDialog dialog;
-    private JOptionPane pane;
+    private final JDialog dialog;
+    private final JOptionPane pane;
 
-    private String houseName = "";
+    private String houseName;
 
     JTabbedPane ConfigPane = new JTabbedPane(SwingConstants.TOP);
 
-    MWClient mwclient = null;
+    IClient client;
     /**
      * @author jtighe
      *
@@ -65,37 +62,28 @@ public final class FactionConfigurationDialog implements ActionListener {
      */
 
     /**
-     * @author Torren (Jason Tighe)
-     * 12/29/2005
-     *
-     * I've completely redone how the Server config dialog works
-     * There are 2 basic fields now baseTextField which is a JTextField
-     * and baseCheckBox which is a JCheckBox.
-     *
-     * When you add a new server config add the labels to the tab
-     * then use the base fields to add the ver. make sure to set the base
-     * field's name method this is used to populate and save.
-     *
-     *  ex: BaseTextField.setName("DefaultServerOptionsVariable");
-     *
-     * Two recursive methods populate and save the data to the server
-     *
-     * findAndPopulateTextAndCheckBoxes(JPanel)
-     * findAndSaveConfigs(JPanel)
-     *
-     * This change to the code removes the tediousness of having to add a
-     * new var to 3 locations when it is use. Now only 1 location needs to added
-     * and that is the vars placement on the tab in the UI.
+     * @author Torren (Jason Tighe) 12/29/2005
+     *       <p>
+     *       I've completely redone how the Server config dialog works There are 2 basic fields now baseTextField which
+     *       is a JTextField and baseCheckBox which is a JCheckBox.
+     *       <p>
+     *       When you add a new server config add the labels to the tab then use the base fields to add the ver. make
+     *       sure to set the base field's name method this is used to populate and save.
+     *       <p>
+     *       ex: BaseTextField.setName("DefaultServerOptionsVariable");
+     *       <p>
+     *       Two recursive methods populate and save the data to the server
+     *       <p>
+     *       findAndPopulateTextAndCheckBoxes(JPanel) findAndSaveConfigs(JPanel)
+     *       <p>
+     *       This change to the code removes the tediousness of having to add a new var to 3 locations when it is use.
+     *       Now only 1 location needs to added and that is the vars placement on the tab in the UI.
      */
-    public FactionConfigurationDialog(MWClient mwclient, String houseName) {
+    public FactionConfigurationDialog(IClient client, String houseName) {
 
-        this.mwclient = mwclient;
+        this.client = client;
         this.houseName = houseName;
         this.windowName = "MekWars " + houseName + " Configuration";
-
-        String fluName = mwclient.getserverConfigs("FluShortName");
-        String rpName = mwclient.getserverConfigs("RPShortName");
-        String cbName = mwclient.getserverConfigs("MoneyShortName");
 
         //TAB PANELS (these are added to the root pane as tabs)
         JPanel repodPanel = new JPanel();
@@ -136,10 +124,10 @@ public final class FactionConfigurationDialog implements ActionListener {
         influenceFlowPanel.add(influenceSpring3);
 
         // load spring1 first
-        baseTextField = new JTextField(5);
-        influenceSpring1.add(new JLabel("Max Player " + mwclient.moneyOrFluMessage(false, false, -1) + ":",
+        JTextField baseTextField = new JTextField(5);
+        influenceSpring1.add(new JLabel("Max Player " + client.moneyOrFluMessage(false, false, -1) + ":",
               SwingConstants.TRAILING));
-        baseTextField.setToolTipText(mwclient.moneyOrFluMessage(false, false, -1) + " ceiling");
+        baseTextField.setToolTipText(client.moneyOrFluMessage(false, false, -1) + " ceiling");
         baseTextField.setName("InfluenceCeiling");
         influenceSpring1.add(baseTextField);
 
@@ -150,19 +138,19 @@ public final class FactionConfigurationDialog implements ActionListener {
         influenceSpring1.add(baseTextField);
 
         baseTextField = new JTextField(5); //@salient
-        influenceSpring1.add(new JLabel(mwclient.moneyOrFluMessage(true, true, -1) +
+        influenceSpring1.add(new JLabel(client.moneyOrFluMessage(true, true, -1) +
                                               " per " +
-                                              mwclient.moneyOrFluMessage(false, true, -1), SwingConstants.TRAILING));
+                                              client.moneyOrFluMessage(false, true, -1), SwingConstants.TRAILING));
         baseTextField.setToolTipText(
               "The ability to convert Flu to CB and the number of CB given per 1 flu. Disabled if set to zero. ");
         baseTextField.setName("Cbills_Per_Flu");
         influenceSpring1.add(baseTextField);
 
         baseTextField = new JTextField(5); //@salient
-        influenceSpring1.add(new JLabel(mwclient.moneyOrFluMessage(false, true, -1) + " to refresh",
+        influenceSpring1.add(new JLabel(client.moneyOrFluMessage(false, true, -1) + " to refresh",
               SwingConstants.TRAILING));
         baseTextField.setToolTipText("The amount of " +
-                                           mwclient.moneyOrFluMessage(false, true, -1) +
+                                           client.moneyOrFluMessage(false, true, -1) +
                                            " needed to refresh a factory");
         baseTextField.setName("FluToRefreshFactory");
         influenceSpring1.add(baseTextField);
@@ -172,7 +160,7 @@ public final class FactionConfigurationDialog implements ActionListener {
 
         // then set up spring2
         baseTextField = new JTextField(5);
-        influenceSpring2.add(new JLabel("Min Time for " + mwclient.moneyOrFluMessage(false, true, -1) + ":",
+        influenceSpring2.add(new JLabel("Min Time for " + client.moneyOrFluMessage(false, true, -1) + ":",
               SwingConstants.TRAILING));
         baseTextField.setToolTipText("Minimum active time to receive flu @ check.");
         baseTextField.setName("InfluenceTimeMin");
@@ -197,10 +185,10 @@ public final class FactionConfigurationDialog implements ActionListener {
         influenceSpring2.add(baseTextField);
 
         baseTextField = new JTextField(5);
-        influenceSpring2.add(new JLabel(mwclient.moneyOrFluMessage(false, true, -1) + " Per Army:",
+        influenceSpring2.add(new JLabel(client.moneyOrFluMessage(false, true, -1) + " Per Army:",
               SwingConstants.TRAILING));
         baseTextField.setToolTipText("Base amount of " +
-                                           mwclient.moneyOrFluMessage(false, false, -1) +
+                                           client.moneyOrFluMessage(false, false, -1) +
                                            " given for each army");
         baseTextField.setName("BaseInfluence");
         influenceSpring2.add(baseTextField);
@@ -248,99 +236,99 @@ public final class FactionConfigurationDialog implements ActionListener {
         repodBoxPanel.add(repodSpringGrid);
 
         //set up the flow panel
-        BaseCheckBox = new JCheckBox("Cost " + mwclient.moneyOrFluMessage(true, true, -1));
+        JCheckBox baseCheckBox = new JCheckBox("Cost " + client.moneyOrFluMessage(true, true, -1));
 
-        BaseCheckBox.setToolTipText("Check to enable " +
-                                          mwclient.moneyOrFluMessage(true, true, -1) +
+        baseCheckBox.setToolTipText("Check to enable " +
+                                          client.moneyOrFluMessage(true, true, -1) +
                                           " charges for repods");
-        BaseCheckBox.setName("DoesRepodCost");
-        repodCBoxGridPanel.add(BaseCheckBox);
+        baseCheckBox.setName("DoesRepodCost");
+        repodCBoxGridPanel.add(baseCheckBox);
 
-        BaseCheckBox = new JCheckBox("Use Factory");
+        baseCheckBox = new JCheckBox("Use Factory");
 
-        BaseCheckBox.setToolTipText("Check to have repodding use a factory");
-        BaseCheckBox.setName("RepodUsesFactory");
-        repodCBoxGridPanel.add(BaseCheckBox);
+        baseCheckBox.setToolTipText("Check to have repodding use a factory");
+        baseCheckBox.setName("RepodUsesFactory");
+        repodCBoxGridPanel.add(baseCheckBox);
 
-        BaseCheckBox = new JCheckBox("Uses Comps");
+        baseCheckBox = new JCheckBox("Uses Comps");
 
-        BaseCheckBox.setToolTipText("Check to have repodding consume components");
-        BaseCheckBox.setName("RepodUsesComp");
-        repodCBoxGridPanel.add(BaseCheckBox);
+        baseCheckBox.setToolTipText("Check to have repodding consume components");
+        baseCheckBox.setName("RepodUsesComp");
+        repodCBoxGridPanel.add(baseCheckBox);
 
-        BaseCheckBox = new JCheckBox("Common Table");
+        baseCheckBox = new JCheckBox("Common Table");
 
-        BaseCheckBox.setToolTipText("Check to allow all factions to repod from common table.");
-        BaseCheckBox.setName("UseCommonTableForRepod");
-        repodCBoxGridPanel.add(BaseCheckBox);
+        baseCheckBox.setToolTipText("Check to allow all factions to repod from common table.");
+        baseCheckBox.setName("UseCommonTableForRepod");
+        repodCBoxGridPanel.add(baseCheckBox);
 
-        BaseCheckBox = new JCheckBox("Allow Random");
+        baseCheckBox = new JCheckBox("Allow Random");
 
-        BaseCheckBox.setToolTipText("Check to allow random repods.");
-        BaseCheckBox.setName("RandomRepodAllowed");
-        repodCBoxGridPanel.add(BaseCheckBox);
+        baseCheckBox.setToolTipText("Check to allow random repods.");
+        baseCheckBox.setName("RandomRepodAllowed");
+        repodCBoxGridPanel.add(baseCheckBox);
 
-        BaseCheckBox = new JCheckBox("Random Only");
+        baseCheckBox = new JCheckBox("Random Only");
 
-        BaseCheckBox.setToolTipText("If checked, only random repods are allowed.");
-        BaseCheckBox.setName("RandomRepodOnly");
-        repodCBoxGridPanel.add(BaseCheckBox);
+        baseCheckBox.setToolTipText("If checked, only random repods are allowed.");
+        baseCheckBox.setName("RandomRepodOnly");
+        repodCBoxGridPanel.add(baseCheckBox);
 
         //and then the various springs. MU first.
         baseTextField = new JTextField(5);
-        cbillSpring.add(new JLabel("Light " + mwclient.moneyOrFluMessage(true, true, -1) + ":",
+        cbillSpring.add(new JLabel("Light " + client.moneyOrFluMessage(true, true, -1) + ":",
               SwingConstants.TRAILING));
-        baseTextField.setToolTipText(mwclient.moneyOrFluMessage(true, true, -1) + " required to repod a light unit");
+        baseTextField.setToolTipText(client.moneyOrFluMessage(true, true, -1) + " required to repod a light unit");
         baseTextField.setName("RepodCostLight");
         cbillSpring.add(baseTextField);
 
         baseTextField = new JTextField(5);
-        cbillSpring.add(new JLabel("Medium " + mwclient.moneyOrFluMessage(true, true, -1) + ":",
+        cbillSpring.add(new JLabel("Medium " + client.moneyOrFluMessage(true, true, -1) + ":",
               SwingConstants.TRAILING));
-        baseTextField.setToolTipText(mwclient.moneyOrFluMessage(true, true, -1) + " required to repod a medium unit");
+        baseTextField.setToolTipText(client.moneyOrFluMessage(true, true, -1) + " required to repod a medium unit");
         baseTextField.setName("RepodCostMedium");
         cbillSpring.add(baseTextField);
 
         baseTextField = new JTextField(5);
-        cbillSpring.add(new JLabel("Heavy " + mwclient.moneyOrFluMessage(true, true, -1) + ":",
+        cbillSpring.add(new JLabel("Heavy " + client.moneyOrFluMessage(true, true, -1) + ":",
               SwingConstants.TRAILING));
-        baseTextField.setToolTipText(mwclient.moneyOrFluMessage(true, true, -1) + " required to repod a heavy unit");
+        baseTextField.setToolTipText(client.moneyOrFluMessage(true, true, -1) + " required to repod a heavy unit");
         baseTextField.setName("RepodCostHeavy");
         cbillSpring.add(baseTextField);
 
         baseTextField = new JTextField(5);
-        cbillSpring.add(new JLabel("Assault " + mwclient.moneyOrFluMessage(true, true, -1) + ":",
+        cbillSpring.add(new JLabel("Assault " + client.moneyOrFluMessage(true, true, -1) + ":",
               SwingConstants.TRAILING));
-        baseTextField.setToolTipText(mwclient.moneyOrFluMessage(true, true, -1) + " required to repod an assault unit");
+        baseTextField.setToolTipText(client.moneyOrFluMessage(true, true, -1) + " required to repod an assault unit");
         baseTextField.setName("RepodCostAssault");
         cbillSpring.add(baseTextField);
 
         //now the flu spring
         baseTextField = new JTextField(5);
-        fluSpring.add(new JLabel("Light " + mwclient.moneyOrFluMessage(false, true, -1) + ":",
+        fluSpring.add(new JLabel("Light " + client.moneyOrFluMessage(false, true, -1) + ":",
               SwingConstants.TRAILING));
-        baseTextField.setToolTipText(mwclient.moneyOrFluMessage(false, true, -1) + " required to repod a light unit");
+        baseTextField.setToolTipText(client.moneyOrFluMessage(false, true, -1) + " required to repod a light unit");
         baseTextField.setName("RepodFluLight");
         fluSpring.add(baseTextField);
 
         baseTextField = new JTextField(5);
-        fluSpring.add(new JLabel("Medium " + mwclient.moneyOrFluMessage(false, true, -1) + ":",
+        fluSpring.add(new JLabel("Medium " + client.moneyOrFluMessage(false, true, -1) + ":",
               SwingConstants.TRAILING));
-        baseTextField.setToolTipText(mwclient.moneyOrFluMessage(false, true, -1) + " required to repod a medium unit");
+        baseTextField.setToolTipText(client.moneyOrFluMessage(false, true, -1) + " required to repod a medium unit");
         baseTextField.setName("RepodFluMedium");
         fluSpring.add(baseTextField);
 
         baseTextField = new JTextField(5);
-        fluSpring.add(new JLabel("Heavy " + mwclient.moneyOrFluMessage(false, true, -1) + ":",
+        fluSpring.add(new JLabel("Heavy " + client.moneyOrFluMessage(false, true, -1) + ":",
               SwingConstants.TRAILING));
-        baseTextField.setToolTipText(mwclient.moneyOrFluMessage(false, true, -1) + " required to repod a heavy unit");
+        baseTextField.setToolTipText(client.moneyOrFluMessage(false, true, -1) + " required to repod a heavy unit");
         baseTextField.setName("RepodFluHeavy");
         fluSpring.add(baseTextField);
 
         baseTextField = new JTextField(5);
-        fluSpring.add(new JLabel("Assault " + mwclient.moneyOrFluMessage(false, true, -1) + ":",
+        fluSpring.add(new JLabel("Assault " + client.moneyOrFluMessage(false, true, -1) + ":",
               SwingConstants.TRAILING));
-        baseTextField.setToolTipText(mwclient.moneyOrFluMessage(false, true, -1) +
+        baseTextField.setToolTipText(client.moneyOrFluMessage(false, true, -1) +
                                            " required to repod an assault unit");
         baseTextField.setName("RepodFluAssault");
         fluSpring.add(baseTextField);
@@ -435,36 +423,36 @@ public final class FactionConfigurationDialog implements ActionListener {
         techsBox.add(techSpring);
 
         //the basic CBox flow
-        BaseCheckBox = new JCheckBox("Use Techs");
-        BaseCheckBox.setToolTipText("Unchecking disables technicians. Not advised.");
+        baseCheckBox = new JCheckBox("Use Techs");
+        baseCheckBox.setToolTipText("Unchecking disables technicians. Not advised.");
 
-        BaseCheckBox.setName("UseTechnicians");
-        techsCBoxFlow.add(BaseCheckBox);
+        baseCheckBox.setName("UseTechnicians");
+        techsCBoxFlow.add(baseCheckBox);
 
-        BaseCheckBox = new JCheckBox("Use XP");
+        baseCheckBox = new JCheckBox("Use XP");
 
-        BaseCheckBox.setToolTipText("Check grants additional technicians w/ XP.");
-        BaseCheckBox.setName("UseExperience");
-        techsCBoxFlow.add(BaseCheckBox);
+        baseCheckBox.setToolTipText("Check grants additional technicians w/ XP.");
+        baseCheckBox.setName("UseExperience");
+        techsCBoxFlow.add(baseCheckBox);
 
-        BaseCheckBox = new JCheckBox("Decreasing Cost");
+        baseCheckBox = new JCheckBox("Decreasing Cost");
 
-        BaseCheckBox.setToolTipText("Checking lowers tech hiring costs w/ XP.");
-        BaseCheckBox.setName("DecreasingTechCost");
-        techsCBoxFlow.add(BaseCheckBox);
+        baseCheckBox.setToolTipText("Checking lowers tech hiring costs w/ XP.");
+        baseCheckBox.setName("DecreasingTechCost");
+        techsCBoxFlow.add(baseCheckBox);
 
         //the sendRecPay flow.
-        BaseCheckBox = new JCheckBox("Sender Pays");
+        baseCheckBox = new JCheckBox("Sender Pays");
 
-        BaseCheckBox.setToolTipText("If checked, a player sending a unit will pay techs.");
-        BaseCheckBox.setName("SenderPaysOnTransfer");
-        techsSendRecPayFlow.add(BaseCheckBox);
+        baseCheckBox.setToolTipText("If checked, a player sending a unit will pay techs.");
+        baseCheckBox.setName("SenderPaysOnTransfer");
+        techsSendRecPayFlow.add(baseCheckBox);
 
-        BaseCheckBox = new JCheckBox("Recipient Pays");
+        baseCheckBox = new JCheckBox("Recipient Pays");
 
-        BaseCheckBox.setToolTipText("If checked, a player receiving a unit will pay techs.");
-        BaseCheckBox.setName("ReceiverPaysOnTransfer");
-        techsSendRecPayFlow.add(BaseCheckBox);
+        baseCheckBox.setToolTipText("If checked, a player receiving a unit will pay techs.");
+        baseCheckBox.setName("ReceiverPaysOnTransfer");
+        techsSendRecPayFlow.add(baseCheckBox);
 
         //set up the spring
         baseTextField = new JTextField(5);
@@ -476,7 +464,7 @@ public final class FactionConfigurationDialog implements ActionListener {
         baseTextField = new JTextField(5);
         techSpring.add(new JLabel("XP for Decrease:", SwingConstants.TRAILING));
         baseTextField.setToolTipText("Amount of XP required to reduce hiring cost by 1 " +
-                                           mwclient.moneyOrFluMessage(true, true, -1));
+                                           client.moneyOrFluMessage(true, true, -1));
         baseTextField.setName("XPForDecrease");
         techSpring.add(baseTextField);
 
@@ -493,7 +481,7 @@ public final class FactionConfigurationDialog implements ActionListener {
                                            "with .05 set, the first tech would cost .05, the second .10, the third .15, the fourth .20,<br>" +
                                            "such that your first 4 techs cost haf a Cbill (total) to maintain, while the 10th tech costs<br>" +
                                            "half a " +
-                                           mwclient.moneyOrFluMessage(true, true, -1) +
+                                           client.moneyOrFluMessage(true, true, -1) +
                                            " all by himself. A cap on this price can be set, after which there is no further<br>" +
                                            "increase. The ceiling ABSOLUTELY MUST be a multiple of the additive.</HTML>");
         baseTextField.setName("AdditivePerTech");
@@ -531,12 +519,12 @@ public final class FactionConfigurationDialog implements ActionListener {
 
         baseTextField = new JTextField(5);
         techSpring.add(new JLabel("Unmaintain Penalty:", SwingConstants.TRAILING));
-        baseTextField.setToolTipText("" +
-                                           "<HTML>Maintainance reduction for units which are already below 100. If the BaseLevel is lower than current<br>" +
-                                           "level minus penalty, it is used instead. Example1: A unit has a maintainance level of 90 and is set to<br>" +
-                                           "unmaintained status. The unmaint penalty is 10 and base elvel is 75. 90-10 = 80, so the base level of 75 is<br>" +
-                                           "set. Example2: A unit has an mlevel of 80 and is set to unmaintained. 80 - 10 = 70. 70 is set and the base<br>" +
-                                           "level (75) is ignored.</HTML>");
+        baseTextField.setToolTipText(
+              "<HTML>Maintainance reduction for units which are already below 100. If the BaseLevel is lower than current<br>" +
+                    "level minus penalty, it is used instead. Example1: A unit has a maintainance level of 90 and is set to<br>" +
+                    "unmaintained status. The unmaint penalty is 10 and base elvel is 75. 90-10 = 80, so the base level of 75 is<br>" +
+                    "set. Example2: A unit has an mlevel of 80 and is set to unmaintained. 80 - 10 = 70. 70 is set and the base<br>" +
+                    "level (75) is ignored.</HTML>");
         baseTextField.setName("UnmaintainedPenalty");
         techSpring.add(baseTextField);
 
@@ -699,7 +687,7 @@ public final class FactionConfigurationDialog implements ActionListener {
         baseTextField.setPreferredSize(fieldSize);
         baseTextField.setMinimumSize(fieldSize);
         vehiclePilotSkillsSpring.add(new JLabel("MA", SwingConstants.TRAILING));
-        if (Boolean.parseBoolean(mwclient.getserverConfigs("PlayersCanBuyPilotUpgrades"))) {
+        if (Boolean.parseBoolean(client.getServerConfigs("PlayersCanBuyPilotUpgrades"))) {
             baseTextField.setToolTipText(
                   "<html><body>Set cost for a pilot to gain maneuvering ace. Zero to disable skill</body></html>");
         } else {
@@ -712,7 +700,7 @@ public final class FactionConfigurationDialog implements ActionListener {
         baseTextField.setMaximumSize(fieldSize);
         baseTextField.setPreferredSize(fieldSize);
         vehiclePilotSkillsSpring.add(new JLabel("NAP", SwingConstants.TRAILING));
-        if (Boolean.parseBoolean(mwclient.getserverConfigs("PlayersCanBuyPilotUpgrades"))) {
+        if (Boolean.parseBoolean(client.getServerConfigs("PlayersCanBuyPilotUpgrades"))) {
             baseTextField.setToolTipText(
                   "<html><body>Set cost for a pilot to gain Natural Aptitude Piloting. Zero to disable skill</body></html>");
         } else {
@@ -726,7 +714,7 @@ public final class FactionConfigurationDialog implements ActionListener {
         baseTextField.setMaximumSize(fieldSize);
         baseTextField.setPreferredSize(fieldSize);
         vehiclePilotSkillsSpring.add(new JLabel("NAG", SwingConstants.TRAILING));
-        if (Boolean.parseBoolean(mwclient.getserverConfigs("PlayersCanBuyPilotUpgrades"))) {
+        if (Boolean.parseBoolean(client.getServerConfigs("PlayersCanBuyPilotUpgrades"))) {
             baseTextField.setToolTipText(
                   "<html><body>Set cost for a pilot to gain Natural Aptitude Gunnery. Zero to disable skill</body></html>");
         } else {
@@ -740,7 +728,7 @@ public final class FactionConfigurationDialog implements ActionListener {
         baseTextField.setMaximumSize(fieldSize);
         baseTextField.setPreferredSize(fieldSize);
         vehiclePilotSkillsSpring.add(new JLabel("AT", SwingConstants.TRAILING));
-        if (Boolean.parseBoolean(mwclient.getserverConfigs("PlayersCanBuyPilotUpgrades"))) {
+        if (Boolean.parseBoolean(client.getServerConfigs("PlayersCanBuyPilotUpgrades"))) {
             baseTextField.setToolTipText(
                   "<html><body>Set cost for a pilot to gain gunnery/missile. Zero to disable skill</body></html>");
         } else {
@@ -753,7 +741,7 @@ public final class FactionConfigurationDialog implements ActionListener {
         baseTextField.setMaximumSize(fieldSize);
         baseTextField.setPreferredSize(fieldSize);
         vehiclePilotSkillsSpring.add(new JLabel("TG", SwingConstants.TRAILING));
-        if (Boolean.parseBoolean(mwclient.getserverConfigs("PlayersCanBuyPilotUpgrades"))) {
+        if (Boolean.parseBoolean(client.getServerConfigs("PlayersCanBuyPilotUpgrades"))) {
             baseTextField.setToolTipText(
                   "<html><body>Set cost for a pilot to gain tactical genius. Zero to disable skill</body></html>");
         } else {
@@ -766,7 +754,7 @@ public final class FactionConfigurationDialog implements ActionListener {
         baseTextField.setMaximumSize(fieldSize);
         baseTextField.setPreferredSize(fieldSize);
         vehiclePilotSkillsSpring.add(new JLabel("WS", SwingConstants.TRAILING));
-        if (Boolean.parseBoolean(mwclient.getserverConfigs("PlayersCanBuyPilotUpgrades"))) {
+        if (Boolean.parseBoolean(client.getServerConfigs("PlayersCanBuyPilotUpgrades"))) {
             baseTextField.setToolTipText(
                   "<html><body>Set cost for a pilot to gain weapon specialist.  Zero to disable skill</body></html>");
         } else {
@@ -779,7 +767,7 @@ public final class FactionConfigurationDialog implements ActionListener {
         baseTextField.setMaximumSize(fieldSize);
         baseTextField.setPreferredSize(fieldSize);
         vehiclePilotSkillsSpring.add(new JLabel("G/B", SwingConstants.TRAILING));
-        if (Boolean.parseBoolean(mwclient.getserverConfigs("PlayersCanBuyPilotUpgrades"))) {
+        if (Boolean.parseBoolean(client.getServerConfigs("PlayersCanBuyPilotUpgrades"))) {
             baseTextField.setToolTipText(
                   "<html><body>Set cost for a pilot to gain gunnery/ballistic. Zero to disable skill</body></html>");
         } else {
@@ -792,7 +780,7 @@ public final class FactionConfigurationDialog implements ActionListener {
         baseTextField.setMaximumSize(fieldSize);
         baseTextField.setPreferredSize(fieldSize);
         vehiclePilotSkillsSpring.add(new JLabel("G/L", SwingConstants.TRAILING));
-        if (Boolean.parseBoolean(mwclient.getserverConfigs("PlayersCanBuyPilotUpgrades"))) {
+        if (Boolean.parseBoolean(client.getServerConfigs("PlayersCanBuyPilotUpgrades"))) {
             baseTextField.setToolTipText(
                   "<html><body>Set cost for a pilot to gain gunnery/laser. Zero to disable skill</body></html>");
         } else {
@@ -805,7 +793,7 @@ public final class FactionConfigurationDialog implements ActionListener {
         baseTextField.setMaximumSize(fieldSize);
         baseTextField.setPreferredSize(fieldSize);
         vehiclePilotSkillsSpring.add(new JLabel("G/M", SwingConstants.TRAILING));
-        if (Boolean.parseBoolean(mwclient.getserverConfigs("PlayersCanBuyPilotUpgrades"))) {
+        if (Boolean.parseBoolean(client.getServerConfigs("PlayersCanBuyPilotUpgrades"))) {
             baseTextField.setToolTipText(
                   "<html><body>Set cost for a pilot to gain gunnery/missile. Zero to disable skill</body></html>");
         } else {
@@ -818,7 +806,7 @@ public final class FactionConfigurationDialog implements ActionListener {
         baseTextField.setMaximumSize(fieldSize);
         baseTextField.setPreferredSize(fieldSize);
         vehiclePilotSkillsSpring.add(new JLabel("Trait", SwingConstants.TRAILING));
-        if (Boolean.parseBoolean(mwclient.getserverConfigs("PlayersCanBuyPilotUpgrades"))) {
+        if (Boolean.parseBoolean(client.getServerConfigs("PlayersCanBuyPilotUpgrades"))) {
             baseTextField.setToolTipText("<html><body>Set cost for a pilot to gain trait. Zero to disable</body></html>");
         } else {
             baseTextField.setToolTipText("<html><body>Set Chance for a pilot to gain trait</body></html>");
@@ -830,7 +818,7 @@ public final class FactionConfigurationDialog implements ActionListener {
         baseTextField.setMaximumSize(fieldSize);
         baseTextField.setPreferredSize(fieldSize);
         vehiclePilotSkillsSpring.add(new JLabel("EI", SwingConstants.TRAILING));
-        if (Boolean.parseBoolean(mwclient.getserverConfigs("PlayersCanBuyPilotUpgrades"))) {
+        if (Boolean.parseBoolean(client.getServerConfigs("PlayersCanBuyPilotUpgrades"))) {
             baseTextField.setToolTipText(
                   "<html><body>Set cost for a pilot to gain Enhanced Interface. Zero to disable</body></html>");
         } else {
@@ -843,7 +831,7 @@ public final class FactionConfigurationDialog implements ActionListener {
         baseTextField.setMaximumSize(fieldSize);
         baseTextField.setPreferredSize(fieldSize);
         vehiclePilotSkillsSpring.add(new JLabel("GT", SwingConstants.TRAILING));
-        if (Boolean.parseBoolean(mwclient.getserverConfigs("PlayersCanBuyPilotUpgrades"))) {
+        if (Boolean.parseBoolean(client.getServerConfigs("PlayersCanBuyPilotUpgrades"))) {
             baseTextField.setToolTipText(
                   "<html><body>Set cost for a pilot to gain gifted. Zero to disable skill</body></html>");
         } else {
@@ -856,7 +844,7 @@ public final class FactionConfigurationDialog implements ActionListener {
         baseTextField.setMaximumSize(fieldSize);
         baseTextField.setPreferredSize(fieldSize);
         vehiclePilotSkillsSpring.add(new JLabel("QS", SwingConstants.TRAILING));
-        if (Boolean.parseBoolean(mwclient.getserverConfigs("PlayersCanBuyPilotUpgrades"))) {
+        if (Boolean.parseBoolean(client.getServerConfigs("PlayersCanBuyPilotUpgrades"))) {
             baseTextField.setToolTipText(
                   "<html><body>Set cost for a pilot to gain Quick Study. Zero to disable skill</body></html>");
         } else {
@@ -869,7 +857,7 @@ public final class FactionConfigurationDialog implements ActionListener {
         baseTextField.setMaximumSize(fieldSize);
         baseTextField.setPreferredSize(fieldSize);
         vehiclePilotSkillsSpring.add(new JLabel("VDNI", SwingConstants.TRAILING));
-        if (Boolean.parseBoolean(mwclient.getserverConfigs("PlayersCanBuyPilotUpgrades"))) {
+        if (Boolean.parseBoolean(client.getServerConfigs("PlayersCanBuyPilotUpgrades"))) {
             baseTextField.setToolTipText(
                   "<html><body>Set cost for a pilot to gain the VDNI skill. Zero to disable</body></html>");
         } else {
@@ -882,7 +870,7 @@ public final class FactionConfigurationDialog implements ActionListener {
         baseTextField.setMaximumSize(fieldSize);
         baseTextField.setPreferredSize(fieldSize);
         vehiclePilotSkillsSpring.add(new JLabel("BVDNI", SwingConstants.TRAILING));
-        if (Boolean.parseBoolean(mwclient.getserverConfigs("PlayersCanBuyPilotUpgrades"))) {
+        if (Boolean.parseBoolean(client.getServerConfigs("PlayersCanBuyPilotUpgrades"))) {
             baseTextField.setToolTipText(
                   "<html><body>Set cost for a pilot to gain the buffered VDNI skill. Zero to disable</body></html>");
         } else {
@@ -896,7 +884,7 @@ public final class FactionConfigurationDialog implements ActionListener {
         baseTextField.setMaximumSize(fieldSize);
         baseTextField.setPreferredSize(fieldSize);
         vehiclePilotSkillsSpring.add(new JLabel("PS", SwingConstants.TRAILING));
-        if (Boolean.parseBoolean(mwclient.getserverConfigs("PlayersCanBuyPilotUpgrades"))) {
+        if (Boolean.parseBoolean(client.getServerConfigs("PlayersCanBuyPilotUpgrades"))) {
             baseTextField.setToolTipText(
                   "<html><body>Set cost for a pilot to gain the Pain Shunt skill. Zero to disable</body></html>");
         } else {
@@ -912,7 +900,7 @@ public final class FactionConfigurationDialog implements ActionListener {
         baseTextField.setMaximumSize(fieldSize);
         baseTextField.setPreferredSize(fieldSize);
         infantryPilotSkillsSpring.add(new JLabel("MA", SwingConstants.TRAILING));
-        if (Boolean.parseBoolean(mwclient.getserverConfigs("PlayersCanBuyPilotUpgrades"))) {
+        if (Boolean.parseBoolean(client.getServerConfigs("PlayersCanBuyPilotUpgrades"))) {
             baseTextField.setToolTipText(
                   "<html><body>Set cost for a pilot to gain maneuvering ace. Zero to disable</body></html>");
         } else {
@@ -925,7 +913,7 @@ public final class FactionConfigurationDialog implements ActionListener {
         baseTextField.setMaximumSize(fieldSize);
         baseTextField.setPreferredSize(fieldSize);
         infantryPilotSkillsSpring.add(new JLabel("NAP", SwingConstants.TRAILING));
-        if (Boolean.parseBoolean(mwclient.getserverConfigs("PlayersCanBuyPilotUpgrades"))) {
+        if (Boolean.parseBoolean(client.getServerConfigs("PlayersCanBuyPilotUpgrades"))) {
             baseTextField.setToolTipText(
                   "<html><body>Set cost for a pilot to gain Natural Aptitude Piloting. Zero to disable</body></html>");
         } else {
@@ -939,7 +927,7 @@ public final class FactionConfigurationDialog implements ActionListener {
         baseTextField.setMaximumSize(fieldSize);
         baseTextField.setPreferredSize(fieldSize);
         infantryPilotSkillsSpring.add(new JLabel("NAG", SwingConstants.TRAILING));
-        if (Boolean.parseBoolean(mwclient.getserverConfigs("PlayersCanBuyPilotUpgrades"))) {
+        if (Boolean.parseBoolean(client.getServerConfigs("PlayersCanBuyPilotUpgrades"))) {
             baseTextField.setToolTipText(
                   "<html><body>Set cost for a pilot to gain Natural Aptitude Gunnery. Zero to disable</body></html>");
         } else {
@@ -953,7 +941,7 @@ public final class FactionConfigurationDialog implements ActionListener {
         baseTextField.setMaximumSize(fieldSize);
         baseTextField.setPreferredSize(fieldSize);
         infantryPilotSkillsSpring.add(new JLabel("AT", SwingConstants.TRAILING));
-        if (Boolean.parseBoolean(mwclient.getserverConfigs("PlayersCanBuyPilotUpgrades"))) {
+        if (Boolean.parseBoolean(client.getServerConfigs("PlayersCanBuyPilotUpgrades"))) {
             baseTextField.setToolTipText(
                   "<html><body>Set cost for a pilot to gain astech. Zero to disable</body></html>");
         } else {
@@ -966,7 +954,7 @@ public final class FactionConfigurationDialog implements ActionListener {
         baseTextField.setMaximumSize(fieldSize);
         baseTextField.setPreferredSize(fieldSize);
         infantryPilotSkillsSpring.add(new JLabel("TG", SwingConstants.TRAILING));
-        if (Boolean.parseBoolean(mwclient.getserverConfigs("PlayersCanBuyPilotUpgrades"))) {
+        if (Boolean.parseBoolean(client.getServerConfigs("PlayersCanBuyPilotUpgrades"))) {
             baseTextField.setToolTipText(
                   "<html><body>Set cost for a pilot to gain tactical genius. Zero to disable</body></html>");
         } else {
@@ -979,7 +967,7 @@ public final class FactionConfigurationDialog implements ActionListener {
         baseTextField.setMaximumSize(fieldSize);
         baseTextField.setPreferredSize(fieldSize);
         infantryPilotSkillsSpring.add(new JLabel("WS", SwingConstants.TRAILING));
-        if (Boolean.parseBoolean(mwclient.getserverConfigs("PlayersCanBuyPilotUpgrades"))) {
+        if (Boolean.parseBoolean(client.getServerConfigs("PlayersCanBuyPilotUpgrades"))) {
             baseTextField.setToolTipText(
                   "<html><body>Set cost for a pilot to gain weapon specialist. Zero to disable</body></html>");
         } else {
@@ -992,7 +980,7 @@ public final class FactionConfigurationDialog implements ActionListener {
         baseTextField.setMaximumSize(fieldSize);
         baseTextField.setPreferredSize(fieldSize);
         infantryPilotSkillsSpring.add(new JLabel("G/B", SwingConstants.TRAILING));
-        if (Boolean.parseBoolean(mwclient.getserverConfigs("PlayersCanBuyPilotUpgrades"))) {
+        if (Boolean.parseBoolean(client.getServerConfigs("PlayersCanBuyPilotUpgrades"))) {
             baseTextField.setToolTipText(
                   "<html><body>Set cost for a pilot to gain gunnery/ballistic. Zero to disable</body></html>");
         } else {
@@ -1005,7 +993,7 @@ public final class FactionConfigurationDialog implements ActionListener {
         baseTextField.setMaximumSize(fieldSize);
         baseTextField.setPreferredSize(fieldSize);
         infantryPilotSkillsSpring.add(new JLabel("G/L", SwingConstants.TRAILING));
-        if (Boolean.parseBoolean(mwclient.getserverConfigs("PlayersCanBuyPilotUpgrades"))) {
+        if (Boolean.parseBoolean(client.getServerConfigs("PlayersCanBuyPilotUpgrades"))) {
             baseTextField.setToolTipText(
                   "<html><body>Set cost for a pilot to gain gunnery/laser. Zero to disable</body></html>");
         } else {
@@ -1018,7 +1006,7 @@ public final class FactionConfigurationDialog implements ActionListener {
         baseTextField.setMaximumSize(fieldSize);
         baseTextField.setPreferredSize(fieldSize);
         infantryPilotSkillsSpring.add(new JLabel("G/M", SwingConstants.TRAILING));
-        if (Boolean.parseBoolean(mwclient.getserverConfigs("PlayersCanBuyPilotUpgrades"))) {
+        if (Boolean.parseBoolean(client.getServerConfigs("PlayersCanBuyPilotUpgrades"))) {
             baseTextField.setToolTipText(
                   "<html><body>Set cost for a pilot to gain gunnery/missile. Zero to disable</body></html>");
         } else {
@@ -1031,7 +1019,7 @@ public final class FactionConfigurationDialog implements ActionListener {
         baseTextField.setMaximumSize(fieldSize);
         baseTextField.setPreferredSize(fieldSize);
         infantryPilotSkillsSpring.add(new JLabel("Trait", SwingConstants.TRAILING));
-        if (Boolean.parseBoolean(mwclient.getserverConfigs("PlayersCanBuyPilotUpgrades"))) {
+        if (Boolean.parseBoolean(client.getServerConfigs("PlayersCanBuyPilotUpgrades"))) {
             baseTextField.setToolTipText(
                   "<html><body>Set cost for a pilot to gain a trait. Zero to disable</body></html>");
         } else {
@@ -1044,7 +1032,7 @@ public final class FactionConfigurationDialog implements ActionListener {
         baseTextField.setMaximumSize(fieldSize);
         baseTextField.setPreferredSize(fieldSize);
         infantryPilotSkillsSpring.add(new JLabel("EI", SwingConstants.TRAILING));
-        if (Boolean.parseBoolean(mwclient.getserverConfigs("PlayersCanBuyPilotUpgrades"))) {
+        if (Boolean.parseBoolean(client.getServerConfigs("PlayersCanBuyPilotUpgrades"))) {
             baseTextField.setToolTipText(
                   "<html><body>Set cost for a pilot to gain Enhanced Interface. Zero to disable</body></html>");
         } else {
@@ -1057,7 +1045,7 @@ public final class FactionConfigurationDialog implements ActionListener {
         baseTextField.setMaximumSize(fieldSize);
         baseTextField.setPreferredSize(fieldSize);
         infantryPilotSkillsSpring.add(new JLabel("GT", SwingConstants.TRAILING));
-        if (Boolean.parseBoolean(mwclient.getserverConfigs("PlayersCanBuyPilotUpgrades"))) {
+        if (Boolean.parseBoolean(client.getServerConfigs("PlayersCanBuyPilotUpgrades"))) {
             baseTextField.setToolTipText(
                   "<html><body>Set cost for a pilot to gain gifted. Zero to disable</body></html>");
         } else {
@@ -1070,7 +1058,7 @@ public final class FactionConfigurationDialog implements ActionListener {
         baseTextField.setMaximumSize(fieldSize);
         baseTextField.setPreferredSize(fieldSize);
         infantryPilotSkillsSpring.add(new JLabel("QS", SwingConstants.TRAILING));
-        if (Boolean.parseBoolean(mwclient.getserverConfigs("PlayersCanBuyPilotUpgrades"))) {
+        if (Boolean.parseBoolean(client.getServerConfigs("PlayersCanBuyPilotUpgrades"))) {
             baseTextField.setToolTipText(
                   "<html><body>Set cost for a pilot to gain Quick Study. Zero to disable</body></html>");
         } else {
@@ -1083,7 +1071,7 @@ public final class FactionConfigurationDialog implements ActionListener {
         baseTextField.setMaximumSize(fieldSize);
         baseTextField.setPreferredSize(fieldSize);
         infantryPilotSkillsSpring.add(new JLabel("PS", SwingConstants.TRAILING));
-        if (Boolean.parseBoolean(mwclient.getserverConfigs("PlayersCanBuyPilotUpgrades"))) {
+        if (Boolean.parseBoolean(client.getServerConfigs("PlayersCanBuyPilotUpgrades"))) {
             baseTextField.setToolTipText(
                   "<html><body>Set cost for a pilot to gain the Pain Shunt skill. Zero to disable</body></html>");
         } else {
@@ -1099,7 +1087,7 @@ public final class FactionConfigurationDialog implements ActionListener {
         baseTextField.setMaximumSize(fieldSize);
         baseTextField.setPreferredSize(fieldSize);
         protomechPilotSkillsSpring.add(new JLabel("MA", SwingConstants.TRAILING));
-        if (Boolean.parseBoolean(mwclient.getserverConfigs("PlayersCanBuyPilotUpgrades"))) {
+        if (Boolean.parseBoolean(client.getServerConfigs("PlayersCanBuyPilotUpgrades"))) {
             baseTextField.setToolTipText(
                   "<html><body>Set cost for a pilot to gain maneuvering ace. Zero to disable</body></html>");
         } else {
@@ -1112,7 +1100,7 @@ public final class FactionConfigurationDialog implements ActionListener {
         baseTextField.setMaximumSize(fieldSize);
         baseTextField.setPreferredSize(fieldSize);
         protomechPilotSkillsSpring.add(new JLabel("NAP", SwingConstants.TRAILING));
-        if (Boolean.parseBoolean(mwclient.getserverConfigs("PlayersCanBuyPilotUpgrades"))) {
+        if (Boolean.parseBoolean(client.getServerConfigs("PlayersCanBuyPilotUpgrades"))) {
             baseTextField.setToolTipText(
                   "<html><body>Set cost for a pilot to gain Natural Aptitude Piloting. Zero to disable</body></html>");
         } else {
@@ -1126,7 +1114,7 @@ public final class FactionConfigurationDialog implements ActionListener {
         baseTextField.setMaximumSize(fieldSize);
         baseTextField.setPreferredSize(fieldSize);
         protomechPilotSkillsSpring.add(new JLabel("NAG", SwingConstants.TRAILING));
-        if (Boolean.parseBoolean(mwclient.getserverConfigs("PlayersCanBuyPilotUpgrades"))) {
+        if (Boolean.parseBoolean(client.getServerConfigs("PlayersCanBuyPilotUpgrades"))) {
             baseTextField.setToolTipText(
                   "<html><body>Set cost for a pilot to gain Natural Aptitude Gunnery. Zero to disable</body></html>");
         } else {
@@ -1140,7 +1128,7 @@ public final class FactionConfigurationDialog implements ActionListener {
         baseTextField.setMaximumSize(fieldSize);
         baseTextField.setPreferredSize(fieldSize);
         protomechPilotSkillsSpring.add(new JLabel("AT", SwingConstants.TRAILING));
-        if (Boolean.parseBoolean(mwclient.getserverConfigs("PlayersCanBuyPilotUpgrades"))) {
+        if (Boolean.parseBoolean(client.getServerConfigs("PlayersCanBuyPilotUpgrades"))) {
             baseTextField.setToolTipText(
                   "<html><body>Set cost for a pilot to gain astech. Zero to disable</body></html>");
         } else {
@@ -1153,7 +1141,7 @@ public final class FactionConfigurationDialog implements ActionListener {
         baseTextField.setMaximumSize(fieldSize);
         baseTextField.setPreferredSize(fieldSize);
         protomechPilotSkillsSpring.add(new JLabel("TG", SwingConstants.TRAILING));
-        if (Boolean.parseBoolean(mwclient.getserverConfigs("PlayersCanBuyPilotUpgrades"))) {
+        if (Boolean.parseBoolean(client.getServerConfigs("PlayersCanBuyPilotUpgrades"))) {
             baseTextField.setToolTipText(
                   "<html><body>Set cost for a pilot to gain tactical genius. Zero to disable</body></html>");
         } else {
@@ -1166,7 +1154,7 @@ public final class FactionConfigurationDialog implements ActionListener {
         baseTextField.setMaximumSize(fieldSize);
         baseTextField.setPreferredSize(fieldSize);
         protomechPilotSkillsSpring.add(new JLabel("WS", SwingConstants.TRAILING));
-        if (Boolean.parseBoolean(mwclient.getserverConfigs("PlayersCanBuyPilotUpgrades"))) {
+        if (Boolean.parseBoolean(client.getServerConfigs("PlayersCanBuyPilotUpgrades"))) {
             baseTextField.setToolTipText(
                   "<html><body>Set cost for a pilot to gain weapon specialist. Zero to disable</body></html>");
         } else {
@@ -1179,7 +1167,7 @@ public final class FactionConfigurationDialog implements ActionListener {
         baseTextField.setMaximumSize(fieldSize);
         baseTextField.setPreferredSize(fieldSize);
         protomechPilotSkillsSpring.add(new JLabel("G/B", SwingConstants.TRAILING));
-        if (Boolean.parseBoolean(mwclient.getserverConfigs("PlayersCanBuyPilotUpgrades"))) {
+        if (Boolean.parseBoolean(client.getServerConfigs("PlayersCanBuyPilotUpgrades"))) {
             baseTextField.setToolTipText(
                   "<html><body>Set cost for a pilot to gain gunnery/ballistic. Zero to disable</body></html>");
         } else {
@@ -1192,7 +1180,7 @@ public final class FactionConfigurationDialog implements ActionListener {
         baseTextField.setMaximumSize(fieldSize);
         baseTextField.setPreferredSize(fieldSize);
         protomechPilotSkillsSpring.add(new JLabel("G/L", SwingConstants.TRAILING));
-        if (Boolean.parseBoolean(mwclient.getserverConfigs("PlayersCanBuyPilotUpgrades"))) {
+        if (Boolean.parseBoolean(client.getServerConfigs("PlayersCanBuyPilotUpgrades"))) {
             baseTextField.setToolTipText(
                   "<html><body>Set cost for a pilot to gain gunnery/laser. Zero to disable</body></html>");
         } else {
@@ -1205,7 +1193,7 @@ public final class FactionConfigurationDialog implements ActionListener {
         baseTextField.setMaximumSize(fieldSize);
         baseTextField.setPreferredSize(fieldSize);
         protomechPilotSkillsSpring.add(new JLabel("G/M", SwingConstants.TRAILING));
-        if (Boolean.parseBoolean(mwclient.getserverConfigs("PlayersCanBuyPilotUpgrades"))) {
+        if (Boolean.parseBoolean(client.getServerConfigs("PlayersCanBuyPilotUpgrades"))) {
             baseTextField.setToolTipText(
                   "<html><body>Set cost for a pilot to gain gunnery/missile. Zero to disable</body></html>");
         } else {
@@ -1218,7 +1206,7 @@ public final class FactionConfigurationDialog implements ActionListener {
         baseTextField.setMaximumSize(fieldSize);
         baseTextField.setPreferredSize(fieldSize);
         protomechPilotSkillsSpring.add(new JLabel("Trait", SwingConstants.TRAILING));
-        if (Boolean.parseBoolean(mwclient.getserverConfigs("PlayersCanBuyPilotUpgrades"))) {
+        if (Boolean.parseBoolean(client.getServerConfigs("PlayersCanBuyPilotUpgrades"))) {
             baseTextField.setToolTipText("<html><body>Set cost for a pilot to a trait. Zero to disable</body></html>");
         } else {
             baseTextField.setToolTipText("<html><body>Set Chance for a pilot to a trait</body></html>");
@@ -1230,7 +1218,7 @@ public final class FactionConfigurationDialog implements ActionListener {
         baseTextField.setMaximumSize(fieldSize);
         baseTextField.setPreferredSize(fieldSize);
         protomechPilotSkillsSpring.add(new JLabel("EI", SwingConstants.TRAILING));
-        if (Boolean.parseBoolean(mwclient.getserverConfigs("PlayersCanBuyPilotUpgrades"))) {
+        if (Boolean.parseBoolean(client.getServerConfigs("PlayersCanBuyPilotUpgrades"))) {
             baseTextField.setToolTipText(
                   "<html><body>Set cost for a pilot to gain Enhanced Interface. Zero to disable</body></html>");
         } else {
@@ -1243,7 +1231,7 @@ public final class FactionConfigurationDialog implements ActionListener {
         baseTextField.setMaximumSize(fieldSize);
         baseTextField.setPreferredSize(fieldSize);
         protomechPilotSkillsSpring.add(new JLabel("GT", SwingConstants.TRAILING));
-        if (Boolean.parseBoolean(mwclient.getserverConfigs("PlayersCanBuyPilotUpgrades"))) {
+        if (Boolean.parseBoolean(client.getServerConfigs("PlayersCanBuyPilotUpgrades"))) {
             baseTextField.setToolTipText(
                   "<html><body>Set cost for a pilot to gain gifted. Zero to disable</body></html>");
         } else {
@@ -1256,7 +1244,7 @@ public final class FactionConfigurationDialog implements ActionListener {
         baseTextField.setMaximumSize(fieldSize);
         baseTextField.setPreferredSize(fieldSize);
         protomechPilotSkillsSpring.add(new JLabel("QS", SwingConstants.TRAILING));
-        if (Boolean.parseBoolean(mwclient.getserverConfigs("PlayersCanBuyPilotUpgrades"))) {
+        if (Boolean.parseBoolean(client.getServerConfigs("PlayersCanBuyPilotUpgrades"))) {
             baseTextField.setToolTipText(
                   "<html><body>Set cost for a pilot to gain Quick Study. Zero to disable</body></html>");
         } else {
@@ -1269,7 +1257,7 @@ public final class FactionConfigurationDialog implements ActionListener {
         baseTextField.setMaximumSize(fieldSize);
         baseTextField.setPreferredSize(fieldSize);
         protomechPilotSkillsSpring.add(new JLabel("MT", SwingConstants.TRAILING));
-        if (Boolean.parseBoolean(mwclient.getserverConfigs("PlayersCanBuyPilotUpgrades"))) {
+        if (Boolean.parseBoolean(client.getServerConfigs("PlayersCanBuyPilotUpgrades"))) {
             baseTextField.setToolTipText(
                   "<html><body>Set cost for a pilot to gain the Med Tech Skill. Zero to disable</body></html>");
         } else {
@@ -1285,7 +1273,7 @@ public final class FactionConfigurationDialog implements ActionListener {
         baseTextField.setMaximumSize(fieldSize);
         baseTextField.setPreferredSize(fieldSize);
         battlearmorPilotSkillsSpring.add(new JLabel("MA", SwingConstants.TRAILING));
-        if (Boolean.parseBoolean(mwclient.getserverConfigs("PlayersCanBuyPilotUpgrades"))) {
+        if (Boolean.parseBoolean(client.getServerConfigs("PlayersCanBuyPilotUpgrades"))) {
             baseTextField.setToolTipText(
                   "<html><body>Set cost for a pilot to gain maneuvering ace. Zero to disable</body></html>");
         } else {
@@ -1298,7 +1286,7 @@ public final class FactionConfigurationDialog implements ActionListener {
         baseTextField.setMaximumSize(fieldSize);
         baseTextField.setPreferredSize(fieldSize);
         battlearmorPilotSkillsSpring.add(new JLabel("NAP", SwingConstants.TRAILING));
-        if (Boolean.parseBoolean(mwclient.getserverConfigs("PlayersCanBuyPilotUpgrades"))) {
+        if (Boolean.parseBoolean(client.getServerConfigs("PlayersCanBuyPilotUpgrades"))) {
             baseTextField.setToolTipText(
                   "<html><body>Set cost for a pilot to gain Natural Aptitude Piloting. Zero to disable</body></html>");
         } else {
@@ -1312,7 +1300,7 @@ public final class FactionConfigurationDialog implements ActionListener {
         baseTextField.setMaximumSize(fieldSize);
         baseTextField.setPreferredSize(fieldSize);
         battlearmorPilotSkillsSpring.add(new JLabel("NAG", SwingConstants.TRAILING));
-        if (Boolean.parseBoolean(mwclient.getserverConfigs("PlayersCanBuyPilotUpgrades"))) {
+        if (Boolean.parseBoolean(client.getServerConfigs("PlayersCanBuyPilotUpgrades"))) {
             baseTextField.setToolTipText(
                   "<html><body>Set cost for a pilot to gain Natural Aptitude Gunnery. Zero to disable</body></html>");
         } else {
@@ -1326,7 +1314,7 @@ public final class FactionConfigurationDialog implements ActionListener {
         baseTextField.setMaximumSize(fieldSize);
         baseTextField.setPreferredSize(fieldSize);
         battlearmorPilotSkillsSpring.add(new JLabel("AT", SwingConstants.TRAILING));
-        if (Boolean.parseBoolean(mwclient.getserverConfigs("PlayersCanBuyPilotUpgrades"))) {
+        if (Boolean.parseBoolean(client.getServerConfigs("PlayersCanBuyPilotUpgrades"))) {
             baseTextField.setToolTipText(
                   "<html><body>Set cost for a pilot to gain astech. Zero to disable</body></html>");
         } else {
@@ -1339,7 +1327,7 @@ public final class FactionConfigurationDialog implements ActionListener {
         baseTextField.setMaximumSize(fieldSize);
         baseTextField.setPreferredSize(fieldSize);
         battlearmorPilotSkillsSpring.add(new JLabel("TG", SwingConstants.TRAILING));
-        if (Boolean.parseBoolean(mwclient.getserverConfigs("PlayersCanBuyPilotUpgrades"))) {
+        if (Boolean.parseBoolean(client.getServerConfigs("PlayersCanBuyPilotUpgrades"))) {
             baseTextField.setToolTipText(
                   "<html><body>Set cost for a pilot to gain tactical genius. Zero to disable</body></html>");
         } else {
@@ -1352,7 +1340,7 @@ public final class FactionConfigurationDialog implements ActionListener {
         baseTextField.setMaximumSize(fieldSize);
         baseTextField.setPreferredSize(fieldSize);
         battlearmorPilotSkillsSpring.add(new JLabel("WS", SwingConstants.TRAILING));
-        if (Boolean.parseBoolean(mwclient.getserverConfigs("PlayersCanBuyPilotUpgrades"))) {
+        if (Boolean.parseBoolean(client.getServerConfigs("PlayersCanBuyPilotUpgrades"))) {
             baseTextField.setToolTipText(
                   "<html><body>Set cost for a pilot to gain weapon specialist. Zero to disable</body></html>");
         } else {
@@ -1365,7 +1353,7 @@ public final class FactionConfigurationDialog implements ActionListener {
         baseTextField.setMaximumSize(fieldSize);
         baseTextField.setPreferredSize(fieldSize);
         battlearmorPilotSkillsSpring.add(new JLabel("G/B", SwingConstants.TRAILING));
-        if (Boolean.parseBoolean(mwclient.getserverConfigs("PlayersCanBuyPilotUpgrades"))) {
+        if (Boolean.parseBoolean(client.getServerConfigs("PlayersCanBuyPilotUpgrades"))) {
             baseTextField.setToolTipText(
                   "<html><body>Set cost for a pilot to gain gunnery/ballistic. Zero to disable</body></html>");
         } else {
@@ -1378,7 +1366,7 @@ public final class FactionConfigurationDialog implements ActionListener {
         baseTextField.setMaximumSize(fieldSize);
         baseTextField.setPreferredSize(fieldSize);
         battlearmorPilotSkillsSpring.add(new JLabel("G/L", SwingConstants.TRAILING));
-        if (Boolean.parseBoolean(mwclient.getserverConfigs("PlayersCanBuyPilotUpgrades"))) {
+        if (Boolean.parseBoolean(client.getServerConfigs("PlayersCanBuyPilotUpgrades"))) {
             baseTextField.setToolTipText(
                   "<html><body>Set cost for a pilot to gain gunnery/laser. Zero to disable</body></html>");
         } else {
@@ -1391,7 +1379,7 @@ public final class FactionConfigurationDialog implements ActionListener {
         baseTextField.setMaximumSize(fieldSize);
         baseTextField.setPreferredSize(fieldSize);
         battlearmorPilotSkillsSpring.add(new JLabel("G/M", SwingConstants.TRAILING));
-        if (Boolean.parseBoolean(mwclient.getserverConfigs("PlayersCanBuyPilotUpgrades"))) {
+        if (Boolean.parseBoolean(client.getServerConfigs("PlayersCanBuyPilotUpgrades"))) {
             baseTextField.setToolTipText(
                   "<html><body>Set cost for a pilot to gain gunnery/missile. Zero to disable</body></html>");
         } else {
@@ -1404,7 +1392,7 @@ public final class FactionConfigurationDialog implements ActionListener {
         baseTextField.setMaximumSize(fieldSize);
         baseTextField.setPreferredSize(fieldSize);
         battlearmorPilotSkillsSpring.add(new JLabel("Trait", SwingConstants.TRAILING));
-        if (Boolean.parseBoolean(mwclient.getserverConfigs("PlayersCanBuyPilotUpgrades"))) {
+        if (Boolean.parseBoolean(client.getServerConfigs("PlayersCanBuyPilotUpgrades"))) {
             baseTextField.setToolTipText(
                   "<html><body>Set cost for a pilot to gain a trait. Zero to disable</body></html>");
         } else {
@@ -1417,7 +1405,7 @@ public final class FactionConfigurationDialog implements ActionListener {
         baseTextField.setMaximumSize(fieldSize);
         baseTextField.setPreferredSize(fieldSize);
         battlearmorPilotSkillsSpring.add(new JLabel("EI", SwingConstants.TRAILING));
-        if (Boolean.parseBoolean(mwclient.getserverConfigs("PlayersCanBuyPilotUpgrades"))) {
+        if (Boolean.parseBoolean(client.getServerConfigs("PlayersCanBuyPilotUpgrades"))) {
             baseTextField.setToolTipText(
                   "<html><body>Set cost for a pilot to gain Enhanced Interface. Zero to disable</body></html>");
         } else {
@@ -1430,7 +1418,7 @@ public final class FactionConfigurationDialog implements ActionListener {
         baseTextField.setMaximumSize(fieldSize);
         baseTextField.setPreferredSize(fieldSize);
         battlearmorPilotSkillsSpring.add(new JLabel("GT", SwingConstants.TRAILING));
-        if (Boolean.parseBoolean(mwclient.getserverConfigs("PlayersCanBuyPilotUpgrades"))) {
+        if (Boolean.parseBoolean(client.getServerConfigs("PlayersCanBuyPilotUpgrades"))) {
             baseTextField.setToolTipText(
                   "<html><body>Set cost for a pilot to gain gifted. Zero to disable</body></html>");
         } else {
@@ -1443,7 +1431,7 @@ public final class FactionConfigurationDialog implements ActionListener {
         baseTextField.setMaximumSize(fieldSize);
         baseTextField.setPreferredSize(fieldSize);
         battlearmorPilotSkillsSpring.add(new JLabel("QS", SwingConstants.TRAILING));
-        if (Boolean.parseBoolean(mwclient.getserverConfigs("PlayersCanBuyPilotUpgrades"))) {
+        if (Boolean.parseBoolean(client.getServerConfigs("PlayersCanBuyPilotUpgrades"))) {
             baseTextField.setToolTipText(
                   "<html><body>Set cost for a pilot to gain Quick Study. Zero to disable</body></html>");
         } else {
@@ -1456,7 +1444,7 @@ public final class FactionConfigurationDialog implements ActionListener {
         baseTextField.setMaximumSize(fieldSize);
         baseTextField.setPreferredSize(fieldSize);
         battlearmorPilotSkillsSpring.add(new JLabel("PS", SwingConstants.TRAILING));
-        if (Boolean.parseBoolean(mwclient.getserverConfigs("PlayersCanBuyPilotUpgrades"))) {
+        if (Boolean.parseBoolean(client.getServerConfigs("PlayersCanBuyPilotUpgrades"))) {
             baseTextField.setToolTipText(
                   "<html><body>Set cost for a pilot to gain the Pain Shunt skill. Zero to disable</body></html>");
         } else {
@@ -1473,7 +1461,7 @@ public final class FactionConfigurationDialog implements ActionListener {
         baseTextField.setPreferredSize(fieldSize);
         baseTextField.setMinimumSize(fieldSize);
         aeroPilotSkillsSpring.add(new JLabel("MA", SwingConstants.TRAILING));
-        if (Boolean.parseBoolean(mwclient.getserverConfigs("PlayersCanBuyPilotUpgrades"))) {
+        if (Boolean.parseBoolean(client.getServerConfigs("PlayersCanBuyPilotUpgrades"))) {
             baseTextField.setToolTipText(
                   "<html><body>Set cost for a pilot to gain maneuvering ace. Zero to disable</body></html>");
         } else {
@@ -1486,7 +1474,7 @@ public final class FactionConfigurationDialog implements ActionListener {
         baseTextField.setMaximumSize(fieldSize);
         baseTextField.setPreferredSize(fieldSize);
         aeroPilotSkillsSpring.add(new JLabel("NAP", SwingConstants.TRAILING));
-        if (Boolean.parseBoolean(mwclient.getserverConfigs("PlayersCanBuyPilotUpgrades"))) {
+        if (Boolean.parseBoolean(client.getServerConfigs("PlayersCanBuyPilotUpgrades"))) {
             baseTextField.setToolTipText(
                   "<html><body>Set cost for a pilot to gain Natural Aptitude Piloting. Zero to disable</body></html>");
         } else {
@@ -1500,7 +1488,7 @@ public final class FactionConfigurationDialog implements ActionListener {
         baseTextField.setMaximumSize(fieldSize);
         baseTextField.setPreferredSize(fieldSize);
         aeroPilotSkillsSpring.add(new JLabel("NAG", SwingConstants.TRAILING));
-        if (Boolean.parseBoolean(mwclient.getserverConfigs("PlayersCanBuyPilotUpgrades"))) {
+        if (Boolean.parseBoolean(client.getServerConfigs("PlayersCanBuyPilotUpgrades"))) {
             baseTextField.setToolTipText(
                   "<html><body>Set cost for a pilot to gain Natural Aptitude Gunnery. Zero to disable</body></html>");
         } else {
@@ -1514,7 +1502,7 @@ public final class FactionConfigurationDialog implements ActionListener {
         baseTextField.setMaximumSize(fieldSize);
         baseTextField.setPreferredSize(fieldSize);
         aeroPilotSkillsSpring.add(new JLabel("AT", SwingConstants.TRAILING));
-        if (Boolean.parseBoolean(mwclient.getserverConfigs("PlayersCanBuyPilotUpgrades"))) {
+        if (Boolean.parseBoolean(client.getServerConfigs("PlayersCanBuyPilotUpgrades"))) {
             baseTextField.setToolTipText(
                   "<html><body>Set cost for a pilot to gain gunnery/missile. Zero to disable</body></html>");
         } else {
@@ -1527,7 +1515,7 @@ public final class FactionConfigurationDialog implements ActionListener {
         baseTextField.setMaximumSize(fieldSize);
         baseTextField.setPreferredSize(fieldSize);
         aeroPilotSkillsSpring.add(new JLabel("TG", SwingConstants.TRAILING));
-        if (Boolean.parseBoolean(mwclient.getserverConfigs("PlayersCanBuyPilotUpgrades"))) {
+        if (Boolean.parseBoolean(client.getServerConfigs("PlayersCanBuyPilotUpgrades"))) {
             baseTextField.setToolTipText(
                   "<html><body>Set cost for a pilot to gain tactical genius. Zero to disable</body></html>");
         } else {
@@ -1540,7 +1528,7 @@ public final class FactionConfigurationDialog implements ActionListener {
         baseTextField.setMaximumSize(fieldSize);
         baseTextField.setPreferredSize(fieldSize);
         aeroPilotSkillsSpring.add(new JLabel("WS", SwingConstants.TRAILING));
-        if (Boolean.parseBoolean(mwclient.getserverConfigs("PlayersCanBuyPilotUpgrades"))) {
+        if (Boolean.parseBoolean(client.getServerConfigs("PlayersCanBuyPilotUpgrades"))) {
             baseTextField.setToolTipText(
                   "<html><body>Set cost for a pilot to gain weapon specialist. Zero to disable</body></html>");
         } else {
@@ -1553,7 +1541,7 @@ public final class FactionConfigurationDialog implements ActionListener {
         baseTextField.setMaximumSize(fieldSize);
         baseTextField.setPreferredSize(fieldSize);
         aeroPilotSkillsSpring.add(new JLabel("G/B", SwingConstants.TRAILING));
-        if (Boolean.parseBoolean(mwclient.getserverConfigs("PlayersCanBuyPilotUpgrades"))) {
+        if (Boolean.parseBoolean(client.getServerConfigs("PlayersCanBuyPilotUpgrades"))) {
             baseTextField.setToolTipText(
                   "<html><body>Set cost for a pilot to gain gunnery/ballistic. Zero to disable</body></html>");
         } else {
@@ -1566,7 +1554,7 @@ public final class FactionConfigurationDialog implements ActionListener {
         baseTextField.setMaximumSize(fieldSize);
         baseTextField.setPreferredSize(fieldSize);
         aeroPilotSkillsSpring.add(new JLabel("G/L", SwingConstants.TRAILING));
-        if (Boolean.parseBoolean(mwclient.getserverConfigs("PlayersCanBuyPilotUpgrades"))) {
+        if (Boolean.parseBoolean(client.getServerConfigs("PlayersCanBuyPilotUpgrades"))) {
             baseTextField.setToolTipText(
                   "<html><body>Set cost for a pilot to gain gunnery/laser. Zero to disable</body></html>");
         } else {
@@ -1579,7 +1567,7 @@ public final class FactionConfigurationDialog implements ActionListener {
         baseTextField.setMaximumSize(fieldSize);
         baseTextField.setPreferredSize(fieldSize);
         aeroPilotSkillsSpring.add(new JLabel("G/M", SwingConstants.TRAILING));
-        if (Boolean.parseBoolean(mwclient.getserverConfigs("PlayersCanBuyPilotUpgrades"))) {
+        if (Boolean.parseBoolean(client.getServerConfigs("PlayersCanBuyPilotUpgrades"))) {
             baseTextField.setToolTipText(
                   "<html><body>Set cost for a pilot to gain gunnery/missile. Zero to disable</body></html>");
         } else {
@@ -1592,7 +1580,7 @@ public final class FactionConfigurationDialog implements ActionListener {
         baseTextField.setMaximumSize(fieldSize);
         baseTextField.setPreferredSize(fieldSize);
         aeroPilotSkillsSpring.add(new JLabel("Trait", SwingConstants.TRAILING));
-        if (Boolean.parseBoolean(mwclient.getserverConfigs("PlayersCanBuyPilotUpgrades"))) {
+        if (Boolean.parseBoolean(client.getServerConfigs("PlayersCanBuyPilotUpgrades"))) {
             baseTextField.setToolTipText("<html><body>Set cost for a pilot to gain trait. Zero to disable</body></html>");
         } else {
             baseTextField.setToolTipText("<html><body>Set Chance for a pilot to gain trait</body></html>");
@@ -1604,7 +1592,7 @@ public final class FactionConfigurationDialog implements ActionListener {
         baseTextField.setMaximumSize(fieldSize);
         baseTextField.setPreferredSize(fieldSize);
         aeroPilotSkillsSpring.add(new JLabel("EI", SwingConstants.TRAILING));
-        if (Boolean.parseBoolean(mwclient.getserverConfigs("PlayersCanBuyPilotUpgrades"))) {
+        if (Boolean.parseBoolean(client.getServerConfigs("PlayersCanBuyPilotUpgrades"))) {
             baseTextField.setToolTipText(
                   "<html><body>Set cost for a pilot to gain Enhanced Interface. Zero to disable</body></html>");
         } else {
@@ -1617,7 +1605,7 @@ public final class FactionConfigurationDialog implements ActionListener {
         baseTextField.setMaximumSize(fieldSize);
         baseTextField.setPreferredSize(fieldSize);
         aeroPilotSkillsSpring.add(new JLabel("GT", SwingConstants.TRAILING));
-        if (Boolean.parseBoolean(mwclient.getserverConfigs("PlayersCanBuyPilotUpgrades"))) {
+        if (Boolean.parseBoolean(client.getServerConfigs("PlayersCanBuyPilotUpgrades"))) {
             baseTextField.setToolTipText(
                   "<html><body>Set cost for a pilot to gain gifted. Zero to disable</body></html>");
         } else {
@@ -1630,7 +1618,7 @@ public final class FactionConfigurationDialog implements ActionListener {
         baseTextField.setMaximumSize(fieldSize);
         baseTextField.setPreferredSize(fieldSize);
         aeroPilotSkillsSpring.add(new JLabel("QS", SwingConstants.TRAILING));
-        if (Boolean.parseBoolean(mwclient.getserverConfigs("PlayersCanBuyPilotUpgrades"))) {
+        if (Boolean.parseBoolean(client.getServerConfigs("PlayersCanBuyPilotUpgrades"))) {
             baseTextField.setToolTipText(
                   "<html><body>Set cost for a pilot to gain Quick Study. Zero to disable</body></html>");
         } else {
@@ -1643,7 +1631,7 @@ public final class FactionConfigurationDialog implements ActionListener {
         baseTextField.setMaximumSize(fieldSize);
         baseTextField.setPreferredSize(fieldSize);
         aeroPilotSkillsSpring.add(new JLabel("VDNI", SwingConstants.TRAILING));
-        if (Boolean.parseBoolean(mwclient.getserverConfigs("PlayersCanBuyPilotUpgrades"))) {
+        if (Boolean.parseBoolean(client.getServerConfigs("PlayersCanBuyPilotUpgrades"))) {
             baseTextField.setToolTipText(
                   "<html><body>Set cost for a pilot to gain the VDNI skill. Zero to disable</body></html>");
         } else {
@@ -1656,7 +1644,7 @@ public final class FactionConfigurationDialog implements ActionListener {
         baseTextField.setMaximumSize(fieldSize);
         baseTextField.setPreferredSize(fieldSize);
         aeroPilotSkillsSpring.add(new JLabel("BVDNI", SwingConstants.TRAILING));
-        if (Boolean.parseBoolean(mwclient.getserverConfigs("PlayersCanBuyPilotUpgrades"))) {
+        if (Boolean.parseBoolean(client.getServerConfigs("PlayersCanBuyPilotUpgrades"))) {
             baseTextField.setToolTipText(
                   "<html><body>Set cost for a pilot to gain the buffered VDNI skill. Zero to disable</body></html>");
         } else {
@@ -1670,7 +1658,7 @@ public final class FactionConfigurationDialog implements ActionListener {
         baseTextField.setMaximumSize(fieldSize);
         baseTextField.setPreferredSize(fieldSize);
         aeroPilotSkillsSpring.add(new JLabel("PS", SwingConstants.TRAILING));
-        if (Boolean.parseBoolean(mwclient.getserverConfigs("PlayersCanBuyPilotUpgrades"))) {
+        if (Boolean.parseBoolean(client.getServerConfigs("PlayersCanBuyPilotUpgrades"))) {
             baseTextField.setToolTipText(
                   "<html><body>Set cost for a pilot to gain the Pain Shunt skill. Zero to disable</body></html>");
         } else {
@@ -1683,7 +1671,7 @@ public final class FactionConfigurationDialog implements ActionListener {
         baseTextField.setMaximumSize(fieldSize);
         baseTextField.setPreferredSize(fieldSize);
         aeroPilotSkillsSpring.add(new JLabel("MT", SwingConstants.TRAILING));
-        if (Boolean.parseBoolean(mwclient.getserverConfigs("PlayersCanBuyPilotUpgrades"))) {
+        if (Boolean.parseBoolean(client.getServerConfigs("PlayersCanBuyPilotUpgrades"))) {
             baseTextField.setToolTipText(
                   "<html><body>Set cost for a pilot to gain the Med Tech skill. Zero to disable</body></html>");
         } else {
@@ -1740,7 +1728,7 @@ public final class FactionConfigurationDialog implements ActionListener {
         baseTextField.setMaximumSize(fieldSize);
         baseTextField.setPreferredSize(fieldSize);
         mekPilotSkillsSpring.add(new JLabel("DM", SwingConstants.TRAILING));
-        if (Boolean.parseBoolean(mwclient.getserverConfigs("PlayersCanBuyPilotUpgrades"))) {
+        if (Boolean.parseBoolean(client.getServerConfigs("PlayersCanBuyPilotUpgrades"))) {
             baseTextField.setToolTipText(
                   "<html><body>Set cost for a pilot to gain dodge maneuver. Zero to disable</body></html>");
         } else {
@@ -1753,7 +1741,7 @@ public final class FactionConfigurationDialog implements ActionListener {
         baseTextField.setMaximumSize(fieldSize);
         baseTextField.setPreferredSize(fieldSize);
         mekPilotSkillsSpring.add(new JLabel("MS", SwingConstants.TRAILING));
-        if (Boolean.parseBoolean(mwclient.getserverConfigs("PlayersCanBuyPilotUpgrades"))) {
+        if (Boolean.parseBoolean(client.getServerConfigs("PlayersCanBuyPilotUpgrades"))) {
             baseTextField.setToolTipText(
                   "<html><body>Set cost for a pilot to gain melee specialist. Zero to disable</body></html>");
         } else {
@@ -1766,7 +1754,7 @@ public final class FactionConfigurationDialog implements ActionListener {
         baseTextField.setMaximumSize(fieldSize);
         baseTextField.setPreferredSize(fieldSize);
         mekPilotSkillsSpring.add(new JLabel("PR", SwingConstants.TRAILING));
-        if (Boolean.parseBoolean(mwclient.getserverConfigs("PlayersCanBuyPilotUpgrades"))) {
+        if (Boolean.parseBoolean(client.getServerConfigs("PlayersCanBuyPilotUpgrades"))) {
             baseTextField.setToolTipText(
                   "<html><body>Set cost for a pilot to gain pain resistance. Zero to disable</body></html>");
         } else {
@@ -1779,7 +1767,7 @@ public final class FactionConfigurationDialog implements ActionListener {
         baseTextField.setMaximumSize(fieldSize);
         baseTextField.setPreferredSize(fieldSize);
         mekPilotSkillsSpring.add(new JLabel("SV", SwingConstants.TRAILING));
-        if (Boolean.parseBoolean(mwclient.getserverConfigs("PlayersCanBuyPilotUpgrades"))) {
+        if (Boolean.parseBoolean(client.getServerConfigs("PlayersCanBuyPilotUpgrades"))) {
             baseTextField.setToolTipText(
                   "<html><body>Set cost for a pilot to gain survivalist. Zero to disable</body></html>");
         } else {
@@ -1792,7 +1780,7 @@ public final class FactionConfigurationDialog implements ActionListener {
         baseTextField.setMaximumSize(fieldSize);
         baseTextField.setPreferredSize(fieldSize);
         mekPilotSkillsSpring.add(new JLabel("IM", SwingConstants.TRAILING));
-        if (Boolean.parseBoolean(mwclient.getserverConfigs("PlayersCanBuyPilotUpgrades"))) {
+        if (Boolean.parseBoolean(client.getServerConfigs("PlayersCanBuyPilotUpgrades"))) {
             baseTextField.setToolTipText(
                   "<html><body>Set cost for a pilot to gain iron man. Zero to disable</body></html>");
         } else {
@@ -1805,7 +1793,7 @@ public final class FactionConfigurationDialog implements ActionListener {
         baseTextField.setMaximumSize(fieldSize);
         baseTextField.setPreferredSize(fieldSize);
         mekPilotSkillsSpring.add(new JLabel("MA", SwingConstants.TRAILING));
-        if (Boolean.parseBoolean(mwclient.getserverConfigs("PlayersCanBuyPilotUpgrades"))) {
+        if (Boolean.parseBoolean(client.getServerConfigs("PlayersCanBuyPilotUpgrades"))) {
             baseTextField.setToolTipText(
                   "<html><body>Set cost for a pilot to gain maneuvering ace. Zero to disable</body></html>");
         } else {
@@ -1818,7 +1806,7 @@ public final class FactionConfigurationDialog implements ActionListener {
         baseTextField.setMaximumSize(fieldSize);
         baseTextField.setPreferredSize(fieldSize);
         mekPilotSkillsSpring.add(new JLabel("NAP", SwingConstants.TRAILING));
-        if (Boolean.parseBoolean(mwclient.getserverConfigs("PlayersCanBuyPilotUpgrades"))) {
+        if (Boolean.parseBoolean(client.getServerConfigs("PlayersCanBuyPilotUpgrades"))) {
             baseTextField.setToolTipText(
                   "<html><body>Set cost for a pilot to gain Natural Aptitude Piloting. Zero to disable</body></html>");
         } else {
@@ -1832,7 +1820,7 @@ public final class FactionConfigurationDialog implements ActionListener {
         baseTextField.setMaximumSize(fieldSize);
         baseTextField.setPreferredSize(fieldSize);
         mekPilotSkillsSpring.add(new JLabel("NAG", SwingConstants.TRAILING));
-        if (Boolean.parseBoolean(mwclient.getserverConfigs("PlayersCanBuyPilotUpgrades"))) {
+        if (Boolean.parseBoolean(client.getServerConfigs("PlayersCanBuyPilotUpgrades"))) {
             baseTextField.setToolTipText(
                   "<html><body>Set cost for a pilot to gain Natural Aptitude Gunnery. Zero to disable</body></html>");
         } else {
@@ -1846,7 +1834,7 @@ public final class FactionConfigurationDialog implements ActionListener {
         baseTextField.setMaximumSize(fieldSize);
         baseTextField.setPreferredSize(fieldSize);
         mekPilotSkillsSpring.add(new JLabel("AT", SwingConstants.TRAILING));
-        if (Boolean.parseBoolean(mwclient.getserverConfigs("PlayersCanBuyPilotUpgrades"))) {
+        if (Boolean.parseBoolean(client.getServerConfigs("PlayersCanBuyPilotUpgrades"))) {
             baseTextField.setToolTipText(
                   "<html><body>Set cost for a pilot to gain Astech. Zero to disable</body></html>");
         } else {
@@ -1859,7 +1847,7 @@ public final class FactionConfigurationDialog implements ActionListener {
         baseTextField.setMaximumSize(fieldSize);
         baseTextField.setPreferredSize(fieldSize);
         mekPilotSkillsSpring.add(new JLabel("TG", SwingConstants.TRAILING));
-        if (Boolean.parseBoolean(mwclient.getserverConfigs("PlayersCanBuyPilotUpgrades"))) {
+        if (Boolean.parseBoolean(client.getServerConfigs("PlayersCanBuyPilotUpgrades"))) {
             baseTextField.setToolTipText(
                   "<html><body>Set cost for a pilot to gain tactical genius. Zero to disable</body></html>");
         } else {
@@ -1872,7 +1860,7 @@ public final class FactionConfigurationDialog implements ActionListener {
         baseTextField.setMaximumSize(fieldSize);
         baseTextField.setPreferredSize(fieldSize);
         mekPilotSkillsSpring.add(new JLabel("WS", SwingConstants.TRAILING));
-        if (Boolean.parseBoolean(mwclient.getserverConfigs("PlayersCanBuyPilotUpgrades"))) {
+        if (Boolean.parseBoolean(client.getServerConfigs("PlayersCanBuyPilotUpgrades"))) {
             baseTextField.setToolTipText(
                   "<html><body>Set cost for a pilot to gain weapon specialist. Zero to disable</body></html>");
         } else {
@@ -1885,7 +1873,7 @@ public final class FactionConfigurationDialog implements ActionListener {
         baseTextField.setMaximumSize(fieldSize);
         baseTextField.setPreferredSize(fieldSize);
         mekPilotSkillsSpring.add(new JLabel("G/B", SwingConstants.TRAILING));
-        if (Boolean.parseBoolean(mwclient.getserverConfigs("PlayersCanBuyPilotUpgrades"))) {
+        if (Boolean.parseBoolean(client.getServerConfigs("PlayersCanBuyPilotUpgrades"))) {
             baseTextField.setToolTipText(
                   "<html><body>Set cost for a pilot to gain gunnery/Ballistic. Zero to disable</body></html>");
         } else {
@@ -1898,7 +1886,7 @@ public final class FactionConfigurationDialog implements ActionListener {
         baseTextField.setMaximumSize(fieldSize);
         baseTextField.setPreferredSize(fieldSize);
         mekPilotSkillsSpring.add(new JLabel("G/L", SwingConstants.TRAILING));
-        if (Boolean.parseBoolean(mwclient.getserverConfigs("PlayersCanBuyPilotUpgrades"))) {
+        if (Boolean.parseBoolean(client.getServerConfigs("PlayersCanBuyPilotUpgrades"))) {
             baseTextField.setToolTipText(
                   "<html><body>Set cost for a pilot to gain gunnery/laser. Zero to disable</body></html>");
         } else {
@@ -1911,7 +1899,7 @@ public final class FactionConfigurationDialog implements ActionListener {
         baseTextField.setMaximumSize(fieldSize);
         baseTextField.setPreferredSize(fieldSize);
         mekPilotSkillsSpring.add(new JLabel("G/M", SwingConstants.TRAILING));
-        if (Boolean.parseBoolean(mwclient.getserverConfigs("PlayersCanBuyPilotUpgrades"))) {
+        if (Boolean.parseBoolean(client.getServerConfigs("PlayersCanBuyPilotUpgrades"))) {
             baseTextField.setToolTipText(
                   "<html><body>Set cost for a pilot to gain gunnery/missile. Zero to disable</body></html>");
         } else {
@@ -1924,7 +1912,7 @@ public final class FactionConfigurationDialog implements ActionListener {
         baseTextField.setMaximumSize(fieldSize);
         baseTextField.setPreferredSize(fieldSize);
         mekPilotSkillsSpring.add(new JLabel("Trait", SwingConstants.TRAILING));
-        if (Boolean.parseBoolean(mwclient.getserverConfigs("PlayersCanBuyPilotUpgrades"))) {
+        if (Boolean.parseBoolean(client.getServerConfigs("PlayersCanBuyPilotUpgrades"))) {
             baseTextField.setToolTipText(
                   "<html><body>Set cost for a pilot to gain a trait. Zero to disable</body></html>");
         } else {
@@ -1937,7 +1925,7 @@ public final class FactionConfigurationDialog implements ActionListener {
         baseTextField.setMaximumSize(fieldSize);
         baseTextField.setPreferredSize(fieldSize);
         mekPilotSkillsSpring.add(new JLabel("EI", SwingConstants.TRAILING));
-        if (Boolean.parseBoolean(mwclient.getserverConfigs("PlayersCanBuyPilotUpgrades"))) {
+        if (Boolean.parseBoolean(client.getServerConfigs("PlayersCanBuyPilotUpgrades"))) {
             baseTextField.setToolTipText(
                   "<html><body>Set cost for a pilot to gain Enhanced Interface. Zero to disable</body></html>");
         } else {
@@ -1950,7 +1938,7 @@ public final class FactionConfigurationDialog implements ActionListener {
         baseTextField.setMaximumSize(fieldSize);
         baseTextField.setPreferredSize(fieldSize);
         mekPilotSkillsSpring.add(new JLabel("GT", SwingConstants.TRAILING));
-        if (Boolean.parseBoolean(mwclient.getserverConfigs("PlayersCanBuyPilotUpgrades"))) {
+        if (Boolean.parseBoolean(client.getServerConfigs("PlayersCanBuyPilotUpgrades"))) {
             baseTextField.setToolTipText(
                   "<html><body>Set cost for a pilot to gain gifted. Zero to disable</body></html>");
         } else {
@@ -1963,7 +1951,7 @@ public final class FactionConfigurationDialog implements ActionListener {
         baseTextField.setMaximumSize(fieldSize);
         baseTextField.setPreferredSize(fieldSize);
         mekPilotSkillsSpring.add(new JLabel("QS", SwingConstants.TRAILING));
-        if (Boolean.parseBoolean(mwclient.getserverConfigs("PlayersCanBuyPilotUpgrades"))) {
+        if (Boolean.parseBoolean(client.getServerConfigs("PlayersCanBuyPilotUpgrades"))) {
             baseTextField.setToolTipText(
                   "<html><body>Set cost for a pilot to gain Quick Study. Zero to disable</body></html>");
         } else {
@@ -1976,7 +1964,7 @@ public final class FactionConfigurationDialog implements ActionListener {
         baseTextField.setMaximumSize(fieldSize);
         baseTextField.setPreferredSize(fieldSize);
         mekPilotSkillsSpring.add(new JLabel("MT", SwingConstants.TRAILING));
-        if (Boolean.parseBoolean(mwclient.getserverConfigs("PlayersCanBuyPilotUpgrades"))) {
+        if (Boolean.parseBoolean(client.getServerConfigs("PlayersCanBuyPilotUpgrades"))) {
             baseTextField.setToolTipText(
                   "<html><body>Set cost for a pilot to gain the Med Tech skill. Zero to disable</body></html>");
         } else {
@@ -1989,7 +1977,7 @@ public final class FactionConfigurationDialog implements ActionListener {
         baseTextField.setMaximumSize(fieldSize);
         baseTextField.setPreferredSize(fieldSize);
         mekPilotSkillsSpring.add(new JLabel("Edge", SwingConstants.TRAILING));
-        if (Boolean.parseBoolean(mwclient.getserverConfigs("PlayersCanBuyPilotUpgrades"))) {
+        if (Boolean.parseBoolean(client.getServerConfigs("PlayersCanBuyPilotUpgrades"))) {
             baseTextField.setToolTipText(
                   "<html><body>Set cost for a pilot to gain the Edge skill. Zero to disable</body></html>");
         } else {
@@ -2002,7 +1990,7 @@ public final class FactionConfigurationDialog implements ActionListener {
         baseTextField.setMaximumSize(fieldSize);
         baseTextField.setPreferredSize(fieldSize);
         mekPilotSkillsSpring.add(new JLabel("VDNI", SwingConstants.TRAILING));
-        if (Boolean.parseBoolean(mwclient.getserverConfigs("PlayersCanBuyPilotUpgrades"))) {
+        if (Boolean.parseBoolean(client.getServerConfigs("PlayersCanBuyPilotUpgrades"))) {
             baseTextField.setToolTipText(
                   "<html><body>Set cost for a pilot to gain the VDNI skill. Zero to disable</body></html>");
         } else {
@@ -2015,7 +2003,7 @@ public final class FactionConfigurationDialog implements ActionListener {
         baseTextField.setMaximumSize(fieldSize);
         baseTextField.setPreferredSize(fieldSize);
         mekPilotSkillsSpring.add(new JLabel("BVDNI", SwingConstants.TRAILING));
-        if (Boolean.parseBoolean(mwclient.getserverConfigs("PlayersCanBuyPilotUpgrades"))) {
+        if (Boolean.parseBoolean(client.getServerConfigs("PlayersCanBuyPilotUpgrades"))) {
             baseTextField.setToolTipText(
                   "<html><body>Set cost for a pilot to gain the buffered VDNI skill. Zero to disable</body></html>");
         } else {
@@ -2029,7 +2017,7 @@ public final class FactionConfigurationDialog implements ActionListener {
         baseTextField.setMaximumSize(fieldSize);
         baseTextField.setPreferredSize(fieldSize);
         mekPilotSkillsSpring.add(new JLabel("PS", SwingConstants.TRAILING));
-        if (Boolean.parseBoolean(mwclient.getserverConfigs("PlayersCanBuyPilotUpgrades"))) {
+        if (Boolean.parseBoolean(client.getServerConfigs("PlayersCanBuyPilotUpgrades"))) {
             baseTextField.setToolTipText(
                   "<html><body>Set cost for a pilot to gain the Pain Shunt skill. Zero to disable</body></html>");
         } else {
@@ -2230,11 +2218,11 @@ public final class FactionConfigurationDialog implements ActionListener {
         baseTextField = new JTextField(5);
         pilotOptionsSpring2.add(new JLabel("Early Retire Cost:", SwingConstants.TRAILING));
         baseTextField.setToolTipText("<html>" +
-                                           mwclient.moneyOrFluMessage(true, true, -1) +
+                                           client.moneyOrFluMessage(true, true, -1) +
                                            " cost PER LEVEL to retire a pilot before free. For<br>" +
                                            "example, if Skill to Retire is 6, a pilot is 4/5 (Total:9)<br>" +
                                            "and the cost is 10, it will cost (9-6)*10=30 " +
-                                           mwclient.moneyOrFluMessage(true, true, -1) +
+                                           client.moneyOrFluMessage(true, true, -1) +
                                            " to<br>" +
                                            "retire the 4/5.</html>");
         baseTextField.setName("CostPerLevelToRetireEarly");
@@ -2293,87 +2281,87 @@ public final class FactionConfigurationDialog implements ActionListener {
         SpringLayoutHelper.setupSpringGrid(pilotOptionsSpring2, 2);
 
         //pilot cboxes
-        BaseCheckBox = new JCheckBox("Elite BV Mod");
-        BaseCheckBox.setToolTipText("Increase BV of units which are <2/X or X/<2 above FASA levels.");
-        BaseCheckBox.setName("ElitePilotsBVMod");
-        pilotCBoxGrid.add(BaseCheckBox);
+        baseCheckBox = new JCheckBox("Elite BV Mod");
+        baseCheckBox.setToolTipText("Increase BV of units which are <2/X or X/<2 above FASA levels.");
+        baseCheckBox.setName("ElitePilotsBVMod");
+        pilotCBoxGrid.add(baseCheckBox);
 
-        BaseCheckBox = new JCheckBox("MaxTech Skills");
-        BaseCheckBox.setName("PilotSkills");
-        BaseCheckBox.setToolTipText("Allow MaxTech pilot skills (Manuv. Ace, Pain Resist, etc)");
-        pilotCBoxGrid.add(BaseCheckBox);
+        baseCheckBox = new JCheckBox("MaxTech Skills");
+        baseCheckBox.setName("PilotSkills");
+        baseCheckBox.setToolTipText("Allow MaxTech pilot skills (Manuv. Ace, Pain Resist, etc)");
+        pilotCBoxGrid.add(baseCheckBox);
 
-        BaseCheckBox = new JCheckBox("Unlevel@Queue");
-        BaseCheckBox.setToolTipText("<HTML>" +
+        baseCheckBox = new JCheckBox("Unlevel@Queue");
+        baseCheckBox.setToolTipText("<HTML>" +
                                           "Unchecking allows Pilots to keep skills and XP in queue" +
                                           "after their rides die. Disabling this is discouraged.</HTML>");
-        BaseCheckBox.setName("ReduceSkillsInQue");
-        pilotCBoxGrid.add(BaseCheckBox);
+        baseCheckBox.setName("ReduceSkillsInQue");
+        pilotCBoxGrid.add(baseCheckBox);
 
-        BaseCheckBox = new JCheckBox("Allow Green Pilots");
-        BaseCheckBox.setToolTipText("Check in order to allow green pilots. 4/6, 5/5, etc.");
-        BaseCheckBox.setName("AllowGreenPilots");
-        pilotCBoxGrid.add(BaseCheckBox);
+        baseCheckBox = new JCheckBox("Allow Green Pilots");
+        baseCheckBox.setToolTipText("Check in order to allow green pilots. 4/6, 5/5, etc.");
+        baseCheckBox.setName("AllowGreenPilots");
+        pilotCBoxGrid.add(baseCheckBox);
 
-        BaseCheckBox = new JCheckBox("Allow Vet Pilots");
-        BaseCheckBox.setToolTipText("Check in order to allow vet pilots. 3/5, 4/4, etc.");
-        BaseCheckBox.setName("AllowVetPilots");
-        pilotCBoxGrid.add(BaseCheckBox);
+        baseCheckBox = new JCheckBox("Allow Vet Pilots");
+        baseCheckBox.setToolTipText("Check in order to allow vet pilots. 3/5, 4/4, etc.");
+        baseCheckBox.setName("AllowVetPilots");
+        pilotCBoxGrid.add(baseCheckBox);
 
-        BaseCheckBox = new JCheckBox("Allow PPQ");
-        BaseCheckBox.setToolTipText(
+        baseCheckBox = new JCheckBox("Allow PPQ");
+        baseCheckBox.setToolTipText(
               "<HTML>Allow Personal Pilot Queues<br>Players are allowed to keep their own pilots instead of them going to the faction pools</HTML>");
-        BaseCheckBox.setName("AllowPersonalPilotQueues");
-        pilotCBoxGrid.add(BaseCheckBox);
+        baseCheckBox.setName("AllowPersonalPilotQueues");
+        pilotCBoxGrid.add(baseCheckBox);
 
-        BaseCheckBox = new JCheckBox("Allow Extra Pilots");
-        BaseCheckBox.setToolTipText(
+        baseCheckBox = new JCheckBox("Allow Extra Pilots");
+        baseCheckBox.setToolTipText(
               "<HTML>When checked the players can buy<br>pilots from the faction pool<br>even if they already have pilots of that<br>type/class in their pools</HTML>");
-        BaseCheckBox.setName("AllowPlayerToBuyPilotsFromHouseWhenPoolIsFull");
-        pilotCBoxGrid.add(BaseCheckBox);
+        baseCheckBox.setName("AllowPlayerToBuyPilotsFromHouseWhenPoolIsFull");
+        pilotCBoxGrid.add(baseCheckBox);
 
-        BaseCheckBox = new JCheckBox("Downed Pilots Roll");
-        BaseCheckBox.setToolTipText(
+        baseCheckBox = new JCheckBox("Downed Pilots Roll");
+        baseCheckBox.setToolTipText(
               "<HTML>When checked a downed pilot must make a survival roll<br>to see if they make it home<br>or are captured</HTML>");
-        BaseCheckBox.setName("DownPilotsMustRollForSurvival");
-        pilotCBoxGrid.add(BaseCheckBox);
+        baseCheckBox.setName("DownPilotsMustRollForSurvival");
+        pilotCBoxGrid.add(baseCheckBox);
 
-        BaseCheckBox = new JCheckBox("Allow Retirement");
-        BaseCheckBox.setToolTipText("Allow players to retire their pilots.");
-        BaseCheckBox.setName("PilotRetirementAllowed");
-        pilotCBoxGrid.add(BaseCheckBox);
+        baseCheckBox = new JCheckBox("Allow Retirement");
+        baseCheckBox.setToolTipText("Allow players to retire their pilots.");
+        baseCheckBox.setName("PilotRetirementAllowed");
+        pilotCBoxGrid.add(baseCheckBox);
 
-        BaseCheckBox = new JCheckBox("Early Retirement");
-        BaseCheckBox.setToolTipText("Allow players to pay a fee in order to retire their pilots earlier than normal.");
-        BaseCheckBox.setName("EarlyRetirementAllowed");
-        pilotCBoxGrid.add(BaseCheckBox);
+        baseCheckBox = new JCheckBox("Early Retirement");
+        baseCheckBox.setToolTipText("Allow players to pay a fee in order to retire their pilots earlier than normal.");
+        baseCheckBox.setName("EarlyRetirementAllowed");
+        pilotCBoxGrid.add(baseCheckBox);
 
-        BaseCheckBox = new JCheckBox("Elite Retirements");
-        BaseCheckBox.setToolTipText(
+        baseCheckBox = new JCheckBox("Elite Retirements");
+        baseCheckBox.setToolTipText(
               "<html>Randomly retire elite pilots who can't level any more. Rolls to retire are<br>" +
                     "against the same target as their final level up. This automated retirement is separate<br>" +
                     "from player-initiated retirement and will work even if \"Allow Retirement\" is disabled.</html>");
-        BaseCheckBox.setName("RandomRetirementOfElites");
-        pilotCBoxGrid.add(BaseCheckBox);
+        baseCheckBox.setName("RandomRetirementOfElites");
+        pilotCBoxGrid.add(baseCheckBox);
 
-        BaseCheckBox = new JCheckBox("Common Names Only");
-        BaseCheckBox.setToolTipText("Pilot names are only pulled from the Pilotnames.txt");
-        BaseCheckBox.setName("UseCommonPilotNameFileOnly");
-        pilotCBoxGrid.add(BaseCheckBox);
+        baseCheckBox = new JCheckBox("Common Names Only");
+        baseCheckBox.setToolTipText("Pilot names are only pulled from the Pilotnames.txt");
+        baseCheckBox.setName("UseCommonPilotNameFileOnly");
+        pilotCBoxGrid.add(baseCheckBox);
 
-        BaseCheckBox = new JCheckBox("Random Pilot Levels");
-        BaseCheckBox.setToolTipText("<html>" +
+        baseCheckBox = new JCheckBox("Random Pilot Levels");
+        baseCheckBox.setToolTipText("<html>" +
                                           "Disable to use RPG style pilot levelling. Pilots must gain<br>" +
                                           "Base * Multiplier * (10-Skill) XP to reach next level.<br>" +
                                           "Random roll to level up is removed - only raw XP is used.</html>");
-        BaseCheckBox.setName("UseRandomPilotLevelups");
-        pilotCBoxGrid.add(BaseCheckBox);
+        baseCheckBox.setName("UseRandomPilotLevelups");
+        pilotCBoxGrid.add(baseCheckBox);
 
-        BaseCheckBox = new JCheckBox("Pilot Damage Transfers");
-        BaseCheckBox.setToolTipText(
+        baseCheckBox = new JCheckBox("Pilot Damage Transfers");
+        baseCheckBox.setToolTipText(
               "<html>If a pilot takes damage in a game it'll transfer back to the campaign<br>and the pilot will need to heal up.</html>");
-        BaseCheckBox.setName("AllowPilotDamageToTransfer");
-        pilotCBoxGrid.add(BaseCheckBox);
+        baseCheckBox.setName("AllowPilotDamageToTransfer");
+        pilotCBoxGrid.add(baseCheckBox);
 
         //finalize the layout
         JPanel pilotBox = new JPanel(new SpringLayout());
@@ -2420,25 +2408,25 @@ public final class FactionConfigurationDialog implements ActionListener {
         //MEKs
         baseTextField = new JTextField(5);
         mekCbillsSpring.add(new JLabel("Light Mek Cost:", SwingConstants.TRAILING));
-        baseTextField.setToolTipText("Base " + mwclient.moneyOrFluMessage(true, true, -1) + " for a light mek.");
+        baseTextField.setToolTipText("Base " + client.moneyOrFluMessage(true, true, -1) + " for a light mek.");
         baseTextField.setName("LightPrice");
         mekCbillsSpring.add(baseTextField);
 
         baseTextField = new JTextField(5);
         mekCbillsSpring.add(new JLabel("Medium Mek Cost:", SwingConstants.TRAILING));
-        baseTextField.setToolTipText("Base " + mwclient.moneyOrFluMessage(true, true, -1) + " for a medium mek.");
+        baseTextField.setToolTipText("Base " + client.moneyOrFluMessage(true, true, -1) + " for a medium mek.");
         baseTextField.setName("MediumPrice");
         mekCbillsSpring.add(baseTextField);
 
         baseTextField = new JTextField(5);
         mekCbillsSpring.add(new JLabel("Heavy Mek Cost:", SwingConstants.TRAILING));
-        baseTextField.setToolTipText("Base " + mwclient.moneyOrFluMessage(true, true, -1) + " for a heavy mek.");
+        baseTextField.setToolTipText("Base " + client.moneyOrFluMessage(true, true, -1) + " for a heavy mek.");
         baseTextField.setName("HeavyPrice");
         mekCbillsSpring.add(baseTextField);
 
         baseTextField = new JTextField(5);
         mekCbillsSpring.add(new JLabel("Assault Mek Cost:", SwingConstants.TRAILING));
-        baseTextField.setToolTipText("Base " + mwclient.moneyOrFluMessage(true, true, -1) + " for an assault mek.");
+        baseTextField.setToolTipText("Base " + client.moneyOrFluMessage(true, true, -1) + " for an assault mek.");
         baseTextField.setName("AssaultPrice");
         mekCbillsSpring.add(baseTextField);
 
@@ -2499,25 +2487,25 @@ public final class FactionConfigurationDialog implements ActionListener {
         //VEHICLES
         baseTextField = new JTextField(5);
         vehCbillsSpring.add(new JLabel("Light Veh Cost:", SwingConstants.TRAILING));
-        baseTextField.setToolTipText("Base " + mwclient.moneyOrFluMessage(true, true, -1) + " for a light veh.");
+        baseTextField.setToolTipText("Base " + client.moneyOrFluMessage(true, true, -1) + " for a light veh.");
         baseTextField.setName("LightVehiclePrice");
         vehCbillsSpring.add(baseTextField);
 
         baseTextField = new JTextField(5);
         vehCbillsSpring.add(new JLabel("Medium Veh Cost:", SwingConstants.TRAILING));
-        baseTextField.setToolTipText("Base " + mwclient.moneyOrFluMessage(true, true, -1) + " for a medium veh.");
+        baseTextField.setToolTipText("Base " + client.moneyOrFluMessage(true, true, -1) + " for a medium veh.");
         baseTextField.setName("MediumVehiclePrice");
         vehCbillsSpring.add(baseTextField);
 
         baseTextField = new JTextField(5);
         vehCbillsSpring.add(new JLabel("Heavy Veh Cost:", SwingConstants.TRAILING));
-        baseTextField.setToolTipText("Base " + mwclient.moneyOrFluMessage(true, true, -1) + " for a heavy veh.");
+        baseTextField.setToolTipText("Base " + client.moneyOrFluMessage(true, true, -1) + " for a heavy veh.");
         baseTextField.setName("HeavyVehiclePrice");
         vehCbillsSpring.add(baseTextField);
 
         baseTextField = new JTextField(5);
         vehCbillsSpring.add(new JLabel("Assault Veh Cost:", SwingConstants.TRAILING));
-        baseTextField.setToolTipText("Base " + mwclient.moneyOrFluMessage(true, true, -1) + " for an assault veh.");
+        baseTextField.setToolTipText("Base " + client.moneyOrFluMessage(true, true, -1) + " for an assault veh.");
         baseTextField.setName("AssaultVehiclePrice");
         vehCbillsSpring.add(baseTextField);
 
@@ -2578,25 +2566,25 @@ public final class FactionConfigurationDialog implements ActionListener {
         //INFANTRY
         baseTextField = new JTextField(5);
         infCbillsSpring.add(new JLabel("Light Inf Cost:", SwingConstants.TRAILING));
-        baseTextField.setToolTipText("Base " + mwclient.moneyOrFluMessage(true, true, -1) + " for light infantry.");
+        baseTextField.setToolTipText("Base " + client.moneyOrFluMessage(true, true, -1) + " for light infantry.");
         baseTextField.setName("LightInfantryPrice");
         infCbillsSpring.add(baseTextField);
 
         baseTextField = new JTextField(5);
         infCbillsSpring.add(new JLabel("Medium Inf Cost:", SwingConstants.TRAILING));
-        baseTextField.setToolTipText("Base " + mwclient.moneyOrFluMessage(true, true, -1) + " for medium infantry.");
+        baseTextField.setToolTipText("Base " + client.moneyOrFluMessage(true, true, -1) + " for medium infantry.");
         baseTextField.setName("MediumInfantryPrice");
         infCbillsSpring.add(baseTextField);
 
         baseTextField = new JTextField(5);
         infCbillsSpring.add(new JLabel("Heavy Inf Cost:", SwingConstants.TRAILING));
-        baseTextField.setToolTipText("Base " + mwclient.moneyOrFluMessage(true, true, -1) + " for heavy infantry.");
+        baseTextField.setToolTipText("Base " + client.moneyOrFluMessage(true, true, -1) + " for heavy infantry.");
         baseTextField.setName("HeavyInfantryPrice");
         infCbillsSpring.add(baseTextField);
 
         baseTextField = new JTextField(5);
         infCbillsSpring.add(new JLabel("Assault Inf Cost:", SwingConstants.TRAILING));
-        baseTextField.setToolTipText("Base " + mwclient.moneyOrFluMessage(true, true, -1) + " for assault infantry.");
+        baseTextField.setToolTipText("Base " + client.moneyOrFluMessage(true, true, -1) + " for assault infantry.");
         baseTextField.setName("AssaultInfantryPrice");
         infCbillsSpring.add(baseTextField);
 
@@ -2677,55 +2665,55 @@ public final class FactionConfigurationDialog implements ActionListener {
         SpringLayoutHelper.setupSpringGrid(unitsMiscSpring, 4);
 
         //unit cboxes
-        BaseCheckBox = new JCheckBox("Use Vehs");
+        baseCheckBox = new JCheckBox("Use Vehs");
 
-        BaseCheckBox.setToolTipText("Uncheck to disable Vehs.");
-        BaseCheckBox.setName("UseVehicle");
-        unitCBoxGrid.add(BaseCheckBox);
+        baseCheckBox.setToolTipText("Uncheck to disable Vehs.");
+        baseCheckBox.setName("UseVehicle");
+        unitCBoxGrid.add(baseCheckBox);
 
-        BaseCheckBox = new JCheckBox("Use Inf");
+        baseCheckBox = new JCheckBox("Use Inf");
 
-        BaseCheckBox.setToolTipText("Uncheck to disable Infantry.");
-        BaseCheckBox.setName("UseInfantry");
-        unitCBoxGrid.add(BaseCheckBox);
+        baseCheckBox.setToolTipText("Uncheck to disable Infantry.");
+        baseCheckBox.setName("UseInfantry");
+        unitCBoxGrid.add(baseCheckBox);
 
-        BaseCheckBox = new JCheckBox("Light Inf");
+        baseCheckBox = new JCheckBox("Light Inf");
 
-        BaseCheckBox.setToolTipText("Check to have all inf count as light.");
-        BaseCheckBox.setName("UseOnlyLightInfantry");
-        unitCBoxGrid.add(BaseCheckBox);
+        baseCheckBox.setToolTipText("Check to have all inf count as light.");
+        baseCheckBox.setName("UseOnlyLightInfantry");
+        unitCBoxGrid.add(baseCheckBox);
 
-        BaseCheckBox = new JCheckBox("Light Vehs");
+        baseCheckBox = new JCheckBox("Light Vehs");
 
-        BaseCheckBox.setToolTipText("Check to have all vehs count as light.");
-        BaseCheckBox.setName("UseOnlyOneVehicleSize");
-        unitCBoxGrid.add(BaseCheckBox);
+        baseCheckBox.setToolTipText("Check to have all vehs count as light.");
+        baseCheckBox.setName("UseOnlyOneVehicleSize");
+        unitCBoxGrid.add(baseCheckBox);
 
-        BaseCheckBox = new JCheckBox("Free Foot");
+        baseCheckBox = new JCheckBox("Free Foot");
 
-        BaseCheckBox.setToolTipText("Check to have Foot Inf take 0 techs/bays");
-        BaseCheckBox.setName("FootInfTakeNoBays");
-        unitCBoxGrid.add(BaseCheckBox);
+        baseCheckBox.setToolTipText("Check to have Foot Inf take 0 techs/bays");
+        baseCheckBox.setName("FootInfTakeNoBays");
+        unitCBoxGrid.add(baseCheckBox);
 
-        BaseCheckBox = new JCheckBox("Use BA");
+        baseCheckBox = new JCheckBox("Use BA");
 
-        BaseCheckBox.setToolTipText("Uncheck to disable BattleArmor.");
-        BaseCheckBox.setName("UseBattleArmor");
-        unitCBoxGrid.add(BaseCheckBox);
+        baseCheckBox.setToolTipText("Uncheck to disable BattleArmor.");
+        baseCheckBox.setName("UseBattleArmor");
+        unitCBoxGrid.add(baseCheckBox);
 
-        BaseCheckBox = new JCheckBox("Use Proto");
+        baseCheckBox = new JCheckBox("Use Proto");
 
-        BaseCheckBox.setToolTipText("Uncheck to disable ProtoMeks.");
-        BaseCheckBox.setName("UseProtoMek");
-        unitCBoxGrid.add(BaseCheckBox);
+        baseCheckBox.setToolTipText("Uncheck to disable ProtoMeks.");
+        baseCheckBox.setName("UseProtoMek");
+        unitCBoxGrid.add(baseCheckBox);
 
-        BaseCheckBox = new JCheckBox("Real Cost");
+        baseCheckBox = new JCheckBox("Real Cost");
 
-        BaseCheckBox.setToolTipText(
+        baseCheckBox.setToolTipText(
               "<html>Check to use MM/FASA calculated costs for each unit.<br>Requires a reboot of the server.<br>Note MM does not calculate costs for some infantry and all protos.</html>");
-        BaseCheckBox.setEnabled(false);
-        BaseCheckBox.setName("UseCalculatedCosts");
-        unitCBoxGrid.add(BaseCheckBox);
+        baseCheckBox.setEnabled(false);
+        baseCheckBox.setName("UseCalculatedCosts");
+        unitCBoxGrid.add(baseCheckBox);
 
         //finalize the layout
         JPanel unitBox = new JPanel();
@@ -2766,25 +2754,25 @@ public final class FactionConfigurationDialog implements ActionListener {
 
         baseTextField = new JTextField(5);
         protoCbillsSpring.add(new JLabel("Light Proto Cost:", SwingConstants.TRAILING));
-        baseTextField.setToolTipText("Base " + mwclient.moneyOrFluMessage(true, true, -1) + " for light proto.");
+        baseTextField.setToolTipText("Base " + client.moneyOrFluMessage(true, true, -1) + " for light proto.");
         baseTextField.setName("LightProtoMekPrice");
         protoCbillsSpring.add(baseTextField);
 
         baseTextField = new JTextField(5);
         protoCbillsSpring.add(new JLabel("Medium Proto Cost:", SwingConstants.TRAILING));
-        baseTextField.setToolTipText("Base " + mwclient.moneyOrFluMessage(true, true, -1) + " for medium proto.");
+        baseTextField.setToolTipText("Base " + client.moneyOrFluMessage(true, true, -1) + " for medium proto.");
         baseTextField.setName("MediumProtoMekPrice");
         protoCbillsSpring.add(baseTextField);
 
         baseTextField = new JTextField(5);
         protoCbillsSpring.add(new JLabel("Heavy Proto Cost:", SwingConstants.TRAILING));
-        baseTextField.setToolTipText("Base " + mwclient.moneyOrFluMessage(true, true, -1) + " for heavy proto.");
+        baseTextField.setToolTipText("Base " + client.moneyOrFluMessage(true, true, -1) + " for heavy proto.");
         baseTextField.setName("HeavyProtoMekPrice");
         protoCbillsSpring.add(baseTextField);
 
         baseTextField = new JTextField(5);
         protoCbillsSpring.add(new JLabel("Assault Proto Cost:", SwingConstants.TRAILING));
-        baseTextField.setToolTipText("Base " + mwclient.moneyOrFluMessage(true, true, -1) + " for assault proto.");
+        baseTextField.setToolTipText("Base " + client.moneyOrFluMessage(true, true, -1) + " for assault proto.");
         baseTextField.setName("AssaultProtoMekPrice");
         protoCbillsSpring.add(baseTextField);
 
@@ -2844,25 +2832,25 @@ public final class FactionConfigurationDialog implements ActionListener {
 
         baseTextField = new JTextField(5);
         baCbillsSpring.add(new JLabel("Light BA Cost:", SwingConstants.TRAILING));
-        baseTextField.setToolTipText("Base " + mwclient.moneyOrFluMessage(true, true, -1) + " for light ba.");
+        baseTextField.setToolTipText("Base " + client.moneyOrFluMessage(true, true, -1) + " for light ba.");
         baseTextField.setName("LightBattleArmorPrice");
         baCbillsSpring.add(baseTextField);
 
         baseTextField = new JTextField(5);
         baCbillsSpring.add(new JLabel("Medium BA Cost:", SwingConstants.TRAILING));
-        baseTextField.setToolTipText("Base " + mwclient.moneyOrFluMessage(true, true, -1) + " for medium ba.");
+        baseTextField.setToolTipText("Base " + client.moneyOrFluMessage(true, true, -1) + " for medium ba.");
         baseTextField.setName("MediumBattleArmorPrice");
         baCbillsSpring.add(baseTextField);
 
         baseTextField = new JTextField(5);
         baCbillsSpring.add(new JLabel("Heavy BA Cost:", SwingConstants.TRAILING));
-        baseTextField.setToolTipText("Base " + mwclient.moneyOrFluMessage(true, true, -1) + " for heavy ba.");
+        baseTextField.setToolTipText("Base " + client.moneyOrFluMessage(true, true, -1) + " for heavy ba.");
         baseTextField.setName("HeavyBattleArmorPrice");
         baCbillsSpring.add(baseTextField);
 
         baseTextField = new JTextField(5);
         baCbillsSpring.add(new JLabel("Assault BA Cost:", SwingConstants.TRAILING));
-        baseTextField.setToolTipText("Base " + mwclient.moneyOrFluMessage(true, true, -1) + " for assault ba.");
+        baseTextField.setToolTipText("Base " + client.moneyOrFluMessage(true, true, -1) + " for assault ba.");
         baseTextField.setName("AssaultBattleArmorPrice");
         baCbillsSpring.add(baseTextField);
 
@@ -2922,25 +2910,25 @@ public final class FactionConfigurationDialog implements ActionListener {
 
         baseTextField = new JTextField(5);
         aeroCbillsSpring.add(new JLabel("Light Aero Cost:", SwingConstants.TRAILING));
-        baseTextField.setToolTipText("Base " + mwclient.moneyOrFluMessage(true, true, -1) + " for light aero.");
+        baseTextField.setToolTipText("Base " + client.moneyOrFluMessage(true, true, -1) + " for light aero.");
         baseTextField.setName("LightAeroPrice");
         aeroCbillsSpring.add(baseTextField);
 
         baseTextField = new JTextField(5);
         aeroCbillsSpring.add(new JLabel("Medium Aero Cost:", SwingConstants.TRAILING));
-        baseTextField.setToolTipText("Base " + mwclient.moneyOrFluMessage(true, true, -1) + " for medium aero.");
+        baseTextField.setToolTipText("Base " + client.moneyOrFluMessage(true, true, -1) + " for medium aero.");
         baseTextField.setName("MediumAeroPrice");
         aeroCbillsSpring.add(baseTextField);
 
         baseTextField = new JTextField(5);
         aeroCbillsSpring.add(new JLabel("Heavy Aero Cost:", SwingConstants.TRAILING));
-        baseTextField.setToolTipText("Base " + mwclient.moneyOrFluMessage(true, true, -1) + " for heavy aero.");
+        baseTextField.setToolTipText("Base " + client.moneyOrFluMessage(true, true, -1) + " for heavy aero.");
         baseTextField.setName("HeavyAeroPrice");
         aeroCbillsSpring.add(baseTextField);
 
         baseTextField = new JTextField(5);
         aeroCbillsSpring.add(new JLabel("Assault Aero Cost:", SwingConstants.TRAILING));
-        baseTextField.setToolTipText("Base " + mwclient.moneyOrFluMessage(true, true, -1) + " for assault aero.");
+        baseTextField.setToolTipText("Base " + client.moneyOrFluMessage(true, true, -1) + " for assault aero.");
         baseTextField.setName("AssaultAeroPrice");
         aeroCbillsSpring.add(baseTextField);
 
@@ -3104,53 +3092,53 @@ public final class FactionConfigurationDialog implements ActionListener {
 
         SpringLayoutHelper.setupSpringGrid(unit4TextFlow, 6);
 
-        BaseCheckBox = new JCheckBox("Allow Mek Commanders");
-        BaseCheckBox.setToolTipText(
+        baseCheckBox = new JCheckBox("Allow Mek Commanders");
+        baseCheckBox.setToolTipText(
               "<html>Allow meks to be set as unit commanders<br>for the kill all unit commanders operation victory condition</html>");
-        BaseCheckBox.setName("allowUnitCommanderMek");
-        unitCommanderSpring.add(BaseCheckBox);
+        baseCheckBox.setName("allowUnitCommanderMek");
+        unitCommanderSpring.add(baseCheckBox);
 
-        BaseCheckBox = new JCheckBox("Allow Vee Commanders");
-        BaseCheckBox.setToolTipText(
+        baseCheckBox = new JCheckBox("Allow Vee Commanders");
+        baseCheckBox.setToolTipText(
               "<html>Allow vehicles to be set as unit commanders<br>for the kill all unit commanders operation victory condition</html>");
-        BaseCheckBox.setName("allowUnitCommanderVehicle");
-        unitCommanderSpring.add(BaseCheckBox);
+        baseCheckBox.setName("allowUnitCommanderVehicle");
+        unitCommanderSpring.add(baseCheckBox);
 
-        BaseCheckBox = new JCheckBox("Allow Inf Commanders");
-        BaseCheckBox.setToolTipText(
+        baseCheckBox = new JCheckBox("Allow Inf Commanders");
+        baseCheckBox.setToolTipText(
               "<html>Allow infantry to be set as unit commanders<br>for the kill all unit commanders operation victory condition</html>");
-        BaseCheckBox.setName("allowUnitCommanderInfantry");
-        unitCommanderSpring.add(BaseCheckBox);
+        baseCheckBox.setName("allowUnitCommanderInfantry");
+        unitCommanderSpring.add(baseCheckBox);
 
-        BaseCheckBox = new JCheckBox("Allow Proto Commanders");
-        BaseCheckBox.setToolTipText(
+        baseCheckBox = new JCheckBox("Allow Proto Commanders");
+        baseCheckBox.setToolTipText(
               "<html>Allow protomeks to be set as unit commanders<br>for the kill all unit commanders operation victory condition</html>");
-        BaseCheckBox.setName("allowUnitCommanderProtoMek");
-        unitCommanderSpring.add(BaseCheckBox);
+        baseCheckBox.setName("allowUnitCommanderProtoMek");
+        unitCommanderSpring.add(baseCheckBox);
 
-        BaseCheckBox = new JCheckBox("Allow BA Commanders");
-        BaseCheckBox.setToolTipText(
+        baseCheckBox = new JCheckBox("Allow BA Commanders");
+        baseCheckBox.setToolTipText(
               "<html>Allow battlearmor to be set as unit commanders<br>for the kill all unit commanders operation victory condition</html>");
-        BaseCheckBox.setName("allowUnitCommanderBattleArmor");
-        unitCommanderSpring.add(BaseCheckBox);
+        baseCheckBox.setName("allowUnitCommanderBattleArmor");
+        unitCommanderSpring.add(baseCheckBox);
 
-        BaseCheckBox = new JCheckBox("Allow VTOL Commanders");
-        BaseCheckBox.setToolTipText(
+        baseCheckBox = new JCheckBox("Allow VTOL Commanders");
+        baseCheckBox.setToolTipText(
               "<html>Allow VTOL to be set as unit commanders<br>for the kill all unit commanders operation victory condition</html>");
-        BaseCheckBox.setName("allowUnitCommanderVTOL");
-        unitCommanderSpring.add(BaseCheckBox);
+        baseCheckBox.setName("allowUnitCommanderVTOL");
+        unitCommanderSpring.add(baseCheckBox);
 
-        BaseCheckBox = new JCheckBox("Allow Aero Commanders");
-        BaseCheckBox.setToolTipText(
+        baseCheckBox = new JCheckBox("Allow Aero Commanders");
+        baseCheckBox.setToolTipText(
               "<html>Allow Aero to be set as unit commanders<br>for the kill all unit commanders operation victory condition</html>");
-        BaseCheckBox.setName("allowUnitCommanderAero");
-        unitCommanderSpring.add(BaseCheckBox);
+        baseCheckBox.setName("allowUnitCommanderAero");
+        unitCommanderSpring.add(baseCheckBox);
 
-        BaseCheckBox = new JCheckBox("Allow Fighting Without Commanders");
-        BaseCheckBox.setToolTipText(
+        baseCheckBox = new JCheckBox("Allow Fighting Without Commanders");
+        baseCheckBox.setToolTipText(
               "<html>Allow players to go active without any unit commanders set in their armies<br>for the kill all unit commanders operation victory condition</html>");
-        BaseCheckBox.setName("allowGoingActiveWithoutUnitCommanders");
-        unitCommanderSpring.add(BaseCheckBox);
+        baseCheckBox.setName("allowGoingActiveWithoutUnitCommanders");
+        unitCommanderSpring.add(baseCheckBox);
         SpringLayoutHelper.setupSpringGrid(unitCommanderSpring, 3);
 
         //build complete panel, wrapped in box
@@ -3345,10 +3333,10 @@ public final class FactionConfigurationDialog implements ActionListener {
         buySellSpring2.setLayout(new BoxLayout(buySellSpring2, BoxLayout.Y_AXIS));
 
         //finalize layout
-        BaseCheckBox = new JCheckBox("Use Direct Sell");
-        BaseCheckBox.setName("UseDirectSell");
+        baseCheckBox = new JCheckBox("Use Direct Sell");
+        baseCheckBox.setName("UseDirectSell");
 
-        buySellSpring2.add(BaseCheckBox);
+        buySellSpring2.add(baseCheckBox);
         buySellSpring2.add(buySellSpring);
 
         //SpringLayoutHelper.setupSpringGrid(buySellSpring2 , 1, 3);
@@ -3504,29 +3492,29 @@ public final class FactionConfigurationDialog implements ActionListener {
         //setup CBoxes
         JPanel factionCBoxSpring = new JPanel(new SpringLayout());
 
-        BaseCheckBox = new JCheckBox("Donate @ Unenroll");
-        BaseCheckBox.setToolTipText(
+        baseCheckBox = new JCheckBox("Donate @ Unenroll");
+        baseCheckBox.setToolTipText(
               "<html>If checked, players that unenroll will donate<br>all their units to the house bays.</html>");
-        BaseCheckBox.setName("DonateUnitsUponUnenrollment");
-        factionCBoxSpring.add(BaseCheckBox);
+        baseCheckBox.setName("DonateUnitsUponUnenrollment");
+        factionCBoxSpring.add(baseCheckBox);
 
-        BaseCheckBox = new JCheckBox("Faction Names on Games");
-        BaseCheckBox.setToolTipText(
+        baseCheckBox = new JCheckBox("Faction Names on Games");
+        baseCheckBox.setToolTipText(
               "<html>If checked, faction names will replace player names in<br>completed game descriptions.</html>");
-        BaseCheckBox.setName("ShowCompleteGameInfoOnTick");
-        factionCBoxSpring.add(BaseCheckBox);
+        baseCheckBox.setName("ShowCompleteGameInfoOnTick");
+        factionCBoxSpring.add(baseCheckBox);
 
-        BaseCheckBox = new JCheckBox("Faction Names in News");
-        BaseCheckBox.setToolTipText(
+        baseCheckBox = new JCheckBox("Faction Names in News");
+        baseCheckBox.setToolTipText(
               "<html>If checked, faction names will replace player names in<br>news feed description of games.</html>");
-        BaseCheckBox.setName("ShowCompleteGameInfoInNews");
-        factionCBoxSpring.add(BaseCheckBox);
+        baseCheckBox.setName("ShowCompleteGameInfoInNews");
+        factionCBoxSpring.add(baseCheckBox);
 
-        BaseCheckBox = new JCheckBox("Auto Promote Sub Factions");
-        BaseCheckBox.setToolTipText(
+        baseCheckBox = new JCheckBox("Auto Promote Sub Factions");
+        baseCheckBox.setToolTipText(
               "<html>If checked, a player will be automatically promoted<br>to the next higher sub faction,<br>if they are qualified.</html>");
-        BaseCheckBox.setName("autoPromoteSubFaction");
-        factionCBoxSpring.add(BaseCheckBox);
+        baseCheckBox.setName("autoPromoteSubFaction");
+        factionCBoxSpring.add(baseCheckBox);
 
         SpringLayoutHelper.setupSpringGrid(factionCBoxSpring, 3);
 
@@ -3672,18 +3660,18 @@ public final class FactionConfigurationDialog implements ActionListener {
         prodMiscPanel.add(baseTextField);
 
         //Check Box Spring
-        BaseCheckBox = new JCheckBox();
+        baseCheckBox = new JCheckBox();
         prodCBoxSpring.add(new JLabel("Produce w/o factory:", SwingConstants.TRAILING));
-        BaseCheckBox.setToolTipText(
+        baseCheckBox.setToolTipText(
               "If checked, components will be produced even if no factory of a type/weightclass is owned");
-        BaseCheckBox.setName("ProduceComponentsWithNoFactory");
-        prodCBoxSpring.add(BaseCheckBox);
+        baseCheckBox.setName("ProduceComponentsWithNoFactory");
+        prodCBoxSpring.add(baseCheckBox);
 
-        BaseCheckBox = new JCheckBox();
+        baseCheckBox = new JCheckBox();
         prodCBoxSpring.add(new JLabel("Output Multipliers:", SwingConstants.TRAILING));
-        BaseCheckBox.setToolTipText("If checked, personal production multipliers will be shown on ticks");
-        BaseCheckBox.setName("ShowOutputMultiplierOnTick");
-        prodCBoxSpring.add(BaseCheckBox);
+        baseCheckBox.setToolTipText("If checked, personal production multipliers will be shown on ticks");
+        baseCheckBox.setName("ShowOutputMultiplierOnTick");
+        prodCBoxSpring.add(baseCheckBox);
 
 
         //lay out the springs
@@ -3726,7 +3714,7 @@ public final class FactionConfigurationDialog implements ActionListener {
         selectionPanel.add(apTypeClassic);
         selectionPanel.add(apTypeNew);
 
-        if (Boolean.parseBoolean(mwclient.getserverConfigs("UseAutoProdNew"))) {
+        if (Boolean.parseBoolean(client.getServerConfigs("UseAutoProdNew"))) {
             apTypeClassic.setSelected(false);
             apTypeNew.setSelected(true);
         } else {
@@ -3817,7 +3805,7 @@ public final class FactionConfigurationDialog implements ActionListener {
         apNewBoxPanel.add(new JLabel("Units"));
         apNewBoxPanel.add(new JLabel("Failure"));
 
-        for (int i = 0; i < Unit.MAXBUILD; i++) {
+        for (int i = 0; i < Unit.MAX_BUILD; i++) {
             for (int j = 0; j <= Unit.ASSAULT; j++) {
                 if (j == 0) {
                     apNewBoxPanel.add(new JLabel(Unit.getTypeClassDesc(i)));
@@ -3864,66 +3852,66 @@ public final class FactionConfigurationDialog implements ActionListener {
         JLabel rewardAllowHeader = new JLabel("Allow rewards to be used for:");
         rewardAllowHeader.setAlignmentX(Component.CENTER_ALIGNMENT);
 
-        BaseCheckBox = new JCheckBox("DISPLAY");
+        baseCheckBox = new JCheckBox("DISPLAY");
 
-        BaseCheckBox.setToolTipText("If checked, reward levels are shown to players. RECOMMENDED.");
-        BaseCheckBox.setName("ShowReward");
-        rewardCBoxGrid.add(BaseCheckBox);
+        baseCheckBox.setToolTipText("If checked, reward levels are shown to players. RECOMMENDED.");
+        baseCheckBox.setName("ShowReward");
+        rewardCBoxGrid.add(baseCheckBox);
 
-        BaseCheckBox = new JCheckBox(mwclient.moneyOrFluMessage(false, true, -1));
+        baseCheckBox = new JCheckBox(client.moneyOrFluMessage(false, true, -1));
 
-        BaseCheckBox.setToolTipText("Check to allow players to exchange RP for flu");
-        BaseCheckBox.setName("AllowInfluenceForRewards");
-        rewardCBoxGrid.add(BaseCheckBox);
+        baseCheckBox.setToolTipText("Check to allow players to exchange RP for flu");
+        baseCheckBox.setName("AllowInfluenceForRewards");
+        rewardCBoxGrid.add(baseCheckBox);
 
         // @Author Salient (mwosux@gmail.com) , Add RP for CBills
-        BaseCheckBox = new JCheckBox(mwclient.moneyOrFluMessage(true, true, -1));
+        baseCheckBox = new JCheckBox(client.moneyOrFluMessage(true, true, -1));
 
-        BaseCheckBox.setToolTipText("Check to allow players to exchange RP for CBills");
-        BaseCheckBox.setName("AllowCBillsForRewards");
-        rewardCBoxGrid.add(BaseCheckBox);
+        baseCheckBox.setToolTipText("Check to allow players to exchange RP for CBills");
+        baseCheckBox.setName("AllowCBillsForRewards");
+        rewardCBoxGrid.add(baseCheckBox);
 
-        BaseCheckBox = new JCheckBox("Techs");
+        baseCheckBox = new JCheckBox("Techs");
 
-        BaseCheckBox.setToolTipText("Check to allow players to exchange RP for techs");
-        BaseCheckBox.setName("AllowTechsForRewards");
-        rewardCBoxGrid.add(BaseCheckBox);
+        baseCheckBox.setToolTipText("Check to allow players to exchange RP for techs");
+        baseCheckBox.setName("AllowTechsForRewards");
+        rewardCBoxGrid.add(baseCheckBox);
 
-        BaseCheckBox = new JCheckBox("Units");
+        baseCheckBox = new JCheckBox("Units");
 
-        BaseCheckBox.setToolTipText("Check to allow players to exchange RP for units");
-        BaseCheckBox.setName("AllowUnitsForRewards");
-        rewardCBoxGrid.add(BaseCheckBox);
+        baseCheckBox.setToolTipText("Check to allow players to exchange RP for units");
+        baseCheckBox.setName("AllowUnitsForRewards");
+        rewardCBoxGrid.add(baseCheckBox);
 
-        BaseCheckBox = new JCheckBox("Rares");
+        baseCheckBox = new JCheckBox("Rares");
 
-        BaseCheckBox.setToolTipText("Check to allow players to get RARE units with RP");
-        BaseCheckBox.setName("AllowRareUnitsForRewards");
-        rewardCBoxGrid.add(BaseCheckBox);
+        baseCheckBox.setToolTipText("Check to allow players to get RARE units with RP");
+        baseCheckBox.setName("AllowRareUnitsForRewards");
+        rewardCBoxGrid.add(baseCheckBox);
 
-        BaseCheckBox = new JCheckBox("Repods");
+        baseCheckBox = new JCheckBox("Repods");
 
-        BaseCheckBox.setToolTipText(
+        baseCheckBox.setToolTipText(
               "<html>Check to allow players to repod units with RP<br>This allows a player to repod a unit<br>even if its not on their build table<br>Random repod options based<br>on the random repod settings</html>");
-        BaseCheckBox.setName("GlobalRepodAllowed");
-        rewardCBoxGrid.add(BaseCheckBox);
+        baseCheckBox.setName("GlobalRepodAllowed");
+        rewardCBoxGrid.add(baseCheckBox);
 
-        BaseCheckBox = new JCheckBox("Refresh");
+        baseCheckBox = new JCheckBox("Refresh");
 
-        BaseCheckBox.setToolTipText("Check to allow players to refresh factories with RP");
-        BaseCheckBox.setName("AllowFactoryRefreshForRewards");
-        rewardCBoxGrid.add(BaseCheckBox);
+        baseCheckBox.setToolTipText("Check to allow players to refresh factories with RP");
+        baseCheckBox.setName("AllowFactoryRefreshForRewards");
+        rewardCBoxGrid.add(baseCheckBox);
 
-        BaseCheckBox = new JCheckBox("Repairs");
+        baseCheckBox = new JCheckBox("Repairs");
 
-        BaseCheckBox.setToolTipText("Check to allow players to repair units with RP");
-        BaseCheckBox.setName("AllowRepairsForRewards");
-        rewardCBoxGrid.add(BaseCheckBox);
+        baseCheckBox.setToolTipText("Check to allow players to repair units with RP");
+        baseCheckBox.setName("AllowRepairsForRewards");
+        rewardCBoxGrid.add(baseCheckBox);
 
-        BaseCheckBox = new JCheckBox("Crit Repairs");
-        BaseCheckBox.setToolTipText("Check to allow players to individual crits with RP");
-        BaseCheckBox.setName("AllowCritRepairsForRewards");
-        rewardCBoxGrid.add(BaseCheckBox);
+        baseCheckBox = new JCheckBox("Crit Repairs");
+        baseCheckBox.setToolTipText("Check to allow players to individual crits with RP");
+        baseCheckBox.setName("AllowCritRepairsForRewards");
+        rewardCBoxGrid.add(baseCheckBox);
 
         SpringLayoutHelper.setupSpringGrid(rewardCBoxGrid, 4);
 
@@ -3941,7 +3929,7 @@ public final class FactionConfigurationDialog implements ActionListener {
         rewardSpring1.add(baseTextField);
 
         baseTextField = new JTextField(5);
-        rewardSpring1.add(new JLabel("Techs per " + mwclient.getserverConfigs("RPShortName"), SwingConstants.TRAILING));
+        rewardSpring1.add(new JLabel("Techs per " + client.getServerConfigs("RPShortName"), SwingConstants.TRAILING));
         baseTextField.setToolTipText("Number of techs hired with 1 RP");
         baseTextField.setName("TechsForARewardPoint");
         rewardSpring1.add(baseTextField);
@@ -3952,7 +3940,7 @@ public final class FactionConfigurationDialog implements ActionListener {
         baseTextField.setName("RewardPointMultiplierForRare");
         rewardSpring1.add(baseTextField);
 
-        if (Boolean.parseBoolean(mwclient.getserverConfigs("UseAdvanceRepair"))) {
+        if (Boolean.parseBoolean(client.getServerConfigs("UseAdvanceRepair"))) {
             baseTextField = new JTextField(5);
             rewardSpring1.add(new JLabel("RP to buy Green Tech:", SwingConstants.TRAILING));
             baseTextField.setToolTipText("RP to buy 1 green tech.");
@@ -3988,9 +3976,9 @@ public final class FactionConfigurationDialog implements ActionListener {
 
         //set up spring2
         baseTextField = new JTextField(5);
-        rewardSpring2.add(new JLabel(mwclient.moneyOrFluMessage(false, true, -1) +
+        rewardSpring2.add(new JLabel(client.moneyOrFluMessage(false, true, -1) +
                                            " per " +
-                                           mwclient.getserverConfigs("RPShortName"), SwingConstants.TRAILING));
+                                           client.getServerConfigs("RPShortName"), SwingConstants.TRAILING));
         baseTextField.setToolTipText("Amount of flu given in exhcange for 1 RP");
         baseTextField.setName("InfluenceForARewardPoint");
         rewardSpring2.add(baseTextField);
@@ -4003,15 +3991,15 @@ public final class FactionConfigurationDialog implements ActionListener {
 
         // @Author Salient (mwosux@gmail.com) , Add RP for CBills
         baseTextField = new JTextField(5);
-        rewardSpring2.add(new JLabel(mwclient.moneyOrFluMessage(true, true, -1) +
+        rewardSpring2.add(new JLabel(client.moneyOrFluMessage(true, true, -1) +
                                            " per " +
-                                           mwclient.getserverConfigs("RPShortName"), SwingConstants.TRAILING));
+                                           client.getServerConfigs("RPShortName"), SwingConstants.TRAILING));
         baseTextField.setToolTipText("Amount of CBills given in exhcange for 1 RP");
         baseTextField.setName("CBillsForARewardPoint");
         rewardSpring2.add(baseTextField);
 
 
-        if (Boolean.parseBoolean(mwclient.getserverConfigs("UseAdvanceRepair"))) {
+        if (Boolean.parseBoolean(client.getServerConfigs("UseAdvanceRepair"))) {
             baseTextField = new JTextField(5);
             rewardSpring2.add(new JLabel("RP to buy Reg Tech:", SwingConstants.TRAILING));
             baseTextField.setToolTipText("RP to buy 1 reg tech.");
@@ -4086,21 +4074,21 @@ public final class FactionConfigurationDialog implements ActionListener {
         fbdPanel3.setBorder(BorderFactory.createTitledBorder("Misc Options"));
         fbdPanel3.setLayout(new VerticalLayout(5, VerticalLayout.CENTER, VerticalLayout.TOP));
 
-        BaseCheckBox = new JCheckBox("Enforce token usage before going Active");
-        BaseCheckBox.setToolTipText(
+        baseCheckBox = new JCheckBox("Enforce token usage before going Active");
+        baseCheckBox.setToolTipText(
               "<HTML>Set this if you want to disable going active if player has free meks remaining</HTML>");
-        BaseCheckBox.setName("FreeBuild_LimitGoActive");
-        fbdPanel3a.add(BaseCheckBox);
+        baseCheckBox.setName("FreeBuild_LimitGoActive");
+        fbdPanel3a.add(baseCheckBox);
 
-        BaseCheckBox = new JCheckBox("Allow Dupes");
-        BaseCheckBox.setToolTipText("<HTML>Can only create 1 of each variant</HTML>");
-        BaseCheckBox.setName("FreeBuild_AllowDuplicates");
-        fbdPanel3a.add(BaseCheckBox);
+        baseCheckBox = new JCheckBox("Allow Dupes");
+        baseCheckBox.setToolTipText("<HTML>Can only create 1 of each variant</HTML>");
+        baseCheckBox.setName("FreeBuild_AllowDuplicates");
+        fbdPanel3a.add(baseCheckBox);
 
-        BaseCheckBox = new JCheckBox("Use Dupe Limits");
-        BaseCheckBox.setToolTipText("<HTML>Set how many dupes are allowed</HTML>");
-        BaseCheckBox.setName("FreeBuild_DupeLimits");
-        fbdPanel3a.add(BaseCheckBox);
+        baseCheckBox = new JCheckBox("Use Dupe Limits");
+        baseCheckBox.setToolTipText("<HTML>Set how many dupes are allowed</HTML>");
+        baseCheckBox.setName("FreeBuild_DupeLimits");
+        fbdPanel3a.add(baseCheckBox);
 
         fbdPanel3b.add(new JLabel("Dupe Limits -> ", SwingConstants.TRAILING));
 
@@ -4160,7 +4148,7 @@ public final class FactionConfigurationDialog implements ActionListener {
         ulBottomPanel.add(new JLabel("Heavy"));
         ulBottomPanel.add(new JLabel("Assault"));
 
-        for (int type = Unit.MEK; type < Unit.MAXBUILD; type++) {
+        for (int type = Unit.MEK; type < Unit.MAX_BUILD; type++) {
             ulBottomPanel.add(new JLabel(Unit.getTypeClassDesc(type)));
             for (int weight = Unit.LIGHT; weight <= Unit.ASSAULT; weight++) {
                 baseTextField = new JTextField(5);
@@ -4169,7 +4157,7 @@ public final class FactionConfigurationDialog implements ActionListener {
                                                    Unit.getWeightClassDesc(weight) +
                                                    " " +
                                                    Unit.getTypeClassDesc(type) +
-                                                   ((Unit.getTypeClassDesc(type) == "Infantry") ? "" : "s") +
+                                                   ((Unit.getTypeClassDesc(type).equals("Infantry")) ? "" : "s") +
                                                    ".  -1 to disable limit");
                 ulBottomPanel.add(baseTextField);
             }
@@ -4188,20 +4176,20 @@ public final class FactionConfigurationDialog implements ActionListener {
         ulAPTop.setBorder(BorderFactory.createEmptyBorder(0, 5, 0, 5));
         ulAPBottom.setBorder(BorderFactory.createEmptyBorder(0, 5, 0, 5));
 
-        BaseCheckBox = new JCheckBox("Disable Activation");
-        BaseCheckBox.setName("DisableActivationIfOverHangarLimits");
-        BaseCheckBox.setToolTipText("Players over the limits cannot go active.");
-        ulAPTop.add(BaseCheckBox);
-        BaseCheckBox = new JCheckBox("Disable AFR");
-        BaseCheckBox.setName("DisableAFRIfOverHangarLimits");
-        BaseCheckBox.setToolTipText("Players over the limits cannot initiate or defend Attack From Reserve.");
-        ulAPTop.add(BaseCheckBox);
+        baseCheckBox = new JCheckBox("Disable Activation");
+        baseCheckBox.setName("DisableActivationIfOverHangarLimits");
+        baseCheckBox.setToolTipText("Players over the limits cannot go active.");
+        ulAPTop.add(baseCheckBox);
+        baseCheckBox = new JCheckBox("Disable AFR");
+        baseCheckBox.setName("DisableAFRIfOverHangarLimits");
+        baseCheckBox.setToolTipText("Players over the limits cannot initiate or defend Attack From Reserve.");
+        ulAPTop.add(baseCheckBox);
 
-        BaseCheckBox = new JCheckBox("Use Sliding Hangar Limits");
-        BaseCheckBox.setName("UseSlidingHangarLimits");
-        BaseCheckBox.setToolTipText(
+        baseCheckBox = new JCheckBox("Use Sliding Hangar Limits");
+        baseCheckBox.setName("UseSlidingHangarLimits");
+        baseCheckBox.setToolTipText(
               "<html>Checking this box enables modified limits that increase in cost as more units are purchased.<br>See 'Using Sliding Hangar Limits.pdf'<br><br>Please note that at this time, this is an on/off switch - the per fight and on purchase options do nothing.</html>");
-        ulAPBottom.add(BaseCheckBox);
+        ulAPBottom.add(baseCheckBox);
 
         ulAPBottom.add(new JLabel("Multiplier:"));
         baseTextField = new JTextField(5);
@@ -4209,15 +4197,15 @@ public final class FactionConfigurationDialog implements ActionListener {
         baseTextField.setToolTipText("Multiplier for sliding hangar limits");
         ulAPBottom.add(baseTextField);
 
-        BaseCheckBox = new JCheckBox("Apply to Purchase");
-        BaseCheckBox.setName("SlidingHangarLimitsAffectPurchase");
-        BaseCheckBox.setToolTipText("The over-limit penalty will be applied to purchase price");
-        ulAPBottom.add(BaseCheckBox);
+        baseCheckBox = new JCheckBox("Apply to Purchase");
+        baseCheckBox.setName("SlidingHangarLimitsAffectPurchase");
+        baseCheckBox.setToolTipText("The over-limit penalty will be applied to purchase price");
+        ulAPBottom.add(baseCheckBox);
 
-        BaseCheckBox = new JCheckBox("Apply to Payout");
-        BaseCheckBox.setName("SlidingHangarLimitsAffectPayout");
-        BaseCheckBox.setToolTipText("The over-limit penalty will be applied to game payout");
-        ulAPBottom.add(BaseCheckBox);
+        baseCheckBox = new JCheckBox("Apply to Payout");
+        baseCheckBox.setName("SlidingHangarLimitsAffectPayout");
+        baseCheckBox.setToolTipText("The over-limit penalty will be applied to game payout");
+        ulAPBottom.add(baseCheckBox);
 
         ulActionsPanel.setLayout(new VerticalLayout());
         ulActionsPanel.add(ulAPTop);
@@ -4239,135 +4227,135 @@ public final class FactionConfigurationDialog implements ActionListener {
 
         bmLimitsPanel.add(new JLabel("Mechs: "));
 
-        BaseCheckBox = new JCheckBox();
-        BaseCheckBox.setName("CanBuyBMLightMeks");
-        BaseCheckBox.setToolTipText("Players can buy Light Meks from the BM");
-        bmLimitsPanel.add(BaseCheckBox);
+        baseCheckBox = new JCheckBox();
+        baseCheckBox.setName("CanBuyBMLightMeks");
+        baseCheckBox.setToolTipText("Players can buy Light Meks from the BM");
+        bmLimitsPanel.add(baseCheckBox);
 
-        BaseCheckBox = new JCheckBox();
-        BaseCheckBox.setName("CanBuyBMMediumMeks");
-        BaseCheckBox.setToolTipText("Players can buy Medium Meks from the BM");
-        bmLimitsPanel.add(BaseCheckBox);
+        baseCheckBox = new JCheckBox();
+        baseCheckBox.setName("CanBuyBMMediumMeks");
+        baseCheckBox.setToolTipText("Players can buy Medium Meks from the BM");
+        bmLimitsPanel.add(baseCheckBox);
 
-        BaseCheckBox = new JCheckBox();
-        BaseCheckBox.setName("CanBuyBMHeavyMeks");
-        BaseCheckBox.setToolTipText("Players can buy Heavy Meks from the BM");
-        bmLimitsPanel.add(BaseCheckBox);
+        baseCheckBox = new JCheckBox();
+        baseCheckBox.setName("CanBuyBMHeavyMeks");
+        baseCheckBox.setToolTipText("Players can buy Heavy Meks from the BM");
+        bmLimitsPanel.add(baseCheckBox);
 
-        BaseCheckBox = new JCheckBox();
-        BaseCheckBox.setName("CanBuyBMAssaultMeks");
-        BaseCheckBox.setToolTipText("Players can buy Assault Meks from the BM");
-        bmLimitsPanel.add(BaseCheckBox);
+        baseCheckBox = new JCheckBox();
+        baseCheckBox.setName("CanBuyBMAssaultMeks");
+        baseCheckBox.setToolTipText("Players can buy Assault Meks from the BM");
+        bmLimitsPanel.add(baseCheckBox);
 
         bmLimitsPanel.add(new JLabel("Vehicles: "));
 
-        BaseCheckBox = new JCheckBox();
-        BaseCheckBox.setName("CanBuyBMLightVehicles");
-        BaseCheckBox.setToolTipText("Players can buy Light Vehicles from the BM");
-        bmLimitsPanel.add(BaseCheckBox);
+        baseCheckBox = new JCheckBox();
+        baseCheckBox.setName("CanBuyBMLightVehicles");
+        baseCheckBox.setToolTipText("Players can buy Light Vehicles from the BM");
+        bmLimitsPanel.add(baseCheckBox);
 
-        BaseCheckBox = new JCheckBox();
-        BaseCheckBox.setName("CanBuyBMMediumVehicles");
-        BaseCheckBox.setToolTipText("Players can buy Medium Vehicles from the BM");
-        bmLimitsPanel.add(BaseCheckBox);
+        baseCheckBox = new JCheckBox();
+        baseCheckBox.setName("CanBuyBMMediumVehicles");
+        baseCheckBox.setToolTipText("Players can buy Medium Vehicles from the BM");
+        bmLimitsPanel.add(baseCheckBox);
 
-        BaseCheckBox = new JCheckBox();
-        BaseCheckBox.setName("CanBuyBMHeavyVehicles");
-        BaseCheckBox.setToolTipText("Players can buy Heavy Vehicles from the BM");
-        bmLimitsPanel.add(BaseCheckBox);
+        baseCheckBox = new JCheckBox();
+        baseCheckBox.setName("CanBuyBMHeavyVehicles");
+        baseCheckBox.setToolTipText("Players can buy Heavy Vehicles from the BM");
+        bmLimitsPanel.add(baseCheckBox);
 
-        BaseCheckBox = new JCheckBox();
-        BaseCheckBox.setName("CanBuyBMAssaultVehicles");
-        BaseCheckBox.setToolTipText("Players can buy Assault Vehicles from the BM");
-        bmLimitsPanel.add(BaseCheckBox);
+        baseCheckBox = new JCheckBox();
+        baseCheckBox.setName("CanBuyBMAssaultVehicles");
+        baseCheckBox.setToolTipText("Players can buy Assault Vehicles from the BM");
+        bmLimitsPanel.add(baseCheckBox);
 
         bmLimitsPanel.add(new JLabel("Infantry: "));
 
-        BaseCheckBox = new JCheckBox();
-        BaseCheckBox.setName("CanBuyBMLightInfantry");
-        BaseCheckBox.setToolTipText("Players can buy Light Infantry from the BM");
-        bmLimitsPanel.add(BaseCheckBox);
+        baseCheckBox = new JCheckBox();
+        baseCheckBox.setName("CanBuyBMLightInfantry");
+        baseCheckBox.setToolTipText("Players can buy Light Infantry from the BM");
+        bmLimitsPanel.add(baseCheckBox);
 
-        BaseCheckBox = new JCheckBox();
-        BaseCheckBox.setName("CanBuyBMMediumInfantry");
-        BaseCheckBox.setToolTipText("Players can buy Medium Infantry from the BM");
-        bmLimitsPanel.add(BaseCheckBox);
+        baseCheckBox = new JCheckBox();
+        baseCheckBox.setName("CanBuyBMMediumInfantry");
+        baseCheckBox.setToolTipText("Players can buy Medium Infantry from the BM");
+        bmLimitsPanel.add(baseCheckBox);
 
-        BaseCheckBox = new JCheckBox();
-        BaseCheckBox.setName("CanBuyBMHeavyInfantry");
-        BaseCheckBox.setToolTipText("Players can buy Heavy Infantry from the BM");
-        bmLimitsPanel.add(BaseCheckBox);
+        baseCheckBox = new JCheckBox();
+        baseCheckBox.setName("CanBuyBMHeavyInfantry");
+        baseCheckBox.setToolTipText("Players can buy Heavy Infantry from the BM");
+        bmLimitsPanel.add(baseCheckBox);
 
-        BaseCheckBox = new JCheckBox();
-        BaseCheckBox.setName("CanBuyBMAssaultInfantry");
-        BaseCheckBox.setToolTipText("Players can buy Assault Infantry from the BM");
-        bmLimitsPanel.add(BaseCheckBox);
+        baseCheckBox = new JCheckBox();
+        baseCheckBox.setName("CanBuyBMAssaultInfantry");
+        baseCheckBox.setToolTipText("Players can buy Assault Infantry from the BM");
+        bmLimitsPanel.add(baseCheckBox);
 
         bmLimitsPanel.add(new JLabel("BattleArmor: "));
 
-        BaseCheckBox = new JCheckBox();
-        BaseCheckBox.setName("CanBuyBMLightBA");
-        BaseCheckBox.setToolTipText("Players can buy Light BA from the BM");
-        bmLimitsPanel.add(BaseCheckBox);
+        baseCheckBox = new JCheckBox();
+        baseCheckBox.setName("CanBuyBMLightBA");
+        baseCheckBox.setToolTipText("Players can buy Light BA from the BM");
+        bmLimitsPanel.add(baseCheckBox);
 
-        BaseCheckBox = new JCheckBox();
-        BaseCheckBox.setName("CanBuyBMMediumBA");
-        BaseCheckBox.setToolTipText("Players can buy Medium BA from the BM");
-        bmLimitsPanel.add(BaseCheckBox);
+        baseCheckBox = new JCheckBox();
+        baseCheckBox.setName("CanBuyBMMediumBA");
+        baseCheckBox.setToolTipText("Players can buy Medium BA from the BM");
+        bmLimitsPanel.add(baseCheckBox);
 
-        BaseCheckBox = new JCheckBox();
-        BaseCheckBox.setName("CanBuyBMHeavyBA");
-        BaseCheckBox.setToolTipText("Players can buy Heavy BA from the BM");
-        bmLimitsPanel.add(BaseCheckBox);
+        baseCheckBox = new JCheckBox();
+        baseCheckBox.setName("CanBuyBMHeavyBA");
+        baseCheckBox.setToolTipText("Players can buy Heavy BA from the BM");
+        bmLimitsPanel.add(baseCheckBox);
 
-        BaseCheckBox = new JCheckBox();
-        BaseCheckBox.setName("CanBuyBMAssaultBA");
-        BaseCheckBox.setToolTipText("Players can buy Assault BA from the BM");
-        bmLimitsPanel.add(BaseCheckBox);
+        baseCheckBox = new JCheckBox();
+        baseCheckBox.setName("CanBuyBMAssaultBA");
+        baseCheckBox.setToolTipText("Players can buy Assault BA from the BM");
+        bmLimitsPanel.add(baseCheckBox);
 
         bmLimitsPanel.add(new JLabel("Protomeks: "));
 
-        BaseCheckBox = new JCheckBox();
-        BaseCheckBox.setName("CanBuyBMLightProtomeks");
-        BaseCheckBox.setToolTipText("Players can buy Light Protomeks from the BM");
-        bmLimitsPanel.add(BaseCheckBox);
+        baseCheckBox = new JCheckBox();
+        baseCheckBox.setName("CanBuyBMLightProtomeks");
+        baseCheckBox.setToolTipText("Players can buy Light Protomeks from the BM");
+        bmLimitsPanel.add(baseCheckBox);
 
-        BaseCheckBox = new JCheckBox();
-        BaseCheckBox.setName("CanBuyBMMediumProtomeks");
-        BaseCheckBox.setToolTipText("Players can buy Medium Protomeks from the BM");
-        bmLimitsPanel.add(BaseCheckBox);
+        baseCheckBox = new JCheckBox();
+        baseCheckBox.setName("CanBuyBMMediumProtomeks");
+        baseCheckBox.setToolTipText("Players can buy Medium Protomeks from the BM");
+        bmLimitsPanel.add(baseCheckBox);
 
-        BaseCheckBox = new JCheckBox();
-        BaseCheckBox.setName("CanBuyBMHeavyProtomeks");
-        BaseCheckBox.setToolTipText("Players can buy Heavy Protomeks from the BM");
-        bmLimitsPanel.add(BaseCheckBox);
+        baseCheckBox = new JCheckBox();
+        baseCheckBox.setName("CanBuyBMHeavyProtomeks");
+        baseCheckBox.setToolTipText("Players can buy Heavy Protomeks from the BM");
+        bmLimitsPanel.add(baseCheckBox);
 
-        BaseCheckBox = new JCheckBox();
-        BaseCheckBox.setName("CanBuyBMAssaultProtomeks");
-        BaseCheckBox.setToolTipText("Players can buy Assault Protomeks from the BM");
-        bmLimitsPanel.add(BaseCheckBox);
+        baseCheckBox = new JCheckBox();
+        baseCheckBox.setName("CanBuyBMAssaultProtomeks");
+        baseCheckBox.setToolTipText("Players can buy Assault Protomeks from the BM");
+        bmLimitsPanel.add(baseCheckBox);
 
         bmLimitsPanel.add(new JLabel("Aero: "));
 
-        BaseCheckBox = new JCheckBox();
-        BaseCheckBox.setName("CanBuyBMLightAero");
-        BaseCheckBox.setToolTipText("Players can buy Light Aero from the BM");
-        bmLimitsPanel.add(BaseCheckBox);
+        baseCheckBox = new JCheckBox();
+        baseCheckBox.setName("CanBuyBMLightAero");
+        baseCheckBox.setToolTipText("Players can buy Light Aero from the BM");
+        bmLimitsPanel.add(baseCheckBox);
 
-        BaseCheckBox = new JCheckBox();
-        BaseCheckBox.setName("CanBuyBMMediumAero");
-        BaseCheckBox.setToolTipText("Players can buy Medium Aero from the BM");
-        bmLimitsPanel.add(BaseCheckBox);
+        baseCheckBox = new JCheckBox();
+        baseCheckBox.setName("CanBuyBMMediumAero");
+        baseCheckBox.setToolTipText("Players can buy Medium Aero from the BM");
+        bmLimitsPanel.add(baseCheckBox);
 
-        BaseCheckBox = new JCheckBox();
-        BaseCheckBox.setName("CanBuyBMHeavyAero");
-        BaseCheckBox.setToolTipText("Players can buy Heavy Aero from the BM");
-        bmLimitsPanel.add(BaseCheckBox);
+        baseCheckBox = new JCheckBox();
+        baseCheckBox.setName("CanBuyBMHeavyAero");
+        baseCheckBox.setToolTipText("Players can buy Heavy Aero from the BM");
+        bmLimitsPanel.add(baseCheckBox);
 
-        BaseCheckBox = new JCheckBox();
-        BaseCheckBox.setName("CanBuyBMAssaultAero");
-        BaseCheckBox.setToolTipText("Players can buy Assault Aero from the BM");
-        bmLimitsPanel.add(BaseCheckBox);
+        baseCheckBox = new JCheckBox();
+        baseCheckBox.setName("CanBuyBMAssaultAero");
+        baseCheckBox.setToolTipText("Players can buy Assault Aero from the BM");
+        bmLimitsPanel.add(baseCheckBox);
 
         JPanel bmLimitsBox = new JPanel();
         bmLimitsBox.setLayout(new BoxLayout(bmLimitsBox, BoxLayout.Y_AXIS));
@@ -4437,7 +4425,7 @@ public final class FactionConfigurationDialog implements ActionListener {
 
 
         //Show the dialog and get the user's input
-        dialog.setLocationRelativeTo(mwclient.getMainFrame());
+        dialog.setLocationRelativeTo(client.getMainFrame());
         dialog.setModal(true);
         dialog.pack();
         dialog.setVisible(true);
@@ -4448,23 +4436,22 @@ public final class FactionConfigurationDialog implements ActionListener {
                 JPanel panel = (JPanel) ConfigPane.getComponent(pos);
                 findAndSaveConfigs(panel);
             }
-            mwclient.sendChat(MWClient.CAMPAIGN_PREFIX + "c AdminSaveFactionConfigs#" + houseName);
-            mwclient.sendChat(MWClient.CAMPAIGN_PREFIX + "c CampaignConfig");
+            client.sendChat(IClient.CAMPAIGN_PREFIX + "c AdminSaveFactionConfigs#" + houseName);
+            client.sendChat(IClient.CAMPAIGN_PREFIX + "c CampaignConfig");
 
-            mwclient.reloadData();
+            client.reloadData();
 
         } else {dialog.dispose();}
     }
 
     /**
-     * This Method tunnels through all of the panels to find the textfields
-     * and checkboxes. Once it find one it grabs the Name() param of the object
-     * and uses that to find out what the setting should be from the
-     * mwclient.getserverConfigs() method.
-     * @param panel
+     * This Method tunnels through all the panels to find the text fields and checkboxes. Once it find one it grabs the
+     * Name() param of the object and uses that to find out what the setting should be from the
+     * client.getServerConfigs() method.
+     *
      */
     public void findAndPopulateTextAndCheckBoxes(JPanel panel) {
-        String key = null;
+        String key;
 
         for (int fieldPos = panel.getComponentCount() - 1; fieldPos >= 0; fieldPos--) {
 
@@ -4472,8 +4459,7 @@ public final class FactionConfigurationDialog implements ActionListener {
 
             if (field instanceof JPanel) {
                 findAndPopulateTextAndCheckBoxes((JPanel) field);
-            } else if (field instanceof JTextField) {
-                JTextField textBox = (JTextField) field;
+            } else if (field instanceof JTextField textBox) {
 
                 key = textBox.getName();
                 if (key == null) {continue;}
@@ -4483,52 +4469,50 @@ public final class FactionConfigurationDialog implements ActionListener {
                     //bad hack need to format the message for the last time the backup happened
                     if (key.equals("LastAutomatedBackup")) {
                         SimpleDateFormat sDF = new SimpleDateFormat("MM/dd/yy HH:mm:ss");
-                        Date date = new Date(Long.parseLong(mwclient.getserverConfigs(key)));
+                        Date date = new Date(Long.parseLong(client.getServerConfigs(key)));
                         textBox.setText(sDF.format(date));
-                    } else {textBox.setText(mwclient.getserverConfigs(key));}
+                    } else {textBox.setText(client.getServerConfigs(key));}
                 } catch (Exception ex) {
                     textBox.setText("N/A");
                 }
-            } else if (field instanceof JCheckBox) {
-                JCheckBox checkBox = (JCheckBox) field;
+            } else if (field instanceof JCheckBox checkBox) {
 
                 key = checkBox.getName();
                 if (key == null) {
                     MWLogger.errLog("Null Checkbox: " + checkBox.getToolTipText());
                     continue;
                 }
-                checkBox.setSelected(Boolean.parseBoolean(mwclient.getserverConfigs(key)));
+                checkBox.setSelected(Boolean.parseBoolean(client.getServerConfigs(key)));
 
-            } else if (field instanceof JRadioButton) {
-                JRadioButton radioButton = (JRadioButton) field;
+            } else if (field instanceof JRadioButton radioButton) {
 
                 key = radioButton.getName();
                 if (key == null) {
                     MWLogger.errLog("Null RadioButton: " + radioButton.getToolTipText());
                     continue;
                 }
-                radioButton.setSelected(Boolean.parseBoolean(mwclient.getserverConfigs(key)));
+                radioButton.setSelected(Boolean.parseBoolean(client.getServerConfigs(key)));
 
             }//else continue
         }
     }
 
     /**
-     * This method will tunnel through all of the panels of the config UI
-     * to find any changed text fields or checkboxes. Then it will send the
-     * new configs to the server.
-     * @param panel
+     * This method will tunnel through all the panels of the config UI to find any changed text fields or checkboxes.
+     * Then it will send the new configs to the server.
+     *
      */
     public void findAndSaveConfigs(JPanel panel) {
-        String key = null;
-        String value = null;
+        String key;
+        String value;
         for (int fieldPos = panel.getComponentCount() - 1; fieldPos >= 0; fieldPos--) {
 
             Object field = panel.getComponent(fieldPos);
 
             //found another JPanel keep digging!
-            if (field instanceof JPanel) {findAndSaveConfigs((JPanel) field);} else if (field instanceof JTextField) {
-                JTextField textBox = (JTextField) field;
+            if (field instanceof JPanel) {
+                findAndSaveConfigs((JPanel) field);
+            } else if (field instanceof JTextField textBox) {
 
                 value = textBox.getText();
                 key = textBox.getName();
@@ -4540,51 +4524,49 @@ public final class FactionConfigurationDialog implements ActionListener {
                 if (key.equals("LastAutomatedBackup")) {continue;}
 
                 //reduce bandwidth only send things that have changed.
-                if (!mwclient.getserverConfigs(key).equalsIgnoreCase(value)) {
-                    mwclient.sendChat(MWClient.CAMPAIGN_PREFIX +
-                                            "c AdminChangeFactionConfig#" +
-                                            houseName +
-                                            "#" +
-                                            key +
-                                            "#" +
-                                            value +
-                                            "#CONFIRM");
+                if (!client.getServerConfigs(key).equalsIgnoreCase(value)) {
+                    client.sendChat(IClient.CAMPAIGN_PREFIX +
+                                          "c AdminChangeFactionConfig#" +
+                                          houseName +
+                                          "#" +
+                                          key +
+                                          "#" +
+                                          value +
+                                          "#CONFIRM");
                 }
-            } else if (field instanceof JCheckBox) {
-                JCheckBox checkBox = (JCheckBox) field;
+            } else if (field instanceof JCheckBox checkBox) {
 
                 value = Boolean.toString(checkBox.isSelected());
                 key = checkBox.getName();
 
-                if (key == null || value == null) {continue;}
+                if (key == null || value.isBlank()) {continue;}
                 //reduce bandwidth only send things that have changed.
-                if (!mwclient.getserverConfigs(key).equalsIgnoreCase(value)) {
-                    mwclient.sendChat(MWClient.CAMPAIGN_PREFIX +
-                                            "c AdminChangeFactionConfig#" +
-                                            houseName +
-                                            "#" +
-                                            key +
-                                            "#" +
-                                            value +
-                                            "#CONFIRM");
+                if (!client.getServerConfigs(key).equalsIgnoreCase(value)) {
+                    client.sendChat(IClient.CAMPAIGN_PREFIX +
+                                          "c AdminChangeFactionConfig#" +
+                                          houseName +
+                                          "#" +
+                                          key +
+                                          "#" +
+                                          value +
+                                          "#CONFIRM");
                 }
-            } else if (field instanceof JRadioButton) {
-                JRadioButton radioButton = (JRadioButton) field;
+            } else if (field instanceof JRadioButton radioButton) {
 
                 value = Boolean.toString(radioButton.isSelected());
                 key = radioButton.getName();
 
-                if (key == null || value == null) {continue;}
+                if (key == null || value.isBlank()) {continue;}
                 //reduce bandwidth only send things that have changed.
-                if (!mwclient.getserverConfigs(key).equalsIgnoreCase(value)) {
-                    mwclient.sendChat(MWClient.CAMPAIGN_PREFIX +
-                                            "c AdminChangeFactionConfig#" +
-                                            houseName +
-                                            "#" +
-                                            key +
-                                            "#" +
-                                            value +
-                                            "#CONFIRM");
+                if (!client.getServerConfigs(key).equalsIgnoreCase(value)) {
+                    client.sendChat(IClient.CAMPAIGN_PREFIX +
+                                          "c AdminChangeFactionConfig#" +
+                                          houseName +
+                                          "#" +
+                                          key +
+                                          "#" +
+                                          value +
+                                          "#CONFIRM");
                 }
             }//else continue
         }

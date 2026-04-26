@@ -16,6 +16,7 @@
 
 package mekwars.admin.dialog.serverConfigDialogs;
 
+import java.io.Serial;
 import javax.swing.BorderFactory;
 import javax.swing.BoxLayout;
 import javax.swing.JCheckBox;
@@ -25,21 +26,19 @@ import javax.swing.JTextField;
 import javax.swing.SpringLayout;
 import javax.swing.SwingConstants;
 
-import client.MWClient;
-import common.VerticalLayout;
-import common.util.SpringLayoutHelper;
+import mekwars.common.VerticalLayout;
+import mekwars.common.campaign.clientutils.protocol.IClient;
+import mekwars.common.util.SpringLayoutHelper;
 
 public class FactionPanel extends JPanel {
 
     /**
      *
      */
+    @Serial
     private static final long serialVersionUID = 6005564512507419589L;
 
-    private JTextField baseTextField = new JTextField(5);
-    private JCheckBox baseCheckBox = new JCheckBox();
-
-    public FactionPanel(MWClient mwclient) {
+    public FactionPanel(IClient client) {
         super();
 
         /*
@@ -49,31 +48,31 @@ public class FactionPanel extends JPanel {
         JPanel factionSpring2 = new JPanel(new SpringLayout());
 
         // faction spring #1 -- mostly SOL things
-        baseTextField = new JTextField(5);
-        factionSpring1.add(new JLabel("Starting " + mwclient.moneyOrFluMessage(true, true, -1) + ":",
+        JTextField baseTextField = new JTextField(5);
+        factionSpring1.add(new JLabel("Starting " + client.moneyOrFluMessage(true, true, -1) + ":",
               SwingConstants.TRAILING));
         baseTextField.setToolTipText("Number of " +
-                                           mwclient.moneyOrFluMessage(true, true, -1) +
+                                           client.moneyOrFluMessage(true, true, -1) +
                                            " given to a new SOL player");
         baseTextField.setName("PlayerBaseMoney");
         factionSpring1.add(baseTextField);
 
         //@Salient adding option to give new player starting RP
         baseTextField = new JTextField(5);
-        factionSpring1.add(new JLabel("Starting " + mwclient.getserverConfigs("RPShortName") + ":",
+        factionSpring1.add(new JLabel("Starting " + client.getServerConfigs("RPShortName") + ":",
               SwingConstants.TRAILING));
         baseTextField.setToolTipText("Number of " +
-                                           mwclient.getserverConfigs("RPLongName") +
+                                           client.getServerConfigs("RPLongName") +
                                            " given to a new SOL player.");
         baseTextField.setName("PlayerBaseRP");
         factionSpring1.add(baseTextField);
 
         //@Salient adding option to give new player starting Flu
         baseTextField = new JTextField(5);
-        factionSpring1.add(new JLabel("Starting " + mwclient.getserverConfigs("FluShortName") + ":",
+        factionSpring1.add(new JLabel("Starting " + client.getServerConfigs("FluShortName") + ":",
               SwingConstants.TRAILING));
         baseTextField.setToolTipText("Number of " +
-                                           mwclient.getserverConfigs("FluLongName") +
+                                           client.getServerConfigs("FluLongName") +
                                            " given to a new SOL player.");
         baseTextField.setName("PlayerBaseFlu");
         factionSpring1.add(baseTextField);
@@ -260,7 +259,7 @@ public class FactionPanel extends JPanel {
         // setup CBoxes
         JPanel factionCBoxSpring = new JPanel(new SpringLayout());
 
-        baseCheckBox = new JCheckBox("Donate @ Unenroll");
+        JCheckBox baseCheckBox = new JCheckBox("Donate @ Unenroll");
         baseCheckBox.setToolTipText(
               "<html>If checked, players that unenroll will donate<br>all their units to the house bays.</html>");
         baseCheckBox.setName("DonateUnitsUponUnenrollment");

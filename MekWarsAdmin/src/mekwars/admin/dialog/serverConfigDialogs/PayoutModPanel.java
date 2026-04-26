@@ -17,6 +17,7 @@
 package mekwars.admin.dialog.serverConfigDialogs;
 
 import java.awt.Dimension;
+import java.io.Serial;
 
 import javax.swing.BorderFactory;
 import javax.swing.JCheckBox;
@@ -24,10 +25,11 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
 
-import common.VerticalLayout;
+import mekwars.common.VerticalLayout;
 
 public class PayoutModPanel extends JPanel {
 
+    @Serial
     private static final long serialVersionUID = 7388409164181746448L;
     private JTextField baseTextField = new JTextField(5);
     private JCheckBox baseCheckBox = new JCheckBox();
@@ -40,7 +42,6 @@ public class PayoutModPanel extends JPanel {
     private final int MAX_TYPE = 4;
 
     int maxWidth = 0;
-    int maxLabelWidth = 0;
 
     private JPanel setUpPanel(JPanel panel, int type) {
         if (type < 0 || type > MAX_TYPE) {
@@ -48,30 +49,29 @@ public class PayoutModPanel extends JPanel {
         }
 
         String typeName = "";
-        String ttText = "";
-
-        switch (type) {
-            case TYPE_RP:
+        String ttText = switch (type) {
+            case TYPE_RP -> {
                 typeName = "RP";
-                ttText = "RP";
-                break;
-            case TYPE_FLU:
+                yield "RP";
+            }
+            case TYPE_FLU -> {
                 typeName = "Influence";
-                ttText = "influence";
-                break;
-            case TYPE_MONEY:
+                yield "influence";
+            }
+            case TYPE_MONEY -> {
                 typeName = "Money";
-                ttText = "money";
-                break;
-            case TYPE_EXP:
+                yield "money";
+            }
+            case TYPE_EXP -> {
                 typeName = "Exp";
-                ttText = "experience";
-                break;
-            case TYPE_LAND:
+                yield "experience";
+            }
+            case TYPE_LAND -> {
                 typeName = "Land";
-                ttText = "land";
-                break;
-        }
+                yield "land";
+            }
+            default -> "";
+        };
 
         baseCheckBox = new JCheckBox("Modify Op Payout");
         baseCheckBox.setName("ModifyOpPayoutByELO_" + typeName);

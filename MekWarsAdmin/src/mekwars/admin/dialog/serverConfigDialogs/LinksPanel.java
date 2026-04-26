@@ -13,6 +13,7 @@ package mekwars.admin.dialog.serverConfigDialogs;
 
 import java.awt.FlowLayout;
 import java.awt.GridLayout;
+import java.io.Serial;
 
 import javax.swing.BorderFactory;
 import javax.swing.JCheckBox;
@@ -20,7 +21,8 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
 
-import common.VerticalLayout;
+import mekwars.common.VerticalLayout;
+
 
 /**
  *
@@ -28,11 +30,8 @@ import common.VerticalLayout;
  */
 public class LinksPanel extends JPanel {
 
+    @Serial
     private static final long serialVersionUID = -4629994177197981829L;
-
-    private JTextField baseTextField = new JTextField(5);
-    private JCheckBox baseCheckBox = new JCheckBox();
-    private JLabel baseLabel = new JLabel();
 
     private void init() {
 
@@ -71,7 +70,7 @@ public class LinksPanel extends JPanel {
 
         panel1.setBorder(BorderFactory.createTitledBorder("Link Area Options"));
 
-        baseCheckBox = new JCheckBox("Enable Link Area");
+        JCheckBox baseCheckBox = new JCheckBox("Enable Link Area");
         baseCheckBox.setToolTipText("<HTML>Must be enabled if you wish to use this feature.</HTML>");
         baseCheckBox.setName("Enable_Link_Area");
         panel1.add(baseCheckBox);
@@ -88,8 +87,8 @@ public class LinksPanel extends JPanel {
         baseCheckBox.setName("Enable_Link3_Button");
         panel1.add(baseCheckBox);
 
-        baseLabel = new JLabel("Area Label:");
-        baseTextField = new JTextField(10);
+        JLabel baseLabel = new JLabel("Area Label:");
+        JTextField baseTextField = new JTextField(10);
         baseTextField.setToolTipText(
               "<HTML>The area label displayed to the user, should be able to use html tags if you wish to change font</HTML>");
         baseTextField.setName("Link_Area_Label");

@@ -19,8 +19,11 @@ package mekwars.common.util;
 import java.io.IOException;
 import java.io.Writer;
 
+import jakarta.annotation.Nonnull;
+
 /**
  * Splits a stream into two.
+ *
  * @author Imi (immanuel.scholz@gmx.de)
  */
 public final class TeePrinter extends Writer {
@@ -30,28 +33,31 @@ public final class TeePrinter extends Writer {
         this.tee = tee;
         this.too = too;
     }
+
     /**
      * @see java.io.Writer#close()
      */
     @Override
-	public void close() throws IOException {
+    public void close() throws IOException {
         tee.close();
         too.close();
     }
+
     /**
      * @see java.io.Writer#flush()
      */
     @Override
-	public void flush() throws IOException {
+    public void flush() throws IOException {
         tee.flush();
         too.flush();
     }
+
     /**
      * @see java.io.Writer#write(char[], int, int)
      */
     @Override
-	public void write(char[] cbuf, int off, int len) throws IOException {
-        tee.write(cbuf, off, len);
-        too.write(cbuf, off, len);
+    public void write(@Nonnull char[] charBuff, int off, int len) throws IOException {
+        tee.write(charBuff, off, len);
+        too.write(charBuff, off, len);
     }
 }

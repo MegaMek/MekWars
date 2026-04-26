@@ -24,7 +24,7 @@ package mekwars.common;
  * @author Helge Richter
  */
 public class Continent {
-    private common.Terrain environment;
+    private Terrain environment;
     private AdvancedTerrain advTerrain;
     private int size = 1;
     private int id = -1;
@@ -38,7 +38,7 @@ public class Continent {
 	}
 	*/
 
-    public Continent(int Size, common.Terrain env, AdvancedTerrain advTerr) {
+    public Continent(int Size, Terrain env, AdvancedTerrain advTerr) {
         this.size = Size;
         environment = env;
         advTerrain = advTerr;
@@ -46,7 +46,7 @@ public class Continent {
 
 
     public Continent() {
-        // for serialisation
+        // for serialization
     }
 
 
@@ -67,18 +67,25 @@ public class Continent {
 
     @Override
     public boolean equals(Object o) {
-        if (!(o instanceof Continent)) {return false;}
-        Continent cont = (Continent) o;
-        if (cont.getSize() != getSize()) {return false;}
-        if (cont.getEnvironment().equals(getEnvironment())) {return false;}
-        if (cont.getAdvancedTerrain().equals(getAdvancedTerrain())) {return false;}
-        return true;
+        if (!(o instanceof Continent cont)) {
+            return false;
+        }
+
+        if (cont.getSize() != getSize()) {
+            return false;
+        }
+
+        if (cont.getEnvironment().equals(getEnvironment())) {
+            return false;
+        }
+
+        return !cont.getAdvancedTerrain().equals(getAdvancedTerrain());
     }
 
     /**
      * @return Returns the envID.
      */
-    public common.Terrain getEnvironment() {
+    public Terrain getEnvironment() {
         return environment;
     }
 
@@ -100,7 +107,6 @@ public class Continent {
     /**
      * Sets the continent ID;
      *
-     * @param id
      */
     public void setID(int id) {
         this.id = id;
@@ -109,11 +115,4 @@ public class Continent {
     public String getDropBoxName() {
         return getEnvironment().getName() + "(" + getAdvancedTerrain().getName() + ") %" + getSize();
     }
-  /* public void binOut(TreeWriter out)
-   {
-       out.write(getEnvironment().getId(), "envID");
-       out.write(getSize(), "size");
-   }
-   public void binIn(TreeReader in, CampaignData data){
-   }*/
 }

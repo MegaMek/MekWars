@@ -11,6 +11,7 @@
 
 package mekwars.admin.dialog.serverConfigDialogs;
 
+import java.io.Serial;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
@@ -21,11 +22,10 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.SpringLayout;
 
-import common.VerticalLayout;
-import common.util.SpringLayoutHelper;
-import org.jdatepicker.impl.JDatePanelImpl;
-import org.jdatepicker.impl.JDatePickerImpl;
-import org.jdatepicker.impl.UtilDateModel;
+import mekwars.common.VerticalLayout;
+import mekwars.common.util.SpringLayoutHelper;
+import org.jdatepicker.JDatePanel;
+import org.jdatepicker.JDatePicker;
 
 /**
  * Configuration panel containing settings for the Christmas season.
@@ -38,60 +38,57 @@ public class ChristmasPanel extends JPanel {
     /**
      *
      */
+    @Serial
     private static final long serialVersionUID = -4014592405096904081L;
-
-    private JCheckBox BaseCheckBox = new JCheckBox();
 
     public ChristmasPanel() {
         super();
         JPanel panel = new JPanel(new VerticalLayout());
 
         JPanel checkboxSpring = new JPanel(new SpringLayout());
-        JPanel unitPanel = new admin.dialog.serverConfigDialogs.ChristmasUnitPanel();
+        JPanel unitPanel = new ChristmasUnitPanel();
 
-        BaseCheckBox = new JCheckBox("Celebrate Christmas");
-        BaseCheckBox.setToolTipText("Give free units to players during the holidays.");
-        BaseCheckBox.setName("Celebrate_Christmas");
-        checkboxSpring.add(BaseCheckBox);
+        JCheckBox baseCheckBox = new JCheckBox("Celebrate Christmas");
+        baseCheckBox.setToolTipText("Give free units to players during the holidays.");
+        baseCheckBox.setName("Celebrate_Christmas");
+        checkboxSpring.add(baseCheckBox);
         checkboxSpring.add(new JLabel(""));
 
-        BaseCheckBox = new JCheckBox("Allow Scrapping");
-        BaseCheckBox.setToolTipText("Allow Christmas Units to be scrapped");
-        BaseCheckBox.setName("Christmas_AllowScrap");
-        checkboxSpring.add(BaseCheckBox);
+        baseCheckBox = new JCheckBox("Allow Scrapping");
+        baseCheckBox.setToolTipText("Allow Christmas Units to be scrapped");
+        baseCheckBox.setName("Christmas_AllowScrap");
+        checkboxSpring.add(baseCheckBox);
 
-        BaseCheckBox = new JCheckBox("Allow BM Sales");
-        BaseCheckBox.setToolTipText("Allow Christmas Units to be sold on the Black Market");
-        BaseCheckBox.setName("Christmas_AllowBM");
-        checkboxSpring.add(BaseCheckBox);
+        baseCheckBox = new JCheckBox("Allow BM Sales");
+        baseCheckBox.setToolTipText("Allow Christmas Units to be sold on the Black Market");
+        baseCheckBox.setName("Christmas_AllowBM");
+        checkboxSpring.add(baseCheckBox);
 
-        BaseCheckBox = new JCheckBox("Allow Direct Sales");
-        BaseCheckBox.setToolTipText("Allow Christmas Units to be sold to other players");
-        BaseCheckBox.setName("Christmas_AllowDirectSell");
-        checkboxSpring.add(BaseCheckBox);
+        baseCheckBox = new JCheckBox("Allow Direct Sales");
+        baseCheckBox.setToolTipText("Allow Christmas Units to be sold to other players");
+        baseCheckBox.setName("Christmas_AllowDirectSell");
+        checkboxSpring.add(baseCheckBox);
 
-        BaseCheckBox = new JCheckBox("Allow Transfer");
-        BaseCheckBox.setToolTipText("Allow Christmas Units to be transferred to other players");
-        BaseCheckBox.setName("Christmas_AllowTransfer");
-        checkboxSpring.add(BaseCheckBox);
+        baseCheckBox = new JCheckBox("Allow Transfer");
+        baseCheckBox.setToolTipText("Allow Christmas Units to be transferred to other players");
+        baseCheckBox.setName("Christmas_AllowTransfer");
+        checkboxSpring.add(baseCheckBox);
 
-        BaseCheckBox = new JCheckBox("Allow Donate");
-        BaseCheckBox.setToolTipText("Allow Christmas Units to be donated to faction bays");
-        BaseCheckBox.setName("Christmas_AllowDonate");
-        checkboxSpring.add(BaseCheckBox);
+        baseCheckBox = new JCheckBox("Allow Donate");
+        baseCheckBox.setToolTipText("Allow Christmas Units to be donated to faction bays");
+        baseCheckBox.setName("Christmas_AllowDonate");
+        checkboxSpring.add(baseCheckBox);
 
-        UtilDateModel model = new UtilDateModel();
         Properties props = new Properties();
         props.put("text.today", "Today");
         props.put("text.month", "Month");
         props.put("text.year", "Year");
-        JDatePanelImpl startDatePanel = new JDatePanelImpl(model, props);
-        JDatePickerImpl startDatePicker = new JDatePickerImpl(startDatePanel, new DateLabelFormatter());
+        JDatePanel startDatePanel = new JDatePanel();
+        JDatePicker startDatePicker = new JDatePicker();
         startDatePicker.setName("Christmas_StartDate");
 
-        model = new UtilDateModel();
-        JDatePanelImpl endDatePanel = new JDatePanelImpl(model, props);
-        JDatePickerImpl endDatePicker = new JDatePickerImpl(endDatePanel, new DateLabelFormatter());
+        JDatePanel endDatePanel = new JDatePanel();
+        JDatePicker endDatePicker = new JDatePicker();
         endDatePicker.setName("Christmas_EndDate");
 
         checkboxSpring.add(new JLabel(""));
@@ -113,12 +110,13 @@ public class ChristmasPanel extends JPanel {
      *
      * @author Spork
      */
-    private class DateLabelFormatter extends AbstractFormatter {
+    private static class DateLabelFormatter extends AbstractFormatter {
 
+        @Serial
         private static final long serialVersionUID = -8200575816557834887L;
 
-        private String datePattern = "yyyy-MM-dd";
-        private SimpleDateFormat dateFormatter = new SimpleDateFormat(datePattern);
+        private final String datePattern = "yyyy-MM-dd";
+        private final SimpleDateFormat dateFormatter = new SimpleDateFormat(datePattern);
 
         @Override
         public Object stringToValue(String text) throws ParseException {

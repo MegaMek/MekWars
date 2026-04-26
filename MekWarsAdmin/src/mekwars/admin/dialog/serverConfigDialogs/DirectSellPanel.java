@@ -11,6 +11,7 @@
 
 package mekwars.admin.dialog.serverConfigDialogs;
 
+import java.io.Serial;
 import javax.swing.BoxLayout;
 import javax.swing.JCheckBox;
 import javax.swing.JLabel;
@@ -19,7 +20,8 @@ import javax.swing.JTextField;
 import javax.swing.SpringLayout;
 import javax.swing.SwingConstants;
 
-import common.util.SpringLayoutHelper;
+import mekwars.common.util.SpringLayoutHelper;
+
 
 /**
  * @author Spork
@@ -27,9 +29,8 @@ import common.util.SpringLayoutHelper;
  */
 public class DirectSellPanel extends JPanel {
 
+    @Serial
     private static final long serialVersionUID = 3795966693108854838L;
-    private JTextField baseTextField = new JTextField(5);
-    private JCheckBox baseCheckBox = new JCheckBox();
 
     public DirectSellPanel() {
         super();
@@ -46,7 +47,7 @@ public class DirectSellPanel extends JPanel {
 
         JPanel buySellSpring = new JPanel(new SpringLayout());
 
-        baseTextField = new JTextField(5);
+        JTextField baseTextField = new JTextField(5);
         MekSpring.add(new JLabel("Light Mek Pricemod:", SwingConstants.TRAILING));
         baseTextField.setToolTipText("Amount added to pricemod to direct sell a Mek.");
         baseTextField.setName("SellDirectLightMekPrice");
@@ -215,7 +216,7 @@ public class DirectSellPanel extends JPanel {
         buySellSpring2.setLayout(new BoxLayout(buySellSpring2, BoxLayout.Y_AXIS));
 
         // finalize layout
-        baseCheckBox = new JCheckBox("Use Direct Sell");
+        JCheckBox baseCheckBox = new JCheckBox("Use Direct Sell");
         baseCheckBox.setName("UseDirectSell");
 
         buySellSpring2.add(baseCheckBox);

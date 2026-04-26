@@ -70,7 +70,7 @@ public class HPGSubscriberDeserializer implements JsonDeserializer<HPGSubscriber
         final String password = (obj.get("password") == null || obj.get("password").isJsonNull()) ?
                                       "" :
                                       obj.get("password").getAsString();
-        final boolean isLegacy = obj.get("isLegacy") == null ? true : obj.get("isLegacy").getAsBoolean();
+        final boolean isLegacy = obj.get("isLegacy") == null || obj.get("isLegacy").getAsBoolean();
         final String lastUpdated = (obj.get("lastUpdated") == null || obj.get("lastUpdated").isJsonNull()) ?
                                          "" :
                                          obj.get("lastUpdated").getAsString();

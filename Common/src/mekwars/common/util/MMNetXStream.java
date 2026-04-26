@@ -22,8 +22,8 @@ import com.thoughtworks.xstream.converters.reflection.PureJavaReflectionProvider
 import com.thoughtworks.xstream.core.ReferenceByIdMarshallingStrategy;
 import com.thoughtworks.xstream.io.HierarchicalStreamDriver;
 
-import common.House;
-import common.Planet;
+import mekwars.common.House;
+import mekwars.common.Planet;
 
 
 /**
@@ -35,18 +35,18 @@ public class MMNetXStream extends XStream {
         super(new PureJavaReflectionProvider());
         // you may add shortcuts here, so XStream will not
         // write the whole class name each time ;-)
-        alias("faction",House.class);
-        alias("planet",Planet.class);
+        alias("faction", House.class);
+        alias("planet", Planet.class);
         // Enables reference marshalling.
         setMarshallingStrategy(new ReferenceByIdMarshallingStrategy());
     }
 
-    public MMNetXStream(HierarchicalStreamDriver hierarchicalStreamDriver){
-    	super(hierarchicalStreamDriver);
+    public MMNetXStream(HierarchicalStreamDriver hierarchicalStreamDriver) {
+        super(hierarchicalStreamDriver);
         // you may add shortcuts here, so XStream will not
         // write the whole class name each time ;-)
-        alias("faction",House.class);
-        alias("planet",Planet.class);
+        alias("faction", House.class);
+        alias("planet", Planet.class);
         // Enables reference marshalling.
         setMarshallingStrategy(new ReferenceByIdMarshallingStrategy());
     }

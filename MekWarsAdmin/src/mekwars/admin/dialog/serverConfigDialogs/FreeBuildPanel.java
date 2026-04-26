@@ -11,6 +11,7 @@
 
 package mekwars.admin.dialog.serverConfigDialogs;
 
+import java.io.Serial;
 import javax.swing.BorderFactory;
 import javax.swing.JCheckBox;
 import javax.swing.JLabel;
@@ -18,29 +19,28 @@ import javax.swing.JPanel;
 import javax.swing.JTextField;
 import javax.swing.SwingConstants;
 
-import client.MWClient;
-import common.VerticalLayout;
+import mekwars.common.VerticalLayout;
+
 
 /**
  *
  * @author Salient - contains link area options options
  */
-public class FreebuildPanel extends JPanel {
+public class FreeBuildPanel extends JPanel {
 
+    @Serial
     private static final long serialVersionUID = -4626004177199981829L;
 
-    private JTextField baseTextField = new JTextField(5);
-    private JCheckBox baseCheckBox = new JCheckBox();
-
-    public FreebuildPanel(MWClient mwclient) {
+    public FreeBuildPanel() {
         super();
 
         setLayout(new VerticalLayout(5, VerticalLayout.CENTER, VerticalLayout.TOP));
 
         String description =
-              "<HTML>Freebuild allows for several things. It can be used to allow SOL to pick whatever units<br>"
+              "<HTML>Free build allows for several things. It can be used to allow SOL to pick whatever units<br>"
                     +
-                    " they want from either a defined build table OR all tables. Also post defection freebuild can be enabled.<br>"
+                    " they want from either a defined build table OR all tables. Also post defection free build can " +
+                    "be enabled.<br>"
                     +
                     " This will allow for the player to build from the house table. A limit of how many free meks can be set.<br>"
                     +
@@ -52,18 +52,14 @@ public class FreebuildPanel extends JPanel {
         JPanel panel3 = new JPanel();
         JPanel panel3a = new JPanel();
         JPanel panel3b = new JPanel();
-
-        //	        String fluName = mwclient.getserverConfigs("FluShortName");
-        //	        String rpName = mwclient.getserverConfigs("RPShortName");
-        //	        String cbName = mwclient.getserverConfigs("MoneyShortName");
-
+        
         panel0.setBorder(BorderFactory.createTitledBorder("Free Build"));
 
         panel0.add(new JLabel(description));
 
         panel1.setBorder(BorderFactory.createTitledBorder("SOL Free Build"));
 
-        baseCheckBox = new JCheckBox("Allow Sol Free Build");
+        JCheckBox baseCheckBox = new JCheckBox("Allow Sol Free Build");
         baseCheckBox.setToolTipText(
               "<HTML>Allows new players to create their own units based<br> on the build table of your choice, starting units should be set to 0</HTML>");
         baseCheckBox.setName("Sol_FreeBuild");
@@ -75,7 +71,7 @@ public class FreebuildPanel extends JPanel {
         baseCheckBox.setName("Sol_FreeBuild_UseAll");
         panel1.add(baseCheckBox);
 
-        baseTextField = new JTextField(30);
+        JTextField baseTextField = new JTextField(30);
         panel1.add(new JLabel("Build Table Name:", SwingConstants.TRAILING));
         baseTextField.setToolTipText(
               "<HTML>Set name of build table for new players to build units from.<br>default is Common, or you can create a new set of build tables if you'd like(ex Starter) <br>Starter_Light Starter_Medium and so on. Frequency is irrelavant, if creating a new build table, just set frequency to 1. </HTML>");

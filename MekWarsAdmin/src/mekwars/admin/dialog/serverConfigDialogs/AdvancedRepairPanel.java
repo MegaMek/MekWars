@@ -11,6 +11,7 @@
 
 package mekwars.admin.dialog.serverConfigDialogs;
 
+import java.io.Serial;
 import javax.swing.BoxLayout;
 import javax.swing.ButtonGroup;
 import javax.swing.JCheckBox;
@@ -21,7 +22,7 @@ import javax.swing.JTextField;
 import javax.swing.SpringLayout;
 import javax.swing.SwingConstants;
 
-import common.util.SpringLayoutHelper;
+import mekwars.common.util.SpringLayoutHelper;
 
 /**
  * @author jtighe
@@ -29,10 +30,8 @@ import common.util.SpringLayoutHelper;
  */
 public class AdvancedRepairPanel extends JPanel {
 
+    @Serial
     private static final long serialVersionUID = -8614798115843988091L;
-    private JTextField baseTextField = new JTextField(5);
-    private JCheckBox BaseCheckBox = new JCheckBox();
-    private JRadioButton baseRadioButton = new JRadioButton();
 
     public AdvancedRepairPanel() {
         super();
@@ -47,7 +46,7 @@ public class AdvancedRepairPanel extends JPanel {
 
         ButtonGroup repairTypes = new ButtonGroup();
 
-        baseRadioButton = new JRadioButton("Use Techs");
+        JRadioButton baseRadioButton = new JRadioButton("Use Techs");
 
         baseRadioButton.setToolTipText(
               "<html>Use Techs as bays<br>NOTE: Save all player files and reboot<br>When turning on or off.</html>");
@@ -72,47 +71,47 @@ public class AdvancedRepairPanel extends JPanel {
         repairTypes.add(baseRadioButton);
         repairSpring.add(baseRadioButton);
 
-        BaseCheckBox = new JCheckBox("Allow Reg Techs To Be Hired");
+        JCheckBox baseCheckBox = new JCheckBox("Allow Reg Techs To Be Hired");
 
-        BaseCheckBox.setToolTipText("Allow players to hire reg techs");
-        BaseCheckBox.setName("AllowRegTechsToBeHired");
-        repairSpring.add(BaseCheckBox);
+        baseCheckBox.setToolTipText("Allow players to hire reg techs");
+        baseCheckBox.setName("AllowRegTechsToBeHired");
+        repairSpring.add(baseCheckBox);
 
         // Allow players to donate and sell damaged units.
-        BaseCheckBox = new JCheckBox("Allow Selling Of Damaged Units");
+        baseCheckBox = new JCheckBox("Allow Selling Of Damaged Units");
 
-        BaseCheckBox.setToolTipText("Allow players to sell damaged units on the BM");
-        BaseCheckBox.setEnabled(false);
-        BaseCheckBox.setName("AllowSellingOfDamagedUnits");
-        repairSpring.add(BaseCheckBox);
+        baseCheckBox.setToolTipText("Allow players to sell damaged units on the BM");
+        baseCheckBox.setEnabled(false);
+        baseCheckBox.setName("AllowSellingOfDamagedUnits");
+        repairSpring.add(baseCheckBox);
 
-        BaseCheckBox = new JCheckBox("Allow Donating Of Damaged Units");
+        baseCheckBox = new JCheckBox("Allow Donating Of Damaged Units");
 
-        BaseCheckBox.setToolTipText("Allow players to donate damaged units to their factions");
-        BaseCheckBox.setName("AllowDonatingOfDamagedUnits");
-        repairSpring.add(BaseCheckBox);
+        baseCheckBox.setToolTipText("Allow players to donate damaged units to their factions");
+        baseCheckBox.setName("AllowDonatingOfDamagedUnits");
+        repairSpring.add(baseCheckBox);
 
-        BaseCheckBox = new JCheckBox("Use Parts For Repairs");
+        baseCheckBox = new JCheckBox("Use Parts For Repairs");
 
-        BaseCheckBox.setToolTipText("Parts are pulled from the players cache to use for repairs.");
-        BaseCheckBox.setName("UsePartsRepair");
-        repairSpring.add(BaseCheckBox);
+        baseCheckBox.setToolTipText("Parts are pulled from the players cache to use for repairs.");
+        baseCheckBox.setName("UsePartsRepair");
+        repairSpring.add(baseCheckBox);
 
-        BaseCheckBox = new JCheckBox("Non-Faction Units cost extra techs");
-        BaseCheckBox.setToolTipText("Only used with Tech Repairs.  Increases the tech cost of non-faction units.");
-        BaseCheckBox.setName("UseNonFactionUnitsIncreasedTechs");
-        repairSpring.add(BaseCheckBox);
+        baseCheckBox = new JCheckBox("Non-Faction Units cost extra techs");
+        baseCheckBox.setToolTipText("Only used with Tech Repairs.  Increases the tech cost of non-faction units.");
+        baseCheckBox.setName("UseNonFactionUnitsIncreasedTechs");
+        repairSpring.add(baseCheckBox);
 
-        BaseCheckBox = new JCheckBox("Do not allow salvage of undamaged units");
-        BaseCheckBox.setToolTipText("Only used with Tech Repairs.  Players may not salvage undamaged units");
-        BaseCheckBox.setName("DisallowFreshUnitSalvage");
-        repairSpring.add(BaseCheckBox);
+        baseCheckBox = new JCheckBox("Do not allow salvage of undamaged units");
+        baseCheckBox.setToolTipText("Only used with Tech Repairs.  Players may not salvage undamaged units");
+        baseCheckBox.setName("DisallowFreshUnitSalvage");
+        repairSpring.add(baseCheckBox);
 
         SpringLayoutHelper.setupSpringGrid(repairSpring, 3);
 
         // The base cost to hire a tech.
 
-        baseTextField = new JTextField(5);
+        JTextField baseTextField = new JTextField(5);
         repairSpring2.add(new JLabel("Green Tech Hire Cost:", SwingConstants.TRAILING));
         baseTextField.setToolTipText("Cost to hire 1 green tech");
         baseTextField.setName("GreenTechHireCost");

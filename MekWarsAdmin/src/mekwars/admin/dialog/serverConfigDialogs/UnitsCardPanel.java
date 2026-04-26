@@ -19,9 +19,7 @@ package mekwars.admin.dialog.serverConfigDialogs;
 import java.awt.CardLayout;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-
+import java.io.Serial;
 import javax.swing.BorderFactory;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
@@ -31,21 +29,14 @@ import javax.swing.JTextField;
 import javax.swing.SpringLayout;
 import javax.swing.SwingConstants;
 
-import client.MWClient;
-import common.Unit;
-import common.VerticalLayout;
-import common.util.SpringLayoutHelper;
+import mekwars.common.Unit;
+import mekwars.common.VerticalLayout;
+import mekwars.common.util.SpringLayoutHelper;
 
 public class UnitsCardPanel extends JPanel {
 
-
-    /**
-     *
-     */
+    @Serial
     private static final long serialVersionUID = 2383908910758773550L;
-
-    private JTextField baseTextField = new JTextField(5);
-    private JCheckBox baseCheckBox = new JCheckBox();
 
     private void init() {
         // We're going to split up the UnitsPanel into two card dialogs
@@ -66,9 +57,10 @@ public class UnitsCardPanel extends JPanel {
         costGrid.add(new JLabel("Influence"));
         costGrid.add(new JLabel("PP"));
 
+        JTextField baseTextField;
         for (int unitType = Unit.MEK; unitType <= Unit.INFANTRY; unitType++) {
             for (int unitWeight = Unit.LIGHT; unitWeight <= Unit.ASSAULT; unitWeight++) {
-                String baseName = "";
+                String baseName;
                 if (unitType == Unit.MEK) {
                     baseName = Unit.getWeightClassDesc(unitWeight);
                 } else {
@@ -120,7 +112,7 @@ public class UnitsCardPanel extends JPanel {
 
         for (int unitType = Unit.PROTOMEK; unitType <= Unit.AERO; unitType++) {
             for (int unitWeight = Unit.LIGHT; unitWeight <= Unit.ASSAULT; unitWeight++) {
-                String baseName = "";
+                String baseName;
                 if (unitType == Unit.MEK) {
                     baseName = Unit.getWeightClassDesc(unitWeight);
                 } else {
@@ -165,7 +157,7 @@ public class UnitsCardPanel extends JPanel {
 
         JPanel unitUsePanel = new JPanel(new SpringLayout());
 
-        baseCheckBox = new JCheckBox("Use Vehicles");
+        JCheckBox baseCheckBox = new JCheckBox("Use Vehicles");
         baseCheckBox.setToolTipText("Uncheck to disable Vehs.");
         baseCheckBox.setName("UseVehicle");
         unitUsePanel.add(baseCheckBox);
@@ -292,7 +284,7 @@ public class UnitsCardPanel extends JPanel {
         JPanel typesPanel = new JPanel(new SpringLayout());
         typesPanel.setBorder(BorderFactory.createTitledBorder("Factory Type Names"));
 
-        for (int i = Unit.MEK; i < Unit.MAXBUILD; i++) {
+        for (int i = Unit.MEK; i < Unit.MAX_BUILD; i++) {
             baseTextField = new JTextField(5);
             typesPanel.add(new JLabel(Unit.getTypeClassDesc(i) + ":", SwingConstants.TRAILING));
             baseTextField.setToolTipText("<html>Title to be displayed of " +
@@ -375,18 +367,10 @@ public class UnitsCardPanel extends JPanel {
         final JPanel bottomPanel = new JPanel();
         bottomPanel.setLayout(cl);
         JButton costsButton = new JButton("Unit Costs");
-        costsButton.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent e) {
-                cl.first(bottomPanel);
-            }
-        });
+        costsButton.addActionListener(e -> cl.first(bottomPanel));
 
         JButton otherButton = new JButton("Other");
-        otherButton.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent e) {
-                cl.last(bottomPanel);
-            }
-        });
+        otherButton.addActionListener(e -> cl.last(bottomPanel));
 
         topPanel.add(costsButton);
         topPanel.add(otherButton);
@@ -400,7 +384,7 @@ public class UnitsCardPanel extends JPanel {
         add(bottomPanel);
     }
 
-    public UnitsCardPanel(MWClient mwclient) {
+    public UnitsCardPanel() {
         super();
         init();
     }

@@ -11,6 +11,7 @@
 
 package mekwars.admin.dialog.serverConfigDialogs;
 
+import java.io.Serial;
 import javax.swing.BorderFactory;
 import javax.swing.JCheckBox;
 import javax.swing.JLabel;
@@ -20,8 +21,8 @@ import javax.swing.SpringLayout;
 import javax.swing.SwingConstants;
 import javax.swing.border.BevelBorder;
 
-import common.VerticalLayout;
-import common.util.SpringLayoutHelper;
+import mekwars.common.VerticalLayout;
+import mekwars.common.util.SpringLayoutHelper;
 
 /**
  *
@@ -33,10 +34,8 @@ import common.util.SpringLayoutHelper;
  */
 public class TrackerPanel extends JPanel {
 
+    @Serial
     private static final long serialVersionUID = -4629994177197981829L;
-
-    private JTextField baseTextField = new JTextField(5);
-    private JCheckBox baseCheckBox = new JCheckBox();
 
     private void init(String uuid) {
 
@@ -63,7 +62,7 @@ public class TrackerPanel extends JPanel {
         uuidPanel.add(new JLabel(" "));
         uuidPanel.add(new JLabel("UUID: " + uuid));
 
-        baseCheckBox = new JCheckBox("Regenerate");
+        JCheckBox baseCheckBox = new JCheckBox("Regenerate");
         baseCheckBox.setName("TrackerResetUUID");
         uuidPanel.add(baseCheckBox);
 
@@ -75,7 +74,7 @@ public class TrackerPanel extends JPanel {
 
         JPanel panel1 = new JPanel(new SpringLayout());
 
-        baseTextField = new JTextField(30);
+        JTextField baseTextField = new JTextField(30);
         baseTextField.setName("ServerName");
         baseTextField.setToolTipText(
               "The Server's name.  This will show in the Tracker as well as at the beginning of MainChat.");

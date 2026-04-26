@@ -25,10 +25,9 @@ import java.util.Hashtable;
 import java.util.Vector;
 import java.util.concurrent.ConcurrentHashMap;
 
-import common.util.BinReader;
-import common.util.BinWriter;
 import megamek.common.TechConstants;
-import org.mekwars.libpk.converters.HTML;
+import mekwars.common.persistence.BinReader;
+import mekwars.common.persistence.BinWriter;
 
 /**
  * @author Helge Richter
@@ -46,15 +45,15 @@ public class House {
 
     private Integer id;
     private int dbId = 0;
-    private Vector<Integer> baseGunner = new Vector<Integer>(common.Unit.MAXBUILD, 1);
-    private Vector<Integer> basePilot = new Vector<Integer>(common.Unit.MAXBUILD, 1);
-    private Vector<String> basePilotSkills = new Vector<String>(common.Unit.MAXBUILD, 1);
+    private final Vector<Integer> baseGunner = new Vector<>(Unit.MAX_BUILD, 1);
+    private final Vector<Integer> basePilot = new Vector<>(Unit.MAX_BUILD, 1);
+    private final Vector<String> basePilotSkills = new Vector<>(Unit.MAX_BUILD, 1);
 
     // private int factionPlayerColors[] = new int[3]; // [red,green,blue]
 
-    private int factionUnitPriceMod[][] = new int[common.Unit.MAXBUILD][4]; // [Type][Weight]
-    private int factionUnitFluMod[][] = new int[common.Unit.MAXBUILD][4]; // [Type][Weight]
-    private int factionUnitComponentMod[][] = new int[common.Unit.MAXBUILD][4]; // [Type][Weight]
+    private final int[][] factionUnitPriceMod = new int[Unit.MAX_BUILD][4]; // [Type][Weight]
+    private final int[][] factionUnitFluMod = new int[Unit.MAX_BUILD][4]; // [Type][Weight]
+    private final int[][] factionUnitComponentMod = new int[Unit.MAX_BUILD][4]; // [Type][Weight]
 
     private String factionColor = "#000000";
     private String abbreviation = "";
@@ -62,16 +61,16 @@ public class House {
 
     private boolean conquerable = true;
 
-    private Hashtable<String, String> BannedAmmo = new Hashtable<String, String>();
+    private final Hashtable<String, String> BannedAmmo = new Hashtable<>();
     private int techLevel = TechConstants.T_ALLOWED_ALL;
     private boolean allowDefectionsFrom = true;
     private boolean allowDefectionsTo = true;
 
-    private ConcurrentHashMap<String, common.SubFaction> subFactionList = new ConcurrentHashMap<String, common.SubFaction>();
+    private final ConcurrentHashMap<String, SubFaction> subFactionList = new ConcurrentHashMap<>();
 
     public float usedMekBayMultiplier;
 
-    public ConcurrentHashMap<String, Integer> supportedUnits = new ConcurrentHashMap<String, Integer>();
+    public ConcurrentHashMap<String, Integer> supportedUnits = new ConcurrentHashMap<>();
 
     private boolean nonFactionUnitsCostMore = false;
 
@@ -85,7 +84,7 @@ public class House {
     /**
      * @return baseGunner vector
      */
-    public Vector<Integer> getBaseGunnerVect() {
+    public Vector<Integer> getBaseGunnerVector() {
         return baseGunner;
     }
 
@@ -240,7 +239,7 @@ public class House {
     }
 
     /**
-     * @param logo The logo to set.
+     * @param factionFlu The logo to set.
      */
     public void setHouseFluFile(String factionFlu) {
         this.factionFluFile = factionFlu;
@@ -268,8 +267,11 @@ public class House {
      * @return Returns the id.
      */
     public int getId() {
-        if (id == null) {return -1;}
-        return id.intValue();
+        if (id == null) {
+            return -1;
+        }
+
+        return id;
     }
 
     public int getDBId() {
@@ -281,11 +283,11 @@ public class House {
     }
 
     /**
-     * @param id
+     *
      */
     public House(int id) {
         this.id = id;
-        for (int pos = 0; pos < common.Unit.MAXBUILD; pos++) {
+        for (int pos = 0; pos < Unit.MAX_BUILD; pos++) {
             baseGunner.add(4);
             basePilot.add(5);
             basePilotSkills.add(" ");
@@ -296,7 +298,7 @@ public class House {
      * Constructor used for serialization
      */
     public House() {
-        for (int pos = 0; pos < common.Unit.MAXBUILD; pos++) {
+        for (int pos = 0; pos < Unit.MAX_BUILD; pos++) {
             baseGunner.add(4);
             basePilot.add(5);
             basePilotSkills.add(" ");
@@ -304,11 +306,11 @@ public class House {
     }
 
     /**
-     * Write itself to an binary stream.
+     * Write itself to a binary stream.
      */
-    public void binOut(BinWriter out) throws IOException {
+    public void binOut(BinWriter out) {
 
-        out.println(id.intValue(), "id");
+        out.println(id, "id");
         out.println(name, "name");
         out.println(logo, "logo");
         out.println(getBaseGunner(), "baseGunner");
@@ -320,17 +322,17 @@ public class House {
         out.println(abbreviation, "abbreviation");
         out.println(conquerable, "conquerable");
 
-        for (int type = 0; type < common.Unit.MAXBUILD; type++) {
+        for (int type = 0; type < Unit.MAX_BUILD; type++) {
             for (int weight = 0; weight < 4; weight++) {
                 out.println(this.getHouseUnitComponentMod(type, weight), "componentMod" + type + weight);
             }
         }
-        for (int type = 0; type < common.Unit.MAXBUILD; type++) {
+        for (int type = 0; type < Unit.MAX_BUILD; type++) {
             for (int weight = 0; weight < 4; weight++) {
                 out.println(this.getHouseUnitPriceMod(type, weight), "priceMod" + type + weight);
             }
         }
-        for (int type = 0; type < common.Unit.MAXBUILD; type++) {
+        for (int type = 0; type < Unit.MAX_BUILD; type++) {
             for (int weight = 0; weight < 4; weight++) {
                 out.println(this.getHouseUnitFluMod(type, weight), "fluMod" + type + weight);
             }
@@ -341,7 +343,7 @@ public class House {
             out.println(munition, "munition");
         }
 
-        for (int pos = 0; pos < common.Unit.MAXBUILD; pos++) {
+        for (int pos = 0; pos < Unit.MAX_BUILD; pos++) {
             out.println(basePilotSkills.elementAt(pos), "factionBasePilotSkill");
         }
 
@@ -352,14 +354,18 @@ public class House {
 
         out.println(this.getSubFactionList().size(), "subfactionsize");
 
-        for (common.SubFaction subFaction : this.getSubFactionList().values()) {
+        for (SubFaction subFaction : this.getSubFactionList().values()) {
             out.println(subFaction.getConfig("Name"), "SubFactionName");
             out.println(subFaction.getConfig("AccessLevel"), "SubFactionAccessLevel");
-            for (int type = 0; type < common.Unit.MAXBUILD; type++) {
-                for (int weight = 0; weight <= common.Unit.ASSAULT; weight++) {
-                    String setting = "CanBuyNew" + common.Unit.getWeightClassDesc(weight) + common.Unit.getTypeClassDesc(type);
+            for (int type = 0; type < Unit.MAX_BUILD; type++) {
+                for (int weight = 0; weight <= Unit.ASSAULT; weight++) {
+                    String setting = "CanBuyNew" +
+                                           Unit.getWeightClassDesc(weight) +
+                                           Unit.getTypeClassDesc(type);
                     out.println(subFaction.getConfig(setting), setting);
-                    setting = "CanBuyUsed" + common.Unit.getWeightClassDesc(weight) + common.Unit.getTypeClassDesc(type);
+                    setting = "CanBuyUsed" +
+                                    Unit.getWeightClassDesc(weight) +
+                                    Unit.getTypeClassDesc(type);
                     out.println(subFaction.getConfig(setting), setting);
                 }
             }
@@ -373,15 +379,15 @@ public class House {
      */
     public House(BinReader in) throws IOException {
 
-        for (int pos = 0; pos < common.Unit.MAXBUILD; pos++) {
+        for (int pos = 0; pos < Unit.MAX_BUILD; pos++) {
             baseGunner.add(4);
             basePilot.add(5);
             basePilotSkills.add(" ");
         }
 
         id = in.readInt("id");
-        name = HTML.br2cr(in.readLine("name"));
-        logo = HTML.br2cr(in.readLine("logo"));
+        name = in.readLine("name");
+        logo = in.readLine("logo");
         setBaseGunner(in.readInt("baseGunner"));
         setBasePilot(in.readInt("basePilot"));
         factionColor = in.readLine("factionColor");
@@ -391,17 +397,17 @@ public class House {
         abbreviation = in.readLine("abbreviation");
         conquerable = in.readBoolean("conquerable");
 
-        for (int type = 0; type < common.Unit.MAXBUILD; type++) {
+        for (int type = 0; type < Unit.MAX_BUILD; type++) {
             for (int weight = 0; weight < 4; weight++) {
                 this.setHouseUnitComponentMod(type, weight, in.readInt("componentMod" + type + weight));
             }
         }
-        for (int type = 0; type < common.Unit.MAXBUILD; type++) {
+        for (int type = 0; type < Unit.MAX_BUILD; type++) {
             for (int weight = 0; weight < 4; weight++) {
                 this.setHouseUnitPriceMod(type, weight, in.readInt("priceMod" + type + weight));
             }
         }
-        for (int type = 0; type < common.Unit.MAXBUILD; type++) {
+        for (int type = 0; type < Unit.MAX_BUILD; type++) {
             for (int weight = 0; weight < 4; weight++) {
                 this.setHouseUnitFluMod(type, weight, in.readInt("fluMod" + type + weight));
             }
@@ -410,7 +416,7 @@ public class House {
         int size = in.readInt("factionbannedammosize");
         for (; size > 0; size--) {BannedAmmo.put(in.readLine("munition"), "Banned");}
 
-        for (int pos = 0; pos < common.Unit.MAXBUILD; pos++) {
+        for (int pos = 0; pos < Unit.MAX_BUILD; pos++) {
             basePilotSkills.set(pos, in.readLine("factionBasePilotSkill"));
         }
 
@@ -423,13 +429,17 @@ public class House {
 
         this.subFactionList.clear();
         for (; size > 0; size--) {
-            common.SubFaction subFaction = new common.SubFaction(in.readLine("SubFactionName"));
+            SubFaction subFaction = new SubFaction(in.readLine("SubFactionName"));
             subFaction.setConfig("AccessLevel", in.readLine("SubFactionAccessLevel"));
-            for (int type = 0; type < common.Unit.MAXBUILD; type++) {
-                for (int weight = 0; weight <= common.Unit.ASSAULT; weight++) {
-                    String setting = "CanBuyNew" + common.Unit.getWeightClassDesc(weight) + common.Unit.getTypeClassDesc(type);
+            for (int type = 0; type < Unit.MAX_BUILD; type++) {
+                for (int weight = 0; weight <= Unit.ASSAULT; weight++) {
+                    String setting = "CanBuyNew" +
+                                           Unit.getWeightClassDesc(weight) +
+                                           Unit.getTypeClassDesc(type);
                     subFaction.setConfig(setting, in.readLine(setting));
-                    setting = "CanBuyUsed" + common.Unit.getWeightClassDesc(weight) + common.Unit.getTypeClassDesc(type);
+                    setting = "CanBuyUsed" +
+                                    Unit.getWeightClassDesc(weight) +
+                                    Unit.getTypeClassDesc(type);
                     subFaction.setConfig(setting, in.readLine(setting));
                 }
             }
@@ -442,8 +452,8 @@ public class House {
 
     /**
      * @param id The id to set.
-     *
-     * @TODO This is only a hack and should ONLY be used by experienced personnel!
+     *           <p>
+     *                                                                                           TODO This is only a hack and should ONLY be used by experienced personnel!
      */
     public void setId(int id) {
         this.id = id;
@@ -477,7 +487,7 @@ public class House {
      * (String banned : this.getBannedAmmo().keySet())
      * out.write(banned,"munition");
      *
-     * for( int pos = 0; pos < Unit.MAXBUILD; pos++ ){
+     * for( int pos = 0; pos < Unit.MAX_BUILD; pos++ ){
      * out.write(basePilotSkills.elementAt(pos),"factionBasePilotSkill"); }
      *  }
      *
@@ -487,7 +497,7 @@ public class House {
      * public void binIn(TreeReader in, CampaignData dataProvider)throws
      * IOException {
      *
-     * for( int pos = 0; pos < Unit.MAXBUILD; pos++ ){ baseGunner.add(4);
+     * for( int pos = 0; pos < Unit.MAX_BUILD; pos++ ){ baseGunner.add(4);
      * basePilot.add(5); basePilotSkills.add(" "); }
      *
      * id = new Integer(in.readInt("id")); name =
@@ -515,7 +525,7 @@ public class House {
      * int size = in.readInt("factionbannedammosize"); for( ; size > 0; size--)
      * BannedAmmo.put(in.readString("munition"),"Banned");
      *
-     * for( int pos = 0; pos < Unit.MAXBUILD; pos++ ){
+     * for( int pos = 0; pos < Unit.MAX_BUILD; pos++ ){
      * basePilotSkills.set(pos,in.readString("factionBasePilotSkill")); } }
      */
 
@@ -571,16 +581,14 @@ public class House {
         return this.factionPlayerColors;
     }
 
-    // public void setBannedAmmo(Hashtable<String,String> ban){
-    // BannedAmmo = ban;
-    // }
-
     public Hashtable<String, String> getBannedAmmo() {
         return BannedAmmo;
     }
 
     public void setTechLevel(int level) {
-        if (level < TechConstants.T_INTRO_BOXSET) {this.techLevel = TechConstants.T_ALL;} else {this.techLevel = level;}
+        if (level < TechConstants.T_INTRO_BOX_SET) {this.techLevel = TechConstants.T_ALL;} else {
+            this.techLevel = level;
+        }
     }
 
     public int getTechLevel() {
@@ -611,7 +619,7 @@ public class House {
         return this.usedMekBayMultiplier;
     }
 
-    public ConcurrentHashMap<String, common.SubFaction> getSubFactionList() {
+    public ConcurrentHashMap<String, SubFaction> getSubFactionList() {
         return subFactionList;
     }
 
@@ -625,7 +633,7 @@ public class House {
     }
 
     public void addUnitSupported(String fileName) {
-        if (fileName.trim().length() < 1) {return;}
+        if (fileName.trim().isEmpty()) {return;}
         fileName = fileName.trim();
         if (houseSupportsUnit(fileName)) {
             int num = getSupportedUnits().get(fileName);
@@ -636,7 +644,7 @@ public class House {
     }
 
     public void removeUnitSupported(String fileName) {
-        if (fileName.trim().length() < 1) {return;}
+        if (fileName.trim().isEmpty()) {return;}
         fileName = fileName.trim();
         if (houseSupportsUnit(fileName)) {
             int num = supportedUnits.get(fileName);
@@ -646,14 +654,6 @@ public class House {
             } else {
                 supportedUnits.put(fileName, num - 1);
             }
-        } else {
-            // Error. We should never get here.
-            // Fix the logging here. How to determine if it's being called from
-            // CHouse or SHouse?
-            // MWServ.mwlog.mainLog("Error in House.removeUnitProduction():
-            // trying to remove a unit that is not produced.");
-            // MWServ.mwlog.mainLog(" --> House: " + getName() + ", Unit: " +
-            // fileName);
         }
     }
 
@@ -674,7 +674,12 @@ public class House {
         result.append(name);
         result.append("|");
 
-        if (logo.trim().length() < 1) {result.append(" ");} else {result.append(logo);}
+        if (logo.trim().isEmpty()) {
+            result.append(" ");
+        } else {
+            result.append(logo);
+        }
+
         result.append("|");
         result.append(getBaseGunner());
         result.append("|");

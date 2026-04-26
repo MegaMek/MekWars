@@ -36,7 +36,7 @@ public class Army {
     public static final int NO_LIMIT = -1;
 
     // VARIABLES
-    private Vector<common.Unit> units = new Vector<common.Unit>(1, 1);
+    private final Vector<Unit> units = new Vector<>(1, 1);
     private String name = " ";
 
     private int upperLimiter = NO_LIMIT;
@@ -52,9 +52,9 @@ public class Army {
 
     private float opForceSize = NO_LIMIT;
 
-    private Hashtable<Integer, Integer> c3Network = new Hashtable<Integer, Integer>();
+    private Hashtable<Integer, Integer> c3Network = new Hashtable<>();
 
-    private Vector<Integer> commanders = new Vector<Integer>(1, 1);
+    private final Vector<Integer> commanders = new Vector<>(1, 1);
 
     // CONSTRUCTORS
     public Army() {
@@ -104,27 +104,22 @@ public class Army {
     /**
      * @param locked The locked to set.
      */
-    public void setLocked(boolean b) {
-        locked = b;
+    public void setLocked(boolean locked) {
+        this.locked = locked;
     }
 
     /**
      * @return return the BV.
      */
     public int getBV() {
-
-        if (bv < 0) {
-            return 0;
-        }
-
-        return bv;
+        return Math.max(bv, 0);
     }
 
     /**
      * @param bv The bV to set.
      */
-    public void setBV(int i) {
-        bv = i;
+    public void setBV(int bv) {
+        this.bv = bv;
     }
 
     /**
@@ -151,33 +146,30 @@ public class Army {
     /**
      * @param name The name to set.
      */
-    public void setName(String s) {
-        name = s.trim();
+    public void setName(String name) {
+        this.name = name.trim();
     }
 
     /**
      * Add a unit to a specific position.
      *
-     * @param unit
-     * @param Position
      */
-    public void addUnit(common.Unit unit, int Position) {
+    public void addUnit(Unit unit, int Position) {
         units.add(Position, unit);
     }
 
     /**
      * add units to the army vector.
      *
-     * @param unit
      */
-    public void addUnit(common.Unit unit) {
+    public void addUnit(Unit unit) {
         units.add(unit);
     }
 
     /**
      * @return Returns the units.
      */
-    public Vector<common.Unit> getUnits() {
+    public Vector<Unit> getUnits() {
         return units;
     }
 
@@ -191,7 +183,7 @@ public class Army {
     public int getNumberOfUnitTypes(int type) {
         int count = 0;
 
-        for (common.Unit unit : getUnits()) {
+        for (Unit unit : getUnits()) {
             if (unit.getType() == type) {
                 count++;
             }
@@ -204,15 +196,14 @@ public class Army {
      * This will pull The number of unit types this army holds i.e. type = Unit.MEK all meks will be counted.
      *
      * @param type         The unit type to check against.
-     * @param countSupport Whether or not to count Support Units.
+     * @param countSupport Whether to count Support Units.
      *
-     * @return
      */
 
     public int getNumberOfUnitTypes(int type, boolean countSupport) {
         int count = 0;
 
-        for (common.Unit unit : getUnits()) {
+        for (Unit unit : getUnits()) {
             if (unit.getType() == type) {
                 if (!unit.isSupportUnit() || (unit.isSupportUnit() && countSupport)) {
                     count++;
@@ -229,7 +220,7 @@ public class Army {
      */
     public int getTotalSupportUnits() {
         int count = 0;
-        for (common.Unit unit : getUnits()) {
+        for (Unit unit : getUnits()) {
             if (unit.isSupportUnit()) {
                 count++;
             }
@@ -258,9 +249,9 @@ public class Army {
         return id;
     }
 
-    public common.Unit getUnit(int unitId) {
+    public Unit getUnit(int unitId) {
 
-        for (common.Unit currU : getUnits()) {
+        for (Unit currU : getUnits()) {
             if (currU.getId() == unitId) {
                 return currU;
             }
@@ -286,7 +277,7 @@ public class Army {
             result.append(isLocked());
             result.append(delimiter);
         }
-        if (getName().length() > 0) {
+        if (!getName().isEmpty()) {
             result.append(getName());
         } else {
             result.append(" ");
@@ -298,7 +289,7 @@ public class Army {
         result.append(delimiter);
         result.append(getUnits().size());
         result.append(delimiter);
-        for (common.Unit unit : getUnits()) {
+        for (Unit unit : getUnits()) {
             result.append(unit.getId());
             result.append(delimiter);
         }
@@ -320,9 +311,9 @@ public class Army {
             result.append(unitId);
             result.append(delimiter);
         }
-        result.append(Boolean.toString(armyPlayerLocked));
+        result.append(armyPlayerLocked);
         result.append(delimiter);
-        result.append(Boolean.toString(armyDisabled));
+        result.append(armyDisabled);
         result.append(delimiter);
         return result.toString();
     }
@@ -337,8 +328,8 @@ public class Army {
     /**
      * @param c3Network The C3Networks to set.
      */
-    public void setC3Network(Hashtable<Integer, Integer> network) {
-        c3Network = network;
+    public void setC3Network(Hashtable<Integer, Integer> c3Network) {
+        this.c3Network = c3Network;
     }
 
     public void removeUnitFromC3Network(int unitID) {
@@ -352,7 +343,7 @@ public class Army {
         while (i.hasNext()) {
             Integer slave = i.next();
             Integer master = getC3Network().get(slave);
-            if (master.intValue() == unitID) {
+            if (master == unitID) {
                 i.remove();
             }
         }
@@ -362,10 +353,6 @@ public class Army {
     /**
      * Finds out if unitOne and unitTwo are in the ame c3 Network
      *
-     * @param unitOne
-     * @param unitTwo
-     *
-     * @return
      */
     public boolean isSameC3Network(int unitOne, int unitTwo) {
 
@@ -380,17 +367,12 @@ public class Army {
         Integer networkOne = getC3Network().get(unitOne);
         Integer networkTwo = getC3Network().get(unitTwo);
 
-        if (networkOne != null && networkOne.equals(networkTwo)) {
-            return true;
-        }
-
-        return false;
+        return networkOne != null && networkOne.equals(networkTwo);
     }
 
     /**
      * Return the number of C3 networks in this army.
      *
-     * @return
      */
     public int getNumberOfNetworks() {
         int count = 0;
@@ -398,7 +380,7 @@ public class Army {
         for (int uid : c3Network.values()) {
 
             try {
-                common.Unit master = getUnit(uid);
+                Unit master = getUnit(uid);
                 if (!c3Network.containsKey(uid) && master.hasBeenC3LinkedTo(this)) {
                     count++;
                 }
@@ -423,12 +405,7 @@ public class Army {
     }
 
     public boolean isCommander(int id) {
-
-        if (commanders.contains(id)) {
-            return true;
-        }
-
-        return false;
+        return commanders.contains(id);
     }
 
     public void removeCommander(int id) {

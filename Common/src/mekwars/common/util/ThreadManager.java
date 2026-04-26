@@ -24,30 +24,30 @@ package mekwars.common.util;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-public class ThreadManager{
+public class ThreadManager {
 
-	private static ThreadManager instance = new ThreadManager();
+    private static final ThreadManager instance = new ThreadManager();
 
-	private ExecutorService executor;
+    private final ExecutorService executor;
 
-	protected ThreadManager(){
-		executor = Executors.newCachedThreadPool();
-	}
+    protected ThreadManager() {
+        executor = Executors.newCachedThreadPool();
+    }
 
-	public static ThreadManager getInstance(){
-		return instance;
-	}
+    public static ThreadManager getInstance() {
+        return instance;
+    }
 
-	public void runInThreadFromPool(Thread runnable){
-		try{
-			executor.execute(runnable);
-		}catch(Exception ex ){
-			MWLogger.errLog(ex);
-		}
-	}
+    public void runInThreadFromPool(Thread runnable) {
+        try {
+            executor.execute(runnable);
+        } catch (Exception ex) {
+            MWLogger.errLog(ex);
+        }
+    }
 
 
-	public void shutdown(){
-		executor.shutdown();
-	}
+    public void shutdown() {
+        executor.shutdown();
+    }
 }

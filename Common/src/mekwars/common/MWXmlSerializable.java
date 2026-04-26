@@ -17,7 +17,7 @@
 package mekwars.common;
 
 public interface MWXmlSerializable {
-    public abstract void writeToXmlFile(String folderName, String fileName);
+    void writeToXmlFile(String folderName, String fileName);
 
-    public abstract String getXmlString();
+    String getXmlString();
 }

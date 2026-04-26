@@ -22,16 +22,16 @@ package mekwars.common;
 
 import java.util.Vector;
 
-import common.campaign.pilot.Pilot;
-import common.campaign.targetsystems.TargetSystem;
-import megamek.common.Aero;
-import megamek.common.AmmoType;
-import megamek.common.BattleArmor;
-import megamek.common.Entity;
-import megamek.common.EntityWeightClass;
-import megamek.common.Mech;
-import megamek.common.Protomech;
-import megamek.common.Tank;
+import megamek.common.battleArmor.BattleArmor;
+import megamek.common.equipment.AmmoType;
+import megamek.common.units.Aero;
+import megamek.common.units.Entity;
+import megamek.common.units.EntityWeightClass;
+import megamek.common.units.Mek;
+import megamek.common.units.ProtoMek;
+import megamek.common.units.Tank;
+import mekwars.common.campaign.pilot.Pilot;
+import mekwars.common.campaign.targetsystems.TargetSystem;
 
 
 /**
@@ -55,33 +55,33 @@ public class Unit {
     public static final int AERO = 5;
     public static final int QUAD = 6;
     public static final int MEKWARRIOR = 7;
-    public static final int MAXBUILD = 6;
+    public static final int MAX_BUILD = 6;
 
     public static final int C3_NONE = 0;
     public static final int C3_SLAVE = 1;
     public static final int C3_MASTER = 2;
     public static final int C3_IMPROVED = 3;
-    public static final int C3_MMASTER = 4;
+    public static final int C3M_MASTER = 4;
 
     public static final int STATUS_OK = 1;
     public static final int STATUS_UNMAINTAINED = 2;//@urgru 7/18/04
-    public static final int STATUS_FORSALE = 3;//@urgru 12.29.05
+    public static final int STATUS_FOR_SALE = 3;//@urgru 12.29.05
 
-    public static final int TOTALTYPES = 6;
+    public static final int TOTAL_TYPES = 6;
 
     //VARIABLES
     protected int id;
     protected int DBId;
     private Pilot pilot;
     private int type;
-    private int weightclass;
+    private int weightClass;
     private int status = Unit.STATUS_OK;
     private String producer;
-    private String UnitFilename;
+    private String unitFilename;
     private int posId;
-    private String Modelname;
+    private String modelName;
 
-    private int maintainanceLevel = 100;//@urgru 8/2/04
+    private int maintenanceLevel = 100;//@urgru 8/2/04
     private int unitC3Level = 0; //@Torren 12/13/04 0=None 1=Slave 2=Master 3=Independent
 
     public int[] test = new int[4];
@@ -108,46 +108,92 @@ public class Unit {
 
     /**
      *
-     * @param Weightclass
+     * @param weightClass
      *
-     * @return a String describing the weightclass (light, medium etc)
+     * @return a String describing the weightClass (light, medium etc)
      */
-    public static String getWeightClassDesc(int weightclass) {
-        if (weightclass == LIGHT) {return "Light";}
-        if (weightclass == MEDIUM) {return "Medium";}
-        if (weightclass == HEAVY) {return "Heavy";}
-        if (weightclass == ASSAULT) {return "Assault";}
+    public static String getWeightClassDesc(int weightClass) {
+        if (weightClass == LIGHT) {
+            return "Light";
+        }
+
+        if (weightClass == MEDIUM) {
+            return "Medium";
+        }
+
+        if (weightClass == HEAVY) {
+            return "Heavy";
+        }
+
+        if (weightClass == ASSAULT) {
+            return "Assault";
+        }
+
         return "Unknown";
     }
 
     public static int getWeightIDForName(String name) {
-        if (name.equalsIgnoreCase("LIGHT")) {return LIGHT;}
-        if (name.equalsIgnoreCase("MEDIUM")) {return MEDIUM;}
-        if (name.equalsIgnoreCase("HEAVY")) {return HEAVY;}
-        if (name.equalsIgnoreCase("ASSAULT")) {return ASSAULT;}
+        if (name.equalsIgnoreCase("LIGHT")) {
+            return LIGHT;
+        }
+
+        if (name.equalsIgnoreCase("MEDIUM")) {
+            return MEDIUM;
+        }
+
+        if (name.equalsIgnoreCase("HEAVY")) {
+            return HEAVY;
+        }
+
+        if (name.equalsIgnoreCase("ASSAULT")) {
+            return ASSAULT;
+        }
+
         return 0;
     }
 
     public static int getEntityWeight(Entity ent) {
         int weight = ent.getWeightClass();
-        if (weight == EntityWeightClass.WEIGHT_LIGHT) {return Unit.LIGHT;}
-        if (weight == EntityWeightClass.WEIGHT_MEDIUM) {return Unit.MEDIUM;}
-        if (weight == EntityWeightClass.WEIGHT_HEAVY) {return Unit.HEAVY;}
-        if (weight == EntityWeightClass.WEIGHT_ASSAULT) {return Unit.ASSAULT;}
+
+        if (weight == EntityWeightClass.WEIGHT_LIGHT) {
+            return Unit.LIGHT;
+        }
+
+        if (weight == EntityWeightClass.WEIGHT_MEDIUM) {
+            return Unit.MEDIUM;
+        }
+
+        if (weight == EntityWeightClass.WEIGHT_HEAVY) {
+            return Unit.HEAVY;
+        }
+
+        if (weight == EntityWeightClass.WEIGHT_ASSAULT) {
+            return Unit.ASSAULT;
+        }
 
         return Unit.LIGHT;
     }
 
     public static int getEntityType(Entity ent) {
-        if (ent instanceof Mech) {return Unit.MEK;}
+        if (ent instanceof Mek) {
+            return Unit.MEK;
+        }
 
-        if (ent instanceof Tank) {return Unit.VEHICLE;}
+        if (ent instanceof Tank) {
+            return Unit.VEHICLE;
+        }
 
-        if (ent instanceof BattleArmor) {return Unit.BATTLEARMOR;}
+        if (ent instanceof BattleArmor) {
+            return Unit.BATTLEARMOR;
+        }
 
-        if (ent instanceof Protomech) {return Unit.PROTOMEK;}
+        if (ent instanceof ProtoMek) {
+            return Unit.PROTOMEK;
+        }
 
-        if (ent instanceof Aero) {return Unit.AERO;}
+        if (ent instanceof Aero) {
+            return Unit.AERO;
+        }
 
         return Unit.INFANTRY;
     }
@@ -196,14 +242,14 @@ public class Unit {
      * @return Returns the modelname.
      */
     public String checkModelName() {
-        return Modelname;
+        return modelName;
     }
 
     /**
-     * @param modelname The modelname to set.
+     * @param modelName The modelName to set.
      */
-    public void setModelname(String modelname) {
-        Modelname = modelname;
+    public void setModelName(String modelName) {
+        this.modelName = modelName;
     }
 
     /**
@@ -216,8 +262,8 @@ public class Unit {
     /**
      * @param pilot The pilot to set.
      */
-    public void setPilot(Pilot p) {
-        this.pilot = p;
+    public void setPilot(Pilot pilot) {
+        this.pilot = pilot;
     }
 
     /**
@@ -230,8 +276,8 @@ public class Unit {
     /**
      * @param posId The posId to set.
      */
-    public void setPosId(int pid) {
-        posId = pid;
+    public void setPosId(int posId) {
+        this.posId = posId;
     }
 
     /**
@@ -244,8 +290,8 @@ public class Unit {
     /**
      * @param producer The producer to set.
      */
-    public void setProducer(String s) {
-        producer = s;
+    public void setProducer(String producer) {
+        this.producer = producer;
     }
 
     /**
@@ -258,36 +304,36 @@ public class Unit {
     /**
      * @param type The type to set.
      */
-    public void setType(int i) {
-        type = i;
+    public void setType(int type) {
+        this.type = type;
     }
 
     /**
      * @return Returns the unitFilename.
      */
     public String getUnitFilename() {
-        return UnitFilename;//.trim();
+        return unitFilename;//.trim();
     }
 
     /**
      * @param unitFilename The unitFilename to set.
      */
-    public void setUnitFilename(String s) {
-        UnitFilename = s;
+    public void setUnitFilename(String unitFilename) {
+        this.unitFilename = unitFilename;
     }
 
     /**
-     * @return Returns the weightclass.
+     * @return Returns the weightClass.
      */
-    public int getWeightclass() {
-        return weightclass;
+    public int getWeightClass() {
+        return weightClass;
     }
 
     /**
-     * @param weightclass The weightclass to set.
+     * @param weightClass The weightClass to set.
      */
-    public void setWeightclass(int i) {
-        weightclass = i;
+    public void setWeightClass(int weightClass) {
+        this.weightClass = weightClass;
     }
 
     /**
@@ -300,8 +346,8 @@ public class Unit {
     /**
      * @param status The status to set.
      */
-    public void setStatus(int i) {
-        status = i;
+    public void setStatus(int status) {
+        this.status = status;
     }
 
     /**
@@ -314,8 +360,8 @@ public class Unit {
     /**
      * @param id The id to set.
      */
-    public void setId(int i) {
-        id = i;
+    public void setId(int id) {
+        this.id = id;
     }
 
     public int getDBId() {
@@ -327,66 +373,79 @@ public class Unit {
     }
 
     /**
-     * @return return the maintainance status
+     * @return return the maintenance status
      */
-    public int getMaintainanceLevel() {
-        return maintainanceLevel;
+    public int getMaintenanceLevel() {
+        return maintenanceLevel;
     }
 
     /**
-     * @param int maintainance level to set.
-     *            <p>
-     *            since maintainance is expressed as a percentage, dont let this this exceed 100 or drop below 0.
+     * @param maintenanceLevel maintenance level to set.
+     *                         <p>
+     *                         since maintenance is expressed as a percentage, dont let this this exceed 100 or drop
+     *                         below 0.
      */
-    public void setMaintainanceLevel(int i) {
-        if (i < 0) {i = 0;}
-        if (i > 100) {i = 100;}
-        maintainanceLevel = i;
+    public void setMaintenanceLevel(int maintenanceLevel) {
+        if (maintenanceLevel < 0) {
+            maintenanceLevel = 0;
+        }
+
+        if (maintenanceLevel > 100) {
+            maintenanceLevel = 100;
+        }
+
+        this.maintenanceLevel = maintenanceLevel;
     }
 
     /**
-     * @param int amount of maintanance to add.
+     * @param i amount of maintenance to add.
      */
-    public void addToMaintainanceLevel(int i) {
-        setMaintainanceLevel(maintainanceLevel + i);
+    public void addToMaintenanceLevel(int i) {
+        setMaintenanceLevel(maintenanceLevel + i);
     }
 
     public int linkToC3Network(Army army, Unit master) {
 
-        if (army == null || master == null) {return -1;}
+        if (army == null || master == null) {
+            return -1;
+        }
 
-        if (army.getUnit(this.getId()) == null) {return -1;}
+        if (army.getUnit(this.getId()) == null) {
+            return -1;
+        }
 
-        if (this.getC3Level() == C3_NONE) {return -1;}
+        if (this.getC3Level() == C3_NONE) {
+            return -1;
+        }
 
         if (this.getC3Level() == C3_SLAVE) {
 
             if (master.getC3Level() != C3_MASTER &&
-                      master.getC3Level() != C3_MMASTER)//master is a slave or doens't have C3
-            {return -1;}
+                      master.getC3Level() != C3M_MASTER) {
+                return -1;
+            }
 
-            if (master.hasBeenC3LinkedTo(army) && !master.hasC3SlavesLinkedTo(army)) {return -1;}
+            if (master.hasBeenC3LinkedTo(army) && !master.hasC3SlavesLinkedTo(army)) {
+                return -1;
+            }
 
-            if (!master.checkC3mNetworkHasOpen(army, this.getC3Level())) {return -1;}
+            if (!master.checkC3mNetworkHasOpen(army, this.getC3Level())) {
+                return -1;
+            }
 
             army.getC3Network().put(this.getId(), master.getId());
             return master.getId();
-        } else if (this.getC3Level() == C3_MASTER || this.getC3Level() == C3_MMASTER) {
+        } else if (this.getC3Level() == C3_MASTER || this.getC3Level() == C3M_MASTER) {
 
             if (master.getC3Level() != C3_MASTER &&
-                      master.getC3Level() != C3_MMASTER)//master is really a slave or doesn't have C3
+                      master.getC3Level() != C3M_MASTER)//master is really a slave or doesn't have C3
             {return -1;}
-
-            //MWLogger.errLog("Return 7");
-
-            /* if ( master.getId() == this.getId() )//master is a company master
-			 return master.getId();*/
 
             if (this.hasBeenC3LinkedTo(army) &&
                       !this.hasC3SlavesLinkedTo(army)) //other units have linked to this unit so it cannot link to other units
             {return -1;}
 
-            if (master.getC3Level() != Unit.C3_MMASTER &&
+            if (master.getC3Level() != Unit.C3M_MASTER &&
                       master.hasBeenC3LinkedTo(army) &&
                       master.hasC3SlavesLinkedTo(army)) {return -1;}
 
@@ -427,8 +486,8 @@ public class Unit {
 
         for (Integer c3Slave : army.getC3Network().keySet()) {
             Integer c3Master = army.getC3Network().get(c3Slave);
-            if (c3Master.intValue() == this.getId()) {
-                if (army.getUnit(c3Slave.intValue()).getC3Level() != Unit.C3_SLAVE) {return false;}
+            if (c3Master == this.getId()) {
+                if (army.getUnit(c3Slave).getC3Level() != Unit.C3_SLAVE) {return false;}
             }
         }
         return true;
@@ -446,15 +505,15 @@ public class Unit {
         if (army.getC3Network().get(this.getId()) != null) //meaning hes already linked to someone
         {return false;}
 
-        if (this.getC3Level() == C3_MMASTER) {
+        if (this.getC3Level() == C3M_MASTER) {
             int slaveCount = 0, masterCount = 0;
             int maxMasters = 2;
             int maxSlaves = 3;
 
             for (Integer c3Slave : army.getC3Network().keySet()) {
                 Integer c3Master = army.getC3Network().get(c3Slave);
-                if (c3Master.intValue() == this.getId()) {
-                    Unit tempUnit = army.getUnit(c3Slave.intValue());
+                if (c3Master == this.getId()) {
+                    Unit tempUnit = army.getUnit(c3Slave);
                     if (tempUnit.getC3Level() == C3_SLAVE) {slaveCount++;} else {
                         masterCount++; // we are going to assume that no C3I's are in a C3M/S network
                     }
@@ -463,13 +522,11 @@ public class Unit {
 
             if (c3Type != Unit.C3_SLAVE && masterCount >= maxMasters) {return false;}
 
-            if (c3Type == Unit.C3_SLAVE && slaveCount >= maxSlaves) {return false;}
-
-            return true;
+            return c3Type != Unit.C3_SLAVE || slaveCount < maxSlaves;
         }
 
         for (Integer c3Unit : army.getC3Network().values()) {
-            if (c3Unit.intValue() == this.getId()) {unitCount++;}
+            if (c3Unit == this.getId()) {unitCount++;}
         }
 
         return unitCount < MAX_UNITS;
@@ -486,7 +543,7 @@ public class Unit {
         if (army.getC3Network().get(this.getId()) != null) {return false;}
 
         for (Integer c3U : army.getC3Network().values()) {
-            if (c3U.intValue() == this.getId()) {unitCount++;}
+            if (c3U == this.getId()) {unitCount++;}
         }
 
         return unitCount < MAX_UNITS;
@@ -497,7 +554,7 @@ public class Unit {
         if (unit.hasC3S()) {
             this.setC3Level(C3_SLAVE); //Slave
         } else if (unit.hasC3MM()) {
-            this.setC3Level(C3_MMASTER); //Dual Master
+            this.setC3Level(C3M_MASTER); //Dual Master
         } else if (unit.hasC3M()) {
             this.setC3Level(C3_MASTER); //Master
         } else if (unit.hasC3i()) {
@@ -506,7 +563,7 @@ public class Unit {
     }
 
     /**
-     * @Gets the units current C3 Level 0=None 1=Slave 2=Master 3=Independent 4=Dual Masters
+     * Gets the units current C3 Level 0=None 1=Slave 2=Master 3=Independent 4=Dual Masters
      */
     public int getC3Level() {
         return unitC3Level;
@@ -519,22 +576,23 @@ public class Unit {
         unitC3Level = level;
     }
 
-    public AmmoType getEntityAmmo(int weaponType, String ammoName) {
+    public AmmoType getEntityAmmo(AmmoType.AmmoTypeEnum weaponType, String ammoName) {
         Vector<AmmoType> v_Ammo = AmmoType.getMunitionsFor(weaponType);
-        AmmoType at = null;
+        AmmoType at;
+
         for (int count = 0; count < v_Ammo.size(); count++) {
             at = v_Ammo.elementAt(count);
-            if (at.getInternalName().equalsIgnoreCase(ammoName)) {return at;}
+            if (at.getInternalName().equalsIgnoreCase(ammoName)) {
+                return at;
+            }
         }
 
-        //couldn't find the ammo retun null and just use the entities standard ammo.
+        //couldn't find the ammo return null and just use the entities standard ammo.
         return null;
     }
 
     public boolean hasVacantPilot() {
-        if (this.getPilot() == null || this.getPilot().getName().equalsIgnoreCase("Vacant")) {return true;}
-
-        return false;
+        return this.getPilot() == null || this.getPilot().getName().equalsIgnoreCase("Vacant");
     }
 
     public void setRepairCosts(int current, int life) {
@@ -559,15 +617,10 @@ public class Unit {
     }
 
     public boolean isSinglePilotUnit() {
-
-        if (this.getType() == Unit.MEK ||
-                  this.getType() == Unit.PROTOMEK ||
-                  this.getType() == Unit.QUAD ||
-                  this.getType() == Unit.AERO) {
-            return true;
-        }
-
-        return false;
+        return this.getType() == Unit.MEK ||
+                     this.getType() == Unit.PROTOMEK ||
+                     this.getType() == Unit.QUAD ||
+                     this.getType() == Unit.AERO;
     }
 
     /**
@@ -597,23 +650,4 @@ public class Unit {
     public void setChristmasUnit(boolean christmasUnit) {
         ChristmasUnit = christmasUnit;
     }
-
-    /**
-     * @return the christmasUnit piggy back off of xmas
-     *
-     * @author Salient
-     */
-    public boolean isLocked() {
-        return ChristmasUnit;
-    }
-
-    /**
-     * @param christmasUnit the christmasUnit to set piggy back off of xmas
-     *
-     * @author Salient
-     */
-    public void setLocked(boolean lockUnit) {
-        ChristmasUnit = lockUnit;
-    }
-
 }

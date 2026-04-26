@@ -18,49 +18,92 @@ package mekwars.common.persistence;
 
 import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.Reader;
+
+import mekwars.common.util.MWLogger;
 
 /**
- * Reads compact data from a stream written with BinWriter. No data structure information is written/read, so expect bad
- * results, if the data structure does not match.
+ * Helper to encode and decode typical fields of classes
+ * <p>
+ * currently handled types are: - boolean - int - String - double
  *
  * @author Imi (immanuel.scholz@gmx.de)
  */
-
 public class BinReader {
-    private final BufferedReader in;
 
-    /**
-     * Constructs a new BinReader from an buffered reader and start reading from it
-     */
-    public BinReader(BufferedReader in) {
-        this.in = in;
+    private final BufferedReader in;
+    private boolean debug;
+
+    private String read(String debugName) throws IOException {
+        String s = in.readLine();
+        if (debug) {
+            if (!s.substring(0, s.indexOf('=')).equals(debugName)) {
+                throw new RuntimeException("serialization mismatch");
+            }
+            return s.substring(s.indexOf('=') + 1);
+        }
+        return s;
     }
 
+    /**
+     * Construct an BinReader
+     */
+    public BinReader(Reader in) {
+        this.in = new BufferedReader(in);
+        try {
+            this.in.mark(100);
+            String s = this.in.readLine();
+            debug = s.equals("###DEBUG_ON###");
+
+            if (!debug) {
+                this.in.reset();
+            }
+        } catch (IOException e) {
+            MWLogger.errLog(e);
+            debug = false;
+        }
+    }
+
+    /**
+     * Reads an integer
+     */
+    public int readInt(String debugName) throws IOException {
+        return Integer.parseInt(read(debugName));
+    }
+
+    /**
+     * Reads an double
+     */
+    public double readDouble(String debugName) throws IOException {
+        return Double.parseDouble(read(debugName));
+    }
+
+    /**
+     * Reads an boolean
+     */
+    public boolean readBoolean(String debugName) throws IOException {
+        String s = read(debugName);
+        return !s.equalsIgnoreCase("false") && !s.equals("0") && !s.isEmpty();
+    }
+
+    /**
+     * Reads an string
+     */
+    public String readLine(String debugName) throws IOException {
+        return read(debugName);
+    }
+
+    /**
+     * Reads a string
+     */
+    public String readStringLine(String debugName) throws IOException {
+        return read(debugName);
+    }
+
+    /**
+     * Closes the input.
+     */
     public void close() throws IOException {
         in.close();
     }
-
-    public int readInt(String name) throws IOException {
-        return Integer.parseInt(read());
-    }
-
-    public double readDouble(String name) throws IOException {
-        return Double.parseDouble(read());
-    }
-
-    public boolean readBoolean(String name) throws IOException {
-        return Boolean.getBoolean(read());
-    }
-
-    public String readString(String name) throws IOException {
-        return read();
-    }
-
-    private String read() throws IOException {
-        return in.readLine();
-    }
-
-    public void startDataBlock(String name) {}
-
-    public void endDataBlock(String name) {}
 }

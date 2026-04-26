@@ -25,6 +25,7 @@ import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
 import java.util.Hashtable;
+import java.util.Objects;
 import java.util.TreeSet;
 
 import javax.swing.JButton;
@@ -36,50 +37,48 @@ import javax.swing.JPanel;
 import javax.swing.JTextField;
 import javax.swing.SpringLayout;
 
-import client.MWClient;
-import common.House;
-import common.util.SpringLayoutHelper;
+import mekwars.common.House;
+import mekwars.common.campaign.clientutils.protocol.IClient;
+import mekwars.common.util.SpringLayoutHelper;
+
 
 public final class FactionToFactionRewardPointMultiplierDialog implements ActionListener, KeyListener {
 
     private final static String okayCommand = "okay";
     private final static String cancelCommand = "cancel";
-    private String windowName = "";
 
-    private JTextField multiplierText = new JTextField(5);
+    private final JTextField multiplierText = new JTextField(5);
 
     private final JButton okayButton = new JButton("OK");
     private final JButton cancelButton = new JButton("Cancel");
 
-    private JDialog dialog;
-    private JOptionPane pane;
+    private final JDialog dialog;
+    private final JOptionPane pane;
 
-    private JComboBox faction1 = null;
-    private JComboBox faction2 = null;
-    private Hashtable<String, String> configChanges = new Hashtable<String, String>();
+    private final JComboBox<String> faction1;
+    private JComboBox<String> faction2 = null;
+    private final Hashtable<String, String> configChanges = new Hashtable<>();
 
-    MWClient mwclient = null;
+    IClient client;
 
     /**
-     * @param client
-     *
      * @author jtighe
      *       <p>
      *       Opens the server config page in the client.
      */
 
-    public FactionToFactionRewardPointMultiplierDialog(MWClient mwclient) {
+    public FactionToFactionRewardPointMultiplierDialog(IClient client) {
 
-        this.mwclient = mwclient;
-        this.windowName = "MekWars Faction to Faction Reward Point Multiplier";
+        this.client = client;
+        String windowName = "MekWars Faction to Faction Reward Point Multiplier";
 
         //TAB PANELS (these are added to the root pane as tabs)
         JPanel mainPanel = new JPanel();
         JPanel mainBoxPanel = new JPanel(new SpringLayout());
 
-        TreeSet<String> factionNames = new TreeSet<String>();
+        TreeSet<String> factionNames = new TreeSet<>();
 
-        for (House faction : mwclient.getData().getAllHouses()) {factionNames.add(faction.getName());}
+        for (House faction : client.getData().getAllHouses()) {factionNames.add(faction.getName());}
 
         faction1 = new JComboBox(factionNames.toArray());
         faction1.setSelectedIndex(0);
@@ -131,32 +130,32 @@ public final class FactionToFactionRewardPointMultiplierDialog implements Action
 
 
         //Show the dialog and get the user's input
-        dialog.setLocationRelativeTo(mwclient.getMainFrame());
+        dialog.setLocationRelativeTo(client.getMainFrame());
         dialog.setModal(true);
         dialog.pack();
         dialog.setVisible(true);
 
         if (pane.getValue() == okayButton) {
 
-            if (configChanges.size() > 0) {
-                StringBuffer changes = new StringBuffer();
+            if (!configChanges.isEmpty()) {
+                StringBuilder changes = new StringBuilder();
                 for (String key : configChanges.keySet()) {
                     changes.append(key);
                     changes.append("#");
                     changes.append(configChanges.get(key));
-                    mwclient.sendChat(MWClient.CAMPAIGN_PREFIX +
-                                            "c SetFactionToFactionRewardPointMultiplier#" +
-                                            changes.toString());
+                    client.sendChat(IClient.CAMPAIGN_PREFIX +
+                                          "c SetFactionToFactionRewardPointMultiplier#" +
+                                          changes);
                     changes.setLength(0);
                 }
 
             }
-            mwclient.sendChat(MWClient.CAMPAIGN_PREFIX + "c adminsaveserverconfigs");
-            mwclient.getServerConfigData();
+            client.sendChat(IClient.CAMPAIGN_PREFIX + "c adminsaveserverconfigs");
+            client.getServerConfigData();
 
         } else {
             dialog.dispose();
-            if (configChanges.size() > 0) {mwclient.getServerConfigData();}
+            if (!configChanges.isEmpty()) {client.getServerConfigData();}
         }
     }
 
@@ -175,16 +174,16 @@ public final class FactionToFactionRewardPointMultiplierDialog implements Action
                                   "To" +
                                   faction2.getSelectedItem().toString() +
                                   "RewardPointMultiplier";
-            multiplierText.setText(mwclient.getserverConfigs(config));
+            multiplierText.setText(client.getServerConfigs(config));
         }
     }
 
     public void saveChanges() {
-        String config = faction1.getSelectedItem().toString() +
+        String config = Objects.requireNonNull(faction1.getSelectedItem()) +
                               "To" +
-                              faction2.getSelectedItem().toString() +
+                              Objects.requireNonNull(faction2.getSelectedItem()) +
                               "RewardPointMultiplier";
-        mwclient.getserverConfigs().put(config, multiplierText.getText());
+        client.putServerConfigs(config, multiplierText.getText());
         configChanges.put(faction1.getSelectedItem().toString() + "#" + faction2.getSelectedItem().toString(),
               multiplierText.getText());
     }
