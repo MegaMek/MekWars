@@ -44,10 +44,10 @@ public class Player implements IPlayer {
     }
 
     /**
-     * @param bvtracker the bvTracker value
+     * @param tracker the bvTracker value
      */
-    public void setBVTracker(int bvtracker) {
-        bvTracker = bvtracker;
+    public void setBVTracker(int tracker) {
+        bvTracker = tracker;
     }
 
     /**

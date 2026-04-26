@@ -21,11 +21,12 @@
 package mekwars.common;
 
 import java.io.IOException;
-import java.util.Hashtable;
+import java.util.EnumSet;
 import java.util.Vector;
 import java.util.concurrent.ConcurrentHashMap;
 
 import megamek.common.TechConstants;
+import megamek.common.equipment.AmmoType;
 import mekwars.common.persistence.BinReader;
 import mekwars.common.persistence.BinWriter;
 
@@ -61,7 +62,7 @@ public class House {
 
     private boolean conquerable = true;
 
-    private final Hashtable<String, String> BannedAmmo = new Hashtable<>();
+    private final EnumSet<AmmoType.Munitions> bannedAmmo = EnumSet.noneOf(AmmoType.Munitions.class);
     private int techLevel = TechConstants.T_ALLOWED_ALL;
     private boolean allowDefectionsFrom = true;
     private boolean allowDefectionsTo = true;
@@ -414,7 +415,7 @@ public class House {
         }
 
         int size = in.readInt("factionbannedammosize");
-        for (; size > 0; size--) {BannedAmmo.put(in.readLine("munition"), "Banned");}
+        for (; size > 0; size--) {bannedAmmo.put(in.readLine("munition"), "Banned");}
 
         for (int pos = 0; pos < Unit.MAX_BUILD; pos++) {
             basePilotSkills.set(pos, in.readLine("factionBasePilotSkill"));
@@ -453,7 +454,7 @@ public class House {
     /**
      * @param id The id to set.
      *           <p>
-     *                                                                                           TODO This is only a hack and should ONLY be used by experienced personnel!
+     *                                                                                                                         TODO This is only a hack and should ONLY be used by experienced personnel!
      */
     public void setId(int id) {
         this.id = id;
@@ -581,8 +582,8 @@ public class House {
         return this.factionPlayerColors;
     }
 
-    public Hashtable<String, String> getBannedAmmo() {
-        return BannedAmmo;
+    public EnumSet<AmmoType.Munitions> getBannedAmmo() {
+        return bannedAmmo;
     }
 
     public void setTechLevel(int level) {

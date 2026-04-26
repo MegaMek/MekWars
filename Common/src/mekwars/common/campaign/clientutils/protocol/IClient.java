@@ -1,12 +1,20 @@
 package mekwars.common.campaign.clientutils.protocol;
 
-import java.awt.Dialog;
+import java.util.List;
 import java.util.Map;
+import java.util.TreeMap;
 
+import megamek.common.game.Game;
 import mekwars.common.CampaignData;
 import mekwars.common.Equipment;
-import mekwars.common.Player;
+import mekwars.common.campaign.CCampaign;
+import mekwars.common.campaign.CPlayer;
+import mekwars.common.campaign.CUser;
+import mekwars.common.campaign.clientutils.IClientConfig;
 import mekwars.common.campaign.clientutils.IClientUser;
+import mekwars.common.gui.CMainFrame;
+import mekwars.common.util.RepairManagmentThread;
+import mekwars.common.util.SalvageManagmentThread;
 
 public interface IClient {
     /**
@@ -14,10 +22,19 @@ public interface IClient {
      */
     String DELIMITER = "\t";
 
+    int STATUS_DISCONNECTED = 0;
+    int STATUS_LOGGED_OUT = 1;
+    int STATUS_RESERVE = 2;
+    int STATUS_ACTIVE = 3;
+    int STATUS_FIGHTING = 4;
+
+    String CAMPAIGN_PREFIX = "/"; // prefix for campaign commands
+    String CAMPAIGN_PATH = "data/campaign/";
+    String COMMAND_DELIMITER = "|"; // delimiter for client commands
+
     String PROTOCOL_DELIMITER = "\t"; // delimiter for protocol commands
     String PROTOCOL_PREFIX = "/"; // prefix for protocol commands
     String CLIENT_VERSION = "0.8.0.0"; // change this with
-    String CAMPAIGN_PREFIX = "/"; // prefix for campaign commands
 
     /**
      * If you understand this, you are a 1.1-compliant client. Following DEFLATED + DELIMITER is the number of bytes in
@@ -57,7 +74,7 @@ public interface IClient {
 
     void sendChat(String string);
 
-    Player getPlayer();
+    CPlayer getPlayer();
 
     String moneyOrFluMessage(boolean b, boolean b1, int i);
 
@@ -71,7 +88,7 @@ public interface IClient {
 
     boolean getTargetSystemBanStatus(int type);
 
-    Dialog getMainFrame();
+    CMainFrame getMainFrame();
 
     void loadServerCommands();
 
@@ -88,4 +105,68 @@ public interface IClient {
     void putServerConfigs(String config, String text);
 
     void refreshData();
+
+    void addToChat(String s);
+
+    IClientConfig getConfig();
+
+    void processTick(int time);
+
+    void setWaiting(boolean b);
+
+    int getPlayerStartingEdge();
+
+    boolean isUsingAdvanceRepairs();
+
+    String getConfigParam(String primaryHQSortOrder);
+
+    String getUsername();
+
+    void updateOpData(boolean b);
+
+    int getMyStatus();
+
+    List<CUser> getUsers();
+
+    TreeMap<String, String[]> getAllOps();
+
+    boolean isWaiting();
+
+    String getCacheDir();
+
+    void loadServerTraitFiles();
+
+    void loadMegaMekClient();
+
+    void setConfig();
+
+    int getUserLevel();
+
+    RepairManagmentThread getRMT();
+
+    double getAmmoCost(String internalName);
+
+    SalvageManagmentThread getSMT();
+
+    boolean isMod();
+
+    boolean isAdmin();
+
+    CCampaign getCampaign();
+
+    void setPassword(String s);
+
+    void setIgnoreHouse();
+
+    void setIgnorePrivate();
+
+    void setIgnorePublic();
+
+    void setKeyWords();
+
+    void setLookAndFeel(boolean b);
+
+    void showInfoWindow(String s);
+
+    Game getGame();
 }

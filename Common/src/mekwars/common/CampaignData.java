@@ -20,6 +20,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.EnumSet;
 import java.util.Hashtable;
 import java.util.Map;
 import java.util.Properties;
@@ -81,7 +82,7 @@ public class CampaignData implements TerrainProvider {
     private final ArrayList<AdvancedTerrain> advTerrains = new ArrayList<>();
 
 
-    private Hashtable<String, String> ServerBannedAmmo = new Hashtable<>();
+    private EnumSet<AmmoType.Munitions> serverBannedAmmo = EnumSet.noneOf(AmmoType.Munitions.class);
     private Vector<Integer> bannedTargetingSystems = new Vector<>();
     private Hashtable<String, Integer> commands = new Hashtable<>();
     private final TreeMap<String, String> planetOpFlags = new TreeMap<>();
@@ -199,8 +200,8 @@ public class CampaignData implements TerrainProvider {
      *
      * @return An Planet id not used yet.
      *       <p>
-     *                                                                                                                                                                                                                                                       TODO There should be no need for such function, since ID's should extracted from resource files. This
-     *                                                                                                                                                                                                                                                             function will vanish if ids are part of the resource.
+     *                                                                                                                                                                                                                                                                                                       TODO There should be no need for such function, since ID's should extracted from resource files. This
+     *                                                                                                                                                                                                                                                                                                             function will vanish if ids are part of the resource.
      */
     public int getUnusedPlanetID() {
         int id = 0;
@@ -233,7 +234,7 @@ public class CampaignData implements TerrainProvider {
      *
      * @param faction The faction to hold.
      *                <p>
-     *                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            TODO You should use XStream to initialize CampaignData
+     *                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    TODO You should use XStream to initialize CampaignData
      */
     public void addHouse(House faction) {
         if (faction.getId() == -1 && !faction.getName().equalsIgnoreCase("None")) {
@@ -289,8 +290,8 @@ public class CampaignData implements TerrainProvider {
      *
      * @return An House id not used yet.
      *       <p>
-     *                         TODO There should be no need for such function, since ID's should extracted from resource files. This
-     *                               function will vanish if ids are part of the resource.
+     *                                                                         TODO There should be no need for such function, since ID's should extracted from resource files. This
+     *                                                                               function will vanish if ids are part of the resource.
      */
     public int getUnusedHouseID() {
         int id = -1;
@@ -743,12 +744,12 @@ public class CampaignData implements TerrainProvider {
         return munitions;
     }
 
-    public void setServerBannedAmmo(Hashtable<String, String> ban) {
-        ServerBannedAmmo = ban;
+    public void setServerBannedAmmo(EnumSet<AmmoType.Munitions> ban) {
+        serverBannedAmmo = ban;
     }
 
-    public Hashtable<String, String> getServerBannedAmmo() {
-        return ServerBannedAmmo;
+    public EnumSet<AmmoType.Munitions> getServerBannedAmmo() {
+        return serverBannedAmmo;
     }
 
     public void setBannedTargetingSystems(Vector<Integer> ban) {

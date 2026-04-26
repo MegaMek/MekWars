@@ -16,54 +16,54 @@
  * See http://www.sourceforge.net/projects/megameknet for more info.
  */
 
-package mekwars.admin.dialog;
-
-//awt imports
-
-import java.awt.Dimension;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.io.Serial;
-import java.util.ArrayList;
-import java.util.TreeSet;
-import javax.swing.*;
-
-import mekwars.common.Terrain;
-import mekwars.common.campaign.clientutils.protocol.IClient;
-import mekwars.common.util.SpringLayoutHelper;
+package mekwars.common.gui.dialogs;
 
 /*
  * Base dialog, derived from MMNET's SearchHouseListener, allows players
- * to search for commands using partial strings. Eventually, I'd like to
+ * to search for factions using partial strings. Eventually, I'd like to
  * expand this to allow searching in other modes (selectable via combo box),
  * like "Active Operations" and "Contested Worlds," w/ appropriate fields
  * for selection input.
  *
  * @urgru 5.2.05
- * used code that urgru started to make cookie cut dialog boxes for command
+ * used code that urgru started to make cookie cut dialog boxes for faction
  * and planets for commands requiring that input.
  *
  * @Torren 5.6.05
- *
- * Created to list all of the Commands for the SO's
- *
- * @Torren 11.8.05
  */
 
-public class TerrainSelectionDialog extends JDialog implements ActionListener {
-    @Serial
-    private static final long serialVersionUID = -1024120117465498506L;
-    //variables
-    private final TreeSet<String> names;
+import java.awt.Dimension;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.io.Serial;
+import java.util.Collection;
+import java.util.TreeSet;
+import javax.swing.*;
 
-    private final JList<String> matchingCommandList;
+import mekwars.common.House;
+import mekwars.common.campaign.clientutils.protocol.IClient;
+import mekwars.common.util.SpringLayoutHelper;
+
+public class HouseNameDialog extends JDialog implements ActionListener {
+
+    /**
+     *
+     */
+    @Serial
+    private static final long serialVersionUID = -1908461615647395978L;
+    //variables
+    private final Collection<House> factions;
+    private final TreeSet<String> factionNames;
+
+    private final JList<String> matchingHousesList;
     private final JTextField nameField;//input field
     private final String okayCommand = "Okay";
 
-    private Object[] commandName = null;
+    private String factionName = null;
+    private final boolean addBlank;
 
     //constructor
-    public TerrainSelectionDialog(IClient client, String boxText) {
+    public HouseNameDialog(IClient client, String boxText, boolean addBlank, boolean showCanDefectTo) {
 
         /*
          * NOTE: variables are final to
@@ -71,62 +71,62 @@ public class TerrainSelectionDialog extends JDialog implements ActionListener {
          */
 
         //super, and variable saves
-        super(new JFrame(), boxText, true);//dummy frame as owner
-        names = new TreeSet<>();
+        super(client.getMainFrame(), boxText, true);//dummy frame as owner
+        this.factions = client.getData().getAllHouses();
+        this.addBlank = addBlank;
 
-        for (Terrain it : client.getData().getAllTerrains()) {
-            names.add(it.getName());
+        //set up a list of names to feed into a list
+        factionNames = new java.util.TreeSet<>();//tree to alpha sort
+        for (House house : factions) {
+            if (showCanDefectTo && !house.getHouseDefectionTo()) {continue;}
+            factionNames.add(house.getName());
         }
+        final String[] allHouseNames = factionNames.toArray(new String[factionNames.size()]);
 
-        final String[] allCommandNames = names.toArray(new String[names.size()]);
-
-        //construct the command name list
-        matchingCommandList = new JList<>(allCommandNames);
-        matchingCommandList.setVisibleRowCount(10);
-        matchingCommandList.setSelectionMode(ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
+        //construct the faction name list
+        matchingHousesList = new javax.swing.JList<>(allHouseNames);
+        matchingHousesList.setVisibleRowCount(10);
+        matchingHousesList.setSelectionMode(javax.swing.ListSelectionModel.SINGLE_SELECTION);
 
         //the name field, for user input. caretUpdate
         //does most of the work to update list contents
-        nameField = new JTextField();//field for user input
-        nameField.addCaretListener(e -> new Thread() {
+        nameField = new javax.swing.JTextField();//field for user input
+        nameField.addCaretListener(_ -> new Thread() {
             @Override
             public void run() {
                 String text = nameField.getText();
                 if (text == null || text.isEmpty()) {
-                    matchingCommandList.setListData(allCommandNames);
+                    matchingHousesList.setListData(allHouseNames);
                     return;
                 }
-                ArrayList<String> possibleCommands = new ArrayList<>();
+                java.util.ArrayList<String> possibleHouses = new java.util.ArrayList<>();
                 text = text.toLowerCase();
-                for (String curCommand : names) {
-                    if (curCommand.toLowerCase().contains(text)) {
-                        possibleCommands.add(curCommand.charAt(0) +
-                                                   curCommand.substring(1).toLowerCase());
-                    }
+                for (String curHouse : factionNames) {
+                    if (curHouse.toLowerCase().contains(text)) {possibleHouses.add(curHouse);}
                 }
-                matchingCommandList.setListData(possibleCommands.toArray(new String[possibleCommands.size()]));
+                matchingHousesList.setListData(possibleHouses.toArray(new String[possibleHouses.size()]));
 
                 /*
-                 * Try to select a command with a STARTING string which matched
-                 * the search index. If none is available, use the first command.
+                 * Try to select a faction with a STARTING string which matched
+                 * the search index. If none is available, use the first faction.
                  *
                  * Hacky, but functional. @urgru 5.2.05
                  */
                 boolean shouldContinue = true;
                 int element = 0;
-                for (String name : possibleCommands) {
+                java.util.Iterator<String> it = possibleHouses.iterator();
+                while (it.hasNext() && shouldContinue) {
+                    String name = it.next();
                     if (name.toLowerCase().startsWith(text)) {
-                        matchingCommandList.setSelectedIndex(element);
+                        matchingHousesList.setSelectedIndex(element);
                         shouldContinue = false;
-                        break;
                     }
                     element++;
                 }
-                // MWLogger.errLog("7");
 
                 //looped through without finding a starting match. set 0.
                 if (shouldContinue) {
-                    matchingCommandList.setSelectedIndex(0);
+                    matchingHousesList.setSelectedIndex(0);
                 }
 
             }
@@ -134,7 +134,7 @@ public class TerrainSelectionDialog extends JDialog implements ActionListener {
 
         //put the list in a scroll pane
         //holds the JList
-        JScrollPane scrollPane = new JScrollPane(matchingCommandList);
+        JScrollPane scrollPane = new JScrollPane(matchingHousesList);
         scrollPane.setAlignmentX(LEFT_ALIGNMENT);
         scrollPane.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
 
@@ -182,14 +182,22 @@ public class TerrainSelectionDialog extends JDialog implements ActionListener {
         String command = event.getActionCommand();
 
         if (command.equals(okayCommand)) {
-            String selectedCommand = matchingCommandList.getSelectedValue();
-            if (selectedCommand == null) {selectedCommand = nameField.getText();}
-            if (selectedCommand == null || selectedCommand.isEmpty()) {return;}
-            if (matchingCommandList.getModel().getSize() >= 1) {
-                setCommandName(matchingCommandList.getSelectedValuesList().toArray());
-            } else {
-                JOptionPane.showMessageDialog(null, "Unknown Terrain");
+            String selectedHouse = matchingHousesList.getSelectedValue();
+            if (selectedHouse == null) {
+                selectedHouse = nameField.getText();
             }
+            if (!addBlank && (selectedHouse == null || selectedHouse.isEmpty())) {return;}
+            if (matchingHousesList.getModel().getSize() == 1) {
+                selectedHouse = matchingHousesList.getModel().getElementAt(0);
+            }
+            for (House faction : factions) {
+                if (selectedHouse.equals(faction.getName())) {
+                    this.setHouseName(faction.getName());
+                    this.setVisible(false);
+                    return;
+                }
+            }
+            JOptionPane.showMessageDialog(null, "Unknown House");
         }
 
         //dispose of the dialog
@@ -216,17 +224,16 @@ public class TerrainSelectionDialog extends JDialog implements ActionListener {
         } else {height = (int) curDim.getHeight();}
 
         if (shouldRedraw) {
-            this.setSize(new Dimension(width, height));
+            this.setSize(new java.awt.Dimension(width, height));
         }
 
     }//end checkMinimumSize
 
-    private void setCommandName(Object[] terrains) {
-        this.commandName = terrains;
+    private void setHouseName(String name) {
+        this.factionName = name;
     }
 
-    public Object[] getCommandName() {
-        return this.commandName;
+    public String getHouseName() {
+        return this.factionName;
     }
-
 }

@@ -26,21 +26,17 @@ import java.awt.event.ActionListener;
 import java.util.Hashtable;
 import javax.swing.*;
 
-import client.MWClient;
-import client.campaign.CUnit;
-import common.House;
-import common.SubFaction;
-import common.util.MWLogger;
-import common.util.SpringLayoutHelper;
+import mekwars.common.House;
+import mekwars.common.SubFaction;
+import mekwars.common.campaign.CUnit;
+import mekwars.common.campaign.clientutils.protocol.IClient;
+import mekwars.common.util.MWLogger;
+import mekwars.common.util.SpringLayoutHelper;
 
 public final class SubFactionConfigurationDialog implements ActionListener {
 
     private final static String okayCommand = "okay";
     private final static String cancelCommand = "cancel";
-    private String windowName = "";
-
-    private JTextField baseTextField = new JTextField(5);
-    private JCheckBox BaseCheckBox = new JCheckBox();
 
     private final JButton okayButton = new JButton("OK");
     private final JButton cancelButton = new JButton("Cancel");
@@ -48,16 +44,13 @@ public final class SubFactionConfigurationDialog implements ActionListener {
     private JDialog dialog;
     private JOptionPane pane;
 
-    private String houseName = "";
-
     private SubFaction subFactionConfig = null;
-    private House faction = null;
 
-    private Hashtable<String, String> configChanges = new Hashtable<String, String>();
+    private final Hashtable<String, String> configChanges = new Hashtable<>();
 
     JTabbedPane ConfigPane = new JTabbedPane(SwingConstants.TOP);
 
-    MWClient mwclient = null;
+    IClient client;
 
     /**
      * @param client
@@ -67,12 +60,11 @@ public final class SubFactionConfigurationDialog implements ActionListener {
      *       Opens the server config page in the client.
      */
 
-    public SubFactionConfigurationDialog(MWClient mwclient, String houseName, String subFactionName) {
+    public SubFactionConfigurationDialog(IClient client, String houseName, String subFactionName) {
 
-        this.mwclient = mwclient;
-        this.houseName = houseName;
-        this.windowName = "MekWars SubFaction Configuration";
-        this.faction = mwclient.getData().getHouseByName(houseName);
+        this.client = client;
+        String windowName = "MekWars SubFaction Configuration";
+        House faction = client.getData().getHouseByName(houseName);
 
         if (faction == null) {return;}
 
@@ -82,11 +74,11 @@ public final class SubFactionConfigurationDialog implements ActionListener {
             this.subFactionConfig = new SubFaction(subFactionName, "0");
             this.subFactionConfig.setConfig("MinELO", "0");
             this.subFactionConfig.setConfig("MinExp", "0");
-            mwclient.sendChat(MWClient.CAMPAIGN_PREFIX +
-                                    "c CreateSubFaction#" +
-                                    this.subFactionConfig.getConfig("Name") +
-                                    "#0#" +
-                                    this.houseName);
+            client.sendChat(IClient.CAMPAIGN_PREFIX +
+                                  "c CreateSubFaction#" +
+                                  this.subFactionConfig.getConfig("Name") +
+                                  "#0#" +
+                                  houseName);
         }
 
         //TAB PANELS (these are added to the root pane as tabs)
@@ -109,7 +101,7 @@ public final class SubFactionConfigurationDialog implements ActionListener {
         //set up the flow panel
 
         //and then the various springs. MU first.
-        baseTextField = new JTextField(5);
+        JTextField baseTextField = new JTextField(5);
         mainTextBoxSpring.add(new JLabel("Name:", SwingConstants.TRAILING));
         baseTextField.setToolTipText("Sub faction name.");
         baseTextField.setName("Name");
@@ -134,35 +126,26 @@ public final class SubFactionConfigurationDialog implements ActionListener {
         baseTextField.setName("MinExp");
         mainTextBoxSpring.add(baseTextField);
 
-        for (int type = 0; type < CUnit.MAXBUILD; type++) {
-            for (int weight = 0; weight <= CUnit.ASSAULT; weight++) {
-                BaseCheckBox = new JCheckBox("Can buy new " +
-                                                   CUnit.getWeightClassDesc(weight) +
-                                                   " " +
-                                                   CUnit.getTypeClassDesc(type));
-                BaseCheckBox.setToolTipText("<html>Check to allow subfaction memebers to buy new<br>" +
-                                                  CUnit.getWeightClassDesc(weight) +
-                                                  " " +
-                                                  CUnit.getTypeClassDesc(type) +
-                                                  "</html>");
-                BaseCheckBox.setName("CanBuyNew" + CUnit.getWeightClassDesc(weight) + CUnit.getTypeClassDesc(type));
-                mainCBoxGridPanel.add(BaseCheckBox);
+        JCheckBox baseCheckBox = new JCheckBox();
+        for (int type = 0; type < mekwars.common.campaign.CUnit.MAX_BUILD; type++) {
+            for (int weight = 0; weight <= mekwars.common.campaign.CUnit.ASSAULT; weight++) {
+                baseCheckBox = new JCheckBox(STR."Can buy new \{CUnit.getWeightClassDesc(weight)} \{CUnit.getTypeClassDesc(
+                      type)}");
+                baseCheckBox.setToolTipText(STR."<html>Check to allow subfaction memebers to buy new<br>\{CUnit.getWeightClassDesc(
+                      weight)} \{CUnit.getTypeClassDesc(type)}</html>");
+                baseCheckBox.setName(STR."CanBuyNew\{CUnit.getWeightClassDesc(weight)}\{CUnit.getTypeClassDesc(type)}");
+                mainCBoxGridPanel.add(baseCheckBox);
             }
         }
 
-        for (int type = 0; type < CUnit.MAXBUILD; type++) {
-            for (int weight = 0; weight <= CUnit.ASSAULT; weight++) {
-                BaseCheckBox = new JCheckBox("Can buy used " +
-                                                   CUnit.getWeightClassDesc(weight) +
-                                                   " " +
-                                                   CUnit.getTypeClassDesc(type));
-                BaseCheckBox.setToolTipText("<html>Check to allow subfaction memebers to buy used<br>" +
-                                                  CUnit.getWeightClassDesc(weight) +
-                                                  " " +
-                                                  CUnit.getTypeClassDesc(type) +
-                                                  "</html>");
-                BaseCheckBox.setName("CanBuyUsed" + CUnit.getWeightClassDesc(weight) + CUnit.getTypeClassDesc(type));
-                mainCBoxGridPanel.add(BaseCheckBox);
+        for (int type = 0; type < mekwars.common.campaign.CUnit.MAX_BUILD; type++) {
+            for (int weight = 0; weight <= mekwars.common.campaign.CUnit.ASSAULT; weight++) {
+                baseCheckBox = new JCheckBox(STR."Can buy used \{CUnit.getWeightClassDesc(weight)} \{CUnit.getTypeClassDesc(
+                      type)}");
+                baseCheckBox.setToolTipText(STR."<html>Check to allow subfaction memebers to buy used<br>\{CUnit.getWeightClassDesc(
+                      weight)} \{CUnit.getTypeClassDesc(type)}</html>");
+                baseCheckBox.setName(STR."CanBuyUsed\{CUnit.getWeightClassDesc(weight)}\{CUnit.getTypeClassDesc(type)}");
+                mainCBoxGridPanel.add(baseCheckBox);
             }
         }
 
@@ -212,7 +195,7 @@ public final class SubFactionConfigurationDialog implements ActionListener {
 
 
         //Show the dialog and get the user's input
-        dialog.setLocationRelativeTo(mwclient.getMainFrame());
+        dialog.setLocationRelativeTo(client.getMainFrame());
         dialog.setModal(true);
         dialog.pack();
         dialog.setVisible(true);
@@ -224,8 +207,8 @@ public final class SubFactionConfigurationDialog implements ActionListener {
                 findAndSaveConfigs(panel);
             }
 
-            if (configChanges.size() > 0) {
-                StringBuffer configPairs = new StringBuffer();
+            if (!configChanges.isEmpty()) {
+                StringBuilder configPairs = new StringBuilder();
 
                 for (String key : configChanges.keySet()) {
                     configPairs.append(key);
@@ -234,16 +217,11 @@ public final class SubFactionConfigurationDialog implements ActionListener {
                     configPairs.append("#");
                 }
 
-                mwclient.sendChat(MWClient.CAMPAIGN_PREFIX +
-                                        "c SetSubFactionConfig#" +
-                                        this.subFactionConfig.getConfig("Name") +
-                                        "#" +
-                                        houseName +
-                                        "#" +
-                                        configPairs.toString());
+                client.sendChat(STR."\{IClient.CAMPAIGN_PREFIX}c SetSubFactionConfig#\{this.subFactionConfig.getConfig(
+                      "Name")}#\{houseName}#\{configPairs.toString()}");
             }
-            mwclient.sendChat(MWClient.CAMPAIGN_PREFIX + "c adminsave");
-            mwclient.refreshData();
+            client.sendChat(STR."\{IClient.CAMPAIGN_PREFIX}c adminsave");
+            client.refreshData();
 
         } else {dialog.dispose();}
     }
@@ -256,7 +234,7 @@ public final class SubFactionConfigurationDialog implements ActionListener {
      * @param panel
      */
     public void findAndPopulateTextAndCheckBoxes(JPanel panel) {
-        String key = null;
+        String key;
 
         for (int fieldPos = panel.getComponentCount() - 1; fieldPos >= 0; fieldPos--) {
 
@@ -264,30 +242,26 @@ public final class SubFactionConfigurationDialog implements ActionListener {
 
             if (field instanceof JPanel) {
                 findAndPopulateTextAndCheckBoxes((JPanel) field);
-            } else if (field instanceof JTextField) {
-                JTextField textBox = (JTextField) field;
-
+            } else if (field instanceof JTextField textBox) {
                 key = textBox.getName();
                 if (key == null) {continue;}
 
                 textBox.setMaximumSize(new Dimension(100, 10));
                 textBox.setText(this.subFactionConfig.getConfig(key));
-            } else if (field instanceof JCheckBox) {
-                JCheckBox checkBox = (JCheckBox) field;
+            } else if (field instanceof JCheckBox checkBox) {
 
                 key = checkBox.getName();
                 if (key == null) {
-                    MWLogger.errLog("Null Checkbox: " + checkBox.getToolTipText());
+                    MWLogger.errLog(STR."Null Checkbox: \{checkBox.getToolTipText()}");
                     continue;
                 }
                 checkBox.setSelected(Boolean.parseBoolean(this.subFactionConfig.getConfig(key)));
 
-            } else if (field instanceof JRadioButton) {
-                JRadioButton radioButton = (JRadioButton) field;
+            } else if (field instanceof JRadioButton radioButton) {
 
                 key = radioButton.getName();
                 if (key == null) {
-                    MWLogger.errLog("Null RadioButton: " + radioButton.getToolTipText());
+                    MWLogger.errLog(STR."Null RadioButton: \{radioButton.getToolTipText()}");
                     continue;
                 }
                 radioButton.setSelected(Boolean.parseBoolean(this.subFactionConfig.getConfig(key)));
@@ -310,13 +284,16 @@ public final class SubFactionConfigurationDialog implements ActionListener {
             Object field = panel.getComponent(fieldPos);
 
             //found another JPanel keep digging!
-            if (field instanceof JPanel) {findAndSaveConfigs((JPanel) field);} else if (field instanceof JTextField) {
-                JTextField textBox = (JTextField) field;
+            if (field instanceof JPanel) {
+                findAndSaveConfigs((JPanel) field);
+            } else if (field instanceof JTextField textBox) {
 
                 value = textBox.getText();
                 key = textBox.getName();
 
-                if (key == null || value == null) {continue;}
+                if (key == null || value == null) {
+                    continue;
+                }
 
                 //don't need to save this the system does it on its own
                 // --Torren.
@@ -324,22 +301,25 @@ public final class SubFactionConfigurationDialog implements ActionListener {
 
                 //reduce bandwidth only send things that have changed.
                 if (!this.subFactionConfig.getConfig(key).equalsIgnoreCase(value)) {configChanges.put(key, value);}
-            } else if (field instanceof JCheckBox) {
-                JCheckBox checkBox = (JCheckBox) field;
+            } else if (field instanceof JCheckBox checkBox) {
 
                 value = Boolean.toString(checkBox.isSelected());
                 key = checkBox.getName();
 
-                if (key == null || value == null) {continue;}
+                if (key == null || value.isEmpty()) {
+                    continue;
+                }
+
                 //reduce bandwidth only send things that have changed.
                 if (!this.subFactionConfig.getConfig(key).equalsIgnoreCase(value)) {configChanges.put(key, value);}
-            } else if (field instanceof JRadioButton) {
-                JRadioButton radioButton = (JRadioButton) field;
+            } else if (field instanceof JRadioButton radioButton) {
 
                 value = Boolean.toString(radioButton.isSelected());
                 key = radioButton.getName();
 
-                if (key == null || value == null) {continue;}
+                if (key == null || value.isEmpty()) {
+                    continue;
+                }
                 //reduce bandwidth only send things that have changed.
                 if (!this.subFactionConfig.getConfig(key).equalsIgnoreCase(value)) {configChanges.put(key, value);}
             }//else continue

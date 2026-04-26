@@ -17,32 +17,30 @@ package mekwars.admin;
 
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-
+import java.io.Serial;
 import javax.swing.JFrame;
 import javax.swing.JMenu;
 import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
 
-import admin.dialog.OpFlagSelectionDialog;
-import admin.dialog.PlanetEditorDialog;
-import client.MWClient;
-import client.gui.CMapPanel;
-import client.gui.InnerStellarMap;
-import client.gui.dialog.PlanetNameDialog;
-import common.CampaignData;
-import common.Planet;
+import mekwars.admin.dialog.OpFlagSelectionDialog;
+import mekwars.admin.dialog.PlanetEditorDialog;
+import mekwars.common.CampaignData;
+import mekwars.common.Planet;
+import mekwars.common.campaign.clientutils.protocol.IClient;
 
 public class AdminMapPopupMenu extends JMenu {
 
     /**
      *
      */
+    @Serial
     private static final long serialVersionUID = 1L;
     //variables
-    private MWClient mwclient;
+    private IClient client;
     private InnerStellarMap isMap;
-    private int xcoord;
-    private int ycoord;
+    private int xCord;
+    private int yCord;
     private CMapPanel mp;
     private String pname;
     private Planet pplanet;
@@ -52,16 +50,16 @@ public class AdminMapPopupMenu extends JMenu {
         super("Administration");
     }
 
-    public void createMenu(MWClient client, InnerStellarMap ISMap, Integer Xcoord, Integer Ycoord, Planet PPlanet) {
+    public void createMenu(IClient client, InnerStellarMap ISMap, Integer xCord, Integer yCord, Planet PPlanet) {
 
         //save params
-        this.mwclient = client;
+        this.client = client;
         this.isMap = ISMap;
-        this.xcoord = Xcoord.intValue();
-        this.ycoord = Ycoord.intValue();
+        this.xCord = xCord;
+        this.yCord = yCord;
         this.pname = PPlanet.getName();
         pplanet = PPlanet;
-        userLevel = this.mwclient.getUser(this.mwclient.getUsername()).getUserlevel();
+        userLevel = this.client.getUser(this.client.getUsername()).getUserlevel();
 
         //save the underlying CMapPanel
         mp = isMap.getMapPanel();
@@ -70,147 +68,115 @@ public class AdminMapPopupMenu extends JMenu {
         JMenuItem item;//holder
 
         item = new JMenuItem("Rename Planet");
-        item.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent ex) {
-                Planet cPlanet = pplanet;
-                String newName = (String) JOptionPane.showInputDialog("Rename " + cPlanet.getName() + " to:");
-                if (newName != null && newName.trim().length() > 0) {
-                    mwclient.sendChat(MWClient.CAMPAIGN_PREFIX +
-                                            "adminrenameplanet " +
-                                            cPlanet.getId() +
-                                            "#" +
-                                            cPlanet.getName() +
-                                            "#" +
-                                            newName);
-                    mwclient.refreshData();
-                    mp.repaint();
-                }
+        item.addActionListener(ex -> {
+            Planet cPlanet = pplanet;
+            String newName = JOptionPane.showInputDialog(STR."Rename \{cPlanet.getName()} to:");
+            if (newName != null && !newName.trim().isEmpty()) {
+                AdminMapPopupMenu.this.client.sendChat(STR."\{IClient.CAMPAIGN_PREFIX}adminrenameplanet \{cPlanet.getId()}#\{cPlanet.getName()}#\{newName}");
+                AdminMapPopupMenu.this.client.refreshData();
+                mp.repaint();
             }
         });
-        if (userLevel >= mwclient.getData().getAccessLevel("AdminRenamePlanet")) {
+        if (userLevel >= this.client.getData().getAccessLevel("AdminRenamePlanet")) {
             this.add(item);
         }
 
         item = new JMenuItem("Vertigos: Edit Planet");
-        item.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent ex) {
-                Planet cPlanet = pplanet;
-                new PlanetEditorDialog(mwclient, cPlanet.getName(), cPlanet.getId());
-            }
+        item.addActionListener(ex -> {
+            Planet cPlanet = pplanet;
+            new PlanetEditorDialog(AdminMapPopupMenu.this.client, cPlanet.getName(), cPlanet.getId());
         });
-        if (userLevel >= mwclient.getData().getAccessLevel("SetAdvancedPlanetTerrain")
-                  && userLevel >= mwclient.getData().getAccessLevel("AdminRemovePlanetOwnership")
-                  && userLevel >= mwclient.getData().getAccessLevel("AdminDestroyFactory")
-                  && userLevel >= mwclient.getData().getAccessLevel("AdminDestroyTerrain")
-                  && userLevel >= mwclient.getData().getAccessLevel("AdminUpdatePlanetOwnership")
-                  && userLevel >= mwclient.getData().getAccessLevel("AdminCreateFactory")
-                  && userLevel >= mwclient.getData().getAccessLevel("AdminCreateTerrain")
-                  && userLevel >= mwclient.getData().getAccessLevel("AdminSetPlanetBoardSize")
-                  && userLevel >= mwclient.getData().getAccessLevel("AdminSetPlanetGravity")
-                  && userLevel >= mwclient.getData().getAccessLevel("AdminSetPlanetMapSize")
-                  && userLevel >= mwclient.getData().getAccessLevel("AdminSetPlanetTemperature")
-                  && userLevel >= mwclient.getData().getAccessLevel("AdminSetPlanetVacuum")
-                  && userLevel >= mwclient.getData().getAccessLevel("AdminMovePlanet")
-                  && userLevel >= mwclient.getData().getAccessLevel("AdminSetPlanetOriginalOwner")
-                  && userLevel >= mwclient.getData().getAccessLevel("AdminSave")) {this.add(item);}
+        if (userLevel >= this.client.getData().getAccessLevel("SetAdvancedPlanetTerrain")
+                  && userLevel >= this.client.getData().getAccessLevel("AdminRemovePlanetOwnership")
+                  && userLevel >= this.client.getData().getAccessLevel("AdminDestroyFactory")
+                  && userLevel >= this.client.getData().getAccessLevel("AdminDestroyTerrain")
+                  && userLevel >= this.client.getData().getAccessLevel("AdminUpdatePlanetOwnership")
+                  && userLevel >= this.client.getData().getAccessLevel("AdminCreateFactory")
+                  && userLevel >= this.client.getData().getAccessLevel("AdminCreateTerrain")
+                  && userLevel >= this.client.getData().getAccessLevel("AdminSetPlanetBoardSize")
+                  && userLevel >= this.client.getData().getAccessLevel("AdminSetPlanetGravity")
+                  && userLevel >= this.client.getData().getAccessLevel("AdminSetPlanetMapSize")
+                  && userLevel >= this.client.getData().getAccessLevel("AdminSetPlanetTemperature")
+                  && userLevel >= this.client.getData().getAccessLevel("AdminSetPlanetVacuum")
+                  && userLevel >= this.client.getData().getAccessLevel("AdminMovePlanet")
+                  && userLevel >= this.client.getData().getAccessLevel("AdminSetPlanetOriginalOwner")
+                  && userLevel >= this.client.getData().getAccessLevel("AdminSave")) {this.add(item);}
 
         item = new JMenuItem("Move Planet Here");
-        item.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent ex) {
+        item.addActionListener(ex -> {
+            PlanetNameDialog pnd = new PlanetNameDialog(AdminMapPopupMenu.this.client, "Select a Planet", null);
 
-                PlanetNameDialog pnd = new PlanetNameDialog(mwclient, "Select a Planet", null);
+            pnd.setVisible(true);
 
-                pnd.setVisible(true);
+            String planet = pnd.getPlanetName();
 
-                String planet = pnd.getPlanetName();
-
-                if (planet != null) {
-                    mwclient.sendChat(MWClient.CAMPAIGN_PREFIX +
-                                            "c adminmoveplanet#" +
-                                            planet +
-                                            "#" +
-                                            xcoord +
-                                            "#" +
-                                            ycoord);
-                    mwclient.refreshData();
-                    mp.repaint();
-                }
+            if (planet != null) {
+                AdminMapPopupMenu.this.client.sendChat(STR."\{IClient.CAMPAIGN_PREFIX}c adminmoveplanet#\{planet}#\{AdminMapPopupMenu.this.xCord}#\{AdminMapPopupMenu.this.yCord}");
+                AdminMapPopupMenu.this.client.refreshData();
+                mp.repaint();
             }
         });
 
-        if (userLevel >= mwclient.getData().getAccessLevel("adminmoveplanet")) {this.add(item);}
+        if (userLevel >= this.client.getData().getAccessLevel("adminmoveplanet")) {this.add(item);}
 
         item = new JMenuItem("Create Planet");
         item.addActionListener(new ActionListener() {
 
             public void actionPerformed(ActionEvent ex) {
-                String planetName = JOptionPane.showInputDialog(mwclient.getMainFrame(), "Planet Name?");
-                if (planetName == null || planetName.length() == 0) {return;}
+                String planetName = JOptionPane.showInputDialog(AdminMapPopupMenu.this.client.getMainFrame(),
+                      "Planet Name?");
+                if (planetName == null || planetName.isEmpty()) {return;}
 
-                mwclient.sendChat(MWClient.CAMPAIGN_PREFIX +
-                                        "c admincreateplanet#" +
-                                        planetName +
-                                        "#" +
-                                        xcoord +
-                                        "#" +
-                                        ycoord);
-                mwclient.refreshData();
+                AdminMapPopupMenu.this.client.sendChat(STR."\{IClient.CAMPAIGN_PREFIX}c admincreateplanet#\{planetName}#\{AdminMapPopupMenu.this.xCord}#\{AdminMapPopupMenu.this.yCord}");
+                AdminMapPopupMenu.this.client.refreshData();
                 mp.repaint();
                 int id = CampaignData.cd.getPlanetByName(planetName).getId();
-                new PlanetEditorDialog(mwclient, planetName, id);
+                new PlanetEditorDialog(AdminMapPopupMenu.this.client, planetName, id);
             }
         });
-        if (userLevel >= mwclient.getData().getAccessLevel("AdminCreatePlanet")) {this.add(item);}
+        if (userLevel >= this.client.getData().getAccessLevel("AdminCreatePlanet")) {this.add(item);}
 
         item = new JMenuItem("Destroy Planet");
-        item.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent ex) {
-                int result = JOptionPane.showConfirmDialog(new JFrame(),
-                      "Are you Sure you want to Destroy this planet?");
-                if (result == JOptionPane.YES_OPTION) {
-                    mwclient.sendChat(MWClient.CAMPAIGN_PREFIX + "c admindestroyplanet#" + pname);
-                    mwclient.refreshData();
-                    mp.repaint();
-                }
-            }
-        });
-        if (userLevel >= mwclient.getData().getAccessLevel("AdminDestroyPlanet")) {this.add(item);}
-
-        item = new JMenuItem("Set Planet Op Flags");
-        item.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent ex) {
-
-                OpFlagSelectionDialog OFSD = new OpFlagSelectionDialog(mwclient, "Select Flags(s)!");
-                OFSD.setVisible(true);
-
-                Object[] flags = OFSD.getCommandName();
-                OFSD.setVisible(false);
-
-                if (flags == null || flags.length == 0) {return;}
-
-                StringBuffer results = new StringBuffer();
-
-                for (int pos = 0; pos < flags.length; pos++) {
-                    String value = (String) flags[pos];
-
-                    for (String key : mwclient.getData().getPlanetOpFlags().keySet()) {
-                        if (value.equals(mwclient.getData().getPlanetOpFlags().get(key))) {
-                            results.append(key);
-                            results.append("#");
-                            break;
-                        }
-                    }
-                }
-                mwclient.sendChat(MWClient.CAMPAIGN_PREFIX +
-                                        "c AdminSetPlanetOpFlags#" +
-                                        pname +
-                                        "#" +
-                                        results.toString());
-                mwclient.refreshData();
+        item.addActionListener(ex -> {
+            int result = JOptionPane.showConfirmDialog(new JFrame(),
+                  "Are you Sure you want to Destroy this planet?");
+            if (result == JOptionPane.YES_OPTION) {
+                AdminMapPopupMenu.this.client.sendChat(STR."\{IClient.CAMPAIGN_PREFIX}c admindestroyplanet#\{pname}");
+                AdminMapPopupMenu.this.client.refreshData();
                 mp.repaint();
             }
         });
-        if (userLevel >= mwclient.getData().getAccessLevel("AdminSetPlanetOpFlags")) {this.add(item);}
+        if (userLevel >= this.client.getData().getAccessLevel("AdminDestroyPlanet")) {this.add(item);}
+
+        item = new JMenuItem("Set Planet Op Flags");
+        item.addActionListener(ex -> {
+            OpFlagSelectionDialog OFSD = new OpFlagSelectionDialog(AdminMapPopupMenu.this.client,
+                  "Select Flags(s)!");
+            OFSD.setVisible(true);
+
+            Object[] flags = OFSD.getCommandName();
+            OFSD.setVisible(false);
+
+            if (flags == null || flags.length == 0) {return;}
+
+            StringBuilder results = new StringBuilder();
+
+            for (Object flag : flags) {
+                String value = (String) flag;
+
+                for (String key : AdminMapPopupMenu.this.client.getData().getPlanetOpFlags().keySet()) {
+                    if (value.equals(AdminMapPopupMenu.this.client.getData().getPlanetOpFlags().get(key))) {
+                        results.append(key);
+                        results.append("#");
+                        break;
+                    }
+                }
+            }
+            AdminMapPopupMenu.this.client.sendChat(STR."\{IClient.CAMPAIGN_PREFIX}c AdminSetPlanetOpFlags#\{pname}#\{results.toString()}");
+            AdminMapPopupMenu.this.client.refreshData();
+            mp.repaint();
+        });
+        if (userLevel >= this.client.getData().getAccessLevel("AdminSetPlanetOpFlags")) {this.add(item);}
 
     }//end constructor
 
