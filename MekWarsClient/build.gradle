@@ -27,3 +27,8 @@ sourceSets {
         }
     }
 }
+
+dependencies {
+    implementation project(":Common")
+    implementation "org.megamek:megamek"
+}
