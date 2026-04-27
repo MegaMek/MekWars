@@ -26,23 +26,20 @@ class JCopy {
     JCopy() {
     }
 
-    public void copyFile(java.io.File in, java.io.File out) throws Exception {
+    public void copyFile(java.io.File in, java.io.File out) {
 
         System.err
               .println("Copying " + in.toString() + " to " + out.toString());
-        java.io.FileInputStream fis = new java.io.FileInputStream(in);
-        java.io.FileOutputStream fos = new java.io.FileOutputStream(out);
-        try {
+        try (java.io.FileInputStream fis = new java.io.FileInputStream(in);
+              java.io.FileOutputStream fos = new java.io.FileOutputStream(out)) {
             byte[] buf = new byte[1024];
-            int i = 0;
+            int i;
             while ((i = fis.read(buf)) != -1) {
                 fos.write(buf, 0, i);
             }
         } catch (Exception ex) {
             ex.printStackTrace();
         } finally {
-            fis.close();
-            fos.close();
             in.delete();
         }
     }

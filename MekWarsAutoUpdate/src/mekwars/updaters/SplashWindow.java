@@ -38,19 +38,18 @@ public class SplashWindow {
 
     public JFrame splashWindow;
     private boolean continueAnimating;
-    private JLabel imageLabel;
-    private JLabel versionLabel;
-    private AnimationThread animator;
+    private final JLabel versionLabel;
+    private final AnimationThread animator;
     private int currentStatus;
-    private JProgressBar progressBar;
+    private final JProgressBar progressBar;
 
     public final int STATUS_INITIALIZING = 0;
-    public final int STATUS_FETCHINGDATA = 1;
-    public final int STATUS_CONSTRUCTINGGUI = 2;
+    public final int STATUS_FETCHING_DATA = 1;
+    public final int STATUS_CONSTRUCTING_GUI = 2;
     public final int STATUS_CONNECTING = 3;
-    public final int STATUS_INPUTWAIT = 4;
-    public final int STATUS_DATAERROR = 5;
-    public final int STATUS_CONNECTFAILED = 6;
+    public final int STATUS_INPUT_WAIT = 4;
+    public final int STATUS_DATA_ERROR = 5;
+    public final int STATUS_CONNECT_FAILED = 6;
 
     public SplashWindow() {
 
@@ -66,7 +65,7 @@ public class SplashWindow {
         progressBar.setAlignmentY(Component.LEFT_ALIGNMENT);
 
         // load and scale the splash image
-        ImageIcon splashImage = null;
+        ImageIcon splashImage;
         boolean useJPGImage = new File("data/images/mekwarssplash.jpg").exists();
         if (useJPGImage) {splashImage = new ImageIcon("data/images/mekwarssplash.jpg");} else {
             splashImage = new ImageIcon("data/images/mekwarssplash.gif");
@@ -75,7 +74,7 @@ public class SplashWindow {
         splashImage.setImage(tempImage);
 
         // format the label
-        imageLabel = new JLabel("<HTML><CENTER>Updating MekWars Client<br>Please Wait</CENTER></HTML>",
+        JLabel imageLabel = new JLabel("<HTML><CENTER>Updating MekWars Client<br>Please Wait</CENTER></HTML>",
               splashImage,
               SwingConstants.CENTER);
         imageLabel.setVerticalTextPosition(SwingConstants.BOTTOM);
@@ -84,7 +83,7 @@ public class SplashWindow {
         imageLabel.setIconTextGap(6);
 
         // create a version label
-        versionLabel = new JLabel("<HTML><CENTER><b>Initializing<br>\u25cf</b></CENTER></HTML>", SwingConstants.CENTER);
+        versionLabel = new JLabel("<HTML><CENTER><b>Initializing<br>●</b></CENTER></HTML>", SwingConstants.CENTER);
 
         // place the labels in a panel
         JPanel windowPanel = new JPanel();

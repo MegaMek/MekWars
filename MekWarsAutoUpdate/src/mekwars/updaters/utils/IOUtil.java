@@ -46,7 +46,7 @@ public class IOUtil {
     public static String[] getLines(String inputFileName) throws IOException {
 
         BufferedReader in = new BufferedReader(new FileReader(inputFileName));
-        List<String> lines = new ArrayList<String>();
+        List<String> lines = new ArrayList<>();
         String line;
         while ((line = in.readLine()) != null) {
             lines.add(line);
@@ -187,34 +187,6 @@ public class IOUtil {
         return url.replaceAll(" ", "%20");
     }
 
-    /**
-     * @param path - path that came from another box and may not be correct for this OS.
-     *
-     * @return string with fixed path
-     */
-    public static String fixPath(String path) {
-        String newPath = removeLeadingDotSlash(path);
-
-        if (File.separator.equals("\\")) {
-            newPath = newPath.replaceAll("/", "\\");
-        } else if (File.separator.equals("/")) {
-            newPath = newPath.replaceAll("\\", "/");
-        }
-
-        return newPath;
-    }
-
-    /**
-     * @param path - path to be modified
-     *
-     * @return path without any leading ./
-     */
-    public static String removeLeadingDotSlash(String path) {
-        /*String newPath = path.replaceAll("\\\\","\\");
-        newPath = newPath.replaceAll("//","/");*/
-        String newPath = IOUtil.replaceString(path, ".\\", "");
-        return IOUtil.replaceString(newPath, "./", "");
-    }
 
     public static void main(String[] args) throws Exception {
         copy(new BufferedInputStream(new URL(args[0]).openStream()), new FileOutputStream(args[1]));

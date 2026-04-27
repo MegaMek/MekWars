@@ -46,19 +46,21 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.URL;
+import java.io.Serial;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Hashtable;
 import java.util.List;
 
-import updaters.utils.IOUtil;
-import updaters.utils.Terminator;
-import updaters.utils.VoidFunction;
+import mekwars.updaters.utils.IOUtil;
+import mekwars.updaters.utils.Terminator;
+import mekwars.updaters.utils.VoidFunction;
 
 public class AutoUpdater {
     // Temporary directory to store the files that will be updated.
     public static final String UPDATE_TMP_DIR = "update-tmp";
-    protected SplashWindow splash = null;
+    protected SplashWindow splash;
 
     public AutoUpdater(String localDir, SplashWindow splash) {
         localDir_ = new File(localDir);
@@ -138,7 +140,7 @@ public class AutoUpdater {
         List<String> expectedOffsetStructure = manifest.getClientFileStructure();
 
         //convert offset structure to a bunch of File objects
-        List<File> expectedFileStructure = new ArrayList<File>(expectedOffsetStructure.size());
+        List<File> expectedFileStructure = new ArrayList<>(expectedOffsetStructure.size());
 
         for (String offset : expectedOffsetStructure) {
             expectedFileStructure.add(new File(localDir_, offset));
@@ -147,7 +149,7 @@ public class AutoUpdater {
         return expectedFileStructure;
     }
 
-    public InputStream getLocalFileStream(FileInfo fileInfo) throws IOException {
+    public InputStream getLocalFileStream(FileInfo fileInfo) throws IOException, URISyntaxException {
 
         //file is embedded in a jar file, must kludge
         //java doesn't close inputstreams into jar files, so we
@@ -171,6 +173,7 @@ public class AutoUpdater {
 
                 final File finalTempJarFile = tempJarFile;
                 Terminator.instance().runOnExit(new VoidFunction() {
+                    @Serial
                     private static final long serialVersionUID = 1L;
 
                     public Object execute() {
@@ -182,11 +185,11 @@ public class AutoUpdater {
                 tempJarFile = copyMap_.get(originalJarFileName);
             }
 
-            String completeURL = tempJarFile.toURI().toURL().toString() + "!" + urlParts[1];
+            String completeURL = tempJarFile.toURI().toURL() + "!" + urlParts[1];
 
             completeURL = IOUtil.fixJarURL(completeURL);
             System.err.println("Reading from jarfile: " + completeURL);
-            return new BufferedInputStream(new URL(completeURL).openStream());
+            return new BufferedInputStream(new URI(completeURL).toURL().openStream());
         }
 
         //else

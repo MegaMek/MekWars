@@ -19,7 +19,7 @@ package mekwars.updaters;
 class AnimationThread extends Thread {
 
     // vars
-    private mekwars.updaters.SplashWindow splash;
+    private final mekwars.updaters.SplashWindow splash;
     private int cycle;
     private int progress;
     private String progressText = "";
@@ -59,9 +59,9 @@ class AnimationThread extends Thread {
                 }
 
                 int currStatus = splash.getStatus();
-                if (currStatus == splash.STATUS_DATAERROR ||
-                          currStatus == splash.STATUS_INPUTWAIT ||
-                          currStatus == splash.STATUS_CONNECTFAILED) {
+                if (currStatus == splash.STATUS_DATA_ERROR ||
+                          currStatus == splash.STATUS_INPUT_WAIT ||
+                          currStatus == splash.STATUS_CONNECT_FAILED) {
                     // do not advanced the progress meter. roll back the cycle.
                     cycle--;
                 } else if (cycle == 0) {

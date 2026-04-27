@@ -44,20 +44,17 @@ public class MekWarsAutoUpdate {
     private static final String logFileName = "./logs/mekwarsautoupdate.log";
     private static final String VERSION = "4.0";
     private Properties config = null;
-    private SplashWindow splash = null;
 
     public static void main(String[] args) {
 
-        if (logFileName != null) {
-            try {
-                PrintStream ps = new PrintStream(new BufferedOutputStream(
-                      new FileOutputStream(logFileName), 64));
-                System.setOut(ps);
-                System.setErr(ps);
-            } catch (Exception ex) {
-                ex.printStackTrace();
-            }
-        } // End log-to-file
+        try {
+            PrintStream ps = new PrintStream(new BufferedOutputStream(
+                  new FileOutputStream(logFileName), 64));
+            System.setOut(ps);
+            System.setErr(ps);
+        } catch (Exception ex) {
+            ex.printStackTrace();
+        }
 
         System.err.println("Running MekWarsAutoUpdate: " + VERSION);
         System.err.flush();
@@ -72,12 +69,12 @@ public class MekWarsAutoUpdate {
 
         if (args.length < 1) {
 
-            Vector<String> selections = new Vector<String>(2, 1);
+            Vector<String> selections = new Vector<>(2, 1);
 
             selections.add("Update");
             selections.add("Create Manifest");
 
-            JComboBox combo = new JComboBox(selections);
+            JComboBox<String> combo = new JComboBox<>(selections);
             combo.setEditable(false);
             JOptionPane jop = new JOptionPane(combo,
                   JOptionPane.QUESTION_MESSAGE, JOptionPane.OK_CANCEL_OPTION);
@@ -89,7 +86,7 @@ public class MekWarsAutoUpdate {
             dlg.setVisible(true);
 
             int selection = combo.getSelectedIndex();
-            int value = ((Integer) jop.getValue()).intValue();
+            int value = (Integer) jop.getValue();
 
             if (value == JOptionPane.CANCEL_OPTION) {
                 System.exit(0);
@@ -109,6 +106,7 @@ public class MekWarsAutoUpdate {
          * count++ ) System.err.print(args[count]+" "); System.err.println();
          */
 
+        SplashWindow splash = null;
         if (args[0].equals("PLAYER")) {
             splash = new SplashWindow();
         }
@@ -117,10 +115,10 @@ public class MekWarsAutoUpdate {
             System.out.println("Starting Update");
             System.out.flush();
             if (splash != null) {
-                splash.setStatus(splash.STATUS_FETCHINGDATA);
+                splash.setStatus(splash.STATUS_FETCHING_DATA);
             }
             String url = config.getProperty("UPDATEURL");
-            if (url == null || url.trim().length() < 8 || url.equals("-1")) {
+            if (url == null || url.trim().length() < 8) {
                 System.out
                       .println("Unable to find UPDATEURL in the .\\mwconfig.txt");
                 System.out.flush();
@@ -194,7 +192,6 @@ public class MekWarsAutoUpdate {
             System.err.println("Unable to load config file: " + CONFIG_FILE);
             System.err.flush();
             ex.printStackTrace();
-            return;
         }
     }
 

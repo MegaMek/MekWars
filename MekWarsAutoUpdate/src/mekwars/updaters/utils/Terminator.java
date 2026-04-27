@@ -56,19 +56,12 @@ public class Terminator {
     }
 
     public void runOnExit(VoidFunction vf) {
-        jobsToRunOnExit_.add(0, vf);
+        jobsToRunOnExit_.addFirst(vf);
     }
 
     public void exit(int status) {
         runExitJobs();
         System.gc();
-        System.runFinalization();
-        //System.exit( status );
-    }
-
-    @Override
-    public void finalize() {
-        runExitJobs();
     }
 
     public void runExitJobs() {
@@ -77,11 +70,11 @@ public class Terminator {
         }
     }
 
-    protected List<VoidFunction> jobsToRunOnExit_ = new LinkedList<VoidFunction>();
+    protected List<VoidFunction> jobsToRunOnExit_ = new LinkedList<>();
 
     protected static Terminator instance_;
 
-    //check every 5 seconds for a killme or killme.txt file
+    //check every 5 seconds for a kill me or killme.txt file
     public static final int KILL_CHECK_INTERVAL = 5000;
 
     //com.navtools.networking.armi.networking.test code follows

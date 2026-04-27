@@ -7,16 +7,17 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.net.URL;
+import java.net.URI;
+import java.net.URISyntaxException;
 
-import updaters.utils.IOUtil;
+import mekwars.updaters.utils.IOUtil;
 
 public class Repository {
     public Repository(String urlBase) {
         urlBase_ = fixURL(urlBase) + "/";
     }
 
-    public Version getLatestVersion() throws IOException {
+    public Version getLatestVersion() throws IOException, URISyntaxException {
         System.err.println("Getting latest version from LatestVersion.ver");
 
         BufferedReader verFile = getCharFile("LatestVersion.ver");
@@ -27,23 +28,18 @@ public class Repository {
         return new ReplaceFileDiff(fileDiffInfo, version);
     }
 
-    public BufferedReader getCharFile(String filename)
-          throws IOException {
+    public BufferedReader getCharFile(String filename) throws IOException, URISyntaxException {
         return new BufferedReader(new InputStreamReader(getBinaryFile(filename)));
     }
 
-    public InputStream getBinaryFile(String filename)
-          throws IOException {
+    public InputStream getBinaryFile(String filename) throws IOException, URISyntaxException {
         filename = fixURL(filename);
 
         String url = IOUtil.delimitURL(IOUtil.fixJarURL(urlBase_ + filename));
 
         System.err.println("Retrieving url " + url + " from server");
 
-        //get inputstream from url
-        InputStream retval = new BufferedInputStream(new URL(url).openStream());
-
-        return retval;
+        return new BufferedInputStream(new URI(url).toURL().openStream());
     }
 
     public static String fixURL(String url) {

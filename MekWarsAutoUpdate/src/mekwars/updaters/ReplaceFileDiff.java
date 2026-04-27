@@ -7,7 +7,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.StringTokenizer;
 
-import updaters.utils.IOUtil;
+import mekwars.updaters.utils.IOUtil;
 
 public class ReplaceFileDiff extends FileDiff {
     public ReplaceFileDiff(FileInfo fileInfo, Version version) {
@@ -25,7 +25,7 @@ public class ReplaceFileDiff extends FileDiff {
     public void apply(AutoUpdater updater, Repository repository) {
         String file = localFileOffset_;
 
-        if (file.indexOf("/") > -1) {
+        if (file.contains("/")) {
             file = ".." + file.substring(file.lastIndexOf("/"));
         }
 
@@ -61,19 +61,7 @@ public class ReplaceFileDiff extends FileDiff {
             }
 
             // first check if temp update dir exists and if not, create it
-            File tmpDirFile = new File(updater.getLocalDir() + File.separator + AutoUpdater.UPDATE_TMP_DIR);
-            if (!tmpDirFile.exists()) {
-                tmpDirFile.mkdirs();
-            }
-
-            // remove directory of same name if it exists
-            File destFile = new File(destFileName);
-            if (destFile.isDirectory()) {
-                destFile.delete();
-            }
-
-            // create parent dir if necessary
-            File destFileParent = new File(destFile.getParent());
+            File destFileParent = getDestFileParent(updater, destFileName);
             if (!destFileParent.exists()) {
                 destFileParent.mkdirs();
             }
@@ -146,6 +134,22 @@ public class ReplaceFileDiff extends FileDiff {
         } catch (Exception e) {
             e.printStackTrace();
         }
+    }
+
+    private static File getDestFileParent(AutoUpdater updater, String destFileName) {
+        File tmpDirFile = new File(updater.getLocalDir() + File.separator + AutoUpdater.UPDATE_TMP_DIR);
+        if (!tmpDirFile.exists()) {
+            tmpDirFile.mkdirs();
+        }
+
+        // remove directory of same name if it exists
+        File destFile = new File(destFileName);
+        if (destFile.isDirectory()) {
+            destFile.delete();
+        }
+
+        // create parent dir if necessary
+        return new File(destFile.getParent());
     }
 
     @Override

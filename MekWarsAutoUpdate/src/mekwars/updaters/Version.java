@@ -5,8 +5,9 @@ package mekwars.updaters;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.URISyntaxException;
 
-import updaters.utils.IOUtil;
+import mekwars.updaters.utils.IOUtil;
 
 public class Version {
     public Version(Repository repository, String version) {
@@ -14,30 +15,20 @@ public class Version {
         version_ = IOUtil.trimFileSeparator(version);
     }
 
-    public VersionManifest getManifest() throws IOException {
+    public VersionManifest getManifest() throws IOException, URISyntaxException {
         if (manifest_ == null) {
-            //manifest_ = new VersionManifest(getCharFile("Manifest.txt.jar!/Manifest.txt"));
             manifest_ = new VersionManifest(getCharFile("Manifest.txt"));
         }
 
         return manifest_;
     }
 
-    public InputStream getBinaryFile(String filename) throws IOException {
-      /*while (filename.indexOf(" ") != -1)
-      {
-        int index = filename.indexOf(" ");
-        filename = filename.substring(0,index) + "%20" + filename.substring(index+1,filename.length());
-      }*/
-
-        filename = filename.replaceAll(" ", "%20");
-
-
+    public InputStream getBinaryFile(String filename) throws IOException, URISyntaxException {
+        filename = filename.replace(" ", "%20");
         return repository_.getBinaryFile(version_ + "/" + filename);
     }
 
-    public BufferedReader getCharFile(String filename) throws IOException {
-
+    public BufferedReader getCharFile(String filename) throws IOException, URISyntaxException {
         return repository_.getCharFile(version_ + "/" + filename);
     }
 

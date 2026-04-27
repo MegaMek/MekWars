@@ -14,8 +14,7 @@ public class FileInfo {
      * @param manifestLine the string to be parsed
      */
     public FileInfo(String manifestLine) {
-        StringTokenizer toker = new StringTokenizer(manifestLine,
-              VersionManifest.separator);
+        StringTokenizer toker = new StringTokenizer(manifestLine, VersionManifest.separator);
         localOffset_ = toker.nextToken();
         remoteOffset_ = toker.nextToken();
         crc32_ = Long.parseLong(toker.nextToken());
@@ -41,7 +40,7 @@ public class FileInfo {
         tempFileUpToDate_ = isLatest;
     }
 
-    protected long crc32_ = -1;
+    protected long crc32_;
     protected String remoteOffset_;
     protected String localOffset_;
     protected boolean tempFileUpToDate_ = false;

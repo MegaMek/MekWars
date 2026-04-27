@@ -6,25 +6,20 @@ import java.util.List;
 import java.util.StringTokenizer;
 import javax.swing.JFileChooser;
 
-import common.util.MWLogger;
-import updaters.utils.IOUtil;
+import mekwars.common.util.MWLogger;
+import mekwars.updaters.utils.IOUtil;
 
 public class VersionManifest {
     public VersionManifest(BufferedReader manifestStream) {
-        String line = null;
+        String line;
         try {
             while ((line = manifestStream.readLine()) != null) {
-                // System.err.println("Found line \"" + line + "\" in
-                // manifest");
-
                 // if line is not a cleanup line
-                if (line.indexOf("<CLEANUP>") == -1) {
+                if (!line.contains("<CLEANUP>")) {
                     fileList_.add(new FileInfo(line));
                 } else {
                     StringTokenizer toker = new StringTokenizer(line, separator);
-                    // first token should be <CLEANUP>, throw away
                     toker.nextToken();
-                    // second token is name of directory to clean up, keep it.
                     dirsToCleanUp_.add(toker.nextToken());
                 }
             }
@@ -36,7 +31,7 @@ public class VersionManifest {
     public List<FileInfo> getDiffInfos(AutoUpdater updater) {
         System.err.println("Getting diff infos");
 
-        List<FileInfo> retval = new ArrayList<FileInfo>();
+        List<FileInfo> retVal = new ArrayList<>();
         long tempCRC = 0;
         for (FileInfo file : fileList_) {
 
@@ -53,7 +48,7 @@ public class VersionManifest {
                 StringBuilder tempManifest = new StringBuilder("./");
                 tempManifest.append(AutoUpdater.UPDATE_TMP_DIR);
                 tempManifest.append(File.separator);
-                tempManifest.append(IOUtil.removeLeadingDotSlash(file.getLocalOffset()));
+                tempManifest.append(file.getLocalOffset());
                 tempManifest.append(VersionManifest.separator);
                 tempManifest.append(file.getRemoteOffset());
                 tempManifest.append(VersionManifest.separator);
@@ -92,7 +87,7 @@ public class VersionManifest {
                     } else {
                         file.setTempFileUpToDate(false);
                     }
-                    retval.add(file);
+                    retVal.add(file);
                 } else {
                     System.err.println("Remote file " +
                                              file.getRemoteOffset() +
@@ -116,13 +111,13 @@ public class VersionManifest {
                 } else {
                     file.setTempFileUpToDate(false);
                 }
-                retval.add(file);
+                retVal.add(file);
             } catch (Exception e) {
                 e.printStackTrace();
             }
         }
 
-        return retval;
+        return retVal;
     }
 
     /**
@@ -131,12 +126,12 @@ public class VersionManifest {
     public List<String> getClientFileStructure() {
         System.err.println("Getting client file structure");
 
-        List<String> retval = new ArrayList<String>();
+        List<String> retVal = new ArrayList<>();
         for (FileInfo file : fileList_) {
-            retval.add(file.getLocalOffset());
+            retVal.add(file.getLocalOffset());
         }
 
-        return retval;
+        return retVal;
     }
 
     /**
@@ -242,22 +237,21 @@ public class VersionManifest {
     }
 
     private static void createManifestFile(String outPutFileName) {
-        BufferedReader manifestList = null;
-        try {
-            manifestList = new BufferedReader(new FileReader(outPutFileName));
-
-            String manifestFileName = outPutFileName.substring(0, outPutFileName.indexOf("files.txt")) + "Manifest.txt";
+        try (BufferedReader manifestList = new BufferedReader(new FileReader(outPutFileName))) {
+            String manifestFileName = outPutFileName.substring(0, outPutFileName.indexOf("files.txt")) +
+                                            "Manifest.txt";
             FileOutputStream out = new FileOutputStream(manifestFileName);
             PrintStream ps = new PrintStream(out);
 
-            String line, newLine = "";
+            String line, newLine;
             while ((line = manifestList.readLine()) != null) {
                 long crc32 = IOUtil.getCRC32(new BufferedInputStream(new FileInputStream(line)));
                 newLine = IOUtil.replaceString(line, "\\", "/");
                 ps.println(newLine + separator + newLine + separator + crc32);
             }
+
             // Basic folders that should be cleaned up regularly.
-            ps.println("<CLEANUP>*./data/mechfiles");
+            ps.println("<CLEANUP>*./data/mekfiles");
             ps.println("<CLEANUP>*./data/images/units");
             ps.println("<CLEANUP>*./data/images/camo");
             ps.println("<CLEANUP>*./data/images/units/wrecks");
@@ -270,28 +264,15 @@ public class VersionManifest {
             out.flush();
             ps.close();
             out.close();
-            /*
-             * Runtime runtime = Runtime.getRuntime(); String[] call = { "jar",
-             * "-cf", "Manifest.txt.jar", "Manifest.txt" }; Process event =
-             * runtime.exec(call); ProcessLogger outLogger = new
-             * ProcessLogger(event.getInputStream()); ProcessLogger errLogger =
-             * new ProcessLogger(event.getErrorStream()); outLogger.start();
-             * errLogger.start(); event.waitFor();
-             */
-        } catch (Exception ex) {
-            ex.printStackTrace();
-        } finally {
-            try {
-                manifestList.close();
-            } catch (IOException e) {
-                MWLogger.errLog(e);
-            }
+
+        } catch (IOException e) {
+            MWLogger.errLog(e);
         }
     }
 
-    protected List<FileInfo> fileList_ = new ArrayList<FileInfo>();
+    protected List<FileInfo> fileList_ = new ArrayList<>();
 
-    protected List<String> dirsToCleanUp_ = new ArrayList<String>();
+    protected List<String> dirsToCleanUp_ = new ArrayList<>();
 
     public static String separator = "*";
 }
