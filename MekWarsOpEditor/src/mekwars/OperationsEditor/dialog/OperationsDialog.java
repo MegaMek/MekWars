@@ -41,93 +41,66 @@ import java.io.InputStreamReader;
 import java.io.PrintStream;
 import java.util.StringTokenizer;
 import java.util.TreeMap;
+import javax.swing.*;
 
-import javax.swing.BorderFactory;
-import javax.swing.BoxLayout;
-import javax.swing.JCheckBox;
-import javax.swing.JComboBox;
-import javax.swing.JFrame;
-import javax.swing.JLabel;
-import javax.swing.JMenu;
-import javax.swing.JMenuBar;
-import javax.swing.JMenuItem;
-import javax.swing.JOptionPane;
-import javax.swing.JPanel;
-import javax.swing.JScrollPane;
-import javax.swing.JTabbedPane;
-import javax.swing.JTextField;
-import javax.swing.ScrollPaneConstants;
-import javax.swing.SpringLayout;
-import javax.swing.SwingConstants;
+import mekwars.common.VerticalLayout;
+import mekwars.common.campaign.clientutils.protocol.IClient;
+import mekwars.common.campaign.operations.DefaultOperation;
+import mekwars.common.flags.FlagSet;
+import mekwars.common.util.MWLogger;
+import mekwars.common.util.SpringLayoutHelper;
 
-import common.VerticalLayout;
-import common.campaign.operations.DefaultOperation;
-import common.flags.FlagSet;
-import common.util.MWLogger;
-import common.util.SpringLayoutHelper;
 
 public class OperationsDialog extends JFrame implements ActionListener, KeyListener, MouseListener {
 
+    public final static int OP_VERSION = 2;
     /**
      *
      */
     private static final long serialVersionUID = -238767483230471330L;
     private final static String windowName = "MekWars Operations Editor";
-
     private final static int SHORT_OP = 0;
     private final static int LONG_OP = 0;
     private final static int SPECIAL_OP = 0;
-
-    public final static int OP_VERSION = 2;
-    private int currentOpType = SHORT_OP;
-
-    private boolean shortOpScreenCreated = false;
-
-    private String taskName = "";
-
-    private DefaultOperation defaultOperationInfo = new DefaultOperation();
-
-    private BackedTreeMap opValues;
-
-    private JTextField BaseTextField = new JTextField(10);
-    private JCheckBox BaseCheckBox = new JCheckBox();
-    private JComboBox BaseComboBox = new JComboBox();
-
-    private String filePathName = "./data/operations";
-    private JOptionPane pane;
-    private JScrollPane scrollPane;
-    private Object mwclient = null;
-
     JPanel contentPane;
-
-    private boolean changesMade = false;
-
-    private Dimension textBoxSize = new Dimension(70, 22);
-
     JTabbedPane ConfigPane = new JTabbedPane(SwingConstants.TOP);
-
     FlagTable afTable;
     FlagTable dfTable;
     FlagTable wfTable;
     FlagTable lfTable;
+    private int currentOpType = SHORT_OP;
+    private boolean shortOpScreenCreated = false;
+    private String taskName = "";
+    private DefaultOperation defaultOperationInfo = new DefaultOperation();
+    private BackedTreeMap opValues;
+    private JTextField BaseTextField = new JTextField(10);
+    private JCheckBox BaseCheckBox = new JCheckBox();
+    private JComboBox BaseComboBox = new JComboBox();
+    private String filePathName = "./data/operations";
+    private JOptionPane pane;
+    private JScrollPane scrollPane;
+    private IClient mwclient = null;
+    private boolean changesMade = false;
+    private Dimension textBoxSize = new Dimension(70, 22);
 
     /**
      * @author Torren (Jason Tighe) 01/04/2006
-     *
-     *         I've completely redone how the Operations dialog works There are 2 basic fields now baseTextField which is a JTextField and baseCheckBox which is
-     *         a JCheckBox.
-     *
-     *         When you add a new config add the labels to the tab then use the base fields to add the ver. make sure to set the base field's name method this
-     *         is used to populate and save.
-     *
-     *         ex: BaseTextField.setName("DefaultOperationsOptionsVariable");
-     *
-     *         Three recursive methods populate, load, and save the data to file
-     *
-     *         findAndPopulateTextAndCheckBoxes(JPanel) findAndPopulateTextAndCheckBoxes(JPanel, BackedTreeMap) findAndSaveConfigs(JPanel, PrintStream)
-     *
-     *         This change to the code removes the tediousness of having to add a new var to 3 locations when it is used. Now only 1 location needs to be added
-     *         and that is the vars placement on the tab in the UI.
+     *       <p>
+     *       I've completely redone how the Operations dialog works There are 2 basic fields now baseTextField which is
+     *       a JTextField and baseCheckBox which is a JCheckBox.
+     *       <p>
+     *       When you add a new config add the labels to the tab then use the base fields to add the ver. make sure to
+     *       set the base field's name method this is used to populate and save.
+     *       <p>
+     *       ex: BaseTextField.setName("DefaultOperationsOptionsVariable");
+     *       <p>
+     *       Three recursive methods populate, load, and save the data to file
+     *       <p>
+     *       findAndPopulateTextAndCheckBoxes(JPanel) findAndPopulateTextAndCheckBoxes(JPanel, BackedTreeMap)
+     *       findAndSaveConfigs(JPanel, PrintStream)
+     *       <p>
+     *       This change to the code removes the tediousness of having to add a new var to 3 locations when it is used.
+     *       Now only 1 location needs to be added and that is the vars placement on the tab in the UI.
      */
     public OperationsDialog(Object o) {
 
@@ -4406,28 +4379,6 @@ public class OperationsDialog extends JFrame implements ActionListener, KeyListe
 
     }
 
-    /*
-     * Inner class which backs a treemap with
-     * a set of default ops values.
-     */
-    private class BackedTreeMap extends TreeMap<String, String> {
-
-        private static final long serialVersionUID = 1L;
-        DefaultOperation defaults;
-
-        public BackedTreeMap(DefaultOperation dop) {
-            defaults = dop;
-        }
-
-        public String getV(String key) {
-            Object toReturn = super.get(key);
-            if (toReturn == null) {
-                toReturn = defaults.getDefault(key);
-            }
-            return (String) toReturn;
-        }
-    }// end BackedTreeMap
-
     public void keyTyped(KeyEvent arg0) {
 
         if ((arg0.getKeyCode() >= 32) && (arg0.getKeyCode() <= 126)) {
@@ -4457,8 +4408,9 @@ public class OperationsDialog extends JFrame implements ActionListener, KeyListe
     }
 
     /**
-     * This Method tunnels through all of the panels to find the textfields and checkboxes. Once it find one it grabs the Name() param of the object and uses
-     * that to find out what the setting should be from the mwclient.getserverConfigs() method.
+     * This Method tunnels through all of the panels to find the textfields and checkboxes. Once it find one it grabs
+     * the Name() param of the object and uses that to find out what the setting should be from the
+     * client.getserverConfigs() method.
      *
      * @param panel
      */
@@ -4518,8 +4470,9 @@ public class OperationsDialog extends JFrame implements ActionListener, KeyListe
     }
 
     /**
-     * This Method tunnels through all of the panels to find the textfields and checkboxes. Once it find one it grabs the Name() param of the object and uses
-     * that to find out what the setting should be from the mwclient.getserverConfigs() method.
+     * This Method tunnels through all of the panels to find the textfields and checkboxes. Once it find one it grabs
+     * the Name() param of the object and uses that to find out what the setting should be from the
+     * client.getserverConfigs() method.
      *
      * @param panel
      */
@@ -4582,8 +4535,8 @@ public class OperationsDialog extends JFrame implements ActionListener, KeyListe
     }
 
     /**
-     * This method will tunnel through all of the panels of the config UI to find any changed text fields or checkboxes. Then it will send the new configs to
-     * the server.
+     * This method will tunnel through all of the panels of the config UI to find any changed text fields or checkboxes.
+     * Then it will send the new configs to the server.
      *
      * @param panel
      */
@@ -4669,49 +4622,49 @@ public class OperationsDialog extends JFrame implements ActionListener, KeyListe
         jMenuRetrieveOperationFile.setText("Retrieve Operation File");
         jMenuRetrieveOperationFile.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
-                ((client.MWClient) mwclient).getMainFrame().jMenuRetrieveOperationFile_actionPerformed(e);
+                ((IClient) mwclient).getMainFrame().jMenuRetrieveOperationFile_actionPerformed(e);
             }
         });
 
         jMenuSetOperationFile.setText("Set Operation File");
         jMenuSetOperationFile.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
-                ((client.MWClient) mwclient).getMainFrame().jMenuSetOperationFile_actionPerformed(e);
+                ((IClient) mwclient).getMainFrame().jMenuSetOperationFile_actionPerformed(e);
             }
         });
 
         jMenuSetNewOperationFile.setText("Set New Operation File");
         jMenuSetNewOperationFile.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
-                ((client.MWClient) mwclient).getMainFrame().jMenuSetNewOperationFile_actionPerformed(e);
+                ((IClient) mwclient).getMainFrame().jMenuSetNewOperationFile_actionPerformed(e);
             }
         });
 
         jMenuSendAllOperationFiles.setText("Send All Local Op Files");
         jMenuSendAllOperationFiles.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
-                ((client.MWClient) mwclient).getMainFrame().jMenuSendAllOperationFiles_actionPerformed(e);
+                ((IClient) mwclient).getMainFrame().jMenuSendAllOperationFiles_actionPerformed(e);
             }
         });
 
         jMenuUpdateOperations.setText("Update Operations");
         jMenuUpdateOperations.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
-                ((client.MWClient) mwclient).getMainFrame().jMenuUpdateOperations_actionPerformed(e);
+                ((IClient) mwclient).getMainFrame().jMenuUpdateOperations_actionPerformed(e);
             }
         });
 
-        int userLevel = ((client.MWClient) mwclient).getUser(((client.MWClient) mwclient).getUsername()).getUserlevel();
-        if (userLevel >= ((client.MWClient) mwclient).getData().getAccessLevel("RetrieveOperation")) {
+        int userLevel = ((IClient) mwclient).getUser(((IClient) mwclient).getUsername()).getUserlevel();
+        if (userLevel >= ((IClient) mwclient).getData().getAccessLevel("RetrieveOperation")) {
             jMenuOperations.add(jMenuRetrieveOperationFile);
         }
-        if (userLevel >= ((client.MWClient) mwclient).getData().getAccessLevel("SetOperation")) {
+        if (userLevel >= ((IClient) mwclient).getData().getAccessLevel("SetOperation")) {
             jMenuOperations.add(jMenuSendCurrentOperationFile);
             jMenuOperations.add(jMenuSetOperationFile);
             jMenuOperations.add(jMenuSetNewOperationFile);
             jMenuOperations.add(jMenuSendAllOperationFiles);
         }
-        if (userLevel >= ((client.MWClient) mwclient).getData().getAccessLevel("UpdateOperations")) {
+        if (userLevel >= ((IClient) mwclient).getData().getAccessLevel("UpdateOperations")) {
             jMenuOperations.add(jMenuUpdateOperations);
         }
 
@@ -4747,9 +4700,9 @@ public class OperationsDialog extends JFrame implements ActionListener, KeyListe
             return;
         }
 
-        ((client.MWClient) mwclient).sendChat(client.MWClient.CAMPAIGN_PREFIX +
-                                                    "c setoperation#short#" +
-                                                    opData.toString());
+        ((IClient) mwclient).sendChat(IClient.CAMPAIGN_PREFIX +
+                                            "c setoperation#short#" +
+                                            opData.toString());
     }
 
     public void mouseClicked(MouseEvent arg0) {
@@ -4758,6 +4711,16 @@ public class OperationsDialog extends JFrame implements ActionListener, KeyListe
             JTextField text = (JTextField) arg0.getSource();
             new TextEditorDialog(this, text);
         }
+
+    }
+
+    public void mousePressed(MouseEvent arg0) {
+        // TODO Auto-generated method stub
+
+    }
+
+    public void mouseReleased(MouseEvent arg0) {
+        // TODO Auto-generated method stub
 
     }
 
@@ -4771,13 +4734,25 @@ public class OperationsDialog extends JFrame implements ActionListener, KeyListe
 
     }
 
-    public void mousePressed(MouseEvent arg0) {
-        // TODO Auto-generated method stub
+    /*
+     * Inner class which backs a treemap with
+     * a set of default ops values.
+     */
+    private class BackedTreeMap extends TreeMap<String, String> {
 
-    }
+        private static final long serialVersionUID = 1L;
+        DefaultOperation defaults;
 
-    public void mouseReleased(MouseEvent arg0) {
-        // TODO Auto-generated method stub
+        public BackedTreeMap(DefaultOperation dop) {
+            defaults = dop;
+        }
 
-    }
+        public String getV(String key) {
+            Object toReturn = super.get(key);
+            if (toReturn == null) {
+                toReturn = defaults.getDefault(key);
+            }
+            return (String) toReturn;
+        }
+    }// end BackedTreeMap
 }

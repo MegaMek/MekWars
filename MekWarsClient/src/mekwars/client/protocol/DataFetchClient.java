@@ -1,14 +1,15 @@
 package mekwars.client.protocol;
 
-import client.gui.CMainFrame;
-import common.CampaignData;
-import common.Equipment;
-import common.House;
-import common.Influences;
-import common.Planet;
-import common.util.BinReader;
-import common.util.BinWriter;
-import common.util.MWLogger;
+import mekwars.common.CampaignData;
+import mekwars.common.Equipment;
+import mekwars.common.House;
+import mekwars.common.Influences;
+import mekwars.common.Planet;
+import mekwars.common.campaign.clientutils.protocol.IClient;
+import mekwars.common.gui.CMainFrame;
+import mekwars.common.persistence.BinReader;
+import mekwars.common.persistence.BinWriter;
+import mekwars.common.util.MWLogger;
 
 /**
  * Calls to the data retrieving server and gets data for planets and factions
@@ -336,7 +337,7 @@ public class DataFetchClient {
      * Check Server version against client if it doesn't match you can't connect
      *
      */
-    public void checkServerVersion(client.MWClient mwclient) throws java.io.IOException {
+    public void checkServerVersion(IClient client) throws java.io.IOException {
 
         boolean mustUpdate = false;
         String clientVersion = client.MWClient.CLIENT_VERSION;
@@ -355,7 +356,7 @@ public class DataFetchClient {
         if (!mustUpdate) {
             binreader = openConnection("ForceUpdateKey");
             String forceUpdateKey = binreader.readLine("ForceUpdateKey");
-            String clientUpdateKey = mwclient.getConfigParam("UPDATEKEY");
+            String clientUpdateKey = client.getConfigParam("UPDATEKEY");
 
             MWLogger.errLog("Server Key: " + forceUpdateKey);
             // the server update key starts out blank. So the update only works
@@ -367,7 +368,7 @@ public class DataFetchClient {
 
         if (mustUpdate) {
             int update = javax.swing.JOptionPane.NO_OPTION;
-            if (!mwclient.isDedicated()) {
+            if (!client.isDedicated()) {
                 update = javax.swing.JOptionPane.showConfirmDialog(null,
                       "You have an invalid version\n\rof the MekWars Client\n\rWould you like to update now?",
                       "Invalid Client update now!",
@@ -375,7 +376,7 @@ public class DataFetchClient {
 
                 if (update == javax.swing.JOptionPane.YES_OPTION) {
                     try {
-                        mwclient.goodbye();
+                        client.goodbye();
                         Runtime runtime = Runtime.getRuntime();
                         String[] call = { "java", "-jar", "./MekWarsAutoUpdate.jar", "PLAYER" };
                         runtime.exec(call);
@@ -387,8 +388,8 @@ public class DataFetchClient {
 
             } else {// is Ded
                 try {
-                    mwclient.stopHost();
-                    mwclient.goodbye();
+                    client.stopHost();
+                    client.goodbye();
                     Runtime runtime = Runtime.getRuntime();
                     String[] call = { "java", "-jar", "MekWarsAutoUpdate.jar", "DEDICATED" };
                     runtime.exec(call);
@@ -555,6 +556,33 @@ public class DataFetchClient {
     }
 
     /**
+     * Store itself to disk.
+     */
+    public void store() {
+
+        if (lastTimestamp != null) {
+            try {
+                java.io.FileWriter fw = new java.io.FileWriter(cacheDir + "/dataLastUpdated.dat");
+                // write the time out in Milliseconds
+                // lastTimestamp = latestTimeStamp;
+
+                fw.write(Long.toString(lastTimestamp.getTime()));
+                fw.close();
+            } catch (java.io.IOException e) {
+                MWLogger.errLog(e);
+            }
+        }
+        try {
+            BinWriter binOut = new BinWriter(new java.io.PrintWriter(new java.io.FileWriter(cacheDir + "/data.dat")));
+            data.binOut(binOut);
+            binOut.close();
+        } catch (Exception ex) {
+            MWLogger.errLog(ex);
+            MWLogger.errLog("Error saving data.");
+        }
+    }
+
+    /**
      * Transfer only the differential planets since last timestamp.
      */
     public boolean getPlanetsUpdate(CampaignData Data) {
@@ -699,33 +727,6 @@ public class DataFetchClient {
     public void setData(String hostAddr, String cacheDir) {
         this.hostAddr = hostAddr;
         this.cacheDir = cacheDir;
-    }
-
-    /**
-     * Store itself to disk.
-     */
-    public void store() {
-
-        if (lastTimestamp != null) {
-            try {
-                java.io.FileWriter fw = new java.io.FileWriter(cacheDir + "/dataLastUpdated.dat");
-                // write the time out in Milliseconds
-                // lastTimestamp = latestTimeStamp;
-
-                fw.write(Long.toString(lastTimestamp.getTime()));
-                fw.close();
-            } catch (java.io.IOException e) {
-                MWLogger.errLog(e);
-            }
-        }
-        try {
-            BinWriter binOut = new BinWriter(new java.io.PrintWriter(new java.io.FileWriter(cacheDir + "/data.dat")));
-            data.binOut(binOut);
-            binOut.close();
-        } catch (Exception ex) {
-            MWLogger.errLog(ex);
-            MWLogger.errLog("Error saving data.");
-        }
     }
 
     /**

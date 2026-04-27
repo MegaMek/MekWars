@@ -21,6 +21,7 @@ import java.io.Serial;
 
 import mekwars.client.MWClient;
 import mekwars.common.campaign.clientutils.protocol.CConnector;
+import mekwars.common.campaign.clientutils.protocol.IClient;
 
 /**
  * Abstract class for GUI Commands
@@ -46,7 +47,7 @@ public abstract class CGUICommand extends javax.swing.AbstractAction implements 
         super();
         this.mwclient = client;
         Connector = client.getConnector();
-        guiPrefix = MWClient.GUI_PREFIX;
+        guiPrefix = IClient.GUI_PREFIX;
         delimiter = MWClient.PROTOCOL_DELIMITER;
         prefix = MWClient.PROTOCOL_PREFIX;
     }

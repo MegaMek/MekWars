@@ -14,7 +14,7 @@
  * for more details.
  */
 
-package mekwars.client.gui;
+package mekwars.common.gui;
 
 import client.gui.dialog.SellUnitDialog;
 import common.util.MWLogger;
@@ -31,12 +31,10 @@ public class CBMPanel extends javax.swing.JPanel {
      *
      */
     private static final long serialVersionUID = -432087180209544906L;
+    public BlackMarketModel BlackMarketInfo;
     client.MWClient mwclient;
     client.campaign.CPlayer Player;
-
     long lastUpdate = -1;//update time for button
-    public BlackMarketModel BlackMarketInfo;
-
     private javax.swing.JTable tblMarket = new javax.swing.JTable();
     private javax.swing.JScrollPane spMarket = new javax.swing.JScrollPane();
 
@@ -242,76 +240,6 @@ public class CBMPanel extends javax.swing.JPanel {
         refresh();
     }
 
-    public void fireMarketChanged() {
-        //here's a problem MyBlackMarket has to be created somehow (by parsing BM or from Player data)
-        BlackMarketInfo.refreshModel();
-
-        tblMarket.setPreferredSize(new java.awt.Dimension(tblMarket.getWidth(),
-              tblMarket.getRowHeight() * (tblMarket.getRowCount())));
-        tblMarket.revalidate();
-    }
-
-    public void refresh() {
-        fireMarketChanged();
-    }
-
-    /**
-     * Called by action listener. Retracts a bid placed on a unit.
-     */
-    private void btnRecallBidActionPerformed(java.awt.event.ActionEvent evt) {
-
-        mm = getMarketMechAtRow(tblMarket.getSelectedRow());
-
-        //break out if no selection
-        if (mm == null) {
-            return;
-        }
-
-        //no bid. return.
-        if (tblMarket.getValueAt(tblMarket.getSelectedRow(), BlackMarketModel.BID) == null) {
-            return;
-        }
-
-        //returns passed. send the recall command and deselect the buttons.
-        mwclient.sendChat(client.MWClient.CAMPAIGN_PREFIX + "c recallbid#" + mm.getAuctionID());
-        btnRecallBid.setEnabled(false);
-        btnRecallUnit.setEnabled(false);
-        btnBid.setEnabled(false);
-
-    }
-
-    /**
-     * Called by action listener. Recinds a unit sale.
-     */
-    private void btnRecallUnitActionPerformed(java.awt.event.ActionEvent evt) {
-
-        mm = getMarketMechAtRow(tblMarket.getSelectedRow());
-
-        //break out if no selection
-        if (mm == null) {
-            return;
-        }
-
-        //not the players unit, so he cant terminate the sale
-        if (!mm.playerIsSeller()) {
-            return;
-        }
-
-        //returns passed. send the recall command and deselect the buttons.
-        mwclient.sendChat(client.MWClient.CAMPAIGN_PREFIX + "c recall#" + mm.getAuctionID());
-        btnRecallBid.setEnabled(false);
-        btnRecallUnit.setEnabled(false);
-        btnBid.setEnabled(false);
-    }
-
-    /**
-     * Called from an action listener. Creates a SellUnitDialog. The dialog does all of the work ;-)
-     */
-    public void btnSellUnitActionPerformed(java.awt.event.ActionEvent evt) {
-        SellUnitDialog sud = new SellUnitDialog(null, mwclient, null);
-        sud.setVisible(true);
-    }
-
     /**
      * Called from an action listener. Opens a MechDetailDisplay for the unit at the currently selected row.
      *
@@ -338,7 +266,6 @@ public class CBMPanel extends javax.swing.JPanel {
         infoWindow.setVisible(true);
         unitDisplay.displayEntity(theEntity);
     }
-
 
     public client.campaign.CBMUnit getMarketMechAtRow(int row) {
         mm = null;
@@ -422,76 +349,61 @@ public class CBMPanel extends javax.swing.JPanel {
         }
     }//end btnBidActionPerformed
 
-    //refresh preview image
-    public void resetCamo() {
+    /**
+     * Called by action listener. Retracts a bid placed on a unit.
+     */
+    private void btnRecallBidActionPerformed(java.awt.event.ActionEvent evt) {
 
-        if (!hideBMUnits && mwclient.getConfig().isParam("BMPREVIEWIMAGE")) {
+        mm = getMarketMechAtRow(tblMarket.getSelectedRow());
 
-            //refresh the camo ... may have been changed.
-            pnlMekIcon = new MechInfo(mwclient.getConfig().getImage("CAMO"));
-            pnlMekIcon.setMinimumSize(new java.awt.Dimension(84, 72));
-            pnlMekIcon.setPreferredSize(new java.awt.Dimension(84, 72));
-            pnlMekIcon.setMaximumSize(new java.awt.Dimension(84, 72));
-
-
-            try {
-                ((MechInfo) pnlMekIcon).setUnit(mm.getEmbeddedUnit().getEntity());
-                ((MechInfo) pnlMekIcon).setImageVisible(true);
-            } catch (Exception e) {
-                //just means no entity has been selected yet
-            }
-
-            pnlMekIconHolder.removeAll();
-            pnlMekIconHolder.add(pnlMekIcon);
-
-        } else {
-            ((MechInfo) pnlMekIcon).setImageVisible(false);
+        //break out if no selection
+        if (mm == null) {
+            return;
         }
 
-        pnlBuyBtns.validate();
+        //no bid. return.
+        if (tblMarket.getValueAt(tblMarket.getSelectedRow(), BlackMarketModel.BID) == null) {
+            return;
+        }
+
+        //returns passed. send the recall command and deselect the buttons.
+        mwclient.sendChat(client.MWClient.CAMPAIGN_PREFIX + "c recallbid#" + mm.getAuctionID());
+        btnRecallBid.setEnabled(false);
+        btnRecallUnit.setEnabled(false);
+        btnBid.setEnabled(false);
+
     }
 
     /**
-     * Method called from CPlayer after a faction is set. Enables or disables the Sell Unit button, as appropriate for
-     * the faction.
-     * <p>
-     * Also sets a correct CBMPanel.factionBidsAllowed value so that future clicks on BM units give a correct "Place
-     * Bid" button.
+     * Called by action listener. Recinds a unit sale.
      */
-    public void checkFactionAccess() {
+    private void btnRecallUnitActionPerformed(java.awt.event.ActionEvent evt) {
 
-        //check to see if selling is forbidden for the player's faction
-        boolean sellingEnabled = true;
-        java.util.StringTokenizer blockedFactions = new java.util.StringTokenizer(mwclient.getserverConfigs("BMNoSell"),
-              "$");
-        while (blockedFactions.hasMoreTokens()) {
-            if (Player.getMyHouse().getName().equals(blockedFactions.nextToken())) {
-                sellingEnabled = false;
-            }
+        mm = getMarketMechAtRow(tblMarket.getSelectedRow());
+
+        //break out if no selection
+        if (mm == null) {
+            return;
         }
 
-        if (sellingEnabled) {
-            btnSellUnit.setEnabled(true);
-        } else {
-            btnSellUnit.setEnabled(false);
+        //not the players unit, so he cant terminate the sale
+        if (!mm.playerIsSeller()) {
+            return;
         }
 
-        //check to see if buying is forbidds, and save boolean.
-        boolean buyingEnabled = true;
-        blockedFactions = new java.util.StringTokenizer(mwclient.getserverConfigs("BMNoBuy"), "$");
-        while (blockedFactions.hasMoreTokens()) {
-            if (Player.getMyHouse().getName().equals(blockedFactions.nextToken())) {
-                buyingEnabled = false;
-            }
-        }
+        //returns passed. send the recall command and deselect the buttons.
+        mwclient.sendChat(client.MWClient.CAMPAIGN_PREFIX + "c recall#" + mm.getAuctionID());
+        btnRecallBid.setEnabled(false);
+        btnRecallUnit.setEnabled(false);
+        btnBid.setEnabled(false);
+    }
 
-        //have to use an ivar and check the perm so bidding is re-enabled after defection
-        if (buyingEnabled) {
-            factionBidsAllowed = true;
-        } else {
-            factionBidsAllowed = false;
-        }
-
+    /**
+     * Called from an action listener. Creates a SellUnitDialog. The dialog does all of the work ;-)
+     */
+    public void btnSellUnitActionPerformed(java.awt.event.ActionEvent evt) {
+        SellUnitDialog sud = new SellUnitDialog(null, mwclient, null);
+        sud.setVisible(true);
     }
 
     public void resetButtonBar() {
@@ -560,6 +472,91 @@ public class CBMPanel extends javax.swing.JPanel {
 
         pnlBuyBtns.validate();
         this.repaint();
+    }
+
+    public void refresh() {
+        fireMarketChanged();
+    }
+
+    //refresh preview image
+    public void resetCamo() {
+
+        if (!hideBMUnits && mwclient.getConfig().isParam("BMPREVIEWIMAGE")) {
+
+            //refresh the camo ... may have been changed.
+            pnlMekIcon = new MechInfo(mwclient.getConfig().getImage("CAMO"));
+            pnlMekIcon.setMinimumSize(new java.awt.Dimension(84, 72));
+            pnlMekIcon.setPreferredSize(new java.awt.Dimension(84, 72));
+            pnlMekIcon.setMaximumSize(new java.awt.Dimension(84, 72));
+
+
+            try {
+                ((MechInfo) pnlMekIcon).setUnit(mm.getEmbeddedUnit().getEntity());
+                ((MechInfo) pnlMekIcon).setImageVisible(true);
+            } catch (Exception e) {
+                //just means no entity has been selected yet
+            }
+
+            pnlMekIconHolder.removeAll();
+            pnlMekIconHolder.add(pnlMekIcon);
+
+        } else {
+            ((MechInfo) pnlMekIcon).setImageVisible(false);
+        }
+
+        pnlBuyBtns.validate();
+    }
+
+    public void fireMarketChanged() {
+        //here's a problem MyBlackMarket has to be created somehow (by parsing BM or from Player data)
+        BlackMarketInfo.refreshModel();
+
+        tblMarket.setPreferredSize(new java.awt.Dimension(tblMarket.getWidth(),
+              tblMarket.getRowHeight() * (tblMarket.getRowCount())));
+        tblMarket.revalidate();
+    }
+
+    /**
+     * Method called from CPlayer after a faction is set. Enables or disables the Sell Unit button, as appropriate for
+     * the faction.
+     * <p>
+     * Also sets a correct CBMPanel.factionBidsAllowed value so that future clicks on BM units give a correct "Place
+     * Bid" button.
+     */
+    public void checkFactionAccess() {
+
+        //check to see if selling is forbidden for the player's faction
+        boolean sellingEnabled = true;
+        java.util.StringTokenizer blockedFactions = new java.util.StringTokenizer(mwclient.getserverConfigs("BMNoSell"),
+              "$");
+        while (blockedFactions.hasMoreTokens()) {
+            if (Player.getMyHouse().getName().equals(blockedFactions.nextToken())) {
+                sellingEnabled = false;
+            }
+        }
+
+        if (sellingEnabled) {
+            btnSellUnit.setEnabled(true);
+        } else {
+            btnSellUnit.setEnabled(false);
+        }
+
+        //check to see if buying is forbidds, and save boolean.
+        boolean buyingEnabled = true;
+        blockedFactions = new java.util.StringTokenizer(mwclient.getserverConfigs("BMNoBuy"), "$");
+        while (blockedFactions.hasMoreTokens()) {
+            if (Player.getMyHouse().getName().equals(blockedFactions.nextToken())) {
+                buyingEnabled = false;
+            }
+        }
+
+        //have to use an ivar and check the perm so bidding is re-enabled after defection
+        if (buyingEnabled) {
+            factionBidsAllowed = true;
+        } else {
+            factionBidsAllowed = false;
+        }
+
     }
 
 }

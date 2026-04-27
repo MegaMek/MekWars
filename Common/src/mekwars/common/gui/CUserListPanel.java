@@ -15,11 +15,12 @@
  * for more details.
  */
 
-package mekwars.client.gui;
+package mekwars.common.gui;
 
 import common.campaign.clientutils.IClientConfig;
 import common.util.MWLogger;
 import common.util.StringUtils;
+import mekwars.common.campaign.clientutils.protocol.IClient;
 
 //import com.sun.jndi.toolkit.url.Uri;
 
@@ -48,13 +49,13 @@ public class CUserListPanel extends javax.swing.JPanel implements java.awt.event
     public static int SORTORDER_ASCENDING = 1;
     public static int SORTORDER_DESCENDING = 2;
 
-    client.MWClient mwclient;
+    IClient mwclient;
     IClientConfig Config;
     boolean LoggedIn = false;
     boolean Dedicateds;
     javax.swing.JScrollPane UserListSP;
     javax.swing.JList UserList;
-    mekwars.client.gui.CUserListPanel.CUserListModel Users;
+    mekwars.common.gui.CUserListPanel.CUserListModel Users;
 
     //additional info
     javax.swing.JPanel countPanel = new javax.swing.JPanel();
@@ -69,7 +70,7 @@ public class CUserListPanel extends javax.swing.JPanel implements java.awt.event
     javax.swing.JPanel linksPanel = new javax.swing.JPanel();
     javax.swing.JPanel bottomPanel = new javax.swing.JPanel();
 
-    mekwars.client.gui.CUserListPanel.UserListPopupListener UserListPopup = new mekwars.client.gui.CUserListPanel.UserListPopupListener();
+    mekwars.common.gui.CUserListPanel.UserListPopupListener UserListPopup = new mekwars.common.gui.CUserListPanel.UserListPopupListener();
 
     private javax.swing.Icon link1Icon = null;
     private javax.swing.Icon link2Icon = null;
@@ -89,7 +90,7 @@ public class CUserListPanel extends javax.swing.JPanel implements java.awt.event
         setMinimumSize(new java.awt.Dimension(120, 100));
         setMaximumSize(new java.awt.Dimension(180, 2000));
 
-        Users = new mekwars.client.gui.CUserListPanel.CUserListModel(mwclient);
+        Users = new mekwars.common.gui.CUserListPanel.CUserListModel(mwclient);
         UserList = new javax.swing.JList(Users);
         UserList.setAlignmentX(0.0F);
         UserList.addMouseListener(UserListPopup);
@@ -178,29 +179,29 @@ public class CUserListPanel extends javax.swing.JPanel implements java.awt.event
         //restore the previous sort mode
         String mode = mwclient.getConfig().getParam("SORTMODE");
         if (mode.equals("HOUSE")) {
-            ((mekwars.client.gui.CUserListPanel.CUserListModel) UserList.getModel()).setSortMode(SORTMODE_HOUSE);
+            ((mekwars.common.gui.CUserListPanel.CUserListModel) UserList.getModel()).setSortMode(SORTMODE_HOUSE);
         } else if (mode.equals("EXP")) {
-            ((mekwars.client.gui.CUserListPanel.CUserListModel) UserList.getModel()).setSortMode(SORTMODE_EXP);
+            ((mekwars.common.gui.CUserListPanel.CUserListModel) UserList.getModel()).setSortMode(SORTMODE_EXP);
         } else if (mode.equals("RATING")) {
             if (!Boolean.parseBoolean(mwclient.getserverConfigs("HideELO"))) {
-                ((mekwars.client.gui.CUserListPanel.CUserListModel) UserList.getModel()).setSortMode(SORTMODE_RATING);
+                ((mekwars.common.gui.CUserListPanel.CUserListModel) UserList.getModel()).setSortMode(SORTMODE_RATING);
             } else {
-                ((mekwars.client.gui.CUserListPanel.CUserListModel) UserList.getModel()).setSortMode(SORTMODE_NAME);
+                ((mekwars.common.gui.CUserListPanel.CUserListModel) UserList.getModel()).setSortMode(SORTMODE_NAME);
             }
         } else if (mode.equals("STATUS")) {
-            ((mekwars.client.gui.CUserListPanel.CUserListModel) UserList.getModel()).setSortMode(SORTMODE_STATUS);
+            ((mekwars.common.gui.CUserListPanel.CUserListModel) UserList.getModel()).setSortMode(SORTMODE_STATUS);
         } else if (mode.equals("USERLEVEL")) {
-            ((mekwars.client.gui.CUserListPanel.CUserListModel) UserList.getModel()).setSortMode(SORTMODE_USERLEVEL);
+            ((mekwars.common.gui.CUserListPanel.CUserListModel) UserList.getModel()).setSortMode(SORTMODE_USERLEVEL);
         } else if (mode.equals("COUNTRY")) {
-            ((mekwars.client.gui.CUserListPanel.CUserListModel) UserList.getModel()).setSortMode(SORTMODE_COUNTRY);
-        } else {((mekwars.client.gui.CUserListPanel.CUserListModel) UserList.getModel()).setSortMode(SORTMODE_NAME);}
+            ((mekwars.common.gui.CUserListPanel.CUserListModel) UserList.getModel()).setSortMode(SORTMODE_COUNTRY);
+        } else {((mekwars.common.gui.CUserListPanel.CUserListModel) UserList.getModel()).setSortMode(SORTMODE_NAME);}
 
         //restore the previous sort order
         String order = mwclient.getConfig().getParam("SORTORDER");
         if (order.equals("DESCENDING")) {
-            ((mekwars.client.gui.CUserListPanel.CUserListModel) UserList.getModel()).setSortOrder(SORTORDER_DESCENDING);
+            ((mekwars.common.gui.CUserListPanel.CUserListModel) UserList.getModel()).setSortOrder(SORTORDER_DESCENDING);
         } else {
-            ((mekwars.client.gui.CUserListPanel.CUserListModel) UserList.getModel()).setSortOrder(SORTORDER_ASCENDING);
+            ((mekwars.common.gui.CUserListPanel.CUserListModel) UserList.getModel()).setSortOrder(SORTORDER_ASCENDING);
         }
 
     }
@@ -320,13 +321,13 @@ public class CUserListPanel extends javax.swing.JPanel implements java.awt.event
         add(bottomPanel, java.awt.BorderLayout.SOUTH);
     }
 
-    public mekwars.client.gui.CUserListPanel.CUserListModel getUsers() {return Users;}
+    public mekwars.common.gui.CUserListPanel.CUserListModel getUsers() {return Users;}
 
     public javax.swing.JList getUserList() {return UserList;}
 
     public synchronized void refresh() {
         try {
-            ((mekwars.client.gui.CUserListPanel.CUserListModel) UserList.getModel()).refreshModel();
+            ((mekwars.common.gui.CUserListPanel.CUserListModel) UserList.getModel()).refreshModel();
         } catch (Exception ex) {MWLogger.errLog(ex);}
         CountLabel.setText("Player Count: " + UserList.getModel().getSize());
     }
@@ -411,7 +412,7 @@ public class CUserListPanel extends javax.swing.JPanel implements java.awt.event
          */
         private static final long serialVersionUID = 9141928592065940657L;
         java.util.SortedSet<client.CUser> Users;  //users set
-        mekwars.client.gui.CUserListPanel.CUserListModel.UserListCellRenderer Renderer;  //list cells renderer
+        mekwars.common.gui.CUserListPanel.CUserListModel.UserListCellRenderer Renderer;  //list cells renderer
         client.MWClient mwclient;  //client owning this model
         boolean Dedicateds; //dedicated hosts visible
 
@@ -419,8 +420,8 @@ public class CUserListPanel extends javax.swing.JPanel implements java.awt.event
         public CUserListModel(client.MWClient client) {
             mwclient = client;
             Dedicateds = mwclient.getConfig().isParam("USERLISTDEDICATEDS");
-            Users = java.util.Collections.synchronizedSortedSet(new java.util.TreeSet<client.CUser>(new mekwars.client.gui.CUserListPanel.CUserListModel.UserComparator()));
-            Renderer = new mekwars.client.gui.CUserListPanel.CUserListModel.UserListCellRenderer(this);
+            Users = java.util.Collections.synchronizedSortedSet(new java.util.TreeSet<client.CUser>(new mekwars.common.gui.CUserListPanel.CUserListModel.UserComparator()));
+            Renderer = new mekwars.common.gui.CUserListPanel.CUserListModel.UserListCellRenderer(this);
         }
 
         public synchronized void remove(client.CUser user) {Users.remove(user);}
@@ -437,10 +438,10 @@ public class CUserListPanel extends javax.swing.JPanel implements java.awt.event
 
         public void setDedicateds(boolean dedicateds) {Dedicateds = dedicateds;}
 
-        public int getSortMode() {return ((mekwars.client.gui.CUserListPanel.CUserListModel.UserComparator) Users.comparator()).getMode();}
+        public int getSortMode() {return ((mekwars.common.gui.CUserListPanel.CUserListModel.UserComparator) Users.comparator()).getMode();}
 
         public void setSortMode(int tsortmode) {
-            ((mekwars.client.gui.CUserListPanel.CUserListModel.UserComparator) Users.comparator()).setMode(tsortmode);
+            ((mekwars.common.gui.CUserListPanel.CUserListModel.UserComparator) Users.comparator()).setMode(tsortmode);
             refreshModel();
         }
 
@@ -470,10 +471,10 @@ public class CUserListPanel extends javax.swing.JPanel implements java.awt.event
 
         public void add(client.CUser user) {Users.add(user);}
 
-        public int getSortOrder() {return ((mekwars.client.gui.CUserListPanel.CUserListModel.UserComparator) Users.comparator()).getOrder();}
+        public int getSortOrder() {return ((mekwars.common.gui.CUserListPanel.CUserListModel.UserComparator) Users.comparator()).getOrder();}
 
         public void setSortOrder(int tsortorder) {
-            ((mekwars.client.gui.CUserListPanel.CUserListModel.UserComparator) Users.comparator()).setOrder(tsortorder);
+            ((mekwars.common.gui.CUserListPanel.CUserListModel.UserComparator) Users.comparator()).setOrder(tsortorder);
             refreshModel();
         }
 
@@ -491,7 +492,7 @@ public class CUserListPanel extends javax.swing.JPanel implements java.awt.event
             return new client.CUser();
         }
 
-        public mekwars.client.gui.CUserListPanel.CUserListModel.UserListCellRenderer getRenderer() {return Renderer;}
+        public mekwars.common.gui.CUserListPanel.CUserListModel.UserListCellRenderer getRenderer() {return Renderer;}
 
         static class UserListCellRenderer extends javax.swing.JLabel implements javax.swing.ListCellRenderer {
 
@@ -500,7 +501,7 @@ public class CUserListPanel extends javax.swing.JPanel implements java.awt.event
              */
             private static final long serialVersionUID = 4400213401819469963L;
             client.MWClient ulMwclient;
-            mekwars.client.gui.CUserListPanel.CUserListModel Owner;
+            mekwars.common.gui.CUserListPanel.CUserListModel Owner;
             boolean LoggedIn = false;
             boolean TextBold = true;
             boolean TextColor = true;
@@ -510,7 +511,7 @@ public class CUserListPanel extends javax.swing.JPanel implements java.awt.event
             javax.swing.ImageIcon ActiveImage;
             javax.swing.ImageIcon FightImage;
 
-            public UserListCellRenderer(mekwars.client.gui.CUserListPanel.CUserListModel towner) {
+            public UserListCellRenderer(mekwars.common.gui.CUserListPanel.CUserListModel towner) {
                 Owner = towner;
                 ulMwclient = towner.mwclient;
                 TextBold = ulMwclient.getConfig().isParam("USERLISTBOLD");
@@ -731,9 +732,9 @@ public class CUserListPanel extends javax.swing.JPanel implements java.awt.event
                 int row = UserList.locationToIndex(e.getPoint());
                 if (row > -1 && row < UserList.getModel().getSize()) {
                     //don't show mail/money/mute/noplay for player himself
-                    client.CUser user = ((mekwars.client.gui.CUserListPanel.CUserListModel) UserList.getModel()).getUser(
+                    client.CUser user = ((mekwars.common.gui.CUserListPanel.CUserListModel) UserList.getModel()).getUser(
                           row);
-                    String input = client.MWClient.GUI_PREFIX + "mail " + user.getName() + ", ";
+                    String input = IClient.GUI_PREFIX + "mail " + user.getName() + ", ";
                     input = input + mwclient.getMainFrame().getMainPanel().getCommPanel().getInput();
                     mwclient.getMainFrame().getMainPanel().getCommPanel().setInput(input);
                     mwclient.getMainFrame().getMainPanel().getCommPanel().focusInputField();
@@ -760,7 +761,7 @@ public class CUserListPanel extends javax.swing.JPanel implements java.awt.event
                 row = UserList.locationToIndex(e.getPoint());
                 if (row > -1 && row < UserList.getModel().getSize()) {
                     //don't show mail/money/mute/noplay for player himself
-                    client.CUser user = ((mekwars.client.gui.CUserListPanel.CUserListModel) UserList.getModel()).getUser(
+                    client.CUser user = ((mekwars.common.gui.CUserListPanel.CUserListModel) UserList.getModel()).getUser(
                           row);
                     userName = user.getName();
 
@@ -967,7 +968,7 @@ public class CUserListPanel extends javax.swing.JPanel implements java.awt.event
 
                     }//end if(clicked player isn't THE player)
                     //Toggle ascending/decending order
-                    if (((mekwars.client.gui.CUserListPanel.CUserListModel) UserList.getModel()).getSortOrder() ==
+                    if (((mekwars.common.gui.CUserListPanel.CUserListModel) UserList.getModel()).getSortOrder() ==
                               SORTORDER_DESCENDING) {
                         item = new javax.swing.JMenuItem("Ascending Order");
                         item.setActionCommand("SO|A");
@@ -1088,13 +1089,13 @@ public class CUserListPanel extends javax.swing.JPanel implements java.awt.event
             //send mail
             if (command.equals("MA") && st.hasMoreElements()) {
                 userName = st.nextToken();
-                if (true) {mwclient.getMainFrame().jMenuFileMail_actionPerformed(userName);}
+                mwclient.getMainFrame().jMenuFileMail_actionPerformed(userName);
                 return;
             }
             //send Money
             if (command.equals("MO") && st.hasMoreElements()) {
                 userName = st.nextToken();
-                if (true) {mwclient.getMainFrame().jMenuCommanderTransferMoney_actionPerformed(userName);}
+                mwclient.getMainFrame().jMenuCommanderTransferMoney_actionPerformed(userName);
                 return;
             }
 
@@ -1204,26 +1205,26 @@ public class CUserListPanel extends javax.swing.JPanel implements java.awt.event
             if (command.equals("SM") && st.hasMoreElements()) {
                 command = st.nextToken();
                 if (command.equals("N")) {
-                    ((mekwars.client.gui.CUserListPanel.CUserListModel) UserList.getModel()).setSortMode(SORTMODE_NAME);
+                    ((mekwars.common.gui.CUserListPanel.CUserListModel) UserList.getModel()).setSortMode(SORTMODE_NAME);
                 } else if (command.equals("H")) {
-                    ((mekwars.client.gui.CUserListPanel.CUserListModel) UserList.getModel()).setSortMode(SORTMODE_HOUSE);
+                    ((mekwars.common.gui.CUserListPanel.CUserListModel) UserList.getModel()).setSortMode(SORTMODE_HOUSE);
                 } else if (command.equals("E")) {
-                    ((mekwars.client.gui.CUserListPanel.CUserListModel) UserList.getModel()).setSortMode(SORTMODE_EXP);
+                    ((mekwars.common.gui.CUserListPanel.CUserListModel) UserList.getModel()).setSortMode(SORTMODE_EXP);
                 } else if (command.equals("R")) {
                     if (!Boolean.parseBoolean(mwclient.getserverConfigs("HideELO"))) {
-                        ((mekwars.client.gui.CUserListPanel.CUserListModel) UserList.getModel()).setSortMode(
+                        ((mekwars.common.gui.CUserListPanel.CUserListModel) UserList.getModel()).setSortMode(
                               SORTMODE_RATING);
                     } else {
-                        ((mekwars.client.gui.CUserListPanel.CUserListModel) UserList.getModel()).setSortMode(
+                        ((mekwars.common.gui.CUserListPanel.CUserListModel) UserList.getModel()).setSortMode(
                               SORTMODE_NAME);
                     }
                 } else if (command.equals("S")) {
-                    ((mekwars.client.gui.CUserListPanel.CUserListModel) UserList.getModel()).setSortMode(SORTMODE_STATUS);
+                    ((mekwars.common.gui.CUserListPanel.CUserListModel) UserList.getModel()).setSortMode(SORTMODE_STATUS);
                 } else if (command.equals("L")) {
-                    ((mekwars.client.gui.CUserListPanel.CUserListModel) UserList.getModel()).setSortMode(
+                    ((mekwars.common.gui.CUserListPanel.CUserListModel) UserList.getModel()).setSortMode(
                           SORTMODE_USERLEVEL);
                 } else if (command.equals("C")) {
-                    ((mekwars.client.gui.CUserListPanel.CUserListModel) UserList.getModel()).setSortMode(
+                    ((mekwars.common.gui.CUserListPanel.CUserListModel) UserList.getModel()).setSortMode(
                           SORTMODE_COUNTRY);
                 }
 
@@ -1246,11 +1247,11 @@ public class CUserListPanel extends javax.swing.JPanel implements java.awt.event
             if (command.equals("SO") && st.hasMoreElements()) {
                 command = st.nextToken();
                 if (command.equals("A")) {
-                    ((mekwars.client.gui.CUserListPanel.CUserListModel) UserList.getModel()).setSortOrder(
+                    ((mekwars.common.gui.CUserListPanel.CUserListModel) UserList.getModel()).setSortOrder(
                           SORTORDER_ASCENDING);
                 }
                 if (command.equals("D")) {
-                    ((mekwars.client.gui.CUserListPanel.CUserListModel) UserList.getModel()).setSortOrder(
+                    ((mekwars.common.gui.CUserListPanel.CUserListModel) UserList.getModel()).setSortOrder(
                           SORTORDER_DESCENDING);
                 }
 
@@ -1269,7 +1270,7 @@ public class CUserListPanel extends javax.swing.JPanel implements java.awt.event
                 if (Dedicateds) {mwclient.getConfig().setParam("USERLISTDEDICATEDS", "YES");} else {
                     mwclient.getConfig().setParam("USERLISTDEDICATEDS", "NO");
                 }
-                ((mekwars.client.gui.CUserListPanel.CUserListModel) UserList.getModel()).setDedicateds(Dedicateds);
+                ((mekwars.common.gui.CUserListPanel.CUserListModel) UserList.getModel()).setDedicateds(Dedicateds);
                 refresh();
                 mwclient.getConfig().saveConfig();
             } else if (command.equals("ULC") && st.hasMoreElements()) {

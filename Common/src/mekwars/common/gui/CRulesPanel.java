@@ -15,7 +15,7 @@
  * for more details.
  */
 
-package mekwars.client.gui;
+package mekwars.common.gui;
 
 /**
  * Class to display simple rules tab
@@ -35,7 +35,7 @@ public class CRulesPanel extends javax.swing.JPanel {
         javax.swing.JEditorPane editorPane = new javax.swing.JEditorPane();
         editorPane.setEditable(false);
         String rulesLocation = mwclient.getserverConfigs("Rules_Location");
-        java.net.URL rulesURL = mekwars.client.gui.CRulesPanel.class.getResource(rulesLocation);
+        java.net.URL rulesURL = CRulesPanel.class.getResource(rulesLocation);
 
         if (rulesURL != null) {
             try {editorPane.setPage(rulesURL);} catch (java.io.IOException e) {

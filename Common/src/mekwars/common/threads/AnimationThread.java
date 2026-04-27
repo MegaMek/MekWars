@@ -1,26 +1,22 @@
-package mekwars.common.gui;
+package mekwars.common.threads;
+
+import mekwars.common.gui.SplashWindow;
 
 class AnimationThread extends Thread {
 
     //vars
     private final SplashWindow splash;
-    private int cycle;
-    private int progress;
-
     private final String initializing = "Initializing";
     private final String constructing = "Constructing GUI";
     private final String fetching = "Downloading Data";
     private final String connecting = "Connecting to Server";
+    private int cycle;
+    private int progress;
 
     public AnimationThread(SplashWindow s) {
         splash = s;
         progress = 0;
         cycle = 0;
-    }
-
-    private void setLabelText(String s) {
-        splash.getImageLabel().setText("<HTML><CENTER><b>" + s + "</b></CENTER></HTML>");
-        splash.getProgressBar().setValue(progress);
     }
 
     @Override
@@ -80,4 +76,9 @@ class AnimationThread extends Thread {
         }//end while
 
     }//end run()
+
+    private void setLabelText(String s) {
+        splash.getImageLabel().setText("<HTML><CENTER><b>" + s + "</b></CENTER></HTML>");
+        splash.getProgressBar().setValue(progress);
+    }
 }//end AnimationThread

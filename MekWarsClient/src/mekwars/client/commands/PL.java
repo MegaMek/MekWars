@@ -17,11 +17,11 @@
 
 package mekwars.client.commands;
 
-import common.campaign.pilot.Pilot;
-import common.util.MWLogger;
-import common.util.TokenReader;
-import common.util.UnitUtils;
 import mekwars.client.MWClient;
+import mekwars.common.campaign.pilot.Pilot;
+import mekwars.common.util.MWLogger;
+import mekwars.common.util.TokenReader;
+import mekwars.common.util.UnitUtils;
 
 /**
  * @author Imi (immanuel.scholz@gmx.de)

@@ -10,6 +10,7 @@ import megamek.common.options.IBasicOption;
 import mekwars.common.AdvancedTerrain;
 import mekwars.common.CampaignData;
 import mekwars.common.Equipment;
+import mekwars.common.MMGame;
 import mekwars.common.PlanetEnvironment;
 import mekwars.common.campaign.Buildings;
 import mekwars.common.campaign.CCampaign;
@@ -18,14 +19,16 @@ import mekwars.common.campaign.CUser;
 import mekwars.common.campaign.clientutils.IClientConfig;
 import mekwars.common.campaign.clientutils.IClientUser;
 import mekwars.common.gui.CMainFrame;
-import mekwars.common.util.RepairManagmentThread;
-import mekwars.common.util.SalvageManagmentThread;
+import mekwars.common.threads.ClientThread;
+import mekwars.common.threads.RepairManagmentThread;
+import mekwars.common.threads.SalvageManagmentThread;
 
 public interface IClient {
     /**
      * The delimiter.  A tab character.
      */
     String DELIMITER = "\t";
+    String GUI_PREFIX = "/"; // prefix for commands in GUI
 
     int STATUS_DISCONNECTED = 0;
     int STATUS_LOGGED_OUT = 1;
@@ -209,4 +212,32 @@ public interface IClient {
     void setBuildingTemplate(Buildings building);
 
     void serverSend(String s);
+
+    void startClient(String curName, boolean b);
+
+    TreeMap<String, MMGame> getServers();
+
+    void stopHost();
+
+    boolean isServerRunning();
+
+    void goodbye();
+
+    List<ClientThread> getMMClients();
+
+    boolean isLeader();
+
+    void rewardPointsDialog();
+
+    void influencePointsDialog();
+
+    void setSoundMuted(boolean state);
+
+    void connectToServer();
+
+    void connectToServer(String ip, int port);
+
+    String getStatus();
+
+    void processGUIInput(String s);
 }

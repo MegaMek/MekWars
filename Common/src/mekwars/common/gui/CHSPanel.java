@@ -15,7 +15,7 @@
  * for more details.
  */
 
-package mekwars.client.gui;
+package mekwars.common.gui;
 
 import common.House;
 import common.Unit;
@@ -28,7 +28,9 @@ import megamek.client.ui.swing.unitDisplay.UnitDisplay;
 import megamek.common.CrewType;
 import megamek.common.Entity;
 import megamek.common.Infantry;
-import mekwars.common.gui.MWUnitDisplay;
+import mekwars.client.gui.HSMek;
+import mekwars.client.gui.MMNetHyperLinkListener;
+import mekwars.client.gui.MyHTMLEditorKit;
 
 /**
  * SHouse Status Panel
@@ -54,7 +56,7 @@ public class CHSPanel extends javax.swing.JPanel {
     private javax.swing.JButton buyNewButton = new javax.swing.JButton();
     private javax.swing.JButton buyUsedButton = new javax.swing.JButton();
     private javax.swing.JLabel lblInfo = new javax.swing.JLabel();
-    private mekwars.client.gui.CHSPanel.BuyPopupListener myPopup = null;
+    private mekwars.common.gui.CHSPanel.BuyPopupListener myPopup = null;
 
     // Needed to internally store SHouse Status
     private String HouseName;
@@ -69,7 +71,7 @@ public class CHSPanel extends javax.swing.JPanel {
         mwclient = client;
         theCampaign = mwclient.getCampaign();
         thePlayer = theCampaign.getPlayer();
-        myPopup = new mekwars.client.gui.CHSPanel.BuyPopupListener();
+        myPopup = new mekwars.common.gui.CHSPanel.BuyPopupListener();
 
         mainPane.setEditorKit(kit);
         mainPane.setEditable(false);

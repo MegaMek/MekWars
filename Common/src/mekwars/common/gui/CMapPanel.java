@@ -19,6 +19,7 @@ package mekwars.common.gui;
 
 import common.CampaignData;
 import common.util.MWLogger;
+import mekwars.common.campaign.clientutils.protocol.IClient;
 
 /**
  * Class used to display Stellar InnerStellarMap in GUI
@@ -34,52 +35,28 @@ public class CMapPanel extends javax.swing.JPanel {
      *
      */
     private static final long serialVersionUID = 5547551465585402891L;
-
-    private class ZoomSlider extends javax.swing.JSlider implements javax.swing.event.ChangeListener {
-        /**
-         *
-         */
-        private static final long serialVersionUID = -2214264904474265394L;
-
-        ZoomSlider() {
-            super(HORIZONTAL, map.conf.reverseScaleMin, map.conf.reverseScaleMax,
-                  map.conf.reverseScaleMin +
-                        (map.conf.reverseScaleMax - map.conf.reverseScaleMin) / 2);
-            addChangeListener(this);
-        }
-
-        public void stateChanged(javax.swing.event.ChangeEvent e) {
-            map.setScale(50 / (double) getValue());
-            mekwars.common.gui.CMapPanel.this.repaint();
-        }
-    }
-
     /**
      * The main map
      */
     private InnerStellarMap map;
-
     /**
      * The zoom slider
      */
     private javax.swing.JSlider slider;
-
     /**
      * Statistics of the current selected planet.
      */
     private mekwars.client.gui.PlanetPanel planetPanel;
-
     /**
      * The map control in topleft corner
      */
     private javax.swing.JPanel mapControl;
-
     /**
      * A vector of all planets to be drawn at demand.
      */
     private client.MWClient mwclient;
 
-    public CMapPanel(client.MWClient client, mekwars.client.gui.CMainFrame mainFrame, int xsize, int ysize) {
+    public CMapPanel(IClient client, CMainFrame mainFrame, int xsize, int ysize) {
         this.mwclient = client;
         setLayout(null);
         mapControl = new javax.swing.JPanel();
@@ -171,5 +148,24 @@ public class CMapPanel extends javax.swing.JPanel {
      */
     public InnerStellarMap getMap() {
         return map;
+    }
+
+    private class ZoomSlider extends javax.swing.JSlider implements javax.swing.event.ChangeListener {
+        /**
+         *
+         */
+        private static final long serialVersionUID = -2214264904474265394L;
+
+        ZoomSlider() {
+            super(HORIZONTAL, map.conf.reverseScaleMin, map.conf.reverseScaleMax,
+                  map.conf.reverseScaleMin +
+                        (map.conf.reverseScaleMax - map.conf.reverseScaleMin) / 2);
+            addChangeListener(this);
+        }
+
+        public void stateChanged(javax.swing.event.ChangeEvent e) {
+            map.setScale(50 / (double) getValue());
+            mekwars.common.gui.CMapPanel.this.repaint();
+        }
     }
 }

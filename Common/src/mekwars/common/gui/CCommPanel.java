@@ -22,6 +22,7 @@ import javax.swing.text.DefaultCaret;
 
 import common.util.MWLogger;
 import common.util.StringUtils;
+import mekwars.common.campaign.clientutils.protocol.IClient;
 
 /**
  * This is a tabbed multi-channet Communications Panel using Swing to manage the display.
@@ -33,30 +34,6 @@ import common.util.StringUtils;
 public class CCommPanel extends javax.swing.JPanel
       implements javax.swing.event.ChangeListener, java.awt.event.ComponentListener, java.awt.event.MouseListener {
 
-    /**
-     *
-     */
-    private static final long serialVersionUID = 8754254920729491806L;
-
-    /**
-     * Caret that does not auto-scroll if nothing is selected.
-     */
-    static class ScrollCaret extends javax.swing.text.DefaultCaret {
-        /**
-         *
-         */
-        private static final long serialVersionUID = 7038682935535985621L;
-        public boolean showCaret = true;
-
-        /**
-         * @see DefaultCaret#adjustVisibility(Rectangle)
-         */
-        @Override
-        protected void adjustVisibility(java.awt.Rectangle nloc) {
-            if (showCaret) {super.adjustVisibility(nloc);}
-        }
-    }
-
     public static final int CHANNEL_MAIN = 0;
     public static final int CHANNEL_HMAIL = 1;
     public static final int CHANNEL_PMAIL = 2;
@@ -66,7 +43,6 @@ public class CCommPanel extends javax.swing.JPanel
     public static final int CHANNEL_RPG = 6;
     public static final int CHANNEL_MOD = 7;
     public static final int CHANNEL_ERROR = 8;
-
     /**
      * Maximum buffer of each channel. Each channel will be capped to have no more than this amount of characters.
      */
@@ -78,9 +54,11 @@ public class CCommPanel extends javax.swing.JPanel
      * @see CCommPanel#MAXBUFFER
      */
     public static final int CAPBUFFERAMOUNT = 60000;
-
-    client.MWClient mwclient;
-
+    /**
+     *
+     */
+    private static final long serialVersionUID = 8754254920729491806L;
+    IClient mwclient;
     javax.swing.JTabbedPane CommTPane = new javax.swing.JTabbedPane(javax.swing.SwingConstants.BOTTOM);
     mekwars.client.gui.MyHTMLEditorKit kit = new mekwars.client.gui.MyHTMLEditorKit();
     javax.swing.JPanel MChannelPanel = new javax.swing.JPanel();
@@ -125,8 +103,7 @@ public class CCommPanel extends javax.swing.JPanel
     boolean autoTextUpdate;
     mekwars.common.gui.CCommPanel.CTabForwardAction ForwardCommTab;
     mekwars.common.gui.CCommPanel.CTabBackwardAction BackwardCommTab;
-
-    public CCommPanel(client.MWClient client) {
+    public CCommPanel(IClient client) {
         int index;
         int mnemo;
         String tabText = "";
@@ -468,51 +445,86 @@ public class CCommPanel extends javax.swing.JPanel
         getActionMap().put("HitF5", new mekwars.common.gui.CCommPanel.CF5KeyAction());
     }// end CommPanel()
 
-    public void createModTab() {
-        // tabText = Client.getConfig().getParam("HOUSEMAILTABNAME");
-        String tabText = "Mod Mail";
-        CommTPane.addTab(tabText, null, ModMailPanel, "Mod Communication Channel (Alt + O)");
-        int index = CommTPane.indexOfComponent(ModMailPanel);
-        int mnemo = CommTPane.getTitleAt(index).indexOf("O");
-        if (mnemo == -1) {mnemo = CommTPane.getTitleAt(index).indexOf("o");}
+    // something that the user has typed
+    public boolean sendChat(String s) {
+        if (!s.startsWith(IClient.GUI_PREFIX) &&
+                  CommTPane.getSelectedIndex() == CommTPane.indexOfComponent(HMailPanel)) {
+            s = IClient.GUI_PREFIX + "c hm#" + s;
+        }
+        if (!s.startsWith(IClient.GUI_PREFIX) &&
+                  CommTPane.getSelectedIndex() == CommTPane.indexOfComponent(ModMailPanel)) {
+            s = IClient.GUI_PREFIX + "c mm#" + s;
+        }
+        if (!s.startsWith(IClient.GUI_PREFIX) &&
+                  CommTPane.getSelectedIndex() == CommTPane.indexOfComponent(RPGChannelPanel)) {
+            s = IClient.GUI_PREFIX + "c ic#" + s;
+        }
 
-        CommTPane.setDisplayedMnemonicIndexAt(index, mnemo);
-        ModMailSelect = new mekwars.common.gui.CCommPanel.CSelectTabAction(ModMailPanel);
-        getInputMap(WHEN_IN_FOCUSED_WINDOW).put(javax.swing.KeyStroke.getKeyStroke("alt O"), "ModMailSelect");
-        getActionMap().put("ModMailSelect", ModMailSelect);
-
-    }
-
-    public void createErrorTab() {
-        String tabText = "Error Log";
-        // ErrorLogEPane.addMouseListener(this);
-
-        CommTPane.addTab(tabText, null, ErrorLogPanel, "Error Log Channel (Alt + R)");
-        int index = CommTPane.indexOfComponent(ErrorLogPanel);
-        int mnemo = CommTPane.getTitleAt(index).indexOf("R");
-        if (mnemo == -1) {mnemo = CommTPane.getTitleAt(index).indexOf("r");}
-
-        CommTPane.setDisplayedMnemonicIndexAt(index, mnemo);
-        ErrorLogSelect = new mekwars.common.gui.CCommPanel.CSelectTabAction(ErrorLogPanel);
-        getInputMap(WHEN_IN_FOCUSED_WINDOW).put(javax.swing.KeyStroke.getKeyStroke("alt R"), "ErrorLogSelect");
-        getActionMap().put("ErrorLogSelect", ErrorLogSelect);
-    }
-
-    public javax.swing.JPanel findMailTab(String tabName) {
-        javax.swing.JPanel panel = null;
-
-        for (int pos = 0; pos < CommTPane.getTabCount(); pos++) {
-            // System.err.println("Tab: "+CommTPane.getTitleAt(pos));
-            if (CommTPane.getComponent(pos) instanceof javax.swing.JPanel) {
-                panel = (javax.swing.JPanel) CommTPane.getComponent(pos);
-                // System.err.println("Panel Name: "+panel.getName());
-                // System.err.println("Find: "+tabName);
-                if (panel != null && panel.getName() != null && panel.getName().equals("Mail Tab " + tabName)) {
-                    return panel;
-                }
+        if (!s.startsWith(IClient.GUI_PREFIX) &&
+                  !mwclient.getConfig().isParam("USEMULTIPLEPM") &&
+                  CommTPane.getSelectedIndex() == CommTPane.indexOfComponent(PMailPanel)) {
+            String receiver = mwclient.getLastQuery();
+            if (receiver != null && !receiver.equals("")) {
+                s = IClient.GUI_PREFIX + "mail " + receiver + "," + s;
+            } else {
+                mwclient.showInfoWindow("No receiver set.");
+                chatField.setText(s);
+                return false;
             }
         }
-        return null;
+        if (!s.startsWith(
+              IClient.GUI_PREFIX) &&
+                  mwclient.getConfig().isParam("USEMULTIPLEPM") &&
+                  ((javax.swing.JPanel) CommTPane.getComponent(CommTPane.getSelectedIndex())).getName() != null &&
+                  ((javax.swing.JPanel) CommTPane.getComponent(CommTPane.getSelectedIndex())).getName()
+                        .startsWith("Mail Tab ")) {
+            javax.swing.JPanel panel = ((javax.swing.JPanel) CommTPane.getComponent(CommTPane.getSelectedIndex()));
+            String mailTab = "Mail Tab ";
+            String receiver = panel.getName().substring(mailTab.length()).trim();
+            if (receiver != null && !receiver.equals("")) {
+                s = IClient.GUI_PREFIX + "mail " + receiver + "," + s;
+            } else {
+                mwclient.showInfoWindow("No receiver set.");
+                chatField.setText(s);
+                return false;
+            }
+        }
+
+        if (s.startsWith(IClient.GUI_PREFIX + "me") || s.startsWith(IClient.GUI_PREFIX + "c me")) {
+            if (CommTPane.getSelectedIndex() == CommTPane.indexOfComponent(RPGChannelPanel)) {
+                s += "|ic";
+            } else if (CommTPane.getSelectedIndex() == CommTPane.indexOfComponent(ModMailPanel)) {
+                s += "|mm";
+            } else if (CommTPane.getSelectedIndex() == CommTPane.indexOfComponent(HMailPanel)) {
+                s += "|hm";
+            } else if (!mwclient.getConfig().isParam("USEMULTIPLEPM") &&
+                             CommTPane.getSelectedIndex() == CommTPane.indexOfComponent(PMailPanel)) {
+                s += "|mail";
+                String receiver = mwclient.getLastQuery();
+                if (receiver != null && !receiver.equals("")) {s += "|" + receiver;} else {
+                    mwclient.showInfoWindow("No receiver set.");
+                    chatField.setText(s);
+                    return false;
+                }
+            } else if (mwclient.getConfig().isParam("USEMULTIPLEPM") &&
+                             ((javax.swing.JPanel) CommTPane.getComponent(CommTPane.getSelectedIndex())).getName() !=
+                                   null &&
+                             ((javax.swing.JPanel) CommTPane.getComponent(CommTPane.getSelectedIndex())).getName()
+                                   .startsWith("Mail Tab ")) {
+                s += "|mail";
+                javax.swing.JPanel panel = ((javax.swing.JPanel) CommTPane.getComponent(CommTPane.getSelectedIndex()));
+                String mailTab = "Mail Tab ";
+                String receiver = panel.getName().substring(mailTab.length()).trim();
+                if (receiver != null && !receiver.equals("")) {s += "|" + receiver;} else {
+                    mwclient.showInfoWindow("No receiver set.");
+                    chatField.setText(s);
+                    return false;
+                }
+            }
+
+        }
+        mwclient.processGUIInput(s);
+        return true;
     }
 
     public int countMailTabs() {
@@ -529,33 +541,6 @@ public class CCommPanel extends javax.swing.JPanel
             }
         }
         return count;
-    }
-
-    public int getNextMailTabNumber() {
-        javax.swing.JPanel panel = null;
-        int count = 1;
-        int maxTabs = mwclient.getConfig().getIntParam("MAXPMTABS");
-        boolean found = false;
-
-        for (count = 1; count <= maxTabs; count++) {
-            found = false;
-            for (int pos = 0; pos < CommTPane.getTabCount(); pos++) {
-                if (CommTPane.getComponent(pos) instanceof javax.swing.JPanel) {
-                    panel = (javax.swing.JPanel) CommTPane.getComponent(pos);
-                    if (panel != null && panel.getName() != null && panel.getName().startsWith("Mail Tab ")) {
-                        String tabText = CommTPane.getTitleAt(pos).trim();
-                        if (tabText.startsWith("*")) {tabText = tabText.substring(1);}
-                        if (Integer.parseInt(tabText.substring(0, tabText.indexOf("."))) == count) {
-                            found = true;
-                            break;// no reason to continue the search.
-                        }
-                    }
-                }
-            }
-            if (!found) {break;}
-        }
-        return count;
-
     }
 
     public void createMailTab(String tabName) {
@@ -596,94 +581,39 @@ public class CCommPanel extends javax.swing.JPanel
         getActionMap().put("Mail From " + tabName, LogSelect);
     }
 
-    // something that the user has typed
-    public boolean sendChat(String s) {
-        if (!s.startsWith(client.MWClient.GUI_PREFIX) &&
-                  CommTPane.getSelectedIndex() == CommTPane.indexOfComponent(HMailPanel)) {
-            s = client.MWClient.GUI_PREFIX + "c hm#" + s;
-        }
-        if (!s.startsWith(client.MWClient.GUI_PREFIX) &&
-                  CommTPane.getSelectedIndex() == CommTPane.indexOfComponent(ModMailPanel)) {
-            s = client.MWClient.GUI_PREFIX + "c mm#" + s;
-        }
-        if (!s.startsWith(client.MWClient.GUI_PREFIX) &&
-                  CommTPane.getSelectedIndex() == CommTPane.indexOfComponent(RPGChannelPanel)) {
-            s = client.MWClient.GUI_PREFIX + "c ic#" + s;
-        }
+    public int getNextMailTabNumber() {
+        javax.swing.JPanel panel = null;
+        int count = 1;
+        int maxTabs = mwclient.getConfig().getIntParam("MAXPMTABS");
+        boolean found = false;
 
-        if (!s.startsWith(client.MWClient.GUI_PREFIX) &&
-                  !mwclient.getConfig().isParam("USEMULTIPLEPM") &&
-                  CommTPane.getSelectedIndex() == CommTPane.indexOfComponent(PMailPanel)) {
-            String receiver = mwclient.getLastQuery();
-            if (receiver != null && !receiver.equals("")) {
-                s = client.MWClient.GUI_PREFIX + "mail " + receiver + "," + s;
-            } else {
-                mwclient.showInfoWindow("No receiver set.");
-                chatField.setText(s);
-                return false;
-            }
-        }
-        if (!s.startsWith(
-              client.MWClient.GUI_PREFIX) &&
-                  mwclient.getConfig().isParam("USEMULTIPLEPM") &&
-                  ((javax.swing.JPanel) CommTPane.getComponent(CommTPane.getSelectedIndex())).getName() != null &&
-                  ((javax.swing.JPanel) CommTPane.getComponent(CommTPane.getSelectedIndex())).getName()
-                        .startsWith("Mail Tab ")) {
-            javax.swing.JPanel panel = ((javax.swing.JPanel) CommTPane.getComponent(CommTPane.getSelectedIndex()));
-            String mailTab = "Mail Tab ";
-            String receiver = panel.getName().substring(mailTab.length()).trim();
-            if (receiver != null && !receiver.equals("")) {
-                s = client.MWClient.GUI_PREFIX + "mail " + receiver + "," + s;
-            } else {
-                mwclient.showInfoWindow("No receiver set.");
-                chatField.setText(s);
-                return false;
-            }
-        }
-
-        if (s.startsWith(client.MWClient.GUI_PREFIX + "me") || s.startsWith(client.MWClient.GUI_PREFIX + "c me")) {
-            if (CommTPane.getSelectedIndex() == CommTPane.indexOfComponent(RPGChannelPanel)) {
-                s += "|ic";
-            } else if (CommTPane.getSelectedIndex() == CommTPane.indexOfComponent(ModMailPanel)) {
-                s += "|mm";
-            } else if (CommTPane.getSelectedIndex() == CommTPane.indexOfComponent(HMailPanel)) {
-                s += "|hm";
-            } else if (!mwclient.getConfig().isParam("USEMULTIPLEPM") &&
-                             CommTPane.getSelectedIndex() == CommTPane.indexOfComponent(PMailPanel)) {
-                s += "|mail";
-                String receiver = mwclient.getLastQuery();
-                if (receiver != null && !receiver.equals("")) {s += "|" + receiver;} else {
-                    mwclient.showInfoWindow("No receiver set.");
-                    chatField.setText(s);
-                    return false;
-                }
-            } else if (mwclient.getConfig().isParam("USEMULTIPLEPM") &&
-                             ((javax.swing.JPanel) CommTPane.getComponent(CommTPane.getSelectedIndex())).getName() !=
-                                   null &&
-                             ((javax.swing.JPanel) CommTPane.getComponent(CommTPane.getSelectedIndex())).getName()
-                                   .startsWith("Mail Tab ")) {
-                s += "|mail";
-                javax.swing.JPanel panel = ((javax.swing.JPanel) CommTPane.getComponent(CommTPane.getSelectedIndex()));
-                String mailTab = "Mail Tab ";
-                String receiver = panel.getName().substring(mailTab.length()).trim();
-                if (receiver != null && !receiver.equals("")) {s += "|" + receiver;} else {
-                    mwclient.showInfoWindow("No receiver set.");
-                    chatField.setText(s);
-                    return false;
+        for (count = 1; count <= maxTabs; count++) {
+            found = false;
+            for (int pos = 0; pos < CommTPane.getTabCount(); pos++) {
+                if (CommTPane.getComponent(pos) instanceof javax.swing.JPanel) {
+                    panel = (javax.swing.JPanel) CommTPane.getComponent(pos);
+                    if (panel != null && panel.getName() != null && panel.getName().startsWith("Mail Tab ")) {
+                        String tabText = CommTPane.getTitleAt(pos).trim();
+                        if (tabText.startsWith("*")) {tabText = tabText.substring(1);}
+                        if (Integer.parseInt(tabText.substring(0, tabText.indexOf("."))) == count) {
+                            found = true;
+                            break;// no reason to continue the search.
+                        }
+                    }
                 }
             }
-
+            if (!found) {break;}
         }
-        mwclient.processGUIInput(s);
-        return true;
-    }
+        return count;
 
-    public void setInput(String input) {
-        chatField.setText(input);
     }
 
     public String getInput() {
         return chatField.getText();
+    }
+
+    public void setInput(String input) {
+        chatField.setText(input);
     }
 
     public void setChat(String s, int channel) {
@@ -808,6 +738,85 @@ public class CCommPanel extends javax.swing.JPanel
         if (scroll) {editorpane.setCaretPosition(editorpane.getDocument().getLength());}
     }
 
+    public void printCommLog(String s, int channel) {
+        String filePath = "";
+
+        if (channel == CHANNEL_MAIN) {
+            filePath = "./logs/Main.html";
+        } else if (channel == CHANNEL_HMAIL) {
+            filePath = "./logs/HouseMail.html";
+        } else if (channel == CHANNEL_PMAIL) {
+            filePath = "./logs/PrivateMail.html";
+        } else if (channel == CHANNEL_PLOG) {
+            filePath = "./logs/PersonalLog.html";
+        } else if (channel == CHANNEL_SLOG) {
+            filePath = "./logs/SystemLog.html";
+        } else if (channel == CHANNEL_MISC) {
+            filePath = "./logs/Misc.html";
+        } else if (channel == CHANNEL_MOD) {
+            filePath = "./logs/Mod.html";
+        } else if (channel == CHANNEL_RPG) {
+            filePath = "./logs/RPG.html";
+        }
+
+        try {
+            java.io.FileOutputStream fos = new java.io.FileOutputStream(filePath, true);
+            java.io.PrintWriter ps = new java.io.PrintWriter(fos);
+            ps.print(s + "<br>");
+            ps.close();
+            fos.close();
+        } catch (Exception e) {
+            MWLogger.errLog(e);
+        }
+    }
+
+    public javax.swing.JPanel findMailTab(String tabName) {
+        javax.swing.JPanel panel = null;
+
+        for (int pos = 0; pos < CommTPane.getTabCount(); pos++) {
+            // System.err.println("Tab: "+CommTPane.getTitleAt(pos));
+            if (CommTPane.getComponent(pos) instanceof javax.swing.JPanel) {
+                panel = (javax.swing.JPanel) CommTPane.getComponent(pos);
+                // System.err.println("Panel Name: "+panel.getName());
+                // System.err.println("Find: "+tabName);
+                if (panel != null && panel.getName() != null && panel.getName().equals("Mail Tab " + tabName)) {
+                    return panel;
+                }
+            }
+        }
+        return null;
+    }
+
+    public void createModTab() {
+        // tabText = Client.getConfig().getParam("HOUSEMAILTABNAME");
+        String tabText = "Mod Mail";
+        CommTPane.addTab(tabText, null, ModMailPanel, "Mod Communication Channel (Alt + O)");
+        int index = CommTPane.indexOfComponent(ModMailPanel);
+        int mnemo = CommTPane.getTitleAt(index).indexOf("O");
+        if (mnemo == -1) {mnemo = CommTPane.getTitleAt(index).indexOf("o");}
+
+        CommTPane.setDisplayedMnemonicIndexAt(index, mnemo);
+        ModMailSelect = new mekwars.common.gui.CCommPanel.CSelectTabAction(ModMailPanel);
+        getInputMap(WHEN_IN_FOCUSED_WINDOW).put(javax.swing.KeyStroke.getKeyStroke("alt O"), "ModMailSelect");
+        getActionMap().put("ModMailSelect", ModMailSelect);
+
+    }
+
+    public void createErrorTab() {
+        String tabText = "Error Log";
+        // ErrorLogEPane.addMouseListener(this);
+
+        CommTPane.addTab(tabText, null, ErrorLogPanel, "Error Log Channel (Alt + R)");
+        int index = CommTPane.indexOfComponent(ErrorLogPanel);
+        int mnemo = CommTPane.getTitleAt(index).indexOf("R");
+        if (mnemo == -1) {mnemo = CommTPane.getTitleAt(index).indexOf("r");}
+
+        CommTPane.setDisplayedMnemonicIndexAt(index, mnemo);
+        ErrorLogSelect = new mekwars.common.gui.CCommPanel.CSelectTabAction(ErrorLogPanel);
+        getInputMap(WHEN_IN_FOCUSED_WINDOW).put(javax.swing.KeyStroke.getKeyStroke("alt R"), "ErrorLogSelect");
+        getActionMap().put("ErrorLogSelect", ErrorLogSelect);
+    }
+
     /*
      * remove in a given window all http-link tags public void
      * removeHttpLinksFromEditorPane(int channel) { JEditorPane ePane =
@@ -815,10 +824,6 @@ public class CCommPanel extends javax.swing.JPanel
      * ""));
      *  }
      */
-
-    public javax.swing.JEditorPane getEditorPane(int channel) {
-        return getEditorPane(channel, null);
-    }
 
     public javax.swing.JEditorPane getEditorPane(int channel, String mailTab) {
 
@@ -864,10 +869,6 @@ public class CCommPanel extends javax.swing.JPanel
         }
 
         return null;
-    }
-
-    public javax.swing.JScrollPane getScrollPane(int channel) {
-        return getScrollPane(channel, null);
     }
 
     public javax.swing.JScrollPane getScrollPane(int channel, String tabName) {
@@ -941,17 +942,6 @@ public class CCommPanel extends javax.swing.JPanel
         }
     }
 
-    // change listener
-    // component listener
-    public void componentHidden(java.awt.event.ComponentEvent e) {
-    }
-
-    public void componentMoved(java.awt.event.ComponentEvent e) {
-    }
-
-    public void componentShown(java.awt.event.ComponentEvent e) {
-    }
-
     public void componentResized(java.awt.event.ComponentEvent e) {
         for (int i = 0; i < CommTPane.getTabCount(); i++) {
 
@@ -969,36 +959,23 @@ public class CCommPanel extends javax.swing.JPanel
         }
     }
 
-    public void printCommLog(String s, int channel) {
-        String filePath = "";
+    public javax.swing.JScrollPane getScrollPane(int channel) {
+        return getScrollPane(channel, null);
+    }
 
-        if (channel == CHANNEL_MAIN) {
-            filePath = "./logs/Main.html";
-        } else if (channel == CHANNEL_HMAIL) {
-            filePath = "./logs/HouseMail.html";
-        } else if (channel == CHANNEL_PMAIL) {
-            filePath = "./logs/PrivateMail.html";
-        } else if (channel == CHANNEL_PLOG) {
-            filePath = "./logs/PersonalLog.html";
-        } else if (channel == CHANNEL_SLOG) {
-            filePath = "./logs/SystemLog.html";
-        } else if (channel == CHANNEL_MISC) {
-            filePath = "./logs/Misc.html";
-        } else if (channel == CHANNEL_MOD) {
-            filePath = "./logs/Mod.html";
-        } else if (channel == CHANNEL_RPG) {
-            filePath = "./logs/RPG.html";
-        }
+    public javax.swing.JEditorPane getEditorPane(int channel) {
+        return getEditorPane(channel, null);
+    }
 
-        try {
-            java.io.FileOutputStream fos = new java.io.FileOutputStream(filePath, true);
-            java.io.PrintWriter ps = new java.io.PrintWriter(fos);
-            ps.print(s + "<br>");
-            ps.close();
-            fos.close();
-        } catch (Exception e) {
-            MWLogger.errLog(e);
-        }
+    public void componentMoved(java.awt.event.ComponentEvent e) {
+    }
+
+    public void componentShown(java.awt.event.ComponentEvent e) {
+    }
+
+    // change listener
+    // component listener
+    public void componentHidden(java.awt.event.ComponentEvent e) {
     }
 
     /**
@@ -1010,234 +987,6 @@ public class CCommPanel extends javax.swing.JPanel
         } catch (Exception e) {
             // do nothing. just means no upper-level tabs.
         }
-    }
-
-    // component listener actions
-    private class CTabForwardAction extends javax.swing.AbstractAction {
-
-        private static final long serialVersionUID = -7910457998205249026L;
-
-        public CTabForwardAction() {
-            // empty constructor
-        }
-
-        public void actionPerformed(java.awt.event.ActionEvent e) {
-            int count = CommTPane.getTabCount();
-            if (count < 2) {
-                return;
-            }
-            int index = CommTPane.getSelectedIndex();
-            index++;
-            if (index == count) {
-                index = 0;
-            }
-            while (!CommTPane.isEnabledAt(index)) {
-                index++;
-                if (index == count) {
-                    index = 0;
-                }
-            }
-            CommTPane.setSelectedIndex(index);
-        }
-    }
-
-    private class CTabBackwardAction extends javax.swing.AbstractAction {
-
-        private static final long serialVersionUID = -880460003608846342L;
-
-        public CTabBackwardAction() {
-            // empty constructor
-        }
-
-        public void actionPerformed(java.awt.event.ActionEvent e) {
-            int count = CommTPane.getTabCount();
-            if (count < 2) {
-                return;
-            }
-            int index = CommTPane.getSelectedIndex();
-            index--;
-            if (index == -1) {
-                index = count - 1;
-            }
-            while (!CommTPane.isEnabledAt(index)) {
-                index--;
-                if (index == -1) {
-                    index = count - 1;
-                }
-            }
-            CommTPane.setSelectedIndex(index);
-        }
-    }
-
-    private class CSelectTabAction extends javax.swing.AbstractAction {
-
-        private static final long serialVersionUID = -3297024782997974093L;
-        private java.awt.Component Tab = null;
-
-        public CSelectTabAction(java.awt.Component tab) {
-            Tab = tab;
-        }
-
-        public void actionPerformed(java.awt.event.ActionEvent e) {
-            if (CommTPane.isEnabledAt(CommTPane.indexOfComponent(Tab))) {CommTPane.setSelectedComponent(Tab);}
-        }
-    }
-
-    private class CF1KeyAction extends javax.swing.AbstractAction {
-        private static final long serialVersionUID = -9057337706669800548L;
-
-        public void actionPerformed(java.awt.event.ActionEvent e) {
-            processFunctionKeyCommand(mwclient.getConfigParam("F1BIND"));
-        }
-    }// end CF1Action
-
-    private class CF2KeyAction extends javax.swing.AbstractAction {
-        private static final long serialVersionUID = 2756143179187978156L;
-
-        public void actionPerformed(java.awt.event.ActionEvent e) {
-            processFunctionKeyCommand(mwclient.getConfigParam("F2BIND"));
-        }
-    }// end CF1Action
-
-    private class CF3KeyAction extends javax.swing.AbstractAction {
-        private static final long serialVersionUID = -4939591054092680536L;
-
-        public void actionPerformed(java.awt.event.ActionEvent e) {
-            processFunctionKeyCommand(mwclient.getConfigParam("F3BIND"));
-        }
-    }// end CF1Action
-
-    private class CF4KeyAction extends javax.swing.AbstractAction {
-        private static final long serialVersionUID = -6563867639119041768L;
-
-        public void actionPerformed(java.awt.event.ActionEvent e) {
-            processFunctionKeyCommand(mwclient.getConfigParam("F4BIND"));
-        }
-    }// end CF1Action
-
-    private class CF5KeyAction extends javax.swing.AbstractAction {
-        private static final long serialVersionUID = 6214466835711778622L;
-
-        public void actionPerformed(java.awt.event.ActionEvent e) {
-            processFunctionKeyCommand(mwclient.getConfigParam("F5BIND"));
-        }
-    }// end CF1Action
-
-    // chat field class
-    public class CChatField extends javax.swing.JTextField
-          implements java.awt.event.ActionListener, java.awt.event.KeyListener {
-
-        private static final long serialVersionUID = -9140296134799032871L;
-
-        client.MWClient Client;
-        int ChatHistoryNumber = 0;
-        int UserNumber = 0;
-
-        java.util.ArrayList<String> ChatHistory = new java.util.ArrayList<String>();
-        java.util.ArrayList<String> Users = new java.util.ArrayList<String>();
-
-        mekwars.common.gui.CCommPanel.IInputReceiver myReceiver;
-        String textandnick = "";
-
-        public CChatField(client.MWClient client) {
-            Client = client;
-            this.addActionListener(this);
-            this.addKeyListener(this);
-            this.setFocusTraversalKeysEnabled(false);
-            this.setBackground(StringUtils.html2Color(mwclient.getConfigParam("BACKGROUNDCOLOR")));
-            this.setForeground(StringUtils.html2Color(mwclient.getConfigParam("CHATFONTCOLOR")));
-            this.setCaretColor(StringUtils.html2Color(mwclient.getConfigParam("CHATFONTCOLOR")));
-        }
-
-        public void setReceiver(mekwars.common.gui.CCommPanel.IInputReceiver receiver) {
-            this.myReceiver = receiver;
-        }
-
-        public String parseOutUserName(String text) {
-
-            // there are spaces in the text so get the last word
-            if (text.trim().indexOf(" ") != -1) {text = text.substring(0, text.trim().lastIndexOf(" ")).trim();}
-
-            // The name is the first word.
-            else {text = "";}
-
-            return text;
-        }
-
-        public void actionPerformed(java.awt.event.ActionEvent actionEvent) {
-            ChatHistory.add(getText());
-            ChatHistoryNumber = 0;
-            if (this.myReceiver != null) {
-                if (myReceiver.processInput(getText())) {
-                    setText("");
-                }
-            }
-        }
-
-        public void keyPressed(java.awt.event.KeyEvent e) {
-
-            if (e.getKeyCode() == java.awt.event.KeyEvent.VK_UP) {
-                UserNumber = 0;
-                if (ChatHistoryNumber < ChatHistory.size()) {
-                    ChatHistoryNumber++;
-                    setText(ChatHistory.get(ChatHistory.size() - ChatHistoryNumber));
-                }
-            } else if (e.getKeyCode() == java.awt.event.KeyEvent.VK_DOWN) {
-                UserNumber = 0;
-                if (ChatHistoryNumber > 0) {
-                    ChatHistoryNumber--;
-                    if (ChatHistoryNumber == 0) {
-                        setText("");
-                    } else {
-                        setText(ChatHistory.get(ChatHistory.size() - ChatHistoryNumber));
-                    }
-                }
-            } else if (e.getKeyCode() == java.awt.event.KeyEvent.VK_TAB) {
-                String messageText = "";
-                if (UserNumber == 0) {
-                    Users = Client.getPartialUser(getText());
-                    // No users where found keep the UserNumber at 0 and
-                    // wait for the next key press.
-                    if (Users == null || Users.isEmpty()) {return;}
-                    textandnick = parseOutUserName(getText());
-                    // Get rid of any leading spaces if the name is the first
-                    // thing typed.
-                    messageText = textandnick.trim() + " " + Users.get(UserNumber++).trim();
-                } else if (UserNumber < Users.size()) {
-                    messageText = textandnick.trim() + " " + Users.get(UserNumber++).trim();
-                } else {
-                    UserNumber = 0;
-                    messageText = textandnick.trim() + " " + Users.get(UserNumber++).trim();
-                }
-                setText(messageText.trim());
-            } else if (e.getKeyCode() == java.awt.event.KeyEvent.VK_ESCAPE) {
-
-                if (CommTPane.getSelectedIndex() == CommTPane.indexOfComponent(ErrorLogPanel)) {
-                    CommTPane.remove(CommTPane.getSelectedComponent());
-                } else if (mwclient.getConfig().isParam("USEMULTIPLEPM") &&
-                                 CommTPane.getSelectedComponent() instanceof javax.swing.JPanel) {
-                    javax.swing.JPanel panel = (javax.swing.JPanel) CommTPane.getSelectedComponent();
-                    if (panel.getName() != null && panel.getName().startsWith("Mail Tab ")) {
-                        CommTPane.remove(panel);
-                        panel = null;
-                    }
-                }
-            } else {UserNumber = 0;}
-
-        }
-
-        public void keyReleased(java.awt.event.KeyEvent e) {
-            // filler
-        }
-
-        public void keyTyped(java.awt.event.KeyEvent e) {
-            // filler
-        }
-    }
-
-    // receiver interface
-    public static interface IInputReceiver {
-        public boolean processInput(String input);
     }
 
     // receiver interface
@@ -1572,7 +1321,254 @@ public class CCommPanel extends javax.swing.JPanel
         java.util.StringTokenizer commands = new java.util.StringTokenizer(command, ";");
 
         while (commands.hasMoreTokens()) {
-            mwclient.sendChat(client.MWClient.CAMPAIGN_PREFIX + "c " + commands.nextToken());
+            mwclient.sendChat(IClient.CAMPAIGN_PREFIX + "c " + commands.nextToken());
+        }
+    }
+
+    // receiver interface
+    public static interface IInputReceiver {
+        public boolean processInput(String input);
+    }
+
+    /**
+     * Caret that does not auto-scroll if nothing is selected.
+     */
+    static class ScrollCaret extends javax.swing.text.DefaultCaret {
+        /**
+         *
+         */
+        private static final long serialVersionUID = 7038682935535985621L;
+        public boolean showCaret = true;
+
+        /**
+         * @see DefaultCaret#adjustVisibility(Rectangle)
+         */
+        @Override
+        protected void adjustVisibility(java.awt.Rectangle nloc) {
+            if (showCaret) {super.adjustVisibility(nloc);}
+        }
+    }
+
+    // component listener actions
+    private class CTabForwardAction extends javax.swing.AbstractAction {
+
+        private static final long serialVersionUID = -7910457998205249026L;
+
+        public CTabForwardAction() {
+            // empty constructor
+        }
+
+        public void actionPerformed(java.awt.event.ActionEvent e) {
+            int count = CommTPane.getTabCount();
+            if (count < 2) {
+                return;
+            }
+            int index = CommTPane.getSelectedIndex();
+            index++;
+            if (index == count) {
+                index = 0;
+            }
+            while (!CommTPane.isEnabledAt(index)) {
+                index++;
+                if (index == count) {
+                    index = 0;
+                }
+            }
+            CommTPane.setSelectedIndex(index);
+        }
+    }
+
+    private class CTabBackwardAction extends javax.swing.AbstractAction {
+
+        private static final long serialVersionUID = -880460003608846342L;
+
+        public CTabBackwardAction() {
+            // empty constructor
+        }
+
+        public void actionPerformed(java.awt.event.ActionEvent e) {
+            int count = CommTPane.getTabCount();
+            if (count < 2) {
+                return;
+            }
+            int index = CommTPane.getSelectedIndex();
+            index--;
+            if (index == -1) {
+                index = count - 1;
+            }
+            while (!CommTPane.isEnabledAt(index)) {
+                index--;
+                if (index == -1) {
+                    index = count - 1;
+                }
+            }
+            CommTPane.setSelectedIndex(index);
+        }
+    }
+
+    private class CSelectTabAction extends javax.swing.AbstractAction {
+
+        private static final long serialVersionUID = -3297024782997974093L;
+        private java.awt.Component Tab = null;
+
+        public CSelectTabAction(java.awt.Component tab) {
+            Tab = tab;
+        }
+
+        public void actionPerformed(java.awt.event.ActionEvent e) {
+            if (CommTPane.isEnabledAt(CommTPane.indexOfComponent(Tab))) {CommTPane.setSelectedComponent(Tab);}
+        }
+    }
+
+    private class CF1KeyAction extends javax.swing.AbstractAction {
+        private static final long serialVersionUID = -9057337706669800548L;
+
+        public void actionPerformed(java.awt.event.ActionEvent e) {
+            processFunctionKeyCommand(mwclient.getConfigParam("F1BIND"));
+        }
+    }// end CF1Action
+
+    private class CF2KeyAction extends javax.swing.AbstractAction {
+        private static final long serialVersionUID = 2756143179187978156L;
+
+        public void actionPerformed(java.awt.event.ActionEvent e) {
+            processFunctionKeyCommand(mwclient.getConfigParam("F2BIND"));
+        }
+    }// end CF1Action
+
+    private class CF3KeyAction extends javax.swing.AbstractAction {
+        private static final long serialVersionUID = -4939591054092680536L;
+
+        public void actionPerformed(java.awt.event.ActionEvent e) {
+            processFunctionKeyCommand(mwclient.getConfigParam("F3BIND"));
+        }
+    }// end CF1Action
+
+    private class CF4KeyAction extends javax.swing.AbstractAction {
+        private static final long serialVersionUID = -6563867639119041768L;
+
+        public void actionPerformed(java.awt.event.ActionEvent e) {
+            processFunctionKeyCommand(mwclient.getConfigParam("F4BIND"));
+        }
+    }// end CF1Action
+
+    private class CF5KeyAction extends javax.swing.AbstractAction {
+        private static final long serialVersionUID = 6214466835711778622L;
+
+        public void actionPerformed(java.awt.event.ActionEvent e) {
+            processFunctionKeyCommand(mwclient.getConfigParam("F5BIND"));
+        }
+    }// end CF1Action
+
+    // chat field class
+    public class CChatField extends javax.swing.JTextField
+          implements java.awt.event.ActionListener, java.awt.event.KeyListener {
+
+        private static final long serialVersionUID = -9140296134799032871L;
+
+        IClient Client;
+        int ChatHistoryNumber = 0;
+        int UserNumber = 0;
+
+        java.util.ArrayList<String> ChatHistory = new java.util.ArrayList<String>();
+        java.util.ArrayList<String> Users = new java.util.ArrayList<String>();
+
+        mekwars.common.gui.CCommPanel.IInputReceiver myReceiver;
+        String textandnick = "";
+
+        public CChatField(IClient client) {
+            Client = client;
+            this.addActionListener(this);
+            this.addKeyListener(this);
+            this.setFocusTraversalKeysEnabled(false);
+            this.setBackground(StringUtils.html2Color(mwclient.getConfigParam("BACKGROUNDCOLOR")));
+            this.setForeground(StringUtils.html2Color(mwclient.getConfigParam("CHATFONTCOLOR")));
+            this.setCaretColor(StringUtils.html2Color(mwclient.getConfigParam("CHATFONTCOLOR")));
+        }
+
+        public void setReceiver(mekwars.common.gui.CCommPanel.IInputReceiver receiver) {
+            this.myReceiver = receiver;
+        }
+
+        public void actionPerformed(java.awt.event.ActionEvent actionEvent) {
+            ChatHistory.add(getText());
+            ChatHistoryNumber = 0;
+            if (this.myReceiver != null) {
+                if (myReceiver.processInput(getText())) {
+                    setText("");
+                }
+            }
+        }
+
+        public void keyTyped(java.awt.event.KeyEvent e) {
+            // filler
+        }
+
+        public void keyPressed(java.awt.event.KeyEvent e) {
+
+            if (e.getKeyCode() == java.awt.event.KeyEvent.VK_UP) {
+                UserNumber = 0;
+                if (ChatHistoryNumber < ChatHistory.size()) {
+                    ChatHistoryNumber++;
+                    setText(ChatHistory.get(ChatHistory.size() - ChatHistoryNumber));
+                }
+            } else if (e.getKeyCode() == java.awt.event.KeyEvent.VK_DOWN) {
+                UserNumber = 0;
+                if (ChatHistoryNumber > 0) {
+                    ChatHistoryNumber--;
+                    if (ChatHistoryNumber == 0) {
+                        setText("");
+                    } else {
+                        setText(ChatHistory.get(ChatHistory.size() - ChatHistoryNumber));
+                    }
+                }
+            } else if (e.getKeyCode() == java.awt.event.KeyEvent.VK_TAB) {
+                String messageText = "";
+                if (UserNumber == 0) {
+                    Users = Client.getPartialUser(getText());
+                    // No users where found keep the UserNumber at 0 and
+                    // wait for the next key press.
+                    if (Users == null || Users.isEmpty()) {return;}
+                    textandnick = parseOutUserName(getText());
+                    // Get rid of any leading spaces if the name is the first
+                    // thing typed.
+                    messageText = textandnick.trim() + " " + Users.get(UserNumber++).trim();
+                } else if (UserNumber < Users.size()) {
+                    messageText = textandnick.trim() + " " + Users.get(UserNumber++).trim();
+                } else {
+                    UserNumber = 0;
+                    messageText = textandnick.trim() + " " + Users.get(UserNumber++).trim();
+                }
+                setText(messageText.trim());
+            } else if (e.getKeyCode() == java.awt.event.KeyEvent.VK_ESCAPE) {
+
+                if (CommTPane.getSelectedIndex() == CommTPane.indexOfComponent(ErrorLogPanel)) {
+                    CommTPane.remove(CommTPane.getSelectedComponent());
+                } else if (mwclient.getConfig().isParam("USEMULTIPLEPM") &&
+                                 CommTPane.getSelectedComponent() instanceof javax.swing.JPanel) {
+                    javax.swing.JPanel panel = (javax.swing.JPanel) CommTPane.getSelectedComponent();
+                    if (panel.getName() != null && panel.getName().startsWith("Mail Tab ")) {
+                        CommTPane.remove(panel);
+                        panel = null;
+                    }
+                }
+            } else {UserNumber = 0;}
+
+        }
+
+        public String parseOutUserName(String text) {
+
+            // there are spaces in the text so get the last word
+            if (text.trim().indexOf(" ") != -1) {text = text.substring(0, text.trim().lastIndexOf(" ")).trim();}
+
+            // The name is the first word.
+            else {text = "";}
+
+            return text;
+        }
+
+        public void keyReleased(java.awt.event.KeyEvent e) {
+            // filler
         }
     }
 }

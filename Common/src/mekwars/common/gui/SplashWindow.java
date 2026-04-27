@@ -33,13 +33,9 @@ import javax.swing.JProgressBar;
 import javax.swing.JSeparator;
 import javax.swing.SwingConstants;
 
-public class SplashWindow {
+import mekwars.common.threads.AnimationThread;
 
-    public JFrame splashWindow;
-    private boolean continueAnimating;
-    private final JLabel versionLabel;
-    private int currentStatus;
-    private final JProgressBar progressBar;
+public class SplashWindow {
 
     public final int STATUS_INITIALIZING = 0;
     public final int STATUS_FETCHING_DATA = 1;
@@ -48,6 +44,11 @@ public class SplashWindow {
     public final int STATUS_INPUT_WAIT = 4;
     public final int STATUS_DATA_ERROR = 5;
     public final int STATUS_CONNECT_FAILED = 6;
+    private final JLabel versionLabel;
+    private final JProgressBar progressBar;
+    public JFrame splashWindow;
+    private boolean continueAnimating;
+    private int currentStatus;
 
     public SplashWindow() {
 
@@ -143,12 +144,12 @@ public class SplashWindow {
         return progressBar;
     }
 
-    public void setStatus(int i) {
-        currentStatus = i;
-    }
-
     public int getStatus() {
         return currentStatus;
+    }
+
+    public void setStatus(int i) {
+        currentStatus = i;
     }
 
 

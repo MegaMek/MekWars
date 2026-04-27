@@ -15,9 +15,13 @@
  * for more details.
  */
 
-package mekwars.client.gui;
+package mekwars.common.gui;
 
-import common.MMGame;
+
+import java.io.Serial;
+
+import mekwars.common.MMGame;
+import mekwars.common.campaign.clientutils.protocol.IClient;
 
 /**
  * The panel where all currently active battles are shown
@@ -31,22 +35,23 @@ public class CBattlePanel extends javax.swing.JPanel {
     /**
      *
      */
+    @Serial
     private static final long serialVersionUID = -1556406945897698254L;
-    private final client.MWClient mwclient;
+    private final IClient mwclient;
     private final javax.swing.JTable BattleTable;
-    private final mekwars.client.gui.CBattlePanel.BattlesModel battleTableModel;
+    private final mekwars.common.gui.CBattlePanel.BattlesModel battleTableModel;
     private final javax.swing.JScrollPane battleScrollPane;
     private final TableSorter battleSorter;
 
     /**
      * Construct a new battle panel
      */
-    public CBattlePanel(client.MWClient client) {
+    public CBattlePanel(IClient client) {
         this.mwclient = client;
         setLayout(new javax.swing.BoxLayout(this, javax.swing.BoxLayout.Y_AXIS));
 
         //make table and set sorted model
-        battleTableModel = new mekwars.client.gui.CBattlePanel.BattlesModel();
+        battleTableModel = new mekwars.common.gui.CBattlePanel.BattlesModel();
         BattleTable = new javax.swing.JTable();
 
         battleSorter = new TableSorter(battleTableModel, mwclient, TableSorter.SORTER_BATTLES);
@@ -54,7 +59,7 @@ public class CBattlePanel extends javax.swing.JPanel {
         battleSorter.addMouseListenerToHeaderInTable(this.BattleTable);
 
         BattleTable.setDefaultRenderer(Object.class, battleTableModel.getRenderer());
-        BattleTable.addMouseListener(new mekwars.client.gui.CBattlePanel.BattlePopupListener());
+        BattleTable.addMouseListener(new mekwars.common.gui.CBattlePanel.BattlePopupListener());
         //Host name
         BattleTable.getColumnModel().getColumn(0).setMinWidth(10);
         BattleTable.getColumnModel().getColumn(0).setPreferredWidth(100);
@@ -100,7 +105,7 @@ public class CBattlePanel extends javax.swing.JPanel {
     /**
      * Return the model. Used to refresh.
      */
-    public mekwars.client.gui.CBattlePanel.BattlesModel getBattleTableModel() {
+    public BattlesModel getBattleTableModel() {
         return battleTableModel;
     }
 
@@ -325,7 +330,7 @@ public class CBattlePanel extends javax.swing.JPanel {
                       "Restart?",
                       javax.swing.JOptionPane.YES_NO_OPTION);
                 if (result == javax.swing.JOptionPane.YES_OPTION) {
-                    mwclient.sendChat(client.MWClient.CAMPAIGN_PREFIX + "mail " + currName + ",restart");
+                    mwclient.sendChat(IClient.CAMPAIGN_PREFIX + "mail " + currName + ",restart");
                 }
             } else if (s.startsWith("RESET|")) {
                 String currName = s.substring(s.indexOf('|') + 1);
@@ -334,7 +339,7 @@ public class CBattlePanel extends javax.swing.JPanel {
                       "Reset?",
                       javax.swing.JOptionPane.YES_NO_OPTION);
                 if (result == javax.swing.JOptionPane.YES_OPTION) {
-                    mwclient.sendChat(client.MWClient.CAMPAIGN_PREFIX + "mail " + currName + ",reset");
+                    mwclient.sendChat(IClient.CAMPAIGN_PREFIX + "mail " + currName + ",reset");
                 }
             } else if (s.startsWith("DIE|")) {
                 String currName = s.substring(s.indexOf('|') + 1);
@@ -343,7 +348,7 @@ public class CBattlePanel extends javax.swing.JPanel {
                       "Kill?",
                       javax.swing.JOptionPane.YES_NO_OPTION);
                 if (result == javax.swing.JOptionPane.YES_OPTION) {
-                    mwclient.sendChat(client.MWClient.CAMPAIGN_PREFIX + "mail " + currName + ",die");
+                    mwclient.sendChat(IClient.CAMPAIGN_PREFIX + "mail " + currName + ",die");
                 }
             } else if (s.startsWith("START|")) {
                 String currName = s.substring(s.indexOf('|') + 1);
@@ -352,7 +357,7 @@ public class CBattlePanel extends javax.swing.JPanel {
                       "Start?",
                       javax.swing.JOptionPane.YES_NO_OPTION);
                 if (result == javax.swing.JOptionPane.YES_OPTION) {
-                    mwclient.sendChat(client.MWClient.CAMPAIGN_PREFIX + "mail " + currName + ",start");
+                    mwclient.sendChat(IClient.CAMPAIGN_PREFIX + "mail " + currName + ",start");
                 }
             } else if (s.startsWith("STOP|")) {
                 String currName = s.substring(s.indexOf('|') + 1);
@@ -361,11 +366,11 @@ public class CBattlePanel extends javax.swing.JPanel {
                       "Stop?",
                       javax.swing.JOptionPane.YES_NO_OPTION);
                 if (result == javax.swing.JOptionPane.YES_OPTION) {
-                    mwclient.sendChat(client.MWClient.CAMPAIGN_PREFIX + "mail " + currName + ",stop");
+                    mwclient.sendChat(IClient.CAMPAIGN_PREFIX + "mail " + currName + ",stop");
                 }
             } else if (s.startsWith("OWNERS|")) {
                 String currName = s.substring(s.indexOf('|') + 1);
-                mwclient.sendChat(client.MWClient.CAMPAIGN_PREFIX + "mail " + currName + ",owners");
+                mwclient.sendChat(IClient.CAMPAIGN_PREFIX + "mail " + currName + ",owners");
             } else if (s.startsWith("CLEAROWNERS|")) {
                 String currName = s.substring(s.indexOf('|') + 1);
                 int result = javax.swing.JOptionPane.showConfirmDialog(mwclient.getMainFrame(),
@@ -373,7 +378,7 @@ public class CBattlePanel extends javax.swing.JPanel {
                       "Clear the owners?",
                       javax.swing.JOptionPane.YES_NO_OPTION);
                 if (result == javax.swing.JOptionPane.YES_OPTION) {
-                    mwclient.sendChat(client.MWClient.CAMPAIGN_PREFIX + "mail " + currName + ",clearowners");
+                    mwclient.sendChat(IClient.CAMPAIGN_PREFIX + "mail " + currName + ",clearowners");
                 }
             } else if (s.startsWith("ADDOWNERS|")) {
                 String currName = s.substring(s.indexOf('|') + 1);
@@ -382,11 +387,11 @@ public class CBattlePanel extends javax.swing.JPanel {
                       "Add Owners",
                       javax.swing.JOptionPane.OK_CANCEL_OPTION);
                 if (result != null && result.length() > 1) {
-                    mwclient.sendChat(client.MWClient.CAMPAIGN_PREFIX + "mail " + currName + ",owner " + result);
+                    mwclient.sendChat(IClient.CAMPAIGN_PREFIX + "mail " + currName + ",owner " + result);
                 }
             } else if (s.startsWith("GETPORT|")) {
                 String currName = s.substring(s.indexOf('|') + 1);
-                mwclient.sendChat(client.MWClient.CAMPAIGN_PREFIX + "mail " + currName + ",port");
+                mwclient.sendChat(IClient.CAMPAIGN_PREFIX + "mail " + currName + ",port");
             } else if (s.startsWith("SETPORT|")) {
                 String currName = s.substring(s.indexOf('|') + 1);
                 String result = javax.swing.JOptionPane.showInputDialog(mwclient.getMainFrame(),
@@ -394,11 +399,11 @@ public class CBattlePanel extends javax.swing.JPanel {
                       "New Port",
                       javax.swing.JOptionPane.OK_CANCEL_OPTION);
                 if (result != null && result.length() > 1) {
-                    mwclient.sendChat(client.MWClient.CAMPAIGN_PREFIX + "mail " + currName + ",port " + result);
+                    mwclient.sendChat(IClient.CAMPAIGN_PREFIX + "mail " + currName + ",port " + result);
                 }
             } else if (s.startsWith("GSGPD|")) {
                 String currName = s.substring(s.indexOf('|') + 1);
-                mwclient.sendChat(client.MWClient.CAMPAIGN_PREFIX + "mail " + currName + ",savegamepurge");
+                mwclient.sendChat(IClient.CAMPAIGN_PREFIX + "mail " + currName + ",savegamepurge");
             } else if (s.startsWith("SSGPD|")) {
                 String currName = s.substring(s.indexOf('|') + 1);
                 String result = javax.swing.JOptionPane.showInputDialog(mwclient.getMainFrame(),
@@ -406,7 +411,7 @@ public class CBattlePanel extends javax.swing.JPanel {
                       "New days out to purge",
                       javax.swing.JOptionPane.OK_CANCEL_OPTION);
                 if (result != null && result.length() >= 1) {
-                    mwclient.sendChat(client.MWClient.CAMPAIGN_PREFIX +
+                    mwclient.sendChat(IClient.CAMPAIGN_PREFIX +
                                             "mail " +
                                             currName +
                                             ",savegamepurge " +
@@ -414,22 +419,22 @@ public class CBattlePanel extends javax.swing.JPanel {
                 }
             } else if (s.startsWith("PING|")) {
                 String currName = s.substring(s.indexOf('|') + 1);
-                mwclient.sendChat(client.MWClient.CAMPAIGN_PREFIX + "mail " + currName + ",ping");
+                mwclient.sendChat(IClient.CAMPAIGN_PREFIX + "mail " + currName + ",ping");
             } else if (s.startsWith("UPDATE|")) {
                 String currName = s.substring(s.indexOf('|') + 1);
-                mwclient.sendChat(client.MWClient.CAMPAIGN_PREFIX + "mail " + currName + ",update");
+                mwclient.sendChat(IClient.CAMPAIGN_PREFIX + "mail " + currName + ",update");
             } else if (s.startsWith("DSG|")) {
                 String currName = s.substring(s.indexOf('|') + 1);
-                mwclient.sendChat(client.MWClient.CAMPAIGN_PREFIX + "mail " + currName + ",displaysavedgames");
+                mwclient.sendChat(IClient.CAMPAIGN_PREFIX + "mail " + currName + ",displaysavedgames");
             } else if (s.startsWith("DMML|")) {
                 String currName = s.substring(s.indexOf('|') + 1);
-                mwclient.sendChat(client.MWClient.CAMPAIGN_PREFIX + "mail " + currName + ",displaymegameklog");
+                mwclient.sendChat(IClient.CAMPAIGN_PREFIX + "mail " + currName + ",displaymegameklog");
             } else if (s.startsWith("DDEL|")) {
                 String currName = s.substring(s.indexOf('|') + 1);
-                mwclient.sendChat(client.MWClient.CAMPAIGN_PREFIX + "mail " + currName + ",displaydederrorlog");
+                mwclient.sendChat(IClient.CAMPAIGN_PREFIX + "mail " + currName + ",displaydederrorlog");
             } else if (s.startsWith("DELL|")) {
                 String currName = s.substring(s.indexOf('|') + 1);
-                mwclient.sendChat(client.MWClient.CAMPAIGN_PREFIX + "mail " + currName + ",displaydedlog");
+                mwclient.sendChat(IClient.CAMPAIGN_PREFIX + "mail " + currName + ",displaydedlog");
             } else if (s.startsWith("LOADGAME|")) {
                 String currName = s.substring(s.indexOf('|') + 1);
                 String result = null;
@@ -438,7 +443,7 @@ public class CBattlePanel extends javax.swing.JPanel {
                       "Load Game",
                       javax.swing.JOptionPane.OK_CANCEL_OPTION);
                 if (result != null) {
-                    mwclient.sendChat(client.MWClient.CAMPAIGN_PREFIX + "mail " + currName + ",loadgame " + result);
+                    mwclient.sendChat(IClient.CAMPAIGN_PREFIX + "mail " + currName + ",loadgame " + result);
                 }
             } else if (s.startsWith("LOADAUTOSAVE|")) {
                 String currName = s.substring(s.indexOf('|') + 1);
@@ -447,7 +452,7 @@ public class CBattlePanel extends javax.swing.JPanel {
                       "Load Auto Saved Game?",
                       javax.swing.JOptionPane.YES_NO_OPTION);
                 if (result == javax.swing.JOptionPane.YES_OPTION) {
-                    mwclient.sendChat(client.MWClient.CAMPAIGN_PREFIX + "mail " + currName + ",loadautosave");
+                    mwclient.sendChat(IClient.CAMPAIGN_PREFIX + "mail " + currName + ",loadautosave");
                 }
             } else if (s.startsWith("SETNAME|")) {
                 String currName = s.substring(s.indexOf('|') + 1);
@@ -458,8 +463,8 @@ public class CBattlePanel extends javax.swing.JPanel {
                       "New Name",
                       javax.swing.JOptionPane.OK_CANCEL_OPTION);
                 if (result != null && result.length() > 1) {
-                    mwclient.sendChat(client.MWClient.CAMPAIGN_PREFIX + "mail " + currName + ",name " + result);
-                    mwclient.sendChat(client.MWClient.CAMPAIGN_PREFIX + "mail " + currName + ",die");
+                    mwclient.sendChat(IClient.CAMPAIGN_PREFIX + "mail " + currName + ",name " + result);
+                    mwclient.sendChat(IClient.CAMPAIGN_PREFIX + "mail " + currName + ",die");
                 }
             } else if (s.startsWith("SETCOMMENT|")) {
                 String currName = s.substring(s.indexOf('|') + 1);
@@ -468,7 +473,7 @@ public class CBattlePanel extends javax.swing.JPanel {
                       "New Comment",
                       javax.swing.JOptionPane.OK_CANCEL_OPTION);
                 if (result != null && result.length() > 1) {
-                    mwclient.sendChat(client.MWClient.CAMPAIGN_PREFIX + "mail " + currName + ",comment " + result);
+                    mwclient.sendChat(IClient.CAMPAIGN_PREFIX + "mail " + currName + ",comment " + result);
                 }
             } else if (s.startsWith("SETPLAYERS|")) {
                 String currName = s.substring(s.indexOf('|') + 1);
@@ -477,11 +482,11 @@ public class CBattlePanel extends javax.swing.JPanel {
                       "New Players",
                       javax.swing.JOptionPane.OK_CANCEL_OPTION);
                 if (result != null && result.length() > 0) {
-                    mwclient.sendChat(client.MWClient.CAMPAIGN_PREFIX + "mail " + currName + ",players " + result);
+                    mwclient.sendChat(IClient.CAMPAIGN_PREFIX + "mail " + currName + ",players " + result);
                 }
             } else if (s.startsWith("CURRENTRESTART|")) {
                 String currName = s.substring(s.indexOf('|') + 1);
-                mwclient.sendChat(client.MWClient.CAMPAIGN_PREFIX + "mail " + currName + ",restartcount");
+                mwclient.sendChat(IClient.CAMPAIGN_PREFIX + "mail " + currName + ",restartcount");
             } else if (s.startsWith("SETRESTART|")) {
                 String currName = s.substring(s.indexOf('|') + 1);
                 String result = javax.swing.JOptionPane.showInputDialog(mwclient.getMainFrame(),
@@ -489,11 +494,11 @@ public class CBattlePanel extends javax.swing.JPanel {
                       "New Restart",
                       javax.swing.JOptionPane.OK_CANCEL_OPTION);
                 if (result != null && result.length() >= 1) {
-                    mwclient.sendChat(client.MWClient.CAMPAIGN_PREFIX + "mail " + currName + ",restartcount " + result);
+                    mwclient.sendChat(IClient.CAMPAIGN_PREFIX + "mail " + currName + ",restartcount " + result);
                 }
             } else if (s.startsWith("GETUPDATEURL|")) {
                 String currName = s.substring(s.indexOf('|') + 1);
-                mwclient.sendChat(client.MWClient.CAMPAIGN_PREFIX + "mail " + currName + ",getupdateurl");
+                mwclient.sendChat(IClient.CAMPAIGN_PREFIX + "mail " + currName + ",getupdateurl");
             } else if (s.startsWith("SETUPDATEURL|")) {
                 String currName = s.substring(s.indexOf('|') + 1);
                 String result = javax.swing.JOptionPane.showInputDialog(mwclient.getMainFrame(),
@@ -501,147 +506,12 @@ public class CBattlePanel extends javax.swing.JPanel {
                       "New Update URL",
                       javax.swing.JOptionPane.OK_CANCEL_OPTION);
                 if (result != null && result.length() >= 1) {
-                    mwclient.sendChat(client.MWClient.CAMPAIGN_PREFIX + "mail " + currName + ",setupdateurl " + result);
+                    mwclient.sendChat(IClient.CAMPAIGN_PREFIX + "mail " + currName + ",setupdateurl " + result);
                 }
             }
 
         }
     }
 
-
-    class BattlesModel extends javax.swing.table.AbstractTableModel {
-
-        /**
-         *
-         */
-        private static final long serialVersionUID = -6384905445657195650L;
-
-        public Object[] sortedGames; //not really though, sort is handled elsewhere...
-
-        public final static int NAME = 0;
-        public final static int PLAYERCOUNT = 1;
-        public final static int VERSION = 2;
-        public final static int COMMENT = 3;
-        public final static int PLAYERNAMES = 4;
-
-        final String[] columnNames = {
-              "Name",
-              "Players",
-              "Version",
-              "Comment",
-              "Player Names"
-        };
-
-        final String[] longValues = {
-              "XXXXXXXXXXXXXXXXX",
-              "XXXXXXXXXXXXXXXXX",
-              "XXXXXXXXXXXXXXXXX",
-              "XXXXXXXXXXXXXXXXX",
-              "XXXXXXXXXXXXXXXXX",
-              };
-
-        public int getColumnCount() {
-            return this.columnNames.length;
-        }
-
-        public BattlesModel() {
-            this.sortedGames = mwclient.getServers().values().toArray();
-        }
-
-        public void refreshModel() {
-            //do a resort
-            this.sortedGames = mwclient.getServers().values().toArray();
-            this.fireTableDataChanged();
-        }
-
-        public int getRowCount() {
-            return this.sortedGames.length;
-        }
-
-        @Override
-        public String getColumnName(int col) {
-            return (columnNames[col]);
-        }
-
-        @Override
-        public boolean isCellEditable(int row, int col) {
-            return false;
-        }
-
-        public Object getValueAt(int row, int col) {
-
-            if (row < 0) {return "";}
-
-            if (row >= sortedGames.length) {return "";}
-
-            MMGame aGame = (MMGame) this.sortedGames[row];
-
-            switch (col) {
-                case NAME:
-                    return aGame.getHostName();
-                case PLAYERCOUNT:
-                    return aGame.getCurrentPlayers().size() + "/" + aGame.getMaxPlayers();
-                case VERSION:
-                    return aGame.getVersion();
-                case COMMENT:
-                    return aGame.getComment();
-                case PLAYERNAMES:
-
-                    StringBuffer result = new StringBuffer();
-                    for (String currName : aGame.getCurrentPlayers()) {result.append(currName + ", ");}
-
-                    String toReturn = result.toString().trim();
-                    if (toReturn.lastIndexOf(",") >= 0) {toReturn = toReturn.substring(0, toReturn.lastIndexOf(","));}
-
-                    return toReturn;
-            }
-
-            return "";
-        }
-
-        public mekwars.client.gui.CBattlePanel.BattlesModel.Renderer getRenderer() {
-            return new mekwars.client.gui.CBattlePanel.BattlesModel.Renderer();
-        }
-
-        /*
-         * Renderer cannot be static because it uses parent data structs.
-         */
-
-        class Renderer extends javax.swing.table.DefaultTableCellRenderer {
-
-            /**
-             *
-             */
-            private static final long serialVersionUID = -2353501701911884548L;
-
-            @Override
-            public java.awt.Component getTableCellRendererComponent(javax.swing.JTable table, Object value,
-                  boolean isSelected, boolean hasFocus, int row, int column) {
-                java.awt.Component c = super.getTableCellRendererComponent(table,
-                      value,
-                      isSelected,
-                      hasFocus,
-                      row,
-                      column);
-
-                if (sortedGames.length <= row) {return c;}
-                if (isSelected) {return c;}
-
-                String gameName = (String) battleSorter.getValueAt(row, 0);//host name
-                MMGame game = mwclient.getServers().get(gameName);
-
-                //set background color
-                if (game.getCurrentPlayers().size() >= game.getMaxPlayers()) {
-                    c.setBackground(java.awt.Color.red);
-                } else if (game.getStatus().equals("Open")) {
-                    c.setBackground(java.awt.Color.green);
-                } else if (game.getStatus().equals("Running")) {c.setBackground(java.awt.Color.yellow);} else {
-                    c.setBackground(getBackground());
-                }
-
-                return c;
-            }
-        }
-    }
 
 }

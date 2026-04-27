@@ -34,16 +34,6 @@ import mekwars.common.campaign.clientutils.protocol.commands.IProtCommand;
 import mekwars.common.util.MWLogger;
 
 public abstract class GameHost implements GameListener, IGameHost {
-    public static final int STATUS_DISCONNECTED = 0;
-    public static final int STATUS_LOGGED_OUT = 1;
-    public static final int STATUS_RESERVE = 2;
-    public static final int STATUS_ACTIVE = 3;
-    public static final int STATUS_FIGHTING = 4;
-
-    public static final String CAMPAIGN_PREFIX = "/"; // prefix for campaign commands
-    public static final String CAMPAIGN_PATH = "data/campaign/";
-    public static final String COMMAND_DELIMITER = "|"; // delimiter for client commands
-
     public String myUsername = "";// public b/c used in RGTS command to set server status. HACK!
 
     protected TreeMap<String, IProtCommand> ProtCommands;

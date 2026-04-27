@@ -41,6 +41,6 @@ public class SSC extends Command {
         } catch (Exception ex) {
             MWLogger.errLog(ex);
         }
-        //mwclient.setWaiting(false);
+        //client.setWaiting(false);
     }//end execute
 }//end SC.java

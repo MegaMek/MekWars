@@ -19,7 +19,7 @@
  *       <p>
  *       This Thread is run by the client to allow them to queue up jobs.
  */
-package mekwars.common.util;
+package mekwars.common.threads;
 
 import java.util.Iterator;
 import java.util.StringTokenizer;
@@ -32,11 +32,13 @@ import megamek.common.units.Mek;
 import mekwars.common.campaign.CUnit;
 import mekwars.common.campaign.clientutils.protocol.IClient;
 import mekwars.common.campaign.pilot.skills.PilotSkill;
+import mekwars.common.util.MWLogger;
+import mekwars.common.util.UnitUtils;
 
 public class RepairManagmentThread extends Thread {
     private final Vector<ConcurrentLinkedQueue<String>> workOrders = new Vector<>(5, 1);
-    private long averageRepairTime = 1000;
     private final IClient client;
+    private long averageRepairTime = 1000;
 
     //Set the repair time and init the work order queue
     public RepairManagmentThread(Long repairTime, IClient client) {
@@ -66,72 +68,6 @@ public class RepairManagmentThread extends Thread {
                 MWLogger.errLog(ex);
             }
         }
-    }
-
-    //String format unitID#Location#SlotID(using the armor/is/rear armor slots as well)#baseRoll
-    public void addWorkOrder(int techType, String workOrder) {
-        workOrders.elementAt(techType).add(workOrder);
-    }
-
-    public void removeAllWorkOrders(int unitID) {
-        String id = Integer.toString(unitID);
-
-        for (int tech = UnitUtils.TECH_GREEN; tech <= UnitUtils.TECH_PILOT; tech++) {
-            workOrders.elementAt(tech).removeIf(repair -> repair.startsWith(STR."\{id}#"));
-        }
-    }
-
-    public void removeWorkOrder(int techType, String data) {
-        Iterator<String> repairs = workOrders.elementAt(techType).iterator();
-        while (repairs.hasNext()) {
-            String repair = repairs.next();
-            if (repair.equals(data)) {
-                repairs.remove();
-                break;
-            }
-        }
-
-        client.systemMessage(STR."Removed work orders for for \{UnitUtils.techDescription(techType)} techs.");
-    }
-
-    public boolean isQueued(int Location, int slot, int unitid) {
-
-        for (int tech = UnitUtils.TECH_GREEN; tech <= UnitUtils.TECH_PILOT; tech++) {
-            for (String repair : workOrders.elementAt(tech)) {
-                if (repair.indexOf(Integer.toString(unitid)) == 0) {
-                    java.util.StringTokenizer order = new StringTokenizer(repair, "#");
-                    order.nextToken();//unit id Already Verified it.
-                    int locationid = Integer.parseInt(order.nextToken());
-                    int slotid = Integer.parseInt(order.nextToken());
-                    if (slotid == UnitUtils.LOC_REAR_ARMOR) {
-                        locationid -= 7;
-                    }
-
-                    if (locationid == Location && slotid == slot) {
-                        return true;
-                    }
-
-                }
-
-            }
-        }
-
-        return false;
-    }
-
-    public boolean hasQueuedOrders(int unitid) {
-
-        String id = Integer.toString(unitid);
-
-        for (int tech = UnitUtils.TECH_GREEN; tech <= UnitUtils.TECH_PILOT; tech++) {
-            for (String repair : workOrders.elementAt(tech)) {
-                if (repair.startsWith(STR."\{id}#")) {
-                    return true;
-                }
-
-            }
-        }
-        return false;
     }
 
     private void processWorkOrders() {
@@ -271,6 +207,72 @@ public class RepairManagmentThread extends Thread {
             }
 
         }
+    }
+
+    //String format unitID#Location#SlotID(using the armor/is/rear armor slots as well)#baseRoll
+    public void addWorkOrder(int techType, String workOrder) {
+        workOrders.elementAt(techType).add(workOrder);
+    }
+
+    public void removeAllWorkOrders(int unitID) {
+        String id = Integer.toString(unitID);
+
+        for (int tech = UnitUtils.TECH_GREEN; tech <= UnitUtils.TECH_PILOT; tech++) {
+            workOrders.elementAt(tech).removeIf(repair -> repair.startsWith(STR."\{id}#"));
+        }
+    }
+
+    public void removeWorkOrder(int techType, String data) {
+        Iterator<String> repairs = workOrders.elementAt(techType).iterator();
+        while (repairs.hasNext()) {
+            String repair = repairs.next();
+            if (repair.equals(data)) {
+                repairs.remove();
+                break;
+            }
+        }
+
+        client.systemMessage(STR."Removed work orders for for \{UnitUtils.techDescription(techType)} techs.");
+    }
+
+    public boolean isQueued(int Location, int slot, int unitid) {
+
+        for (int tech = UnitUtils.TECH_GREEN; tech <= UnitUtils.TECH_PILOT; tech++) {
+            for (String repair : workOrders.elementAt(tech)) {
+                if (repair.indexOf(Integer.toString(unitid)) == 0) {
+                    java.util.StringTokenizer order = new StringTokenizer(repair, "#");
+                    order.nextToken();//unit id Already Verified it.
+                    int locationid = Integer.parseInt(order.nextToken());
+                    int slotid = Integer.parseInt(order.nextToken());
+                    if (slotid == UnitUtils.LOC_REAR_ARMOR) {
+                        locationid -= 7;
+                    }
+
+                    if (locationid == Location && slotid == slot) {
+                        return true;
+                    }
+
+                }
+
+            }
+        }
+
+        return false;
+    }
+
+    public boolean hasQueuedOrders(int unitid) {
+
+        String id = Integer.toString(unitid);
+
+        for (int tech = UnitUtils.TECH_GREEN; tech <= UnitUtils.TECH_PILOT; tech++) {
+            for (String repair : workOrders.elementAt(tech)) {
+                if (repair.startsWith(STR."\{id}#")) {
+                    return true;
+                }
+
+            }
+        }
+        return false;
     }
 
     public String getRepairQueue(int unitID) {

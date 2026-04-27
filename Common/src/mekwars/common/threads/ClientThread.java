@@ -10,22 +10,14 @@
  * A PARTICULAR PURPOSE. See the GNU General Public License for more details.
  */
 
-package mekwars.client;
+package mekwars.common.threads;
 
-import client.campaign.CArmy;
-import client.campaign.CUnit;
-import common.AdvancedTerrain;
-import common.PlanetEnvironment;
-import common.Unit;
-import common.campaign.Buildings;
-import common.util.MWLogger;
-import common.util.UnitUtils;
 import megamek.client.Client;
 import megamek.client.CloseClientListener;
 import megamek.client.bot.BotClient;
 import megamek.client.bot.princess.Princess;
 import megamek.client.bot.ui.swing.BotGUI;
-import megamek.client.ui.swing.util.MegaMekController;
+import megamek.client.ui.util.MegaMekController;
 import megamek.common.KeyBindParser;
 import megamek.common.OffBoardDirection;
 import megamek.common.board.Board;
@@ -42,15 +34,26 @@ import megamek.common.units.Crew;
 import megamek.common.units.CrewType;
 import megamek.common.units.Entity;
 import megamek.common.util.BuildingTemplate;
-
-// import megamek.common.IGame;
-// import megamek.common.Player;
-// import org.apache.log4j.lf5.LogLevel;
-// import org.apache.logging.log4j.Level;
-// import org.apache.logging.log4j.LogManager;
+import mekwars.common.AdvancedTerrain;
+import mekwars.common.PlanetEnvironment;
+import mekwars.common.Unit;
+import mekwars.common.campaign.Buildings;
+import mekwars.common.campaign.CArmy;
+import mekwars.common.campaign.CUnit;
+import mekwars.common.util.MWLogger;
+import mekwars.common.util.UnitUtils;
 
 public class ClientThread extends Thread implements CloseClientListener {
 
+    final int N = 0;
+    final int NE = 1;
+    final int SE = 2;
+    final int S = 3;
+    final int SW = 4;
+    final int NW = 5;
+    // auto army
+    CArmy army = null;
+    BotClient bot = null;
     // VARIABLES
     private String myname;
     private String serverip;
@@ -60,19 +63,8 @@ public class ClientThread extends Thread implements CloseClientListener {
     private Client client;
     private megamek.client.ui.swing.ClientGUI swingGui;
     private megamek.client.ui.swing.util.MegaMekController controller;
-
     private java.util.ArrayList<Unit> mechs = new java.util.ArrayList<Unit>();
     private java.util.ArrayList<CUnit> autoarmy = new java.util.ArrayList<CUnit>();// from server's
-    // auto army
-    CArmy army = null;
-    BotClient bot = null;
-
-    final int N = 0;
-    final int NE = 1;
-    final int SE = 2;
-    final int S = 3;
-    final int SW = 4;
-    final int NW = 5;
 
     // CONSTRUCTOR
     public ClientThread(String name, String servername, String ip, int port, MWClient mwclient,
@@ -732,120 +724,6 @@ public class ClientThread extends Thread implements CloseClientListener {
 
     }
 
-    /*
-     * from megamek.client.CloseClientListener clientClosed() Thanks to MM for
-     * adding the listener. And to MMNet for the poorly documented code change.
-     */
-    @Override
-    public void clientClosed() {
-
-        PreferenceManager.getInstance().save();
-
-        if (bot != null) {
-            bot.die();
-            bot = null;
-        }
-
-        // client.die();
-        client = null;// explicit null of the MM client. Wasn't/isn't being
-        // GC'ed.
-        mwclient.closingGame(serverName);
-        System.gc();
-
-    }
-
-    /**
-     * @param army
-     * @param slaveid
-     * @param masterid This function goes through and makes sure the slave is linked to the master unit
-     *
-     * @author jtighe
-     */
-    public void linkMegaMekC3Units(CArmy army, Integer slaveid, Integer masterid) {
-        Entity c3Unit = null;
-        Entity c3Master = null;
-
-        while ((c3Unit == null) || (c3Master == null)) {
-            try {
-
-                for (Entity en : client.getGame().getEntitiesVector()) {
-                    if ((c3Unit == null) && (en.getExternalId() == slaveid)) {
-                        c3Unit = en;
-                    }
-
-                    if ((c3Master == null) && (en.getExternalId() == masterid)) {
-                        c3Master = en;
-                    }
-                }
-                Thread.sleep(10);// give the queue time to refresh
-            } catch (Exception ex) {
-                MWLogger.errLog("Error in linkMegaMekC3Units");
-                MWLogger.errLog(ex);
-            }
-        }
-
-        // catch for some funky stuff
-        if ((c3Unit == null) || (c3Master == null)) {
-            MWLogger.errLog("Null Units c3Unit: " + c3Unit + " C3Master: " + c3Master);
-            return;
-        }
-
-        try {
-            CUnit masterUnit = (CUnit) army.getUnit(masterid);
-            // MWLogger.errLog("Master Unit:
-            // "+masterUnit.getModelName());
-            // MWLogger.errLog("Slave Unit:
-            // "+c3Unit.getModel());
-            if (!masterUnit.hasC3SlavesLinkedTo(army) &&
-                      masterUnit.hasBeenC3LinkedTo(army) &&
-                      ((masterUnit.getC3Level() == Unit.C3_MASTER) || (masterUnit.getC3Level() == Unit.C3_MMASTER))) {
-                // MWLogger.errLog("Unit:
-                // "+c3Master.getModel()+" id: "+c3Master.getExternalId());
-                if (c3Master.getC3MasterId() == Entity.NONE) {
-                    c3Master.setShutDown(false);
-                    c3Master.setC3Master(c3Master, false);
-                    client.sendUpdateEntity(c3Master);
-                }
-                /*
-                 * if ( c3Master.hasC3MM() )
-                 * MWLogger.errLog("hasC3MM"); else
-                 * MWLogger.errLog("!hasC3MM");
-                 */
-            } else if (c3Master.getC3MasterId() != Entity.NONE) {
-                c3Master.setShutDown(false);
-                c3Master.setC3Master(Entity.NONE, false);
-                client.sendUpdateEntity(c3Master);
-            }
-            // MWLogger.errLog("c3Unit: "+c3Unit.getModel()+"
-            // Master: "+c3Master.getModel());
-            c3Unit.setShutDown(false);
-            c3Unit.setC3Master(c3Master, false);
-            // MWLogger.errLog("c3Master Set to
-            // "+c3Unit.getC3MasterId()+" "+c3Unit.getC3NetId());
-            client.sendUpdateEntity(c3Unit);
-        } catch (Exception ex) {
-            MWLogger.errLog(ex);
-            MWLogger.errLog("Error in setting up C3Network");
-        }
-    }
-
-    /*
-     * Taken form Megamek Code for use with MekWars The call was private and was
-     * needed. Thanks to Ben Mazur and all of the MM coders we hope for a long
-     * and happy relation ship. Torren.
-     */
-
-    public static java.util.Comparator<? super Object> stringComparator() {
-        return new java.util.Comparator<Object>() {
-            @Override
-            public int compare(Object o1, Object o2) {
-                String s1 = ((String) o1).toLowerCase();
-                String s2 = ((String) o2).toLowerCase();
-                return s1.compareTo(s2);
-            }
-        };
-    }
-
     /**
      * Scans the boards directory for map boards of the appropriate size and returns them.
      */
@@ -864,7 +742,7 @@ public class ClientThread extends Thread implements CloseClientListener {
         // scan files
         String[] fileList = boardDir.list();
         java.util.Vector<String> tempList = new java.util.Vector<String>(1, 1);
-        java.util.Comparator<? super String> sortComp = mekwars.client.ClientThread.stringComparator();
+        java.util.Comparator<? super String> sortComp = mekwars.common.threads.ClientThread.stringComparator();
         for (String path : fileList) {
             if (path.indexOf(".board") == -1) {
                 continue;
@@ -1011,6 +889,120 @@ public class ClientThread extends Thread implements CloseClientListener {
         }
 
         return buildingList;
+    }
+
+    /*
+     * Taken form Megamek Code for use with MekWars The call was private and was
+     * needed. Thanks to Ben Mazur and all of the MM coders we hope for a long
+     * and happy relation ship. Torren.
+     */
+
+    /**
+     * @param army
+     * @param slaveid
+     * @param masterid This function goes through and makes sure the slave is linked to the master unit
+     *
+     * @author jtighe
+     */
+    public void linkMegaMekC3Units(CArmy army, Integer slaveid, Integer masterid) {
+        Entity c3Unit = null;
+        Entity c3Master = null;
+
+        while ((c3Unit == null) || (c3Master == null)) {
+            try {
+
+                for (Entity en : client.getGame().getEntitiesVector()) {
+                    if ((c3Unit == null) && (en.getExternalId() == slaveid)) {
+                        c3Unit = en;
+                    }
+
+                    if ((c3Master == null) && (en.getExternalId() == masterid)) {
+                        c3Master = en;
+                    }
+                }
+                Thread.sleep(10);// give the queue time to refresh
+            } catch (Exception ex) {
+                MWLogger.errLog("Error in linkMegaMekC3Units");
+                MWLogger.errLog(ex);
+            }
+        }
+
+        // catch for some funky stuff
+        if ((c3Unit == null) || (c3Master == null)) {
+            MWLogger.errLog("Null Units c3Unit: " + c3Unit + " C3Master: " + c3Master);
+            return;
+        }
+
+        try {
+            CUnit masterUnit = (CUnit) army.getUnit(masterid);
+            // MWLogger.errLog("Master Unit:
+            // "+masterUnit.getModelName());
+            // MWLogger.errLog("Slave Unit:
+            // "+c3Unit.getModel());
+            if (!masterUnit.hasC3SlavesLinkedTo(army) &&
+                      masterUnit.hasBeenC3LinkedTo(army) &&
+                      ((masterUnit.getC3Level() == Unit.C3_MASTER) || (masterUnit.getC3Level() == Unit.C3_MMASTER))) {
+                // MWLogger.errLog("Unit:
+                // "+c3Master.getModel()+" id: "+c3Master.getExternalId());
+                if (c3Master.getC3MasterId() == Entity.NONE) {
+                    c3Master.setShutDown(false);
+                    c3Master.setC3Master(c3Master, false);
+                    client.sendUpdateEntity(c3Master);
+                }
+                /*
+                 * if ( c3Master.hasC3MM() )
+                 * MWLogger.errLog("hasC3MM"); else
+                 * MWLogger.errLog("!hasC3MM");
+                 */
+            } else if (c3Master.getC3MasterId() != Entity.NONE) {
+                c3Master.setShutDown(false);
+                c3Master.setC3Master(Entity.NONE, false);
+                client.sendUpdateEntity(c3Master);
+            }
+            // MWLogger.errLog("c3Unit: "+c3Unit.getModel()+"
+            // Master: "+c3Master.getModel());
+            c3Unit.setShutDown(false);
+            c3Unit.setC3Master(c3Master, false);
+            // MWLogger.errLog("c3Master Set to
+            // "+c3Unit.getC3MasterId()+" "+c3Unit.getC3NetId());
+            client.sendUpdateEntity(c3Unit);
+        } catch (Exception ex) {
+            MWLogger.errLog(ex);
+            MWLogger.errLog("Error in setting up C3Network");
+        }
+    }
+
+    public static java.util.Comparator<? super Object> stringComparator() {
+        return new java.util.Comparator<Object>() {
+            @Override
+            public int compare(Object o1, Object o2) {
+                String s1 = ((String) o1).toLowerCase();
+                String s2 = ((String) o2).toLowerCase();
+                return s1.compareTo(s2);
+            }
+        };
+    }
+
+    /*
+     * from megamek.client.CloseClientListener clientClosed() Thanks to MM for
+     * adding the listener. And to MMNet for the poorly documented code change.
+     */
+    @Override
+    public void clientClosed() {
+
+        PreferenceManager.getInstance().save();
+
+        if (bot != null) {
+            bot.die();
+            bot = null;
+        }
+
+        // client.die();
+        client = null;// explicit null of the MM client. Wasn't/isn't being
+        // GC'ed.
+        mwclient.closingGame(serverName);
+        System.gc();
+
     }
 
 }

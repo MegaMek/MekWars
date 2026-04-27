@@ -1,4 +1,4 @@
-package mekwars.common.gui;
+package mekwars.common.threads;
 
 import javax.swing.Icon;
 import javax.swing.JButton;

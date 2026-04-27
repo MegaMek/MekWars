@@ -14,7 +14,7 @@
  */
 
 
-package mekwars.client.gui;
+package mekwars.common.gui;
 
 import common.BMEquipment;
 import common.util.SpringLayoutHelper;
@@ -29,12 +29,9 @@ public class CBMPartsPanel extends javax.swing.JPanel {
      *
      */
     private static final long serialVersionUID = -5553918525846016147L;
-
-    client.MWClient mwclient;
-
-    long lastUpdate = -1;//update time for button
     public BlackMarketPartsModel BlackMarketInfo;
-
+    client.MWClient mwclient;
+    long lastUpdate = -1;//update time for button
     private javax.swing.JTable tblMarket = new javax.swing.JTable();
     private javax.swing.JScrollPane spMarket = new javax.swing.JScrollPane();
 
@@ -162,28 +159,6 @@ public class CBMPartsPanel extends javax.swing.JPanel {
         refresh();
     }
 
-    public void fireMarketChanged() {
-        //here's a problem MyBlackMarket has to be created somehow (by parsing BM or from Player data)
-        BlackMarketInfo.refreshModel();
-        tblMarket.setPreferredSize(new java.awt.Dimension(tblMarket.getWidth(),
-              tblMarket.getRowHeight() * (tblMarket.getRowCount())));
-        tblMarket.revalidate();
-    }
-
-    public void refresh() {
-        fireMarketChanged();
-    }
-
-    public BMEquipment getPartsAtRow(int row) {
-        bme = null;
-        String part = (String) tblMarket.getModel().getValueAt(row, BlackMarketPartsModel.INTERNALPART);
-
-        if (part != null) {
-            bme = theCampaign.getBlackMarketParts().get(part);
-        }
-        return bme;
-    }
-
     /**
      * Called from an action listener. Opens a dialo for input, checks the input, and places a bid with the server if
      * the bid is sufficient.
@@ -243,6 +218,16 @@ public class CBMPartsPanel extends javax.swing.JPanel {
         }
     }//end btnBuyPartsPerformed
 
+    public BMEquipment getPartsAtRow(int row) {
+        bme = null;
+        String part = (String) tblMarket.getModel().getValueAt(row, BlackMarketPartsModel.INTERNALPART);
+
+        if (part != null) {
+            bme = theCampaign.getBlackMarketParts().get(part);
+        }
+        return bme;
+    }
+
     public void resetButtonBar() {
 
         /*
@@ -256,6 +241,18 @@ public class CBMPartsPanel extends javax.swing.JPanel {
 
         pnlBuyBtns.validate();
         this.repaint();
+    }
+
+    public void refresh() {
+        fireMarketChanged();
+    }
+
+    public void fireMarketChanged() {
+        //here's a problem MyBlackMarket has to be created somehow (by parsing BM or from Player data)
+        BlackMarketInfo.refreshModel();
+        tblMarket.setPreferredSize(new java.awt.Dimension(tblMarket.getWidth(),
+              tblMarket.getRowHeight() * (tblMarket.getRowCount())));
+        tblMarket.revalidate();
     }
 
 }

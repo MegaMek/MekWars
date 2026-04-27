@@ -43,6 +43,7 @@ import mekwars.common.House;
 import mekwars.common.Influences;
 import mekwars.common.Planet;
 import mekwars.common.campaign.clientutils.protocol.IClient;
+import mekwars.common.gui.dialogs.PlanetSearchDialog;
 import mekwars.common.util.MMNetXStream;
 import mekwars.common.util.MWLogger;
 import mekwars.common.util.StringUtils;
@@ -58,106 +59,8 @@ public class InnerStellarMap extends JComponent
 
     @Serial
     private static final long serialVersionUID = 8655078955521790260L;
-
-    /**
-     * All configuration behaviour of InterStellarMap are saved here.
-     *
-     * @author Imi (immanuel.scholz@gmx.de)
-     */
-    static public final class InnerStellarMapConfig {
-        /**
-         * Whether to scale planet dots on zoom or not
-         */
-        int minDotSize = 2;
-        int maxDotSize = 25;
-        /**
-         * The scaling maximum dimension
-         */
-        int reverseScaleMax = 100;
-        /**
-         * The scaling minimum dimension
-         */
-        int reverseScaleMin = 2;
-        /**
-         * Threshold to not show influence anymore. 0 means show always
-         */
-        double showInfluenceThreshold = 0.0;
-        /**
-         * Threshold to not show unit factories anymore. 0 means show always
-         */
-        double showUnitFactoriesThreshold = 0.0;
-        /**
-         * Threshold to not show planet names. 0 means show always
-         */
-        double showPlanetNamesThreshold = 0.0;
-        /**
-         * brightness correction for colors. This is no gamma correction! Gamma correction brightens medium level colors
-         * more than extreme ones. 0 means no brightening.
-         */
-        double colorAdjustment = 0.5;
-        /**
-         * The maps background color
-         */
-        String backgroundColor = "#000000";
-
-        /**
-         * Various display options - Names, Control, Factories, Warehouses, Ranges, Changes
-         */
-        boolean[] display = new boolean[] { true, false, true, true, true, true, true, true };
-
-        /**
-         * The actual scale factor. 1.0 for default, higher means bigger.
-         */
-        double scale = 1.0;
-        /**
-         * The scrolling offset
-         */
-        Point offset = new Point();
-        /**
-         * The current selected Planet-id
-         */
-        int planetID;
-    }
-
-    /**
-     * The current configuration & filtration options.
-     */
-    InnerStellarMapConfig conf = new InnerStellarMapConfig();
-
-    private final CMapPanel mapPanel;
-
-    /**
-     * The main client to access
-     */
-    private final IClient client;
-
-    /**
-     * A cache for image icons. key=filename(String), value=ImageIcon
-     */
-    private static class IconProvider extends TreeMap<String, ImageIcon> {
-        /**
-         *
-         */
-        @Serial
-        private static final long serialVersionUID = 4594828039895948331L;
-
-        public ImageIcon get(String key) {
-            if (!containsKey(key)) {
-                put(key, new ImageIcon(key));
-            }
-            return super.get(key);
-        }
-    }
-
-    private final IconProvider iconCache = new IconProvider();
-
-    private Planet selectedPlanet = null;
-
-    ArrayList<ArrayList<Position>> overlayLines = new ArrayList<>();
-
     private static final String[] displayStr = { "Planet Names", "Planet Control", "Factories", "Warehouses",
                                                  "Attack Ranges", "Recent Changes", "Overlay", "Tooltips" };
-
     private static final int DISPLAY_NAMES = 0;
     private static final int DISPLAY_INFLUENCE = 1;
     private static final int DISPLAY_UNITS = 2;
@@ -166,22 +69,8 @@ public class InnerStellarMap extends JComponent
     private static final int DISPLAY_LAST_CHANGED = 5;
     private static final int DISPLAY_OVERLAY = 6;
     private static final int DISPLAY_TOOLTIPS = 7;
-
-    /**
-     * Various display options
-     *
-     * @see InnerStellarMapConfig
-     */
-    private final JCheckBoxMenuItem[] display = new JCheckBoxMenuItem[displayStr.length];
-
     private static final String[] filterStr = { "All", "", "Factories", "Facilities", "Faction", "Disputed",
                                                 "Contested" };
-
-    /**
-     * Map filtering options ; ALL, _FILLER_, Factories, Facilities, Disputed, Contested
-     */
-    boolean[] filterSettings = new boolean[] { true, false, true, true, true, true, true };
-
     private static final int FILTER_ALL = 0;
     private static final int FILTER_SEP = 1;
     private static final int FILTER_FACTORIES = 2;
@@ -189,19 +78,268 @@ public class InnerStellarMap extends JComponent
     private static final int FILTER_FACTION = 4;
     private static final int FILTER_DISPUTED = 5;
     private static final int FILTER_CONTESTED = 6;
-
+    private final CMapPanel mapPanel;
+    /**
+     * The main client to access
+     */
+    private final IClient client;
+    private final IconProvider iconCache = new IconProvider();
+    /**
+     * Various display options
+     *
+     * @see InnerStellarMapConfig
+     */
+    private final JCheckBoxMenuItem[] display = new JCheckBoxMenuItem[displayStr.length];
     private final JCheckBoxMenuItem[] filter = new JCheckBoxMenuItem[filterStr.length];
-
     /**
      * A data stucture to hold all planets marked as "changed" since last update. - see
      * common.CampaignData.decodeMutablePlanets()
      */
     private final Map<Integer, Influences> changesSinceLastRefresh;
-
+    /**
+     * The current configuration & filtration options.
+     */
+    InnerStellarMapConfig conf = new InnerStellarMapConfig();
+    ArrayList<ArrayList<Position>> overlayLines = new ArrayList<>();
+    /**
+     * Map filtering options ; ALL, _FILLER_, Factories, Facilities, Disputed, Contested
+     */
+    boolean[] filterSettings = new boolean[] { true, false, true, true, true, true, true };
+    java.awt.Point lastMousePos = null;
+    int mouseMod = 0;
+    private Planet selectedPlanet = null;
     /**
      * Used to indicate the blinking of a planet. If true, the planets are drawn white.
      */
     private boolean blinkPhase = false;
+    private java.net.URLClassLoader loader;
+
+    /**
+     * Constructs the ISMap.
+     *
+     * @param panel - The panel it belongs to.
+     */
+    InnerStellarMap(CMapPanel panel, IClient client, CMainFrame mainFrame) {
+        this.client = client;
+        setBackground(java.awt.Color.BLACK);
+        mapPanel = panel;
+        setOpaque(true);
+        addMouseListener(this);
+        addMouseMotionListener(this);
+        addMouseWheelListener(this);
+
+        MMNetXStream xml = new MMNetXStream(new DomDriver());
+        try {
+            java.io.File dir = new java.io.File(client.getCacheDir());
+            if (!dir.exists()) {
+                dir.mkdirs();
+            }
+            conf = (mekwars.common.gui.InnerStellarMap.InnerStellarMapConfig) xml.fromXML(new java.io.FileReader(client.getCacheDir() +
+                                                                                                                       "/mapconf.xml"));
+            if (conf.display.length != displayStr.length) {
+                throw new RuntimeException("not my file");
+            }
+        } catch (Throwable e) {
+            if (!(e instanceof java.io.FileNotFoundException)) {
+                MWLogger.errLog((Exception) e);
+            }
+            MWLogger.infoLog("could not read map config file. Will use defaults");
+            conf = new mekwars.common.gui.InnerStellarMap.InnerStellarMapConfig();
+        }
+
+        try {
+            parseOverlayFile();
+        } catch (Throwable e) {
+            if (!(e instanceof java.io.FileNotFoundException)) {
+                MWLogger.errLog((Exception) e);
+            }
+            MWLogger.infoLog("could not read map overlay file.");
+        }
+
+        for (int i = 0; i < displayStr.length; ++i) {
+            display[i] = new javax.swing.JCheckBoxMenuItem(displayStr[i], conf.display[i]);
+            display[i].addActionListener(this);
+        }
+
+        // read in map filter settings
+        java.util.StringTokenizer tokenizer = new java.util.StringTokenizer(this.client.getConfigParam("MAPFILTER1"),
+              "$");
+        int currFilter = FILTER_ALL;
+        while (tokenizer.hasMoreElements() || currFilter < filterStr.length) {
+
+            String nextToken = tokenizer.nextToken();
+
+            if (currFilter == FILTER_SEP) {
+                currFilter++;
+                continue;
+            }
+
+            if (nextToken != null) {
+                boolean filterState = Boolean.parseBoolean(nextToken);
+                filterSettings[currFilter] = filterState;
+                filter[currFilter] = new javax.swing.JCheckBoxMenuItem(filterStr[currFilter], filterState);
+                filter[currFilter].addActionListener(this);
+            }
+
+            // null. default to true and add.
+            else {
+                filterSettings[currFilter] = true;
+                filter[currFilter] = new javax.swing.JCheckBoxMenuItem(filterStr[currFilter], true);
+                filter[currFilter].addActionListener(this);
+            }
+
+            currFilter++;
+        }
+
+        mainFrame.addWindowListener(new java.awt.event.WindowAdapter() {
+            @Override
+            public void windowClosing(java.awt.event.WindowEvent evt) {
+                processTick();
+            }
+        });
+
+        changesSinceLastRefresh = client.getChangesSinceLastRefresh();
+        new Thread() {
+            @Override
+            public void run() {
+                while (true) {
+                    try {
+                        Thread.sleep(1000);
+                    } catch (InterruptedException e) {
+                    }
+                    blinkPhase = !blinkPhase;
+                    if (changesSinceLastRefresh.size() > 0) {
+                        mapPanel.repaint();
+                    }
+                }
+            }
+        }.start();
+
+        // restore previous zoom level
+        Double storedZoom = Double.parseDouble(client.getConfigParam("MAPZOOMLEVEL"));
+        if (storedZoom != null) {
+            double storedValue = storedZoom.doubleValue();
+            if (storedValue != 0) {
+                conf.scale = storedValue;
+            }
+        }
+
+        // restore previous offset
+        int storedXOffset = Integer.parseInt(client.getConfigParam("MAPXOFFSET"));
+        int storedYOffset = Integer.parseInt(client.getConfigParam("MAPYOFFSET"));
+        conf.offset = new java.awt.Point(storedXOffset, storedYOffset);
+
+        // restore previously selected planet
+        String storedPlanetName = client.getConfigParam("SELECTEDPLANET");
+        if (storedPlanetName != null && !storedPlanetName.trim().equals("")) {
+            // planet setting exists. lets see if the planet does ...
+            Planet currPlan = client.getData().getPlanetByName(storedPlanetName);
+            if (currPlan != null) {
+                this.activate(currPlan, false);
+            }
+        }
+
+    }
+
+    private void parseOverlayFile() throws Exception {
+        java.io.File file = new java.io.File("data/mapoverlay.txt");
+        java.io.Reader r = new java.io.BufferedReader(new java.io.FileReader(file));
+        java.io.StreamTokenizer st = new java.io.StreamTokenizer(r);
+        st.eolIsSignificant(true);
+        st.commentChar('#');
+        java.util.ArrayList<Position> line = new java.util.ArrayList<Position>();
+        Position position = null;
+        String color = client.getConfigParam("MAPOVERLAYCOLOR");
+        while (st.nextToken() != java.io.StreamTokenizer.TT_EOF) {
+            if (st.ttype == java.io.StreamTokenizer.TT_WORD && st.sval.equals("LINE") && line.size() > 0) {
+                overlayLines.add(line);
+                line = new java.util.ArrayList<Position>();
+            } else if (st.ttype == java.io.StreamTokenizer.TT_WORD && st.sval.startsWith("COLOR")) {
+                color = st.sval.substring("COLOR".length());
+            } else if (st.ttype == java.io.StreamTokenizer.TT_NUMBER) {
+                double x = st.nval;
+                if (st.nextToken() == java.io.StreamTokenizer.TT_NUMBER) {
+                    position = new Position(x, st.nval);
+                    position.setColor(color);
+                    line.add(position);
+                }
+                while (st.ttype != java.io.StreamTokenizer.TT_EOF && st.ttype != java.io.StreamTokenizer.TT_EOL) {
+                    st.nextToken();
+                }
+            }
+        }
+        if (line.size() > 0) {
+            overlayLines.add(line);
+        }
+    }
+
+    /**
+     * At each tick, save the config file... (I just needed a time to do this)
+     */
+    public void processTick() {
+        try {
+            new MMNetXStream().toXML(conf, new java.io.FileWriter(client.getCacheDir() + "/mapconf.xml"));
+        } catch (java.io.IOException e1) {
+            MWLogger.errLog(e1);
+        }
+    }
+
+    /**
+     * Activate and Center
+     */
+    public void activate(Planet p, boolean center) {
+
+        if (p == null) {
+            return;
+        }
+
+        // activate normally
+        this.activate(p);
+
+        // then center on the world
+        if (center) {
+            conf.offset.setLocation(-p.getPosition().x * conf.scale, p.getPosition().y * conf.scale);
+        }
+
+    }// end activate(p,center)
+
+    /**
+     * Activate a specfic planet
+     *
+     * @param p This planet becomes the selected one.
+     */
+    public void activate(Planet p) {
+
+        if (p == null) {
+            return;
+        }
+
+        if (mapPanel.getPPanel() != null && mapPanel.getPPanel().getPlanet() != p) {
+
+            mapPanel.getPPanel().update(p);
+            conf.planetID = p.getId();
+            mapPanel.repaint();
+
+            saveMapSelection(p);
+        }
+    }
+
+    /**
+     * Method which saves current map properties. Called when a new planet is selected. The settings are restored when a
+     * client is loaded, preserving map selections between user sessions.
+     */
+    public void saveMapSelection(Planet p) {
+
+        // save the config
+        client.getConfig().setParam("SELECTEDPLANET", p.getName());
+        client.getConfig().setParam("MAPZOOMLEVEL", "" + conf.scale);
+        client.getConfig().setParam("MAPYOFFSET", "" + (int) conf.offset.getY());
+        client.getConfig().setParam("MAPXOFFSET", "" + (int) conf.offset.getX());
+
+        client.getConfig().saveConfig();
+        client.setConfig();
+
+    }
 
     /**
      * Method which returns the panel underlying the map. This is used by the AdminMapPopupMenu class in admin package.
@@ -472,166 +610,6 @@ public class InnerStellarMap extends JComponent
     }
 
     /**
-     * Constructs the ISMap.
-     *
-     * @param panel - The panel it belongs to.
-     */
-    InnerStellarMap(mekwars.client.gui.CMapPanel panel, client.MWClient client,
-          mekwars.client.gui.CMainFrame mainFrame) {
-        this.client = client;
-        setBackground(java.awt.Color.BLACK);
-        mapPanel = panel;
-        setOpaque(true);
-        addMouseListener(this);
-        addMouseMotionListener(this);
-        addMouseWheelListener(this);
-
-        MMNetXStream xml = new MMNetXStream(new DomDriver());
-        try {
-            java.io.File dir = new java.io.File(client.getCacheDir());
-            if (!dir.exists()) {
-                dir.mkdirs();
-            }
-            conf = (mekwars.common.gui.InnerStellarMap.InnerStellarMapConfig) xml.fromXML(new java.io.FileReader(client.getCacheDir() +
-                                                                                                                       "/mapconf.xml"));
-            if (conf.display.length != displayStr.length) {
-                throw new RuntimeException("not my file");
-            }
-        } catch (Throwable e) {
-            if (!(e instanceof java.io.FileNotFoundException)) {
-                MWLogger.errLog((Exception) e);
-            }
-            MWLogger.infoLog("could not read map config file. Will use defaults");
-            conf = new mekwars.common.gui.InnerStellarMap.InnerStellarMapConfig();
-        }
-
-        try {
-            parseOverlayFile();
-        } catch (Throwable e) {
-            if (!(e instanceof java.io.FileNotFoundException)) {
-                MWLogger.errLog((Exception) e);
-            }
-            MWLogger.infoLog("could not read map overlay file.");
-        }
-
-        for (int i = 0; i < displayStr.length; ++i) {
-            display[i] = new javax.swing.JCheckBoxMenuItem(displayStr[i], conf.display[i]);
-            display[i].addActionListener(this);
-        }
-
-        // read in map filter settings
-        java.util.StringTokenizer tokenizer = new java.util.StringTokenizer(this.client.getConfigParam("MAPFILTER1"),
-              "$");
-        int currFilter = FILTER_ALL;
-        while (tokenizer.hasMoreElements() || currFilter < filterStr.length) {
-
-            String nextToken = tokenizer.nextToken();
-
-            if (currFilter == FILTER_SEP) {
-                currFilter++;
-                continue;
-            }
-
-            if (nextToken != null) {
-                boolean filterState = Boolean.parseBoolean(nextToken);
-                filterSettings[currFilter] = filterState;
-                filter[currFilter] = new javax.swing.JCheckBoxMenuItem(filterStr[currFilter], filterState);
-                filter[currFilter].addActionListener(this);
-            }
-
-            // null. default to true and add.
-            else {
-                filterSettings[currFilter] = true;
-                filter[currFilter] = new javax.swing.JCheckBoxMenuItem(filterStr[currFilter], true);
-                filter[currFilter].addActionListener(this);
-            }
-
-            currFilter++;
-        }
-
-        mainFrame.addWindowListener(new java.awt.event.WindowAdapter() {
-            @Override
-            public void windowClosing(java.awt.event.WindowEvent evt) {
-                processTick();
-            }
-        });
-
-        changesSinceLastRefresh = client.getChangesSinceLastRefresh();
-        new Thread() {
-            @Override
-            public void run() {
-                while (true) {
-                    try {
-                        Thread.sleep(1000);
-                    } catch (InterruptedException e) {
-                    }
-                    blinkPhase = !blinkPhase;
-                    if (changesSinceLastRefresh.size() > 0) {
-                        mapPanel.repaint();
-                    }
-                }
-            }
-        }.start();
-
-        // restore previous zoom level
-        Double storedZoom = Double.parseDouble(client.getConfigParam("MAPZOOMLEVEL"));
-        if (storedZoom != null) {
-            double storedValue = storedZoom.doubleValue();
-            if (storedValue != 0) {
-                conf.scale = storedValue;
-            }
-        }
-
-        // restore previous offset
-        int storedXOffset = Integer.parseInt(client.getConfigParam("MAPXOFFSET"));
-        int storedYOffset = Integer.parseInt(client.getConfigParam("MAPYOFFSET"));
-        conf.offset = new java.awt.Point(storedXOffset, storedYOffset);
-
-        // restore previously selected planet
-        String storedPlanetName = client.getConfigParam("SELECTEDPLANET");
-        if (storedPlanetName != null && !storedPlanetName.trim().equals("")) {
-            // planet setting exists. lets see if the planet does ...
-            Planet currPlan = client.getData().getPlanetByName(storedPlanetName);
-            if (currPlan != null) {
-                this.activate(currPlan, false);
-            }
-        }
-
-    }
-
-    private void parseOverlayFile() throws Exception {
-        java.io.File file = new java.io.File("data/mapoverlay.txt");
-        java.io.Reader r = new java.io.BufferedReader(new java.io.FileReader(file));
-        java.io.StreamTokenizer st = new java.io.StreamTokenizer(r);
-        st.eolIsSignificant(true);
-        st.commentChar('#');
-        java.util.ArrayList<Position> line = new java.util.ArrayList<Position>();
-        Position position = null;
-        String color = client.getConfigParam("MAPOVERLAYCOLOR");
-        while (st.nextToken() != java.io.StreamTokenizer.TT_EOF) {
-            if (st.ttype == java.io.StreamTokenizer.TT_WORD && st.sval.equals("LINE") && line.size() > 0) {
-                overlayLines.add(line);
-                line = new java.util.ArrayList<Position>();
-            } else if (st.ttype == java.io.StreamTokenizer.TT_WORD && st.sval.startsWith("COLOR")) {
-                color = st.sval.substring("COLOR".length());
-            } else if (st.ttype == java.io.StreamTokenizer.TT_NUMBER) {
-                double x = st.nval;
-                if (st.nextToken() == java.io.StreamTokenizer.TT_NUMBER) {
-                    position = new Position(x, st.nval);
-                    position.setColor(color);
-                    line.add(position);
-                }
-                while (st.ttype != java.io.StreamTokenizer.TT_EOF && st.ttype != java.io.StreamTokenizer.TT_EOL) {
-                    st.nextToken();
-                }
-            }
-        }
-        if (line.size() > 0) {
-            overlayLines.add(line);
-        }
-    }
-
-    /**
      * Calculate the nearest neighbour for the given point If anyone has a better algorithm than this stupid kind of
      * shit, please, feel free to exchange my brute force thing... An good idea would be an voronoi diagram and the
      * sweep algorithm from Steven Fortune.
@@ -653,22 +631,114 @@ public class InnerStellarMap extends JComponent
     }
 
     /**
+     * Finds the best factory on a planet
+     *
+     * @author Torren
+     * @param p -
+     *            planet to get fac on
+     * @return 2 character string of factory icon. i.e. am for assault mek factory.
+     */
+    /*
+     * private String getBestFactory(Planet p){ int type = Integer.MAX_VALUE; int weight = Integer.MIN_VALUE; int tempType = 0; int tempWeight = 0; String id =""; Iterator i = p.getUnitFactories().iterator(); //No factories on this planet. if ( !i.hasNext() ) return ""; while (i.hasNext()) { UnitFactory uf = (UnitFactory)i.next(); tempType = uf.getBestTypeProducable(); tempWeight = uf.getWeightclass(); if ( tempType <= type && tempWeight > weight ) { weight = tempWeight; type = tempType; } //Found an Assault Mek Factory not going to get any better then that! if ( type == Unit.MEK && weight == Unit.ASSAULT) return ("am"); } //no factories redundent check. if ( type == Integer.MAX_VALUE && weight == Integer.MIN_VALUE) return ""; switch ( weight ){ case Unit.LIGHT: id="l";break; case Unit.MEDIUM: id="m";break; case Unit.HEAVY: id="h";break; case Unit.ASSAULT: id="a";break; } switch ( type ){
+     * case Unit.MEK: id += "m";break; case Unit.VEHICLE: id += "v";break; case Unit.INFANTRY: id += "i";break; } return id; }
+     */
+
+    /**
      * Computes the map-coordinate from the screen koordinate system
      */
     private double scr2mapX(int x) {
         return Math.round((x - getWidth() / 2 - conf.offset.x) / conf.scale);
     }
 
-    private int map2scrX(double x) {
-        return (int) Math.round(getWidth() / 2 + x * conf.scale) + conf.offset.x;
-    }
-
     private double scr2mapY(int y) {
         return Math.round((getHeight() / 2 - (y - conf.offset.y)) / conf.scale);
     }
 
-    private int map2scrY(double y) {
-        return (int) Math.round(getHeight() / 2 - y * conf.scale) + conf.offset.y;
+    /*
+     * Called from action listeners, or stand alone from a button on a non-map panel.
+     */
+    public void createPlanetSearchDialog() {
+        PlanetSearchDialog searchDialog = new PlanetSearchDialog(this, client);
+        searchDialog.setVisible(true);
+    }
+
+    /**
+     * Utility method which checks the visibility of a given planet.
+     *
+     * @param p
+     *
+     * @return
+     */
+    private boolean planetIsVisible(Planet p) {
+
+        if (null == p) {
+            return false;
+        }
+
+        // first, make sure its not "All"
+        if (filterSettings[FILTER_ALL]) {
+            return true;
+        }
+
+        /*
+         * Not showing all, so do check all relevant server options and determine whether this particular world should be visible @ this time.
+         */
+        if (filterSettings[FILTER_FACTORIES] && p.getFactoryCount() > 0) {
+            return true;
+        }
+
+        if (filterSettings[FILTER_FACILITIES] && p.getBaysProvided() > 0) {
+            return true;
+        }
+
+        if (filterSettings[FILTER_DISPUTED]) {
+
+            Integer houseID = p.getInfluence().getOwner();
+
+            // no owner means disputed
+            if (houseID == null) {
+                return true;
+            }
+
+            // there's a high ID, but it doesn't own enough of the world to be undisputed
+            if (p.getInfluence().getInfluence(houseID) < client.getMinPlanetOwnerShip(p)) {
+                return true;
+            }
+        }
+
+        if (filterSettings[FILTER_CONTESTED] && p.getInfluence().getHouses().size() > 1) {
+            return true;
+        }
+
+        if (filterSettings[FILTER_FACTION] &&
+                  p.getInfluence().getInfluence(client.getPlayer().getMyHouse().getId()) > 0) {
+            return true;
+        }
+
+        // no qualifiers. we shouldn't see the world.
+        return false;
+    }
+
+    public void mousePressed(java.awt.event.MouseEvent e) {
+        mouseMod = e.getButton();
+        if (e.getButton() != java.awt.event.MouseEvent.BUTTON1) {
+            return;
+        }
+        selectedPlanet = nearestNeighbour(scr2mapX(e.getX()), scr2mapY(e.getY()));
+        activate(selectedPlanet);
+    }
+
+    public void mouseReleased(java.awt.event.MouseEvent e) {
+        mouseMod = 0;
+    }
+
+    public void mouseEntered(java.awt.event.MouseEvent e) {
+        // mp.requestFocus();
+        lastMousePos = new java.awt.Point(e.getX(), e.getY());
+    }
+
+    public void mouseExited(java.awt.event.MouseEvent e) {
+        lastMousePos = null;
     }
 
     /**
@@ -894,18 +964,20 @@ public class InnerStellarMap extends JComponent
 
     }
 
+    private int map2scrX(double x) {
+        return (int) Math.round(getWidth() / 2 + x * conf.scale) + conf.offset.x;
+    }
+
+    private int map2scrY(double y) {
+        return (int) Math.round(getHeight() / 2 - y * conf.scale) + conf.offset.y;
+    }
+
     /**
-     * Finds the best factory on a planet
-     *
-     * @author Torren
-     * @param p -
-     *            planet to get fac on
-     * @return 2 character string of factory icon. i.e. am for assault mek factory.
+     * Adjust the color according to the current colorAdjustment...
      */
-    /*
-     * private String getBestFactory(Planet p){ int type = Integer.MAX_VALUE; int weight = Integer.MIN_VALUE; int tempType = 0; int tempWeight = 0; String id =""; Iterator i = p.getUnitFactories().iterator(); //No factories on this planet. if ( !i.hasNext() ) return ""; while (i.hasNext()) { UnitFactory uf = (UnitFactory)i.next(); tempType = uf.getBestTypeProducable(); tempWeight = uf.getWeightclass(); if ( tempType <= type && tempWeight > weight ) { weight = tempWeight; type = tempType; } //Found an Assault Mek Factory not going to get any better then that! if ( type == Unit.MEK && weight == Unit.ASSAULT) return ("am"); } //no factories redundent check. if ( type == Integer.MAX_VALUE && weight == Integer.MIN_VALUE) return ""; switch ( weight ){ case Unit.LIGHT: id="l";break; case Unit.MEDIUM: id="m";break; case Unit.HEAVY: id="h";break; case Unit.ASSAULT: id="a";break; } switch ( type ){
-     * case Unit.MEK: id += "m";break; case Unit.VEHICLE: id += "v";break; case Unit.INFANTRY: id += "i";break; } return id; }
-     */
+    public java.awt.Color adjustColor(java.awt.Color c) {
+        return new java.awt.Color(adj(c.getRed()), adj(c.getGreen()), adj(c.getBlue()));
+    }
 
     /**
      * What we NOT want, is to wash out the color tone by adding simple gray to the color. I preferre the code from
@@ -925,81 +997,6 @@ public class InnerStellarMap extends JComponent
         return Math.min((int) (r / (1 - conf.colorAdjustment)), 255);
     }
 
-    /**
-     * Adjust the color according to the current colorAdjustment...
-     */
-    public java.awt.Color adjustColor(java.awt.Color c) {
-        return new java.awt.Color(adj(c.getRed()), adj(c.getGreen()), adj(c.getBlue()));
-    }
-
-    /**
-     * Activate a specfic planet
-     *
-     * @param p This planet becomes the selected one.
-     */
-    public void activate(Planet p) {
-
-        if (p == null) {
-            return;
-        }
-
-        if (mapPanel.getPPanel() != null && mapPanel.getPPanel().getPlanet() != p) {
-
-            mapPanel.getPPanel().update(p);
-            conf.planetID = p.getId();
-            mapPanel.repaint();
-
-            saveMapSelection(p);
-        }
-    }
-
-    /**
-     * Activate and Center
-     */
-    public void activate(Planet p, boolean center) {
-
-        if (p == null) {
-            return;
-        }
-
-        // activate normally
-        this.activate(p);
-
-        // then center on the world
-        if (center) {
-            conf.offset.setLocation(-p.getPosition().x * conf.scale, p.getPosition().y * conf.scale);
-        }
-
-    }// end activate(p,center)
-
-    public void mouseEntered(java.awt.event.MouseEvent e) {
-        // mp.requestFocus();
-        lastMousePos = new java.awt.Point(e.getX(), e.getY());
-    }
-
-    public void mouseExited(java.awt.event.MouseEvent e) {
-        lastMousePos = null;
-    }
-
-    public void mousePressed(java.awt.event.MouseEvent e) {
-        mouseMod = e.getButton();
-        if (e.getButton() != java.awt.event.MouseEvent.BUTTON1) {
-            return;
-        }
-        selectedPlanet = nearestNeighbour(scr2mapX(e.getX()), scr2mapY(e.getY()));
-        activate(selectedPlanet);
-    }
-
-    public void mouseReleased(java.awt.event.MouseEvent e) {
-        mouseMod = 0;
-    }
-
-    java.awt.Point lastMousePos = null;
-
-    int mouseMod = 0;
-
-    private java.net.URLClassLoader loader;
-
     public void mouseDragged(java.awt.event.MouseEvent e) {
         if (mouseMod != java.awt.event.MouseEvent.BUTTON3) {
             return;
@@ -1009,28 +1006,6 @@ public class InnerStellarMap extends JComponent
             conf.offset.y -= lastMousePos.y - e.getY();
         }
         mouseMoved(e);
-        mapPanel.repaint();
-    }
-
-    /** Handle the key pressed event from the text field. */
-    public void keyPressed(java.awt.event.KeyEvent e) {
-        int keyCode = e.getKeyCode();
-
-        if (keyCode == 37)// left arrow
-        {
-            conf.offset.y -= conf.scale;
-        } else if (keyCode == 38) // uparrow
-        {
-            conf.offset.x -= conf.scale;
-        } else if (keyCode == 39)// right arrow
-        {
-            conf.offset.y += conf.scale;
-        } else if (keyCode == 40)// down arrow
-        {
-            conf.offset.x += conf.scale;
-        } else {
-            return;
-        }
         mapPanel.repaint();
     }
 
@@ -1077,6 +1052,28 @@ public class InnerStellarMap extends JComponent
         } else {
             setToolTipText(null);
         }
+    }
+
+    /** Handle the key pressed event from the text field. */
+    public void keyPressed(java.awt.event.KeyEvent e) {
+        int keyCode = e.getKeyCode();
+
+        if (keyCode == 37)// left arrow
+        {
+            conf.offset.y -= conf.scale;
+        } else if (keyCode == 38) // uparrow
+        {
+            conf.offset.x -= conf.scale;
+        } else if (keyCode == 39)// right arrow
+        {
+            conf.offset.y += conf.scale;
+        } else if (keyCode == 40)// down arrow
+        {
+            conf.offset.x += conf.scale;
+        } else {
+            return;
+        }
+        mapPanel.repaint();
     }
 
     public void mouseWheelMoved(java.awt.event.MouseWheelEvent e) {
@@ -1152,17 +1149,6 @@ public class InnerStellarMap extends JComponent
     }
 
     /**
-     * At each tick, save the config file... (I just needed a time to do this)
-     */
-    public void processTick() {
-        try {
-            new MMNetXStream().toXML(conf, new java.io.FileWriter(client.getCacheDir() + "/mapconf.xml"));
-        } catch (java.io.IOException e1) {
-            MWLogger.errLog(e1);
-        }
-    }
-
-    /**
      * Solves events of data fetches by adding the changes to the current change set.
      */
     public void dataFetched(java.util.Map<Integer, Influences> changes) {
@@ -1190,86 +1176,82 @@ public class InnerStellarMap extends JComponent
         return changesSinceLastRefresh;
     }
 
-    /*
-     * Called from action listeners, or stand alone from a button on a non-map panel.
-     */
-    public void createPlanetSearchDialog() {
-        PlanetSearchDialog searchDialog = new PlanetSearchDialog(this, client);
-        searchDialog.setVisible(true);
-    }
-
     /**
-     * Method which saves current map properties. Called when a new planet is selected. The settings are restored when a
-     * client is loaded, preserving map selections between user sessions.
-     */
-    public void saveMapSelection(Planet p) {
-
-        // save the config
-        client.getConfig().setParam("SELECTEDPLANET", p.getName());
-        client.getConfig().setParam("MAPZOOMLEVEL", "" + conf.scale);
-        client.getConfig().setParam("MAPYOFFSET", "" + (int) conf.offset.getY());
-        client.getConfig().setParam("MAPXOFFSET", "" + (int) conf.offset.getX());
-
-        client.getConfig().saveConfig();
-        client.setConfig();
-
-    }
-
-    /**
-     * Utility method which checks the visibility of a given planet.
+     * All configuration behaviour of InterStellarMap are saved here.
      *
-     * @param p
-     *
-     * @return
+     * @author Imi (immanuel.scholz@gmx.de)
      */
-    private boolean planetIsVisible(Planet p) {
-
-        if (null == p) {
-            return false;
-        }
-
-        // first, make sure its not "All"
-        if (filterSettings[FILTER_ALL]) {
-            return true;
-        }
-
-        /*
-         * Not showing all, so do check all relevant server options and determine whether this particular world should be visible @ this time.
+    static public final class InnerStellarMapConfig {
+        /**
+         * Whether to scale planet dots on zoom or not
          */
-        if (filterSettings[FILTER_FACTORIES] && p.getFactoryCount() > 0) {
-            return true;
-        }
+        int minDotSize = 2;
+        int maxDotSize = 25;
+        /**
+         * The scaling maximum dimension
+         */
+        int reverseScaleMax = 100;
+        /**
+         * The scaling minimum dimension
+         */
+        int reverseScaleMin = 2;
+        /**
+         * Threshold to not show influence anymore. 0 means show always
+         */
+        double showInfluenceThreshold = 0.0;
+        /**
+         * Threshold to not show unit factories anymore. 0 means show always
+         */
+        double showUnitFactoriesThreshold = 0.0;
+        /**
+         * Threshold to not show planet names. 0 means show always
+         */
+        double showPlanetNamesThreshold = 0.0;
+        /**
+         * brightness correction for colors. This is no gamma correction! Gamma correction brightens medium level colors
+         * more than extreme ones. 0 means no brightening.
+         */
+        double colorAdjustment = 0.5;
+        /**
+         * The maps background color
+         */
+        String backgroundColor = "#000000";
 
-        if (filterSettings[FILTER_FACILITIES] && p.getBaysProvided() > 0) {
-            return true;
-        }
+        /**
+         * Various display options - Names, Control, Factories, Warehouses, Ranges, Changes
+         */
+        boolean[] display = new boolean[] { true, false, true, true, true, true, true, true };
 
-        if (filterSettings[FILTER_DISPUTED]) {
+        /**
+         * The actual scale factor. 1.0 for default, higher means bigger.
+         */
+        double scale = 1.0;
+        /**
+         * The scrolling offset
+         */
+        Point offset = new Point();
+        /**
+         * The current selected Planet-id
+         */
+        int planetID;
+    }
 
-            Integer houseID = p.getInfluence().getOwner();
+    /**
+     * A cache for image icons. key=filename(String), value=ImageIcon
+     */
+    private static class IconProvider extends TreeMap<String, ImageIcon> {
+        /**
+         *
+         */
+        @Serial
+        private static final long serialVersionUID = 4594828039895948331L;
 
-            // no owner means disputed
-            if (houseID == null) {
-                return true;
+        public ImageIcon get(String key) {
+            if (!containsKey(key)) {
+                put(key, new ImageIcon(key));
             }
-
-            // there's a high ID, but it doesn't own enough of the world to be undisputed
-            if (p.getInfluence().getInfluence(houseID) < client.getMinPlanetOwnerShip(p)) {
-                return true;
-            }
+            return super.get(key);
         }
-
-        if (filterSettings[FILTER_CONTESTED] && p.getInfluence().getHouses().size() > 1) {
-            return true;
-        }
-
-        if (filterSettings[FILTER_FACTION] &&
-                  p.getInfluence().getInfluence(client.getPlayer().getMyHouse().getId()) > 0) {
-            return true;
-        }
-
-        // no qualifiers. we shouldn't see the world.
-        return false;
     }
 
 }

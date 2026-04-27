@@ -17,15 +17,17 @@
 
 package mekwars.client.gui;
 
-import common.Planet;
-import common.util.MWLogger;
+import mekwars.client.MWClient;
+import mekwars.common.Planet;
+import mekwars.common.gui.InnerStellarMap;
+import mekwars.common.util.MWLogger;
 
 class MMNetHyperLinkListener implements javax.swing.event.HyperlinkListener {
 
-    client.MWClient mwclient;
     protected boolean isHovering = false;
     protected String Tooltip = null;
-    protected CHSPanel HSPanel = null;
+    protected mekwars.common.gui.CHSPanel HSPanel = null;
+    MWClient mwclient;
 
     /*
      * Construct which takes only MWClient
@@ -38,7 +40,7 @@ class MMNetHyperLinkListener implements javax.swing.event.HyperlinkListener {
         mwclient = f;
     }
 
-    public MMNetHyperLinkListener(client.MWClient f, CHSPanel p) {
+    public MMNetHyperLinkListener(client.MWClient f, mekwars.common.gui.CHSPanel p) {
         mwclient = f;
         HSPanel = p;
     }
@@ -186,7 +188,7 @@ class MMNetHyperLinkListener implements javax.swing.event.HyperlinkListener {
                         mwclient.getSMT().removeWorkOrder(tech, position);
 
                     } else {
-                        Browser.displayURL(e.getURL().toExternalForm());
+                        mekwars.common.gui.Browser.displayURL(e.getURL().toExternalForm());
                     }
                 } catch (Throwable t) {
                     MWLogger.errLog((Exception) t);

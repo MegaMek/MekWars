@@ -17,210 +17,197 @@
 
 package mekwars.common.gui;
 
-import client.gui.dialog.*;
-import client.gui.dialog.buildtableviewer.BuildTableViewer;
-import common.House;
-import common.Unit;
-import common.campaign.pilot.Pilot;
-import common.util.MWLogger;
-import common.util.StringUtils;
-import megamek.client.ui.swing.UnitLoadingDialog;
-import mekwars.client.gui.sounds.MenuPopupSound;
-import mekwars.client.gui.sounds.MenuSound;
+import java.awt.BorderLayout;
+import java.awt.event.WindowAdapter;
+import java.io.File;
+import java.io.Serial;
+import java.util.Objects;
+
+import javax.swing.*;
+
+import megamek.client.ui.dialogs.UnitLoadingDialog;
+import megamek.common.equipment.AmmoType;
+import mekwars.common.House;
+import mekwars.common.Unit;
+import mekwars.common.campaign.CArmy;
+import mekwars.common.campaign.CCampaign;
+import mekwars.common.campaign.CPlayer;
+import mekwars.common.campaign.CUnit;
+import mekwars.common.campaign.CUser;
+import mekwars.common.campaign.clientutils.protocol.IClient;
+import mekwars.common.campaign.pilot.Pilot;
+import mekwars.common.gui.dialogs.*;
+import mekwars.common.gui.dialogs.buildtableviewer.BuildTableViewer;
+import mekwars.common.sounds.MenuPopupSound;
+import mekwars.common.sounds.MenuSound;
+import mekwars.common.threads.ClientThread;
+import mekwars.common.util.MWLogger;
+import mekwars.common.util.StringUtils;
 
 //import client.gui.dialog.TableViewerDialog;
 
-public class CMainFrame extends javax.swing.JFrame {
+public class CMainFrame extends JFrame {
     /**
      *
      */
+    @Serial
     private static final long serialVersionUID = -1198882220815512476L;
-
-    javax.swing.JPanel contentPane;
-
-    javax.swing.JToolBar ToolBar = new javax.swing.JToolBar();
-
-    javax.swing.JMenuBar jMenuBar1 = new javax.swing.JMenuBar();
-
+    private final MenuSound sound;
+    private final MenuPopupSound popupSound;
+    public IClient client;
+    JPanel contentPane;
+    JMenuBar jMenuBar1 = new JMenuBar();
     // FILE Menu
-    javax.swing.JMenu jMenuFile = new javax.swing.JMenu();
-    javax.swing.JMenuItem jMenuFileConnect = new javax.swing.JMenuItem();
-    javax.swing.JMenuItem jMenuFileDisconnect = new javax.swing.JMenuItem();
-    javax.swing.JMenuItem jMenuFileRegister = new javax.swing.JMenuItem();
-    javax.swing.JMenuItem jMenuFileMail = new javax.swing.JMenuItem();
-    javax.swing.JMenuItem jMenuFileLastOnline = new javax.swing.JMenuItem();
-    javax.swing.JMenuItem jMenuFileExit = new javax.swing.JMenuItem();
-    javax.swing.JMenuItem jMenuFileConfig = new javax.swing.JMenuItem();
+    JMenu jMenuFile = new JMenu();
+    JMenuItem jMenuFileConnect = new JMenuItem();
+    JMenuItem jMenuFileDisconnect = new JMenuItem();
+    JMenuItem jMenuFileRegister = new JMenuItem();
+    JMenuItem jMenuFileMail = new JMenuItem();
+    JMenuItem jMenuFileLastOnline = new JMenuItem();
+    JMenuItem jMenuFileExit = new JMenuItem();
+    JMenuItem jMenuFileConfig = new JMenuItem();
 
     // CAMPAIGN Menu
-    javax.swing.JMenu jMenuCampaign = new javax.swing.JMenu();
-
-    javax.swing.JMenu jMenuCampaignSubStatus = new javax.swing.JMenu();// submenu in Campaign
-    javax.swing.JMenu jMenuCampaignSubTechs = new javax.swing.JMenu();
-    javax.swing.JMenu jMenuCampaignSubBays = new javax.swing.JMenu();
-    javax.swing.JMenu jMenuCampaignSubTransfer = new javax.swing.JMenu();
-    javax.swing.JMenu jMenuCampaignSubAttack = new javax.swing.JMenu();
-    javax.swing.JMenu jMenuCampaignSubMerc = new javax.swing.JMenu();
-    javax.swing.JMenu jMenuCampaignSubOther = new javax.swing.JMenu();
-    javax.swing.JMenu jMenuCampaignPersonnelTechSubMenu = new javax.swing.JMenu("Techs");
-    javax.swing.JMenu jMenuCampaignPersonnelPilotsSubMenu = new javax.swing.JMenu("Pilots");
-
-    javax.swing.JMenuItem jMenuCampaignMyStatus = new javax.swing.JMenuItem();
-
-    javax.swing.JMenuItem jMenuCampaignLogin = new javax.swing.JMenuItem();
-    javax.swing.JMenuItem jMenuCampaignActivate = new javax.swing.JMenuItem();
-    javax.swing.JMenuItem jMenuCampaignDeactivate = new javax.swing.JMenuItem();
-    javax.swing.JMenuItem jMenuCampaignLogout = new javax.swing.JMenuItem();
-
-    javax.swing.JMenuItem jMenuCampaignPlayers = new javax.swing.JMenuItem();
-    javax.swing.JMenuItem jMenuCampaignISStatus = new javax.swing.JMenuItem();
-    javax.swing.JMenuItem jMenuCampaignHouses = new javax.swing.JMenuItem();
-    javax.swing.JMenuItem jMenuCampaignFactionStatus = new javax.swing.JMenuItem();
-
-    javax.swing.JMenuItem jMenuCampaignHouseStatus = new javax.swing.JMenuItem();
-    javax.swing.JMenuItem jMenuCampaignCheckAttack = new javax.swing.JMenuItem();
-    javax.swing.JMenuItem jMenuCampaignRange = new javax.swing.JMenuItem();
-    javax.swing.JMenuItem jMenuFindContestedPlanets = new javax.swing.JMenuItem(); //BarukKhazad 20151129
-
-    javax.swing.JMenuItem jMenuCampaignTransferUnit = new javax.swing.JMenuItem();
-    javax.swing.JMenuItem jMenuCampaignTransferMoney = new javax.swing.JMenuItem();
-    javax.swing.JMenuItem jMenuCampaignTransferPilot = new javax.swing.JMenuItem();
-
-    javax.swing.JMenuItem jMenuCampaignLogo = new javax.swing.JMenuItem();
-    javax.swing.JMenuItem jMenuCampaignPersonalPilotQueue = new javax.swing.JMenuItem();
-    javax.swing.JMenuItem jMenuCampaignDonatePersonalPilot = new javax.swing.JMenuItem();
-    javax.swing.JMenuItem jMenuCampaignDirectSell = new javax.swing.JMenuItem();
-    javax.swing.JMenuItem jMenuCampaignDefect = new javax.swing.JMenuItem();
-    javax.swing.JMenuItem jMenuCampaignSelfPromote = new javax.swing.JMenuItem(); //@salient
-    javax.swing.JMenuItem jMenuCampaignReportStatusMC = new javax.swing.JMenuItem(); //@salient
-    javax.swing.JMenuItem jMenuCampaignRewardPoints = new javax.swing.JMenuItem();
-    javax.swing.JMenuItem jMenuCampaignInfluencePoints = new javax.swing.JMenuItem();
-    javax.swing.JMenuItem jMenuCampaignPartsCache = new javax.swing.JMenuItem();
-
-    javax.swing.JMenuItem jMenuSubCampaignFireTechs = new javax.swing.JMenuItem();
-    javax.swing.JMenuItem jMenuSubCampaignHireTechs = new javax.swing.JMenuItem();
-
-    javax.swing.JMenuItem jMenuSubCampaignSellBays = new javax.swing.JMenuItem();
-    javax.swing.JMenuItem jMenuSubCampaignBuyBays = new javax.swing.JMenuItem();
-
-    javax.swing.JMenuItem jMenuCampaignBuyPilots = new javax.swing.JMenuItem();
-
-    javax.swing.JMenuItem jMenuMercStatus = new javax.swing.JMenuItem();
-    javax.swing.JMenuItem jMenuMercUnemployed = new javax.swing.JMenuItem();
-    javax.swing.JMenuItem jMenuMercContracted = new javax.swing.JMenuItem();
-    javax.swing.JMenuItem jMenuMercOfferContract = new javax.swing.JMenuItem();
+    JMenu jMenuCampaign = new JMenu();
+    JMenu jMenuCampaignSubStatus = new JMenu();// submenu in Campaign
+    JMenu jMenuCampaignSubTechs = new JMenu();
+    JMenu jMenuCampaignSubBays = new JMenu();
+    JMenu jMenuCampaignSubTransfer = new JMenu();
+    JMenu jMenuCampaignSubAttack = new JMenu();
+    JMenu jMenuCampaignSubMerc = new JMenu();
+    JMenu jMenuCampaignSubOther = new JMenu();
+    JMenu jMenuCampaignPersonnelTechSubMenu = new JMenu("Techs");
+    JMenu jMenuCampaignPersonnelPilotsSubMenu = new JMenu("Pilots");
+    JMenuItem jMenuCampaignMyStatus = new JMenuItem();
+    JMenuItem jMenuCampaignLogin = new JMenuItem();
+    JMenuItem jMenuCampaignActivate = new JMenuItem();
+    JMenuItem jMenuCampaignDeactivate = new JMenuItem();
+    JMenuItem jMenuCampaignLogout = new JMenuItem();
+    JMenuItem jMenuCampaignPlayers = new JMenuItem();
+    JMenuItem jMenuCampaignISStatus = new JMenuItem();
+    JMenuItem jMenuCampaignHouses = new JMenuItem();
+    JMenuItem jMenuCampaignFactionStatus = new JMenuItem();
+    JMenuItem jMenuCampaignCheckAttack = new JMenuItem();
+    JMenuItem jMenuCampaignRange = new JMenuItem();
+    JMenuItem jMenuFindContestedPlanets = new JMenuItem(); //BarukKhazad 20151129
+    JMenuItem jMenuCampaignTransferUnit = new JMenuItem();
+    JMenuItem jMenuCampaignTransferMoney = new JMenuItem();
+    JMenuItem jMenuCampaignTransferPilot = new JMenuItem();
+    JMenuItem jMenuCampaignLogo = new JMenuItem();
+    JMenuItem jMenuCampaignPersonalPilotQueue = new JMenuItem();
+    JMenuItem jMenuCampaignDonatePersonalPilot = new JMenuItem();
+    JMenuItem jMenuCampaignDirectSell = new JMenuItem();
+    JMenuItem jMenuCampaignDefect = new JMenuItem();
+    JMenuItem jMenuCampaignSelfPromote = new JMenuItem(); //@salient
+    JMenuItem jMenuCampaignReportStatusMC = new JMenuItem(); //@salient
+    JMenuItem jMenuCampaignRewardPoints = new JMenuItem();
+    JMenuItem jMenuCampaignInfluencePoints = new JMenuItem();
+    JMenuItem jMenuCampaignPartsCache = new JMenuItem();
+    JMenuItem jMenuSubCampaignFireTechs = new JMenuItem();
+    JMenuItem jMenuSubCampaignHireTechs = new JMenuItem();
+    JMenuItem jMenuSubCampaignSellBays = new JMenuItem();
+    JMenuItem jMenuSubCampaignBuyBays = new JMenuItem();
+    JMenuItem jMenuCampaignBuyPilots = new JMenuItem();
+    JMenuItem jMenuMercStatus = new JMenuItem();
+    JMenuItem jMenuMercUnemployed = new JMenuItem();
+    JMenuItem jMenuMercContracted = new JMenuItem();
+    JMenuItem jMenuMercOfferContract = new JMenuItem();
 
     /*
      * ATTACK/GAME Menu is a class unto itself and needs constant update calls.
      */
     AttackMenu jMenuAttackMenu;
-
     // HOST Menu
-    javax.swing.JMenu jMenuHost = new javax.swing.JMenu();
-
-    javax.swing.JMenuItem jMenuCSHostAndJoin = new javax.swing.JMenuItem();
-    javax.swing.JMenuItem jMenuCSHostDedicated = new javax.swing.JMenuItem();
-    javax.swing.JMenuItem jMenuCSHostLoad = new javax.swing.JMenuItem();
-    javax.swing.JMenuItem jMenuCSHostLoadAndJoin = new javax.swing.JMenuItem();
-    javax.swing.JMenuItem jMenuCSHostStop = new javax.swing.JMenuItem();
+    JMenu jMenuHost = new JMenu();
+    JMenuItem jMenuCSHostAndJoin = new JMenuItem();
+    JMenuItem jMenuCSHostDedicated = new JMenuItem();
+    JMenuItem jMenuCSHostLoad = new JMenuItem();
+    JMenuItem jMenuCSHostLoadAndJoin = new JMenuItem();
+    JMenuItem jMenuCSHostStop = new JMenuItem();
 
     // OPTIONS menu components
-    javax.swing.JMenu jMenuOptions = new javax.swing.JMenu();
-
-    javax.swing.JCheckBoxMenuItem jMenuOptionsAutoScroll = new javax.swing.JCheckBoxMenuItem();
-    javax.swing.JCheckBoxMenuItem jMenuOptionsMute = new javax.swing.JCheckBoxMenuItem();
-    javax.swing.JMenuItem jMenuOptionsReloadAllData = new javax.swing.JMenuItem();
+    JMenu jMenuOptions = new JMenu();
+    JCheckBoxMenuItem jMenuOptionsAutoScroll = new JCheckBoxMenuItem();
+    JCheckBoxMenuItem jMenuOptionsMute = new JCheckBoxMenuItem();
+    JMenuItem jMenuOptionsReloadAllData = new JMenuItem();
 
     // Leadership Menu
-    javax.swing.JMenu jMenuLeaderShip = new javax.swing.JMenu();
-
-    javax.swing.JMenuItem jMenuLeaderPromote = new javax.swing.JMenuItem();
-    javax.swing.JMenuItem jMenuLeaderDemote = new javax.swing.JMenuItem();
-    javax.swing.JMenuItem jMenuLeaderFluff = new javax.swing.JMenuItem();
-    javax.swing.JMenuItem jMenuLeaderMute = new javax.swing.JMenuItem();
-    javax.swing.JMenuItem jMenuLeaderFactionColor = new javax.swing.JMenuItem();
-    javax.swing.JMenuItem jMenuLeaderPlayerColor = new javax.swing.JMenuItem();
-    javax.swing.JMenuItem jMenuLeaderPurchaseFactory = new javax.swing.JMenuItem();
-    javax.swing.JMenuItem jMenuLeaderResearchTech = new javax.swing.JMenuItem();
-    javax.swing.JMenuItem jMenuLeaderResearchUnit = new javax.swing.JMenuItem();
-    javax.swing.JMenuItem jMenuLeaderSetComponentConversion = new javax.swing.JMenuItem();
-    javax.swing.JMenuItem jMenuLeaderViewFactionPartsCache = new javax.swing.JMenuItem();
+    JMenu jMenuLeaderShip = new JMenu();
+    JMenuItem jMenuLeaderPromote = new JMenuItem();
+    JMenuItem jMenuLeaderDemote = new JMenuItem();
+    JMenuItem jMenuLeaderFluff = new JMenuItem();
+    JMenuItem jMenuLeaderMute = new JMenuItem();
+    JMenuItem jMenuLeaderFactionColor = new JMenuItem();
+    JMenuItem jMenuLeaderPlayerColor = new JMenuItem();
+    JMenuItem jMenuLeaderPurchaseFactory = new JMenuItem();
+    JMenuItem jMenuLeaderResearchTech = new JMenuItem();
+    JMenuItem jMenuLeaderResearchUnit = new JMenuItem();
+    JMenuItem jMenuLeaderSetComponentConversion = new JMenuItem();
+    JMenuItem jMenuLeaderViewFactionPartsCache = new JMenuItem();
 
     // HELP Menu
-    javax.swing.JMenu jMenuHelp = new javax.swing.JMenu();
-
-    javax.swing.JMenuItem jMenuHelpAbout = new javax.swing.JMenuItem();
-    javax.swing.JMenuItem jMenuHelpMemory = new javax.swing.JMenuItem();
-    javax.swing.JMenuItem jMenuHelpHelp = new javax.swing.JMenuItem();
-    javax.swing.JMenuItem jMenuHelpViewUnit = new javax.swing.JMenuItem();
-    javax.swing.JMenuItem jMenuHelpViewBuildTables = new javax.swing.JMenuItem();
-    javax.swing.JMenuItem jMenuHelpViewTraits = new javax.swing.JMenuItem();
-    javax.swing.JMenuItem jMenuHelpPilotSkills = new javax.swing.JMenuItem();
-    javax.swing.JMenuItem jMenuHelpOpViewer = new javax.swing.JMenuItem();
+    JMenu jMenuHelp = new JMenu();
+    JMenuItem jMenuHelpAbout = new JMenuItem();
+    JMenuItem jMenuHelpMemory = new JMenuItem();
+    JMenuItem jMenuHelpHelp = new JMenuItem();
+    JMenuItem jMenuHelpViewUnit = new JMenuItem();
+    JMenuItem jMenuHelpViewBuildTables = new JMenuItem();
+    JMenuItem jMenuHelpViewTraits = new JMenuItem();
+    JMenuItem jMenuHelpPilotSkills = new JMenuItem();
+    JMenuItem jMenuHelpOpViewer = new JMenuItem();
 
     // Emoji Menu
-    javax.swing.JMenu jMenuEmoji = new javax.swing.JMenu();
-
-    javax.swing.JMenuItem jMenuEmojiFlip = new javax.swing.JMenuItem();
-    javax.swing.JMenuItem jMenuEmojiBear = new javax.swing.JMenuItem();
-    javax.swing.JMenuItem jMenuEmojiShrug = new javax.swing.JMenuItem();
-    javax.swing.JMenuItem jMenuEmojiFingers = new javax.swing.JMenuItem();
-    javax.swing.JMenuItem jMenuEmojiKiss = new javax.swing.JMenuItem();
-    javax.swing.JMenuItem jMenuEmojiSmile = new javax.swing.JMenuItem();
-    javax.swing.JMenuItem jMenuEmojiDeal = new javax.swing.JMenuItem();
-
+    JMenu jMenuEmoji = new JMenu();
+    JMenuItem jMenuEmojiFlip = new JMenuItem();
+    JMenuItem jMenuEmojiShrug = new JMenuItem();
+    JMenuItem jMenuEmojiFingers = new JMenuItem();
+    JMenuItem jMenuEmojiKiss = new JMenuItem();
+    JMenuItem jMenuEmojiSmile = new JMenuItem();
+    JMenuItem jMenuEmojiDeal = new JMenuItem();
 
     // These are simple holders for when real menus
     // is generated/returned from the admin plugin.
-    javax.swing.JMenu jMenuMod = new javax.swing.JMenu();
-    javax.swing.JMenu jMenuAdmin = new javax.swing.JMenu();
-    javax.swing.JMenu jMenuOperations = new javax.swing.JMenu();
+    JMenu jMenuMod = new JMenu();
+    JMenu jMenuAdmin = new JMenu();
+    JMenu jMenuOperations = new JMenu();
 
-    public client.MWClient mwclient;
+    CMainPanel MainPanel;
+    CCampaign theCampaign;
+    CPlayer thePlayer;
+    boolean useAdvanceRepairs;
+    boolean usePersonalPilotQueues;
     private int userLevel = 0;
-
-    mekwars.client.gui.CMainPanel MainPanel;
-    client.campaign.CCampaign theCampaign;
-    client.campaign.CPlayer thePlayer;
-
     private boolean hasAdminMenus = false;
-    boolean useAdvanceRepairs = false;
-    boolean usePersonalPilotQueues = false;
-
-    private MenuSound sound;
-    private MenuPopupSound popupSound;
 
     // CONSTRUCTOR
-    public CMainFrame(client.MWClient myC) {
-        mwclient = myC;
-        theCampaign = mwclient.getCampaign();
-        thePlayer = mwclient.getPlayer();
-        MainPanel = new mekwars.client.gui.CMainPanel(mwclient, this);
+    public CMainFrame(IClient myC) {
+        client = myC;
+        theCampaign = client.getCampaign();
+        thePlayer = client.getPlayer();
+        MainPanel = new CMainPanel(client, this);
 
-        useAdvanceRepairs = mwclient.isUsingAdvanceRepairs();
-        usePersonalPilotQueues = Boolean.parseBoolean(mwclient.getserverConfigs("AllowPersonalPilotQueues"));
-        sound = new MenuSound(mwclient);
-        popupSound = new MenuPopupSound(mwclient);
+        useAdvanceRepairs = client.isUsingAdvanceRepairs();
+        usePersonalPilotQueues = Boolean.parseBoolean(client.getServerConfigs("AllowPersonalPilotQueues"));
+        sound = new MenuSound(client);
+        popupSound = new MenuPopupSound(client);
 
         /*
          * ATTACK/GAME Menu is a class unto itself and needs constant update
          * calls. Have to build it here so its client isn't null and it isn't
          * being handed to createMenu() as a null itself.
          */
-        jMenuAttackMenu = new AttackMenu(mwclient, -1, "-1");
+
+        jMenuAttackMenu = new AttackMenu(client, -1, "-1");
 
         enableEvents(java.awt.AWTEvent.WINDOW_EVENT_MASK);
         setResizable(true);
         setSize(new java.awt.Dimension(640, 480));
         setExtendedState(java.awt.Frame.MAXIMIZED_BOTH);
-        setTitle(mwclient.getConfigParam("CAMPAIGNSERVERNAME") +
-                       " (MekWars Client " +
-                       client.MWClient.CLIENT_VERSION +
-                       ")");
-        contentPane = (javax.swing.JPanel) getContentPane();
+        setTitle(client.getConfigParam("CAMPAIGNSERVERNAME") + " (MekWars Client " + IClient.CLIENT_VERSION + ")");
+        contentPane = (JPanel) getContentPane();
         contentPane.setLayout(new java.awt.BorderLayout());
-        useAdvanceRepairs = mwclient.isUsingAdvanceRepairs();
-        usePersonalPilotQueues = Boolean.parseBoolean(mwclient.getserverConfigs("AllowPersonalPilotQueues"));
+        useAdvanceRepairs = client.isUsingAdvanceRepairs();
+        usePersonalPilotQueues = Boolean.parseBoolean(client.getServerConfigs("AllowPersonalPilotQueues"));
         try {
             // factored out to reduce bloat
             createMenu();
@@ -230,22 +217,22 @@ public class CMainFrame extends javax.swing.JFrame {
         setJMenuBar(jMenuBar1);
         enableMenu();
         repaint();
-        contentPane.add(MainPanel, java.awt.BorderLayout.CENTER);
-        setDefaultCloseOperation(javax.swing.WindowConstants.DO_NOTHING_ON_CLOSE);
-        addWindowListener(new java.awt.event.WindowAdapter() {
+        contentPane.add(MainPanel, BorderLayout.CENTER);
+        setDefaultCloseOperation(WindowConstants.DO_NOTHING_ON_CLOSE);
+        addWindowListener(new WindowAdapter() {
             @Override
             public void windowClosing(java.awt.event.WindowEvent evt) {
-                if (mwclient.isServerRunning()) {
-                    int result = javax.swing.JOptionPane.showConfirmDialog(mwclient.getMainFrame(),
+                if (client.isServerRunning()) {
+                    int result = JOptionPane.showConfirmDialog(client.getMainFrame(),
                           "Are you sure you want to exit?",
                           "You are hosting a game!",
-                          javax.swing.JOptionPane.YES_NO_OPTION);
-                    if (result == javax.swing.JOptionPane.YES_OPTION) {
-                        mwclient.goodbye();
+                          JOptionPane.YES_NO_OPTION);
+                    if (result == JOptionPane.YES_OPTION) {
+                        client.goodbye();
                         System.exit(0);
                     }
                 } else {
-                    mwclient.goodbye();
+                    client.goodbye();
                     System.exit(0);
                 }
             }
@@ -253,7 +240,7 @@ public class CMainFrame extends javax.swing.JFrame {
 
             @Override
             public void windowGainedFocus(java.awt.event.WindowEvent evt) {
-                for (client.ClientThread mmClient : mwclient.getMMClients()) {
+                for (ClientThread mmClient : client.getMMClients()) {
                     mmClient.getMegaMekController().setIgnoreKeyPresses(true);
                 }
             }
@@ -261,111 +248,76 @@ public class CMainFrame extends javax.swing.JFrame {
 
             @Override
             public void windowLostFocus(java.awt.event.WindowEvent evt) {
-                for (client.ClientThread mmClient : mwclient.getMMClients()) {
+                for (ClientThread mmClient : client.getMMClients()) {
                     mmClient.getMegaMekController().setIgnoreKeyPresses(false);
                 }
             }
         });
     }
 
-    public mekwars.client.gui.CMainPanel getMainPanel() {
+    public CMainPanel getMainPanel() {
         return MainPanel;
     }
 
-    // Initialising Components
+    // Initializing Components
     public void enableMenu() {
         boolean disconnected = false;
         boolean loggedout = false;
         boolean loggedin = false;
         boolean reserve = false;
         boolean active = false;
-        // boolean fighting = false;
         boolean admin = false;
         boolean mod = false;
 
-        userLevel = mwclient.getUserLevel();
-        mwclient.loadServerCommmands();
+        userLevel = client.getUserLevel();
+        client.loadServerCommands();
 
-        if (mwclient.getMyStatus() == client.MWClient.STATUS_DISCONNECTED) {
+        if (client.getMyStatus() == IClient.STATUS_DISCONNECTED) {
             disconnected = true;
         }
-        if (mwclient.getMyStatus() == client.MWClient.STATUS_LOGGEDOUT) {
+        if (client.getMyStatus() == IClient.STATUS_LOGGED_OUT) {
             loggedout = true;
         }
-        if (mwclient.getMyStatus() == client.MWClient.STATUS_RESERVE) {
+        if (client.getMyStatus() == IClient.STATUS_RESERVE) {
             loggedin = true;
             reserve = true;
         }
-        if (mwclient.getMyStatus() == client.MWClient.STATUS_ACTIVE) {
+        if (client.getMyStatus() == IClient.STATUS_ACTIVE) {
             loggedin = true;
             active = true;
         }
-        if (mwclient.getMyStatus() == client.MWClient.STATUS_FIGHTING) {
+        if (client.getMyStatus() == IClient.STATUS_FIGHTING) {
             loggedin = true;
             // fighting = true;
         }
-        if (mwclient.isAdmin()) {
+        if (client.isAdmin()) {
             admin = true;
         }
-        if (mwclient.isMod()) {
+        if (client.isMod()) {
             mod = true;
         }
 
-        /*
-         * jMenuCampaign.setEnabled(!disconnected);
-         * jMenuCommander.setEnabled(loggedin); jMenuTask.setEnabled(active);
-         * jMenuHost.setEnabled(!disconnected);
-         * jMenuFileConnect.setEnabled(disconnected);
-         * jMenuFileConnectTo.setEnabled(disconnected);
-         * jMenuFileRegister.setEnabled(!disconnected);
-         * jMenuFileMail.setEnabled(!disconnected);
-         * jMenuFileLastOnline.setEnabled(!disconnected);
-         * jMenuCampaignTasks.setEnabled(loggedin);
-         * jMenuCampaignPlayers.setEnabled(loggedin);
-         * jMenuCampaignISStatus.setEnabled(loggedin);
-         * jMenuCampaignHouses.setEnabled(loggedin);
-         * jMenuCampaignPlanet.setEnabled(loggedin);
-         * jMenuCampaignPlanetRange.setEnabled(loggedin);
-         * jMenuCampaignBMStatus.setEnabled(loggedin);
-         */
-        // jMenuCampaignTraderStatus.setEnabled(loggedin);
-        /*
-         * jMenuCampaignMercStatus.setEnabled(loggedin);
-         * jMenuCampaignUMercs.setEnabled(loggedin);
-         * jMenuCampaignTick.setEnabled(loggedin);
-         * jMenuCampaignLogin.setEnabled(loggedout);
-         * jMenuCampaignActivate.setEnabled(reserve);
-         * jMenuCampaignDeactivate.setEnabled(active);
-         * jMenuCampaignLogout.setEnabled(loggedin);
-         * jMenuCampaignEnroll.setEnabled(loggedout);
-         */
-        // jMenuCampaignUnenroll.setEnabled(loggedin);
-        // Client.errorMessage("Mod "+mod+" Admin "+admin+" Level
-        // "+Client.getUser(Client.getUsername()).getUserlevel()+" Status:
-        // "+this.getClient().getMyStatus()+" StatusII: "+Client.getMyStatus());
         if ((mod || admin) && !hasAdminMenus) {
 
-            java.io.File loadJar = new java.io.File("./MekWarsAdmin.jar");
+            File loadJar = new File("./MekWarsAdmin.jar");
 
-            // dont print an entire trace if the jar is missing.
+            // don't print an entire trace if the jar is missing.
             if (!loadJar.exists()) {
                 MWLogger.errLog("Player/Server menu creation skipped. No MekWarsAdmin.jar present.");
             } else {
                 // assume mod
                 try {
                     java.net.URLClassLoader loader = new java.net.URLClassLoader(new java.net.URL[] {
-                          loadJar.toURI().toURL() });
-                    Class<?> c = loader.loadClass("admin.ModeratorMenu");
-                    Object o = c.newInstance();
-                    c.getDeclaredMethod("createMenu", new Class[] { client.MWClient.class })
-                          .invoke(o, new Object[] { mwclient });
+                          loadJar.toURI().toURL()
+                    });
+
+                    Class<?> clazz = loader.loadClass("admin.ModeratorMenu");
+                    Object object = clazz.getDeclaredConstructor().newInstance();
+                    clazz.getDeclaredMethod("createMenu", new Class[] { IClient.class }).invoke(object, client);
                     jMenuBar1.remove(jMenuMod);
-                    jMenuMod = (javax.swing.JMenu) o;
+                    jMenuMod = (JMenu) object;
                     jMenuBar1.add(jMenuMod);
                     loader.close();
-                    /*
-                     * if ( jMenuMod.getItemCount() < 1 ){ mod = false; }
-                     */
                 } catch (Exception ex) {
                     MWLogger.errLog("ModeratorMenu creation FAILED!");
                     MWLogger.errLog(ex);
@@ -373,12 +325,11 @@ public class CMainFrame extends javax.swing.JFrame {
                 try {
                     java.net.URLClassLoader loader = new java.net.URLClassLoader(new java.net.URL[] {
                           loadJar.toURI().toURL() });
-                    Class<?> c = loader.loadClass("admin.AdminMenu");
-                    Object o = c.newInstance();
-                    c.getDeclaredMethod("createMenu", new Class[] { client.MWClient.class })
-                          .invoke(o, new Object[] { mwclient });
+                    Class<?> clazz = loader.loadClass("admin.AdminMenu");
+                    Object object = clazz.getDeclaredConstructor().newInstance();
+                    clazz.getDeclaredMethod("createMenu", new Class[] { IClient.class }).invoke(object, client);
                     jMenuBar1.remove(jMenuAdmin);
-                    jMenuAdmin = (javax.swing.JMenu) o;
+                    jMenuAdmin = (JMenu) object;
                     jMenuBar1.add(jMenuAdmin);
                     loader.close();
                 } catch (Exception ex) {
@@ -390,76 +341,53 @@ public class CMainFrame extends javax.swing.JFrame {
             if (new java.io.File("./MekWarsOpEditor.jar").exists()) {
                 jMenuBar1.remove(jMenuOperations);
                 jMenuOperations.setText("Operations");
-                javax.swing.JMenuItem item = new javax.swing.JMenuItem("Op Editor");
-                item.addActionListener(new java.awt.event.ActionListener() {
-                    public void actionPerformed(java.awt.event.ActionEvent e) {
-                        try {
-                            java.net.URLClassLoader loader = new java.net.URLClassLoader(new java.net.URL[] {
-                                  new java.io.File("./MekWarsOpEditor.jar").toURI().toURL() });
-                            Class<?> c = loader.loadClass("OperationsEditor.MainOperations");
-                            Object o = c.newInstance();
-                            c.getDeclaredMethod("main", new Class[] { Object.class })
-                                  .invoke(o, new Object[] { mwclient });
-                            loader.close();
-                        } catch (Exception ex) {
-                            MWLogger.errLog(ex);
-                        }
-                        // new
-                        // OperationsEditor.dialog.OperationsDialog(client);
+                JMenuItem item = new JMenuItem("Op Editor");
+                item.addActionListener(_ -> {
+                    try {
+                        java.net.URLClassLoader loader = new java.net.URLClassLoader(new java.net.URL[] {
+                              new File("./MekWarsOpEditor.jar").toURI().toURL() });
+                        Class<?> clazz = loader.loadClass("OperationsEditor.MainOperations");
+                        Object object = clazz.getDeclaredConstructor().newInstance();
+                        clazz.getDeclaredMethod("main", new Class[] { Object.class }).invoke(object, client);
+                        loader.close();
+                    } catch (Exception ex) {
+                        MWLogger.errLog(ex);
                     }
+                    // new
+                    // OperationsEditor.dialog.OperationsDialog(client);
                 });
                 jMenuOperations.add(item);
-                javax.swing.JMenuItem jMenuRetrieveOperationFile = new javax.swing.JMenuItem();
-                javax.swing.JMenuItem jMenuSetOperationFile = new javax.swing.JMenuItem();
-                javax.swing.JMenuItem jMenuSetNewOperationFile = new javax.swing.JMenuItem();
-                javax.swing.JMenuItem jMenuSendAllOperationFiles = new javax.swing.JMenuItem();
-                javax.swing.JMenuItem jMenuUpdateOperations = new javax.swing.JMenuItem();
+                JMenuItem jMenuRetrieveOperationFile = new JMenuItem();
+                JMenuItem jMenuSetOperationFile = new JMenuItem();
+                JMenuItem jMenuSetNewOperationFile = new JMenuItem();
+                JMenuItem jMenuSendAllOperationFiles = new JMenuItem();
+                JMenuItem jMenuUpdateOperations = new JMenuItem();
 
                 jMenuRetrieveOperationFile.setText("Retrieve Operation File");
-                jMenuRetrieveOperationFile.addActionListener(new java.awt.event.ActionListener() {
-                    public void actionPerformed(java.awt.event.ActionEvent e) {
-                        jMenuRetrieveOperationFile_actionPerformed(e);
-                    }
-                });
+                jMenuRetrieveOperationFile.addActionListener(this::jMenuRetrieveOperationFile_actionPerformed);
 
                 jMenuSetOperationFile.setText("Set Operation File");
-                jMenuSetOperationFile.addActionListener(new java.awt.event.ActionListener() {
-                    public void actionPerformed(java.awt.event.ActionEvent e) {
-                        jMenuSetOperationFile_actionPerformed(e);
-                    }
-                });
+                jMenuSetOperationFile.addActionListener(this::jMenuSetOperationFile_actionPerformed);
 
                 jMenuSetNewOperationFile.setText("Set New Operation File");
-                jMenuSetNewOperationFile.addActionListener(new java.awt.event.ActionListener() {
-                    public void actionPerformed(java.awt.event.ActionEvent e) {
-                        jMenuSetNewOperationFile_actionPerformed(e);
-                    }
-                });
+                jMenuSetNewOperationFile.addActionListener(this::jMenuSetNewOperationFile_actionPerformed);
 
                 jMenuSendAllOperationFiles.setText("Send All Local Op Files");
-                jMenuSendAllOperationFiles.addActionListener(new java.awt.event.ActionListener() {
-                    public void actionPerformed(java.awt.event.ActionEvent e) {
-                        jMenuSendAllOperationFiles_actionPerformed(e);
-                    }
-                });
+                jMenuSendAllOperationFiles.addActionListener(this::jMenuSendAllOperationFiles_actionPerformed);
 
                 jMenuUpdateOperations.setText("Update Operations");
-                jMenuUpdateOperations.addActionListener(new java.awt.event.ActionListener() {
-                    public void actionPerformed(java.awt.event.ActionEvent e) {
-                        jMenuUpdateOperations_actionPerformed(e);
-                    }
-                });
+                jMenuUpdateOperations.addActionListener(this::jMenuUpdateOperations_actionPerformed);
 
-                int userLevel = mwclient.getUserLevel();
-                if (userLevel >= mwclient.getData().getAccessLevel("RetrieveOperation")) {
+                int userLevel = client.getUserLevel();
+                if (userLevel >= client.getData().getAccessLevel("RetrieveOperation")) {
                     jMenuOperations.add(jMenuRetrieveOperationFile);
                 }
-                if (userLevel >= mwclient.getData().getAccessLevel("SetOperation")) {
+                if (userLevel >= client.getData().getAccessLevel("SetOperation")) {
                     jMenuOperations.add(jMenuSetOperationFile);
                     jMenuOperations.add(jMenuSetNewOperationFile);
                     jMenuOperations.add(jMenuSendAllOperationFiles);
                 }
-                if (userLevel >= mwclient.getData().getAccessLevel("UpdateOperations")) {
+                if (userLevel >= client.getData().getAccessLevel("UpdateOperations")) {
                     jMenuOperations.add(jMenuUpdateOperations);
                 }
 
@@ -484,21 +412,21 @@ public class CMainFrame extends javax.swing.JFrame {
         // jMenuTask.setVisible(loggedin);
         jMenuHost.setVisible(!disconnected);
 
-        jMenuLeaderShip.setVisible(mwclient.isLeader());
+        jMenuLeaderShip.setVisible(client.isLeader());
 
-        jMenuLeaderDemote.setVisible(userLevel >= mwclient.getData().getAccessLevel("DemotePlayer"));
-        jMenuLeaderFluff.setVisible(userLevel >= mwclient.getData().getAccessLevel("FactionLeaderFluff"));
-        jMenuLeaderMute.setVisible(userLevel >= mwclient.getData().getAccessLevel("FactionLeaderMute"));
-        jMenuLeaderPromote.setVisible(userLevel >= mwclient.getData().getAccessLevel("PromotePlayer"));
-        jMenuLeaderFactionColor.setVisible(userLevel >= mwclient.getData().getAccessLevel("ChangeHouseColor"));
-        jMenuLeaderPlayerColor.setVisible(userLevel >= mwclient.getData().getAccessLevel("AdminSetHousePlayerColor"));
-        jMenuLeaderPurchaseFactory.setVisible(userLevel >= mwclient.getData().getAccessLevel("PurchaseFactory"));
-        jMenuLeaderResearchTech.setVisible(userLevel >= mwclient.getData().getAccessLevel("ResearchTechLevel"));
-        jMenuLeaderResearchUnit.setVisible(userLevel >= mwclient.getData().getAccessLevel("ResearchUnit"));
+        jMenuLeaderDemote.setVisible(userLevel >= client.getData().getAccessLevel("DemotePlayer"));
+        jMenuLeaderFluff.setVisible(userLevel >= client.getData().getAccessLevel("FactionLeaderFluff"));
+        jMenuLeaderMute.setVisible(userLevel >= client.getData().getAccessLevel("FactionLeaderMute"));
+        jMenuLeaderPromote.setVisible(userLevel >= client.getData().getAccessLevel("PromotePlayer"));
+        jMenuLeaderFactionColor.setVisible(userLevel >= client.getData().getAccessLevel("ChangeHouseColor"));
+        jMenuLeaderPlayerColor.setVisible(userLevel >= client.getData().getAccessLevel("AdminSetHousePlayerColor"));
+        jMenuLeaderPurchaseFactory.setVisible(userLevel >= client.getData().getAccessLevel("PurchaseFactory"));
+        jMenuLeaderResearchTech.setVisible(userLevel >= client.getData().getAccessLevel("ResearchTechLevel"));
+        jMenuLeaderResearchUnit.setVisible(userLevel >= client.getData().getAccessLevel("ResearchUnit"));
         jMenuLeaderSetComponentConversion.setVisible(userLevel >=
-                                                           mwclient.getData().getAccessLevel("SetComponentConversion"));
+                                                           client.getData().getAccessLevel("SetComponentConversion"));
         jMenuLeaderViewFactionPartsCache.setVisible(userLevel >=
-                                                          mwclient.getData().getAccessLevel("ViewFactionPartsCache"));
+                                                          client.getData().getAccessLevel("ViewFactionPartsCache"));
 
         jMenuFileConnect.setVisible(disconnected);
         jMenuFileDisconnect.setVisible(!disconnected);
@@ -514,7 +442,7 @@ public class CMainFrame extends javax.swing.JFrame {
         jMenuCampaignPersonalPilotQueue.setVisible(usePersonalPilotQueues);
         jMenuCampaignTransferPilot.setVisible(usePersonalPilotQueues);
         jMenuCampaignDonatePersonalPilot.setVisible(usePersonalPilotQueues);
-        jMenuCampaignDirectSell.setVisible(Boolean.parseBoolean(mwclient.getserverConfigs("UseDirectSell")));
+        jMenuCampaignDirectSell.setVisible(Boolean.parseBoolean(client.getServerConfigs("UseDirectSell")));
 
         addMenuListener(jMenuBar1.getComponents());
         this.repaint();
@@ -527,131 +455,71 @@ public class CMainFrame extends javax.swing.JFrame {
 
         jMenuFileConnect.setText("Connect");
         jMenuFileConnect.setMnemonic('o');
-        jMenuFileConnect.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent e) {
-                jMenuFileConnect_actionPerformed();
-            }
-        });
+        jMenuFileConnect.addActionListener(_ -> jMenuFileConnect_actionPerformed());
 
         jMenuFileDisconnect.setText("Disconnect");
         jMenuFileDisconnect.setMnemonic('D');
-        jMenuFileDisconnect.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent e) {
-                mwclient.getConnector().closeConnection();
-            }
-        });
+        jMenuFileDisconnect.addActionListener(_ -> client.getConnector().closeConnection());
 
         jMenuFileRegister.setText("Register Nickname");
         jMenuFileRegister.setMnemonic('R');
-        jMenuFileRegister.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent e) {
-                jMenuFileRegister_actionPerformed();
-            }
-        });
+        jMenuFileRegister.addActionListener(_ -> jMenuFileRegister_actionPerformed());
 
         jMenuFileMail.setText("Mail User");
         jMenuFileMail.setMnemonic('M');
-        jMenuFileMail.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent e) {
-                jMenuFileMail_actionPerformed(null);
-            }
-        });
+        jMenuFileMail.addActionListener(_ -> jMenuFileMail_actionPerformed(null));
 
         jMenuFileLastOnline.setText("Last Online");
         jMenuFileLastOnline.setMnemonic('L');
-        jMenuFileLastOnline.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent e) {
-                jMenuFileLastOnline_actionPerformed();
-            }
-        });
+        jMenuFileLastOnline.addActionListener(_ -> jMenuFileLastOnline_actionPerformed());
 
         jMenuFileConfig.setText("Configuration");
         jMenuFileConfig.setMnemonic('C');
-        jMenuFileConfig.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent e) {
-                new ConfigurationDialog(mwclient);
-            }
-        });
+        jMenuFileConfig.addActionListener(_ -> new ConfigurationDialog(client));
 
         jMenuFileExit.setText("Exit");
         jMenuFileExit.setMnemonic('X');
-        jMenuFileExit.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent e) {
-                jMenuFileExit_actionPerformed();
-            }
-        });
+        jMenuFileExit.addActionListener(_ -> jMenuFileExit_actionPerformed());
 
         jMenuCampaign.setText("Campaign");
         jMenuCampaign.setMnemonic('C');
 
         jMenuCampaignLogin.setText("Log in!");
         jMenuCampaignLogin.setMnemonic('I');
-        jMenuCampaignLogin.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent e) {
-                mwclient.sendChat(client.MWClient.CAMPAIGN_PREFIX + "c login");
-            }
-        });
+        jMenuCampaignLogin.addActionListener(_ -> client.sendChat(IClient.CAMPAIGN_PREFIX + "c login"));
 
         jMenuCampaignActivate.setText("Activate");
-        // jMenuCampaignActivate.setMnemonic('A');
-        jMenuCampaignActivate.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent e) {
-                mwclient.sendChat(client.MWClient.CAMPAIGN_PREFIX + "c activate#" + client.MWClient.CLIENT_VERSION);
-            }
-        });
+        jMenuCampaignActivate.addActionListener(_ -> client.sendChat(IClient.CAMPAIGN_PREFIX +
+                                                                           "c activate#" +
+                                                                           IClient.CLIENT_VERSION));
 
         jMenuCampaignDeactivate.setText("Deactivate");
-        // jMenuCampaignDeactivate.setMnemonic('R');
-        jMenuCampaignDeactivate.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent e) {
-                mwclient.sendChat(client.MWClient.CAMPAIGN_PREFIX + "c deactivate");
-            }
-        });
+        jMenuCampaignDeactivate.addActionListener(_ -> client.sendChat(IClient.CAMPAIGN_PREFIX + "c deactivate"));
 
         jMenuCampaignLogout.setText("Log Out");
-        // jMenuCampaignLogout.setMnemonic('O');
-        jMenuCampaignLogout.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent e) {
-                mwclient.sendChat(client.MWClient.CAMPAIGN_PREFIX + "c logout");
-            }
-        });
+        jMenuCampaignLogout.addActionListener(_ -> client.sendChat(IClient.CAMPAIGN_PREFIX + "c logout"));
 
         jMenuCampaignPlayers.setText("Players Status");
         jMenuCampaignPlayers.setMnemonic('P');
-        jMenuCampaignPlayers.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent e) {
-                mwclient.sendChat(client.MWClient.CAMPAIGN_PREFIX + "c players");
-            }
-        });
+        jMenuCampaignPlayers.addActionListener(_ -> client.sendChat(IClient.CAMPAIGN_PREFIX + "c players"));
 
         jMenuCampaignISStatus.setText("Planetary Control");
         jMenuCampaignISStatus.setMnemonic('C');
-        jMenuCampaignISStatus.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent e) {
-                jMenuCampaignISStatus_actionPerformed();
-            }
-        });
+        jMenuCampaignISStatus.addActionListener(_ -> jMenuCampaignISStatus_actionPerformed());
 
         jMenuCampaignFactionStatus.setText("Faction Status");
         jMenuCampaignFactionStatus.setMnemonic('F');
-        jMenuCampaignFactionStatus.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent e) {
-                jMenuCampaignFactionStatus_actionPerformed();
-            }
-        });
+        jMenuCampaignFactionStatus.addActionListener(_ -> jMenuCampaignFactionStatus_actionPerformed());
 
         jMenuCampaignHouses.setText("Factions List");
         jMenuCampaignHouses.setMnemonic('L');
-        jMenuCampaignHouses.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent e) {
-                mwclient.sendChat(client.MWClient.CAMPAIGN_PREFIX + "c housestatus");
-            }
-        });
+        jMenuCampaignHouses.addActionListener(_ -> client.sendChat(IClient.CAMPAIGN_PREFIX + "c housestatus"));
 
         if (useAdvanceRepairs) {
             jMenuCampaignSubBays.setText("Bays");
             jMenuCampaignSubBays.setMnemonic('B');
         }
+
         jMenuCampaignSubTechs.setText("Personnel");
         jMenuCampaignSubTechs.setMnemonic('E');
 
@@ -669,282 +537,155 @@ public class CMainFrame extends javax.swing.JFrame {
 
         jMenuCampaignMyStatus.setText("My Status");
         jMenuCampaignMyStatus.setMnemonic('M');
-        jMenuCampaignMyStatus.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent e) {
-                mwclient.sendChat(client.MWClient.CAMPAIGN_PREFIX + "c mystatus");
-            }
-        });
-
-        // jMenuCampaignHouseStatus.setText("My House Status");
-        // jMenuCampaignHouseStatus.setMnemonic('H');
-        // jMenuCampaignHouseStatus.addActionListener(new ActionListener() {
-        // public void actionPerformed(ActionEvent e) {
-        // Client.sendChat(MWClient.CAMPAIGN_PREFIX + "c status");
-        // }
-        // });
+        jMenuCampaignMyStatus.addActionListener(_ -> client.sendChat(IClient.CAMPAIGN_PREFIX + "c mystatus"));
 
         jMenuCampaignCheckAttack.setText("Attack Options");
         jMenuCampaignCheckAttack.setMnemonic('A');
-        jMenuCampaignCheckAttack.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent e) {
-                jMenuCommanderCheckAttack_actionPerformed(-1);
-            }
-        });
+        jMenuCampaignCheckAttack.addActionListener(_ -> jMenuCommanderCheckAttack_actionPerformed(-1));
 
         jMenuCampaignRange.setText("Range Calculator");
         jMenuCampaignRange.setMnemonic('R');
-        jMenuCampaignRange.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent e) {
-                jMenuCommanderRange_actionPerformed();
-            }
-        });
+        jMenuCampaignRange.addActionListener(_ -> jMenuCommanderRange_actionPerformed());
 
-        //BarukKhazad 20151129 - start 1
         jMenuFindContestedPlanets.setText("Find Contested Planets");
         jMenuFindContestedPlanets.setMnemonic('Z');
-        jMenuFindContestedPlanets.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent e) {
-                jMenuFindContestedPlanets_actionPerformed();
-            }
-        });  //BarukKhazad 20151129 - end 1
+        jMenuFindContestedPlanets.addActionListener(_ -> jMenuFindContestedPlanets_actionPerformed());  //BarukKhazad 20151129 - end 1
 
         jMenuCampaignTransferUnit.setText("Transfer Unit");
         jMenuCampaignTransferUnit.setMnemonic('U');
-        jMenuCampaignTransferUnit.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent e) {
-                jMenuCommanderTransferUnit_actionPerformed(null, -1);
-            }
-        });
+        jMenuCampaignTransferUnit.addActionListener(_ -> jMenuCommanderTransferUnit_actionPerformed(null, -1));
 
-        jMenuCampaignTransferMoney.setText("Transfer " + mwclient.moneyOrFluMessage(true, true, -2));
+        jMenuCampaignTransferMoney.setText("Transfer " + client.moneyOrFluMessage(true, true, -2));
         jMenuCampaignTransferMoney.setMnemonic('C');
-        jMenuCampaignTransferMoney.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent e) {
-                jMenuCommanderTransferMoney_actionPerformed(null);
-            }
-        });
+        jMenuCampaignTransferMoney.addActionListener(_ -> jMenuCommanderTransferMoney_actionPerformed(null));
 
         jMenuCampaignLogo.setText("Set Logo");
         jMenuCampaignLogo.setMnemonic('L');
-        jMenuCampaignLogo.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent e) {
-                jMenuCommanderLogo_actionPerformed();
-            }
-        });
+        jMenuCampaignLogo.addActionListener(_ -> jMenuCommanderLogo_actionPerformed());
 
         jMenuCampaignPersonalPilotQueue.setText("View Pilot Queue");
         jMenuCampaignPersonalPilotQueue.setMnemonic('Q');
-        jMenuCampaignPersonalPilotQueue.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent e) {
-                jMenuCommanderPersonalPilotQueue_actionPerformed();
-            }
-        });
+        jMenuCampaignPersonalPilotQueue.addActionListener(_ -> jMenuCommanderPersonalPilotQueue_actionPerformed());
 
         jMenuCampaignDonatePersonalPilot.setText("Fire Pilot");
         jMenuCampaignDonatePersonalPilot.setMnemonic('o');
-        jMenuCampaignDonatePersonalPilot.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent e) {
-                jMenuCommanderDonatePersonalPilot_actionPerformed();
-            }
-        });
+        jMenuCampaignDonatePersonalPilot.addActionListener(_ -> jMenuCommanderDonatePersonalPilot_actionPerformed());
 
         jMenuCampaignDirectSell.setText("Direct Sell Unit");
         jMenuCampaignDirectSell.setMnemonic('S');
-        jMenuCampaignDirectSell.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent e) {
-                jMenuCommanderDirectSell_actionPerformed(null, null);
-            }
-        });
+        jMenuCampaignDirectSell.addActionListener(_ -> jMenuCommanderDirectSell_actionPerformed(null, null));
 
         jMenuCampaignTransferPilot.setText("Transfer Pilot");
         jMenuCampaignTransferPilot.setMnemonic('T');
-        jMenuCampaignTransferPilot.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent e) {
-                jMenuCommanderTransferPilot_actionPerformed(null);
-            }
-        });
+        jMenuCampaignTransferPilot.addActionListener(_ -> jMenuCommanderTransferPilot_actionPerformed(null));
 
         jMenuCampaignDefect.setText("Defect");
         jMenuCampaignDefect.setMnemonic('D');
-        jMenuCampaignDefect.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent e) {
-                jMenuCommanderDefect_actionPerformed();
-            }
-        });
+        jMenuCampaignDefect.addActionListener(_ -> jMenuCommanderDefect_actionPerformed());
 
         jMenuCampaignSelfPromote.setText("Self Promote"); //@salient
-        //jMenuCampaignDefect.setMnemonic('D');
-        jMenuCampaignSelfPromote.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent e) {
-                jMenuCommanderSelfPromote_actionPerformed();
-            }
-        });
+        jMenuCampaignSelfPromote.addActionListener(_ -> jMenuCommanderSelfPromote_actionPerformed());
 
         jMenuCampaignReportStatusMC.setText("Check MiniCampaign Status"); //@salient for mini campaign
-        //jMenuCampaignDefect.setMnemonic('D');
-        jMenuCampaignReportStatusMC.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent e) {
-                jMenuCommanderReportStatusMC_actionPerformed();
-            }
-        });
+        jMenuCampaignReportStatusMC.addActionListener(_ -> jMenuCommanderReportStatusMC_actionPerformed());
 
-        jMenuCampaignRewardPoints.setText("Use " + mwclient.getserverConfigs("RPLongName"));
+        jMenuCampaignRewardPoints.setText("Use " + client.getServerConfigs("RPLongName"));
         jMenuCampaignRewardPoints.setMnemonic('P');
-        jMenuCampaignRewardPoints.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent e) {
-                mwclient.rewardPointsDialog();
-            }
-        });
+        jMenuCampaignRewardPoints.addActionListener(_ -> client.rewardPointsDialog());
 
         //@Salient
-        jMenuCampaignInfluencePoints.setText("Use " + mwclient.getserverConfigs("FluLongName"));
-        //jMenuCampaignRewardPoints.setMnemonic('P');
-        jMenuCampaignInfluencePoints.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent e) {
-                mwclient.influencePointsDialog();
-            }
-        });
+        jMenuCampaignInfluencePoints.setText("Use " + client.getServerConfigs("FluLongName"));
+        jMenuCampaignInfluencePoints.addActionListener(_ -> client.influencePointsDialog());
 
         jMenuCampaignPartsCache.setText("View Parts");
         jMenuCampaignPartsCache.setMnemonic('V');
-        jMenuCampaignPartsCache.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent e) {
-                jMenuCampaignPartsCache_actionPerformed();
-            }
-        });
+        jMenuCampaignPartsCache.addActionListener(_ -> jMenuCampaignPartsCache_actionPerformed());
 
         if (useAdvanceRepairs) {
             jMenuSubCampaignBuyBays.setText("Lease Bays");
             jMenuSubCampaignBuyBays.setMnemonic('L');
-            jMenuSubCampaignBuyBays.addActionListener(new java.awt.event.ActionListener() {
-                public void actionPerformed(java.awt.event.ActionEvent e) {
-                    jMenuCommanderBuyBays_actionPerformed();
-                }
-            });
+            jMenuSubCampaignBuyBays.addActionListener(_ -> jMenuCommanderBuyBays_actionPerformed());
 
             jMenuSubCampaignSellBays.setText("Return Bays");
             jMenuSubCampaignSellBays.setMnemonic('R');
-            jMenuSubCampaignSellBays.addActionListener(new java.awt.event.ActionListener() {
-                public void actionPerformed(java.awt.event.ActionEvent e) {
-                    jMenuCommanderSellBays_actionPerformed();
-                }
-            });
+            jMenuSubCampaignSellBays.addActionListener(_ -> jMenuCommanderSellBays_actionPerformed());
         }
 
         if (usePersonalPilotQueues) {
             jMenuCampaignBuyPilots.setText("Hire Pilots");
             jMenuCampaignBuyPilots.setMnemonic('P');
-            jMenuCampaignBuyPilots.addActionListener(new java.awt.event.ActionListener() {
-                public void actionPerformed(java.awt.event.ActionEvent e) {
-                    jMenuCampaignSubOtherBuyPilots_actionPerformed();
-                }
-            });
+            jMenuCampaignBuyPilots.addActionListener(_ -> jMenuCampaignSubOtherBuyPilots_actionPerformed());
         }
 
         jMenuSubCampaignHireTechs.setText("Hire Techs");
         jMenuSubCampaignHireTechs.setMnemonic('H');
-        jMenuSubCampaignHireTechs.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent e) {
-                jMenuCommanderHireTechs_actionPerformed();
-            }
-        });
+        jMenuSubCampaignHireTechs.addActionListener(_ -> jMenuCommanderHireTechs_actionPerformed());
 
         jMenuSubCampaignFireTechs.setText("Fire Techs");
         jMenuSubCampaignFireTechs.setMnemonic('F');
-        jMenuSubCampaignFireTechs.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent e) {
-                jMenuCommanderFireTechs_actionPerformed();
-            }
-        });
+        jMenuSubCampaignFireTechs.addActionListener(_ -> jMenuCommanderFireTechs_actionPerformed());
 
         jMenuCampaignSubMerc.setText("Mercenaries");
         jMenuCampaignSubMerc.setMnemonic('r');
 
         jMenuMercOfferContract.setText("Offer a Mercenary Contract");
         jMenuMercOfferContract.setMnemonic('O');
-        jMenuMercOfferContract.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent e) {
-                jMenuMercOfferContract_actionPerformed();
-            }
-        });
+        jMenuMercOfferContract.addActionListener(_ -> jMenuMercOfferContract_actionPerformed());
 
         jMenuMercStatus.setText("Mercenary Status");
         jMenuMercStatus.setMnemonic('M');
-        jMenuMercStatus.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent e) {
-                jMenuMercStatus_actionPerformed();
-            }
-        });
+        jMenuMercStatus.addActionListener(_ -> jMenuMercStatus_actionPerformed());
+
         jMenuMercUnemployed.setText("Unemployed Mercs");
         jMenuMercUnemployed.setMnemonic('U');
-        jMenuMercUnemployed.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent e) {
-                mwclient.sendChat(client.MWClient.CAMPAIGN_PREFIX + "c unemployedmercs");
-            }
-        });
+        jMenuMercUnemployed.addActionListener(_ -> client.sendChat(IClient.CAMPAIGN_PREFIX + "c unemployedmercs"));
+
         jMenuMercContracted.setText("Contracted Mercs");
         jMenuMercContracted.setMnemonic('C');
-        jMenuMercContracted.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent e) {
-                mwclient.sendChat(client.MWClient.CAMPAIGN_PREFIX + "c housecontracts");
-            }
-        });
-
-        // jMenuTask.setText("Task");
-        // jMenuTask.setMnemonic('T');
+        jMenuMercContracted.addActionListener(_ -> client.sendChat(IClient.CAMPAIGN_PREFIX + "c housecontracts"));
 
         jMenuHost.setText("Host");
         jMenuHost.setMnemonic('S');
 
         jMenuCSHostAndJoin.setText("Start Hosting (and Join)");
         jMenuCSHostAndJoin.setMnemonic('H');
-        jMenuCSHostAndJoin.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent e) {
-                startHost();
-                mwclient.startHost(false, true, false);
-            }
+        jMenuCSHostAndJoin.addActionListener(_ -> {
+            startHost();
+            client.startHost(false, true, false);
         });
 
         jMenuCSHostDedicated.setText("Start Dedicated Host");
         jMenuCSHostDedicated.setMnemonic('D');
         jMenuCSHostDedicated.setEnabled(false);
         jMenuCSHostDedicated.setVisible(false);
-        jMenuCSHostDedicated.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent e) {
-                startHost();
-                mwclient.startHost(true, false, false);
-            }
+        jMenuCSHostDedicated.addActionListener(_ -> {
+            startHost();
+            client.startHost(true, false, false);
         });
 
         jMenuCSHostLoad.setText("Start Dedicated Host (Load Savegame)");
         jMenuCSHostLoad.setMnemonic('L');
         jMenuCSHostLoad.setEnabled(false);
         jMenuCSHostLoad.setVisible(false);
-        jMenuCSHostLoad.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent e) {
-                startHost();
-                mwclient.startHost(true, false, true);
-            }
+        jMenuCSHostLoad.addActionListener(_ -> {
+            startHost();
+            client.startHost(true, false, true);
         });
 
         jMenuCSHostLoadAndJoin.setText("Start Hosting (Load Savegame and Join)");
         jMenuCSHostLoadAndJoin.setMnemonic('S');
-        jMenuCSHostLoadAndJoin.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent e) {
-                startHost();
-                mwclient.startHost(false, false, true);
-            }
+        jMenuCSHostLoadAndJoin.addActionListener(_ -> {
+            startHost();
+            client.startHost(false, false, true);
         });
 
         jMenuCSHostStop.setText("Stop Hosting");
         jMenuCSHostStop.setMnemonic('S');
         jMenuCSHostStop.setEnabled(false);
         jMenuCSHostStop.setVisible(false);
-        jMenuCSHostStop.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent e) {
-                stopHost();
-                mwclient.stopHost();
-            }
+        jMenuCSHostStop.addActionListener(_ -> {
+            stopHost();
+            client.stopHost();
         });
 
         jMenuOptions.setText("Options");
@@ -953,294 +694,149 @@ public class CMainFrame extends javax.swing.JFrame {
         jMenuOptionsAutoScroll.setText("Auto Scroll");
         jMenuOptionsAutoScroll.setMnemonic('A');
         jMenuOptionsAutoScroll.setState(MainPanel.getCommPanel().autoTextUpdate);
-        jMenuOptionsAutoScroll.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent e) {
-                boolean newValue = !MainPanel.getCommPanel().autoTextUpdate;
-                MainPanel.getCommPanel().autoTextUpdate = newValue;
-                jMenuOptionsAutoScroll.setState(newValue);
+        jMenuOptionsAutoScroll.addActionListener(_ -> {
+            boolean newValue = !MainPanel.getCommPanel().autoTextUpdate;
+            MainPanel.getCommPanel().autoTextUpdate = newValue;
+            jMenuOptionsAutoScroll.setState(newValue);
 
-                mwclient.getConfig().setParam("AUTOSCROLL", Boolean.toString(newValue));
-                mwclient.getConfig().saveConfig();
-            }
+            client.getConfig().setParam("AUTOSCROLL", Boolean.toString(newValue));
+            client.getConfig().saveConfig();
         });
 
         jMenuOptionsMute.setText("Mute");
         jMenuOptionsMute.setMnemonic('M');
-        jMenuOptionsMute.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent e) {
-                mwclient.setSoundMuted(jMenuOptionsMute.getState());
-            }
-        });
+        jMenuOptionsMute.addActionListener(_ -> client.setSoundMuted(jMenuOptionsMute.getState()));
 
         jMenuOptionsReloadAllData.setText("Reload Data");
         jMenuOptionsReloadAllData.setMnemonic('D');
-        jMenuOptionsReloadAllData.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent e) {
-                mwclient.reloadData();
-            }
-        });
+        jMenuOptionsReloadAllData.addActionListener(_ -> client.reloadData());
 
         jMenuLeaderShip.setText("Leadership");
 
         jMenuLeaderPromote.setText("Promote Player");
-        jMenuLeaderPromote.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent e) {
-                jMenuLeaderPromote_actionPerformed();
-            }
-        });
+        jMenuLeaderPromote.addActionListener(_ -> jMenuLeaderPromote_actionPerformed());
 
         jMenuLeaderDemote.setText("Demote Player");
-        jMenuLeaderDemote.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent e) {
-                jMenuLeaderDemote_actionPerformed();
-            }
-        });
+        jMenuLeaderDemote.addActionListener(_ -> jMenuLeaderDemote_actionPerformed());
 
         jMenuLeaderFluff.setText("Fluff Player");
-        jMenuLeaderFluff.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent e) {
-                jMenuLeaderFluff_actionPerformed();
-            }
-        });
+        jMenuLeaderFluff.addActionListener(_ -> jMenuLeaderFluff_actionPerformed());
 
         jMenuLeaderMute.setText("Mute Player");
-        jMenuLeaderMute.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent e) {
-                jMenuLeaderMute_actionPerformed();
-            }
-        });
+        jMenuLeaderMute.addActionListener(_ -> jMenuLeaderMute_actionPerformed());
 
         jMenuLeaderFactionColor.setText("Faction Color");
-        jMenuLeaderFactionColor.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent e) {
-                jMenuLeaderFactionColor_actionPerformed();
-            }
-        });
+        jMenuLeaderFactionColor.addActionListener(_ -> jMenuLeaderFactionColor_actionPerformed());
 
         jMenuLeaderPlayerColor.setText("Player Color");
-        jMenuLeaderPlayerColor.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent e) {
-                jMenuLeaderPlayerColor_actionPerformed();
-            }
-        });
+        jMenuLeaderPlayerColor.addActionListener(_ -> jMenuLeaderPlayerColor_actionPerformed());
 
         jMenuLeaderResearchUnit.setText("Research Unit");
-        jMenuLeaderResearchUnit.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent e) {
-                jMenuLeaderResearchUnit_actionPerformed();
-            }
-        });
+        jMenuLeaderResearchUnit.addActionListener(_ -> jMenuLeaderResearchUnit_actionPerformed());
 
         jMenuLeaderResearchTech.setText("Research Tech");
-        jMenuLeaderResearchTech.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent e) {
+        jMenuLeaderResearchTech.addActionListener(_ -> {
+            int option = JOptionPane.showConfirmDialog(client.getMainFrame(),
+                  "Do you wish to research tech?",
+                  "Research?",
+                  JOptionPane.YES_NO_OPTION);
 
-                int option = javax.swing.JOptionPane.showConfirmDialog(mwclient.getMainFrame(),
-                      "Do you wish to research tech?",
-                      "Research?",
-                      javax.swing.JOptionPane.YES_NO_OPTION);
-
-                if (option == javax.swing.JOptionPane.NO_OPTION) {
-                    return;
-                }
-
-                mwclient.sendChat(client.MWClient.CAMPAIGN_PREFIX + "c researchtechlevel");
+            if (option == JOptionPane.NO_OPTION) {
+                return;
             }
+
+            client.sendChat(IClient.CAMPAIGN_PREFIX + "c researchtechlevel");
         });
 
         jMenuLeaderPurchaseFactory.setText("Purchase Factory");
-        jMenuLeaderPurchaseFactory.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent e) {
-                jMenuLeaderPurchaseFactory_actionPerformed(null);
-            }
-        });
+        jMenuLeaderPurchaseFactory.addActionListener(_ -> jMenuLeaderPurchaseFactory_actionPerformed(null));
 
         jMenuLeaderSetComponentConversion.setText("Set Component Conversion");
-        jMenuLeaderSetComponentConversion.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent e) {
-                jMenuLeaderSetComponentConversion_actionPerformed();
-            }
-        });
+        jMenuLeaderSetComponentConversion.addActionListener(_ -> jMenuLeaderSetComponentConversion_actionPerformed());
 
         jMenuLeaderViewFactionPartsCache.setText("View Faction Cache");
-        jMenuLeaderViewFactionPartsCache.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent e) {
-                mwclient.sendChat(client.MWClient.CAMPAIGN_PREFIX + "c viewfactionpartscache");
-            }
-        });
+        jMenuLeaderViewFactionPartsCache.addActionListener(_ -> client.sendChat(IClient.CAMPAIGN_PREFIX +
+                                                                                      "c viewfactionpartscache"));
 
         jMenuHelp.setText("Help");
         jMenuHelp.setMnemonic('E');
 
         jMenuHelpAbout.setText("About");
         jMenuHelpAbout.setMnemonic('A');
-        jMenuHelpAbout.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent e) {
-                jMenuHelpAbout_actionPerformed();
-            }
-        });
+        jMenuHelpAbout.addActionListener(_ -> jMenuHelpAbout_actionPerformed());
 
         jMenuHelpMemory.setText("Memory");
         jMenuHelpMemory.setMnemonic('M');
-        jMenuHelpMemory.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent e) {
-                jMenuHelpMemory_actionPerformed();
-            }
-        });
+        jMenuHelpMemory.addActionListener(_ -> jMenuHelpMemory_actionPerformed());
 
         jMenuHelpHelp.setText("Online Help");
         jMenuHelpHelp.setMnemonic('H');
-        jMenuHelpHelp.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent e) {
-                jMenuHelpHelp_actionPerformed();
-            }
-        });
+        jMenuHelpHelp.addActionListener(_ -> jMenuHelpHelp_actionPerformed());
 
         jMenuHelpViewUnit.setText("Unit Viewer");
         jMenuHelpViewUnit.setMnemonic('U');
-        jMenuHelpViewUnit.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent e) {
-                jMenuHelpViewUnit_actionPerformed();
-            }
-        });
+        jMenuHelpViewUnit.addActionListener(_ -> jMenuHelpViewUnit_actionPerformed());
 
         jMenuHelpViewBuildTables.setText("Build Table Viewer");
         jMenuHelpViewBuildTables.setMnemonic('B');
-        jMenuHelpViewBuildTables.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent e) {
-                jMenuHelpViewBuildTables_actionPerformed();
-            }
-        });
+        jMenuHelpViewBuildTables.addActionListener(_ -> jMenuHelpViewBuildTables_actionPerformed());
 
         jMenuHelpViewTraits.setText("View Faction Traits");
-        jMenuHelpViewTraits.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent e) {
-                new TraitDialog(mwclient, true);
-            }
-        });
+        jMenuHelpViewTraits.addActionListener(_ -> new TraitDialog(client, true));
 
         jMenuHelpPilotSkills.setText("Pilot Skill Descriptions");
         jMenuHelpPilotSkills.setMnemonic('P');
-        jMenuHelpPilotSkills.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent e) {
-                jMenuHelpPilotSkills_actionPerformed();
-            }
-        });
+        jMenuHelpPilotSkills.addActionListener(_ -> jMenuHelpPilotSkills_actionPerformed());
 
         jMenuHelpOpViewer.setText("Operation Viewer");
-        jMenuHelpOpViewer.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent e) {
-                mwclient.sendChat(client.MWClient.CAMPAIGN_PREFIX + "getops md5");
-            }
-        });
+        jMenuHelpOpViewer.addActionListener(_ -> client.sendChat(IClient.CAMPAIGN_PREFIX + "getops md5"));
 
         /*
-         * Display Report "MekWars Bug" and "Report MegaMek Bug" links in the
-         * Help Menu. Create the actual menu options, with browsers calls, here
-         * in order to add them to the menu in the formatting blocks that
-         * follow. These are hardcoded. Server ops can add their own links with
-         * the links.txt detailed above. @urgru 12.5.04
+         * Display Report "MekWars Bug" and "Report MegaMek Bug" links in the Help Menu. Create the actual menu
+         * options, with browsers calls, here to add them to the menu in the formatting blocks that follow. These are
+         * hardcoded. Server ops can add their own links with the links.txt detailed above. @urgru 12.5.04
          */
-        javax.swing.JMenuItem jMenuMekwarsBug = new javax.swing.JMenuItem("Report Bug (MekWars)");
-        javax.swing.JMenuItem jMenuMegamekBug = new javax.swing.JMenuItem("Report Bug (MegaMek)");
-        javax.swing.JMenuItem jMenuMekwarsRFE = new javax.swing.JMenuItem("RFE (MekWars)");
-        javax.swing.JMenuItem jMenuMegamekRFE = new javax.swing.JMenuItem("RFE (MegaMek)");
-        java.awt.event.ActionListener mekwarsListener = new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent e) {
-                try {
-                    mekwars.client.gui.Browser.displayURL("http://sourceforge.net/tracker/?group_id=122002&atid=692058");
-                } catch (Exception ex) {
-                    MWLogger.errLog(ex);
-                }
+        JMenuItem jMenuMekWarsBug = new JMenuItem("Report Bug/RFE (MekWars)");
+        JMenuItem jMenuMegaMekBug = new JMenuItem("Report Bug/REF (MegaMek)");
+        java.awt.event.ActionListener mekWarsListener = _ -> {
+            try {
+                Browser.displayURL("https://github.com/MegaMek/MekWars");
+            } catch (Exception ex) {
+                MWLogger.errLog(ex);
             }
         };
-        java.awt.event.ActionListener megamekListener = new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent e) {
-                try {
-                    mekwars.client.gui.Browser.displayURL("http://sourceforge.net/tracker/?group_id=47079&atid=448394");
-                } catch (Exception ex) {
-                    MWLogger.errLog(ex);
-                }
+        java.awt.event.ActionListener megaMekListener = _ -> {
+            try {
+                Browser.displayURL("https://github.com/MegaMek/megamek");
+            } catch (Exception ex) {
+                MWLogger.errLog(ex);
             }
         };
-        java.awt.event.ActionListener megamekRFEListener = new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent e) {
-                try {
-                    mekwars.client.gui.Browser.displayURL("http://sourceforge.net/tracker/?group_id=47079&atid=448397");
-                } catch (Exception ex) {
-                    MWLogger.errLog(ex);
-                }
-            }
-        };
-        java.awt.event.ActionListener mekwarsRFEListener = new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent e) {
-                try {
-                    mekwars.client.gui.Browser.displayURL("http://sourceforge.net/tracker/?group_id=122002&atid=692061");
-                } catch (Exception ex) {
-                    MWLogger.errLog(ex);
-                }
-            }
-        };
-        jMenuMekwarsBug.addActionListener(mekwarsListener);
-        jMenuMegamekBug.addActionListener(megamekListener);
-        jMenuMegamekRFE.addActionListener(megamekRFEListener);
-        jMenuMekwarsRFE.addActionListener(mekwarsRFEListener);
+        jMenuMekWarsBug.addActionListener(mekWarsListener);
+        jMenuMegaMekBug.addActionListener(megaMekListener);
 
         //@sal emojis
 
         jMenuEmoji.setText("Emojis");
 
-        if (Boolean.parseBoolean(mwclient.getserverConfigs("AllowEmoji"))) {
+        if (Boolean.parseBoolean(client.getServerConfigs("AllowEmoji"))) {
             jMenuEmojiFlip.setText("(╯°□°)╯︵ ┻━┻");
-            jMenuEmojiFlip.addActionListener(new java.awt.event.ActionListener() {
-                public void actionPerformed(java.awt.event.ActionEvent e) {
-                    mwclient.sendChat(client.MWClient.CAMPAIGN_PREFIX + "ec#fl");
-                }
-            });
-
-            //        	jMenuEmojiBear.setText("ʕ •ᴥ•ʔ");
-            //        	jMenuEmojiBear.addActionListener(new ActionListener()
-            //            {
-            //            	public void actionPerformed(ActionEvent e)
-            //            	{
-            //            		client.sendChat(MWClient.CAMPAIGN_PREFIX + "ec#be");
-            //            	}
-            //            });
+            jMenuEmojiFlip.addActionListener(_ -> client.sendChat(IClient.CAMPAIGN_PREFIX + "ec#fl"));
 
             jMenuEmojiShrug.setText("¯\\_(ツ)_/¯");
-            jMenuEmojiShrug.addActionListener(new java.awt.event.ActionListener() {
-                public void actionPerformed(java.awt.event.ActionEvent e) {
-                    mwclient.sendChat(client.MWClient.CAMPAIGN_PREFIX + "ec#sh");
-                }
-            });
+            jMenuEmojiShrug.addActionListener(_ -> client.sendChat(IClient.CAMPAIGN_PREFIX + "ec#sh"));
 
             jMenuEmojiFingers.setText("t(-.-t)");
-            jMenuEmojiFingers.addActionListener(new java.awt.event.ActionListener() {
-                public void actionPerformed(java.awt.event.ActionEvent e) {
-                    mwclient.sendChat(client.MWClient.CAMPAIGN_PREFIX + "ec#fi");
-                }
-            });
+            jMenuEmojiFingers.addActionListener(_ -> client.sendChat(IClient.CAMPAIGN_PREFIX + "ec#fi"));
 
             jMenuEmojiKiss.setText("( ˘ ³˘)♥");
-            jMenuEmojiKiss.addActionListener(new java.awt.event.ActionListener() {
-                public void actionPerformed(java.awt.event.ActionEvent e) {
-                    mwclient.sendChat(client.MWClient.CAMPAIGN_PREFIX + "ec#ki");
-                }
-            });
+            jMenuEmojiKiss.addActionListener(_ -> client.sendChat(IClient.CAMPAIGN_PREFIX + "ec#ki"));
 
             jMenuEmojiSmile.setText("◉‿◉");
-            jMenuEmojiSmile.addActionListener(new java.awt.event.ActionListener() {
-                public void actionPerformed(java.awt.event.ActionEvent e) {
-                    mwclient.sendChat(client.MWClient.CAMPAIGN_PREFIX + "ec#sm");
-                }
-            });
+            jMenuEmojiSmile.addActionListener(_ -> client.sendChat(IClient.CAMPAIGN_PREFIX + "ec#sm"));
 
             jMenuEmojiDeal.setText("•_•) ( •_•)>⌐■-■ (⌐■_■)");
-            jMenuEmojiDeal.addActionListener(new java.awt.event.ActionListener() {
-                public void actionPerformed(java.awt.event.ActionEvent e) {
-                    mwclient.sendChat(client.MWClient.CAMPAIGN_PREFIX + "ec#de");
-                }
-            });
+            jMenuEmojiDeal.addActionListener(_ -> client.sendChat(IClient.CAMPAIGN_PREFIX + "ec#de"));
         }
 
 
@@ -1255,11 +851,10 @@ public class CMainFrame extends javax.swing.JFrame {
         jMenuFile.addSeparator();
         jMenuFile.add(jMenuFileDisconnect);
         jMenuFile.add(jMenuFileExit);
-        // jMenuFile.add(jMenuFileDebugPlayer);
 
         /*
-         * Put together the campaign menu. Start by assembling the sub-menus,
-         * then add the manus and line items all together ...
+         * Put together the campaign menu. Start by assembling the sub-menus, then add the manus and line items all
+         * together ...
          */
 
         // front-line submenu
@@ -1304,26 +899,28 @@ public class CMainFrame extends javax.swing.JFrame {
         // other sub menu
         jMenuCampaignSubOther.add(jMenuCampaignLogo);
         jMenuCampaignSubOther.add(jMenuCampaignDefect);
-        if (Boolean.parseBoolean(mwclient.getserverConfigs("Self_Promote_Subfaction"))) //@salient
+
+        if (Boolean.parseBoolean(client.getServerConfigs("Self_Promote_Subfaction"))) //@salient
         {
             jMenuCampaignSubOther.add(jMenuCampaignSelfPromote);
         }
-        if (Boolean.parseBoolean(mwclient.getserverConfigs("Enable_MiniCampaign"))) //@salient
+
+        if (Boolean.parseBoolean(client.getServerConfigs("Enable_MiniCampaign"))) //@salient
         {
             jMenuCampaignSubOther.add(jMenuCampaignReportStatusMC);
         }
+
         jMenuCampaignSubOther.add(jMenuCampaignRewardPoints);
         jMenuCampaignSubOther.add(jMenuCampaignInfluencePoints);
-        if (Boolean.parseBoolean(mwclient.getserverConfigs("UsePartsBlackMarket"))) {
+
+        if (Boolean.parseBoolean(client.getServerConfigs("UsePartsBlackMarket"))) {
             jMenuCampaignSubOther.add(jMenuCampaignPartsCache);
         }
 
         jMenuCampaignSubOther.add(jMenuCampaignDirectSell);
 
         // assemble the actual campaign menu...
-
         jMenuCampaign.add(jMenuCampaignMyStatus);
-        // jMenuCommander.add(jMenuCampaignHouseStatus);
         jMenuCampaign.add(jMenuCampaignSubAttack);
         jMenuCampaign.addSeparator();
         jMenuCampaign.add(jMenuCampaignSubMerc);
@@ -1337,6 +934,7 @@ public class CMainFrame extends javax.swing.JFrame {
         jMenuCampaign.add(jMenuCampaignActivate);
         jMenuCampaign.add(jMenuCampaignDeactivate);
         jMenuCampaign.add(jMenuCampaignLogout);
+
         /*
          * Games menu is assembled in a Menu Factory
          */
@@ -1372,11 +970,11 @@ public class CMainFrame extends javax.swing.JFrame {
         jMenuHelp.add(jMenuHelpViewBuildTables);
 
         /*
-         * Only add the trait viewer if the server allows traits. We'll use
-         * BattleMech traits as a proxy for ALL trait types when deciding
-         * whether or not to show.
+         * Only add the trait viewer if the server allows traits. We'll use BattleMek traits as a proxy for ALL
+         * trait types when deciding whether to show.
          */
-        if (Integer.parseInt(mwclient.getserverConfigs("chanceforTNforMek")) > 0) {
+
+        if (Integer.parseInt(client.getServerConfigs("chanceforTNforMek")) > 0) {
             jMenuHelp.add(jMenuHelpViewTraits);
         }
 
@@ -1384,22 +982,16 @@ public class CMainFrame extends javax.swing.JFrame {
         jMenuHelp.add(jMenuHelpPilotSkills);
         jMenuHelp.add(jMenuHelpOpViewer);
         jMenuHelp.addSeparator();
-        jMenuHelp.add(jMenuMekwarsBug);
-        jMenuHelp.add(jMenuMegamekBug);
-        jMenuHelp.addSeparator();
-        jMenuHelp.add(jMenuMekwarsRFE);
-        jMenuHelp.add(jMenuMegamekRFE);
+        jMenuHelp.add(jMenuMekWarsBug);
+        jMenuHelp.add(jMenuMegaMekBug);
 
         //@salient emoji
         jMenuEmoji.add(jMenuEmojiFlip);
-        //jMenuEmoji.add(jMenuEmojiBear);
         jMenuEmoji.add(jMenuEmojiShrug);
         jMenuEmoji.add(jMenuEmojiFingers);
         jMenuEmoji.add(jMenuEmojiKiss);
         jMenuEmoji.add(jMenuEmojiSmile);
         jMenuEmoji.add(jMenuEmojiDeal);
-
-
 
         /*
          * Admin menu setup used to be here. @urgru
@@ -1417,85 +1009,71 @@ public class CMainFrame extends javax.swing.JFrame {
         jMenuBar1.add(jMenuLeaderShip);
         jMenuBar1.add(jMenuHelp);
 
-        if (Boolean.parseBoolean(mwclient.getserverConfigs("AllowEmoji"))) {
+        if (Boolean.parseBoolean(client.getServerConfigs("AllowEmoji"))) {
             jMenuBar1.add(jMenuEmoji);
         }
-        /*
-         * jMenuBar1.add(jMenuMod); jMenuBar1.add(jMenuAdmin);
-         */
+
         jMenuBar1.add(jMenuOperations);
-
-        // jMenuBar1.add(jMenuAdmin);
-    }
-
-    public void jMenuFileNick_actionPerformed() {
-        String NewNick, Password;
-        NewNick = javax.swing.JOptionPane.showInputDialog(getContentPane(), "NewNick");
-        if (NewNick == null) {
-            return;
-        }
-        Password = javax.swing.JOptionPane.showInputDialog(getContentPane(), "Message");
-        mwclient.sendChat(client.MWClient.CAMPAIGN_PREFIX + "nick " + NewNick + "," + Password);
     }
 
     public void jMenuFileConnect_actionPerformed() {
-        mwclient.connectToServer();
+        client.connectToServer();
         // Set Version upon reconnect.
-        if (!mwclient.getStatus().equals("Not connected")) {
-            mwclient.sendChat(
-                  client.MWClient.CAMPAIGN_PREFIX +
+        if (!client.getStatus().equals("Not connected")) {
+            client.sendChat(
+                  IClient.CAMPAIGN_PREFIX +
                         "c setclientversion#" +
-                        mwclient.myUsername.trim() +
+                        client.getUsername().trim() +
                         "#" +
-                        client.MWClient.CLIENT_VERSION);
+                        IClient.CLIENT_VERSION);
         }
     }
 
     public void jMenuFileRegister_actionPerformed() {
-        new RegisterNameDialog(mwclient);
+        new RegisterNameDialog(client);
     }
 
     public void jMenuFileMail_actionPerformed(String Nickname) {
         String message;
         if (Nickname == null) {
-            Nickname = javax.swing.JOptionPane.showInputDialog(getContentPane(),
+            Nickname = JOptionPane.showInputDialog(getContentPane(),
                   "Nickname",
                   "Send mail to whom?",
-                  javax.swing.JOptionPane.PLAIN_MESSAGE);
+                  JOptionPane.PLAIN_MESSAGE);
             if (Nickname == null) {
                 return;
             }
         }
-        message = javax.swing.JOptionPane.showInputDialog(getContentPane(),
+        message = JOptionPane.showInputDialog(getContentPane(),
               "message",
               "Send mail to " + Nickname,
-              javax.swing.JOptionPane.PLAIN_MESSAGE);
+              JOptionPane.PLAIN_MESSAGE);
         if (message == null) {
             return;
         }
-        mwclient.processGUIInput(client.MWClient.GUI_PREFIX + "mail " + Nickname + "," + message);
+        client.processGUIInput(IClient.GUI_PREFIX + "mail " + Nickname + "," + message);
     }
 
     public void jMenuFileLastOnline_actionPerformed() {
         String Nickname;
-        Nickname = javax.swing.JOptionPane.showInputDialog(getContentPane(), "Player name?");
+        Nickname = JOptionPane.showInputDialog(getContentPane(), "Player name?");
         if (Nickname == null) {
             return;
         }
-        mwclient.sendChat(client.MWClient.CAMPAIGN_PREFIX + "c lastonline#" + Nickname);
+        client.sendChat(IClient.CAMPAIGN_PREFIX + "c lastonline#" + Nickname);
     }
 
     public void jMenuFileExit_actionPerformed() {
-        mwclient.goodbye();
+        client.goodbye();
         System.exit(0);
     }
 
     public void jMenuCampaignISStatus_actionPerformed() {
 
-        String House = "";
-        String House2 = "";
+        String House;
+        String House2;
 
-        HouseNameDialog factionDialog = new HouseNameDialog(mwclient, "Faction", true, false);
+        HouseNameDialog factionDialog = new HouseNameDialog(client, "Faction", true, false);
         factionDialog.setVisible(true);
         House = factionDialog.getHouseName();
         factionDialog.dispose();
@@ -1504,22 +1082,22 @@ public class CMainFrame extends javax.swing.JFrame {
             return;
         }
 
-        if (!House.equals("")) {
-            factionDialog = new HouseNameDialog(mwclient, "Secondary Faction", true, false);
+        if (!House.isEmpty()) {
+            factionDialog = new HouseNameDialog(client, "Secondary Faction", true, false);
             factionDialog.setVisible(true);
             House2 = factionDialog.getHouseName();
             factionDialog.dispose();
-            mwclient.sendChat(client.MWClient.CAMPAIGN_PREFIX + "c isstatus#" + House + "#" + House2);
+            client.sendChat(IClient.CAMPAIGN_PREFIX + "c isstatus#" + House + "#" + House2);
         } else {
-            mwclient.sendChat(client.MWClient.CAMPAIGN_PREFIX + "c isstatus");
+            client.sendChat(IClient.CAMPAIGN_PREFIX + "c isstatus");
         }
     }
 
     public void jMenuCampaignFactionStatus_actionPerformed() {
 
-        String House = "";
+        String House;
 
-        HouseNameDialog factionDialog = new HouseNameDialog(mwclient, "Faction", true, false);
+        HouseNameDialog factionDialog = new HouseNameDialog(client, "Faction", true, false);
         factionDialog.setVisible(true);
         House = factionDialog.getHouseName();
         factionDialog.dispose();
@@ -1528,11 +1106,11 @@ public class CMainFrame extends javax.swing.JFrame {
             return;
         }
 
-        mwclient.sendChat(client.MWClient.CAMPAIGN_PREFIX + "c faction#" + House);
+        client.sendChat(IClient.CAMPAIGN_PREFIX + "c faction#" + House);
     }
 
     public void jMenuMercStatus_actionPerformed() {
-        PlayerNameDialog playerDialog = new PlayerNameDialog(mwclient,
+        PlayerNameDialog playerDialog = new PlayerNameDialog(client,
               "Which Merc do you want info on?",
               PlayerNameDialog.MERCS_ONLY);
         playerDialog.setVisible(true);
@@ -1543,14 +1121,14 @@ public class CMainFrame extends javax.swing.JFrame {
             return;
         }
 
-        mwclient.sendChat(client.MWClient.CAMPAIGN_PREFIX + "c mstatus#" + Merc);
+        client.sendChat(IClient.CAMPAIGN_PREFIX + "c mstatus#" + Merc);
     }
 
     public void jMenuCommanderCheckAttack_actionPerformed(int lid) {
         if (lid == -1) {
-            mwclient.sendChat(client.MWClient.CAMPAIGN_PREFIX + "c ca");
+            client.sendChat(IClient.CAMPAIGN_PREFIX + "c ca");
         } else {
-            mwclient.sendChat(client.MWClient.CAMPAIGN_PREFIX + "c ca#" + lid);
+            client.sendChat(IClient.CAMPAIGN_PREFIX + "c ca#" + lid);
         }
     }
 
@@ -1558,51 +1136,50 @@ public class CMainFrame extends javax.swing.JFrame {
         String range;
         String faction;
 
-        range = javax.swing.JOptionPane.showInputDialog(getContentPane(), "Max distance in Lightyears?");
-        if ((range == null) || (range.length() < 1)) {
+        range = JOptionPane.showInputDialog(getContentPane(), "Max distance in Lightyears?");
+        if ((range == null) || (range.isEmpty())) {
             return;
         }
 
-        HouseNameDialog factionDialog = new HouseNameDialog(mwclient, "Faction", false, false);
+        HouseNameDialog factionDialog = new HouseNameDialog(client, "Faction", false, false);
         factionDialog.setVisible(true);
         faction = factionDialog.getHouseName();
         factionDialog.dispose();
 
-        if ((faction == null) || (faction.length() < 1)) {
+        if ((faction == null) || (faction.isEmpty())) {
             return;
         }
-        mwclient.sendChat(client.MWClient.CAMPAIGN_PREFIX + "c range#" + range + "#" + faction);
+        client.sendChat(IClient.CAMPAIGN_PREFIX + "c range#" + range + "#" + faction);
     }
 
     public void jMenuFindContestedPlanets_actionPerformed() { //BarukKhazad 20151129 - start 2
         String h1 = thePlayer.getHouse();
-        String h2 = "";
+        String h2;
         String Perc = "20";
-        Perc = (String) javax.swing.JOptionPane.showInputDialog(getContentPane(),
-              (Object) "Minimum Attacker Planet Percentage? (1 to 100)",
+        Perc = (String) JOptionPane.showInputDialog(getContentPane(),
+              "Minimum Attacker Planet Percentage? (1 to 100)",
               "",
-              javax.swing.JOptionPane.PLAIN_MESSAGE,
+              JOptionPane.PLAIN_MESSAGE,
               null,
               null,
               Perc);
-        if ((Perc == null) || (Perc.length() < 1)) {
+        if ((Perc == null) || (Perc.isEmpty())) {
             return;
         }
 
-        HouseNameDialog factionDialog = new HouseNameDialog(mwclient, "Target Faction", false, false);
+        HouseNameDialog factionDialog = new HouseNameDialog(client, "Target Faction", false, false);
         factionDialog.setVisible(true);
         h2 = factionDialog.getHouseName();
         factionDialog.dispose();
 
-        if ((h2 == null) || (h2.length() < 1)) {
+        if ((h2 == null) || (h2.isEmpty())) {
             return;
         }
-        if (h1 == h2) {
-            mwclient.addToChat("That is your faction. Target an enemy faction.");
+        if (Objects.equals(h1, h2)) {
+            client.addToChat("That is your faction. Target an enemy faction.");
             return;
         }
-        //client.addToChat("findcp " + h1 + "#" + h2 + "#" + Perc);
-        mwclient.sendChat(client.MWClient.CAMPAIGN_PREFIX + "findcp " + h1 + "#" + h2 + "#" + Perc);
+        client.sendChat(IClient.CAMPAIGN_PREFIX + "findcp " + h1 + "#" + h2 + "#" + Perc);
     }  //BarukKhazad 20151129 - end 2
 
     public void jMenuCommanderTransferMoney_actionPerformed(String name) {
@@ -1610,8 +1187,8 @@ public class CMainFrame extends javax.swing.JFrame {
         String targetPlayer;
         String Amount;
 
-        if ((name == null) || name.trim().equals("")) {
-            PlayerNameDialog pnd = new PlayerNameDialog(mwclient, "Transfer Recipient", PlayerNameDialog.FACTION_ONLY);
+        if ((name == null) || name.trim().isEmpty()) {
+            PlayerNameDialog pnd = new PlayerNameDialog(client, "Transfer Recipient", PlayerNameDialog.FACTION_ONLY);
             pnd.setVisible(true);
             targetPlayer = pnd.getPlayerName();
             pnd.dispose();
@@ -1623,24 +1200,24 @@ public class CMainFrame extends javax.swing.JFrame {
             return;
         }
 
-        Amount = javax.swing.JOptionPane.showInputDialog(getContentPane(),
+        Amount = JOptionPane.showInputDialog(getContentPane(),
               "Amount",
-              "Send " + mwclient.moneyOrFluMessage(true, true, -2) + " to " + targetPlayer,
-              javax.swing.JOptionPane.PLAIN_MESSAGE);
+              "Send " + client.moneyOrFluMessage(true, true, -2) + " to " + targetPlayer,
+              JOptionPane.PLAIN_MESSAGE);
 
         if (Amount == null) {
             return;
         }
 
-        mwclient.sendChat(client.MWClient.CAMPAIGN_PREFIX + "c transfermoney#" + targetPlayer + "#" + Amount);
+        client.sendChat(IClient.CAMPAIGN_PREFIX + "c transfermoney#" + targetPlayer + "#" + Amount);
     }
 
     public void jMenuCommanderTransferRewardPoints_actionPerformed(String name) {
         String targetPlayer;
         String Amount;
 
-        if ((name == null) || name.trim().equals("")) {
-            PlayerNameDialog pnd = new PlayerNameDialog(mwclient, "Transfer Recipient", PlayerNameDialog.FACTION_ONLY);
+        if ((name == null) || name.trim().isEmpty()) {
+            PlayerNameDialog pnd = new PlayerNameDialog(client, "Transfer Recipient", PlayerNameDialog.FACTION_ONLY);
             pnd.setVisible(true);
             targetPlayer = pnd.getPlayerName();
             pnd.dispose();
@@ -1652,16 +1229,16 @@ public class CMainFrame extends javax.swing.JFrame {
             return;
         }
 
-        Amount = javax.swing.JOptionPane.showInputDialog(getContentPane(),
+        Amount = JOptionPane.showInputDialog(getContentPane(),
               "Amount",
-              "Send " + mwclient.getserverConfigs("RPShortName") + " to " + targetPlayer,
-              javax.swing.JOptionPane.PLAIN_MESSAGE);
+              "Send " + client.getServerConfigs("RPShortName") + " to " + targetPlayer,
+              JOptionPane.PLAIN_MESSAGE);
 
         if (Amount == null) {
             return;
         }
 
-        mwclient.sendChat(client.MWClient.CAMPAIGN_PREFIX + "c transferrewardpoints#" + targetPlayer + "#" + Amount);
+        client.sendChat(IClient.CAMPAIGN_PREFIX + "c transferrewardpoints#" + targetPlayer + "#" + Amount);
     }
 
     //@Salient
@@ -1669,8 +1246,8 @@ public class CMainFrame extends javax.swing.JFrame {
         String targetPlayer;
         String Amount;
 
-        if ((name == null) || name.trim().equals("")) {
-            PlayerNameDialog pnd = new PlayerNameDialog(mwclient, "Transfer Recipient", PlayerNameDialog.FACTION_ONLY);
+        if ((name == null) || name.trim().isEmpty()) {
+            PlayerNameDialog pnd = new PlayerNameDialog(client, "Transfer Recipient", PlayerNameDialog.FACTION_ONLY);
             pnd.setVisible(true);
             targetPlayer = pnd.getPlayerName();
             pnd.dispose();
@@ -1682,16 +1259,16 @@ public class CMainFrame extends javax.swing.JFrame {
             return;
         }
 
-        Amount = javax.swing.JOptionPane.showInputDialog(getContentPane(),
+        Amount = JOptionPane.showInputDialog(getContentPane(),
               "Amount",
-              "Send " + mwclient.getserverConfigs("FluShortName") + " to " + targetPlayer,
-              javax.swing.JOptionPane.PLAIN_MESSAGE);
+              "Send " + client.getServerConfigs("FluShortName") + " to " + targetPlayer,
+              JOptionPane.PLAIN_MESSAGE);
 
         if (Amount == null) {
             return;
         }
 
-        mwclient.sendChat(client.MWClient.CAMPAIGN_PREFIX + "c transferinfluence#" + targetPlayer + "#" + Amount);
+        client.sendChat(IClient.CAMPAIGN_PREFIX + "c transferinfluence#" + targetPlayer + "#" + Amount);
     }
 
 
@@ -1699,8 +1276,8 @@ public class CMainFrame extends javax.swing.JFrame {
 
         String targetPlayer;
 
-        if ((name == null) || name.trim().equals("")) {
-            PlayerNameDialog pnd = new PlayerNameDialog(mwclient, "Transfer Recipient", PlayerNameDialog.FACTION_ONLY);
+        if ((name == null) || name.trim().isEmpty()) {
+            PlayerNameDialog pnd = new PlayerNameDialog(client, "Transfer Recipient", PlayerNameDialog.FACTION_ONLY);
             pnd.setVisible(true);
             targetPlayer = pnd.getPlayerName();
             pnd.dispose();
@@ -1713,7 +1290,7 @@ public class CMainFrame extends javax.swing.JFrame {
         }
 
         if (mid == -1) {
-            UnitSelectionDialog usd = new UnitSelectionDialog(mwclient, "Transfer Unit", "Select unit to transfer:");
+            UnitSelectionDialog usd = new UnitSelectionDialog(client, "Transfer Unit", "Select unit to transfer:");
             usd.setVisible(true);
             mid = Integer.parseInt(usd.getUnitID());
             usd.dispose();
@@ -1723,28 +1300,28 @@ public class CMainFrame extends javax.swing.JFrame {
             return;
         }
 
-        mwclient.sendChat(client.MWClient.CAMPAIGN_PREFIX + "c transferunit#" + targetPlayer + "#" + mid);
+        client.sendChat(IClient.CAMPAIGN_PREFIX + "c transferunit#" + targetPlayer + "#" + mid);
     }
 
     public void jMenuCommanderAddToBM_actionPerformed(int mid) {
 
-        java.util.Vector<client.campaign.CUnit> toSell = new java.util.Vector<client.campaign.CUnit>(1, 1);
-        toSell.add(mwclient.getPlayer().getUnit(mid));
+        java.util.Vector<CUnit> toSell = new java.util.Vector<>(1, 1);
+        toSell.add(client.getPlayer().getUnit(mid));
 
-        SellUnitDialog sud = new SellUnitDialog(this, mwclient, toSell);
+        SellUnitDialog sud = new SellUnitDialog(this, client, toSell);
         sud.setVisible(true);
     }
 
     public void jMenuCommanderRemoveLance_actionPerformed(int lid) {
         String LanceID;
         if (lid == -1) {
-            LanceID = javax.swing.JOptionPane.showInputDialog(getContentPane(), "Army ID?");
+            LanceID = JOptionPane.showInputDialog(getContentPane(), "Army ID?");
             if (LanceID == null) {
                 return;
             }
             lid = Integer.parseInt(LanceID);
         }
-        mwclient.sendChat(client.MWClient.CAMPAIGN_PREFIX + "c rma#" + lid);
+        client.sendChat(IClient.CAMPAIGN_PREFIX + "c rma#" + lid);
     }
 
     /*
@@ -1752,11 +1329,11 @@ public class CMainFrame extends javax.swing.JFrame {
      * unit id.
      */
     public void jMenuCommanderNamePilot_actionPerformed(int uid) {
-        String newName = javax.swing.JOptionPane.showInputDialog(getContentPane(), "Pilot's Name?");
+        String newName = JOptionPane.showInputDialog(getContentPane(), "Pilot's Name?");
         if (newName == null) {
             return;
         }
-        mwclient.sendChat(client.MWClient.CAMPAIGN_PREFIX + "c namepilot#" + uid + "#" + newName);
+        client.sendChat(IClient.CAMPAIGN_PREFIX + "c namepilot#" + uid + "#" + newName);
     }
 
     /*
@@ -1764,43 +1341,36 @@ public class CMainFrame extends javax.swing.JFrame {
      * army id.
      */
     public void jMenuCommanderNameArmy_actionPerformed(int aid) {
-        client.campaign.CArmy selectedArmy = mwclient.getPlayer().getArmy(aid);
+        CArmy selectedArmy = client.getPlayer().getArmy(aid);
         if (selectedArmy == null) {
             return;
         }
 
-        String newName = javax.swing.JOptionPane.showInputDialog(getContentPane(),
+        String newName = JOptionPane.showInputDialog(getContentPane(),
               "New army name? [Leave blank to clear]",
               selectedArmy.getName());
         if (newName == null) {
             return;
         }
 
-        if (newName.trim().length() == 0) {
+        if (newName.trim().isEmpty()) {
             newName = "clear";
         }
 
-        mwclient.sendChat(client.MWClient.CAMPAIGN_PREFIX + "c namearmy#" + aid + "#" + newName);
+        client.sendChat(IClient.CAMPAIGN_PREFIX + "c namearmy#" + aid + "#" + newName);
     }
 
     public void jMenuCommanderPlayerLockArmy_actionPerformed(int aid) {
-
-        // CArmy selectedArmy = client.getPlayer().getArmy(aid);
-        // if(selectedArmy == null)
-        // return;
-        mwclient.sendChat(client.MWClient.CAMPAIGN_PREFIX + "c playerlockarmy#" + aid);
+        client.sendChat(IClient.CAMPAIGN_PREFIX + "c playerlockarmy#" + aid);
     }
 
     public void jMenuCommanderPlayerUnlockArmy_actionPerformed(int aid) {
-        // CArmy selectedArmy = client.getPlayer().getArmy(aid);
-        // if(selectedArmy == null)
-        // return;
-        mwclient.sendChat(client.MWClient.CAMPAIGN_PREFIX + "c playerunlockarmy#" + aid);
+        client.sendChat(IClient.CAMPAIGN_PREFIX + "c playerunlockarmy#" + aid);
     }
 
     public void jMenuCommanderDisableArmy_actionPerformed(int aid) {
         // Toggle armyDisabled
-        mwclient.sendChat(client.MWClient.CAMPAIGN_PREFIX + "c togglearmydisabled#" + aid);
+        client.sendChat(IClient.CAMPAIGN_PREFIX + "c togglearmydisabled#" + aid);
     }
 
     /*
@@ -1809,30 +1379,29 @@ public class CMainFrame extends javax.swing.JFrame {
      */
     public void jMenuCommanderSetLowerUnitLimit_actionPerformed(int aid) {
 
-        client.campaign.CArmy selectedArmy = mwclient.getPlayer().getArmy(aid);
+        CArmy selectedArmy = client.getPlayer().getArmy(aid);
         if (selectedArmy == null) {
             return;
         }
 
-        int newLimit = -1;
+        int newLimit;
 
-        String example = "" +
-                               "Example: An Army of 8 units with a Lower Limit of<br>" +
+        String example = "Example: An Army of 8 units with a Lower Limit of<br>" +
                                "4 will not be able to fight an Army with only 3 units.<br>" +
                                "This can be useful if you want to avoid fighting a<br>" +
                                "small number of super heavy/levelled units.";
 
-        String limit = javax.swing.JOptionPane.showInputDialog(getContentPane(),
+        String limit = JOptionPane.showInputDialog(getContentPane(),
               "<HTML>" + "Lower Limit? [-1 to disable the limit]<i><br><br>" + example + "<br></i></HTML>",
               Integer.toString(selectedArmy.getLowerLimiter()),
-              javax.swing.JOptionPane.PLAIN_MESSAGE);
+              JOptionPane.PLAIN_MESSAGE);
 
         if (limit == null) {
             return;
         }
 
         newLimit = Integer.parseInt(limit);
-        mwclient.sendChat(client.MWClient.CAMPAIGN_PREFIX + "c all#" + aid + "#" + newLimit);
+        client.sendChat(IClient.CAMPAIGN_PREFIX + "c all#" + aid + "#" + newLimit);
     }
 
     /*
@@ -1841,31 +1410,30 @@ public class CMainFrame extends javax.swing.JFrame {
      */
     public void jMenuCommanderSetUpperUnitLimit_actionPerformed(int aid) {
 
-        client.campaign.CArmy selectedArmy = mwclient.getPlayer().getArmy(aid);
+        CArmy selectedArmy = client.getPlayer().getArmy(aid);
         if (selectedArmy == null) {
             return;
         }
 
-        int newLimit = -1;
+        int newLimit;
 
         // generate an example string.
-        String example = "" +
-                               "Example: An Army of 4 units with an Upper Limit of 5<br>" +
-                               "will not be able to fight againt Armies with more than<br>" +
+        String example = "Example: An Army of 4 units with an Upper Limit of 5<br>" +
+                               "will not be able to fight against Armies with more than<br>" +
                                "9 units. This can be useful if you don't want to play<br>" +
-                               "againts swarms";
+                               "against swarms";
 
-        String limit = javax.swing.JOptionPane.showInputDialog(getContentPane(),
+        String limit = JOptionPane.showInputDialog(getContentPane(),
               "<HTML>" + "Upper Limit? [-1 to disable the limit]<i><br><br>" + example + "<br></i></HTML>",
-              Integer.toString(selectedArmy.getLowerLimiter()).toString(),
-              javax.swing.JOptionPane.PLAIN_MESSAGE);
+              Integer.toString(selectedArmy.getLowerLimiter()),
+              JOptionPane.PLAIN_MESSAGE);
 
         if (limit == null) {
             return;
         }
 
         newLimit = Integer.parseInt(limit);
-        mwclient.sendChat(client.MWClient.CAMPAIGN_PREFIX + "c aul#" + aid + "#" + newLimit);
+        client.sendChat(IClient.CAMPAIGN_PREFIX + "c aul#" + aid + "#" + newLimit);
     }
 
     /*
@@ -1874,40 +1442,40 @@ public class CMainFrame extends javax.swing.JFrame {
      */
     public void jMenuCommanderSetForceSizeToFace_actionPerformed(int aid) {
 
-        client.campaign.CArmy selectedArmy = mwclient.getPlayer().getArmy(aid);
+        CArmy selectedArmy = client.getPlayer().getArmy(aid);
         if (selectedArmy == null) {
             return;
         }
 
         // generate an example string.
-        String example = "" + "This is the force size you expect to face when you request a match";
+        String example = "This is the force size you expect to face when you request a match";
 
-        String force = javax.swing.JOptionPane.showInputDialog(getContentPane(),
+        String force = JOptionPane.showInputDialog(getContentPane(),
               "<HTML>" + "Force Size To Face	? [-1 to disable the limit]<i><br><br>" + example + "<br></i></HTML>",
               Float.toString(selectedArmy.getOpForceSize()),
-              javax.swing.JOptionPane.PLAIN_MESSAGE);
+              JOptionPane.PLAIN_MESSAGE);
 
         if (force == null) {
             return;
         }
 
-        mwclient.sendChat(client.MWClient.CAMPAIGN_PREFIX + "c aofs#" + aid + "#" + force);
+        client.sendChat(IClient.CAMPAIGN_PREFIX + "c aofs#" + aid + "#" + force);
 
     }
 
     public void jMenuCommanderLogo_actionPerformed() {
         String LogoURL;
-        LogoURL = javax.swing.JOptionPane.showInputDialog(getContentPane(),
+        LogoURL = JOptionPane.showInputDialog(getContentPane(),
               "URL? (i.e. http://www.mysite.com/mypic.jpg)",
-              mwclient.getPlayer().getMyLogo());
+              client.getPlayer().getMyLogo());
         if (LogoURL == null) {
             return;
         }
-        mwclient.sendChat(client.MWClient.CAMPAIGN_PREFIX + "c setmylogo#" + LogoURL);
+        client.sendChat(IClient.CAMPAIGN_PREFIX + "c setmylogo#" + LogoURL);
     }
 
     public void jMenuCommanderPersonalPilotQueue_actionPerformed() {
-        mwclient.sendChat(client.MWClient.CAMPAIGN_PREFIX + "c displayplayerpersonalpilotqueue");
+        client.sendChat(IClient.CAMPAIGN_PREFIX + "c displayplayerpersonalpilotqueue");
     }
 
     public void jMenuCommanderTransferPilot_actionPerformed(String name) {
@@ -1915,8 +1483,8 @@ public class CMainFrame extends javax.swing.JFrame {
         // get player
         String targetPlayer;
 
-        if ((name == null) || name.trim().equals("")) {
-            PlayerNameDialog pnd = new PlayerNameDialog(mwclient, "Transfer Recipient", PlayerNameDialog.FACTION_ONLY);
+        if ((name == null) || name.trim().isEmpty()) {
+            PlayerNameDialog pnd = new PlayerNameDialog(client, "Transfer Recipient", PlayerNameDialog.FACTION_ONLY);
             pnd.setVisible(true);
             targetPlayer = pnd.getPlayerName();
             pnd.dispose();
@@ -1932,19 +1500,19 @@ public class CMainFrame extends javax.swing.JFrame {
         Object[] pWeightClass = { "Light", "Medium", "Heavy", "Assault" };
         Object[] pUnitType = { "Mek", "Proto" };
 
-        int weightClass = 0;
-        int unitType = 0;
+        int weightClass;
+        int unitType;
 
         // determine the unit type to use
-        String pUnitTypeString = (String) javax.swing.JOptionPane.showInputDialog(mwclient.getMainFrame(),
+        String pUnitTypeString = (String) JOptionPane.showInputDialog(client.getMainFrame(),
               "Select a pilot unit type",
               "Unit Type Selection",
-              javax.swing.JOptionPane.INFORMATION_MESSAGE,
+              JOptionPane.INFORMATION_MESSAGE,
               null,
               pUnitType,
               pUnitType[0]);
 
-        if ((pUnitTypeString == null) || (pUnitTypeString.length() == 0)) {
+        if ((pUnitTypeString == null) || (pUnitTypeString.isEmpty())) {
             return;
         }
 
@@ -1955,34 +1523,34 @@ public class CMainFrame extends javax.swing.JFrame {
         }
 
         // determine the weight class to use
-        String pWeightClassString = (String) javax.swing.JOptionPane.showInputDialog(mwclient.getMainFrame(),
+        String pWeightClassString = (String) JOptionPane.showInputDialog(client.getMainFrame(),
               "Select a pilot unit size",
               "Weight Class Selection",
-              javax.swing.JOptionPane.INFORMATION_MESSAGE,
+              JOptionPane.INFORMATION_MESSAGE,
               null,
               pWeightClass,
               pWeightClass[0]);
 
-        if ((pWeightClassString == null) || (pWeightClassString.length() == 0)) {
+        if ((pWeightClassString == null) || (pWeightClassString.isEmpty())) {
             return;
         }
 
         weightClass = Unit.getWeightIDForName(pWeightClassString);
 
-        if (mwclient.getPlayer().getPersonalPilotQueue().getPilotQueue(unitType, weightClass).size() < 1) {
-            javax.swing.JOptionPane.showMessageDialog(null,
+        if (client.getPlayer().getPersonalPilotQueue().getPilotQueue(unitType, weightClass).isEmpty()) {
+            JOptionPane.showMessageDialog(null,
                   "You do not have any pilots for " +
                         StringUtils.aOrAn(pWeightClassString, true) +
                         " " +
                         pUnitTypeString,
                   "No Pilots!",
-                  javax.swing.JOptionPane.CLOSED_OPTION);
+                  JOptionPane.CLOSED_OPTION);
             return;
         }
 
-        Object[] pilots = mwclient.getPlayer().getPersonalPilotQueue().getPilotQueue(unitType, weightClass).toArray();
+        Object[] pilots = client.getPlayer().getPersonalPilotQueue().getPilotQueue(unitType, weightClass).toArray();
 
-        javax.swing.JComboBox<String> combo = new javax.swing.JComboBox<String>();
+        JComboBox<String> combo = new JComboBox<>();
 
         for (Object pilot : pilots) {
             Pilot mm = (Pilot) pilot;
@@ -2001,11 +1569,11 @@ public class CMainFrame extends javax.swing.JFrame {
         }
 
         combo.setEditable(false);
-        javax.swing.JOptionPane jop = new javax.swing.JOptionPane(combo,
-              javax.swing.JOptionPane.QUESTION_MESSAGE,
-              javax.swing.JOptionPane.OK_CANCEL_OPTION);
+        JOptionPane jop = new JOptionPane(combo,
+              JOptionPane.QUESTION_MESSAGE,
+              JOptionPane.OK_CANCEL_OPTION);
 
-        javax.swing.JDialog dlg = jop.createDialog(mwclient.getMainFrame(), "Select a pilot.");
+        JDialog dlg = jop.createDialog(client.getMainFrame(), "Select a pilot.");
         combo.grabFocus();
         combo.getEditor().selectAll();
 
@@ -2013,14 +1581,14 @@ public class CMainFrame extends javax.swing.JFrame {
 
         int position = combo.getSelectedIndex();
 
-        int value = ((Integer) jop.getValue()).intValue();
+        int value = (Integer) jop.getValue();
 
-        if (value == javax.swing.JOptionPane.CANCEL_OPTION) {
+        if (value == JOptionPane.CANCEL_OPTION) {
             return;
         }
 
-        mwclient.sendChat(
-              client.MWClient.CAMPAIGN_PREFIX +
+        client.sendChat(
+              IClient.CAMPAIGN_PREFIX +
                     "c transferpilot#" +
                     targetPlayer +
                     "#" +
@@ -2032,7 +1600,7 @@ public class CMainFrame extends javax.swing.JFrame {
     }
 
     public void jMenuCommanderDonatePersonalPilot_actionPerformed() {
-        boolean allowProto = Boolean.parseBoolean(mwclient.getserverConfigs("UseProtoMek"));
+        boolean allowProto = Boolean.parseBoolean(client.getServerConfigs("UseProtoMek"));
 
         Object[] pWeightClass = { "Light", "Medium", "Heavy", "Assault" };
         Object[] pUnitType;
@@ -2043,19 +1611,19 @@ public class CMainFrame extends javax.swing.JFrame {
             pUnitType = new Object[] { "Mek" };
         }
 
-        int weightClass = 0;
-        int unitType = 0;
+        int weightClass;
+        int unitType;
 
         // determine the unit type to use
-        String pUnitTypeString = (String) javax.swing.JOptionPane.showInputDialog(mwclient.getMainFrame(),
+        String pUnitTypeString = (String) JOptionPane.showInputDialog(client.getMainFrame(),
               "Select a pilot unit type",
               "Unit Type Selection",
-              javax.swing.JOptionPane.INFORMATION_MESSAGE,
+              JOptionPane.INFORMATION_MESSAGE,
               null,
               pUnitType,
               pUnitType[0]);
 
-        if ((pUnitTypeString == null) || (pUnitTypeString.length() == 0)) {
+        if ((pUnitTypeString == null) || (pUnitTypeString.isEmpty())) {
             return;
         }
 
@@ -2066,35 +1634,35 @@ public class CMainFrame extends javax.swing.JFrame {
         }
 
         // determine the weight class to use
-        String pWeightClassString = (String) javax.swing.JOptionPane.showInputDialog(mwclient.getMainFrame(),
+        String pWeightClassString = (String) JOptionPane.showInputDialog(client.getMainFrame(),
               "Select a pilot unit size",
               "Weight Class Selection",
-              javax.swing.JOptionPane.INFORMATION_MESSAGE,
+              JOptionPane.INFORMATION_MESSAGE,
               null,
               pWeightClass,
               pWeightClass[0]);
 
-        if ((pWeightClassString == null) || (pWeightClassString.length() == 0)) {
+        if ((pWeightClassString == null) || (pWeightClassString.isEmpty())) {
             return;
         }
 
         weightClass = Unit.getWeightIDForName(pWeightClassString);
 
-        if (mwclient.getPlayer().getPersonalPilotQueue().getPilotQueue(unitType, weightClass).size() < 1) {
-            javax.swing.JOptionPane.showMessageDialog(null,
+        if (client.getPlayer().getPersonalPilotQueue().getPilotQueue(unitType, weightClass).isEmpty()) {
+            JOptionPane.showMessageDialog(null,
                   "You do not have any pilots for " +
                         StringUtils.aOrAn(pWeightClassString, true) +
                         " " +
                         pUnitTypeString +
                         ".",
                   "No Pilots!",
-                  javax.swing.JOptionPane.CLOSED_OPTION);
+                  JOptionPane.CLOSED_OPTION);
             return;
         }
 
-        Object[] pilots = mwclient.getPlayer().getPersonalPilotQueue().getPilotQueue(unitType, weightClass).toArray();
+        Object[] pilots = client.getPlayer().getPersonalPilotQueue().getPilotQueue(unitType, weightClass).toArray();
 
-        javax.swing.JComboBox<String> combo = new javax.swing.JComboBox<String>();
+        JComboBox<String> combo = new JComboBox<>();
 
         for (Object pilot : pilots) {
             Pilot mm = (Pilot) pilot;
@@ -2113,11 +1681,11 @@ public class CMainFrame extends javax.swing.JFrame {
         }
 
         combo.setEditable(false);
-        javax.swing.JOptionPane jop = new javax.swing.JOptionPane(combo,
-              javax.swing.JOptionPane.QUESTION_MESSAGE,
-              javax.swing.JOptionPane.OK_CANCEL_OPTION);
+        JOptionPane jop = new JOptionPane(combo,
+              JOptionPane.QUESTION_MESSAGE,
+              JOptionPane.OK_CANCEL_OPTION);
 
-        javax.swing.JDialog dlg = jop.createDialog(mwclient.getMainFrame(), "Select a pilot.");
+        JDialog dlg = jop.createDialog(client.getMainFrame(), "Select a pilot.");
         combo.grabFocus();
         combo.getEditor().selectAll();
 
@@ -2125,19 +1693,19 @@ public class CMainFrame extends javax.swing.JFrame {
 
         int position = combo.getSelectedIndex();
 
-        int value = ((Integer) jop.getValue()).intValue();
+        int value = (Integer) jop.getValue();
 
-        if (value == javax.swing.JOptionPane.CANCEL_OPTION) {
+        if (value == JOptionPane.CANCEL_OPTION) {
             return;
         }
 
-        mwclient.sendChat(client.MWClient.CAMPAIGN_PREFIX +
-                                "c donatepilot#" +
-                                unitType +
-                                "#" +
-                                weightClass +
-                                "#" +
-                                position);
+        client.sendChat(IClient.CAMPAIGN_PREFIX +
+                              "c donatepilot#" +
+                              unitType +
+                              "#" +
+                              weightClass +
+                              "#" +
+                              position);
     }
 
     public void jMenuCommanderDirectSell_actionPerformed(String name, String id) {
@@ -2147,8 +1715,8 @@ public class CMainFrame extends javax.swing.JFrame {
         String unitID;
         String price;
 
-        if ((name == null) || name.trim().equals("")) {
-            PlayerNameDialog pnd = new PlayerNameDialog(mwclient, "Buyer", PlayerNameDialog.ANY_PLAYER);
+        if ((name == null) || name.trim().isEmpty()) {
+            PlayerNameDialog pnd = new PlayerNameDialog(client, "Buyer", PlayerNameDialog.ANY_PLAYER);
             pnd.setVisible(true);
             buyer = pnd.getPlayerName();
             pnd.dispose();
@@ -2160,8 +1728,8 @@ public class CMainFrame extends javax.swing.JFrame {
             return;
         }
 
-        if ((id == null) || id.trim().equals("")) {
-            UnitSelectionDialog usd = new UnitSelectionDialog(mwclient, "Unit", "Select a unit to sell");
+        if ((id == null) || id.trim().isEmpty()) {
+            UnitSelectionDialog usd = new UnitSelectionDialog(client, "Unit", "Select a unit to sell");
             usd.setVisible(true);
             unitID = usd.getUnitID();
             usd.dispose();
@@ -2169,30 +1737,30 @@ public class CMainFrame extends javax.swing.JFrame {
             unitID = id;
         }
 
-        client.campaign.CUnit unit = mwclient.getPlayer().getUnit(Integer.parseInt(unitID));
+        CUnit unit = client.getPlayer().getUnit(Integer.parseInt(unitID));
 
         String serviceFee = "SellDirect" +
-                                  Unit.getWeightClassDesc(unit.getWeightclass()) +
+                                  Unit.getWeightClassDesc(unit.getWeightClass()) +
                                   Unit.getTypeClassDesc(unit.getType()) +
                                   "Price";
-        price = javax.swing.JOptionPane.showInputDialog(getContentPane(),
+        price = JOptionPane.showInputDialog(getContentPane(),
               "How much do you wish to offer? (" +
-                    mwclient.moneyOrFluMessage(true, true, -2) +
+                    client.moneyOrFluMessage(true, true, -2) +
                     ")\n\r" +
                     "Please note a service charge of " +
-                    mwclient.moneyOrFluMessage(true, true, Integer.parseInt(mwclient.getserverConfigs(serviceFee))) +
+                    client.moneyOrFluMessage(true, true, Integer.parseInt(client.getServerConfigs(serviceFee))) +
                     " will be added.");
 
-        if ((price == null) || (price.length() < 1)) {
+        if ((price == null) || (price.isEmpty())) {
             return;
         }
 
-        mwclient.sendChat(
-              client.MWClient.CAMPAIGN_PREFIX +
+        client.sendChat(
+              IClient.CAMPAIGN_PREFIX +
                     "c directsellunit#" +
                     buyer +
                     "#" +
-                    mwclient.getPlayer().getName() +
+                    client.getPlayer().getName() +
                     "#" +
                     unitID +
                     "#" +
@@ -2202,7 +1770,7 @@ public class CMainFrame extends javax.swing.JFrame {
     public void jMenuMercOfferContract_actionPerformed() {
         String Amount;
         String Duration;
-        PlayerNameDialog playerDialog = new PlayerNameDialog(mwclient,
+        PlayerNameDialog playerDialog = new PlayerNameDialog(client,
               "Which Merc do you want to offer a contract?",
               PlayerNameDialog.MERCS_ONLY);
         playerDialog.setVisible(true);
@@ -2213,25 +1781,25 @@ public class CMainFrame extends javax.swing.JFrame {
             return;
         }
 
-        Amount = javax.swing.JOptionPane.showInputDialog(getContentPane(),
-              "How much do you wish to offer? (" + mwclient.moneyOrFluMessage(true, true, -2) + ")");
+        Amount = JOptionPane.showInputDialog(getContentPane(),
+              "How much do you wish to offer? (" + client.moneyOrFluMessage(true, true, -2) + ")");
         if (Amount == null) {
             return;
         }
 
-        java.util.Vector<String> techTypes = new java.util.Vector<String>(5, 1);
+        java.util.Vector<String> techTypes = new java.util.Vector<>(5, 1);
         techTypes.add("Exp");
         techTypes.add("Land");
         techTypes.add("Units");
         techTypes.add("Components");
         techTypes.add("Delay");
-        javax.swing.JComboBox<String> combo = new javax.swing.JComboBox<String>(techTypes);
+        JComboBox<String> combo = new JComboBox<>(techTypes);
         combo.setEditable(false);
-        javax.swing.JOptionPane jop = new javax.swing.JOptionPane(combo,
-              javax.swing.JOptionPane.QUESTION_MESSAGE,
-              javax.swing.JOptionPane.OK_CANCEL_OPTION);
+        JOptionPane jop = new JOptionPane(combo,
+              JOptionPane.QUESTION_MESSAGE,
+              JOptionPane.OK_CANCEL_OPTION);
 
-        javax.swing.JDialog dlg = jop.createDialog(this, "Select contract type.");
+        JDialog dlg = jop.createDialog(this, "Select contract type.");
         combo.grabFocus();
         combo.getEditor().selectAll();
 
@@ -2239,46 +1807,46 @@ public class CMainFrame extends javax.swing.JFrame {
 
         String Type = (String) combo.getSelectedItem();
 
-        int value = ((Integer) jop.getValue()).intValue();
+        int value = (Integer) jop.getValue();
 
-        if (value == javax.swing.JOptionPane.CANCEL_OPTION) {
+        if (value == JOptionPane.CANCEL_OPTION) {
             return;
         }
 
-        Duration = javax.swing.JOptionPane.showInputDialog(getContentPane(), "Duration of the contract?");
+        Duration = JOptionPane.showInputDialog(getContentPane(), "Duration of the contract?");
         if (Duration == null) {
             return;
         }
 
-        mwclient.sendChat(
-              client.MWClient.CAMPAIGN_PREFIX + "c offercontract#" + Merc + "#" + Amount + "#" + Duration + "#" + Type);
+        client.sendChat(
+              IClient.CAMPAIGN_PREFIX + "c offercontract#" + Merc + "#" + Amount + "#" + Duration + "#" + Type);
     }
 
     public void jMenuCommanderDefect_actionPerformed() {
         // String Confirmation;
-        String House = "";
+        String House;
 
-        if (Boolean.parseBoolean(mwclient.getserverConfigs("AllowSinglePlayerFactions"))) {
-            House = javax.swing.JOptionPane.showInputDialog(getContentPane(),
+        if (Boolean.parseBoolean(client.getServerConfigs("AllowSinglePlayerFactions"))) {
+            House = JOptionPane.showInputDialog(getContentPane(),
                   "Name of your new Faction?",
                   "New Faction Name?",
-                  javax.swing.JOptionPane.QUESTION_MESSAGE);
+                  JOptionPane.QUESTION_MESSAGE);
             if (House == null) {
                 return;
             }
-            String shortName = javax.swing.JOptionPane.showInputDialog(getContentPane(),
+            String shortName = JOptionPane.showInputDialog(getContentPane(),
                   House + "'s short name?",
                   "Short Name?",
-                  javax.swing.JOptionPane.QUESTION_MESSAGE);
+                  JOptionPane.QUESTION_MESSAGE);
             if (shortName == null) {
                 return;
             }
-            mwclient.sendChat(client.MWClient.CAMPAIGN_PREFIX + "c defect#" + House + "#newfaction#" + shortName);
+            client.sendChat(IClient.CAMPAIGN_PREFIX + "c defect#" + House + "#newfaction#" + shortName);
 
             return;
         }
 
-        HouseNameDialog factionDialog = new HouseNameDialog(mwclient, "Defect to faction:", false, true);
+        HouseNameDialog factionDialog = new HouseNameDialog(client, "Defect to faction:", false, true);
         factionDialog.setVisible(true);
         House = factionDialog.getHouseName();
         factionDialog.dispose();
@@ -2288,62 +1856,62 @@ public class CMainFrame extends javax.swing.JFrame {
         }
 
         // send unconfirmed defection command
-        mwclient.sendChat(client.MWClient.CAMPAIGN_PREFIX + "c defect#" + House);
+        client.sendChat(IClient.CAMPAIGN_PREFIX + "c defect#" + House);
     }
 
     public void jMenuCommanderSelfPromote_actionPerformed() {
 
-        SubFactionNameDialog subFactionDialog = new SubFactionNameDialog(mwclient,
+        SubFactionNameDialog subFactionDialog = new SubFactionNameDialog(client,
               "SubFaction",
-              mwclient.getPlayer().getHouse());
+              client.getPlayer().getHouse());
         subFactionDialog.setVisible(true);
         String subFactionName = subFactionDialog.getSubFactionName();
         subFactionDialog.dispose();
 
-        if ((subFactionName == null) || (subFactionName.length() == 0)) {
+        if ((subFactionName == null) || (subFactionName.isEmpty())) {
             return;
         }
 
-        mwclient.sendChat(client.MWClient.CAMPAIGN_PREFIX + "c selfpromote#" + subFactionName);
+        client.sendChat(IClient.CAMPAIGN_PREFIX + "c selfpromote#" + subFactionName);
     }
 
     public void jMenuCommanderReportStatusMC_actionPerformed() {
-        mwclient.sendChat(client.MWClient.CAMPAIGN_PREFIX + "c reportstatusmc#");
+        client.sendChat(IClient.CAMPAIGN_PREFIX + "c reportstatusmc#");
     }
 
     public void jMenuCommanderFireTechs_actionPerformed() {
 
-        String techsToFire = javax.swing.JOptionPane.showInputDialog(getContentPane(),
+        String techsToFire = JOptionPane.showInputDialog(getContentPane(),
               "How many techs do you want to fire?");
-        if ((techsToFire == null) || (techsToFire.trim().length() == 0)) {
+        if ((techsToFire == null) || (techsToFire.trim().isEmpty())) {
             return;
         }
 
         int techs = Integer.parseInt(techsToFire);
         if (!useAdvanceRepairs && (thePlayer.getTechs() <= 0)) {
-            mwclient.addToChat("<b>You have no hired techs to fire.<b>");
+            client.addToChat("<b>You have no hired techs to fire.<b>");
             return;
         }
 
         if (!useAdvanceRepairs && ((techs < 1) || (techs > thePlayer.getTechs()))) {
-            mwclient.addToChat("<b>Try picking a number between 1 and " + thePlayer.getTechs() + "<b>");
+            client.addToChat("<b>Try picking a number between 1 and " + thePlayer.getTechs() + "<b>");
             return;
         }
 
         if (useAdvanceRepairs) {
 
-            java.util.Vector<String> techTypes = new java.util.Vector<String>(4, 1);
+            java.util.Vector<String> techTypes = new java.util.Vector<>(4, 1);
             techTypes.add("Green");
             techTypes.add("Regular");
             techTypes.add("Vet");
             techTypes.add("Elite");
-            javax.swing.JComboBox<String> combo = new javax.swing.JComboBox<String>(techTypes);
+            JComboBox<String> combo = new JComboBox<>(techTypes);
             combo.setEditable(true);
-            javax.swing.JOptionPane jop = new javax.swing.JOptionPane(combo,
-                  javax.swing.JOptionPane.QUESTION_MESSAGE,
-                  javax.swing.JOptionPane.OK_CANCEL_OPTION);
+            JOptionPane jop = new JOptionPane(combo,
+                  JOptionPane.QUESTION_MESSAGE,
+                  JOptionPane.OK_CANCEL_OPTION);
 
-            javax.swing.JDialog dlg = jop.createDialog(mwclient.getMainFrame(), "Select tech to fire.");
+            JDialog dlg = jop.createDialog(client.getMainFrame(), "Select tech to fire.");
             combo.grabFocus();
             combo.getEditor().selectAll();
 
@@ -2355,60 +1923,60 @@ public class CMainFrame extends javax.swing.JFrame {
                 return;
             }
 
-            int value = ((Integer) jop.getValue()).intValue();
+            int value = (Integer) jop.getValue();
 
-            if (value == javax.swing.JOptionPane.CANCEL_OPTION) {
+            if (value == JOptionPane.CANCEL_OPTION) {
                 return;
             }
 
-            mwclient.sendChat(client.MWClient.CAMPAIGN_PREFIX + "c firetechs#" + techs + "#" + techType);
+            client.sendChat(IClient.CAMPAIGN_PREFIX + "c firetechs#" + techs + "#" + techType);
         } else {
-            mwclient.sendChat(client.MWClient.CAMPAIGN_PREFIX + "c firetechs#" + techs);
+            client.sendChat(IClient.CAMPAIGN_PREFIX + "c firetechs#" + techs);
         }
     }
 
     public void jMenuCommanderHireTechs_actionPerformed() {
-        boolean allowRegTechs = Boolean.parseBoolean(mwclient.getserverConfigs("AllowRegTechsToBeHired"));
+        boolean allowRegTechs = Boolean.parseBoolean(client.getServerConfigs("AllowRegTechsToBeHired"));
 
-        String techsToHire = "";
+        String techsToHire;
 
         if (useAdvanceRepairs && !allowRegTechs) {
-            techsToHire = javax.swing.JOptionPane.showInputDialog(getContentPane(),
+            techsToHire = JOptionPane.showInputDialog(getContentPane(),
                   "How many green techs do you want to hire?(" +
-                        Integer.parseInt(mwclient.getserverConfigs("GreenTechHireCost")) +
-                        mwclient.moneyOrFluMessage(true, true, -2) +
+                        Integer.parseInt(client.getServerConfigs("GreenTechHireCost")) +
+                        client.moneyOrFluMessage(true, true, -2) +
                         ")");
         } else {
-            techsToHire = javax.swing.JOptionPane.showInputDialog(getContentPane(),
+            techsToHire = JOptionPane.showInputDialog(getContentPane(),
                   "How many techs do you want to hire?");
         }
 
-        if ((techsToHire == null) || (techsToHire.length() == 0)) {
+        if ((techsToHire == null) || (techsToHire.isEmpty())) {
             return;
         }
 
         int techs = Integer.parseInt(techsToHire);
         if (techs < 1) {
-            mwclient.addToChat("Try picking a number greater then 0");
+            client.addToChat("Try picking a number greater then 0");
             return;
         }
 
         if (useAdvanceRepairs && allowRegTechs) {
 
-            java.util.Vector<String> techTypes = new java.util.Vector<String>(2, 1);
+            java.util.Vector<String> techTypes = new java.util.Vector<>(2, 1);
             techTypes.add("Green " +
-                                Integer.parseInt(mwclient.getserverConfigs("GreenTechHireCost")) +
-                                mwclient.moneyOrFluMessage(true, true, -2));
+                                Integer.parseInt(client.getServerConfigs("GreenTechHireCost")) +
+                                client.moneyOrFluMessage(true, true, -2));
             techTypes.add("Regular " +
-                                Integer.parseInt(mwclient.getserverConfigs("RegTechHireCost")) +
-                                mwclient.moneyOrFluMessage(true, true, -2));
-            javax.swing.JComboBox<String> combo = new javax.swing.JComboBox<String>(techTypes);
+                                Integer.parseInt(client.getServerConfigs("RegTechHireCost")) +
+                                client.moneyOrFluMessage(true, true, -2));
+            JComboBox<String> combo = new JComboBox<>(techTypes);
             combo.setEditable(false);
-            javax.swing.JOptionPane jop = new javax.swing.JOptionPane(combo,
-                  javax.swing.JOptionPane.QUESTION_MESSAGE,
-                  javax.swing.JOptionPane.OK_CANCEL_OPTION);
+            JOptionPane jop = new JOptionPane(combo,
+                  JOptionPane.QUESTION_MESSAGE,
+                  JOptionPane.OK_CANCEL_OPTION);
 
-            javax.swing.JDialog dlg = jop.createDialog(mwclient.getMainFrame(), "Select tech to hire.");
+            JDialog dlg = jop.createDialog(client.getMainFrame(), "Select tech to hire.");
             combo.grabFocus();
             combo.getEditor().selectAll();
 
@@ -2420,23 +1988,23 @@ public class CMainFrame extends javax.swing.JFrame {
                 return;
             }
 
-            int value = ((Integer) jop.getValue()).intValue();
+            int value = (Integer) jop.getValue();
 
-            if (value == javax.swing.JOptionPane.CANCEL_OPTION) {
+            if (value == JOptionPane.CANCEL_OPTION) {
                 return;
             }
 
-            mwclient.sendChat(client.MWClient.CAMPAIGN_PREFIX + "c hiretechs#" + techs + "#" + techType);
+            client.sendChat(IClient.CAMPAIGN_PREFIX + "c hiretechs#" + techs + "#" + techType);
         } else {
-            mwclient.sendChat(client.MWClient.CAMPAIGN_PREFIX + "c hiretechs#" + techs);
+            client.sendChat(IClient.CAMPAIGN_PREFIX + "c hiretechs#" + techs);
         }
     }
 
     public void jMenuCampaignSubOtherBuyPilots_actionPerformed() {
-        boolean allowProto = Boolean.parseBoolean(mwclient.getserverConfigs("UseProtoMek"));
-        boolean allowAero = Boolean.parseBoolean(mwclient.getserverConfigs("UseAero"));
-        int unitType = Unit.MEK;
-        int unitClass = Unit.LIGHT;
+        boolean allowProto = Boolean.parseBoolean(client.getServerConfigs("UseProtoMek"));
+        boolean allowAero = Boolean.parseBoolean(client.getServerConfigs("UseAero"));
+        int unitType;
+        int unitClass;
 
         Object[] pWeightClass = { "Light", "Medium", "Heavy", "Assault" };
         Object[] pUnitType;
@@ -2452,98 +2020,98 @@ public class CMainFrame extends javax.swing.JFrame {
         }
 
         // determine the unit type to use
-        String pUnitTypeString = (String) javax.swing.JOptionPane.showInputDialog(mwclient.getMainFrame(),
+        String pUnitTypeString = (String) JOptionPane.showInputDialog(client.getMainFrame(),
               "Select unit type",
               "Unit Type Selection",
-              javax.swing.JOptionPane.INFORMATION_MESSAGE,
+              JOptionPane.INFORMATION_MESSAGE,
               null,
               pUnitType,
               pUnitType[0]);
 
-        if ((pUnitTypeString == null) || (pUnitTypeString.length() == 0)) {
+        if ((pUnitTypeString == null) || (pUnitTypeString.isEmpty())) {
             return;
         }
 
         unitType = Unit.getTypeIDForName(pUnitTypeString);
 
         // determine the weight class to use
-        String pWeightClassString = (String) javax.swing.JOptionPane.showInputDialog(mwclient.getMainFrame(),
+        String pWeightClassString = (String) JOptionPane.showInputDialog(client.getMainFrame(),
               "Select unit size",
               "Weight Class Selection",
-              javax.swing.JOptionPane.INFORMATION_MESSAGE,
+              JOptionPane.INFORMATION_MESSAGE,
               null,
               pWeightClass,
               pWeightClass[0]);
 
-        if ((pWeightClassString == null) || (pWeightClassString.length() == 0)) {
+        if ((pWeightClassString == null) || (pWeightClassString.isEmpty())) {
             return;
         }
 
         unitClass = Unit.getWeightIDForName(pWeightClassString);
 
-        String numberOfPilots = javax.swing.JOptionPane.showInputDialog(getContentPane(),
+        String numberOfPilots = JOptionPane.showInputDialog(getContentPane(),
               "How many pilots do you want to hire?",
               1);
 
-        if ((numberOfPilots == null) || (numberOfPilots.length() == 0)) {
+        if ((numberOfPilots == null) || (numberOfPilots.isEmpty())) {
             return;
         }
 
-        mwclient.sendChat(client.MWClient.CAMPAIGN_PREFIX +
-                                "c buypilotsfromhouse#" +
-                                unitType +
-                                "#" +
-                                unitClass +
-                                "#" +
-                                numberOfPilots);
+        client.sendChat(IClient.CAMPAIGN_PREFIX +
+                              "c buypilotsfromhouse#" +
+                              unitType +
+                              "#" +
+                              unitClass +
+                              "#" +
+                              numberOfPilots);
     }
 
     public void jMenuCommanderSellBays_actionPerformed() {
-        String baysToFire = javax.swing.JOptionPane.showInputDialog(getContentPane(),
+        String baysToFire = JOptionPane.showInputDialog(getContentPane(),
               "How many bays do you want to return??");
 
-        if ((baysToFire == null) || (baysToFire.length() == 0)) {
+        if ((baysToFire == null) || (baysToFire.isEmpty())) {
             return;
         }
 
         int bays = Integer.parseInt(baysToFire);
         if (thePlayer.getFreeBays() <= 0) {
-            mwclient.addToChat("<b>You have no free bays to return.<b>");
+            client.addToChat("<b>You have no free bays to return.<b>");
             return;
         }
         if ((bays < 1) || (bays > thePlayer.getFreeBays())) {
-            mwclient.addToChat("<b>Try picking a number between 1 and " + thePlayer.getFreeBays() + "<b>");
+            client.addToChat("<b>Try picking a number between 1 and " + thePlayer.getFreeBays() + "<b>");
             return;
         }
-        mwclient.sendChat(client.MWClient.CAMPAIGN_PREFIX + "c sellbays#" + bays);
+        client.sendChat(IClient.CAMPAIGN_PREFIX + "c sellbays#" + bays);
     }
 
     public void jMenuCampaignPartsCache_actionPerformed() {
-        client.campaign.CPlayer p = mwclient.getPlayer();
+        CPlayer p = client.getPlayer();
         StringBuilder result = new StringBuilder();
-        int year = Integer.parseInt(mwclient.getserverConfigs("CampaignYear"));
+        int year = Integer.parseInt(client.getServerConfigs("CampaignYear"));
 
         result.append(p.getPartsCache().tableizeComponents(year));
-        mwclient.doParseDataInput("SM|" + result.toString());
+        client.doParseDataInput("SM|" + result);
     }
 
     public void jMenuCommanderBuyBays_actionPerformed() {
-        String baysToHire = javax.swing.JOptionPane.showInputDialog(getContentPane(),
+        String baysToHire = JOptionPane.showInputDialog(getContentPane(),
               "How many bays do you want to lease?(" +
-                    Integer.parseInt(mwclient.getserverConfigs("CostToBuyNewBay")) +
-                    mwclient.moneyOrFluMessage(true, true, -2) +
+                    Integer.parseInt(client.getServerConfigs("CostToBuyNewBay")) +
+                    client.moneyOrFluMessage(true, true, -2) +
                     ")");
 
-        if ((baysToHire == null) || (baysToHire.length() == 0)) {
+        if ((baysToHire == null) || (baysToHire.isEmpty())) {
             return;
         }
 
         int bays = Integer.parseInt(baysToHire);
         if (bays < 1) {
-            mwclient.addToChat("Try picking a number greater then 0");
+            client.addToChat("Try picking a number greater then 0");
             return;
         }
-        mwclient.sendChat(client.MWClient.CAMPAIGN_PREFIX + "c buybays#" + bays);
+        client.sendChat(IClient.CAMPAIGN_PREFIX + "c buybays#" + bays);
     }
 
     public void jMenuHelpViewBuildTables_actionPerformed() {
@@ -2552,34 +2120,32 @@ public class CMainFrame extends javax.swing.JFrame {
          * Otherwise, make use of server commands.
          */
         // User the new BuildTableViewer
-        if ((userLevel >= mwclient.getData().getAccessLevel("AdminRequestBuildTable")) ||
-                  (userLevel >= mwclient.getData().getAccessLevel("RequestBuildTable"))) {
-            BuildTableViewer btv = new BuildTableViewer(this, mwclient);
+        if ((userLevel >= client.getData().getAccessLevel("AdminRequestBuildTable")) ||
+                  (userLevel >= client.getData().getAccessLevel("RequestBuildTable"))) {
+            BuildTableViewer btv = new BuildTableViewer(this, client);
             btv.run();
         } else {
-            mwclient.sendChat(client.MWClient.CAMPAIGN_PREFIX + "c buildtablelist");
+            client.sendChat(IClient.CAMPAIGN_PREFIX + "c buildtablelist");
         }
 
     }
 
     public void jMenuHelpViewUnit_actionPerformed() {
 
-        UnitLoadingDialog unitLoadingDialog = new UnitLoadingDialog(mwclient.getMainFrame());
-        //UnitViewerDialog unitSelector = new UnitViewerDialog(client.getMainFrame(), unitLoadingDialog, client, UnitViewerDialog.UNIT_VIEWER);
+        UnitLoadingDialog unitLoadingDialog = new UnitLoadingDialog(client.getMainFrame());
         NewUnitViewerDialog unitSelector = new NewUnitViewerDialog(this,
               unitLoadingDialog,
-              mwclient,
+              client,
               NewUnitViewerDialog.UNIT_VIEWER);
-        new Thread(unitSelector).run();
-        // unitSelector.setVisible(true);
+        new Thread(unitSelector).start();
     }
 
     public void jMenuLeaderPromote_actionPerformed() {
         String targetPlayer;
 
-        int menuType = mwclient.isMod() ? PlayerNameDialog.ANY_PLAYER : PlayerNameDialog.FACTION_ONLY;
+        int menuType = client.isMod() ? PlayerNameDialog.ANY_PLAYER : PlayerNameDialog.FACTION_ONLY;
 
-        PlayerNameDialog pnd = new PlayerNameDialog(mwclient, "Promote", menuType);
+        PlayerNameDialog pnd = new PlayerNameDialog(client, "Promote", menuType);
         pnd.setVisible(true);
         targetPlayer = pnd.getPlayerName();
         pnd.dispose();
@@ -2588,27 +2154,27 @@ public class CMainFrame extends javax.swing.JFrame {
             return;
         }
 
-        SubFactionNameDialog subFactionDialog = new SubFactionNameDialog(mwclient,
+        SubFactionNameDialog subFactionDialog = new SubFactionNameDialog(client,
               "SubFaction",
-              mwclient.getUser(targetPlayer).getHouse());
+              client.getUser(targetPlayer).getHouse());
         subFactionDialog.setVisible(true);
         String subFactionName = subFactionDialog.getSubFactionName();
         subFactionDialog.dispose();
 
-        if ((subFactionName == null) || (subFactionName.length() == 0)) {
+        if ((subFactionName == null) || (subFactionName.isEmpty())) {
             return;
         }
 
-        mwclient.sendChat(client.MWClient.CAMPAIGN_PREFIX + "c promoteplayer#" + targetPlayer + "#" + subFactionName);
+        client.sendChat(IClient.CAMPAIGN_PREFIX + "c promoteplayer#" + targetPlayer + "#" + subFactionName);
 
     }
 
     public void jMenuLeaderDemote_actionPerformed() {
         String targetPlayer;
 
-        int menuType = mwclient.isMod() ? PlayerNameDialog.ANY_PLAYER : PlayerNameDialog.FACTION_ONLY;
+        int menuType = client.isMod() ? PlayerNameDialog.ANY_PLAYER : PlayerNameDialog.FACTION_ONLY;
 
-        PlayerNameDialog pnd = new PlayerNameDialog(mwclient, "Demote Player", menuType);
+        PlayerNameDialog pnd = new PlayerNameDialog(client, "Demote Player", menuType);
         pnd.setVisible(true);
         targetPlayer = pnd.getPlayerName();
         pnd.dispose();
@@ -2617,18 +2183,18 @@ public class CMainFrame extends javax.swing.JFrame {
             return;
         }
 
-        SubFactionNameDialog subFactionDialog = new SubFactionNameDialog(mwclient,
+        SubFactionNameDialog subFactionDialog = new SubFactionNameDialog(client,
               "Use None to remove completely",
-              mwclient.getUser(targetPlayer).getHouse());
+              client.getUser(targetPlayer).getHouse());
         subFactionDialog.setVisible(true);
         String subFactionName = subFactionDialog.getSubFactionName();
         subFactionDialog.dispose();
 
-        if ((subFactionName == null) || (subFactionName.length() == 0)) {
+        if ((subFactionName == null) || (subFactionName.isEmpty())) {
             return;
         }
 
-        mwclient.sendChat(client.MWClient.CAMPAIGN_PREFIX + "c demoteplayer#" + targetPlayer + "#" + subFactionName);
+        client.sendChat(IClient.CAMPAIGN_PREFIX + "c demoteplayer#" + targetPlayer + "#" + subFactionName);
 
     }
 
@@ -2637,7 +2203,7 @@ public class CMainFrame extends javax.swing.JFrame {
 
         int menuType = PlayerNameDialog.FACTION_ONLY;
 
-        PlayerNameDialog pnd = new PlayerNameDialog(mwclient, "Fluff Player", menuType);
+        PlayerNameDialog pnd = new PlayerNameDialog(client, "Fluff Player", menuType);
         pnd.setVisible(true);
         targetPlayer = pnd.getPlayerName();
         pnd.dispose();
@@ -2646,18 +2212,18 @@ public class CMainFrame extends javax.swing.JFrame {
             return;
         }
 
-        client.CUser user = mwclient.getUser(targetPlayer);
+        CUser user = client.getUser(targetPlayer);
 
-        String newfluff = javax.swing.JOptionPane.showInputDialog(this,
+        String newFluff = JOptionPane.showInputDialog(this,
               "Fluff? (Leave blank to remove)",
               user.getFluff());
 
-        if (newfluff != null) {
-            mwclient.sendChat(client.MWClient.CAMPAIGN_PREFIX +
-                                    "c FactionLeaderFluff#" +
-                                    targetPlayer +
-                                    "#" +
-                                    newfluff);
+        if (newFluff != null) {
+            client.sendChat(IClient.CAMPAIGN_PREFIX +
+                                  "c FactionLeaderFluff#" +
+                                  targetPlayer +
+                                  "#" +
+                                  newFluff);
         }
     }
 
@@ -2666,7 +2232,7 @@ public class CMainFrame extends javax.swing.JFrame {
 
         int menuType = PlayerNameDialog.FACTION_ONLY;
 
-        PlayerNameDialog pnd = new PlayerNameDialog(mwclient, "Mute Player", menuType);
+        PlayerNameDialog pnd = new PlayerNameDialog(client, "Mute Player", menuType);
         pnd.setVisible(true);
         targetPlayer = pnd.getPlayerName();
         pnd.dispose();
@@ -2675,53 +2241,53 @@ public class CMainFrame extends javax.swing.JFrame {
             return;
         }
 
-        mwclient.sendChat(client.MWClient.CAMPAIGN_PREFIX + "c FactionLeaderMute#" + targetPlayer);
+        client.sendChat(IClient.CAMPAIGN_PREFIX + "c FactionLeaderMute#" + targetPlayer);
     }
 
     public void jMenuLeaderFactionColor_actionPerformed() {
-        String newColor = javax.swing.JOptionPane.showInputDialog(this,
+        String newColor = JOptionPane.showInputDialog(this,
               "Faction Color?",
               "Faction Color?",
-              javax.swing.JOptionPane.QUESTION_MESSAGE);
+              JOptionPane.QUESTION_MESSAGE);
 
         if (newColor != null) {
-            mwclient.sendChat(
-                  client.MWClient.CAMPAIGN_PREFIX +
+            client.sendChat(
+                  IClient.CAMPAIGN_PREFIX +
                         "c ChangeHouseColor#" +
-                        mwclient.getPlayer().getHouse() +
+                        client.getPlayer().getHouse() +
                         "#" +
                         newColor);
         }
     }
 
     public void jMenuLeaderPlayerColor_actionPerformed() {
-        String newColor = javax.swing.JOptionPane.showInputDialog(this,
+        String newColor = JOptionPane.showInputDialog(this,
               "Player Color?",
               "Player Color?",
-              javax.swing.JOptionPane.QUESTION_MESSAGE);
+              JOptionPane.QUESTION_MESSAGE);
 
         if (newColor != null) {
-            mwclient.sendChat(
-                  client.MWClient.CAMPAIGN_PREFIX +
+            client.sendChat(
+                  IClient.CAMPAIGN_PREFIX +
                         "c AdminSetHousePlayerColor#" +
-                        mwclient.getPlayer().getHouse() +
+                        client.getPlayer().getHouse() +
                         "#" +
                         newColor);
         }
     }
 
     public void jMenuLeaderResearchUnit_actionPerformed() {
-        UnitLoadingDialog unitLoadingDialog = new UnitLoadingDialog(mwclient.getMainFrame());
+        UnitLoadingDialog unitLoadingDialog = new UnitLoadingDialog(client.getMainFrame());
         NewUnitViewerDialog unitSelector = new NewUnitViewerDialog(this,
               unitLoadingDialog,
-              mwclient,
+              client,
               NewUnitViewerDialog.UNIT_VIEWER);
         unitSelector.setName("Unit Selector");
         new Thread(unitSelector).start();
     }
 
     public void jMenuLeaderSetComponentConversion_actionPerformed() {
-        new ComponentConverterDialog(mwclient);
+        new ComponentConverterDialog(client);
     }
 
     public void jMenuLeaderPurchaseFactory_actionPerformed(String planet) {
@@ -2731,22 +2297,22 @@ public class CMainFrame extends javax.swing.JFrame {
         String[] weight = { Unit.getWeightClassDesc(Unit.LIGHT), Unit.getWeightClassDesc(Unit.MEDIUM),
                             Unit.getWeightClassDesc(Unit.HEAVY), Unit.getWeightClassDesc(Unit.ASSAULT) };
 
-        String factoryName = javax.swing.JOptionPane.showInputDialog(this,
+        String factoryName = JOptionPane.showInputDialog(this,
               "Factory Name?",
               "Factory Name?",
-              javax.swing.JOptionPane.QUESTION_MESSAGE);
+              JOptionPane.QUESTION_MESSAGE);
 
         if (factoryName == null) {
             return;
         }
 
-        javax.swing.JComboBox<String> combo = new javax.swing.JComboBox<String>(units);
+        JComboBox<String> combo = new JComboBox<>(units);
         combo.setEditable(false);
-        javax.swing.JOptionPane jop = new javax.swing.JOptionPane(combo,
-              javax.swing.JOptionPane.QUESTION_MESSAGE,
-              javax.swing.JOptionPane.OK_CANCEL_OPTION);
+        JOptionPane jop = new JOptionPane(combo,
+              JOptionPane.QUESTION_MESSAGE,
+              JOptionPane.OK_CANCEL_OPTION);
 
-        javax.swing.JDialog dlg = jop.createDialog(mwclient.getMainFrame(), "Unit Type");
+        JDialog dlg = jop.createDialog(client.getMainFrame(), "Unit Type");
         combo.grabFocus();
         combo.getEditor().selectAll();
 
@@ -2758,19 +2324,19 @@ public class CMainFrame extends javax.swing.JFrame {
             return;
         }
 
-        int value = ((Integer) jop.getValue()).intValue();
+        int value = (Integer) jop.getValue();
 
-        if (value == javax.swing.JOptionPane.CANCEL_OPTION) {
+        if (value == JOptionPane.CANCEL_OPTION) {
             return;
         }
 
-        combo = new javax.swing.JComboBox<String>(weight);
+        combo = new JComboBox<>(weight);
         combo.setEditable(false);
-        jop = new javax.swing.JOptionPane(combo,
-              javax.swing.JOptionPane.QUESTION_MESSAGE,
-              javax.swing.JOptionPane.OK_CANCEL_OPTION);
+        jop = new JOptionPane(combo,
+              JOptionPane.QUESTION_MESSAGE,
+              JOptionPane.OK_CANCEL_OPTION);
 
-        dlg = jop.createDialog(mwclient.getMainFrame(), "Unit Weight");
+        dlg = jop.createDialog(client.getMainFrame(), "Unit Weight");
         combo.grabFocus();
         combo.getEditor().selectAll();
 
@@ -2782,16 +2348,16 @@ public class CMainFrame extends javax.swing.JFrame {
             return;
         }
 
-        value = ((Integer) jop.getValue()).intValue();
+        value = (Integer) jop.getValue();
 
-        if (value == javax.swing.JOptionPane.CANCEL_OPTION) {
+        if (value == JOptionPane.CANCEL_OPTION) {
             return;
         }
 
         if (planet == null) {
             String[] opString = { "20000", " ", " ", " ", " ", "100", "100", "0", Integer.toString(Integer.MAX_VALUE),
-                                  mwclient.getPlayer().getHouse(), "", "" };
-            PlanetNameDialog planetDialog = new PlanetNameDialog(mwclient, "Choose a planet", opString);
+                                  client.getPlayer().getHouse(), "", "" };
+            PlanetNameDialog planetDialog = new PlanetNameDialog(client, "Choose a planet", opString);
             planetDialog.setVisible(true);
             planet = planetDialog.getPlanetName();
             planetDialog.dispose();
@@ -2801,8 +2367,8 @@ public class CMainFrame extends javax.swing.JFrame {
             }
         }
 
-        mwclient.sendChat(
-              client.MWClient.CAMPAIGN_PREFIX +
+        client.sendChat(
+              IClient.CAMPAIGN_PREFIX +
                     "c purchaseFactory#" +
                     factoryName +
                     "#" +
@@ -2817,23 +2383,23 @@ public class CMainFrame extends javax.swing.JFrame {
     public void jMenuHelpAbout_actionPerformed() {
 
         // make the dialog
-        javax.swing.JDialog dlg = new javax.swing.JDialog(this, "MekWars Client Info");
+        JDialog dlg = new JDialog(this, "MekWars Client Info");
 
         // set up the contents
-        javax.swing.JPanel child = new javax.swing.JPanel();
-        child.setLayout(new javax.swing.BoxLayout(child, javax.swing.BoxLayout.Y_AXIS));
+        JPanel child = new JPanel();
+        child.setLayout(new BoxLayout(child, BoxLayout.Y_AXIS));
 
         // set the text up.
-        javax.swing.JLabel mekwars = new javax.swing.JLabel("MekWars Client Version: " +
-                                                                  client.MWClient.CLIENT_VERSION);
-        javax.swing.JLabel version = new javax.swing.JLabel("MegaMek Version: " + megamek.SuiteConstants.VERSION);
-        javax.swing.JLabel license1 = new javax.swing.JLabel("MekWars Client software is under GPL. See");
-        javax.swing.JLabel license2 = new javax.swing.JLabel("license.txt in ./MekWars Docs/ for details.");
-        javax.swing.JLabel license3 = new javax.swing.JLabel("Project Info and Server Packages:");
-        javax.swing.JLabel license4 = new javax.swing.JLabel("       http://www.sourceforge.net/projects/mekwars       ");
-        javax.swing.JLabel data1 = new javax.swing.JLabel("       Datasets are prepared by server operators.       ");
-        javax.swing.JLabel data2 = new javax.swing.JLabel("       Contact a server administrator for information       ");
-        javax.swing.JLabel data3 = new javax.swing.JLabel("       regarding data use and redistribution.       ");
+        JLabel mekwars = new JLabel("MekWars Client Version: " +
+                                          IClient.CLIENT_VERSION);
+        JLabel version = new JLabel("MegaMek Version: " + megamek.SuiteConstants.VERSION);
+        JLabel license1 = new JLabel("MekWars Client software is under GPL. See");
+        JLabel license2 = new JLabel("license.txt in ./MekWars Docs/ for details.");
+        JLabel license3 = new JLabel("Project Info and Server Packages:");
+        JLabel license4 = new JLabel("       http://www.sourceforge.net/projects/mekwars       ");
+        JLabel data1 = new JLabel("       Datasets are prepared by server operators.       ");
+        JLabel data2 = new JLabel("       Contact a server administrator for information       ");
+        JLabel data3 = new JLabel("       regarding data use and redistribution.       ");
 
         // center everything
         mekwars.setAlignmentX(java.awt.Component.CENTER_ALIGNMENT);
@@ -2847,20 +2413,20 @@ public class CMainFrame extends javax.swing.JFrame {
         data3.setAlignmentX(java.awt.Component.CENTER_ALIGNMENT);
 
         // add to child panel
-        child.add(new javax.swing.JLabel("\n"));
+        child.add(new JLabel("\n"));
         child.add(mekwars);
         child.add(version);
-        child.add(new javax.swing.JLabel("\n"));
+        child.add(new JLabel("\n"));
         child.add(license1);
         child.add(license2);
-        child.add(new javax.swing.JLabel("\n"));
+        child.add(new JLabel("\n"));
         child.add(license3);
         child.add(license4);
-        child.add(new javax.swing.JLabel("\n"));
+        child.add(new JLabel("\n"));
         child.add(data1);
         child.add(data2);
         child.add(data3);
-        child.add(new javax.swing.JLabel("\n"));
+        child.add(new JLabel("\n"));
 
         // then add child panel to the content pane.
         dlg.getContentPane().add(child);
@@ -2880,11 +2446,11 @@ public class CMainFrame extends javax.swing.JFrame {
     public void jMenuHelpMemory_actionPerformed() {
 
         // make the dialog
-        javax.swing.JDialog dlg = new javax.swing.JDialog(this, "MekWars Memory Usage");
+        JDialog dlg = new JDialog(this, "MekWars Memory Usage");
 
         // set up the contents
-        javax.swing.JPanel child = new javax.swing.JPanel();
-        child.setLayout(new javax.swing.BoxLayout(child, javax.swing.BoxLayout.Y_AXIS));
+        JPanel child = new JPanel();
+        child.setLayout(new BoxLayout(child, BoxLayout.Y_AXIS));
 
         Runtime runtime = Runtime.getRuntime();
 
@@ -2894,17 +2460,17 @@ public class CMainFrame extends javax.swing.JFrame {
 
         java.text.DecimalFormat myFormatter = new java.text.DecimalFormat("#,### kb");
         // set the text up.
-        javax.swing.JLabel freeMem = new javax.swing.JLabel("Free Memory:          " +
-                                                                  myFormatter.format(freeMemory / 1024));
-        javax.swing.JLabel allocatedMem = new javax.swing.JLabel("Allocated Memory:  " +
-                                                                       myFormatter.format(allocatedMemory / 1024));
-        javax.swing.JLabel maxMem = new javax.swing.JLabel("Max Memory:           " +
-                                                                 myFormatter.format(maxMemory / 1024));
-        javax.swing.JLabel totalFreeMem = new javax.swing.JLabel("Total Free Memory: " +
-                                                                       myFormatter.format((freeMemory +
-                                                                                                 (maxMemory -
-                                                                                                        allocatedMemory)) /
-                                                                                                1024));
+        JLabel freeMem = new JLabel("Free Memory:          " +
+                                          myFormatter.format(freeMemory / 1024));
+        JLabel allocatedMem = new JLabel("Allocated Memory:  " +
+                                               myFormatter.format(allocatedMemory / 1024));
+        JLabel maxMem = new JLabel("Max Memory:           " +
+                                         myFormatter.format(maxMemory / 1024));
+        JLabel totalFreeMem = new JLabel("Total Free Memory: " +
+                                               myFormatter.format((freeMemory +
+                                                                         (maxMemory -
+                                                                                allocatedMemory)) /
+                                                                        1024));
 
         // center everything
         freeMem.setAlignmentX(java.awt.Component.LEFT_ALIGNMENT);
@@ -2913,12 +2479,12 @@ public class CMainFrame extends javax.swing.JFrame {
         totalFreeMem.setAlignmentX(java.awt.Component.LEFT_ALIGNMENT);
 
         // add to child panel
-        child.add(new javax.swing.JLabel("\n"));
+        child.add(new JLabel("\n"));
         child.add(freeMem);
         child.add(allocatedMem);
         child.add(maxMem);
         child.add(totalFreeMem);
-        child.add(new javax.swing.JLabel("\n"));
+        child.add(new JLabel("\n"));
 
         // then add child panel to the content pane.
         dlg.getContentPane().add(child);
@@ -2933,17 +2499,17 @@ public class CMainFrame extends javax.swing.JFrame {
     }
 
     public void jMenuHelpHelp_actionPerformed() {
-        client.campaign.CPlayer p = mwclient.getPlayer();
-        boolean trueCost = Boolean.parseBoolean(mwclient.getserverConfigs("UseCalculatedCosts"));
+        CPlayer player = client.getPlayer();
+        boolean trueCost = Boolean.parseBoolean(client.getServerConfigs("UseCalculatedCosts"));
         StringBuilder result = new StringBuilder();
         result.append("<font color=\"black\">");
         result.append("MEKWARS ONLINE HELP<br>");
 
-        result.append("<table><tr><th>Name</th><th>" +
-                            mwclient.moneyOrFluMessage(true, false, -2) +
-                            "</th><th>" +
-                            mwclient.moneyOrFluMessage(false, false, -2) +
-                            "</th><th>Components</th>");
+        result.append("<table><tr><th>Name</th><th>")
+              .append(client.moneyOrFluMessage(true, false, -2))
+              .append("</th><th>")
+              .append(client.moneyOrFluMessage(false, false, -2))
+              .append("</th><th>Components</th>");
 
         if (useAdvanceRepairs) {
             result.append("<th>Bays</th></tr>");
@@ -2951,11 +2517,11 @@ public class CMainFrame extends javax.swing.JFrame {
             result.append("<th>Techs</th></tr>");
         }
 
-        int typeamount = Unit.MAXBUILD;
+        int typeamount = Unit.MAX_BUILD;
         for (int type = 0; type < typeamount; type++) {
             String useIt = "Use" + Unit.getTypeClassDesc(type);
 
-            if (!Boolean.parseBoolean(mwclient.getserverConfigs(useIt))) {
+            if (!Boolean.parseBoolean(client.getServerConfigs(useIt))) {
                 continue;
             }
 
@@ -2963,39 +2529,41 @@ public class CMainFrame extends javax.swing.JFrame {
 
                 // No reason to cycle through med-assault infantry if you are
                 // only using light
-                if (Boolean.parseBoolean(mwclient.getserverConfigs("UseOnlyLightInfantry")) &&
+                if (Boolean.parseBoolean(client.getServerConfigs("UseOnlyLightInfantry")) &&
                           (type == Unit.INFANTRY) &&
                           (weight != Unit.LIGHT)) {
                     break;
                 }
+
                 // only using one vee size means only lights are used. so no
                 // reason to keep cycling if we are past the lights.
-                if (Boolean.parseBoolean(mwclient.getserverConfigs("UseOnlyOneVehicleSize")) &&
+                if (Boolean.parseBoolean(client.getServerConfigs("UseOnlyOneVehicleSize")) &&
                           (type == Unit.VEHICLE) &&
                           (weight != Unit.LIGHT)) {
                     break;
                 }
 
-                result.append("<tr><td>" +
-                                    Unit.getWeightClassDesc(weight) +
-                                    " " +
-                                    Unit.getTypeClassDesc(type) +
-                                    "</td><td>");
+                result.append("<tr><td>")
+                      .append(Unit.getWeightClassDesc(weight))
+                      .append(" ")
+                      .append(Unit.getTypeClassDesc(type))
+                      .append("</td><td>");
                 if (trueCost) {
-                    result.append("See Unit Viwer");
+                    result.append("See Unit Viewer");
                 } else {
-                    result.append(client.campaign.CUnit.getPriceForUnit(mwclient, weight, type, p.getMyHouse()));
+                    result.append(CUnit.getPriceForUnit(client, weight, type, player.getMyHouse()));
                 }
-                result.append("</td><td>" +
-                                    client.campaign.CUnit.getInfluenceForUnit(mwclient, weight, type, p.getMyHouse()) +
-                                    "</td>");
-                result.append("<td>" +
-                                    client.campaign.CUnit.getPPForUnit(mwclient, weight, type, p.getMyHouse()) +
-                                    "</td><td>");
+                result.append("</td><td>").append(CUnit.getInfluenceForUnit(client,
+                      weight,
+                      type,
+                      player.getMyHouse())).append("</td>");
+                result.append("<td>")
+                      .append(CUnit.getPPForUnit(client, weight, type, player.getMyHouse()))
+                      .append("</td><td>");
                 if (type == Unit.PROTOMEK) {
-                    result.append(mwclient.getserverConfigs("TechsToProtoPointRatio") + " per 5");
+                    result.append(client.getServerConfigs("TechsToProtoPointRatio")).append(" per 5");
                 } else {
-                    result.append(p.getHangarSpaceRequired(type, weight, 0, ""));
+                    result.append(player.getHangarSpaceRequired(type, weight, 0, ""));
                 }
                 result.append("</td></tr>");
 
@@ -3004,77 +2572,86 @@ public class CMainFrame extends javax.swing.JFrame {
         result.append("</table>");
 
         result.append("<br><b><i>Repoding facts:</b></i>");
-        result.append("<table><tr><th>Class</th><th>" +
-                            mwclient.moneyOrFluMessage(true, false, -2) +
-                            "</th><th>" +
-                            mwclient.moneyOrFluMessage(false, false, -2) +
-                            "</th><th>Components</th></tr>");
+        result.append("<table><tr><th>Class</th><th>")
+              .append(client.moneyOrFluMessage(true, false, -2))
+              .append("</th><th>")
+              .append(client.moneyOrFluMessage(false, false, -2))
+              .append("</th><th>Components</th></tr>");
         typeamount = 1;
         for (int type = 0; type < typeamount; type++) {
             for (int weight = 0; weight < 4; weight++) {
-                String repodFlu = "RepodFlu" + Unit.getWeightClassDesc(weight);
-                String repodCost = "RepodCost" + Unit.getWeightClassDesc(weight);
-                String repodComponents = "RepodComp" + Unit.getWeightClassDesc(weight);
+                String rePodFlu = "RePodFlu" + Unit.getWeightClassDesc(weight);
+                String rePodCost = "RePodCost" + Unit.getWeightClassDesc(weight);
+                String rePodComponents = "RePodComp" + Unit.getWeightClassDesc(weight);
 
-                int repodCostInt = Integer.parseInt(mwclient.getserverConfigs(repodCost));
-                int repodComponentsInt = Integer.parseInt(mwclient.getserverConfigs(repodComponents));
+                int rePodCostInt = Integer.parseInt(client.getServerConfigs(rePodCost));
+                int rePodComponentsInt = Integer.parseInt(client.getServerConfigs(rePodComponents));
 
-                if (!Boolean.parseBoolean(mwclient.getserverConfigs("DoesRepodCost"))) {
-                    repodCostInt = 0;
-                }
-                if (!Boolean.parseBoolean(mwclient.getserverConfigs("RepodUsesComp"))) {
-                    repodComponentsInt = 0;
+                if (!Boolean.parseBoolean(client.getServerConfigs("DoesRePodCost"))) {
+                    rePodCostInt = 0;
                 }
 
-                result.append("<tr><td>" +
-                                    Unit.getWeightClassDesc(weight) +
-                                    "</td><td>" +
-                                    repodCostInt +
-                                    "</td><td>" +
-                                    mwclient.getserverConfigs(repodFlu) +
-                                    "</td><td>" +
-                                    repodComponentsInt +
-                                    "</td></tr>");
+                if (!Boolean.parseBoolean(client.getServerConfigs("RePodUsesComp"))) {
+                    rePodComponentsInt = 0;
+                }
+
+                result.append("<tr><td>")
+                      .append(Unit.getWeightClassDesc(weight))
+                      .append("</td><td>")
+                      .append(rePodCostInt)
+                      .append("</td><td>")
+                      .append(client.getServerConfigs(rePodFlu))
+                      .append("</td><td>")
+                      .append(rePodComponentsInt)
+                      .append("</td></tr>");
             }
         }
 
         result.append("</table><br>");
         if (useAdvanceRepairs) {
             result.append("<br><b><i>Tech/BayCosts:</b></i>");
-            result.append("<table><tr><th>Type</th><th>" + mwclient.moneyOrFluMessage(true, false, -2) + "</th>");
-            result.append("<tr><td>Bay Cost</td><td>" +
-                                Integer.parseInt(mwclient.getserverConfigs("CostToBuyNewBay")) +
-                                "</td></tr>");
-            result.append("<tr><td>Bay Sale</td><td>" +
-                                Integer.parseInt(mwclient.getserverConfigs("BaySellBackPrice")) +
-                                "</td></tr>");
-            result.append("<tr><td>Green Tech</td><td>" +
-                                Integer.parseInt(mwclient.getserverConfigs("GreenTechHireCost")) +
-                                "</td></tr>");
+            result.append("<table><tr><th>Type</th><th>")
+                  .append(client.moneyOrFluMessage(true, false, -2))
+                  .append("</th>");
+            result.append("<tr><td>Bay Cost</td><td>")
+                  .append(Integer.parseInt(client.getServerConfigs("CostToBuyNewBay")))
+                  .append("</td></tr>");
+            result.append("<tr><td>Bay Sale</td><td>")
+                  .append(Integer.parseInt(client.getServerConfigs("BaySellBackPrice")))
+                  .append("</td></tr>");
+            result.append("<tr><td>Green Tech</td><td>")
+                  .append(Integer.parseInt(client.getServerConfigs("GreenTechHireCost")))
+                  .append("</td></tr>");
 
-            if (Boolean.parseBoolean(mwclient.getserverConfigs("AllowRegTechsToBeHired"))) {
-                result.append("<tr><td>Reg Tech</td><td>" +
-                                    Integer.parseInt(mwclient.getserverConfigs("RegTechHireCost")) +
-                                    "</td></tr>");
+            if (Boolean.parseBoolean(client.getServerConfigs("AllowRegTechsToBeHired"))) {
+                result.append("<tr><td>Reg Tech</td><td>")
+                      .append(Integer.parseInt(client.getServerConfigs("RegTechHireCost")))
+                      .append("</td></tr>");
             }
             result.append("</table>");
         }
         result.append("<table><tr><th>Size of Unit</th><th>EXP needed</th></tr>");
-        result.append("<tr><td>Light</td><td>" + mwclient.getserverConfigs("MinEXPforLight") + "</td></tr>"); //@salient
-        result.append("<tr><td>Medium</td><td>" + mwclient.getserverConfigs("MinEXPforMedium") + "</td></tr>");
-        result.append("<tr><td>Heavy</td><td>" + mwclient.getserverConfigs("MinEXPforHeavy") + "</td></tr>");
-        result.append("<tr><td>Assault</td><td>" + mwclient.getserverConfigs("MinEXPforAssault") + "</td></tr>");
+        result.append("<tr><td>Light</td><td>")
+              .append(client.getServerConfigs("MinEXPforLight"))
+              .append("</td></tr>"); //@salient
+        result.append("<tr><td>Medium</td><td>")
+              .append(client.getServerConfigs("MinEXPforMedium"))
+              .append("</td></tr>");
+        result.append("<tr><td>Heavy</td><td>").append(client.getServerConfigs("MinEXPforHeavy")).append("</td></tr>");
+        result.append("<tr><td>Assault</td><td>")
+              .append(client.getServerConfigs("MinEXPforAssault"))
+              .append("</td></tr>");
         result.append("</table>");
-        result.append("EXP needed to Buy/Sell on the Black Market: " +
-                            mwclient.getserverConfigs("MinEXPforBMBuying") +
-                            "/" +
-                            mwclient.getserverConfigs("MinEXPforBMSelling") +
-                            "<br>");
-        result.append("EXP needed to defect from " +
-                            mwclient.getserverConfigs("NewbieHouseName") +
-                            " to a Faction: " +
-                            mwclient.getserverConfigs("MinEXPforDefecting") +
-                            "<br>");
+        result.append("EXP needed to Buy/Sell on the Black Market: ")
+              .append(client.getServerConfigs("MinEXPforBMBuying"))
+              .append("/")
+              .append(client.getServerConfigs("MinEXPforBMSelling"))
+              .append("<br>");
+        result.append("EXP needed to defect from ")
+              .append(client.getServerConfigs("NewbieHouseName"))
+              .append(" to a Faction: ")
+              .append(client.getServerConfigs("MinEXPforDefecting"))
+              .append("<br>");
 
         result.append("</table><br>");
 
@@ -3114,42 +2691,33 @@ public class CMainFrame extends javax.swing.JFrame {
 
         result.append("</table><br>");
 
-        if (mwclient.getData().getServerBannedAmmo().size() > 0) {
+        if (!client.getData().getServerBannedAmmo().isEmpty()) {
             result.append("<b><i>Server Banned ammo</b></i><br>");
-            for (String key : mwclient.getData().getServerBannedAmmo().keySet()) {
-                result.append(mwclient.getData().getMunitionsByNumber().get(Long.parseLong(key)) + "<br>");
+            for (AmmoType.Munitions bannedAmmo : client.getData().getServerBannedAmmo()) {
+                result.append(client.getData().getMunitionsByNumber().get(bannedAmmo)).append("<br>");
             }
         }
 
-        House faction = mwclient.getData().getHouseByName(mwclient.getPlayer().getHouse());
-        if (faction.getBannedAmmo().size() > 0) {
+        House faction = client.getData().getHouseByName(client.getPlayer().getHouse());
+        if (!faction.getBannedAmmo().isEmpty()) {
             result.append("<b><i>House Banned Ammo</b></i><br>");
-            for (String key : faction.getBannedAmmo().keySet()) {
-                result.append(mwclient.getData().getMunitionsByNumber().get(Long.parseLong(key)) + "<br>");
+            for (AmmoType.Munitions bannedAmmo : faction.getBannedAmmo()) {
+                result.append(client.getData().getMunitionsByNumber().get(bannedAmmo)).append("<br>");
             }
         }
 
-        /*
-         * for ( Object prop : System.getProperties().keySet()){
-         * result.append(prop.toString()); result.append(" = ");
-         * result.append(System.getProperty(prop.toString()));
-         * result.append("<br>"); }
-         */
         /*
          * use process incoming, instead of adding directly to misc, so that
          * output is directly to main if misc in main is enabled or players has
          * the misc. tab off.
          */
-        mwclient.doParseDataInput("SM|" + result.toString());
+        client.doParseDataInput("SM|" + result);
     }
 
-    public void jMenuHelpOpViewer_actionPerformed() {
+    private String pilotSkillBVBlurbLine(String a, String b) {//BK added
+        // builds help menu's pilot skill bv blurb, wants a and b to build server config lookup and get the value
+        int i = Integer.parseInt(client.getServerConfigs("chancefor" + a + "for" + b));
 
-    }
-
-    private String sPSB(String a, String b) {//BK added
-        // builds help menu's pilot skill bv blurb, wants a and b to build serverconfig lookup and get the value
-        Integer i = Integer.parseInt(mwclient.getserverConfigs("chancefor" + a + "for" + b));
         if (i > 0) {
             return " " + b + " xp cost: " + i;
         } else {
@@ -3157,96 +2725,97 @@ public class CMainFrame extends javax.swing.JFrame {
         }
     }
 
-    private String sPSBL(String a, String b, String c) {//BK added
-        // builds help menu's pilot skill blurb line, wants a and b and c as skillfullname and
-        //skillshortname and description, e.g. "Astech" and "AT" and "does this..."
+    private String pilotSkillBlurbLine(String skill, String fullName, String shortName) {//BK added
+        // builds help menu's pilot skill blurb line, wants skill and fullName and shortName as skill, full name and skill shortname and
+        // description, e.g. "Astech" and "AT" and "does this..."
         String s = " ";
         //find if there is any chance for this skill, and if yes, create entry
-        s += sPSB(b, "Mek") +
-                   sPSB(b, "Vehicle") +
-                   sPSB(b, "Infantry") +
-                   sPSB(b, "ProtoMek") +
-                   sPSB(b, "BattleArmor") +
-                   sPSB(b, "Aero");//not sure where to get a reiterable list for unit types
+        s += pilotSkillBVBlurbLine(fullName, "Mek") +
+                   pilotSkillBVBlurbLine(fullName, "Vehicle") +
+                   pilotSkillBVBlurbLine(fullName, "Infantry") +
+                   pilotSkillBVBlurbLine(fullName, "ProtoMek") +
+                   pilotSkillBVBlurbLine(fullName, "BattleArmor") +
+                   pilotSkillBVBlurbLine(fullName, "Aero");//not sure where to get skill reiterable list for unit types
         if (s.length() > 1) {
-            s = "<tr><td>" + a + "</td><td>" + b + "</td><td>" + c + "<br>" + s + "</td></tr>";
+            s = "<tr><td>" + skill + "</td><td>" + fullName + "</td><td>" + shortName + "<br>" + s + "</td></tr>";
         }
         return s;
     }
 
     public void jMenuHelpPilotSkills_actionPerformed() {
-        //BK;  would prefer to have this Help Menu list built using a reiteration of the pilot
-        //skills by pulling the info from those classes
-        //step one was adding pilot xp costs to the help menu,
-        //step two will be adding bv costs, drawn via the skill
+        //BK;  would prefer to have this Help Menu list built using a reiteration of the pilot skills by pulling the
+        // info from those classes step one was adding pilot xp costs to the help menu, step two will be adding bv
+        // costs, drawn via the skill
         String result = "";
-        Integer i;
-        String s;
         result += "<font color=\"black\">";
         result += "<b><i>MekWars/MegaMek Pilot Skills</b></i><br>";
-        result += "<table><tr><th>Name</th>" + "<th>Abbrivation</th>" + "<th>Description</th></tr>";
+        result += "<table><tr><th>Name</th>" + "<th>Abbreviation</th>" + "<th>Description</th></tr>";
         if (useAdvanceRepairs) {
-            result += sPSBL("Astech", "AT", "Pilot acts as a tech with repairs only costing parts");
+            result += pilotSkillBlurbLine("Astech", "AT", "Pilot acts as a tech with repairs only costing parts");
         } else {
-            result += sPSBL("Astech", "AT", "Reduces the number of techs needed to repair a unit by 1");
+            result += pilotSkillBlurbLine("Astech", "AT", "Reduces the number of techs needed to repair a unit by 1");
         }
-        result += sPSBL("MD Buffered VDNI", "BVDNI", "Allows pilots to take more damage.");
-        result += sPSBL("Dodge Maneuver",
+        result += pilotSkillBlurbLine("MD Buffered VDNI", "BVDNI", "Allows pilots to take more damage.");
+        result += pilotSkillBlurbLine("Dodge Maneuver",
               "DM",
               "Enables the unit to make a dodge maneuver instead of a physical attack.<br>This maneuver adds +2 to the BTH to physical attacks against the unit.");
-        result += sPSBL("Edge", "ED", "Allows Pilot to reroll 1 roll(per level) per game.");
-        result += sPSBL("Enhanced Interface",
+        result += pilotSkillBlurbLine("Edge", "ED", "Allows Pilot to reroll 1 roll(per level) per game.");
+        result += pilotSkillBlurbLine("Enhanced Interface",
               "EI",
               "Neural interface to the clan enhanced imaging system<br>-1 To PSR<br>+2 when targeting with TC instead of +3<br>Can Target without TC at +6<br>Reduces all forest and Smoke mods to 1<br>Pilot receives 1 point of damage every time Units IS is hit,<br>If you fail a roll of 7+<br>BA's recieve 1 extra point of damage every time they are hit.");
-        result += sPSBL("Gifted",
+        result += pilotSkillBlurbLine("Gifted",
               "GT",
               "Pilots receive an extra " +
-                    mwclient.getserverConfigs("GiftedPercent") +
+                    client.getServerConfigs("GiftedPercent") +
                     "% chance to gain a skill when they fail<br>to level Piloting or Gunnery after a win.");
-        result += sPSBL("Gunnery Ballistic",
+        result += pilotSkillBlurbLine("Gunnery Ballistic",
               "GB",
               "NOTE: This is an unofficial rule. Pilot gets a -1 to-hit bonus on all<br>ballistic weapons (MGs, all ACs, Gaussrifles).");
-        result += sPSBL("Gunnery Laser",
+        result += pilotSkillBlurbLine("Gunnery Laser",
               "GL",
               "NOTE: This is an unofficial rule. Pilot gets a -1 to-hit bonus on all<br>energy-based weapons (Laser, PPC, and Flamer).");
-        result += sPSBL("Gunnery Missile",
+        result += pilotSkillBlurbLine("Gunnery Missile",
               "GM",
               "NOTE: This is an unofficial rule. Pilot gets a -1 to-hit bonus on all<br>missile weapons (LRM, MRM, SRM).");
-        result += sPSBL("Iron Man",
+        result += pilotSkillBlurbLine("Iron Man",
               "IM",
               "NOTE: This is an unofficial rule. A pilot with this skill receives only<br>1 pilot hit from ammunition explosions.");
-        result += sPSBL("Maneuvering Ace",
+        result += pilotSkillBlurbLine("Maneuvering Ace",
               "MA",
               "Enables the unit to move laterally like a Quad. Units also receive a -1<br>BTH to rolls against skidding.");
-        result += sPSBL("Melee Specialist",
+        result += pilotSkillBlurbLine("Melee Specialist",
               "MS",
               "Enables the unit to do 1 additional point of damage with physical attacks<br>and subtracts one from the attacker movement modifier (to a minimum of zero).");
-        result += sPSBL("MedTech", "MT", "A pilot with the MedTech skill will heal 1 extra point per tick.");
-        result += sPSBL("Natural Aptitude: Gunnery",
+        result += pilotSkillBlurbLine("MedTech",
+              "MT",
+              "A pilot with the MedTech skill will heal 1 extra point per tick.");
+        result += pilotSkillBlurbLine("Natural Aptitude: Gunnery",
               "NAG",
               "The pilot checks leveling for gunnery at one level higher then current i.e.<br>5 instead of 4 for a 4/5 pilot.");
-        result += sPSBL("Natural Aptitude: Piloting",
+        result += pilotSkillBlurbLine("Natural Aptitude: Piloting",
               "NAP",
               "The pilot checks leveling for piloting at one level higher then current i.e.<br>6 instead of 5 for a 4/5 pilot.");
-        result += sPSBL("Pain Resistance",
+        result += pilotSkillBlurbLine("Pain Resistance",
               "PR",
               "When making consciousness rolls, 1 is added to all rolls. Also, damage received<BR>from ammo explosions is reduced to 1.");
-        result += sPSBL("Pain Shunt",
+        result += pilotSkillBlurbLine("Pain Shunt",
               "PS",
               "When making consciousness rolls, 1 is added to all rolls. Also, damage received<BR>from ammo explosions is reduced to 1.");
-        result += sPSBL("Quick Study", "QS", "Pilots with the Quick Study skill gain a 5% bonus to all XP earned.");
-        result += sPSBL("Survivalist",
+        result += pilotSkillBlurbLine("Quick Study",
+              "QS",
+              "Pilots with the Quick Study skill gain a 5% bonus to all XP earned.");
+        result += pilotSkillBlurbLine("Survivalist",
               "SV",
               "If a pilot has this skill they will have a +20% of returning home if ejected and<br>left on the field.");
-        result += sPSBL("Tactical Genius",
+        result += pilotSkillBlurbLine("Tactical Genius",
               "TG",
               "A pilot who has a Tactical Genius may reroll their initiative once per turn.<br>The second roll must be accepted.");
-        result += sPSBL("Trait", "TN", "Pilot traits for use with moding the gaining of other skills.");
-        result += sPSBL("VDNI MD Skill", "VDNI", "Allows Pilot to Take more Damage.");
-        result += sPSBL("Weapon Specialist",
+        result += pilotSkillBlurbLine("Trait", "TN", "Pilot traits for use with moding the gaining of other skills.");
+        result += pilotSkillBlurbLine("VDNI MD Skill", "VDNI", "Allows Pilot to Take more Damage.");
+        result += pilotSkillBlurbLine("Weapon Specialist",
               "WS",
               "A pilot who specializes in a particular weapon receives a -2 to hit modifier<br>on all attacks with that weapon.");
-        result += sPSBL("Clan Pilot Training",
+        result += pilotSkillBlurbLine("Clan Pilot Training",
               "CPT",
               "Pilot has a +1 penalty for physical attacks,<br>because clans do not train for dishonourable combat.");
         result += "</table>";
@@ -3256,7 +2825,7 @@ public class CMainFrame extends javax.swing.JFrame {
          * output is directly to main if misc in main is enabled or player's
          * misc. tab is disabled.
          */
-        mwclient.doParseDataInput("SM|" + result);
+        client.doParseDataInput("SM|" + result);
 
     }
 
@@ -3264,19 +2833,19 @@ public class CMainFrame extends javax.swing.JFrame {
 
         java.util.StringTokenizer mulList = new java.util.StringTokenizer(data, "#");
 
-        java.util.Vector<String> list = new java.util.Vector<String>(1, 1);
+        java.util.Vector<String> list = new java.util.Vector<>(1, 1);
 
         while (mulList.hasMoreElements()) {
             list.add(mulList.nextToken());
         }
 
-        javax.swing.JComboBox<String> combo = new javax.swing.JComboBox<String>(list);
+        JComboBox<String> combo = new JComboBox<>(list);
         combo.setEditable(false);
-        javax.swing.JOptionPane jop = new javax.swing.JOptionPane(combo,
-              javax.swing.JOptionPane.QUESTION_MESSAGE,
-              javax.swing.JOptionPane.OK_CANCEL_OPTION);
+        JOptionPane jop = new JOptionPane(combo,
+              JOptionPane.QUESTION_MESSAGE,
+              JOptionPane.OK_CANCEL_OPTION);
 
-        javax.swing.JDialog dlg = jop.createDialog(mwclient.getMainFrame(), "Select mul file.");
+        JDialog dlg = jop.createDialog(client.getMainFrame(), "Select mul file.");
         combo.grabFocus();
         combo.getEditor().selectAll();
 
@@ -3286,14 +2855,14 @@ public class CMainFrame extends javax.swing.JFrame {
             return;
         }
 
-        int value = ((Integer) jop.getValue()).intValue();
+        int value = (Integer) jop.getValue();
 
-        if (value == javax.swing.JOptionPane.CANCEL_OPTION) {
+        if (value == JOptionPane.CANCEL_OPTION) {
             return;
         }
         String selectedMul = list.elementAt(combo.getSelectedIndex());
 
-        mwclient.sendChat(client.MWClient.CAMPAIGN_PREFIX + "c retrievemul#" + selectedMul);
+        client.sendChat(IClient.CAMPAIGN_PREFIX + "c retrievemul#" + selectedMul);
     }
 
     /*
@@ -3310,23 +2879,8 @@ public class CMainFrame extends javax.swing.JFrame {
         MainPanel.refreshBattleTable();
     }
 
-    void this_componentResized(java.awt.event.ComponentEvent e) {
-    }
-
     public void setSoundMuted(boolean b) {
         jMenuOptionsMute.setState(b);
-    }
-
-    public void refreshMenu() {
-        hasAdminMenus = false;
-        jMenuBar1.removeAll();
-        try {
-            createMenu();
-        } catch (Exception ex) {
-            MWLogger.errLog(ex);
-        }
-        enableMenu();
-        this.repaint();
     }
 
     public void updateAttackMenu() {
@@ -3365,31 +2919,30 @@ public class CMainFrame extends javax.swing.JFrame {
         jMenuCSHostStop.setVisible(false);
     }
 
-    public void changeStatus(int status, int laststatus) {
+    public void changeStatus(int status, int lastStatus) {
 
-        if (mwclient.getConfig().isParam("STATUSINTRAYICON")) {
-            if (status == client.MWClient.STATUS_RESERVE) {
+        if (client.getConfig().isParam("STATUSINTRAYICON")) {
+            if (status == IClient.STATUS_RESERVE) {
                 try {
-                    setIconImage(mwclient.getConfig().getImage("RESERVE").getImage());
+                    setIconImage(client.getConfig().getImage("RESERVE").getImage());
                 } catch (Exception ex) {
                     MWLogger.errLog(ex);
                 }
-            } else if (status == client.MWClient.STATUS_ACTIVE) {
+            } else if (status == IClient.STATUS_ACTIVE) {
                 try {
-                    setIconImage(mwclient.getConfig().getImage("ACTIVE").getImage());
+                    setIconImage(client.getConfig().getImage("ACTIVE").getImage());
                 } catch (Exception ex) {
                     MWLogger.errLog(ex);
                 }
-            } else if (status == client.MWClient.STATUS_FIGHTING) {
+            } else if (status == IClient.STATUS_FIGHTING) {
                 try {
-                    setIconImage(mwclient.getConfig().getImage("FIGHT").getImage());
+                    setIconImage(client.getConfig().getImage("FIGHT").getImage());
                 } catch (Exception ex) {
                     MWLogger.errLog(ex);
                 }
-            } else if ((status == client.MWClient.STATUS_LOGGEDOUT) ||
-                             (status == client.MWClient.STATUS_DISCONNECTED)) {
+            } else if ((status == IClient.STATUS_LOGGED_OUT) || (status == IClient.STATUS_DISCONNECTED)) {
                 try {
-                    setIconImage(mwclient.getConfig().getImage("LOGOUT").getImage());
+                    setIconImage(client.getConfig().getImage("LOGOUT").getImage());
                 } catch (Exception ex) {
                     MWLogger.errLog(ex);
                 }
@@ -3399,19 +2952,19 @@ public class CMainFrame extends javax.swing.JFrame {
         // if not showing status, show the operator's custom icon
         else {
             try {
-                setIconImage(mwclient.getConfig().getImage("TRAY").getImage());
+                setIconImage(client.getConfig().getImage("TRAY").getImage());
             } catch (Exception ex) {
                 MWLogger.errLog(ex);
             }
         }
 
-        MainPanel.changeStatus(status, laststatus);
+        MainPanel.changeStatus(status, lastStatus);
         enableMenu();
         repaint();
     }
 
     public void createArmyFromMul(String data) {
-        PlayerNameDialog playerDialog = new PlayerNameDialog(mwclient, "Choose a Player.", PlayerNameDialog.ANY_PLAYER);
+        PlayerNameDialog playerDialog = new PlayerNameDialog(client, "Choose a Player.", PlayerNameDialog.ANY_PLAYER);
         playerDialog.setVisible(true);
         String player = playerDialog.getPlayerName();
         playerDialog.dispose();
@@ -3423,7 +2976,7 @@ public class CMainFrame extends javax.swing.JFrame {
         System.err.println("String Tokenizer called");
         java.util.StringTokenizer mulList = new java.util.StringTokenizer(data, "#");
 
-        java.util.Vector<String> list = new java.util.Vector<String>(1, 1);
+        java.util.Vector<String> list = new java.util.Vector<>(1, 1);
 
         // System.err.println("adding mul's to vector");
         while (mulList.hasMoreElements()) {
@@ -3432,13 +2985,13 @@ public class CMainFrame extends javax.swing.JFrame {
 
         // System.err.println("creating combo box.");
 
-        javax.swing.JComboBox<String> combo = new javax.swing.JComboBox<String>(list);
+        JComboBox<String> combo = new JComboBox<>(list);
         combo.setEditable(false);
-        javax.swing.JOptionPane jop = new javax.swing.JOptionPane(combo,
-              javax.swing.JOptionPane.QUESTION_MESSAGE,
-              javax.swing.JOptionPane.OK_CANCEL_OPTION);
+        JOptionPane jop = new JOptionPane(combo,
+              JOptionPane.QUESTION_MESSAGE,
+              JOptionPane.OK_CANCEL_OPTION);
 
-        javax.swing.JDialog dlg = jop.createDialog(mwclient.getMainFrame(), "Select mul file.");
+        JDialog dlg = jop.createDialog(client.getMainFrame(), "Select mul file.");
         combo.grabFocus();
         combo.getEditor().selectAll();
 
@@ -3448,35 +3001,35 @@ public class CMainFrame extends javax.swing.JFrame {
             return;
         }
 
-        int value = ((Integer) jop.getValue()).intValue();
+        int value = (Integer) jop.getValue();
 
-        if (value == javax.swing.JOptionPane.CANCEL_OPTION) {
+        if (value == JOptionPane.CANCEL_OPTION) {
             return;
         }
         String selectedMul = list.elementAt(combo.getSelectedIndex());
 
-        String fluff = javax.swing.JOptionPane.showInputDialog(getContentPane(), "Army Name.");
-        if ((fluff == null) || (fluff.length() < 1)) {
+        String fluff = JOptionPane.showInputDialog(getContentPane(), "Army Name.");
+        if ((fluff == null) || (fluff.isEmpty())) {
             return;
         }
 
-        mwclient.sendChat(client.MWClient.CAMPAIGN_PREFIX +
-                                "createarmyfrommul " +
-                                selectedMul +
-                                "#" +
-                                fluff +
-                                "#" +
-                                player);
+        client.sendChat(IClient.CAMPAIGN_PREFIX +
+                              "createarmyfrommul " +
+                              selectedMul +
+                              "#" +
+                              fluff +
+                              "#" +
+                              player);
     }
 
     public void jMenuSendAllOperationFiles_actionPerformed(java.awt.event.ActionEvent e) {
 
-        int result = javax.swing.JOptionPane.showConfirmDialog(null,
+        int result = JOptionPane.showConfirmDialog(null,
               "Upload All local OpFiles?",
               "Upload Ops",
-              javax.swing.JOptionPane.YES_NO_OPTION);
+              JOptionPane.YES_NO_OPTION);
 
-        if (result == javax.swing.JOptionPane.NO_OPTION) {
+        if (result == JOptionPane.NO_OPTION) {
             return;
         }
 
@@ -3495,9 +3048,9 @@ public class CMainFrame extends javax.swing.JFrame {
                 }
                 java.io.FileInputStream fis = new java.io.FileInputStream(opFile);
                 java.io.BufferedReader dis = new java.io.BufferedReader(new java.io.InputStreamReader(fis));
-                opData.append(opFile.getName().substring(0, opFile.getName().lastIndexOf(".txt")) + "#");
+                opData.append(opFile.getName(), 0, opFile.getName().lastIndexOf(".txt")).append("#");
                 while (dis.ready()) {
-                    opData.append(dis.readLine().replaceAll("#", "(pound)") + "#");
+                    opData.append(dis.readLine().replace("#", "(pound)")).append("#");
                 }
                 dis.close();
                 fis.close();
@@ -3506,7 +3059,7 @@ public class CMainFrame extends javax.swing.JFrame {
                 MWLogger.errLog("Unable to read " + opFile);
                 return;
             }
-            mwclient.sendChat(client.MWClient.CAMPAIGN_PREFIX + "c setoperation#short#" + opData.toString());
+            client.sendChat(IClient.CAMPAIGN_PREFIX + "c setoperation#short#" + opData);
             opData.setLength(0);
             opData.trimToSize();
         }
@@ -3514,10 +3067,10 @@ public class CMainFrame extends javax.swing.JFrame {
 
     public void jMenuSetNewOperationFile_actionPerformed(java.awt.event.ActionEvent e) {
 
-        String opName = javax.swing.JOptionPane.showInputDialog(mwclient.getMainFrame().getContentPane(),
+        String opName = JOptionPane.showInputDialog(client.getMainFrame().getContentPane(),
               "New Op Name?");
 
-        if ((opName == null) || (opName.trim().length() < 1)) {
+        if ((opName == null) || (opName.trim().isEmpty())) {
             return;
         }
 
@@ -3532,9 +3085,9 @@ public class CMainFrame extends javax.swing.JFrame {
         try {
             java.io.FileInputStream fis = new java.io.FileInputStream(opFile);
             java.io.BufferedReader dis = new java.io.BufferedReader(new java.io.InputStreamReader(fis));
-            opData.append(opName + "#");
+            opData.append(opName).append("#");
             while (dis.ready()) {
-                opData.append(dis.readLine().replaceAll("#", "(pound)") + "#");
+                opData.append(dis.readLine().replace("#", "(pound)")).append("#");
             }
             dis.close();
             fis.close();
@@ -3544,59 +3097,56 @@ public class CMainFrame extends javax.swing.JFrame {
             return;
         }
 
-        mwclient.sendChat(client.MWClient.CAMPAIGN_PREFIX + "c setoperation#short#" + opData.toString());
+        client.sendChat(IClient.CAMPAIGN_PREFIX + "c setoperation#short#" + opData);
     }
 
     public void jMenuUpdateOperations_actionPerformed(java.awt.event.ActionEvent e) {
-        mwclient.sendChat(client.MWClient.CAMPAIGN_PREFIX + "c adminlockcampaign");
-        mwclient.sendChat(client.MWClient.CAMPAIGN_PREFIX + "c updateoperations");
-        mwclient.sendChat(client.MWClient.CAMPAIGN_PREFIX + "c adminunlockcampaign");
+        client.sendChat(IClient.CAMPAIGN_PREFIX + "c adminlockcampaign");
+        client.sendChat(IClient.CAMPAIGN_PREFIX + "c updateoperations");
+        client.sendChat(IClient.CAMPAIGN_PREFIX + "c adminunlockcampaign");
 
     }
 
     public void jMenuRetrieveOperationFile_actionPerformed(java.awt.event.ActionEvent e) {
-        javax.swing.JComboBox<String> opCombo = new javax.swing.JComboBox<String>(mwclient.getAllOps()
-                                                                                        .keySet()
-                                                                                        .toArray(new String[0]));
+        JComboBox<String> opCombo = new JComboBox<>(client.getAllOps()
+                                                          .keySet()
+                                                          .toArray(new String[0]));
         opCombo.setEditable(false);
 
-        javax.swing.JOptionPane jop = new javax.swing.JOptionPane(opCombo,
-              javax.swing.JOptionPane.QUESTION_MESSAGE,
-              javax.swing.JOptionPane.OK_CANCEL_OPTION);
-        javax.swing.JDialog dlg = jop.createDialog(this, "Select Op.");
+        JOptionPane jop = new JOptionPane(opCombo,
+              JOptionPane.QUESTION_MESSAGE,
+              JOptionPane.OK_CANCEL_OPTION);
+        JDialog dlg = jop.createDialog(this, "Select Op.");
         opCombo.grabFocus();
         opCombo.getEditor().selectAll();
 
         dlg.setVisible(true);
 
-        if ((Integer) jop.getValue() == javax.swing.JOptionPane.CANCEL_OPTION) {
+        if ((Integer) jop.getValue() == JOptionPane.CANCEL_OPTION) {
             return;
         }
 
         String opName = (String) opCombo.getSelectedItem();
 
-        mwclient.sendChat(client.MWClient.CAMPAIGN_PREFIX + "c RETRIEVEOPERATION#short#" + opName);
+        client.sendChat(IClient.CAMPAIGN_PREFIX + "c RETRIEVEOPERATION#short#" + opName);
     }
 
     public void jMenuSetOperationFile_actionPerformed(java.awt.event.ActionEvent e) {
 
-        javax.swing.JComboBox<String> opCombo = new javax.swing.JComboBox<String>(mwclient.getAllOps()
-                                                                                        .keySet()
-                                                                                        .toArray(new String[mwclient.getAllOps()
-                                                                                                                  .keySet()
-                                                                                                                  .size()]));
+        JComboBox<String> opCombo = new JComboBox<>();
+        client.getAllOps().keySet().forEach(opCombo::addItem);
         opCombo.setEditable(false);
 
-        javax.swing.JOptionPane jop = new javax.swing.JOptionPane(opCombo,
-              javax.swing.JOptionPane.QUESTION_MESSAGE,
-              javax.swing.JOptionPane.OK_CANCEL_OPTION);
-        javax.swing.JDialog dlg = jop.createDialog(this, "Select Op.");
+        JOptionPane jop = new JOptionPane(opCombo,
+              JOptionPane.QUESTION_MESSAGE,
+              JOptionPane.OK_CANCEL_OPTION);
+        JDialog dlg = jop.createDialog(this, "Select Op.");
         opCombo.grabFocus();
         opCombo.getEditor().selectAll();
 
         dlg.setVisible(true);
 
-        if ((Integer) jop.getValue() == javax.swing.JOptionPane.CANCEL_OPTION) {
+        if ((Integer) jop.getValue() == JOptionPane.CANCEL_OPTION) {
             return;
         }
 
@@ -3613,9 +3163,9 @@ public class CMainFrame extends javax.swing.JFrame {
         try {
             java.io.FileInputStream fis = new java.io.FileInputStream(opFile);
             java.io.BufferedReader dis = new java.io.BufferedReader(new java.io.InputStreamReader(fis));
-            opData.append(opName + "#");
+            opData.append(opName).append("#");
             while (dis.ready()) {
-                opData.append(dis.readLine().replaceAll("#", "(pound)") + "#");
+                opData.append(dis.readLine().replace("#", "(pound)")).append("#");
             }
             dis.close();
             fis.close();
@@ -3625,27 +3175,26 @@ public class CMainFrame extends javax.swing.JFrame {
             return;
         }
 
-        mwclient.sendChat(client.MWClient.CAMPAIGN_PREFIX + "c setoperation#short#" + opData.toString());
+        client.sendChat(IClient.CAMPAIGN_PREFIX + "c setoperation#short#" + opData);
     }
 
     private void addMenuListener(Object[] components) {
         for (Object menu : components) {
-            if (menu instanceof javax.swing.JMenu) {
-                javax.swing.JMenu jmenu = ((javax.swing.JMenu) menu);
+            if (menu instanceof JMenu jmenu) {
                 jmenu.removeMenuListener(sound);
                 jmenu.addMenuListener(sound);
-                addMenuItemListner(jmenu);
+                addMenuItemListener(jmenu);
             }
         }
     }
 
-    private void addMenuItemListner(javax.swing.JMenu menu) {
+    private void addMenuItemListener(JMenu menu) {
         for (int pos = 0; pos < menu.getItemCount(); pos++) {
-            javax.swing.JMenuItem item = menu.getItem(pos);
-            if (item instanceof javax.swing.JMenu) {
-                ((javax.swing.JMenu) item).removeMenuListener(popupSound);
-                ((javax.swing.JMenu) item).addMenuListener(popupSound);
-                addMenuItemListner((javax.swing.JMenu) item);
+            JMenuItem item = menu.getItem(pos);
+            if (item instanceof JMenu) {
+                ((JMenu) item).removeMenuListener(popupSound);
+                ((JMenu) item).addMenuListener(popupSound);
+                addMenuItemListener((JMenu) item);
             }
         }
 

@@ -14,27 +14,28 @@
  * FOR A PARTICULAR PURPOSE. See the GNU General Public License for more
  * details.
  */
-package mekwars.client.gui.sounds;
+package mekwars.common.sounds;
+
+import mekwars.common.campaign.clientutils.protocol.IClient;
 
 public class MenuPopupSound implements javax.swing.event.MenuListener {
 
-    client.MWClient mwclient = null;
+    IClient client;
 
-    public MenuPopupSound(client.MWClient mwclient) {
-        this.mwclient = mwclient;
+    public MenuPopupSound(IClient client) {
+        this.client = client;
     }
 
-    public void menuCanceled(javax.swing.event.MenuEvent arg0) {
+    public void menuSelected(javax.swing.event.MenuEvent arg0) {
+        if (client.getConfig().isParam("ENABLEMENUPOPUPSOUND")) {
+            client.doPlaySound(client.getConfigParam("SOUNDONMENUPOPUP"));
+        }
     }
 
     public void menuDeselected(javax.swing.event.MenuEvent arg0) {
     }
 
-    public void menuSelected(javax.swing.event.MenuEvent arg0) {
-
-        if (mwclient.getConfig().isParam("ENABLEMENUPOPUPSOUND")) {
-            mwclient.doPlaySound(mwclient.getConfigParam("SOUNDONMENUPOPUP"));
-        }
+    public void menuCanceled(javax.swing.event.MenuEvent arg0) {
     }
 
 }

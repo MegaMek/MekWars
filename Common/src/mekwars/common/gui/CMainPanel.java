@@ -15,10 +15,11 @@
  * for more details.
  */
 
-package mekwars.client.gui;
+package mekwars.common.gui;
 
 import common.BMEquipment;
 import common.util.MWLogger;
+import mekwars.common.campaign.clientutils.protocol.IClient;
 
 /**
  * Main panel
@@ -37,33 +38,33 @@ public class CMainPanel extends javax.swing.JPanel
     CUserListPanel UserListPanel;
     javax.swing.JTabbedPane MainTPane = new javax.swing.JTabbedPane(javax.swing.SwingConstants.BOTTOM);
     CCommPanel CommPanel;
-    mekwars.client.gui.CMainPanel.CSelectTabAction CommSelect;
+    mekwars.common.gui.CMainPanel.CSelectTabAction CommSelect;
     CHQPanel HQPanel = null;
     CBMPanel BMPanel = null;
     CHSPanel HSPanel = null;
     CRulesPanel RulesPanel = null; //@salient
     javax.swing.JTabbedPane BMETabbed = null;
-    mekwars.client.gui.CMainPanel.CSelectTabAction HQSelect = null;
-    mekwars.client.gui.CMainPanel.CSelectTabAction RulesSelect = null; //@salient
-    mekwars.client.gui.CMainPanel.CSelectTabAction BMSelect = null;
-    mekwars.client.gui.CMainPanel.CSelectTabAction HSSelect = null;
-    mekwars.client.gui.CMainPanel.CSelectTabAction BMESelect = null;
+    mekwars.common.gui.CMainPanel.CSelectTabAction HQSelect = null;
+    mekwars.common.gui.CMainPanel.CSelectTabAction RulesSelect = null; //@salient
+    mekwars.common.gui.CMainPanel.CSelectTabAction BMSelect = null;
+    mekwars.common.gui.CMainPanel.CSelectTabAction HSSelect = null;
+    mekwars.common.gui.CMainPanel.CSelectTabAction BMESelect = null;
 
     CBattlePanel BattlePanel = null;
-    mekwars.client.gui.CMainPanel.CSelectTabAction BattleSelect = null;
+    mekwars.common.gui.CMainPanel.CSelectTabAction BattleSelect = null;
     CMapPanel MapPanel = null;
-    mekwars.client.gui.CMainPanel.CSelectTabAction MapSelect = null;
+    mekwars.common.gui.CMainPanel.CSelectTabAction MapSelect = null;
 
-    client.MWClient mwclient;
+    IClient mwclient;
 
-    mekwars.client.gui.CMainPanel.CTabForwardAction ForwardMainTab;
-    mekwars.client.gui.CMainPanel.CTabBackwardAction BackwardMainTab;
+    mekwars.common.gui.CMainPanel.CTabForwardAction ForwardMainTab;
+    mekwars.common.gui.CMainPanel.CTabBackwardAction BackwardMainTab;
     int panelDivider;
     int playerPanelDivider;
     int verticalPanelDivider;
     int sPanelDivider = 0;
 
-    public CMainPanel(client.MWClient client, CMainFrame mainFrame) {
+    public CMainPanel(IClient client, CMainFrame mainFrame) {
         mwclient = client;
         setLayout(new java.awt.BorderLayout());
         setMinimumSize(new java.awt.Dimension(620, 400));
@@ -96,82 +97,13 @@ public class CMainPanel extends javax.swing.JPanel
         MainSPane.setDividerSize(sPanelDivider);
         add(MainSPane, java.awt.BorderLayout.CENTER);
 
-        ForwardMainTab = new mekwars.client.gui.CMainPanel.CTabForwardAction();
+        ForwardMainTab = new mekwars.common.gui.CMainPanel.CTabForwardAction();
         getInputMap(WHEN_IN_FOCUSED_WINDOW).put(javax.swing.KeyStroke.getKeyStroke("alt X"), "TabForward");
         getActionMap().put("TabForward", ForwardMainTab);
-        BackwardMainTab = new mekwars.client.gui.CMainPanel.CTabBackwardAction();
+        BackwardMainTab = new mekwars.common.gui.CMainPanel.CTabBackwardAction();
         getInputMap(WHEN_IN_FOCUSED_WINDOW).put(javax.swing.KeyStroke.getKeyStroke("shift alt X"), "TabBackward");
         getActionMap().put("TabBackward", BackwardMainTab);
         revalidate();
-    }
-
-    private void addPanelMain(
-          javax.swing.JPanel panel,
-          mekwars.client.gui.CMainPanel.CSelectTabAction select,
-          String name,
-          String tooltip,
-          String mnemostr,
-          String commandStr) {
-        MainTPane.addTab(name, null, panel, tooltip);
-        int index = MainTPane.indexOfComponent(panel);
-        int mnemo = MainTPane.getTitleAt(index).indexOf(mnemostr.toUpperCase());
-        if (mnemo == -1) {mnemo = MainTPane.getTitleAt(index).indexOf(mnemostr.toLowerCase());}
-        MainTPane.setDisplayedMnemonicIndexAt(index, mnemo);
-        getInputMap(WHEN_IN_FOCUSED_WINDOW).put(javax.swing.KeyStroke.getKeyStroke("alt " + mnemostr), commandStr);
-        getActionMap().put(commandStr, select);
-    }
-
-    private void addPanelCComm(
-          javax.swing.JPanel panel,
-          mekwars.client.gui.CMainPanel.CSelectTabAction select,
-          String name,
-          String tooltip,
-          String mnemostr,
-          String commandStr,
-          CCommPanel CommPanel) {
-        CommPanel.CommTPane.addTab(name, null, panel, tooltip);
-        int index = CommPanel.CommTPane.indexOfComponent(panel);
-        int mnemo = CommPanel.CommTPane.getTitleAt(index).indexOf(mnemostr.toUpperCase());
-        if (mnemo == -1) {mnemo = CommPanel.CommTPane.getTitleAt(index).indexOf(mnemostr.toLowerCase());}
-        CommPanel.CommTPane.setDisplayedMnemonicIndexAt(index, mnemo);
-        CommPanel.CommTPane.getInputMap(WHEN_IN_FOCUSED_WINDOW)
-              .put(javax.swing.KeyStroke.getKeyStroke("alt " + mnemostr), commandStr);
-        CommPanel.CommTPane.getActionMap().put(commandStr, select);
-    }
-
-    //Why is this defined twice? - salient
-    private void addPanelMain(
-          javax.swing.JTabbedPane panel,
-          mekwars.client.gui.CMainPanel.CSelectTabAction select,
-          String name,
-          String tooltip,
-          String mnemostr,
-          String commandStr) {
-        MainTPane.addTab(name, null, panel, tooltip);
-        int index = MainTPane.indexOfComponent(panel);
-        int mnemo = MainTPane.getTitleAt(index).indexOf(mnemostr.toUpperCase());
-        if (mnemo == -1) {mnemo = MainTPane.getTitleAt(index).indexOf(mnemostr.toLowerCase());}
-        MainTPane.setDisplayedMnemonicIndexAt(index, mnemo);
-        getInputMap(WHEN_IN_FOCUSED_WINDOW).put(javax.swing.KeyStroke.getKeyStroke("alt " + mnemostr), commandStr);
-        getActionMap().put(commandStr, select);
-    }
-
-    private void addPanelCComm(
-          javax.swing.JTabbedPane panel,
-          mekwars.client.gui.CMainPanel.CSelectTabAction select,
-          String name,
-          String tooltip,
-          String mnemostr,
-          String commandStr,
-          CCommPanel CommPanel) {
-        CommPanel.CommTPane.addTab(name, null, panel, tooltip);
-        int index = CommPanel.CommTPane.indexOfComponent(panel);
-        int mnemo = CommPanel.CommTPane.getTitleAt(index).indexOf(mnemostr.toUpperCase());
-        if (mnemo == -1) {mnemo = CommPanel.CommTPane.getTitleAt(index).indexOf(mnemostr.toLowerCase());}
-        CommPanel.CommTPane.setDisplayedMnemonicIndexAt(index, mnemo);
-        CommPanel.CommTPane.getInputMap(WHEN_IN_FOCUSED_WINDOW)
-              .put(javax.swing.KeyStroke.getKeyStroke("alt " + mnemostr), commandStr);
-        CommPanel.CommTPane.getActionMap().put(commandStr, select);
     }
 
     private void createMainTPane(CMainFrame mainFrame) {
@@ -184,7 +116,7 @@ public class CMainPanel extends javax.swing.JPanel
         String mnemonicText = "";
         if (mwclient.getConfig().isParam("HQTABVISIBLE")) {
             HQPanel = new CHQPanel(mwclient);
-            HQSelect = new mekwars.client.gui.CMainPanel.CSelectTabAction(HQPanel);
+            HQSelect = new mekwars.common.gui.CMainPanel.CSelectTabAction(HQPanel);
             tabText = mwclient.getConfig().getParam("HQTABNAME");
             mnemonicText = mwclient.getConfig().getParam("HQMNEMONIC");
             if (mwclient.getConfig().isParam("HQINTOPROW")) {
@@ -207,7 +139,7 @@ public class CMainPanel extends javax.swing.JPanel
 
         if (mwclient.getConfig().isParam("BMTABVISIBLE")) {
             BMPanel = new CBMPanel(mwclient);
-            BMSelect = new mekwars.client.gui.CMainPanel.CSelectTabAction(BMPanel);
+            BMSelect = new mekwars.common.gui.CMainPanel.CSelectTabAction(BMPanel);
             tabText = mwclient.getConfig().getParam("BMTABNAME");
             mnemonicText = mwclient.getConfig().getParam("BMMNEMONIC");
             if (mwclient.getConfig().isParam("BMINTOPROW")) {
@@ -235,7 +167,7 @@ public class CMainPanel extends javax.swing.JPanel
             BMETabbed.addTab("Armor", new CBMPartsPanel(mwclient, BMEquipment.PART_ARMOR));
             BMETabbed.addTab("Weapons", new CBMPartsPanel(mwclient, BMEquipment.PART_WEAPON));
             BMETabbed.addTab("Misc", new CBMPartsPanel(mwclient, BMEquipment.PART_MISC));
-            BMESelect = new mekwars.client.gui.CMainPanel.CSelectTabAction(BMETabbed);
+            BMESelect = new mekwars.common.gui.CMainPanel.CSelectTabAction(BMETabbed);
             tabText = mwclient.getConfig().getParam("BMETABNAME");
             mnemonicText = mwclient.getConfig().getParam("BMEMNEMONIC");
             if (mwclient.getConfig().isParam("BMEINTOPROW")) {
@@ -258,7 +190,7 @@ public class CMainPanel extends javax.swing.JPanel
 
         HSPanel = new CHSPanel(mwclient);
         if (mwclient.getConfig().isParam("HSTATUSTABVISIBLE")) {
-            HSSelect = new mekwars.client.gui.CMainPanel.CSelectTabAction(HSPanel);
+            HSSelect = new mekwars.common.gui.CMainPanel.CSelectTabAction(HSPanel);
             tabText = mwclient.getConfig().getParam("HSTATUSTABNAME");
             mnemonicText = mwclient.getConfig().getParam("HSTATUSMNEMONIC");
             if (mwclient.getConfig().isParam("HSTATUSINTOPROW")) {
@@ -281,7 +213,7 @@ public class CMainPanel extends javax.swing.JPanel
 
         if (mwclient.getConfig().isParam("BATTLETABVISIBLE")) {
             BattlePanel = new CBattlePanel(mwclient);
-            BattleSelect = new mekwars.client.gui.CMainPanel.CSelectTabAction(BattlePanel);
+            BattleSelect = new mekwars.common.gui.CMainPanel.CSelectTabAction(BattlePanel);
             tabText = mwclient.getConfig().getParam("BATTLETABNAME");
             mnemonicText = mwclient.getConfig().getParam("BATTLEMNEMONIC");
             if (mwclient.getConfig().isParam("BATTLEINTOPROW")) {
@@ -304,7 +236,7 @@ public class CMainPanel extends javax.swing.JPanel
 
         MapPanel = new CMapPanel(mwclient, mainFrame, CommPanel.getWidth(), CommPanel.getHeight());
         if (mwclient.getConfig().isParam("MAPTABVISIBLE")) {
-            MapSelect = new mekwars.client.gui.CMainPanel.CSelectTabAction(MapPanel);
+            MapSelect = new mekwars.common.gui.CMainPanel.CSelectTabAction(MapPanel);
             tabText = mwclient.getConfig().getParam("MAPTABNAME");
             mnemonicText = mwclient.getConfig().getParam("MAPMNEMONIC");
             if (mwclient.getConfig().isParam("MAPINTOPROW")) {
@@ -328,7 +260,7 @@ public class CMainPanel extends javax.swing.JPanel
         if (mwclient.getConfig().isParam("RULESTABVISIBLE")) //@salient
         {
             RulesPanel = new CRulesPanel(mwclient);
-            RulesSelect = new mekwars.client.gui.CMainPanel.CSelectTabAction(RulesPanel);
+            RulesSelect = new mekwars.common.gui.CMainPanel.CSelectTabAction(RulesPanel);
             tabText = mwclient.getConfig().getParam("RULESTABNAME");
             mnemonicText = mwclient.getConfig().getParam("RULESMNEMONIC");
             if (mwclient.getConfig().isParam("RULESINTOPROW")) {
@@ -352,10 +284,79 @@ public class CMainPanel extends javax.swing.JPanel
         MainTPane.addChangeListener(this);
     }
 
+    private void addPanelMain(
+          javax.swing.JPanel panel,
+          mekwars.common.gui.CMainPanel.CSelectTabAction select,
+          String name,
+          String tooltip,
+          String mnemostr,
+          String commandStr) {
+        MainTPane.addTab(name, null, panel, tooltip);
+        int index = MainTPane.indexOfComponent(panel);
+        int mnemo = MainTPane.getTitleAt(index).indexOf(mnemostr.toUpperCase());
+        if (mnemo == -1) {mnemo = MainTPane.getTitleAt(index).indexOf(mnemostr.toLowerCase());}
+        MainTPane.setDisplayedMnemonicIndexAt(index, mnemo);
+        getInputMap(WHEN_IN_FOCUSED_WINDOW).put(javax.swing.KeyStroke.getKeyStroke("alt " + mnemostr), commandStr);
+        getActionMap().put(commandStr, select);
+    }
+
+    private void addPanelCComm(
+          javax.swing.JPanel panel,
+          mekwars.common.gui.CMainPanel.CSelectTabAction select,
+          String name,
+          String tooltip,
+          String mnemostr,
+          String commandStr,
+          CCommPanel CommPanel) {
+        CommPanel.CommTPane.addTab(name, null, panel, tooltip);
+        int index = CommPanel.CommTPane.indexOfComponent(panel);
+        int mnemo = CommPanel.CommTPane.getTitleAt(index).indexOf(mnemostr.toUpperCase());
+        if (mnemo == -1) {mnemo = CommPanel.CommTPane.getTitleAt(index).indexOf(mnemostr.toLowerCase());}
+        CommPanel.CommTPane.setDisplayedMnemonicIndexAt(index, mnemo);
+        CommPanel.CommTPane.getInputMap(WHEN_IN_FOCUSED_WINDOW)
+              .put(javax.swing.KeyStroke.getKeyStroke("alt " + mnemostr), commandStr);
+        CommPanel.CommTPane.getActionMap().put(commandStr, select);
+    }
+
+    //Why is this defined twice? - salient
+    private void addPanelMain(
+          javax.swing.JTabbedPane panel,
+          mekwars.common.gui.CMainPanel.CSelectTabAction select,
+          String name,
+          String tooltip,
+          String mnemostr,
+          String commandStr) {
+        MainTPane.addTab(name, null, panel, tooltip);
+        int index = MainTPane.indexOfComponent(panel);
+        int mnemo = MainTPane.getTitleAt(index).indexOf(mnemostr.toUpperCase());
+        if (mnemo == -1) {mnemo = MainTPane.getTitleAt(index).indexOf(mnemostr.toLowerCase());}
+        MainTPane.setDisplayedMnemonicIndexAt(index, mnemo);
+        getInputMap(WHEN_IN_FOCUSED_WINDOW).put(javax.swing.KeyStroke.getKeyStroke("alt " + mnemostr), commandStr);
+        getActionMap().put(commandStr, select);
+    }
+
+    private void addPanelCComm(
+          javax.swing.JTabbedPane panel,
+          mekwars.common.gui.CMainPanel.CSelectTabAction select,
+          String name,
+          String tooltip,
+          String mnemostr,
+          String commandStr,
+          CCommPanel CommPanel) {
+        CommPanel.CommTPane.addTab(name, null, panel, tooltip);
+        int index = CommPanel.CommTPane.indexOfComponent(panel);
+        int mnemo = CommPanel.CommTPane.getTitleAt(index).indexOf(mnemostr.toUpperCase());
+        if (mnemo == -1) {mnemo = CommPanel.CommTPane.getTitleAt(index).indexOf(mnemostr.toLowerCase());}
+        CommPanel.CommTPane.setDisplayedMnemonicIndexAt(index, mnemo);
+        CommPanel.CommTPane.getInputMap(WHEN_IN_FOCUSED_WINDOW)
+              .put(javax.swing.KeyStroke.getKeyStroke("alt " + mnemostr), commandStr);
+        CommPanel.CommTPane.getActionMap().put(commandStr, select);
+    }
+
     public void changeStatus(int status, int laststatus) {
 
-        if (status == client.MWClient.STATUS_RESERVE) {
-            if (laststatus == client.MWClient.STATUS_LOGGEDOUT) {
+        if (status == IClient.STATUS_RESERVE) {
+            if (laststatus == IClient.STATUS_LOGGEDOUT) {
                 UserListPanel.setLoggedIn(true);
                 UserListPanel.getUsers().getRenderer().setLoggedIn(true);
                 if (mwclient.getConfig().isParam("PLAYERPANEL")) {PlayerPanel.setVisible(true);}
@@ -364,13 +365,13 @@ public class CMainPanel extends javax.swing.JPanel
             }
         }
 
-        if (status == client.MWClient.STATUS_DISCONNECTED || status == client.MWClient.STATUS_LOGGEDOUT) {
+        if (status == IClient.STATUS_DISCONNECTED || status == IClient.STATUS_LOGGEDOUT) {
             UserListPanel.setLoggedIn(false);
             UserListPanel.getUsers().getRenderer().setLoggedIn(false);
             PlayerPanel.setVisible(false);
         }
 
-        if (status == client.MWClient.STATUS_DISCONNECTED) {MainTPane.setVisible(false);} else {
+        if (status == IClient.STATUS_DISCONNECTED) {MainTPane.setVisible(false);} else {
             MainTPane.setVisible(true);
         }
     }
@@ -460,16 +461,13 @@ public class CMainPanel extends javax.swing.JPanel
         if (MainTPane.getSelectedComponent() == CommPanel) {CommPanel.getInputField().requestFocusInWindow();}
     }
 
-    // component listener
-    public void componentHidden(java.awt.event.ComponentEvent e) {}
-
-    public void componentMoved(java.awt.event.ComponentEvent e) {}
-
     public void componentResized(java.awt.event.ComponentEvent e) {
         TabSPane.setDividerLocation(panelDivider);
         SideSPane.setDividerLocation(playerPanelDivider);
         MainSPane.setDividerLocation(verticalPanelDivider);
     }
+
+    public void componentMoved(java.awt.event.ComponentEvent e) {}
 
     public void componentShown(java.awt.event.ComponentEvent e) {
         TabSPane.setDividerLocation(panelDivider);
@@ -478,7 +476,205 @@ public class CMainPanel extends javax.swing.JPanel
     }
 
     // component listener
+    public void componentHidden(java.awt.event.ComponentEvent e) {}
+
+    // component listener
     // actions
+
+    public void recreateMainTPane(CMainFrame mainFrame) {
+        //int index;
+        //int mnemo;
+
+        MainTPane.removeAll();
+        CommPanel.CommTPane.removeAll();
+        CommPanel.reload();
+
+        String tabText = "";
+        String mnemonicText = "";
+        if (mwclient.getConfig().isParam("HQTABVISIBLE")) {
+            if (HQPanel == null) {
+                HQPanel = new CHQPanel(mwclient);
+                HQSelect = new mekwars.common.gui.CMainPanel.CSelectTabAction(HQPanel);
+            }
+            tabText = mwclient.getConfig().getParam("HQTABNAME");
+            mnemonicText = mwclient.getConfig().getParam("HQMNEMONIC");
+            if (mwclient.getConfig().isParam("HQINTOPROW")) {
+                addPanelMain(HQPanel,
+                      HQSelect,
+                      tabText,
+                      "Command Center and Hangars (Alt + " + mnemonicText + ")",
+                      mnemonicText,
+                      "HQSelect");
+            } else {
+                addPanelCComm(HQPanel,
+                      HQSelect,
+                      tabText,
+                      "Command Center and Hangars (Alt + " + mnemonicText + ")",
+                      mnemonicText,
+                      "HQSelect",
+                      CommPanel);
+            }
+        }
+
+        if (mwclient.getConfig().isParam("BMTABVISIBLE")) {
+            if (BMPanel == null) {
+                BMPanel = new CBMPanel(mwclient);
+                BMSelect = new mekwars.common.gui.CMainPanel.CSelectTabAction(BMPanel);
+            }
+            tabText = mwclient.getConfig().getParam("BMTABNAME");
+            mnemonicText = mwclient.getConfig().getParam("BMMNEMONIC");
+            if (mwclient.getConfig().isParam("BMINTOPROW")) {
+                addPanelMain(BMPanel,
+                      BMSelect,
+                      tabText,
+                      "Buy and Sell Units (Alt + " + mnemonicText + ")",
+                      mnemonicText,
+                      "BMSelect");
+            } else {
+                addPanelCComm(BMPanel,
+                      BMSelect,
+                      tabText,
+                      "Buy and Sell Units (Alt + " + mnemonicText + ")",
+                      mnemonicText,
+                      "BMSelect",
+                      CommPanel);
+            }
+        }
+
+        if (mwclient.getConfig().isParam("BMETABVISIBLE") &&
+                  Boolean.parseBoolean(mwclient.getserverConfigs("UsePartsBlackMarket"))) {
+            if (BMETabbed == null) {
+                BMETabbed = new javax.swing.JTabbedPane(javax.swing.SwingConstants.BOTTOM);
+                BMETabbed.addTab("Ammo", new CBMPartsPanel(mwclient, BMEquipment.PART_AMMO));
+                BMETabbed.addTab("Armor", new CBMPartsPanel(mwclient, BMEquipment.PART_ARMOR));
+                BMETabbed.addTab("Weapons", new CBMPartsPanel(mwclient, BMEquipment.PART_WEAPON));
+                BMETabbed.addTab("Misc", new CBMPartsPanel(mwclient, BMEquipment.PART_MISC));
+                BMESelect = new mekwars.common.gui.CMainPanel.CSelectTabAction(BMETabbed);
+            }
+            tabText = mwclient.getConfig().getParam("BMETABNAME");
+            mnemonicText = mwclient.getConfig().getParam("BMEMNEMONIC");
+            if (mwclient.getConfig().isParam("BMEINTOPROW")) {
+                addPanelMain(BMETabbed,
+                      BMSelect,
+                      tabText,
+                      "Buy and Sell Parts (Alt + " + mnemonicText + ")",
+                      mnemonicText,
+                      "BMESelect");
+            } else {
+                addPanelCComm(BMETabbed,
+                      BMSelect,
+                      tabText,
+                      "Buy and Sell Parts (Alt + " + mnemonicText + ")",
+                      mnemonicText,
+                      "BMESelect",
+                      CommPanel);
+            }
+        }
+
+        if (mwclient.getConfig().isParam("HSTATUSTABVISIBLE")) {
+            if (HSPanel == null) {
+                HSPanel = new CHSPanel(mwclient);
+                HSSelect = new mekwars.common.gui.CMainPanel.CSelectTabAction(HSPanel);
+            } else if (HSSelect == null) {
+                HSSelect = new mekwars.common.gui.CMainPanel.CSelectTabAction(HSPanel);
+            }
+            tabText = mwclient.getConfig().getParam("HSTATUSTABNAME");
+            mnemonicText = mwclient.getConfig().getParam("HSTATUSMNEMONIC");
+            if (mwclient.getConfig().isParam("HSTATUSINTOPROW")) {
+                addPanelMain(HSPanel,
+                      HSSelect,
+                      tabText,
+                      "Show current House Status (Alt + " + mnemonicText + ")",
+                      mnemonicText,
+                      "HSSelect");
+            } else {
+                addPanelCComm(HSPanel,
+                      HSSelect,
+                      tabText,
+                      "Show current House Status (Alt + " + mnemonicText + ")",
+                      mnemonicText,
+                      "HSSelect",
+                      CommPanel);
+            }
+        }
+
+        if (mwclient.getConfig().isParam("BATTLETABVISIBLE")) {
+            if (BattlePanel == null) {
+                BattlePanel = new CBattlePanel(mwclient);
+                BattleSelect = new mekwars.common.gui.CMainPanel.CSelectTabAction(BattlePanel);
+            }
+            tabText = mwclient.getConfig().getParam("BATTLETABNAME");
+            mnemonicText = mwclient.getConfig().getParam("BATTLEMNEMONIC");
+            if (mwclient.getConfig().isParam("BATTLEINTOPROW")) {
+                addPanelMain(BattlePanel,
+                      BattleSelect,
+                      tabText,
+                      "Battles Intelligence Data (Alt + " + mnemonicText + ")",
+                      mnemonicText,
+                      "BattleSelect");
+            } else {
+                addPanelCComm(BattlePanel,
+                      BattleSelect,
+                      tabText,
+                      "Battles Intelligence Data (Alt + " + mnemonicText + ")",
+                      mnemonicText,
+                      "BattleSelect",
+                      CommPanel);
+            }
+        }
+
+        if (MapPanel == null) {
+            MapPanel = new CMapPanel(mwclient, mainFrame, CommPanel.getWidth(), CommPanel.getHeight());
+        }
+        if (mwclient.getConfig().isParam("MAPTABVISIBLE")) {
+            if (MapSelect == null) {MapSelect = new mekwars.common.gui.CMainPanel.CSelectTabAction(MapPanel);}
+            tabText = mwclient.getConfig().getParam("MAPTABNAME");
+            mnemonicText = mwclient.getConfig().getParam("MAPMNEMONIC");
+            if (mwclient.getConfig().isParam("MAPINTOPROW")) {
+                addPanelMain(MapPanel,
+                      MapSelect,
+                      tabText,
+                      "Star Map (Alt + " + mnemonicText + ")",
+                      mnemonicText,
+                      "MapSelect");
+            } else {
+                addPanelCComm(MapPanel,
+                      MapSelect,
+                      tabText,
+                      "Star Map (Alt + " + mnemonicText + ")",
+                      mnemonicText,
+                      "MapSelect",
+                      CommPanel);
+            }
+        }
+
+        if (mwclient.getConfig().isParam("RULESTABVISIBLE")) {
+            if (RulesPanel == null) {
+                RulesPanel = new CRulesPanel(mwclient);
+                RulesSelect = new mekwars.common.gui.CMainPanel.CSelectTabAction(RulesPanel);
+            }
+            tabText = mwclient.getConfig().getParam("RULESTABNAME");
+            mnemonicText = mwclient.getConfig().getParam("RULESMNEMONIC");
+            if (mwclient.getConfig().isParam("RULESINTOPROW")) {
+                addPanelMain(RulesPanel,
+                      RulesSelect,
+                      tabText,
+                      "Rules Tab (Alt + " + mnemonicText + ")",
+                      mnemonicText,
+                      "RulesSelect");
+            } else {
+                addPanelCComm(RulesPanel,
+                      RulesSelect,
+                      tabText,
+                      "Rules Tab (Alt + " + mnemonicText + ")",
+                      mnemonicText,
+                      "RulesSelect",
+                      CommPanel);
+            }
+        }
+
+        MainTPane.addChangeListener(this);
+    }
 
     private class CTabForwardAction extends javax.swing.AbstractAction {
 
@@ -529,6 +725,8 @@ public class CMainPanel extends javax.swing.JPanel
         }
     }
 
+    // actions
+
     private class CSelectTabAction extends javax.swing.AbstractAction {
 
         /**
@@ -548,203 +746,6 @@ public class CMainPanel extends javax.swing.JPanel
                 }
             }
         }
-    }
-
-    // actions
-
-    public void recreateMainTPane(CMainFrame mainFrame) {
-        //int index;
-        //int mnemo;
-
-        MainTPane.removeAll();
-        CommPanel.CommTPane.removeAll();
-        CommPanel.reload();
-
-        String tabText = "";
-        String mnemonicText = "";
-        if (mwclient.getConfig().isParam("HQTABVISIBLE")) {
-            if (HQPanel == null) {
-                HQPanel = new CHQPanel(mwclient);
-                HQSelect = new mekwars.client.gui.CMainPanel.CSelectTabAction(HQPanel);
-            }
-            tabText = mwclient.getConfig().getParam("HQTABNAME");
-            mnemonicText = mwclient.getConfig().getParam("HQMNEMONIC");
-            if (mwclient.getConfig().isParam("HQINTOPROW")) {
-                addPanelMain(HQPanel,
-                      HQSelect,
-                      tabText,
-                      "Command Center and Hangars (Alt + " + mnemonicText + ")",
-                      mnemonicText,
-                      "HQSelect");
-            } else {
-                addPanelCComm(HQPanel,
-                      HQSelect,
-                      tabText,
-                      "Command Center and Hangars (Alt + " + mnemonicText + ")",
-                      mnemonicText,
-                      "HQSelect",
-                      CommPanel);
-            }
-        }
-
-        if (mwclient.getConfig().isParam("BMTABVISIBLE")) {
-            if (BMPanel == null) {
-                BMPanel = new CBMPanel(mwclient);
-                BMSelect = new mekwars.client.gui.CMainPanel.CSelectTabAction(BMPanel);
-            }
-            tabText = mwclient.getConfig().getParam("BMTABNAME");
-            mnemonicText = mwclient.getConfig().getParam("BMMNEMONIC");
-            if (mwclient.getConfig().isParam("BMINTOPROW")) {
-                addPanelMain(BMPanel,
-                      BMSelect,
-                      tabText,
-                      "Buy and Sell Units (Alt + " + mnemonicText + ")",
-                      mnemonicText,
-                      "BMSelect");
-            } else {
-                addPanelCComm(BMPanel,
-                      BMSelect,
-                      tabText,
-                      "Buy and Sell Units (Alt + " + mnemonicText + ")",
-                      mnemonicText,
-                      "BMSelect",
-                      CommPanel);
-            }
-        }
-
-        if (mwclient.getConfig().isParam("BMETABVISIBLE") &&
-                  Boolean.parseBoolean(mwclient.getserverConfigs("UsePartsBlackMarket"))) {
-            if (BMETabbed == null) {
-                BMETabbed = new javax.swing.JTabbedPane(javax.swing.SwingConstants.BOTTOM);
-                BMETabbed.addTab("Ammo", new CBMPartsPanel(mwclient, BMEquipment.PART_AMMO));
-                BMETabbed.addTab("Armor", new CBMPartsPanel(mwclient, BMEquipment.PART_ARMOR));
-                BMETabbed.addTab("Weapons", new CBMPartsPanel(mwclient, BMEquipment.PART_WEAPON));
-                BMETabbed.addTab("Misc", new CBMPartsPanel(mwclient, BMEquipment.PART_MISC));
-                BMESelect = new mekwars.client.gui.CMainPanel.CSelectTabAction(BMETabbed);
-            }
-            tabText = mwclient.getConfig().getParam("BMETABNAME");
-            mnemonicText = mwclient.getConfig().getParam("BMEMNEMONIC");
-            if (mwclient.getConfig().isParam("BMEINTOPROW")) {
-                addPanelMain(BMETabbed,
-                      BMSelect,
-                      tabText,
-                      "Buy and Sell Parts (Alt + " + mnemonicText + ")",
-                      mnemonicText,
-                      "BMESelect");
-            } else {
-                addPanelCComm(BMETabbed,
-                      BMSelect,
-                      tabText,
-                      "Buy and Sell Parts (Alt + " + mnemonicText + ")",
-                      mnemonicText,
-                      "BMESelect",
-                      CommPanel);
-            }
-        }
-
-        if (mwclient.getConfig().isParam("HSTATUSTABVISIBLE")) {
-            if (HSPanel == null) {
-                HSPanel = new CHSPanel(mwclient);
-                HSSelect = new mekwars.client.gui.CMainPanel.CSelectTabAction(HSPanel);
-            } else if (HSSelect == null) {
-                HSSelect = new mekwars.client.gui.CMainPanel.CSelectTabAction(HSPanel);
-            }
-            tabText = mwclient.getConfig().getParam("HSTATUSTABNAME");
-            mnemonicText = mwclient.getConfig().getParam("HSTATUSMNEMONIC");
-            if (mwclient.getConfig().isParam("HSTATUSINTOPROW")) {
-                addPanelMain(HSPanel,
-                      HSSelect,
-                      tabText,
-                      "Show current House Status (Alt + " + mnemonicText + ")",
-                      mnemonicText,
-                      "HSSelect");
-            } else {
-                addPanelCComm(HSPanel,
-                      HSSelect,
-                      tabText,
-                      "Show current House Status (Alt + " + mnemonicText + ")",
-                      mnemonicText,
-                      "HSSelect",
-                      CommPanel);
-            }
-        }
-
-        if (mwclient.getConfig().isParam("BATTLETABVISIBLE")) {
-            if (BattlePanel == null) {
-                BattlePanel = new CBattlePanel(mwclient);
-                BattleSelect = new mekwars.client.gui.CMainPanel.CSelectTabAction(BattlePanel);
-            }
-            tabText = mwclient.getConfig().getParam("BATTLETABNAME");
-            mnemonicText = mwclient.getConfig().getParam("BATTLEMNEMONIC");
-            if (mwclient.getConfig().isParam("BATTLEINTOPROW")) {
-                addPanelMain(BattlePanel,
-                      BattleSelect,
-                      tabText,
-                      "Battles Intelligence Data (Alt + " + mnemonicText + ")",
-                      mnemonicText,
-                      "BattleSelect");
-            } else {
-                addPanelCComm(BattlePanel,
-                      BattleSelect,
-                      tabText,
-                      "Battles Intelligence Data (Alt + " + mnemonicText + ")",
-                      mnemonicText,
-                      "BattleSelect",
-                      CommPanel);
-            }
-        }
-
-        if (MapPanel == null) {
-            MapPanel = new CMapPanel(mwclient, mainFrame, CommPanel.getWidth(), CommPanel.getHeight());
-        }
-        if (mwclient.getConfig().isParam("MAPTABVISIBLE")) {
-            if (MapSelect == null) {MapSelect = new mekwars.client.gui.CMainPanel.CSelectTabAction(MapPanel);}
-            tabText = mwclient.getConfig().getParam("MAPTABNAME");
-            mnemonicText = mwclient.getConfig().getParam("MAPMNEMONIC");
-            if (mwclient.getConfig().isParam("MAPINTOPROW")) {
-                addPanelMain(MapPanel,
-                      MapSelect,
-                      tabText,
-                      "Star Map (Alt + " + mnemonicText + ")",
-                      mnemonicText,
-                      "MapSelect");
-            } else {
-                addPanelCComm(MapPanel,
-                      MapSelect,
-                      tabText,
-                      "Star Map (Alt + " + mnemonicText + ")",
-                      mnemonicText,
-                      "MapSelect",
-                      CommPanel);
-            }
-        }
-
-        if (mwclient.getConfig().isParam("RULESTABVISIBLE")) {
-            if (RulesPanel == null) {
-                RulesPanel = new CRulesPanel(mwclient);
-                RulesSelect = new mekwars.client.gui.CMainPanel.CSelectTabAction(RulesPanel);
-            }
-            tabText = mwclient.getConfig().getParam("RULESTABNAME");
-            mnemonicText = mwclient.getConfig().getParam("RULESMNEMONIC");
-            if (mwclient.getConfig().isParam("RULESINTOPROW")) {
-                addPanelMain(RulesPanel,
-                      RulesSelect,
-                      tabText,
-                      "Rules Tab (Alt + " + mnemonicText + ")",
-                      mnemonicText,
-                      "RulesSelect");
-            } else {
-                addPanelCComm(RulesPanel,
-                      RulesSelect,
-                      tabText,
-                      "Rules Tab (Alt + " + mnemonicText + ")",
-                      mnemonicText,
-                      "RulesSelect",
-                      CommPanel);
-            }
-        }
-
-        MainTPane.addChangeListener(this);
     }
 
 }

@@ -10,28 +10,23 @@
  * A PARTICULAR PURPOSE. See the GNU General Public License for more details.
  */
 
-package mekwars.client.gui;
+package mekwars.common.gui;
 
-import client.gui.dialog.AdvancedRepairDialog;
-import client.gui.dialog.BulkRepairDialog;
-import client.gui.dialog.CamoSelectionDialog;
-import client.gui.dialog.CustomUnitDialog;
-import client.gui.dialog.PromotePilotDialog;
-import client.gui.dialog.SolFreeBuildDialog;
-import common.Army;
-import common.Unit;
-import common.campaign.pilot.Pilot;
-import common.util.MWLogger;
-import common.util.SpringLayoutHelper;
-import common.util.TokenReader;
-import common.util.UnitUtils;
-import megamek.client.ui.swing.tileset.MechTileset;
-import megamek.client.ui.swing.unitDisplay.UnitDisplay;
-import megamek.common.Entity;
-import megamek.common.Infantry;
-import megamek.common.Mech;
-import mekwars.common.gui.AttackMenu;
-import mekwars.common.gui.MWUnitDisplay;
+import megamek.common.units.Infantry;
+import mekwars.common.Army;
+import mekwars.common.Unit;
+import mekwars.common.campaign.clientutils.protocol.IClient;
+import mekwars.common.campaign.pilot.Pilot;
+import mekwars.common.gui.dialogs.AdvancedRepairDialog;
+import mekwars.common.gui.dialogs.BulkRepairDialog;
+import mekwars.common.gui.dialogs.CamoSelectionDialog;
+import mekwars.common.gui.dialogs.CustomUnitDialog;
+import mekwars.common.gui.dialogs.PromotePilotDialog;
+import mekwars.common.gui.dialogs.SolFreeBuildDialog;
+import mekwars.common.util.MWLogger;
+import mekwars.common.util.SpringLayoutHelper;
+import mekwars.common.util.TokenReader;
+import mekwars.common.util.UnitUtils;
 
 //@Salient
 //import client.gui.dialog.TableViewerDialog; //for testing/debug
@@ -46,17 +41,12 @@ public class CHQPanel extends javax.swing.JPanel {
      *
      */
     private static final long serialVersionUID = -5137503055464771160L;
-
-    client.MWClient mwclient;
-
+    public mekwars.common.gui.CHQPanel.MekTableModel MekTable;
+    protected mekwars.common.gui.CHQPanel.MechTableMouseAdapter mouseAdapter;
+    IClient mwclient;
     client.campaign.CPlayer Player;
 
-    public mekwars.client.gui.CHQPanel.MekTableModel MekTable;
-
-    protected mekwars.client.gui.CHQPanel.MechTableMouseAdapter mouseAdapter;
-
     // graphical components
-
     private java.awt.GridBagConstraints gridBagConstraints;
 
     private javax.swing.JPanel pnlMeks;
@@ -78,8 +68,8 @@ public class CHQPanel extends javax.swing.JPanel {
     public CHQPanel(client.MWClient client) {
         mwclient = client;
         Player = mwclient.getPlayer();
-        MekTable = new mekwars.client.gui.CHQPanel.MekTableModel();
-        mouseAdapter = new mekwars.client.gui.CHQPanel.MechTableMouseAdapter();
+        MekTable = new mekwars.common.gui.CHQPanel.MekTableModel();
+        mouseAdapter = new mekwars.common.gui.CHQPanel.MechTableMouseAdapter();
         gridBagConstraints = new java.awt.GridBagConstraints();
         gridBagConstraints.gridx = 1;
         gridBagConstraints.gridy = 0;
@@ -91,37 +81,6 @@ public class CHQPanel extends javax.swing.JPanel {
 
         init();
         refresh();
-    }
-
-    /**
-     * Public call which reinitializes the HQ panel. Hacky and evil, but lets camo and # columns in HQ display get
-     * updated on the fly.
-     */
-    public void reinitialize() {
-
-        // client.getMainFrame().getMainPanel().selectFirstTab();
-        // client.getMainFrame().getMainPanel().getCommPanel().selectFirstTab();
-
-        // remove all the old components.
-        removeAll();
-        // this.setVisible(false);
-
-        Player = mwclient.getPlayer();
-        MekTable = new mekwars.client.gui.CHQPanel.MekTableModel();
-        mouseAdapter = new mekwars.client.gui.CHQPanel.MechTableMouseAdapter();
-        gridBagConstraints = new java.awt.GridBagConstraints();
-        gridBagConstraints.gridx = 1;
-        gridBagConstraints.gridy = 0;
-        gridBagConstraints.gridheight = 2;
-        gridBagConstraints.fill = java.awt.GridBagConstraints.BOTH;
-        gridBagConstraints.ipadx = 5;
-        gridBagConstraints.weightx = 1.0;
-        gridBagConstraints.weighty = 1.0;
-        // gridBagConstraints.insets = new Insets(0, 0, 0, 10);
-
-        init();
-        refresh();
-        // this.setVisible(true);
     }
 
     private void init() {
@@ -154,6 +113,15 @@ public class CHQPanel extends javax.swing.JPanel {
         add(pnlMeks, gridBagConstraints);
         useAdvanceRepairs = mwclient.isUsingAdvanceRepairs();
         useUnitLocking = Boolean.parseBoolean(mwclient.getserverConfigs("LockUnits"));
+    }
+
+    public void refresh() {
+        useAdvanceRepairs = mwclient.isUsingAdvanceRepairs();
+        MekTable.refreshModel();
+        tblMeks.setPreferredSize(new java.awt.Dimension(tblMeks.getWidth(),
+              tblMeks.getRowHeight() * (MekTable.getRowCount())));
+        tblMeks.revalidate();
+        mwclient.getPlayer().sortArmies();
     }
 
     private void createMeksPanel() {
@@ -209,90 +177,6 @@ public class CHQPanel extends javax.swing.JPanel {
         // gridBagConstraints.weighty = 0.0;
         // gridBagConstraints.insets = new Insets(0, 0, 0, 0);
         pnlMeks.add(pnlMeksBtns, gridBagConstraints);
-    }
-
-    public void refresh() {
-        useAdvanceRepairs = mwclient.isUsingAdvanceRepairs();
-        MekTable.refreshModel();
-        tblMeks.setPreferredSize(new java.awt.Dimension(tblMeks.getWidth(),
-              tblMeks.getRowHeight() * (MekTable.getRowCount())));
-        tblMeks.revalidate();
-        mwclient.getPlayer().sortArmies();
-    }
-
-    // try to remove all armies
-    private void btnRemoveAllArmiesActionPerformed(java.awt.event.ActionEvent evt) {
-        //no armies... don't bother   		//Baruk Khazad! 20151204 - start block 1
-        if (mwclient.getPlayer().getArmies().size() == 0) {return;}
-        //get confirm
-        int result = javax.swing.JOptionPane.showConfirmDialog(mwclient.getMainFrame(),
-              "Are you sure you want to remove all of your armies?",
-              "Remove all armies?",
-              javax.swing.JOptionPane.YES_NO_OPTION);
-        if (result == javax.swing.JOptionPane.NO_OPTION) {
-            return;        //Baruk Khazad! 20151204 - end block 1
-        }
-        // only remove all if he's logged in, not fighting/active/logout/discon
-        if (mwclient.getMyStatus() != client.MWClient.STATUS_RESERVE) {
-            return;
-        }
-
-        for (client.campaign.CArmy currA : mwclient.getPlayer().getArmies()) {
-            if (!currA.isPlayerLocked()) {
-                mwclient.sendChat(client.MWClient.CAMPAIGN_PREFIX + "c removearmy#" + currA.getID());
-            }
-        }
-    }// end btnRemoveAllArmiesActionPerformed
-
-    private void newbieResetUnitsButtonActionPerformed(java.awt.event.ActionEvent evt) {
-        mwclient.sendChat(client.MWClient.CAMPAIGN_PREFIX + "c request#resetunits");
-    }
-
-    private void repairAllUnitsButtonActionPerformed(java.awt.event.ActionEvent evt) {
-        if (mwclient.getPlayer().getHangar().size() > 0) {
-            new BulkRepairDialog(mwclient,
-                  mwclient.getPlayer().getHangar().firstElement().getId(),
-                  BulkRepairDialog.TYPE_BULK,
-                  BulkRepairDialog.UNIT_TYPE_ALL);
-        }
-    }
-
-    ;
-
-    private void reloadAllUnitsButtonActionPerformed(java.awt.event.ActionEvent evt) {
-        if (mwclient.getPlayer().getHangar().size() > 0) {
-            int result = javax.swing.JOptionPane.showConfirmDialog(mwclient.getMainFrame(),
-                  "Are you sure you want to reload all the ammo on all your units?",
-                  "Reload all units?",
-                  javax.swing.JOptionPane.YES_NO_OPTION);
-
-            if (result == javax.swing.JOptionPane.YES_OPTION) {
-                for (client.campaign.CUnit unit : mwclient.getPlayer().getHangar()) {
-                    if (!UnitUtils.hasAllAmmo(unit.getEntity())) {
-                        mwclient.sendChat(client.MWClient.CAMPAIGN_PREFIX + "c RELOADALLAMMO#" + unit.getId());
-                    }
-                }
-
-                refresh();
-            }
-        }
-    }
-
-    ;
-
-    private void btnAddLanceActionPerformed(java.awt.event.ActionEvent evt) {
-        mwclient.sendChat(client.MWClient.CAMPAIGN_PREFIX + "c cra#" + mwclient.getConfigParam("DEFAULTARMYNAME"));
-    }
-
-    private void setCamoButtonActionPerformed(java.awt.event.ActionEvent evt) {
-        CamoSelectionDialog camoDialog = new CamoSelectionDialog(mwclient.getMainFrame(), mwclient);
-        camoDialog.setVisible(true);
-    }
-
-    //@Salient (mwosux@gmail.com) added for SolFreeBuild option
-    private void solFreeBuildButtonActionPerformed(java.awt.event.ActionEvent evt) {
-        SolFreeBuildDialog solDialog = new SolFreeBuildDialog(mwclient);
-        solDialog.setVisible(true);
     }
 
     public void makeButtons() {
@@ -396,6 +280,134 @@ public class CHQPanel extends javax.swing.JPanel {
         pnlMeksBtns.repaint();
     }
 
+    private void btnAddLanceActionPerformed(java.awt.event.ActionEvent evt) {
+        mwclient.sendChat(client.MWClient.CAMPAIGN_PREFIX + "c cra#" + mwclient.getConfigParam("DEFAULTARMYNAME"));
+    }
+
+    // try to remove all armies
+    private void btnRemoveAllArmiesActionPerformed(java.awt.event.ActionEvent evt) {
+        //no armies... don't bother   		//Baruk Khazad! 20151204 - start block 1
+        if (mwclient.getPlayer().getArmies().size() == 0) {return;}
+        //get confirm
+        int result = javax.swing.JOptionPane.showConfirmDialog(mwclient.getMainFrame(),
+              "Are you sure you want to remove all of your armies?",
+              "Remove all armies?",
+              javax.swing.JOptionPane.YES_NO_OPTION);
+        if (result == javax.swing.JOptionPane.NO_OPTION) {
+            return;        //Baruk Khazad! 20151204 - end block 1
+        }
+        // only remove all if he's logged in, not fighting/active/logout/discon
+        if (mwclient.getMyStatus() != client.MWClient.STATUS_RESERVE) {
+            return;
+        }
+
+        for (client.campaign.CArmy currA : mwclient.getPlayer().getArmies()) {
+            if (!currA.isPlayerLocked()) {
+                mwclient.sendChat(client.MWClient.CAMPAIGN_PREFIX + "c removearmy#" + currA.getID());
+            }
+        }
+    }// end btnRemoveAllArmiesActionPerformed
+
+    private void newbieResetUnitsButtonActionPerformed(java.awt.event.ActionEvent evt) {
+        mwclient.sendChat(client.MWClient.CAMPAIGN_PREFIX + "c request#resetunits");
+    }
+
+    ;
+
+    private void repairAllUnitsButtonActionPerformed(java.awt.event.ActionEvent evt) {
+        if (mwclient.getPlayer().getHangar().size() > 0) {
+            new BulkRepairDialog(mwclient,
+                  mwclient.getPlayer().getHangar().firstElement().getId(),
+                  BulkRepairDialog.TYPE_BULK,
+                  BulkRepairDialog.UNIT_TYPE_ALL);
+        }
+    }
+
+    ;
+
+    private void reloadAllUnitsButtonActionPerformed(java.awt.event.ActionEvent evt) {
+        if (mwclient.getPlayer().getHangar().size() > 0) {
+            int result = javax.swing.JOptionPane.showConfirmDialog(mwclient.getMainFrame(),
+                  "Are you sure you want to reload all the ammo on all your units?",
+                  "Reload all units?",
+                  javax.swing.JOptionPane.YES_NO_OPTION);
+
+            if (result == javax.swing.JOptionPane.YES_OPTION) {
+                for (client.campaign.CUnit unit : mwclient.getPlayer().getHangar()) {
+                    if (!UnitUtils.hasAllAmmo(unit.getEntity())) {
+                        mwclient.sendChat(client.MWClient.CAMPAIGN_PREFIX + "c RELOADALLAMMO#" + unit.getId());
+                    }
+                }
+
+                refresh();
+            }
+        }
+    }
+
+    private void setCamoButtonActionPerformed(java.awt.event.ActionEvent evt) {
+        CamoSelectionDialog camoDialog = new CamoSelectionDialog(mwclient.getMainFrame(), mwclient);
+        camoDialog.setVisible(true);
+    }
+
+    //@Salient (mwosux@gmail.com) added for SolFreeBuild option
+    private void solFreeBuildButtonActionPerformed(java.awt.event.ActionEvent evt) {
+        SolFreeBuildDialog solDialog = new SolFreeBuildDialog(mwclient);
+        solDialog.setVisible(true);
+    }
+
+    /**
+     * Public call which reinitializes the HQ panel. Hacky and evil, but lets camo and # columns in HQ display get
+     * updated on the fly.
+     */
+    public void reinitialize() {
+
+        // client.getMainFrame().getMainPanel().selectFirstTab();
+        // client.getMainFrame().getMainPanel().getCommPanel().selectFirstTab();
+
+        // remove all the old components.
+        removeAll();
+        // this.setVisible(false);
+
+        Player = mwclient.getPlayer();
+        MekTable = new mekwars.common.gui.CHQPanel.MekTableModel();
+        mouseAdapter = new mekwars.common.gui.CHQPanel.MechTableMouseAdapter();
+        gridBagConstraints = new java.awt.GridBagConstraints();
+        gridBagConstraints.gridx = 1;
+        gridBagConstraints.gridy = 0;
+        gridBagConstraints.gridheight = 2;
+        gridBagConstraints.fill = java.awt.GridBagConstraints.BOTH;
+        gridBagConstraints.ipadx = 5;
+        gridBagConstraints.weightx = 1.0;
+        gridBagConstraints.weighty = 1.0;
+        // gridBagConstraints.insets = new Insets(0, 0, 0, 10);
+
+        init();
+        refresh();
+        // this.setVisible(true);
+    }
+
+    /*
+     * Original source: http://docs.rinet.ru/J21/ch25.htm#AnAlphaImageFilter Original author: Michael Morrison
+     */
+    private static class AlphaFilter extends java.awt.image.RGBImageFilter {
+        int alphaLevel;
+
+        public AlphaFilter(int alpha) {
+            alphaLevel = alpha;
+            canFilterIndexColorModel = true;
+        }
+
+        @Override
+        public int filterRGB(int x, int y, int rgb) {
+            // Adjust the alpha value
+            int alpha = (rgb >> 24) & 0xff;
+            alpha = (alpha * alphaLevel) / 255;
+
+            // Return the result
+            return ((rgb & 0x00ffffff) | (alpha << 24));
+        }
+    }
+
     class MechTableMouseAdapter extends javax.swing.event.MouseInputAdapter implements java.awt.event.ActionListener {
 
         // VARS
@@ -446,6 +458,32 @@ public class CHQPanel extends javax.swing.JPanel {
                               .createCustomCursor(maxI, new java.awt.Point(0, 0), "maxcursor");
         }
 
+        @Override
+        public void mouseClicked(java.awt.event.MouseEvent e) {
+
+            if (e.getClickCount() == 2) {
+
+                int row = tblMeks.rowAtPoint(e.getPoint());
+                int col = tblMeks.columnAtPoint(e.getPoint());
+                client.campaign.CUnit mek = MekTable.getMekAt(row, col);
+
+                if (mek != null) {
+                    javax.swing.JFrame infoWindow = new javax.swing.JFrame();
+                    UnitDisplay unitdisplay = new MWUnitDisplay(null, mwclient);
+                    Entity theEntity = mek.getEntity();
+                    theEntity.loadAllWeapons();
+                    infoWindow.getContentPane().add(unitdisplay);
+                    infoWindow.setSize(300, 400);
+                    infoWindow.setResizable(false);
+                    infoWindow.setTitle(mek.getModelName());
+                    infoWindow.setLocationRelativeTo(null);
+                    infoWindow.setVisible(true);
+                    unitdisplay.displayEntity(theEntity);
+                }
+            }
+            tblMeks.repaint();
+        }
+
         // METHODS
         @Override
         public void mousePressed(java.awt.event.MouseEvent e) {
@@ -481,7 +519,7 @@ public class CHQPanel extends javax.swing.JPanel {
                 dragRect.setRect(e.getX(), e.getY(), 84, 72);
 
                 // give the image some alpha
-                mekwars.client.gui.CHQPanel.AlphaFilter aFilter = new mekwars.client.gui.CHQPanel.AlphaFilter(95);
+                mekwars.common.gui.CHQPanel.AlphaFilter aFilter = new mekwars.common.gui.CHQPanel.AlphaFilter(95);
                 dragImage = java.awt.Toolkit.getDefaultToolkit()
                                   .createImage(new java.awt.image.FilteredImageSource(dragImage.getSource(), aFilter));
             }
@@ -662,32 +700,6 @@ public class CHQPanel extends javax.swing.JPanel {
 
             }
 
-        }
-
-        @Override
-        public void mouseClicked(java.awt.event.MouseEvent e) {
-
-            if (e.getClickCount() == 2) {
-
-                int row = tblMeks.rowAtPoint(e.getPoint());
-                int col = tblMeks.columnAtPoint(e.getPoint());
-                client.campaign.CUnit mek = MekTable.getMekAt(row, col);
-
-                if (mek != null) {
-                    javax.swing.JFrame infoWindow = new javax.swing.JFrame();
-                    UnitDisplay unitdisplay = new MWUnitDisplay(null, mwclient);
-                    Entity theEntity = mek.getEntity();
-                    theEntity.loadAllWeapons();
-                    infoWindow.getContentPane().add(unitdisplay);
-                    infoWindow.setSize(300, 400);
-                    infoWindow.setResizable(false);
-                    infoWindow.setTitle(mek.getModelName());
-                    infoWindow.setLocationRelativeTo(null);
-                    infoWindow.setVisible(true);
-                    unitdisplay.displayEntity(theEntity);
-                }
-            }
-            tblMeks.repaint();
         }
 
         /**
@@ -3180,40 +3192,12 @@ public class CHQPanel extends javax.swing.JPanel {
         }
     }
 
-    /*
-     * Original source: http://docs.rinet.ru/J21/ch25.htm#AnAlphaImageFilter Original author: Michael Morrison
-     */
-    private static class AlphaFilter extends java.awt.image.RGBImageFilter {
-        int alphaLevel;
-
-        public AlphaFilter(int alpha) {
-            alphaLevel = alpha;
-            canFilterIndexColorModel = true;
-        }
-
-        @Override
-        public int filterRGB(int x, int y, int rgb) {
-            // Adjust the alpha value
-            int alpha = (rgb >> 24) & 0xff;
-            alpha = (alpha * alphaLevel) / 255;
-
-            // Return the result
-            return ((rgb & 0x00ffffff) | (alpha << 24));
-        }
-    }
-
     public class MekTableModel extends javax.swing.table.AbstractTableModel {
 
         /**
          *
          */
         private static final long serialVersionUID = -7918520064078379615L;
-
-        public int getColumnCount() {
-            int count = Integer.parseInt(mwclient.getConfigParam("UNITAMOUNT")) + 1;
-            return count;
-            // return this.columnNames.length;
-        }
 
         // should be based on the number of mechs you can own
         public int getRowCount() {
@@ -3222,98 +3206,10 @@ public class CHQPanel extends javax.swing.JPanel {
             return hangarRows + armyRows;
         }
 
-        // number of rows consumed by given army
-        public int getRowsForArmy(client.campaign.CArmy army) {
-            int toReturn = (int) Math.ceil((double) army.getAmountOfUnits() / (double) (getColumnCount() - 1));
-            if (toReturn < 1) {
-                return 1;
-            }
-            return toReturn;
-        }
-
-        // number of rows consumed by hangar
-        public int getRowsForHangar() {
-
-            /*
-             * no matter how many free bays a person has, return only one. this this solitary space shows players' remaining technicians. also - do not allow any adjustment in HQ display for negative bays.
-             */
-            int freebays = Player.getFreeBays();
-            if (freebays > 1) {
-                freebays = 1;
-            }
-            if (freebays < 0) {
-                freebays = 0;
-            }
-
-            return (int) Math.ceil((double) (freebays + Player.getHangar().size()) / (getColumnCount() - 1));
-        }
-
-        public int getRowsForArmies() {
-
-            int total = 0;
-            for (client.campaign.CArmy currA : Player.getArmies()) {
-                total += getRowsForArmy(currA);
-            }
-
-            return total;
-        }
-
-        @Override
-        public String getColumnName(int col) {
-            if (col == 0) {
-                return "Army";
-            }
-            return "Unit " + col;
-        }
-
-        public client.campaign.CArmy getArmyAt(int row) {
-
-            for (client.campaign.CArmy currA : Player.getArmies()) {
-                int uses = getRowsForArmy(currA);
-                if (uses > row) {
-                    return (currA);
-                }
-                row -= uses;
-            }
-
-            return null;
-        }
-
-        public int getOffset(int row) {
-
-            for (client.campaign.CArmy currA : Player.getArmies()) {
-
-                int uses = getRowsForArmy(currA);
-                if (uses > row) {
-                    return row * (getColumnCount() - 1);
-                }
-
-                row -= uses;
-            }
-
-            return 0;
-        }
-
-        public client.campaign.CUnit getMekAt(int row, int col) {
-            if (row < 0) {
-                return null;
-            }
-            if (col != 0) {
-                if (row < getRowsForArmies()) {
-                    client.campaign.CArmy army = getArmyAt(row);
-                    java.util.Vector<Unit> mechs = new java.util.Vector<Unit>(army.getUnits());
-                    int offset = (getOffset(row) + col) - 1;
-                    if (offset < mechs.size()) {
-                        return (client.campaign.CUnit) mechs.elementAt(offset);
-                    }
-                    return null;
-                }
-                int hangernum = (((row - getRowsForArmies()) * (getColumnCount() - 1)) + col) - 1;
-                if ((hangernum >= 0) && (hangernum < Player.getHangar().size())) {
-                    return Player.getHangar().get(hangernum);
-                }
-            }
-            return null;
+        public int getColumnCount() {
+            int count = Integer.parseInt(mwclient.getConfigParam("UNITAMOUNT")) + 1;
+            return count;
+            // return this.columnNames.length;
         }
 
         public Object getValueAt(int row, int col) {
@@ -3486,17 +3382,111 @@ public class CHQPanel extends javax.swing.JPanel {
             return result.toString();
         }
 
+        // number of rows consumed by hangar
+        public int getRowsForHangar() {
+
+            /*
+             * no matter how many free bays a person has, return only one. this this solitary space shows players' remaining technicians. also - do not allow any adjustment in HQ display for negative bays.
+             */
+            int freebays = Player.getFreeBays();
+            if (freebays > 1) {
+                freebays = 1;
+            }
+            if (freebays < 0) {
+                freebays = 0;
+            }
+
+            return (int) Math.ceil((double) (freebays + Player.getHangar().size()) / (getColumnCount() - 1));
+        }
+
+        public int getRowsForArmies() {
+
+            int total = 0;
+            for (client.campaign.CArmy currA : Player.getArmies()) {
+                total += getRowsForArmy(currA);
+            }
+
+            return total;
+        }
+
+        // number of rows consumed by given army
+        public int getRowsForArmy(client.campaign.CArmy army) {
+            int toReturn = (int) Math.ceil((double) army.getAmountOfUnits() / (double) (getColumnCount() - 1));
+            if (toReturn < 1) {
+                return 1;
+            }
+            return toReturn;
+        }
+
+        @Override
+        public String getColumnName(int col) {
+            if (col == 0) {
+                return "Army";
+            }
+            return "Unit " + col;
+        }
+
         @Override
         public boolean isCellEditable(int row, int col) {
             return false;
+        }
+
+        public client.campaign.CArmy getArmyAt(int row) {
+
+            for (client.campaign.CArmy currA : Player.getArmies()) {
+                int uses = getRowsForArmy(currA);
+                if (uses > row) {
+                    return (currA);
+                }
+                row -= uses;
+            }
+
+            return null;
+        }
+
+        public int getOffset(int row) {
+
+            for (client.campaign.CArmy currA : Player.getArmies()) {
+
+                int uses = getRowsForArmy(currA);
+                if (uses > row) {
+                    return row * (getColumnCount() - 1);
+                }
+
+                row -= uses;
+            }
+
+            return 0;
+        }
+
+        public client.campaign.CUnit getMekAt(int row, int col) {
+            if (row < 0) {
+                return null;
+            }
+            if (col != 0) {
+                if (row < getRowsForArmies()) {
+                    client.campaign.CArmy army = getArmyAt(row);
+                    java.util.Vector<Unit> mechs = new java.util.Vector<Unit>(army.getUnits());
+                    int offset = (getOffset(row) + col) - 1;
+                    if (offset < mechs.size()) {
+                        return (client.campaign.CUnit) mechs.elementAt(offset);
+                    }
+                    return null;
+                }
+                int hangernum = (((row - getRowsForArmies()) * (getColumnCount() - 1)) + col) - 1;
+                if ((hangernum >= 0) && (hangernum < Player.getHangar().size())) {
+                    return Player.getHangar().get(hangernum);
+                }
+            }
+            return null;
         }
 
         public void refreshModel() {
             fireTableDataChanged();
         }
 
-        public mekwars.client.gui.CHQPanel.MekTableModel.Renderer getRenderer() {
-            return new mekwars.client.gui.CHQPanel.MekTableModel.Renderer(mwclient);
+        public mekwars.common.gui.CHQPanel.MekTableModel.Renderer getRenderer() {
+            return new mekwars.common.gui.CHQPanel.MekTableModel.Renderer(mwclient);
         }
 
         public class Renderer extends MechInfo implements javax.swing.table.TableCellRenderer {

@@ -15,11 +15,13 @@
  * for more details.
  */
 
-package mekwars.client.gui;
+package mekwars.common.gui;
 
 import common.campaign.clientutils.IClientConfig;
 import common.util.MWLogger;
 import common.util.UnitUtils;
+import mekwars.client.gui.MMNetHyperLinkListener;
+import mekwars.client.gui.MyHTMLEditorKit;
 
 /**
  * Player panel
@@ -171,7 +173,7 @@ public class CPlayerPanel extends javax.swing.JScrollPane {
         setBorder(new javax.swing.border.LineBorder(java.awt.Color.black));
         setViewportView(PlayerPanel);
 
-        Thread clockT = new mekwars.client.gui.CPlayerPanel.TThread(this);
+        Thread clockT = new mekwars.common.gui.CPlayerPanel.TThread(this);
         clockT.start();
 
     }
@@ -264,9 +266,9 @@ public class CPlayerPanel extends javax.swing.JScrollPane {
 
     private static class TThread extends Thread {
 
-        mekwars.client.gui.CPlayerPanel myPanel;
+        mekwars.common.gui.CPlayerPanel myPanel;
 
-        public TThread(mekwars.client.gui.CPlayerPanel p) {
+        public TThread(mekwars.common.gui.CPlayerPanel p) {
             myPanel = p;
         }
 

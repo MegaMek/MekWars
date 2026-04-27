@@ -16,11 +16,12 @@
  * See COPYING.TXT for details.
  */
 
-package mekwars.client.gui;
+package mekwars.common.gui;
 
 import java.io.IOException;
 
 import common.util.MWLogger;
+import mekwars.client.gui.BrowserCommandLexer;
 
 /**
  * Allows URLs to be opened in the system browser on Windows and Unix. More information about this class is available
@@ -32,12 +33,21 @@ import common.util.MWLogger;
 public class Browser {
 
     /**
+     * A list of commands to try in order to display the url. The url is put into the command using MessageFormat, so
+     * the URL will be specified as {0} in the command. Some examples of commands to try might be:<br>
+     * <code>rundll32 url.dll,FileProtocolHandler {0}</code></br>
+     * <code>netscape {0}</code><br>
+     * These commands are passed in order to exec until something works when displayURL is used.
+     *
+     * @since ostermillerutils 1.00.00
+     */
+    public static String[] exec = null;
+    /**
      * The dialog that allows user configuration of the options for this class.
      *
      * @since ostermillerutils 1.00.00
      */
-    protected static mekwars.client.gui.Browser.BrowserDialog dialog;
-
+    protected static mekwars.common.gui.Browser.BrowserDialog dialog;
     /**
      * Locale specific strings displayed to the user.
      *
@@ -45,6 +55,47 @@ public class Browser {
      */
     protected static java.util.ResourceBundle labels = java.util.ResourceBundle.getBundle("MegaMekNETClient.GUI.Browser",
           java.util.Locale.US);
+    /**
+     * Where the command lines are typed.
+     *
+     * @since ostermillerutils 1.00.00
+     */
+    private static javax.swing.JTextArea description;
+    /**
+     * Where the command lines are typed.
+     *
+     * @since ostermillerutils 1.00.00
+     */
+    private static javax.swing.JTextArea commandLinesArea;
+    /**
+     * The reset button.
+     *
+     * @since ostermillerutils 1.00.00
+     */
+    private static javax.swing.JButton resetButton;
+    /**
+     * The browse button.
+     *
+     * @since ostermillerutils 1.00.00
+     */
+    private static javax.swing.JButton browseButton;
+    /**
+     * The label for the field in which the name is typed.
+     *
+     * @since ostermillerutils 1.00.00
+     */
+    private static javax.swing.JLabel commandLinesLabel;
+    /**
+     * File dialog for choosing a browser
+     *
+     * @since ostermillerutils 1.00.00
+     */
+    private static javax.swing.JFileChooser fileChooser;
+    /**
+     * A panel used in the options dialog.  Null until getDialogPanel() is called.
+     */
+    private static javax.swing.JPanel dialogPanel = null;
+    private static java.awt.Window dialogParent = null;
 
     /**
      * Set the locale used for getting localized strings.
@@ -58,26 +109,40 @@ public class Browser {
     }
 
     /**
-     * A list of commands to try in order to display the url. The url is put into the command using MessageFormat, so
-     * the URL will be specified as {0} in the command. Some examples of commands to try might be:<br>
-     * <code>rundll32 url.dll,FileProtocolHandler {0}</code></br>
-     * <code>netscape {0}</code><br>
-     * These commands are passed in order to exec until something works when displayURL is used.
+     * Save the options used to the given properties file. Property names used will all start with
+     * MegaMekNETClient.GUI.Browser Properties are saved in such a way that a call to load(props); will restore the
+     * state of this class. If the default commands to open a browser are being used then they are not saved in the
+     * properties file, assuming that the user will want to use the defaults next time even if the defaults change.
+     *
+     * @param props properties file to which configuration is saved.
      *
      * @since ostermillerutils 1.00.00
      */
-    public static String[] exec = null;
-
-    /**
-     * Determine appropriate commands to start a browser on the current operating system.  On windows: <br>
-     * <code>rundll32 url.dll,FileProtocolHandler {0}</code></br>
-     * On other operating systems, the "which" command is used to test if Mozilla, netscape, and lynx(xterm) are
-     * available (in that order).
-     *
-     * @since ostermillerutils 1.00.00
-     */
-    public static void init() {
-        exec = defaultCommands();
+    public static void save(java.util.Properties props) {
+        boolean saveBrowser = false;
+        if (mekwars.common.gui.Browser.exec != null && mekwars.common.gui.Browser.exec.length > 0) {
+            String[] exec = mekwars.common.gui.Browser.defaultCommands();
+            if (exec != null && exec.length == mekwars.common.gui.Browser.exec.length) {
+                for (int i = 0; i < exec.length; i++) {
+                    if (!exec[i].equals(mekwars.common.gui.Browser.exec[i])) {
+                        saveBrowser = true;
+                    }
+                }
+            } else {
+                saveBrowser = true;
+            }
+        }
+        if (saveBrowser) {
+            StringBuilder sb = new StringBuilder();
+            for (int i = 0;
+                  mekwars.common.gui.Browser.exec != null && i < mekwars.common.gui.Browser.exec.length;
+                  i++) {
+                sb.append(mekwars.common.gui.Browser.exec[i]).append('\n');
+            }
+            props.put("MegaMekNETClient.GUI.Browser.open", sb.toString());
+        } else {
+            props.remove("MegaMekNETClient.GUI.Browser.open");
+        }
     }
 
     /**
@@ -181,43 +246,6 @@ public class Browser {
     }
 
     /**
-     * Save the options used to the given properties file. Property names used will all start with
-     * MegaMekNETClient.GUI.Browser Properties are saved in such a way that a call to load(props); will restore the
-     * state of this class. If the default commands to open a browser are being used then they are not saved in the
-     * properties file, assuming that the user will want to use the defaults next time even if the defaults change.
-     *
-     * @param props properties file to which configuration is saved.
-     *
-     * @since ostermillerutils 1.00.00
-     */
-    public static void save(java.util.Properties props) {
-        boolean saveBrowser = false;
-        if (mekwars.client.gui.Browser.exec != null && mekwars.client.gui.Browser.exec.length > 0) {
-            String[] exec = mekwars.client.gui.Browser.defaultCommands();
-            if (exec != null && exec.length == mekwars.client.gui.Browser.exec.length) {
-                for (int i = 0; i < exec.length; i++) {
-                    if (!exec[i].equals(mekwars.client.gui.Browser.exec[i])) {
-                        saveBrowser = true;
-                    }
-                }
-            } else {
-                saveBrowser = true;
-            }
-        }
-        if (saveBrowser) {
-            StringBuilder sb = new StringBuilder();
-            for (int i = 0;
-                  mekwars.client.gui.Browser.exec != null && i < mekwars.client.gui.Browser.exec.length;
-                  i++) {
-                sb.append(mekwars.client.gui.Browser.exec[i]).append('\n');
-            }
-            props.put("MegaMekNETClient.GUI.Browser.open", sb.toString());
-        } else {
-            props.remove("MegaMekNETClient.GUI.Browser.open");
-        }
-    }
-
-    /**
      * Load the options for this class from the given properties file. This method is designed to work with the
      * save(props) method.  All properties used will start with MegaMekNETClient.GUI.Browser.  If no configuration is
      * found, the default configuration will be used. If this method is used, a call to Browser.init(); is not needed.
@@ -235,10 +263,73 @@ public class Browser {
             for (int i = 0; i < count; i++) {
                 exec[i] = tok.nextToken();
             }
-            mekwars.client.gui.Browser.exec = exec;
+            mekwars.common.gui.Browser.exec = exec;
         } else {
-            mekwars.client.gui.Browser.init();
+            mekwars.common.gui.Browser.init();
         }
+    }
+
+    /**
+     * Determine appropriate commands to start a browser on the current operating system.  On windows: <br>
+     * <code>rundll32 url.dll,FileProtocolHandler {0}</code></br>
+     * On other operating systems, the "which" command is used to test if Mozilla, netscape, and lynx(xterm) are
+     * available (in that order).
+     *
+     * @since ostermillerutils 1.00.00
+     */
+    public static void init() {
+        exec = defaultCommands();
+    }
+
+    /**
+     * Display the URLs, each in their own window, in the system browser.
+     * <p>
+     * Browser.init() should be called before calling this function or Browser.exec should be set explicitly.
+     * <p>
+     * If more than one URL is given an HTML page containing JavaScript will be written to the local drive, that page
+     * will be opened, and it will open the rest of the URLs.
+     *
+     * @param urls the list of urls to display
+     *
+     * @throws IOException if the url is not valid or the browser fails to star
+     * @since ostermillerutils 1.00.00
+     */
+    public static void displayURLs(String[] urls) throws java.io.IOException {
+        if (urls == null || urls.length == 0) {
+            return;
+        }
+        if (urls.length == 1) {
+            displayURL(urls[0]);
+            return;
+        }
+        java.io.File shortcut = java.io.File.createTempFile("DisplayURLs", ".html");
+        shortcut = shortcut.getCanonicalFile();
+        shortcut.deleteOnExit();
+        java.io.PrintWriter out = new java.io.PrintWriter(new java.io.FileWriter(shortcut));
+        out.println("<html>");
+        out.println("<head>");
+        out.println("<title>" + labels.getString("html.openurls") + "</title>");
+        out.println("<script language=\"javascript\" type=\"text/javascript\">");
+        out.println("function displayURLs(){");
+        for (int i = 1; i < urls.length; i++) {
+            out.println("window.open(\"" +
+                              urls[i] +
+                              "\", \"_blank\", \"toolbar=yes,location=yes,directories=yes,status=yes,menubar=yes,scrollbars=yes,resizable=yes\");");
+        }
+        out.println("location.href=\"" + urls[0] + "\";");
+        out.println("}");
+        out.println("</script>");
+        out.println("</head>");
+        out.println("<body onload=\"javascript:displayURLs()\">");
+        out.println("<noscript>");
+        for (int i = 0; i < urls.length; i++) {
+            out.println("<a target=\"_blank\" href=\"" + urls[i] + "\">" + urls[i] + "</a><br>");
+        }
+        out.println("</noscript>");
+        out.println("</body>");
+        out.println("</html>");
+        out.close();
+        displayURL(shortcut.toURI().toURL().toString());
     }
 
     /**
@@ -410,57 +501,6 @@ public class Browser {
                 // lets just say that it is displaying the url right now!
             }
         }
-    }
-
-    /**
-     * Display the URLs, each in their own window, in the system browser.
-     * <p>
-     * Browser.init() should be called before calling this function or Browser.exec should be set explicitly.
-     * <p>
-     * If more than one URL is given an HTML page containing JavaScript will be written to the local drive, that page
-     * will be opened, and it will open the rest of the URLs.
-     *
-     * @param urls the list of urls to display
-     *
-     * @throws IOException if the url is not valid or the browser fails to star
-     * @since ostermillerutils 1.00.00
-     */
-    public static void displayURLs(String[] urls) throws java.io.IOException {
-        if (urls == null || urls.length == 0) {
-            return;
-        }
-        if (urls.length == 1) {
-            displayURL(urls[0]);
-            return;
-        }
-        java.io.File shortcut = java.io.File.createTempFile("DisplayURLs", ".html");
-        shortcut = shortcut.getCanonicalFile();
-        shortcut.deleteOnExit();
-        java.io.PrintWriter out = new java.io.PrintWriter(new java.io.FileWriter(shortcut));
-        out.println("<html>");
-        out.println("<head>");
-        out.println("<title>" + labels.getString("html.openurls") + "</title>");
-        out.println("<script language=\"javascript\" type=\"text/javascript\">");
-        out.println("function displayURLs(){");
-        for (int i = 1; i < urls.length; i++) {
-            out.println("window.open(\"" +
-                              urls[i] +
-                              "\", \"_blank\", \"toolbar=yes,location=yes,directories=yes,status=yes,menubar=yes,scrollbars=yes,resizable=yes\");");
-        }
-        out.println("location.href=\"" + urls[0] + "\";");
-        out.println("}");
-        out.println("</script>");
-        out.println("</head>");
-        out.println("<body onload=\"javascript:displayURLs()\">");
-        out.println("<noscript>");
-        for (int i = 0; i < urls.length; i++) {
-            out.println("<a target=\"_blank\" href=\"" + urls[i] + "\">" + urls[i] + "</a><br>");
-        }
-        out.println("</noscript>");
-        out.println("</body>");
-        out.println("</html>");
-        out.close();
-        displayURL(shortcut.toURI().toURL().toString());
     }
 
     /**
@@ -654,18 +694,18 @@ public class Browser {
      */
     public static void main(String[] args) {
         try {
-            mekwars.client.gui.Browser.init();
-            if (mekwars.client.gui.Browser.dialogConfiguration(null)) {
+            mekwars.common.gui.Browser.init();
+            if (mekwars.common.gui.Browser.dialogConfiguration(null)) {
                 if (args.length == 0) {
-                    mekwars.client.gui.Browser.displayURLs(new String[] {
+                    mekwars.common.gui.Browser.displayURLs(new String[] {
                           "http://www.google.com/",
                           "http://dmoz.org/",
                           "http://ostermiller.org",
                           }, "fun");
                 } else if (args.length == 1) {
-                    mekwars.client.gui.Browser.displayURL(args[0], "fun");
+                    mekwars.common.gui.Browser.displayURL(args[0], "fun");
                 } else {
-                    mekwars.client.gui.Browser.displayURLs(args, "fun");
+                    mekwars.common.gui.Browser.displayURLs(args, "fun");
                 }
             }
             try {
@@ -687,7 +727,7 @@ public class Browser {
      */
     public static boolean dialogConfiguration(java.awt.Frame owner) {
         dialogConfiguration(owner, null);
-        return mekwars.client.gui.Browser.dialog.changed();
+        return mekwars.common.gui.Browser.dialog.changed();
     }
 
     /**
@@ -707,63 +747,15 @@ public class Browser {
      * @deprecated Use the MegaMekNETClient.GUI.Browser resource bundle to set strings for the given locale.
      */
     public static boolean dialogConfiguration(java.awt.Frame owner, java.util.Properties props) {
-        if (mekwars.client.gui.Browser.dialog == null) {
-            mekwars.client.gui.Browser.dialog = new mekwars.client.gui.Browser.BrowserDialog(owner);
+        if (mekwars.common.gui.Browser.dialog == null) {
+            mekwars.common.gui.Browser.dialog = new mekwars.common.gui.Browser.BrowserDialog(owner);
         }
         if (props != null) {
-            mekwars.client.gui.Browser.dialog.setProps(props);
+            mekwars.common.gui.Browser.dialog.setProps(props);
         }
-        mekwars.client.gui.Browser.dialog.setVisible(true);
-        return mekwars.client.gui.Browser.dialog.changed();
+        mekwars.common.gui.Browser.dialog.setVisible(true);
+        return mekwars.common.gui.Browser.dialog.changed();
     }
-
-    /**
-     * Where the command lines are typed.
-     *
-     * @since ostermillerutils 1.00.00
-     */
-    private static javax.swing.JTextArea description;
-
-    /**
-     * Where the command lines are typed.
-     *
-     * @since ostermillerutils 1.00.00
-     */
-    private static javax.swing.JTextArea commandLinesArea;
-
-    /**
-     * The reset button.
-     *
-     * @since ostermillerutils 1.00.00
-     */
-    private static javax.swing.JButton resetButton;
-
-    /**
-     * The browse button.
-     *
-     * @since ostermillerutils 1.00.00
-     */
-    private static javax.swing.JButton browseButton;
-
-    /**
-     * The label for the field in which the name is typed.
-     *
-     * @since ostermillerutils 1.00.00
-     */
-    private static javax.swing.JLabel commandLinesLabel;
-
-    /**
-     * File dialog for choosing a browser
-     *
-     * @since ostermillerutils 1.00.00
-     */
-    private static javax.swing.JFileChooser fileChooser;
-
-    /**
-     * A panel used in the options dialog.  Null until getDialogPanel() is called.
-     */
-    private static javax.swing.JPanel dialogPanel = null;
-    private static java.awt.Window dialogParent = null;
 
     /**
      * If you wish to add to your own dialog box rather than have a separate one just for the browser, use this method
@@ -792,7 +784,7 @@ public class Browser {
                 public void actionPerformed(java.awt.event.ActionEvent e) {
                     Object source = e.getSource();
                     if (source == resetButton) {
-                        setCommands(mekwars.client.gui.Browser.defaultCommands());
+                        setCommands(mekwars.common.gui.Browser.defaultCommands());
                     } else if (source == browseButton) {
                         if (fileChooser == null) {
                             fileChooser = new javax.swing.JFileChooser();
@@ -856,6 +848,45 @@ public class Browser {
         return dialogPanel;
     }
 
+    private static void setCommands(String[] newExec) {
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0; newExec != null && i < newExec.length; i++) {
+            sb.append(newExec[i]).append('\n');
+        }
+        commandLinesArea.setText(sb.toString());
+    }
+
+    /**
+     * If you are using the getDialogPanel() method to create your own dialog, this method should be called every time
+     * before you display the dialog.
+     * <p>
+     * mydialog.add(Browser.getDialogPanel(mydialog)); Browser.initPanel(); mydialog.setVisible(true); if (ok_pressed){
+     * &nbsp;&nbsp;Browser.userOKedPanelChanges(); }
+     *
+     * @since ostermillerutils 1.02.22
+     */
+    public static void initPanel() {
+        setCommands(exec);
+    }
+
+    /**
+     * If you are using the getDialogPanel() method to create your own dialog, this method should be called after you
+     * display the dialog if the user pressed ok.
+     * <p>
+     * mydialog.add(Browser.getDialogPanel(mydialog)); Browser.initPanel(); mydialog.setVisible(true); if (ok_pressed){
+     * &nbsp;&nbsp;Browser.userOKedPanelChanges(); }
+     *
+     * @since ostermillerutils 1.02.22
+     */
+    public static void userOKedPanelChanges() {
+        java.util.StringTokenizer tok = new java.util.StringTokenizer(commandLinesArea.getText(), "\r\n", false);
+        int count = tok.countTokens();
+        String[] exec = new String[count];
+        for (int i = 0; i < count; i++) {
+            exec[i] = tok.nextToken();
+        }
+        mekwars.common.gui.Browser.exec = exec;
+    }
 
     /**
      * A modal dialog that presents configuration option for this class.
@@ -897,6 +928,20 @@ public class Browser {
          */
         private boolean pressed_OK = false;
 
+
+        /**
+         * Create this dialog with the given parent and title.
+         *
+         * @param parent window from which this dialog is launched
+         * @param title  the title for the dialog box window
+         *
+         * @since ostermillerutils 1.00.00
+         */
+        public BrowserDialog(java.awt.Frame parent) {
+            super(parent, labels.getString("dialog.title"), true);
+            setLocationRelativeTo(parent);
+            // super calls dialogInit, so we don't need to do it again.
+        }
 
         /**
          * Properties that are used: MegaMekNETClient.GUI.BrowserDialog.title<br>
@@ -945,20 +990,6 @@ public class Browser {
         }
 
         /**
-         * Create this dialog with the given parent and title.
-         *
-         * @param parent window from which this dialog is launched
-         * @param title  the title for the dialog box window
-         *
-         * @since ostermillerutils 1.00.00
-         */
-        public BrowserDialog(java.awt.Frame parent) {
-            super(parent, labels.getString("dialog.title"), true);
-            setLocationRelativeTo(parent);
-            // super calls dialogInit, so we don't need to do it again.
-        }
-
-        /**
          * Called by constructors to initialize the dialog.
          *
          * @since ostermillerutils 1.00.00
@@ -976,7 +1007,7 @@ public class Browser {
             okButton.addActionListener(new java.awt.event.ActionListener() {
                 public void actionPerformed(java.awt.event.ActionEvent e) {
                     pressed_OK = true;
-                    mekwars.client.gui.Browser.BrowserDialog.this.setVisible(false);
+                    mekwars.common.gui.Browser.BrowserDialog.this.setVisible(false);
                 }
             });
             panel.add(okButton);
@@ -984,7 +1015,7 @@ public class Browser {
             cancelButton.addActionListener(new java.awt.event.ActionListener() {
                 public void actionPerformed(java.awt.event.ActionEvent e) {
                     pressed_OK = false;
-                    mekwars.client.gui.Browser.BrowserDialog.this.setVisible(false);
+                    mekwars.common.gui.Browser.BrowserDialog.this.setVisible(false);
                 }
             });
             panel.add(cancelButton);
@@ -1006,46 +1037,6 @@ public class Browser {
                 userOKedPanelChanges();
             }
         }
-    }
-
-    private static void setCommands(String[] newExec) {
-        StringBuilder sb = new StringBuilder();
-        for (int i = 0; newExec != null && i < newExec.length; i++) {
-            sb.append(newExec[i]).append('\n');
-        }
-        commandLinesArea.setText(sb.toString());
-    }
-
-    /**
-     * If you are using the getDialogPanel() method to create your own dialog, this method should be called every time
-     * before you display the dialog.
-     * <p>
-     * mydialog.add(Browser.getDialogPanel(mydialog)); Browser.initPanel(); mydialog.setVisible(true); if (ok_pressed){
-     * &nbsp;&nbsp;Browser.userOKedPanelChanges(); }
-     *
-     * @since ostermillerutils 1.02.22
-     */
-    public static void initPanel() {
-        setCommands(exec);
-    }
-
-    /**
-     * If you are using the getDialogPanel() method to create your own dialog, this method should be called after you
-     * display the dialog if the user pressed ok.
-     * <p>
-     * mydialog.add(Browser.getDialogPanel(mydialog)); Browser.initPanel(); mydialog.setVisible(true); if (ok_pressed){
-     * &nbsp;&nbsp;Browser.userOKedPanelChanges(); }
-     *
-     * @since ostermillerutils 1.02.22
-     */
-    public static void userOKedPanelChanges() {
-        java.util.StringTokenizer tok = new java.util.StringTokenizer(commandLinesArea.getText(), "\r\n", false);
-        int count = tok.countTokens();
-        String[] exec = new String[count];
-        for (int i = 0; i < count; i++) {
-            exec[i] = tok.nextToken();
-        }
-        mekwars.client.gui.Browser.exec = exec;
     }
 }
 

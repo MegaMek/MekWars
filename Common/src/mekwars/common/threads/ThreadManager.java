@@ -19,10 +19,12 @@
  *
  */
 
-package mekwars.common.util;
+package mekwars.common.threads;
 
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+
+import mekwars.common.util.MWLogger;
 
 public class ThreadManager {
 
