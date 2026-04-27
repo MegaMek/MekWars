@@ -205,6 +205,18 @@ public class CUserListPanel extends javax.swing.JPanel implements java.awt.event
 
     }
 
+    public void resetActivityButton() {
+        if (activateIcon != null) {
+            ActivityButton.setUI(new javax.swing.plaf.basic.BasicButtonUI());
+            java.awt.Insets noInsets = new java.awt.Insets(0, 0, 0, 0);
+            ActivityButton.setMargin(noInsets);
+            ActivityButton.setBorder(javax.swing.BorderFactory.createEmptyBorder());
+            ActivityButton.setContentAreaFilled(false);
+            ActivityButton.setLayout(null);
+            ActivityButton.setBorderPainted(false);
+        }
+    }
+
     private void createLinkArea() {
         LinksLabel.setAlignmentX(java.awt.Component.CENTER_ALIGNMENT);
         LinksLabel.setAlignmentY(java.awt.Component.CENTER_ALIGNMENT);
@@ -331,6 +343,17 @@ public class CUserListPanel extends javax.swing.JPanel implements java.awt.event
         }
     }
 
+    public void setActivateButtonText(String s) {
+
+        if (ActivityButton.getIcon() == null) {
+            ActivityButton.setText(s);
+            //ActivityButton.setBorder(BorderFactory.createEtchedBorder());
+        } else {
+            ActivityButton.setText("");
+            //ActivityButton.setBorder(BorderFactory.createEmptyBorder());
+        }
+    }
+
     public void setActivityButton(Boolean activate) {
 
         if (activate) {
@@ -359,29 +382,6 @@ public class CUserListPanel extends javax.swing.JPanel implements java.awt.event
         }
     }
 
-    public void setActivateButtonText(String s) {
-
-        if (ActivityButton.getIcon() == null) {
-            ActivityButton.setText(s);
-            //ActivityButton.setBorder(BorderFactory.createEtchedBorder());
-        } else {
-            ActivityButton.setText("");
-            //ActivityButton.setBorder(BorderFactory.createEmptyBorder());
-        }
-    }
-
-    public void resetActivityButton() {
-        if (activateIcon != null) {
-            ActivityButton.setUI(new javax.swing.plaf.basic.BasicButtonUI());
-            java.awt.Insets noInsets = new java.awt.Insets(0, 0, 0, 0);
-            ActivityButton.setMargin(noInsets);
-            ActivityButton.setBorder(javax.swing.BorderFactory.createEmptyBorder());
-            ActivityButton.setContentAreaFilled(false);
-            ActivityButton.setLayout(null);
-            ActivityButton.setBorderPainted(false);
-        }
-    }
-
     public void setActivityButtonEnabled(boolean b) {
         ActivityButton.setEnabled(b);
     }
@@ -405,13 +405,324 @@ public class CUserListPanel extends javax.swing.JPanel implements java.awt.event
         }
     }
 
+    public static class CUserListModel extends javax.swing.AbstractListModel {
+        /**
+         *
+         */
+        private static final long serialVersionUID = 9141928592065940657L;
+        java.util.SortedSet<client.CUser> Users;  //users set
+        mekwars.client.gui.CUserListPanel.CUserListModel.UserListCellRenderer Renderer;  //list cells renderer
+        client.MWClient mwclient;  //client owning this model
+        boolean Dedicateds; //dedicated hosts visible
+
+
+        public CUserListModel(client.MWClient client) {
+            mwclient = client;
+            Dedicateds = mwclient.getConfig().isParam("USERLISTDEDICATEDS");
+            Users = java.util.Collections.synchronizedSortedSet(new java.util.TreeSet<client.CUser>(new mekwars.client.gui.CUserListPanel.CUserListModel.UserComparator()));
+            Renderer = new mekwars.client.gui.CUserListPanel.CUserListModel.UserListCellRenderer(this);
+        }
+
+        public synchronized void remove(client.CUser user) {Users.remove(user);}
+
+        public synchronized void addAll(java.util.Collection<client.CUser> c) {Users.addAll(c);}
+
+        public synchronized int getSize() {return Users.size();}
+
+        public synchronized Object getElementAt(int index) {
+            if (index < Users.size()) {return (((client.CUser) Users.toArray()[index]).getName());}
+            //else
+            return null;
+        }
+
+        public void setDedicateds(boolean dedicateds) {Dedicateds = dedicateds;}
+
+        public int getSortMode() {return ((mekwars.client.gui.CUserListPanel.CUserListModel.UserComparator) Users.comparator()).getMode();}
+
+        public void setSortMode(int tsortmode) {
+            ((mekwars.client.gui.CUserListPanel.CUserListModel.UserComparator) Users.comparator()).setMode(tsortmode);
+            refreshModel();
+        }
+
+        public synchronized void refreshModel() {
+
+            fireIntervalRemoved(this, 0, Users.size());
+            clear();
+            int myLevel = mwclient.getUserLevel();
+
+            /*
+             * Synch on client.getUsers() to prevent ConcurrentModError
+             * while rebuilding the CUserListPanel.
+             */
+            java.util.Collection<client.CUser> users = mwclient.getUsers();
+            synchronized (users) {
+                for (client.CUser currU : users) {
+                    if (currU.isInvis() && myLevel < currU.getUserlevel()) {continue;}
+                    if (currU.getName().startsWith("[Dedicated]") && !Dedicateds) {continue;}
+                    add(currU);
+                }
+            }
+
+            fireIntervalAdded(this, 0, Users.size());
+        }
+
+        public synchronized void clear() {Users.clear();}
+
+        public void add(client.CUser user) {Users.add(user);}
+
+        public int getSortOrder() {return ((mekwars.client.gui.CUserListPanel.CUserListModel.UserComparator) Users.comparator()).getOrder();}
+
+        public void setSortOrder(int tsortorder) {
+            ((mekwars.client.gui.CUserListPanel.CUserListModel.UserComparator) Users.comparator()).setOrder(tsortorder);
+            refreshModel();
+        }
+
+        public synchronized client.CUser getUser(int index) {
+            if (index < Users.size()) {return ((client.CUser) Users.toArray()[index]);}
+            //else
+            return null;
+        }
+
+        public synchronized client.CUser getUser(String name) {
+            for (java.util.Iterator<client.CUser> i = Users.iterator(); i.hasNext(); ) {
+                client.CUser user = i.next();
+                if (user.getName().equals(name)) {return user;}
+            }
+            return new client.CUser();
+        }
+
+        public mekwars.client.gui.CUserListPanel.CUserListModel.UserListCellRenderer getRenderer() {return Renderer;}
+
+        static class UserListCellRenderer extends javax.swing.JLabel implements javax.swing.ListCellRenderer {
+
+            /**
+             *
+             */
+            private static final long serialVersionUID = 4400213401819469963L;
+            client.MWClient ulMwclient;
+            mekwars.client.gui.CUserListPanel.CUserListModel Owner;
+            boolean LoggedIn = false;
+            boolean TextBold = true;
+            boolean TextColor = true;
+            boolean TextImage = true;
+            javax.swing.ImageIcon LogoutImage;
+            javax.swing.ImageIcon ReserveImage;
+            javax.swing.ImageIcon ActiveImage;
+            javax.swing.ImageIcon FightImage;
+
+            public UserListCellRenderer(mekwars.client.gui.CUserListPanel.CUserListModel towner) {
+                Owner = towner;
+                ulMwclient = towner.mwclient;
+                TextBold = ulMwclient.getConfig().isParam("USERLISTBOLD");
+                TextColor = ulMwclient.getConfig().isParam("USERLISTCOLOR");
+                TextImage = ulMwclient.getConfig().isParam("USERLISTIMAGE");
+                LogoutImage = ulMwclient.getConfig().getImage("LOGOUT");
+                ReserveImage = ulMwclient.getConfig().getImage("RESERVE");
+                ActiveImage = ulMwclient.getConfig().getImage("ACTIVE");
+                FightImage = ulMwclient.getConfig().getImage("FIGHT");
+                setOpaque(true);
+            }
+
+            public void setLoggedIn(boolean tloggedin) {LoggedIn = tloggedin;}
+
+            public void refreshParams() {
+                TextBold = ulMwclient.getConfig().isParam("USERLISTBOLD");
+                TextColor = ulMwclient.getConfig().isParam("USERLISTCOLOR");
+                TextImage = ulMwclient.getConfig().isParam("USERLISTIMAGE");
+                LogoutImage = ulMwclient.getConfig().getImage("LOGOUT");
+                ReserveImage = ulMwclient.getConfig().getImage("RESERVE");
+                ActiveImage = ulMwclient.getConfig().getImage("ACTIVE");
+                FightImage = ulMwclient.getConfig().getImage("FIGHT");
+            }
+
+            //value to display, cell index, is selected, cell has focus?
+            public java.awt.Component getListCellRendererComponent(javax.swing.JList list, Object value, int index,
+                  boolean selected, boolean focus) {
+                //have to make this renderer faster
+                int userlevel = 0;
+                int status;
+
+                client.CUser user = Owner.getUser(index);
+                if (user == null) {return null;}
+
+                userlevel = user.getUserlevel();
+                String invisFlag = " ";
+
+                //if you can see them, and they are invis, then your level is >= to theres
+                if (user.isInvis()) {invisFlag = "(I) ";}
+
+                if (userlevel < 30) {setText(user.getName());}
+                if (userlevel >= 30 && userlevel < 100) {setText("^" + invisFlag + user.getName());}
+                if (userlevel >= 100 && userlevel < 200) {setText("*" + invisFlag + user.getName());}
+                if (userlevel >= 200) {setText("@" + invisFlag + user.getName());}
+
+                //check users No-Play status
+                boolean isOnNoPlay = false;
+                if (ulMwclient.getPlayer().getAdminExcludes().contains(user.getName().toLowerCase())) {
+                    isOnNoPlay = true;
+                } else if (ulMwclient.getPlayer().getPlayerExcludes().contains(user.getName().toLowerCase())) {
+                    isOnNoPlay = true;
+                }
+
+                //append mute/unmuted status. this is sickeningly inefficient when the whole
+                //list is being processed and should be rewritten eventually.
+                String searchString = user.getName().trim();
+                int isMuted = 0;
+
+                if (userlevel < 100) {
+                    String ignoreList = ulMwclient.getConfig().getParam("IGNOREPUBLIC");
+                    java.util.StringTokenizer it = new java.util.StringTokenizer(ignoreList, ",");
+                    while (it.hasMoreTokens()) {
+                        String currString = it.nextToken().trim();
+                        if (currString.equalsIgnoreCase(searchString)) {isMuted++;}
+                    }
+
+                    //search PrivateMessageCommand mute as well
+                    ignoreList = ulMwclient.getConfig().getParam("IGNOREPRIVATE");
+                    it = new java.util.StringTokenizer(ignoreList, ",");
+                    while (it.hasMoreTokens()) {
+                        String currString = it.nextToken().trim();
+                        if (currString.equalsIgnoreCase(searchString)) {isMuted++;}
+                    }
+
+
+                    //and the faction ...
+                    if (user.getHouse().equals(ulMwclient.getPlayer().getHouse())) {
+                        ignoreList = ulMwclient.getConfig().getParam("IGNOREHOUSE");
+                        it = new java.util.StringTokenizer(ignoreList, ",");
+                        while (it.hasMoreTokens()) {
+                            String currString = it.nextToken();
+                            if (currString.equalsIgnoreCase(searchString)) {isMuted++;}
+                        }
+                    }
+                }
+                String muteUps = "";
+                for (int i = 1; i < isMuted; i++) {muteUps += "+";}
+
+                if (isMuted > 0 && isOnNoPlay) {setText(getText() + " [muted" + muteUps + ", np]");} else if (isMuted >
+                                                                                                                    0) {
+                    setText(getText() + " [muted" + muteUps + "]");
+                } else if (isOnNoPlay) {
+                    setText(getText() + " [np]");
+                }
+
+
+                if (selected) {
+                    setForeground(list.getSelectionForeground());
+                    setBackground(list.getSelectionBackground());
+                } else {
+                    setBackground(list.getBackground());
+                    if (TextColor && LoggedIn) {setForeground(user.getRGBColor());} else {
+                        setForeground(java.awt.Color.black);
+                    }
+                }
+
+                if (LoggedIn) {
+                    status = user.getStatus();
+                    if (status == client.MWClient.STATUS_LOGGEDOUT) {
+
+                        //logged out users are never bold
+                        setFont(getFont().deriveFont(java.awt.Font.PLAIN));
+                        if (TextImage) {try {setIcon(LogoutImage);} catch (Exception ex) {MWLogger.errLog(ex);}}
+                    } else {
+                        if (TextBold) {setFont(getFont().deriveFont(java.awt.Font.BOLD));} else {
+                            setFont(getFont().deriveFont(java.awt.Font.PLAIN));
+                        }
+
+                        if (TextImage) {
+                            if (status == client.MWClient.STATUS_RESERVE) {
+                                try {setIcon(ReserveImage);} catch (Exception ex) {MWLogger.errLog(ex);}
+                            }
+                            if (status == client.MWClient.STATUS_ACTIVE) {
+                                try {setIcon(ActiveImage);} catch (Exception ex) {MWLogger.errLog(ex);}
+                            }
+                            if (status == client.MWClient.STATUS_FIGHTING) {
+                                try {setIcon(FightImage);} catch (Exception ex) {MWLogger.errLog(ex);}
+                            }
+                        } else {
+                            setIcon(null);
+                        }
+                    }
+                    setIconTextGap(7);
+                    setToolTipText(user.getInfo(ulMwclient.getConfig().isParam("NOIMGINCHAT")));
+                } else {
+
+                    //logged out users don't see bold names OR icons
+                    setFont(getFont().deriveFont(java.awt.Font.PLAIN));
+                    setIcon(null);
+
+                    setToolTipText(user.getShortInfo());
+                }
+                return this;
+            }
+        }
+
+        public class UserComparator implements java.util.Comparator<client.CUser> {
+
+            int Mode;
+            int Order;
+
+            public UserComparator() {
+                Mode = SORTMODE_NAME;
+                Order = SORTORDER_ASCENDING;
+            }
+
+            public int compare(client.CUser o1, client.CUser o2) {
+                client.CUser user1 = null;
+                client.CUser user2 = null;
+                int result = 0;
+
+                if (Order == SORTORDER_DESCENDING) {
+                    user1 = o2;
+                    user2 = o1;
+                } else {
+                    user1 = o1;
+                    user2 = o2;
+                }
+
+                if (Mode == SORTMODE_NAME) {return (user1.getName().compareToIgnoreCase(user2.getName()));}
+                if (Mode == SORTMODE_HOUSE) {result = user1.getHouse().compareToIgnoreCase(user2.getHouse());}
+                if (Mode == SORTMODE_COUNTRY) {result = user1.getCountry().compareToIgnoreCase(user2.getCountry());}
+                // orders are switched for the following, meaning, bigger value is earlier on list
+                if (Mode == SORTMODE_EXP) {result = Integer.valueOf(user2.getExp()).compareTo(user1.getExp());}
+                if (Mode == SORTMODE_RATING) {result = Float.valueOf(user2.getRating()).compareTo(user1.getRating());}
+                if (Mode == SORTMODE_STATUS) {result = Integer.valueOf(user2.getStatus()).compareTo(user1.getStatus());}
+                if (Mode == SORTMODE_USERLEVEL) {
+                    result = Integer.valueOf(user2.getUserlevel()).compareTo(user1.getUserlevel());
+                }
+                // if other modes gave equal result or no mode known, sort by name
+                if (result == 0) {
+                    if (Order == SORTORDER_DESCENDING) {return (user2.getName().compareToIgnoreCase(user1.getName()));}
+                    //else
+                    return (user1.getName().compareToIgnoreCase(user2.getName()));
+                }
+                //else
+                return result;
+            }
+
+            public boolean equals(Object o1, Object o2) {
+                return (((client.CUser) o1).getName().equals(((client.CUser) o2).getName()));
+            }
+
+            public int getMode() {return Mode;}
+
+            public void setMode(int tmode) {
+                if (tmode == SORTMODE_NAME || tmode == SORTMODE_HOUSE ||
+                          tmode == SORTMODE_EXP || tmode == SORTMODE_RATING ||
+                          tmode == SORTMODE_STATUS || tmode == SORTMODE_USERLEVEL ||
+                          tmode == SORTMODE_COUNTRY) {Mode = tmode;}
+            }
+
+            public int getOrder() {return Order;}
+
+            public void setOrder(int torder) {
+                if (torder == SORTORDER_ASCENDING || torder == SORTORDER_DESCENDING) {Order = torder;}
+            }
+        }
+
+    }
+
     class UserListPopupListener extends java.awt.event.MouseAdapter implements java.awt.event.ActionListener {
-
-        @Override
-        public void mousePressed(java.awt.event.MouseEvent e) {maybeShowPopup(e);}
-
-        @Override
-        public void mouseReleased(java.awt.event.MouseEvent e) {maybeShowPopup(e);}
 
         @Override
         public void mouseClicked(java.awt.event.MouseEvent e) {
@@ -430,6 +741,12 @@ public class CUserListPanel extends javax.swing.JPanel implements java.awt.event
 
             }
         }
+
+        @Override
+        public void mousePressed(java.awt.event.MouseEvent e) {maybeShowPopup(e);}
+
+        @Override
+        public void mouseReleased(java.awt.event.MouseEvent e) {maybeShowPopup(e);}
 
         private void maybeShowPopup(java.awt.event.MouseEvent e) {
             javax.swing.JMenuItem item;
@@ -565,7 +882,7 @@ public class CUserListPanel extends javax.swing.JPanel implements java.awt.event
                         }
 
                         /*
-                         * Mute/Unmute the player via PM
+                         * Mute/Unmute the player via PrivateMessageCommand
                          */
                         ignoreList = mwclient.getConfig().getParam("IGNOREPRIVATE");
                         st = new java.util.StringTokenizer(ignoreList, ",");
@@ -992,323 +1309,6 @@ public class CUserListPanel extends javax.swing.JPanel implements java.awt.event
              * admin.ModeratorPopupMenu, 6/26/05, @urgru
              */
         }
-    }
-
-    public static class CUserListModel extends javax.swing.AbstractListModel {
-        /**
-         *
-         */
-        private static final long serialVersionUID = 9141928592065940657L;
-        java.util.SortedSet<client.CUser> Users;  //users set
-        mekwars.client.gui.CUserListPanel.CUserListModel.UserListCellRenderer Renderer;  //list cells renderer
-        client.MWClient mwclient;  //client owning this model
-        boolean Dedicateds; //dedicated hosts visible
-
-
-        public CUserListModel(client.MWClient client) {
-            mwclient = client;
-            Dedicateds = mwclient.getConfig().isParam("USERLISTDEDICATEDS");
-            Users = java.util.Collections.synchronizedSortedSet(new java.util.TreeSet<client.CUser>(new mekwars.client.gui.CUserListPanel.CUserListModel.UserComparator()));
-            Renderer = new mekwars.client.gui.CUserListPanel.CUserListModel.UserListCellRenderer(this);
-        }
-
-        public synchronized void clear() {Users.clear();}
-
-        public void add(client.CUser user) {Users.add(user);}
-
-        public synchronized void remove(client.CUser user) {Users.remove(user);}
-
-        public synchronized void addAll(java.util.Collection<client.CUser> c) {Users.addAll(c);}
-
-        public synchronized int getSize() {return Users.size();}
-
-        public synchronized void refreshModel() {
-
-            fireIntervalRemoved(this, 0, Users.size());
-            clear();
-            int myLevel = mwclient.getUserLevel();
-
-            /*
-             * Synch on mwclient.getUsers() to prevent ConcurrentModError
-             * while rebuilding the CUserListPanel.
-             */
-            java.util.Collection<client.CUser> users = mwclient.getUsers();
-            synchronized (users) {
-                for (client.CUser currU : users) {
-                    if (currU.isInvis() && myLevel < currU.getUserlevel()) {continue;}
-                    if (currU.getName().startsWith("[Dedicated]") && !Dedicateds) {continue;}
-                    add(currU);
-                }
-            }
-
-            fireIntervalAdded(this, 0, Users.size());
-        }
-
-        public void setDedicateds(boolean dedicateds) {Dedicateds = dedicateds;}
-
-        public void setSortMode(int tsortmode) {
-            ((mekwars.client.gui.CUserListPanel.CUserListModel.UserComparator) Users.comparator()).setMode(tsortmode);
-            refreshModel();
-        }
-
-        public int getSortMode() {return ((mekwars.client.gui.CUserListPanel.CUserListModel.UserComparator) Users.comparator()).getMode();}
-
-        public void setSortOrder(int tsortorder) {
-            ((mekwars.client.gui.CUserListPanel.CUserListModel.UserComparator) Users.comparator()).setOrder(tsortorder);
-            refreshModel();
-        }
-
-        public int getSortOrder() {return ((mekwars.client.gui.CUserListPanel.CUserListModel.UserComparator) Users.comparator()).getOrder();}
-
-        public synchronized Object getElementAt(int index) {
-            if (index < Users.size()) {return (((client.CUser) Users.toArray()[index]).getName());}
-            //else
-            return null;
-        }
-
-        public synchronized client.CUser getUser(int index) {
-            if (index < Users.size()) {return ((client.CUser) Users.toArray()[index]);}
-            //else
-            return null;
-        }
-
-        public synchronized client.CUser getUser(String name) {
-            for (java.util.Iterator<client.CUser> i = Users.iterator(); i.hasNext(); ) {
-                client.CUser user = i.next();
-                if (user.getName().equals(name)) {return user;}
-            }
-            return new client.CUser();
-        }
-
-        public mekwars.client.gui.CUserListPanel.CUserListModel.UserListCellRenderer getRenderer() {return Renderer;}
-
-        static class UserListCellRenderer extends javax.swing.JLabel implements javax.swing.ListCellRenderer {
-
-            /**
-             *
-             */
-            private static final long serialVersionUID = 4400213401819469963L;
-            client.MWClient ulMwclient;
-            mekwars.client.gui.CUserListPanel.CUserListModel Owner;
-            boolean LoggedIn = false;
-            boolean TextBold = true;
-            boolean TextColor = true;
-            boolean TextImage = true;
-            javax.swing.ImageIcon LogoutImage;
-            javax.swing.ImageIcon ReserveImage;
-            javax.swing.ImageIcon ActiveImage;
-            javax.swing.ImageIcon FightImage;
-
-            public UserListCellRenderer(mekwars.client.gui.CUserListPanel.CUserListModel towner) {
-                Owner = towner;
-                ulMwclient = towner.mwclient;
-                TextBold = ulMwclient.getConfig().isParam("USERLISTBOLD");
-                TextColor = ulMwclient.getConfig().isParam("USERLISTCOLOR");
-                TextImage = ulMwclient.getConfig().isParam("USERLISTIMAGE");
-                LogoutImage = ulMwclient.getConfig().getImage("LOGOUT");
-                ReserveImage = ulMwclient.getConfig().getImage("RESERVE");
-                ActiveImage = ulMwclient.getConfig().getImage("ACTIVE");
-                FightImage = ulMwclient.getConfig().getImage("FIGHT");
-                setOpaque(true);
-            }
-
-            public void setLoggedIn(boolean tloggedin) {LoggedIn = tloggedin;}
-
-            public void refreshParams() {
-                TextBold = ulMwclient.getConfig().isParam("USERLISTBOLD");
-                TextColor = ulMwclient.getConfig().isParam("USERLISTCOLOR");
-                TextImage = ulMwclient.getConfig().isParam("USERLISTIMAGE");
-                LogoutImage = ulMwclient.getConfig().getImage("LOGOUT");
-                ReserveImage = ulMwclient.getConfig().getImage("RESERVE");
-                ActiveImage = ulMwclient.getConfig().getImage("ACTIVE");
-                FightImage = ulMwclient.getConfig().getImage("FIGHT");
-            }
-
-            //value to display, cell index, is selected, cell has focus?
-            public java.awt.Component getListCellRendererComponent(javax.swing.JList list, Object value, int index,
-                  boolean selected, boolean focus) {
-                //have to make this renderer faster
-                int userlevel = 0;
-                int status;
-
-                client.CUser user = Owner.getUser(index);
-                if (user == null) {return null;}
-
-                userlevel = user.getUserlevel();
-                String invisFlag = " ";
-
-                //if you can see them, and they are invis, then your level is >= to theres
-                if (user.isInvis()) {invisFlag = "(I) ";}
-
-                if (userlevel < 30) {setText(user.getName());}
-                if (userlevel >= 30 && userlevel < 100) {setText("^" + invisFlag + user.getName());}
-                if (userlevel >= 100 && userlevel < 200) {setText("*" + invisFlag + user.getName());}
-                if (userlevel >= 200) {setText("@" + invisFlag + user.getName());}
-
-                //check users No-Play status
-                boolean isOnNoPlay = false;
-                if (ulMwclient.getPlayer().getAdminExcludes().contains(user.getName().toLowerCase())) {
-                    isOnNoPlay = true;
-                } else if (ulMwclient.getPlayer().getPlayerExcludes().contains(user.getName().toLowerCase())) {
-                    isOnNoPlay = true;
-                }
-
-                //append mute/unmuted status. this is sickeningly inefficient when the whole
-                //list is being processed and should be rewritten eventually.
-                String searchString = user.getName().trim();
-                int isMuted = 0;
-
-                if (userlevel < 100) {
-                    String ignoreList = ulMwclient.getConfig().getParam("IGNOREPUBLIC");
-                    java.util.StringTokenizer it = new java.util.StringTokenizer(ignoreList, ",");
-                    while (it.hasMoreTokens()) {
-                        String currString = it.nextToken().trim();
-                        if (currString.equalsIgnoreCase(searchString)) {isMuted++;}
-                    }
-
-                    //search PM mute as well
-                    ignoreList = ulMwclient.getConfig().getParam("IGNOREPRIVATE");
-                    it = new java.util.StringTokenizer(ignoreList, ",");
-                    while (it.hasMoreTokens()) {
-                        String currString = it.nextToken().trim();
-                        if (currString.equalsIgnoreCase(searchString)) {isMuted++;}
-                    }
-
-
-                    //and the faction ...
-                    if (user.getHouse().equals(ulMwclient.getPlayer().getHouse())) {
-                        ignoreList = ulMwclient.getConfig().getParam("IGNOREHOUSE");
-                        it = new java.util.StringTokenizer(ignoreList, ",");
-                        while (it.hasMoreTokens()) {
-                            String currString = it.nextToken();
-                            if (currString.equalsIgnoreCase(searchString)) {isMuted++;}
-                        }
-                    }
-                }
-                String muteUps = "";
-                for (int i = 1; i < isMuted; i++) {muteUps += "+";}
-
-                if (isMuted > 0 && isOnNoPlay) {setText(getText() + " [muted" + muteUps + ", np]");} else if (isMuted >
-                                                                                                                    0) {
-                    setText(getText() + " [muted" + muteUps + "]");
-                } else if (isOnNoPlay) {
-                    setText(getText() + " [np]");
-                }
-
-
-                if (selected) {
-                    setForeground(list.getSelectionForeground());
-                    setBackground(list.getSelectionBackground());
-                } else {
-                    setBackground(list.getBackground());
-                    if (TextColor && LoggedIn) {setForeground(user.getRGBColor());} else {
-                        setForeground(java.awt.Color.black);
-                    }
-                }
-
-                if (LoggedIn) {
-                    status = user.getStatus();
-                    if (status == client.MWClient.STATUS_LOGGEDOUT) {
-
-                        //logged out users are never bold
-                        setFont(getFont().deriveFont(java.awt.Font.PLAIN));
-                        if (TextImage) {try {setIcon(LogoutImage);} catch (Exception ex) {MWLogger.errLog(ex);}}
-                    } else {
-                        if (TextBold) {setFont(getFont().deriveFont(java.awt.Font.BOLD));} else {
-                            setFont(getFont().deriveFont(java.awt.Font.PLAIN));
-                        }
-
-                        if (TextImage) {
-                            if (status == client.MWClient.STATUS_RESERVE) {
-                                try {setIcon(ReserveImage);} catch (Exception ex) {MWLogger.errLog(ex);}
-                            }
-                            if (status == client.MWClient.STATUS_ACTIVE) {
-                                try {setIcon(ActiveImage);} catch (Exception ex) {MWLogger.errLog(ex);}
-                            }
-                            if (status == client.MWClient.STATUS_FIGHTING) {
-                                try {setIcon(FightImage);} catch (Exception ex) {MWLogger.errLog(ex);}
-                            }
-                        } else {
-                            setIcon(null);
-                        }
-                    }
-                    setIconTextGap(7);
-                    setToolTipText(user.getInfo(ulMwclient.getConfig().isParam("NOIMGINCHAT")));
-                } else {
-
-                    //logged out users don't see bold names OR icons
-                    setFont(getFont().deriveFont(java.awt.Font.PLAIN));
-                    setIcon(null);
-
-                    setToolTipText(user.getShortInfo());
-                }
-                return this;
-            }
-        }
-
-        public class UserComparator implements java.util.Comparator<client.CUser> {
-
-            int Mode;
-            int Order;
-
-            public UserComparator() {
-                Mode = SORTMODE_NAME;
-                Order = SORTORDER_ASCENDING;
-            }
-
-            public int compare(client.CUser o1, client.CUser o2) {
-                client.CUser user1 = null;
-                client.CUser user2 = null;
-                int result = 0;
-
-                if (Order == SORTORDER_DESCENDING) {
-                    user1 = o2;
-                    user2 = o1;
-                } else {
-                    user1 = o1;
-                    user2 = o2;
-                }
-
-                if (Mode == SORTMODE_NAME) {return (user1.getName().compareToIgnoreCase(user2.getName()));}
-                if (Mode == SORTMODE_HOUSE) {result = user1.getHouse().compareToIgnoreCase(user2.getHouse());}
-                if (Mode == SORTMODE_COUNTRY) {result = user1.getCountry().compareToIgnoreCase(user2.getCountry());}
-                // orders are switched for the following, meaning, bigger value is earlier on list
-                if (Mode == SORTMODE_EXP) {result = Integer.valueOf(user2.getExp()).compareTo(user1.getExp());}
-                if (Mode == SORTMODE_RATING) {result = Float.valueOf(user2.getRating()).compareTo(user1.getRating());}
-                if (Mode == SORTMODE_STATUS) {result = Integer.valueOf(user2.getStatus()).compareTo(user1.getStatus());}
-                if (Mode == SORTMODE_USERLEVEL) {
-                    result = Integer.valueOf(user2.getUserlevel()).compareTo(user1.getUserlevel());
-                }
-                // if other modes gave equal result or no mode known, sort by name
-                if (result == 0) {
-                    if (Order == SORTORDER_DESCENDING) {return (user2.getName().compareToIgnoreCase(user1.getName()));}
-                    //else
-                    return (user1.getName().compareToIgnoreCase(user2.getName()));
-                }
-                //else
-                return result;
-            }
-
-            public boolean equals(Object o1, Object o2) {
-                return (((client.CUser) o1).getName().equals(((client.CUser) o2).getName()));
-            }
-
-            public void setMode(int tmode) {
-                if (tmode == SORTMODE_NAME || tmode == SORTMODE_HOUSE ||
-                          tmode == SORTMODE_EXP || tmode == SORTMODE_RATING ||
-                          tmode == SORTMODE_STATUS || tmode == SORTMODE_USERLEVEL ||
-                          tmode == SORTMODE_COUNTRY) {Mode = tmode;}
-            }
-
-            public int getMode() {return Mode;}
-
-            public void setOrder(int torder) {
-                if (torder == SORTORDER_ASCENDING || torder == SORTORDER_DESCENDING) {Order = torder;}
-            }
-
-            public int getOrder() {return Order;}
-        }
-
     }
 }
 

@@ -55,8 +55,7 @@ public abstract class GameHost implements GameListener, IGameHost {
     protected Server myServer = null;
     protected Date myTime = new Date(System.currentTimeMillis());
     protected TreeMap<String, MMGame> servers = new TreeMap<>();// hostname,mmgame
-    protected Vector<String> decodeBuffer = new Vector<>(1,
-          1);// used to buffer incoming data until CMainFrame is built
+    protected Vector<String> decodeBuffer = new Vector<>(1, 1);// used to buffer incoming data until CMainFrame is built
 
     protected Buildings buildingTemplate = null;
 
@@ -67,19 +66,64 @@ public abstract class GameHost implements GameListener, IGameHost {
     protected int turn = 0;
 
     @Override
-    public void gameBoardChanged(GameBoardChangeEvent arg0) {
+    public void gamePlayerConnected(GamePlayerConnectedEvent arg0) {
         // TODO Auto-generated method stub
 
     }
 
     @Override
-    public void gameBoardNew(GameBoardNewEvent arg0) {
+    public void gamePlayerDisconnected(GamePlayerDisconnectedEvent arg0) {
         // TODO Auto-generated method stub
 
     }
 
     @Override
-    public void gameClientFeedbackRequest(GameCFREvent arg0) {
+    public void gamePlayerChange(GamePlayerChangeEvent arg0) {
+        // TODO Auto-generated method stub
+
+    }
+
+    @Override
+    public void gamePlayerChat(GamePlayerChatEvent arg0) {
+        // TODO Auto-generated method stub
+
+    }
+
+    @Override
+    public void gameTurnChange(GameTurnChangeEvent e) {
+        if (myServer != null) {
+            if (turn == 0) {
+                serverSend("SHS|" + getUsername() + "|Running");
+            } else if ((myServer.getGame().getPhase() != currentPhase) &&
+                             myServer.getGame().getOptions().booleanOption("paranoid_autosave")) {
+                sendServerGameUpdate();
+                currentPhase = myServer.getGame().getPhase();
+            }
+            turn += 1;
+
+        }
+    }
+
+    public void gamePhaseChange(GamePhaseChangeEvent e) {
+        try {
+
+            /*
+             * Reporting phases show deaths - units that try to stand and blow their ammo, units that have ammo
+             * explode from head, etc. This is also an opportune time to correct issues with the gameRemoveEntity
+             * ISU's. Removals happen ASAP, even if the removal condition and final condition of the unit are
+             * different (i.e. - remove on Engine crits even when a CT core comes later in the round).
+             */
+            sendServerGameUpdate();
+
+        }// end try
+        catch (Exception ex) {
+            MWLogger.errLog("Error reporting game!");
+            MWLogger.errLog(ex);
+        }
+    }
+
+    @Override
+    public void gameReport(GameReportEvent arg0) {
         // TODO Auto-generated method stub
 
     }
@@ -91,7 +135,25 @@ public abstract class GameHost implements GameListener, IGameHost {
     }
 
     @Override
-    public void gameEntityChange(GameEntityChangeEvent arg0) {
+    public void gameBoardNew(GameBoardNewEvent arg0) {
+        // TODO Auto-generated method stub
+
+    }
+
+    @Override
+    public void gameBoardChanged(GameBoardChangeEvent arg0) {
+        // TODO Auto-generated method stub
+
+    }
+
+    @Override
+    public void gameSettingsChange(GameSettingsChangeEvent arg0) {
+        // TODO Auto-generated method stub
+
+    }
+
+    @Override
+    public void gameMapQuery(GameMapQueryEvent arg0) {
         // TODO Auto-generated method stub
 
     }
@@ -109,18 +171,14 @@ public abstract class GameHost implements GameListener, IGameHost {
     }
 
     /*
-     * When an entity is removed from play, check the reason. If the unit is
-     * ejected, captured or devastated and the player is involved in the game at
-     * hand, report the removal to the server. The server stores these reports
-     * in pilotTree and deathTree to auto-resolve games after a player
-     * disconnects. NOTE: This sends the first possible removal condition, which
-     * means that a unit which is simultanously head killed and then CT cored
-     * will show as salvageable.
+     * When an entity is removed from play, check the reason. If the unit is ejected, captured or devastated and the
+     * player is involved in the game at hand, report the removal to the server. The server stores these reports in
+     * pilotTree and deathTree to auto-resolve games after a player disconnects. NOTE: This sends the first possible
+     * removal condition, which means that a unit which is simultaneously head killed and then CT cored will show as
+     * salvageable.
      */
-    public void gameEntityRemove(GameEntityRemoveEvent e) {// only send if the
-        // player is
-        // actually involved
-        // in the game
+    public void gameEntityRemove(GameEntityRemoveEvent e) {
+        // only send if the player is actually involved in the game
 
         // get the entity
         Entity removedE = e.getEntity();
@@ -135,10 +193,8 @@ public abstract class GameHost implements GameListener, IGameHost {
         serverSend("IPU|" + toSend);
     }
 
-    protected abstract boolean isUsingAdvanceRepairs();
-
     @Override
-    public void gameMapQuery(GameMapQueryEvent arg0) {
+    public void gameEntityChange(GameEntityChangeEvent arg0) {
         // TODO Auto-generated method stub
 
     }
@@ -149,75 +205,19 @@ public abstract class GameHost implements GameListener, IGameHost {
 
     }
 
-    public void gamePhaseChange(GamePhaseChangeEvent e) {
+    @Override
+    public void gameClientFeedbackRequest(GameCFREvent arg0) {
+        // TODO Auto-generated method stub
+
+    }
+
+    protected abstract boolean isUsingAdvanceRepairs();
+
+    public void serverSend(String s) {
         try {
-
-            /*
-             * Reporting phases show deaths - units that try to stand and blow
-             * their ammo, units that have ammo explode from head, etc. This is
-             * also an opportune time to correct isses with the gameRemoveEntity
-             * ISU's. Removals happen ASAP, even if the removal condition and
-             * final condition of the unit are not the same (ie - remove on
-             * Engine crits even when a CT core comes later in the round).
-             */
-            sendServerGameUpdate();
-
-        }// end try
-        catch (Exception ex) {
-            MWLogger.errLog("Error reporting game!");
-            MWLogger.errLog(ex);
-        }
-    }
-
-    @Override
-    public void gamePlayerChange(GamePlayerChangeEvent arg0) {
-        // TODO Auto-generated method stub
-
-    }
-
-    @Override
-    public void gamePlayerChat(GamePlayerChatEvent arg0) {
-        // TODO Auto-generated method stub
-
-    }
-
-    @Override
-    public void gamePlayerConnected(GamePlayerConnectedEvent arg0) {
-        // TODO Auto-generated method stub
-
-    }
-
-    @Override
-    public void gamePlayerDisconnected(GamePlayerDisconnectedEvent arg0) {
-        // TODO Auto-generated method stub
-
-    }
-
-    @Override
-    public void gameReport(GameReportEvent arg0) {
-        // TODO Auto-generated method stub
-
-    }
-
-    @Override
-    public void gameSettingsChange(GameSettingsChangeEvent arg0) {
-        // TODO Auto-generated method stub
-
-    }
-
-    @Override
-    public void gameTurnChange(GameTurnChangeEvent e) {
-        if (myServer != null) {
-            if (turn == 0) {
-                serverSend("SHS|" + getUsername() + "|Running");
-            } else if ((myServer.getGame().getPhase() != currentPhase)
-                             && myServer.getGame().getOptions()
-                                      .booleanOption("paranoid_autosave")) {
-                sendServerGameUpdate();
-                currentPhase = myServer.getGame().getPhase();
-            }
-            turn += 1;
-
+            Connector.send(IClient.PROTOCOL_PREFIX + "comm" + "\t" + TransportCodec.encode(s));
+        } catch (Exception e) {
+            MWLogger.errLog(e);
         }
     }
 
@@ -300,11 +300,6 @@ public abstract class GameHost implements GameListener, IGameHost {
         sendChat(GameHost.CAMPAIGN_PREFIX + "c servergameoptions#" + packet);
     }
 
-
-    public TreeMap<String, MMGame> getServers() {
-        return servers;
-    }
-
     public void sendChat(String s) {
         // Sends the content of the Chatfield to the server
         // We need the StringTokenizer to enable Mulitline comments
@@ -317,6 +312,10 @@ public abstract class GameHost implements GameListener, IGameHost {
                 serverSend("CH|" + str);
             }
         }
+    }
+
+    public TreeMap<String, MMGame> getServers() {
+        return servers;
     }
 
     public String doEscape(String str) {
@@ -335,7 +334,7 @@ public abstract class GameHost implements GameListener, IGameHost {
 
     public String doEscapeString(String t, int character, String replace) {
 
-        // find all occurences of character in t and replace them with replace
+        // find all occurrences of character in t and replace them with replace
         int pos = t.indexOf(character);
         if (pos != -1) {
             String res = "";
@@ -353,13 +352,5 @@ public abstract class GameHost implements GameListener, IGameHost {
 
     public CConnector getConnector() {
         return Connector;
-    }
-
-    public void serverSend(String s) {
-        try {
-            Connector.send(IClient.PROTOCOL_PREFIX + "comm" + "\t" + TransportCodec.encode(s));
-        } catch (Exception e) {
-            MWLogger.errLog(e);
-        }
     }
 }

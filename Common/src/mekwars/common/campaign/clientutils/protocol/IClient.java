@@ -1,12 +1,17 @@
 package mekwars.common.campaign.clientutils.protocol;
 
+import java.awt.Dimension;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 
 import megamek.common.game.Game;
+import megamek.common.options.IBasicOption;
+import mekwars.common.AdvancedTerrain;
 import mekwars.common.CampaignData;
 import mekwars.common.Equipment;
+import mekwars.common.PlanetEnvironment;
+import mekwars.common.campaign.Buildings;
 import mekwars.common.campaign.CCampaign;
 import mekwars.common.campaign.CPlayer;
 import mekwars.common.campaign.CUser;
@@ -27,6 +32,17 @@ public interface IClient {
     int STATUS_RESERVE = 2;
     int STATUS_ACTIVE = 3;
     int STATUS_FIGHTING = 4;
+
+    int REFRESH_STATUS = 0;
+    int REFRESH_USERLIST = 1;
+    int REFRESH_PLAYER_PANEL = 2;
+    int REFRESH_BATTLE_TABLE = 4;
+    int REFRESH_HQ_PANEL = 5;
+    int REFRESH_BM_PANEL = 6;
+
+    int IGNORE_PUBLIC = 0;
+    int IGNORE_HOUSE = 1;
+    int IGNORE_PRIVATE = 2;
 
     String CAMPAIGN_PREFIX = "/"; // prefix for campaign commands
     String CAMPAIGN_PATH = "data/campaign/";
@@ -63,8 +79,6 @@ public interface IClient {
     void startHost(boolean dedicated, boolean deploy, boolean loadSavedGame);
 
     boolean isDedicated();
-
-    void setUsername(String name);
 
     void doParseDataInput(String input);
 
@@ -108,19 +122,23 @@ public interface IClient {
 
     void addToChat(String s);
 
+    void addToChat(String s, int channel);
+
     IClientConfig getConfig();
 
     void processTick(int time);
 
-    void setWaiting(boolean b);
-
     int getPlayerStartingEdge();
+
+    void setPlayerStartingEdge(int edge);
 
     boolean isUsingAdvanceRepairs();
 
     String getConfigParam(String primaryHQSortOrder);
 
     String getUsername();
+
+    void setUsername(String name);
 
     void updateOpData(boolean b);
 
@@ -131,6 +149,8 @@ public interface IClient {
     TreeMap<String, String[]> getAllOps();
 
     boolean isWaiting();
+
+    void setWaiting(boolean b);
 
     String getCacheDir();
 
@@ -169,4 +189,24 @@ public interface IClient {
     void showInfoWindow(String s);
 
     Game getGame();
+
+    void setAdvancedTerrain(AdvancedTerrain aTerrain);
+
+    void refreshGUI(int refreshHqPanel);
+
+    boolean isIgnored(String name, int ignoreHouse);
+
+    String getShortTime();
+
+    void doPlaySound(String soundName);
+
+    void changeStatus(int i);
+
+    List<IBasicOption> getGameOptions();
+
+    void setEnvironment(PlanetEnvironment planetEnvironment, Dimension dimension, int mapMedium);
+
+    void setBuildingTemplate(Buildings building);
+
+    void serverSend(String s);
 }

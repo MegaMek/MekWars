@@ -30,6 +30,8 @@ import megamek.client.ui.swing.unitDisplay.UnitDisplay;
 import megamek.common.Entity;
 import megamek.common.Infantry;
 import megamek.common.Mech;
+import mekwars.common.gui.AttackMenu;
+import mekwars.common.gui.MWUnitDisplay;
 
 //@Salient
 //import client.gui.dialog.TableViewerDialog; //for testing/debug
@@ -97,8 +99,8 @@ public class CHQPanel extends javax.swing.JPanel {
      */
     public void reinitialize() {
 
-        // mwclient.getMainFrame().getMainPanel().selectFirstTab();
-        // mwclient.getMainFrame().getMainPanel().getCommPanel().selectFirstTab();
+        // client.getMainFrame().getMainPanel().selectFirstTab();
+        // client.getMainFrame().getMainPanel().getCommPanel().selectFirstTab();
 
         // remove all the old components.
         removeAll();
@@ -135,7 +137,7 @@ public class CHQPanel extends javax.swing.JPanel {
         reloadAllUnitsButton = new javax.swing.JButton();
         //@Salient (mwosux@gmail.com) added for SolFreeBuild option
         solFreeBuildButton = new javax.swing.JButton();
-        // pnlMekIcon = new MechInfo(mwclient);
+        // pnlMekIcon = new MechInfo(client);
         // btnShowMek = new JButton();
 
         setLayout(new java.awt.GridBagLayout());
@@ -913,7 +915,7 @@ public class CHQPanel extends javax.swing.JPanel {
                         // selectionFound = true;
 
                         /*
-                         * secondary sort menu construction for (int i = 0; i < choices.length; i++) { menuName = choices[i]; if (mwclient.getConfigParam("SECONDARYARMYSORTORDER").equals(choices[i])) { menuName = "<HTML><i>" + menuName + "</i></HTML>"; //selectionFound = false; } menuItem = new JMenuItem(menuName); menuItem.setActionCommand("SAS|" + choices[i]); menuItem.addActionListener(this); secondarySortMenu.add(menuItem); if (i + 2 == choices.length) secondarySortMenu.addSeparator(); } //reset selectionFound //selectionFound = true; //tertiary sort menu construction for (int i = 0; i < choices.length; i++) { menuName = choices[i]; if (mwclient.getConfigParam("TERTIARYARMYSORTORDER").equals(choices[i])) { menuName = "<HTML><i>" + menuName + "</i></HTML>"; //selectionFound = false; } menuItem = new JMenuItem(menuName); menuItem.setActionCommand("TAS|" + choices[i]);
+                         * secondary sort menu construction for (int i = 0; i < choices.length; i++) { menuName = choices[i]; if (client.getConfigParam("SECONDARYARMYSORTORDER").equals(choices[i])) { menuName = "<HTML><i>" + menuName + "</i></HTML>"; //selectionFound = false; } menuItem = new JMenuItem(menuName); menuItem.setActionCommand("SAS|" + choices[i]); menuItem.addActionListener(this); secondarySortMenu.add(menuItem); if (i + 2 == choices.length) secondarySortMenu.addSeparator(); } //reset selectionFound //selectionFound = true; //tertiary sort menu construction for (int i = 0; i < choices.length; i++) { menuName = choices[i]; if (client.getConfigParam("TERTIARYARMYSORTORDER").equals(choices[i])) { menuName = "<HTML><i>" + menuName + "</i></HTML>"; //selectionFound = false; } menuItem = new JMenuItem(menuName); menuItem.setActionCommand("TAS|" + choices[i]);
                          * menuItem.addActionListener(this); tertiarySortMenu.add(menuItem); if (i + 2 == choices.length) tertiarySortMenu.addSeparator(); }
                          */
                         popup.addSeparator();
@@ -3049,7 +3051,7 @@ public class CHQPanel extends javax.swing.JPanel {
                 //@Salient for SOL freebuild option
             } else if (command.equalsIgnoreCase("DL")) {
                 int num = Integer.parseInt(st.nextToken());
-                //int result = JOptionPane.showConfirmDialog(mwclient.getMainFrame(), "Are you sure you want to Remove this unit?", "Delete it?", JOptionPane.YES_NO_OPTION);
+                //int result = JOptionPane.showConfirmDialog(client.getMainFrame(), "Are you sure you want to Remove this unit?", "Delete it?", JOptionPane.YES_NO_OPTION);
                 mwclient.sendChat(client.MWClient.CAMPAIGN_PREFIX + "SOLDELETEUNIT " + num);
             } else if (command.equalsIgnoreCase("MM")) {
                 int num = Integer.parseInt(st.nextToken());

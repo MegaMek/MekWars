@@ -28,6 +28,7 @@ import megamek.client.ui.swing.unitDisplay.UnitDisplay;
 import megamek.common.CrewType;
 import megamek.common.Entity;
 import megamek.common.Infantry;
+import mekwars.common.gui.MWUnitDisplay;
 
 /**
  * SHouse Status Panel
@@ -142,8 +143,333 @@ public class CHSPanel extends javax.swing.JPanel {
         unitsInfo = new java.util.TreeMap<String, java.util.Vector<HSMek>>();
     }
 
+    // BUY MENU METHODS AND LISTENERS
+    private void buyNewButtonActionPerformed(java.awt.event.ActionEvent e) {
+    }// do nothing on action
+
+    // make popup on press or release of New button
+    private void buyNewUnitMouseEvent(java.awt.event.MouseEvent e) {
+        javax.swing.JPopupMenu buy = createBuyNewPopupMenu();
+        buy.show(e.getComponent(), e.getX(), e.getY());
+    }
+
+    private void buyUsedButtonActionPerformed(java.awt.event.ActionEvent e) {
+    }// do nothing
+
+    private void buyUsedUnitMouseEvent(java.awt.event.MouseEvent e) {
+        javax.swing.JPopupMenu buy = createBuyUsedPopupMenu();
+        buy.show(e.getComponent(), e.getX(), e.getY());
+    }
+
+    private javax.swing.JPopupMenu createBuyNewPopupMenu() {
+        javax.swing.JMenu tmenu;
+        javax.swing.JPopupMenu buy = new javax.swing.JPopupMenu();
+        javax.swing.JMenuItem menuItem = null;
+
+        tmenu = new javax.swing.JMenu("Mek");
+        buy.add(tmenu);
+        menuItem = new javax.swing.JMenuItem("Light Mek");
+        menuItem.setActionCommand("BUY|LIGHT|" + Unit.MEK);
+        menuItem.addActionListener(myPopup);
+        tmenu.add(menuItem);
+        menuItem = new javax.swing.JMenuItem("Medium Mek");
+        menuItem.setActionCommand("BUY|MEDIUM|" + Unit.MEK);
+        menuItem.addActionListener(myPopup);
+        tmenu.add(menuItem);
+        menuItem = new javax.swing.JMenuItem("Heavy Mek");
+        menuItem.setActionCommand("BUY|HEAVY|" + Unit.MEK);
+        menuItem.addActionListener(myPopup);
+        tmenu.add(menuItem);
+        menuItem = new javax.swing.JMenuItem("Assault Mek");
+        menuItem.setActionCommand("BUY|ASSAULT|" + Unit.MEK);
+        menuItem.addActionListener(myPopup);
+        tmenu.add(menuItem);
+
+        if (Boolean.parseBoolean(mwclient.getserverConfigs("UseVehicle"))) {
+            tmenu = new javax.swing.JMenu("Vehicle");
+            buy.add(tmenu);
+            menuItem = new javax.swing.JMenuItem("Light Vehicle");
+            menuItem.setActionCommand("BUY|LIGHT|" + Unit.VEHICLE);
+            menuItem.addActionListener(myPopup);
+            tmenu.add(menuItem);
+            menuItem = new javax.swing.JMenuItem("Medium Vehicle");
+            menuItem.setActionCommand("BUY|MEDIUM|" + Unit.VEHICLE);
+            menuItem.addActionListener(myPopup);
+            tmenu.add(menuItem);
+            menuItem = new javax.swing.JMenuItem("Heavy Vehicle");
+            menuItem.setActionCommand("BUY|HEAVY|" + Unit.VEHICLE);
+            menuItem.addActionListener(myPopup);
+            tmenu.add(menuItem);
+            menuItem = new javax.swing.JMenuItem("Assault Vehicle");
+            menuItem.setActionCommand("BUY|ASSAULT|" + Unit.VEHICLE);
+            menuItem.addActionListener(myPopup);
+            tmenu.add(menuItem);
+        }
+
+        if (Boolean.parseBoolean(mwclient.getserverConfigs("UseInfantry"))) {
+            tmenu = new javax.swing.JMenu("Infantry");
+            buy.add(tmenu);
+            menuItem = new javax.swing.JMenuItem("Light Infantry");
+            menuItem.setActionCommand("BUY|LIGHT|" + Unit.INFANTRY);
+            menuItem.addActionListener(myPopup);
+            tmenu.add(menuItem);
+            menuItem = new javax.swing.JMenuItem("Medium Infantry");
+            menuItem.setActionCommand("BUY|MEDIUM|" + Unit.INFANTRY);
+            menuItem.addActionListener(myPopup);
+            tmenu.add(menuItem);
+            menuItem = new javax.swing.JMenuItem("Heavy Infantry");
+            menuItem.setActionCommand("BUY|HEAVY|" + Unit.INFANTRY);
+            menuItem.addActionListener(myPopup);
+            tmenu.add(menuItem);
+            menuItem = new javax.swing.JMenuItem("Assault Infantry");
+            menuItem.setActionCommand("BUY|ASSAULT|" + Unit.INFANTRY);
+            menuItem.addActionListener(myPopup);
+            tmenu.add(menuItem);
+        }
+
+        if (Boolean.parseBoolean(mwclient.getserverConfigs("UseProtoMek"))) {
+            tmenu = new javax.swing.JMenu("ProtoMek");
+            buy.add(tmenu);
+            menuItem = new javax.swing.JMenuItem("Light ProtoMek");
+            menuItem.setActionCommand("BUY|LIGHT|" + Unit.PROTOMEK);
+            menuItem.addActionListener(myPopup);
+            tmenu.add(menuItem);
+            menuItem = new javax.swing.JMenuItem("Medium ProtoMek");
+            menuItem.setActionCommand("BUY|MEDIUM|" + Unit.PROTOMEK);
+            menuItem.addActionListener(myPopup);
+            tmenu.add(menuItem);
+            menuItem = new javax.swing.JMenuItem("Heavy ProtoMek");
+            menuItem.setActionCommand("BUY|HEAVY|" + Unit.PROTOMEK);
+            menuItem.addActionListener(myPopup);
+            tmenu.add(menuItem);
+            menuItem = new javax.swing.JMenuItem("Assault ProtoMek");
+            menuItem.setActionCommand("BUY|ASSAULT|" + Unit.PROTOMEK);
+            menuItem.addActionListener(myPopup);
+            tmenu.add(menuItem);
+        }
+
+        if (Boolean.parseBoolean(mwclient.getserverConfigs("UseBattleArmor"))) {
+            tmenu = new javax.swing.JMenu("Battle Armor");
+            buy.add(tmenu);
+            menuItem = new javax.swing.JMenuItem("Light Battle Armor");
+            menuItem.setActionCommand("BUY|LIGHT|" + Unit.BATTLEARMOR);
+            menuItem.addActionListener(myPopup);
+            tmenu.add(menuItem);
+            menuItem = new javax.swing.JMenuItem("Medium Battle Armor");
+            menuItem.setActionCommand("BUY|MEDIUM|" + Unit.BATTLEARMOR);
+            menuItem.addActionListener(myPopup);
+            tmenu.add(menuItem);
+            menuItem = new javax.swing.JMenuItem("Heavy Battle Armor");
+            menuItem.setActionCommand("BUY|HEAVY|" + Unit.BATTLEARMOR);
+            menuItem.addActionListener(myPopup);
+            tmenu.add(menuItem);
+            menuItem = new javax.swing.JMenuItem("Assault Battle Armor");
+            menuItem.setActionCommand("BUY|ASSAULT|" + Unit.BATTLEARMOR);
+            menuItem.addActionListener(myPopup);
+            tmenu.add(menuItem);
+        }
+
+        if (Boolean.parseBoolean(mwclient.getserverConfigs("UseAero"))) {
+            tmenu = new javax.swing.JMenu("Aero");
+            buy.add(tmenu);
+            menuItem = new javax.swing.JMenuItem("Light Aero");
+            menuItem.setActionCommand("BUY|LIGHT|" + Unit.AERO);
+            menuItem.addActionListener(myPopup);
+            tmenu.add(menuItem);
+            menuItem = new javax.swing.JMenuItem("Medium Aero");
+            menuItem.setActionCommand("BUY|MEDIUM|" + Unit.AERO);
+            menuItem.addActionListener(myPopup);
+            tmenu.add(menuItem);
+            menuItem = new javax.swing.JMenuItem("Heavy Aero");
+            menuItem.setActionCommand("BUY|HEAVY|" + Unit.AERO);
+            menuItem.addActionListener(myPopup);
+            tmenu.add(menuItem);
+            menuItem = new javax.swing.JMenuItem("Assault Aero");
+            menuItem.setActionCommand("BUY|ASSAULT|" + Unit.AERO);
+            menuItem.addActionListener(myPopup);
+            tmenu.add(menuItem);
+        }
+
+        if (Boolean.parseBoolean(mwclient.getserverConfigs("AllowPersonalPilotQueues"))) {
+            tmenu = new javax.swing.JMenu("Pilots");
+            buy.add(tmenu);
+            javax.swing.JMenu smenu = new javax.swing.JMenu("Mek");
+            menuItem = new javax.swing.JMenuItem("Light Pilot");
+            menuItem.setActionCommand("BUYP|" + Unit.MEK + "|" + Unit.LIGHT);
+            menuItem.addActionListener(myPopup);
+            smenu.add(menuItem);
+            menuItem = new javax.swing.JMenuItem("Medium Pilot");
+            menuItem.setActionCommand("BUYP|" + Unit.MEK + "|" + Unit.MEDIUM);
+            menuItem.addActionListener(myPopup);
+            smenu.add(menuItem);
+            menuItem = new javax.swing.JMenuItem("Heavy Pilot");
+            menuItem.setActionCommand("BUYP|" + Unit.MEK + "|" + Unit.HEAVY);
+            menuItem.addActionListener(myPopup);
+            smenu.add(menuItem);
+            menuItem = new javax.swing.JMenuItem("Assault Pilot");
+            menuItem.setActionCommand("BUYP|" + Unit.MEK + "|" + Unit.ASSAULT);
+            menuItem.addActionListener(myPopup);
+            smenu.add(menuItem);
+            tmenu.add(smenu);
+
+            if (Boolean.parseBoolean(mwclient.getserverConfigs("UseProtoMek"))) {
+                smenu = new javax.swing.JMenu("Proto");
+                menuItem = new javax.swing.JMenuItem("Light Pilot");
+                menuItem.setActionCommand("BUYP|" + Unit.PROTOMEK + "|" + Unit.LIGHT);
+                menuItem.addActionListener(myPopup);
+                smenu.add(menuItem);
+                menuItem = new javax.swing.JMenuItem("Medium Pilot");
+                menuItem.setActionCommand("BUYP|" + Unit.PROTOMEK + "|" + Unit.MEDIUM);
+                menuItem.addActionListener(myPopup);
+                smenu.add(menuItem);
+                menuItem = new javax.swing.JMenuItem("Heavy Pilot");
+                menuItem.setActionCommand("BUYP|" + Unit.PROTOMEK + "|" + Unit.HEAVY);
+                menuItem.addActionListener(myPopup);
+                smenu.add(menuItem);
+                menuItem = new javax.swing.JMenuItem("Assault Pilot");
+                menuItem.setActionCommand("BUYP|" + Unit.PROTOMEK + "|" + Unit.ASSAULT);
+                menuItem.addActionListener(myPopup);
+                smenu.add(menuItem);
+                tmenu.add(smenu);
+            }
+        }
+
+        return buy;
+    }
+
+    private javax.swing.JPopupMenu createBuyUsedPopupMenu() {
+        javax.swing.JMenu tmenu;
+        javax.swing.JPopupMenu buy = new javax.swing.JPopupMenu();
+        javax.swing.JMenuItem menuItem = null;
+
+        tmenu = new javax.swing.JMenu("Mek");
+        buy.add(tmenu);
+        menuItem = new javax.swing.JMenuItem("Light Mek");
+        menuItem.setActionCommand("BUYU|LIGHT|" + Unit.MEK);
+        menuItem.addActionListener(myPopup);
+        tmenu.add(menuItem);
+        menuItem = new javax.swing.JMenuItem("Medium Mek");
+        menuItem.setActionCommand("BUYU|MEDIUM|" + Unit.MEK);
+        menuItem.addActionListener(myPopup);
+        tmenu.add(menuItem);
+        menuItem = new javax.swing.JMenuItem("Heavy Mek");
+        menuItem.setActionCommand("BUYU|HEAVY|" + Unit.MEK);
+        menuItem.addActionListener(myPopup);
+        tmenu.add(menuItem);
+        menuItem = new javax.swing.JMenuItem("Assault Mek");
+        menuItem.setActionCommand("BUYU|ASSAULT|" + Unit.MEK);
+        menuItem.addActionListener(myPopup);
+        tmenu.add(menuItem);
+
+        if (Boolean.parseBoolean(mwclient.getserverConfigs("UseVehicle"))) {
+            tmenu = new javax.swing.JMenu("Vehicle");
+            buy.add(tmenu);
+            menuItem = new javax.swing.JMenuItem("Light Vehicle");
+            menuItem.setActionCommand("BUYU|LIGHT|" + Unit.VEHICLE);
+            menuItem.addActionListener(myPopup);
+            tmenu.add(menuItem);
+            menuItem = new javax.swing.JMenuItem("Medium Vehicle");
+            menuItem.setActionCommand("BUYU|MEDIUM|" + Unit.VEHICLE);
+            menuItem.addActionListener(myPopup);
+            tmenu.add(menuItem);
+            menuItem = new javax.swing.JMenuItem("Heavy Vehicle");
+            menuItem.setActionCommand("BUYU|HEAVY|" + Unit.VEHICLE);
+            menuItem.addActionListener(myPopup);
+            tmenu.add(menuItem);
+            menuItem = new javax.swing.JMenuItem("Assault Vehicle");
+            menuItem.setActionCommand("BUYU|ASSAULT|" + Unit.VEHICLE);
+            menuItem.addActionListener(myPopup);
+            tmenu.add(menuItem);
+        }
+        if (Boolean.parseBoolean(mwclient.getserverConfigs("UseInfantry"))) {
+            tmenu = new javax.swing.JMenu("Infantry");
+            buy.add(tmenu);
+            menuItem = new javax.swing.JMenuItem("Light Infantry");
+            menuItem.setActionCommand("BUYU|LIGHT|" + Unit.INFANTRY);
+            menuItem.addActionListener(myPopup);
+            tmenu.add(menuItem);
+            menuItem = new javax.swing.JMenuItem("Medium Infantry");
+            menuItem.setActionCommand("BUYU|MEDIUM|" + Unit.INFANTRY);
+            menuItem.addActionListener(myPopup);
+            tmenu.add(menuItem);
+            menuItem = new javax.swing.JMenuItem("Heavy Infantry");
+            menuItem.setActionCommand("BUYU|HEAVY|" + Unit.INFANTRY);
+            menuItem.addActionListener(myPopup);
+            tmenu.add(menuItem);
+            menuItem = new javax.swing.JMenuItem("Assault Infantry");
+            menuItem.setActionCommand("BUYU|ASSAULT|" + Unit.INFANTRY);
+            menuItem.addActionListener(myPopup);
+            tmenu.add(menuItem);
+        }
+
+        if (Boolean.parseBoolean(mwclient.getserverConfigs("UseProtoMek"))) {
+            tmenu = new javax.swing.JMenu("ProtoMek");
+            buy.add(tmenu);
+            menuItem = new javax.swing.JMenuItem("Light ProtoMek");
+            menuItem.setActionCommand("BUYU|LIGHT|" + Unit.PROTOMEK);
+            menuItem.addActionListener(myPopup);
+            tmenu.add(menuItem);
+            menuItem = new javax.swing.JMenuItem("Medium Infantry");
+            menuItem.setActionCommand("BUYU|MEDIUM|" + Unit.PROTOMEK);
+            menuItem.addActionListener(myPopup);
+            tmenu.add(menuItem);
+            menuItem = new javax.swing.JMenuItem("Heavy Infantry");
+            menuItem.setActionCommand("BUYU|HEAVY|" + Unit.PROTOMEK);
+            menuItem.addActionListener(myPopup);
+            tmenu.add(menuItem);
+            menuItem = new javax.swing.JMenuItem("Assault Infantry");
+            menuItem.setActionCommand("BUYU|ASSAULT|" + Unit.PROTOMEK);
+            menuItem.addActionListener(myPopup);
+            tmenu.add(menuItem);
+        }
+
+        if (Boolean.parseBoolean(mwclient.getserverConfigs("UseBattleArmor"))) {
+            tmenu = new javax.swing.JMenu("Battle Armor");
+            buy.add(tmenu);
+            menuItem = new javax.swing.JMenuItem("Light Battle Armor");
+            menuItem.setActionCommand("BUYU|LIGHT|" + Unit.BATTLEARMOR);
+            menuItem.addActionListener(myPopup);
+            tmenu.add(menuItem);
+            menuItem = new javax.swing.JMenuItem("Medium Battle Armor");
+            menuItem.setActionCommand("BUYU|MEDIUM|" + Unit.BATTLEARMOR);
+            menuItem.addActionListener(myPopup);
+            tmenu.add(menuItem);
+            menuItem = new javax.swing.JMenuItem("Heavy Battle Armor");
+            menuItem.setActionCommand("BUYU|HEAVY|" + Unit.BATTLEARMOR);
+            menuItem.addActionListener(myPopup);
+            tmenu.add(menuItem);
+            menuItem = new javax.swing.JMenuItem("Assault Battle Armor");
+            menuItem.setActionCommand("BUYU|ASSAULT|" + Unit.BATTLEARMOR);
+            menuItem.addActionListener(myPopup);
+            tmenu.add(menuItem);
+        }
+
+        if (Boolean.parseBoolean(mwclient.getserverConfigs("UseAero"))) {
+            tmenu = new javax.swing.JMenu("Aero");
+            buy.add(tmenu);
+            menuItem = new javax.swing.JMenuItem("Light Aero");
+            menuItem.setActionCommand("BUYU|LIGHT|" + Unit.AERO);
+            menuItem.addActionListener(myPopup);
+            tmenu.add(menuItem);
+            menuItem = new javax.swing.JMenuItem("Medium Aero");
+            menuItem.setActionCommand("BUYU|MEDIUM|" + Unit.AERO);
+            menuItem.addActionListener(myPopup);
+            tmenu.add(menuItem);
+            menuItem = new javax.swing.JMenuItem("Heavy Aero");
+            menuItem.setActionCommand("BUYU|HEAVY|" + Unit.AERO);
+            menuItem.addActionListener(myPopup);
+            tmenu.add(menuItem);
+            menuItem = new javax.swing.JMenuItem("Assault Aero");
+            menuItem.setActionCommand("BUYU|ASSAULT|" + Unit.AERO);
+            menuItem.addActionListener(myPopup);
+            tmenu.add(menuItem);
+        }
+
+        return buy;
+    }
+
     /**
-     * Set faction name. Called in response to HS|FN| command.
+     * Set faction name. Called in response to FactionStatusScreenUpdateCommand|FN| command.
      */
     public void setFactionName(String name) {
         HouseName = name;
@@ -159,7 +485,8 @@ public class CHSPanel extends javax.swing.JPanel {
     }
 
     /**
-     * Add a unit to the units' hash. Called from HS.java when client receives HS|AU|data command.
+     * Add a unit to the units' hash. Called from FactionStatusScreenUpdateCommand.java when client receives
+     * FactionStatusScreenUpdateCommand|AU|data command.
      */
     public void addFactionUnit(String unitData) {
 
@@ -184,7 +511,8 @@ public class CHSPanel extends javax.swing.JPanel {
     }
 
     /**
-     * Remove a unit from the units' hash+vector sets. Called from HS.java when client receives HS|RU| command.
+     * Remove a unit from the units' hash+vector sets. Called from FactionStatusScreenUpdateCommand.java when client
+     * receives FactionStatusScreenUpdateCommand|RU| command.
      */
     public void removeFactionUnit(String unitData) {
 
@@ -213,8 +541,9 @@ public class CHSPanel extends javax.swing.JPanel {
     }
 
     /**
-     * Change the component display for a given weight & type combo. Called from HS.java when client receives HS|CC|
-     * command. Because components are so simple, change is always used and there are no adds/removes.
+     * Change the component display for a given weight & type combo. Called from FactionStatusScreenUpdateCommand.java
+     * when client receives FactionStatusScreenUpdateCommand|CC| command. Because components are so simple, change is
+     * always used and there are no adds/removes.
      */
     public void changeFactionComponents(String componentData) {
 
@@ -232,7 +561,8 @@ public class CHSPanel extends javax.swing.JPanel {
     }
 
     /**
-     * Add a factory. Called from HS.java when HS|AF| command received.
+     * Add a factory. Called from FactionStatusScreenUpdateCommand.java when FactionStatusScreenUpdateCommand|AF|
+     * command received.
      */
     public void addFactionFactory(String factoryData) {
 
@@ -300,169 +630,6 @@ public class CHSPanel extends javax.swing.JPanel {
     }
 
     /**
-     * Remove a factory from house status. Used when client receives a HS|RF| command. Usually after a world changes
-     * hands.
-     * <p>
-     * Format: HS|RF|weight$metatype$planet$name|
-     */
-    public void removeFactionFactory(String factoryData) {
-
-        java.util.StringTokenizer tokenizer = new java.util.StringTokenizer(factoryData, "$");
-
-        int weight = Integer.valueOf(tokenizer.nextToken());
-        int type = Integer.valueOf(tokenizer.nextToken());
-
-        String planet = tokenizer.nextToken();
-        String factoryName = tokenizer.nextToken();
-
-        /*
-         * Check for multiproduction and remove from all appropriate factory
-         * categories. Overly complex, and makes me want to punch the person who
-         * RFE'ed multifacs in the face :-(
-         */
-        if (canProduce(Unit.MEK, type)) {
-            removeFactoryHelper(weight, Unit.MEK, planet, factoryName);
-        }
-        if (canProduce(Unit.VEHICLE, type)) {
-            removeFactoryHelper(weight, Unit.VEHICLE, planet, factoryName);
-        }
-        if (canProduce(Unit.INFANTRY, type)) {
-            removeFactoryHelper(weight, Unit.INFANTRY, planet, factoryName);
-        }
-        if (canProduce(Unit.PROTOMEK, type)) {
-            removeFactoryHelper(weight, Unit.PROTOMEK, planet, factoryName);
-        }
-        if (canProduce(Unit.BATTLEARMOR, type)) {
-            removeFactoryHelper(weight, Unit.BATTLEARMOR, planet, factoryName);
-        }
-        if (canProduce(Unit.AERO, type)) {
-            removeFactoryHelper(weight, Unit.AERO, planet, factoryName);
-        }
-    }
-
-    /**
-     * Change a factory's information. Used to update refresh times. Format:
-     * HS|CF|weight$metatype$name$planet$timetorefresh|
-     */
-    public void changeFactionFactory(String factoryData) {
-
-        java.util.StringTokenizer tokenizer = new java.util.StringTokenizer(factoryData, "$");
-
-        int weight = Integer.valueOf(tokenizer.nextToken());
-        int type = Integer.valueOf(tokenizer.nextToken());
-
-        String planet = tokenizer.nextToken();
-        String factoryName = tokenizer.nextToken();
-
-        int timeToRefresh = Integer.valueOf(tokenizer.nextToken());
-
-        int accessLevel = Integer.parseInt(tokenizer.nextToken());
-
-        String factoryID = tokenizer.nextToken();
-
-        /*
-         * Check for multiproduction and update in all appropriate factory
-         * categories. Overly complex, and makes me want to punch the person who
-         * RFE'ed multifacs in the face :-(
-         */
-        if (canProduce(Unit.MEK, type)) {
-            changeFactoryHelper(weight, Unit.MEK, planet, factoryName, timeToRefresh, accessLevel, factoryID);
-        }
-        if (canProduce(Unit.VEHICLE, type)) {
-            changeFactoryHelper(weight, Unit.VEHICLE, planet, factoryName, timeToRefresh, accessLevel, factoryID);
-        }
-        if (canProduce(Unit.INFANTRY, type)) {
-            changeFactoryHelper(weight, Unit.INFANTRY, planet, factoryName, timeToRefresh, accessLevel, factoryID);
-        }
-        if (canProduce(Unit.PROTOMEK, type)) {
-            changeFactoryHelper(weight, Unit.PROTOMEK, planet, factoryName, timeToRefresh, accessLevel, factoryID);
-        }
-        if (canProduce(Unit.BATTLEARMOR, type)) {
-            changeFactoryHelper(weight, Unit.BATTLEARMOR, planet, factoryName, timeToRefresh, accessLevel, factoryID);
-        }
-        if (canProduce(Unit.AERO, type)) {
-            changeFactoryHelper(weight, Unit.AERO, planet, factoryName, timeToRefresh, accessLevel, factoryID);
-        }
-    }
-
-    /**
-     * Private method called only from addFactionFactory. Abstracts out some repetetive code that checks for factory
-     * vectors and creates missing listings.
-     */
-    private void addFactoryHelper(int weight, int type, int timeToRefresh, String founder, String planet,
-          String factoryName, int accessLevel, String factoryID) {
-
-        // if there isn't a vector for this type + weight combo already, create
-        // one
-        java.util.TreeMap<String, String> weightAndTypeMap = factoriesInfo.get(weight + "$" + type);
-        if (weightAndTypeMap == null) {
-            weightAndTypeMap = new java.util.TreeMap<String, String>();
-            factoriesInfo.put(weight + "$" + type, weightAndTypeMap);
-        }
-
-        /*
-         * Add the factory to the map. Note that we use a map so the factories
-         * appear in alpha order, by world.
-         */
-        weightAndTypeMap.put(planet + "$" + factoryName,
-              founder + "$" + planet + "$" + factoryName + "$" + timeToRefresh + "$" + accessLevel + "$" + factoryID);
-    }
-
-    /**
-     * Helper that abstracts out some repetetive checks from removeFactionFactory.
-     */
-    private void removeFactoryHelper(int weight, int type, String planet, String factoryName) {
-
-        java.util.TreeMap<String, String> weightAndTypeMap = factoriesInfo.get(weight + "$" + type);
-
-        // if weight and type map is null, there is no way to remove the
-        // factory.
-        if (weightAndTypeMap == null) {
-            return;
-        }
-
-        // iterate through all facs of this wieght&type. remove matching names.
-        java.util.Iterator<String> i = weightAndTypeMap.keySet().iterator();
-        while (i.hasNext()) {
-            String currName = i.next();
-            if (currName.equals(planet + "$" + factoryName)) {
-                i.remove();
-            }
-        }
-    }
-
-    /**
-     * Helper that abstracts out some repetetive checks from checkFactionFactory.
-     */
-    private void changeFactoryHelper(int weight, int type, String planet, String factoryName, int timeToRefresh,
-          int accessLevel, String factoryID) {
-
-        java.util.TreeMap<String, String> weightAndTypeMap = factoriesInfo.get(weight + "$" + type);
-
-        // if weight and type map is null, there is no way to change the
-        // factory.
-        if (weightAndTypeMap == null) {
-            MWLogger.errLog("Error updating factory: null treemap at weight & type.");
-            return;
-        }
-
-        // no factory with matching name on planet. return.
-        String oldFactoryInfo = weightAndTypeMap.get(planet + "$" + factoryName);
-        if (oldFactoryInfo == null) {
-            MWLogger.errLog("Error updating factory: null oldFactory.");
-            return;
-        }
-
-        // get the founder, which wasn't transferred.
-        java.util.StringTokenizer tokenizer = new java.util.StringTokenizer(oldFactoryInfo, "$");
-        String founder = tokenizer.nextToken();
-
-        // overwrite the old entry
-        weightAndTypeMap.put(planet + "$" + factoryName,
-              founder + "$" + planet + "$" + factoryName + "$" + timeToRefresh + "$" + accessLevel + "$" + factoryID);
-    }
-
-    /**
      * Helper used to determine which unit types a multi-fac can produce.
      */
     private boolean canProduce(int type_id, int productionCapabilities) {
@@ -515,6 +682,169 @@ public class CHSPanel extends javax.swing.JPanel {
         }
 
         return false;
+    }
+
+    /**
+     * Private method called only from addFactionFactory. Abstracts out some repetetive code that checks for factory
+     * vectors and creates missing listings.
+     */
+    private void addFactoryHelper(int weight, int type, int timeToRefresh, String founder, String planet,
+          String factoryName, int accessLevel, String factoryID) {
+
+        // if there isn't a vector for this type + weight combo already, create
+        // one
+        java.util.TreeMap<String, String> weightAndTypeMap = factoriesInfo.get(weight + "$" + type);
+        if (weightAndTypeMap == null) {
+            weightAndTypeMap = new java.util.TreeMap<String, String>();
+            factoriesInfo.put(weight + "$" + type, weightAndTypeMap);
+        }
+
+        /*
+         * Add the factory to the map. Note that we use a map so the factories
+         * appear in alpha order, by world.
+         */
+        weightAndTypeMap.put(planet + "$" + factoryName,
+              founder + "$" + planet + "$" + factoryName + "$" + timeToRefresh + "$" + accessLevel + "$" + factoryID);
+    }
+
+    /**
+     * Remove a factory from house status. Used when client receives a FactionStatusScreenUpdateCommand|RF| command.
+     * Usually after a world changes hands.
+     * <p>
+     * Format: FactionStatusScreenUpdateCommand|RF|weight$metatype$planet$name|
+     */
+    public void removeFactionFactory(String factoryData) {
+
+        java.util.StringTokenizer tokenizer = new java.util.StringTokenizer(factoryData, "$");
+
+        int weight = Integer.valueOf(tokenizer.nextToken());
+        int type = Integer.valueOf(tokenizer.nextToken());
+
+        String planet = tokenizer.nextToken();
+        String factoryName = tokenizer.nextToken();
+
+        /*
+         * Check for multiproduction and remove from all appropriate factory
+         * categories. Overly complex, and makes me want to punch the person who
+         * RFE'ed multifacs in the face :-(
+         */
+        if (canProduce(Unit.MEK, type)) {
+            removeFactoryHelper(weight, Unit.MEK, planet, factoryName);
+        }
+        if (canProduce(Unit.VEHICLE, type)) {
+            removeFactoryHelper(weight, Unit.VEHICLE, planet, factoryName);
+        }
+        if (canProduce(Unit.INFANTRY, type)) {
+            removeFactoryHelper(weight, Unit.INFANTRY, planet, factoryName);
+        }
+        if (canProduce(Unit.PROTOMEK, type)) {
+            removeFactoryHelper(weight, Unit.PROTOMEK, planet, factoryName);
+        }
+        if (canProduce(Unit.BATTLEARMOR, type)) {
+            removeFactoryHelper(weight, Unit.BATTLEARMOR, planet, factoryName);
+        }
+        if (canProduce(Unit.AERO, type)) {
+            removeFactoryHelper(weight, Unit.AERO, planet, factoryName);
+        }
+    }
+
+    /**
+     * Helper that abstracts out some repetetive checks from removeFactionFactory.
+     */
+    private void removeFactoryHelper(int weight, int type, String planet, String factoryName) {
+
+        java.util.TreeMap<String, String> weightAndTypeMap = factoriesInfo.get(weight + "$" + type);
+
+        // if weight and type map is null, there is no way to remove the
+        // factory.
+        if (weightAndTypeMap == null) {
+            return;
+        }
+
+        // iterate through all facs of this wieght&type. remove matching names.
+        java.util.Iterator<String> i = weightAndTypeMap.keySet().iterator();
+        while (i.hasNext()) {
+            String currName = i.next();
+            if (currName.equals(planet + "$" + factoryName)) {
+                i.remove();
+            }
+        }
+    }
+
+    /**
+     * Change a factory's information. Used to update refresh times. Format:
+     * FactionStatusScreenUpdateCommand|CF|weight$metatype$name$planet$timetorefresh|
+     */
+    public void changeFactionFactory(String factoryData) {
+
+        java.util.StringTokenizer tokenizer = new java.util.StringTokenizer(factoryData, "$");
+
+        int weight = Integer.valueOf(tokenizer.nextToken());
+        int type = Integer.valueOf(tokenizer.nextToken());
+
+        String planet = tokenizer.nextToken();
+        String factoryName = tokenizer.nextToken();
+
+        int timeToRefresh = Integer.valueOf(tokenizer.nextToken());
+
+        int accessLevel = Integer.parseInt(tokenizer.nextToken());
+
+        String factoryID = tokenizer.nextToken();
+
+        /*
+         * Check for multiproduction and update in all appropriate factory
+         * categories. Overly complex, and makes me want to punch the person who
+         * RFE'ed multifacs in the face :-(
+         */
+        if (canProduce(Unit.MEK, type)) {
+            changeFactoryHelper(weight, Unit.MEK, planet, factoryName, timeToRefresh, accessLevel, factoryID);
+        }
+        if (canProduce(Unit.VEHICLE, type)) {
+            changeFactoryHelper(weight, Unit.VEHICLE, planet, factoryName, timeToRefresh, accessLevel, factoryID);
+        }
+        if (canProduce(Unit.INFANTRY, type)) {
+            changeFactoryHelper(weight, Unit.INFANTRY, planet, factoryName, timeToRefresh, accessLevel, factoryID);
+        }
+        if (canProduce(Unit.PROTOMEK, type)) {
+            changeFactoryHelper(weight, Unit.PROTOMEK, planet, factoryName, timeToRefresh, accessLevel, factoryID);
+        }
+        if (canProduce(Unit.BATTLEARMOR, type)) {
+            changeFactoryHelper(weight, Unit.BATTLEARMOR, planet, factoryName, timeToRefresh, accessLevel, factoryID);
+        }
+        if (canProduce(Unit.AERO, type)) {
+            changeFactoryHelper(weight, Unit.AERO, planet, factoryName, timeToRefresh, accessLevel, factoryID);
+        }
+    }
+
+    /**
+     * Helper that abstracts out some repetetive checks from checkFactionFactory.
+     */
+    private void changeFactoryHelper(int weight, int type, String planet, String factoryName, int timeToRefresh,
+          int accessLevel, String factoryID) {
+
+        java.util.TreeMap<String, String> weightAndTypeMap = factoriesInfo.get(weight + "$" + type);
+
+        // if weight and type map is null, there is no way to change the
+        // factory.
+        if (weightAndTypeMap == null) {
+            MWLogger.errLog("Error updating factory: null treemap at weight & type.");
+            return;
+        }
+
+        // no factory with matching name on planet. return.
+        String oldFactoryInfo = weightAndTypeMap.get(planet + "$" + factoryName);
+        if (oldFactoryInfo == null) {
+            MWLogger.errLog("Error updating factory: null oldFactory.");
+            return;
+        }
+
+        // get the founder, which wasn't transferred.
+        java.util.StringTokenizer tokenizer = new java.util.StringTokenizer(oldFactoryInfo, "$");
+        String founder = tokenizer.nextToken();
+
+        // overwrite the old entry
+        weightAndTypeMap.put(planet + "$" + factoryName,
+              founder + "$" + planet + "$" + factoryName + "$" + timeToRefresh + "$" + accessLevel + "$" + factoryID);
     }
 
     public void updateDisplay() {
@@ -916,6 +1246,16 @@ public class CHSPanel extends javax.swing.JPanel {
         mainPane.repaint();
     }
 
+    private boolean hasFactories(int type) {
+
+        for (int weight = 0; weight <= Unit.ASSAULT; weight++) {
+            if (factoriesInfo.get(weight + "$" + type) != null) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     public void setInfoText(String s) {
         lblInfo.setText(s);
         if (s == null) {
@@ -971,24 +1311,6 @@ public class CHSPanel extends javax.swing.JPanel {
         unitDetailInfo.displayEntity(unitEntity);
     }
 
-    // BUY MENU METHODS AND LISTENERS
-    private void buyNewButtonActionPerformed(java.awt.event.ActionEvent e) {
-    }// do nothing on action
-
-    private void buyUsedButtonActionPerformed(java.awt.event.ActionEvent e) {
-    }// do nothing
-
-    // make popup on press or release of New button
-    private void buyNewUnitMouseEvent(java.awt.event.MouseEvent e) {
-        javax.swing.JPopupMenu buy = createBuyNewPopupMenu();
-        buy.show(e.getComponent(), e.getX(), e.getY());
-    }
-
-    private void buyUsedUnitMouseEvent(java.awt.event.MouseEvent e) {
-        javax.swing.JPopupMenu buy = createBuyUsedPopupMenu();
-        buy.show(e.getComponent(), e.getX(), e.getY());
-    }
-
     class BuyPopupListener extends java.awt.event.MouseAdapter implements java.awt.event.ActionListener {
 
         public void actionPerformed(java.awt.event.ActionEvent actionEvent) {
@@ -1022,323 +1344,6 @@ public class CHSPanel extends javax.swing.JPanel {
                 // removeHttpLinksFromEditorPane(CCommPanel.CHANNEL_MISC);
             }
         }
-    }
-
-    private javax.swing.JPopupMenu createBuyNewPopupMenu() {
-        javax.swing.JMenu tmenu;
-        javax.swing.JPopupMenu buy = new javax.swing.JPopupMenu();
-        javax.swing.JMenuItem menuItem = null;
-
-        tmenu = new javax.swing.JMenu("Mek");
-        buy.add(tmenu);
-        menuItem = new javax.swing.JMenuItem("Light Mek");
-        menuItem.setActionCommand("BUY|LIGHT|" + Unit.MEK);
-        menuItem.addActionListener(myPopup);
-        tmenu.add(menuItem);
-        menuItem = new javax.swing.JMenuItem("Medium Mek");
-        menuItem.setActionCommand("BUY|MEDIUM|" + Unit.MEK);
-        menuItem.addActionListener(myPopup);
-        tmenu.add(menuItem);
-        menuItem = new javax.swing.JMenuItem("Heavy Mek");
-        menuItem.setActionCommand("BUY|HEAVY|" + Unit.MEK);
-        menuItem.addActionListener(myPopup);
-        tmenu.add(menuItem);
-        menuItem = new javax.swing.JMenuItem("Assault Mek");
-        menuItem.setActionCommand("BUY|ASSAULT|" + Unit.MEK);
-        menuItem.addActionListener(myPopup);
-        tmenu.add(menuItem);
-
-        if (Boolean.parseBoolean(mwclient.getserverConfigs("UseVehicle"))) {
-            tmenu = new javax.swing.JMenu("Vehicle");
-            buy.add(tmenu);
-            menuItem = new javax.swing.JMenuItem("Light Vehicle");
-            menuItem.setActionCommand("BUY|LIGHT|" + Unit.VEHICLE);
-            menuItem.addActionListener(myPopup);
-            tmenu.add(menuItem);
-            menuItem = new javax.swing.JMenuItem("Medium Vehicle");
-            menuItem.setActionCommand("BUY|MEDIUM|" + Unit.VEHICLE);
-            menuItem.addActionListener(myPopup);
-            tmenu.add(menuItem);
-            menuItem = new javax.swing.JMenuItem("Heavy Vehicle");
-            menuItem.setActionCommand("BUY|HEAVY|" + Unit.VEHICLE);
-            menuItem.addActionListener(myPopup);
-            tmenu.add(menuItem);
-            menuItem = new javax.swing.JMenuItem("Assault Vehicle");
-            menuItem.setActionCommand("BUY|ASSAULT|" + Unit.VEHICLE);
-            menuItem.addActionListener(myPopup);
-            tmenu.add(menuItem);
-        }
-
-        if (Boolean.parseBoolean(mwclient.getserverConfigs("UseInfantry"))) {
-            tmenu = new javax.swing.JMenu("Infantry");
-            buy.add(tmenu);
-            menuItem = new javax.swing.JMenuItem("Light Infantry");
-            menuItem.setActionCommand("BUY|LIGHT|" + Unit.INFANTRY);
-            menuItem.addActionListener(myPopup);
-            tmenu.add(menuItem);
-            menuItem = new javax.swing.JMenuItem("Medium Infantry");
-            menuItem.setActionCommand("BUY|MEDIUM|" + Unit.INFANTRY);
-            menuItem.addActionListener(myPopup);
-            tmenu.add(menuItem);
-            menuItem = new javax.swing.JMenuItem("Heavy Infantry");
-            menuItem.setActionCommand("BUY|HEAVY|" + Unit.INFANTRY);
-            menuItem.addActionListener(myPopup);
-            tmenu.add(menuItem);
-            menuItem = new javax.swing.JMenuItem("Assault Infantry");
-            menuItem.setActionCommand("BUY|ASSAULT|" + Unit.INFANTRY);
-            menuItem.addActionListener(myPopup);
-            tmenu.add(menuItem);
-        }
-
-        if (Boolean.parseBoolean(mwclient.getserverConfigs("UseProtoMek"))) {
-            tmenu = new javax.swing.JMenu("ProtoMek");
-            buy.add(tmenu);
-            menuItem = new javax.swing.JMenuItem("Light ProtoMek");
-            menuItem.setActionCommand("BUY|LIGHT|" + Unit.PROTOMEK);
-            menuItem.addActionListener(myPopup);
-            tmenu.add(menuItem);
-            menuItem = new javax.swing.JMenuItem("Medium ProtoMek");
-            menuItem.setActionCommand("BUY|MEDIUM|" + Unit.PROTOMEK);
-            menuItem.addActionListener(myPopup);
-            tmenu.add(menuItem);
-            menuItem = new javax.swing.JMenuItem("Heavy ProtoMek");
-            menuItem.setActionCommand("BUY|HEAVY|" + Unit.PROTOMEK);
-            menuItem.addActionListener(myPopup);
-            tmenu.add(menuItem);
-            menuItem = new javax.swing.JMenuItem("Assault ProtoMek");
-            menuItem.setActionCommand("BUY|ASSAULT|" + Unit.PROTOMEK);
-            menuItem.addActionListener(myPopup);
-            tmenu.add(menuItem);
-        }
-
-        if (Boolean.parseBoolean(mwclient.getserverConfigs("UseBattleArmor"))) {
-            tmenu = new javax.swing.JMenu("Battle Armor");
-            buy.add(tmenu);
-            menuItem = new javax.swing.JMenuItem("Light Battle Armor");
-            menuItem.setActionCommand("BUY|LIGHT|" + Unit.BATTLEARMOR);
-            menuItem.addActionListener(myPopup);
-            tmenu.add(menuItem);
-            menuItem = new javax.swing.JMenuItem("Medium Battle Armor");
-            menuItem.setActionCommand("BUY|MEDIUM|" + Unit.BATTLEARMOR);
-            menuItem.addActionListener(myPopup);
-            tmenu.add(menuItem);
-            menuItem = new javax.swing.JMenuItem("Heavy Battle Armor");
-            menuItem.setActionCommand("BUY|HEAVY|" + Unit.BATTLEARMOR);
-            menuItem.addActionListener(myPopup);
-            tmenu.add(menuItem);
-            menuItem = new javax.swing.JMenuItem("Assault Battle Armor");
-            menuItem.setActionCommand("BUY|ASSAULT|" + Unit.BATTLEARMOR);
-            menuItem.addActionListener(myPopup);
-            tmenu.add(menuItem);
-        }
-
-        if (Boolean.parseBoolean(mwclient.getserverConfigs("UseAero"))) {
-            tmenu = new javax.swing.JMenu("Aero");
-            buy.add(tmenu);
-            menuItem = new javax.swing.JMenuItem("Light Aero");
-            menuItem.setActionCommand("BUY|LIGHT|" + Unit.AERO);
-            menuItem.addActionListener(myPopup);
-            tmenu.add(menuItem);
-            menuItem = new javax.swing.JMenuItem("Medium Aero");
-            menuItem.setActionCommand("BUY|MEDIUM|" + Unit.AERO);
-            menuItem.addActionListener(myPopup);
-            tmenu.add(menuItem);
-            menuItem = new javax.swing.JMenuItem("Heavy Aero");
-            menuItem.setActionCommand("BUY|HEAVY|" + Unit.AERO);
-            menuItem.addActionListener(myPopup);
-            tmenu.add(menuItem);
-            menuItem = new javax.swing.JMenuItem("Assault Aero");
-            menuItem.setActionCommand("BUY|ASSAULT|" + Unit.AERO);
-            menuItem.addActionListener(myPopup);
-            tmenu.add(menuItem);
-        }
-
-        if (Boolean.parseBoolean(mwclient.getserverConfigs("AllowPersonalPilotQueues"))) {
-            tmenu = new javax.swing.JMenu("Pilots");
-            buy.add(tmenu);
-            javax.swing.JMenu smenu = new javax.swing.JMenu("Mek");
-            menuItem = new javax.swing.JMenuItem("Light Pilot");
-            menuItem.setActionCommand("BUYP|" + Unit.MEK + "|" + Unit.LIGHT);
-            menuItem.addActionListener(myPopup);
-            smenu.add(menuItem);
-            menuItem = new javax.swing.JMenuItem("Medium Pilot");
-            menuItem.setActionCommand("BUYP|" + Unit.MEK + "|" + Unit.MEDIUM);
-            menuItem.addActionListener(myPopup);
-            smenu.add(menuItem);
-            menuItem = new javax.swing.JMenuItem("Heavy Pilot");
-            menuItem.setActionCommand("BUYP|" + Unit.MEK + "|" + Unit.HEAVY);
-            menuItem.addActionListener(myPopup);
-            smenu.add(menuItem);
-            menuItem = new javax.swing.JMenuItem("Assault Pilot");
-            menuItem.setActionCommand("BUYP|" + Unit.MEK + "|" + Unit.ASSAULT);
-            menuItem.addActionListener(myPopup);
-            smenu.add(menuItem);
-            tmenu.add(smenu);
-
-            if (Boolean.parseBoolean(mwclient.getserverConfigs("UseProtoMek"))) {
-                smenu = new javax.swing.JMenu("Proto");
-                menuItem = new javax.swing.JMenuItem("Light Pilot");
-                menuItem.setActionCommand("BUYP|" + Unit.PROTOMEK + "|" + Unit.LIGHT);
-                menuItem.addActionListener(myPopup);
-                smenu.add(menuItem);
-                menuItem = new javax.swing.JMenuItem("Medium Pilot");
-                menuItem.setActionCommand("BUYP|" + Unit.PROTOMEK + "|" + Unit.MEDIUM);
-                menuItem.addActionListener(myPopup);
-                smenu.add(menuItem);
-                menuItem = new javax.swing.JMenuItem("Heavy Pilot");
-                menuItem.setActionCommand("BUYP|" + Unit.PROTOMEK + "|" + Unit.HEAVY);
-                menuItem.addActionListener(myPopup);
-                smenu.add(menuItem);
-                menuItem = new javax.swing.JMenuItem("Assault Pilot");
-                menuItem.setActionCommand("BUYP|" + Unit.PROTOMEK + "|" + Unit.ASSAULT);
-                menuItem.addActionListener(myPopup);
-                smenu.add(menuItem);
-                tmenu.add(smenu);
-            }
-        }
-
-        return buy;
-    }
-
-    private javax.swing.JPopupMenu createBuyUsedPopupMenu() {
-        javax.swing.JMenu tmenu;
-        javax.swing.JPopupMenu buy = new javax.swing.JPopupMenu();
-        javax.swing.JMenuItem menuItem = null;
-
-        tmenu = new javax.swing.JMenu("Mek");
-        buy.add(tmenu);
-        menuItem = new javax.swing.JMenuItem("Light Mek");
-        menuItem.setActionCommand("BUYU|LIGHT|" + Unit.MEK);
-        menuItem.addActionListener(myPopup);
-        tmenu.add(menuItem);
-        menuItem = new javax.swing.JMenuItem("Medium Mek");
-        menuItem.setActionCommand("BUYU|MEDIUM|" + Unit.MEK);
-        menuItem.addActionListener(myPopup);
-        tmenu.add(menuItem);
-        menuItem = new javax.swing.JMenuItem("Heavy Mek");
-        menuItem.setActionCommand("BUYU|HEAVY|" + Unit.MEK);
-        menuItem.addActionListener(myPopup);
-        tmenu.add(menuItem);
-        menuItem = new javax.swing.JMenuItem("Assault Mek");
-        menuItem.setActionCommand("BUYU|ASSAULT|" + Unit.MEK);
-        menuItem.addActionListener(myPopup);
-        tmenu.add(menuItem);
-
-        if (Boolean.parseBoolean(mwclient.getserverConfigs("UseVehicle"))) {
-            tmenu = new javax.swing.JMenu("Vehicle");
-            buy.add(tmenu);
-            menuItem = new javax.swing.JMenuItem("Light Vehicle");
-            menuItem.setActionCommand("BUYU|LIGHT|" + Unit.VEHICLE);
-            menuItem.addActionListener(myPopup);
-            tmenu.add(menuItem);
-            menuItem = new javax.swing.JMenuItem("Medium Vehicle");
-            menuItem.setActionCommand("BUYU|MEDIUM|" + Unit.VEHICLE);
-            menuItem.addActionListener(myPopup);
-            tmenu.add(menuItem);
-            menuItem = new javax.swing.JMenuItem("Heavy Vehicle");
-            menuItem.setActionCommand("BUYU|HEAVY|" + Unit.VEHICLE);
-            menuItem.addActionListener(myPopup);
-            tmenu.add(menuItem);
-            menuItem = new javax.swing.JMenuItem("Assault Vehicle");
-            menuItem.setActionCommand("BUYU|ASSAULT|" + Unit.VEHICLE);
-            menuItem.addActionListener(myPopup);
-            tmenu.add(menuItem);
-        }
-        if (Boolean.parseBoolean(mwclient.getserverConfigs("UseInfantry"))) {
-            tmenu = new javax.swing.JMenu("Infantry");
-            buy.add(tmenu);
-            menuItem = new javax.swing.JMenuItem("Light Infantry");
-            menuItem.setActionCommand("BUYU|LIGHT|" + Unit.INFANTRY);
-            menuItem.addActionListener(myPopup);
-            tmenu.add(menuItem);
-            menuItem = new javax.swing.JMenuItem("Medium Infantry");
-            menuItem.setActionCommand("BUYU|MEDIUM|" + Unit.INFANTRY);
-            menuItem.addActionListener(myPopup);
-            tmenu.add(menuItem);
-            menuItem = new javax.swing.JMenuItem("Heavy Infantry");
-            menuItem.setActionCommand("BUYU|HEAVY|" + Unit.INFANTRY);
-            menuItem.addActionListener(myPopup);
-            tmenu.add(menuItem);
-            menuItem = new javax.swing.JMenuItem("Assault Infantry");
-            menuItem.setActionCommand("BUYU|ASSAULT|" + Unit.INFANTRY);
-            menuItem.addActionListener(myPopup);
-            tmenu.add(menuItem);
-        }
-
-        if (Boolean.parseBoolean(mwclient.getserverConfigs("UseProtoMek"))) {
-            tmenu = new javax.swing.JMenu("ProtoMek");
-            buy.add(tmenu);
-            menuItem = new javax.swing.JMenuItem("Light ProtoMek");
-            menuItem.setActionCommand("BUYU|LIGHT|" + Unit.PROTOMEK);
-            menuItem.addActionListener(myPopup);
-            tmenu.add(menuItem);
-            menuItem = new javax.swing.JMenuItem("Medium Infantry");
-            menuItem.setActionCommand("BUYU|MEDIUM|" + Unit.PROTOMEK);
-            menuItem.addActionListener(myPopup);
-            tmenu.add(menuItem);
-            menuItem = new javax.swing.JMenuItem("Heavy Infantry");
-            menuItem.setActionCommand("BUYU|HEAVY|" + Unit.PROTOMEK);
-            menuItem.addActionListener(myPopup);
-            tmenu.add(menuItem);
-            menuItem = new javax.swing.JMenuItem("Assault Infantry");
-            menuItem.setActionCommand("BUYU|ASSAULT|" + Unit.PROTOMEK);
-            menuItem.addActionListener(myPopup);
-            tmenu.add(menuItem);
-        }
-
-        if (Boolean.parseBoolean(mwclient.getserverConfigs("UseBattleArmor"))) {
-            tmenu = new javax.swing.JMenu("Battle Armor");
-            buy.add(tmenu);
-            menuItem = new javax.swing.JMenuItem("Light Battle Armor");
-            menuItem.setActionCommand("BUYU|LIGHT|" + Unit.BATTLEARMOR);
-            menuItem.addActionListener(myPopup);
-            tmenu.add(menuItem);
-            menuItem = new javax.swing.JMenuItem("Medium Battle Armor");
-            menuItem.setActionCommand("BUYU|MEDIUM|" + Unit.BATTLEARMOR);
-            menuItem.addActionListener(myPopup);
-            tmenu.add(menuItem);
-            menuItem = new javax.swing.JMenuItem("Heavy Battle Armor");
-            menuItem.setActionCommand("BUYU|HEAVY|" + Unit.BATTLEARMOR);
-            menuItem.addActionListener(myPopup);
-            tmenu.add(menuItem);
-            menuItem = new javax.swing.JMenuItem("Assault Battle Armor");
-            menuItem.setActionCommand("BUYU|ASSAULT|" + Unit.BATTLEARMOR);
-            menuItem.addActionListener(myPopup);
-            tmenu.add(menuItem);
-        }
-
-        if (Boolean.parseBoolean(mwclient.getserverConfigs("UseAero"))) {
-            tmenu = new javax.swing.JMenu("Aero");
-            buy.add(tmenu);
-            menuItem = new javax.swing.JMenuItem("Light Aero");
-            menuItem.setActionCommand("BUYU|LIGHT|" + Unit.AERO);
-            menuItem.addActionListener(myPopup);
-            tmenu.add(menuItem);
-            menuItem = new javax.swing.JMenuItem("Medium Aero");
-            menuItem.setActionCommand("BUYU|MEDIUM|" + Unit.AERO);
-            menuItem.addActionListener(myPopup);
-            tmenu.add(menuItem);
-            menuItem = new javax.swing.JMenuItem("Heavy Aero");
-            menuItem.setActionCommand("BUYU|HEAVY|" + Unit.AERO);
-            menuItem.addActionListener(myPopup);
-            tmenu.add(menuItem);
-            menuItem = new javax.swing.JMenuItem("Assault Aero");
-            menuItem.setActionCommand("BUYU|ASSAULT|" + Unit.AERO);
-            menuItem.addActionListener(myPopup);
-            tmenu.add(menuItem);
-        }
-
-        return buy;
-    }
-
-    private boolean hasFactories(int type) {
-
-        for (int weight = 0; weight <= Unit.ASSAULT; weight++) {
-            if (factoriesInfo.get(weight + "$" + type) != null) {
-                return true;
-            }
-        }
-        return false;
     }
 
 }

@@ -17,20 +17,24 @@
 
 package mekwars.client.gui.commands;
 
-import common.campaign.clientutils.IClientConfig;
+import java.io.Serial;
+
 import common.campaign.clientutils.protocol.TransportCodec;
 import common.util.StringUtils;
+import mekwars.client.MWClient;
+import mekwars.common.gui.GUIClientConfig;
 
 /**
  * Mail command
  */
 public class MailGCmd extends CGUICommand {
 
+    @Serial
     private static final long serialVersionUID = 4728122923982632944L;
-    IClientConfig Config = null;
+    GUIClientConfig Config = null;
     String fontcolor = "black";
 
-    public MailGCmd(client.MWClient mwclient) {
+    public MailGCmd(MWClient mwclient) {
         super(mwclient);
         Config = mwclient.getConfig();
         name = "mail";
@@ -56,7 +60,7 @@ public class MailGCmd extends CGUICommand {
                         String sysColour = mwclient.getConfigParam("SYSMESSAGECOLOR");
                         mwclient.addToChat("<font color=\"" +
                                                  sysColour +
-                                                 "\"><b>You already have the max number of PM tabs open! Close one before starting a new session.</b></font>");
+                                                 "\"><b>You already have the max number of PrivateMessageCommand tabs open! Close one before starting a new session.</b></font>");
                         return false;
                     }
                 }
@@ -82,8 +86,8 @@ public class MailGCmd extends CGUICommand {
 
         message = input.substring(input.indexOf(",") + 1);
 
-		/*if (mwclient.getConfig().isParam("USEMULTIPLEPM"))
-		 name = mwclient.getPlayer().getName();
+		/*if (client.getConfig().isParam("USEMULTIPLEPM"))
+		 name = client.getPlayer().getName();
 		 */
         client.CUser user = mwclient.getUser(name);
 
@@ -129,7 +133,7 @@ public class MailGCmd extends CGUICommand {
             if (mailTab == null) {mwclient.getMainFrame().getMainPanel().getCommPanel().createMailTab(tabName);}
         }
 
-        //add to PM Channel
+        //add to PrivateMessageCommand Channel
         mwclient.addToChat(message, client.gui.CCommPanel.CHANNEL_PMAIL, tabName);
 
         //if should be shown in main, add there as well

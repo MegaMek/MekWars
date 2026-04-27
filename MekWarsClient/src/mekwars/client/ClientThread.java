@@ -26,12 +26,21 @@ import megamek.client.bot.BotClient;
 import megamek.client.bot.princess.Princess;
 import megamek.client.bot.ui.swing.BotGUI;
 import megamek.client.ui.swing.util.MegaMekController;
-import megamek.common.*;
+import megamek.common.KeyBindParser;
+import megamek.common.OffBoardDirection;
+import megamek.common.board.Board;
+import megamek.common.board.BoardDimensions;
+import megamek.common.board.Coords;
 import megamek.common.enums.GamePhase;
 import megamek.common.icons.Camouflage;
+import megamek.common.loaders.MapSettings;
 import megamek.common.options.IBasicOption;
+import megamek.common.planetaryConditions.PlanetaryConditions;
 import megamek.common.preference.ClientPreferences;
 import megamek.common.preference.PreferenceManager;
+import megamek.common.units.Crew;
+import megamek.common.units.CrewType;
+import megamek.common.units.Entity;
 import megamek.common.util.BuildingTemplate;
 
 // import megamek.common.IGame;
@@ -103,10 +112,10 @@ public class ClientThread extends Thread implements CloseClientListener {
         client = new Client(myname, serverip, serverport);
         client.addCloseClientListener(this);
         /*
-         * mwclient.getserverConfigs("MMTimeStampLogFile");
-         * mwclient.getserverConfigs("MMShowUnitId");
-         * mwclient.getserverConfigs("MMKeepGameLog");
-         * mwclient.getserverConfigs("MMGameLogName");
+         * client.getserverConfigs("MMTimeStampLogFile");
+         * client.getserverConfigs("MMShowUnitId");
+         * client.getserverConfigs("MMKeepGameLog");
+         * client.getserverConfigs("MMGameLogName");
          */
 
         try {
@@ -550,7 +559,7 @@ public class ClientThread extends Thread implements CloseClientListener {
                           .setCamouflage(new Camouflage(Camouflage.ROOT_CATEGORY,
                                 mwclient.getConfig().getParam("UNITCAMO")));
                     //                    client.getLocalPlayer().setCategory(Camouflage.ROOT_CATEGORY);
-                    //                    client.getLocalPlayer().setCamoFileName(mwclient.getConfig().getParam("UNITCAMO"));
+                    //                    client.getLocalPlayer().setCamoFileName(client.getConfig().getParam("UNITCAMO"));
                     playerUpdate = true;
                 }
 

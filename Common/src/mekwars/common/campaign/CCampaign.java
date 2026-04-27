@@ -20,6 +20,7 @@ package mekwars.common.campaign;
 import mekwars.common.BMEquipment;
 import mekwars.common.campaign.clientutils.protocol.IClient;
 import mekwars.common.gui.CCommPanel;
+import mekwars.common.gui.dialogs.ArmyViewerDialog;
 import mekwars.common.util.ComponentToCritsConverter;
 import mekwars.common.util.MWLogger;
 import mekwars.common.util.TokenReader;
@@ -102,7 +103,7 @@ public class CCampaign {
                         for (CBMUnit currUnit : BlackMarket.values()) {
                             currUnit.decrementSalesTicks();
                         }
-                        client.refreshGUI(IClient.REFRESH_BMPANEL);
+                        client.refreshGUI(IClient.REFRESH_BM_PANEL);
                     }
                 }
                 return (true);

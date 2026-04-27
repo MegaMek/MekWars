@@ -188,8 +188,8 @@ public class CPlayerPanel extends javax.swing.JScrollPane {
             } catch (Exception ex) {
                 MWLogger.errLog(ex);
             }
-            //lblLogo.setIcon(mwclient.getPlayer().getLogo());
-        }//lblLogo.setIcon(mwclient.getConfig().getImage("LOGO"));}
+            //lblLogo.setIcon(client.getPlayer().getLogo());
+        }//lblLogo.setIcon(client.getConfig().getImage("LOGO"));}
         lblName.setText(player.getName());
         lblStatus.setText(PP_STATUS + " " + mwclient.getStatus());
         lblExp.setText(PP_EXP + " " + player.getExp());

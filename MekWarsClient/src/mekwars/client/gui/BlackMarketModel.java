@@ -18,7 +18,7 @@
 /*
  * BlackMarketModel.java
  *
- * Created on June 21, 2002, 2:45 PM
+ * Created on June 21, 2002, 2:45 PrivateMessageCommand
  */
 
 package mekwars.client.gui;
@@ -32,25 +32,16 @@ import common.Unit;
  */
 public class BlackMarketModel extends javax.swing.table.AbstractTableModel {
 
-    /**
-     *
-     */
-    private static final long serialVersionUID = -783116408720137035L;
-    public client.MWClient mwclient;
-    client.campaign.CCampaign theCampaign;
-    public java.util.TreeMap<Integer, client.campaign.CBMUnit> mechs; //this collection is backed by the main map, so it should always be good
-    //public TreeMap bids;
-    public Object[] sortedMechs; //not really though, sort is handled elsewhere...
-
     public final static int MECH = 0;
     public final static int BV = 1;
     public final static int MIN = 2;
     public final static int TICKS = 3;
     public final static int BID = 4;
     public final static int AUCTION_ID = 5; //not shown in table
-
-    private boolean hiddenUnits = false;
-
+    /**
+     *
+     */
+    private static final long serialVersionUID = -783116408720137035L;
     final String[] columnNames = {
           "Unit",
           "Stock BV",
@@ -58,7 +49,6 @@ public class BlackMarketModel extends javax.swing.table.AbstractTableModel {
           "Ticks",
           "Your Bid",
           };
-
     final String[] longValues = {
           "XXXXXX-XXXX-XXXXXX",
           "XXXXXXXXX",
@@ -66,10 +56,12 @@ public class BlackMarketModel extends javax.swing.table.AbstractTableModel {
           "XXXXXXXXX",
           "XXXXXXXXX",
           };
-
-    public int getColumnCount() {
-        return this.columnNames.length;
-    }
+    public client.MWClient mwclient;
+    public java.util.TreeMap<Integer, client.campaign.CBMUnit> mechs; //this collection is backed by the main map, so it should always be good
+    //public TreeMap bids;
+    public Object[] sortedMechs; //not really though, sort is handled elsewhere...
+    client.campaign.CCampaign theCampaign;
+    private boolean hiddenUnits = false;
 
     public BlackMarketModel(client.MWClient client, boolean hideBMUnits) {
         this.mwclient = client;
@@ -116,14 +108,8 @@ public class BlackMarketModel extends javax.swing.table.AbstractTableModel {
         return this.sortedMechs.length;
     }
 
-    @Override
-    public String getColumnName(int col) {
-        return (columnNames[col]);
-    }
-
-    @Override
-    public boolean isCellEditable(int row, int col) {
-        return false;
+    public int getColumnCount() {
+        return this.columnNames.length;
     }
 
     public Object getValueAt(int row, int col) {
@@ -153,6 +139,16 @@ public class BlackMarketModel extends javax.swing.table.AbstractTableModel {
                 return mm.getAuctionID();
         }
         return "";
+    }
+
+    @Override
+    public String getColumnName(int col) {
+        return (columnNames[col]);
+    }
+
+    @Override
+    public boolean isCellEditable(int row, int col) {
+        return false;
     }
 
     public mekwars.client.gui.BlackMarketModel.Renderer getRenderer() {

@@ -17,7 +17,10 @@
 
 package mekwars.client.gui.commands;
 
-import common.campaign.clientutils.protocol.CConnector;
+import java.io.Serial;
+
+import mekwars.client.MWClient;
+import mekwars.common.campaign.clientutils.protocol.CConnector;
 
 /**
  * Abstract class for GUI Commands
@@ -27,29 +30,30 @@ public abstract class CGUICommand extends javax.swing.AbstractAction implements 
     /**
      *
      */
+    @Serial
     private static final long serialVersionUID = -8448209123971531879L;
     String name = "";
     String alias = "";
     String command = ""; // name of command sent to server (lyrisoft chat layer)
     String subcommand = ""; // name of command sent to server (MEKWARS layer)
-    String GUIprefix = "";
+    String guiPrefix = "";
     String delimiter = "";
     String prefix = "";
-    client.MWClient mwclient;
+    MWClient mwclient;
     CConnector Connector;
 
-    public CGUICommand(client.MWClient mwclient) {
+    public CGUICommand(MWClient client) {
         super();
-        this.mwclient = mwclient;
-        Connector = mwclient.getConnector();
-        GUIprefix = client.MWClient.GUI_PREFIX;
-        delimiter = client.MWClient.PROTOCOL_DELIMITER;
-        prefix = client.MWClient.PROTOCOL_PREFIX;
+        this.mwclient = client;
+        Connector = client.getConnector();
+        guiPrefix = MWClient.GUI_PREFIX;
+        delimiter = MWClient.PROTOCOL_DELIMITER;
+        prefix = MWClient.PROTOCOL_PREFIX;
     }
 
     public boolean check(String tname) {
-        if (tname.startsWith(GUIprefix)) {
-            tname = tname.substring(GUIprefix.length());
+        if (tname.startsWith(guiPrefix)) {
+            tname = tname.substring(guiPrefix.length());
         }
         return (name.equals(tname) || alias.equals(tname));
     }
@@ -57,6 +61,18 @@ public abstract class CGUICommand extends javax.swing.AbstractAction implements 
     // execute command
     public boolean execute(String input) {
         return true;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public String getAlias() {
+        return alias;
+    }
+
+    public boolean isAlias() {
+        return (alias != null && !alias.equals(""));
     }
 
     // echo command in GUI
@@ -75,8 +91,8 @@ public abstract class CGUICommand extends javax.swing.AbstractAction implements 
 
     // remove prefix and name/alias from input
     protected String decompose(String input) {
-        if (input.startsWith(GUIprefix)) {
-            input = input.substring(GUIprefix.length()).trim();
+        if (input.startsWith(guiPrefix)) {
+            input = input.substring(guiPrefix.length()).trim();
         }
         if (input.startsWith(name)) {
             input = input.substring(name.length()).trim();
@@ -84,17 +100,5 @@ public abstract class CGUICommand extends javax.swing.AbstractAction implements 
             input = input.substring(alias.length()).trim();
         }
         return input;
-    }
-
-    public String getName() {
-        return name;
-    }
-
-    public String getAlias() {
-        return alias;
-    }
-
-    public boolean isAlias() {
-        return (alias != null && !alias.equals(""));
     }
 }

@@ -750,7 +750,7 @@ public class CPlayer extends Player {
             getArmy(army).setBV(bv);
             getArmy(army).getC3Network().remove(unitId);
         }
-        client.refreshGUI(IClient.REFRESH_HQPANEL);
+        client.refreshGUI(IClient.REFRESH_HQ_PANEL);
     }
 
     /**

@@ -15,261 +15,143 @@ package mekwars.client;
 // This is the Client used for connecting to the master server.
 // @Author: Helge Richter (McWizard@gmx.de)
 
-import client.campaign.CCampaign;
-import client.campaign.CPlayer;
-import client.campaign.CUnit;
-import client.cmd.Command;
-import client.gui.Browser;
-import client.gui.CCommPanel;
-import client.gui.CMainFrame;
-import client.gui.SplashWindow;
-import client.gui.commands.IGUICommand;
-import client.gui.commands.MailGCmd;
-import client.gui.commands.PingGCmd;
-import client.gui.dialog.InfluencePointsDialog;
-import client.gui.dialog.RewardPointsDialog;
-import client.gui.dialog.SignonDialog;
-import client.protocol.DataFetchClient;
-import client.util.RepairManagmentThread;
-import client.util.SalvageManagmentThread;
-import com.jgoodies.looks.plastic.Plastic3DLookAndFeel;
-import com.jgoodies.looks.plastic.PlasticLookAndFeel;
-import com.jgoodies.looks.plastic.PlasticXPLookAndFeel;
-import com.jgoodies.looks.plastic.theme.DesertGreen;
-import com.jgoodies.looks.plastic.theme.SkyBlue;
-import com.l2fprod.gui.plaf.skin.Skin;
-import com.l2fprod.gui.plaf.skin.SkinLookAndFeel;
-import com.sun.jdi.connect.Connector;
-import common.*;
-import common.campaign.Buildings;
-import common.campaign.clientutils.GameHost;
-import common.campaign.clientutils.SerializeEntity;
-import common.campaign.clientutils.protocol.CConnector;
-import common.campaign.clientutils.protocol.IClient;
-import common.campaign.clientutils.protocol.commands.AckSignonPCmd;
-import common.campaign.clientutils.protocol.commands.CommPCmd;
-import common.campaign.clientutils.protocol.commands.IProtCommand;
-import common.campaign.clientutils.protocol.commands.PingPCmd;
-import common.campaign.clientutils.protocol.commands.PongPCmd;
-import common.util.MWLogger;
-import common.util.ThreadManager;
-import common.util.TokenReader;
-import common.util.UnitUtils;
-import megamek.client.ui.swing.GameOptionsDialog;
+import java.util.Collections;
+import java.util.TreeMap;
+import java.util.Vector;
+
+import megamek.client.ui.dialogs.buttonDialogs.GameOptionsDialog;
 import megamek.common.CriticalSlot;
-import megamek.common.Entity;
-import megamek.common.EquipmentType;
-import megamek.common.Game;
-import megamek.common.Mech;
-import megamek.common.MechWarrior;
+import megamek.common.equipment.EquipmentType;
 import megamek.common.event.GameCFREvent;
 import megamek.common.event.GameEvent;
+import megamek.common.game.Game;
 import megamek.common.options.GameOptions;
 import megamek.common.options.IBasicOption;
 import megamek.common.preference.ClientPreferences;
 import megamek.common.preference.PreferenceManager;
-import megamek.server.GameManager;
 import megamek.server.Server;
-import net.sourceforge.mlf.metouia.MetouiaLookAndFeel;
-import org.mekwars.libpk.logging.PKLogManager;
+import mekwars.client.commands.Command;
+import mekwars.client.gui.Browser;
+import mekwars.client.gui.commands.IGUICommand;
+import mekwars.client.gui.commands.MailGCmd;
+import mekwars.client.gui.commands.PingGCmd;
+import mekwars.client.protocol.DataFetchClient;
+import mekwars.common.*;
+import mekwars.common.campaign.Buildings;
+import mekwars.common.campaign.CCampaign;
+import mekwars.common.campaign.CPlayer;
+import mekwars.common.campaign.CUnit;
+import mekwars.common.campaign.CUser;
+import mekwars.common.campaign.clientutils.GameHost;
+import mekwars.common.campaign.clientutils.SerializeEntity;
+import mekwars.common.campaign.clientutils.protocol.CConnector;
+import mekwars.common.campaign.clientutils.protocol.IClient;
+import mekwars.common.campaign.clientutils.protocol.commands.CommPCmd;
+import mekwars.common.campaign.clientutils.protocol.commands.IProtCommand;
+import mekwars.common.campaign.clientutils.protocol.commands.PingPCmd;
+import mekwars.common.campaign.clientutils.protocol.commands.PongPCmd;
+import mekwars.common.gui.CCommPanel;
+import mekwars.common.gui.CMainFrame;
+import mekwars.common.gui.GUIClientConfig;
+import mekwars.common.gui.SplashWindow;
+import mekwars.common.gui.dialogs.InfluencePointsDialog;
+import mekwars.common.gui.dialogs.RewardPointsDialog;
+import mekwars.common.util.MWLogger;
+import mekwars.common.util.RepairManagmentThread;
+import mekwars.common.util.SalvageManagmentThread;
+import mekwars.common.util.ThreadManager;
+import mekwars.common.util.TokenReader;
+import mekwars.common.util.UnitUtils;
 
 
 public final class MWClient extends GameHost implements IClient {
+    public static final String GUI_PREFIX = "/"; // prefix for commands in GUI
+    public static final int REFRESH_STATUS = 0;
+    public static final int REFRESH_USERLIST = 1;
+    public static final int REFRESH_PLAYER_PANEL = 2;
+    public static final int REFRESH_BATTLE_TABLE = 4;
 
+    // all client
+    // changes @Torren
+    public static final int REFRESH_HQ_PANEL = 5;
+    public static final int REFRESH_BM_PANEL = 6;
+    public static final int IGNORE_PUBLIC = 0;
+    public static final int IGNORE_HOUSE = 1;
+    public static final int IGNORE_PRIVATE = 2;
     /**
      *
      */
     private static final long serialVersionUID = 6056977040880995791L;
     public static Object mwClientLog;
+    private final java.util.HashMap<String, Equipment> blackMarketEquipmentList = new java.util.HashMap<>();
     // Holds campaign data as factions and planets..
     CampaignData data = null;
     DataFetchClient dataFetcher;
     Thread updateDataFetcher;
-    
-    // all client
-    // changes @Torren
-
-    mekwars.client.MWClient.TimeOutThread TO;
-    java.util.Collection<mekwars.client.CUser> Users;
+    MWClient.TimeOutThread TO;
+    java.util.Collection<CUser> Users;
     Server myServer = null;
     java.util.List<ClientThread> mmClientThreads = new java.util.ArrayList<>();
     java.util.Vector<IBasicOption> GameOptions = new java.util.Vector<IBasicOption>(1, 1);
-
+    // restart.
     Browser browser;
-
     boolean SignOff = false;
     boolean packFrame = false;
     boolean SoundMuted = false;
-
     String password = "";
     String myDedOwners = "";
     int myPort = -1;
     int gameCount = 0; // number of games played on a ded
     long lastResetCheck = System.currentTimeMillis();
     int dedRestartAt = 50; // number of games played on a ded before auto
-    // restart.
-
     long TimeOut = 120;
     long LastPing = 0;
-
     PlanetEnvironment currentEnvironment;
     AdvancedTerrain aTerrain = null;
-
     java.util.TreeMap<String, String[]> allOps;// all operations, from OpList.txt
-
     java.awt.Dimension MapSize;
     int mapMedium = 0;
-
     SplashWindow splash = null;
-    private Game game = new Game();
-
-    public static final String GUI_PREFIX = "/"; // prefix for commands in GUI
-
-    public static final int REFRESH_STATUS = 0;
-    public static final int REFRESH_USERLIST = 1;
-    public static final int REFRESH_PLAYERPANEL = 2;
-    public static final int REFRESH_BATTLETABLE = 4;
-    public static final int REFRESH_HQPANEL = 5;
-    public static final int REFRESH_BMPANEL = 6;
-
-    public static final int IGNORE_PUBLIC = 0;
-    public static final int IGNORE_HOUSE = 1;
-    public static final int IGNORE_PRIVATE = 2;
-
     CCampaign theCampaign;
     CPlayer myPlayer;
     CMainFrame MainFrame;
-
     int Status = STATUS_DISCONNECTED;
     int LastStatus = STATUS_DISCONNECTED;
-
     java.util.TreeMap<String, IGUICommand> GUICommands = new java.util.TreeMap<String, IGUICommand>();
-
-
     /**
-     * Maps the task prefixes as HS, PL, SP etc. to a command under package cmd. key: String, value: cmd.Command
+     * Maps the task prefixes as FactionStatusScreenUpdateCommand, PL, SP etc. to a command under package cmd. key:
+     * String, value: cmd.Command
      */
-    java.util.HashMap<String, Command> commands = new java.util.HashMap<String, Command>();
-
+    java.util.HashMap<String, Command> commands = new java.util.HashMap<>();
     String LastQuery = ""; // receiver of last mail
-    java.util.Vector<String> IgnorePublic = new java.util.Vector<String>(1, 1); // people whose
+    java.util.Vector<String> IgnorePublic = new java.util.Vector<>(1, 1); // people whose
     // public messages
     // are ignored
-    java.util.Vector<String> IgnoreHouse = new java.util.Vector<String>(1, 1); // people whose
+    java.util.Vector<String> IgnoreHouse = new java.util.Vector<>(1, 1); // people whose
     // faction messages
     // are ignored
-    java.util.Vector<String> IgnorePrivate = new java.util.Vector<String>(1, 1); // people whose
+    java.util.Vector<String> IgnorePrivate = new java.util.Vector<>(1, 1); // people whose
     // private
     // messages are
     // ignored
-    java.util.Vector<String> KeyWords = new java.util.Vector<String>(1, 1); // words announced with
+    java.util.Vector<String> KeyWords = new java.util.Vector<>(1, 1); // words announced with
+    private Game game = new Game();
     // sound
     private String cacheDir;
-
     // Starting edge for players in building ops
     private int playerStartingEdge = Buildings.EDGE_UNKNOWN;
-
     // Bot commands
     private boolean usingBots = false;
     private boolean botsOnSameTeam = false;
-
     // Advanced Repair Queue
     private RepairManagmentThread RMT = null;
     private SalvageManagmentThread SMT = null;
-
     private boolean waitingOnCommand = false;
-
-    private java.util.HashMap<String, Equipment> blackMarketEquipmentList = new java.util.HashMap<String, Equipment>();
-
-    //private static MWLogger logger = MWLogger.getInstance();
-    // Main-Method
-    public static void main(String[] args) {
-
-        GUIClientConfig config;
-        boolean dedicated = false;
-        int i;
-
-
-        createLoggers();
-        /*
-         * put StdErr and StdOut into ./logs/megameklog.txt, because MegaMek
-         * uses StdOut and StdErr, but the part of MegaMek that sets that up
-         * does not get called when we launch MegaMek in MekWars Redirect output
-         * to logfiles, unless turned off. Moved megameklog.txt to the logs
-         * folder -- Torren
-         */
-        String logFileName = "./logs/megameklog.txt";
-        boolean enableSplashScreen = true;
-        try {
-            java.io.PrintStream ps = new java.io.PrintStream(new java.io.BufferedOutputStream(
-                  new java.io.FileOutputStream(logFileName), 64));
-            System.setOut(ps);
-            System.setErr(ps);
-        } catch (Exception ex) {
-            MWLogger.errLog(ex);
-            MWLogger.errLog("Unable to redirect MegaMek output to "
-                                  + logFileName);
-        }
-
-        MWLogger.infoLog("Starting MekWars Client Version: "
-                               + CLIENT_VERSION);
-        try {
-            for (i = 0; i < args.length; i++) {
-                if (args[i].equalsIgnoreCase("-dedicated")
-                          || args[i].equalsIgnoreCase("-d")) {
-                    dedicated = true;
-                }
-                // add more args?
-                else if (args[i].equalsIgnoreCase("-disableSplash")) {
-                    enableSplashScreen = false;
-                } else if (args[i].equalsIgnoreCase("-enableSplash")) {
-                    enableSplashScreen = true;
-                }
-            }
-            config = new GUIClientConfig(dedicated);
-
-            if (!enableSplashScreen) {
-                config.setParam("ENABLESPLASHSCREEN", "false");
-            } else {
-                config.setParam("ENABLESPLASHSCREEN", "true");
-            }
-            /*
-             * clear any cache'd unit files. these will be rebuilt later in the
-             * start process. clearing @ each start ensures that updates take
-             * hold properly.
-             */
-            java.io.File cache = new java.io.File("./data/mechfiles/units.cache");
-            if (cache.exists()) {
-                cache.delete();
-            }
-
-            /*
-             * Config files have been loaded, and command line args have been
-             * parsed. Construct the actual client. NOTE: Client constrtuctor
-             * attempts to pull the oplist, campaign config and other
-             * non-interactive data over the DATAPORT before client.start()
-             * attempts to connect to the chat server on the SERVERPORT.
-             */
-            new mekwars.client.MWClient(config);
-
-        } catch (Exception ex) {
-            MWLogger.errLog(ex);
-            MWLogger.errLog("Couldn't create Client Object");
-            System.exit(1);
-        }
-    }
-
-    private static void createLoggers() {
-        PKLogManager logger = PKLogManager.getInstance();
-        logger.addLog("infolog");
-        logger.addLog("errlog");
-        logger.addLog("debuglog");
-    }
 
     public MWClient(GUIClientConfig config) {
 
 
-        ProtCommands = new java.util.TreeMap<String, IProtCommand>();
+        ProtCommands = new TreeMap<>();
         Config = config;
 
         // set up the splash screen. do this before any
@@ -300,7 +182,7 @@ public final class MWClient extends GameHost implements IClient {
         Connector = new CConnector(this);
         Connector.setSplashWindow(splash);// may set null if ded.
 
-        Users = java.util.Collections.synchronizedList(new java.util.Vector<mekwars.client.CUser>(1, 1));
+        Users = Collections.synchronizedList(new Vector<CUser>(1, 1));
 
         // Non-ded's get a GUI, show signon dialog, etc.
         if (!isDedicated()) {
@@ -312,7 +194,7 @@ public final class MWClient extends GameHost implements IClient {
 
             // indicate that the splash is trying to get data
             if (splash != null) {
-                splash.setStatus(splash.STATUS_FETCHINGDATA);
+                splash.setStatus(splash.STATUS_FETCHING_DATA);
             }
 
             /*
@@ -348,10 +230,9 @@ public final class MWClient extends GameHost implements IClient {
             }
 
             // Start the data fetcher, get ops/map/etc
-            dataFetcher = new DataFetchClient(Integer.parseInt(Config
-                                                                     .getParam("DATAPORT")), Integer.parseInt(Config
-                                                                                                                    .getParam(
-                                                                                                                          "SOCKETTIMEOUTDELAY")));
+            dataFetcher = new DataFetchClient(Integer.parseInt(Config.getParam("DATAPORT")),
+                  Integer.parseInt(Config.getParam(
+                        "SOCKETTIMEOUTDELAY")));
 
             try {
                 java.io.BufferedReader dis = new java.io.BufferedReader(new java.io.InputStreamReader(
@@ -637,7 +518,7 @@ public final class MWClient extends GameHost implements IClient {
             /*
              * Send client version and saved mail request to the server. Doing
              * this after the main frame is build and visible will (I hope) fix
-             * the "PM Ping Crash" TT users have with Client 0.1.44.5.
+             * the "PrivateMessageCommand Ping Crash" TT users have with Client 0.1.44.5.
              */
             sendChat(mekwars.client.MWClient.CAMPAIGN_PREFIX + "c setclientversion#"
                            + myUsername.trim() + "#" + CLIENT_VERSION);
@@ -681,41 +562,264 @@ public final class MWClient extends GameHost implements IClient {
         TO.run();
     }
 
-    /*
-     * NOTE: this list is ancient. sometimes useful. often out of date. List of
-     * Abreviations for the protocol used by the client only: NG = New Game
-     * (NG|<IP>|<Port>|<MaxPlayers>|<Version>|<Comment>) CG = Close Game (CG) GB
-     * = Goodbye (Client exit) (GB) SO = Sign-On (SO|<Version>|<UserName>) Used
-     * by Both: CH = Chat Server news:(CH|<text>) Client Chat:
-     * (CH|<UserName>|<Color>|<Text>) Used only by the Server: SL|NG = Games
-     * (GS|<MMGame.toString()>|<MMGame.toString()|...) SL|CG = close game SL|JG
-     * = add a player to game list SL|LG = remove a player from game list SL|SHS
-     * = Set Host Status (SHS|<GameID>|<Status>) US = Users
-     * (US|<MMClientInfo.toString()>|<MMClientInfo.toString()>|..) UG = User
-     * Gone (UG|<MMClientInfo.toString>|[Gone]) Gone is used when the client
-     * didn't just change his name NU = New User
-     * (NU|<MMClientInfo.toString>|[NEW]) NEW is used the same way as GONE in UG
-     * ER = Error (Not yet used) (ER|<ErrorLevel>|<description>) NN = New name
-     * (My name Change was successful) CT = Campaign Task Offset (CT|Offset) CS
-     * = Campaign Status (CS|Status) GO = Game Options
-     * (GO|OPTION1NAME|OPTION1VALUE|OPTION2NAME...) PE = SPlanet Environment
-     * (Used to initialize the MM map generator) HS = SHouse Status TI = Tick
-     * Info (TI|TIMETILLNEXT) SP = Show PopupWindow SM = Show Miscellaneous
-     * (Puts text into Misc Tab)
-     */
-    public synchronized void doParseDataInput(String input) {
+    protected void createProtCommands() {
+        addProtCommand(new CommPCmd(this));
+        addProtCommand(new PingPCmd(this));
+        addProtCommand(new PongPCmd(this));
+        addProtCommand(new AckSignonPCmd(this));
+    }
 
-        // non-null main frame, unbuffer or just pass through
-        if (decodeBuffer.size() > 0) {
-            java.util.Iterator<String> i = decodeBuffer.iterator();
-            while (i.hasNext()) {
-                String currS = i.next();
-                doParseDataHelper(currS);
+    protected void createGUICommands() {
+        addGUICommand(new PingGCmd(this));
+        addGUICommand(new MailGCmd(this));
+    }
+
+    /**
+     * Method which parses OpList.txt in order to set up a tree which conatins names (as keys) and information (as
+     * values) for all game types. Various portions of the GUI code use this tree to properly draw themselves. Kept in
+     * MWClient in order to be universally available; however, this is poor design ... *sigh*
+     */
+    public void setupAllOps() {
+
+        allOps = new java.util.TreeMap<String, String[]>();
+        try {
+
+            java.io.File f = new java.io.File(cacheDir + "/OpList.txt");
+            if (!f.exists()) {
+                MWLogger.errLog("Error: OpList.txt does not exist.");
+                return;
+            }
+
+            java.io.FileInputStream in = new java.io.FileInputStream(cacheDir + "/OpList.txt");
+            java.io.BufferedReader br = new java.io.BufferedReader(new java.io.InputStreamReader(in));
+
+            // skip past the first line - its just a timestamp.
+            String currLine = br.readLine();
+            if (currLine != null) {
+                currLine = br.readLine();
+            }
+
+            while (currLine != null) {
+
+                // if there's a hanging line, move to next.
+                if (currLine.trim().length() == 0) {
+                    currLine = br.readLine();
+                    continue;
+                }
+
+                // set up tokenizer and make tree entry
+                java.util.StringTokenizer st = new java.util.StringTokenizer(currLine, "*");
+
+                String name = st.nextToken();// key
+                String range = st.nextToken();
+                String color = st.nextToken();
+                String hasLong = st.nextToken();// int, not a boolean
+                String facInfo = st.nextToken();// "all", "only", "none"
+                String homeInfo = st.nextToken();// "all", "only", "none"
+                String launchOn = st.nextToken();// int, percentage
+                String launchFrom = st.nextToken();// int, percentage
+                String minOwn = st.nextToken();// int, percentage
+                String maxOwn = st.nextToken();// int, percentage
+                String reserveOnly = st.nextToken();// boolean
+                String activeOnly = st.nextToken();// boolean
+
+                String legalDefenders = st.nextToken();
+                String allowPlanetFlags = st.nextToken();
+                String disallowPlanetFlags = st.nextToken();
+                String minAccessLevel = st.nextToken();// int
+                String minOwnIBD = st.nextToken(); // boolean
+
+                // TODO: Replace explicit numerical references with static ints.
+                String[] props = {// value bag
+                                  range,// 0
+                                  color,// 1
+                                  hasLong,// 2
+                                  facInfo,// 3
+                                  homeInfo,// 4
+                                  launchOn,// 5
+                                  launchFrom,// 6
+                                  minOwn,// 7
+                                  maxOwn,// 8
+                                  legalDefenders,// 9
+                                  allowPlanetFlags,// 10
+                                  disallowPlanetFlags,// 11
+                                  reserveOnly,// 12
+                                  activeOnly,// 13
+                                  minAccessLevel, // 14
+                                  minOwnIBD // 15
+                };
+                allOps.put(name, props);
+
+                // load next line
+                currLine = br.readLine();
+
+            }// end while (lines remain to tokenize)
+
+            br.close();
+            in.close();
+
+        } catch (Exception e) {
+            MWLogger.errLog("Error in setupAllOps()");
+            MWLogger.errLog(e);
+        }
+    }// end setupAllOps
+
+    protected java.util.Vector<String> splitString(String string, String splitter) {
+        java.util.Vector<String> vector = new java.util.Vector<String>(1, 1);
+        String[] splitted = string.split(splitter);
+        for (String element : splitted) {
+            vector.add(element.trim());
+        }
+
+        /*
+         * Remove empty entries from the set. Strip ",," and "" from the vector.
+         * Helps with ignore and keyword lists.
+         */
+        java.util.Iterator<String> i = vector.iterator();
+        while (i.hasNext()) {
+            String currString = i.next();
+            if (currString.trim().length() == 0) {
                 i.remove();
             }
-        } else {
-            doParseDataHelper(input);
         }
+
+        return vector;
+    }
+
+    public void setSoundMuted(boolean b) {
+        SoundMuted = b;
+        MainFrame.setSoundMuted(b);
+
+        // see if the setting should be saved
+        if (b != getConfig().isParam("DISABLEALLSOUND")) {
+            if (b == false) {
+                getConfig().setParam("DISABLEALLSOUND", "false");
+            } else {
+                getConfig().setParam("DISABLEALLSOUND", "true");
+            }
+
+            getConfig().saveConfig();
+        }
+
+    }
+
+    public void connectToServer(String ip, int port) {
+        if ((myUsername == null) || myUsername.equals("")) {
+            errorMessage("Username not set.");
+            return;
+        }
+        // connect to specific ip and port
+        // System exits from connector on failure.
+        Connector.connect(ip, port);
+    }
+
+    public String getserverConfigs(String key) {
+        if (CampaignData.cd.getServerConfigs().getProperty(key) == null) {
+            MWLogger.infoLog("You're missing the config variable: "
+                                   + key + " in serverconfig!");
+            return "-1";
+        }
+        return CampaignData.cd.getServerConfigs().getProperty(key).trim();
+    }
+
+    protected void addProtCommand(IProtCommand command) {
+        ProtCommands.put(command.getName(), command);
+    }
+
+    protected void addGUICommand(IGUICommand command) {
+        GUICommands.put(command.getName(), command);
+        if (command.isAlias()) {
+            GUICommands.put(command.getAlias(), command);
+        }
+    }
+
+    //private static MWLogger logger = MWLogger.getInstance();
+    // Main-Method
+    public static void main(String[] args) {
+
+        GUIClientConfig config;
+        boolean dedicated = false;
+        int i;
+
+
+        createLoggers();
+        /*
+         * put StdErr and StdOut into ./logs/megameklog.txt, because MegaMek
+         * uses StdOut and StdErr, but the part of MegaMek that sets that up
+         * does not get called when we launch MegaMek in MekWars Redirect output
+         * to logfiles, unless turned off. Moved megameklog.txt to the logs
+         * folder -- Torren
+         */
+        String logFileName = "./logs/megameklog.txt";
+        boolean enableSplashScreen = true;
+        try {
+            java.io.PrintStream ps = new java.io.PrintStream(new java.io.BufferedOutputStream(
+                  new java.io.FileOutputStream(logFileName), 64));
+            System.setOut(ps);
+            System.setErr(ps);
+        } catch (Exception ex) {
+            MWLogger.errLog(ex);
+            MWLogger.errLog("Unable to redirect MegaMek output to "
+                                  + logFileName);
+        }
+
+        MWLogger.infoLog("Starting MekWars Client Version: "
+                               + CLIENT_VERSION);
+        try {
+            for (i = 0; i < args.length; i++) {
+                if (args[i].equalsIgnoreCase("-dedicated")
+                          || args[i].equalsIgnoreCase("-d")) {
+                    dedicated = true;
+                }
+                // add more args?
+                else if (args[i].equalsIgnoreCase("-disableSplash")) {
+                    enableSplashScreen = false;
+                } else if (args[i].equalsIgnoreCase("-enableSplash")) {
+                    enableSplashScreen = true;
+                }
+            }
+            config = new GUIClientConfig(dedicated);
+
+            if (!enableSplashScreen) {
+                config.setParam("ENABLESPLASHSCREEN", "false");
+            } else {
+                config.setParam("ENABLESPLASHSCREEN", "true");
+            }
+            /*
+             * clear any cache'd unit files. these will be rebuilt later in the
+             * start process. clearing @ each start ensures that updates take
+             * hold properly.
+             */
+            java.io.File cache = new java.io.File("./data/mechfiles/units.cache");
+            if (cache.exists()) {
+                cache.delete();
+            }
+
+            /*
+             * Config files have been loaded, and command line args have been
+             * parsed. Construct the actual client. NOTE: Client constrtuctor
+             * attempts to pull the oplist, campaign config and other
+             * non-interactive data over the DATAPORT before client.start()
+             * attempts to connect to the chat server on the SERVERPORT.
+             */
+            new mekwars.client.MWClient(config);
+
+        } catch (Exception ex) {
+            MWLogger.errLog(ex);
+            MWLogger.errLog("Couldn't create Client Object");
+            System.exit(1);
+        }
+    }
+
+    private static void createLoggers() {
+        PKLogManager logger = PKLogManager.getInstance();
+        logger.addLog("infolog");
+        logger.addLog("errlog");
+        logger.addLog("debuglog");
+    }
+
+    public static long getSerialversionuid() {
+        return serialVersionUID;
     }
 
     public String createFilenameChecksum(String filename) throws Exception {
@@ -790,6 +894,513 @@ public final class MWClient extends GameHost implements IClient {
         }
     }
 
+    public void processGUIInput(String input) {
+        String s = null;
+
+        if (input.startsWith(GUI_PREFIX)) {
+            input = input.substring(GUI_PREFIX.length());
+            java.util.StringTokenizer ST = new java.util.StringTokenizer(input, " #");
+            s = ST.nextToken();
+            if (s.equalsIgnoreCase("c")) {
+                s = "c " + ST.nextToken().toLowerCase();
+            }
+            IGUICommand command = getGUICommand(s);
+            if ((command != null) && command.check(s)) {
+                if (!command.execute(input)) {
+                    MWLogger.infoLog("COMMAND ERROR: wrong command executed.");
+                }
+                return;
+            }
+            // else
+            input = CAMPAIGN_PREFIX + input;
+
+            sendChat(input);
+            s = "Sent command: " + '"'
+                      + input.substring(CAMPAIGN_PREFIX.length()) + '"';
+            addToChat(s, CCommPanel.CHANNEL_PLOG, null);
+        } else {
+            sendChat(input);
+            String color = getUser(myUsername).getColor();
+            String addon = getUser(myUsername).getAddon();
+            addon = addon.equals("") ? "" : " [" + addon + "]";
+            s = "<font color=\"" + color + "\"><b>" + myUsername + addon
+                      + "</b></font><b>:</b> " + input;
+            if (Config.isParam("TIMESTAMP")) {
+                s = "<font color=\"" + Config.isParam("CHATFONTCOLOR") + "\">"
+                          + getShortTime() + "</font>" + s;
+
+            }
+            addToChat(s, CCommPanel.CHANNEL_PLOG, null);
+            chatCaptureForBot(myUsername, addon, input); //@salient
+        }
+    }// end processGUIInput
+
+    IGUICommand getGUICommand(String command) {
+        return GUICommands.get(command);
+    }
+
+    public void addToChat(String s, int channel, String tabName) {
+
+        s = "<BODY  TEXT=\"" + Config.getParam("CHATFONTCOLOR")
+                  + "\" BGCOLOR=\"" + Config.getParam("BACKGROUNDCOLOR")
+                  + "\"><font size=\"" + Config.getParam("CHATFONTSIZE") + "\">"
+                  + s + "</font></BODY>";
+        // MWLogger.infoLog("String: "+s);
+        try {
+            javax.swing.SwingUtilities.invokeLater(new mekwars.client.MWClient.CAddToChat(s, channel, tabName));
+        } catch (Exception ex) {
+            MWLogger.errLog(ex);
+        }
+
+    }
+
+    private void chatCaptureForBot(String username, String addon, String input) //@salient
+    {
+        if (!Boolean.parseBoolean(getserverConfigs("Enable_Bot_Chat"))) {return;}
+
+        String temp = getShortTime().trim() + username.trim() + addon.trim() + ":" + input;
+        temp = String.format("%s%n", temp);
+
+        //		if(channel !=0)
+        //			return;
+
+        //call a new command to capture chat server side
+        sendChat(mekwars.client.MWClient.CAMPAIGN_PREFIX + "CHATBOT " + temp);
+    }
+
+    public String getLastQuery() {
+        return LastQuery;
+    }
+
+    public void setLastQuery(String name) {
+        LastQuery = name;
+    }
+
+    public java.util.Vector<String> getIgnorePublic() {
+        return IgnorePublic;
+    }
+
+    public java.util.Vector<String> getIgnoreHouse() {
+        return IgnoreHouse;
+    }
+
+    public java.util.Vector<String> getIgnorePrivate() {
+        return IgnorePrivate;
+    }
+
+    public boolean hasKeyWords(String input) {
+        for (String currS : KeyWords) {
+            if (input.toLowerCase().indexOf(currS.toLowerCase()) > -1) {
+                return true;
+            }
+        }
+        return (false);
+    }
+
+    public String getStatus() {
+        if (Status == STATUS_DISCONNECTED) {
+            return ("Not connected");
+        }
+        if (Status == STATUS_LOGGEDOUT) {
+            return ("Logged out");
+        }
+        if (Status == STATUS_RESERVE) {
+            return ("Reserve duty");
+        }
+        if (Status == STATUS_ACTIVE) {
+            return ("Active duty");
+        }
+        if (Status == STATUS_FIGHTING) {
+            return ("Fighting");
+        }
+        return ("");
+    }
+
+    public synchronized java.util.ArrayList<String> getPartialUser(String u) {
+
+        String result = "";
+        java.util.TreeSet<String> userNames = new java.util.TreeSet<String>();
+
+        // there are spaces in the text so get the last word
+        if (u.trim().indexOf(" ") != -1) {
+            result = u.substring(u.trim().lastIndexOf(" ")).trim();
+            u = u.substring(0, u.trim().lastIndexOf(" ")).trim();
+        } else {// The name is the first word.
+            result = u.trim();
+            u = "";
+        }
+
+        if (result.length() < 1) {
+            return null;
+        }
+
+        int myLevel = getUser(getPlayer().getName()).getUserlevel();
+        for (CUser usr : Users) {
+            if (usr.getName().toLowerCase().startsWith(result.toLowerCase())
+                      && (!usr.isInvis() || (usr.isInvis() && (myLevel >= usr
+                                                                                .getUserlevel())))) {
+                userNames.add(usr.getName());
+            }
+        }
+
+        // We have a sorted tree set. Convert to an ArrayList so we can work
+        // with them more easily.
+        java.util.ArrayList<String> test = new java.util.ArrayList<String>();
+        test.addAll(userNames);
+        return test;
+    }
+
+    public boolean isMuted() {
+        return SoundMuted;
+    }
+
+    public boolean isUsingBots() {
+        return usingBots;
+    }
+
+    public void setUsingBots(Boolean using) {
+        usingBots = using;
+    }
+
+    public boolean isBotsOnSameTeam() {
+        return botsOnSameTeam;
+    }
+
+    public void setBotsOnSameTeam(Boolean sameTeam) {
+        botsOnSameTeam = sameTeam;
+    }
+
+    // IClient interface
+    @Override
+    public void systemMessage(String message) {
+
+        if (!isDedicated()) {
+            String sysColour = getConfigParam("SYSMESSAGECOLOR");
+            message = "<font color=\"" + sysColour + "\"><b>" + message
+                            + "</b></font>";
+
+            addToChat(message, CCommPanel.CHANNEL_SLOG);
+            if (Config.isParam("MAINCHANNELSM")) {
+                addToChat(message);
+            }
+        }
+    }
+
+    @Override
+    public void errorMessage(String message) {
+        if (!isDedicated()) {
+            javax.swing.JOptionPane.showMessageDialog(MainFrame, message);
+        } else {
+            MWLogger.errLog("Error: " + message);
+        }
+    }
+
+    @Override
+    public void processIncoming(String incoming) {
+        IProtCommand pcommand = null;
+
+        // MWLogger.infoLog("INCOMING: " + incoming);
+        if (incoming.startsWith(IClient.PROTOCOL_PREFIX)) {
+            incoming = incoming.substring(IClient.PROTOCOL_PREFIX.length());
+            java.util.StringTokenizer ST = new java.util.StringTokenizer(incoming,
+                  PROTOCOL_DELIMITER);
+            String s = ST.nextToken();
+            pcommand = getProtCommand(s);
+            if ((pcommand != null) && pcommand.check(s)) {
+                if (!pcommand.execute(incoming)) {
+                    MWLogger.infoLog("COMMAND ERROR: wrong protocol command executed or execution failed.");
+                    MWLogger.infoLog("COMMAND RECEIVED: " + incoming);
+                }
+                return;
+            }
+            if (pcommand == null) {
+                MWLogger.infoLog("COMMAND ERROR: unknown protocol command from server.");
+                MWLogger.infoLog("COMMAND RECEIVED: " + incoming);
+                if (incoming.equalsIgnoreCase("denied	/denied")) {
+                    // let them know it's a wrong password
+                    javax.swing.JOptionPane.showMessageDialog(getMainFrame(),
+                          "Unknown Username/Password combination.");
+                }
+                return;
+            }
+        } else {
+            MWLogger.infoLog("COMMAND ERROR: received protocol command without protocol prefix.");
+            MWLogger.infoLog("COMMAND RECEIVED: " + incoming);
+            return;
+        }
+    }
+
+    IProtCommand getProtCommand(String command) {
+        return ProtCommands.get(command);
+    }
+
+    @Override
+    public void connectionLost() {
+
+        Status = STATUS_DISCONNECTED;
+        if (SignOff) {
+            return;
+        }
+
+        errorMessage("Connection lost.");
+        if (isDedicated()) {
+
+            // no point in having a server open w/o connection to campaign
+            // server
+            stopHost();
+
+            // wait at least 90 seconds before trying to connect again
+            try {
+                Thread.sleep(90000);
+            } catch (Exception ex) {
+                MWLogger.errLog(ex);
+            }
+
+            // keep retrying every two minutes after the first 90 sec downtime.
+            while (Status == STATUS_DISCONNECTED) {
+                connectToServer(Config.getParam("SERVERIP"),
+                      Config.getIntParam("SERVERPORT"));
+                if (Status == STATUS_DISCONNECTED) {
+                    MWLogger.infoLog("Couldn't reconnect to server. Retrying in 120 seconds.");
+                    try {
+                        Thread.sleep(90000);
+                    } catch (Exception exe) {
+                        MWLogger.errLog(exe);
+                    }
+                }
+            }
+        } else {
+            Users.clear();
+            refreshGUI(REFRESH_STATUS);
+        }
+    }
+
+    // Stop & send the close game event to the Server
+    public void stopHost() {
+
+        serverSend("CG");// send close game to server
+        try {
+            myServer.die();
+        } catch (Exception ex) {
+            MWLogger.errLog(ex);
+            MWLogger.errLog("Megamek Error:");
+        }
+        myServer = null;
+    }
+
+    @Override
+    public void connectionEstablished() {
+
+        LastPing = System.currentTimeMillis() / 1000;
+        MWLogger.errLog("Connected. Signing on.");
+
+        String VersionSubID = new java.rmi.dgc.VMID().toString();
+        java.util.StringTokenizer ST = new java.util.StringTokenizer(VersionSubID, ":");
+
+        /*
+         * If password is blank, send a filler password instead of an empty
+         * token. This prevents the no-password "whitescreen" error. HACKY. It
+         * would be probably be better to actually fix the server SignOn so an
+         * empty password creates a nobody, but this does the trick ...
+         */
+        String passToSend = getConfigParam("NAMEPASSWORD");
+        if ((passToSend == null) || (passToSend.length() == 0)) {
+            passToSend = "1337";
+        }
+
+        Connector.send(IClient.PROTOCOL_PREFIX + "signon\t" + getConfigParam("NAME")
+                             + "\t" + passToSend + "\t" + getProtocolVersion() + "\t"
+                             + Config.getParam("COLOR") + "\t" + CLIENT_VERSION + "\t"
+                             + ST.nextToken());
+        Status = STATUS_LOGGEDOUT;
+        if (!isDedicated()) {
+            refreshGUI(REFRESH_STATUS);
+        }
+    }
+
+    public String getProtocolVersion() {
+        return "4";
+    }
+
+    public void startHost(boolean dedicated, boolean deploy,
+          boolean loadSavegame) {
+
+        java.util.ArrayList<Unit> meks;
+        java.util.ArrayList<CUnit> autoArmy;
+
+        //@salient - check quirk xml file sizes with server
+        if (Boolean.parseBoolean(getserverConfigs("EnableQuirks"))) {
+            java.io.File canon = new java.io.File("data" + java.io.File.separator + "canonUnitQuirks.xml");
+            java.io.File custom = new java.io.File("data" +
+                                                         java.io.File.separator +
+                                                         "mmconf" +
+                                                         java.io.File.separator +
+                                                         "unitQuirksOverride.xml");
+            long canonFileLength = canon.length(); // returns 0L if does not exist
+            long customFileLength = custom.length();
+            sendChat(mekwars.client.MWClient.CAMPAIGN_PREFIX +
+                           "c QUIRKCHECK#" +
+                           canonFileLength +
+                           "#" +
+                           customFileLength);
+        }
+
+        // reread the config to allow the user to change setting during runtime
+        String ip = "127.0.0.1";
+        if (!getConfigParam("IP:").equals("")) {// IP Setting set, override IP
+            // detection.
+            try {
+                ip = getConfigParam("IP:");
+                java.net.InetAddress IA = java.net.InetAddress.getByName(ip); // Resolve Dyndns
+                // Entries
+                ip = IA.getHostAddress();
+            } catch (Exception ex) {
+                showInfoWindow(
+                      "Couldn't set IP. Please check the spelling of mwconfig.txt's IP value or comment it out to use autodetection.");
+                return;
+            }
+        }
+
+        String MMVersion = getserverConfigs("AllowedMegaMekVersion");
+        if (!MMVersion.equals("-1")
+                  && !MMVersion.equalsIgnoreCase(megamek.SuiteConstants.VERSION.toString())) {
+            if (isDedicated()) {
+                MWLogger.errLog("You are using an invalid version of MegaMek. Please use version "
+                                      + MMVersion);
+                try {
+                    stopHost();
+                    goodbye();
+                    Runtime runtime = Runtime.getRuntime();
+                    String[] call = { "java", "-jar", "MekWarsAutoUpdate.jar",
+                                      "DEDICATED" };
+                    runtime.exec(call);
+                } catch (Exception ex) {
+                    MWLogger.errLog(ex);
+                }
+                System.exit(0);
+            } else {
+                showInfoWindow("You are using an invalid version of MegaMek. Please use version "
+                                     + MMVersion);
+            }
+            return;
+        }
+
+        if (servers.get(myUsername) != null) {
+            if (isDedicated()) {
+                MWLogger.errLog("Attempted to start a second host while host was already running.");
+            } else {
+                String toUser = "CH|CLIENT: You already have a host open.";
+                doParseDataInput(toUser);
+            }
+            return;
+        }
+
+        // int port = Integer.parseInt(getConfigParam("PORT:"));
+        int MaxPlayers = Integer.parseInt(getConfigParam("MAXPLAYERS:"));
+        String comment = getConfigParam("COMMENT:");
+        String gpassword = getConfigParam("GAMEPASSWORD:");
+
+        if (gpassword == null) {
+            gpassword = "";
+        }
+        try {
+            myServer = new Server(gpassword, myPort, new GameManager());
+            if (loadSavegame) {
+                java.awt.FileDialog f = new java.awt.FileDialog(MainFrame, "Load Savegame");
+                f.setDirectory(System.getProperty("user.dir") + "/savegames");
+                f.setVisible(true);
+                myServer.loadGame(new java.io.File(f.getDirectory(), f.getFile()));
+            }
+        } catch (Exception ex) {
+            try {
+                if (myServer == null) {
+                    MWLogger.errLog("Error opening dedicated server. Result = null host.");
+                    MWLogger.errLog(ex);
+                } else {
+                    MWLogger.errLog("Error opening dedicated server. Will attempt a .die().");
+                    MWLogger.errLog(ex);
+                    myServer.die();
+                    myServer = null;
+                }
+            } catch (Exception e) {
+                MWLogger.errLog("Further error while trying to clean up failed host attempt.");
+                MWLogger.errLog(e);
+            }
+            return;
+        }
+
+        ((Game) myServer.getGame()).addGameListener(this);
+        // Send the new game info to the Server
+        serverSend("NG|"
+                         + new MMGame(myUsername, ip, myPort, MaxPlayers,
+              megamek.SuiteConstants.VERSION.toString(), comment)
+                                 .toString());
+        if (!dedicated) {
+
+            if (deploy) {
+                meks = myPlayer.getLockedUnits();
+                autoArmy = myPlayer.getAutoArmy();
+            } else {
+                meks = new java.util.ArrayList<Unit>();
+                autoArmy = new java.util.ArrayList<CUnit>();
+            }
+            MWLogger.infoLog("Joining own game!");
+
+            ClientThread MMGameThread = new ClientThread(myUsername,
+                  myUsername, "127.0.0.1", myPort, this, meks, autoArmy);
+            mmClientThreads.add(MMGameThread);
+            ThreadManager.getInstance().runInThreadFromPool(MMGameThread);
+            serverSend("JG|" + myUsername);
+        } else {
+            clearSavedGames();
+            purgeOldLogs();
+            ClientPreferences cs = PreferenceManager.getClientPreferences();
+            cs.setStampFilenames(Boolean
+                                       .parseBoolean(getserverConfigs("MMTimeStampLogFile")));
+        }
+    }
+
+    public boolean isDedicated() {
+        return Config.isParam("DEDICATED");
+    }
+
+    /*
+     * NOTE: this list is ancient. sometimes useful. often out of date. List of
+     * Abreviations for the protocol used by the client only: NG = New Game
+     * (NG|<IP>|<Port>|<MaxPlayers>|<Version>|<Comment>) CG = Close Game (CG) GB
+     * = Goodbye (Client exit) (GB) SO = Sign-On (SO|<Version>|<UserName>) Used
+     * by Both: CH = Chat Server news:(CH|<text>) Client Chat:
+     * (CH|<UserName>|<Color>|<Text>) Used only by the Server: SL|NG = Games
+     * (GS|<MMGame.toString()>|<MMGame.toString()|...) SL|CG = close game SL|JG
+     * = add a player to game list SL|LG = remove a player from game list SL|SHS
+     * = Set Host Status (SHS|<GameID>|<Status>) US = Users
+     * (US|<MMClientInfo.toString()>|<MMClientInfo.toString()>|..) UG = User
+     * Gone (UG|<MMClientInfo.toString>|[Gone]) Gone is used when the client
+     * didn't just change his name NewUserCommand = New User
+     * (NewUserCommand|<MMClientInfo.toString>|[NEW]) NEW is used the same way as GONE in UG
+     * ER = Error (Not yet used) (ER|<ErrorLevel>|<description>) NN = New name
+     * (My name Change was successful) CT = Campaign Task Offset (CT|Offset) ChangeStatusCommand
+     * = Campaign Status (ChangeStatusCommand|Status) GameOptionsCommand = Game Options
+     * (GameOptionsCommand|OPTION1NAME|OPTION1VALUE|OPTION2NAME...) PlanetEnvironmentCommand = SPlanet Environment
+     * (Used to initialize the MM map generator) FactionStatusScreenUpdateCommand = SHouse Status TI = Tick
+     * Info (TI|TIMETILLNEXT) SP = Show PopupWindow SM = Show Miscellaneous
+     * (Puts text into Misc Tab)
+     */
+    public synchronized void doParseDataInput(String input) {
+
+        // non-null main frame, unbuffer or just pass through
+        if (decodeBuffer.size() > 0) {
+            java.util.Iterator<String> i = decodeBuffer.iterator();
+            while (i.hasNext()) {
+                String currS = i.next();
+                doParseDataHelper(currS);
+                i.remove();
+            }
+        } else {
+            doParseDataHelper(input);
+        }
+    }
+
     public synchronized void parseDedDataInput(String data) {
 
         // Debug info
@@ -801,12 +1412,12 @@ public final class MWClient extends GameHost implements IClient {
 
         /*
          * New users, report requests and data should be sent to standard
-         * processor. PM's are checked below, and all other commands are tossed
+         * processor. PrivateMessageCommand's are checked below, and all other commands are tossed
          * (e.g. - CH). Note that ded's bypass the doParseDeda() buffering
          * process (never have a main frame, so no null check or buffer needed)
          * and call doParseDataHelper() directly.
          */
-        if (data.startsWith("US|") || data.startsWith("NU|")
+        if (data.startsWith("US|") || data.startsWith("NewUserCommand|")
                   || data.startsWith("UG|") || data.startsWith("RGTS|")
                   || data.startsWith("DSD|") || data.startsWith("USD|")) {
             doParseDataHelper(data);// bypass the buffering process -
@@ -814,12 +1425,12 @@ public final class MWClient extends GameHost implements IClient {
             return;
         }
 
-        // only parse PM's for commands
-        if (!data.startsWith("PM|")) {
+        // only parse PrivateMessageCommand's for commands
+        if (!data.startsWith("PrivateMessageCommand|")) {
             return;
         }
 
-        data = data.substring(3);// strip "PM|"
+        data = data.substring(3);// strip "PrivateMessageCommand|"
         st = new java.util.StringTokenizer(data, "|");
         own = new java.util.StringTokenizer(myDedOwners, "$");
 
@@ -1476,220 +2087,283 @@ public final class MWClient extends GameHost implements IClient {
                                + ": access denied for " + name + ".");
     }
 
-    public void processGUIInput(String input) {
-        String s = null;
-
-        if (input.startsWith(GUI_PREFIX)) {
-            input = input.substring(GUI_PREFIX.length());
-            java.util.StringTokenizer ST = new java.util.StringTokenizer(input, " #");
-            s = ST.nextToken();
-            if (s.equalsIgnoreCase("c")) {
-                s = "c " + ST.nextToken().toLowerCase();
-            }
-            IGUICommand command = getGUICommand(s);
-            if ((command != null) && command.check(s)) {
-                if (!command.execute(input)) {
-                    MWLogger.infoLog("COMMAND ERROR: wrong command executed.");
-                }
-                return;
-            }
-            // else
-            input = CAMPAIGN_PREFIX + input;
-
-            sendChat(input);
-            s = "Sent command: " + '"'
-                      + input.substring(CAMPAIGN_PREFIX.length()) + '"';
-            addToChat(s, CCommPanel.CHANNEL_PLOG, null);
-        } else {
-            sendChat(input);
-            String color = getUser(myUsername).getColor();
-            String addon = getUser(myUsername).getAddon();
-            addon = addon.equals("") ? "" : " [" + addon + "]";
-            s = "<font color=\"" + color + "\"><b>" + myUsername + addon
-                      + "</b></font><b>:</b> " + input;
-            if (Config.isParam("TIMESTAMP")) {
-                s = "<font color=\"" + Config.isParam("CHATFONTCOLOR") + "\">"
-                          + getShortTime() + "</font>" + s;
-
-            }
-            addToChat(s, CCommPanel.CHANNEL_PLOG, null);
-            chatCaptureForBot(myUsername, addon, input); //@salient
-        }
-    }// end processGUIInput
-
-    protected void createGUICommands() {
-        addGUICommand(new PingGCmd(this));
-        addGUICommand(new MailGCmd(this));
-    }
-
-    protected void addGUICommand(IGUICommand command) {
-        GUICommands.put(command.getName(), command);
-        if (command.isAlias()) {
-            GUICommands.put(command.getAlias(), command);
-        }
-    }
-
-    IGUICommand getGUICommand(String command) {
-        return GUICommands.get(command);
-    }
-
-    protected void createProtCommands() {
-        addProtCommand(new CommPCmd(this));
-        addProtCommand(new PingPCmd(this));
-        addProtCommand(new PongPCmd(this));
-        addProtCommand(new AckSignonPCmd(this));
-    }
-
-    protected void addProtCommand(IProtCommand command) {
-        ProtCommands.put(command.getName(), command);
-    }
-
-    IProtCommand getProtCommand(String command) {
-        return ProtCommands.get(command);
-    }
-
-    public CCampaign getCampaign() {
-        return theCampaign;
+    public void setLastPing(long lastping) {
+        LastPing = lastping;
     }
 
     public CPlayer getPlayer() {
         return myPlayer;
     }
 
-    public String getLastQuery() {
-        return LastQuery;
+    /**
+     * @param money
+     * @param shortname
+     * @param amount
+     *
+     * @return String Hokey function to return the correct syntax for long and short money/flu messages to the user.
+     *       ClientVersion
+     *
+     * @author Torren (Jason Tighe)
+     */
+    public String moneyOrFluMessage(boolean money, boolean shortname, int amount) {
+        return moneyOrFluMessage(money, shortname, amount, false);
     }
 
-    public void setLastQuery(String name) {
-        LastQuery = name;
-    }
+    public String moneyOrFluMessage(boolean money, boolean shortname,
+          int amount, boolean showSign) {
+        String result = java.text.NumberFormat.getInstance().format(amount);
 
-    public int getMyStatus() {
-        return Status;
-    }
+        String moneyShort = getserverConfigs("MoneyShortName");
+        String moneyLong = getserverConfigs("MoneyLongName");
+        String fluShort = getserverConfigs("FluShortName");
+        String fluLong = getserverConfigs("FluLongName");
+        // String RPLong = getserverConfigs("RPLongName");
+        // String RPShort = getserverConfigs("RPShortName");
 
-    public void setLastPing(long lastping) {
-        LastPing = lastping;
-    }
+        String sign = "+";
 
-    public java.util.Vector<String> getIgnorePublic() {
-        return IgnorePublic;
-    }
-
-    public java.util.Vector<String> getIgnoreHouse() {
-        return IgnoreHouse;
-    }
-
-    public java.util.Vector<String> getIgnorePrivate() {
-        return IgnorePrivate;
-    }
-
-    public RepairManagmentThread getRMT() {
-        return RMT;
-    }
-
-    public SalvageManagmentThread getSMT() {
-        return SMT;
-    }
-
-    public java.util.Vector<String> getIgnored(int type) {
-        if (type == IGNORE_PUBLIC) {
-            return IgnorePublic;
-        }
-        if (type == IGNORE_HOUSE) {
-            return IgnoreHouse;
-        }
-        if (type == IGNORE_PRIVATE) {
-            return IgnorePrivate;
-        }
-        return (new java.util.Vector<String>(1, 1));
-    }
-
-    public boolean isIgnored(String name, int type) {
-
-        // Do not ignore the staff.
-        if (getUser(name.trim()).getUserlevel() >= 100) {
-            return false;
+        if (amount < 0) {
+            amount *= -1;
+            result = "";
+            sign = "-";
         }
 
-        // return true if non-mod is ignored
-        for (String next : getIgnored(type)) {
-            if (name.trim().equalsIgnoreCase(next.trim())) {
-                return true;
+        if (money) {
+            if (shortname) {
+                if ((amount == 1) && moneyShort.endsWith("s")) {
+                    result += moneyShort.substring(0, moneyShort.length() - 1);
+                } else if ((amount > 1) && !moneyShort.endsWith("s")) {
+                    result += moneyShort + "s";
+                } else {
+                    result += moneyShort;
+                }
+            } else {// longname
+                if ((amount == 1) && moneyLong.endsWith("s")) {
+                    result += " "
+                                    + moneyLong.substring(0, moneyLong.length() - 1);
+                } else if ((amount > 1) && !moneyLong.endsWith("s")) {
+                    result += " " + moneyLong + "s";
+                } else {
+                    result += " " + moneyLong;
+                }
+            }
+        } else {// influence
+            if (shortname) {
+                result += fluShort;
+            } else {
+                result += " " + fluLong;
             }
         }
 
-        // otherwise, return false
+        // add sign, if set
+        if (showSign) {
+            result = sign + result;
+        }
+
+        return result.trim();
+    }
+
+    /**
+     * @return Returns the data.
+     */
+    public CampaignData getData() {
+
+        if ((data == null) && !isDedicated()) {
+
+            // Lets reload everything from the cache and then pull down and
+            // planet changes
+            // If a majory campaign change has happened i.e. new terrains/houses
+            // then the clients will be able to use the refresh all command via
+            // CMainFrame --Torren
+            try {
+                MWLogger.infoLog("try to import the planetcache");
+                // sanity check
+                dataFetcher.checkServerVersion(this);
+                // data = dataFetcher.getAllData();
+
+                data = dataFetcher.getCacheData(getCacheDir());
+                if ((data == null) || (data.getAllPlanets().size() == 0)
+                          || (data.getAllHouses().size() == 0)) {
+                    throw new Exception("data still empty");
+                }
+                refreshData();
+                dataFetcher.store();
+                MWLogger.infoLog("cache data loaded");
+            } catch (Throwable e) {
+
+                if (!(e instanceof java.io.FileNotFoundException)) {
+                    MWLogger.errLog((Exception) e);
+                }
+                MWLogger.infoLog("need to fetch all planet data..");
+                try {
+                    data = dataFetcher.getAllData();
+                    dataFetcher.store();
+                } catch (java.net.ConnectException e1) {
+                    if (splash != null) {
+                        splash.setStatus(splash.STATUS_DATAERROR);
+                    }
+                    MWLogger.errLog(e1);
+                    MWLogger.errLog(getCacheDir());
+                    Object[] options = { "Exit", "Continue" };
+                    int selectedValue = javax.swing.JOptionPane.showOptionDialog(null,
+                          "Could not connect to server to fetch map data.",
+                          "Connection error!", javax.swing.JOptionPane.DEFAULT_OPTION,
+                          javax.swing.JOptionPane.ERROR_MESSAGE, null, options,
+                          options[0]);
+                    if (selectedValue == 0) {
+                        System.exit(0);// exit, if they so choose
+                    }
+                } catch (java.io.IOException e1) {
+                    if (splash != null) {
+                        splash.setStatus(splash.STATUS_DATAERROR);
+                    }
+                    MWLogger.errLog(e1);
+                    javax.swing.JOptionPane
+                          .showMessageDialog(null,
+                                "Server is busy while fetching planet data.\nTry again later.");
+                } catch (Throwable e1) {
+                    if (splash != null) {
+                        splash.setStatus(splash.STATUS_DATAERROR);
+                    }
+                    MWLogger.errLog((Exception) e1);
+                    Object[] options = { "Exit", "Continue" };
+                    int selectedValue = javax.swing.JOptionPane
+                                              .showOptionDialog(
+                                                    null,
+                                                    "Unknown error while fetching map data. Please\n"
+                                                          + "report this bug, and keep your error logs handy.",
+                                                    "Unknown error!",
+                                                    javax.swing.JOptionPane.DEFAULT_OPTION,
+                                                    javax.swing.JOptionPane.ERROR_MESSAGE, null, options,
+                                                    options[0]);
+                    if (selectedValue == 0) {
+                        System.exit(0);// exit, if they so choose
+                    }
+                }
+                if (splash != null) {
+                    splash.setStatus(splash.STATUS_FETCHINGDATA);
+                }
+            }
+
+            try {
+                dataFetcher.getServerConfigData(this);
+            } catch (Exception ex) {
+                MWLogger.errLog("Unable to fetch Server configs.");
+                MWLogger.errLog(ex);
+            }
+
+            try {
+                dataFetcher.getBannedAmmoData(this);
+            } catch (Exception ex) {
+                MWLogger.errLog("Unable to fetch server banned ammo data.");
+                MWLogger.errLog(ex);
+            }
+
+            // close the connection.a
+            dataFetcher.closeDataConnection();
+        }
+
+        return data;
+    }
+
+    public void loadBannedAmmo() {
+        try {
+            dataFetcher.getBannedAmmoData(this);
+        } catch (Exception ex) {
+            if (!(ex instanceof java.net.SocketException)) {
+                MWLogger.errLog("Error loading Server banned ammo file");
+                MWLogger.errLog(ex);
+            }
+        }
+    }
+
+    public boolean getTargetSystemBanStatus(int type) {
+        if (getData().getBannedTargetingSystems().contains(type)) {
+            return true;
+        }
         return false;
     }
 
-    public boolean hasKeyWords(String input) {
-        for (String currS : KeyWords) {
-            if (input.toLowerCase().indexOf(currS.toLowerCase()) > -1) {
-                return true;
+    public CMainFrame getMainFrame() {
+        return MainFrame;
+    }
+
+    public void getBlackMarketSettings() {
+        try {
+            dataFetcher.getBlackMarketSettings(this);
+        } catch (Exception ex) {
+            MWLogger.errLog(ex);
+        }
+
+    }
+
+    public java.util.HashMap<String, Equipment> getBlackMarketEquipmentList() {
+        return blackMarketEquipmentList;
+    }
+
+    /**
+     * @author jtighe Reload all the server data back into the client. Used when the client runs a command that
+     *       changes the server's data (ie - admin makes map change).
+     */
+    public void reloadData() {
+        try {
+            data = dataFetcher.getAllData();
+        } catch (Exception ex) {
+            if (!(ex instanceof java.net.SocketException)) {
+                MWLogger.errLog(ex);
             }
         }
-        return (false);
+        try {
+            dataFetcher.getServerConfigData(this);
+        } catch (java.io.IOException e1) {
+            MWLogger.errLog(e1);
+        }
     }
 
-    public String getStatus() {
-        if (Status == STATUS_DISCONNECTED) {
-            return ("Not connected");
+    public void getServerConfigData() {
+        try {
+            dataFetcher.getServerConfigData(this);
+        } catch (Exception ex) {
+            if (!(ex instanceof java.net.SocketException)) {
+                MWLogger.errLog(ex);
+            }
         }
-        if (Status == STATUS_LOGGEDOUT) {
-            return ("Logged out");
-        }
-        if (Status == STATUS_RESERVE) {
-            return ("Reserve duty");
-        }
-        if (Status == STATUS_ACTIVE) {
-            return ("Active duty");
-        }
-        if (Status == STATUS_FIGHTING) {
-            return ("Fighting");
-        }
-        return ("");
     }
 
-    public void setPlayerStartingEdge(int edge) {
-        playerStartingEdge = edge;
-    }
+    /**
+     * Reloads new planet data from the server. This will be done asynchron, so you may have to wait a bit ;-)
+     */
+    synchronized public void refreshData() {
 
-    public int getPlayerStartingEdge() {
-        return playerStartingEdge;
-    }
-
-    public String getShortTime() {
-        mytime = new java.util.Date();
-        java.util.StringTokenizer s = new java.util.StringTokenizer(mytime.toString());
-        s.nextElement();
-        s.nextElement();
-        s.nextElement();
-        String t = (String) s.nextElement();
-        s = new java.util.StringTokenizer(t, ":");
-        String result = "[" + s.nextElement() + ":" + s.nextElement() + "] ";
-        return result;
-    }
-
-    protected class CAddToChat implements Runnable {
-        String input = "";
-        int channel = -1;
-        String tabName = "";
-
-        public CAddToChat(String tinput, int tchannel, String ttabName) {
-            input = tinput;
-            channel = tchannel;
-            tabName = ttabName;
+        // if the map isnt visible, skip the refresh. waste of bandwidth.
+        if (!getConfig().isParam("MAPTABVISIBLE")) {
+            MWLogger.infoLog("Map visibility disabled. Skipping map data fetch!");
+            return;
         }
 
-        @Override
-        public void run() {
-            (MainFrame.getMainPanel().getCommPanel()).setChat(input, channel,
-                  tabName);
+        if (!dataFetcher.getPlanetsUpdate(data)) {
+            // MWLogger.infoLog("MD5 does not match! Retrieve all
+            // planet data again.");
+            MWLogger.infoLog("MD5 does not match! But the md5 seems broken anyway...");
+            /*
+             * try { data = dataFetcher.getAllData(); } catch (IOException e) {
+             * MMClient.MWLogger.errLog(e);
+             * JOptionPane.showMessageDialog(null,
+             * "The map data could not be retrieved. The map will be disabled.\nTry again later."
+             * ); getMainFrame().getMainPanel().getMapPanel().setEnabled(false);
+             * }
+             */
         }
-        //@salient discord bot chat capture
-        //if i wanted to capture multiple channels
-        //i'd have to do it here?
+        updateDataFetcher = null;
+        // refresh the changed set... if more than one place want
+        // to know about, maybe a listener system would be better..
+        java.util.Map<Integer, Influences> changesSinceLastRefresh = dataFetcher
+                                                                           .getChangesSinceLastRefresh();
+        if (getMainFrame() != null) {
+            getMainFrame().getMainPanel().getMapPanel().getMap()
+                  .dataFetched(changesSinceLastRefresh);
+        }
+        MWLogger.infoLog("update for new planet data finished");
     }
 
     public void addToChat(String s) {
@@ -1700,190 +2374,215 @@ public final class MWClient extends GameHost implements IClient {
         addToChat(s, channel, null);
     }
 
-    public void addToChat(String s, int channel, String tabName) {
-
-        s = "<BODY  TEXT=\"" + Config.getParam("CHATFONTCOLOR")
-                  + "\" BGCOLOR=\"" + Config.getParam("BACKGROUNDCOLOR")
-                  + "\"><font size=\"" + Config.getParam("CHATFONTSIZE") + "\">"
-                  + s + "</font></BODY>";
-        // MWLogger.infoLog("String: "+s);
-        try {
-            javax.swing.SwingUtilities.invokeLater(new mekwars.client.MWClient.CAddToChat(s, channel, tabName));
-        } catch (Exception ex) {
-            MWLogger.errLog(ex);
-        }
-
-    }
-
-    protected java.util.Vector<String> splitString(String string, String splitter) {
-        java.util.Vector<String> vector = new java.util.Vector<String>(1, 1);
-        String[] splitted = string.split(splitter);
-        for (String element : splitted) {
-            vector.add(element.trim());
-        }
-
-        /*
-         * Remove empty entries from the set. Strip ",," and "" from the vector.
-         * Helps with ignore and keyword lists.
-         */
-        java.util.Iterator<String> i = vector.iterator();
-        while (i.hasNext()) {
-            String currString = i.next();
-            if (currString.trim().length() == 0) {
-                i.remove();
-            }
-        }
-
-        return vector;
-    }
-
-    public synchronized CUser getUser(String name) {
-
-        for (CUser currUser : Users) {
-            if (currUser.getName().equalsIgnoreCase(name)) {
-                return currUser;
-            }
-        }
-        CUser dummyUser = new CUser();
-        dummyUser.setColor(Config.getParam("CHATFONTCOLOR"));
-        return dummyUser;
-    }
-
-    public synchronized java.util.ArrayList<String> getPartialUser(String u) {
-
-        String result = "";
-        java.util.TreeSet<String> userNames = new java.util.TreeSet<String>();
-
-        // there are spaces in the text so get the last word
-        if (u.trim().indexOf(" ") != -1) {
-            result = u.substring(u.trim().lastIndexOf(" ")).trim();
-            u = u.substring(0, u.trim().lastIndexOf(" ")).trim();
-        } else {// The name is the first word.
-            result = u.trim();
-            u = "";
-        }
-
-        if (result.length() < 1) {
-            return null;
-        }
-
-        int myLevel = getUser(getPlayer().getName()).getUserlevel();
-        for (CUser usr : Users) {
-            if (usr.getName().toLowerCase().startsWith(result.toLowerCase())
-                      && (!usr.isInvis() || (usr.isInvis() && (myLevel >= usr
-                                                                                .getUserlevel())))) {
-                userNames.add(usr.getName());
-            }
-        }
-
-        // We have a sorted tree set. Convert to an ArrayList so we can work
-        // with them more easily.
-        java.util.ArrayList<String> test = new java.util.ArrayList<String>();
-        test.addAll(userNames);
-        return test;
-    }
-
-    public synchronized void clearUserCampaignData() {
-        for (CUser currUser : Users) {
-            currUser.clearCampaignData();
-        }
+    public GUIClientConfig getConfig() {
+        return (GUIClientConfig) (Config);
     }
 
     /**
-     * Method which parses OpList.txt in order to set up a tree which conatins names (as keys) and information (as
-     * values) for all game types. Various portions of the GUI code use this tree to properly draw themselves. Kept in
-     * MWClient in order to be universally available; however, this is poor design ... *sigh*
+     * Does things when a tick is arrived.
      */
-    public void setupAllOps() {
+    public void processTick(int time) {
+        // set tick counter
+        getMainFrame().getMainPanel().getPlayerPanel()
+              .setNextTick(System.currentTimeMillis() + time);
+        getMainFrame().getMainPanel().getMapPanel().getMap().processTick();
+        System.gc(); // Decicded to have the client do a GC every tick as
+        // well.
+    }
 
-        allOps = new java.util.TreeMap<String, String[]>();
-        try {
+    public int getPlayerStartingEdge() {
+        return playerStartingEdge;
+    }
 
-            java.io.File f = new java.io.File(cacheDir + "/OpList.txt");
-            if (!f.exists()) {
-                MWLogger.errLog("Error: OpList.txt does not exist.");
-                return;
-            }
+    public void setPlayerStartingEdge(int edge) {
+        playerStartingEdge = edge;
+    }
 
-            java.io.FileInputStream in = new java.io.FileInputStream(cacheDir + "/OpList.txt");
-            java.io.BufferedReader br = new java.io.BufferedReader(new java.io.InputStreamReader(in));
+    public String getConfigParam(String p) {
+        String tparam = "";
 
-            // skip past the first line - its just a timestamp.
-            String currLine = br.readLine();
-            if (currLine != null) {
-                currLine = br.readLine();
-            }
-
-            while (currLine != null) {
-
-                // if there's a hanging line, move to next.
-                if (currLine.trim().length() == 0) {
-                    currLine = br.readLine();
-                    continue;
-                }
-
-                // set up tokenizer and make tree entry
-                java.util.StringTokenizer st = new java.util.StringTokenizer(currLine, "*");
-
-                String name = st.nextToken();// key
-                String range = st.nextToken();
-                String color = st.nextToken();
-                String hasLong = st.nextToken();// int, not a boolean
-                String facInfo = st.nextToken();// "all", "only", "none"
-                String homeInfo = st.nextToken();// "all", "only", "none"
-                String launchOn = st.nextToken();// int, percentage
-                String launchFrom = st.nextToken();// int, percentage
-                String minOwn = st.nextToken();// int, percentage
-                String maxOwn = st.nextToken();// int, percentage
-                String reserveOnly = st.nextToken();// boolean
-                String activeOnly = st.nextToken();// boolean
-
-                String legalDefenders = st.nextToken();
-                String allowPlanetFlags = st.nextToken();
-                String disallowPlanetFlags = st.nextToken();
-                String minAccessLevel = st.nextToken();// int
-                String minOwnIBD = st.nextToken(); // boolean
-
-                // TODO: Replace explicit numerical references with static ints.
-                String[] props = {// value bag
-                                  range,// 0
-                                  color,// 1
-                                  hasLong,// 2
-                                  facInfo,// 3
-                                  homeInfo,// 4
-                                  launchOn,// 5
-                                  launchFrom,// 6
-                                  minOwn,// 7
-                                  maxOwn,// 8
-                                  legalDefenders,// 9
-                                  allowPlanetFlags,// 10
-                                  disallowPlanetFlags,// 11
-                                  reserveOnly,// 12
-                                  activeOnly,// 13
-                                  minAccessLevel, // 14
-                                  minOwnIBD // 15
-                };
-                allOps.put(name, props);
-
-                // load next line
-                currLine = br.readLine();
-
-            }// end while (lines remain to tokenize)
-
-            br.close();
-            in.close();
-
-        } catch (Exception e) {
-            MWLogger.errLog("Error in setupAllOps()");
-            MWLogger.errLog(e);
+        if (p.endsWith(":")) {
+            p = p.substring(0, p.lastIndexOf(":"));
         }
-    }// end setupAllOps
+        if (p.equals("NAME") && !(myUsername.equals(""))) {
+            return myUsername;
+        }
+        if (p.equals("NAMEPASSWORD") && !password.equals("")) {
+            return password;
+        }
+
+        tparam = Config.getParam(p);
+        if (tparam == null) {
+            MWLogger.errLog("Unable to find param " + p);
+            tparam = "";
+        }
+
+        if (tparam.equals("") && p.equals("NAME") && isDedicated()) {
+            MWLogger.infoLog("Error: no dedicated name set.");
+            System.exit(1);
+        }
+        return (tparam);
+    }
+
+    public void setUsername(String s) {
+        myUsername = s.trim();
+    }
+
+    public void updateOpData(boolean deleteCache) {
+        try {
+            if (deleteCache) {
+                new java.io.File(cacheDir + "/OpList.txt").delete();
+            }
+
+            dataFetcher.checkForMostRecentOpList();
+            setupAllOps();
+        } catch (Exception ex) {
+            MWLogger.errLog(ex);
+        }
+    }
+
+    public int getMyStatus() {
+        return Status;
+    }
+
+    public synchronized java.util.Collection<mekwars.client.CUser> getUsers() {
+        return Users;
+    }
 
     /**
      * Method which returns the master list of Operations (as assembled from OpList.txt) for use in display code.
      */
     public java.util.TreeMap<String, String[]> getAllOps() {
         return allOps;
+    }
+
+    public boolean isWaiting() {
+        return waitingOnCommand;
+    }
+
+    public void setWaiting(boolean waiting) {
+        waitingOnCommand = waiting;
+    }
+
+    /**
+     * Return the directory, where all cache files can go into. The dirname depends on the server you connect.
+     */
+    public String getCacheDir() {
+        // if (cacheDir == null) {
+        // first access. Check if need to create directory.
+        cacheDir = "data/servers/" + Config.getParam("SERVERIP") + "."
+                         + Config.getParam("SERVERPORT");
+        java.io.File dir = new java.io.File(cacheDir);
+        if (!dir.exists()) {
+            dir.mkdirs();
+        }
+        // }
+        return cacheDir;
+    }
+
+    public void loadServerTraitFiles() {
+        try {
+            dataFetcher.getServerTraitFiles();
+        } catch (Exception ex) {
+            if (!(ex instanceof java.net.SocketException)) {
+
+                MWLogger.errLog("Error loading Server Trait files");
+                MWLogger.errLog(ex);
+            }
+        }
+    }
+
+    public void loadMegaMekClient() {
+        try {
+            setWaiting(true);
+            sendChat(IClient.PROTOCOL_PREFIX + "c GetServerMegaMekGameOptions");
+            try {
+                while (isWaiting()) {
+                    Thread.sleep(10);
+                }
+            } catch (Exception ex) {
+                MWLogger.errLog(ex);
+            }
+            GameOptions gameOptions = new GameOptions();
+            gameOptions.loadOptions();
+            GameOptionsDialog MMGOD = new GameOptionsDialog(getMainFrame(),
+                  gameOptions, true);
+            MMGOD.update(gameOptions);
+            MMGOD.setEditable(true);
+            MMGOD.setVisible(true);
+            MMGOD.dispose();
+            java.io.File localGameOptions = new java.io.File("mmconf/gameoptions.xml");
+
+            if (localGameOptions.lastModified() >= (System.currentTimeMillis() - 1000)) {
+                sendGameOptionsToServer();
+            }
+        } catch (Exception ex) {
+            MWLogger.errLog("Unable to pull server MegaMek Logs");
+            MWLogger.errLog(ex);
+        }
+    }
+
+    public void setConfig() {
+        Config = new GUIClientConfig(false);
+    }
+
+    public int getUserLevel() {
+        return getUser(getUsername()).getUserlevel();
+    }
+
+    public RepairManagmentThread getRMT() {
+        return RMT;
+    }
+
+    public double getAmmoCost(String ammo) {
+        EquipmentType eq = EquipmentType.get(ammo);
+
+
+        if (eq == null) {
+            return -1;
+        }
+
+        if (!getCampaign().getBlackMarketParts().containsKey(
+              eq.getInternalName())) {
+            return -1;
+        }
+
+        if (getCampaign().getBlackMarketParts().get(eq.getInternalName())
+                  .getCost() > 0) {
+            return getCampaign().getBlackMarketParts()
+                         .get(eq.getInternalName()).getCost();
+        }
+
+        return -1.0;
+    }
+
+    public SalvageManagmentThread getSMT() {
+        return SMT;
+    }
+
+    public CCampaign getCampaign() {
+        return theCampaign;
+    }
+
+    public void setPassword(String s) {
+        password = s;
+    }
+
+    public void setIgnoreHouse() {
+        IgnoreHouse = splitString(Config.getParam("IGNOREHOUSE"), ",");
+    }
+
+    public void setIgnorePrivate() {
+        IgnorePrivate = splitString(Config.getParam("IGNOREPRIVATE"), ",");
+
+    }
+
+    public void setIgnorePublic() {
+        IgnorePublic = splitString(Config.getParam("IGNOREPUBLIC"), ",");
+    }
+
+    public void setKeyWords() {
+        KeyWords = splitString(Config.getParam("KEYWORDS"), ",");
     }
 
     /*
@@ -1951,53 +2650,6 @@ public final class MWClient extends GameHost implements IClient {
 
     }// end setLookAndFeel
 
-    protected class CRefreshGUI implements Runnable {
-        protected int mode = -1;
-
-        public CRefreshGUI(int tmode) {
-            mode = tmode;
-        }
-
-        @Override
-        public void run() {
-            if (MainFrame == null) {
-                return;
-            }// return if main frame not yet drawn (still fetching data)
-            try {
-                switch (mode) {
-                    case REFRESH_USERLIST:
-                        MainFrame.getMainPanel().getUserListPanel().refresh();
-                        break;
-                    case REFRESH_PLAYERPANEL:
-                        MainFrame.getMainPanel().getPlayerPanel().refresh();
-                        break;
-                    case REFRESH_BATTLETABLE:
-                        MainFrame.refreshBattleTable();
-                        break;
-                    case REFRESH_HQPANEL:
-                        MainFrame.getMainPanel().getHQPanel().refresh();
-                        break;
-                    case REFRESH_STATUS:
-                        MainFrame.changeStatus(Status, LastStatus);
-                        break;
-                    case REFRESH_BMPANEL:
-                        MainFrame.getMainPanel().getBMPanel().refresh();
-                        break;
-                }
-            } catch (Exception ex) {
-                // do nothing
-            }
-        }
-    }
-
-    public void refreshGUI(int mode) {
-        try {
-            javax.swing.SwingUtilities.invokeLater(new mekwars.client.MWClient.CRefreshGUI(mode));
-        } catch (Exception ex) {
-            MWLogger.errLog(ex);
-        }
-    }
-
     public void showInfoWindow(String Text) {
 
         // Show a popup with a message
@@ -2052,6 +2704,55 @@ public final class MWClient extends GameHost implements IClient {
         }
     }
 
+    public Game getGame() {
+        return game;
+    }
+
+    /**
+     * Sets the current advanced terrain and map size that will be used on next playboard
+     */
+    public void setAdvancedTerrain(AdvancedTerrain aTerrain) {
+        this.aTerrain = aTerrain;
+    }
+
+    public void refreshGUI(int mode) {
+        try {
+            javax.swing.SwingUtilities.invokeLater(new mekwars.client.MWClient.CRefreshGUI(mode));
+        } catch (Exception ex) {
+            MWLogger.errLog(ex);
+        }
+    }
+
+    public boolean isIgnored(String name, int type) {
+
+        // Do not ignore the staff.
+        if (getUser(name.trim()).getUserlevel() >= 100) {
+            return false;
+        }
+
+        // return true if non-mod is ignored
+        for (String next : getIgnored(type)) {
+            if (name.trim().equalsIgnoreCase(next.trim())) {
+                return true;
+            }
+        }
+
+        // otherwise, return false
+        return false;
+    }
+
+    public String getShortTime() {
+        mytime = new java.util.Date();
+        java.util.StringTokenizer s = new java.util.StringTokenizer(mytime.toString());
+        s.nextElement();
+        s.nextElement();
+        s.nextElement();
+        String t = (String) s.nextElement();
+        s = new java.util.StringTokenizer(t, ":");
+        String result = "[" + s.nextElement() + ":" + s.nextElement() + "] ";
+        return result;
+    }
+
     public void doPlaySound(String filename) {
         doPlaySound(filename, true);
     }
@@ -2076,226 +2777,35 @@ public final class MWClient extends GameHost implements IClient {
         }
     }
 
-    public void setSoundMuted(boolean b) {
-        SoundMuted = b;
-        MainFrame.setSoundMuted(b);
+    public java.util.Vector<IBasicOption> getGameOptions() {
+        return GameOptions;
+    }
 
-        // see if the setting should be saved
-        if (b != getConfig().isParam("DISABLEALLSOUND")) {
-            if (b == false) {
-                getConfig().setParam("DISABLEALLSOUND", "false");
-            } else {
-                getConfig().setParam("DISABLEALLSOUND", "true");
-            }
+    /**
+     * Sets the current environment, map size and map medium that will be used on next playboard
+     */
+    public void setEnvironment(PlanetEnvironment pe, java.awt.Dimension map,
+          int mapMedium) {
+        currentEnvironment = pe;
+        MapSize = map;
+        this.mapMedium = mapMedium;
+    }
 
-            getConfig().saveConfig();
+    public java.util.Vector<String> getIgnored(int type) {
+        if (type == IGNORE_PUBLIC) {
+            return IgnorePublic;
         }
-
-    }
-
-    public boolean isMuted() {
-        return SoundMuted;
-    }
-
-    public void setUsingBots(Boolean using) {
-        usingBots = using;
-    }
-
-    public boolean isUsingBots() {
-        return usingBots;
-    }
-
-    public void setBotsOnSameTeam(Boolean sameTeam) {
-        botsOnSameTeam = sameTeam;
-    }
-
-    public boolean isBotsOnSameTeam() {
-        return botsOnSameTeam;
-    }
-
-    public CMainFrame getMainFrame() {
-        return MainFrame;
-    }
-
-    public synchronized java.util.Collection<mekwars.client.CUser> getUsers() {
-        return Users;
-    }
-
-    public String getProtocolVersion() {
-        return "4";
-    }
-
-    public void setUsername(String s) {
-        myUsername = s.trim();
-    }
-
-    public void setPassword(String s) {
-        password = s;
-    }
-
-    public GUIClientConfig getConfig() {
-        return (GUIClientConfig) (Config);
-    }
-
-    public void setConfig() {
-        Config = new GUIClientConfig(false);
-    }
-
-    public String getConfigParam(String p) {
-        String tparam = "";
-
-        if (p.endsWith(":")) {
-            p = p.substring(0, p.lastIndexOf(":"));
+        if (type == IGNORE_HOUSE) {
+            return IgnoreHouse;
         }
-        if (p.equals("NAME") && !(myUsername.equals(""))) {
-            return myUsername;
+        if (type == IGNORE_PRIVATE) {
+            return IgnorePrivate;
         }
-        if (p.equals("NAMEPASSWORD") && !password.equals("")) {
-            return password;
-        }
-
-        tparam = Config.getParam(p);
-        if (tparam == null) {
-            MWLogger.errLog("Unable to find param " + p);
-            tparam = "";
-        }
-
-        if (tparam.equals("") && p.equals("NAME") && isDedicated()) {
-            MWLogger.infoLog("Error: no dedicated name set.");
-            System.exit(1);
-        }
-        return (tparam);
+        return (new java.util.Vector<String>(1, 1));
     }
 
-    // IClient interface
-    @Override
-    public void systemMessage(String message) {
-
-        if (!isDedicated()) {
-            String sysColour = getConfigParam("SYSMESSAGECOLOR");
-            message = "<font color=\"" + sysColour + "\"><b>" + message
-                            + "</b></font>";
-
-            addToChat(message, CCommPanel.CHANNEL_SLOG);
-            if (Config.isParam("MAINCHANNELSM")) {
-                addToChat(message);
-            }
-        }
-    }
-
-    @Override
-    public void errorMessage(String message) {
-        if (!isDedicated()) {
-            javax.swing.JOptionPane.showMessageDialog(MainFrame, message);
-        } else {
-            MWLogger.errLog("Error: " + message);
-        }
-    }
-
-    @Override
-    public void processIncoming(String incoming) {
-        IProtCommand pcommand = null;
-
-        // MWLogger.infoLog("INCOMING: " + incoming);
-        if (incoming.startsWith(IClient.PROTOCOL_PREFIX)) {
-            incoming = incoming.substring(IClient.PROTOCOL_PREFIX.length());
-            java.util.StringTokenizer ST = new java.util.StringTokenizer(incoming,
-                  PROTOCOL_DELIMITER);
-            String s = ST.nextToken();
-            pcommand = getProtCommand(s);
-            if ((pcommand != null) && pcommand.check(s)) {
-                if (!pcommand.execute(incoming)) {
-                    MWLogger.infoLog("COMMAND ERROR: wrong protocol command executed or execution failed.");
-                    MWLogger.infoLog("COMMAND RECEIVED: " + incoming);
-                }
-                return;
-            }
-            if (pcommand == null) {
-                MWLogger.infoLog("COMMAND ERROR: unknown protocol command from server.");
-                MWLogger.infoLog("COMMAND RECEIVED: " + incoming);
-                if (incoming.equalsIgnoreCase("denied	/denied")) {
-                    // let them know it's a wrong password
-                    javax.swing.JOptionPane.showMessageDialog(getMainFrame(),
-                          "Unknown Username/Password combination.");
-                }
-                return;
-            }
-        } else {
-            MWLogger.infoLog("COMMAND ERROR: received protocol command without protocol prefix.");
-            MWLogger.infoLog("COMMAND RECEIVED: " + incoming);
-            return;
-        }
-    }
-
-    @Override
-    public void connectionLost() {
-
-        Status = STATUS_DISCONNECTED;
-        if (SignOff) {
-            return;
-        }
-
-        errorMessage("Connection lost.");
-        if (isDedicated()) {
-
-            // no point in having a server open w/o connection to campaign
-            // server
-            stopHost();
-
-            // wait at least 90 seconds before trying to connect again
-            try {
-                Thread.sleep(90000);
-            } catch (Exception ex) {
-                MWLogger.errLog(ex);
-            }
-
-            // keep retrying every two minutes after the first 90 sec downtime.
-            while (Status == STATUS_DISCONNECTED) {
-                connectToServer(Config.getParam("SERVERIP"),
-                      Config.getIntParam("SERVERPORT"));
-                if (Status == STATUS_DISCONNECTED) {
-                    MWLogger.infoLog("Couldn't reconnect to server. Retrying in 120 seconds.");
-                    try {
-                        Thread.sleep(90000);
-                    } catch (Exception exe) {
-                        MWLogger.errLog(exe);
-                    }
-                }
-            }
-        } else {
-            Users.clear();
-            refreshGUI(REFRESH_STATUS);
-        }
-    }
-
-    @Override
-    public void connectionEstablished() {
-
-        LastPing = System.currentTimeMillis() / 1000;
-        MWLogger.errLog("Connected. Signing on.");
-
-        String VersionSubID = new java.rmi.dgc.VMID().toString();
-        java.util.StringTokenizer ST = new java.util.StringTokenizer(VersionSubID, ":");
-
-        /*
-         * If password is blank, send a filler password instead of an empty
-         * token. This prevents the no-password "whitescreen" error. HACKY. It
-         * would be probably be better to actually fix the server SignOn so an
-         * empty password creates a nobody, but this does the trick ...
-         */
-        String passToSend = getConfigParam("NAMEPASSWORD");
-        if ((passToSend == null) || (passToSend.length() == 0)) {
-            passToSend = "1337";
-        }
-
-        Connector.send(IClient.PROTOCOL_PREFIX + "signon\t" + getConfigParam("NAME")
-                             + "\t" + passToSend + "\t" + getProtocolVersion() + "\t"
-                             + Config.getParam("COLOR") + "\t" + CLIENT_VERSION + "\t"
-                             + ST.nextToken());
-        Status = STATUS_LOGGEDOUT;
-        if (!isDedicated()) {
-            refreshGUI(REFRESH_STATUS);
-        }
+    public void setGame(Game game) {
+        this.game = game;
     }
 
     public void rewardPointsDialog() {
@@ -2311,206 +2821,6 @@ public final class MWClient extends GameHost implements IClient {
     public void connectToServer() {
         connectToServer(Config.getParam("SERVERIP"),
               Config.getIntParam("SERVERPORT"));
-    }
-
-    public void connectToServer(String ip, int port) {
-        if ((myUsername == null) || myUsername.equals("")) {
-            errorMessage("Username not set.");
-            return;
-        }
-        // connect to specific ip and port
-        // System exits from connector on failure.
-        Connector.connect(ip, port);
-    }
-
-    public void goodbye() {
-        SignOff = true;
-        if (!isDedicated() && (Status > STATUS_LOGGEDOUT)) {
-            getConfig().setParam(
-                  "PANELDIVIDER",
-                  Integer.toString(getMainFrame().getMainPanel()
-                                         .getTabSPane().getDividerLocation()));
-            getConfig().setParam(
-                  "VERTICALDIVIDER",
-                  Integer.toString(getMainFrame().getMainPanel()
-                                         .getMainSPane().getDividerLocation()));
-            getConfig().setParam(
-                  "PLAYERPANELDIVIDER",
-                  Integer.toString(getMainFrame().getMainPanel()
-                                         .getSideSPane().getDividerLocation()));
-            getConfig().setParam("WINDOWSTATE",
-                  Integer.toString(getMainFrame().getExtendedState()));
-            getConfig().setParam("WINDOWHEIGHT",
-                  Integer.toString(getMainFrame().getHeight()));
-            getConfig().setParam("WINDOWWIDTH",
-                  Integer.toString(getMainFrame().getWidth()));
-            getConfig().setParam("WINDOWLEFT",
-                  Integer.toString(getMainFrame().getX()));
-            getConfig().setParam("WINDOWTOP",
-                  Integer.toString(getMainFrame().getY()));
-            getConfig().saveConfig();
-        }
-        if (Status != STATUS_DISCONNECTED) {
-            // serverSend("GB");
-            Connector.send(IClient.PROTOCOL_PREFIX + "signoff");
-            dataFetcher.closeDataConnection();
-            Connector.closeConnection();
-        }
-
-        if (getConfig().isParam("ENABLEEXITCLIENTSOUND")) {
-            doPlaySound(getConfigParam("SOUNDONEXITCLIENT"), false);
-        }
-    }
-
-    public void startHost(boolean dedicated, boolean deploy,
-          boolean loadSavegame) {
-
-        java.util.ArrayList<Unit> meks;
-        java.util.ArrayList<CUnit> autoArmy;
-
-        //@salient - check quirk xml file sizes with server
-        if (Boolean.parseBoolean(getserverConfigs("EnableQuirks"))) {
-            java.io.File canon = new java.io.File("data" + java.io.File.separator + "canonUnitQuirks.xml");
-            java.io.File custom = new java.io.File("data" +
-                                                         java.io.File.separator +
-                                                         "mmconf" +
-                                                         java.io.File.separator +
-                                                         "unitQuirksOverride.xml");
-            long canonFileLength = canon.length(); // returns 0L if does not exist
-            long customFileLength = custom.length();
-            sendChat(mekwars.client.MWClient.CAMPAIGN_PREFIX +
-                           "c QUIRKCHECK#" +
-                           canonFileLength +
-                           "#" +
-                           customFileLength);
-        }
-
-        // reread the config to allow the user to change setting during runtime
-        String ip = "127.0.0.1";
-        if (!getConfigParam("IP:").equals("")) {// IP Setting set, override IP
-            // detection.
-            try {
-                ip = getConfigParam("IP:");
-                java.net.InetAddress IA = java.net.InetAddress.getByName(ip); // Resolve Dyndns
-                // Entries
-                ip = IA.getHostAddress();
-            } catch (Exception ex) {
-                showInfoWindow(
-                      "Couldn't set IP. Please check the spelling of mwconfig.txt's IP value or comment it out to use autodetection.");
-                return;
-            }
-        }
-
-        String MMVersion = getserverConfigs("AllowedMegaMekVersion");
-        if (!MMVersion.equals("-1")
-                  && !MMVersion.equalsIgnoreCase(megamek.SuiteConstants.VERSION.toString())) {
-            if (isDedicated()) {
-                MWLogger.errLog("You are using an invalid version of MegaMek. Please use version "
-                                      + MMVersion);
-                try {
-                    stopHost();
-                    goodbye();
-                    Runtime runtime = Runtime.getRuntime();
-                    String[] call = { "java", "-jar", "MekWarsAutoUpdate.jar",
-                                      "DEDICATED" };
-                    runtime.exec(call);
-                } catch (Exception ex) {
-                    MWLogger.errLog(ex);
-                }
-                System.exit(0);
-            } else {
-                showInfoWindow("You are using an invalid version of MegaMek. Please use version "
-                                     + MMVersion);
-            }
-            return;
-        }
-
-        if (servers.get(myUsername) != null) {
-            if (isDedicated()) {
-                MWLogger.errLog("Attempted to start a second host while host was already running.");
-            } else {
-                String toUser = "CH|CLIENT: You already have a host open.";
-                doParseDataInput(toUser);
-            }
-            return;
-        }
-
-        // int port = Integer.parseInt(getConfigParam("PORT:"));
-        int MaxPlayers = Integer.parseInt(getConfigParam("MAXPLAYERS:"));
-        String comment = getConfigParam("COMMENT:");
-        String gpassword = getConfigParam("GAMEPASSWORD:");
-
-        if (gpassword == null) {
-            gpassword = "";
-        }
-        try {
-            myServer = new Server(gpassword, myPort, new GameManager());
-            if (loadSavegame) {
-                java.awt.FileDialog f = new java.awt.FileDialog(MainFrame, "Load Savegame");
-                f.setDirectory(System.getProperty("user.dir") + "/savegames");
-                f.setVisible(true);
-                myServer.loadGame(new java.io.File(f.getDirectory(), f.getFile()));
-            }
-        } catch (Exception ex) {
-            try {
-                if (myServer == null) {
-                    MWLogger.errLog("Error opening dedicated server. Result = null host.");
-                    MWLogger.errLog(ex);
-                } else {
-                    MWLogger.errLog("Error opening dedicated server. Will attempt a .die().");
-                    MWLogger.errLog(ex);
-                    myServer.die();
-                    myServer = null;
-                }
-            } catch (Exception e) {
-                MWLogger.errLog("Further error while trying to clean up failed host attempt.");
-                MWLogger.errLog(e);
-            }
-            return;
-        }
-
-        ((Game) myServer.getGame()).addGameListener(this);
-        // Send the new game info to the Server
-        serverSend("NG|"
-                         + new MMGame(myUsername, ip, myPort, MaxPlayers,
-              megamek.SuiteConstants.VERSION.toString(), comment)
-                                 .toString());
-        if (!dedicated) {
-
-            if (deploy) {
-                meks = myPlayer.getLockedUnits();
-                autoArmy = myPlayer.getAutoArmy();
-            } else {
-                meks = new java.util.ArrayList<Unit>();
-                autoArmy = new java.util.ArrayList<CUnit>();
-            }
-            MWLogger.infoLog("Joining own game!");
-
-            ClientThread MMGameThread = new ClientThread(myUsername,
-                  myUsername, "127.0.0.1", myPort, this, meks, autoArmy);
-            mmClientThreads.add(MMGameThread);
-            ThreadManager.getInstance().runInThreadFromPool(MMGameThread);
-            serverSend("JG|" + myUsername);
-        } else {
-            clearSavedGames();
-            purgeOldLogs();
-            ClientPreferences cs = PreferenceManager.getClientPreferences();
-            cs.setStampFilenames(Boolean
-                                       .parseBoolean(getserverConfigs("MMTimeStampLogFile")));
-        }
-    }
-
-    // Stop & send the close game event to the Server
-    public void stopHost() {
-
-        serverSend("CG");// send close game to server
-        try {
-            myServer.die();
-        } catch (Exception ex) {
-            MWLogger.errLog(ex);
-            MWLogger.errLog("Megamek Error:");
-        }
-        myServer = null;
     }
 
     public void resetGame() { // reset hosted game
@@ -2620,10 +2930,6 @@ public final class MWClient extends GameHost implements IClient {
         System.gc();
     }
 
-    public java.util.Vector<IBasicOption> getGameOptions() {
-        return GameOptions;
-    }
-
     public java.awt.Dimension getMapSize() {
         return MapSize;
     }
@@ -2631,6 +2937,15 @@ public final class MWClient extends GameHost implements IClient {
     public int getMapMedium() {
         return mapMedium;
     }
+
+    //@Salient ... ugh... how can i get to the damn house configs
+    //    public String getHouseConfigs(String key)
+    //    {
+    //    	//CampaignData.cd.ge
+    //    	SHouse house = CampaignData.cd.getHouseByName(this.getPlayer().getHouse());
+    //
+    //    	return CampaignData.cd.getServerConfigs().getProperty(key).trim();
+    //    }
 
     public PlanetEnvironment getCurrentEnvironment() {
         return currentEnvironment;
@@ -2644,112 +2959,8 @@ public final class MWClient extends GameHost implements IClient {
         return browser;
     }
 
-    public void getBlackMarketSettings() {
-        try {
-            dataFetcher.getBlackMarketSettings(this);
-        } catch (Exception ex) {
-            MWLogger.errLog(ex);
-        }
-
-    }
-
-    protected class TimeOutThread extends Thread {
-
-        mekwars.client.MWClient mwclient;
-
-        public TimeOutThread(mekwars.client.MWClient client) {
-            mwclient = client;
-        }
-
-        @Override
-        public void run() {
-            while (true) {
-                try {
-                    Thread.sleep(TimeOut * 100);
-                } catch (Exception ex) {
-                    MWLogger.errLog(ex);
-                }
-                if (Status != mekwars.client.MWClient.STATUS_DISCONNECTED) {
-                    long timeout = (System.currentTimeMillis() / 1000)
-                                         - LastPing;
-                    if (timeout > TimeOut) {
-                        systemMessage("Ping timeout (" + timeout + " s)");
-                        Connector.closeConnection();
-                    }
-                } else {
-                    LastPing = System.currentTimeMillis() / 1000;
-                }
-            }
-        }
-    }
-
-    /**
-     * Reloads new planet data from the server. This will be done asynchron, so you may have to wait a bit ;-)
-     */
-    synchronized public void refreshData() {
-
-        // if the map isnt visible, skip the refresh. waste of bandwidth.
-        if (!getConfig().isParam("MAPTABVISIBLE")) {
-            MWLogger.infoLog("Map visibility disabled. Skipping map data fetch!");
-            return;
-        }
-
-        if (!dataFetcher.getPlanetsUpdate(data)) {
-            // MWLogger.infoLog("MD5 does not match! Retrieve all
-            // planet data again.");
-            MWLogger.infoLog("MD5 does not match! But the md5 seems broken anyway...");
-            /*
-             * try { data = dataFetcher.getAllData(); } catch (IOException e) {
-             * MMClient.MWLogger.errLog(e);
-             * JOptionPane.showMessageDialog(null,
-             * "The map data could not be retrieved. The map will be disabled.\nTry again later."
-             * ); getMainFrame().getMainPanel().getMapPanel().setEnabled(false);
-             * }
-             */
-        }
-        updateDataFetcher = null;
-        // refresh the changed set... if more than one place want
-        // to know about, maybe a listener system would be better..
-        java.util.Map<Integer, Influences> changesSinceLastRefresh = dataFetcher
-                                                                           .getChangesSinceLastRefresh();
-        if (getMainFrame() != null) {
-            getMainFrame().getMainPanel().getMapPanel().getMap()
-                  .dataFetched(changesSinceLastRefresh);
-        }
-        MWLogger.infoLog("update for new planet data finished");
-    }
-
     public java.util.Map<Integer, Influences> getChangesSinceLastRefresh() {
         return dataFetcher.getChangesSinceLastRefresh();
-    }
-
-    /**
-     * @author jtighe Reload all the server data back into the client. Used when the client runs a command that
-     *       changes the server's data (ie - admin makes map change).
-     */
-    public void reloadData() {
-        try {
-            data = dataFetcher.getAllData();
-        } catch (Exception ex) {
-            if (!(ex instanceof java.net.SocketException)) {
-                MWLogger.errLog(ex);
-            }
-        }
-        try {
-            dataFetcher.getServerConfigData(this);
-        } catch (java.io.IOException e1) {
-            MWLogger.errLog(e1);
-        }
-    }
-
-    public void getServerConfigData() {
-        try {
-            dataFetcher.getServerConfigData(this);
-        } catch (Exception ex) {
-            if (!(ex instanceof java.net.SocketException)) {
-                MWLogger.errLog(ex);
-            }
-        }
     }
 
     public void loadServerCommmands() {
@@ -2761,224 +2972,6 @@ public final class MWClient extends GameHost implements IClient {
                 MWLogger.errLog(ex);
             }
         }
-    }
-
-    public void loadServerTraitFiles() {
-        try {
-            dataFetcher.getServerTraitFiles();
-        } catch (Exception ex) {
-            if (!(ex instanceof java.net.SocketException)) {
-
-                MWLogger.errLog("Error loading Server Trait files");
-                MWLogger.errLog(ex);
-            }
-        }
-    }
-
-    public void loadBannedAmmo() {
-        try {
-            dataFetcher.getBannedAmmoData(this);
-        } catch (Exception ex) {
-            if (!(ex instanceof java.net.SocketException)) {
-                MWLogger.errLog("Error loading Server banned ammo file");
-                MWLogger.errLog(ex);
-            }
-        }
-    }
-
-    /**
-     * @return Returns the data.
-     */
-    public CampaignData getData() {
-
-        if ((data == null) && !isDedicated()) {
-
-            // Lets reload everything from the cache and then pull down and
-            // planet changes
-            // If a majory campaign change has happened i.e. new terrains/houses
-            // then the clients will be able to use the refresh all command via
-            // CMainFrame --Torren
-            try {
-                MWLogger.infoLog("try to import the planetcache");
-                // sanity check
-                dataFetcher.checkServerVersion(this);
-                // data = dataFetcher.getAllData();
-
-                data = dataFetcher.getCacheData(getCacheDir());
-                if ((data == null) || (data.getAllPlanets().size() == 0)
-                          || (data.getAllHouses().size() == 0)) {
-                    throw new Exception("data still empty");
-                }
-                refreshData();
-                dataFetcher.store();
-                MWLogger.infoLog("cache data loaded");
-            } catch (Throwable e) {
-
-                if (!(e instanceof java.io.FileNotFoundException)) {
-                    MWLogger.errLog((Exception) e);
-                }
-                MWLogger.infoLog("need to fetch all planet data..");
-                try {
-                    data = dataFetcher.getAllData();
-                    dataFetcher.store();
-                } catch (java.net.ConnectException e1) {
-                    if (splash != null) {
-                        splash.setStatus(splash.STATUS_DATAERROR);
-                    }
-                    MWLogger.errLog(e1);
-                    MWLogger.errLog(getCacheDir());
-                    Object[] options = { "Exit", "Continue" };
-                    int selectedValue = javax.swing.JOptionPane.showOptionDialog(null,
-                          "Could not connect to server to fetch map data.",
-                          "Connection error!", javax.swing.JOptionPane.DEFAULT_OPTION,
-                          javax.swing.JOptionPane.ERROR_MESSAGE, null, options,
-                          options[0]);
-                    if (selectedValue == 0) {
-                        System.exit(0);// exit, if they so choose
-                    }
-                } catch (java.io.IOException e1) {
-                    if (splash != null) {
-                        splash.setStatus(splash.STATUS_DATAERROR);
-                    }
-                    MWLogger.errLog(e1);
-                    javax.swing.JOptionPane
-                          .showMessageDialog(null,
-                                "Server is busy while fetching planet data.\nTry again later.");
-                } catch (Throwable e1) {
-                    if (splash != null) {
-                        splash.setStatus(splash.STATUS_DATAERROR);
-                    }
-                    MWLogger.errLog((Exception) e1);
-                    Object[] options = { "Exit", "Continue" };
-                    int selectedValue = javax.swing.JOptionPane
-                                              .showOptionDialog(
-                                                    null,
-                                                    "Unknown error while fetching map data. Please\n"
-                                                          + "report this bug, and keep your error logs handy.",
-                                                    "Unknown error!",
-                                                    javax.swing.JOptionPane.DEFAULT_OPTION,
-                                                    javax.swing.JOptionPane.ERROR_MESSAGE, null, options,
-                                                    options[0]);
-                    if (selectedValue == 0) {
-                        System.exit(0);// exit, if they so choose
-                    }
-                }
-                if (splash != null) {
-                    splash.setStatus(splash.STATUS_FETCHINGDATA);
-                }
-            }
-
-            try {
-                dataFetcher.getServerConfigData(this);
-            } catch (Exception ex) {
-                MWLogger.errLog("Unable to fetch Server configs.");
-                MWLogger.errLog(ex);
-            }
-
-            try {
-                dataFetcher.getBannedAmmoData(this);
-            } catch (Exception ex) {
-                MWLogger.errLog("Unable to fetch server banned ammo data.");
-                MWLogger.errLog(ex);
-            }
-
-            // close the connection.a
-            dataFetcher.closeDataConnection();
-        }
-
-        return data;
-    }
-
-    public double getAmmoCost(String ammo) {
-        EquipmentType eq = EquipmentType.get(ammo);
-
-
-        if (eq == null) {
-            return -1;
-        }
-
-        if (!getCampaign().getBlackMarketParts().containsKey(
-              eq.getInternalName())) {
-            return -1;
-        }
-
-        if (getCampaign().getBlackMarketParts().get(eq.getInternalName())
-                  .getCost() > 0) {
-            return getCampaign().getBlackMarketParts()
-                         .get(eq.getInternalName()).getCost();
-        }
-
-        return -1.0;
-    }
-
-    /**
-     * Does things when a tick is arrived.
-     */
-    public void processTick(int time) {
-        // set tick counter
-        getMainFrame().getMainPanel().getPlayerPanel()
-              .setNextTick(System.currentTimeMillis() + time);
-        getMainFrame().getMainPanel().getMapPanel().getMap().processTick();
-        System.gc(); // Decicded to have the client do a GC every tick as
-        // well.
-    }
-
-    /**
-     * Return the directory, where all cache files can go into. The dirname depends on the server you connect.
-     */
-    public String getCacheDir() {
-        // if (cacheDir == null) {
-        // first access. Check if need to create directory.
-        cacheDir = "data/servers/" + Config.getParam("SERVERIP") + "."
-                         + Config.getParam("SERVERPORT");
-        java.io.File dir = new java.io.File(cacheDir);
-        if (!dir.exists()) {
-            dir.mkdirs();
-        }
-        // }
-        return cacheDir;
-    }
-
-    public void setIgnoreHouse() {
-        IgnoreHouse = splitString(Config.getParam("IGNOREHOUSE"), ",");
-    }
-
-    public void setIgnorePublic() {
-        IgnorePublic = splitString(Config.getParam("IGNOREPUBLIC"), ",");
-    }
-
-    public void setIgnorePrivate() {
-        IgnorePrivate = splitString(Config.getParam("IGNOREPRIVATE"), ",");
-
-    }
-
-    public void setKeyWords() {
-        KeyWords = splitString(Config.getParam("KEYWORDS"), ",");
-    }
-
-    /**
-     * Sets the current advanced terrain and map size that will be used on next playboard
-     */
-    public void setAdvancedTerrain(AdvancedTerrain aTerrain) {
-        this.aTerrain = aTerrain;
-    }
-
-    /**
-     * Sets the current environment, map size and map medium that will be used on next playboard
-     */
-    public void setEnvironment(PlanetEnvironment pe, java.awt.Dimension map,
-          int mapMedium) {
-        currentEnvironment = pe;
-        MapSize = map;
-        this.mapMedium = mapMedium;
-    }
-
-    public void setBuildingTemplate(Buildings buildingTemplate) {
-        this.buildingTemplate = buildingTemplate;
-    }
-
-    public Buildings getBuildingTemplate() {
-        return buildingTemplate;
     }
 
     /**
@@ -3011,7 +3004,7 @@ public final class MWClient extends GameHost implements IClient {
             }
             getMainFrame().getMainPanel().getUserListPanel()
                   .setActivityButtonEnabled(true);
-        } else if (Status == mekwars.client.MWClient.STATUS_DISCONNECTED) {
+        } else if (Status == STATUS_DISCONNECTED) {
             getMainFrame().getMainPanel().getUserListPanel()
                   .setActivateButtonText("Disconnected");
             getMainFrame().getMainPanel().getUserListPanel()
@@ -3038,23 +3031,11 @@ public final class MWClient extends GameHost implements IClient {
         refreshGUI(REFRESH_PLAYERPANEL);
     }
 
-    public String getserverConfigs(String key) {
-        if (CampaignData.cd.getServerConfigs().getProperty(key) == null) {
-            MWLogger.infoLog("You're missing the config variable: "
-                                   + key + " in serverconfig!");
-            return "-1";
+    public synchronized void clearUserCampaignData() {
+        for (CUser currUser : Users) {
+            currUser.clearCampaignData();
         }
-        return CampaignData.cd.getServerConfigs().getProperty(key).trim();
     }
-
-    //@Salient ... ugh... how can i get to the damn house configs
-    //    public String getHouseConfigs(String key)
-    //    {
-    //    	//CampaignData.cd.ge
-    //    	SHouse house = CampaignData.cd.getHouseByName(this.getPlayer().getHouse());
-    //
-    //    	return CampaignData.cd.getServerConfigs().getProperty(key).trim();
-    //    }
 
     public java.util.Properties getserverConfigs() {
         return CampaignData.cd.getServerConfigs();
@@ -3063,56 +3044,6 @@ public final class MWClient extends GameHost implements IClient {
     public boolean isLeader() {
         return getUserLevel() >= Integer
                                        .parseInt(getserverConfigs("factionLeaderLevel"));
-    }
-
-    public int getUserLevel() {
-        return getUser(getUsername()).getUserlevel();
-    }
-
-    // this adds 1 to the number of games played and if it matched the restart
-    // amount it restarts the ded.
-    public void checkForRestart() {
-        gameCount++;
-
-        // only check for restart once every 30 seconds.
-        if ((System.currentTimeMillis() - 30000) < lastResetCheck) {
-            return;
-        }
-
-        if (gameCount >= dedRestartAt) {
-            MWLogger.infoLog("System has reached " + gameCount
-                                   + " games played and is restarting");
-            try {
-                Thread.sleep(5000);
-            }// give people time to vacate
-            catch (Exception ex) {
-                MWLogger.errLog(ex);
-            }
-            stopHost();
-            try {
-                Thread.sleep(5000);
-            } catch (Exception ex) {
-                MWLogger.errLog(ex);
-            }
-            try {
-                Runtime runTime = Runtime.getRuntime();
-                if (new java.io.File("MekWarsDed.jar").exists()) {
-                    String[] call = { "java", "-Xmx512m", "-jar",
-                                      "MekWarsDed.jar" };
-                    runTime.exec(call);
-                } else {
-                    String[] call = { "java", "-Xmx512m", "-jar",
-                                      "MekWarsClient.jar" };
-                    runTime.exec(call);
-                }
-                System.exit(0);
-
-            } catch (Exception ex) {
-                MWLogger.errLog("Unable to find MekWarsDed.jar");
-            }
-        }
-
-        lastResetCheck = System.currentTimeMillis();
     }
 
     public void clearSavedGames() {
@@ -3261,104 +3192,6 @@ public final class MWClient extends GameHost implements IClient {
 
         } catch (Exception ex) {
             // TODO: Log error?
-        }
-    }
-
-    /**
-     * @param money
-     * @param shortname
-     * @param amount
-     *
-     * @return String Hokey function to return the correct syntax for long and short money/flu messages to the user.
-     *       ClientVersion
-     *
-     * @author Torren (Jason Tighe)
-     */
-    public String moneyOrFluMessage(boolean money, boolean shortname, int amount) {
-        return moneyOrFluMessage(money, shortname, amount, false);
-    }
-
-    public String moneyOrFluMessage(boolean money, boolean shortname,
-          int amount, boolean showSign) {
-        String result = java.text.NumberFormat.getInstance().format(amount);
-
-        String moneyShort = getserverConfigs("MoneyShortName");
-        String moneyLong = getserverConfigs("MoneyLongName");
-        String fluShort = getserverConfigs("FluShortName");
-        String fluLong = getserverConfigs("FluLongName");
-        // String RPLong = getserverConfigs("RPLongName");
-        // String RPShort = getserverConfigs("RPShortName");
-
-        String sign = "+";
-
-        if (amount < 0) {
-            amount *= -1;
-            result = "";
-            sign = "-";
-        }
-
-        if (money) {
-            if (shortname) {
-                if ((amount == 1) && moneyShort.endsWith("s")) {
-                    result += moneyShort.substring(0, moneyShort.length() - 1);
-                } else if ((amount > 1) && !moneyShort.endsWith("s")) {
-                    result += moneyShort + "s";
-                } else {
-                    result += moneyShort;
-                }
-            } else {// longname
-                if ((amount == 1) && moneyLong.endsWith("s")) {
-                    result += " "
-                                    + moneyLong.substring(0, moneyLong.length() - 1);
-                } else if ((amount > 1) && !moneyLong.endsWith("s")) {
-                    result += " " + moneyLong + "s";
-                } else {
-                    result += " " + moneyLong;
-                }
-            }
-        } else {// influence
-            if (shortname) {
-                result += fluShort;
-            } else {
-                result += " " + fluLong;
-            }
-        }
-
-        // add sign, if set
-        if (showSign) {
-            result = sign + result;
-        }
-
-        return result.trim();
-    }
-
-    public void loadMegaMekClient() {
-        try {
-            setWaiting(true);
-            sendChat(IClient.PROTOCOL_PREFIX + "c GetServerMegaMekGameOptions");
-            try {
-                while (isWaiting()) {
-                    Thread.sleep(10);
-                }
-            } catch (Exception ex) {
-                MWLogger.errLog(ex);
-            }
-            GameOptions gameOptions = new GameOptions();
-            gameOptions.loadOptions();
-            GameOptionsDialog MMGOD = new GameOptionsDialog(getMainFrame(),
-                  gameOptions, true);
-            MMGOD.update(gameOptions);
-            MMGOD.setEditable(true);
-            MMGOD.setVisible(true);
-            MMGOD.dispose();
-            java.io.File localGameOptions = new java.io.File("mmconf/gameoptions.xml");
-
-            if (localGameOptions.lastModified() >= (System.currentTimeMillis() - 1000)) {
-                sendGameOptionsToServer();
-            }
-        } catch (Exception ex) {
-            MWLogger.errLog("Unable to pull server MegaMek Logs");
-            MWLogger.errLog(ex);
         }
     }
 
@@ -3591,28 +3424,6 @@ public final class MWClient extends GameHost implements IClient {
 
     }
 
-    public boolean isUsingAdvanceRepairs() {
-        return Boolean.parseBoolean(getserverConfigs("UseAdvanceRepair"))
-                     || Boolean.parseBoolean(getserverConfigs("UseSimpleRepair"));
-    }
-
-    public boolean isDedicated() {
-        return Config.isParam("DEDICATED");
-    }
-
-    public void updateOpData(boolean deleteCache) {
-        try {
-            if (deleteCache) {
-                new java.io.File(cacheDir + "/OpList.txt").delete();
-            }
-
-            dataFetcher.checkForMostRecentOpList();
-            setupAllOps();
-        } catch (Exception ex) {
-            MWLogger.errLog(ex);
-        }
-    }
-
     public void updateParam(java.util.StringTokenizer ST) {
         try {
             getConfig().setParam(ST.nextToken(), ST.nextToken());
@@ -3625,18 +3436,6 @@ public final class MWClient extends GameHost implements IClient {
 
     public Server getMyServer() {
         return myServer;
-    }
-
-    public boolean isWaiting() {
-        return waitingOnCommand;
-    }
-
-    public void setWaiting(boolean waiting) {
-        waitingOnCommand = waiting;
-    }
-
-    public java.util.HashMap<String, Equipment> getBlackMarketEquipmentList() {
-        return blackMarketEquipmentList;
     }
 
     public void updatePartsBlackMarket(String data, int year) {
@@ -3713,59 +3512,44 @@ public final class MWClient extends GameHost implements IClient {
         System.exit(0);
     }
 
-    /*
-     * INNER CLASSES
-     */
-    static class AutoSaveFilter implements java.io.FilenameFilter {
-        @Override
-        public boolean accept(java.io.File dir, String name) {
-            return (name.startsWith("autosave"));
+    public void goodbye() {
+        SignOff = true;
+        if (!isDedicated() && (Status > STATUS_LOGGEDOUT)) {
+            getConfig().setParam(
+                  "PANELDIVIDER",
+                  Integer.toString(getMainFrame().getMainPanel()
+                                         .getTabSPane().getDividerLocation()));
+            getConfig().setParam(
+                  "VERTICALDIVIDER",
+                  Integer.toString(getMainFrame().getMainPanel()
+                                         .getMainSPane().getDividerLocation()));
+            getConfig().setParam(
+                  "PLAYERPANELDIVIDER",
+                  Integer.toString(getMainFrame().getMainPanel()
+                                         .getSideSPane().getDividerLocation()));
+            getConfig().setParam("WINDOWSTATE",
+                  Integer.toString(getMainFrame().getExtendedState()));
+            getConfig().setParam("WINDOWHEIGHT",
+                  Integer.toString(getMainFrame().getHeight()));
+            getConfig().setParam("WINDOWWIDTH",
+                  Integer.toString(getMainFrame().getWidth()));
+            getConfig().setParam("WINDOWLEFT",
+                  Integer.toString(getMainFrame().getX()));
+            getConfig().setParam("WINDOWTOP",
+                  Integer.toString(getMainFrame().getY()));
+            getConfig().saveConfig();
+        }
+        if (Status != STATUS_DISCONNECTED) {
+            // serverSend("GB");
+            Connector.send(IClient.PROTOCOL_PREFIX + "signoff");
+            dataFetcher.closeDataConnection();
+            Connector.closeConnection();
+        }
+
+        if (getConfig().isParam("ENABLEEXITCLIENTSOUND")) {
+            doPlaySound(getConfigParam("SOUNDONEXITCLIENT"), false);
         }
     }
-
-    private static class PurgeAutoSaves implements Runnable {
-
-        public PurgeAutoSaves() {
-            super();
-        }
-
-        @Override
-        public void run() {
-            long twoHours = 2 * 60 * 60 * 1000;
-            try {
-                while (true) {
-                    java.io.File saveFiles = new java.io.File("./savegames");
-                    if (!saveFiles.exists()) {
-                        return;
-                    }
-                    java.io.FilenameFilter filter = new mekwars.client.MWClient.AutoSaveFilter();
-                    java.io.File[] fileList = saveFiles.listFiles(filter);
-                    for (java.io.File savedFile : fileList) {
-                        long lastTime = savedFile.lastModified();
-                        if (savedFile.exists()
-                                  && savedFile.isFile()
-                                  && (lastTime < (System.currentTimeMillis() - twoHours))) {
-                            try {
-                                MWLogger.infoLog("Purging File: "
-                                                       + savedFile.getName()
-                                                       + " Time: "
-                                                       + lastTime
-                                                       + " purge Time: "
-                                                       + (System.currentTimeMillis() - twoHours));
-                                savedFile.delete();
-                            } catch (Exception ex) {
-                                MWLogger.errLog("Error trying to delete these files!");
-                                MWLogger.errLog(ex);
-                            }
-                        }
-                    }
-                    Thread.sleep(twoHours);
-                }
-            } catch (Exception ex) {
-                return;
-            }
-        }
-    }// end PurgeAutoSaves
 
     public void createNewHouse(java.util.StringTokenizer st) {
         House house = new House();
@@ -3790,6 +3574,21 @@ public final class MWClient extends GameHost implements IClient {
      * redundant code since MM does not always send a discon event.
      */
     public void gamePlayerStatusChange(GameEvent e) {
+    }
+
+    public java.util.List<ClientThread> getMMClients() {
+        return mmClientThreads;
+    }
+
+    @Override
+    public void gameClientFeedbackRequest(GameCFREvent arg0) {
+        // TODO Auto-generated method stub
+
+    }
+
+    public boolean isUsingAdvanceRepairs() {
+        return Boolean.parseBoolean(getserverConfigs("UseAdvanceRepair"))
+                     || Boolean.parseBoolean(getserverConfigs("UseSimpleRepair"));
     }
 
     protected void sendServerGameUpdate() {
@@ -3843,6 +3642,18 @@ public final class MWClient extends GameHost implements IClient {
         if (isDedicated()) {
             checkForRestart();
         }
+    }
+
+    public synchronized CUser getUser(String name) {
+
+        for (CUser currUser : Users) {
+            if (currUser.getName().equalsIgnoreCase(name)) {
+                return currUser;
+            }
+        }
+        CUser dummyUser = new CUser();
+        dummyUser.setColor(Config.getParam("CHATFONTCOLOR"));
+        return dummyUser;
     }
 
     public static StringBuilder prepareReport(GameInterface myGame,
@@ -3936,48 +3747,202 @@ public final class MWClient extends GameHost implements IClient {
         return result;
     }
 
-    public boolean getTargetSystemBanStatus(int type) {
-        if (getData().getBannedTargetingSystems().contains(type)) {
-            return true;
+    public Buildings getBuildingTemplate() {
+        return buildingTemplate;
+    }
+
+    public void setBuildingTemplate(Buildings buildingTemplate) {
+        this.buildingTemplate = buildingTemplate;
+    }
+
+    // this adds 1 to the number of games played and if it matched the restart
+    // amount it restarts the ded.
+    public void checkForRestart() {
+        gameCount++;
+
+        // only check for restart once every 30 seconds.
+        if ((System.currentTimeMillis() - 30000) < lastResetCheck) {
+            return;
         }
-        return false;
+
+        if (gameCount >= dedRestartAt) {
+            MWLogger.infoLog("System has reached " + gameCount
+                                   + " games played and is restarting");
+            try {
+                Thread.sleep(5000);
+            }// give people time to vacate
+            catch (Exception ex) {
+                MWLogger.errLog(ex);
+            }
+            stopHost();
+            try {
+                Thread.sleep(5000);
+            } catch (Exception ex) {
+                MWLogger.errLog(ex);
+            }
+            try {
+                Runtime runTime = Runtime.getRuntime();
+                if (new java.io.File("MekWarsDed.jar").exists()) {
+                    String[] call = { "java", "-Xmx512m", "-jar",
+                                      "MekWarsDed.jar" };
+                    runTime.exec(call);
+                } else {
+                    String[] call = { "java", "-Xmx512m", "-jar",
+                                      "MekWarsClient.jar" };
+                    runTime.exec(call);
+                }
+                System.exit(0);
+
+            } catch (Exception ex) {
+                MWLogger.errLog("Unable to find MekWarsDed.jar");
+            }
+        }
+
+        lastResetCheck = System.currentTimeMillis();
     }
 
-    public static long getSerialversionuid() {
-        return serialVersionUID;
+    /*
+     * INNER CLASSES
+     */
+    static class AutoSaveFilter implements java.io.FilenameFilter {
+        @Override
+        public boolean accept(java.io.File dir, String name) {
+            return (name.startsWith("autosave"));
+        }
     }
 
+    private static class PurgeAutoSaves implements Runnable {
 
-    public java.util.List<ClientThread> getMMClients() {
-        return mmClientThreads;
+        public PurgeAutoSaves() {
+            super();
+        }
+
+        @Override
+        public void run() {
+            long twoHours = 2 * 60 * 60 * 1000;
+            try {
+                while (true) {
+                    java.io.File saveFiles = new java.io.File("./savegames");
+                    if (!saveFiles.exists()) {
+                        return;
+                    }
+                    java.io.FilenameFilter filter = new mekwars.client.MWClient.AutoSaveFilter();
+                    java.io.File[] fileList = saveFiles.listFiles(filter);
+                    for (java.io.File savedFile : fileList) {
+                        long lastTime = savedFile.lastModified();
+                        if (savedFile.exists()
+                                  && savedFile.isFile()
+                                  && (lastTime < (System.currentTimeMillis() - twoHours))) {
+                            try {
+                                MWLogger.infoLog("Purging File: "
+                                                       + savedFile.getName()
+                                                       + " Time: "
+                                                       + lastTime
+                                                       + " purge Time: "
+                                                       + (System.currentTimeMillis() - twoHours));
+                                savedFile.delete();
+                            } catch (Exception ex) {
+                                MWLogger.errLog("Error trying to delete these files!");
+                                MWLogger.errLog(ex);
+                            }
+                        }
+                    }
+                    Thread.sleep(twoHours);
+                }
+            } catch (Exception ex) {
+                return;
+            }
+        }
+    }// end PurgeAutoSaves
+
+    protected class CAddToChat implements Runnable {
+        String input = "";
+        int channel = -1;
+        String tabName = "";
+
+        public CAddToChat(String tinput, int tchannel, String ttabName) {
+            input = tinput;
+            channel = tchannel;
+            tabName = ttabName;
+        }
+
+        @Override
+        public void run() {
+            (MainFrame.getMainPanel().getCommPanel()).setChat(input, channel,
+                  tabName);
+        }
+        //@salient discord bot chat capture
+        //if i wanted to capture multiple channels
+        //i'd have to do it here?
     }
 
-    private void chatCaptureForBot(String username, String addon, String input) //@salient
-    {
-        if (!Boolean.parseBoolean(getserverConfigs("Enable_Bot_Chat"))) {return;}
+    protected class CRefreshGUI implements Runnable {
+        protected int mode = -1;
 
-        String temp = getShortTime().trim() + username.trim() + addon.trim() + ":" + input;
-        temp = String.format("%s%n", temp);
+        public CRefreshGUI(int tmode) {
+            mode = tmode;
+        }
 
-        //		if(channel !=0)
-        //			return;
-
-        //call a new command to capture chat server side
-        sendChat(mekwars.client.MWClient.CAMPAIGN_PREFIX + "CHATBOT " + temp);
+        @Override
+        public void run() {
+            if (MainFrame == null) {
+                return;
+            }// return if main frame not yet drawn (still fetching data)
+            try {
+                switch (mode) {
+                    case REFRESH_USERLIST:
+                        MainFrame.getMainPanel().getUserListPanel().refresh();
+                        break;
+                    case REFRESH_PLAYERPANEL:
+                        MainFrame.getMainPanel().getPlayerPanel().refresh();
+                        break;
+                    case REFRESH_BATTLETABLE:
+                        MainFrame.refreshBattleTable();
+                        break;
+                    case REFRESH_HQPANEL:
+                        MainFrame.getMainPanel().getHQPanel().refresh();
+                        break;
+                    case REFRESH_STATUS:
+                        MainFrame.changeStatus(Status, LastStatus);
+                        break;
+                    case REFRESH_BMPANEL:
+                        MainFrame.getMainPanel().getBMPanel().refresh();
+                        break;
+                }
+            } catch (Exception ex) {
+                // do nothing
+            }
+        }
     }
 
-    @Override
-    public void gameClientFeedbackRequest(GameCFREvent arg0) {
-        // TODO Auto-generated method stub
+    protected class TimeOutThread extends Thread {
 
-    }
+        mekwars.client.MWClient mwclient;
 
-    public Game getGame() {
-        return game;
-    }
+        public TimeOutThread(mekwars.client.MWClient client) {
+            mwclient = client;
+        }
 
-    public void setGame(Game game) {
-        this.game = game;
+        @Override
+        public void run() {
+            while (true) {
+                try {
+                    Thread.sleep(TimeOut * 100);
+                } catch (Exception ex) {
+                    MWLogger.errLog(ex);
+                }
+                if (Status != STATUS_DISCONNECTED) {
+                    long timeout = (System.currentTimeMillis() / 1000)
+                                         - LastPing;
+                    if (timeout > TimeOut) {
+                        systemMessage("Ping timeout (" + timeout + " s)");
+                        Connector.closeConnection();
+                    }
+                } else {
+                    LastPing = System.currentTimeMillis() / 1000;
+                }
+            }
+        }
     }
 
 

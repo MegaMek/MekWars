@@ -308,7 +308,7 @@ public class DataFetchClient {
         }
 
         // clear the hash so we can add all the new stuff --Torren
-        //mwclient.clearBanTargeting();
+        //client.clearBanTargeting();
         if (!timestampMatch) { // BanTargeting
             BinReader in = openConnection("BanTargeting");
             String timestamp = "-1";

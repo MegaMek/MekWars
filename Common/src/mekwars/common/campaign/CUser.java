@@ -86,7 +86,7 @@ public class CUser implements Comparable<CUser>, IClientUser {
      */
     public CUser(String data) {
 
-        StringTokenizer ST = null;
+        StringTokenizer ST;
 
         addon = "";
         playerHouse = "";
@@ -102,34 +102,18 @@ public class CUser implements Comparable<CUser>, IClientUser {
             htmlColor = ST.nextToken();
             country = ST.nextToken();
             userLevel = Integer.parseInt(ST.nextToken());
-            isInvisible = Boolean.parseBoolean(ST.nextToken());
+            invisible = Boolean.parseBoolean(ST.nextToken());
         } catch (Exception ex) {
             MWLogger.errLog("Error in deserializing user");
         }
-    }
-
-    public void setName(String name) {
-        this.name = name;
-    }
-
-    public String getName() {
-        return name;
-    }
-
-    public void setAddon(String addon) {
-        this.addon = addon;
     }
 
     public String getAddon() {
         return addon;
     }
 
-    public void setCountry(String country) {
-        this.country = country;
-    }
-
-    public String getCountry() {
-        return country;
+    public void setAddon(String addon) {
+        this.addon = addon;
     }
 
     public void setHTMLColor(String color) {
@@ -140,40 +124,40 @@ public class CUser implements Comparable<CUser>, IClientUser {
         return htmlColor;
     }
 
-    public void setUserLevel(int level) {
-        this.userLevel = level;
-    }
-
     public int getUserLevel() {
         return userLevel;
     }
 
-    public void setFluff(String fluff) {
-        this.fluff = fluff;
+    public void setUserLevel(int level) {
+        this.userLevel = level;
     }
 
     public String getFluff() {
         return this.fluff;
     }
 
-    public String getHouse() {
-        return playerHouse;
+    public void setFluff(String fluff) {
+        this.fluff = fluff;
     }
 
-    public void setExp(int exp) {
-        this.exp = exp;
+    public String getHouse() {
+        return playerHouse;
     }
 
     public int getExp() {
         return exp;
     }
 
-    public void setRating(float rating) {
-        this.rating = rating;
+    public void setExp(int exp) {
+        this.exp = exp;
     }
 
     public float getRating() {
         return rating;
+    }
+
+    public void setRating(float rating) {
+        this.rating = rating;
     }
 
     public boolean isInvisible() {
@@ -238,6 +222,10 @@ public class CUser implements Comparable<CUser>, IClientUser {
         rgbColor = java.awt.Color.black;
     }
 
+    public int getStatus() {
+        return status;
+    }
+
     public void setStatus(int status) {
         this.status = status;
         if (status == IClient.STATUS_LOGGED_OUT) {
@@ -252,10 +240,6 @@ public class CUser implements Comparable<CUser>, IClientUser {
         }
     }
 
-    public int getStatus() {
-        return status;
-    }
-
     public boolean isLoggedIn() {
         return loggedIn;
     }
@@ -264,15 +248,15 @@ public class CUser implements Comparable<CUser>, IClientUser {
         StringBuilder info = new StringBuilder("<html><body>");
         info.append(getName());
 
-        if (Userlevel >= 100 && Userlevel < 200) {
+        if (userLevel >= 100 && userLevel < 200) {
             info.append(" (Moderator)");
         }
 
-        if (Userlevel >= 200) {
+        if (userLevel >= 200) {
             info.append(" (Admin)");
         }
 
-        if (!Country.equals("unknown")) {
+        if (!country.equals("unknown")) {
             info.append(" (");
             info.append(getCountry());
             info.append(")");
@@ -280,6 +264,22 @@ public class CUser implements Comparable<CUser>, IClientUser {
 
         info.append("</body></html>");
         return info.toString();
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public String getCountry() {
+        return country;
+    }
+
+    public void setCountry(String country) {
+        this.country = country;
     }
 
     public String getInfo(boolean removeImages) {
