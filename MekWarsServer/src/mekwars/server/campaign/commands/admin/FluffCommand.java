@@ -21,10 +21,6 @@ public class FluffCommand implements server.campaign.commands.Command {
     int accessLevel = server.MWChatServer.auth.IAuthenticator.ADMIN;
     String syntax = "Player Name#[fluff text][blank to clear]";
 
-    public int getExecutionLevel() {return accessLevel;}
-
-    public void setExecutionLevel(int i) {accessLevel = i;}
-
     public String getSyntax() {return syntax;}
 
     public void process(java.util.StringTokenizer command, String Username) {
@@ -101,4 +97,8 @@ public class FluffCommand implements server.campaign.commands.Command {
         server.campaign.CampaignMain.cm.doSendToAllOnlinePlayers("PI|FT|" + p.getName() + "|" + p.getFluffText(),
               false);
     }
+
+    public int getExecutionLevel() {return accessLevel;}
+
+    public void setExecutionLevel(int i) {accessLevel = i;}
 }

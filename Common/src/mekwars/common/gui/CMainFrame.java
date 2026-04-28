@@ -2212,7 +2212,7 @@ public class CMainFrame extends JFrame {
             return;
         }
 
-        CUser user = client.getUser(targetPlayer);
+        CUser user = (CUser) client.getUser(targetPlayer);
 
         String newFluff = JOptionPane.showInputDialog(this,
               "Fluff? (Leave blank to remove)",

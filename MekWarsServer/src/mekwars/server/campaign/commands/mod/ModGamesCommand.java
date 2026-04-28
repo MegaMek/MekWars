@@ -20,10 +20,6 @@ public class ModGamesCommand implements server.campaign.commands.Command {
     int accessLevel = server.MWChatServer.auth.IAuthenticator.MODERATOR;
     String syntax = "[Faction]";
 
-    public int getExecutionLevel() {return accessLevel;}
-
-    public void setExecutionLevel(int i) {accessLevel = i;}
-
     public String getSyntax() {return syntax;}
 
     public void process(java.util.StringTokenizer command, String Username) {
@@ -106,4 +102,8 @@ public class ModGamesCommand implements server.campaign.commands.Command {
         //server.MWLogger.modLog(Username + " used /c modgames.");
         server.campaign.CampaignMain.cm.doSendModMail("NOTE", Username + " used /c modgames.");
     }
+
+    public int getExecutionLevel() {return accessLevel;}
+
+    public void setExecutionLevel(int i) {accessLevel = i;}
 }

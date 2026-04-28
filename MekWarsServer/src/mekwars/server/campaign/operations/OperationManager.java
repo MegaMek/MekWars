@@ -80,6 +80,76 @@ public class OperationManager extends AbstractOperationManager implements I_Oper
 
     //METHODS
 
+    public void loadOperations() {
+        /*
+         * Check for the operations directories.
+         * If they're missing create them.
+         */
+        java.io.File shortDir = new java.io.File("./data/operations/short/");
+        java.io.File longDir = new java.io.File("./data/operations/long/");
+        java.io.File modDir = new java.io.File("./data/operations/modifiers/");
+        try {
+            if (!shortDir.exists()) {shortDir.mkdirs();}
+            if (!longDir.exists()) {longDir.mkdir();}
+            if (!modDir.exists()) {modDir.mkdir();}
+        } catch (Exception e) {
+            MWLogger.errLog("Error while creating operations directories.");
+        }
+
+        ops.clear();
+        mods.clear();
+        MULOnlyArmiesOpsLoad = false;
+
+        /*
+         * read the shortoperation's subdir and do loads. since every
+         * long has a corresponding short, its possible to do loads
+         * via the short names only (loader handles this properly)
+         */
+        String[] shortNames = shortDir.list();
+        for (int i = 0; i < shortNames.length; i++) {
+            Operation currOp = opLoader.loadOpValues(shortNames[i]);
+            ops.put(currOp.getName(), currOp);
+            if (currOp.getBooleanValue("MULArmiesOnly")) {
+                MULOnlyArmiesOpsLoad = true;
+            }
+        }
+
+        /*
+         * read the mod operations subdir and do loads. add the mods to
+         * target ops' modmaps as the loads occur. Throw error if, for some
+         * reason, a given target cannot be found.
+         */
+        String[] modNames = modDir.list();
+        for (int i = 0; i < modNames.length; i++) {
+            ModifyingOperation currMod = opLoader.loadModOpValues(modNames[i]);
+            mods.put(currMod.getName(), currMod);
+
+            /*
+             * mod loaded. now, try to put it into standard op's trees.
+             * targets are a string w/ ; as deliminter. trim to remove leading
+             * and trailing spaces.
+             */
+            String targets = currMod.getValueAsString("LinkedOperations");
+            java.util.StringTokenizer st = new java.util.StringTokenizer(targets, ";");
+            while (st.hasMoreTokens()) {
+                String currTarget = st.nextToken().trim();
+                Operation currOp = ops.get(currTarget);
+                if (currOp == null) {
+                    MWLogger.errLog("Error assigning modop target. Mod: " +
+                                          currMod.getName() +
+                                          " Target: " +
+                                          currTarget);
+                } else {currOp.addModifyingOperation(currMod);}
+            }//end while(more targets)
+        }//end modOp loading
+
+        /*
+         * Now that all Ops are loaded, write out the crib sheet for clients.
+         */
+        opWriter.writeOpList(ops);
+
+    }
+
     /**
      * Method which checks to see whether a player who logged out (quit client, crashed, etc) was involved in a game. If
      * so, a DisconnectionThread is started and a logout timestamp is set.
@@ -145,91 +215,20 @@ public class OperationManager extends AbstractOperationManager implements I_Oper
     }
 
     /**
-     * Method which checks to see whether a reconnecting player should have a DisconnectionThread halted and ShortOp
-     * SPlayer/Sarmy references refreshed.
+     * Method which returns the ShortOperation in which a player is participating.
      */
-    public void doReconnectCheckOnPlayer(String name) {
-
-        //see if the player is real
-        server.campaign.SPlayer p = server.campaign.CampaignMain.cm.getPlayer(name);
-        if (p == null) {return;}
-
-        //check to see if the player has a pending disco
-        OpsDisconnectionThread discoT = disconnectionThreads.get(p.getName().toLowerCase());
-        if (discoT == null) {
-
-            //Matches with more then 2 players do not get disconnection threads
-            //So check the player for those kinda ops.
-            if (server.campaign.CampaignMain.cm.getOpsManager().getShortOpForPlayer(p) != null) {
-                ShortOperation so = server.campaign.CampaignMain.cm.getOpsManager().getShortOpForPlayer(p);
-                if (so.getStatus() == ShortOperation.STATUS_REPORTING ||
-                          so.getStatus() == ShortOperation.STATUS_FINISHED) {return;}
-
-                //resend appropriate data to the player and update SO's references.
-                so.sendReconnectInfoToPlayer(p);
-            }
-            return;
+    public ShortOperation getShortOpForPlayer(server.campaign.SPlayer p) {
+        for (ShortOperation currSO : this.getRunningOps().values()) {
+            if (currSO.hasPlayer(p) && currSO.getStatus() != ShortOperation.STATUS_FINISHED) {return currSO;}
         }
-
-        //determine time offline
-        long currTime = System.currentTimeMillis();
-        long exitStamp = disconnectionTimestamps.get(p.getName().toLowerCase());
-        long discoDuration = currTime - exitStamp;
-
-        //prevent the thread from triggering a report
-        discoT.playerReturned(true, discoDuration);
-
-        //load the short operation in question. check for nullness and finished status
-        ShortOperation so = this.runningOperations.get(discoT.getShortID());
-        if (so == null) {return;}
-        if (so.getStatus() == ShortOperation.STATUS_REPORTING || so.getStatus() == ShortOperation.STATUS_FINISHED) {
-            return;
-        }
-
-        //adjust the duration by the grace period (expressed in seconds in config)
-        long gracePeriod = Long.parseLong(server.campaign.CampaignMain.cm.getConfig("DisconnectionGracePeriod")) * 1000;
-        discoDuration -= gracePeriod;
-        if (discoDuration < 0) {discoDuration = 0;}
-
-        //put the duration in  the tree
-        disconnectionDurations.put(p.getName().toLowerCase(), discoDuration);
-
-        //resend appropriate data to the player and update SO's references.
-        so.sendReconnectInfoToPlayer(p);
+        return null;
     }
 
     /**
-     * Method which clears all references to a player in the disconenctionTimestamp and disconnectionDuration Trees.
-     * <p>
-     * ShortResolver should call for all players when a game finishes, and this class should call for all players
-     * whenver terminating a game.
+     * Method which passes Terminates w/o an ignore boolean into the full termination method.
      */
-    public void clearAllDisconnectionTracks(ShortOperation so) {
-        for (String currN : so.getAllPlayerNames()) {
-            String lowerName = currN.toLowerCase();
-            OpsDisconnectionThread discoThread = disconnectionThreads.get(lowerName);
-            if (discoThread != null) {
-                discoThread.playerReturned(false, 0);
-                disconnectionThreads.remove(lowerName);
-            }
-            disconnectionDurations.remove(lowerName);
-            disconnectionTimestamps.remove(lowerName);
-        }//end foreach (Player in game)
-    }//end clearAllDisconnectionTracks
-
-    /**
-     * Method which fetches an Operation (paramater collection) from the ops TreeMap.
-     */
-    public Operation getOperation(String name) {
-        return ops.get(name);
-    }
-
-    public java.util.TreeMap<String, Operation> getOperations() {
-        return ops;
-    }
-
-    private ModifyingOperation getModifyingOperation(String name) {
-        return mods.get(name);
+    public void terminateOperation(ShortOperation so, int termCode, server.campaign.SPlayer terminator) {
+        this.terminateOperation(so, termCode, terminator, false);
     }
 
     /**
@@ -237,107 +236,6 @@ public class OperationManager extends AbstractOperationManager implements I_Oper
      */
     public java.util.TreeMap<Integer, mekwars.server.campaign.operations.ShortOperation> getRunningOps() {
         return runningOperations;
-    }
-
-    /**
-     * Method which passes information from AttackCommand to the ShortValidator and returns any failures.
-     * <p>
-     * If the attacker passes the check, the Validator will automatically check active armies from the aa's OLH for
-     * matches. Only if a defender is available will the ShortValidator construct a ShortOperation.
-     * <p>
-     * The ShortOperation's chickenThreads contain all prechecked SArmies and SPlayers, and the DefendCommand will let
-     * these SPlayers/SArmies join automatically.
-     * <p>
-     * In short - validateShortAttack takes care of 90% of the work necessary to get an Attack running. The analagous
-     * defender call need only be used for SPlayers who activated after validateShortAttack was called ...
-     */
-    public String validateShortAttack(
-          server.campaign.SPlayer ap, server.campaign.SArmy aa, Operation o, server.campaign.SPlanet target, int longID,
-          boolean joiningAttack) {
-        java.util.ArrayList<Integer> failures = this.shortValidator.validateShortAttacker(ap,
-              aa,
-              o,
-              target,
-              longID,
-              joiningAttack);
-        if (failures.size() > 0) {return this.shortValidator.failuresToString(failures);}
-
-        return null;
-    }
-
-    /**
-     * Method which clears a defender to participate in a game. Should only be called from DefendCommand, and even then
-     * only when an Army or Player has not been pre-cleared to participate in a game.
-     * <p>
-     * See validateShortAttack() for a detailed explaination of how/why this works.
-     */
-    public String validateShortDefense(server.campaign.SPlayer dp, server.campaign.SArmy da, Operation o,
-          server.campaign.SPlanet target) {
-        java.util.ArrayList<Integer> failures = this.shortValidator.validateShortDefender(dp, da, o, target);
-        if (failures.size() > 0) {return this.shortValidator.failuresToString(failures);}
-        return null;
-    }
-
-    /**
-     * Conduit method. Takes ShortOperation, Operation, and a report String from CampaignMain and sends them to the
-     * ShortResolver.
-     */
-    public void resolveShortAttack(Operation o, ShortOperation so, String report) {
-        synchronized (this.shortResolver) {
-            this.shortResolver.resolveShortAttack(o, so, report);
-        }
-    }
-
-    /**
-     * Conduit method. Takes ShortOperation, Operation, a winner and a loser from a DisconnectionThread and sends them
-     * to ShortResolver
-     */
-    public void resolveShortAttack(Operation o, ShortOperation so, String winnerName, String loserName) {
-        synchronized (this.shortResolver) {
-            this.shortResolver.resolveShortAttack(o, so, winnerName, loserName);
-        }
-    }
-
-    /**
-     * Method which adds a new short operation to this.runningOperations.
-     * <p>
-     * SPlayer ap and Operation o are sent for convenience. They could be derived from the ShortOperation with ease, but
-     * they're already in the validator, so ...
-     */
-    public void addShortOperation(ShortOperation so, server.campaign.SPlayer ap, Operation o) {
-
-        //nullcheck, just in case.
-        if (so == null) {
-            MWLogger.errLog("Error: Tried to add a null ShortOperation to the Manager");
-            return;
-        }
-
-        //add to the list. Validator got a free shortID from the
-        //manager right before adding this.
-        this.runningOperations.put(so.getShortID(), so);
-
-        //if there are costs, charge the attacker
-        int money = o.getIntValue("AttackerCostMoney");
-        int flu = o.getIntValue("AttackerCostInfluence");
-        int rp = o.getIntValue("AttackerCostReward");
-
-        String toSend = "You are on your way to " + so.getTargetWorld().getName() + " (" + o.getName();
-        if (money > 0) {
-            ap.addMoney(-money);
-            toSend += ", " + server.campaign.CampaignMain.cm.moneyOrFluMessage(true, true, -money, true);
-        }
-        if (flu > 0) {
-            ap.addInfluence(-flu);
-            toSend += ", " + server.campaign.CampaignMain.cm.moneyOrFluMessage(false, true, -flu, true);
-        }
-        if (rp > 0) {
-            ap.addReward(-rp);
-            toSend += ", -" + rp + " " + server.campaign.CampaignMain.cm.getConfig("RPShortName");
-        }
-        toSend += ").";
-
-        //tell the attacker that his attack has begun
-        server.campaign.CampaignMain.cm.toUser(toSend, ap.getName(), true);
     }
 
     /**
@@ -546,15 +444,197 @@ public class OperationManager extends AbstractOperationManager implements I_Oper
     }//end terminateOperation
 
     /**
-     * Method which passes Terminates w/o an ignore boolean into the full termination method.
+     * Method which fetches an Operation (paramater collection) from the ops TreeMap.
      */
-    public void terminateOperation(ShortOperation so, int termCode, server.campaign.SPlayer terminator) {
-        this.terminateOperation(so, termCode, terminator, false);
+    public Operation getOperation(String name) {
+        return ops.get(name);
+    }
+
+    /**
+     * Method which clears all references to a player in the disconenctionTimestamp and disconnectionDuration Trees.
+     * <p>
+     * ShortResolver should call for all players when a game finishes, and this class should call for all players
+     * whenver terminating a game.
+     */
+    public void clearAllDisconnectionTracks(ShortOperation so) {
+        for (String currN : so.getAllPlayerNames()) {
+            String lowerName = currN.toLowerCase();
+            OpsDisconnectionThread discoThread = disconnectionThreads.get(lowerName);
+            if (discoThread != null) {
+                discoThread.playerReturned(false, 0);
+                disconnectionThreads.remove(lowerName);
+            }
+            disconnectionDurations.remove(lowerName);
+            disconnectionTimestamps.remove(lowerName);
+        }//end foreach (Player in game)
+    }//end clearAllDisconnectionTracks
+
+    /**
+     * Method which checks to see whether a reconnecting player should have a DisconnectionThread halted and ShortOp
+     * SPlayer/Sarmy references refreshed.
+     */
+    public void doReconnectCheckOnPlayer(String name) {
+
+        //see if the player is real
+        server.campaign.SPlayer p = server.campaign.CampaignMain.cm.getPlayer(name);
+        if (p == null) {return;}
+
+        //check to see if the player has a pending disco
+        OpsDisconnectionThread discoT = disconnectionThreads.get(p.getName().toLowerCase());
+        if (discoT == null) {
+
+            //Matches with more then 2 players do not get disconnection threads
+            //So check the player for those kinda ops.
+            if (server.campaign.CampaignMain.cm.getOpsManager().getShortOpForPlayer(p) != null) {
+                ShortOperation so = server.campaign.CampaignMain.cm.getOpsManager().getShortOpForPlayer(p);
+                if (so.getStatus() == ShortOperation.STATUS_REPORTING ||
+                          so.getStatus() == ShortOperation.STATUS_FINISHED) {return;}
+
+                //resend appropriate data to the player and update SO's references.
+                so.sendReconnectInfoToPlayer(p);
+            }
+            return;
+        }
+
+        //determine time offline
+        long currTime = System.currentTimeMillis();
+        long exitStamp = disconnectionTimestamps.get(p.getName().toLowerCase());
+        long discoDuration = currTime - exitStamp;
+
+        //prevent the thread from triggering a report
+        discoT.playerReturned(true, discoDuration);
+
+        //load the short operation in question. check for nullness and finished status
+        ShortOperation so = this.runningOperations.get(discoT.getShortID());
+        if (so == null) {return;}
+        if (so.getStatus() == ShortOperation.STATUS_REPORTING || so.getStatus() == ShortOperation.STATUS_FINISHED) {
+            return;
+        }
+
+        //adjust the duration by the grace period (expressed in seconds in config)
+        long gracePeriod = Long.parseLong(server.campaign.CampaignMain.cm.getConfig("DisconnectionGracePeriod")) * 1000;
+        discoDuration -= gracePeriod;
+        if (discoDuration < 0) {discoDuration = 0;}
+
+        //put the duration in  the tree
+        disconnectionDurations.put(p.getName().toLowerCase(), discoDuration);
+
+        //resend appropriate data to the player and update SO's references.
+        so.sendReconnectInfoToPlayer(p);
+    }
+
+    public java.util.TreeMap<String, Operation> getOperations() {
+        return ops;
+    }
+
+    private ModifyingOperation getModifyingOperation(String name) {
+        return mods.get(name);
+    }
+
+    /**
+     * Method which passes information from AttackCommand to the ShortValidator and returns any failures.
+     * <p>
+     * If the attacker passes the check, the Validator will automatically check active armies from the aa's OLH for
+     * matches. Only if a defender is available will the ShortValidator construct a ShortOperation.
+     * <p>
+     * The ShortOperation's chickenThreads contain all prechecked SArmies and SPlayers, and the DefendCommand will let
+     * these SPlayers/SArmies join automatically.
+     * <p>
+     * In short - validateShortAttack takes care of 90% of the work necessary to get an Attack running. The analagous
+     * defender call need only be used for SPlayers who activated after validateShortAttack was called ...
+     */
+    public String validateShortAttack(
+          server.campaign.SPlayer ap, server.campaign.SArmy aa, Operation o, server.campaign.SPlanet target, int longID,
+          boolean joiningAttack) {
+        java.util.ArrayList<Integer> failures = this.shortValidator.validateShortAttacker(ap,
+              aa,
+              o,
+              target,
+              longID,
+              joiningAttack);
+        if (failures.size() > 0) {return this.shortValidator.failuresToString(failures);}
+
+        return null;
+    }
+
+    /**
+     * Method which clears a defender to participate in a game. Should only be called from DefendCommand, and even then
+     * only when an Army or Player has not been pre-cleared to participate in a game.
+     * <p>
+     * See validateShortAttack() for a detailed explaination of how/why this works.
+     */
+    public String validateShortDefense(server.campaign.SPlayer dp, server.campaign.SArmy da, Operation o,
+          server.campaign.SPlanet target) {
+        java.util.ArrayList<Integer> failures = this.shortValidator.validateShortDefender(dp, da, o, target);
+        if (failures.size() > 0) {return this.shortValidator.failuresToString(failures);}
+        return null;
+    }
+
+    /**
+     * Conduit method. Takes ShortOperation, Operation, and a report String from CampaignMain and sends them to the
+     * ShortResolver.
+     */
+    public void resolveShortAttack(Operation o, ShortOperation so, String report) {
+        synchronized (this.shortResolver) {
+            this.shortResolver.resolveShortAttack(o, so, report);
+        }
     }
 
     //public void terminateOperation(LongOperation lo) {
     //	//ADD CONTENTS!
     //}
+
+    /**
+     * Conduit method. Takes ShortOperation, Operation, a winner and a loser from a DisconnectionThread and sends them
+     * to ShortResolver
+     */
+    public void resolveShortAttack(Operation o, ShortOperation so, String winnerName, String loserName) {
+        synchronized (this.shortResolver) {
+            this.shortResolver.resolveShortAttack(o, so, winnerName, loserName);
+        }
+    }
+
+    /**
+     * Method which adds a new short operation to this.runningOperations.
+     * <p>
+     * SPlayer ap and Operation o are sent for convenience. They could be derived from the ShortOperation with ease, but
+     * they're already in the validator, so ...
+     */
+    public void addShortOperation(ShortOperation so, server.campaign.SPlayer ap, Operation o) {
+
+        //nullcheck, just in case.
+        if (so == null) {
+            MWLogger.errLog("Error: Tried to add a null ShortOperation to the Manager");
+            return;
+        }
+
+        //add to the list. Validator got a free shortID from the
+        //manager right before adding this.
+        this.runningOperations.put(so.getShortID(), so);
+
+        //if there are costs, charge the attacker
+        int money = o.getIntValue("AttackerCostMoney");
+        int flu = o.getIntValue("AttackerCostInfluence");
+        int rp = o.getIntValue("AttackerCostReward");
+
+        String toSend = "You are on your way to " + so.getTargetWorld().getName() + " (" + o.getName();
+        if (money > 0) {
+            ap.addMoney(-money);
+            toSend += ", " + server.campaign.CampaignMain.cm.moneyOrFluMessage(true, true, -money, true);
+        }
+        if (flu > 0) {
+            ap.addInfluence(-flu);
+            toSend += ", " + server.campaign.CampaignMain.cm.moneyOrFluMessage(false, true, -flu, true);
+        }
+        if (rp > 0) {
+            ap.addReward(-rp);
+            toSend += ", -" + rp + " " + server.campaign.CampaignMain.cm.getConfig("RPShortName");
+        }
+        toSend += ").";
+
+        //tell the attacker that his attack has begun
+        server.campaign.CampaignMain.cm.toUser(toSend, ap.getName(), true);
+    }
 
     /**
      * Method which returns the ID of a specific long operation. It is assumed that hasLongOnPlanet or
@@ -844,16 +924,6 @@ public class OperationManager extends AbstractOperationManager implements I_Oper
     }
 
     /**
-     * Method which returns the ShortOperation in which a player is participating.
-     */
-    public ShortOperation getShortOpForPlayer(server.campaign.SPlayer p) {
-        for (ShortOperation currSO : this.getRunningOps().values()) {
-            if (currSO.hasPlayer(p) && currSO.getStatus() != ShortOperation.STATUS_FINISHED) {return currSO;}
-        }
-        return null;
-    }
-
-    /**
      * Method which checks to see if a player has an active ChickenThread. Whenever a thread is stopped w/ stopChicken()
      * it is also removed from the ShortOperation's tree, so we should only check for nulls and may ignore the thread's
      * shouldContinue boolean.
@@ -913,76 +983,6 @@ public class OperationManager extends AbstractOperationManager implements I_Oper
      */
     public void checkOperations(server.campaign.SArmy a, boolean display) {
         shortValidator.checkOperations(a, display, ops);
-    }
-
-    public void loadOperations() {
-        /*
-         * Check for the operations directories.
-         * If they're missing create them.
-         */
-        java.io.File shortDir = new java.io.File("./data/operations/short/");
-        java.io.File longDir = new java.io.File("./data/operations/long/");
-        java.io.File modDir = new java.io.File("./data/operations/modifiers/");
-        try {
-            if (!shortDir.exists()) {shortDir.mkdirs();}
-            if (!longDir.exists()) {longDir.mkdir();}
-            if (!modDir.exists()) {modDir.mkdir();}
-        } catch (Exception e) {
-            MWLogger.errLog("Error while creating operations directories.");
-        }
-
-        ops.clear();
-        mods.clear();
-        MULOnlyArmiesOpsLoad = false;
-
-        /*
-         * read the shortoperation's subdir and do loads. since every
-         * long has a corresponding short, its possible to do loads
-         * via the short names only (loader handles this properly)
-         */
-        String[] shortNames = shortDir.list();
-        for (int i = 0; i < shortNames.length; i++) {
-            Operation currOp = opLoader.loadOpValues(shortNames[i]);
-            ops.put(currOp.getName(), currOp);
-            if (currOp.getBooleanValue("MULArmiesOnly")) {
-                MULOnlyArmiesOpsLoad = true;
-            }
-        }
-
-        /*
-         * read the mod operations subdir and do loads. add the mods to
-         * target ops' modmaps as the loads occur. Throw error if, for some
-         * reason, a given target cannot be found.
-         */
-        String[] modNames = modDir.list();
-        for (int i = 0; i < modNames.length; i++) {
-            ModifyingOperation currMod = opLoader.loadModOpValues(modNames[i]);
-            mods.put(currMod.getName(), currMod);
-
-            /*
-             * mod loaded. now, try to put it into standard op's trees.
-             * targets are a string w/ ; as deliminter. trim to remove leading
-             * and trailing spaces.
-             */
-            String targets = currMod.getValueAsString("LinkedOperations");
-            java.util.StringTokenizer st = new java.util.StringTokenizer(targets, ";");
-            while (st.hasMoreTokens()) {
-                String currTarget = st.nextToken().trim();
-                Operation currOp = ops.get(currTarget);
-                if (currOp == null) {
-                    MWLogger.errLog("Error assigning modop target. Mod: " +
-                                          currMod.getName() +
-                                          " Target: " +
-                                          currTarget);
-                } else {currOp.addModifyingOperation(currMod);}
-            }//end while(more targets)
-        }//end modOp loading
-
-        /*
-         * Now that all Ops are loaded, write out the crib sheet for clients.
-         */
-        opWriter.writeOpList(ops);
-
     }
 
     /**

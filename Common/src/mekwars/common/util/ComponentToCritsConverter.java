@@ -34,13 +34,6 @@ public class ComponentToCritsConverter {
     /**
      *
      */
-    public void setMinCritLevel(int level) {
-        this.minCritLevel = level;
-    }
-
-    /**
-     *
-     */
     public int getMinCritLevel() {
         return this.minCritLevel;
     }
@@ -48,8 +41,8 @@ public class ComponentToCritsConverter {
     /**
      *
      */
-    public void setComponentUsedType(int type) {
-        this.componentUsedType = type;
+    public void setMinCritLevel(int level) {
+        this.minCritLevel = level;
     }
 
     /**
@@ -63,8 +56,8 @@ public class ComponentToCritsConverter {
     /**
      *
      */
-    public void setComponentUsedWeight(int weight) {
-        this.componentUsedWeight = weight;
+    public void setComponentUsedType(int type) {
+        this.componentUsedType = type;
     }
 
     /**
@@ -78,8 +71,8 @@ public class ComponentToCritsConverter {
     /**
      *
      */
-    public void setCritName(String crit) {
-        this.critName = crit;
+    public void setComponentUsedWeight(int weight) {
+        this.componentUsedWeight = weight;
     }
 
     /**
@@ -88,6 +81,13 @@ public class ComponentToCritsConverter {
      */
     public String getCritName() {
         return this.critName;
+    }
+
+    /**
+     *
+     */
+    public void setCritName(String crit) {
+        this.critName = crit;
     }
 
     public String toString() {

@@ -9,21 +9,6 @@ public class AnnounceCommand implements server.campaign.commands.Command {
     String syntax = "Set for Faction: /announce [FactionName]#Message ('clear' to unset)<br>Set for all Factions: /announce All#Message ('clear' to unset)";
 
     @Override
-    public int getExecutionLevel() {
-        return accessLevel;
-    }
-
-    @Override
-    public void setExecutionLevel(int i) {
-        accessLevel = i;
-    }
-
-    @Override
-    public String getSyntax() {
-        return syntax;
-    }
-
-    @Override
     public void process(java.util.StringTokenizer command, String Username) {
         if (accessLevel != 0) {
             int userLevel = server.campaign.CampaignMain.cm.getServer().getUserLevel(Username);
@@ -87,6 +72,21 @@ public class AnnounceCommand implements server.campaign.commands.Command {
             p.getMyHouse().setAnnouncement(announcement + "<p> -- Set by " + p.getName());
             server.campaign.CampaignMain.cm.toUser("AM:MOTD set. Use /c motd to review.", Username, true);
         }
+    }
+
+    @Override
+    public int getExecutionLevel() {
+        return accessLevel;
+    }
+
+    @Override
+    public void setExecutionLevel(int i) {
+        accessLevel = i;
+    }
+
+    @Override
+    public String getSyntax() {
+        return syntax;
     }
 
 

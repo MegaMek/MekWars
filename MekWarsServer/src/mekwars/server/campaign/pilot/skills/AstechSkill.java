@@ -48,8 +48,9 @@ public class AstechSkill extends SPilotSkill {
     }
 
     @Override
-    public int getBVMod(Entity unit) {
-        return 0;
+    public void addToPilot(Pilot pilot) {
+        //this.setLevel(-1);
+        pilot.getSkills().add(this);
     }
 
     @Override
@@ -66,9 +67,8 @@ public class AstechSkill extends SPilotSkill {
     }
 
     @Override
-    public void addToPilot(Pilot pilot) {
-        //this.setLevel(-1);
-        pilot.getSkills().add(this);
+    public int getBVMod(Entity unit) {
+        return 0;
     }
 
     /**

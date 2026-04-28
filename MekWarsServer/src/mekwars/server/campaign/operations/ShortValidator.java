@@ -39,10 +39,6 @@ import server.campaign.operations.validation.StandardBVSpreadValidator;
 
 public class ShortValidator {
 
-    // IVARS
-    // back reference to the manager
-    private OperationManager manager;
-
     /*
      * Shared failure reasons, common to checks of both attacking and defending
      * players/armies.
@@ -99,6 +95,12 @@ public class ShortValidator {
     // has bene
     // exceeded
     public static final int SFAIL_COMMON_INFACTION_ATTACK = 8; // Intra-faction
+    /*
+     * Failure codes for attacker-specific checks.
+     *
+     * 200-399 reserved for attacker usage in the future.
+     */
+    public static final int SFAIL_ATTACK_MAXBV = 200;// "MaxAttackerBV" - BV
     // attacks not
     // allowed.
     // public static final int SFAIL_COMMON = 9;
@@ -123,13 +125,6 @@ public class ShortValidator {
     // public static final int SFAIL_COMMON = 28;
     // public static final int SFAIL_COMMON = 29;
     // public static final int SFAIL_COMMON = 30;
-
-    /*
-     * Failure codes for attacker-specific checks.
-     *
-     * 200-399 reserved for attacker usage in the future.
-     */
-    public static final int SFAIL_ATTACK_MAXBV = 200;// "MaxAttackerBV" - BV
     // ceiling, contruction
     // prop
     public static final int SFAIL_ATTACK_MINBV = 201;// "MinAttackerBV" - BV
@@ -283,25 +278,21 @@ public class ShortValidator {
     public static final int SFAIL_ATTACK_ELITE_PILOTS = 252;// Attacker has pilots that are below the
     //  lowest skill total allowed thresh hold
     public static final int SFAIL_ATTACK_GREEN_PILOTS = 253;// Attacker has pilots that are above the
-    // highest skill total allowed thresh hold
-
     public static final int SFAIL_ATTACK_MAX_AERO = 254;// Max Number of Aeros an Attacker can have in an army
+    // highest skill total allowed thresh hold
     public static final int SFAIL_ATTACK_MIN_AERO = 255;// Min Number of Aeros an Attacker can have in an army
     public static final int SFAIL_ATTACK_NOAEROS = 256;// "AttackerAllowedAeros",
     public static final int SFAIL_ATTACK_TECHBASE_TOO_MUCH_CLAN = 257; // Too many clan units
     public static final int SFAIL_ATTACK_TECHBASE_TOO_LITTLE_CLAN = 258; // Not enough clan units
     public static final int SFAIL_ATTACK_TOO_MANY_SUPPORT_UNITS = 259; // Too many designated support units
     public static final int SFAIL_ATTACK_TOO_FEW_SUPPORT_UNITS = 260; // Not enough designated support units
-
     public static final int SFAIL_ATTACK_MISSING_REQUIRED_FLAG = 261; // Attacker is missing a required flag
     public static final int SFAIL_ATTACK_HAS_BANNED_FLAG = 262; // Attacker has a flag set that is banned from the attack
-
     public static final int SFAIL_ATTACK_MAXJUMP = 263; // Attacker has a unit with too large a jump
     public static final int SFAIL_ATTACK_TOO_MANY_NONSUPPORT_UNITS = 264;
     public static final int SFAIL_ATTACK_TOO_FEW_NONSUPPORT_UNITS = 265;
     public static final int SFAIL_ATTACK_SKILLSUM_TOOHIGH = 266;
     public static final int SFAIL_ATTACK_SKILLSUM_TOOLOW = 267;
-
     /*
      * Failure codes for defender-specific checks.
      *
@@ -444,28 +435,24 @@ public class ShortValidator {
     public static final int SFAIL_DEFEND_ELITE_PILOTS = 453;// Defender has pilots that are below the
     // lowest skill total allowed thresh hold
     public static final int SFAIL_DEFEND_GREEN_PILOTS = 454;// Defender has pilots that are above the
-    // highest skill total allowed thresh hold
-
     public static final int SFAIL_DEFEND_MAX_AERO = 455;// Max Number of Aeros a defender can have in an army
+    // highest skill total allowed thresh hold
     public static final int SFAIL_DEFEND_MIN_AERO = 456;// Min Number of Aeros a defender can have in an army
     public static final int SFAIL_DEFEND_NOAEROS = 457;// "DefenderAllowedAeros",
-
     public static final int SFAIL_DEFEND_TECHBASE_TOO_MUCH_CLAN = 458; // Too many clan units
     public static final int SFAIL_DEFEND_TECHBASE_TOO_LITTLE_CLAN = 459; // Not enough clan units
-
     public static final int SFAIL_DEFEND_TOO_MANY_SUPPORT_UNITS = 460; // Too many designated support units
     public static final int SFAIL_DEFEND_TOO_FEW_SUPPORT_UNITS = 461; // Not enough designated support units
-
     public static final int SFAIL_DEFEND_MISSING_REQUIRED_FLAG = 462; // Defender is missing a required set flag
     public static final int SFAIL_DEFEND_HAS_BANNED_FLAG = 463; // Defender has set a banned flag
-
     public static final int SFAIL_DEFEND_MAXJUMP = 464; // Defender has a unit that jumps too far
-
     public static final int SFAIL_DEFEND_TOO_MANY_NONSUPPORT_UNITS = 465;
     public static final int SFAIL_DEFEND_TOO_FEW_NONSUPPORT_UNITS = 466;
-
     public static final int SFAIL_DEFEND_SKILLSUM_TOOHIGH = 467;
     public static final int SFAIL_DEFEND_SKILLSUM_TOOLOW = 468;
+    // IVARS
+    // back reference to the manager
+    private OperationManager manager;
 
 
     // CONSTRUCTORS
@@ -474,6 +461,114 @@ public class ShortValidator {
     }
 
     // METHODS
+
+    /**
+     * Method which checks an Army's eligibility vs. all available Operations and updates its legalOperations TreeMap.
+     * Changes are collected in two ArrayLists (addList, removeList).
+     * <p>
+     * If <code>display</code> is true, the client receives a standard system message as well as the silent update.
+     */
+    public void checkOperations(server.campaign.SArmy a, boolean display,
+          java.util.TreeMap<String, Operation> operations) {
+
+        server.campaign.SPlayer p = server.campaign.CampaignMain.cm.getPlayer(a.getPlayerName());
+        if (p == null) {return;}
+
+        /*
+         * If the player is not logged in, skip the checks. This saves us from
+         * sending updates to disconnected players when their games
+         * auto-resolve.
+         */
+        if (p.getDutyStatus() < server.campaign.SPlayer.STATUS_RESERVE) {return;}
+
+        java.util.ArrayList<String> addNames = new java.util.ArrayList<String>();
+        java.util.ArrayList<String> removeNames = new java.util.ArrayList<String>();
+
+        for (Operation currType : operations.values()) {
+
+            // check for failures. contruction and milestones only.
+            java.util.ArrayList<Integer> failures = this.validateShortAttacker(p, a, currType, null, -1, false);
+
+            // if there were failures, try to remve
+            if (failures.size() > 0) {
+                String removal = a.getLegalOperations().remove(currType.getName());
+                if (removal != null) {removeNames.add(removal);}
+            }
+
+            // no failures. add to the tree. if the key was connected
+            // to a null previously, we need to notify the player.
+            else if (a.getLegalOperations().put(currType.getName(), currType.getName()) == null) {
+                addNames.add(currType.getName());
+            }
+
+        }// end for(each operation)
+
+        // if there were changes, pre updates
+        if (addNames.size() > 0 || removeNames.size() > 0) {
+
+            // assemble PL| command string
+            String toSend = "PL|UOE|" + a.getID() + "*";
+            for (String currName : addNames) {toSend += "a*" + currName + "*";}
+            for (String currName : removeNames) {toSend += "r*" + currName + "*";}
+
+            // send command
+            server.campaign.CampaignMain.cm.toUser(toSend, p.getName(), false);
+
+            // if verbose, inform the players
+            if (display) {
+
+                String addSend = "AM:Army #" + a.getID();
+                String removeSend = "AM:Army #" + a.getID();
+
+                // add messages
+                if (addNames.size() == 1) {
+                    addSend += " gained access to an attack: " + addNames.get(0) + ".";
+                    server.campaign.CampaignMain.cm.toUser(addSend, p.getName(), true);
+                } else if (addNames.size() > 1) {
+                    addSend += " gained access to the following attacks: ";
+                    java.util.Iterator<String> i = addNames.iterator();
+                    while (i.hasNext()) {
+                        addSend += i.next();
+                        if (i.hasNext()) {
+                            addSend += ", ";
+                        }
+                    }
+                    // try to remove the last instance of ", "
+                    int lastComma = addSend.lastIndexOf(", ");
+                    if (lastComma >= 0) {
+                        String front = addSend.substring(0, lastComma);
+                        String back = addSend.substring(lastComma + 2, addSend.length());
+                        addSend = front + " and " + back + ".";
+                    }
+                    server.campaign.CampaignMain.cm.toUser(addSend, p.getName(), true);
+                }
+
+                // remove messages
+                if (removeNames.size() == 1) {
+                    removeSend += " lost access to an attack: " + removeNames.get(0) + ".";
+                    server.campaign.CampaignMain.cm.toUser(removeSend, p.getName(), true);
+                } else if (removeNames.size() > 1) {
+                    removeSend += " lost access to the following attacks: ";
+                    java.util.Iterator<String> i = removeNames.iterator();
+                    while (i.hasNext()) {
+                        removeSend += i.next();
+                        if (i.hasNext()) {
+                            removeSend += ", ";
+                        }
+                    }
+                    // try to remove the last instance of ", "
+                    int lastComma = removeSend.lastIndexOf(", ");
+                    if (lastComma >= 0) {
+                        String front = removeSend.substring(0, lastComma);
+                        String back = removeSend.substring(lastComma + 2, removeSend.length());
+                        removeSend = front + " and " + back + ".";
+                    }
+                    server.campaign.CampaignMain.cm.toUser(removeSend, p.getName(), true);
+                }
+
+            }// end if(display)
+        }// end (legal types were added or removed)
+    }// end checkOperations()
 
     /**
      * Method which checks a player's army vs. an operation type to see if the army can be used to attack. This method
@@ -753,155 +848,6 @@ public class ShortValidator {
         return failureReasons;
     }// end validateShortAttacker()
 
-    private void checkAttackerFlags(java.util.ArrayList<Integer> failureReasons,
-          server.campaign.SPlayer ap, Operation o) {
-        PlayerFlags pFlags = ap.getFlags();
-        String requiredFlags = o.getValue("AttackerFlags");
-        // Loop through the flag string, checking settings
-        java.util.StringTokenizer st = new java.util.StringTokenizer(requiredFlags, "$");
-        while (st.hasMoreTokens()) {
-            java.util.StringTokenizer element = new java.util.StringTokenizer(st.nextToken(), "#");
-            String fName = element.nextToken();
-            boolean value = Boolean.parseBoolean(element.nextToken());
-            if (pFlags.getFlagStatus(fName) != value) {
-                if (value) {
-                    failureReasons.add(SFAIL_ATTACK_MISSING_REQUIRED_FLAG);
-                } else {
-                    failureReasons.add(SFAIL_ATTACK_HAS_BANNED_FLAG);
-                }
-            }
-        }
-    }
-
-    /**
-     * Method which checks the attacker's ability to reach the target world. Factions may always reach worlds on which
-     * they have running long ops, as they couldn't have started them if the targets were out of range. Players may
-     * always always attack worlds they control.
-     * <p>
-     * "Range" check has evolved to include more than just range, and may now be considered a general "Target Validity"
-     * check, which looks at ownership %'s, factory presence, counterattack ability, etc.
-     * <p>
-     * NOTE: This is a change from the Task system, which allowed players to attack from worlds they did not own (25%)
-     * or attack on any world which they had a foothold on. Some operations will overload the default setting and allow
-     * attacks with non-controlling territory on a world (suggested op: Guerilla Engagement).
-     */
-    public void checkAttackerRange(java.util.ArrayList<Integer> failureReasons, server.campaign.SPlayer ap, Operation o,
-          server.campaign.SPlanet target) {
-
-        // Always allow attacks on newbie worlds
-        if (target.getOwner() != null && target.getOwner() instanceof server.campaign.NewbieHouse) {return;}
-
-        // Check for a long op. If present, autopass.
-        // if (manager.factionHasLongRunningOn(target))
-        // return;
-
-        /*
-         * Check to see if this is a counterattack.
-         */
-        if (o.getBooleanValue("ForbidCounterAttacks") &&
-                  server.campaign.CampaignMain.cm.getOpsManager().playerHasActiveChickenThread(ap)) {
-            failureReasons.add(SFAIL_ATTACK_NOCOUNTERS);
-        }
-
-        /*
-         * Check to ensure that the player is in a proper duty status
-         */
-        if (o.getBooleanValue("OnlyAllowedFromReserve") &&
-                  ap.getDutyStatus() >= server.campaign.SPlayer.STATUS_ACTIVE) {
-            failureReasons.add(SFAIL_ATTACK_AFRONLY);
-        }
-        if (o.getBooleanValue("OnlyAllowedFromActive") &&
-                  ap.getDutyStatus() <= server.campaign.SPlayer.STATUS_RESERVE) {
-            failureReasons.add(SFAIL_ATTACK_ACTIVEONLY);
-        }
-
-        // store the percent owned, since it's checked multiple times
-        int ahID = ap.getHouseFightingFor().getId();
-        double percentOwned = (double) 100 *
-                                    ((double) target.getInfluence().getInfluence(ahID) /
-                                           (double) target.getConquestPoints());
-
-        /*
-         * Check the ownership limitations.
-         */
-        if (percentOwned < o.getIntValue("MinPlanetOwnership")) {failureReasons.add(SFAIL_ATTACK_MINOWNERSHIP);}
-
-        if (percentOwned > o.getIntValue("MaxPlanetOwnership")) {failureReasons.add(SFAIL_ATTACK_MAXOWNERSHIP);}
-
-        /*
-         * Check the Have Fac/No Fac limitations.
-         */
-        boolean mustHaveFac = o.getBooleanValue("OnlyAgainstFactoryWorlds");
-        boolean mustNotHaveFac = o.getBooleanValue("OnlyAgainstNonFactoryWorlds");
-        if (mustHaveFac && target.getFactoryCount() <= 0) {failureReasons.add(SFAIL_ATTACK_NEEDSFAC);}
-        if (mustNotHaveFac && target.getFactoryCount() > 0) {failureReasons.add(SFAIL_ATTACK_HASFAC);}
-
-        /*
-         * Check the Have Home/No worlds
-         */
-        boolean mustHaveHome = o.getBooleanValue("OnlyAgainstHomeWorlds");
-        boolean mustNotHaveHome = o.getBooleanValue("OnlyAgainstNonHomeWorlds");
-        if (mustHaveHome && !target.isHomeWorld()) {failureReasons.add(SFAIL_ATTACK_NEEDSHOME);}
-        if (mustNotHaveHome && target.isHomeWorld()) {failureReasons.add(SFAIL_ATTACK_HASHOME);}
-
-        // check for allowed op flags
-        String allowPlanetFlags = o.getValue("AllowPlanetFlags");
-        String disallowPlanetFlags = o.getValue("DisallowPlanetFlags");
-
-        // Check for allowed planet flags. the planet most have these flags.
-        if (allowPlanetFlags.length() > 0) {
-            java.util.StringTokenizer st = new java.util.StringTokenizer(allowPlanetFlags, "^");
-            while (st.hasMoreTokens()) {
-                if (!target.getPlanetFlags().containsKey(st.nextToken())) {failureReasons.add(SFAIL_ATTACK_OPFLAGS);}
-            }
-        }
-
-        // Check for disallowed planet flags. If the planet has one of these
-        // flags
-        // The planet will not be allowed.
-        if (disallowPlanetFlags.length() > 0) {
-            java.util.StringTokenizer st = new java.util.StringTokenizer(disallowPlanetFlags, "^");
-            while (st.hasMoreTokens()) {
-                if (target.getPlanetFlags().containsKey(st.nextToken())) {failureReasons.add(SFAIL_ATTACK_OPFLAGS);}
-            }
-        }
-
-        /*
-         * If the operation allows non-control attacks, check the planetary
-         * influences and return if the faction has enough control.
-         */
-        int percToAttackOnWorld = o.getIntValue("PercentageToAttackOnWorld");
-        if (percentOwned >= percToAttackOnWorld) {return;}
-
-        /*
-         * Non-newbie world, no long op, and not enough % to attack on world.
-         * Look at surrounding planets. Break out of this search as soon as a
-         * legal jump off world has been found. We don't care WHERE we attack
-         * from - just that we can.
-         */
-        // load op range values
-        double opRange = o.getDoubleValue("OperationRange");
-        double percToAttackOffWorld = o.getDoubleValue("PercentageToAttackOffWorld");
-
-        java.util.Iterator<Planet> e = server.campaign.CampaignMain.cm.getData().getAllPlanets().iterator();
-        while (e.hasNext()) {
-            server.campaign.SPlanet currP = (server.campaign.SPlanet) e.next();
-            percentOwned = (double) 100 *
-                                 ((double) currP.getInfluence().getInfluence(ahID) /
-                                        (double) currP.getConquestPoints());
-
-            if (percentOwned >= percToAttackOffWorld &&
-                      currP.getPosition().distanceSq(target.getPosition()) <= opRange) {return;}
-        }// end while(planets remain)
-
-        /*
-         * We've now exhausted all possible planets and range justifications
-         * without finding a match. Add a range failure to the list.
-         */
-        failureReasons.add(SFAIL_ATTACK_OUTOFRANGE);
-
-    }
-
     /**
      * Method which checks attacker milestones, like experience and rank. The milestone check includes a few "static"
      * status items - faction, etc.
@@ -940,21 +886,6 @@ public class ShortValidator {
         // failureReasons.add(SFAIL_ATTACK_MAXGAMES);
         // if (ap.getGamesPlayed() < o.getIntValue("MinAttackerGamesPlayed")))
         // failureReasons.add(SFAIL_ATTACK_MINGAMES);
-    }
-
-    /**
-     * Method which checks to ensure that an attacker can meet the costs associated with begining an operation.
-     * <p>
-     * Random Trivia: This was MekWars' first use of Java 1.5 autoboxing. Exciting!?
-     */
-    public void checkAttackerCosts(java.util.ArrayList<Integer> failureReasons, server.campaign.SPlayer ap,
-          Operation o) {
-
-        if (ap.getMoney() < o.getIntValue("AttackerCostMoney")) {failureReasons.add(SFAIL_ATTACK_MONEY);}
-
-        if (ap.getInfluence() < o.getIntValue("AttackerCostInfluence")) {failureReasons.add(SFAIL_ATTACK_INFLUENCE);}
-
-        if (ap.getReward() < o.getIntValue("AttackerCostReward")) {failureReasons.add(SFAIL_ATTACK_REWARD);}
     }
 
     /**
@@ -1204,7 +1135,9 @@ public class ShortValidator {
             int type = currUnit.getType();
             if (currUnit.isSupportUnit() && !o.getBooleanValue("CountSupportUnitsForSpread")) {continue;}
             if (type == Unit.VEHICLE && !o.getBooleanValue("CountVehsForSpread")) {continue;} else if (type ==
-                                                                                                             Unit.PROTOMEK && !o.getBooleanValue("CountProtosForSpread")) {
+                                                                                                             Unit.PROTOMEK &&
+                                                                                                             !o.getBooleanValue(
+                                                                                                                   "CountProtosForSpread")) {
                 continue;
             } else if ((type ==
                               Unit.BATTLEARMOR || type == Unit.INFANTRY) && !o.getBooleanValue("CountInfForSpread")) {
@@ -1332,6 +1265,170 @@ public class ShortValidator {
     }// end CheckAttackerConstruction
 
     /**
+     * Method which checks the attacker's ability to reach the target world. Factions may always reach worlds on which
+     * they have running long ops, as they couldn't have started them if the targets were out of range. Players may
+     * always always attack worlds they control.
+     * <p>
+     * "Range" check has evolved to include more than just range, and may now be considered a general "Target Validity"
+     * check, which looks at ownership %'s, factory presence, counterattack ability, etc.
+     * <p>
+     * NOTE: This is a change from the Task system, which allowed players to attack from worlds they did not own (25%)
+     * or attack on any world which they had a foothold on. Some operations will overload the default setting and allow
+     * attacks with non-controlling territory on a world (suggested op: Guerilla Engagement).
+     */
+    public void checkAttackerRange(java.util.ArrayList<Integer> failureReasons, server.campaign.SPlayer ap, Operation o,
+          server.campaign.SPlanet target) {
+
+        // Always allow attacks on newbie worlds
+        if (target.getOwner() != null && target.getOwner() instanceof server.campaign.NewbieHouse) {return;}
+
+        // Check for a long op. If present, autopass.
+        // if (manager.factionHasLongRunningOn(target))
+        // return;
+
+        /*
+         * Check to see if this is a counterattack.
+         */
+        if (o.getBooleanValue("ForbidCounterAttacks") &&
+                  server.campaign.CampaignMain.cm.getOpsManager().playerHasActiveChickenThread(ap)) {
+            failureReasons.add(SFAIL_ATTACK_NOCOUNTERS);
+        }
+
+        /*
+         * Check to ensure that the player is in a proper duty status
+         */
+        if (o.getBooleanValue("OnlyAllowedFromReserve") &&
+                  ap.getDutyStatus() >= server.campaign.SPlayer.STATUS_ACTIVE) {
+            failureReasons.add(SFAIL_ATTACK_AFRONLY);
+        }
+        if (o.getBooleanValue("OnlyAllowedFromActive") &&
+                  ap.getDutyStatus() <= server.campaign.SPlayer.STATUS_RESERVE) {
+            failureReasons.add(SFAIL_ATTACK_ACTIVEONLY);
+        }
+
+        // store the percent owned, since it's checked multiple times
+        int ahID = ap.getHouseFightingFor().getId();
+        double percentOwned = (double) 100 *
+                                    ((double) target.getInfluence().getInfluence(ahID) /
+                                           (double) target.getConquestPoints());
+
+        /*
+         * Check the ownership limitations.
+         */
+        if (percentOwned < o.getIntValue("MinPlanetOwnership")) {failureReasons.add(SFAIL_ATTACK_MINOWNERSHIP);}
+
+        if (percentOwned > o.getIntValue("MaxPlanetOwnership")) {failureReasons.add(SFAIL_ATTACK_MAXOWNERSHIP);}
+
+        /*
+         * Check the Have Fac/No Fac limitations.
+         */
+        boolean mustHaveFac = o.getBooleanValue("OnlyAgainstFactoryWorlds");
+        boolean mustNotHaveFac = o.getBooleanValue("OnlyAgainstNonFactoryWorlds");
+        if (mustHaveFac && target.getFactoryCount() <= 0) {failureReasons.add(SFAIL_ATTACK_NEEDSFAC);}
+        if (mustNotHaveFac && target.getFactoryCount() > 0) {failureReasons.add(SFAIL_ATTACK_HASFAC);}
+
+        /*
+         * Check the Have Home/No worlds
+         */
+        boolean mustHaveHome = o.getBooleanValue("OnlyAgainstHomeWorlds");
+        boolean mustNotHaveHome = o.getBooleanValue("OnlyAgainstNonHomeWorlds");
+        if (mustHaveHome && !target.isHomeWorld()) {failureReasons.add(SFAIL_ATTACK_NEEDSHOME);}
+        if (mustNotHaveHome && target.isHomeWorld()) {failureReasons.add(SFAIL_ATTACK_HASHOME);}
+
+        // check for allowed op flags
+        String allowPlanetFlags = o.getValue("AllowPlanetFlags");
+        String disallowPlanetFlags = o.getValue("DisallowPlanetFlags");
+
+        // Check for allowed planet flags. the planet most have these flags.
+        if (allowPlanetFlags.length() > 0) {
+            java.util.StringTokenizer st = new java.util.StringTokenizer(allowPlanetFlags, "^");
+            while (st.hasMoreTokens()) {
+                if (!target.getPlanetFlags().containsKey(st.nextToken())) {failureReasons.add(SFAIL_ATTACK_OPFLAGS);}
+            }
+        }
+
+        // Check for disallowed planet flags. If the planet has one of these
+        // flags
+        // The planet will not be allowed.
+        if (disallowPlanetFlags.length() > 0) {
+            java.util.StringTokenizer st = new java.util.StringTokenizer(disallowPlanetFlags, "^");
+            while (st.hasMoreTokens()) {
+                if (target.getPlanetFlags().containsKey(st.nextToken())) {failureReasons.add(SFAIL_ATTACK_OPFLAGS);}
+            }
+        }
+
+        /*
+         * If the operation allows non-control attacks, check the planetary
+         * influences and return if the faction has enough control.
+         */
+        int percToAttackOnWorld = o.getIntValue("PercentageToAttackOnWorld");
+        if (percentOwned >= percToAttackOnWorld) {return;}
+
+        /*
+         * Non-newbie world, no long op, and not enough % to attack on world.
+         * Look at surrounding planets. Break out of this search as soon as a
+         * legal jump off world has been found. We don't care WHERE we attack
+         * from - just that we can.
+         */
+        // load op range values
+        double opRange = o.getDoubleValue("OperationRange");
+        double percToAttackOffWorld = o.getDoubleValue("PercentageToAttackOffWorld");
+
+        java.util.Iterator<Planet> e = server.campaign.CampaignMain.cm.getData().getAllPlanets().iterator();
+        while (e.hasNext()) {
+            server.campaign.SPlanet currP = (server.campaign.SPlanet) e.next();
+            percentOwned = (double) 100 *
+                                 ((double) currP.getInfluence().getInfluence(ahID) /
+                                        (double) currP.getConquestPoints());
+
+            if (percentOwned >= percToAttackOffWorld &&
+                      currP.getPosition().distanceSq(target.getPosition()) <= opRange) {return;}
+        }// end while(planets remain)
+
+        /*
+         * We've now exhausted all possible planets and range justifications
+         * without finding a match. Add a range failure to the list.
+         */
+        failureReasons.add(SFAIL_ATTACK_OUTOFRANGE);
+
+    }
+
+    /**
+     * Method which checks to ensure that an attacker can meet the costs associated with begining an operation.
+     * <p>
+     * Random Trivia: This was MekWars' first use of Java 1.5 autoboxing. Exciting!?
+     */
+    public void checkAttackerCosts(java.util.ArrayList<Integer> failureReasons, server.campaign.SPlayer ap,
+          Operation o) {
+
+        if (ap.getMoney() < o.getIntValue("AttackerCostMoney")) {failureReasons.add(SFAIL_ATTACK_MONEY);}
+
+        if (ap.getInfluence() < o.getIntValue("AttackerCostInfluence")) {failureReasons.add(SFAIL_ATTACK_INFLUENCE);}
+
+        if (ap.getReward() < o.getIntValue("AttackerCostReward")) {failureReasons.add(SFAIL_ATTACK_REWARD);}
+    }
+
+    private void checkAttackerFlags(java.util.ArrayList<Integer> failureReasons,
+          server.campaign.SPlayer ap, Operation o) {
+        PlayerFlags pFlags = ap.getFlags();
+        String requiredFlags = o.getValue("AttackerFlags");
+        // Loop through the flag string, checking settings
+        java.util.StringTokenizer st = new java.util.StringTokenizer(requiredFlags, "$");
+        while (st.hasMoreTokens()) {
+            java.util.StringTokenizer element = new java.util.StringTokenizer(st.nextToken(), "#");
+            String fName = element.nextToken();
+            boolean value = Boolean.parseBoolean(element.nextToken());
+            if (pFlags.getFlagStatus(fName) != value) {
+                if (value) {
+                    failureReasons.add(SFAIL_ATTACK_MISSING_REQUIRED_FLAG);
+                } else {
+                    failureReasons.add(SFAIL_ATTACK_HAS_BANNED_FLAG);
+                }
+            }
+        }
+    }
+
+    /**
      * Method which checks a Player/Army vs. an operation type to see if the army can be used to defend. This method may
      * be called with 2 different goals:
      * <p>
@@ -1353,582 +1450,6 @@ public class ShortValidator {
         this.checkDefenderFlags(failureReasons, dp, o);
 
         return failureReasons;
-    }
-
-    private void checkDefenderFlags(java.util.ArrayList<Integer> failureReasons,
-          server.campaign.SPlayer dp, Operation o) {
-        // TODO Auto-generated method stub
-        PlayerFlags pFlags = dp.getFlags();
-        String requiredFlags = o.getValue("DefenderFlags");
-        // Loop through the flag string, checking settings
-        java.util.StringTokenizer st = new java.util.StringTokenizer(requiredFlags, "$");
-        while (st.hasMoreTokens()) {
-            java.util.StringTokenizer element = new java.util.StringTokenizer(st.nextToken(), "#");
-            String fName = element.nextToken();
-            boolean value = Boolean.parseBoolean(element.nextToken());
-            if (pFlags.getFlagStatus(fName) != value) {
-                if (value) {
-                    failureReasons.add(SFAIL_DEFEND_MISSING_REQUIRED_FLAG);
-                } else {
-                    failureReasons.add(SFAIL_DEFEND_HAS_BANNED_FLAG);
-                }
-            }
-        }
-    }
-
-    /**
-     * Method which checks defender milestones, like experience and rank.
-     */
-    private void checkDefenderMilestones(java.util.ArrayList<Integer> failureReasons, server.campaign.SPlayer dp,
-          Operation o, server.campaign.SPlanet target) {
-
-        boolean solCanDefend = o.getBooleanValue("AllowAgainstSOL");
-        boolean nonConqCanDefend = o.getBooleanValue("AllowAgainstNonConq");
-        double percentOwned = 0;
-        if (target != null) {
-            percentOwned = (double) 100 *
-                                 ((double) target.getInfluence().getInfluence(dp.getHouseFightingFor().getId()) /
-                                        (double) target.getConquestPoints());
-        } else {percentOwned = 0;}
-        //Baruk Khazad! - 20151003 - start
-        if (target != null && percentOwned < o.getIntValue("MinPlanetOwnership")) {
-            if (percentOwned > 0 &&
-                      o.getIntValue("MinPlanetOwnership") > 0 &&
-                      o.getBooleanValue("MinPlanetOwnershipIgnoredByDefender")) {
-                //do not apply a fail flag because 1) they own some 2) there is a non-zero min%Owned value 3) the ignore flag is set to true. This fits the condition described in the Operations Manager.
-            } else {
-                failureReasons.add(SFAIL_DEFEND_NOTPLANDEF);
-            }
-        }
-        //Baruk Khazad! - 20151003 - end
-        if (dp.getHouseFightingFor().isNewbieHouse() && !solCanDefend) {failureReasons.add(SFAIL_DEFEND_SOLCANTDEF);}
-        if (!dp.getHouseFightingFor().isConquerable() && !nonConqCanDefend) {
-            failureReasons.add(SFAIL_DEFEND_NON_CONQ_D);
-        }
-
-        if ((o.getIntValue("AttackerBaseConquestAmount") > 0 ||
-                   o.getIntValue("AttackerConquestBVAdjustment") > 0 ||
-                   o.getIntValue("AttackerConquestUnitAdjustment") > 0 ||
-                   o.getIntValue("DefenderBaseConquestAmount") > 0 ||
-                   o.getIntValue("DefenderConquestBVAdjustment") > 0 ||
-                   o.getIntValue("DefenderConquestUnitAdjustment") > 0) && (target != null && !target.isConquerable())) {
-            failureReasons.add(SFAIL_DEFEND_NON_CONQ_PLANET);
-        }
-
-        // faction checks
-        String allowed = o.getValue("LegalDefendFactions");
-        String notAllowed = o.getValue("IllegalDefendFactions");
-        if (allowed.trim().length() != 0 && allowed.indexOf(dp.getHouseFightingFor().getName()) == -1) {
-            failureReasons.add(SFAIL_DEFEND_FACTION);
-        } else if (notAllowed.trim().length() != 0 && notAllowed.indexOf(dp.getHouseFightingFor().getName()) >= 0) {
-            failureReasons.add(SFAIL_DEFEND_FACTION);
-        }
-
-        if (dp.getRating() > o.getDoubleValue("MaxDefenderRating")) {failureReasons.add(SFAIL_DEFEND_MAXRATING);}
-        if (dp.getRating() < o.getDoubleValue("MinDefenderRating")) {failureReasons.add(SFAIL_DEFEND_MINRATING);}
-
-        if (dp.getExperience() > o.getIntValue("MaxDefenderXP")) {failureReasons.add(SFAIL_DEFEND_MAXXP);}
-        if (dp.getExperience() < o.getIntValue("MinDefenderXP")) {failureReasons.add(SFAIL_DEFEND_MINXP);}
-
-        // subFaction Checks
-        if (dp.getSubFactionAccess() < o.getIntValue("MinSubFactionAccessLevel")) {
-            failureReasons.add(SFAIL_COMMON_INSUFFICENT_SUBFACTION_ACCESS_LEVEL);
-        }
-
-        // if (dp.getGamesPlayed() > o.getIntValue("MaxDefenderGamesPlayed")))
-        // failureReasons.add(SFAIL_DEFEND_MAXGAMES);
-        // if (dp.getGamesPlayed() < o.getIntValue("MinDefenderGamesPlayed")))
-        // failureReasons.add(SFAIL_DEFEND_MINGAMES);
-    }
-
-    /**
-     * Method which checks to ensure that a defender can meet the costs associated with begining an operation.
-     */
-    private void checkDefenderCosts(java.util.ArrayList<Integer> failureReasons, server.campaign.SPlayer dp,
-          Operation o) {
-
-        if (dp.getMoney() < o.getIntValue("DefenderCostMoney")) {failureReasons.add(SFAIL_DEFEND_MONEY);}
-
-        if (dp.getInfluence() < o.getIntValue("DefenderCostInfluence")) {failureReasons.add(SFAIL_DEFEND_INFLUENCE);}
-
-        if (dp.getReward() < o.getIntValue("DefenderCostReward")) {failureReasons.add(SFAIL_DEFEND_REWARD);}
-    }
-
-    /**
-     * Method which checks army construction params/properties for defenders. Mirrors checkAttackerConstructon in many
-     * respects.
-     * <p>
-     * Checks the following Operation properties: - MaxDefenderBV - MinDefenderBV - MaxDefenderUnits - MinDefenderUnits
-     * - MinDefenderWalk - MinDefenderJump - MaxDefenderUnitTonnage - MinDefenderUnitTonnage - MaxTotalDefenderTonnage -
-     * MinTotalDefenderTonnage - DefenderAllowedMeks - DefenderAllowedVehs - DefenderAllowedInf - DefenderOmniMeksOnly -
-     * PoweredInfAllowed, if !DefenderAllowedInf
-     */
-    private void checkDefenderConstruction(java.util.ArrayList<Integer> failureReasons, server.campaign.SArmy da,
-          Operation o) {
-
-
-        //There is no army to check. The army will be provided by the server
-        if (o.getBooleanValue("MULArmiesOnly")) {
-            return;
-        }
-
-        I_SpreadValidator isv;
-        int spreadError = I_SpreadValidator.ERROR_NONE;
-        if (o.getBooleanValue("DefenderUsePercentageBVSpread")) {
-            isv = new PercentBVSpreadValidator(o.getIntValue("MaxDefenderUnitBVSpread"),
-                  o.getDoubleValue("DefenderBVSpreadPercent"));
-        } else {
-            isv = new StandardBVSpreadValidator(o.getIntValue("MinDefenderUnitBVSpread"),
-                  o.getIntValue("MaxDefenderUnitBVSpread"));
-        }
-        isv.setDebug(false); // Set this to false when we go live with it.
-        boolean spreadValidates = isv.validate(da, o);
-
-        if (!spreadValidates) {
-            spreadError = isv.getError();
-        }
-
-        boolean countSupport = o.getBooleanValue("CountSupportUnits");
-
-        // BV min/max. Remember - these are for op qualification, not army
-        // matching.
-        if (da.getBV() > o.getIntValue("MaxDefenderBV")) {failureReasons.add(SFAIL_DEFEND_MAXBV);} else if (da.getBV() <
-                                                                                                                  o.getIntValue(
-                                                                                                                        "MinDefenderBV")) {
-            failureReasons.add(SFAIL_DEFEND_MINBV);
-        }
-
-        // Meks min/max. Remember - these are for op qualification, not related
-        // to limiters.
-        if (da.getNumberOfUnitTypes(Unit.MEK, countSupport) > o.getIntValue("MaxDefenderMeks")) {
-            failureReasons.add(SFAIL_DEFEND_MAXMEKS);
-        } else if (da.getNumberOfUnitTypes(Unit.MEK, countSupport) < o.getIntValue("MinDefenderMeks")) {
-            failureReasons.add(SFAIL_DEFEND_MINMEKS);
-        }
-
-        // Vehicles min/max. Remember - these are for op qualification, not
-        // related to limiters.
-        if (da.getNumberOfUnitTypes(Unit.VEHICLE, countSupport) > o.getIntValue("MaxDefenderVehicles")) {
-            failureReasons.add(SFAIL_DEFEND_MAXVEHICLES);
-        } else if (da.getNumberOfUnitTypes(Unit.VEHICLE, countSupport) < o.getIntValue("MinDefenderVehicles")) {
-            failureReasons.add(SFAIL_DEFEND_MINVEHICLES);
-        }
-
-        // Aero min/max. Remember - these are for op qualification, not
-        // related to limiters.
-        if (da.getNumberOfUnitTypes(Unit.AERO, countSupport) > o.getIntValue("MaxDefenderAero")) {
-            failureReasons.add(SFAIL_DEFEND_MAX_AERO);
-        } else if (da.getNumberOfUnitTypes(Unit.AERO, countSupport) < o.getIntValue("MinDefenderAero")) {
-            failureReasons.add(SFAIL_DEFEND_MIN_AERO);
-        }
-
-        // Check Aero ratios
-        if (o.getBooleanValue("EnforceDefenderAeroRatio")) {
-            boolean countAeroSupport = o.getBooleanValue("CountSupportUnitsInAeroRatio");
-            int numAero = da.getNumberOfUnitTypes(Unit.AERO, countAeroSupport);
-            int totalUnits = da.getAmountOfUnits();
-            double minPercent = o.getDoubleValue("MinAttackerAeroPercent");
-            double maxPercent = o.getDoubleValue("MaxAttackerAeroPercent");
-            double actualPercent = (double) (((double) numAero / (double) totalUnits) * 100);
-            if (actualPercent < minPercent) {
-                failureReasons.add(SFAIL_DEFEND_MIN_AERO);
-            } else if (actualPercent > maxPercent) {
-                failureReasons.add(SFAIL_DEFEND_MAX_AERO);
-            }
-        }
-
-
-        int infCount = da.getNumberOfUnitTypes(Unit.INFANTRY, countSupport);
-        infCount += da.getNumberOfUnitTypes(Unit.BATTLEARMOR, countSupport);
-        int protoCount = da.getNumberOfUnitTypes(Unit.PROTOMEK, countSupport);
-        if (protoCount > 0) {infCount += Math.max(1, protoCount / 5);}
-
-        // Infantry min/max. Remember - these are for op qualification, not
-        // related to limiters.
-        if (infCount > o.getIntValue("MaxDefenderInfantry")) {
-            failureReasons.add(SFAIL_DEFEND_MAXINFANTRY);
-        } else if (infCount < o.getIntValue("MinDefenderInfantry")) {failureReasons.add(SFAIL_DEFEND_MININFANTRY);}
-
-        // NonInfantry min/max. Remember - these are for op qualification, not
-        // related to limiters.
-        if (da.getNumberOfUnitTypes(Unit.MEK) +
-                  da.getNumberOfUnitTypes(Unit.VEHICLE) +
-                  da.getNumberOfUnitTypes(Unit.AERO) > o.getIntValue("MaxDefenderNonInfantry")) {
-            failureReasons.add(SFAIL_DEFEND_MAXNONINFANTRY);
-        } else if (da.getNumberOfUnitTypes(Unit.MEK) +
-                         da.getNumberOfUnitTypes(Unit.VEHICLE) +
-                         da.getNumberOfUnitTypes(Unit.AERO) < o.getIntValue("MinDefenderNonInfantry")) {
-            failureReasons.add(SFAIL_DEFEND_MINNONINFANTRY);
-        }
-
-        // Support Unit min/max
-        if (da.getTotalSupportUnits() < o.getIntValue("MinDefenderSupportUnits")) {
-            failureReasons.add(SFAIL_DEFEND_TOO_FEW_SUPPORT_UNITS);
-        } else if (da.getTotalSupportUnits() > o.getIntValue("MaxDefenderSupportUnits")) {
-            failureReasons.add(SFAIL_DEFEND_TOO_MANY_SUPPORT_UNITS);
-        }
-
-        // Non-Support Unit min/max
-        if ((da.getAmountOfUnitsWithoutInfantry() - da.getTotalSupportUnits()) <
-                  o.getIntValue("MinDefenderNonSupportUnits")) {
-            failureReasons.add(SFAIL_DEFEND_TOO_FEW_NONSUPPORT_UNITS);
-        } else if (da.getAmountOfUnitsWithoutInfantry() - da.getTotalSupportUnits() >
-                         o.getIntValue("MaxDefenderSupportUnits")) {
-            failureReasons.add(SFAIL_DEFEND_TOO_MANY_NONSUPPORT_UNITS);
-        }
-
-        /*
-         * loop through all units in the army, setting up remaining checks.
-         */
-        int totalWeight = 0;
-        int largestWeight = 0;
-        int numProtoMeks = da.getNumberOfUnitTypes(Unit.PROTOMEK);
-
-        int numberOfCommanders = 0;
-        boolean hasMeks = false;
-        boolean hasVehs = false;
-        boolean hasAeros = false;
-        boolean hasInf = false;
-        boolean normInf = false;
-        boolean powerInf = false;
-        boolean speedFail = false;
-        boolean jumpTooFar = false;
-        boolean maxTonFail = false;
-        boolean minTonFail = false;
-        boolean maxBVFail = false;
-        boolean minBVFail = false;
-        boolean omniFail = false;
-        boolean checkOmni = o.getBooleanValue("DefenderOmniMeksOnly");
-        boolean vetPilots = false;
-        boolean greenPilots = false;
-        double averageArmySkills = 0.0;
-        int numberOfValidUnits = 0;
-        boolean checkClantech = o.getBooleanValue("UseClanEquipmentRatios");
-        int numClanUnits = 0;
-        int numTotalUnits = 0;
-
-        java.util.Iterator<Unit> i = da.getUnits().iterator();
-        while (i.hasNext()) {
-
-            // load the next unit
-            server.campaign.SUnit currUnit = (server.campaign.SUnit) i.next();
-
-            // Check to see if the unit is a commander
-            numberOfCommanders = da.getCommanders().size();
-
-            // get the unit's weight, store
-            int currWeight = (int) currUnit.getEntity().getWeight();
-            totalWeight += currWeight;
-            if (currWeight > largestWeight) {largestWeight = currWeight;}
-
-            if (currUnit.getType() == Unit.MEK) {
-                hasMeks = true;
-                if (checkOmni && !omniFail) {if (!currUnit.isOmni()) {omniFail = true;}}
-            } else if (currUnit.getType() == Unit.VEHICLE) {hasVehs = true;} else if (currUnit.getType() == Unit.AERO) {
-                hasAeros = true;
-            } else if (currUnit.getType() == Unit.INFANTRY ||
-                             currUnit.getType() == Unit.BATTLEARMOR ||
-                             currUnit.getType() == Unit.PROTOMEK) {
-                hasInf = true;
-                if ((currUnit.getEntity() instanceof BattleArmor) || (currUnit.getEntity() instanceof Protomech)) {
-                    powerInf = true;
-                } else {normInf = true;}
-            }
-
-            // now, check the unit's walking and jumping speeds. only fail on
-            // this once.
-            if (!speedFail && !jumpTooFar) {
-                try {
-                    int walkMP = currUnit.getEntity().getWalkMP();
-                    int jumpMP = currUnit.getEntity().getJumpMP();
-                    if (walkMP < o.getIntValue("MinDefenderWalk") && jumpMP < o.getIntValue("MinDefenderJump")) {
-                        speedFail = true;
-                    }
-                    if (jumpMP > o.getIntValue("MaxDefenderJump")) {
-                        jumpTooFar = true;
-                    }
-                } catch (Exception ex) {
-                }
-            }// end if(hasn't already speedfail'ed)
-
-            // check the unit's weight
-            if (currUnit.getType() == Unit.MEK ||
-                      currUnit.getType() == Unit.VEHICLE ||
-                      currUnit.getType() == Unit.AERO) {
-                if (currWeight > o.getIntValue("MaxDefenderUnitTonnage")) {maxTonFail = true;} else if (currWeight <
-                                                                                                              o.getIntValue(
-                                                                                                                    "MinDefenderUnitTonnage")) {
-                    minTonFail = true;
-                }
-            }
-            // check the unit's BV
-            int currBV = 0;
-            if (o.getBooleanValue("IgnorePilotsForBVSpread")) {
-                currBV = currUnit.getBaseBV();
-            } else {
-                currBV = currUnit.getBV();
-            }
-            if (currBV < o.getIntValue("MinDefenderUnitBV")) {minBVFail = true;} else if (currBV >
-                                                                                                o.getIntValue(
-                                                                                                      "MaxDefenderUnitBV")) {
-                maxBVFail = true;
-            }
-
-            // check spreads. because the spreads can <code>continue</code> they
-            // should be LAST
-            int type = currUnit.getType();
-            if (currUnit.isSupportUnit() && !o.getBooleanValue("CountSupportUnitsForSpread")) {continue;}
-            if (type == Unit.VEHICLE && !o.getBooleanValue("CountVehsForSpread")) {continue;} else if (type ==
-                                                                                                             Unit.PROTOMEK && !o.getBooleanValue("CountProtosForSpread")) {
-                continue;
-            } else if ((type ==
-                              Unit.BATTLEARMOR || type == Unit.INFANTRY) && !o.getBooleanValue("CountInfForSpread")) {
-                continue;
-            } else if (type == Unit.AERO && !o.getBooleanValue("CountAerosForSpread")) {continue;}
-
-            if (!currUnit.hasVacantPilot()) {
-                int piloting = currUnit.getPilot().getPiloting();
-                int gunnery = currUnit.getPilot().getGunnery();
-                int totalSkills = gunnery + piloting;
-
-                numberOfValidUnits++;
-                averageArmySkills += totalSkills;
-
-                if (piloting > o.getIntValue("HighestDefenderPiloting")) {greenPilots = true;}
-
-                if (piloting < o.getIntValue("LowestDefenderPiloting")) {vetPilots = true;}
-
-                if (gunnery > o.getIntValue("HighestDefenderGunnery")) {greenPilots = true;}
-
-                if (gunnery < o.getIntValue("LowestDefenderGunnery")) {vetPilots = true;}
-
-                if (totalSkills > o.getIntValue("HighestDefenderPilotSkillTotal")) {greenPilots = true;}
-
-                if (totalSkills < o.getIntValue("LowestDefenderPilotSkillTotal")) {vetPilots = true;}
-            }
-
-            // Count total units and clan units
-            numTotalUnits++;
-            if (currUnit.getEntity().isClan()) {
-                numClanUnits++;
-            }
-
-        }// end while(units remain)
-
-        // add unit exclusion failures to list
-        if (hasMeks && !o.getBooleanValue("DefenderAllowedMeks")) {failureReasons.add(SFAIL_DEFEND_NOMEKS);}
-        if (hasVehs && !o.getBooleanValue("DefenderAllowedVehs")) {failureReasons.add(SFAIL_DEFEND_NOVEHS);}
-        if (hasAeros && !o.getBooleanValue("DefenderAllowedAeros")) {failureReasons.add(SFAIL_DEFEND_NOAEROS);}
-        if (hasInf && !o.getBooleanValue("DefenderAllowedInf")) {
-            // powered allowed, but there's unarmored inf too
-            if (o.getBooleanValue("DefenderPoweredInfAllowed") && normInf) {failureReasons.add(SFAIL_DEFEND_NONORMINF);}
-            if (o.getBooleanValue("DefenderStandardInfAllowed") && powerInf) {
-                failureReasons.add(SFAIL_DEFEND_NOPOWERINF);
-            } else if (!normInf && !powerInf) {
-                // no infantry allowed, at all
-                failureReasons.add(SFAIL_ATTACK_NOINF);
-            }
-        }// end if(!AllowedInf)
-        if (checkOmni && omniFail) {failureReasons.add(SFAIL_DEFEND_OMNIONLY);}
-
-        if (o.getBooleanValue("UseUnitCommander")) {
-            if (numberOfCommanders < o.getIntValue("MinimumUnitCommanders")) {
-                failureReasons.add(SFAIL_COMMON_NOT_ENOUGH_COMMANDERS);
-            }
-            if (numberOfCommanders > o.getIntValue("MaximumUnitCommanders")) {
-                failureReasons.add(SFAIL_COMMON_TOO_MANY_COMMANDERS);
-            }
-        }
-
-        // proto failures. wee.
-        if (o.getBooleanValue("ProtosMustbeGrouped") && numProtoMeks > 0 && numProtoMeks % 5 != 0) {
-            failureReasons.add(SFAIL_COMMON_PROTOGROUPS);
-        }
-
-        // add speed failure to list
-        if (speedFail) {failureReasons.add(SFAIL_DEFEND_MINSPEED);}
-        if (jumpTooFar) {
-            failureReasons.add(SFAIL_DEFEND_MAXJUMP);
-        }
-        // add max/min unit ton failures to list
-        if (maxTonFail) {failureReasons.add(SFAIL_DEFEND_MAXUNITTON);} else if (minTonFail) {
-            failureReasons.add(SFAIL_DEFEND_MINUNITTON);
-        }
-
-        // add max/min unit BV failures to list
-        if (maxBVFail) {failureReasons.add(SFAIL_DEFEND_MAXUNITBV);} else if (minBVFail) {
-            failureReasons.add(SFAIL_DEFEND_MINUNITBV);
-        }
-
-        // check total tonnage failures
-        if (totalWeight > o.getIntValue("MaxTotalDefenderTonnage")) {
-            failureReasons.add(SFAIL_DEFEND_MAXARMYTON);
-        } else if (totalWeight < o.getIntValue("MinTotalDefenderTonnage")) {
-            failureReasons.add(SFAIL_DEFEND_MINARMYTON);
-        }
-
-        // check unit BV difference failures
-        if (spreadError == I_SpreadValidator.ERROR_SPREAD_TOO_LARGE) {
-            failureReasons.add(SFAIL_DEFEND_MAXSPREAD);
-        } else if (spreadError == I_SpreadValidator.ERROR_SPREAD_TOO_SMALL) {
-            failureReasons.add(SFAIL_DEFEND_MINSPREAD);
-        }
-
-        averageArmySkills /= numberOfValidUnits;
-
-        if (averageArmySkills > o.getDoubleValue("DefenderAverageArmySkillMax")) {
-            failureReasons.add(SFAIL_DEFEND_SKILLSUM_TOOHIGH);
-        }
-
-        if (averageArmySkills < o.getDoubleValue("DefenderAverageArmySkillMin")) {
-            failureReasons.add(SFAIL_DEFEND_SKILLSUM_TOOLOW);
-        }
-
-
-        if (vetPilots) {failureReasons.add(SFAIL_DEFEND_ELITE_PILOTS);}
-
-        if (greenPilots) {failureReasons.add(SFAIL_DEFEND_GREEN_PILOTS);}
-
-        if (checkClantech) {
-            double minClantech = o.getDoubleValue("DefenderMinClanEquipmentPercent");
-            double maxClantech = o.getDoubleValue("DefenderMaxClanEquipmentPercent");
-            double clanTechPercent = numClanUnits / numTotalUnits;
-            if (clanTechPercent < minClantech) {
-                failureReasons.add(SFAIL_DEFEND_TECHBASE_TOO_LITTLE_CLAN);
-            }
-            if (clanTechPercent > maxClantech) {
-                failureReasons.add(SFAIL_DEFEND_TECHBASE_TOO_MUCH_CLAN);
-            }
-        }
-
-    }// end checkDefenderConstruction
-
-    /**
-     * Method which checks an Army's eligibility vs. all available Operations and updates its legalOperations TreeMap.
-     * Changes are collected in two ArrayLists (addList, removeList).
-     * <p>
-     * If <code>display</code> is true, the client receives a standard system message as well as the silent update.
-     */
-    public void checkOperations(server.campaign.SArmy a, boolean display,
-          java.util.TreeMap<String, Operation> operations) {
-
-        server.campaign.SPlayer p = server.campaign.CampaignMain.cm.getPlayer(a.getPlayerName());
-        if (p == null) {return;}
-
-        /*
-         * If the player is not logged in, skip the checks. This saves us from
-         * sending updates to disconnected players when their games
-         * auto-resolve.
-         */
-        if (p.getDutyStatus() < server.campaign.SPlayer.STATUS_RESERVE) {return;}
-
-        java.util.ArrayList<String> addNames = new java.util.ArrayList<String>();
-        java.util.ArrayList<String> removeNames = new java.util.ArrayList<String>();
-
-        for (Operation currType : operations.values()) {
-
-            // check for failures. contruction and milestones only.
-            java.util.ArrayList<Integer> failures = this.validateShortAttacker(p, a, currType, null, -1, false);
-
-            // if there were failures, try to remve
-            if (failures.size() > 0) {
-                String removal = a.getLegalOperations().remove(currType.getName());
-                if (removal != null) {removeNames.add(removal);}
-            }
-
-            // no failures. add to the tree. if the key was connected
-            // to a null previously, we need to notify the player.
-            else if (a.getLegalOperations().put(currType.getName(), currType.getName()) == null) {
-                addNames.add(currType.getName());
-            }
-
-        }// end for(each operation)
-
-        // if there were changes, pre updates
-        if (addNames.size() > 0 || removeNames.size() > 0) {
-
-            // assemble PL| command string
-            String toSend = "PL|UOE|" + a.getID() + "*";
-            for (String currName : addNames) {toSend += "a*" + currName + "*";}
-            for (String currName : removeNames) {toSend += "r*" + currName + "*";}
-
-            // send command
-            server.campaign.CampaignMain.cm.toUser(toSend, p.getName(), false);
-
-            // if verbose, inform the players
-            if (display) {
-
-                String addSend = "AM:Army #" + a.getID();
-                String removeSend = "AM:Army #" + a.getID();
-
-                // add messages
-                if (addNames.size() == 1) {
-                    addSend += " gained access to an attack: " + addNames.get(0) + ".";
-                    server.campaign.CampaignMain.cm.toUser(addSend, p.getName(), true);
-                } else if (addNames.size() > 1) {
-                    addSend += " gained access to the following attacks: ";
-                    java.util.Iterator<String> i = addNames.iterator();
-                    while (i.hasNext()) {
-                        addSend += i.next();
-                        if (i.hasNext()) {
-                            addSend += ", ";
-                        }
-                    }
-                    // try to remove the last instance of ", "
-                    int lastComma = addSend.lastIndexOf(", ");
-                    if (lastComma >= 0) {
-                        String front = addSend.substring(0, lastComma);
-                        String back = addSend.substring(lastComma + 2, addSend.length());
-                        addSend = front + " and " + back + ".";
-                    }
-                    server.campaign.CampaignMain.cm.toUser(addSend, p.getName(), true);
-                }
-
-                // remove messages
-                if (removeNames.size() == 1) {
-                    removeSend += " lost access to an attack: " + removeNames.get(0) + ".";
-                    server.campaign.CampaignMain.cm.toUser(removeSend, p.getName(), true);
-                } else if (removeNames.size() > 1) {
-                    removeSend += " lost access to the following attacks: ";
-                    java.util.Iterator<String> i = removeNames.iterator();
-                    while (i.hasNext()) {
-                        removeSend += i.next();
-                        if (i.hasNext()) {
-                            removeSend += ", ";
-                        }
-                    }
-                    // try to remove the last instance of ", "
-                    int lastComma = removeSend.lastIndexOf(", ");
-                    if (lastComma >= 0) {
-                        String front = removeSend.substring(0, lastComma);
-                        String back = removeSend.substring(lastComma + 2, removeSend.length());
-                        removeSend = front + " and " + back + ".";
-                    }
-                    server.campaign.CampaignMain.cm.toUser(removeSend, p.getName(), true);
-                }
-
-            }// end if(display)
-        }// end (legal types were added or removed)
-    }// end checkOperations()
-
-    /**
-     * Method which takes a failure arraylist and generates human-readible reasons for an attack failure. Public.
-     */
-    public String failuresToString(java.util.ArrayList<Integer> failList) {
-
-        String s = "";
-        if (failList.size() == 1) {
-            return s += " because:<br>- " + this.decodeFailure((Integer) failList.get(0)) + ".";
-        }
-
-        s += "because:<br>";
-        java.util.Iterator<Integer> i = failList.iterator();
-        while (i.hasNext()) {
-            s += "- " + this.decodeFailure(i.next());
-            if (i.hasNext()) {s += "<br>";}
-        }
-
-        return s;
     }
 
     /**
@@ -2412,6 +1933,477 @@ public class ShortValidator {
         }
 
         return "";
+    }
+
+    /**
+     * Method which checks defender milestones, like experience and rank.
+     */
+    private void checkDefenderMilestones(java.util.ArrayList<Integer> failureReasons, server.campaign.SPlayer dp,
+          Operation o, server.campaign.SPlanet target) {
+
+        boolean solCanDefend = o.getBooleanValue("AllowAgainstSOL");
+        boolean nonConqCanDefend = o.getBooleanValue("AllowAgainstNonConq");
+        double percentOwned = 0;
+        if (target != null) {
+            percentOwned = (double) 100 *
+                                 ((double) target.getInfluence().getInfluence(dp.getHouseFightingFor().getId()) /
+                                        (double) target.getConquestPoints());
+        } else {percentOwned = 0;}
+        //Baruk Khazad! - 20151003 - start
+        if (target != null && percentOwned < o.getIntValue("MinPlanetOwnership")) {
+            if (percentOwned > 0 &&
+                      o.getIntValue("MinPlanetOwnership") > 0 &&
+                      o.getBooleanValue("MinPlanetOwnershipIgnoredByDefender")) {
+                //do not apply a fail flag because 1) they own some 2) there is a non-zero min%Owned value 3) the ignore flag is set to true. This fits the condition described in the Operations Manager.
+            } else {
+                failureReasons.add(SFAIL_DEFEND_NOTPLANDEF);
+            }
+        }
+        //Baruk Khazad! - 20151003 - end
+        if (dp.getHouseFightingFor().isNewbieHouse() && !solCanDefend) {failureReasons.add(SFAIL_DEFEND_SOLCANTDEF);}
+        if (!dp.getHouseFightingFor().isConquerable() && !nonConqCanDefend) {
+            failureReasons.add(SFAIL_DEFEND_NON_CONQ_D);
+        }
+
+        if ((o.getIntValue("AttackerBaseConquestAmount") > 0 ||
+                   o.getIntValue("AttackerConquestBVAdjustment") > 0 ||
+                   o.getIntValue("AttackerConquestUnitAdjustment") > 0 ||
+                   o.getIntValue("DefenderBaseConquestAmount") > 0 ||
+                   o.getIntValue("DefenderConquestBVAdjustment") > 0 ||
+                   o.getIntValue("DefenderConquestUnitAdjustment") > 0) &&
+                  (target != null && !target.isConquerable())) {
+            failureReasons.add(SFAIL_DEFEND_NON_CONQ_PLANET);
+        }
+
+        // faction checks
+        String allowed = o.getValue("LegalDefendFactions");
+        String notAllowed = o.getValue("IllegalDefendFactions");
+        if (allowed.trim().length() != 0 && allowed.indexOf(dp.getHouseFightingFor().getName()) == -1) {
+            failureReasons.add(SFAIL_DEFEND_FACTION);
+        } else if (notAllowed.trim().length() != 0 && notAllowed.indexOf(dp.getHouseFightingFor().getName()) >= 0) {
+            failureReasons.add(SFAIL_DEFEND_FACTION);
+        }
+
+        if (dp.getRating() > o.getDoubleValue("MaxDefenderRating")) {failureReasons.add(SFAIL_DEFEND_MAXRATING);}
+        if (dp.getRating() < o.getDoubleValue("MinDefenderRating")) {failureReasons.add(SFAIL_DEFEND_MINRATING);}
+
+        if (dp.getExperience() > o.getIntValue("MaxDefenderXP")) {failureReasons.add(SFAIL_DEFEND_MAXXP);}
+        if (dp.getExperience() < o.getIntValue("MinDefenderXP")) {failureReasons.add(SFAIL_DEFEND_MINXP);}
+
+        // subFaction Checks
+        if (dp.getSubFactionAccess() < o.getIntValue("MinSubFactionAccessLevel")) {
+            failureReasons.add(SFAIL_COMMON_INSUFFICENT_SUBFACTION_ACCESS_LEVEL);
+        }
+
+        // if (dp.getGamesPlayed() > o.getIntValue("MaxDefenderGamesPlayed")))
+        // failureReasons.add(SFAIL_DEFEND_MAXGAMES);
+        // if (dp.getGamesPlayed() < o.getIntValue("MinDefenderGamesPlayed")))
+        // failureReasons.add(SFAIL_DEFEND_MINGAMES);
+    }
+
+    /**
+     * Method which checks to ensure that a defender can meet the costs associated with begining an operation.
+     */
+    private void checkDefenderCosts(java.util.ArrayList<Integer> failureReasons, server.campaign.SPlayer dp,
+          Operation o) {
+
+        if (dp.getMoney() < o.getIntValue("DefenderCostMoney")) {failureReasons.add(SFAIL_DEFEND_MONEY);}
+
+        if (dp.getInfluence() < o.getIntValue("DefenderCostInfluence")) {failureReasons.add(SFAIL_DEFEND_INFLUENCE);}
+
+        if (dp.getReward() < o.getIntValue("DefenderCostReward")) {failureReasons.add(SFAIL_DEFEND_REWARD);}
+    }
+
+    /**
+     * Method which checks army construction params/properties for defenders. Mirrors checkAttackerConstructon in many
+     * respects.
+     * <p>
+     * Checks the following Operation properties: - MaxDefenderBV - MinDefenderBV - MaxDefenderUnits - MinDefenderUnits
+     * - MinDefenderWalk - MinDefenderJump - MaxDefenderUnitTonnage - MinDefenderUnitTonnage - MaxTotalDefenderTonnage -
+     * MinTotalDefenderTonnage - DefenderAllowedMeks - DefenderAllowedVehs - DefenderAllowedInf - DefenderOmniMeksOnly -
+     * PoweredInfAllowed, if !DefenderAllowedInf
+     */
+    private void checkDefenderConstruction(java.util.ArrayList<Integer> failureReasons, server.campaign.SArmy da,
+          Operation o) {
+
+
+        //There is no army to check. The army will be provided by the server
+        if (o.getBooleanValue("MULArmiesOnly")) {
+            return;
+        }
+
+        I_SpreadValidator isv;
+        int spreadError = I_SpreadValidator.ERROR_NONE;
+        if (o.getBooleanValue("DefenderUsePercentageBVSpread")) {
+            isv = new PercentBVSpreadValidator(o.getIntValue("MaxDefenderUnitBVSpread"),
+                  o.getDoubleValue("DefenderBVSpreadPercent"));
+        } else {
+            isv = new StandardBVSpreadValidator(o.getIntValue("MinDefenderUnitBVSpread"),
+                  o.getIntValue("MaxDefenderUnitBVSpread"));
+        }
+        isv.setDebug(false); // Set this to false when we go live with it.
+        boolean spreadValidates = isv.validate(da, o);
+
+        if (!spreadValidates) {
+            spreadError = isv.getError();
+        }
+
+        boolean countSupport = o.getBooleanValue("CountSupportUnits");
+
+        // BV min/max. Remember - these are for op qualification, not army
+        // matching.
+        if (da.getBV() > o.getIntValue("MaxDefenderBV")) {failureReasons.add(SFAIL_DEFEND_MAXBV);} else if (da.getBV() <
+                                                                                                                  o.getIntValue(
+                                                                                                                        "MinDefenderBV")) {
+            failureReasons.add(SFAIL_DEFEND_MINBV);
+        }
+
+        // Meks min/max. Remember - these are for op qualification, not related
+        // to limiters.
+        if (da.getNumberOfUnitTypes(Unit.MEK, countSupport) > o.getIntValue("MaxDefenderMeks")) {
+            failureReasons.add(SFAIL_DEFEND_MAXMEKS);
+        } else if (da.getNumberOfUnitTypes(Unit.MEK, countSupport) < o.getIntValue("MinDefenderMeks")) {
+            failureReasons.add(SFAIL_DEFEND_MINMEKS);
+        }
+
+        // Vehicles min/max. Remember - these are for op qualification, not
+        // related to limiters.
+        if (da.getNumberOfUnitTypes(Unit.VEHICLE, countSupport) > o.getIntValue("MaxDefenderVehicles")) {
+            failureReasons.add(SFAIL_DEFEND_MAXVEHICLES);
+        } else if (da.getNumberOfUnitTypes(Unit.VEHICLE, countSupport) < o.getIntValue("MinDefenderVehicles")) {
+            failureReasons.add(SFAIL_DEFEND_MINVEHICLES);
+        }
+
+        // Aero min/max. Remember - these are for op qualification, not
+        // related to limiters.
+        if (da.getNumberOfUnitTypes(Unit.AERO, countSupport) > o.getIntValue("MaxDefenderAero")) {
+            failureReasons.add(SFAIL_DEFEND_MAX_AERO);
+        } else if (da.getNumberOfUnitTypes(Unit.AERO, countSupport) < o.getIntValue("MinDefenderAero")) {
+            failureReasons.add(SFAIL_DEFEND_MIN_AERO);
+        }
+
+        // Check Aero ratios
+        if (o.getBooleanValue("EnforceDefenderAeroRatio")) {
+            boolean countAeroSupport = o.getBooleanValue("CountSupportUnitsInAeroRatio");
+            int numAero = da.getNumberOfUnitTypes(Unit.AERO, countAeroSupport);
+            int totalUnits = da.getAmountOfUnits();
+            double minPercent = o.getDoubleValue("MinAttackerAeroPercent");
+            double maxPercent = o.getDoubleValue("MaxAttackerAeroPercent");
+            double actualPercent = (double) (((double) numAero / (double) totalUnits) * 100);
+            if (actualPercent < minPercent) {
+                failureReasons.add(SFAIL_DEFEND_MIN_AERO);
+            } else if (actualPercent > maxPercent) {
+                failureReasons.add(SFAIL_DEFEND_MAX_AERO);
+            }
+        }
+
+
+        int infCount = da.getNumberOfUnitTypes(Unit.INFANTRY, countSupport);
+        infCount += da.getNumberOfUnitTypes(Unit.BATTLEARMOR, countSupport);
+        int protoCount = da.getNumberOfUnitTypes(Unit.PROTOMEK, countSupport);
+        if (protoCount > 0) {infCount += Math.max(1, protoCount / 5);}
+
+        // Infantry min/max. Remember - these are for op qualification, not
+        // related to limiters.
+        if (infCount > o.getIntValue("MaxDefenderInfantry")) {
+            failureReasons.add(SFAIL_DEFEND_MAXINFANTRY);
+        } else if (infCount < o.getIntValue("MinDefenderInfantry")) {failureReasons.add(SFAIL_DEFEND_MININFANTRY);}
+
+        // NonInfantry min/max. Remember - these are for op qualification, not
+        // related to limiters.
+        if (da.getNumberOfUnitTypes(Unit.MEK) +
+                  da.getNumberOfUnitTypes(Unit.VEHICLE) +
+                  da.getNumberOfUnitTypes(Unit.AERO) > o.getIntValue("MaxDefenderNonInfantry")) {
+            failureReasons.add(SFAIL_DEFEND_MAXNONINFANTRY);
+        } else if (da.getNumberOfUnitTypes(Unit.MEK) +
+                         da.getNumberOfUnitTypes(Unit.VEHICLE) +
+                         da.getNumberOfUnitTypes(Unit.AERO) < o.getIntValue("MinDefenderNonInfantry")) {
+            failureReasons.add(SFAIL_DEFEND_MINNONINFANTRY);
+        }
+
+        // Support Unit min/max
+        if (da.getTotalSupportUnits() < o.getIntValue("MinDefenderSupportUnits")) {
+            failureReasons.add(SFAIL_DEFEND_TOO_FEW_SUPPORT_UNITS);
+        } else if (da.getTotalSupportUnits() > o.getIntValue("MaxDefenderSupportUnits")) {
+            failureReasons.add(SFAIL_DEFEND_TOO_MANY_SUPPORT_UNITS);
+        }
+
+        // Non-Support Unit min/max
+        if ((da.getAmountOfUnitsWithoutInfantry() - da.getTotalSupportUnits()) <
+                  o.getIntValue("MinDefenderNonSupportUnits")) {
+            failureReasons.add(SFAIL_DEFEND_TOO_FEW_NONSUPPORT_UNITS);
+        } else if (da.getAmountOfUnitsWithoutInfantry() - da.getTotalSupportUnits() >
+                         o.getIntValue("MaxDefenderSupportUnits")) {
+            failureReasons.add(SFAIL_DEFEND_TOO_MANY_NONSUPPORT_UNITS);
+        }
+
+        /*
+         * loop through all units in the army, setting up remaining checks.
+         */
+        int totalWeight = 0;
+        int largestWeight = 0;
+        int numProtoMeks = da.getNumberOfUnitTypes(Unit.PROTOMEK);
+
+        int numberOfCommanders = 0;
+        boolean hasMeks = false;
+        boolean hasVehs = false;
+        boolean hasAeros = false;
+        boolean hasInf = false;
+        boolean normInf = false;
+        boolean powerInf = false;
+        boolean speedFail = false;
+        boolean jumpTooFar = false;
+        boolean maxTonFail = false;
+        boolean minTonFail = false;
+        boolean maxBVFail = false;
+        boolean minBVFail = false;
+        boolean omniFail = false;
+        boolean checkOmni = o.getBooleanValue("DefenderOmniMeksOnly");
+        boolean vetPilots = false;
+        boolean greenPilots = false;
+        double averageArmySkills = 0.0;
+        int numberOfValidUnits = 0;
+        boolean checkClantech = o.getBooleanValue("UseClanEquipmentRatios");
+        int numClanUnits = 0;
+        int numTotalUnits = 0;
+
+        java.util.Iterator<Unit> i = da.getUnits().iterator();
+        while (i.hasNext()) {
+
+            // load the next unit
+            server.campaign.SUnit currUnit = (server.campaign.SUnit) i.next();
+
+            // Check to see if the unit is a commander
+            numberOfCommanders = da.getCommanders().size();
+
+            // get the unit's weight, store
+            int currWeight = (int) currUnit.getEntity().getWeight();
+            totalWeight += currWeight;
+            if (currWeight > largestWeight) {largestWeight = currWeight;}
+
+            if (currUnit.getType() == Unit.MEK) {
+                hasMeks = true;
+                if (checkOmni && !omniFail) {if (!currUnit.isOmni()) {omniFail = true;}}
+            } else if (currUnit.getType() == Unit.VEHICLE) {hasVehs = true;} else if (currUnit.getType() == Unit.AERO) {
+                hasAeros = true;
+            } else if (currUnit.getType() == Unit.INFANTRY ||
+                             currUnit.getType() == Unit.BATTLEARMOR ||
+                             currUnit.getType() == Unit.PROTOMEK) {
+                hasInf = true;
+                if ((currUnit.getEntity() instanceof BattleArmor) || (currUnit.getEntity() instanceof Protomech)) {
+                    powerInf = true;
+                } else {normInf = true;}
+            }
+
+            // now, check the unit's walking and jumping speeds. only fail on
+            // this once.
+            if (!speedFail && !jumpTooFar) {
+                try {
+                    int walkMP = currUnit.getEntity().getWalkMP();
+                    int jumpMP = currUnit.getEntity().getJumpMP();
+                    if (walkMP < o.getIntValue("MinDefenderWalk") && jumpMP < o.getIntValue("MinDefenderJump")) {
+                        speedFail = true;
+                    }
+                    if (jumpMP > o.getIntValue("MaxDefenderJump")) {
+                        jumpTooFar = true;
+                    }
+                } catch (Exception ex) {
+                }
+            }// end if(hasn't already speedfail'ed)
+
+            // check the unit's weight
+            if (currUnit.getType() == Unit.MEK ||
+                      currUnit.getType() == Unit.VEHICLE ||
+                      currUnit.getType() == Unit.AERO) {
+                if (currWeight > o.getIntValue("MaxDefenderUnitTonnage")) {maxTonFail = true;} else if (currWeight <
+                                                                                                              o.getIntValue(
+                                                                                                                    "MinDefenderUnitTonnage")) {
+                    minTonFail = true;
+                }
+            }
+            // check the unit's BV
+            int currBV = 0;
+            if (o.getBooleanValue("IgnorePilotsForBVSpread")) {
+                currBV = currUnit.getBaseBV();
+            } else {
+                currBV = currUnit.getBV();
+            }
+            if (currBV < o.getIntValue("MinDefenderUnitBV")) {minBVFail = true;} else if (currBV >
+                                                                                                o.getIntValue(
+                                                                                                      "MaxDefenderUnitBV")) {
+                maxBVFail = true;
+            }
+
+            // check spreads. because the spreads can <code>continue</code> they
+            // should be LAST
+            int type = currUnit.getType();
+            if (currUnit.isSupportUnit() && !o.getBooleanValue("CountSupportUnitsForSpread")) {continue;}
+            if (type == Unit.VEHICLE && !o.getBooleanValue("CountVehsForSpread")) {continue;} else if (type ==
+                                                                                                             Unit.PROTOMEK &&
+                                                                                                             !o.getBooleanValue(
+                                                                                                                   "CountProtosForSpread")) {
+                continue;
+            } else if ((type ==
+                              Unit.BATTLEARMOR || type == Unit.INFANTRY) && !o.getBooleanValue("CountInfForSpread")) {
+                continue;
+            } else if (type == Unit.AERO && !o.getBooleanValue("CountAerosForSpread")) {continue;}
+
+            if (!currUnit.hasVacantPilot()) {
+                int piloting = currUnit.getPilot().getPiloting();
+                int gunnery = currUnit.getPilot().getGunnery();
+                int totalSkills = gunnery + piloting;
+
+                numberOfValidUnits++;
+                averageArmySkills += totalSkills;
+
+                if (piloting > o.getIntValue("HighestDefenderPiloting")) {greenPilots = true;}
+
+                if (piloting < o.getIntValue("LowestDefenderPiloting")) {vetPilots = true;}
+
+                if (gunnery > o.getIntValue("HighestDefenderGunnery")) {greenPilots = true;}
+
+                if (gunnery < o.getIntValue("LowestDefenderGunnery")) {vetPilots = true;}
+
+                if (totalSkills > o.getIntValue("HighestDefenderPilotSkillTotal")) {greenPilots = true;}
+
+                if (totalSkills < o.getIntValue("LowestDefenderPilotSkillTotal")) {vetPilots = true;}
+            }
+
+            // Count total units and clan units
+            numTotalUnits++;
+            if (currUnit.getEntity().isClan()) {
+                numClanUnits++;
+            }
+
+        }// end while(units remain)
+
+        // add unit exclusion failures to list
+        if (hasMeks && !o.getBooleanValue("DefenderAllowedMeks")) {failureReasons.add(SFAIL_DEFEND_NOMEKS);}
+        if (hasVehs && !o.getBooleanValue("DefenderAllowedVehs")) {failureReasons.add(SFAIL_DEFEND_NOVEHS);}
+        if (hasAeros && !o.getBooleanValue("DefenderAllowedAeros")) {failureReasons.add(SFAIL_DEFEND_NOAEROS);}
+        if (hasInf && !o.getBooleanValue("DefenderAllowedInf")) {
+            // powered allowed, but there's unarmored inf too
+            if (o.getBooleanValue("DefenderPoweredInfAllowed") && normInf) {failureReasons.add(SFAIL_DEFEND_NONORMINF);}
+            if (o.getBooleanValue("DefenderStandardInfAllowed") && powerInf) {
+                failureReasons.add(SFAIL_DEFEND_NOPOWERINF);
+            } else if (!normInf && !powerInf) {
+                // no infantry allowed, at all
+                failureReasons.add(SFAIL_ATTACK_NOINF);
+            }
+        }// end if(!AllowedInf)
+        if (checkOmni && omniFail) {failureReasons.add(SFAIL_DEFEND_OMNIONLY);}
+
+        if (o.getBooleanValue("UseUnitCommander")) {
+            if (numberOfCommanders < o.getIntValue("MinimumUnitCommanders")) {
+                failureReasons.add(SFAIL_COMMON_NOT_ENOUGH_COMMANDERS);
+            }
+            if (numberOfCommanders > o.getIntValue("MaximumUnitCommanders")) {
+                failureReasons.add(SFAIL_COMMON_TOO_MANY_COMMANDERS);
+            }
+        }
+
+        // proto failures. wee.
+        if (o.getBooleanValue("ProtosMustbeGrouped") && numProtoMeks > 0 && numProtoMeks % 5 != 0) {
+            failureReasons.add(SFAIL_COMMON_PROTOGROUPS);
+        }
+
+        // add speed failure to list
+        if (speedFail) {failureReasons.add(SFAIL_DEFEND_MINSPEED);}
+        if (jumpTooFar) {
+            failureReasons.add(SFAIL_DEFEND_MAXJUMP);
+        }
+        // add max/min unit ton failures to list
+        if (maxTonFail) {failureReasons.add(SFAIL_DEFEND_MAXUNITTON);} else if (minTonFail) {
+            failureReasons.add(SFAIL_DEFEND_MINUNITTON);
+        }
+
+        // add max/min unit BV failures to list
+        if (maxBVFail) {failureReasons.add(SFAIL_DEFEND_MAXUNITBV);} else if (minBVFail) {
+            failureReasons.add(SFAIL_DEFEND_MINUNITBV);
+        }
+
+        // check total tonnage failures
+        if (totalWeight > o.getIntValue("MaxTotalDefenderTonnage")) {
+            failureReasons.add(SFAIL_DEFEND_MAXARMYTON);
+        } else if (totalWeight < o.getIntValue("MinTotalDefenderTonnage")) {
+            failureReasons.add(SFAIL_DEFEND_MINARMYTON);
+        }
+
+        // check unit BV difference failures
+        if (spreadError == I_SpreadValidator.ERROR_SPREAD_TOO_LARGE) {
+            failureReasons.add(SFAIL_DEFEND_MAXSPREAD);
+        } else if (spreadError == I_SpreadValidator.ERROR_SPREAD_TOO_SMALL) {
+            failureReasons.add(SFAIL_DEFEND_MINSPREAD);
+        }
+
+        averageArmySkills /= numberOfValidUnits;
+
+        if (averageArmySkills > o.getDoubleValue("DefenderAverageArmySkillMax")) {
+            failureReasons.add(SFAIL_DEFEND_SKILLSUM_TOOHIGH);
+        }
+
+        if (averageArmySkills < o.getDoubleValue("DefenderAverageArmySkillMin")) {
+            failureReasons.add(SFAIL_DEFEND_SKILLSUM_TOOLOW);
+        }
+
+
+        if (vetPilots) {failureReasons.add(SFAIL_DEFEND_ELITE_PILOTS);}
+
+        if (greenPilots) {failureReasons.add(SFAIL_DEFEND_GREEN_PILOTS);}
+
+        if (checkClantech) {
+            double minClantech = o.getDoubleValue("DefenderMinClanEquipmentPercent");
+            double maxClantech = o.getDoubleValue("DefenderMaxClanEquipmentPercent");
+            double clanTechPercent = numClanUnits / numTotalUnits;
+            if (clanTechPercent < minClantech) {
+                failureReasons.add(SFAIL_DEFEND_TECHBASE_TOO_LITTLE_CLAN);
+            }
+            if (clanTechPercent > maxClantech) {
+                failureReasons.add(SFAIL_DEFEND_TECHBASE_TOO_MUCH_CLAN);
+            }
+        }
+
+    }// end checkDefenderConstruction
+
+    private void checkDefenderFlags(java.util.ArrayList<Integer> failureReasons,
+          server.campaign.SPlayer dp, Operation o) {
+        // TODO Auto-generated method stub
+        PlayerFlags pFlags = dp.getFlags();
+        String requiredFlags = o.getValue("DefenderFlags");
+        // Loop through the flag string, checking settings
+        java.util.StringTokenizer st = new java.util.StringTokenizer(requiredFlags, "$");
+        while (st.hasMoreTokens()) {
+            java.util.StringTokenizer element = new java.util.StringTokenizer(st.nextToken(), "#");
+            String fName = element.nextToken();
+            boolean value = Boolean.parseBoolean(element.nextToken());
+            if (pFlags.getFlagStatus(fName) != value) {
+                if (value) {
+                    failureReasons.add(SFAIL_DEFEND_MISSING_REQUIRED_FLAG);
+                } else {
+                    failureReasons.add(SFAIL_DEFEND_HAS_BANNED_FLAG);
+                }
+            }
+        }
+    }
+
+    /**
+     * Method which takes a failure arraylist and generates human-readible reasons for an attack failure. Public.
+     */
+    public String failuresToString(java.util.ArrayList<Integer> failList) {
+
+        String s = "";
+        if (failList.size() == 1) {
+            return s += " because:<br>- " + this.decodeFailure((Integer) failList.get(0)) + ".";
+        }
+
+        s += "because:<br>";
+        java.util.Iterator<Integer> i = failList.iterator();
+        while (i.hasNext()) {
+            s += "- " + this.decodeFailure(i.next());
+            if (i.hasNext()) {s += "<br>";}
+        }
+
+        return s;
     }
 
 }// end ShortValidator class

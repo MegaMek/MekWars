@@ -160,7 +160,7 @@ public class AutoProdPanel extends JPanel {
                 if (j == 0) {
                     apNewBoxPanel.add(new JLabel(Unit.getTypeClassDesc(i)));
                 }
-                
+
                 baseTextField = new JTextField();
                 baseTextField.setName("APAtMax" + Unit.getWeightClassDesc(j) + Unit.getTypeClassDesc(i));
                 baseTextField.setToolTipText("Number of units worth of stored components to trigger an AP attempt for " +

@@ -14,11 +14,6 @@ import mekwars.common.util.CUnitComparator;
  */
 class TableViewerModel extends javax.swing.table.AbstractTableModel {
 
-    /**
-     *
-     */
-    @Serial
-    private static final long serialVersionUID = 4544599978221999391L;
     // IVARS
     // static ints
     public final static int UNIT = 0;// model/name
@@ -26,7 +21,11 @@ class TableViewerModel extends javax.swing.table.AbstractTableModel {
     public final static int BATTLEVALUE = 2;
     public final static int FREQUENCY = 3;
     public final static int FILENAME = 4;
-
+    /**
+     *
+     */
+    @Serial
+    private static final long serialVersionUID = 4544599978221999391L;
     java.util.TreeMap<Object, TableUnit> currentUnits;
     TableUnit[] sortedUnits;
 
@@ -45,50 +44,16 @@ class TableViewerModel extends javax.swing.table.AbstractTableModel {
         sortedUnits = sorted;
     }
 
-    // column count, for AbstractModel
-    @Override
-    public int getColumnCount() {
-        return columnNames.length;
-    }
-
     // rowcount, for AbstractModel
     @Override
     public int getRowCount() {
         return sortedUnits.length;
     }
 
-    // override naming
+    // column count, for AbstractModel
     @Override
-    public String getColumnName(int col) {
-        return (columnNames[col]);
-    }
-
-    // isEditable, overridden from AbstractModel
-    @Override
-    public boolean isCellEditable(int row, int col) {
-        return false;
-    }
-
-    public void setSortMode(int sortMode) {
-        currentSortMode = sortMode;
-    }
-
-    /*
-     * getRenderer, overridden from AbstractModel in order to use custom
-     * renderer.
-     */
-    public TableViewerRenderer getRenderer() {
-        return new TableViewerRenderer(this);
-    }
-
-    /*
-     * refresh model in order to draw new contents, reorder existin
-     * contents.
-     */
-    public void refreshModel() {
-        sortedUnits = new TableUnit[] {};
-        sortedUnits = sortUnits(currentSortMode);
-        fireTableDataChanged();
+    public int getColumnCount() {
+        return columnNames.length;
     }
 
     // getValueAt, for AbstractModel
@@ -150,9 +115,43 @@ class TableViewerModel extends javax.swing.table.AbstractTableModel {
         return "";
     }
 
+    // override naming
+    @Override
+    public String getColumnName(int col) {
+        return (columnNames[col]);
+    }
+
     @Override
     public Class<?> getColumnClass(int c) {
         return getValueAt(0, c).getClass();
+    }
+
+    // isEditable, overridden from AbstractModel
+    @Override
+    public boolean isCellEditable(int row, int col) {
+        return false;
+    }
+
+    public void setSortMode(int sortMode) {
+        currentSortMode = sortMode;
+    }
+
+    /*
+     * getRenderer, overridden from AbstractModel in order to use custom
+     * renderer.
+     */
+    public TableViewerRenderer getRenderer() {
+        return new TableViewerRenderer(this);
+    }
+
+    /*
+     * refresh model in order to draw new contents, reorder existin
+     * contents.
+     */
+    public void refreshModel() {
+        sortedUnits = new TableUnit[] {};
+        sortedUnits = sortUnits(currentSortMode);
+        fireTableDataChanged();
     }
 
     /*

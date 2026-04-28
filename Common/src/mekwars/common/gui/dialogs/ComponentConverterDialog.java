@@ -40,28 +40,23 @@ public final class ComponentConverterDialog implements java.awt.event.ActionList
     private final javax.swing.JPanel mainPanel = new javax.swing.JPanel(); // main Panel for everything
     private final javax.swing.JScrollPane scrollPane = new javax.swing.JScrollPane(); // the scrolly thingy
     private final javax.swing.JPanel masterPanel = new javax.swing.JPanel();
-
+    private final javax.swing.JComboBox factionCombo;
+    private final javax.swing.JButton okayButton = new javax.swing.JButton("OK");
+    private final javax.swing.JButton cancelButton = new javax.swing.JButton("Cancel");
+    private final javax.swing.JButton modeButton = new javax.swing.JButton("Advanced");
+    private final boolean isMod;
+    private final javax.swing.JDialog dialog;
+    private final javax.swing.JOptionPane pane;
     String[] units = { Unit.getTypeClassDesc(Unit.MEK), Unit.getTypeClassDesc(Unit.VEHICLE),
                        Unit.getTypeClassDesc(Unit.INFANTRY), Unit.getTypeClassDesc(Unit.PROTOMEK),
                        Unit.getTypeClassDesc(Unit.BATTLEARMOR), Unit.getTypeClassDesc(Unit.AERO) };
     String[] weight = { Unit.getWeightClassDesc(Unit.LIGHT), Unit.getWeightClassDesc(Unit.MEDIUM),
                         Unit.getWeightClassDesc(Unit.HEAVY), Unit.getWeightClassDesc(Unit.ASSAULT) };
-    private final javax.swing.JComboBox factionCombo;
-
-    private final javax.swing.JButton okayButton = new javax.swing.JButton("OK");
-    private final javax.swing.JButton cancelButton = new javax.swing.JButton("Cancel");
-    private final javax.swing.JButton modeButton = new javax.swing.JButton("Advanced");
+    IClient client;
     private boolean isAdvanced = false;
-
     private int basicWeight = Unit.LIGHT;
     private int basicType = Unit.MEK;
     private int basicAmount = 100;
-    private final boolean isMod;
-
-    private final javax.swing.JDialog dialog;
-    private final javax.swing.JOptionPane pane;
-
-    IClient client;
 
     public ComponentConverterDialog(IClient client) {
 

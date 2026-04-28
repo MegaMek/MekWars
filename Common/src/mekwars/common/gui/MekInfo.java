@@ -53,14 +53,13 @@ public class MekInfo extends javax.swing.JPanel {
     private static final long serialVersionUID = 4308503800966118202L;
     protected static MekTileset mt;
     private final javax.swing.JLabel lblName;
-    private javax.swing.JLabel lblImage = new javax.swing.JLabel();
-    private int cellWidth = 86;
-
     IClient client = null;
     IClientConfig Config = null;
     javax.swing.ImageIcon previewIcon = null;
     CUnit cm = null;
     CArmy army = null;
+    private javax.swing.JLabel lblImage = new javax.swing.JLabel();
+    private int cellWidth = 86;
 
     /*
      * public void setBackground(Color color){ super.setBackground(color); try{
@@ -576,26 +575,8 @@ public class MekInfo extends javax.swing.JPanel {
         lblName.setText(s);
     }
 
-    public void setImage(java.awt.Image img) {
-        lblImage.setIcon(new javax.swing.ImageIcon(img.getScaledInstance(cellWidth, 74, java.awt.Image.SCALE_DEFAULT)));
-    }
-
     public java.awt.Image getEmbeddedImage() {
         return ((javax.swing.ImageIcon) lblImage.getIcon()).getImage();
-    }
-
-    public static java.awt.Image getImageFor(Entity m, java.awt.Component component) {
-
-        if (mt == null) {
-            mt = new MekTileset(new java.io.File("data/images/units/"));
-            try {
-                mt.loadFromFile("mechset.txt");
-            } catch (java.io.IOException ex) {
-                MWLogger.errLog("Unable to read data/images/units/mechset.txt");
-            }
-        }// end if(null tileset)
-        //@Salient - from what i can tell from the megamek code, passing in the component does nothing.
-        return mt.imageFor(m, -1);
     }
 
     public void setPreviewIcon(javax.swing.ImageIcon preview) {
@@ -622,6 +603,24 @@ public class MekInfo extends javax.swing.JPanel {
               this);
         setImage(ei.loadPreviewImage());
 
+    }
+
+    public static java.awt.Image getImageFor(Entity m, java.awt.Component component) {
+
+        if (mt == null) {
+            mt = new MekTileset(new java.io.File("data/images/units/"));
+            try {
+                mt.loadFromFile("mechset.txt");
+            } catch (java.io.IOException ex) {
+                MWLogger.errLog("Unable to read data/images/units/mechset.txt");
+            }
+        }// end if(null tileset)
+        //@Salient - from what i can tell from the megamek code, passing in the component does nothing.
+        return mt.imageFor(m, -1);
+    }
+
+    public void setImage(java.awt.Image img) {
+        lblImage.setIcon(new javax.swing.ImageIcon(img.getScaledInstance(cellWidth, 74, java.awt.Image.SCALE_DEFAULT)));
     }
 
     public void setUnit(CUnit cm, CArmy army) {
@@ -680,18 +679,17 @@ public class MekInfo extends javax.swing.JPanel {
      * A class to handle the image permutations for an entity (Code from megamek.common.TilesetManager class)
      */
     private static class EntityImage {
-        private java.awt.Image base;
-        private java.awt.Image wreck;
-        private java.awt.Image icon;
         private final int tint;
         private final java.awt.Image camo;
         private final java.awt.Image[] facings = new java.awt.Image[6];
         private final java.awt.Image[] wreckFacings = new java.awt.Image[6];
         private final java.awt.Component comp;
-
         private final int IMG_WIDTH = 84;
         private final int IMG_HEIGHT = 72;
         private final int IMG_SIZE = IMG_WIDTH * IMG_HEIGHT;
+        private java.awt.Image base;
+        private java.awt.Image wreck;
+        private java.awt.Image icon;
 
         public EntityImage(java.awt.Image base, int tint, java.awt.Image camo, java.awt.Component comp) {
             this(base, null, tint, camo, comp);
@@ -724,27 +722,6 @@ public class MekInfo extends javax.swing.JPanel {
                     wreckFacings[i] = comp.createImage(rotSource);
                 }
             }
-        }
-
-        public java.awt.Image loadPreviewImage() {
-            base = applyColor(base);
-            return base;
-        }
-
-        public java.awt.Image getFacing(int facing) {
-            return facings[facing];
-        }
-
-        public java.awt.Image getWreckFacing(int facing) {
-            return wreckFacings[facing];
-        }
-
-        public java.awt.Image getBase() {
-            return base;
-        }
-
-        public java.awt.Image getIcon() {
-            return icon;
         }
 
         private java.awt.Image applyColor(java.awt.Image image) {
@@ -819,6 +796,27 @@ public class MekInfo extends javax.swing.JPanel {
 
             image = comp.createImage(new java.awt.image.MemoryImageSource(IMG_WIDTH, IMG_HEIGHT, pMech, 0, IMG_WIDTH));
             return image;
+        }
+
+        public java.awt.Image loadPreviewImage() {
+            base = applyColor(base);
+            return base;
+        }
+
+        public java.awt.Image getFacing(int facing) {
+            return facings[facing];
+        }
+
+        public java.awt.Image getWreckFacing(int facing) {
+            return wreckFacings[facing];
+        }
+
+        public java.awt.Image getBase() {
+            return base;
+        }
+
+        public java.awt.Image getIcon() {
+            return icon;
         }
     }
 

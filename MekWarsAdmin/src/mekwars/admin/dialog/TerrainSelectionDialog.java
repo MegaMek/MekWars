@@ -173,30 +173,6 @@ public class TerrainSelectionDialog extends JDialog implements ActionListener {
 
     }
 
-
-    /**
-     * OK or CANCEL buttons pressed. Handle any changes and then close the dialouge.
-     */
-    public void actionPerformed(ActionEvent event) {
-
-        String command = event.getActionCommand();
-
-        if (command.equals(okayCommand)) {
-            String selectedCommand = matchingCommandList.getSelectedValue();
-            if (selectedCommand == null) {selectedCommand = nameField.getText();}
-            if (selectedCommand == null || selectedCommand.isEmpty()) {return;}
-            if (matchingCommandList.getModel().getSize() >= 1) {
-                setCommandName(matchingCommandList.getSelectedValuesList().toArray());
-            } else {
-                JOptionPane.showMessageDialog(null, "Unknown Terrain");
-            }
-        }
-
-        //dispose of the dialog
-        this.dispose();
-
-    }//end actionPerformed
-
     private void checkMinimumSize() {
 
         Dimension curDim = this.getSize();
@@ -221,12 +197,35 @@ public class TerrainSelectionDialog extends JDialog implements ActionListener {
 
     }//end checkMinimumSize
 
-    private void setCommandName(Object[] terrains) {
-        this.commandName = terrains;
-    }
+    /**
+     * OK or CANCEL buttons pressed. Handle any changes and then close the dialouge.
+     */
+    public void actionPerformed(ActionEvent event) {
+
+        String command = event.getActionCommand();
+
+        if (command.equals(okayCommand)) {
+            String selectedCommand = matchingCommandList.getSelectedValue();
+            if (selectedCommand == null) {selectedCommand = nameField.getText();}
+            if (selectedCommand == null || selectedCommand.isEmpty()) {return;}
+            if (matchingCommandList.getModel().getSize() >= 1) {
+                setCommandName(matchingCommandList.getSelectedValuesList().toArray());
+            } else {
+                JOptionPane.showMessageDialog(null, "Unknown Terrain");
+            }
+        }
+
+        //dispose of the dialog
+        this.dispose();
+
+    }//end actionPerformed
 
     public Object[] getCommandName() {
         return this.commandName;
+    }
+
+    private void setCommandName(Object[] terrains) {
+        this.commandName = terrains;
     }
 
 }

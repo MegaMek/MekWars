@@ -22,10 +22,6 @@ public class AdminAddServerOpFlagsCommand implements server.campaign.commands.Co
     int accessLevel = server.MWChatServer.auth.IAuthenticator.ADMIN;
     String syntax = "FlagCode#FlagName#...";
 
-    public int getExecutionLevel() {return accessLevel;}
-
-    public void setExecutionLevel(int i) {accessLevel = i;}
-
     public String getSyntax() {return syntax;}
 
     public void process(java.util.StringTokenizer command, String Username) {
@@ -69,4 +65,8 @@ public class AdminAddServerOpFlagsCommand implements server.campaign.commands.Co
 
 
     }
+
+    public int getExecutionLevel() {return accessLevel;}
+
+    public void setExecutionLevel(int i) {accessLevel = i;}
 }

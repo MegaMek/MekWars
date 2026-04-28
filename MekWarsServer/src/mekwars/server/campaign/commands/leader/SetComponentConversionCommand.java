@@ -20,15 +20,6 @@ import common.util.ComponentToCritsConverter;
 public class SetComponentConversionCommand implements server.campaign.commands.Command {
 
     int accessLevel = server.campaign.CampaignMain.cm.getIntegerConfig("factionLeaderLevel");
-
-    public int getExecutionLevel() {
-        return accessLevel;
-    }
-
-    public void setExecutionLevel(int i) {
-        accessLevel = i;
-    }
-
     String syntax = "Crit Name#Weight#Type#Max Production#House[Optional Staff Only]";
 
     public String getSyntax() {
@@ -89,5 +80,13 @@ public class SetComponentConversionCommand implements server.campaign.commands.C
                     " to a max of " +
                     maxProduction +
                     "  crits.");
+    }
+
+    public int getExecutionLevel() {
+        return accessLevel;
+    }
+
+    public void setExecutionLevel(int i) {
+        accessLevel = i;
     }
 }

@@ -55,41 +55,6 @@ public class TableUnit extends CUnit {
         tables = new java.util.TreeMap<>();
     }
 
-    public TableUnit(Entity en, double f) {
-        super();
-
-        realFilename = mekwars.common.util.UnitUtils.getEntityFileName(en);
-
-
-        setUnitFilename(realFilename);
-        setPilot(new mekwars.common.campaign.pilot.Pilot("Autopilot", 4, 5));
-
-        // get the unit from the summary cache
-        unitEntity = en;
-
-
-        frequency = f;
-
-        tables = new java.util.TreeMap<>();
-    }
-
-    // METHODS
-    public double getFrequency() {
-        return frequency;
-    }
-
-    public void addFrequencyFrom(mekwars.common.gui.dialogs.TableUnit u) {
-        frequency += u.getFrequency();
-    }
-
-    public String getRealFilename() {
-        return realFilename;
-    }
-
-    public java.util.TreeMap<String, Double> getTables() {
-        return tables;
-    }
-
     private void createEntityFromFileNameWithCache(String fn) {
 
         unitEntity = mekwars.common.util.UnitUtils.createEntity(fn);
@@ -130,6 +95,41 @@ public class TableUnit extends CUnit {
 
         setType(getEntityType(unitEntity));
         getC3Type(unitEntity);
+    }
+
+    public TableUnit(Entity en, double f) {
+        super();
+
+        realFilename = mekwars.common.util.UnitUtils.getEntityFileName(en);
+
+
+        setUnitFilename(realFilename);
+        setPilot(new mekwars.common.campaign.pilot.Pilot("Autopilot", 4, 5));
+
+        // get the unit from the summary cache
+        unitEntity = en;
+
+
+        frequency = f;
+
+        tables = new java.util.TreeMap<>();
+    }
+
+    public void addFrequencyFrom(mekwars.common.gui.dialogs.TableUnit u) {
+        frequency += u.getFrequency();
+    }
+
+    // METHODS
+    public double getFrequency() {
+        return frequency;
+    }
+
+    public String getRealFilename() {
+        return realFilename;
+    }
+
+    public java.util.TreeMap<String, Double> getTables() {
+        return tables;
     }
 
 }// end TableUnit

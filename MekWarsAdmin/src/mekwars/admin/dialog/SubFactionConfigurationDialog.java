@@ -40,17 +40,12 @@ public final class SubFactionConfigurationDialog implements ActionListener {
 
     private final JButton okayButton = new JButton("OK");
     private final JButton cancelButton = new JButton("Cancel");
-
+    private final Hashtable<String, String> configChanges = new Hashtable<>();
+    JTabbedPane ConfigPane = new JTabbedPane(SwingConstants.TOP);
+    IClient client;
     private JDialog dialog;
     private JOptionPane pane;
-
     private SubFaction subFactionConfig = null;
-
-    private final Hashtable<String, String> configChanges = new Hashtable<>();
-
-    JTabbedPane ConfigPane = new JTabbedPane(SwingConstants.TOP);
-
-    IClient client;
 
     /**
      * @param client

@@ -65,16 +65,6 @@ public class ExclusionList {
     }
 
     /**
-     * Method which adds a player to exclude lists. Simple. Does NOT check size, etc. This should be done externally.
-     *
-     * @param fromAdmin - boolean, indicating origin of add
-     * @param name      - String, name of player to exclude
-     */
-    public void addExclude(boolean fromAdmin, String name) {
-        if (fromAdmin) {adminExcludes.add(name.toLowerCase());} else {playerExcludes.add(name.toLowerCase());}
-    }
-
-    /**
      * Method which checks to see if a player is already included on an Exclusion list. Outside classes which modify
      * exclusions lists should check to ensure that duplications in Player and Admin lists are properly handled.
      *
@@ -102,6 +92,67 @@ public class ExclusionList {
             playerExcludes.remove(name.toLowerCase());
             adminExcludes.remove(name.toLowerCase());
         } else {playerExcludes.remove(name.toLowerCase());}
+    }
+
+    /*
+     * simple sizechecks for the excludes. no external
+     * handling of the vectors.
+     */
+    public java.util.Vector<String> getPlayerExcludes() {
+        return playerExcludes;
+    }
+
+    public java.util.Vector<String> getAdminExcludes() {
+        return adminExcludes;
+    }
+
+    /*
+     * The meat of things. To/From strong methods for both
+     * the player and admin Exclude sheets. These are run
+     * when a player is saved/loaded from disk.
+     */
+    public void adminExcludeFromString(String buffer, String delimiter) {
+
+        //MWLogger.mainLog("** adminExcludeFROMStringCalled");
+
+        java.util.StringTokenizer ST = new java.util.StringTokenizer(buffer, delimiter);
+        while (ST.hasMoreElements()) {
+            String curr = ST.nextToken();
+            if (curr.equals("0")) {return;}
+            //else
+            this.addExclude(true, curr);
+        }
+    }
+
+    /**
+     * Method which adds a player to exclude lists. Simple. Does NOT check size, etc. This should be done externally.
+     *
+     * @param fromAdmin - boolean, indicating origin of add
+     * @param name      - String, name of player to exclude
+     */
+    public void addExclude(boolean fromAdmin, String name) {
+        if (fromAdmin) {adminExcludes.add(name.toLowerCase());} else {playerExcludes.add(name.toLowerCase());}
+    }
+
+    public void playerExcludeFromString(String buffer, String delimiter) {
+
+        //MWLogger.mainLog("** playerExcludeFROMStringCalled");
+
+        java.util.StringTokenizer ST = new java.util.StringTokenizer(buffer, delimiter);
+        while (ST.hasMoreElements()) {
+            String curr = ST.nextToken();
+            if (curr.equals("0")) {return;}
+            //else
+            this.addExclude(false, curr);
+        }
+
+        /*
+         * Player excludes are loaded after admin excludes, so we
+         * can assume that loading/filling of the ExclusionList is
+         * now complete. Call the validator in order to ensure that
+         * all the excludes are valid, and the lists aren't overful.
+         */
+        this.validateExcludes();
     }
 
     /**
@@ -164,57 +215,6 @@ public class ExclusionList {
             }
         }
     }//end validateExcludes()
-
-    /*
-     * simple sizechecks for the excludes. no external
-     * handling of the vectors.
-     */
-    public java.util.Vector<String> getPlayerExcludes() {
-        return playerExcludes;
-    }
-
-    public java.util.Vector<String> getAdminExcludes() {
-        return adminExcludes;
-    }
-
-    /*
-     * The meat of things. To/From strong methods for both
-     * the player and admin Exclude sheets. These are run
-     * when a player is saved/loaded from disk.
-     */
-    public void adminExcludeFromString(String buffer, String delimiter) {
-
-        //MWLogger.mainLog("** adminExcludeFROMStringCalled");
-
-        java.util.StringTokenizer ST = new java.util.StringTokenizer(buffer, delimiter);
-        while (ST.hasMoreElements()) {
-            String curr = ST.nextToken();
-            if (curr.equals("0")) {return;}
-            //else
-            this.addExclude(true, curr);
-        }
-    }
-
-    public void playerExcludeFromString(String buffer, String delimiter) {
-
-        //MWLogger.mainLog("** playerExcludeFROMStringCalled");
-
-        java.util.StringTokenizer ST = new java.util.StringTokenizer(buffer, delimiter);
-        while (ST.hasMoreElements()) {
-            String curr = ST.nextToken();
-            if (curr.equals("0")) {return;}
-            //else
-            this.addExclude(false, curr);
-        }
-
-        /*
-         * Player excludes are loaded after admin excludes, so we
-         * can assume that loading/filling of the ExclusionList is
-         * now complete. Call the validator in order to ensure that
-         * all the excludes are valid, and the lists aren't overful.
-         */
-        this.validateExcludes();
-    }
 
     public String adminExcludeToString(String token) {
 

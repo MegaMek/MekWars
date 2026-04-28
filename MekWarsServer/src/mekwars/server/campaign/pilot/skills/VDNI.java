@@ -40,17 +40,6 @@ public class VDNI extends SPilotSkill {
     }
 
     @Override
-    public int getBVMod(Entity unit) {
-        return server.campaign.CampaignMain.cm.getIntegerConfig("VDNIBaseBVMod");
-    }
-
-    @Override
-    public int getBVMod(Entity unit, server.campaign.pilot.SPilot p) {
-        server.campaign.SHouse house = server.campaign.CampaignMain.cm.getHouseFromPartialString(p.getCurrentFaction());
-        return house.getIntegerConfig("VDNIBaseBVMod");
-    }
-
-    @Override
     public int getChance(int unitType, Pilot p) {
         if (p.getSkills().has(this)) {
             return 0;
@@ -69,6 +58,17 @@ public class VDNI extends SPilotSkill {
         }
 
         return house.getIntegerConfig(chance);
+    }
+
+    @Override
+    public int getBVMod(Entity unit) {
+        return server.campaign.CampaignMain.cm.getIntegerConfig("VDNIBaseBVMod");
+    }
+
+    @Override
+    public int getBVMod(Entity unit, server.campaign.pilot.SPilot p) {
+        server.campaign.SHouse house = server.campaign.CampaignMain.cm.getHouseFromPartialString(p.getCurrentFaction());
+        return house.getIntegerConfig("VDNIBaseBVMod");
     }
 
 }

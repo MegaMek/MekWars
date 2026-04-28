@@ -41,6 +41,10 @@ public class HPGSubscriber implements Comparable<HPGSubscriber>, Serializable {
     @Serial
     @Expose(serialize = false, deserialize = false)
     private static final long serialVersionUID = -6353737452488309978L;
+    public static int THREAT_LEVEL_NONE = 0;
+    public static int THREAT_LEVEL_YELLOW = 1;
+    public static int THREAT_LEVEL_RED = 2;
+    public static int THREAT_LEVEL_PURGE = 3;
     @Expose()
     private String name;
     @Expose()
@@ -86,38 +90,15 @@ public class HPGSubscriber implements Comparable<HPGSubscriber>, Serializable {
     @Expose(serialize = false, deserialize = false)
     private HPGNet tracker;
 
-
-    public static int THREAT_LEVEL_NONE = 0;
-    public static int THREAT_LEVEL_YELLOW = 1;
-    public static int THREAT_LEVEL_RED = 2;
-    public static int THREAT_LEVEL_PURGE = 3;
-
     /**
-     * @return the threatLevel
+     * Create a new HPGSubscriber
      */
-    public int getThreatLevel() {
-        return threatLevel;
-    }
-
-    /**
-     * @param threatLevel the threatLevel to set
-     */
-    public void setThreatLevel(int threatLevel) {
-        this.threatLevel = threatLevel;
-    }
-
-    /**
-     * @return the totalGames
-     */
-    public int getTotalGames() {
-        return totalGames;
-    }
-
-    /**
-     * @param totalGames the totalGames to set
-     */
-    public void setTotalGames(int totalGames) {
-        this.totalGames = totalGames;
+    public HPGSubscriber() {
+        // Servers update every 10 minutes.  We want to keep 7 days of history
+        // 7 days = 1008 entries
+        historicalGames = EvictingQueue.create(1008);
+        historicalPlayers = EvictingQueue.create(1008);
+        historicalCompletedGames = EvictingQueue.create(1008);
     }
 
     /**
@@ -163,20 +144,6 @@ public class HPGSubscriber implements Comparable<HPGSubscriber>, Serializable {
     }
 
     /**
-     * @return the mWVersion
-     */
-    public String getMWVersion() {
-        return MWVersion;
-    }
-
-    /**
-     * @param mWVersion the mWVersion to set
-     */
-    public void setMWVersion(String mWVersion) {
-        MWVersion = mWVersion;
-    }
-
-    /**
      * @return the trackerEntry
      */
     public String getTrackerEntry() {
@@ -191,20 +158,6 @@ public class HPGSubscriber implements Comparable<HPGSubscriber>, Serializable {
     }
 
     /**
-     * @return the lastUpdated
-     */
-    public Date getLastUpdated() {
-        return lastUpdated;
-    }
-
-    /**
-     * @param lastUpdated the lastUpdated to set
-     */
-    public void setLastUpdated(Date lastUpdated) {
-        this.lastUpdated = lastUpdated;
-    }
-
-    /**
      * @return the domain
      */
     public String getDomain() {
@@ -216,76 +169,6 @@ public class HPGSubscriber implements Comparable<HPGSubscriber>, Serializable {
      */
     public void setDomain(String domain) {
         this.domain = domain;
-    }
-
-    /**
-     * @return the name
-     */
-    public String getName() {
-        return name;
-    }
-
-    /**
-     * @param name the name to set
-     */
-    public void setName(String name) {
-        this.name = name;
-    }
-
-    /**
-     * @return the url
-     */
-    public String getUrl() {
-        return url;
-    }
-
-    /**
-     * @param url the url to set
-     */
-    public void setUrl(String url) {
-        this.url = url;
-    }
-
-    /**
-     * @return the description
-     */
-    public String getDescription() {
-        return description;
-    }
-
-    /**
-     * @param description the description to set
-     */
-    public void setDescription(String description) {
-        this.description = description;
-    }
-
-    /**
-     * @return the currentPlayers
-     */
-    public int getCurrentPlayers() {
-        return currentPlayers;
-    }
-
-    /**
-     * @param currentPlayers the currentPlayers to set
-     */
-    public void setCurrentPlayers(int currentPlayers) {
-        this.currentPlayers = currentPlayers;
-    }
-
-    /**
-     * @return the currentGames
-     */
-    public int getCurrentGames() {
-        return currentGames;
-    }
-
-    /**
-     * @param currentGames the currentGames to set
-     */
-    public void setCurrentGames(int currentGames) {
-        this.currentGames = currentGames;
     }
 
     /**
@@ -314,20 +197,6 @@ public class HPGSubscriber implements Comparable<HPGSubscriber>, Serializable {
      */
     public void setHistoricalGames(EvictingQueue<Integer> historicalGames) {
         this.historicalGames = historicalGames;
-    }
-
-    /**
-     * @return the maxPlayers
-     */
-    public int getMaxPlayers() {
-        return maxPlayers;
-    }
-
-    /**
-     * @param maxPlayers the maxPlayers to set
-     */
-    public void setMaxPlayers(int maxPlayers) {
-        this.maxPlayers = maxPlayers;
     }
 
     /**
@@ -373,17 +242,6 @@ public class HPGSubscriber implements Comparable<HPGSubscriber>, Serializable {
     }
 
     /**
-     * Create a new HPGSubscriber
-     */
-    public HPGSubscriber() {
-        // Servers update every 10 minutes.  We want to keep 7 days of history
-        // 7 days = 1008 entries
-        historicalGames = EvictingQueue.create(1008);
-        historicalPlayers = EvictingQueue.create(1008);
-        historicalCompletedGames = EvictingQueue.create(1008);
-    }
-
-    /**
      * @param t the tracker to set
      */
     public void setTracker(HPGNet t) {
@@ -391,12 +249,29 @@ public class HPGSubscriber implements Comparable<HPGSubscriber>, Serializable {
     }
 
     /**
-     * Adds a game to the CompletedGames EvictingQueue
+     * Called when a server updates its statistics
+     *
+     * @param players the number of players on the server
+     * @param games   the number of games in progress
+     */
+    public void update(int players, int games, int completedGames) {
+        addHistoricalPlayersElement(players);
+        setCurrentPlayers(players);
+        addHistoricalGamesElement(games);
+        setCurrentGames(games);
+        addHistoricalCompletedGamesElement(completedGames);
+        setLastUpdated(new Date());
+        calculateThreatLevel();
+        generateHTMLString();
+    }
+
+    /**
+     * Adds a player entry to the EvictingQueue
      *
      */
-    public void addHistoricalCompletedGamesElement(int completedGames) {
-        historicalCompletedGames.add(completedGames);
-        calculateCompletedGames();
+    public void addHistoricalPlayersElement(int players) {
+        historicalPlayers.add(players);
+        calculateMaxPlayers();
     }
 
     /**
@@ -409,12 +284,69 @@ public class HPGSubscriber implements Comparable<HPGSubscriber>, Serializable {
     }
 
     /**
-     * Adds a player entry to the EvictingQueue
+     * Adds a game to the CompletedGames EvictingQueue
      *
      */
-    public void addHistoricalPlayersElement(int players) {
-        historicalPlayers.add(players);
-        calculateMaxPlayers();
+    public void addHistoricalCompletedGamesElement(int completedGames) {
+        historicalCompletedGames.add(completedGames);
+        calculateCompletedGames();
+    }
+
+    /**
+     * Sets threatLevel based on how soon the entry will be deleted from the tracker
+     */
+    public void calculateThreatLevel() {
+        int firstWarnDays = Integer.parseInt((String) tracker.getConfig().get("firstwarndays"));
+        int lastWarnDays = Integer.parseInt((String) tracker.getConfig().get("lastwarndays"));
+        int purgeDays = Integer.parseInt((String) tracker.getConfig().get("purgedays"));
+
+        Instant instant = Instant.now();
+        ZoneId zoneId = ZoneId.systemDefault();
+        ZonedDateTime subDate = ZonedDateTime.ofInstant(getLastUpdated().toInstant(), zoneId);
+        ZonedDateTime zdt = ZonedDateTime.ofInstant(instant, zoneId);
+        ZonedDateTime firstWarn = zdt.minusDays(firstWarnDays);
+        ZonedDateTime lastWarn = zdt.minusDays(lastWarnDays);
+        ZonedDateTime purge = zdt.minusDays(purgeDays);
+
+        if (subDate.isBefore(purge)) {
+            setThreatLevel(THREAT_LEVEL_PURGE);
+        } else if (subDate.isBefore(lastWarn)) {
+            setThreatLevel(THREAT_LEVEL_RED);
+        } else if (subDate.isBefore(firstWarn)) {
+            setThreatLevel(THREAT_LEVEL_YELLOW);
+        } else {
+            setThreatLevel(THREAT_LEVEL_NONE);
+        }
+    }
+
+    /**
+     * Creates the tracker entry
+     */
+    public void generateHTMLString() {
+        StringBuilder sb = new StringBuilder();
+        sb.append("<tr class='");
+
+        if (getThreatLevel() == THREAT_LEVEL_RED) {
+            sb.append("red");
+        } else if (getThreatLevel() == THREAT_LEVEL_YELLOW) {
+            sb.append("yellow");
+        } else if (getThreatLevel() == THREAT_LEVEL_PURGE) {
+            sb.append("red");  // We're going to purge within the next 12 hours anyway
+        } else {
+            sb.append("green");
+        }
+
+        sb.append("'>");
+        sb.append("<td><a href=\"").append(getUrl()).append("\">").append(getName()).append("</a></td>");
+        sb.append(buildColumn(getMWVersion()));
+        sb.append(buildColumn(Integer.toString(getCurrentPlayers())));
+        sb.append(buildColumn(Integer.toString(getCurrentGames())));
+        sb.append(buildColumn(Integer.toString(getMaxPlayers())));
+        sb.append(buildColumn(Integer.toString(getTotalGames())));
+        sb.append(buildColumn(getDescription()));
+        sb.append(buildDateColumn(getLastUpdated().toString()));
+        sb.append("</tr>\n");
+        setTrackerEntry(sb.toString());
     }
 
     /**
@@ -457,50 +389,45 @@ public class HPGSubscriber implements Comparable<HPGSubscriber>, Serializable {
     }
 
     /**
-     * Called when a server updates its statistics
-     *
-     * @param players the number of players on the server
-     * @param games   the number of games in progress
+     * @return the lastUpdated
      */
-    public void update(int players, int games, int completedGames) {
-        addHistoricalPlayersElement(players);
-        setCurrentPlayers(players);
-        addHistoricalGamesElement(games);
-        setCurrentGames(games);
-        addHistoricalCompletedGamesElement(completedGames);
-        setLastUpdated(new Date());
-        calculateThreatLevel();
-        generateHTMLString();
+    public Date getLastUpdated() {
+        return lastUpdated;
     }
 
     /**
-     * Creates the tracker entry
+     * @return the threatLevel
      */
-    public void generateHTMLString() {
-        StringBuilder sb = new StringBuilder();
-        sb.append("<tr class='");
+    public int getThreatLevel() {
+        return threatLevel;
+    }
 
-        if (getThreatLevel() == THREAT_LEVEL_RED) {
-            sb.append("red");
-        } else if (getThreatLevel() == THREAT_LEVEL_YELLOW) {
-            sb.append("yellow");
-        } else if (getThreatLevel() == THREAT_LEVEL_PURGE) {
-            sb.append("red");  // We're going to purge within the next 12 hours anyway
-        } else {
-            sb.append("green");
-        }
+    /**
+     * @param threatLevel the threatLevel to set
+     */
+    public void setThreatLevel(int threatLevel) {
+        this.threatLevel = threatLevel;
+    }
 
-        sb.append("'>");
-        sb.append("<td><a href=\"").append(getUrl()).append("\">").append(getName()).append("</a></td>");
-        sb.append(buildColumn(getMWVersion()));
-        sb.append(buildColumn(Integer.toString(getCurrentPlayers())));
-        sb.append(buildColumn(Integer.toString(getCurrentGames())));
-        sb.append(buildColumn(Integer.toString(getMaxPlayers())));
-        sb.append(buildColumn(Integer.toString(getTotalGames())));
-        sb.append(buildColumn(getDescription()));
-        sb.append(buildDateColumn(getLastUpdated().toString()));
-        sb.append("</tr>\n");
-        setTrackerEntry(sb.toString());
+    /**
+     * @return the url
+     */
+    public String getUrl() {
+        return url;
+    }
+
+    /**
+     * @return the name
+     */
+    public String getName() {
+        return name;
+    }
+
+    /**
+     * @param name the name to set
+     */
+    public void setName(String name) {
+        this.name = name;
     }
 
     /**
@@ -515,10 +442,80 @@ public class HPGSubscriber implements Comparable<HPGSubscriber>, Serializable {
     }
 
     /**
-     * Games completed since last update.  This should force a calculation of total games
+     * @return the mWVersion
      */
-    public void setCompletedGames(int completedGames) {
-        addHistoricalCompletedGamesElement(completedGames);
+    public String getMWVersion() {
+        return MWVersion;
+    }
+
+    /**
+     * @param mWVersion the mWVersion to set
+     */
+    public void setMWVersion(String mWVersion) {
+        MWVersion = mWVersion;
+    }
+
+    /**
+     * @return the currentPlayers
+     */
+    public int getCurrentPlayers() {
+        return currentPlayers;
+    }
+
+    /**
+     * @param currentPlayers the currentPlayers to set
+     */
+    public void setCurrentPlayers(int currentPlayers) {
+        this.currentPlayers = currentPlayers;
+    }
+
+    /**
+     * @return the currentGames
+     */
+    public int getCurrentGames() {
+        return currentGames;
+    }
+
+    /**
+     * @param currentGames the currentGames to set
+     */
+    public void setCurrentGames(int currentGames) {
+        this.currentGames = currentGames;
+    }
+
+    /**
+     * @return the maxPlayers
+     */
+    public int getMaxPlayers() {
+        return maxPlayers;
+    }
+
+    /**
+     * @return the totalGames
+     */
+    public int getTotalGames() {
+        return totalGames;
+    }
+
+    /**
+     * @param totalGames the totalGames to set
+     */
+    public void setTotalGames(int totalGames) {
+        this.totalGames = totalGames;
+    }
+
+    /**
+     * @return the description
+     */
+    public String getDescription() {
+        return description;
+    }
+
+    /**
+     * @param description the description to set
+     */
+    public void setDescription(String description) {
+        this.description = description;
     }
 
     /**
@@ -553,37 +550,38 @@ public class HPGSubscriber implements Comparable<HPGSubscriber>, Serializable {
     }
 
     /**
+     * @param maxPlayers the maxPlayers to set
+     */
+    public void setMaxPlayers(int maxPlayers) {
+        this.maxPlayers = maxPlayers;
+    }
+
+    /**
+     * @param url the url to set
+     */
+    public void setUrl(String url) {
+        this.url = url;
+    }
+
+    /**
+     * @param lastUpdated the lastUpdated to set
+     */
+    public void setLastUpdated(Date lastUpdated) {
+        this.lastUpdated = lastUpdated;
+    }
+
+    /**
+     * Games completed since last update.  This should force a calculation of total games
+     */
+    public void setCompletedGames(int completedGames) {
+        addHistoricalCompletedGamesElement(completedGames);
+    }
+
+    /**
      * Sorts two HPGSubscribers by name
      */
     @Override
     public int compareTo(HPGSubscriber o) {
         return getName().compareTo(o.getName());
-    }
-
-    /**
-     * Sets threatLevel based on how soon the entry will be deleted from the tracker
-     */
-    public void calculateThreatLevel() {
-        int firstWarnDays = Integer.parseInt((String) tracker.getConfig().get("firstwarndays"));
-        int lastWarnDays = Integer.parseInt((String) tracker.getConfig().get("lastwarndays"));
-        int purgeDays = Integer.parseInt((String) tracker.getConfig().get("purgedays"));
-
-        Instant instant = Instant.now();
-        ZoneId zoneId = ZoneId.systemDefault();
-        ZonedDateTime subDate = ZonedDateTime.ofInstant(getLastUpdated().toInstant(), zoneId);
-        ZonedDateTime zdt = ZonedDateTime.ofInstant(instant, zoneId);
-        ZonedDateTime firstWarn = zdt.minusDays(firstWarnDays);
-        ZonedDateTime lastWarn = zdt.minusDays(lastWarnDays);
-        ZonedDateTime purge = zdt.minusDays(purgeDays);
-
-        if (subDate.isBefore(purge)) {
-            setThreatLevel(THREAT_LEVEL_PURGE);
-        } else if (subDate.isBefore(lastWarn)) {
-            setThreatLevel(THREAT_LEVEL_RED);
-        } else if (subDate.isBefore(firstWarn)) {
-            setThreatLevel(THREAT_LEVEL_YELLOW);
-        } else {
-            setThreatLevel(THREAT_LEVEL_NONE);
-        }
     }
 }

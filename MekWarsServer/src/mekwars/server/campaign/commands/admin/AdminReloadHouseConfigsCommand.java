@@ -20,10 +20,6 @@ public class AdminReloadHouseConfigsCommand implements server.campaign.commands.
     int accessLevel = server.MWChatServer.auth.IAuthenticator.ADMIN;
     String syntax = "Faction Name";
 
-    public int getExecutionLevel() {return accessLevel;}
-
-    public void setExecutionLevel(int i) {accessLevel = i;}
-
     public String getSyntax() {return syntax;}
 
     public void process(java.util.StringTokenizer command, String Username) {
@@ -60,4 +56,8 @@ public class AdminReloadHouseConfigsCommand implements server.campaign.commands.
         server.campaign.CampaignMain.cm.doSendModMail("NOTE",
               Username + " has reloaded campaign configs for " + h.getName());
     }
+
+    public int getExecutionLevel() {return accessLevel;}
+
+    public void setExecutionLevel(int i) {accessLevel = i;}
 }// end AdminReloadHouseconfigsCommand

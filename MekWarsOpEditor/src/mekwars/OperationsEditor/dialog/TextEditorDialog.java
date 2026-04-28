@@ -110,14 +110,8 @@ public class TextEditorDialog extends JDialog implements ActionListener, KeyList
         pack();
     }
 
-    public void actionPerformed(ActionEvent ae) {
-        if (ae.getSource() == bCancel) {
-            dispose();
-        } else if (ae.getSource() == bSave) {
-            textBox.setText(textField.getText());
-            opDialog.keyPressed(new KeyEvent(textBox, 0, KeyEvent.KEY_PRESSED, 0, KeyEvent.VK_0, '0'));
-            dispose();
-        }
+    public void keyTyped(KeyEvent ke) {
+
     }
 
     public void keyPressed(KeyEvent ke) {
@@ -128,12 +122,18 @@ public class TextEditorDialog extends JDialog implements ActionListener, KeyList
         }
     }
 
-    public void keyReleased(KeyEvent arg0) {
-        // TODO Auto-generated method stub
-
+    public void actionPerformed(ActionEvent ae) {
+        if (ae.getSource() == bCancel) {
+            dispose();
+        } else if (ae.getSource() == bSave) {
+            textBox.setText(textField.getText());
+            opDialog.keyPressed(new KeyEvent(textBox, 0, KeyEvent.KEY_PRESSED, 0, KeyEvent.VK_0, '0'));
+            dispose();
+        }
     }
 
-    public void keyTyped(KeyEvent ke) {
+    public void keyReleased(KeyEvent arg0) {
+        // TODO Auto-generated method stub
 
     }
 }

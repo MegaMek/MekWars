@@ -17,6 +17,8 @@
 
 package mekwars.client.gui.commands;
 
+import mekwars.client.MWClient;
+
 /**
  * Ping command
  */
@@ -26,7 +28,7 @@ public class PingGCmd extends CGUICommand {
      */
     private static final long serialVersionUID = -1052902282489028283L;
 
-    public PingGCmd(client.MWClient mwclient) {
+    public PingGCmd(MWClient mwclient) {
         super(mwclient);
         name = "ping";
         command = "ping";

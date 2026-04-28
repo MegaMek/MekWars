@@ -877,6 +877,22 @@ public class AdminMenu extends JMenu {
 
     }
 
+    public void jMenuAdminHouseAmmoBan_actionPerformed(ActionEvent e) {
+        HouseNameDialog factionDialog = new HouseNameDialog(client,
+              "Select Faction",
+              false,
+              false);
+        factionDialog.setVisible(true);
+        String factionName = factionDialog.getHouseName();
+        factionDialog.dispose();
+
+        if ((factionName == null) || (factionName.isEmpty())) {
+            return;
+        }
+
+        new BannedAmmoDialog(client, client.getData().getHouseByName(factionName));
+    }
+
     public void jMenuAdminChangePlanetOwner_actionPerformed(ActionEvent e) {
         PlanetNameDialog planetDialog = new PlanetNameDialog(client, "Select a Planet", null);
         planetDialog.setVisible(true);
@@ -901,6 +917,15 @@ public class AdminMenu extends JMenu {
 
     }
 
+    public void jMenuAdminTerminateAll_actionPerformed(ActionEvent e) {
+        int confirm = JOptionPane.showConfirmDialog(client.getMainFrame(),
+              "Are you sure you want to terminate all waiting/running games?");
+        if (confirm != JOptionPane.YES_OPTION) {
+            return;
+        }
+        client.sendChat(STR."\{IClient.CAMPAIGN_PREFIX}c adminterminateall");
+    }
+
     public void jMenuAdminSetFactionTechPoints_actionPerformed(ActionEvent e) {
         HouseNameDialog factionDialog = new HouseNameDialog(client, "Faction", false, false);
         factionDialog.setVisible(true);
@@ -923,15 +948,6 @@ public class AdminMenu extends JMenu {
 
     }
 
-    public void jMenuAdminTerminateAll_actionPerformed(ActionEvent e) {
-        int confirm = JOptionPane.showConfirmDialog(client.getMainFrame(),
-              "Are you sure you want to terminate all waiting/running games?");
-        if (confirm != JOptionPane.YES_OPTION) {
-            return;
-        }
-        client.sendChat(STR."\{IClient.CAMPAIGN_PREFIX}c adminterminateall");
-    }
-
     public void jMenuAdminSetHouseFluFile_actionPerformed(ActionEvent e) {
 
         HouseNameDialog factionDialog = new HouseNameDialog(client, "Faction", false, false);
@@ -951,6 +967,49 @@ public class AdminMenu extends JMenu {
         }
 
         client.sendChat(STR."\{IClient.CAMPAIGN_PREFIX}c adminsethouseflufile#\{factionName}#\{fluFilePrefix}");
+    }
+
+    public void jMenuAdminSetHouseTechLevel_actionPerformed(ActionEvent e) {
+
+        HouseNameDialog factionDialog = new HouseNameDialog(client,
+              "Faction",
+              false,
+              false);
+        factionDialog.setVisible(true);
+        String factionName = factionDialog.getHouseName();
+        factionDialog.dispose();
+
+        if ((factionName == null) || (factionName.isEmpty())) {
+            return;
+        }
+
+        JComboBox<String> techCombo = new JComboBox<>(TechConstants.T_NAMES);
+        techCombo.setEditable(false);
+
+        JOptionPane jop = new JOptionPane(techCombo, JOptionPane.QUESTION_MESSAGE, JOptionPane.OK_CANCEL_OPTION);
+        JDialog dlg = jop.createDialog(client.getMainFrame(), "Select Tech Level");
+        techCombo.grabFocus();
+        techCombo.getEditor().selectAll();
+
+        dlg.setVisible(true);
+
+        if ((Integer) jop.getValue() == JOptionPane.CANCEL_OPTION) {
+            return;
+        }
+
+        client.sendChat(STR."\{IClient.CAMPAIGN_PREFIX}c adminsethousetechlevel#\{factionName}#\{techCombo.getSelectedIndex()}");
+    }
+
+    public void jMenuAdminSaveTheUniverse_actionPerformed(ActionEvent e) {
+        client.sendChat(STR."\{IClient.CAMPAIGN_PREFIX}c adminsave");
+    }
+
+    public void jMenuAdminSaveBlackMarketSettings_actionPerformed(ActionEvent e) {
+        client.sendChat(STR."\{IClient.CAMPAIGN_PREFIX}c adminsaveblackmarketconfigs");
+    }
+
+    public void jMenuAdminSavePlanetsToXML_actionPerformed(ActionEvent e) {
+        client.sendChat(STR."\{IClient.CAMPAIGN_PREFIX}c adminsaveplanetstoxml");
     }
 
     public void jMenuAdminGrantComponents_actionPerformed(ActionEvent e) {
@@ -1040,6 +1099,435 @@ public class AdminMenu extends JMenu {
         }
 
         client.sendChat(STR."\{IClient.CAMPAIGN_PREFIX}c adminexchangeplanetownership#\{planetName}#\{winningHouseName}#\{losingHouseName}#\{amount}");
+    }
+
+    public void jMenuAdminLockFactory_actionPerformed(ActionEvent e) {
+        TreeSet<String> names = new TreeSet<>();
+
+        PlanetNameDialog planetDialog = new PlanetNameDialog(
+              client,
+              "Select a Planet",
+              null);
+        planetDialog.setVisible(true);
+        String planetNamestr = planetDialog.getPlanetName();
+        planetDialog.dispose();
+
+        if ((planetNamestr == null) || (planetNamestr.isEmpty())) {
+            return;
+        }
+
+        Planet planet = client.getData().getPlanetByName(planetNamestr);
+
+        for (UnitFactory UF : planet.getUnitFactories()) {
+            names.add(UF.getName());
+        }
+
+        JComboBox<String> combo = new JComboBox<>(names.toArray(new String[names.size()]));
+        combo.setEditable(true);
+        JOptionPane jop = new JOptionPane(combo, JOptionPane.QUESTION_MESSAGE, JOptionPane.OK_CANCEL_OPTION);
+
+        JDialog dlg = jop.createDialog(client.getMainFrame(), "Select factory to toggle the lock on.");
+        combo.grabFocus();
+        combo.getEditor().selectAll();
+
+        dlg.setVisible(true);
+
+        String factoryName = (String) combo.getSelectedItem();
+
+        if ((factoryName == null) || (factoryName.isEmpty())) {
+            return;
+        }
+
+        client.sendChat(STR."\{IClient.CAMPAIGN_PREFIX}c adminlockfactory#\{planetNamestr}#\{factoryName}");
+        client.reloadData();
+
+    }
+
+    public void jMenuAdminSetPlanetMapSize_actionPerformed(ActionEvent e) {
+        PlanetNameDialog planetDialog = new PlanetNameDialog(
+              client,
+              "Select a Planet",
+              null);
+        planetDialog.setVisible(true);
+        String planetNamestr = planetDialog.getPlanetName();
+        planetDialog.dispose();
+
+        if ((planetNamestr == null) || (planetNamestr.isEmpty())) {
+            return;
+        }
+
+        String xSize = JOptionPane.showInputDialog(client.getMainFrame(), "X size");
+
+        if ((xSize == null) || (xSize.isEmpty())) {
+            return;
+        }
+
+        String ySize = JOptionPane.showInputDialog(client.getMainFrame(), "Y Size");
+
+        if ((ySize == null) || (ySize.isEmpty())) {
+            return;
+        }
+
+        client.sendChat(STR."\{IClient.CAMPAIGN_PREFIX}c adminsetplanetmapsize#\{planetNamestr}#\{xSize}#\{ySize}");
+        client.reloadData();
+    }
+
+    public void jMenuAdminSetPlanetBoardSize_actionPerformed(ActionEvent e) {
+        PlanetNameDialog planetDialog = new PlanetNameDialog(
+              client,
+              "Select a Planet",
+              null);
+        planetDialog.setVisible(true);
+        String planetNamestr = planetDialog.getPlanetName();
+        planetDialog.dispose();
+
+        if ((planetNamestr == null) || (planetNamestr.isEmpty())) {
+            return;
+        }
+
+        String xSize = JOptionPane.showInputDialog(client.getMainFrame(), "X size");
+
+        if ((xSize == null) || (xSize.isEmpty())) {
+            return;
+        }
+
+        String ySize = JOptionPane.showInputDialog(client.getMainFrame(), "Y Size");
+
+        if ((ySize == null) || (ySize.isEmpty())) {
+            return;
+        }
+
+        client.sendChat(STR."\{IClient.CAMPAIGN_PREFIX}c adminsetplanetboardsize#\{planetNamestr}#\{xSize}#\{ySize}");
+        client.reloadData();
+    }
+
+    public void jMenuAdminSetPlanetTemperature_actionPerformed(ActionEvent e) {
+        PlanetNameDialog planetDialog = new PlanetNameDialog(
+              client,
+              "Select a Planet",
+              null);
+        planetDialog.setVisible(true);
+        String planetNamestr = planetDialog.getPlanetName();
+        planetDialog.dispose();
+
+        if ((planetNamestr == null) || (planetNamestr.isEmpty())) {
+            return;
+        }
+
+        String lowTemp = JOptionPane.showInputDialog(client.getMainFrame(), "Low Temp");
+
+        if ((lowTemp == null) || (lowTemp.isEmpty())) {
+            return;
+        }
+
+        String hiTemp = JOptionPane.showInputDialog(client.getMainFrame(), "Hi Temp");
+
+        if ((hiTemp == null) || (hiTemp.isEmpty())) {
+            return;
+        }
+
+        client.sendChat(STR."\{IClient.CAMPAIGN_PREFIX}c adminsetplanettemperature#\{planetNamestr}#\{lowTemp}#\{hiTemp}");
+        client.reloadData();
+    }
+
+    public void jMenuAdminSetPlanetGravity_actionPerformed(ActionEvent e) {
+        PlanetNameDialog planetDialog = new PlanetNameDialog(
+              client,
+              "Select a Planet",
+              null);
+        planetDialog.setVisible(true);
+        String planetNamestr = planetDialog.getPlanetName();
+        planetDialog.dispose();
+
+        if ((planetNamestr == null) || (planetNamestr.isEmpty())) {
+            return;
+        }
+
+        String grav = JOptionPane.showInputDialog(client.getMainFrame(), "Gravity");
+
+        if ((grav == null) || (grav.isEmpty())) {
+            return;
+        }
+
+        client.sendChat(STR."\{IClient.CAMPAIGN_PREFIX}c adminsetplanetgravity#\{planetNamestr}#\{grav}");
+        client.reloadData();
+    }
+
+    public void jMenuAdminSetPlanetHomeWorld_actionPerformed(ActionEvent e) {
+        PlanetNameDialog planetDialog = new PlanetNameDialog(
+              client,
+              "Select a Planet",
+              null);
+        planetDialog.setVisible(true);
+        String planetNamestr = planetDialog.getPlanetName();
+        planetDialog.dispose();
+
+        if ((planetNamestr == null) || (planetNamestr.isEmpty())) {
+            return;
+        }
+
+        int result = JOptionPane.showConfirmDialog(null,
+              "Set as HomeWorld?",
+              "Set HomeWorld",
+              JOptionPane.YES_NO_CANCEL_OPTION);
+
+        if (result == JOptionPane.CANCEL_OPTION) {
+            return;
+        }
+
+        boolean homeworld = false;
+        if (result == JOptionPane.YES_OPTION) {
+            homeworld = true;
+        }
+
+        client.sendChat(STR."\{IClient.CAMPAIGN_PREFIX}c adminsethomeworld#\{planetNamestr}#\{homeworld}");
+        client.reloadData();
+
+    }
+
+    public void jMenuAdminSetPlanetOriginalOwner_actionPerformed(ActionEvent ex) {
+
+        PlanetNameDialog planetDialog = new PlanetNameDialog(
+              client,
+              "Select a Planet",
+              null);
+        planetDialog.setVisible(true);
+        String planetNamestr = planetDialog.getPlanetName();
+        planetDialog.dispose();
+
+        if ((planetNamestr == null) || (planetNamestr.isEmpty())) {
+            return;
+        }
+
+        HouseNameDialog hnd = new HouseNameDialog(client,
+              "Select Original Owner",
+              false,
+              false);
+        hnd.setVisible(true);
+        String owner = hnd.getHouseName();
+        hnd.dispose();
+
+        if ((owner == null) || (owner.isEmpty())) {
+            return;
+        }
+
+        client.sendChat(STR."\{IClient.CAMPAIGN_PREFIX}c adminsetplanetoriginalowner#\{planetNamestr}#\{owner}");
+        client.reloadData();
+    }
+
+    public void jMenuAdminServerAmmoBan_actionPerformed(ActionEvent e) {
+        new BannedAmmoDialog(client, null);
+    }
+
+    public void jMenuAdminServerTargetBan_actionPerformed(ActionEvent e) {
+        new BannedTargetingDialog(client);
+    }
+
+    private void jMenuAdminReloadSupportUnits_actionPerformed(ActionEvent e) {
+        client.sendChat(STR."\{IClient.CAMPAIGN_PREFIX}adminReloadSupportUnits");
+    }
+
+    private void jMenuAdminReloadSanitizer_actionPerformed(ActionEvent e) {
+        client.sendChat(STR."\{IClient.CAMPAIGN_PREFIX}adminReloadHTMLSanitizerConfigs");
+    }
+
+    public void jMenuAdminUploadBuildTable_actionPerformed(ActionEvent e) {
+        JFileChooser chooser = new JFileChooser();
+
+        chooser.setCurrentDirectory(new File("./data/buildtables"));
+
+        int returnVal = chooser.showOpenDialog(chooser);
+        if (returnVal == JFileChooser.APPROVE_OPTION) {
+            File file = chooser.getSelectedFile();
+            StringBuilder line = new StringBuilder();
+            line.append(STR."\{IClient.CAMPAIGN_PREFIX}AdminUploadBuildTable ");
+            String path = file.getPath();
+            if (path.contains("rare")) {
+                path = STR."rare/\{file.getName()}";
+            } else if (path.contains("standard")) {
+                path = STR."standard/\{file.getName()}";
+            } else if (path.contains("reward")) {
+                path = STR."reward/\{file.getName()}";
+            }
+            line.append(path);
+            try {
+                FileInputStream in = new FileInputStream(file);
+                BufferedReader br = new BufferedReader(new InputStreamReader(in));
+                try {
+                    while (br.ready()) {
+                        line.append("#").append(br.readLine());
+                    }
+                    br.close();
+                    in.close();
+                } catch (IOException ioex) {
+                    MWLogger.errLog(STR."IOException: \{line.toString()}");
+                }
+            } catch (FileNotFoundException fnfex) {
+                MWLogger.errLog(STR."FileNotFoundException: \{line.toString()}");
+            }
+            line.append("#");
+            client.sendChat(line.toString());
+
+        }
+    }
+
+    public void jMenuAdminRequestBuildTable_actionPerformed(ActionEvent e) {
+        client.sendChat(STR."\{IClient.CAMPAIGN_PREFIX}AdminRequestBuildTable list");
+    }
+
+    public void jMenuAdminPruneBuildTable_actionPerformed(ActionEvent e) {
+        client.sendChat(STR."\{IClient.CAMPAIGN_PREFIX}AdminRequestBuildTable prune");
+    }
+
+    public void jMenuAdminUploadMul_actionPerformed(ActionEvent e) {
+
+        JFileChooser chooser = new JFileChooser();
+
+        File mulFolder = new File("./data/armies");
+        if (!mulFolder.exists()) {
+            mulFolder.mkdir();
+        }
+
+        chooser.setCurrentDirectory(mulFolder);
+
+        int returnVal = chooser.showOpenDialog(chooser);
+        if (returnVal == JFileChooser.APPROVE_OPTION) {
+            File file = chooser.getSelectedFile();
+            StringBuilder line = new StringBuilder();
+            line.append(STR."\{IClient.CAMPAIGN_PREFIX}UploadMul ");
+            line.append(file.getName());
+            try {
+                FileInputStream in = new FileInputStream(file);
+                BufferedReader br = new BufferedReader(new InputStreamReader(in));
+                try {
+                    while (br.ready()) {
+                        line.append("#").append(br.readLine());
+                    }
+                    br.close();
+                    in.close();
+                } catch (IOException ioex) {
+                    MWLogger.errLog(STR."IOException: \{line.toString()}");
+                }
+            } catch (FileNotFoundException fnfex) {
+                MWLogger.errLog(STR."FileNotFoundException: \{line.toString()}");
+            }
+            line.append("#");
+            client.sendChat(line.toString());
+
+        }
+    }
+
+    public void jMenuAdminListMuls_actionPerformed(ActionEvent e) {
+        client.sendChat(IClient.CAMPAIGN_PREFIX + "c listMuls");
+    }
+
+    public void jMenuAdminRetrieveMul_actionPerformed(ActionEvent e) {
+        client.sendChat(IClient.CAMPAIGN_PREFIX + "c listMuls#SMFD");
+    }
+
+    public void jMenuAdminRetrieveAllMuls_actionPerformed(ActionEvent e) {
+        client.sendChat(IClient.CAMPAIGN_PREFIX + "c RetrieveAllMuls");
+    }
+
+    public void jMenuAdminCreateMulArmy_actionPerformed(ActionEvent e) {
+        client.sendChat(STR."\{IClient.CAMPAIGN_PREFIX}listmuls CAFM");
+    }
+
+    public void jMenuAdminComponentList_actionPerformed(ActionEvent e) {
+        // ComponentDisplayDialog componentDialog =
+        int type = (Integer) e.getSource();
+        new ComponentDisplayDialog(client, type);
+        // componentDialog.setVisible(true);
+    }
+
+    public void jMenuAdminOmniVariantMod_actionPerformed(ActionEvent e) {
+        UnitLoadingDialog unitLoadingDialog = new UnitLoadingDialog(client.getMainFrame());
+        mekwars.common.gui.dialogs.NewUnitViewerDialog unitSelector = new mekwars.common.gui.dialogs.NewUnitViewerDialog(
+              client.getMainFrame(),
+              unitLoadingDialog,
+              client,
+              mekwars.common.gui.dialogs.NewUnitViewerDialog.OMNI_VARIANT_SELECTOR);
+        unitSelector.setName("Unit Selector");
+        new Thread(unitSelector).start();
+    }
+
+    public void jMenuAdminSetCommandLevel_actionPerformed(ActionEvent e) {
+
+        CommandNameDialog commandDialog = new CommandNameDialog(client, "Select a Command");
+        commandDialog.setVisible(true);
+        String commandNamestr = commandDialog.getCommandName();
+        commandDialog.dispose();
+
+        if ((commandNamestr == null) || commandNamestr.equalsIgnoreCase("null")) {
+            return;
+        }
+
+        String level = JOptionPane.showInputDialog(client.getMainFrame(), "Level");
+
+        if ((level == null) || (level.isEmpty())) {
+            return;
+        }
+
+        client.sendChat(STR."\{IClient.CAMPAIGN_PREFIX}c adminsetCommandLevel#\{commandNamestr}#\{level}");
+    }
+
+    public void jMenuAdminSetHouseBasePilotSkills_actionPerformed(ActionEvent e) {
+        HouseNameDialog factionDialog = new HouseNameDialog(client,
+              "Select Faction",
+              false,
+              false);
+        factionDialog.setVisible(true);
+        String factionName = factionDialog.getHouseName();
+        factionDialog.dispose();
+
+        if ((factionName == null) || (factionName.isEmpty())) {
+            return;
+        }
+
+        Object[] unitTypes = { "Mek", "Vehicles", "Infantry", "ProtoMeks", "BattleArmor", "Aero" };
+
+        String unitTypestr = (String) JOptionPane.showInputDialog(client.getMainFrame(),
+              "Select Unit Type",
+              "Unit Type",
+              JOptionPane.INFORMATION_MESSAGE,
+              null,
+              unitTypes,
+              unitTypes[0]);
+
+        if ((unitTypestr == null) || (unitTypestr.isEmpty())) {
+            return;
+        }
+
+        int unitTypeint = Unit.getTypeIDForName(unitTypestr);
+
+        String gunnery = JOptionPane.showInputDialog(client.getMainFrame(), "Base Gunnery");
+
+        if ((gunnery == null) || (gunnery.isEmpty())) {
+            return;
+        }
+
+        String piloting = JOptionPane.showInputDialog(client.getMainFrame(), "Base Piloting");
+
+        if ((piloting == null) || (piloting.isEmpty())) {
+            return;
+        }
+
+        String sendCommand = STR."\{factionName}#\{unitTypeint}#\{gunnery}#\{piloting}";
+
+        client.sendChat(STR."\{IClient.CAMPAIGN_PREFIX}c sethousebasepilotskills#\{sendCommand}");
+    }
+
+    public void jMenuAdminCommandLists_actionPerformed(ActionEvent e) {
+        CommandNameDialog commandDialog = new CommandNameDialog(client, "Select a Command");
+        commandDialog.setVisible(true);
+        String commandNamestr = commandDialog.getCommandName();
+        commandDialog.dispose();
+
+        if (commandNamestr != null) {
+            String input = IClient.CAMPAIGN_PREFIX + commandNamestr;
+            client.getMainFrame().getMainPanel().getCommPanel().setInput(input);
+            client.getMainFrame().getMainPanel().getCommPanel().focusInputField();
+        }
     }
 
     public void jMenuAdminSetHousePriceMod_actionPerformed(ActionEvent e) {
@@ -1138,494 +1626,6 @@ public class AdminMenu extends JMenu {
         }
 
         client.sendChat(STR."\{IClient.CAMPAIGN_PREFIX}c adminsethouseflumod#\{factionName}#\{unitTypestr}#\{unitClassstr}#\{fluMod}");
-    }
-
-    public void jMenuAdminSetHouseTechLevel_actionPerformed(ActionEvent e) {
-
-        HouseNameDialog factionDialog = new HouseNameDialog(client,
-              "Faction",
-              false,
-              false);
-        factionDialog.setVisible(true);
-        String factionName = factionDialog.getHouseName();
-        factionDialog.dispose();
-
-        if ((factionName == null) || (factionName.isEmpty())) {
-            return;
-        }
-
-        JComboBox<String> techCombo = new JComboBox<>(TechConstants.T_NAMES);
-        techCombo.setEditable(false);
-
-        JOptionPane jop = new JOptionPane(techCombo, JOptionPane.QUESTION_MESSAGE, JOptionPane.OK_CANCEL_OPTION);
-        JDialog dlg = jop.createDialog(client.getMainFrame(), "Select Tech Level");
-        techCombo.grabFocus();
-        techCombo.getEditor().selectAll();
-
-        dlg.setVisible(true);
-
-        if ((Integer) jop.getValue() == JOptionPane.CANCEL_OPTION) {
-            return;
-        }
-
-        client.sendChat(STR."\{IClient.CAMPAIGN_PREFIX}c adminsethousetechlevel#\{factionName}#\{techCombo.getSelectedIndex()}");
-    }
-
-    public void jMenuAdminSaveTheUniverse_actionPerformed(ActionEvent e) {
-        client.sendChat(STR."\{IClient.CAMPAIGN_PREFIX}c adminsave");
-    }
-
-    public void jMenuAdminSaveBlackMarketSettings_actionPerformed(ActionEvent e) {
-        client.sendChat(STR."\{IClient.CAMPAIGN_PREFIX}c adminsaveblackmarketconfigs");
-    }
-
-    public void jMenuAdminSavePlanetsToXML_actionPerformed(ActionEvent e) {
-        client.sendChat(STR."\{IClient.CAMPAIGN_PREFIX}c adminsaveplanetstoxml");
-    }
-
-    public void jMenuAdminOmniVariantMod_actionPerformed(ActionEvent e) {
-        UnitLoadingDialog unitLoadingDialog = new UnitLoadingDialog(client.getMainFrame());
-        mekwars.common.gui.dialogs.NewUnitViewerDialog unitSelector = new mekwars.common.gui.dialogs.NewUnitViewerDialog(
-              client.getMainFrame(),
-              unitLoadingDialog,
-              client,
-              mekwars.common.gui.dialogs.NewUnitViewerDialog.OMNI_VARIANT_SELECTOR);
-        unitSelector.setName("Unit Selector");
-        new Thread(unitSelector).start();
-    }
-
-    public void jMenuAdminServerAmmoBan_actionPerformed(ActionEvent e) {
-        new BannedAmmoDialog(client, null);
-    }
-
-    public void jMenuAdminServerTargetBan_actionPerformed(ActionEvent e) {
-        new BannedTargetingDialog(client);
-    }
-
-    public void jMenuAdminListMuls_actionPerformed(ActionEvent e) {
-        client.sendChat(IClient.CAMPAIGN_PREFIX + "c listMuls");
-    }
-
-    public void jMenuAdminRetrieveMul_actionPerformed(ActionEvent e) {
-        client.sendChat(IClient.CAMPAIGN_PREFIX + "c listMuls#SMFD");
-    }
-
-    public void jMenuAdminRetrieveAllMuls_actionPerformed(ActionEvent e) {
-        client.sendChat(IClient.CAMPAIGN_PREFIX + "c RetrieveAllMuls");
-    }
-
-    public void jMenuAdminUploadMul_actionPerformed(ActionEvent e) {
-
-        JFileChooser chooser = new JFileChooser();
-
-        File mulFolder = new File("./data/armies");
-        if (!mulFolder.exists()) {
-            mulFolder.mkdir();
-        }
-
-        chooser.setCurrentDirectory(mulFolder);
-
-        int returnVal = chooser.showOpenDialog(chooser);
-        if (returnVal == JFileChooser.APPROVE_OPTION) {
-            File file = chooser.getSelectedFile();
-            StringBuilder line = new StringBuilder();
-            line.append(STR."\{IClient.CAMPAIGN_PREFIX}UploadMul ");
-            line.append(file.getName());
-            try {
-                FileInputStream in = new FileInputStream(file);
-                BufferedReader br = new BufferedReader(new InputStreamReader(in));
-                try {
-                    while (br.ready()) {
-                        line.append("#").append(br.readLine());
-                    }
-                    br.close();
-                    in.close();
-                } catch (IOException ioex) {
-                    MWLogger.errLog(STR."IOException: \{line.toString()}");
-                }
-            } catch (FileNotFoundException fnfex) {
-                MWLogger.errLog(STR."FileNotFoundException: \{line.toString()}");
-            }
-            line.append("#");
-            client.sendChat(line.toString());
-
-        }
-    }
-
-    public void jMenuAdminRequestBuildTable_actionPerformed(ActionEvent e) {
-        client.sendChat(STR."\{IClient.CAMPAIGN_PREFIX}AdminRequestBuildTable list");
-    }
-
-    public void jMenuAdminPruneBuildTable_actionPerformed(ActionEvent e) {
-        client.sendChat(STR."\{IClient.CAMPAIGN_PREFIX}AdminRequestBuildTable prune");
-    }
-
-    public void jMenuAdminUploadBuildTable_actionPerformed(ActionEvent e) {
-        JFileChooser chooser = new JFileChooser();
-
-        chooser.setCurrentDirectory(new File("./data/buildtables"));
-
-        int returnVal = chooser.showOpenDialog(chooser);
-        if (returnVal == JFileChooser.APPROVE_OPTION) {
-            File file = chooser.getSelectedFile();
-            StringBuilder line = new StringBuilder();
-            line.append(STR."\{IClient.CAMPAIGN_PREFIX}AdminUploadBuildTable ");
-            String path = file.getPath();
-            if (path.contains("rare")) {
-                path = STR."rare/\{file.getName()}";
-            } else if (path.contains("standard")) {
-                path = STR."standard/\{file.getName()}";
-            } else if (path.contains("reward")) {
-                path = STR."reward/\{file.getName()}";
-            }
-            line.append(path);
-            try {
-                FileInputStream in = new FileInputStream(file);
-                BufferedReader br = new BufferedReader(new InputStreamReader(in));
-                try {
-                    while (br.ready()) {
-                        line.append("#").append(br.readLine());
-                    }
-                    br.close();
-                    in.close();
-                } catch (IOException ioex) {
-                    MWLogger.errLog(STR."IOException: \{line.toString()}");
-                }
-            } catch (FileNotFoundException fnfex) {
-                MWLogger.errLog(STR."FileNotFoundException: \{line.toString()}");
-            }
-            line.append("#");
-            client.sendChat(line.toString());
-
-        }
-    }
-
-    public void jMenuAdminHouseAmmoBan_actionPerformed(ActionEvent e) {
-        HouseNameDialog factionDialog = new HouseNameDialog(client,
-              "Select Faction",
-              false,
-              false);
-        factionDialog.setVisible(true);
-        String factionName = factionDialog.getHouseName();
-        factionDialog.dispose();
-
-        if ((factionName == null) || (factionName.isEmpty())) {
-            return;
-        }
-
-        new BannedAmmoDialog(client, client.getData().getHouseByName(factionName));
-    }
-
-    public void jMenuAdminSetHouseBasePilotSkills_actionPerformed(ActionEvent e) {
-        HouseNameDialog factionDialog = new HouseNameDialog(client,
-              "Select Faction",
-              false,
-              false);
-        factionDialog.setVisible(true);
-        String factionName = factionDialog.getHouseName();
-        factionDialog.dispose();
-
-        if ((factionName == null) || (factionName.isEmpty())) {
-            return;
-        }
-
-        Object[] unitTypes = { "Mek", "Vehicles", "Infantry", "ProtoMeks", "BattleArmor", "Aero" };
-
-        String unitTypestr = (String) JOptionPane.showInputDialog(client.getMainFrame(),
-              "Select Unit Type",
-              "Unit Type",
-              JOptionPane.INFORMATION_MESSAGE,
-              null,
-              unitTypes,
-              unitTypes[0]);
-
-        if ((unitTypestr == null) || (unitTypestr.isEmpty())) {
-            return;
-        }
-
-        int unitTypeint = Unit.getTypeIDForName(unitTypestr);
-
-        String gunnery = JOptionPane.showInputDialog(client.getMainFrame(), "Base Gunnery");
-
-        if ((gunnery == null) || (gunnery.isEmpty())) {
-            return;
-        }
-
-        String piloting = JOptionPane.showInputDialog(client.getMainFrame(), "Base Piloting");
-
-        if ((piloting == null) || (piloting.isEmpty())) {
-            return;
-        }
-
-        String sendCommand = STR."\{factionName}#\{unitTypeint}#\{gunnery}#\{piloting}";
-
-        client.sendChat(STR."\{IClient.CAMPAIGN_PREFIX}c sethousebasepilotskills#\{sendCommand}");
-    }
-
-    public void jMenuAdminSetCommandLevel_actionPerformed(ActionEvent e) {
-
-        CommandNameDialog commandDialog = new CommandNameDialog(client, "Select a Command");
-        commandDialog.setVisible(true);
-        String commandNamestr = commandDialog.getCommandName();
-        commandDialog.dispose();
-
-        if ((commandNamestr == null) || commandNamestr.equalsIgnoreCase("null")) {
-            return;
-        }
-
-        String level = JOptionPane.showInputDialog(client.getMainFrame(), "Level");
-
-        if ((level == null) || (level.isEmpty())) {
-            return;
-        }
-
-        client.sendChat(STR."\{IClient.CAMPAIGN_PREFIX}c adminsetCommandLevel#\{commandNamestr}#\{level}");
-    }
-
-    public void jMenuAdminLockFactory_actionPerformed(ActionEvent e) {
-        TreeSet<String> names = new TreeSet<>();
-
-        PlanetNameDialog planetDialog = new PlanetNameDialog(
-              client,
-              "Select a Planet",
-              null);
-        planetDialog.setVisible(true);
-        String planetNamestr = planetDialog.getPlanetName();
-        planetDialog.dispose();
-
-        if ((planetNamestr == null) || (planetNamestr.isEmpty())) {
-            return;
-        }
-
-        Planet planet = client.getData().getPlanetByName(planetNamestr);
-
-        for (UnitFactory UF : planet.getUnitFactories()) {
-            names.add(UF.getName());
-        }
-
-        JComboBox<String> combo = new JComboBox<>(names.toArray(new String[names.size()]));
-        combo.setEditable(true);
-        JOptionPane jop = new JOptionPane(combo, JOptionPane.QUESTION_MESSAGE, JOptionPane.OK_CANCEL_OPTION);
-
-        JDialog dlg = jop.createDialog(client.getMainFrame(), "Select factory to toggle the lock on.");
-        combo.grabFocus();
-        combo.getEditor().selectAll();
-
-        dlg.setVisible(true);
-
-        String factoryName = (String) combo.getSelectedItem();
-
-        if ((factoryName == null) || (factoryName.isEmpty())) {
-            return;
-        }
-
-        client.sendChat(STR."\{IClient.CAMPAIGN_PREFIX}c adminlockfactory#\{planetNamestr}#\{factoryName}");
-        client.reloadData();
-
-    }
-
-    public void jMenuAdminSetPlanetMapSize_actionPerformed(ActionEvent e) {
-        PlanetNameDialog planetDialog = new PlanetNameDialog(
-              client,
-              "Select a Planet",
-              null);
-        planetDialog.setVisible(true);
-        String planetNamestr = planetDialog.getPlanetName();
-        planetDialog.dispose();
-
-        if ((planetNamestr == null) || (planetNamestr.isEmpty())) {
-            return;
-        }
-
-        String xSize = JOptionPane.showInputDialog(client.getMainFrame(), "X size");
-
-        if ((xSize == null) || (xSize.isEmpty())) {
-            return;
-        }
-
-        String ySize = JOptionPane.showInputDialog(client.getMainFrame(), "Y Size");
-
-        if ((ySize == null) || (ySize.isEmpty())) {
-            return;
-        }
-
-        client.sendChat(STR."\{IClient.CAMPAIGN_PREFIX}c adminsetplanetmapsize#\{planetNamestr}#\{xSize}#\{ySize}");
-        client.reloadData();
-    }
-
-    public void jMenuAdminSetPlanetHomeWorld_actionPerformed(ActionEvent e) {
-        PlanetNameDialog planetDialog = new PlanetNameDialog(
-              client,
-              "Select a Planet",
-              null);
-        planetDialog.setVisible(true);
-        String planetNamestr = planetDialog.getPlanetName();
-        planetDialog.dispose();
-
-        if ((planetNamestr == null) || (planetNamestr.isEmpty())) {
-            return;
-        }
-
-        int result = JOptionPane.showConfirmDialog(null,
-              "Set as HomeWorld?",
-              "Set HomeWorld",
-              JOptionPane.YES_NO_CANCEL_OPTION);
-
-        if (result == JOptionPane.CANCEL_OPTION) {
-            return;
-        }
-
-        boolean homeworld = false;
-        if (result == JOptionPane.YES_OPTION) {
-            homeworld = true;
-        }
-
-        client.sendChat(STR."\{IClient.CAMPAIGN_PREFIX}c adminsethomeworld#\{planetNamestr}#\{homeworld}");
-        client.reloadData();
-
-    }
-
-    public void jMenuAdminSetPlanetBoardSize_actionPerformed(ActionEvent e) {
-        PlanetNameDialog planetDialog = new PlanetNameDialog(
-              client,
-              "Select a Planet",
-              null);
-        planetDialog.setVisible(true);
-        String planetNamestr = planetDialog.getPlanetName();
-        planetDialog.dispose();
-
-        if ((planetNamestr == null) || (planetNamestr.isEmpty())) {
-            return;
-        }
-
-        String xSize = JOptionPane.showInputDialog(client.getMainFrame(), "X size");
-
-        if ((xSize == null) || (xSize.isEmpty())) {
-            return;
-        }
-
-        String ySize = JOptionPane.showInputDialog(client.getMainFrame(), "Y Size");
-
-        if ((ySize == null) || (ySize.isEmpty())) {
-            return;
-        }
-
-        client.sendChat(STR."\{IClient.CAMPAIGN_PREFIX}c adminsetplanetboardsize#\{planetNamestr}#\{xSize}#\{ySize}");
-        client.reloadData();
-    }
-
-    public void jMenuAdminSetPlanetOriginalOwner_actionPerformed(ActionEvent ex) {
-
-        PlanetNameDialog planetDialog = new PlanetNameDialog(
-              client,
-              "Select a Planet",
-              null);
-        planetDialog.setVisible(true);
-        String planetNamestr = planetDialog.getPlanetName();
-        planetDialog.dispose();
-
-        if ((planetNamestr == null) || (planetNamestr.isEmpty())) {
-            return;
-        }
-
-        HouseNameDialog hnd = new HouseNameDialog(client,
-              "Select Original Owner",
-              false,
-              false);
-        hnd.setVisible(true);
-        String owner = hnd.getHouseName();
-        hnd.dispose();
-
-        if ((owner == null) || (owner.isEmpty())) {
-            return;
-        }
-
-        client.sendChat(STR."\{IClient.CAMPAIGN_PREFIX}c adminsetplanetoriginalowner#\{planetNamestr}#\{owner}");
-        client.reloadData();
-    }
-
-    public void jMenuAdminSetPlanetTemperature_actionPerformed(ActionEvent e) {
-        PlanetNameDialog planetDialog = new PlanetNameDialog(
-              client,
-              "Select a Planet",
-              null);
-        planetDialog.setVisible(true);
-        String planetNamestr = planetDialog.getPlanetName();
-        planetDialog.dispose();
-
-        if ((planetNamestr == null) || (planetNamestr.isEmpty())) {
-            return;
-        }
-
-        String lowTemp = JOptionPane.showInputDialog(client.getMainFrame(), "Low Temp");
-
-        if ((lowTemp == null) || (lowTemp.isEmpty())) {
-            return;
-        }
-
-        String hiTemp = JOptionPane.showInputDialog(client.getMainFrame(), "Hi Temp");
-
-        if ((hiTemp == null) || (hiTemp.isEmpty())) {
-            return;
-        }
-
-        client.sendChat(STR."\{IClient.CAMPAIGN_PREFIX}c adminsetplanettemperature#\{planetNamestr}#\{lowTemp}#\{hiTemp}");
-        client.reloadData();
-    }
-
-    public void jMenuAdminSetPlanetGravity_actionPerformed(ActionEvent e) {
-        PlanetNameDialog planetDialog = new PlanetNameDialog(
-              client,
-              "Select a Planet",
-              null);
-        planetDialog.setVisible(true);
-        String planetNamestr = planetDialog.getPlanetName();
-        planetDialog.dispose();
-
-        if ((planetNamestr == null) || (planetNamestr.isEmpty())) {
-            return;
-        }
-
-        String grav = JOptionPane.showInputDialog(client.getMainFrame(), "Gravity");
-
-        if ((grav == null) || (grav.isEmpty())) {
-            return;
-        }
-
-        client.sendChat(STR."\{IClient.CAMPAIGN_PREFIX}c adminsetplanetgravity#\{planetNamestr}#\{grav}");
-        client.reloadData();
-    }
-
-    public void jMenuAdminCommandLists_actionPerformed(ActionEvent e) {
-        CommandNameDialog commandDialog = new CommandNameDialog(client, "Select a Command");
-        commandDialog.setVisible(true);
-        String commandNamestr = commandDialog.getCommandName();
-        commandDialog.dispose();
-
-        if (commandNamestr != null) {
-            String input = IClient.CAMPAIGN_PREFIX + commandNamestr;
-            client.getMainFrame().getMainPanel().getCommPanel().setInput(input);
-            client.getMainFrame().getMainPanel().getCommPanel().focusInputField();
-        }
-    }
-
-    public void jMenuAdminComponentList_actionPerformed(ActionEvent e) {
-        // ComponentDisplayDialog componentDialog =
-        int type = (Integer) e.getSource();
-        new ComponentDisplayDialog(client, type);
-        // componentDialog.setVisible(true);
-    }
-
-    public void jMenuAdminCreateMulArmy_actionPerformed(ActionEvent e) {
-        client.sendChat(STR."\{IClient.CAMPAIGN_PREFIX}listmuls CAFM");
-    }
-
-    private void jMenuAdminReloadSupportUnits_actionPerformed(ActionEvent e) {
-        client.sendChat(STR."\{IClient.CAMPAIGN_PREFIX}adminReloadSupportUnits");
-    }
-
-    private void jMenuAdminReloadSanitizer_actionPerformed(ActionEvent e) {
-        client.sendChat(STR."\{IClient.CAMPAIGN_PREFIX}adminReloadHTMLSanitizerConfigs");
     }
 
 }// end AdminMenu class

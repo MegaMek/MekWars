@@ -48,21 +48,6 @@ public class DodgeManeuverSkill extends SPilotSkill {
     }
 
     @Override
-    public int getBVMod(Entity unit) {
-        return server.campaign.CampaignMain.cm.getIntegerConfig("DodgeManeuverBaseBVMod");
-    }
-
-    @Override
-    public int getBVMod(Entity unit, server.campaign.pilot.SPilot p) {
-        server.campaign.SHouse house = server.campaign.CampaignMain.cm.getHouseFromPartialString(p.getCurrentFaction());
-
-        if (house != null) {
-            return house.getIntegerConfig("DodgeManeuverBaseBVMod");
-        }
-        return server.campaign.CampaignMain.cm.getIntegerConfig("DodgeManeuverBaseBVMod");
-    }
-
-    @Override
     public int getChance(int unitType, Pilot p) {
 
         if (p.getSkills().has(this)) {
@@ -82,5 +67,20 @@ public class DodgeManeuverSkill extends SPilotSkill {
         }
 
         return house.getIntegerConfig(chance);
+    }
+
+    @Override
+    public int getBVMod(Entity unit) {
+        return server.campaign.CampaignMain.cm.getIntegerConfig("DodgeManeuverBaseBVMod");
+    }
+
+    @Override
+    public int getBVMod(Entity unit, server.campaign.pilot.SPilot p) {
+        server.campaign.SHouse house = server.campaign.CampaignMain.cm.getHouseFromPartialString(p.getCurrentFaction());
+
+        if (house != null) {
+            return house.getIntegerConfig("DodgeManeuverBaseBVMod");
+        }
+        return server.campaign.CampaignMain.cm.getIntegerConfig("DodgeManeuverBaseBVMod");
     }
 }

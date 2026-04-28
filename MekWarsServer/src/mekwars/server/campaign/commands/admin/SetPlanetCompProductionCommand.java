@@ -25,10 +25,6 @@ public class SetPlanetCompProductionCommand implements server.campaign.commands.
     int accessLevel = server.MWChatServer.auth.IAuthenticator.ADMIN;
     String syntax = "Planet Name#Number Of Components";
 
-    public int getExecutionLevel() {return accessLevel;}
-
-    public void setExecutionLevel(int i) {accessLevel = i;}
-
     public String getSyntax() {return syntax;}
 
     public void process(java.util.StringTokenizer command, String Username) {
@@ -79,4 +75,8 @@ public class SetPlanetCompProductionCommand implements server.campaign.commands.
               Username + " has set planet " + PlanetName + "'s component production to " + planet.getCompProduction());
         planet.updated();
     }
+
+    public int getExecutionLevel() {return accessLevel;}
+
+    public void setExecutionLevel(int i) {accessLevel = i;}
 }

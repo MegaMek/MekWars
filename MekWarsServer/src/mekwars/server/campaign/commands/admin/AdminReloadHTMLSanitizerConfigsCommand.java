@@ -23,10 +23,6 @@ public class AdminReloadHTMLSanitizerConfigsCommand implements server.campaign.c
     int accessLevel = server.MWChatServer.auth.IAuthenticator.ADMIN;
     String syntax = "";
 
-    public int getExecutionLevel() {return accessLevel;}
-
-    public void setExecutionLevel(int i) {accessLevel = i;}
-
     public String getSyntax() {return syntax;}
 
     //calculate faction rankings by comparing with original owner
@@ -47,4 +43,8 @@ public class AdminReloadHTMLSanitizerConfigsCommand implements server.campaign.c
         server.campaign.CampaignMain.cm.doSendModMail("NOTE", Username + " has reloaded the HTML Sanitizer configs");
         server.campaign.CampaignMain.cm.toUser("You have reloaded the HTML Sanitizer configs", Username, true);
     }
+
+    public int getExecutionLevel() {return accessLevel;}
+
+    public void setExecutionLevel(int i) {accessLevel = i;}
 }

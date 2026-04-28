@@ -22,10 +22,6 @@ public class AdminHouseStatusCommand implements server.campaign.commands.Command
     int accessLevel = server.MWChatServer.auth.IAuthenticator.ADMIN;
     String syntax = "faction";
 
-    public int getExecutionLevel() {return accessLevel;}
-
-    public void setExecutionLevel(int i) {accessLevel = i;}
-
     public String getSyntax() {return syntax;}
 
     public void process(java.util.StringTokenizer command, String Username) {
@@ -64,4 +60,8 @@ public class AdminHouseStatusCommand implements server.campaign.commands.Command
         server.campaign.CampaignMain.cm.doSendModMail("NOTE", Username + " checked " + h.getName());
 
     }
+
+    public int getExecutionLevel() {return accessLevel;}
+
+    public void setExecutionLevel(int i) {accessLevel = i;}
 }

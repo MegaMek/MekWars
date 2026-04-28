@@ -52,7 +52,7 @@ public class FreeBuildPanel extends JPanel {
         JPanel panel3 = new JPanel();
         JPanel panel3a = new JPanel();
         JPanel panel3b = new JPanel();
-        
+
         panel0.setBorder(BorderFactory.createTitledBorder("Free Build"));
 
         panel0.add(new JLabel(description));

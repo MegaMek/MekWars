@@ -21,10 +21,6 @@ public class GrantRewardCommand implements server.campaign.commands.Command {
     int accessLevel = server.MWChatServer.auth.IAuthenticator.MODERATOR;
     String syntax = "Player Name#Amount";
 
-    public int getExecutionLevel() {return accessLevel;}
-
-    public void setExecutionLevel(int i) {accessLevel = i;}
-
     public String getSyntax() {return syntax;}
 
     public void process(java.util.StringTokenizer command, String Username) {
@@ -75,5 +71,9 @@ public class GrantRewardCommand implements server.campaign.commands.Command {
         }
 
     }//end process()
+
+    public int getExecutionLevel() {return accessLevel;}
+
+    public void setExecutionLevel(int i) {accessLevel = i;}
 
 }

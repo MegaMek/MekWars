@@ -25,10 +25,6 @@ public class AdminReturnPlanetsToOriginalOwnersCommand implements server.campaig
     int accessLevel = server.MWChatServer.auth.IAuthenticator.ADMIN;
     String syntax = "";
 
-    public int getExecutionLevel() {return accessLevel;}
-
-    public void setExecutionLevel(int i) {accessLevel = i;}
-
     public String getSyntax() {return syntax;}
 
     public void process(java.util.StringTokenizer command, String Username) {
@@ -98,4 +94,8 @@ public class AdminReturnPlanetsToOriginalOwnersCommand implements server.campaig
               Username + " restored all plants to their original owners.");
 
     }
+
+    public int getExecutionLevel() {return accessLevel;}
+
+    public void setExecutionLevel(int i) {accessLevel = i;}
 }

@@ -112,20 +112,6 @@ public class MWScheduler implements ScheduleHandler {
         }
     }
 
-
-    /**
-     * Kill the scheduler
-     */
-    @Override
-    public void shutdown() {
-        try {
-            scheduler.shutdown();
-        } catch (SchedulerException e) {
-            server.campaign.CampaignMain.cm.doSendModMail("SERVER", e.getStackTrace().toString());
-            MWLogger.errLog(e);
-        }
-    }
-
     /**
      * Create starting and ending Christmas jobs
      *
@@ -181,6 +167,19 @@ public class MWScheduler implements ScheduleHandler {
     @Override
     public JobExecutionContext getContext(TriggerKey key) {
         return null;
+    }
+
+    /**
+     * Kill the scheduler
+     */
+    @Override
+    public void shutdown() {
+        try {
+            scheduler.shutdown();
+        } catch (SchedulerException e) {
+            server.campaign.CampaignMain.cm.doSendModMail("SERVER", e.getStackTrace().toString());
+            MWLogger.errLog(e);
+        }
     }
 
     /**

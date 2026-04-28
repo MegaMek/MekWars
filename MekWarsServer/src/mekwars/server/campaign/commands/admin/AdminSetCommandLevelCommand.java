@@ -22,10 +22,6 @@ public class AdminSetCommandLevelCommand implements server.campaign.commands.Com
     int accessLevel = server.MWChatServer.auth.IAuthenticator.ADMIN;
     String syntax = "Command#Level";
 
-    public int getExecutionLevel() {return accessLevel;}
-
-    public void setExecutionLevel(int i) {accessLevel = i;}
-
     public String getSyntax() {return syntax;}
 
     public void process(java.util.StringTokenizer command, String Username) {
@@ -62,4 +58,8 @@ public class AdminSetCommandLevelCommand implements server.campaign.commands.Com
               Username + " has changed the command level for " + commandName.toLowerCase() + " to " + commandLevel);
 
     }
+
+    public int getExecutionLevel() {return accessLevel;}
+
+    public void setExecutionLevel(int i) {accessLevel = i;}
 }

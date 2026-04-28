@@ -24,10 +24,6 @@ public class AddTraitCommand implements server.campaign.commands.Command {
     int accessLevel = server.MWChatServer.auth.IAuthenticator.ADMIN;
     String syntax = "Faction#TraitName#Skill$Skill$Skill$Skill";
 
-    public int getExecutionLevel() {return accessLevel;}
-
-    public void setExecutionLevel(int i) {accessLevel = i;}
-
     public String getSyntax() {return syntax;}
 
     public void process(java.util.StringTokenizer command, String Username) {
@@ -91,5 +87,9 @@ public class AddTraitCommand implements server.campaign.commands.Command {
         server.campaign.CampaignMain.cm.doSendModMail("NOTE",
               Username + " has added trait " + traitName + " with skills " + skillList + ".");
     }
+
+    public int getExecutionLevel() {return accessLevel;}
+
+    public void setExecutionLevel(int i) {accessLevel = i;}
 
 }

@@ -44,48 +44,6 @@ public class UnitCosts {
         }
     }
 
-    public void addMaxCost(int weight, int type, double amount) {
-        java.util.Vector<Double> maxCost = getMaxCost(weight);
-        maxCost.removeElementAt(type);
-        maxCost.add(type, amount);
-        setMaxCost(weight, maxCost);
-    }
-
-    public void addMinCost(int weight, int type, double amount) {
-        java.util.Vector<Double> minCost = getMinCost(weight);
-        minCost.removeElementAt(type);
-        minCost.add(type, amount);
-        setMinCost(weight, minCost);
-    }
-
-    public java.util.Vector<Double> getMaxCost(int weight) {
-        return maxCostUnitList.get(weight);
-    }
-
-    public java.util.Vector<Double> getMinCost(int weight) {
-        return minCostUnitList.get(weight);
-    }
-
-    public Double getMaxCostValue(int weight, int type) {
-        java.util.Vector<Double> maxCostVector = maxCostUnitList.get(weight);
-        return maxCostVector.get(type);
-    }
-
-    public Double getMinCostValue(int weight, int type) {
-        java.util.Vector<Double> minCostVector = minCostUnitList.get(weight);
-        return minCostVector.get(type);
-    }
-
-    public void setMaxCost(int weight, java.util.Vector<Double> cost) {
-        maxCostUnitList.removeElementAt(weight);
-        maxCostUnitList.add(weight, cost);
-    }
-
-    public void setMinCost(int weight, java.util.Vector<Double> cost) {
-        minCostUnitList.removeElementAt(weight);
-        minCostUnitList.add(weight, cost);
-    }
-
     public void loadUnitCosts() {
 
         String entityName = "";
@@ -207,6 +165,48 @@ public class UnitCosts {
             MWLogger.errLog("Error with Infantry.zip file " + entityName);
             MWLogger.errLog(ex);
         }
+    }
+
+    public Double getMaxCostValue(int weight, int type) {
+        java.util.Vector<Double> maxCostVector = maxCostUnitList.get(weight);
+        return maxCostVector.get(type);
+    }
+
+    public Double getMinCostValue(int weight, int type) {
+        java.util.Vector<Double> minCostVector = minCostUnitList.get(weight);
+        return minCostVector.get(type);
+    }
+
+    public void addMaxCost(int weight, int type, double amount) {
+        java.util.Vector<Double> maxCost = getMaxCost(weight);
+        maxCost.removeElementAt(type);
+        maxCost.add(type, amount);
+        setMaxCost(weight, maxCost);
+    }
+
+    public void addMinCost(int weight, int type, double amount) {
+        java.util.Vector<Double> minCost = getMinCost(weight);
+        minCost.removeElementAt(type);
+        minCost.add(type, amount);
+        setMinCost(weight, minCost);
+    }
+
+    public java.util.Vector<Double> getMaxCost(int weight) {
+        return maxCostUnitList.get(weight);
+    }
+
+    public void setMaxCost(int weight, java.util.Vector<Double> cost) {
+        maxCostUnitList.removeElementAt(weight);
+        maxCostUnitList.add(weight, cost);
+    }
+
+    public java.util.Vector<Double> getMinCost(int weight) {
+        return minCostUnitList.get(weight);
+    }
+
+    public void setMinCost(int weight, java.util.Vector<Double> cost) {
+        minCostUnitList.removeElementAt(weight);
+        minCostUnitList.add(weight, cost);
     }
 
     public String displayUnitCostsLists() {

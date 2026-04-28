@@ -27,10 +27,6 @@ public class ViewPlayerPersonalPilotQueueCommand implements server.campaign.comm
     int accessLevel = server.MWChatServer.auth.IAuthenticator.MODERATOR;
     String syntax = "Player name";
 
-    public int getExecutionLevel() {return accessLevel;}
-
-    public void setExecutionLevel(int i) {accessLevel = i;}
-
     public String getSyntax() {return syntax;}
 
     public void process(java.util.StringTokenizer command, String Username) {
@@ -221,4 +217,8 @@ public class ViewPlayerPersonalPilotQueueCommand implements server.campaign.comm
         server.campaign.CampaignMain.cm.doSendModMail("NOTE",
               Username + " has viewed " + p.getName() + "'s pilot queue");
     }
+
+    public int getExecutionLevel() {return accessLevel;}
+
+    public void setExecutionLevel(int i) {accessLevel = i;}
 }

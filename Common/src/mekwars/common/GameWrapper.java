@@ -19,22 +19,6 @@ public class GameWrapper implements GameInterface {
         this.game = game;
     }
 
-    public Enumeration<Entity> getDevastatedEntities() {
-        return game.getDevastatedEntities();
-    }
-
-    public Enumeration<Entity> getGraveyardEntities() {
-        return game.getGraveyardEntities();
-    }
-
-    public Iterator<Entity> getEntities() {
-        return game.getEntitiesVector().iterator();
-    }
-
-    public Enumeration<Entity> getRetreatedEntities() {
-        return game.getRetreatedEntities();
-    }
-
     public List<String> getWinners() {
         ArrayList<String> result = new ArrayList<>();
 
@@ -57,6 +41,22 @@ public class GameWrapper implements GameInterface {
 
     public boolean hasWinner() {
         return game.getVictoryTeam() != Player.TEAM_NONE;
+    }
+
+    public Enumeration<Entity> getDevastatedEntities() {
+        return game.getDevastatedEntities();
+    }
+
+    public Enumeration<Entity> getGraveyardEntities() {
+        return game.getGraveyardEntities();
+    }
+
+    public Iterator<Entity> getEntities() {
+        return game.getEntitiesVector().iterator();
+    }
+
+    public Enumeration<Entity> getRetreatedEntities() {
+        return game.getRetreatedEntities();
     }
 
 

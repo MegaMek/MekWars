@@ -39,18 +39,15 @@ import mekwars.common.util.SpringLayoutHelper;
 
 public final class BannedAmmoDialog implements ActionListener {
 
+    private final static String okayCommand = "Add";
+    private final static String cancelCommand = "Close";
     //store the client backlink for other things to use
     private final IClient client;
     private final House house;
-
-    private final static String okayCommand = "Add";
-    private final static String cancelCommand = "Close";
-
-    private String windowName = "Server Banned Ammo Editor";
     private final ArrayList<JCheckBox> cBoxArrayList = new ArrayList<>();
-
     //STOCK DIALOG AND PANE
     private final JDialog dialog;
+    private String windowName = "Server Banned Ammo Editor";
 
     public BannedAmmoDialog(IClient client, House house) {
 
@@ -122,6 +119,35 @@ public final class BannedAmmoDialog implements ActionListener {
 
     }
 
+    public void loadBannedAmmo() {
+        client.loadBannedAmmo();
+    }
+
+    public boolean checkAmmoBan(String ammo) {
+
+        if (house == null) {
+            try {
+
+                //I did this for some silly reason. and now I'm paying for it.
+                //But I don't want to change all the code to long,string hashes
+                //Generics would make it easy but I'm lazy and it works. --Torren.
+                String munition = client.getData().getMunitionsByName().get(ammo).toString();
+                return client.getData().getServerBannedAmmo().containsKey(munition);
+            } catch (Exception ex) {
+                MWLogger.errLog("Unable to find ammo " + ammo);
+                return false;
+            }
+        }
+        try {
+            String munition = client.getData().getMunitionsByName().get(ammo).toString();
+            return house.getBannedAmmo().containsKey(munition);
+        } catch (Exception ex) {
+            MWLogger.errLog("Unable to find ammo " + ammo);
+            return false;
+        }
+
+    }
+
     public void actionPerformed(ActionEvent e) {
         String command = e.getActionCommand();
         Hashtable<String, AmmoType.Munitions> munitionTypes = client.getData().getMunitionsByName();
@@ -165,35 +191,6 @@ public final class BannedAmmoDialog implements ActionListener {
             dialog.dispose();
         } else if (command.equals(cancelCommand)) {
             dialog.dispose();
-        }
-
-    }
-
-    public void loadBannedAmmo() {
-        client.loadBannedAmmo();
-    }
-
-    public boolean checkAmmoBan(String ammo) {
-
-        if (house == null) {
-            try {
-
-                //I did this for some silly reason. and now I'm paying for it.
-                //But I don't want to change all the code to long,string hashes
-                //Generics would make it easy but I'm lazy and it works. --Torren.
-                String munition = client.getData().getMunitionsByName().get(ammo).toString();
-                return client.getData().getServerBannedAmmo().containsKey(munition);
-            } catch (Exception ex) {
-                MWLogger.errLog("Unable to find ammo " + ammo);
-                return false;
-            }
-        }
-        try {
-            String munition = client.getData().getMunitionsByName().get(ammo).toString();
-            return house.getBannedAmmo().containsKey(munition);
-        } catch (Exception ex) {
-            MWLogger.errLog("Unable to find ammo " + ammo);
-            return false;
         }
 
     }

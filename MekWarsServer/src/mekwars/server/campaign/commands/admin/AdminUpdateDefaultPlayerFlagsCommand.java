@@ -8,10 +8,6 @@ public class AdminUpdateDefaultPlayerFlagsCommand implements server.campaign.com
     int accessLevel = server.MWChatServer.auth.IAuthenticator.ADMIN;
     String syntax = "[D or S]#flagname[#value if action is Set]...";
 
-    public int getExecutionLevel() {return accessLevel;}
-
-    public void setExecutionLevel(int i) {accessLevel = i;}
-
     public String getSyntax() {return syntax;}
 
     public void process(java.util.StringTokenizer command, String Username) {
@@ -71,6 +67,10 @@ public class AdminUpdateDefaultPlayerFlagsCommand implements server.campaign.com
         }
         server.campaign.CampaignMain.cm.getDefaultPlayerFlags().save();
     }
+
+    public int getExecutionLevel() {return accessLevel;}
+
+    public void setExecutionLevel(int i) {accessLevel = i;}
 
 }
 

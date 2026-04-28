@@ -43,6 +43,118 @@ public class AutoArmy {
         if (Guns) {theUnits = this.generateGuns(i);} else {theUnits = this.generateAuto(i);}
     }//end constructor
 
+    //METHODS
+    private java.util.Vector<mekwars.server.campaign.SUnit> generateGuns(int i) {
+
+        //BV to auto against
+        int bvOfSArmy = i;
+
+        //holder
+        java.util.Vector<mekwars.server.campaign.SUnit> autoUnits = new java.util.Vector<mekwars.server.campaign.SUnit>(
+              1,
+              1);
+
+        //no auto army if 0'ed BV
+        if (i <= 0) {return autoUnits;}
+
+        //max of each type
+        int maxLight = CampaignMain.cm.getIntegerConfig("MaxLightGunEmplacement");
+        int maxMedium = CampaignMain.cm.getIntegerConfig("MaxMediumGunEmplacement");
+        int maxHeavy = CampaignMain.cm.getIntegerConfig("MaxHeavyGunEmplacement");
+        int maxAssault = CampaignMain.cm.getIntegerConfig("MaxAssaultGunEmplacement");
+        int maxNumOfEachWeight[] = { maxLight, maxMedium, maxHeavy, maxAssault };
+
+        //amount of BV to get each type.
+        int bvForLight = CampaignMain.cm.getIntegerConfig("BVForLightGunEmplacement");
+        int bvForMedium = CampaignMain.cm.getIntegerConfig("BVForMediumGunEmplacement");
+        int bvForHeavy = CampaignMain.cm.getIntegerConfig("BVForHeavyGunEmplacement");
+        int bvForAssault = CampaignMain.cm.getIntegerConfig("BVForAssaultGunEmplacement");
+        int bvForEachWeight[] = { bvForLight, bvForMedium, bvForHeavy, bvForAssault };
+
+        //server's preferred load order.
+        boolean topToBottom = CampaignMain.cm.getBooleanConfig("HeaviestGunEmplacementFirst");
+
+        //get the PLAYER's preferences.
+        /*
+         * No capacity to read/set this yet. Coming soon. The player preference IS
+         * handled properly in the rest of the code. Just need a way to get it here.
+         */
+
+
+        /*
+         * Now that we have all the configs, give the players artillery. Look first at his preferences.
+         * If he prefers artillery of a certain weight class, grant it first. After that, work in the
+         * preferred server order (top to bottom, or bottom to top).
+         */
+        int loadOrder[] = { Unit.LIGHT, Unit.MEDIUM, Unit.HEAVY, Unit.ASSAULT };
+
+        /*
+         * GET THE PLAYER PREF HERE AND MAKE IT ELEMENT 0. For now, we'll assume that the
+         * player preference is for a Medium piece (Sniper in default files).
+         */
+        loadOrder[0] = Unit.MEDIUM;
+        int remainingWeights[] = { Unit.MEDIUM, Unit.HEAVY, Unit.ASSAULT };
+
+        //determine the remaining weight classes, lightest to heaviest.
+        int preferedWeight = loadOrder[0];
+        int currentWeight = Unit.LIGHT;
+        for (int j = 0; j < 3; j++) {//hardbind the 3 to stop NPE.
+
+            //if the curr weight is pref'ed move up one class.
+            if (currentWeight == preferedWeight) {currentWeight++;}
+
+            //then set the order.
+            remainingWeights[j] = currentWeight;
+
+            //then increment the weight so its one higher for the next loop
+            currentWeight++;
+
+        }//end for(remaining weights)
+
+
+        //now we know what remains. add it to loadorder in the proper direction.
+        if (topToBottom) {
+            loadOrder[1] = remainingWeights[2];
+            loadOrder[2] = remainingWeights[1];
+            loadOrder[3] = remainingWeights[0];
+        } else {//its bottom to top
+            loadOrder[1] = remainingWeights[0];
+            loadOrder[2] = remainingWeights[1];
+            loadOrder[3] = remainingWeights[2];
+        }
+
+        /*
+         * Now that we know the the complete load order, start making units.
+         * Run the length of the loadOrder array ...
+         */
+        for (int k = 0; k < 4; k++) {
+
+            //piece count. tracks how many of currWeight tubes have been added.
+            int numOfCurrWeight = 0;
+
+            //load the weighclass at the loadorder location
+            int currWeight = loadOrder[k];
+
+            //get the BV and ceilings for this weightclass
+            int bvForCurrWeight = bvForEachWeight[currWeight];
+            int maxNumOfCurrWeight = maxNumOfEachWeight[currWeight];
+
+            //while we have enough BV to get another tube, and havent hit the server cap, continue ...
+            while (bvOfSArmy >= bvForCurrWeight && numOfCurrWeight < maxNumOfCurrWeight) {
+
+                //make the unit and add it to the units vector
+                autoUnits.addAll(this.makeNewGunEmplacement(currWeight));
+
+                //decrement the BV and boost the counter
+                bvOfSArmy = bvOfSArmy - bvForCurrWeight;
+                numOfCurrWeight = numOfCurrWeight + 1;
+            }//end while(enough BV and uncapped.)
+
+        }//end for(all weights in load order)
+
+        //units constructed. return autounits.
+        return autoUnits;
+    }//end generateAuto()
 
     //METHODS
     private java.util.Vector<mekwars.server.campaign.SUnit> generateAuto(int i) {
@@ -157,190 +269,11 @@ public class AutoArmy {
         return autoUnits;
     }//end generateAuto()
 
-
     /**
      * Method which takes a weightclass and loads a new SUnit
      *
      * @param i weightclass to make
-     * @return an artillery unit
-     */
-    public SUnit makeNewArtilleryPiece(int i) {
-
-        //file to get
-        String filename = "";
-        int size = 0;
-        int position = 0;
-
-        if (Unit.LIGHT == i) {
-            java.util.StringTokenizer list = new java.util.StringTokenizer(CampaignMain.cm.getConfig(
-                  "LightArtilleryFile"), "$");
-
-            size = list.countTokens();
-
-            if (size == 1) {filename = list.nextToken();} else {
-                position = CampaignMain.cm.getRandomNumber(size) + 1;
-
-                for (int count = 0; count < position; count++) {filename = list.nextToken();}
-            }
-        } else if (Unit.MEDIUM == i) {
-            java.util.StringTokenizer list = new java.util.StringTokenizer(CampaignMain.cm.getConfig(
-                  "MediumArtilleryFile"), "$");
-
-            size = list.countTokens();
-
-            if (size == 1) {filename = list.nextToken();} else {
-                position = CampaignMain.cm.getRandomNumber(size) + 1;
-
-                for (int count = 0; count < position; count++) {filename = list.nextToken();}
-            }
-        } else if (Unit.HEAVY == i) {
-            java.util.StringTokenizer list = new java.util.StringTokenizer(CampaignMain.cm.getConfig(
-                  "HeavyArtilleryFile"), "$");
-
-            size = list.countTokens();
-
-            if (size == 1) {filename = list.nextToken();} else {
-                position = CampaignMain.cm.getRandomNumber(size) + 1;
-
-                for (int count = 0; count < position; count++) {filename = list.nextToken();}
-            }
-        } else {
-            java.util.StringTokenizer list = new java.util.StringTokenizer(CampaignMain.cm.getConfig(
-                  "AssaultArtilleryFile"), "$");
-
-            size = list.countTokens();
-
-            if (size == 1) {filename = list.nextToken();} else {
-                position = CampaignMain.cm.getRandomNumber(size) + 1;
-
-                for (int count = 0; count < position; count++) {filename = list.nextToken();}
-            }
-        }//assume assault
-
-        //now build the unit.
-        SUnit cm = new SUnit("autoassigned unit", filename, i);
-        return cm;
-    }//end makenewartillerypiece
-
-
-    //METHODS
-    private java.util.Vector<mekwars.server.campaign.SUnit> generateGuns(int i) {
-
-        //BV to auto against
-        int bvOfSArmy = i;
-
-        //holder
-        java.util.Vector<mekwars.server.campaign.SUnit> autoUnits = new java.util.Vector<mekwars.server.campaign.SUnit>(
-              1,
-              1);
-
-        //no auto army if 0'ed BV
-        if (i <= 0) {return autoUnits;}
-
-        //max of each type
-        int maxLight = CampaignMain.cm.getIntegerConfig("MaxLightGunEmplacement");
-        int maxMedium = CampaignMain.cm.getIntegerConfig("MaxMediumGunEmplacement");
-        int maxHeavy = CampaignMain.cm.getIntegerConfig("MaxHeavyGunEmplacement");
-        int maxAssault = CampaignMain.cm.getIntegerConfig("MaxAssaultGunEmplacement");
-        int maxNumOfEachWeight[] = { maxLight, maxMedium, maxHeavy, maxAssault };
-
-        //amount of BV to get each type.
-        int bvForLight = CampaignMain.cm.getIntegerConfig("BVForLightGunEmplacement");
-        int bvForMedium = CampaignMain.cm.getIntegerConfig("BVForMediumGunEmplacement");
-        int bvForHeavy = CampaignMain.cm.getIntegerConfig("BVForHeavyGunEmplacement");
-        int bvForAssault = CampaignMain.cm.getIntegerConfig("BVForAssaultGunEmplacement");
-        int bvForEachWeight[] = { bvForLight, bvForMedium, bvForHeavy, bvForAssault };
-
-        //server's preferred load order.
-        boolean topToBottom = CampaignMain.cm.getBooleanConfig("HeaviestGunEmplacementFirst");
-
-        //get the PLAYER's preferences.
-        /*
-         * No capacity to read/set this yet. Coming soon. The player preference IS
-         * handled properly in the rest of the code. Just need a way to get it here.
-         */
-
-
-        /*
-         * Now that we have all the configs, give the players artillery. Look first at his preferences.
-         * If he prefers artillery of a certain weight class, grant it first. After that, work in the
-         * preferred server order (top to bottom, or bottom to top).
-         */
-        int loadOrder[] = { Unit.LIGHT, Unit.MEDIUM, Unit.HEAVY, Unit.ASSAULT };
-
-        /*
-         * GET THE PLAYER PREF HERE AND MAKE IT ELEMENT 0. For now, we'll assume that the
-         * player preference is for a Medium piece (Sniper in default files).
-         */
-        loadOrder[0] = Unit.MEDIUM;
-        int remainingWeights[] = { Unit.MEDIUM, Unit.HEAVY, Unit.ASSAULT };
-
-        //determine the remaining weight classes, lightest to heaviest.
-        int preferedWeight = loadOrder[0];
-        int currentWeight = Unit.LIGHT;
-        for (int j = 0; j < 3; j++) {//hardbind the 3 to stop NPE.
-
-            //if the curr weight is pref'ed move up one class.
-            if (currentWeight == preferedWeight) {currentWeight++;}
-
-            //then set the order.
-            remainingWeights[j] = currentWeight;
-
-            //then increment the weight so its one higher for the next loop
-            currentWeight++;
-
-        }//end for(remaining weights)
-
-
-        //now we know what remains. add it to loadorder in the proper direction.
-        if (topToBottom) {
-            loadOrder[1] = remainingWeights[2];
-            loadOrder[2] = remainingWeights[1];
-            loadOrder[3] = remainingWeights[0];
-        } else {//its bottom to top
-            loadOrder[1] = remainingWeights[0];
-            loadOrder[2] = remainingWeights[1];
-            loadOrder[3] = remainingWeights[2];
-        }
-
-        /*
-         * Now that we know the the complete load order, start making units.
-         * Run the length of the loadOrder array ...
-         */
-        for (int k = 0; k < 4; k++) {
-
-            //piece count. tracks how many of currWeight tubes have been added.
-            int numOfCurrWeight = 0;
-
-            //load the weighclass at the loadorder location
-            int currWeight = loadOrder[k];
-
-            //get the BV and ceilings for this weightclass
-            int bvForCurrWeight = bvForEachWeight[currWeight];
-            int maxNumOfCurrWeight = maxNumOfEachWeight[currWeight];
-
-            //while we have enough BV to get another tube, and havent hit the server cap, continue ...
-            while (bvOfSArmy >= bvForCurrWeight && numOfCurrWeight < maxNumOfCurrWeight) {
-
-                //make the unit and add it to the units vector
-                autoUnits.addAll(this.makeNewGunEmplacement(currWeight));
-
-                //decrement the BV and boost the counter
-                bvOfSArmy = bvOfSArmy - bvForCurrWeight;
-                numOfCurrWeight = numOfCurrWeight + 1;
-            }//end while(enough BV and uncapped.)
-
-        }//end for(all weights in load order)
-
-        //units constructed. return autounits.
-        return autoUnits;
-    }//end generateAuto()
-
-
-    /**
-     * Method which takes a weightclass and loads a new SUnit
      *
-     * @param i weightclass to make
      * @return an artillery unit
      */
     public java.util.Vector<mekwars.server.campaign.SUnit> makeNewGunEmplacement(int i) {
@@ -406,11 +339,69 @@ public class AutoArmy {
     }//end makenewgunemplacement
 
     /**
-     * Method which returns the autogenerated units (as a vector).
+     * Method which takes a weightclass and loads a new SUnit
+     *
+     * @param i weightclass to make
+     *
+     * @return an artillery unit
      */
-    public java.util.Vector<mekwars.server.campaign.SUnit> getUnits() {
-        return theUnits;
-    }
+    public SUnit makeNewArtilleryPiece(int i) {
+
+        //file to get
+        String filename = "";
+        int size = 0;
+        int position = 0;
+
+        if (Unit.LIGHT == i) {
+            java.util.StringTokenizer list = new java.util.StringTokenizer(CampaignMain.cm.getConfig(
+                  "LightArtilleryFile"), "$");
+
+            size = list.countTokens();
+
+            if (size == 1) {filename = list.nextToken();} else {
+                position = CampaignMain.cm.getRandomNumber(size) + 1;
+
+                for (int count = 0; count < position; count++) {filename = list.nextToken();}
+            }
+        } else if (Unit.MEDIUM == i) {
+            java.util.StringTokenizer list = new java.util.StringTokenizer(CampaignMain.cm.getConfig(
+                  "MediumArtilleryFile"), "$");
+
+            size = list.countTokens();
+
+            if (size == 1) {filename = list.nextToken();} else {
+                position = CampaignMain.cm.getRandomNumber(size) + 1;
+
+                for (int count = 0; count < position; count++) {filename = list.nextToken();}
+            }
+        } else if (Unit.HEAVY == i) {
+            java.util.StringTokenizer list = new java.util.StringTokenizer(CampaignMain.cm.getConfig(
+                  "HeavyArtilleryFile"), "$");
+
+            size = list.countTokens();
+
+            if (size == 1) {filename = list.nextToken();} else {
+                position = CampaignMain.cm.getRandomNumber(size) + 1;
+
+                for (int count = 0; count < position; count++) {filename = list.nextToken();}
+            }
+        } else {
+            java.util.StringTokenizer list = new java.util.StringTokenizer(CampaignMain.cm.getConfig(
+                  "AssaultArtilleryFile"), "$");
+
+            size = list.countTokens();
+
+            if (size == 1) {filename = list.nextToken();} else {
+                position = CampaignMain.cm.getRandomNumber(size) + 1;
+
+                for (int count = 0; count < position; count++) {filename = list.nextToken();}
+            }
+        }//assume assault
+
+        //now build the unit.
+        SUnit cm = new SUnit("autoassigned unit", filename, i);
+        return cm;
+    }//end makenewartillerypiece
 
     /**
      * @return aggregate BV of the units
@@ -423,8 +414,15 @@ public class AutoArmy {
     }
 
     /**
+     * Method which returns the autogenerated units (as a vector).
+     */
+    public java.util.Vector<mekwars.server.campaign.SUnit> getUnits() {
+        return theUnits;
+    }
+
+    /**
      * Method which strings the AutoArmy for transport to a client.
-     *
+     * <p>
      * Feed it the vector to use as a paramater.
      */
     public String toString(String delimiter) {

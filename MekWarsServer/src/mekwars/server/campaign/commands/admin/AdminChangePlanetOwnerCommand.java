@@ -21,10 +21,6 @@ public class AdminChangePlanetOwnerCommand implements server.campaign.commands.C
     int accessLevel = server.MWChatServer.auth.IAuthenticator.ADMIN;
     String syntax = "planet#newfaction";
 
-    public int getExecutionLevel() {return accessLevel;}
-
-    public void setExecutionLevel(int i) {accessLevel = i;}
-
     public String getSyntax() {return syntax;}
 
     public void process(java.util.StringTokenizer command, String Username) {
@@ -80,4 +76,8 @@ public class AdminChangePlanetOwnerCommand implements server.campaign.commands.C
               Username + " gave ownership of " + p.getName() + " to " + h.getName() + ".");
 
     }
+
+    public int getExecutionLevel() {return accessLevel;}
+
+    public void setExecutionLevel(int i) {accessLevel = i;}
 }

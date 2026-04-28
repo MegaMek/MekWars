@@ -30,11 +30,6 @@ public class RemoveAndAddNoPlayHelper implements server.campaign.commands.Comman
 
     //process the command.
     int accessLevel = 0;
-
-    public int getExecutionLevel() {return accessLevel;}
-
-    public void setExecutionLevel(int i) {accessLevel = i;}
-
     String syntax = "";
 
     public String getSyntax() {return syntax;}
@@ -67,5 +62,9 @@ public class RemoveAndAddNoPlayHelper implements server.campaign.commands.Comman
         noplayCommand.process(addTokenizer, Username);
 
     }//end process()
+
+    public int getExecutionLevel() {return accessLevel;}
+
+    public void setExecutionLevel(int i) {accessLevel = i;}
 
 }//end HireAndRequestNewHelper

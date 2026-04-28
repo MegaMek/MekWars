@@ -44,21 +44,6 @@ import mekwars.common.util.SpringLayoutHelper;
 
 public final class PlanetEditorDialog implements ActionListener, KeyListener {
 
-    // store the client backlink for other things to use
-    private final IClient client;
-    private String planetName;
-    private int advanceTerrainId = -1;
-    private Planet selectedPlanet;
-    private final ArrayList<String> removedOwners = new ArrayList<>();
-    private final HashMap<String, Integer> ownersMap = new HashMap<>();
-    private final ArrayList<String> removedTerrain = new ArrayList<>();
-    private ArrayList<String> removedAdvTerrain = new ArrayList<>();
-    private final HashMap<String, Continent> continentMap = new HashMap<>();
-    private HashMap<String, Integer> terrainMap = new HashMap<>();
-    private HashMap<String, Integer> advTerrainMap = new HashMap<>();
-    private final ArrayList<String> removedFactory = new ArrayList<>();
-    private final HashMap<String, String> factoryMap = new HashMap<>();
-
     private final static String okayCommand = "Save";
     private final static String cancelCommand = "Cancel";
     private final static String refreshCommand = "Refresh";
@@ -75,7 +60,14 @@ public final class PlanetEditorDialog implements ActionListener, KeyListener {
     private final static String planetAdvancedTerrainsCombo = "PlanetAdvancedTerrainsCombo";
     private final static String planetOwnersListCommand = "PlanetOwnersList";
     private final static String windowName = "Vertigo's Planet Editor";
-
+    // store the client backlink for other things to use
+    private final IClient client;
+    private final ArrayList<String> removedOwners = new ArrayList<>();
+    private final HashMap<String, Integer> ownersMap = new HashMap<>();
+    private final ArrayList<String> removedTerrain = new ArrayList<>();
+    private final HashMap<String, Continent> continentMap = new HashMap<>();
+    private final ArrayList<String> removedFactory = new ArrayList<>();
+    private final HashMap<String, String> factoryMap = new HashMap<>();
     // BUTTONS
     private final JButton okayButton = new JButton("Save");
     private final JButton cancelButton = new JButton("Close");
@@ -89,7 +81,6 @@ public final class PlanetEditorDialog implements ActionListener, KeyListener {
     private final JButton addTerrain = new JButton("Add Terrain");
     private final JButton removeTerrain = new JButton("Remove Terrain");
     private final JButton removeAllTerrains = new JButton("Remove All");
-
     // TEXT FIELDS
     // tab names
     private final JTextField DisplayNameText = new JTextField(5);
@@ -139,11 +130,17 @@ public final class PlanetEditorDialog implements ActionListener, KeyListener {
     private final JTextField currentTerrainPercent = new JTextField(5);
     private final JTextField minPlanetOwnerShip = new JTextField(5);
     private final JTextField planetConquerPoints = new JTextField(5);
-
     private final JCheckBox isStaticMapCB = new JCheckBox();
     private final JCheckBox isHomeWorldCB = new JCheckBox();
     private final JCheckBox isConquerable = new JCheckBox();
-
+    ArrayList<String> terrainList = new ArrayList<String>();
+    ArrayList<String> advTerrainList = new ArrayList<String>();
+    private String planetName;
+    private int advanceTerrainId = -1;
+    private Planet selectedPlanet;
+    private ArrayList<String> removedAdvTerrain = new ArrayList<>();
+    private HashMap<String, Integer> terrainMap = new HashMap<>();
+    private HashMap<String, Integer> advTerrainMap = new HashMap<>();
     // STOCK DIALOUG AND PANE
     private JDialog dialog;
     private JOptionPane pane;
@@ -162,13 +159,9 @@ public final class PlanetEditorDialog implements ActionListener, KeyListener {
                                       "Proto & BA", "Mek & Proto & BA", "Vee & Proto & BA", "Mek & Vee & Proto & BA",
                                       "Inf & Proto & BA", "Mek & Inf & Proto & BA", "Vee & Inf & Proto & BA",
                                       "Mek & Vee & Inf & Proto & BA", "VTOL", "Aero" };
-
+    private final JComboBox<String> factoryType = new JComboBox<>(factoryTypes);
     private String[] factorySizes = { "Light", "Medium", "Heavy", "Assault" };
-
-    ArrayList<String> terrainList = new ArrayList<String>();
-    ArrayList<String> advTerrainList = new ArrayList<String>();
-
-
+    private final JComboBox<String> factorySize = new JComboBox<>(factorySizes);
     // Combo boxes
     private JComboBox planetNames;
     private JComboBox houseNames;
@@ -178,8 +171,6 @@ public final class PlanetEditorDialog implements ActionListener, KeyListener {
     private JComboBox planetAdvancedTerrains;
     private JComboBox allTerrains;
     private JComboBox allAdvancedTerrains;
-    private final JComboBox<String> factorySize = new JComboBox<>(factorySizes);
-    private final JComboBox<String> factoryType = new JComboBox<>(factoryTypes);
     private JComboBox factoryOwners;
     private JComboBox ownerNames;
     private JComboBox<Atmosphere> atmosphere = new JComboBox<>(Atmosphere.values());
@@ -419,6 +410,496 @@ public final class PlanetEditorDialog implements ActionListener, KeyListener {
         }
     }
 
+    /*    private void updateAdvancedTerrain() {
+            AdvancedTerrain aTerrain = advancedTerrainMap.get(planetTerrains.getSelectedItem().toString());
+            if (aTerrain == null) {
+                aTerrain = new AdvancedTerrain();
+                advancedTerrainMap.put(planetTerrains.getSelectedItem().toString(), aTerrain);
+            }
+
+            aTerrain.setDisplayName(DisplayNameText.getText());
+            aTerrain.setStaticMapName(StaticMapNameText.getText());
+            aTerrain.setXSize(Integer.parseInt(XSizeText.getText()));
+            aTerrain.setYSize(Integer.parseInt(YSizeText.getText()));
+            aTerrain.setXBoardSize(Integer.parseInt(XBoardSizeText.getText()));
+            aTerrain.setYBoardSize(Integer.parseInt(YBoardSizeText.getText()));
+            aTerrain.setLowTemp(Integer.parseInt(LowTempText.getText()));
+            aTerrain.setHighTemp(Integer.parseInt(HighTempText.getText()));
+            aTerrain.setGravity(Double.parseDouble(GravityText.getText()));
+            aTerrain.setNightChance(Integer.parseInt(NightChanceText.getText()));
+            aTerrain.setNightTempMod(Integer.parseInt(NightTempModText.getText()));
+            aTerrain.setHeavySnowfallChance(Integer.parseInt(heavySnowfallChanceText.getText()));
+            aTerrain.setLightRainfallChance(Integer.parseInt(lightRainfallChanceText.getText()));
+            aTerrain.setHeavyRainfallChance(Integer.parseInt(heavyRainfallChanceText.getText()));
+            aTerrain.setModerateWindsChance(Integer.parseInt(moderateWindsChanceText.getText()));
+            aTerrain.setStaticMap(isStaticMapCB.isSelected());
+            aTerrain.setDuskChance(Integer.parseInt(DuskChanceText.getText()));
+            aTerrain.setMoonLessNightChance(Integer.parseInt(MoonLessNightChanceText.getText()));
+            aTerrain.setPitchBlackNightChance(Integer.parseInt(PitchBlackNightChanceText.getText()));
+            aTerrain.setModerateRainFallChance(Integer.parseInt(moderateRainfallChanceText.getText()));
+            aTerrain.setDownPourChance(Integer.parseInt(downPourChanceText.getText()));
+            aTerrain.setLightSnowfallChance(Integer.parseInt(lightSnowfallChanceText.getText()));
+            aTerrain.setModerateSnowFallChance(Integer.parseInt(moderateSnowfallChanceText.getText()));
+            aTerrain.setSleetChance(Integer.parseInt(sleetChanceText.getText()));
+            aTerrain.setIceStormChance(Integer.parseInt(iceStormChanceText.getText()));
+            aTerrain.setLightHailChance(Integer.parseInt(lightHailChanceText.getText()));
+            aTerrain.setHeavyHailChance(Integer.parseInt(heavyHailChanceText.getText()));
+            aTerrain.setLightFogChance(Integer.parseInt(lightFogChanceText.getText()));
+            aTerrain.setHeavyfogChance(Integer.parseInt(heavyFogChanceText.getText()));
+            aTerrain.setEMIChance(Integer.parseInt(emiChanceText.getText()));
+            aTerrain.setLightWindChance(Integer.parseInt(lightWindsChanceText.getText()));
+            aTerrain.setStrongWindsChance(Integer.parseInt(strongWindsChanceText.getText()));
+            aTerrain.setStormWindsChance(Integer.parseInt(stormWindsChanceText.getText()));
+            aTerrain.setTornadoF13WindChance(Integer.parseInt(tornadoF13WindsChanceText.getText()));
+            aTerrain.setTornadoF4WindsChance(Integer.parseInt(tornadoF4ChanceText.getText()));
+
+            aTerrain.setAtmosphere(atmosphere.getSelectedIndex());
+
+        }
+    */
+    private boolean saveAllData() {
+
+        try {
+            removeOwners();
+            removeFactories();
+            removeTerrain();
+
+            saveOwners();
+            saveFactories();
+            saveTerrain();
+            saveAdvancedTerrain();
+            saveMisc();
+
+        } catch (Exception ex) {
+            MWLogger.errLog(ex);
+            return false;
+        }
+
+        return true;
+    }
+
+    private void refreshAllPanels() {
+
+        loadPlanetNamesData();
+        loadPlanetInfoData();
+        loadPlanetProductionData();
+        loadPlanetTerrainData();
+
+        advanceTerrainId = getTerrainId();
+
+        //loadAdvancedTerrainsData();
+    }
+
+    private void saveTerrain() {
+        for (String terrainIndex : continentMap.keySet()) {
+            Continent terrain = continentMap.get(terrainIndex);
+            //TODO fix this to send the advancedterrain as well
+            client.sendChat(IClient.CAMPAIGN_PREFIX +
+                                  "c AdminCreateTerrain#" +
+                                  planetName +
+                                  "#" +
+                                  terrain.getEnvironment().getName() +
+                                  "#" +
+                                  terrain.getAdvancedTerrain().getName() +
+                                  "#" +
+                                  terrain.getSize());
+        }
+
+    }
+
+    private void removeOwners() {
+
+        if (removedOwners.isEmpty()) {
+            return;
+        }
+
+        for (String owner : removedOwners) {
+            client.sendChat(IClient.CAMPAIGN_PREFIX + "c AdminRemovePlanetOwnership#" + planetName + "#" + owner);
+        }
+    }
+
+    private void removeFactories() {
+        client.sendChat(IClient.CAMPAIGN_PREFIX + "c AdminRemoveAllFactories#" + planetName);
+    }
+
+    private void removeTerrain() {
+        client.sendChat(IClient.CAMPAIGN_PREFIX + "c AdminRemoveAllTerrain#" + planetName);
+    }
+
+    private void saveOwners() {
+
+        for (String owner : ownersMap.keySet()) {
+            client.sendChat(IClient.CAMPAIGN_PREFIX +
+                                  "c AdminUpdatePlanetOwnership#" +
+                                  planetName +
+                                  "#" +
+                                  owner +
+                                  "#" +
+                                  ownersMap.get(owner));
+        }
+    }
+
+    private void saveFactories() {
+        for (String factory : factoryMap.keySet()) {
+            String FactoryData = factoryMap.get(factory);
+            client.sendChat(IClient.CAMPAIGN_PREFIX + "c AdminCreateFactory#" + planetName + "#" + FactoryData);
+        }
+
+    }
+
+    private void saveAdvancedTerrain() {
+
+    }
+
+    private void saveMisc() {
+
+        if (!planetXPosition.getText().equals(Double.toString(selectedPlanet.getPosition().getX())) ||
+                  !planetYPosition.getText().equals(Double.toString(selectedPlanet.getPosition().getY()))) {
+            client.sendChat(IClient.CAMPAIGN_PREFIX +
+                                  "c AdminMovePlanet#" +
+                                  planetName +
+                                  "#" +
+                                  planetXPosition.getText() +
+                                  "#" +
+                                  planetYPosition.getText());
+        }
+        if (!houseNames.getSelectedItem().toString().equals(selectedPlanet.getOriginalOwner())) {
+            client.sendChat(IClient.CAMPAIGN_PREFIX +
+                                  "c AdminSetPlanetOriginalOwner#" +
+                                  planetName +
+                                  "#" +
+                                  houseNames.getSelectedItem().toString());
+        }
+        if (!minPlanetOwnerShip.getText().equals(Integer.toString(selectedPlanet.getMinPlanetOwnerShip()))) {
+            client.sendChat(IClient.CAMPAIGN_PREFIX +
+                                  "c SetPlanetMinOwnerShip#" +
+                                  planetName +
+                                  "#" +
+                                  minPlanetOwnerShip.getText());
+        }
+        if (!planetConquerPoints.getText().equals(Integer.toString(selectedPlanet.getConquestPoints()))) {
+            client.sendChat(IClient.CAMPAIGN_PREFIX +
+                                  "c SetPlanetConquerPoints#" +
+                                  planetName +
+                                  "#" +
+                                  planetConquerPoints.getText());
+        }
+        if (isHomeWorldCB.isSelected() != selectedPlanet.isHomeWorld()) {
+            client.sendChat(IClient.CAMPAIGN_PREFIX +
+                                  "c Adminsethomeworld#" +
+                                  planetName +
+                                  "#" +
+                                  isHomeWorldCB.isSelected());
+        }
+
+        if (isConquerable.isSelected() != selectedPlanet.isConquerable()) {
+            client.sendChat(IClient.CAMPAIGN_PREFIX +
+                                  "c SetPlanetConquer#" +
+                                  planetName +
+                                  "#" +
+                                  isConquerable.isSelected());
+        }
+
+        if (!planetBays.getText().equals(Integer.toString(selectedPlanet.getBaysProvided()))) {
+            client.sendChat(IClient.CAMPAIGN_PREFIX +
+                                  "c Setplanetwarehouse#" +
+                                  planetName +
+                                  "#" +
+                                  planetBays.getText());
+        }
+        if (!planetComps.getText().equals(Integer.toString(selectedPlanet.getCompProduction()))) {
+            client.sendChat(IClient.CAMPAIGN_PREFIX +
+                                  "c Setplanetcompproduction#" +
+                                  planetName +
+                                  "#" +
+                                  planetComps.getText());
+        }
+
+    }
+
+/*    private void loadAdvancedTerrainsData() {
+
+        if (planetTerrains.getItemCount() < 1) {
+            aTerrain = null;
+        } else {
+            aTerrain = advancedTerrainMap.get(planetTerrains.getSelectedItem().toString());
+        }
+
+        if (aTerrain != null) {
+            DisplayNameText.setText(aTerrain.getDisplayName());
+            StaticMapNameText.setText(aTerrain.getStaticMapName());
+            XSizeText.setText(Integer.toString(aTerrain.getXSize()));
+            YSizeText.setText(Integer.toString(aTerrain.getYSize()));
+            XBoardSizeText.setText(Integer.toString(aTerrain.getXBoardSize()));
+            YBoardSizeText.setText(Integer.toString(aTerrain.getYBoardSize()));
+            LowTempText.setText(Integer.toString(aTerrain.getLowTemp()));
+            HighTempText.setText(Integer.toString(aTerrain.getHighTemp()));
+            GravityText.setText(Double.toString(aTerrain.getGravity()));
+            NightChanceText.setText(Integer.toString(aTerrain.getNightChance()));
+            NightTempModText.setText(Integer.toString(aTerrain.getNightTempMod()));
+            heavyRainfallChanceText.setText(Integer.toString(aTerrain.getHeavyRainfallChance()));
+            heavySnowfallChanceText.setText(Integer.toString(aTerrain.getHeavySnowfallChance()));
+            lightRainfallChanceText.setText(Integer.toString(aTerrain.getLightRainfallChance()));
+            moderateWindsChanceText.setText(Integer.toString(aTerrain.getModerateWindsChance()));
+            DuskChanceText.setText(Integer.toString(aTerrain.getDuskChance()));
+            MoonLessNightChanceText.setText(Integer.toString(aTerrain.getMoonLessNightChance()));
+            PitchBlackNightChanceText.setText(Integer.toString(aTerrain.getPitchBlackNightChance()));
+            moderateRainfallChanceText.setText(Integer.toString(aTerrain.getModerateRainFallChance()));
+            downPourChanceText.setText(Integer.toString(aTerrain.getDownPourChance()));
+            lightSnowfallChanceText.setText(Integer.toString(aTerrain.getLightSnowfallChance()));
+            moderateSnowfallChanceText.setText(Integer.toString(aTerrain.getModerateSnowFallChance()));
+            sleetChanceText.setText(Integer.toString(aTerrain.getSleetChance()));
+            iceStormChanceText.setText(Integer.toString(aTerrain.getIceStormChance()));
+            lightHailChanceText.setText(Integer.toString(aTerrain.getLightHailChance()));
+            heavyHailChanceText.setText(Integer.toString(aTerrain.getHeavyHailChance()));
+            lightFogChanceText.setText(Integer.toString(aTerrain.getLightFogChance()));
+            heavyFogChanceText.setText(Integer.toString(aTerrain.getHeavyFogChance()));
+            emiChanceText.setText(Integer.toString(aTerrain.getEMIChance()));
+            lightWindsChanceText.setText(Integer.toString(aTerrain.getLightWindsChance()));
+            strongWindsChanceText.setText(Integer.toString(aTerrain.getStrongWindsChance()));
+            stormWindsChanceText.setText(Integer.toString(aTerrain.getStormWindsChance()));
+            tornadoF13WindsChanceText.setText(Integer.toString(aTerrain.getTornadoF13WindsChance()));
+            tornadoF4ChanceText.setText(Integer.toString(aTerrain.getTornadoF4WindsChance()));
+
+            atmosphere.removeActionListener(this);
+            atmosphere.setSelectedIndex(aTerrain.getAtmosphere());
+            atmosphere.addActionListener(this);
+
+            isStaticMapCB.removeActionListener(this);
+            isStaticMapCB.setSelected(aTerrain.isStaticMap());
+            isStaticMapCB.addActionListener(this);
+        } else {
+            DisplayNameText.setText("");
+            StaticMapNameText.setText("");
+            XSizeText.setText("");
+            YSizeText.setText("");
+            XBoardSizeText.setText("");
+            YBoardSizeText.setText("");
+
+            LowTempText.setText(Integer.toString(selectedPlanet.getTemp().width));
+            HighTempText.setText(Double.toString(selectedPlanet.getTemp().height));
+            GravityText.setText(Double.toString(selectedPlanet.getGravity()));
+            NightChanceText.setText(Integer.toString(selectedPlanet.getNightChance()));
+            NightTempModText.setText(Integer.toString(selectedPlanet.getNightTempMod()));
+            heavyRainfallChanceText.setText("");
+            heavySnowfallChanceText.setText("");
+            lightRainfallChanceText.setText("");
+            moderateWindsChanceText.setText("");
+            heavyRainfallChanceText.setText("");
+            heavySnowfallChanceText.setText("");
+            lightRainfallChanceText.setText("");
+            moderateWindsChanceText.setText("");
+            DuskChanceText.setText("");
+            MoonLessNightChanceText.setText("");
+            PitchBlackNightChanceText.setText("");
+            moderateRainfallChanceText.setText("");
+            downPourChanceText.setText("");
+            lightSnowfallChanceText.setText("");
+            moderateSnowfallChanceText.setText("");
+            sleetChanceText.setText("");
+            iceStormChanceText.setText("");
+            lightHailChanceText.setText("");
+            heavyHailChanceText.setText("");
+            lightFogChanceText.setText("");
+            heavyFogChanceText.setText("");
+            emiChanceText.setText("");
+            lightWindsChanceText.setText("");
+            strongWindsChanceText.setText("");
+            stormWindsChanceText.setText("");
+            tornadoF13WindsChanceText.setText("");
+            tornadoF4ChanceText.setText("");
+
+            // isStaticMapCB.setSelected(false);
+        }
+    }
+*/
+
+    private void loadPlanetNamesData() {
+
+        // setup the a list of names to feed into a list
+        planetNames.removeActionListener(this);
+        planetNames.removeAllItems();
+        ArrayList<String> pNames = new ArrayList<String>();// tree to alpha sort
+        for (Planet planet : client.getData().getAllPlanets()) {
+            pNames.add(planet.getName());
+        }
+
+        planetNames.removeAllItems();
+        addAllItems(planetNames, pNames);
+
+        planetNames.setSelectedItem(planetName);
+        planetNames.addActionListener(this);
+        planetNames.setActionCommand(refreshCommand);
+
+    }
+
+    private void loadPlanetInfoData() {
+
+        planetXPosition.setText(Double.toString(selectedPlanet.getPosition().getX()));
+        planetXPosition.setToolTipText("Planets X Coord");
+
+        planetYPosition.setText(Double.toString(selectedPlanet.getPosition().getY()));
+        planetYPosition.setToolTipText("Planets Y Coord");
+
+        isHomeWorldCB.setText("HomeWorld");
+        isHomeWorldCB.setSelected(selectedPlanet.isHomeWorld());
+
+        isConquerable.setText("Conquerable");
+        isConquerable.setSelected(selectedPlanet.isConquerable());
+
+        ownersMap.clear();
+
+        houseNames.removeAllItems();
+        populateHouseNames(houseNames);
+        houseNames.setSelectedItem(selectedPlanet.getOriginalOwner());
+
+        ArrayList<String> houseList = new ArrayList<String>();
+
+        for (House house : selectedPlanet.getInfluence().getHouses()) {
+            if (removedOwners.contains(house.getName())) {
+                continue;
+            }
+            houseList.add(house.getName());
+            ownersMap.put(house.getName(), selectedPlanet.getInfluence().getInfluence(house.getId()));
+        }
+
+        planetOwnersList.removeActionListener(this);
+        planetOwnersList.removeAllItems();
+        addAllItems(planetOwnersList, houseList);
+        planetOwnersList.addActionListener(this);
+        planetOwnersList.setActionCommand(planetOwnersListCommand);
+        planetOwnersList.setSelectedIndex(0);
+
+        minPlanetOwnerShip.setText(Integer.toString(selectedPlanet.getMinPlanetOwnerShip()));
+        planetConquerPoints.setText(Integer.toString(selectedPlanet.getConquestPoints()));
+
+        ownerNames.removeAllItems();
+        populateHouseNames(ownerNames);
+
+    }
+
+    private void loadPlanetProductionData() {
+
+        planetBays.setText(Integer.toString(selectedPlanet.getBaysProvided()));
+        planetBays.setName("BaysProvided");
+        planetBays.addActionListener(this);
+
+        planetComps.setText(Integer.toString(selectedPlanet.getCompProduction()));
+        planetComps.setName("CompProduction");
+        planetComps.addActionListener(this);
+
+        factoryMap.clear();
+        ArrayList<String> factoryList = new ArrayList<String>();
+        for (UnitFactory factory : selectedPlanet.getUnitFactories()) {
+            if (removedFactory.contains(factory.getName())) {
+                continue;
+            }
+            factoryList.add(factory.getSize() +
+                                  " " +
+                                  factory.getFullTypeString().trim() +
+                                  " " +
+                                  factory.getName() +
+                                  " " +
+                                  factory.getFounder() +
+                                  " " +
+                                  factory.getBuildTableFolder() +
+                                  " " +
+                                  factory.getAccessLevel());
+            factoryMap.put(factory.getName(),
+                  factory.getName() +
+                        "#" +
+                        factory.getSize() +
+                        "#" +
+                        factory.getFounder() +
+                        "#" +
+                        factory.getType() +
+                        "#" +
+                        factory.getBuildTableFolder() +
+                        "#" +
+                        factory.getAccessLevel());
+        }
+
+        planetFactories.removeAllItems();
+        addAllItems(planetFactories, factoryList);
+    }
+
+    private void loadPlanetTerrainData() {
+
+
+        continentMap.clear();
+        ArrayList<String> terrainList = new ArrayList<String>();
+        Iterator<Continent> terrains = selectedPlanet.getEnvironments().iterator();
+
+        planetTerrains.removeActionListener(this);
+        planetTerrains.removeAllItems();
+        int indexer = 0;
+        while (terrains.hasNext()) {
+            Continent terrain = terrains.next();
+            String displayName = terrain.getDropBoxName();
+            planetTerrains.addItem(displayName);
+            continentMap.put(displayName, terrain);
+        }
+
+
+        allTerrains.removeAllItems();
+        terrainList = new ArrayList<String>();
+        for (Terrain terrain : client.getData().getAllTerrains()) {
+            terrainList.add(terrain.getName());
+        }
+
+        addAllItems(allTerrains, terrainList);
+
+        planetAdvancedTerrains.removeActionListener(this);
+        planetAdvancedTerrains.removeAllItems();
+        addAllItems(planetAdvancedTerrains, advTerrainList);
+        planetAdvancedTerrains.addActionListener(this);
+        planetAdvancedTerrains.setActionCommand(planetAdvancedTerrainsCombo);
+        if (planetAdvancedTerrains.getItemCount() > 0) {
+            planetAdvancedTerrains.setSelectedIndex(0);
+        }
+
+        allAdvancedTerrains.removeAllItems();
+        advTerrainList = new ArrayList<String>();
+        Collection<AdvancedTerrain> AdvTerrainCollection = client.getData().getAllAdvancedTerrains();
+        Object[] at = AdvTerrainCollection.toArray();
+        for (int x = 0; x < at.length; x++) {
+            if ((AdvancedTerrain) at[x] != null) {
+                AdvancedTerrain AdvTer = (AdvancedTerrain) at[x];
+                advTerrainList.add(AdvTer.getName());
+            }
+        }
+    }
+
+    private int getTerrainId() {
+        try {
+            int indexToComboBox = planetTerrains.getSelectedIndex();
+            String terrainToLookup = terrainList.get(indexToComboBox);
+
+            return client.getData().getTerrainByName(terrainToLookup).getId();
+        } catch (Exception ex) {
+            return -1;
+        }
+    }
+
+    private void addAllItems(JComboBox combo, ArrayList<String> list) {
+
+        // combo.addItem("None");
+        for (String name : list) {
+            combo.addItem(name);
+        }
+    }
+
+    private void populateHouseNames(JComboBox combo) {
+
+        ArrayList<String> factionNames = new ArrayList<String>();// tree to alpha
+        // sort
+        for (House house : client.getData().getAllHouses()) {
+            factionNames.add(house.getName());
+        }
+
+        addAllItems(combo, factionNames);
+    }
+
     private void loadAllPanels() {
 
         selectedPlanet = client.getData().getPlanetByName(planetName);
@@ -432,18 +913,6 @@ public final class PlanetEditorDialog implements ActionListener, KeyListener {
         loadAdvancedTerrains();
 
         masterPanel.repaint();
-    }
-
-    private void refreshAllPanels() {
-
-        loadPlanetNamesData();
-        loadPlanetInfoData();
-        loadPlanetProductionData();
-        loadPlanetTerrainData();
-
-        advanceTerrainId = getTerrainId();
-
-        //loadAdvancedTerrainsData();
     }
 
     private void loadPlanetInfo() {
@@ -791,287 +1260,7 @@ public final class PlanetEditorDialog implements ActionListener, KeyListener {
         this.planets.setBorder(BorderFactory.createLineBorder(Color.black));
     }
 
-    private void loadPlanetInfoData() {
-
-        planetXPosition.setText(Double.toString(selectedPlanet.getPosition().getX()));
-        planetXPosition.setToolTipText("Planets X Coord");
-
-        planetYPosition.setText(Double.toString(selectedPlanet.getPosition().getY()));
-        planetYPosition.setToolTipText("Planets Y Coord");
-
-        isHomeWorldCB.setText("HomeWorld");
-        isHomeWorldCB.setSelected(selectedPlanet.isHomeWorld());
-
-        isConquerable.setText("Conquerable");
-        isConquerable.setSelected(selectedPlanet.isConquerable());
-
-        ownersMap.clear();
-
-        houseNames.removeAllItems();
-        populateHouseNames(houseNames);
-        houseNames.setSelectedItem(selectedPlanet.getOriginalOwner());
-
-        ArrayList<String> houseList = new ArrayList<String>();
-
-        for (House house : selectedPlanet.getInfluence().getHouses()) {
-            if (removedOwners.contains(house.getName())) {
-                continue;
-            }
-            houseList.add(house.getName());
-            ownersMap.put(house.getName(), selectedPlanet.getInfluence().getInfluence(house.getId()));
-        }
-
-        planetOwnersList.removeActionListener(this);
-        planetOwnersList.removeAllItems();
-        addAllItems(planetOwnersList, houseList);
-        planetOwnersList.addActionListener(this);
-        planetOwnersList.setActionCommand(planetOwnersListCommand);
-        planetOwnersList.setSelectedIndex(0);
-
-        minPlanetOwnerShip.setText(Integer.toString(selectedPlanet.getMinPlanetOwnerShip()));
-        planetConquerPoints.setText(Integer.toString(selectedPlanet.getConquestPoints()));
-
-        ownerNames.removeAllItems();
-        populateHouseNames(ownerNames);
-
-    }
-
-    private void loadPlanetProductionData() {
-
-        planetBays.setText(Integer.toString(selectedPlanet.getBaysProvided()));
-        planetBays.setName("BaysProvided");
-        planetBays.addActionListener(this);
-
-        planetComps.setText(Integer.toString(selectedPlanet.getCompProduction()));
-        planetComps.setName("CompProduction");
-        planetComps.addActionListener(this);
-
-        factoryMap.clear();
-        ArrayList<String> factoryList = new ArrayList<String>();
-        for (UnitFactory factory : selectedPlanet.getUnitFactories()) {
-            if (removedFactory.contains(factory.getName())) {
-                continue;
-            }
-            factoryList.add(factory.getSize() +
-                                  " " +
-                                  factory.getFullTypeString().trim() +
-                                  " " +
-                                  factory.getName() +
-                                  " " +
-                                  factory.getFounder() +
-                                  " " +
-                                  factory.getBuildTableFolder() +
-                                  " " +
-                                  factory.getAccessLevel());
-            factoryMap.put(factory.getName(),
-                  factory.getName() +
-                        "#" +
-                        factory.getSize() +
-                        "#" +
-                        factory.getFounder() +
-                        "#" +
-                        factory.getType() +
-                        "#" +
-                        factory.getBuildTableFolder() +
-                        "#" +
-                        factory.getAccessLevel());
-        }
-
-        planetFactories.removeAllItems();
-        addAllItems(planetFactories, factoryList);
-    }
-
-    private void loadPlanetTerrainData() {
-
-
-        continentMap.clear();
-        ArrayList<String> terrainList = new ArrayList<String>();
-        Iterator<Continent> terrains = selectedPlanet.getEnvironments().iterator();
-
-        planetTerrains.removeActionListener(this);
-        planetTerrains.removeAllItems();
-        int indexer = 0;
-        while (terrains.hasNext()) {
-            Continent terrain = terrains.next();
-            String displayName = terrain.getDropBoxName();
-            planetTerrains.addItem(displayName);
-            continentMap.put(displayName, terrain);
-        }
-
-
-        allTerrains.removeAllItems();
-        terrainList = new ArrayList<String>();
-        for (Terrain terrain : client.getData().getAllTerrains()) {
-            terrainList.add(terrain.getName());
-        }
-
-        addAllItems(allTerrains, terrainList);
-
-        planetAdvancedTerrains.removeActionListener(this);
-        planetAdvancedTerrains.removeAllItems();
-        addAllItems(planetAdvancedTerrains, advTerrainList);
-        planetAdvancedTerrains.addActionListener(this);
-        planetAdvancedTerrains.setActionCommand(planetAdvancedTerrainsCombo);
-        if (planetAdvancedTerrains.getItemCount() > 0) {
-            planetAdvancedTerrains.setSelectedIndex(0);
-        }
-
-        allAdvancedTerrains.removeAllItems();
-        advTerrainList = new ArrayList<String>();
-        Collection<AdvancedTerrain> AdvTerrainCollection = client.getData().getAllAdvancedTerrains();
-        Object[] at = AdvTerrainCollection.toArray();
-        for (int x = 0; x < at.length; x++) {
-            if ((AdvancedTerrain) at[x] != null) {
-                AdvancedTerrain AdvTer = (AdvancedTerrain) at[x];
-                advTerrainList.add(AdvTer.getName());
-            }
-        }
-    }
-
-/*    private void loadAdvancedTerrainsData() {
-
-        if (planetTerrains.getItemCount() < 1) {
-            aTerrain = null;
-        } else {
-            aTerrain = advancedTerrainMap.get(planetTerrains.getSelectedItem().toString());
-        }
-
-        if (aTerrain != null) {
-            DisplayNameText.setText(aTerrain.getDisplayName());
-            StaticMapNameText.setText(aTerrain.getStaticMapName());
-            XSizeText.setText(Integer.toString(aTerrain.getXSize()));
-            YSizeText.setText(Integer.toString(aTerrain.getYSize()));
-            XBoardSizeText.setText(Integer.toString(aTerrain.getXBoardSize()));
-            YBoardSizeText.setText(Integer.toString(aTerrain.getYBoardSize()));
-            LowTempText.setText(Integer.toString(aTerrain.getLowTemp()));
-            HighTempText.setText(Integer.toString(aTerrain.getHighTemp()));
-            GravityText.setText(Double.toString(aTerrain.getGravity()));
-            NightChanceText.setText(Integer.toString(aTerrain.getNightChance()));
-            NightTempModText.setText(Integer.toString(aTerrain.getNightTempMod()));
-            heavyRainfallChanceText.setText(Integer.toString(aTerrain.getHeavyRainfallChance()));
-            heavySnowfallChanceText.setText(Integer.toString(aTerrain.getHeavySnowfallChance()));
-            lightRainfallChanceText.setText(Integer.toString(aTerrain.getLightRainfallChance()));
-            moderateWindsChanceText.setText(Integer.toString(aTerrain.getModerateWindsChance()));
-            DuskChanceText.setText(Integer.toString(aTerrain.getDuskChance()));
-            MoonLessNightChanceText.setText(Integer.toString(aTerrain.getMoonLessNightChance()));
-            PitchBlackNightChanceText.setText(Integer.toString(aTerrain.getPitchBlackNightChance()));
-            moderateRainfallChanceText.setText(Integer.toString(aTerrain.getModerateRainFallChance()));
-            downPourChanceText.setText(Integer.toString(aTerrain.getDownPourChance()));
-            lightSnowfallChanceText.setText(Integer.toString(aTerrain.getLightSnowfallChance()));
-            moderateSnowfallChanceText.setText(Integer.toString(aTerrain.getModerateSnowFallChance()));
-            sleetChanceText.setText(Integer.toString(aTerrain.getSleetChance()));
-            iceStormChanceText.setText(Integer.toString(aTerrain.getIceStormChance()));
-            lightHailChanceText.setText(Integer.toString(aTerrain.getLightHailChance()));
-            heavyHailChanceText.setText(Integer.toString(aTerrain.getHeavyHailChance()));
-            lightFogChanceText.setText(Integer.toString(aTerrain.getLightFogChance()));
-            heavyFogChanceText.setText(Integer.toString(aTerrain.getHeavyFogChance()));
-            emiChanceText.setText(Integer.toString(aTerrain.getEMIChance()));
-            lightWindsChanceText.setText(Integer.toString(aTerrain.getLightWindsChance()));
-            strongWindsChanceText.setText(Integer.toString(aTerrain.getStrongWindsChance()));
-            stormWindsChanceText.setText(Integer.toString(aTerrain.getStormWindsChance()));
-            tornadoF13WindsChanceText.setText(Integer.toString(aTerrain.getTornadoF13WindsChance()));
-            tornadoF4ChanceText.setText(Integer.toString(aTerrain.getTornadoF4WindsChance()));
-
-            atmosphere.removeActionListener(this);
-            atmosphere.setSelectedIndex(aTerrain.getAtmosphere());
-            atmosphere.addActionListener(this);
-
-            isStaticMapCB.removeActionListener(this);
-            isStaticMapCB.setSelected(aTerrain.isStaticMap());
-            isStaticMapCB.addActionListener(this);
-        } else {
-            DisplayNameText.setText("");
-            StaticMapNameText.setText("");
-            XSizeText.setText("");
-            YSizeText.setText("");
-            XBoardSizeText.setText("");
-            YBoardSizeText.setText("");
-
-            LowTempText.setText(Integer.toString(selectedPlanet.getTemp().width));
-            HighTempText.setText(Double.toString(selectedPlanet.getTemp().height));
-            GravityText.setText(Double.toString(selectedPlanet.getGravity()));
-            NightChanceText.setText(Integer.toString(selectedPlanet.getNightChance()));
-            NightTempModText.setText(Integer.toString(selectedPlanet.getNightTempMod()));
-            heavyRainfallChanceText.setText("");
-            heavySnowfallChanceText.setText("");
-            lightRainfallChanceText.setText("");
-            moderateWindsChanceText.setText("");
-            heavyRainfallChanceText.setText("");
-            heavySnowfallChanceText.setText("");
-            lightRainfallChanceText.setText("");
-            moderateWindsChanceText.setText("");
-            DuskChanceText.setText("");
-            MoonLessNightChanceText.setText("");
-            PitchBlackNightChanceText.setText("");
-            moderateRainfallChanceText.setText("");
-            downPourChanceText.setText("");
-            lightSnowfallChanceText.setText("");
-            moderateSnowfallChanceText.setText("");
-            sleetChanceText.setText("");
-            iceStormChanceText.setText("");
-            lightHailChanceText.setText("");
-            heavyHailChanceText.setText("");
-            lightFogChanceText.setText("");
-            heavyFogChanceText.setText("");
-            emiChanceText.setText("");
-            lightWindsChanceText.setText("");
-            strongWindsChanceText.setText("");
-            stormWindsChanceText.setText("");
-            tornadoF13WindsChanceText.setText("");
-            tornadoF4ChanceText.setText("");
-
-            // isStaticMapCB.setSelected(false);
-        }
-    }
-*/
-
-    private void loadPlanetNamesData() {
-
-        // setup the a list of names to feed into a list
-        planetNames.removeActionListener(this);
-        planetNames.removeAllItems();
-        ArrayList<String> pNames = new ArrayList<String>();// tree to alpha sort
-        for (Planet planet : client.getData().getAllPlanets()) {
-            pNames.add(planet.getName());
-        }
-
-        planetNames.removeAllItems();
-        addAllItems(planetNames, pNames);
-
-        planetNames.setSelectedItem(planetName);
-        planetNames.addActionListener(this);
-        planetNames.setActionCommand(refreshCommand);
-
-    }
-
-    private void populateHouseNames(JComboBox combo) {
-
-        ArrayList<String> factionNames = new ArrayList<String>();// tree to alpha
-        // sort
-        for (House house : client.getData().getAllHouses()) {
-            factionNames.add(house.getName());
-        }
-
-        addAllItems(combo, factionNames);
-    }
-
-    private void addAllItems(JComboBox combo, ArrayList<String> list) {
-
-        // combo.addItem("None");
-        for (String name : list) {
-            combo.addItem(name);
-        }
-    }
-
-    private int getTerrainId() {
-        try {
-            int indexToComboBox = planetTerrains.getSelectedIndex();
-            String terrainToLookup = terrainList.get(indexToComboBox);
-
-            return client.getData().getTerrainByName(terrainToLookup).getId();
-        } catch (Exception ex) {
-            return -1;
-        }
+    public void keyTyped(KeyEvent e) {
     }
 
     public void keyPressed(KeyEvent arg0) {
@@ -1090,204 +1279,6 @@ public final class PlanetEditorDialog implements ActionListener, KeyListener {
                 MWLogger.errLog(ex);
             }
         }
-    }
-
-    public void keyTyped(KeyEvent e) {
-    }
-
-    /*    private void updateAdvancedTerrain() {
-            AdvancedTerrain aTerrain = advancedTerrainMap.get(planetTerrains.getSelectedItem().toString());
-            if (aTerrain == null) {
-                aTerrain = new AdvancedTerrain();
-                advancedTerrainMap.put(planetTerrains.getSelectedItem().toString(), aTerrain);
-            }
-
-            aTerrain.setDisplayName(DisplayNameText.getText());
-            aTerrain.setStaticMapName(StaticMapNameText.getText());
-            aTerrain.setXSize(Integer.parseInt(XSizeText.getText()));
-            aTerrain.setYSize(Integer.parseInt(YSizeText.getText()));
-            aTerrain.setXBoardSize(Integer.parseInt(XBoardSizeText.getText()));
-            aTerrain.setYBoardSize(Integer.parseInt(YBoardSizeText.getText()));
-            aTerrain.setLowTemp(Integer.parseInt(LowTempText.getText()));
-            aTerrain.setHighTemp(Integer.parseInt(HighTempText.getText()));
-            aTerrain.setGravity(Double.parseDouble(GravityText.getText()));
-            aTerrain.setNightChance(Integer.parseInt(NightChanceText.getText()));
-            aTerrain.setNightTempMod(Integer.parseInt(NightTempModText.getText()));
-            aTerrain.setHeavySnowfallChance(Integer.parseInt(heavySnowfallChanceText.getText()));
-            aTerrain.setLightRainfallChance(Integer.parseInt(lightRainfallChanceText.getText()));
-            aTerrain.setHeavyRainfallChance(Integer.parseInt(heavyRainfallChanceText.getText()));
-            aTerrain.setModerateWindsChance(Integer.parseInt(moderateWindsChanceText.getText()));
-            aTerrain.setStaticMap(isStaticMapCB.isSelected());
-            aTerrain.setDuskChance(Integer.parseInt(DuskChanceText.getText()));
-            aTerrain.setMoonLessNightChance(Integer.parseInt(MoonLessNightChanceText.getText()));
-            aTerrain.setPitchBlackNightChance(Integer.parseInt(PitchBlackNightChanceText.getText()));
-            aTerrain.setModerateRainFallChance(Integer.parseInt(moderateRainfallChanceText.getText()));
-            aTerrain.setDownPourChance(Integer.parseInt(downPourChanceText.getText()));
-            aTerrain.setLightSnowfallChance(Integer.parseInt(lightSnowfallChanceText.getText()));
-            aTerrain.setModerateSnowFallChance(Integer.parseInt(moderateSnowfallChanceText.getText()));
-            aTerrain.setSleetChance(Integer.parseInt(sleetChanceText.getText()));
-            aTerrain.setIceStormChance(Integer.parseInt(iceStormChanceText.getText()));
-            aTerrain.setLightHailChance(Integer.parseInt(lightHailChanceText.getText()));
-            aTerrain.setHeavyHailChance(Integer.parseInt(heavyHailChanceText.getText()));
-            aTerrain.setLightFogChance(Integer.parseInt(lightFogChanceText.getText()));
-            aTerrain.setHeavyfogChance(Integer.parseInt(heavyFogChanceText.getText()));
-            aTerrain.setEMIChance(Integer.parseInt(emiChanceText.getText()));
-            aTerrain.setLightWindChance(Integer.parseInt(lightWindsChanceText.getText()));
-            aTerrain.setStrongWindsChance(Integer.parseInt(strongWindsChanceText.getText()));
-            aTerrain.setStormWindsChance(Integer.parseInt(stormWindsChanceText.getText()));
-            aTerrain.setTornadoF13WindChance(Integer.parseInt(tornadoF13WindsChanceText.getText()));
-            aTerrain.setTornadoF4WindsChance(Integer.parseInt(tornadoF4ChanceText.getText()));
-
-            aTerrain.setAtmosphere(atmosphere.getSelectedIndex());
-
-        }
-    */
-    private boolean saveAllData() {
-
-        try {
-            removeOwners();
-            removeFactories();
-            removeTerrain();
-
-            saveOwners();
-            saveFactories();
-            saveTerrain();
-            saveAdvancedTerrain();
-            saveMisc();
-
-        } catch (Exception ex) {
-            MWLogger.errLog(ex);
-            return false;
-        }
-
-        return true;
-    }
-
-    private void removeOwners() {
-
-        if (removedOwners.isEmpty()) {
-            return;
-        }
-
-        for (String owner : removedOwners) {
-            client.sendChat(IClient.CAMPAIGN_PREFIX + "c AdminRemovePlanetOwnership#" + planetName + "#" + owner);
-        }
-    }
-
-    private void removeFactories() {
-        client.sendChat(IClient.CAMPAIGN_PREFIX + "c AdminRemoveAllFactories#" + planetName);
-    }
-
-    private void removeTerrain() {
-        client.sendChat(IClient.CAMPAIGN_PREFIX + "c AdminRemoveAllTerrain#" + planetName);
-    }
-
-    private void saveOwners() {
-
-        for (String owner : ownersMap.keySet()) {
-            client.sendChat(IClient.CAMPAIGN_PREFIX +
-                                  "c AdminUpdatePlanetOwnership#" +
-                                  planetName +
-                                  "#" +
-                                  owner +
-                                  "#" +
-                                  ownersMap.get(owner));
-        }
-    }
-
-    private void saveFactories() {
-        for (String factory : factoryMap.keySet()) {
-            String FactoryData = factoryMap.get(factory);
-            client.sendChat(IClient.CAMPAIGN_PREFIX + "c AdminCreateFactory#" + planetName + "#" + FactoryData);
-        }
-
-    }
-
-    private void saveTerrain() {
-        for (String terrainIndex : continentMap.keySet()) {
-            Continent terrain = continentMap.get(terrainIndex);
-            //TODO fix this to send the advancedterrain as well
-            client.sendChat(IClient.CAMPAIGN_PREFIX +
-                                  "c AdminCreateTerrain#" +
-                                  planetName +
-                                  "#" +
-                                  terrain.getEnvironment().getName() +
-                                  "#" +
-                                  terrain.getAdvancedTerrain().getName() +
-                                  "#" +
-                                  terrain.getSize());
-        }
-
-    }
-
-    private void saveAdvancedTerrain() {
-
-    }
-
-    private void saveMisc() {
-
-        if (!planetXPosition.getText().equals(Double.toString(selectedPlanet.getPosition().getX())) ||
-                  !planetYPosition.getText().equals(Double.toString(selectedPlanet.getPosition().getY()))) {
-            client.sendChat(IClient.CAMPAIGN_PREFIX +
-                                  "c AdminMovePlanet#" +
-                                  planetName +
-                                  "#" +
-                                  planetXPosition.getText() +
-                                  "#" +
-                                  planetYPosition.getText());
-        }
-        if (!houseNames.getSelectedItem().toString().equals(selectedPlanet.getOriginalOwner())) {
-            client.sendChat(IClient.CAMPAIGN_PREFIX +
-                                  "c AdminSetPlanetOriginalOwner#" +
-                                  planetName +
-                                  "#" +
-                                  houseNames.getSelectedItem().toString());
-        }
-        if (!minPlanetOwnerShip.getText().equals(Integer.toString(selectedPlanet.getMinPlanetOwnerShip()))) {
-            client.sendChat(IClient.CAMPAIGN_PREFIX +
-                                  "c SetPlanetMinOwnerShip#" +
-                                  planetName +
-                                  "#" +
-                                  minPlanetOwnerShip.getText());
-        }
-        if (!planetConquerPoints.getText().equals(Integer.toString(selectedPlanet.getConquestPoints()))) {
-            client.sendChat(IClient.CAMPAIGN_PREFIX +
-                                  "c SetPlanetConquerPoints#" +
-                                  planetName +
-                                  "#" +
-                                  planetConquerPoints.getText());
-        }
-        if (isHomeWorldCB.isSelected() != selectedPlanet.isHomeWorld()) {
-            client.sendChat(IClient.CAMPAIGN_PREFIX +
-                                  "c Adminsethomeworld#" +
-                                  planetName +
-                                  "#" +
-                                  isHomeWorldCB.isSelected());
-        }
-
-        if (isConquerable.isSelected() != selectedPlanet.isConquerable()) {
-            client.sendChat(IClient.CAMPAIGN_PREFIX +
-                                  "c SetPlanetConquer#" +
-                                  planetName +
-                                  "#" +
-                                  isConquerable.isSelected());
-        }
-
-        if (!planetBays.getText().equals(Integer.toString(selectedPlanet.getBaysProvided()))) {
-            client.sendChat(IClient.CAMPAIGN_PREFIX +
-                                  "c Setplanetwarehouse#" +
-                                  planetName +
-                                  "#" +
-                                  planetBays.getText());
-        }
-        if (!planetComps.getText().equals(Integer.toString(selectedPlanet.getCompProduction()))) {
-            client.sendChat(IClient.CAMPAIGN_PREFIX +
-                                  "c Setplanetcompproduction#" +
-                                  planetName +
-                                  "#" +
-                                  planetComps.getText());
-        }
-
     }
 
     public int getAdvanceTerrainId() {

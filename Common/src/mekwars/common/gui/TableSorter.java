@@ -22,17 +22,16 @@ import mekwars.common.util.MWLogger;
 
 public class TableSorter extends TableMap implements Serializable {
 
-    /**
-     *
-     */
-    @Serial
-    private static final long serialVersionUID = -3715062654870040447L;
     // VARIABLES
     public final static int SORTER_BM = 0;
     public final static int SORTER_BUILD_TABLES = 1;
     public final static int SORTER_BATTLES = 2;
     public final static int SORTER_BM_PARTS = 3;
-
+    /**
+     *
+     */
+    @Serial
+    private static final long serialVersionUID = -3715062654870040447L;
     int[] indexes;
     java.util.Vector<Integer> sortingColumns = new java.util.Vector<>(1, 1);
     boolean ascending = true;
@@ -58,6 +57,104 @@ public class TableSorter extends TableMap implements Serializable {
     public void setModel(javax.swing.table.TableModel model) {
         super.setModel(model);
         reallocateIndexes();
+    }
+
+    @Override
+    public Object getValueAt(int aRow, int aColumn) {
+        if (aRow < 0 || aRow >= indexes.length) {return null;}
+        checkModel();
+        return model.getValueAt(indexes[aRow], aColumn);
+    }
+
+    public void checkModel() {
+        if (indexes.length != model.getRowCount()) {
+            MWLogger.errLog("Sorter not informed of a change in model.");
+        }
+    }
+
+    @Override
+    public void setValueAt(Object aValue, int aRow, int aColumn) {
+        checkModel();
+        model.setValueAt(aValue, indexes[aRow], aColumn);
+    }
+
+    @Override
+    public void tableChanged(javax.swing.event.TableModelEvent e) {
+        // MMClient.mwClientLog.clientOutputLog("Sorter: tableChanged");
+        reallocateIndexes();
+
+        super.tableChanged(e);
+
+        // table changed, now restore the old sort
+        this.restorePreviousSort();
+    }
+
+    public void loadSavedSortPreferences(int mode) {
+
+        if (mode == mekwars.common.gui.TableSorter.SORTER_BM) {
+            currentColumn = Integer.parseInt(client.getConfigParam("BMSORTCOLUMN"));
+            currentOrder = Boolean.parseBoolean(client.getConfigParam("BMSORTORDER"));
+        } else if (mode == mekwars.common.gui.TableSorter.SORTER_BUILD_TABLES) {
+            currentColumn = Integer.parseInt(client.getConfigParam("TABLEBROWSERSORTCOLUMN"));
+            currentOrder = Boolean.parseBoolean(client.getConfigParam("TABLEBROWSERSORTORDER"));
+        } else if (sortMode == SORTER_BATTLES) {
+            currentColumn = Integer.parseInt(client.getConfigParam("BATTLESSORTCOLUMN"));
+            currentOrder = Boolean.parseBoolean(client.getConfigParam("BATTLESSORTORDER"));
+        } else if (mode == mekwars.common.gui.TableSorter.SORTER_BM_PARTS) {
+            currentColumn = Integer.parseInt(client.getConfigParam("BMESORTCOLUMN"));
+            currentOrder = Boolean.parseBoolean(client.getConfigParam("BMESORTORDER"));
+        }
+    }
+
+    public void reallocateIndexes() {
+        int rowCount = model.getRowCount();
+
+        // Set up a new array of indexes with the right number of elements
+        // for the new data model.
+        indexes = new int[rowCount];
+
+        // Initialise with the identity mapping.
+        for (int row = 0; row < rowCount; row++) {
+            indexes[row] = row;
+        }
+    }
+
+    public void sort(Object sender) {
+        checkModel();
+
+        compares = 0;
+        shuttleSort(indexes.clone(), indexes, 0, indexes.length);
+    }
+
+    public void n2sort() {
+        for (int i = 0; i < getRowCount(); i++) {
+            for (int j = i + 1; j < getRowCount(); j++) {
+                if (compare(indexes[i], indexes[j]) == -1) {
+                    swap(i, j);
+                }
+            }
+        }
+    }
+
+    public int compare(int row1, int row2) {
+        compares++;
+        for (int level = 0; level < sortingColumns.size(); level++) {
+            int column = sortingColumns.elementAt(level);
+            int result = compareRowsByColumn(row1, row2, column);
+            if (result != 0) {
+                return ascending ? result : -result;
+            }
+        }
+        return 0;
+    }
+
+    // The mapping only affects the contents of the data rows.
+    // Pass all requests to these rows through the mapping array: "indexes".
+
+    public void swap(int i, int j) {
+        int tmp = indexes[i];
+        indexes[i] = indexes[j];
+        indexes[j] = tmp;
     }
 
     // METHODS
@@ -144,65 +241,6 @@ public class TableSorter extends TableMap implements Serializable {
         }
     }
 
-    public int compare(int row1, int row2) {
-        compares++;
-        for (int level = 0; level < sortingColumns.size(); level++) {
-            int column = sortingColumns.elementAt(level);
-            int result = compareRowsByColumn(row1, row2, column);
-            if (result != 0) {
-                return ascending ? result : -result;
-            }
-        }
-        return 0;
-    }
-
-    public void reallocateIndexes() {
-        int rowCount = model.getRowCount();
-
-        // Set up a new array of indexes with the right number of elements
-        // for the new data model.
-        indexes = new int[rowCount];
-
-        // Initialise with the identity mapping.
-        for (int row = 0; row < rowCount; row++) {
-            indexes[row] = row;
-        }
-    }
-
-    @Override
-    public void tableChanged(javax.swing.event.TableModelEvent e) {
-        // MMClient.mwClientLog.clientOutputLog("Sorter: tableChanged");
-        reallocateIndexes();
-
-        super.tableChanged(e);
-
-        // table changed, now restore the old sort
-        this.restorePreviousSort();
-    }
-
-    public void checkModel() {
-        if (indexes.length != model.getRowCount()) {
-            MWLogger.errLog("Sorter not informed of a change in model.");
-        }
-    }
-
-    public void sort(Object sender) {
-        checkModel();
-
-        compares = 0;
-        shuttleSort(indexes.clone(), indexes, 0, indexes.length);
-    }
-
-    public void n2sort() {
-        for (int i = 0; i < getRowCount(); i++) {
-            for (int j = i + 1; j < getRowCount(); j++) {
-                if (compare(indexes[i], indexes[j]) == -1) {
-                    swap(i, j);
-                }
-            }
-        }
-    }
-
     // This is a home-grown implementation which we have not had time
     // to research - it may perform poorly in some circumstances. It
     // requires twice the space of an in-place algorithm and makes
@@ -256,28 +294,6 @@ public class TableSorter extends TableMap implements Serializable {
         }
     }
 
-    public void swap(int i, int j) {
-        int tmp = indexes[i];
-        indexes[i] = indexes[j];
-        indexes[j] = tmp;
-    }
-
-    // The mapping only affects the contents of the data rows.
-    // Pass all requests to these rows through the mapping array: "indexes".
-
-    @Override
-    public Object getValueAt(int aRow, int aColumn) {
-        if (aRow < 0 || aRow >= indexes.length) {return null;}
-        checkModel();
-        return model.getValueAt(indexes[aRow], aColumn);
-    }
-
-    @Override
-    public void setValueAt(Object aValue, int aRow, int aColumn) {
-        checkModel();
-        model.setValueAt(aValue, indexes[aRow], aColumn);
-    }
-
     public void sortByColumn(int column) {
         sortByColumn(column, true);
     }
@@ -297,23 +313,6 @@ public class TableSorter extends TableMap implements Serializable {
         // only restore if a column was actually selected
         if (currentColumn != -2) {this.sortByColumn(currentColumn, currentOrder);}
     }// end restorePreviousSort
-
-    public void loadSavedSortPreferences(int mode) {
-
-        if (mode == mekwars.common.gui.TableSorter.SORTER_BM) {
-            currentColumn = Integer.parseInt(client.getConfigParam("BMSORTCOLUMN"));
-            currentOrder = Boolean.parseBoolean(client.getConfigParam("BMSORTORDER"));
-        } else if (mode == mekwars.common.gui.TableSorter.SORTER_BUILD_TABLES) {
-            currentColumn = Integer.parseInt(client.getConfigParam("TABLEBROWSERSORTCOLUMN"));
-            currentOrder = Boolean.parseBoolean(client.getConfigParam("TABLEBROWSERSORTORDER"));
-        } else if (sortMode == SORTER_BATTLES) {
-            currentColumn = Integer.parseInt(client.getConfigParam("BATTLESSORTCOLUMN"));
-            currentOrder = Boolean.parseBoolean(client.getConfigParam("BATTLESSORTORDER"));
-        } else if (mode == mekwars.common.gui.TableSorter.SORTER_BM_PARTS) {
-            currentColumn = Integer.parseInt(client.getConfigParam("BMESORTCOLUMN"));
-            currentOrder = Boolean.parseBoolean(client.getConfigParam("BMESORTORDER"));
-        }
-    }
 
     public void saveSortPreferences() {
         if (sortMode == SORTER_BM) {

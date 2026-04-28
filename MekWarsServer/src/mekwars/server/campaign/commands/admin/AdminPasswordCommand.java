@@ -23,15 +23,6 @@ public class AdminPasswordCommand implements server.campaign.commands.Command {
 
     // conforming methods
     int accessLevel = server.MWChatServer.auth.IAuthenticator.REGISTERED;
-
-    public int getExecutionLevel() {
-        return accessLevel;
-    }
-
-    public void setExecutionLevel(int i) {
-        accessLevel = i;
-    }
-
     String syntax = "Admin Password Commands:<br>" +
                           " /c adminpassword#save - save the password file<br>" +
                           " /c adminpassword#remove#NAME - remove NAME's password<br>" +
@@ -122,5 +113,13 @@ public class AdminPasswordCommand implements server.campaign.commands.Command {
             server.campaign.CampaignMain.cm.doSendModMail("NOTE",
                   Username + " has set " + target + "'s level to " + level);
         }
+    }
+
+    public int getExecutionLevel() {
+        return accessLevel;
+    }
+
+    public void setExecutionLevel(int i) {
+        accessLevel = i;
     }
 }

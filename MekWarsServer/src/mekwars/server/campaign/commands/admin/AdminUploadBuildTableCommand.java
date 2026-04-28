@@ -30,10 +30,6 @@ public class AdminUploadBuildTableCommand implements server.campaign.commands.Co
     int accessLevel = server.MWChatServer.auth.IAuthenticator.ADMIN;
     String syntax = "[rare/reward/standard]/Build Table File Name";
 
-    public int getExecutionLevel() {return accessLevel;}
-
-    public void setExecutionLevel(int i) {accessLevel = i;}
-
     public String getSyntax() {return syntax;}
 
     public void process(java.util.StringTokenizer command, String Username) {
@@ -82,4 +78,8 @@ public class AdminUploadBuildTableCommand implements server.campaign.commands.Co
         }
 
     }
+
+    public int getExecutionLevel() {return accessLevel;}
+
+    public void setExecutionLevel(int i) {accessLevel = i;}
 }

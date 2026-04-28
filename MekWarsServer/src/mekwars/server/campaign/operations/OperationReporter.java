@@ -31,6 +31,17 @@
         private java.util.TreeMap<String, String> attackerMap = new java.util.TreeMap<String, String>();
         private java.util.TreeMap<String, String> defenderMap = new java.util.TreeMap<String, String>();
 
+        public OperationReporter() {
+
+        }
+
+        public void setWinnersAndLosers(
+              java.util.TreeMap<String, server.campaign.SPlayer> winners,
+              java.util.TreeMap<String, server.campaign.SPlayer> losers) {
+            setWinners(winners);
+            setLosers(losers);
+        }
+
         private void setWinners(java.util.TreeMap<String, server.campaign.SPlayer> winners) {
 
             for (String winner : winners.keySet()) {
@@ -79,17 +90,6 @@
                 count++;
             }
             opData.setLoserName(lNames.toString());
-        }
-
-        public void setWinnersAndLosers(
-              java.util.TreeMap<String, server.campaign.SPlayer> winners,
-              java.util.TreeMap<String, server.campaign.SPlayer> losers) {
-            setWinners(winners);
-            setLosers(losers);
-        }
-
-        public void setPlanetInfo(String pName, String tName, String thName) {
-            opData.setPlanetInfo(pName, tName, thName);
         }
 
         public void setAttackerStartBV(int BV) {
@@ -153,6 +153,10 @@
             opData.setStartTime(System.currentTimeMillis());
         }
 
+        public void setPlanetInfo(String pName, String tName, String thName) {
+            opData.setPlanetInfo(pName, tName, thName);
+        }
+
         public void addAttacker(String playerName, int armyID) {
             attackerMap.put(playerName,
                   server.campaign.CampaignMain.cm.getPlayer(playerName).getHouseFightingFor().getName());
@@ -168,6 +172,18 @@
             }
         }
 
+        public void addArmy(boolean attackerArmy, server.campaign.SArmy army) {
+            // Keep a list of units for each side
+            int numUnits = army.getAmountOfUnits();
+            if (attackerArmy) {opData.setAttackerSize(numUnits);} else {opData.setDefenderSize(numUnits);}
+
+            for (Unit currU : army.getUnits()) {
+                int ID = currU.getId();
+                String model = ((server.campaign.SUnit) currU).getModelName();
+                if (attackerArmy) {attackerUnits.put(ID, model);} else {defenderUnits.put(ID, model);}
+            }
+        }
+
         public void addDefender(String playerName, int armyID) {
             defenderMap.put(playerName,
                   server.campaign.CampaignMain.cm.getPlayer(playerName).getHouseFightingFor().getName());
@@ -180,18 +196,6 @@
                 if (s.length() == 0) {opData.setDefenderName(playerString);} else {
                     opData.setDefenderName(s + ", " + playerString);
                 }
-            }
-        }
-
-        public void addArmy(boolean attackerArmy, server.campaign.SArmy army) {
-            // Keep a list of units for each side
-            int numUnits = army.getAmountOfUnits();
-            if (attackerArmy) {opData.setAttackerSize(numUnits);} else {opData.setDefenderSize(numUnits);}
-
-            for (Unit currU : army.getUnits()) {
-                int ID = currU.getId();
-                String model = ((server.campaign.SUnit) currU).getModelName();
-                if (attackerArmy) {attackerUnits.put(ID, model);} else {defenderUnits.put(ID, model);}
             }
         }
 
@@ -211,9 +215,5 @@
             // First, figure if it's an attacking or defending unit
             if (attackerUnits.containsKey(unitID)) {opData.addEndingBV(true, BV);} else if (defenderUnits.containsKey(
                   unitID)) {opData.addEndingBV(false, BV);}
-        }
-
-        public OperationReporter() {
-
         }
     }

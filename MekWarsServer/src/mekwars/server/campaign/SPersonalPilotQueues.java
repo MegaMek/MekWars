@@ -71,58 +71,12 @@ public class SPersonalPilotQueues implements java.io.Serializable {
 
     // METHODS
 
-    /**
-     * Rather than if/else'ing meks and protos throughout the other methods of the class, use a private get method which
-     * returns mek or proto as needed and then work on the vector without regard to type.
-     */
-    private java.util.Vector<java.util.LinkedList<Pilot>> getUnitTypeQueue(int typeToGet) {
-
-        if (typeToGet == Unit.PROTOMEK) {return protoPilots;}
-        if (typeToGet == Unit.AERO) {return aeroPilots;}
-        // else
-        return mekPilots;
-    }
-
-    /**
-     * Used if the pilot type has not been set for the pilot yet.
-     *
-     * @param p
-     * @param type
-     * @param weightClass
-     */
-    public void addPilot(Pilot p, int type, int weightClass) {
-        p.setUnitType(type);
-        addPilot(p, weightClass);
-    }
-
-    public void setOwnerID(int ID) {
-        this.playerID = ID;
-    }
-
     public int getOwnerID() {
         return this.playerID;
     }
 
-    /**
-     * Add a pilot to the queue. Many different events can trigger an addition, including game resolution, sale via
-     * market, the hiring/purchase of a new pilot, and more. The type of unit that the pilot may use is embedded within
-     * the Pilot/SPilot that is passed as a param; however, the weight class is not and must be set here.
-     *
-     * @param p      - the actual pilot to add.
-     * @param weight - weightclass of unit the pilot may use
-     */
-    public void addPilot(Pilot p, int weightClass) {
-
-        /*
-         * On the off chance a VACANT pilot is somehow added to the player's queue, kill it off.
-         */
-        if (p.getName().trim().equalsIgnoreCase("Vacant")) {
-            p = null;// some how a bad pilot go through the checks.
-            return;
-        }
-
-        // add the pilot to the correct weightclass list.
-        this.getUnitTypeQueue(p.getUnitType()).get(weightClass).addLast(p);
+    public void setOwnerID(int ID) {
+        this.playerID = ID;
     }
 
     /**
@@ -142,23 +96,22 @@ public class SPersonalPilotQueues implements java.io.Serializable {
     }
 
     /**
-     * Remove a given pilot from the player's personal queue (as defined by type, weight and position in the LList) and
-     * return him to the calling class.
-     */
-    public Pilot getPilot(int unitType, int weightClass, int position) {
-        try {
-            java.util.LinkedList<Pilot> list = this.getUnitTypeQueue(unitType).get(weightClass);
-            return list.remove(position);
-        } catch (Exception ex) {
-            return null;
-        }
-    }
-
-    /**
      * Return the complete pilot list for a given unitType/weightClass.
      */
     public java.util.LinkedList<Pilot> getPilotQueue(int unitType, int weightClass) {
         return this.getUnitTypeQueue(unitType).get(weightClass);
+    }
+
+    /**
+     * Rather than if/else'ing meks and protos throughout the other methods of the class, use a private get method which
+     * returns mek or proto as needed and then work on the vector without regard to type.
+     */
+    private java.util.Vector<java.util.LinkedList<Pilot>> getUnitTypeQueue(int typeToGet) {
+
+        if (typeToGet == Unit.PROTOMEK) {return protoPilots;}
+        if (typeToGet == Unit.AERO) {return aeroPilots;}
+        // else
+        return mekPilots;
     }
 
     /**
@@ -278,6 +231,53 @@ public class SPersonalPilotQueues implements java.io.Serializable {
         /*
          * StringTokenizer ST = new StringTokenizer(buffer,delimiter); for (int type = 0; type <= ppProto; type++ ){ for ( int weight = 0; weight <= SUnit.ASSAULT; weight++ ){ int size = Integer.parseInt(ST.nextToken()); for( int count = 0 ; count < size; count++ ){ SPilot pilot = new SPilot(); pilot.fromFileFormat(ST.nextToken(),"#"); this.addPilot(type,weight,pilot); } } }
          */
+    }
+
+    /**
+     * Used if the pilot type has not been set for the pilot yet.
+     *
+     * @param p
+     * @param type
+     * @param weightClass
+     */
+    public void addPilot(Pilot p, int type, int weightClass) {
+        p.setUnitType(type);
+        addPilot(p, weightClass);
+    }
+
+    /**
+     * Remove a given pilot from the player's personal queue (as defined by type, weight and position in the LList) and
+     * return him to the calling class.
+     */
+    public Pilot getPilot(int unitType, int weightClass, int position) {
+        try {
+            java.util.LinkedList<Pilot> list = this.getUnitTypeQueue(unitType).get(weightClass);
+            return list.remove(position);
+        } catch (Exception ex) {
+            return null;
+        }
+    }
+
+    /**
+     * Add a pilot to the queue. Many different events can trigger an addition, including game resolution, sale via
+     * market, the hiring/purchase of a new pilot, and more. The type of unit that the pilot may use is embedded within
+     * the Pilot/SPilot that is passed as a param; however, the weight class is not and must be set here.
+     *
+     * @param p      - the actual pilot to add.
+     * @param weight - weightclass of unit the pilot may use
+     */
+    public void addPilot(Pilot p, int weightClass) {
+
+        /*
+         * On the off chance a VACANT pilot is somehow added to the player's queue, kill it off.
+         */
+        if (p.getName().trim().equalsIgnoreCase("Vacant")) {
+            p = null;// some how a bad pilot go through the checks.
+            return;
+        }
+
+        // add the pilot to the correct weightclass list.
+        this.getUnitTypeQueue(p.getUnitType()).get(weightClass).addLast(p);
     }
 
 }// end SPersonalPilotQueues.java

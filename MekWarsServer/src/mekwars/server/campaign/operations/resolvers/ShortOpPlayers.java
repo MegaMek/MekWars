@@ -5,20 +5,13 @@ import common.util.MWLogger;
 public class ShortOpPlayers {
     private java.util.HashMap<Integer, mekwars.server.campaign.operations.resolvers.Team> teams;
 
+    public ShortOpPlayers() {
+        teams = new java.util.HashMap<Integer, mekwars.server.campaign.operations.resolvers.Team>();
+    }
+
     public void addTeam(int id, java.util.Vector<server.campaign.SPlayer> p) {
         Team t = new Team(id, p);
         teams.put(Integer.valueOf(id), t);
-    }
-
-    /**
-     * @param id
-     *
-     * @return Team if the id exists, null if not
-     *
-     * @author Spork
-     */
-    public Team getTeam(int id) {
-        return teams.get(id);
     }
 
     /**
@@ -35,6 +28,17 @@ public class ShortOpPlayers {
     }
 
     /**
+     * @param id
+     *
+     * @return Team if the id exists, null if not
+     *
+     * @author Spork
+     */
+    public Team getTeam(int id) {
+        return teams.get(id);
+    }
+
+    /**
      * @param pName - the name of the player to find
      *
      * @return int teamID.  If the player is not found, the method returns -1
@@ -48,9 +52,5 @@ public class ShortOpPlayers {
             }
         }
         return -1;
-    }
-
-    public ShortOpPlayers() {
-        teams = new java.util.HashMap<Integer, mekwars.server.campaign.operations.resolvers.Team>();
     }
 }

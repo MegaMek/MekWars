@@ -469,71 +469,9 @@ public final class CampaignMain implements java.io.Serializable {
         }
     }
 
-    public boolean isLoggedIn(String Username) {
-
-        // always treat deds as logged in
-        if (Username.startsWith("[Dedicated]")) {
-            return true;
-        }
-
-        /*
-         * search all houses, all states, for user with this name. the hash
-         * searches are O(1), which means this is actually much faster than the
-         * old MMNET way, which was to try a .equals() on every player's name.
-         */
-        String lowerName = Username.toLowerCase();
-        for (House vh : data.getAllHouses()) {
-            SHouse h = (SHouse) vh;
-            if (h.getReservePlayers().containsKey(lowerName)) {
-                return true;
-            }
-            if (h.getActivePlayers().containsKey(lowerName)) {
-                return true;
-            }
-            if (h.getFightingPlayers().containsKey(lowerName)) {
-                return true;
-            }
-        }
-
-        // we couldnt find the player. return false.
-        return false;
-    }
-
-    public boolean getBooleanConfig(String key) {
-        try {
-            return Boolean.parseBoolean(cm.getConfig(key));
-        } catch (Exception ex) {
-            return false;
-        }
-    }
-
-    public int getIntegerConfig(String key) {
-        try {
-            return Integer.parseInt(cm.getConfig(key));
-        } catch (Exception ex) {
-            return -1;
-        }
-    }
-
-    public long getLongConfig(String key) {
-        try {
-            return Long.parseLong(cm.getConfig(key));
-        } catch (Exception ex) {
-            return -1;
-        }
-    }
-
     public double getDoubleConfig(String key) {
         try {
             return Double.parseDouble(cm.getConfig(key));
-        } catch (Exception ex) {
-            return -1;
-        }
-    }
-
-    public float getFloatConfig(String key) {
-        try {
-            return Float.parseFloat(cm.getConfig(key));
         } catch (Exception ex) {
             return -1;
         }
@@ -553,11 +491,12 @@ public final class CampaignMain implements java.io.Serializable {
         return config.getProperty(key).trim();
     }
 
-    /**
-     * Method that allows other classes to access the opsManager instance via the static CampaignMain.
-     */
-    public I_OperationManager getOpsManager() {
-        return opsManager;
+    public float getFloatConfig(String key) {
+        try {
+            return Float.parseFloat(cm.getConfig(key));
+        } catch (Exception ex) {
+            return -1;
+        }
     }
 
     public void createNewOpsManager() {
@@ -648,6 +587,174 @@ public final class CampaignMain implements java.io.Serializable {
         }// end while(more elements)
     }// end fromUser
 
+    public server.MWServ getServer() {
+        return myServer;
+    }
+
+    public boolean isLoggedIn(String Username) {
+
+        // always treat deds as logged in
+        if (Username.startsWith("[Dedicated]")) {
+            return true;
+        }
+
+        /*
+         * search all houses, all states, for user with this name. the hash
+         * searches are O(1), which means this is actually much faster than the
+         * old MMNET way, which was to try a .equals() on every player's name.
+         */
+        String lowerName = Username.toLowerCase();
+        for (House vh : data.getAllHouses()) {
+            SHouse h = (SHouse) vh;
+            if (h.getReservePlayers().containsKey(lowerName)) {
+                return true;
+            }
+            if (h.getActivePlayers().containsKey(lowerName)) {
+                return true;
+            }
+            if (h.getFightingPlayers().containsKey(lowerName)) {
+                return true;
+            }
+        }
+
+        // we couldnt find the player. return false.
+        return false;
+    }
+
+    public void toUser(String txt, String Username, boolean isChat) {
+        if (isChat) {
+            myServer.fromCampaignMod("CH|" + txt, Username);
+        } else {
+            myServer.fromCampaignMod(txt, Username);
+        }
+    }
+
+    /**
+     * Get an SPlayer, by name. This searches the reserve, active and fighting hashes of all factions until the player
+     * is found or factions are exhausted. If a player is not in a faction, check the to-save hash. Its entirely
+     * possible that the player is already in memory, but logged out and is awaiting a purge. If no matching player is
+     * found online, the server will attempt to read one in from a text file. If even this fails, a null is returned.
+     * NOTE: A player brought into memory using getPlayer is not automatically logged into his house. Temporary loads
+     * (ex: commands targetted at offline players) will put the player directly into the save queue, as if he was logged
+     * out. This is why the save queue is/must be searched prior to* reading the text file.
+     */
+    public SPlayer getPlayer(String pName) {
+        return getPlayer(pName, true, false);
+    }
+
+    public void toUser(String txt, String Username) {
+        toUser(txt, Username, true);
+    }
+
+    public SPlayer getPlayer(String pName, boolean save, boolean mute) {
+
+        // Fix for Draw games.
+        if (pName.equalsIgnoreCase("DRAW") || pName.toUpperCase().startsWith("DRAW#")) {
+            return null;
+        }
+
+        if (lostSouls.containsKey(pName.toLowerCase())) {
+            return lostSouls.get(pName.toLowerCase());
+        }
+
+        // look for faction players
+        SPlayer result = null;
+        for (House vh : data.getAllHouses()) {
+            SHouse h = (SHouse) vh;
+            result = h.getPlayer(pName);
+            if (result != null) {
+                // MWLogger.debugLog(pName+" Found in house data");
+                return result;
+            }
+        }
+
+        /*
+         * no online player, so try to read from a file.
+         */
+
+        result = loadPlayerFile(pName, false, mute);
+
+        if (result != null) {
+            lostSouls.put(pName.toLowerCase(), result);
+        }
+
+        return result;
+    }
+
+    /**
+     * Method which loads a player file from text. THIS SHOULD NOT BE USED. CampaignMain.getPlayer(String name) will
+     * check to see if a player is already in memory, and then call this loader if the player needs to be brought in
+     * from text. If you need to get a player, always use .getPlayer(String name) instead. A player who is loaded is put
+     * into the CampaignMain
+     */
+    private SPlayer loadPlayerFile(String name, boolean explicitName, boolean mute) {
+
+        if (!name.startsWith("[Dedicated]") && !name.startsWith("War Bot")) {
+
+            MekwarsFileReader dis = null;
+
+            try {
+                // log the load attempt & create readers
+                MWLogger.mainLog("Loading pfile for: " + name);
+
+                java.io.File pFile = null;
+                if (explicitName) {
+                    pFile = new java.io.File("./campaign/players/" + name);
+                } else {
+                    pFile = new java.io.File("./campaign/players/" + name.toLowerCase() + ".dat");
+                }
+
+                if (!pFile.exists()) {
+                    return null;
+                }
+
+                dis = new MekwarsFileReader(pFile);
+
+                // create player from string read by dis
+                SPlayer p = new SPlayer();
+                String pString = dis.readLine();
+
+                if (pString == null) {
+                    return null;
+                }
+
+                p.fromString(pString);
+
+                return p;
+            } catch (java.io.FileNotFoundException fnf) {
+
+                if (!name.toLowerCase().startsWith("nobody") &&
+                          !name.equals("SERVER") &&
+                          !name.toLowerCase().startsWith("war bot") &&
+                          !name.toLowerCase().startsWith("[dedicated]") &&
+                          !mute) {
+                    MWLogger.errLog("could not find a pfile for " + name);
+                    MWLogger.debugLog(fnf);
+                    MWLogger.debugLog("could not find a pfile for " + name);
+                }
+                return null;
+            } catch (Exception ex) {
+                if (!mute) {
+                    MWLogger.errLog(ex);
+                    MWLogger.errLog("Unable to load pfile for " + name);
+                }
+                return null;
+            } finally {
+                // close the streams and return player
+                try {
+                    if (dis != null) {
+                        dis.close();
+                    }
+                } catch (Exception ex) {
+                    MWLogger.errLog(ex);
+                }
+            }
+        }
+
+        return null;
+
+    }
+
     public SPlanet getPlanetFromPartialString(String PlanetName, String Username) {
 
         // store matches so we can tell player if there's more than one
@@ -699,6 +806,24 @@ public final class CampaignMain implements java.io.Serializable {
 
         // then add it to the faction's log
         MWLogger.factionLog(h.getName(), text.substring(11));
+    }
+
+    /**
+     * Send a bit of text to all players in a given faction. Can be chat, or a command/message.
+     */
+    public void doSendToAllOnlinePlayers(SHouse h, String text, boolean isChat) {
+
+        for (String currName : h.getReservePlayers().keySet()) {
+            this.toUser(text, currName, isChat);
+        }
+
+        for (String currName : h.getActivePlayers().keySet()) {
+            this.toUser(text, currName, isChat);
+        }
+
+        for (String currName : h.getFightingPlayers().keySet()) {
+            this.toUser(text, currName, isChat);
+        }
     }
 
     /**
@@ -781,6 +906,10 @@ public final class CampaignMain implements java.io.Serializable {
             }
 
         }
+    }
+
+    public java.util.Hashtable<String, Command> getServerCommands() {
+        return Commands;
     }
 
     /**
@@ -894,8 +1023,11 @@ public final class CampaignMain implements java.io.Serializable {
         so.addInProgressUpdate(s);
     }
 
-    public CampaignData getData() {
-        return data;
+    /**
+     * Method that allows other classes to access the opsManager instance via the static CampaignMain.
+     */
+    public I_OperationManager getOpsManager() {
+        return opsManager;
     }
 
     public java.util.Vector<MercHouse> getMercHouses() {
@@ -1131,51 +1263,6 @@ public final class CampaignMain implements java.io.Serializable {
         toUser("[*] You've logged out of the campaign.", name, true);
     }
 
-    public server.MWServ getServer() {
-        return myServer;
-    }
-
-    public String getPlayerUpdateString(SPlayer p) {
-
-        StringBuffer result = new StringBuffer();
-        if (p == null) {
-            return result.toString();
-        }
-
-        // Hide Reserve and Active Status
-        int Status = p.getDutyStatus();
-        if (Status == SPlayer.STATUS_RESERVE && Boolean.parseBoolean(getConfig("HideActiveStatus"))) {
-            Status = SPlayer.STATUS_ACTIVE;
-        }
-
-        result.append(p.getName());
-        result.append("|");
-        result.append(p.getExperience());
-        result.append("#");
-        if (Boolean.parseBoolean(getConfig("HideELO"))) {
-            result.append("0");
-        } else {
-            result.append(p.getRatingRounded());
-        }
-
-        result.append("#");
-        result.append(Status);
-        result.append("#");
-        if (p.getFluffText().equals("")) {
-            result.append(" #");
-        } else {
-            result.append(p.getFluffText());
-            result.append("#");
-        }
-
-        result.append(p.getHouseFightingFor().getName());
-        result.append("#");
-        result.append(p.getMyHouse().isMercHouse());
-        result.append("#");
-        result.append(p.getSubFactionName());
-        return result.toString();
-    }
-
     /**
      * This sends status updates of Player p to all players
      *
@@ -1200,136 +1287,23 @@ public final class CampaignMain implements java.io.Serializable {
     }
 
     /**
-     * Get an SPlayer, by name. This searches the reserve, active and fighting hashes of all factions until the player
-     * is found or factions are exhausted. If a player is not in a faction, check the to-save hash. Its entirely
-     * possible that the player is already in memory, but logged out and is awaiting a purge. If no matching player is
-     * found online, the server will attempt to read one in from a text file. If even this fails, a null is returned.
-     * NOTE: A player brought into memory using getPlayer is not automatically logged into his house. Temporary loads
-     * (ex: commands targetted at offline players) will put the player directly into the save queue, as if he was logged
-     * out. This is why the save queue is/must be searched prior to* reading the text file.
+     * Send a bit of text to all players who are currently online. Can be chat, or a command/message.
      */
-    public SPlayer getPlayer(String pName) {
-        return getPlayer(pName, true, false);
-    }
+    public void doSendToAllOnlinePlayers(String text, boolean isChat) {
 
-    public SPlayer getPlayer(String pName, boolean save, boolean mute) {
-
-        // Fix for Draw games.
-        if (pName.equalsIgnoreCase("DRAW") || pName.toUpperCase().startsWith("DRAW#")) {
-            return null;
-        }
-
-        if (lostSouls.containsKey(pName.toLowerCase())) {
-            return lostSouls.get(pName.toLowerCase());
-        }
-
-        // look for faction players
-        SPlayer result = null;
         for (House vh : data.getAllHouses()) {
             SHouse h = (SHouse) vh;
-            result = h.getPlayer(pName);
-            if (result != null) {
-                // MWLogger.debugLog(pName+" Found in house data");
-                return result;
+            for (String currName : h.getReservePlayers().keySet()) {
+                this.toUser(text, currName, isChat);
             }
-        }
 
-        /*
-         * no online player, so try to read from a file.
-         */
-
-        result = loadPlayerFile(pName, false, mute);
-
-        if (result != null) {
-            lostSouls.put(pName.toLowerCase(), result);
-        }
-
-        return result;
-    }
-
-    /**
-     * Method which loads a player file from text. THIS SHOULD NOT BE USED. CampaignMain.getPlayer(String name) will
-     * check to see if a player is already in memory, and then call this loader if the player needs to be brought in
-     * from text. If you need to get a player, always use .getPlayer(String name) instead. A player who is loaded is put
-     * into the CampaignMain
-     */
-    private SPlayer loadPlayerFile(String name, boolean explicitName, boolean mute) {
-
-        if (!name.startsWith("[Dedicated]") && !name.startsWith("War Bot")) {
-
-            MekwarsFileReader dis = null;
-
-            try {
-                // log the load attempt & create readers
-                MWLogger.mainLog("Loading pfile for: " + name);
-
-                java.io.File pFile = null;
-                if (explicitName) {
-                    pFile = new java.io.File("./campaign/players/" + name);
-                } else {
-                    pFile = new java.io.File("./campaign/players/" + name.toLowerCase() + ".dat");
-                }
-
-                if (!pFile.exists()) {
-                    return null;
-                }
-
-                dis = new MekwarsFileReader(pFile);
-
-                // create player from string read by dis
-                SPlayer p = new SPlayer();
-                String pString = dis.readLine();
-
-                if (pString == null) {
-                    return null;
-                }
-
-                p.fromString(pString);
-
-                return p;
-            } catch (java.io.FileNotFoundException fnf) {
-
-                if (!name.toLowerCase().startsWith("nobody") &&
-                          !name.equals("SERVER") &&
-                          !name.toLowerCase().startsWith("war bot") &&
-                          !name.toLowerCase().startsWith("[dedicated]") &&
-                          !mute) {
-                    MWLogger.errLog("could not find a pfile for " + name);
-                    MWLogger.debugLog(fnf);
-                    MWLogger.debugLog("could not find a pfile for " + name);
-                }
-                return null;
-            } catch (Exception ex) {
-                if (!mute) {
-                    MWLogger.errLog(ex);
-                    MWLogger.errLog("Unable to load pfile for " + name);
-                }
-                return null;
-            } finally {
-                // close the streams and return player
-                try {
-                    if (dis != null) {
-                        dis.close();
-                    }
-                } catch (Exception ex) {
-                    MWLogger.errLog(ex);
-                }
+            for (String currName : h.getActivePlayers().keySet()) {
+                this.toUser(text, currName, isChat);
             }
-        }
 
-        return null;
-
-    }
-
-    public void toUser(String txt, String Username) {
-        toUser(txt, Username, true);
-    }
-
-    public void toUser(String txt, String Username, boolean isChat) {
-        if (isChat) {
-            myServer.fromCampaignMod("CH|" + txt, Username);
-        } else {
-            myServer.fromCampaignMod(txt, Username);
+            for (String currName : h.getFightingPlayers().keySet()) {
+                this.toUser(text, currName, isChat);
+            }
         }
     }
 
@@ -1542,7 +1516,7 @@ public final class CampaignMain implements java.io.Serializable {
         Commands.put("ISSTATUS", new ISStatusCommand());// legace commands for
         // the client
         Commands.put("ISS", new ISStatusCommand());
-        Commands.put("US", new ISStatusCommand());
+        Commands.put("UsersCommand", new ISStatusCommand());
         Commands.put("UNIVERSESTATUS", new ISStatusCommand());
         //
         Commands.put("JOINATTACK", new JoinAttackCommand());
@@ -1976,6 +1950,17 @@ public final class CampaignMain implements java.io.Serializable {
         }
     }
 
+    public int getRandomNumber(int seed) {
+
+        if (seed < 1) {
+            return seed;
+        }
+
+        float answer = r.nextFloat() * (float) seed;
+
+        return (int) Math.floor(answer);
+    }
+
     public void addMechStat(String Filename, int mechsize, int gameplayed, int gamewon, int scrapped) {
         addMechStat(Filename, mechsize, gameplayed, gamewon, scrapped, 0);
     }
@@ -2361,45 +2346,6 @@ public final class CampaignMain implements java.io.Serializable {
     }
 
     /**
-     * Send a bit of text to all players who are currently online. Can be chat, or a command/message.
-     */
-    public void doSendToAllOnlinePlayers(String text, boolean isChat) {
-
-        for (House vh : data.getAllHouses()) {
-            SHouse h = (SHouse) vh;
-            for (String currName : h.getReservePlayers().keySet()) {
-                this.toUser(text, currName, isChat);
-            }
-
-            for (String currName : h.getActivePlayers().keySet()) {
-                this.toUser(text, currName, isChat);
-            }
-
-            for (String currName : h.getFightingPlayers().keySet()) {
-                this.toUser(text, currName, isChat);
-            }
-        }
-    }
-
-    /**
-     * Send a bit of text to all players in a given faction. Can be chat, or a command/message.
-     */
-    public void doSendToAllOnlinePlayers(SHouse h, String text, boolean isChat) {
-
-        for (String currName : h.getReservePlayers().keySet()) {
-            this.toUser(text, currName, isChat);
-        }
-
-        for (String currName : h.getActivePlayers().keySet()) {
-            this.toUser(text, currName, isChat);
-        }
-
-        for (String currName : h.getFightingPlayers().keySet()) {
-            this.toUser(text, currName, isChat);
-        }
-    }
-
-    /**
      * Update all player armies that are online This is normally called after operations have been updated.
      */
     public void updateAllOnlinePlayerArmies() {
@@ -2483,19 +2429,24 @@ public final class CampaignMain implements java.io.Serializable {
         }
     }
 
-    public java.util.Random getR() {
-        return r;
+    public boolean getBooleanConfig(String key) {
+        try {
+            return Boolean.parseBoolean(cm.getConfig(key));
+        } catch (Exception ex) {
+            return false;
+        }
     }
 
-    public int getRandomNumber(int seed) {
-
-        if (seed < 1) {
-            return seed;
+    public long getLongConfig(String key) {
+        try {
+            return Long.parseLong(cm.getConfig(key));
+        } catch (Exception ex) {
+            return -1;
         }
+    }
 
-        float answer = r.nextFloat() * (float) seed;
-
-        return (int) Math.floor(answer);
+    public java.util.Random getR() {
+        return r;
     }
 
     synchronized public void addToNewsFeed(String s) {
@@ -2514,17 +2465,8 @@ public final class CampaignMain implements java.io.Serializable {
         return partsmarket;
     }
 
-
     public java.util.Properties getConfig() {
         return config;
-    }
-
-    public java.util.Hashtable<String, Command> getServerCommands() {
-        return Commands;
-    }
-
-    public java.util.Hashtable<String, String> getServerBannedAmmo() {
-        return cm.getData().getServerBannedAmmo();
     }
 
     public double getAmmoCost(String ammo) {
@@ -2578,7 +2520,6 @@ public final class CampaignMain implements java.io.Serializable {
         return unresolvedContracts;
     }
 
-
     /**
      * @return Returns the currentUnitID.
      */
@@ -2602,12 +2543,12 @@ public final class CampaignMain implements java.io.Serializable {
         return currentPilotID;
     }
 
-    public synchronized int getAndUpdateCurrentPilotID() {
-        return ++currentPilotID;
-    }
-
     public void setCurrentPilotID(int id) {
         currentPilotID = id;
+    }
+
+    public synchronized int getAndUpdateCurrentPilotID() {
+        return ++currentPilotID;
     }
 
     public SHouse getHouseFromPartialString(String HouseString) {
@@ -2734,13 +2675,8 @@ public final class CampaignMain implements java.io.Serializable {
         }
     }
 
-    /**
-     * Public save method to save one player Used by changename and defect commands This is used so the players have a
-     * Pfile created right away
-     */
-    public void forceSavePlayer(SPlayer p) {
-
-        savePlayerFile(p);
+    public CampaignData getData() {
+        return data;
     }
 
     /**
@@ -2886,16 +2822,16 @@ public final class CampaignMain implements java.io.Serializable {
         }
     }
 
-    public void setGamesCompleted(int i) {
-        gamesCompleted = i;
-    }
-
     public void addGamesCompleted(int i) {
         setGamesCompleted(getGamesCompleted() + i);
     }
 
     public int getGamesCompleted() {
         return gamesCompleted;
+    }
+
+    public void setGamesCompleted(int i) {
+        gamesCompleted = i;
     }
 
     public int getMachineGunCount(java.util.ArrayList<Mounted> weaponList) {
@@ -2971,12 +2907,12 @@ public final class CampaignMain implements java.io.Serializable {
         }
     }
 
-    public void setOmniVariantMods(java.util.Hashtable<String, String> table) {
-        omniVariantMods = table;
-    }
-
     public java.util.Hashtable<String, String> getOmniVariantMods() {
         return omniVariantMods;
+    }
+
+    public void setOmniVariantMods(java.util.Hashtable<String, String> table) {
+        omniVariantMods = table;
     }
 
     public void saveOmniVariantMods() {
@@ -3198,12 +3134,12 @@ public final class CampaignMain implements java.io.Serializable {
         }
     }
 
-    public void setArchiving(boolean archive) {
-        isArchiving = archive;
-    }
-
     public boolean isArchiving() {
         return isArchiving;
+    }
+
+    public void setArchiving(boolean archive) {
+        isArchiving = archive;
     }
 
     public void saveConfigureFile(java.util.Properties config, String fileName) {
@@ -3226,14 +3162,6 @@ public final class CampaignMain implements java.io.Serializable {
 
     public UnitCosts getUnitCostLists() {
         return cm.unitCostLists;
-    }
-
-    public Client getMegaMekClient() {
-        return megaMekClient;
-    }
-
-    public void setMegaMekClient(Client mmClient) {
-        cm.megaMekClient = mmClient;
     }
 
     public RepairTrackingThread getRTT() {
@@ -3684,6 +3612,14 @@ public final class CampaignMain implements java.io.Serializable {
         return (int) cost;
     }
 
+    public int getIntegerConfig(String key) {
+        try {
+            return Integer.parseInt(cm.getConfig(key));
+        } catch (Exception ex) {
+            return -1;
+        }
+    }
+
     public void saveBannedAmmo() {
 
         // Save banned ammo
@@ -3723,6 +3659,10 @@ public final class CampaignMain implements java.io.Serializable {
             MWLogger.errLog("Error saving banned ammo.");
             MWLogger.errLog(ex);
         }
+    }
+
+    public java.util.Hashtable<String, String> getServerBannedAmmo() {
+        return cm.getData().getServerBannedAmmo();
     }
 
     public void saveBannedTargetSystems() {
@@ -4040,6 +3980,56 @@ public final class CampaignMain implements java.io.Serializable {
         forceSavePlayer(player);
     }
 
+    public String getPlayerUpdateString(SPlayer p) {
+
+        StringBuffer result = new StringBuffer();
+        if (p == null) {
+            return result.toString();
+        }
+
+        // Hide Reserve and Active Status
+        int Status = p.getDutyStatus();
+        if (Status == SPlayer.STATUS_RESERVE && Boolean.parseBoolean(getConfig("HideActiveStatus"))) {
+            Status = SPlayer.STATUS_ACTIVE;
+        }
+
+        result.append(p.getName());
+        result.append("|");
+        result.append(p.getExperience());
+        result.append("#");
+        if (Boolean.parseBoolean(getConfig("HideELO"))) {
+            result.append("0");
+        } else {
+            result.append(p.getRatingRounded());
+        }
+
+        result.append("#");
+        result.append(Status);
+        result.append("#");
+        if (p.getFluffText().equals("")) {
+            result.append(" #");
+        } else {
+            result.append(p.getFluffText());
+            result.append("#");
+        }
+
+        result.append(p.getHouseFightingFor().getName());
+        result.append("#");
+        result.append(p.getMyHouse().isMercHouse());
+        result.append("#");
+        result.append(p.getSubFactionName());
+        return result.toString();
+    }
+
+    /**
+     * Public save method to save one player Used by changename and defect commands This is used so the players have a
+     * Pfile created right away
+     */
+    public void forceSavePlayer(SPlayer p) {
+
+        savePlayerFile(p);
+    }
+
     /**
      * this removes a SPlayer object form the global hash. This is called when a player logs into a house, in which case
      * the house now stores the object, or when the player logs off, incase they never bothred to register or login.
@@ -4131,10 +4121,12 @@ public final class CampaignMain implements java.io.Serializable {
         return result.toString();
     }
 
-    class datFileFilter implements java.io.FilenameFilter {
-        public boolean accept(java.io.File dir, String name) {
-            return (name.endsWith(".dat"));
-        }
+    public Client getMegaMekClient() {
+        return megaMekClient;
+    }
+
+    public void setMegaMekClient(Client mmClient) {
+        cm.megaMekClient = mmClient;
     }
 
     /**
@@ -4150,7 +4142,6 @@ public final class CampaignMain implements java.io.Serializable {
     public void setSupportUnits(java.util.Vector<String> supportUnits) {
         this.supportUnits = supportUnits;
     }
-
 
     /**
      * @return the defaultPlayerFlags
@@ -4173,7 +4164,6 @@ public final class CampaignMain implements java.io.Serializable {
         this.scheduler = scheduler;
     }
 
-
     /**
      * Send a message to a Discord Webhook
      *
@@ -4185,6 +4175,12 @@ public final class CampaignMain implements java.io.Serializable {
         }
         DiscordMessageHandler handler = new DiscordMessageHandler();
         handler.post(message);
+    }
+
+    class datFileFilter implements java.io.FilenameFilter {
+        public boolean accept(java.io.File dir, String name) {
+            return (name.endsWith(".dat"));
+        }
     }
 
 }

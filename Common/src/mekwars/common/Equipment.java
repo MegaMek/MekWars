@@ -29,20 +29,24 @@ public class Equipment {
     private int maxProduction = 0;
     private boolean updated = false;
 
+    public String getEquipmentName() {
+        return this.equipmentName;
+    }
+
     public void setEquipmentName(String name) {
         this.equipmentName = name;
     }
 
-    public String getEquipmentName() {
-        return this.equipmentName;
+    public String getEquipmentInternalName() {
+        return this.equipmentInternalName;
     }
 
     public void setEquipmentInternalName(String name) {
         this.equipmentInternalName = name;
     }
 
-    public String getEquipmentInternalName() {
-        return this.equipmentInternalName;
+    public double getMinCost() {
+        return this.minCost;
     }
 
     public void setMinCost(double cost) {
@@ -53,8 +57,8 @@ public class Equipment {
         }
     }
 
-    public double getMinCost() {
-        return this.minCost;
+    public double getMaxCost() {
+        return this.maxCost;
     }
 
     public void setMaxCost(double cost) {
@@ -65,8 +69,8 @@ public class Equipment {
         }
     }
 
-    public double getMaxCost() {
-        return this.maxCost;
+    public int getMinProduction() {
+        return this.minProduction;
     }
 
     public void setMinProduction(int production) {
@@ -77,8 +81,8 @@ public class Equipment {
         }
     }
 
-    public int getMinProduction() {
-        return this.minProduction;
+    public int getMaxProduction() {
+        return this.maxProduction;
     }
 
     public void setMaxProduction(int production) {
@@ -87,10 +91,6 @@ public class Equipment {
             this.maxProduction = production;
             this.updated = true;
         }
-    }
-
-    public int getMaxProduction() {
-        return this.maxProduction;
     }
 
     public boolean isUpdated() {

@@ -22,10 +22,6 @@ public class AdminSetPlanetOpFlagsCommand implements server.campaign.commands.Co
     int accessLevel = server.MWChatServer.auth.IAuthenticator.ADMIN;
     String syntax = "Planet Name#FlagCode#FlagCode#...<br>NOTE: you can repeat FlagCode multiple times.<br>NOTE:This will reset all the flags for the planet to these flags!";
 
-    public int getExecutionLevel() {return accessLevel;}
-
-    public void setExecutionLevel(int i) {accessLevel = i;}
-
     public String getSyntax() {return syntax;}
 
     public void process(java.util.StringTokenizer command, String Username) {
@@ -78,4 +74,8 @@ public class AdminSetPlanetOpFlagsCommand implements server.campaign.commands.Co
 
         planet.updated();
     }
+
+    public int getExecutionLevel() {return accessLevel;}
+
+    public void setExecutionLevel(int i) {accessLevel = i;}
 }

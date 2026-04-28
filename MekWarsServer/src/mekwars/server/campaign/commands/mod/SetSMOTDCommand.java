@@ -27,10 +27,6 @@ public class SetSMOTDCommand implements server.campaign.commands.Command {
     int accessLevel = server.MWChatServer.auth.IAuthenticator.MODERATOR;
     String syntax = "Message";
 
-    public int getExecutionLevel() {return accessLevel;}
-
-    public void setExecutionLevel(int i) {accessLevel = i;}
-
     public String getSyntax() {return syntax;}
 
     public void process(java.util.StringTokenizer command, String Username) {
@@ -50,4 +46,8 @@ public class SetSMOTDCommand implements server.campaign.commands.Command {
         server.campaign.CampaignMain.cm.getServer().setConfigParam("INFOMESSAGE", motdText);
         server.campaign.CampaignMain.cm.toUser("You set a new Server MOTD. Have a nice day.", Username);
     }
+
+    public int getExecutionLevel() {return accessLevel;}
+
+    public void setExecutionLevel(int i) {accessLevel = i;}
 }

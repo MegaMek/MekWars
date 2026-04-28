@@ -22,18 +22,7 @@ import common.util.MWLogger;
 public class GetOpsCommand implements Command {
 
     int accessLevel = 2;
-
-    public int getExecutionLevel() {
-        return accessLevel;
-    }
-
-    public void setExecutionLevel(int i) {
-        accessLevel = i;
-    }
-
     String syntax = "/getops [getall, md5, getsome#list]";
-
-    public String getSyntax() {return syntax;}
 
     @Override
     public void process(java.util.StringTokenizer command, String Username) {
@@ -141,5 +130,15 @@ public class GetOpsCommand implements Command {
             server.campaign.CampaignMain.cm.toUser("AM: invalid syntax, use: " + getSyntax(), Username, true);
         }
     }
+
+    public int getExecutionLevel() {
+        return accessLevel;
+    }
+
+    public void setExecutionLevel(int i) {
+        accessLevel = i;
+    }
+
+    public String getSyntax() {return syntax;}
 
 }

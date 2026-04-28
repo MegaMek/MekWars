@@ -48,13 +48,11 @@ import mekwars.common.util.MWLogger;
  */
 
 public class ConnectionHandlerLocal implements IConnectionHandler {
+    static final boolean DEBUG = false;
     protected PrintStream _out;
-    protected Socket _socket;
     protected IConnectionListener _listener;
     protected ReaderThread _reader;
     protected WriterThread _writer;
-
-    static final boolean DEBUG = false;
 
     /**
      * Construct the ConnectionHandler and spawn the reader and writer threads.
@@ -67,10 +65,10 @@ public class ConnectionHandlerLocal implements IConnectionHandler {
         _writer.start();
     }
 
-    public void setListener(IConnectionListener listener) {
-        _listener = listener;
-        _reader.setListener(listener);
-        _reader.start();
+    public static void DEBUG(String s) {
+        if (DEBUG) {
+            MWLogger.errLog(s);
+        }
     }
 
     /**
@@ -104,10 +102,10 @@ public class ConnectionHandlerLocal implements IConnectionHandler {
         }
     }
 
-    public static void DEBUG(String s) {
-        if (DEBUG) {
-            MWLogger.errLog(s);
-        }
+    public void setListener(IConnectionListener listener) {
+        _listener = listener;
+        _reader.setListener(listener);
+        _reader.start();
     }
 }
 

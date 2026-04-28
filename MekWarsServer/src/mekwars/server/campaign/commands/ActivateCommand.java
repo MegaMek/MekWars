@@ -26,18 +26,6 @@ public class ActivateCommand implements Command {
     int accessLevel = 0;
     String syntax = "";
 
-    public int getExecutionLevel() {
-        return accessLevel;
-    }
-
-    public void setExecutionLevel(int i) {
-        accessLevel = i;
-    }
-
-    public String getSyntax() {
-        return syntax;
-    }
-
     public void process(java.util.StringTokenizer command, String Username) {
 
         if (accessLevel != 0) {
@@ -374,6 +362,30 @@ public class ActivateCommand implements Command {
 
     }// end process()
 
+    public int getExecutionLevel() {
+        return accessLevel;
+    }
+
+    public void setExecutionLevel(int i) {
+        accessLevel = i;
+    }
+
+    public String getSyntax() {
+        return syntax;
+    }
+
+    private boolean hasCommanderlessUnits(java.util.Vector<server.campaign.SArmy> armies) {
+        // start Baruk Khazad!  20151108a
+        Boolean result = false;
+        for (server.campaign.SArmy army : armies) {
+            if (army.getCommanders().size() == 0 && !army.isDisabled()) {
+                result = true;
+            }
+        }
+        return result;
+        // end Baruk Khazad!  20151108a
+    }
+
     /**
      * Method which returns a boolean indicating whether any unit in a set of armies has 3 engine crits.
      * <p>
@@ -493,35 +505,6 @@ public class ActivateCommand implements Command {
         return false;
     }
 
-    /**
-     * @author Salient see if any units in armies are locked, if so return true.
-     *
-     */
-    private boolean hasLockedUnitsInArmies(java.util.Vector<server.campaign.SArmy> armies) {
-        for (server.campaign.SArmy army : armies) {
-            java.util.Iterator<Unit> units = army.getUnits().iterator();
-            while (units.hasNext()) {
-                server.campaign.SUnit unit = (server.campaign.SUnit) units.next();
-                if (unit.isLocked()) {
-                    return true;
-                }
-            }
-        }
-        return false;
-    }
-
-    private boolean hasCommanderlessUnits(java.util.Vector<server.campaign.SArmy> armies) {
-        // start Baruk Khazad!  20151108a
-        Boolean result = false;
-        for (server.campaign.SArmy army : armies) {
-            if (army.getCommanders().size() == 0 && !army.isDisabled()) {
-                result = true;
-            }
-        }
-        return result;
-        // end Baruk Khazad!  20151108a
-    }
-
     private int hasIllegalOpArmies(server.campaign.SPlayer player, java.util.Vector<server.campaign.SArmy> armies) {
 
         for (server.campaign.SArmy army : armies) {
@@ -572,43 +555,22 @@ public class ActivateCommand implements Command {
         return -1;
     }
 
-}// end activatecommand class
-
-/**
- * @author urgru
- *       <p>
- *       private thread. simple minactivetime wait which runs a checkattack for the activating player.
- */
-class CheckAttackThread extends Thread {
-
-    // vars
-    server.campaign.SPlayer p;
-    long duration;
-
-    public CheckAttackThread(server.campaign.SPlayer p, int duration) {
-        super("ActivationThread-" + p.getName());
-        this.duration = duration; // set length when thread is spun
-        this.p = p;
+    /**
+     * @author Salient see if any units in armies are locked, if so return true.
+     *
+     */
+    private boolean hasLockedUnitsInArmies(java.util.Vector<server.campaign.SArmy> armies) {
+        for (server.campaign.SArmy army : armies) {
+            java.util.Iterator<Unit> units = army.getUnits().iterator();
+            while (units.hasNext()) {
+                server.campaign.SUnit unit = (server.campaign.SUnit) units.next();
+                if (unit.isLocked()) {
+                    return true;
+                }
+            }
+        }
+        return false;
     }
 
-    @Override
-    public synchronized void run() {
-        try {
-            wait(duration + 250);// buffer by a quarter second
-
-            // make sure the player is still active (hasnt logged out,
-            // been forcedeactivated, attacked or joined a game).
-            if (p.getDutyStatus() == server.campaign.SPlayer.STATUS_ACTIVE) {
-                CheckAttackCommand ca = new CheckAttackCommand();
-                server.campaign.CampaignMain.cm.toUser("<br>You have arrived on the front lines!", p.getName(), true);
-                ca.process(new java.util.StringTokenizer(""), p.getName());
-            }
-            p.leechCount = 0;
-            // ran once. kill the thread by returning.
-            return;
-        } catch (Exception ex) {
-            MWLogger.errLog(ex);
-        }
-    }// end run()
-}// end CheckAttackThread
+}// end activatecommand class
 

@@ -34,13 +34,6 @@ public class FreeBuildCreateUnitCommand implements Command {
 
     int accessLevel = 1;
     String syntax = "filename#weightclass#houseTable";
-
-    public int getExecutionLevel() {return accessLevel;}
-
-    public void setExecutionLevel(int i) {accessLevel = i;}
-
-    public String getSyntax() {return syntax;}
-
     private Boolean solFreeBuild;
     private Boolean postDefectionFreeBuild;
     private Boolean useAllBuildTables;
@@ -90,6 +83,12 @@ public class FreeBuildCreateUnitCommand implements Command {
               true);
 
     }
+
+    public int getExecutionLevel() {return accessLevel;}
+
+    public void setExecutionLevel(int i) {accessLevel = i;}
+
+    public String getSyntax() {return syntax;}
 
     private void initVars(String Username) {
         username = Username;

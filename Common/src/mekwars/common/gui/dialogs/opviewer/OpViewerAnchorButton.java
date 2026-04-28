@@ -26,12 +26,12 @@ public class OpViewerAnchorButton extends JButton {
     private static final long serialVersionUID = 1L;
     private final String url;
 
-    public String getUrl() {
-        return url;
-    }
-
     public OpViewerAnchorButton(String id, String display) {
         super(display);
         url = id;
+    }
+
+    public String getUrl() {
+        return url;
     }
 }

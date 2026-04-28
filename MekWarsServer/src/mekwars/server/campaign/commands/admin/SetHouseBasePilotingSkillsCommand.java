@@ -24,10 +24,6 @@ public class SetHouseBasePilotingSkillsCommand implements server.campaign.comman
     int accessLevel = server.MWChatServer.auth.IAuthenticator.ADMIN;
     String syntax = "Faction Name#[Mek,Vehicle,Infantry,Proto,BattleArmor,Aero]#PilotingSkill$PilotingSkill";
 
-    public int getExecutionLevel() {return accessLevel;}
-
-    public void setExecutionLevel(int i) {accessLevel = i;}
-
     public String getSyntax() {return syntax;}
 
     public void process(java.util.StringTokenizer command, String Username) {
@@ -84,4 +80,8 @@ public class SetHouseBasePilotingSkillsCommand implements server.campaign.comman
                     ".");
 
     }//end process
+
+    public int getExecutionLevel() {return accessLevel;}
+
+    public void setExecutionLevel(int i) {accessLevel = i;}
 }

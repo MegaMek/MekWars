@@ -22,9 +22,8 @@ import server.campaign.operations.ShortOperation;
 
 public class BattleResolver {
 
-    private Server server;
-
     private static mekwars.server.campaign.autoresolve.BattleResolver instance;
+    private Server server;
 
     private BattleResolver() {
         try {
@@ -119,19 +118,6 @@ public class BattleResolver {
         }
     }
 
-    private String buildReportString(Battlefield bf) {
-        return MWClient.prepareReport(bf, true, null).toString();
-    }
-
-    private void resolveTargeting(Battlefield bf) {
-        //For now: Random
-        for (VirtualUnit unit : bf.getAllUnits()) {
-            unit.setTarget(findRandomEnemy(unit, bf));
-            bf.getBattleReport().addTargetEvent(unit, unit.getTarget());
-        }
-
-    }
-
     private java.util.List<mekwars.server.campaign.autoresolve.VirtualUnit> prepareAttackers(ShortOperation so) {
         java.util.ArrayList<mekwars.server.campaign.autoresolve.VirtualUnit> result = new java.util.ArrayList<mekwars.server.campaign.autoresolve.VirtualUnit>();
         for (String attacker : so.getAttackers().keySet()) {
@@ -147,14 +133,56 @@ public class BattleResolver {
         return result;
     }
 
-    private VirtualUnit findRandomEnemy(VirtualUnit unit, Battlefield bf) {
-        VirtualUnit target;
-        if (unit.isAttacker()) {
-            target = bf.getDefenders().get(server.campaign.CampaignMain.cm.getR().nextInt(bf.getDefenders().size()));
-        } else {
-            target = bf.getAttackers().get(server.campaign.CampaignMain.cm.getR().nextInt(bf.getAttackers().size()));
+    /**
+     * Converts the units from the operation into VirtualUnits
+     *
+     * @param op
+     *
+     * @return all units as virtual Units
+     */
+    private java.util.List<mekwars.server.campaign.autoresolve.VirtualUnit> prepareDefenders(ShortOperation so) {
+        java.util.ArrayList<mekwars.server.campaign.autoresolve.VirtualUnit> result = new java.util.ArrayList<mekwars.server.campaign.autoresolve.VirtualUnit>();
+        for (String defender : so.getDefenders().keySet()) {
+            server.campaign.SPlayer player = server.campaign.CampaignMain.cm.getPlayer(defender);
+            if (player != null) {
+                SArmy army = player.getArmy(so.getDefenders().get(defender));
+                for (Unit unit : army.getUnits()) {
+                    SUnit sunit = (SUnit) unit;
+                    result.add(new VirtualUnit(sunit, player, false));
+                }
+            }
         }
-        return target;
+        return result;
+    }
+
+    private void resolveTargeting(Battlefield bf) {
+        //For now: Random
+        for (VirtualUnit unit : bf.getAllUnits()) {
+            unit.setTarget(findRandomEnemy(unit, bf));
+            bf.getBattleReport().addTargetEvent(unit, unit.getTarget());
+        }
+
+    }
+
+    private void resolveMovement(Battlefield bf) {
+        //Easy for now.
+        for (VirtualUnit unit : bf.getAllUnits()) {
+            VirtualUnit target = unit.getTarget();
+            Entity ent = unit.getUnit().getEntity();
+            int distance = bf.getDistance(unit, target);
+            if (ent.getArmorRemainingPercent() > 0.5 && distance > 0) {
+                bf.setDistance(unit, target, Math.max(0, distance - ent.getRunMP()));
+                unit.setMovement(MovementMode.RUNNING, Math.abs(distance - bf.getDistance(unit, target)));
+            } else if (ent.getArmorRemainingPercent() <= 0.5) {
+                bf.setDistance(unit, target, distance + ent.getRunMP());
+                unit.setMovement(MovementMode.RUNNING, Math.abs(distance - bf.getDistance(unit, target)));
+            } else {
+                unit.setMovement(MovementMode.STANDING, 0);
+            }
+            bf.getBattleReport()
+                  .addMovementEvent(unit,
+                        "Moved from a distance of " + distance + " to " + bf.getDistance(unit, target) + "<br>");
+        }
     }
 
     private void resolveFiring(Battlefield bf) {
@@ -218,47 +246,18 @@ public class BattleResolver {
         }
     }
 
-    private void resolveMovement(Battlefield bf) {
-        //Easy for now.
-        for (VirtualUnit unit : bf.getAllUnits()) {
-            VirtualUnit target = unit.getTarget();
-            Entity ent = unit.getUnit().getEntity();
-            int distance = bf.getDistance(unit, target);
-            if (ent.getArmorRemainingPercent() > 0.5 && distance > 0) {
-                bf.setDistance(unit, target, Math.max(0, distance - ent.getRunMP()));
-                unit.setMovement(MovementMode.RUNNING, Math.abs(distance - bf.getDistance(unit, target)));
-            } else if (ent.getArmorRemainingPercent() <= 0.5) {
-                bf.setDistance(unit, target, distance + ent.getRunMP());
-                unit.setMovement(MovementMode.RUNNING, Math.abs(distance - bf.getDistance(unit, target)));
-            } else {
-                unit.setMovement(MovementMode.STANDING, 0);
-            }
-            bf.getBattleReport()
-                  .addMovementEvent(unit,
-                        "Moved from a distance of " + distance + " to " + bf.getDistance(unit, target) + "<br>");
-        }
+    private String buildReportString(Battlefield bf) {
+        return MWClient.prepareReport(bf, true, null).toString();
     }
 
-    /**
-     * Converts the units from the operation into VirtualUnits
-     *
-     * @param op
-     *
-     * @return all units as virtual Units
-     */
-    private java.util.List<mekwars.server.campaign.autoresolve.VirtualUnit> prepareDefenders(ShortOperation so) {
-        java.util.ArrayList<mekwars.server.campaign.autoresolve.VirtualUnit> result = new java.util.ArrayList<mekwars.server.campaign.autoresolve.VirtualUnit>();
-        for (String defender : so.getDefenders().keySet()) {
-            server.campaign.SPlayer player = server.campaign.CampaignMain.cm.getPlayer(defender);
-            if (player != null) {
-                SArmy army = player.getArmy(so.getDefenders().get(defender));
-                for (Unit unit : army.getUnits()) {
-                    SUnit sunit = (SUnit) unit;
-                    result.add(new VirtualUnit(sunit, player, false));
-                }
-            }
+    private VirtualUnit findRandomEnemy(VirtualUnit unit, Battlefield bf) {
+        VirtualUnit target;
+        if (unit.isAttacker()) {
+            target = bf.getDefenders().get(server.campaign.CampaignMain.cm.getR().nextInt(bf.getDefenders().size()));
+        } else {
+            target = bf.getAttackers().get(server.campaign.CampaignMain.cm.getR().nextInt(bf.getAttackers().size()));
         }
-        return result;
+        return target;
     }
 
     private synchronized void damageEntity(VirtualUnit unit, int damage, String nameOfPlayer, Battlefield bf) {

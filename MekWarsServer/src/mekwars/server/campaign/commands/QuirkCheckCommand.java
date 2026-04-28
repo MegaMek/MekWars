@@ -6,13 +6,6 @@ import common.util.MWLogger;
 public class QuirkCheckCommand implements Command {
     int accessLevel = 0;
     String syntax = "/c quirkCheck#canon#custom";
-
-    public int getExecutionLevel() {return accessLevel;}
-
-    public void setExecutionLevel(int i) {accessLevel = i;}
-
-    public String getSyntax() {return syntax;}
-
     private server.campaign.SPlayer player;
     private String username;
     private int userLevel;
@@ -40,6 +33,11 @@ public class QuirkCheckCommand implements Command {
         compareLengths();
     }
 
+    public int getExecutionLevel() {return accessLevel;}
+
+    public void setExecutionLevel(int i) {accessLevel = i;}
+
+    public String getSyntax() {return syntax;}
 
     private void initVars() {
         enableQuirks = server.campaign.CampaignMain.cm.getBooleanConfig("EnableQuirks");

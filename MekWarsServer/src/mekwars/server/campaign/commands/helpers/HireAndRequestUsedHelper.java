@@ -29,11 +29,6 @@ package mekwars.server.campaign.commands.helpers;
 public class HireAndRequestUsedHelper implements server.campaign.commands.Command {
 
     int accessLevel = 0;
-
-    public int getExecutionLevel() {return accessLevel;}
-
-    public void setExecutionLevel(int i) {accessLevel = i;}
-
     String syntax = "";
 
     public String getSyntax() {return syntax;}
@@ -84,5 +79,9 @@ public class HireAndRequestUsedHelper implements server.campaign.commands.Comman
         requestCommand.process(requestTokenizer, Username);
 
     }//end process()
+
+    public int getExecutionLevel() {return accessLevel;}
+
+    public void setExecutionLevel(int i) {accessLevel = i;}
 
 }//end HireAndRequestNewHelper

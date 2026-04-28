@@ -22,10 +22,6 @@ public class TerminateContractCommand implements server.campaign.commands.Comman
     int accessLevel = server.MWChatServer.auth.IAuthenticator.MODERATOR;
     String syntax = "Player Name";
 
-    public int getExecutionLevel() {return accessLevel;}
-
-    public void setExecutionLevel(int i) {accessLevel = i;}
-
     public String getSyntax() {return syntax;}
 
     public void process(java.util.StringTokenizer command, String Username) {
@@ -94,4 +90,8 @@ public class TerminateContractCommand implements server.campaign.commands.Comman
                                                      ".", Username, true);
 
     }//end process()
+
+    public int getExecutionLevel() {return accessLevel;}
+
+    public void setExecutionLevel(int i) {accessLevel = i;}
 }//end TerminateContract

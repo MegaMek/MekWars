@@ -4,10 +4,10 @@ import megamek.common.units.Entity;
 
 public abstract class AbstractUnitDamageHandler {
 
+    public AbstractUnitDamageHandler() {
+    }
+
     public abstract String buildDamageString(Entity unit, boolean sendAmmo);
 
     public abstract void applyDamageString(Entity unit, String report, boolean isRepairing);
-
-    public AbstractUnitDamageHandler() {
-    }
 }

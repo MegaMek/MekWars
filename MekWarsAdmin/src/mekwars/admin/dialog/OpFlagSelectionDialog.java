@@ -187,29 +187,19 @@ public class OpFlagSelectionDialog extends JDialog implements ActionListener {
 
     }
 
+    private void loadOpFlags() {
+        client.getData().getPlanetOpFlags().clear();
 
-    /**
-     * OK or CANCEL buttons pressed. Handle any changes and then close the dialouge.
-     */
-    public void actionPerformed(ActionEvent event) {
+        client.sendChat(IClient.CAMPAIGN_PREFIX + "c getserveropflags");
 
-        String command = event.getActionCommand();
-
-        if (command.equals(okayCommand)) {
-            String selectedCommand = (String) matchingCommandList.getSelectedValue();
-            if (selectedCommand == null) {selectedCommand = nameField.getText();}
-            if (selectedCommand == null || selectedCommand.equals("")) {return;}
-            if (matchingCommandList.getModel().getSize() >= 1) {
-                // JList.getSelectedValues deprecated
-                //setCommandName(matchingCommandList.getSelectedValues());
-                setCommandName(matchingCommandList.getSelectedValuesList().toArray());
-            } else {JOptionPane.showMessageDialog(null, "Unknown Terrain");}
+        int count = 0;
+        while (client.getData().getPlanetOpFlags().isEmpty() && count < 1000) {
+            try {
+                Thread.sleep(125);
+            } catch (Exception ex) {}
+            count++;
         }
-
-        //dispose of the dialog
-        this.dispose();
-
-    }//end actionPerformed
+    }
 
     private void checkMinimumSize() {
 
@@ -235,26 +225,35 @@ public class OpFlagSelectionDialog extends JDialog implements ActionListener {
 
     }//end checkMinimumSize
 
-    private void setCommandName(Object[] terrains) {
-        this.commandName = terrains;
-    }
+    /**
+     * OK or CANCEL buttons pressed. Handle any changes and then close the dialouge.
+     */
+    public void actionPerformed(ActionEvent event) {
+
+        String command = event.getActionCommand();
+
+        if (command.equals(okayCommand)) {
+            String selectedCommand = (String) matchingCommandList.getSelectedValue();
+            if (selectedCommand == null) {selectedCommand = nameField.getText();}
+            if (selectedCommand == null || selectedCommand.equals("")) {return;}
+            if (matchingCommandList.getModel().getSize() >= 1) {
+                // JList.getSelectedValues deprecated
+                //setCommandName(matchingCommandList.getSelectedValues());
+                setCommandName(matchingCommandList.getSelectedValuesList().toArray());
+            } else {JOptionPane.showMessageDialog(null, "Unknown Terrain");}
+        }
+
+        //dispose of the dialog
+        this.dispose();
+
+    }//end actionPerformed
 
     public Object[] getCommandName() {
         return this.commandName;
     }
 
-    private void loadOpFlags() {
-        client.getData().getPlanetOpFlags().clear();
-
-        client.sendChat(IClient.CAMPAIGN_PREFIX + "c getserveropflags");
-
-        int count = 0;
-        while (client.getData().getPlanetOpFlags().isEmpty() && count < 1000) {
-            try {
-                Thread.sleep(125);
-            } catch (Exception ex) {}
-            count++;
-        }
+    private void setCommandName(Object[] terrains) {
+        this.commandName = terrains;
     }
 
 }

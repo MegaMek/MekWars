@@ -80,351 +80,11 @@ public class CampaignData implements TerrainProvider {
      */
     private final ArrayList<Terrain> terrains = new ArrayList<>();
     private final ArrayList<AdvancedTerrain> advTerrains = new ArrayList<>();
-
-
+    private final TreeMap<String, String> planetOpFlags = new TreeMap<>();
     private EnumSet<AmmoType.Munitions> serverBannedAmmo = EnumSet.noneOf(AmmoType.Munitions.class);
     private Vector<Integer> bannedTargetingSystems = new Vector<>();
     private Hashtable<String, Integer> commands = new Hashtable<>();
-    private final TreeMap<String, String> planetOpFlags = new TreeMap<>();
-
     private Properties serverConfigs = new Properties();
-
-    /**
-     * Retrieve a specific planet.
-     *
-     * @param id The id of the planet.
-     *
-     * @return The requested Planet. This is usually a subclass of Planet.
-     */
-    public Planet getPlanet(int id) {
-        return planets.get(id);
-    }
-
-    /**
-     * Retrieve a planet by its name. Please try to use planet Id's when lookup for a planet instead (if you have the
-     * choice).
-     */
-    public Planet getPlanetByName(String name) {
-
-        try {
-            Integer planetID = this.planetID.get(name.toLowerCase());
-            return getPlanet(planetID);
-        } catch (Exception ex) {
-            MWLogger.errLog("Looking for planet: " + name);
-            return null;
-        }
-    }
-
-    /**
-     * @author jtighe Retrieve a factory by its name.
-     *
-     */
-    public UnitFactory getFactoryByName(Planet planet, String name) {
-        for (UnitFactory e : planet.getUnitFactories()) {
-            if (e.getName().equalsIgnoreCase(name)) {
-                return e;
-            }
-        }
-        return null;
-    }
-
-    /**
-     * @param factory Updates the Client side factories Useful for the factory Refresh with RP
-     *
-     * @author Torren (Jason Tighe)
-     */
-    public void updateFactoryTick(String planetString, String factory, int tick) {
-        Planet planet = getPlanetByName(planetString);
-        UnitFactory unitFactory = getFactoryByName(planet, factory);
-        unitFactory.setTicksUntilRefresh(tick);
-    }
-
-    /**
-     * Check if the planet name was only partial and complete it..
-     */
-    public Planet getPlanetByPartialName(String name) {
-        for (Planet planet : getAllPlanets()) {
-            if (planet.getName().equals(name)) {
-                return planet;
-            }
-
-            if (planet.getName().contains(name)) {
-                return planet;
-            }
-        }
-        return null;
-    }
-
-    /**
-     * Retrieves all planets.
-     */
-    public Collection<Planet> getAllPlanets() {
-        return planets.values();
-    }
-
-    /**
-     * Adds a planet to the campaign storage. If it was already within the storage, it replaces the old object.
-     *
-     * @param planet The planet to hold.
-     *               <p>
-     *               see You should use XStream to initialize CampaignData
-     */
-    public void addPlanet(Planet planet) {
-        if (planet.getId() == -1) {
-            planet.setId(getUnusedPlanetID());
-        }
-
-        planets.put(planet.getId(), planet);
-        planetID.put(planet.getName().toLowerCase(), planet.getId());
-    }
-
-    /**
-     * BUMM - Blow up a planet.
-     *
-     * @param id The id of the blown up planet.
-     */
-    public void removePlanet(int id) {
-        planetID.remove(getPlanet(id).getName().toLowerCase());
-        planets.remove(id);
-    }
-
-    /**
-     * Remove all planets.
-     */
-    public void clearPlanets() {
-        planets.clear();
-    }
-
-    /**
-     * Retrieve an unused id for planets.
-     *
-     * @return An Planet id not used yet.
-     *       <p>
-     *                                                                                                                                                                                                                                                                                                       TODO There should be no need for such function, since ID's should extracted from resource files. This
-     *                                                                                                                                                                                                                                                                                                             function will vanish if ids are part of the resource.
-     */
-    public int getUnusedPlanetID() {
-        int id = 0;
-        while (planets.containsKey(id)) {
-            id++;
-        }
-        return id;
-    }
-
-    /**
-     * Retrieve a specific faction.
-     *
-     * @param id The id of the House.
-     *
-     * @return The requested faction.
-     */
-    public House getHouse(int id) {
-        return factions.get(id);
-    }
-
-    /**
-     * Retrieves all factions.
-     */
-    public Collection<House> getAllHouses() {
-        return factions.values();
-    }
-
-    /**
-     * Adds a faction to the campaign storage. If it was already within the storage, it replaces the old object.
-     *
-     * @param faction The faction to hold.
-     *                <p>
-     *                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    TODO You should use XStream to initialize CampaignData
-     */
-    public void addHouse(House faction) {
-        if (faction.getId() == -1 && !faction.getName().equalsIgnoreCase("None")) {
-            faction.setId(getUnusedHouseID());
-        }
-        factions.put(faction.getId(), faction);
-        factionID.put(faction.getName().toLowerCase(), faction.getId());
-    }
-
-    /**
-     * Remove a house from the server this is normally only for single faction servers
-     *
-     */
-    public void removeHouse(int id) {
-        String factionName = getHouse(id).getName().toLowerCase();
-        factionID.remove(factionName);
-        factions.remove(id);
-
-        File factionFile = new File("./campaign/factions/" + factionName + ".dat");
-        if (factionFile.exists()) {
-            factionFile.delete();
-        }
-
-        factionFile = new File("./campaign/factions/" + factionName + ".bak");
-        if (factionFile.exists()) {
-            factionFile.delete();
-        }
-    }
-
-    /**
-     * Retrieve a faction by its name.
-     * <p>
-     * TODO This seems to be only needed, because some serialization work with transmitting the factions name
-     *       instead of its id.
-     */
-    public House getHouseByName(String name) {
-        try {
-            return getHouse(factionID.get(name.toLowerCase()));
-        } catch (Exception ex) {
-            return null;
-        }
-    }
-
-    /**
-     * Remove all factions.
-     */
-    public void clearHouses() {
-        factions.clear();
-    }
-
-    /**
-     * Retrieve an unused id for factions.
-     *
-     * @return An House id not used yet.
-     *       <p>
-     *                                                                         TODO There should be no need for such function, since ID's should extracted from resource files. This
-     *                                                                               function will vanish if ids are part of the resource.
-     */
-    public int getUnusedHouseID() {
-        int id = -1;
-        int hid;
-        for (House e : factions.values()) {
-            hid = e.getId();
-            if (hid > id) {
-                id = hid;
-            }
-        }
-        id++;
-        return id;
-    }
-
-    /**
-     * Retrieve an unused id for terrains. Only used upon start up of a new server using XML files.
-     *
-     * @return An terrain id not used yet.
-     */
-    public int getUnusedTerrainID() {
-        int id = -1;
-        int hid;
-        for (Terrain terrain : terrains) {
-            hid = terrain.getId();
-            if (hid > id) {
-                id = hid;
-            }
-        }
-        id++;
-        return id;
-    }
-
-    /**
-     * Retrieve an unused id for adv terrains. Only used upon start up of a new server using XML files.
-     *
-     * @return An terrain id not used yet.
-     */
-    public int getUnusedAdvTerrainID() {
-        int id = -1;
-        int hid = -1;
-        for (AdvancedTerrain e : advTerrains) {
-            hid = e.getId();
-            if (hid > id) {
-                id = hid;
-            }
-        }
-        id++;
-        return id;
-    }
-
-    /**
-     * Since I have no idea how TinyXML is operating and since McWizard does not allow me to use my loved JDom and
-     * finally, since Enkel does not like XML-Transfer anyway, I use this to encode/decode the whole object.. (Imi)
-     * <p>
-     * There is another aspect of binOut to keep in mind. Since a MD5 hash is build after each differential update to
-     * keep the data in sync, this function has to provide THE SAME output each time it is run, regardless of the
-     * underlying virtual machine. Currently this is done by only using container classes, that remain the elements in a
-     * stable order. If you need to add a container with unstable order (as Hash*), you have to make sure, the data is
-     * odered before writing it out with binOut.
-     * <p>
-     * TODO: check http://jira.codehaus.org/secure/ViewIssue.jspa?key=XSTR-27 to
-     * see whether a better way of serialization is available ;-)
-     */
-    public void binOut(BinWriter out) throws IOException {
-        binTerrainsOut(out);
-        binHousesOut(out);
-        binPlanetsOut(out);
-    }
-
-    /**
-     * Outputs all factions
-     *
-     * @see CampaignData#binOut(BinWriter)
-     */
-    public void binHousesOut(BinWriter out) throws IOException {
-        out.println(factions.size(), "factions.size");
-        for (House house : factions.values()) {
-            house.binOut(out);
-        }
-    }
-
-    /**
-     * Outputs updated houses
-     *
-     * @see CampaignData#binOut(BinWriter)
-     */
-    public void binHousesOut(ArrayList<House> houses, BinWriter out) throws IOException {
-        out.println(houses.size(), "houses.size");
-        for (House house : houses) {
-            house.binOut(out);
-        }
-    }
-
-    /**
-     * Outputs all terrains
-     *
-     * @see CampaignData#binOut(BinWriter)
-     */
-    public void binTerrainsOut(BinWriter out) throws IOException {
-        out.println(terrains.size(), "terrains.size");
-        for (Terrain pe : terrains) {
-            pe.binOut(out);
-        }
-        out.println(advTerrains.size(), "advTerrains.size");
-        for (AdvancedTerrain pe : advTerrains) {
-            pe.binOut(out);
-        }
-
-    }
-
-    /**
-     * Outputs all planets
-     *
-     * @see CampaignData#binOut(BinWriter)
-     */
-    public void binPlanetsOut(BinWriter out) throws IOException {
-        out.println(planets.size(), "planets.size");
-        for (Planet p : planets.values()) {
-            p.binOut(out);
-        }
-    }
-
-    /**
-     * Outputs all planets
-     *
-     * @see CampaignData#binOut(BinWriter)
-     */
-    public void binPlanetsOut(ArrayList<Planet> planets, BinWriter out) throws IOException {
-        out.println(planets.size(), "planets.size");
-        for (Planet planet : planets) {
-            planet.binOut(out);
-        }
-    }
 
     /**
      * Create empty campaign data.
@@ -465,6 +125,352 @@ public class CampaignData implements TerrainProvider {
     }
 
     /**
+     * @see TerrainProvider#addTerrain(PlanetEnvironment)
+     */
+    public void addTerrain(Terrain terrain) {
+        terrain.setId(getUnusedTerrainID());
+        terrains.add(terrain);
+        terrains.trimToSize();
+    }
+
+    /**
+     * Adds a faction to the campaign storage. If it was already within the storage, it replaces the old object.
+     *
+     * @param faction The faction to hold.
+     *                <p>
+     *                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   TODO You should use XStream to initialize CampaignData
+     */
+    public void addHouse(House faction) {
+        if (faction.getId() == -1 && !faction.getName().equalsIgnoreCase("None")) {
+            faction.setId(getUnusedHouseID());
+        }
+        factions.put(faction.getId(), faction);
+        factionID.put(faction.getName().toLowerCase(), faction.getId());
+    }
+
+    /**
+     * Adds a planet to the campaign storage. If it was already within the storage, it replaces the old object.
+     *
+     * @param planet The planet to hold.
+     *               <p>
+     *               see You should use XStream to initialize CampaignData
+     */
+    public void addPlanet(Planet planet) {
+        if (planet.getId() == -1) {
+            planet.setId(getUnusedPlanetID());
+        }
+
+        planets.put(planet.getId(), planet);
+        planetID.put(planet.getName().toLowerCase(), planet.getId());
+    }
+
+    /**
+     * Retrieve an unused id for terrains. Only used upon start up of a new server using XML files.
+     *
+     * @return An terrain id not used yet.
+     */
+    public int getUnusedTerrainID() {
+        int id = -1;
+        int hid;
+        for (Terrain terrain : terrains) {
+            hid = terrain.getId();
+            if (hid > id) {
+                id = hid;
+            }
+        }
+        id++;
+        return id;
+    }
+
+    /**
+     * Retrieve an unused id for adv terrains. Only used upon start up of a new server using XML files.
+     *
+     * @return An terrain id not used yet.
+     */
+    public int getUnusedAdvTerrainID() {
+        int id = -1;
+        int hid = -1;
+        for (AdvancedTerrain e : advTerrains) {
+            hid = e.getId();
+            if (hid > id) {
+                id = hid;
+            }
+        }
+        id++;
+        return id;
+    }
+
+    /**
+     * Retrieve an unused id for factions.
+     *
+     * @return An House id not used yet.
+     *       <p>
+     *                                                                               TODO There should be no need for such function, since ID's should extracted from resource files. This
+     *                                                                                     function will vanish if ids are part of the resource.
+     */
+    public int getUnusedHouseID() {
+        int id = -1;
+        int hid;
+        for (House e : factions.values()) {
+            hid = e.getId();
+            if (hid > id) {
+                id = hid;
+            }
+        }
+        id++;
+        return id;
+    }
+
+    /**
+     * Retrieve an unused id for planets.
+     *
+     * @return An Planet id not used yet.
+     *       <p>
+     *                                                                                                                                                                                                                                                                                                             TODO There should be no need for such function, since ID's should extracted from resource files. This
+     *                                                                                                                                                                                                                                                                                                                   function will vanish if ids are part of the resource.
+     */
+    public int getUnusedPlanetID() {
+        int id = 0;
+        while (planets.containsKey(id)) {
+            id++;
+        }
+        return id;
+    }
+
+    /**
+     * @param factory Updates the Client side factories Useful for the factory Refresh with RP
+     *
+     * @author Torren (Jason Tighe)
+     */
+    public void updateFactoryTick(String planetString, String factory, int tick) {
+        Planet planet = getPlanetByName(planetString);
+        UnitFactory unitFactory = getFactoryByName(planet, factory);
+        unitFactory.setTicksUntilRefresh(tick);
+    }
+
+    /**
+     * Retrieve a planet by its name. Please try to use planet Id's when lookup for a planet instead (if you have the
+     * choice).
+     */
+    public Planet getPlanetByName(String name) {
+
+        try {
+            Integer planetID = this.planetID.get(name.toLowerCase());
+            return getPlanet(planetID);
+        } catch (Exception ex) {
+            MWLogger.errLog("Looking for planet: " + name);
+            return null;
+        }
+    }
+
+    /**
+     * @author jtighe Retrieve a factory by its name.
+     *
+     */
+    public UnitFactory getFactoryByName(Planet planet, String name) {
+        for (UnitFactory e : planet.getUnitFactories()) {
+            if (e.getName().equalsIgnoreCase(name)) {
+                return e;
+            }
+        }
+        return null;
+    }
+
+    /**
+     * Retrieve a specific planet.
+     *
+     * @param id The id of the planet.
+     *
+     * @return The requested Planet. This is usually a subclass of Planet.
+     */
+    public Planet getPlanet(int id) {
+        return planets.get(id);
+    }
+
+    /**
+     * Check if the planet name was only partial and complete it..
+     */
+    public Planet getPlanetByPartialName(String name) {
+        for (Planet planet : getAllPlanets()) {
+            if (planet.getName().equals(name)) {
+                return planet;
+            }
+
+            if (planet.getName().contains(name)) {
+                return planet;
+            }
+        }
+        return null;
+    }
+
+    /**
+     * Retrieves all planets.
+     */
+    public Collection<Planet> getAllPlanets() {
+        return planets.values();
+    }
+
+    /**
+     * BUMM - Blow up a planet.
+     *
+     * @param id The id of the blown up planet.
+     */
+    public void removePlanet(int id) {
+        planetID.remove(getPlanet(id).getName().toLowerCase());
+        planets.remove(id);
+    }
+
+    /**
+     * Remove all planets.
+     */
+    public void clearPlanets() {
+        planets.clear();
+    }
+
+    /**
+     * Retrieves all factions.
+     */
+    public Collection<House> getAllHouses() {
+        return factions.values();
+    }
+
+    /**
+     * Remove a house from the server this is normally only for single faction servers
+     *
+     */
+    public void removeHouse(int id) {
+        String factionName = getHouse(id).getName().toLowerCase();
+        factionID.remove(factionName);
+        factions.remove(id);
+
+        File factionFile = new File("./campaign/factions/" + factionName + ".dat");
+        if (factionFile.exists()) {
+            factionFile.delete();
+        }
+
+        factionFile = new File("./campaign/factions/" + factionName + ".bak");
+        if (factionFile.exists()) {
+            factionFile.delete();
+        }
+    }
+
+    /**
+     * Retrieve a specific faction.
+     *
+     * @param id The id of the House.
+     *
+     * @return The requested faction.
+     */
+    public House getHouse(int id) {
+        return factions.get(id);
+    }
+
+    /**
+     * Retrieve a faction by its name.
+     * <p>
+     * TODO This seems to be only needed, because some serialization work with transmitting the factions name
+     *       instead of its id.
+     */
+    public House getHouseByName(String name) {
+        try {
+            return getHouse(factionID.get(name.toLowerCase()));
+        } catch (Exception ex) {
+            return null;
+        }
+    }
+
+    /**
+     * Remove all factions.
+     */
+    public void clearHouses() {
+        factions.clear();
+    }
+
+    /**
+     * Since I have no idea how TinyXML is operating and since McWizard does not allow me to use my loved JDom and
+     * finally, since Enkel does not like XML-Transfer anyway, I use this to encode/decode the whole object.. (Imi)
+     * <p>
+     * There is another aspect of binOut to keep in mind. Since a MD5 hash is build after each differential update to
+     * keep the data in sync, this function has to provide THE SAME output each time it is run, regardless of the
+     * underlying virtual machine. Currently this is done by only using container classes, that remain the elements in a
+     * stable order. If you need to add a container with unstable order (as Hash*), you have to make sure, the data is
+     * odered before writing it out with binOut.
+     * <p>
+     * TODO: check http://jira.codehaus.org/secure/ViewIssue.jspa?key=XSTR-27 to
+     * see whether a better way of serialization is available ;-)
+     */
+    public void binOut(BinWriter out) throws IOException {
+        binTerrainsOut(out);
+        binHousesOut(out);
+        binPlanetsOut(out);
+    }
+
+    /**
+     * Outputs all terrains
+     *
+     * @see CampaignData#binOut(BinWriter)
+     */
+    public void binTerrainsOut(BinWriter out) throws IOException {
+        out.println(terrains.size(), "terrains.size");
+        for (Terrain pe : terrains) {
+            pe.binOut(out);
+        }
+        out.println(advTerrains.size(), "advTerrains.size");
+        for (AdvancedTerrain pe : advTerrains) {
+            pe.binOut(out);
+        }
+
+    }
+
+    /**
+     * Outputs all factions
+     *
+     * @see CampaignData#binOut(BinWriter)
+     */
+    public void binHousesOut(BinWriter out) throws IOException {
+        out.println(factions.size(), "factions.size");
+        for (House house : factions.values()) {
+            house.binOut(out);
+        }
+    }
+
+    /**
+     * Outputs all planets
+     *
+     * @see CampaignData#binOut(BinWriter)
+     */
+    public void binPlanetsOut(BinWriter out) throws IOException {
+        out.println(planets.size(), "planets.size");
+        for (Planet p : planets.values()) {
+            p.binOut(out);
+        }
+    }
+
+    /**
+     * Outputs updated houses
+     *
+     * @see CampaignData#binOut(BinWriter)
+     */
+    public void binHousesOut(ArrayList<House> houses, BinWriter out) throws IOException {
+        out.println(houses.size(), "houses.size");
+        for (House house : houses) {
+            house.binOut(out);
+        }
+    }
+
+    /**
+     * Outputs all planets
+     *
+     * @see CampaignData#binOut(BinWriter)
+     */
+    public void binPlanetsOut(ArrayList<Planet> planets, BinWriter out) throws IOException {
+        out.println(planets.size(), "planets.size");
+        for (Planet planet : planets) {
+            planet.binOut(out);
+        }
+    }
+
+    /**
      * Updates sent Planets due a differential update.
      *
      * @param changesSinceLastRefresh A map to hold the change in planet ids that got updated this refresh. Structure is
@@ -481,19 +487,6 @@ public class CampaignData implements TerrainProvider {
             getPlanet(id).decodeMutableFields(in, this);
             Influences infNew = getPlanet(id).getInfluence();
             changesSinceLastRefresh.put(id, infNew.difference(infOld));
-        }
-    }
-
-    /**
-     * Writes some planets due a differential update
-     *
-     * @param ids A collection of java.lang.Integer with the ids to send.
-     */
-    public void encodeMutablePlanets(BinWriter out, Collection<Integer> ids) throws IOException {
-        out.println(ids.size(), "mutableplanetsize");
-        for (Integer id : ids) {
-            out.println(id, "planetID");
-            getPlanet(id).encodeMutableFields(out, this);
         }
     }
 
@@ -515,6 +508,19 @@ public class CampaignData implements TerrainProvider {
      * DatWriter(directory.getPath()+"/CampaignData.dat");
      * datWriter.write(this,"CampaignData"); datWriter.close(); }
      */
+
+    /**
+     * Writes some planets due a differential update
+     *
+     * @param ids A collection of java.lang.Integer with the ids to send.
+     */
+    public void encodeMutablePlanets(BinWriter out, Collection<Integer> ids) throws IOException {
+        out.println(ids.size(), "mutableplanetsize");
+        for (Integer id : ids) {
+            out.println(id, "planetID");
+            getPlanet(id).encodeMutableFields(out, this);
+        }
+    }
 
     /**
      * @see TerrainProvider#getTerrain(int)
@@ -539,19 +545,10 @@ public class CampaignData implements TerrainProvider {
     /**
      * @see TerrainProvider#addTerrain(PlanetEnvironment)
      */
-    public void addTerrain(Terrain terrain) {
-        terrain.setId(getUnusedTerrainID());
-        terrains.add(terrain);
-        terrains.trimToSize();
-    }
-
-    public Terrain getTerrainByName(String TerrainName) {
-        for (Terrain env : terrains) {
-            if (env.getName().equalsIgnoreCase(TerrainName)) {
-                return env;
-            }
-        }
-        return null;
+    public void addAdvancedTerrain(AdvancedTerrain newAdvTerrain) {
+        newAdvTerrain.setId(getUnusedAdvTerrainID());
+        advTerrains.add(newAdvTerrain);
+        advTerrains.trimToSize();
     }
 
     /*adding the advanced terrain to the campaign data*/
@@ -576,13 +573,13 @@ public class CampaignData implements TerrainProvider {
         return advTerrains;
     }
 
-    /**
-     * @see TerrainProvider#addTerrain(PlanetEnvironment)
-     */
-    public void addAdvancedTerrain(AdvancedTerrain newAdvTerrain) {
-        newAdvTerrain.setId(getUnusedAdvTerrainID());
-        advTerrains.add(newAdvTerrain);
-        advTerrains.trimToSize();
+    public Terrain getTerrainByName(String TerrainName) {
+        for (Terrain env : terrains) {
+            if (env.getName().equalsIgnoreCase(TerrainName)) {
+                return env;
+            }
+        }
+        return null;
     }
 
     public AdvancedTerrain getAdvancedTerrainByName(String AdvTerrainName) {
@@ -744,20 +741,20 @@ public class CampaignData implements TerrainProvider {
         return munitions;
     }
 
-    public void setServerBannedAmmo(EnumSet<AmmoType.Munitions> ban) {
-        serverBannedAmmo = ban;
-    }
-
     public EnumSet<AmmoType.Munitions> getServerBannedAmmo() {
         return serverBannedAmmo;
     }
 
-    public void setBannedTargetingSystems(Vector<Integer> ban) {
-        bannedTargetingSystems = ban;
+    public void setServerBannedAmmo(EnumSet<AmmoType.Munitions> ban) {
+        serverBannedAmmo = ban;
     }
 
     public Vector<Integer> getBannedTargetingSystems() {
         return bannedTargetingSystems;
+    }
+
+    public void setBannedTargetingSystems(Vector<Integer> ban) {
+        bannedTargetingSystems = ban;
     }
 
     /**
@@ -781,12 +778,12 @@ public class CampaignData implements TerrainProvider {
         setCommandTable(commandTemp);
     }
 
-    public void setCommandTable(Hashtable<String, Integer> commands) {
-        this.commands = commands;
-    }
-
     public Hashtable<String, Integer> getCommandTable() {
         return commands;
+    }
+
+    public void setCommandTable(Hashtable<String, Integer> commands) {
+        this.commands = commands;
     }
 
     public int getAccessLevel(String command) {

@@ -22,15 +22,6 @@ public class PurchaseFactoryCommand implements server.campaign.commands.Command 
 
     // Starting out at mod level this can be lowered as needed
     int accessLevel = server.MWChatServer.auth.IAuthenticator.MODERATOR;
-
-    public int getExecutionLevel() {
-        return accessLevel;
-    }
-
-    public void setExecutionLevel(int i) {
-        accessLevel = i;
-    }
-
     String syntax = "Factory Name#Type#Weight#Planet";
 
     public String getSyntax() {
@@ -197,5 +188,13 @@ public class PurchaseFactoryCommand implements server.campaign.commands.Command 
         server.campaign.CampaignMain.cm.doSendHouseMail(house,
               "NOTE",
               Username + " has purchased a factory, " + name + ", on planet " + planet.getName() + ".");
+    }
+
+    public int getExecutionLevel() {
+        return accessLevel;
+    }
+
+    public void setExecutionLevel(int i) {
+        accessLevel = i;
     }
 }// end RequestSubFactionPromotionCommand class

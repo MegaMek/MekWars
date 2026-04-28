@@ -49,22 +49,6 @@ public class Continent {
         // for serialization
     }
 
-
-    /**
-     * @return Returns the size.
-     */
-    public int getSize() {
-        return size;
-    }
-
-    /**
-     * @param size The size to set.
-     */
-    public void setSize(int size) {
-        this.size = size;
-    }
-
-
     @Override
     public boolean equals(Object o) {
         if (!(o instanceof Continent cont)) {
@@ -80,6 +64,20 @@ public class Continent {
         }
 
         return !cont.getAdvancedTerrain().equals(getAdvancedTerrain());
+    }
+
+    /**
+     * @return Returns the size.
+     */
+    public int getSize() {
+        return size;
+    }
+
+    /**
+     * @param size The size to set.
+     */
+    public void setSize(int size) {
+        this.size = size;
     }
 
     /**

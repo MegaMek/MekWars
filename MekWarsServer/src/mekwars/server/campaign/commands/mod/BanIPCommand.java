@@ -32,10 +32,6 @@ public class BanIPCommand implements server.campaign.commands.Command {
     int accessLevel = server.MWChatServer.auth.IAuthenticator.MODERATOR;
     String syntax = "Type banip with no arguments for syntax";
 
-    public int getExecutionLevel() {return accessLevel;}
-
-    public void setExecutionLevel(int i) {accessLevel = i;}
-
     public String getSyntax() {return syntax;}
 
     public void process(java.util.StringTokenizer command, String Username) {
@@ -138,5 +134,9 @@ public class BanIPCommand implements server.campaign.commands.Command {
         //MWLogger.modLog(Username + " banned " + toKill + " " +timeName+".");
         server.campaign.CampaignMain.cm.getServer().sendChat(Username + " banned " + toKill + " " + timeName + ".");
     }
+
+    public int getExecutionLevel() {return accessLevel;}
+
+    public void setExecutionLevel(int i) {accessLevel = i;}
 
 }//end banipcommand.java

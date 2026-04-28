@@ -32,17 +32,6 @@ public class GetFactionConfigsCommand implements Command {
     int accessLevel = 0;
     String syntax = "";
 
-    public String getSyntax() {
-        return syntax;
-    }
-
-    public int getExecutionLevel() {
-        return 0;
-    }
-
-    public void setExecutionLevel(int i) {
-    }
-
     public void process(java.util.StringTokenizer command, String Username) {
 
         try {
@@ -110,5 +99,16 @@ public class GetFactionConfigsCommand implements Command {
             server.campaign.CampaignMain.cm.toUser("PL|FC|DONE#DONE", Username, false);
             MWLogger.errLog(ex);
         }
+    }
+
+    public int getExecutionLevel() {
+        return 0;
+    }
+
+    public void setExecutionLevel(int i) {
+    }
+
+    public String getSyntax() {
+        return syntax;
     }
 }// end GetFactionConfigsCommand

@@ -32,6 +32,7 @@ import mekwars.common.util.TokenReader;
  */
 public class CBMUnit {
 
+    CUnit embeddedUnit = null;
     //IVARS
     private boolean soldByPlayer = false;
     private String modelName = "";
@@ -43,8 +44,6 @@ public class CBMUnit {
     private int playersBid = -1;
     private String unitWeight = "";
     private String unitType = "";
-
-    CUnit embeddedUnit = null;
 
     //CONSTRUCTOR
 

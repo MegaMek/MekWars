@@ -21,12 +21,6 @@ public class EmployeeHouseMailCommand implements Command {
     int accessLevel = 0;
     String syntax = "";
 
-    public int getExecutionLevel() {return accessLevel;}
-
-    public void setExecutionLevel(int i) {accessLevel = i;}
-
-    public String getSyntax() {return syntax;}
-
     public void process(java.util.StringTokenizer command, String Username) {
 
         if (accessLevel != 0) {
@@ -47,4 +41,10 @@ public class EmployeeHouseMailCommand implements Command {
         server.campaign.CampaignMain.cm.doSendHouseMail(server.campaign.CampaignMain.cm.getPlayer(Username)
                                                               .getHouseFightingFor(), Username, toSend);
     }
+
+    public int getExecutionLevel() {return accessLevel;}
+
+    public void setExecutionLevel(int i) {accessLevel = i;}
+
+    public String getSyntax() {return syntax;}
 }

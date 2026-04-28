@@ -23,14 +23,6 @@ public class AdminCreateSolarisCommand implements server.campaign.commands.Comma
     int accessLevel = server.MWChatServer.auth.IAuthenticator.ADMIN;
     String syntax = "";
 
-    public int getExecutionLevel() {
-        return accessLevel;
-    }
-
-    public void setExecutionLevel(int i) {
-        accessLevel = i;
-    }
-
     public String getSyntax() {
         return syntax;
     }
@@ -77,5 +69,13 @@ public class AdminCreateSolarisCommand implements server.campaign.commands.Comma
         server.campaign.CampaignMain.cm.doSendModMail("NOTE",
               Username + " has created " + server.campaign.CampaignMain.cm.getConfig("NewbieHouseName"));
 
+    }
+
+    public int getExecutionLevel() {
+        return accessLevel;
+    }
+
+    public void setExecutionLevel(int i) {
+        accessLevel = i;
     }
 }

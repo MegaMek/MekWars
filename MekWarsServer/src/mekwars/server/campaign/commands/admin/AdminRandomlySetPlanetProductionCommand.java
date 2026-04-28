@@ -24,14 +24,6 @@ public class AdminRandomlySetPlanetProductionCommand implements server.campaign.
     int accessLevel = server.MWChatServer.auth.IAuthenticator.ADMIN;
     String syntax = "min#max[set to 0 to reset all planets to 0]";
 
-    public int getExecutionLevel() {
-        return accessLevel;
-    }
-
-    public void setExecutionLevel(int i) {
-        accessLevel = i;
-    }
-
     public String getSyntax() {
         return syntax;
     }
@@ -113,5 +105,13 @@ public class AdminRandomlySetPlanetProductionCommand implements server.campaign.
         server.campaign.CampaignMain.cm.toUser("You have set production for all of the planets.", Username, true);
         server.campaign.CampaignMain.cm.doSendModMail("NOTE", Username + " has set production for all of the planets.");
 
+    }
+
+    public int getExecutionLevel() {
+        return accessLevel;
+    }
+
+    public void setExecutionLevel(int i) {
+        accessLevel = i;
     }
 }

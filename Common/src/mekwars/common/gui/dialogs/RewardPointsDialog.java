@@ -30,9 +30,6 @@ import mekwars.common.util.UnitUtils;
 
 public final class RewardPointsDialog implements java.awt.event.ActionListener, java.awt.event.KeyListener {
 
-    //store the client backlink for other things to use
-    private final IClient client;
-
     private final static String okayCommand = "Okay";
     private final static String cancelCommand = "Cancel";
     private final static String unitCommand = "Units";
@@ -43,8 +40,8 @@ public final class RewardPointsDialog implements java.awt.event.ActionListener, 
     private final static String refreshCommand = "Refresh";
     private final static String techComboCommand = "TechCombo";
     private final static String repairCommand = "Repair";
-
-
+    //store the client backlink for other things to use
+    private final IClient client;
     private final javax.swing.JButton cancelButton = new javax.swing.JButton("Cancel");
 
     //TEXT FIELDS
@@ -65,26 +62,23 @@ public final class RewardPointsDialog implements java.awt.event.ActionListener, 
           javax.swing.SwingConstants.TRAILING);
     private final javax.swing.JLabel repairLabel = new javax.swing.JLabel("Repair:",
           javax.swing.SwingConstants.TRAILING);
-
-    private javax.swing.JComboBox<String> unitComboBox = new javax.swing.JComboBox<>();
     private final String[] weightChoices = { "Light", "Medium", "Heavy", "Assault" };
     private final javax.swing.JComboBox<String> weightComboBox = new javax.swing.JComboBox<>(weightChoices);
     private final javax.swing.JComboBox<String> rewardsComboBox;
     private final javax.swing.JComboBox<String> factionComboBox;
+    private final String[] techChoices = { "Green", "Reg", "Vet", "Elite" };
+    private final javax.swing.JComboBox<String> techComboBox = new javax.swing.JComboBox<>(techChoices);
+    private final javax.swing.JTextField amountText = new javax.swing.JTextField(5);
+    private final javax.swing.JLabel amountLabel;
+    //STOCK DIALOG AND PANE
+    private final javax.swing.JDialog dialog;
+    private final javax.swing.JOptionPane pane;
+    int cost;
+    private javax.swing.JComboBox<String> unitComboBox = new javax.swing.JComboBox<>();
     private javax.swing.JComboBox<String> rePodComboBox = new javax.swing.JComboBox<>();
     private javax.swing.JComboBox<String> pUnitsComboBox = new javax.swing.JComboBox<>();
     private javax.swing.JComboBox<String> refreshComboBox = new javax.swing.JComboBox<>();
     private javax.swing.JComboBox<String> repairComboBox = new javax.swing.JComboBox<>();
-    private final String[] techChoices = { "Green", "Reg", "Vet", "Elite" };
-    private final javax.swing.JComboBox<String> techComboBox = new javax.swing.JComboBox<>(techChoices);
-
-    private final javax.swing.JTextField amountText = new javax.swing.JTextField(5);
-    private final javax.swing.JLabel amountLabel;
-    int cost;
-
-    //STOCK DIALOG AND PANE
-    private final javax.swing.JDialog dialog;
-    private final javax.swing.JOptionPane pane;
 
     public RewardPointsDialog(IClient client) {
 
@@ -333,6 +327,9 @@ public final class RewardPointsDialog implements java.awt.event.ActionListener, 
     public void keyTyped(java.awt.event.KeyEvent e) {
     }
 
+    public void keyPressed(java.awt.event.KeyEvent e) {
+    }
+
     public void keyReleased(java.awt.event.KeyEvent e) {
         String selection = (String) rewardsComboBox.getSelectedItem();
         cost = Integer.parseInt(amountText.getText());
@@ -364,9 +361,6 @@ public final class RewardPointsDialog implements java.awt.event.ActionListener, 
                 }
             }
         }
-    }
-
-    public void keyPressed(java.awt.event.KeyEvent e) {
     }
 
     public void actionPerformed(java.awt.event.ActionEvent e) {

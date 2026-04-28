@@ -10,8 +10,8 @@ import mekwars.common.campaign.clientutils.protocol.TransportCodec;
  */
 
 public class CommPCmd extends CProtCommand {
-    public CommPCmd(IClient mwClient) {
-        super(mwClient);
+    public CommPCmd(IClient client) {
+        super(client);
         name = "comm";
     }
 

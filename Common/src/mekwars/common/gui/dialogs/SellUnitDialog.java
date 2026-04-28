@@ -166,6 +166,29 @@ public class SellUnitDialog extends javax.swing.JDialog implements java.awt.even
         this.setLocationRelativeTo(client.getMainFrame());
     }
 
+    private void checkMinimumSize() {
+
+        java.awt.Dimension curDim = this.getSize();
+
+        int height;
+        int width;
+        boolean shouldRedraw = false;
+
+        if (curDim.getWidth() < 220) {
+            width = 220;
+            shouldRedraw = true;
+        } else {width = (int) curDim.getWidth();}
+
+        if (curDim.getHeight() < 220) {
+            height = 220;
+            shouldRedraw = true;
+        } else {height = (int) curDim.getHeight();}
+
+        if (shouldRedraw) {
+            this.setSize(new java.awt.Dimension(width, height));
+        }
+
+    }//end checkMinimumSize
 
     /**
      * OK or CANCEL buttons pressed. Handle any changes and then close the dialouge.
@@ -201,30 +224,6 @@ public class SellUnitDialog extends javax.swing.JDialog implements java.awt.even
         this.dispose();
 
     }//end actionPerformed
-
-    private void checkMinimumSize() {
-
-        java.awt.Dimension curDim = this.getSize();
-
-        int height;
-        int width;
-        boolean shouldRedraw = false;
-
-        if (curDim.getWidth() < 220) {
-            width = 220;
-            shouldRedraw = true;
-        } else {width = (int) curDim.getWidth();}
-
-        if (curDim.getHeight() < 220) {
-            height = 220;
-            shouldRedraw = true;
-        } else {height = (int) curDim.getHeight();}
-
-        if (shouldRedraw) {
-            this.setSize(new java.awt.Dimension(width, height));
-        }
-
-    }//end checkMinimumSize
 
 
 }//end SellUnitDialog

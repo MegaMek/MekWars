@@ -18,15 +18,6 @@ package mekwars.server.campaign.commands.leader;
 public class ViewFactionPartsCacheCommand implements server.campaign.commands.Command {
 
     int accessLevel = server.campaign.CampaignMain.cm.getIntegerConfig("factionLeaderLevel");
-
-    public int getExecutionLevel() {
-        return accessLevel;
-    }
-
-    public void setExecutionLevel(int i) {
-        accessLevel = i;
-    }
-
     String syntax = "";
 
     public String getSyntax() {
@@ -61,5 +52,13 @@ public class ViewFactionPartsCacheCommand implements server.campaign.commands.Co
         String results = "SM|" + house.getUnitParts().tableizeComponents(year);
 
         server.campaign.CampaignMain.cm.toUser(results, Username, false);
+    }
+
+    public int getExecutionLevel() {
+        return accessLevel;
+    }
+
+    public void setExecutionLevel(int i) {
+        accessLevel = i;
     }
 }// end RequestSubFactionPromotionCommand class

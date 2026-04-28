@@ -56,11 +56,6 @@ import mekwars.common.util.MWLogger;
 public class AttackMenu extends JMenu implements ActionListener {
     @Serial
     private static final long serialVersionUID = 7420602115238025725L;
-    //VARS
-    private final IClient client;
-    private int armyID;
-    private String planetName;
-
     //Statics
     private static final int OPRANGE = 0;
     private static final int OPCOLOR = 1;
@@ -76,6 +71,10 @@ public class AttackMenu extends JMenu implements ActionListener {
     private static final int OPAFR = 12;
     private static final int OPACTIVE = 13;
     private static final int OPACCESSLEVEL = 14;
+    //VARS
+    private final IClient client;
+    private int armyID;
+    private String planetName;
 
     //CONSTRUCTOR
     public AttackMenu(IClient client, int armyID, String planetName) {

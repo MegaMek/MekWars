@@ -23,18 +23,6 @@ public class HPGPurgeThread extends Thread {
     HPGNet tracker;
 
     /**
-     * Waits.  Because that's what threads do
-     *
-     */
-    private void extendedWait(long time) {
-        try {
-            wait(time);
-        } catch (InterruptedException e) {
-            tracker.addToLog(e);
-        }
-    }
-
-    /**
      * The thread in charge of deleting expired tracker entries
      *
      */
@@ -85,5 +73,17 @@ public class HPGPurgeThread extends Thread {
         int hours = Integer.parseInt(tracker.getConfig().getProperty("purgefrequency", "12"));
         int waitTime = hours * 60 * 60 * 1000;
         extendedWait(waitTime);
+    }
+
+    /**
+     * Waits.  Because that's what threads do
+     *
+     */
+    private void extendedWait(long time) {
+        try {
+            wait(time);
+        } catch (InterruptedException e) {
+            tracker.addToLog(e);
+        }
     }
 }

@@ -32,27 +32,27 @@ public abstract class CommandBase implements ICommandProcessorRemote {
     protected int _access;
     protected String _usage;
 
-    public void setHelp(String help) {
-        _help = help;
+    public String getUsage(String myName) {
+        return _usage;
     }
 
     public String getHelp() {
         return _help;
     }
 
-    public void setAccessRequired(int access) {
-        _access = access;
+    public void setHelp(String help) {
+        _help = help;
     }
 
     public int accessRequired() {
         return _access;
     }
 
-    public void setUsage(String usage) {
-        _usage = usage;
+    public void setAccessRequired(int access) {
+        _access = access;
     }
 
-    public String getUsage(String myName) {
-        return _usage;
+    public void setUsage(String usage) {
+        _usage = usage;
     }
 }

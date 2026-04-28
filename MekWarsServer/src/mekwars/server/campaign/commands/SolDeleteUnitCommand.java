@@ -29,12 +29,6 @@ public class SolDeleteUnitCommand implements Command {
     int accessLevel = 1;
     String syntax = "Unit ID";
 
-    public int getExecutionLevel() {return accessLevel;}
-
-    public void setExecutionLevel(int i) {accessLevel = i;}
-
-    public String getSyntax() {return syntax;}
-
     public void process(java.util.StringTokenizer command, String Username) {
 
         //access level checks
@@ -93,4 +87,10 @@ public class SolDeleteUnitCommand implements Command {
         }
 
     }
+
+    public int getExecutionLevel() {return accessLevel;}
+
+    public void setExecutionLevel(int i) {accessLevel = i;}
+
+    public String getSyntax() {return syntax;}
 }//end SolDeleteUnitCommand

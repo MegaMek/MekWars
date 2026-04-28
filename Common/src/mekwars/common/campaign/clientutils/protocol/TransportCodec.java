@@ -67,21 +67,6 @@ public class TransportCodec {
         return "";
     }
 
-    public static Object decode(String s) {
-        Object result;
-        String sobj = TransportCodec.unescape(s);
-        try {
-            ByteArrayInputStream bais = new ByteArrayInputStream(sobj.getBytes());
-            ObjectInputStream ois = new ObjectInputStream(bais);
-            result = ois.readObject();
-            ois.close();
-            return result;
-        } catch (Exception e) {
-            MWLogger.errLog(e);
-        }
-        return null;
-    }
-
     /**
      * Encode a string to the "x-www-form-urlencoded" form, enhanced with the UTF-8-in-URL proposal. This is what
      * happens:
@@ -139,6 +124,21 @@ public class TransportCodec {
             }
         }
         return sbuf.toString();
+    }
+
+    public static Object decode(String s) {
+        Object result;
+        String sobj = TransportCodec.unescape(s);
+        try {
+            ByteArrayInputStream bais = new ByteArrayInputStream(sobj.getBytes());
+            ObjectInputStream ois = new ObjectInputStream(bais);
+            result = ois.readObject();
+            ois.close();
+            return result;
+        } catch (Exception e) {
+            MWLogger.errLog(e);
+        }
+        return null;
     }
 
     public static String unescape(String s) {

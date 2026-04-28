@@ -211,6 +211,20 @@ public class SUnitFactory extends UnitFactory implements java.io.Serializable {
     }
 
     /**
+     * @return Returns the planet.
+     */
+    public SPlanet getPlanet() {
+        return planet;
+    }
+
+    /**
+     * @param planet The planet to set.
+     */
+    public void setPlanet(SPlanet pl) {
+        this.planet = pl;
+    }
+
+    /**
      * Add or remove refresh time to a factory. This should ALWAYS be used in lieu of super.setTicksUntilRefresh(), as
      * it properly (albeit hackishly) updates players' clients with accurate refresh times.
      */
@@ -247,20 +261,6 @@ public class SUnitFactory extends UnitFactory implements java.io.Serializable {
         }
 
         return hsUpdate;
-    }
-
-    /**
-     * @return Returns the planet.
-     */
-    public SPlanet getPlanet() {
-        return planet;
-    }
-
-    /**
-     * @param planet The planet to set.
-     */
-    public void setPlanet(SPlanet pl) {
-        this.planet = pl;
     }
 
     /**

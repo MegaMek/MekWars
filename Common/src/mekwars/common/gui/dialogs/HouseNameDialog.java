@@ -58,9 +58,8 @@ public class HouseNameDialog extends JDialog implements ActionListener {
     private final JList<String> matchingHousesList;
     private final JTextField nameField;//input field
     private final String okayCommand = "Okay";
-
-    private String factionName = null;
     private final boolean addBlank;
+    private String factionName = null;
 
     //constructor
     public HouseNameDialog(IClient client, String boxText, boolean addBlank, boolean showCanDefectTo) {
@@ -173,6 +172,29 @@ public class HouseNameDialog extends JDialog implements ActionListener {
 
     }
 
+    private void checkMinimumSize() {
+
+        Dimension curDim = this.getSize();
+
+        int height;
+        int width;
+        boolean shouldRedraw = false;
+
+        if (curDim.getWidth() < 300) {
+            width = 300;
+            shouldRedraw = true;
+        } else {width = (int) curDim.getWidth();}
+
+        if (curDim.getHeight() < 150) {
+            height = 150;
+            shouldRedraw = true;
+        } else {height = (int) curDim.getHeight();}
+
+        if (shouldRedraw) {
+            this.setSize(new java.awt.Dimension(width, height));
+        }
+
+    }//end checkMinimumSize
 
     /**
      * OK or CANCEL buttons pressed. Handle any changes and then close the dialouge.
@@ -205,35 +227,11 @@ public class HouseNameDialog extends JDialog implements ActionListener {
 
     }//end actionPerformed
 
-    private void checkMinimumSize() {
-
-        Dimension curDim = this.getSize();
-
-        int height;
-        int width;
-        boolean shouldRedraw = false;
-
-        if (curDim.getWidth() < 300) {
-            width = 300;
-            shouldRedraw = true;
-        } else {width = (int) curDim.getWidth();}
-
-        if (curDim.getHeight() < 150) {
-            height = 150;
-            shouldRedraw = true;
-        } else {height = (int) curDim.getHeight();}
-
-        if (shouldRedraw) {
-            this.setSize(new java.awt.Dimension(width, height));
-        }
-
-    }//end checkMinimumSize
+    public String getHouseName() {
+        return this.factionName;
+    }
 
     private void setHouseName(String name) {
         this.factionName = name;
-    }
-
-    public String getHouseName() {
-        return this.factionName;
     }
 }

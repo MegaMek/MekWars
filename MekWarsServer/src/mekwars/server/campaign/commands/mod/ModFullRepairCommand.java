@@ -24,15 +24,9 @@ import megamek.common.Entity;
 public class ModFullRepairCommand implements server.campaign.commands.Command {
 
     int accessLevel = server.MWChatServer.auth.IAuthenticator.ADMIN;
-
-    public int getExecutionLevel() {return accessLevel;}
-
-    public void setExecutionLevel(int i) {accessLevel = i;}
-
     String syntax = "Player Name#Unit ID";
 
     public String getSyntax() {return syntax;}
-
 
     public void process(java.util.StringTokenizer command, String Username) {
 
@@ -90,4 +84,8 @@ public class ModFullRepairCommand implements server.campaign.commands.Command {
         target.checkAndUpdateArmies(m);
         server.campaign.CampaignMain.cm.toUser("PL|UU|" + m.getId() + "|" + m.toString(true), targetName, false);
     }
+
+    public int getExecutionLevel() {return accessLevel;}
+
+    public void setExecutionLevel(int i) {accessLevel = i;}
 }//end ModFullRepairCommand

@@ -52,6 +52,54 @@ public class SPilot extends Pilot {
         // TODO: remove when possible
     }
 
+    public static mekwars.server.campaign.pilot.SPilot getMekWarrior(int originalID, int pickedUpId) {
+        mekwars.server.campaign.pilot.SPilot mw = new mekwars.server.campaign.pilot.SPilot();
+        mw.setOriginalID(originalID);
+        mw.setPickedUpID(pickedUpId);
+        return mw;
+    }
+
+    /**
+     * Get a random pilot name.
+     *
+     * @param r
+     *
+     * @return
+     */
+    public static String getRandomPilotName(java.util.Random r) {
+        String result = "John Doe";
+        java.io.BufferedReader dis = null;
+        try {
+            java.io.File configFile = new java.io.File("./data/pilotnames/Pilotnames.txt");
+            java.io.FileInputStream fis = new java.io.FileInputStream(configFile);
+            dis = new java.io.BufferedReader(new java.io.InputStreamReader(fis));
+            int names = Integer.parseInt(dis.readLine());
+            int pilotid = r.nextInt(names);
+            while (dis.ready()) {
+                String line = dis.readLine();
+                if (pilotid <= 0) {
+                    return line;
+                }
+
+                // else
+                pilotid--;
+            }
+        } catch (Exception e) {
+            MWLogger.errLog("A problem occured with your Pilotnames File!");
+        } finally {
+            if (dis != null) {
+                try {
+                    dis.close();
+                } catch (java.io.IOException e) {
+                    // TODO Auto-generated catch block
+                    MWLogger.errLog("Unable to close reader in GetRandomPilotName");
+                    MWLogger.errLog(e.getMessage());
+                }
+            }
+        }
+        return result;
+    }
+
     /**
      * Used to check and level up pilot. This should only be called from within ShortResolver.getSalvageStrings()
      *
@@ -417,6 +465,10 @@ public class SPilot extends Pilot {
         return "";
     }// end checkForPilotSkillImprovement
 
+    /*
+     * Thanks to Helge from MegaMekNet for the code snippet.
+     */
+
     public String toFileFormat(String delimiter, boolean toPlayer) {
         SerializedMessage result = new SerializedMessage(delimiter);
         result.append(getName());
@@ -561,10 +613,6 @@ public class SPilot extends Pilot {
         }
     }
 
-    /*
-     * Thanks to Helge from MegaMekNet for the code snippet.
-     */
-
     /**
      * @return Returns the originalID.
      */
@@ -607,13 +655,6 @@ public class SPilot extends Pilot {
      */
     public boolean isDead() {
         return death;
-    }
-
-    public static mekwars.server.campaign.pilot.SPilot getMekWarrior(int originalID, int pickedUpId) {
-        mekwars.server.campaign.pilot.SPilot mw = new mekwars.server.campaign.pilot.SPilot();
-        mw.setOriginalID(originalID);
-        mw.setPickedUpID(pickedUpId);
-        return mw;
     }
 
     /**
@@ -784,6 +825,8 @@ public class SPilot extends Pilot {
 
     }
 
+    // STATIC METHODS
+
     /**
      * @param pilot
      *
@@ -836,49 +879,6 @@ public class SPilot extends Pilot {
             }
         }
 
-    }
-
-    // STATIC METHODS
-
-    /**
-     * Get a random pilot name.
-     *
-     * @param r
-     *
-     * @return
-     */
-    public static String getRandomPilotName(java.util.Random r) {
-        String result = "John Doe";
-        java.io.BufferedReader dis = null;
-        try {
-            java.io.File configFile = new java.io.File("./data/pilotnames/Pilotnames.txt");
-            java.io.FileInputStream fis = new java.io.FileInputStream(configFile);
-            dis = new java.io.BufferedReader(new java.io.InputStreamReader(fis));
-            int names = Integer.parseInt(dis.readLine());
-            int pilotid = r.nextInt(names);
-            while (dis.ready()) {
-                String line = dis.readLine();
-                if (pilotid <= 0) {
-                    return line;
-                }
-
-                // else
-                pilotid--;
-            }
-        } catch (Exception e) {
-            MWLogger.errLog("A problem occured with your Pilotnames File!");
-        } finally {
-            if (dis != null) {
-                try {
-                    dis.close();
-                } catch (java.io.IOException e) {
-                    // TODO Auto-generated catch block
-                    MWLogger.errLog("Unable to close reader in GetRandomPilotName");
-                    MWLogger.errLog(e.getMessage());
-                }
-            }
-        }
-        return result;
     }
 
 }

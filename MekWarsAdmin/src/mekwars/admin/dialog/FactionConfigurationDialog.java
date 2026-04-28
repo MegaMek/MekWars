@@ -48,12 +48,9 @@ public final class FactionConfigurationDialog implements ActionListener {
 
     private final JDialog dialog;
     private final JOptionPane pane;
-
-    private String houseName;
-
     JTabbedPane ConfigPane = new JTabbedPane(SwingConstants.TOP);
-
     IClient client;
+    private String houseName;
     /**
      * @author jtighe
      *

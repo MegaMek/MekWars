@@ -38,6 +38,11 @@ public class UnitsCardPanel extends JPanel {
     @Serial
     private static final long serialVersionUID = 2383908910758773550L;
 
+    public UnitsCardPanel() {
+        super();
+        init();
+    }
+
     private void init() {
         // We're going to split up the UnitsPanel into two card dialogs
         JPanel firstCard = new JPanel();
@@ -382,10 +387,5 @@ public class UnitsCardPanel extends JPanel {
         setLayout(new VerticalLayout());
         add(topPanel);
         add(bottomPanel);
-    }
-
-    public UnitsCardPanel() {
-        super();
-        init();
     }
 }

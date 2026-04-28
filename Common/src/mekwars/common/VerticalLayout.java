@@ -70,6 +70,21 @@ public class VerticalLayout implements LayoutManager {
     }
 
     /**
+     * Constructs a VerticalLayout instance with the specified verticalGap, horizontal alignment and anchoring
+     *
+     * @param verticalGap An int value indicating the vertical seperation of the components
+     * @param alignment   An int value which is one of <code>RIGHT, LEFT, CENTER, BOTH</code> for the horizontal
+     *                    alignment.
+     * @param anchor      An int value which is one of <code>TOP, BOTTOM, CENTER</code> indicating where the components
+     *                    are to appear if the display area exceeds the minimum necessary.
+     */
+    public VerticalLayout(int verticalGap, int alignment, int anchor) {
+        this.verticalGap = verticalGap;
+        this.alignment = alignment;
+        this.anchor = anchor;
+    }
+
+    /**
      * Constructs a VerticalLayout instance with horizontal centering, anchored to the top with the specified
      * verticalGap
      *
@@ -91,19 +106,22 @@ public class VerticalLayout implements LayoutManager {
     }
 
     /**
-     * Constructs a VerticalLayout instance with the specified verticalGap, horizontal alignment and anchoring
-     *
-     * @param verticalGap An int value indicating the vertical seperation of the components
-     * @param alignment   An int value which is one of <code>RIGHT, LEFT, CENTER, BOTH</code> for the horizontal
-     *                    alignment.
-     * @param anchor      An int value which is one of <code>TOP, BOTTOM, CENTER</code> indicating where the components
-     *                    are to appear if the display area exceeds the minimum necessary.
+     * Not used by this class
      */
-    public VerticalLayout(int verticalGap, int alignment, int anchor) {
-        this.verticalGap = verticalGap;
-        this.alignment = alignment;
-        this.anchor = anchor;
-    }
+    public void addLayoutComponent(String name, Component comp) {}
+    //-----------------------------------------------------------------------------
+
+    /**
+     * Not used by this class
+     */
+    public void removeLayoutComponent(Component comp) {}
+
+    //-----------------------------------------------------------------------------
+    public Dimension preferredLayoutSize(Container parent) {return layoutSize(parent, false);}
+
+    //-----------------------------------------------------------------------------
+    public Dimension minimumLayoutSize(Container parent) {return layoutSize(parent, false);}
+    //----------------------------------------------------------------------------
 
     //----------------------------------------------------------------------------
     private Dimension layoutSize(Container parent, boolean minimum) {
@@ -164,24 +182,6 @@ public class VerticalLayout implements LayoutManager {
             }
         }
     }
-
-    //-----------------------------------------------------------------------------
-    public Dimension minimumLayoutSize(Container parent) {return layoutSize(parent, false);}
-
-    //-----------------------------------------------------------------------------
-    public Dimension preferredLayoutSize(Container parent) {return layoutSize(parent, false);}
-    //----------------------------------------------------------------------------
-
-    /**
-     * Not used by this class
-     */
-    public void addLayoutComponent(String name, Component comp) {}
-    //-----------------------------------------------------------------------------
-
-    /**
-     * Not used by this class
-     */
-    public void removeLayoutComponent(Component comp) {}
 
     //-----------------------------------------------------------------------------
     public String toString() {

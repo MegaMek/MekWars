@@ -21,10 +21,6 @@ public class DeleteAccountCommand implements server.campaign.commands.Command {
     int accessLevel = server.MWChatServer.auth.IAuthenticator.ADMIN;
     String syntax = "Name#ScrapUnits[true/false]";
 
-    public int getExecutionLevel() {return accessLevel;}
-
-    public void setExecutionLevel(int i) {accessLevel = i;}
-
     public String getSyntax() {return syntax;}
 
     public void process(java.util.StringTokenizer command, String Username) {
@@ -82,5 +78,9 @@ public class DeleteAccountCommand implements server.campaign.commands.Command {
         }
 
     }//end process()
+
+    public int getExecutionLevel() {return accessLevel;}
+
+    public void setExecutionLevel(int i) {accessLevel = i;}
 
 }

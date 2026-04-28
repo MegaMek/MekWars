@@ -25,12 +25,6 @@ public class FireTechsCommand implements Command {
     int accessLevel = 0;
     String syntax = "Syntax: /firetechs numberOfTech#techType";
 
-    public int getExecutionLevel() {return accessLevel;}
-
-    public void setExecutionLevel(int i) {accessLevel = i;}
-
-    public String getSyntax() {return syntax;}
-
     public void process(java.util.StringTokenizer command, String Username) {
 
         if (accessLevel != 0) {
@@ -128,6 +122,12 @@ public class FireTechsCommand implements Command {
         }//end if(firing creates negative support)
 
     }//end process()
+
+    public int getExecutionLevel() {return accessLevel;}
+
+    public void setExecutionLevel(int i) {accessLevel = i;}
+
+    public String getSyntax() {return syntax;}
 
     private void fireAdvanceTechs(java.util.StringTokenizer command, String Username) {
         int numberOfTechs = 0;

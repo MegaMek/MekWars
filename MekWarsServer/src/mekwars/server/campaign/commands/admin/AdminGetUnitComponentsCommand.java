@@ -30,14 +30,6 @@ public class AdminGetUnitComponentsCommand implements server.campaign.commands.C
     int accessLevel = server.MWChatServer.auth.IAuthenticator.ADMIN;
     String syntax = "TargetPlayer#Option[BreakDownUnit,DisplayParts,AddParts]#Unit[ID,FileName]";
 
-    public int getExecutionLevel() {
-        return accessLevel;
-    }
-
-    public void setExecutionLevel(int i) {
-        accessLevel = i;
-    }
-
     public String getSyntax() {
         return syntax;
     }
@@ -129,6 +121,14 @@ public class AdminGetUnitComponentsCommand implements server.campaign.commands.C
                         "Invalid Syntax: /admingetunitcomponents TargetPlayer#Option[BreakDownUnit,DisplayParts,AddParts]#Unit[ID,FileName]",
                         Username);
         }
+    }
+
+    public int getExecutionLevel() {
+        return accessLevel;
+    }
+
+    public void setExecutionLevel(int i) {
+        accessLevel = i;
     }
 
     public java.util.Hashtable<String, Integer> getUnitComponents(Entity ent) {

@@ -97,17 +97,11 @@ public class ShortResolver {
     String newsFeedTitle = "";
 
     String newsFeedBody = "";
-
-    private boolean drawGame = false;
-
-    private boolean saveStats = false;
-
-    private boolean freeForAll = false;
-
-    private ShortOperation shortOp = null;
-
     boolean nonDestructionMode = false;
-
+    private boolean drawGame = false;
+    private boolean saveStats = false;
+    private boolean freeForAll = false;
+    private ShortOperation shortOp = null;
     private PayoutModifier payoutModifier = new PayoutModifier();
 
     // CONSTRUCTORS

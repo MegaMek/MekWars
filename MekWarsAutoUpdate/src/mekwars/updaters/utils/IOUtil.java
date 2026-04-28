@@ -17,17 +17,11 @@ import java.util.zip.CheckedInputStream;
 
 public class IOUtil {
 
+    public static final int BUFFER_SIZE = 8192;
+    public static final byte[] THROWAWAY_BUFFER = new byte[BUFFER_SIZE];
+
     public static void copy(Reader in, Writer out) throws IOException {
         char[] buffer = new char[BUFFER_SIZE];
-        int bytesRead;
-        while ((bytesRead = in.read(buffer)) != -1) {
-            out.write(buffer, 0, bytesRead);
-        }
-    }
-
-    public static void copy(InputStream in, OutputStream out)
-          throws IOException {
-        byte[] buffer = new byte[BUFFER_SIZE];
         int bytesRead;
         while ((bytesRead = in.read(buffer)) != -1) {
             out.write(buffer, 0, bytesRead);
@@ -41,6 +35,15 @@ public class IOUtil {
         copy(in, out);
         in.close();
         out.close();
+    }
+
+    public static void copy(InputStream in, OutputStream out)
+          throws IOException {
+        byte[] buffer = new byte[BUFFER_SIZE];
+        int bytesRead;
+        while ((bytesRead = in.read(buffer)) != -1) {
+            out.write(buffer, 0, bytesRead);
+        }
     }
 
     public static String[] getLines(String inputFileName) throws IOException {
@@ -85,6 +88,12 @@ public class IOUtil {
         return crc.getValue();
     }
 
+    public static String trimFileSeparator(String url) {
+        url = trimLeadingFileSeparator(url);
+        url = trimTrailingFileSeparator(url);
+
+        return url;
+    }
 
     public static String trimLeadingFileSeparator(String url) {
         while (url.endsWith("/") || url.endsWith("\\")
@@ -100,13 +109,6 @@ public class IOUtil {
                      || url.startsWith(File.separator)) {
             url = url.substring(1);
         }
-
-        return url;
-    }
-
-    public static String trimFileSeparator(String url) {
-        url = trimLeadingFileSeparator(url);
-        url = trimTrailingFileSeparator(url);
 
         return url;
     }
@@ -187,7 +189,6 @@ public class IOUtil {
         return url.replaceAll(" ", "%20");
     }
 
-
     public static void main(String[] args) throws Exception {
         copy(new BufferedInputStream(new URL(args[0]).openStream()), new FileOutputStream(args[1]));
     }
@@ -225,7 +226,4 @@ public class IOUtil {
 
         return sRet;
     }
-
-    public static final int BUFFER_SIZE = 8192;
-    public static final byte[] THROWAWAY_BUFFER = new byte[BUFFER_SIZE];
 }

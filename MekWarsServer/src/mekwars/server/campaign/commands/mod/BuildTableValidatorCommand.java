@@ -33,10 +33,6 @@ public class BuildTableValidatorCommand implements server.campaign.commands.Comm
     int accessLevel = server.MWChatServer.auth.IAuthenticator.MODERATOR;
     String syntax = "[Standard/Reward/Rare]";
 
-    public int getExecutionLevel() {return accessLevel;}
-
-    public void setExecutionLevel(int i) {accessLevel = i;}
-
     public String getSyntax() {return syntax;}
 
     public void process(java.util.StringTokenizer command, String Username) {
@@ -79,6 +75,10 @@ public class BuildTableValidatorCommand implements server.campaign.commands.Comm
 
         server.campaign.CampaignMain.cm.toUser("SM|" + results.toString(), Username, false);
     }
+
+    public int getExecutionLevel() {return accessLevel;}
+
+    public void setExecutionLevel(int i) {accessLevel = i;}
 
     private String validate(String folderName, String Username) {
 

@@ -33,14 +33,6 @@ public class AutoFillBlackMarketSettingCommand implements server.campaign.comman
     int accessLevel = server.MWChatServer.auth.IAuthenticator.ADMIN;
     String syntax = "Min Cost Modifer#Max Cost Modifer#Min Production#Max Production#Unit Weight(optional)";
 
-    public int getExecutionLevel() {
-        return accessLevel;
-    }
-
-    public void setExecutionLevel(int i) {
-        accessLevel = i;
-    }
-
     public String getSyntax() {
         return syntax;
     }
@@ -415,6 +407,14 @@ public class AutoFillBlackMarketSettingCommand implements server.campaign.comman
 
         server.campaign.CampaignMain.cm.toUser("AM:Done setting equipment costs for the black market.", Username);
     }// end process
+
+    public int getExecutionLevel() {
+        return accessLevel;
+    }
+
+    public void setExecutionLevel(int i) {
+        accessLevel = i;
+    }
 
     private boolean isArmor(EquipmentType eq) {
         for (String armor : EquipmentType.armorNames) {

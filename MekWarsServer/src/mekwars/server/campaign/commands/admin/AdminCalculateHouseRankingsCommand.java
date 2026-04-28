@@ -26,10 +26,6 @@ public class AdminCalculateHouseRankingsCommand implements server.campaign.comma
     int accessLevel = server.MWChatServer.auth.IAuthenticator.ADMIN;
     String syntax = "";
 
-    public int getExecutionLevel() {return accessLevel;}
-
-    public void setExecutionLevel(int i) {accessLevel = i;}
-
     public String getSyntax() {return syntax;}
 
     //calculate faction rankings by comparing with original owner
@@ -76,4 +72,8 @@ public class AdminCalculateHouseRankingsCommand implements server.campaign.comma
         String result = "SM|" + Statistics.getReadableHouseRanking(true);
         server.campaign.CampaignMain.cm.toUser(result, Username, false);
     }
+
+    public int getExecutionLevel() {return accessLevel;}
+
+    public void setExecutionLevel(int i) {accessLevel = i;}
 }

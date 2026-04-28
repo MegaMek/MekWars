@@ -71,6 +71,22 @@ public class MMGame implements Serializable {
         }
     }
 
+    @Override
+    public boolean equals(Object o) {
+        if (o instanceof MMGame) {
+            MMGame game;
+            try {
+                game = (MMGame) o;
+            } catch (ClassCastException e) {
+                return false;
+            }
+
+            return game.getHostName().equalsIgnoreCase(this.getHostName());
+        }
+
+        return false;
+    }
+
     //METHODS
     @Override
     public String toString() {
@@ -102,29 +118,17 @@ public class MMGame implements Serializable {
 
     }
 
-    @Override
-    public boolean equals(Object o) {
-        if (o instanceof MMGame) {
-            MMGame game;
-            try {
-                game = (MMGame) o;
-            } catch (ClassCastException e) {
-                return false;
-            }
+    public String getHostName() {
+        return hostName;
+    }
 
-            return game.getHostName().equalsIgnoreCase(this.getHostName());
-        }
-
-        return false;
+    public String getIp() {
+        return ip;
     }
 
     //getters & setters
     public void setIp(String ip) {
         this.ip = ip;
-    }
-
-    public String getIp() {
-        return ip;
     }
 
     public String getStatus() {
@@ -154,10 +158,6 @@ public class MMGame implements Serializable {
 
     public int getMaxPlayers() {
         return maxPlayers;
-    }
-
-    public String getHostName() {
-        return hostName;
     }
 
     public int getPort() {

@@ -25,12 +25,6 @@ public class NamePilotCommand implements Command {
     int accessLevel = 0;
     String syntax = "";
 
-    public int getExecutionLevel() {return accessLevel;}
-
-    public void setExecutionLevel(int i) {accessLevel = i;}
-
-    public String getSyntax() {return syntax;}
-
     public void process(java.util.StringTokenizer command, String Username) {
 
         if (accessLevel != 0) {
@@ -109,4 +103,10 @@ public class NamePilotCommand implements Command {
         server.campaign.CampaignMain.cm.toUser("PL|UU|" + u.getId() + "|" + u.toString(true), Username, false);
 
     }//end process()
+
+    public int getExecutionLevel() {return accessLevel;}
+
+    public void setExecutionLevel(int i) {accessLevel = i;}
+
+    public String getSyntax() {return syntax;}
 }//end NamePilotCommand

@@ -67,28 +67,6 @@ public class BuildTable {
     }
 
     /**
-     * Method which randomly selects a unit to build (filename), given only a filename. This is used only to produce
-     * welfare units.
-     */
-    public static String getUnitFilename(String unitFileName) {
-        boolean fileFound = false;
-        String Filename = "";
-        java.util.Vector<String> table = null;
-        while (!fileFound) {
-            table = getListFromFile(new java.io.File(unitFileName));
-
-            if (table.size() < 1) {
-                return "Error OMG URFD.mtf";
-            }
-
-            int ran = CampaignMain.cm.getRandomNumber(table.size());
-            Filename = table.elementAt(ran);
-            if (Filename.indexOf(".") == -1) {unitFileName = Filename;} else {fileFound = true;}
-        }
-        return Filename;
-    }
-
-    /**
      * @param faction The Faction (i.e. - founder, Davion)
      * @param size    The weight class (i.e. - Light)
      * @param dir     The Directory (i.e. - standard, rare)
@@ -124,35 +102,6 @@ public class BuildTable {
                                       ".txt");
             }
             result = "./data/buildtables/" + dir + "/Common_" + weightclass + addon + ".txt";
-        }
-        return result;
-    }
-
-    public static String getTechFileName(String faction, String weightclass, int Type) {
-        /*
-         * Build the Filename, using patterns:
-         * FACTION_SIZE.txt or FACTION_SIZE&TYPE.txt
-         *  ex: Davion_Assault.txt
-         *  ex: Marik_LightVehicle
-         *  ex: WardenClan_HeavyBattleArmor.txt
-         *  ex: FadeFalcon_MediumProtoMek.txt
-         *
-         * and the path, the same way: ./data/buildtables/YEAR/
-         *  ex: ./data/buildtables/3025/
-         *  ex: ./data/buildtables/3130/
-         */
-        String addon = "";
-        if (Type != Unit.MEK) {addon = Unit.getTypeClassDesc(Type);}
-        String result = "./data/buildtables/" +
-                              mekwars.server.campaign.BuildTable.TECH +
-                              "/" +
-                              faction +
-                              "_" +
-                              weightclass +
-                              addon +
-                              ".txt";
-        if (!new java.io.File(result).exists()) {
-            result = "";
         }
         return result;
     }
@@ -216,6 +165,57 @@ public class BuildTable {
             result.trimToSize();
         } catch (Exception ex) {
             MWLogger.errLog(ex);
+        }
+        return result;
+    }
+
+    /**
+     * Method which randomly selects a unit to build (filename), given only a filename. This is used only to produce
+     * welfare units.
+     */
+    public static String getUnitFilename(String unitFileName) {
+        boolean fileFound = false;
+        String Filename = "";
+        java.util.Vector<String> table = null;
+        while (!fileFound) {
+            table = getListFromFile(new java.io.File(unitFileName));
+
+            if (table.size() < 1) {
+                return "Error OMG URFD.mtf";
+            }
+
+            int ran = CampaignMain.cm.getRandomNumber(table.size());
+            Filename = table.elementAt(ran);
+            if (Filename.indexOf(".") == -1) {unitFileName = Filename;} else {fileFound = true;}
+        }
+        return Filename;
+    }
+
+    public static String getTechFileName(String faction, String weightclass, int Type) {
+        /*
+         * Build the Filename, using patterns:
+         * FACTION_SIZE.txt or FACTION_SIZE&TYPE.txt
+         *  ex: Davion_Assault.txt
+         *  ex: Marik_LightVehicle
+         *  ex: WardenClan_HeavyBattleArmor.txt
+         *  ex: FadeFalcon_MediumProtoMek.txt
+         *
+         * and the path, the same way: ./data/buildtables/YEAR/
+         *  ex: ./data/buildtables/3025/
+         *  ex: ./data/buildtables/3130/
+         */
+        String addon = "";
+        if (Type != Unit.MEK) {addon = Unit.getTypeClassDesc(Type);}
+        String result = "./data/buildtables/" +
+                              mekwars.server.campaign.BuildTable.TECH +
+                              "/" +
+                              faction +
+                              "_" +
+                              weightclass +
+                              addon +
+                              ".txt";
+        if (!new java.io.File(result).exists()) {
+            result = "";
         }
         return result;
     }

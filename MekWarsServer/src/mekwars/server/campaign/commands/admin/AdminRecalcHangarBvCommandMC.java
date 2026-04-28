@@ -4,10 +4,6 @@ public class AdminRecalcHangarBvCommandMC implements server.campaign.commands.Co
     int accessLevel = server.MWChatServer.auth.IAuthenticator.ADMIN;
     String syntax = "/c adminrecalchangarbvmc#name";
 
-    public int getExecutionLevel() {return accessLevel;}
-
-    public void setExecutionLevel(int i) {accessLevel = i;}
-
     public String getSyntax() {return syntax;}
 
     public void process(java.util.StringTokenizer command, String Username) {
@@ -45,5 +41,9 @@ public class AdminRecalcHangarBvCommandMC implements server.campaign.commands.Co
         server.campaign.CampaignMain.cm.toUser(Username + " recalculated your hangar bv.", p.getName(), true);
         server.campaign.CampaignMain.cm.doSendModMail("NOTE", Username + " recalculated hangar bv for " + p.getName());
     }
+
+    public int getExecutionLevel() {return accessLevel;}
+
+    public void setExecutionLevel(int i) {accessLevel = i;}
 }
 

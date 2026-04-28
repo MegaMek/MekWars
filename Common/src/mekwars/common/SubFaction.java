@@ -31,17 +31,6 @@ public class SubFaction {
         factionSettings = new Properties(SubFaction.getDefault());
     }
 
-    public SubFaction(String name) {
-        factionSettings = new Properties(SubFaction.getDefault());
-        factionSettings.setProperty("Name", name);
-    }
-
-    public SubFaction(String name, String accessLevel) {
-        factionSettings = new Properties(SubFaction.getDefault());
-        factionSettings.setProperty("Name", name);
-        factionSettings.setProperty("AccessLevel", accessLevel);
-    }
-
     public static Properties getDefault() {
         defaultSettings.setProperty("Name", "");
         defaultSettings.setProperty("AccessLevel", "0");
@@ -61,6 +50,17 @@ public class SubFaction {
         return defaultSettings;
     }
 
+    public SubFaction(String name) {
+        factionSettings = new Properties(SubFaction.getDefault());
+        factionSettings.setProperty("Name", name);
+    }
+
+    public SubFaction(String name, String accessLevel) {
+        factionSettings = new Properties(SubFaction.getDefault());
+        factionSettings.setProperty("Name", name);
+        factionSettings.setProperty("AccessLevel", accessLevel);
+    }
+
     public String getConfig(String key) {
 
         if (!factionSettings.containsKey(key)) {
@@ -74,10 +74,6 @@ public class SubFaction {
         }
 
         return factionSettings.getProperty(key);
-    }
-
-    public void setConfig(String key, String value) {
-        factionSettings.setProperty(key, value);
     }
 
     public String toString() {
@@ -109,6 +105,10 @@ public class SubFaction {
             String value = propertyList.nextToken();
             setConfig(key, value);
         }
+    }
+
+    public void setConfig(String key, String value) {
+        factionSettings.setProperty(key, value);
     }
 
     public String getName() {

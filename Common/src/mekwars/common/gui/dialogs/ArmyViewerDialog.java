@@ -59,34 +59,28 @@ import mekwars.common.util.MWLogger;
 import mekwars.common.util.SpringLayoutHelper;
 
 public class ArmyViewerDialog extends JDialog implements ActionListener, ListSelectionListener, ItemListener {
+    public static final int AVD_DEFEND = 0;
+    public static final int AVD_ATTACK = 1;
+    public static final int AVD_ATTACK_FROM_RESERVE = 2;
     @Serial
     private static final long serialVersionUID = -3851019509649287454L;
-
+    private static final String SPACES = "                        ";
     private final DefaultListModel<String> defaultModel;
     private final JList<String> armyList;
-
     private final JButton bCancel = new JButton("Close");
     private final JButton bSelect = new JButton("Select");
-
     private final JTextArea armyView;
-
     private final JComboBox<String> teamBox = new JComboBox<>();
-
     private final CPlayer player;
     private final String opName;
-    private int selectedArmyId = -1;
     private final TreeSet<Integer> validArmyList = new TreeSet<>();
     private final IClient client;
     private final String planetName;
     private final String defenderName;
     private final int opID;
     private final int teamNumbers;
-
+    private int selectedArmyId = -1;
     private int viewerMode;
-
-    public static final int AVD_DEFEND = 0;
-    public static final int AVD_ATTACK = 1;
-    public static final int AVD_ATTACK_FROM_RESERVE = 2;
 
     public ArmyViewerDialog(IClient client, String opName, StringTokenizer validArmyList, int mode, String planet,
           String defender, int opid, int teamNumbers) {
@@ -183,6 +177,15 @@ public class ArmyViewerDialog extends JDialog implements ActionListener, ListSel
         this.armyList.requestFocus();
     }
 
+    void clearArmyPreview() {
+        armyView.setEditable(false);
+        armyView.setText("");
+
+        //Remove preview image.
+        previewArmy(-1);
+
+    }
+
     private void sortArmies() {
         defaultModel.clear();
         int x = 0;
@@ -214,10 +217,45 @@ public class ArmyViewerDialog extends JDialog implements ActionListener, ListSel
         this.pack();
     }
 
+    void previewArmy(int armyID) {
+        armyView.setEditable(false);
+        if (armyID > -1) {
+            StringBuilder armyText = new StringBuilder();
+            CArmy army = player.getArmy(armyID);
+            for (Unit unit : army.getUnits()) {
+                armyText.append(makeLength(STR."#\{unit.getId()}", 7))
+                      .append(" ")
+                      .append(makeLength(((CUnit) unit).getModelName(), 12))
+                      .append(" ");
+                if (unit.getType() == Unit.VEHICLE || unit.getType() == Unit.MEK || unit.getType() == Unit.AERO) {
+                    armyText.append(STR." (\{unit.getPilot().getGunnery()}/\{unit.getPilot().getPiloting()})");
+                } else if (unit.getType() == Unit.INFANTRY || unit.getType() == Unit.BATTLEARMOR) {
+                    if (((Infantry) ((CUnit) unit).getEntity()).canMakeAntiMekAttacks()) {
+                        armyText.append(STR." (\{unit.getPilot().getGunnery()}/\{unit.getPilot().getPiloting()})");
+                    } else {armyText.append(" (").append(unit.getPilot().getGunnery()).append(")");}
+                } else {armyText.append(" (").append(unit.getPilot().getGunnery()).append(")");}
+                armyText.append(" BV: ").append(((CUnit) unit).getBVForMatch()).append("\n");
+            }
+            armyView.setText(armyText.toString());
+        } else {
+            armyView.setText("No army selected");
+        }
+        armyView.setCaretPosition(0);
+
+    }
+
     private String formatArmy(CArmy army) {
 
         return STR."\{makeLength(STR."#\{army.getID()}", 3)} \{makeLength(army.getName(),
               15)} \{makeLength(STR."BV: \{army.getBV()}", 10)}";
+    }
+
+    private String makeLength(String s, int nLength) {
+        if (s.length() == nLength) {return s;} else if (s.length() > nLength) {
+            return STR."\{s.substring(0, nLength - 2)}..";
+        } else {
+            return s + SPACES.substring(0, nLength - s.length());
+        }
     }
 
     public void actionPerformed(java.awt.event.ActionEvent ae) {
@@ -282,7 +320,6 @@ public class ArmyViewerDialog extends JDialog implements ActionListener, ListSel
 
     }
 
-
     public void itemStateChanged(java.awt.event.ItemEvent ie) {
 
         Object currSelection = armyList.getSelectedValue();
@@ -290,53 +327,7 @@ public class ArmyViewerDialog extends JDialog implements ActionListener, ListSel
         armyList.setSelectedValue(currSelection, true);
     }
 
-    void clearArmyPreview() {
-        armyView.setEditable(false);
-        armyView.setText("");
-
-        //Remove preview image.
-        previewArmy(-1);
-
-    }
-
-    void previewArmy(int armyID) {
-        armyView.setEditable(false);
-        if (armyID > -1) {
-            StringBuilder armyText = new StringBuilder();
-            CArmy army = player.getArmy(armyID);
-            for (Unit unit : army.getUnits()) {
-                armyText.append(makeLength(STR."#\{unit.getId()}", 7))
-                      .append(" ")
-                      .append(makeLength(((CUnit) unit).getModelName(), 12))
-                      .append(" ");
-                if (unit.getType() == Unit.VEHICLE || unit.getType() == Unit.MEK || unit.getType() == Unit.AERO) {
-                    armyText.append(STR." (\{unit.getPilot().getGunnery()}/\{unit.getPilot().getPiloting()})");
-                } else if (unit.getType() == Unit.INFANTRY || unit.getType() == Unit.BATTLEARMOR) {
-                    if (((Infantry) ((CUnit) unit).getEntity()).canMakeAntiMekAttacks()) {
-                        armyText.append(STR." (\{unit.getPilot().getGunnery()}/\{unit.getPilot().getPiloting()})");
-                    } else {armyText.append(" (").append(unit.getPilot().getGunnery()).append(")");}
-                } else {armyText.append(" (").append(unit.getPilot().getGunnery()).append(")");}
-                armyText.append(" BV: ").append(((CUnit) unit).getBVForMatch()).append("\n");
-            }
-            armyView.setText(armyText.toString());
-        } else {
-            armyView.setText("No army selected");
-        }
-        armyView.setCaretPosition(0);
-
-    }
-
     public int getSelectedArmyID() {
         return selectedArmyId;
-    }
-
-    private static final String SPACES = "                        ";
-
-    private String makeLength(String s, int nLength) {
-        if (s.length() == nLength) {return s;} else if (s.length() > nLength) {
-            return STR."\{s.substring(0, nLength - 2)}..";
-        } else {
-            return s + SPACES.substring(0, nLength - s.length());
-        }
     }
 }

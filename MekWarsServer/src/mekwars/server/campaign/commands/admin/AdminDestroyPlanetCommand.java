@@ -21,10 +21,6 @@ public class AdminDestroyPlanetCommand implements server.campaign.commands.Comma
     int accessLevel = server.MWChatServer.auth.IAuthenticator.ADMIN;
     String syntax = "Planet Name";
 
-    public int getExecutionLevel() {return accessLevel;}
-
-    public void setExecutionLevel(int i) {accessLevel = i;}
-
     public String getSyntax() {return syntax;}
 
     public void process(java.util.StringTokenizer command, String Username) {
@@ -60,4 +56,8 @@ public class AdminDestroyPlanetCommand implements server.campaign.commands.Comma
               Username + " unleashed the Death Star on " + p.getName() + ". Planet destroyed!");
 
     }
+
+    public int getExecutionLevel() {return accessLevel;}
+
+    public void setExecutionLevel(int i) {accessLevel = i;}
 }

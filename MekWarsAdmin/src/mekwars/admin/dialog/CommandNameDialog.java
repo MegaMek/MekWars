@@ -182,6 +182,33 @@ public class CommandNameDialog extends JDialog implements ActionListener {
 
     }
 
+    private void loadCommands(IClient client) {
+        client.loadServerCommands();
+    }
+
+    private void checkMinimumSize() {
+
+        Dimension curDim = this.getSize();
+
+        int height;
+        int width;
+        boolean shouldRedraw = false;
+
+        if (curDim.getWidth() < 300) {
+            width = 300;
+            shouldRedraw = true;
+        } else {width = (int) curDim.getWidth();}
+
+        if (curDim.getHeight() < 150) {
+            height = 150;
+            shouldRedraw = true;
+        } else {height = (int) curDim.getHeight();}
+
+        if (shouldRedraw) {
+            this.setSize(new Dimension(width, height));
+        }
+
+    }//end checkMinimumSize
 
     /**
      * OK or CANCEL buttons pressed. Handle any changes and then close the dialog.
@@ -213,39 +240,11 @@ public class CommandNameDialog extends JDialog implements ActionListener {
 
     }//end actionPerformed
 
-    private void checkMinimumSize() {
-
-        Dimension curDim = this.getSize();
-
-        int height;
-        int width;
-        boolean shouldRedraw = false;
-
-        if (curDim.getWidth() < 300) {
-            width = 300;
-            shouldRedraw = true;
-        } else {width = (int) curDim.getWidth();}
-
-        if (curDim.getHeight() < 150) {
-            height = 150;
-            shouldRedraw = true;
-        } else {height = (int) curDim.getHeight();}
-
-        if (shouldRedraw) {
-            this.setSize(new Dimension(width, height));
-        }
-
-    }//end checkMinimumSize
-
-    private void setCommandName(String name) {
-        this.commandName = name.charAt(0) + name.toLowerCase().substring(1);
-    }
-
     public String getCommandName() {
         return this.commandName;
     }
 
-    private void loadCommands(IClient client) {
-        client.loadServerCommands();
+    private void setCommandName(String name) {
+        this.commandName = name.charAt(0) + name.toLowerCase().substring(1);
     }
 }

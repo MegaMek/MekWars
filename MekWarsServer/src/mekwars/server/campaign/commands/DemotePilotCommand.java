@@ -25,18 +25,6 @@ public class DemotePilotCommand implements Command {
     int accessLevel = 0;
     String syntax = "demotepilot#unitid#skill";
 
-    public int getExecutionLevel() {
-        return accessLevel;
-    }
-
-    public void setExecutionLevel(int i) {
-        accessLevel = i;
-    }
-
-    public String getSyntax() {
-        return syntax;
-    }
-
     public void process(java.util.StringTokenizer command, String Username) {
 
         if (accessLevel != 0) {
@@ -166,5 +154,17 @@ public class DemotePilotCommand implements Command {
         server.campaign.CampaignMain.cm.toUser("PL|UU|" + unit.getId() + "|" + unit.toString(true), Username, false);
 
     }// end process()
+
+    public int getExecutionLevel() {
+        return accessLevel;
+    }
+
+    public void setExecutionLevel(int i) {
+        accessLevel = i;
+    }
+
+    public String getSyntax() {
+        return syntax;
+    }
 
 }

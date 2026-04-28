@@ -20,11 +20,6 @@ package mekwars.server.campaign.commands.admin;
 public class RemoveSongCommand implements server.campaign.commands.Command {
 
     int accessLevel = server.MWChatServer.auth.IAuthenticator.ADMIN;
-
-    public int getExecutionLevel() {return accessLevel;}
-
-    public void setExecutionLevel(int i) {accessLevel = i;}
-
     String syntax = "Song Name";
 
     public String getSyntax() {return syntax;}
@@ -83,4 +78,8 @@ public class RemoveSongCommand implements server.campaign.commands.Command {
         server.campaign.CampaignMain.cm.doSendModMail("NOTE",
               Username + " has removed " + songName + " from the song list!");
     }
+
+    public int getExecutionLevel() {return accessLevel;}
+
+    public void setExecutionLevel(int i) {accessLevel = i;}
 }

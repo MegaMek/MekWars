@@ -25,12 +25,6 @@ public class UnenrollCommand implements Command {
     int accessLevel = 0;
     String syntax = "";
 
-    public int getExecutionLevel() {return accessLevel;}
-
-    public void setExecutionLevel(int i) {accessLevel = i;}
-
-    public String getSyntax() {return syntax;}
-
     public void process(java.util.StringTokenizer command, String Username) {
 
         if (accessLevel != 0) {
@@ -138,6 +132,12 @@ public class UnenrollCommand implements Command {
         server.campaign.CampaignMain.cm.doSendModMail("NOTE",
               Username + " unenrolled from the campaign (IP: " + ip + ").");
     }//end process
+
+    public int getExecutionLevel() {return accessLevel;}
+
+    public void setExecutionLevel(int i) {accessLevel = i;}
+
+    public String getSyntax() {return syntax;}
 
     private void removeFaction(server.campaign.SHouse faction) {
 

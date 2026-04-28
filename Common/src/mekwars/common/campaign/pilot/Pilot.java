@@ -37,26 +37,25 @@ import mekwars.common.campaign.pilot.skills.PilotSkills;
 
 public class Pilot {
 
+    private final LinkedList<MegaMekPilotOption> megamekOptions = new LinkedList<>();
+    /**
+     * List of skills this pilot has obtained.
+     */
+    private final PilotSkills skills = new PilotSkills();
+    boolean edge_when_tac = true;
+    boolean edge_when_ko = true;
+    boolean edge_when_head_hit = true;
+    boolean edge_when_explosion = true;
     private int gunnery = 4;
     private int piloting = 5;
     private String name = "John Doe";
     private int experience = 0;
     private int hits = 0;
-    private final LinkedList<MegaMekPilotOption> megamekOptions = new LinkedList<>();
     private String weapon = "Default";//for Weapon Specialist skill
     private String currentFaction = "none";
     private String traitName = "none";
     private int id = -1;
     private int DBId = -1;
-    boolean edge_when_tac = true;
-    boolean edge_when_ko = true;
-    boolean edge_when_head_hit = true;
-    boolean edge_when_explosion = true;
-
-    /**
-     * List of skills this pilot has obtained.
-     */
-    private final PilotSkills skills = new PilotSkills();
     private double bvMod = 0.0;
     private int bayModifier = 0;
     private int kills = 0;
@@ -129,6 +128,29 @@ public class Pilot {
 
         if (result.toString().trim().endsWith(",")) {result.deleteCharAt(result.lastIndexOf(","));}
         return result.toString().trim();
+    }
+
+    /**
+     * @return Returns the skills.
+     */
+    public PilotSkills getSkills() {
+        return skills;
+    }
+
+    public String getWeapon() {
+        return this.weapon;
+    }
+
+    public void setWeapon(String weapon) {
+        this.weapon = weapon;
+    }
+
+    public String getTraitName() {
+        return traitName;
+    }
+
+    public void setTraitName(String Trait) {
+        traitName = Trait;
     }
 
     /**
@@ -220,17 +242,14 @@ public class Pilot {
     }
 
     /**
-     * @return Returns the skills.
-     */
-    public PilotSkills getSkills() {
-        return skills;
-    }
-
-    /**
      * @return Returns the megamekOptions.
      */
     public LinkedList<MegaMekPilotOption> getMegaMekOptions() {
         return megamekOptions;
+    }
+
+    public void addKill(int kill) {
+        setKills(getKills() + kill);
     }
 
     public int getKills() {
@@ -241,24 +260,12 @@ public class Pilot {
         kills = kill;
     }
 
-    public void addKill(int kill) {
-        setKills(getKills() + kill);
-    }
-
-    public void setWeapon(String weapon) {
-        this.weapon = weapon;
-    }
-
-    public String getWeapon() {
-        return this.weapon;
+    public int getUnitType() {
+        return this.unitType;
     }
 
     public void setUnitType(int type) {
         this.unitType = type;
-    }
-
-    public int getUnitType() {
-        return this.unitType;
     }
 
     public String getCurrentFaction() {
@@ -267,14 +274,6 @@ public class Pilot {
 
     public void setCurrentFaction(String faction) {
         currentFaction = faction;
-    }
-
-    public String getTraitName() {
-        return traitName;
-    }
-
-    public void setTraitName(String Trait) {
-        traitName = Trait;
     }
 
     public int getPilotId() {
@@ -295,17 +294,17 @@ public class Pilot {
 
     public boolean getTac() {return edge_when_tac;}
 
-    public boolean getKO() {return edge_when_ko;}
-
-    public boolean getHeadHit() {return edge_when_head_hit;}
-
-    public boolean getExplosion() {return edge_when_explosion;}
-
     public void setTac(boolean value) {edge_when_tac = value;}
+
+    public boolean getKO() {return edge_when_ko;}
 
     public void setKO(boolean value) {edge_when_ko = value;}
 
+    public boolean getHeadHit() {return edge_when_head_hit;}
+
     public void setHeadHit(boolean value) {edge_when_head_hit = value;}
+
+    public boolean getExplosion() {return edge_when_explosion;}
 
     public void setExplosion(boolean value) {edge_when_explosion = value;}
 }

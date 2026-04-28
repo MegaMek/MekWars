@@ -21,10 +21,6 @@ public class AdminSetHousePlayerColorCommand implements server.campaign.commands
     int accessLevel = server.MWChatServer.auth.IAuthenticator.ADMIN;
     String syntax = "Faction Name#htmlhexcolor";
 
-    public int getExecutionLevel() {return accessLevel;}
-
-    public void setExecutionLevel(int i) {accessLevel = i;}
-
     public String getSyntax() {return syntax;}
 
     public void process(java.util.StringTokenizer command, String Username) {
@@ -83,4 +79,8 @@ public class AdminSetHousePlayerColorCommand implements server.campaign.commands
         server.campaign.CampaignMain.cm.toUser(HouseName + " color changed.", Username, true);
 
     }
+
+    public int getExecutionLevel() {return accessLevel;}
+
+    public void setExecutionLevel(int i) {accessLevel = i;}
 }

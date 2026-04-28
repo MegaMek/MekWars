@@ -25,18 +25,6 @@ public class RequestCommand implements Command {
     int accessLevel = 0;
     String syntax = "";
 
-    public int getExecutionLevel() {
-        return accessLevel;
-    }
-
-    public void setExecutionLevel(int i) {
-        accessLevel = i;
-    }
-
-    public String getSyntax() {
-        return syntax;
-    }
-
     public void process(java.util.StringTokenizer command, String Username) {
 
         int userLevel = server.campaign.CampaignMain.cm.getServer().getUserLevel(Username);
@@ -564,6 +552,18 @@ public class RequestCommand implements Command {
         }// end else (not enough PP in faction)
 
     }// end process()
+
+    public int getExecutionLevel() {
+        return accessLevel;
+    }
+
+    public void setExecutionLevel(int i) {
+        accessLevel = i;
+    }
+
+    public String getSyntax() {
+        return syntax;
+    }
 
     /**
      * Private method which builds a welfare unit. Duplicated in RequestCommand. Kept private in these classes in order

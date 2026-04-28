@@ -26,10 +26,6 @@ public class AddLeaderCommand implements server.campaign.commands.Command {
     int accessLevel = server.MWChatServer.auth.IAuthenticator.MODERATOR;
     String syntax = "Player Name";
 
-    public int getExecutionLevel() {return accessLevel;}
-
-    public void setExecutionLevel(int i) {accessLevel = i;}
-
     public String getSyntax() {return syntax;}
 
     public void process(java.util.StringTokenizer command, String Username) {
@@ -80,4 +76,8 @@ public class AddLeaderCommand implements server.campaign.commands.Command {
             server.campaign.CampaignMain.cm.toUser("AM:Invalid syntax: /addleader UserName", Username);
         }
     }
+
+    public int getExecutionLevel() {return accessLevel;}
+
+    public void setExecutionLevel(int i) {accessLevel = i;}
 }

@@ -5,6 +5,11 @@ package mekwars.updaters;
 import java.util.StringTokenizer;
 
 public class FileInfo {
+    protected long crc32_;
+    protected String remoteOffset_;
+    protected String localOffset_;
+    protected boolean tempFileUpToDate_ = false;
+
     /**
      * Format of string: local directory offset*server directory offset*crc32 of remote file
      * <p>
@@ -39,9 +44,4 @@ public class FileInfo {
     public void setTempFileUpToDate(boolean isLatest) {
         tempFileUpToDate_ = isLatest;
     }
-
-    protected long crc32_;
-    protected String remoteOffset_;
-    protected String localOffset_;
-    protected boolean tempFileUpToDate_ = false;
 }

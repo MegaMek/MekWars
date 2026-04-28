@@ -32,11 +32,9 @@ import gd.xml.XMLResponder;
  * @author Helge Richter
  */
 public class XMLTerrainDataParser implements XMLResponder {
-    private String prefix;
     String lastElement = "";
     String name;
     String filename;
-
     // Planet Environment
     // Crater
     int CraterProb;
@@ -44,74 +42,62 @@ public class XMLTerrainDataParser implements XMLResponder {
     int CraterMaxNum;
     int CraterMinRadius;
     int CraterMaxRadius;
-
     // Hills
     int Hillyness;
     int HillElevationRange;
     int HillInvertProb;
-
     // Water
     int WaterMinSpots;
     int WaterMaxSpots;
     int WaterMinHexes;
     int WaterMaxHexes;
     int WaterDeepProb;
-
     // Forest
     int ForestMinSpots;
     int ForestMaxSpots;
     int ForestMinHexes;
     int ForestMaxHexes;
     int ForestHeavyProb;
-
     // Rough
     int RoughMinSpots;
     int RoughMaxSpots;
     int RoughMinHexes;
     int RoughMaxHexes;
-
     // Swamp
     int SwampMinSpots;
     int SwampMaxSpots;
     int SwampMinHexes;
     int SwampMaxHexes;
-
     // Pavement
     int PavementMinSpots;
     int PavementMaxSpots;
     int PavementMinHexes;
     int PavementMaxHexes;
-
     // Ice
     int IceMinSpots;
     int IceMaxSpots;
     int IceMinHexes;
     int IceMaxHexes;
-
     // Rubble
     int RubbleMinSpots;
     int RubbleMaxSpots;
     int RubbleMinHexes;
     int RubbleMaxHexes;
-
     // Sand
     int SandMinSpots;
     int SandMaxSpots;
     int SandMinHexes;
     int SandMaxHexes;
-
     // PlantedField
     int PlantedFieldMinSpots;
     int PlantedFieldMaxSpots;
     int PlantedFieldMinHexes;
     int PlantedFieldMaxHexes;
-
     // Fortified
     int FortifiedMinSpots;
     int FortifiedMaxSpots;
     int FortifiedMinHexes;
     int FortifiedMaxHexes;
-
     // Buildings
     int MinCF;
     int MaxCF;
@@ -121,22 +107,12 @@ public class XMLTerrainDataParser implements XMLResponder {
     int CityDensity = 50;
     String CityType = "NONE";
     int TownSize = 0;
-
     // Speical fx
     int FxMod;
     int ProbForestFire;
     int ProbFreeze;
     int ProbFlood;
     int ProbDrought;
-
-    // Mountains
-    private int MountPeaks = 0;
-    private int MountWidthMin = 0;
-    private int MountWidthMax = 0;
-    private int MountHeightMin = 0;
-    private int MountHeightMax = 0;
-    private int MountStyle = 0;
-
     // Misc
     int RoadProb;
     int RiverProb;
@@ -144,7 +120,6 @@ public class XMLTerrainDataParser implements XMLResponder {
     int CliffProb;
     int InvertNegativeTerrain;
     int environmentProb = 1;
-
     //static maps
     int xmap = 1;
     int ymap = 1;
@@ -152,10 +127,16 @@ public class XMLTerrainDataParser implements XMLResponder {
     int yboard = 17;
     boolean map = false;
     String mapname = "";
-
-
     String Theme = "";
     Terrain planetTerrain = new Terrain();
+    private String prefix;
+    // Mountains
+    private int MountPeaks = 0;
+    private int MountWidthMin = 0;
+    private int MountWidthMax = 0;
+    private int MountHeightMin = 0;
+    private int MountHeightMax = 0;
+    private int MountStyle = 0;
 
     public XMLTerrainDataParser(String filename) {
         this.filename = filename;
@@ -165,6 +146,16 @@ public class XMLTerrainDataParser implements XMLResponder {
         } catch (Exception ex) {
             MWLogger.errLog(ex);
         }
+    }
+
+    public static String newLineToBR(String data) {
+        java.util.StringTokenizer tokened = new java.util.StringTokenizer(data, "\n");
+        String result = new String();
+        while (tokened.hasMoreElements()) {
+            result += tokened.nextElement();
+            if (tokened.hasMoreElements()) {result += "<BR>";}
+        }
+        return result;
     }
 
     public void recordNotationDeclaration(String name, String pubID, String sysID) throws ParseException {
@@ -198,6 +189,8 @@ public class XMLTerrainDataParser implements XMLResponder {
         MWLogger.mainLog((def == null) ? "" : "  def = " + notation);
     }
 
+    /* DOC METHDODS */
+
     public void recordDoctypeDeclaration(String name, String pubID, String sysID) throws ParseException {
         System.out.print(prefix + "!DOCTYPE: " + name);
         if (pubID != null) {System.out.print("  pubID = " + pubID);}
@@ -205,8 +198,6 @@ public class XMLTerrainDataParser implements XMLResponder {
         MWLogger.mainLog("");
         prefix = "";
     }
-
-    /* DOC METHDODS */
 
     public void recordDocStart() {
     }
@@ -631,11 +622,11 @@ public class XMLTerrainDataParser implements XMLResponder {
         }
     }
 
+    /* INPUT METHODS */
+
     public void recordComment(String comment) {
         MWLogger.mainLog(prefix + "*Comment: " + comment);
     }
-
-    /* INPUT METHODS */
 
     public java.io.InputStream getDocumentStream() throws ParseException {
         try {
@@ -643,6 +634,10 @@ public class XMLTerrainDataParser implements XMLResponder {
         } catch (java.io.FileNotFoundException e) {
             throw new ParseException("could not find " + filename);
         }
+    }
+
+    public java.io.InputStream resolveDTDEntity(String name, String pubID, String sysID) throws ParseException {
+        return resolveExternalEntity(name, pubID, sysID);
     }
 
     public java.io.InputStream resolveExternalEntity(String name, String pubID, String sysID) throws ParseException {
@@ -656,19 +651,5 @@ public class XMLTerrainDataParser implements XMLResponder {
         }
         // else
         return null;
-    }
-
-    public java.io.InputStream resolveDTDEntity(String name, String pubID, String sysID) throws ParseException {
-        return resolveExternalEntity(name, pubID, sysID);
-    }
-
-    public static String newLineToBR(String data) {
-        java.util.StringTokenizer tokened = new java.util.StringTokenizer(data, "\n");
-        String result = new String();
-        while (tokened.hasMoreElements()) {
-            result += tokened.nextElement();
-            if (tokened.hasMoreElements()) {result += "<BR>";}
-        }
-        return result;
     }
 }

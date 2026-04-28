@@ -62,6 +62,9 @@ public interface ICommandProcessorRemote {
      */
     public String getHelp();
 
+    // Setter methods
+    public void setHelp(String help);
+
     /**
      * Return the minimum access level required to carry out this command.  Access levels are defined as constants in
      * IAuthenticator.
@@ -71,10 +74,6 @@ public interface ICommandProcessorRemote {
      * @see com.lyrisoft.chat.server.remote.IAuthenticator
      */
     public int accessRequired();
-
-
-    // Setter methods
-    public void setHelp(String help);
 
     public void setAccessRequired(int access);
 

@@ -35,21 +35,6 @@ public class BufferedVDNI extends SPilotSkill {
     }
 
     @Override
-    public int getBVMod(Entity unit) {
-        return server.campaign.CampaignMain.cm.getIntegerConfig("BufferedVDNIBaseBVMod");
-    }
-
-    @Override
-    public int getBVMod(Entity unit, server.campaign.pilot.SPilot p) {
-        server.campaign.SHouse house = server.campaign.CampaignMain.cm.getHouseFromPartialString(p.getCurrentFaction());
-
-        if (house != null) {
-            return house.getIntegerConfig("BufferedVDNIBaseBVMod");
-        }
-        return server.campaign.CampaignMain.cm.getIntegerConfig("BufferedVDNIBaseBVMod");
-    }
-
-    @Override
     public int getChance(int unitType, Pilot p) {
         if (p.getSkills().has(PilotSkill.BufferedVDNIID)) {
             return 0;
@@ -68,6 +53,21 @@ public class BufferedVDNI extends SPilotSkill {
         }
 
         return house.getIntegerConfig(chance);
+    }
+
+    @Override
+    public int getBVMod(Entity unit) {
+        return server.campaign.CampaignMain.cm.getIntegerConfig("BufferedVDNIBaseBVMod");
+    }
+
+    @Override
+    public int getBVMod(Entity unit, server.campaign.pilot.SPilot p) {
+        server.campaign.SHouse house = server.campaign.CampaignMain.cm.getHouseFromPartialString(p.getCurrentFaction());
+
+        if (house != null) {
+            return house.getIntegerConfig("BufferedVDNIBaseBVMod");
+        }
+        return server.campaign.CampaignMain.cm.getIntegerConfig("BufferedVDNIBaseBVMod");
     }
 
 }

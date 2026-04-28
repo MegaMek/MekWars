@@ -20,15 +20,6 @@ import common.util.ComponentToCritsConverter;
 public class GetComponentConversionCommand implements server.campaign.commands.Command {
 
     int accessLevel = server.campaign.CampaignMain.cm.getIntegerConfig("factionLeaderLevel");
-
-    public int getExecutionLevel() {
-        return accessLevel;
-    }
-
-    public void setExecutionLevel(int i) {
-        accessLevel = i;
-    }
-
     String syntax = "[house name option Staff only]";
 
     public String getSyntax() {
@@ -63,5 +54,13 @@ public class GetComponentConversionCommand implements server.campaign.commands.C
         }
 
         server.campaign.CampaignMain.cm.toUser(results.toString(), Username, false);
+    }
+
+    public int getExecutionLevel() {
+        return accessLevel;
+    }
+
+    public void setExecutionLevel(int i) {
+        accessLevel = i;
     }
 }

@@ -9,9 +9,9 @@ import mekwars.common.util.MWLogger;
  * Write the messages in the queue to the socket's output stream
  */
 public class WriterThread extends Thread {
-    private boolean keepGoing = true;
     private final Vector<String> outgoingMessages;
     private final PrintStream _out;
+    private boolean keepGoing = true;
 
     WriterThread(PrintStream out) {
         super("ConnectionHandler$WriterThread");

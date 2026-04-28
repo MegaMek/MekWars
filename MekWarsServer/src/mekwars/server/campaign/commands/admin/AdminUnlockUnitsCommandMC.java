@@ -22,10 +22,6 @@ public class AdminUnlockUnitsCommandMC implements server.campaign.commands.Comma
     int accessLevel = server.MWChatServer.auth.IAuthenticator.ADMIN;
     String syntax = "/c adminunlockunitsmc#name";
 
-    public int getExecutionLevel() {return accessLevel;}
-
-    public void setExecutionLevel(int i) {accessLevel = i;}
-
     public String getSyntax() {return syntax;}
 
     public void process(java.util.StringTokenizer command, String Username) {
@@ -61,4 +57,8 @@ public class AdminUnlockUnitsCommandMC implements server.campaign.commands.Comma
         server.campaign.CampaignMain.cm.toUser(Username + " unlocked your units.", p.getName(), true);
         server.campaign.CampaignMain.cm.doSendModMail("NOTE", Username + " unlocked " + p.getName() + "'s units.");
     }
+
+    public int getExecutionLevel() {return accessLevel;}
+
+    public void setExecutionLevel(int i) {accessLevel = i;}
 }

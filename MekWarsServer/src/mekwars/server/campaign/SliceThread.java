@@ -38,19 +38,6 @@ public class SliceThread extends Thread {
         myCampaign = main;
     }
 
-    public int getSliceID() {
-        return sliceid;
-    }
-
-    public void extendedWait(int time) {
-        until = System.currentTimeMillis() + time;
-        try {
-            this.wait(time);
-        } catch (Exception ex) {
-            MWLogger.errLog(ex);
-        }
-    }// end ExtendedWait(time)
-
     public long getRemainingSleepTime() {
         return Math.max(0, until - System.currentTimeMillis());
     }
@@ -93,5 +80,18 @@ public class SliceThread extends Thread {
         } catch (Exception ex) {
             MWLogger.errLog(ex);
         }
+    }
+
+    public void extendedWait(int time) {
+        until = System.currentTimeMillis() + time;
+        try {
+            this.wait(time);
+        } catch (Exception ex) {
+            MWLogger.errLog(ex);
+        }
+    }// end ExtendedWait(time)
+
+    public int getSliceID() {
+        return sliceid;
     }
 }

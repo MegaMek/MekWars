@@ -29,26 +29,14 @@ import java.io.PrintStream;
 import java.lang.reflect.Constructor;
 import java.net.InetAddress;
 import java.text.SimpleDateFormat;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Date;
-import java.util.Enumeration;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Properties;
-import java.util.StringTokenizer;
-import java.util.TreeMap;
-import java.util.Vector;
+import java.util.*;
 
-import org.mekwars.libpk.logging.PKLogManager;
-
+import com.sun.jdi.connect.Connector;
 import common.GameInterface;
 import common.GameWrapper;
 import common.MMGame;
 import common.campaign.Buildings;
 import common.campaign.clientutils.GameHost;
-import common.campaign.clientutils.IGameHost;
 import common.campaign.clientutils.SerializeEntity;
 import common.campaign.clientutils.protocol.CConnector;
 import common.campaign.clientutils.protocol.IClient;
@@ -61,7 +49,6 @@ import common.util.MWLogger;
 import common.util.UnitUtils;
 import dedicatedhost.cmd.Command;
 import dedicatedhost.protocol.DataFetchClient;
-import megamek.MegaMek;
 import megamek.common.Entity;
 import megamek.common.Game;
 import megamek.common.Mech;
@@ -73,6 +60,8 @@ import megamek.common.preference.ClientPreferences;
 import megamek.common.preference.PreferenceManager;
 import megamek.server.GameManager;
 import megamek.server.Server;
+import mekwars.common.campaign.CUser;
+import org.mekwars.libpk.logging.PKLogManager;
 
 
 // This is the Client used for connecting to the master server.
@@ -80,17 +69,18 @@ import megamek.server.Server;
 
 public final class MWDedHost extends GameHost implements IClient {
 
-    DataFetchClient dataFetcher;
-
     public static final String CLIENT_VERSION = "0.8.0.0"; // change this with
+    private static MWLogger logger;
     // all client
     // changes @Torren
-
+    /**
+     * @author Torren place holder until I can think of something better to say.
+     */
+    public Properties serverConfigs = new Properties();
+    DataFetchClient dataFetcher;
     TimeOutThread TO;
     Collection<CUser> Users;
     Vector<IOption> GameOptions = new Vector<IOption>(1, 1);
-
-
     boolean SignOff = false;
     String password = "";
     String myDedOwners = "";
@@ -105,10 +95,6 @@ public final class MWDedHost extends GameHost implements IClient {
     long TimeOut = 120;
     long LastPing = 0;
     int Status = 0;
-
-    private GamePhase currentPhase = GamePhase.DEPLOYMENT;
-    private int turn = 0;
-
     Dimension MapSize;
     Dimension BoardSize;
 
@@ -118,72 +104,10 @@ public final class MWDedHost extends GameHost implements IClient {
     HashMap<String, Command> commands = new HashMap<String, Command>();
 
     String LastQuery = ""; // receiver of last mail
+    private GamePhase currentPhase = GamePhase.DEPLOYMENT;
+    private int turn = 0;
     private String cacheDir;
 
-    /**
-     * @author Torren place holder until I can think of something better to say.
-     */
-    public Properties serverConfigs = new Properties();
-
-    private static MWLogger logger;
-
-
-    // Main-Method
-    public static void main(String[] args) {
-
-        DedConfig config;
-
-        createLoggers();
-
-        /*
-         * put StdErr and StdOut into ./logs/megameklog.txt, because MegaMek
-         * uses StdOut and StdErr, but the part of MegaMek that sets that up
-         * does not get called when we launch MegaMek in MekWars Redirect output
-         * to logfiles, unless turned off. Moved megameklog.txt to the logs
-         * folder -- Torren
-         */
-        String logFileName = "./logs/megameklog.txt";
-
-        try {
-            PrintStream ps = new PrintStream(new BufferedOutputStream(new FileOutputStream(logFileName), 64));
-            System.setOut(ps);
-            System.setErr(ps);
-        } catch (Exception ex) {
-            MWLogger.errLog(ex);
-            MWLogger.errLog("Unable to redirect MegaMek output to " + logFileName);
-        }
-
-        MWLogger.infoLog("Starting MekWars Client Version: " + CLIENT_VERSION);
-        try {
-            config = new DedConfig(true);
-
-            /*
-             * clear any cache'd unit files. these will be rebuilt later in the
-             * start process. clearing @ each start ensures that updates take
-             * hold properly.
-             */
-            File cache = new File("./data/mechfiles/units.cache");
-            if (cache.exists()) {
-                cache.delete();
-            }
-
-            /*
-             * Config files have been loaded, and command line args have been
-             * parsed. Construct the actual client.
-             *
-             * NOTE: Client constrtuctor attempts to pull the oplist, campaign
-             * config and other non-interactive data over the DATAPORT before
-             * client.start() attempts to connect to the chat server on the
-             * SERVERPORT.
-             */
-            new MWDedHost(config);
-
-        } catch (Exception ex) {
-            MWLogger.errLog(ex);
-            MWLogger.errLog("Couldn't create Client Object");
-            System.exit(1);
-        }
-    }
 
     public MWDedHost(DedConfig config) {
 
@@ -280,6 +204,148 @@ public final class MWDedHost extends GameHost implements IClient {
         TO.run();
     }
 
+    protected void createProtCommands() {
+        addProtCommand(new CommPCmd(this));
+        addProtCommand(new PingPCmd(this));
+        addProtCommand(new PongPCmd(this));
+        addProtCommand(new AckSignonPCmd(this));
+    }
+
+    /**
+     * Return the directory, where all cache files can go into. The dirname depends on the server you connect.
+     */
+    public String getCacheDir() {
+        // if (cacheDir == null) {
+        // first access. Check if need to create directory.
+        cacheDir = "data/servers/" + Config.getParam("SERVERIP") + "." + Config.getParam("SERVERPORT");
+        File dir = new File(cacheDir);
+        if (!dir.exists()) {
+            dir.mkdirs();
+        }
+        // }
+        return cacheDir;
+    }
+
+    public void getServerConfigData() {
+        try {
+            dataFetcher.getServerConfigData(this);
+        } catch (Exception ex) {
+        }
+    }
+
+    public String getConfigParam(String p) {
+        String tparam = "";
+
+        if (p.endsWith(":")) {
+            p = p.substring(0, p.lastIndexOf(":"));
+        }
+        if (p.equals("NAME") && !(myUsername.equals(""))) {
+            return myUsername;
+        }
+        if (p.equals("NAMEPASSWORD") && !password.equals("")) {
+            return password;
+        }
+
+        tparam = Config.getParam(p);
+        if (tparam == null) {
+            tparam = "";
+        }
+
+        if (tparam.equals("") && p.equals("NAME") && isDedicated()) {
+            MWLogger.infoLog("Error: no dedicated name set.");
+            System.exit(1);
+        }
+        return (tparam);
+    }
+
+    public void connectToServer(String ip, int port) {
+        if ((myUsername == null) || myUsername.equals("")) {
+            errorMessage("Username not set.");
+            return;
+        }
+        // connect to specific ip and port
+        // System exits from connector on failure.
+        Connector.connect(ip, port);
+    }
+
+    protected void addProtCommand(IProtCommand command) {
+        ProtCommands.put(command.getName(), command);
+    }
+
+    public boolean isDedicated() {
+        return true;
+    }
+
+    public void errorMessage(String message) {
+        // TODO Auto-generated method stub
+
+    }
+
+    // Main-Method
+    public static void main(String[] args) {
+
+        DedConfig config;
+
+        createLoggers();
+
+        /*
+         * put StdErr and StdOut into ./logs/megameklog.txt, because MegaMek
+         * uses StdOut and StdErr, but the part of MegaMek that sets that up
+         * does not get called when we launch MegaMek in MekWars Redirect output
+         * to logfiles, unless turned off. Moved megameklog.txt to the logs
+         * folder -- Torren
+         */
+        String logFileName = "./logs/megameklog.txt";
+
+        try {
+            PrintStream ps = new PrintStream(new BufferedOutputStream(new FileOutputStream(logFileName), 64));
+            System.setOut(ps);
+            System.setErr(ps);
+        } catch (Exception ex) {
+            MWLogger.errLog(ex);
+            MWLogger.errLog("Unable to redirect MegaMek output to " + logFileName);
+        }
+
+        MWLogger.infoLog("Starting MekWars Client Version: " + CLIENT_VERSION);
+        try {
+            config = new DedConfig(true);
+
+            /*
+             * clear any cache'd unit files. these will be rebuilt later in the
+             * start process. clearing @ each start ensures that updates take
+             * hold properly.
+             */
+            File cache = new File("./data/mechfiles/units.cache");
+            if (cache.exists()) {
+                cache.delete();
+            }
+
+            /*
+             * Config files have been loaded, and command line args have been
+             * parsed. Construct the actual client.
+             *
+             * NOTE: Client constrtuctor attempts to pull the oplist, campaign
+             * config and other non-interactive data over the DATAPORT before
+             * client.start() attempts to connect to the chat server on the
+             * SERVERPORT.
+             */
+            new MWDedHost(config);
+
+        } catch (Exception ex) {
+            MWLogger.errLog(ex);
+            MWLogger.errLog("Couldn't create Client Object");
+            System.exit(1);
+        }
+    }
+
+    private static void createLoggers() {
+        logger = MWLogger.getInstance();
+        PKLogManager logger = PKLogManager.getInstance();
+        logger.addLog("infolog");
+        logger.addLog("errlog");
+        logger.addLog("debuglog");
+    }
+
     /*
      * NOTE: this list is ancient. sometimes useful. often out of date.
      *
@@ -291,14 +357,14 @@ public final class MWDedHost extends GameHost implements IClient {
      * Used by Both: CH = Chat Server news:(CH|<text>) Client Chat:
      * (CH|<UserName>|<Color>|<Text>)
      *
-     * Used only by the Server: SL|NG = Games
-     * (GS|<MMGame.toString()>|<MMGame.toString()|...) SL|CG = close game SL|JG
-     * = add a player to game list SL|LG = remove a player from game list SL|SHS
-     * = Set Host Status (SHS|<GameID>|<Status>) US = Users
-     * (US|<MMClientInfo.toString()>|<MMClientInfo.toString()>|..) UG = User
-     * Gone (UG|<MMClientInfo.toString>|[Gone]) Gone is used when the client
+     * Used only by the Server: ServerListCommand|NG = Games
+     * (GS|<MMGame.toString()>|<MMGame.toString()|...) ServerListCommand|CG = close game ServerListCommand|JG
+     * = add a player to game list ServerListCommand|LG = remove a player from game list ServerListCommand|SHS
+     * = Set Host Status (SHS|<GameID>|<Status>) UsersCommand = Users
+     * (UsersCommand|<MMClientInfo.toString()>|<MMClientInfo.toString()>|..) UserGoneCommand = User
+     * Gone (UserGoneCommand|<MMClientInfo.toString>|[Gone]) Gone is used when the client
      * didn't just change his name NU = New User
-     * (NU|<MMClientInfo.toString>|[NEW]) NEW is used the same way as GONE in UG
+     * (NU|<MMClientInfo.toString>|[NEW]) NEW is used the same way as GONE in UserGoneCommand
      * ER = Error (Not yet used) (ER|<ErrorLevel>|<description>) NN = New name
      * (My name Change was successful) CT = Campaign Task Offset (CT|Offset) CS
      * = Campaign Status (CS|Status) GO = Game Options
@@ -386,9 +452,9 @@ public final class MWDedHost extends GameHost implements IClient {
          * have a main frame, so no null check or buffer needed) and call
          * doParseDataHelper() directly.
          */
-        if (data.startsWith("US|") ||
+        if (data.startsWith("UsersCommand|") ||
                   data.startsWith("NU|") ||
-                  data.startsWith("UG|") ||
+                  data.startsWith("UserGoneCommand|") ||
                   data.startsWith("RGTS|") ||
                   data.startsWith("DSD|") ||
                   data.startsWith("USD|")) {
@@ -984,21 +1050,6 @@ public final class MWDedHost extends GameHost implements IClient {
         MWLogger.infoLog("Command error: " + command + ": access denied for " + name + ".");
     }
 
-    protected void createProtCommands() {
-        addProtCommand(new CommPCmd(this));
-        addProtCommand(new PingPCmd(this));
-        addProtCommand(new PongPCmd(this));
-        addProtCommand(new AckSignonPCmd(this));
-    }
-
-    protected void addProtCommand(IProtCommand command) {
-        ProtCommands.put(command.getName(), command);
-    }
-
-    IProtCommand getProtCommand(String command) {
-        return ProtCommands.get(command);
-    }
-
     public String getLastQuery() {
         return LastQuery;
     }
@@ -1036,7 +1087,6 @@ public final class MWDedHost extends GameHost implements IClient {
         String result = "[" + s.nextElement() + ":" + s.nextElement() + "] ";
         return result;
     }
-
 
     protected Vector<String> splitString(String string, String splitter) {
         Vector<String> vector = new Vector<String>(1, 1);
@@ -1081,49 +1131,12 @@ public final class MWDedHost extends GameHost implements IClient {
         return Users;
     }
 
-    public String getProtocolVersion() {
-        return "4";
-    }
-
     public void setUsername(String s) {
         myUsername = s.trim();
     }
 
     public void setPassword(String s) {
         password = s;
-    }
-
-    public DedConfig getConfig() {
-        return (DedConfig) (Config);
-    }
-
-    public void setConfig() {
-        Config = new DedConfig(false);
-    }
-
-    public String getConfigParam(String p) {
-        String tparam = "";
-
-        if (p.endsWith(":")) {
-            p = p.substring(0, p.lastIndexOf(":"));
-        }
-        if (p.equals("NAME") && !(myUsername.equals(""))) {
-            return myUsername;
-        }
-        if (p.equals("NAMEPASSWORD") && !password.equals("")) {
-            return password;
-        }
-
-        tparam = Config.getParam(p);
-        if (tparam == null) {
-            tparam = "";
-        }
-
-        if (tparam.equals("") && p.equals("NAME") && isDedicated()) {
-            MWLogger.infoLog("Error: no dedicated name set.");
-            System.exit(1);
-        }
-        return (tparam);
     }
 
     public void processIncoming(String incoming) {
@@ -1152,6 +1165,10 @@ public final class MWDedHost extends GameHost implements IClient {
             MWLogger.infoLog("COMMAND RECEIVED: " + incoming);
             return;
         }
+    }
+
+    IProtCommand getProtCommand(String command) {
+        return ProtCommands.get(command);
     }
 
     public void connectionLost() {
@@ -1192,6 +1209,21 @@ public final class MWDedHost extends GameHost implements IClient {
         }
     }
 
+    // Stop & send the close game event to the Server
+    public void stopHost() {
+
+        serverSend("CG");// send close game to server
+        try {
+            if (myServer != null) {
+                myServer.die();
+            }
+        } catch (Exception ex) {
+            MWLogger.errLog("Megamek Error:");
+            MWLogger.errLog(ex);
+        }
+        myServer = null;
+    }
+
     public void connectionEstablished() {
 
         LastPing = System.currentTimeMillis() / 1000;
@@ -1228,19 +1260,13 @@ public final class MWDedHost extends GameHost implements IClient {
         Status = STATUS_LOGGEDOUT;
     }
 
+    public String getProtocolVersion() {
+        return "4";
+    }
+
     // IClient interface
     public void connectToServer() {
         connectToServer(Config.getParam("SERVERIP"), Config.getIntParam("SERVERPORT"));
-    }
-
-    public void connectToServer(String ip, int port) {
-        if ((myUsername == null) || myUsername.equals("")) {
-            errorMessage("Username not set.");
-            return;
-        }
-        // connect to specific ip and port
-        // System exits from connector on failure.
-        Connector.connect(ip, port);
     }
 
     public void goodbye() {
@@ -1331,21 +1357,6 @@ public final class MWDedHost extends GameHost implements IClient {
         cs.setStampFilenames(Boolean.parseBoolean(getserverConfigs("MMTimeStampLogFile")));
     }
 
-    // Stop & send the close game event to the Server
-    public void stopHost() {
-
-        serverSend("CG");// send close game to server
-        try {
-            if (myServer != null) {
-                myServer.die();
-            }
-        } catch (Exception ex) {
-            MWLogger.errLog("Megamek Error:");
-            MWLogger.errLog(ex);
-        }
-        myServer = null;
-    }
-
     public void resetGame() { // reset hosted game
         if (myServer != null) {
             myServer.resetGame();
@@ -1420,35 +1431,6 @@ public final class MWDedHost extends GameHost implements IClient {
         return BoardSize;
     }
 
-    protected class TimeOutThread extends Thread {
-
-        MWDedHost mwdedhost;
-
-        public TimeOutThread(MWDedHost client) {
-            mwdedhost = client;
-        }
-
-        @Override
-        public void run() {
-            while (true) {
-                try {
-                    Thread.sleep(mwdedhost.TimeOut * 100);
-                } catch (Exception ex) {
-                    MWLogger.errLog(ex);
-                }
-                if (mwdedhost.Status != MWDedHost.STATUS_DISCONNECTED) {
-                    long timeout = (System.currentTimeMillis() / 1000) - LastPing;
-                    if (timeout > mwdedhost.TimeOut) {
-                        systemMessage("Ping timeout (" + timeout + " s)");
-                        Connector.closeConnection();
-                    }
-                } else {
-                    LastPing = System.currentTimeMillis() / 1000;
-                }
-            }
-        }
-    }
-
     public void loadServerMegaMekGameOptions() {
         try {
             dataFetcher.getServerMegaMekGameOptions();
@@ -1459,58 +1441,12 @@ public final class MWDedHost extends GameHost implements IClient {
     }
 
     /**
-     * Return the directory, where all cache files can go into. The dirname depends on the server you connect.
-     */
-    public String getCacheDir() {
-        // if (cacheDir == null) {
-        // first access. Check if need to create directory.
-        cacheDir = "data/servers/" + Config.getParam("SERVERIP") + "." + Config.getParam("SERVERPORT");
-        File dir = new File(cacheDir);
-        if (!dir.exists()) {
-            dir.mkdirs();
-        }
-        // }
-        return cacheDir;
-    }
-
-    /**
      * Changes the duty to a new status.
      *
      * @param newStatus
      */
     public void changeStatus(int newStatus) {
         Status = newStatus;
-    }
-
-    // this adds 1 to the number of games played and if it matched the restart
-    // amount it restarts the ded.
-    public void checkForRestart() {
-        gameCount++;
-
-        // only check for restart once every 30 seconds.
-        if (System.currentTimeMillis() - 30000 < lastResetCheck) {
-            return;
-        }
-
-        if (gameCount >= dedRestartAt) {
-            MWLogger.infoLog("System has reached " + gameCount + " games played and is restarting");
-            try {
-                Thread.sleep(5000);
-            }// give people time to vacate
-            catch (Exception ex) {
-                MWLogger.errLog(ex);
-            }
-            try {
-                stopHost();
-                Thread.sleep(5000);
-            }// give people time to vacate
-            catch (Exception ex) {
-                MWLogger.errLog(ex);
-            }
-            restartDed();
-        }
-
-        lastResetCheck = System.currentTimeMillis();
     }
 
     public void clearSavedGames() {
@@ -1612,10 +1548,6 @@ public final class MWDedHost extends GameHost implements IClient {
 
     }
 
-    public boolean isDedicated() {
-        return true;
-    }
-
     public void updateParam(StringTokenizer ST) {
         try {
             getConfig().setParam(ST.nextToken(), ST.nextToken());
@@ -1626,70 +1558,16 @@ public final class MWDedHost extends GameHost implements IClient {
         }
     }
 
+    public DedConfig getConfig() {
+        return (DedConfig) (Config);
+    }
+
+    public void setConfig() {
+        Config = new DedConfig(false);
+    }
+
     public Server getMyServer() {
         return myServer;
-    }
-
-    public boolean isUsingAdvanceRepairs() {
-        return Boolean.parseBoolean(getserverConfigs("UseAdvanceRepair")) ||
-                     Boolean.parseBoolean(getserverConfigs("UseSimpleRepair"));
-    }
-
-    /*
-     * INNER CLASSES
-     */
-    static class AutoSaveFilter implements FilenameFilter {
-        public boolean accept(File dir, String name) {
-            return (name.startsWith("autosave"));
-        }
-    }
-
-    private static class PurgeAutoSaves implements Runnable {
-
-        public PurgeAutoSaves() {
-            super();
-        }
-
-        public void run() {
-            long twoHours = 2 * 60 * 60 * 1000;
-            try {
-                while (true) {
-                    File saveFiles = new File("./savegames");
-                    if (!saveFiles.exists()) {
-                        return;
-                    }
-                    FilenameFilter filter = new AutoSaveFilter();
-                    File[] fileList = saveFiles.listFiles(filter);
-                    for (File savedFile : fileList) {
-                        long lastTime = savedFile.lastModified();
-                        if (savedFile.exists() &&
-                                  savedFile.isFile() &&
-                                  (lastTime < (System.currentTimeMillis() - twoHours))) {
-                            try {
-                                MWLogger.infoLog("Purging File: " +
-                                                       savedFile.getName() +
-                                                       " Time: " +
-                                                       lastTime +
-                                                       " purge Time: " +
-                                                       (System.currentTimeMillis() - twoHours));
-                                savedFile.delete();
-                            } catch (Exception ex) {
-                                MWLogger.errLog("Error trying to delete these files!");
-                                MWLogger.errLog(ex);
-                            }
-                        }
-                    }
-                    Thread.sleep(twoHours);
-                }
-            } catch (Exception ex) {
-                return;
-            }
-        }
-    }// end PurgeAutoSaves
-
-    public void errorMessage(String message) {
-        // TODO Auto-generated method stub
-
     }
 
     public void systemMessage(String message) {
@@ -1697,44 +1575,17 @@ public final class MWDedHost extends GameHost implements IClient {
 
     }
 
-    public void getServerConfigData() {
-        try {
-            dataFetcher.getServerConfigData(this);
-        } catch (Exception ex) {
-        }
-    }
-
-    public String getserverConfigs(String key) {
-        if (serverConfigs.getProperty(key) == null) {
-            return "-1";
-        }
-        return serverConfigs.getProperty(key).trim();
-    }
-
     public Properties getServerConfigs() {
         return serverConfigs;
     }
 
-    public void setBuildingTemplate(Buildings buildingTemplate) {
-        this.buildingTemplate = buildingTemplate;
-    }
-
+    @Override
     public Buildings getBuildingTemplate() {
         return buildingTemplate;
     }
 
-    private void restartDed() {
-        try {
-            String memory = Config.getParam("DEDMEMORY");
-            Runtime runTime = Runtime.getRuntime();
-            String[] call =
-                  { "java", "-Xmx" + memory + "m", "-jar", "MekWarsDed.jar" };
-            runTime.exec(call);
-            System.exit(0);
-
-        } catch (Exception ex) {
-            MWLogger.errLog("Unable to find MekWarsDed.jar");
-        }
+    public void setBuildingTemplate(Buildings buildingTemplate) {
+        this.buildingTemplate = buildingTemplate;
     }
 
     private void updateDed() {
@@ -1783,99 +1634,16 @@ public final class MWDedHost extends GameHost implements IClient {
         }
     }
 
-    public static StringBuilder prepareReport(GameInterface myGame, boolean usingAdvancedRepairs,
-          Buildings buildingTemplate) {
-        StringBuilder result = new StringBuilder();
-        String name = "";
-        // Parse the real playername from the Modified In game one..
-        String winnerName = "";
-        if (myGame.hasWinner()) {
-
-            int numberOfWinners = 0;
-            // Multiple Winners
-            List<String> winners = myGame.getWinners();
-
-            //TODO: Winners is sometimes coming up empty.  Let's see why
-            MWLogger.errLog("Finding winners:");
-            MWLogger.errLog(winners.toString());
-
-            for (String winner : winners) {
-                StringTokenizer st = new StringTokenizer(winner, "~");
-                name = "";
-                while (st.hasMoreElements()) {
-                    name = st.nextToken().trim();
-                }
-                // some of the players set themselves as a team of 1.
-                // This keeps that from happening.
-                if (numberOfWinners > 0) {
-                    winnerName += "*";
-                }
-                numberOfWinners++;
-
-                winnerName += name;
-            }
-            if (winnerName.endsWith("*")) {
-                winnerName = winnerName.substring(0, winnerName.length() - 1);
-            }
-            winnerName += "#";
-        } else {
-            winnerName = "DRAW#";
-        }
-
-        result.append(winnerName);
-
-        // Report the mech stat
-        Enumeration<Entity> en = myGame.getDevastatedEntities();
-        while (en.hasMoreElements()) {
-            Entity ent = en.nextElement();
-            if (ent.getOwner().getName().startsWith("War Bot")) {
-                continue;
-            }
-            result.append(SerializeEntity.serializeEntity(ent, true, false, usingAdvancedRepairs));
-            result.append("#");
-        }
-        en = myGame.getGraveyardEntities();
-        while (en.hasMoreElements()) {
-            Entity ent = en.nextElement();
-            if (ent.getOwner().getName().startsWith("War Bot")) {
-                continue;
-            }
-            result.append(SerializeEntity.serializeEntity(ent, true, false, usingAdvancedRepairs));
-            result.append("#");
-
-        }
-        Iterator<Entity> en2 = myGame.getEntities();
-        while (en2.hasNext()) {
-            Entity ent = en2.next();
-            if (ent.getOwner().getName().startsWith("War Bot")) {
-                continue;
-            }
-            result.append(SerializeEntity.serializeEntity(ent, true, false, usingAdvancedRepairs));
-            result.append("#");
-        }
-        en = myGame.getRetreatedEntities();
-        while (en.hasMoreElements()) {
-            Entity ent = en.nextElement();
-            if (ent.getOwner().getName().startsWith("War Bot")) {
-                continue;
-            }
-            result.append(SerializeEntity.serializeEntity(ent, true, false, usingAdvancedRepairs));
-            result.append("#");
-        }
-
-        if (buildingTemplate != null) {
-            result.append("BL*" + buildingTemplate);
-        }
-        MWLogger.infoLog("CR|" + result);
-        return result;
+    public boolean isUsingAdvanceRepairs() {
+        return Boolean.parseBoolean(getserverConfigs("UseAdvanceRepair")) ||
+                     Boolean.parseBoolean(getserverConfigs("UseSimpleRepair"));
     }
 
-    private static void createLoggers() {
-        logger = MWLogger.getInstance();
-        PKLogManager logger = PKLogManager.getInstance();
-        logger.addLog("infolog");
-        logger.addLog("errlog");
-        logger.addLog("debuglog");
+    public String getserverConfigs(String key) {
+        if (serverConfigs.getProperty(key) == null) {
+            return "-1";
+        }
+        return serverConfigs.getProperty(key).trim();
     }
 
     protected void sendGameReport() {
@@ -1998,9 +1766,222 @@ public final class MWDedHost extends GameHost implements IClient {
         }
     }
 
+    public static StringBuilder prepareReport(GameInterface myGame, boolean usingAdvancedRepairs,
+          Buildings buildingTemplate) {
+        StringBuilder result = new StringBuilder();
+        String name = "";
+        // Parse the real playername from the Modified In game one..
+        String winnerName = "";
+        if (myGame.hasWinner()) {
+
+            int numberOfWinners = 0;
+            // Multiple Winners
+            List<String> winners = myGame.getWinners();
+
+            //TODO: Winners is sometimes coming up empty.  Let's see why
+            MWLogger.errLog("Finding winners:");
+            MWLogger.errLog(winners.toString());
+
+            for (String winner : winners) {
+                StringTokenizer st = new StringTokenizer(winner, "~");
+                name = "";
+                while (st.hasMoreElements()) {
+                    name = st.nextToken().trim();
+                }
+                // some of the players set themselves as a team of 1.
+                // This keeps that from happening.
+                if (numberOfWinners > 0) {
+                    winnerName += "*";
+                }
+                numberOfWinners++;
+
+                winnerName += name;
+            }
+            if (winnerName.endsWith("*")) {
+                winnerName = winnerName.substring(0, winnerName.length() - 1);
+            }
+            winnerName += "#";
+        } else {
+            winnerName = "DRAW#";
+        }
+
+        result.append(winnerName);
+
+        // Report the mech stat
+        Enumeration<Entity> en = myGame.getDevastatedEntities();
+        while (en.hasMoreElements()) {
+            Entity ent = en.nextElement();
+            if (ent.getOwner().getName().startsWith("War Bot")) {
+                continue;
+            }
+            result.append(SerializeEntity.serializeEntity(ent, true, false, usingAdvancedRepairs));
+            result.append("#");
+        }
+        en = myGame.getGraveyardEntities();
+        while (en.hasMoreElements()) {
+            Entity ent = en.nextElement();
+            if (ent.getOwner().getName().startsWith("War Bot")) {
+                continue;
+            }
+            result.append(SerializeEntity.serializeEntity(ent, true, false, usingAdvancedRepairs));
+            result.append("#");
+
+        }
+        Iterator<Entity> en2 = myGame.getEntities();
+        while (en2.hasNext()) {
+            Entity ent = en2.next();
+            if (ent.getOwner().getName().startsWith("War Bot")) {
+                continue;
+            }
+            result.append(SerializeEntity.serializeEntity(ent, true, false, usingAdvancedRepairs));
+            result.append("#");
+        }
+        en = myGame.getRetreatedEntities();
+        while (en.hasMoreElements()) {
+            Entity ent = en.nextElement();
+            if (ent.getOwner().getName().startsWith("War Bot")) {
+                continue;
+            }
+            result.append(SerializeEntity.serializeEntity(ent, true, false, usingAdvancedRepairs));
+            result.append("#");
+        }
+
+        if (buildingTemplate != null) {
+            result.append("BL*" + buildingTemplate);
+        }
+        MWLogger.infoLog("CR|" + result);
+        return result;
+    }
+
+    // this adds 1 to the number of games played and if it matched the restart
+    // amount it restarts the ded.
+    public void checkForRestart() {
+        gameCount++;
+
+        // only check for restart once every 30 seconds.
+        if (System.currentTimeMillis() - 30000 < lastResetCheck) {
+            return;
+        }
+
+        if (gameCount >= dedRestartAt) {
+            MWLogger.infoLog("System has reached " + gameCount + " games played and is restarting");
+            try {
+                Thread.sleep(5000);
+            }// give people time to vacate
+            catch (Exception ex) {
+                MWLogger.errLog(ex);
+            }
+            try {
+                stopHost();
+                Thread.sleep(5000);
+            }// give people time to vacate
+            catch (Exception ex) {
+                MWLogger.errLog(ex);
+            }
+            restartDed();
+        }
+
+        lastResetCheck = System.currentTimeMillis();
+    }
+
+    private void restartDed() {
+        try {
+            String memory = Config.getParam("DEDMEMORY");
+            Runtime runTime = Runtime.getRuntime();
+            String[] call =
+                  { "java", "-Xmx" + memory + "m", "-jar", "MekWarsDed.jar" };
+            runTime.exec(call);
+            System.exit(0);
+
+        } catch (Exception ex) {
+            MWLogger.errLog("Unable to find MekWarsDed.jar");
+        }
+    }
+
     @Override
     public void gameClientFeedbackRequest(GameCFREvent arg0) {
         // TODO Auto-generated method stub
 
+    }
+
+    /*
+     * INNER CLASSES
+     */
+    static class AutoSaveFilter implements FilenameFilter {
+        public boolean accept(File dir, String name) {
+            return (name.startsWith("autosave"));
+        }
+    }
+
+    private static class PurgeAutoSaves implements Runnable {
+
+        public PurgeAutoSaves() {
+            super();
+        }
+
+        public void run() {
+            long twoHours = 2 * 60 * 60 * 1000;
+            try {
+                while (true) {
+                    File saveFiles = new File("./savegames");
+                    if (!saveFiles.exists()) {
+                        return;
+                    }
+                    FilenameFilter filter = new AutoSaveFilter();
+                    File[] fileList = saveFiles.listFiles(filter);
+                    for (File savedFile : fileList) {
+                        long lastTime = savedFile.lastModified();
+                        if (savedFile.exists() &&
+                                  savedFile.isFile() &&
+                                  (lastTime < (System.currentTimeMillis() - twoHours))) {
+                            try {
+                                MWLogger.infoLog("Purging File: " +
+                                                       savedFile.getName() +
+                                                       " Time: " +
+                                                       lastTime +
+                                                       " purge Time: " +
+                                                       (System.currentTimeMillis() - twoHours));
+                                savedFile.delete();
+                            } catch (Exception ex) {
+                                MWLogger.errLog("Error trying to delete these files!");
+                                MWLogger.errLog(ex);
+                            }
+                        }
+                    }
+                    Thread.sleep(twoHours);
+                }
+            } catch (Exception ex) {
+                return;
+            }
+        }
+    }// end PurgeAutoSaves
+
+    protected class TimeOutThread extends Thread {
+
+        MWDedHost mwdedhost;
+
+        public TimeOutThread(MWDedHost client) {
+            mwdedhost = client;
+        }
+
+        @Override
+        public void run() {
+            while (true) {
+                try {
+                    Thread.sleep(mwdedhost.TimeOut * 100);
+                } catch (Exception ex) {
+                    MWLogger.errLog(ex);
+                }
+                if (mwdedhost.Status != MWDedHost.STATUS_DISCONNECTED) {
+                    long timeout = (System.currentTimeMillis() / 1000) - LastPing;
+                    if (timeout > mwdedhost.TimeOut) {
+                        systemMessage("Ping timeout (" + timeout + " s)");
+                        Connector.closeConnection();
+                    }
+                } else {
+                    LastPing = System.currentTimeMillis() / 1000;
+                }
+            }
+        }
     }
 }

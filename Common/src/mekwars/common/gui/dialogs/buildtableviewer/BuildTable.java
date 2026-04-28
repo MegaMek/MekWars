@@ -36,14 +36,12 @@ import javax.swing.table.TableColumn;
  * @author Spork
  */
 public class BuildTable {
+    private final JScrollPane pane = new JScrollPane();
+    private final JLabel unusedLabel = new JLabel("This table is not used on this server");
     private double weight = 0.0;
     private HashMap<String, BuildTableEntry> entries = new HashMap<>();
     private String name = "";
-
-    private final JScrollPane pane = new JScrollPane();
     private JTable table = new JTable();
-    private final JLabel unusedLabel = new JLabel("This table is not used on this server");
-
     private boolean isUsed;
 
     /**
@@ -63,33 +61,6 @@ public class BuildTable {
     }
 
     /**
-     * Set the name of the build table
-     *
-     * @param name the name to set
-     */
-    public void setName(String name) {
-        this.name = name;
-    }
-
-    /**
-     * Set the build table weight.  Not used yet, but when I do recursed build tables, it will
-     *
-     * @param weight How strongly the contents play into overall percentages
-     */
-    public void setWeight(double weight) {
-        this.weight = weight;
-    }
-
-    /**
-     * Manually set the lines of the build table
-     *
-     * @param entries the BuildTableEntries
-     */
-    public void setEntries(java.util.HashMap<String, BuildTableEntry> entries) {
-        this.entries = entries;
-    }
-
-    /**
      * Get the name of the build table
      *
      * @return the name of the build table
@@ -99,12 +70,30 @@ public class BuildTable {
     }
 
     /**
+     * Set the name of the build table
+     *
+     * @param name the name to set
+     */
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    /**
      * Get the table weight
      *
      * @return the table weight (double)
      */
     public double getWeight() {
         return weight;
+    }
+
+    /**
+     * Set the build table weight.  Not used yet, but when I do recursed build tables, it will
+     *
+     * @param weight How strongly the contents play into overall percentages
+     */
+    public void setWeight(double weight) {
+        this.weight = weight;
     }
 
     /**
@@ -121,20 +110,6 @@ public class BuildTable {
     }
 
     /**
-     * Get a Map of the table entries, sorted first by type (table, then unit), then by frequency
-     *
-     * @return the sorted entries
-     */
-    private Map<String, BuildTableEntry> getSortedTable() {
-        return entries.entrySet().stream()
-                     .sorted(Map.Entry.comparingByValue())
-                     .collect(Collectors.toMap(Map.Entry::getKey,
-                           Map.Entry::getValue,
-                           (oldValue, _) -> oldValue,
-                           LinkedHashMap::new));
-    }
-
-    /**
      * Get the BuildTableEntries
      *
      * @return the entries
@@ -144,18 +119,12 @@ public class BuildTable {
     }
 
     /**
-     * Add an entry to the Map
+     * Manually set the lines of the build table
      *
-     * @param entry the BuildTableEntry to add
+     * @param entries the BuildTableEntries
      */
-    public void addEntry(BuildTableEntry entry) {
-        if (!entries.containsKey(entry.getEntry())) {
-            entries.put(entry.getEntry(), entry);
-        } else {
-            int chance = entry.getChance();
-            chance += entries.get(entry.getEntry()).getChance();
-            entries.get(entry.getEntry()).setChance(chance);
-        }
+    public void setEntries(java.util.HashMap<String, BuildTableEntry> entries) {
+        this.entries = entries;
     }
 
     /**
@@ -199,6 +168,21 @@ public class BuildTable {
     }
 
     /**
+     * Add an entry to the Map
+     *
+     * @param entry the BuildTableEntry to add
+     */
+    public void addEntry(BuildTableEntry entry) {
+        if (!entries.containsKey(entry.getEntry())) {
+            entries.put(entry.getEntry(), entry);
+        } else {
+            int chance = entry.getChance();
+            chance += entries.get(entry.getEntry()).getChance();
+            entries.get(entry.getEntry()).setChance(chance);
+        }
+    }
+
+    /**
      * Builds the JPanel containing the table
      */
     private void buildPanel() {
@@ -238,5 +222,19 @@ public class BuildTable {
         }
         column.setPreferredWidth(maxWidth + 25);
         pane.add(table);
+    }
+
+    /**
+     * Get a Map of the table entries, sorted first by type (table, then unit), then by frequency
+     *
+     * @return the sorted entries
+     */
+    private Map<String, BuildTableEntry> getSortedTable() {
+        return entries.entrySet().stream()
+                     .sorted(Map.Entry.comparingByValue())
+                     .collect(Collectors.toMap(Map.Entry::getKey,
+                           Map.Entry::getValue,
+                           (oldValue, _) -> oldValue,
+                           LinkedHashMap::new));
     }
 }

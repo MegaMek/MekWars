@@ -23,10 +23,6 @@ public class AdminMovePlanetCommand implements server.campaign.commands.Command 
     int accessLevel = server.MWChatServer.auth.IAuthenticator.ADMIN;
     String syntax = "Planet Name#X Coord#Y Coord";
 
-    public int getExecutionLevel() {return accessLevel;}
-
-    public void setExecutionLevel(int i) {accessLevel = i;}
-
     public String getSyntax() {return syntax;}
 
     public void process(java.util.StringTokenizer command, String Username) {
@@ -64,4 +60,8 @@ public class AdminMovePlanetCommand implements server.campaign.commands.Command 
               Username + " has moved planet " + p.getName() + " to " + x + "," + y);
         server.campaign.CampaignMain.cm.toUser("Planet Moved", Username);
     }
+
+    public int getExecutionLevel() {return accessLevel;}
+
+    public void setExecutionLevel(int i) {accessLevel = i;}
 }

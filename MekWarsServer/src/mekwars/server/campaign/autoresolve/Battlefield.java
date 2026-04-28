@@ -59,36 +59,27 @@ public class Battlefield implements GameInterface {
         return defenders;
     }
 
-    public java.util.List<VirtualUnit> getAllUnits() {
-        return allUnits;
-    }
-
     public BattleReport getBattleReport() {
         return battleReport;
     }
-
 
     public java.util.List<String> getWinners() {
         return winners;
     }
 
-
     public boolean hasWinner() {
         return true; //For now there is no draw..
     }
-
 
     public java.util.Enumeration<Entity> getDevastatedEntities() {
         //For now there is no way to retreat
         return new java.util.Vector<Entity>().elements();
     }
 
-
     public java.util.Enumeration<Entity> getGraveyardEntities() {
         //For now there is no way to retreat
         return new java.util.Vector<Entity>().elements();
     }
-
 
     public java.util.Iterator<Entity> getEntities() {
         java.util.Vector<Entity> result = new java.util.Vector<Entity>();
@@ -98,6 +89,9 @@ public class Battlefield implements GameInterface {
         return result.iterator();
     }
 
+    public java.util.List<VirtualUnit> getAllUnits() {
+        return allUnits;
+    }
 
     public java.util.Enumeration<Entity> getRetreatedEntities() {
         //For now there is no way to retreat

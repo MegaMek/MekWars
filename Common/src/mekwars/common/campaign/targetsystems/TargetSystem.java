@@ -71,20 +71,8 @@ public class TargetSystem {
         }
     }
 
-    public String getTypeName(int type) throws TargetTypeOutOfBoundsException, TargetTypeNotImplementedException {
-        if (type < 0 || type > TS_TYPE_MAX) {
-            throw new TargetTypeOutOfBoundsException(type);
-        } else if (type == TS_TYPE_STANDARD) {
-            return "Standard";
-        } else if (type == TS_TYPE_ANTIAIR) {
-            return "Anti-Air";
-        } else if (type == TS_TYPE_SHORT) {
-            return "Short-Range";
-        } else if (type == TS_TYPE_MEDIUM) {
-            return "Medium-Range";
-        } else {
-            return "Long-Range";
-        }
+    private void setTargetSystem(String type, boolean on) {
+        if (entity != null) {entity.getQuirks().getOption(type).setValue(on);}
     }
 
     public int getTypeByName(String name) {
@@ -101,10 +89,6 @@ public class TargetSystem {
         } else {
             return 0;
         }
-    }
-
-    private void setTargetSystem(String type, boolean on) {
-        if (entity != null) {entity.getQuirks().getOption(type).setValue(on);}
     }
 
     public void setEntity(Entity e) {
@@ -124,6 +108,22 @@ public class TargetSystem {
             MWLogger.errLog(e);
         }
         return name;
+    }
+
+    public String getTypeName(int type) throws TargetTypeOutOfBoundsException, TargetTypeNotImplementedException {
+        if (type < 0 || type > TS_TYPE_MAX) {
+            throw new TargetTypeOutOfBoundsException(type);
+        } else if (type == TS_TYPE_STANDARD) {
+            return "Standard";
+        } else if (type == TS_TYPE_ANTIAIR) {
+            return "Anti-Air";
+        } else if (type == TS_TYPE_SHORT) {
+            return "Short-Range";
+        } else if (type == TS_TYPE_MEDIUM) {
+            return "Medium-Range";
+        } else {
+            return "Long-Range";
+        }
     }
 
     public String[] getNameArray() {

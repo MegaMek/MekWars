@@ -37,70 +37,23 @@ public class SPlanet extends TimeUpdatePlanet implements java.io.Serializable, C
     private static final long serialVersionUID = -2266871107987235842L;
     private SHouse owner = null;
 
-    @Override
-    public String toString() {
-        SerializedMessage result = new SerializedMessage("#");
-        result.append("PL");
-        result.append(getName());
-        result.append(getCompProduction());
-        if (getUnitFactories() != null) {
-            result.append(getUnitFactories().size());
-            for (UnitFactory factory : getUnitFactories()) {
-                // int i = 0; i < getUnitFactories().size(); i++) {
-                // SUnitFactory MF = (SUnitFactory) getUnitFactories().get(i);
-                result.append(((SUnitFactory) factory).toString());
-            }
-        } else {result.append("0");}
+    /**
+     * Use the other constructor as soon as you do not need the manual serialization support through fromString()
+     * anymore.
+     */
+    public SPlanet() {
+        // super(CampaignMain.cm.getData().getUnusedPlanetID(),"", new
+        // Position(0,0), null);
+        super();
+        setTimestamp(new java.util.Date(0));
+        setOriginalOwner(CampaignMain.cm.getConfig("NewbieHouseName"));
+    }
 
-        result.append(getPosition().getX());
-        result.append(getPosition().getY());
-        StringBuilder houseString = new StringBuilder();
-        for (House house : getInfluence().getHouses()) {
-            SHouse next = (SHouse) house;
-            if (next == null) {continue;}
-            houseString.append(next.getName());
-            houseString.append("$"); // change for unusual influence
-            houseString.append(getInfluence().getInfluence(next.getId()));
-            houseString.append("$"); // change for unusual influence
-        }
-        // No Influences then set influence to NewbieHouse so the planet will
-        // load.
-        if (getInfluence().getHouses().size() < 1) {
-            houseString.append(CampaignMain.cm.getConfig("NewbieHouseName"));
-            houseString.append("$");
-            houseString.append(this.getConquestPoints());
-            houseString.append("$");
-        }
-
-        result.append(houseString.toString());
-        result.append(getEnvironments().size());
-        for (Continent t : getEnvironments().toArray()) {
-            result.append(t.getSize());
-            result.append(t.getEnvironment().getName());
-
-            if (t.getAdvancedTerrain() != null) {
-                if (t.getAdvancedTerrain().getName() != null) {result.append(t.getAdvancedTerrain().getName());}
-            }
-        }
-        if (getDescription().equals("")) {result.append(" ");} else {result.append(getDescription());}
-        result.append(this.getBaysProvided());
-        result.append(this.isConquerable());
-        java.text.SimpleDateFormat sdf = new java.text.SimpleDateFormat("yyyyMMddHHmmss");
-        result.append(sdf.format(this.getLastChanged()));
-        result.append(this.getId());
-        result.append(this.getMinPlanetOwnerShip());
-        result.append(isHomeWorld());
-        result.append(getOriginalOwner());
-
-        if (this.getPlanetFlags().size() > 0) {
-            for (String key : this.getPlanetFlags().keySet()) {
-                result.append(key + "^");
-            }
-        } else {result.append("^^");}
-
-        result.append(this.getConquestPoints());
-
-        return result.toString();
+    public SPlanet(int id, String name, Influences flu, int income, int CompProd, double xcood, double ycood) {
+        super(id, name, new Position(xcood, ycood), flu);
+        setCompProduction(CompProd);
+        setTimestamp(new java.util.Date(0));
+        setOriginalOwner(CampaignMain.cm.getConfig("NewbieHouseName"));
     }
 
     /**
@@ -243,23 +196,97 @@ public class SPlanet extends TimeUpdatePlanet implements java.io.Serializable, C
         return s;
     }
 
-    /**
-     * Use the other constructor as soon as you do not need the manual serialization support through fromString()
-     * anymore.
-     */
-    public SPlanet() {
-        // super(CampaignMain.cm.getData().getUnusedPlanetID(),"", new
-        // Position(0,0), null);
-        super();
-        setTimestamp(new java.util.Date(0));
-        setOriginalOwner(CampaignMain.cm.getConfig("NewbieHouseName"));
+    public boolean isNullOwner() {
+
+        if (this.getInfluence().getInfluence(-1) == this.getConquestPoints()) {return true;}
+
+        return false;
     }
 
-    public SPlanet(int id, String name, Influences flu, int income, int CompProd, double xcood, double ycood) {
-        super(id, name, new Position(xcood, ycood), flu);
-        setCompProduction(CompProd);
-        setTimestamp(new java.util.Date(0));
-        setOriginalOwner(CampaignMain.cm.getConfig("NewbieHouseName"));
+    public void setOwner(SHouse oldOwner, SHouse newOwner, boolean sendHouseUpdates) {
+
+        if (owner != null)// this is the same as oldowner in most cases
+        {owner.removePlanet(this);}
+
+        if (newOwner != null) {
+            owner = newOwner;
+            owner.addPlanet(this);
+        }
+
+        if (sendHouseUpdates) {this.sendHouseStatusUpdate(oldOwner, newOwner);}
+    }
+
+    public SHouse checkOwner() {
+
+        if (getInfluence() == null) {
+            MWLogger.errLog("getINF == null Planet: " + getName());
+            return null;
+        }
+
+        SHouse h = null;
+        Integer houseID = this.getInfluence().getOwner();
+
+        if (houseID == null) {return null;}
+
+        h = (SHouse) CampaignMain.cm.getData().getHouse(houseID);
+
+        if (this.getInfluence().getInfluence(houseID) < this.getMinPlanetOwnerShip()) {return null;}
+
+        return h;
+    }
+
+    /*
+     * Helper method that sends updates to online players when a world changes hands.
+     */
+    private void sendHouseStatusUpdate(SHouse oldOwner, SHouse newOwner) {
+
+        // don't do anything if there's no change is ownership
+        if (oldOwner != null && oldOwner.equals(newOwner)) {return;} else if (oldOwner == null && newOwner == null) {
+            return;
+        }
+
+        // if the world has factories, build strings to send
+        StringBuilder oldOwnerHSUpdates = new StringBuilder();
+        StringBuilder newOwnerHSUpdates = new StringBuilder();
+        for (UnitFactory currUF : getUnitFactories()) {
+
+            oldOwnerHSUpdates.append("RF|" +
+                                           currUF.getWeightclass() +
+                                           "$" +
+                                           currUF.getType() +
+                                           "$" +
+                                           this.getName() +
+                                           "$" +
+                                           currUF.getName() +
+                                           "|");
+
+            newOwnerHSUpdates.append("AF|" + currUF.getWeightclass());
+            newOwnerHSUpdates.append("$");
+            newOwnerHSUpdates.append(currUF.getType());
+            newOwnerHSUpdates.append("$");
+            newOwnerHSUpdates.append(currUF.getFounder());
+            newOwnerHSUpdates.append("$");
+            newOwnerHSUpdates.append(this.getName());
+            newOwnerHSUpdates.append("$");
+            newOwnerHSUpdates.append(currUF.getName());
+            newOwnerHSUpdates.append("$");
+            newOwnerHSUpdates.append(currUF.getTicksUntilRefresh());
+            newOwnerHSUpdates.append("$");
+            newOwnerHSUpdates.append(currUF.getAccessLevel());
+            newOwnerHSUpdates.append("$");
+            newOwnerHSUpdates.append(currUF.getID());
+            newOwnerHSUpdates.append("|");
+        }
+
+        // send updates to non-null houses, so long as update strings have
+        // length > 0 (real updates)
+        if (oldOwner != null && oldOwnerHSUpdates.length() > 0) {
+            CampaignMain.cm.doSendToAllOnlinePlayers(oldOwner, "HS|" + oldOwnerHSUpdates.toString(), false);
+        }
+        if (newOwner != null && newOwnerHSUpdates.length() > 0) {
+            CampaignMain.cm.doSendToAllOnlinePlayers(newOwner, "HS|" + newOwnerHSUpdates.toString(), false);
+        }
+
     }
 
     public SUnitFactory getRandomUnitFactory() {
@@ -331,6 +358,81 @@ public class SPlanet extends TimeUpdatePlanet implements java.io.Serializable, C
         return p.getId() == this.getId();
     }
 
+    @Override
+    public String toString() {
+        SerializedMessage result = new SerializedMessage("#");
+        result.append("PL");
+        result.append(getName());
+        result.append(getCompProduction());
+        if (getUnitFactories() != null) {
+            result.append(getUnitFactories().size());
+            for (UnitFactory factory : getUnitFactories()) {
+                // int i = 0; i < getUnitFactories().size(); i++) {
+                // SUnitFactory MF = (SUnitFactory) getUnitFactories().get(i);
+                result.append(((SUnitFactory) factory).toString());
+            }
+        } else {result.append("0");}
+
+        result.append(getPosition().getX());
+        result.append(getPosition().getY());
+        StringBuilder houseString = new StringBuilder();
+        for (House house : getInfluence().getHouses()) {
+            SHouse next = (SHouse) house;
+            if (next == null) {continue;}
+            houseString.append(next.getName());
+            houseString.append("$"); // change for unusual influence
+            houseString.append(getInfluence().getInfluence(next.getId()));
+            houseString.append("$"); // change for unusual influence
+        }
+        // No Influences then set influence to NewbieHouse so the planet will
+        // load.
+        if (getInfluence().getHouses().size() < 1) {
+            houseString.append(CampaignMain.cm.getConfig("NewbieHouseName"));
+            houseString.append("$");
+            houseString.append(this.getConquestPoints());
+            houseString.append("$");
+        }
+
+        result.append(houseString.toString());
+        result.append(getEnvironments().size());
+        for (Continent t : getEnvironments().toArray()) {
+            result.append(t.getSize());
+            result.append(t.getEnvironment().getName());
+
+            if (t.getAdvancedTerrain() != null) {
+                if (t.getAdvancedTerrain().getName() != null) {result.append(t.getAdvancedTerrain().getName());}
+            }
+        }
+        if (getDescription().equals("")) {result.append(" ");} else {result.append(getDescription());}
+        result.append(this.getBaysProvided());
+        result.append(this.isConquerable());
+        java.text.SimpleDateFormat sdf = new java.text.SimpleDateFormat("yyyyMMddHHmmss");
+        result.append(sdf.format(this.getLastChanged()));
+        result.append(this.getId());
+        result.append(this.getMinPlanetOwnerShip());
+        result.append(isHomeWorld());
+        result.append(getOriginalOwner());
+
+        if (this.getPlanetFlags().size() > 0) {
+            for (String key : this.getPlanetFlags().keySet()) {
+                result.append(key + "^");
+            }
+        } else {result.append("^^");}
+
+        result.append(this.getConquestPoints());
+
+        return result.toString();
+    }
+
+    @Override
+    public int getMinPlanetOwnerShip() {
+
+        int ownership = super.getMinPlanetOwnerShip();
+        if (ownership < 0) {ownership = CampaignMain.cm.getIntegerConfig("MinPlanetOwnerShip");}
+
+        return ownership;
+    }
+
     /**
      * Do a tick - call tick on he planets MF, if it has one, and return the amount of income generated by the planet
      * Income = base income * the number of miniticks registered at a tick
@@ -377,23 +479,21 @@ public class SPlanet extends TimeUpdatePlanet implements java.io.Serializable, C
         return result.toString();
     }
 
-    public SHouse checkOwner() {
+    /**
+     * Method which returns a coloured link name for a planet.
+     */
+    public String getNameAsColoredLink() {
 
-        if (getInfluence() == null) {
-            MWLogger.errLog("getINF == null Planet: " + getName());
-            return null;
-        }
+        String colorString = "";
+        if (owner == null) {
+            colorString = CampaignMain.cm.getConfig("DisputedPlanetColor");// malformed
+            // gets
+            // you
+            // black?
+        } else {colorString = owner.getHouseColor();}
 
-        SHouse h = null;
-        Integer houseID = this.getInfluence().getOwner();
-
-        if (houseID == null) {return null;}
-
-        h = (SHouse) CampaignMain.cm.getData().getHouse(houseID);
-
-        if (this.getInfluence().getInfluence(houseID) < this.getMinPlanetOwnerShip()) {return null;}
-
-        return h;
+        String toReturn = "<font color=\"" + colorString + "\">" + getNameAsLink() + "</font>";
+        return toReturn;
     }
 
     public SHouse getOwner() {
@@ -402,19 +502,6 @@ public class SPlanet extends TimeUpdatePlanet implements java.io.Serializable, C
          */
         if (owner == null) {checkOwner();}
         return owner;
-    }
-
-    public void setOwner(SHouse oldOwner, SHouse newOwner, boolean sendHouseUpdates) {
-
-        if (owner != null)// this is the same as oldowner in most cases
-        {owner.removePlanet(this);}
-
-        if (newOwner != null) {
-            owner = newOwner;
-            owner.addPlanet(this);
-        }
-
-        if (sendHouseUpdates) {this.sendHouseStatusUpdate(oldOwner, newOwner);}
     }
 
     public int doGainInfluence(SHouse winner, SHouse loser, int amount, boolean adminExchange) {
@@ -434,60 +521,6 @@ public class SPlanet extends TimeUpdatePlanet implements java.io.Serializable, C
             setOwner(oldOwner, newOwner, true);
         }
         return infgain;
-    }
-
-    /*
-     * Helper method that sends updates to online players when a world changes hands.
-     */
-    private void sendHouseStatusUpdate(SHouse oldOwner, SHouse newOwner) {
-
-        // don't do anything if there's no change is ownership
-        if (oldOwner != null && oldOwner.equals(newOwner)) {return;} else if (oldOwner == null && newOwner == null) {
-            return;
-        }
-
-        // if the world has factories, build strings to send
-        StringBuilder oldOwnerHSUpdates = new StringBuilder();
-        StringBuilder newOwnerHSUpdates = new StringBuilder();
-        for (UnitFactory currUF : getUnitFactories()) {
-
-            oldOwnerHSUpdates.append("RF|" +
-                                           currUF.getWeightclass() +
-                                           "$" +
-                                           currUF.getType() +
-                                           "$" +
-                                           this.getName() +
-                                           "$" +
-                                           currUF.getName() +
-                                           "|");
-
-            newOwnerHSUpdates.append("AF|" + currUF.getWeightclass());
-            newOwnerHSUpdates.append("$");
-            newOwnerHSUpdates.append(currUF.getType());
-            newOwnerHSUpdates.append("$");
-            newOwnerHSUpdates.append(currUF.getFounder());
-            newOwnerHSUpdates.append("$");
-            newOwnerHSUpdates.append(this.getName());
-            newOwnerHSUpdates.append("$");
-            newOwnerHSUpdates.append(currUF.getName());
-            newOwnerHSUpdates.append("$");
-            newOwnerHSUpdates.append(currUF.getTicksUntilRefresh());
-            newOwnerHSUpdates.append("$");
-            newOwnerHSUpdates.append(currUF.getAccessLevel());
-            newOwnerHSUpdates.append("$");
-            newOwnerHSUpdates.append(currUF.getID());
-            newOwnerHSUpdates.append("|");
-        }
-
-        // send updates to non-null houses, so long as update strings have
-        // length > 0 (real updates)
-        if (oldOwner != null && oldOwnerHSUpdates.length() > 0) {
-            CampaignMain.cm.doSendToAllOnlinePlayers(oldOwner, "HS|" + oldOwnerHSUpdates.toString(), false);
-        }
-        if (newOwner != null && newOwnerHSUpdates.length() > 0) {
-            CampaignMain.cm.doSendToAllOnlinePlayers(newOwner, "HS|" + newOwnerHSUpdates.toString(), false);
-        }
-
     }
 
     public String getShortDescription(boolean withTerrain) {
@@ -517,39 +550,6 @@ public class SPlanet extends TimeUpdatePlanet implements java.io.Serializable, C
             } else {result.append(" (100% correct)");}
         }
         return result.toString();
-    }
-
-    /**
-     * Method which returns a coloured link name for a planet.
-     */
-    public String getNameAsColoredLink() {
-
-        String colorString = "";
-        if (owner == null) {
-            colorString = CampaignMain.cm.getConfig("DisputedPlanetColor");// malformed
-            // gets
-            // you
-            // black?
-        } else {colorString = owner.getHouseColor();}
-
-        String toReturn = "<font color=\"" + colorString + "\">" + getNameAsLink() + "</font>";
-        return toReturn;
-    }
-
-    @Override
-    public int getMinPlanetOwnerShip() {
-
-        int ownership = super.getMinPlanetOwnerShip();
-        if (ownership < 0) {ownership = CampaignMain.cm.getIntegerConfig("MinPlanetOwnerShip");}
-
-        return ownership;
-    }
-
-    public boolean isNullOwner() {
-
-        if (this.getInfluence().getInfluence(-1) == this.getConquestPoints()) {return true;}
-
-        return false;
     }
 
 }

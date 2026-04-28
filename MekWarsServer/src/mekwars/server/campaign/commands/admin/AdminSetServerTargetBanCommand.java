@@ -22,10 +22,6 @@ public class AdminSetServerTargetBanCommand implements server.campaign.commands.
     int accessLevel = server.MWChatServer.auth.IAuthenticator.ADMIN;
     String syntax = "Banned TargetSystem String - list of integers separated by #";
 
-    public int getExecutionLevel() {return accessLevel;}
-
-    public void setExecutionLevel(int i) {accessLevel = i;}
-
     public String getSyntax() {return syntax;}
 
     public void process(java.util.StringTokenizer command, String Username) {
@@ -59,4 +55,8 @@ public class AdminSetServerTargetBanCommand implements server.campaign.commands.
         server.campaign.CampaignMain.cm.doSendToAllOnlinePlayers(sb.toString(), false);
         server.campaign.CampaignMain.cm.toUser("AM: Server Target Bans set", Username, true);
     }
+
+    public int getExecutionLevel() {return accessLevel;}
+
+    public void setExecutionLevel(int i) {accessLevel = i;}
 }

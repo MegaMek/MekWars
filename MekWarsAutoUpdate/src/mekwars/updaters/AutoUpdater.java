@@ -61,11 +61,53 @@ public class AutoUpdater {
     // Temporary directory to store the files that will be updated.
     public static final String UPDATE_TMP_DIR = "update-tmp";
     protected SplashWindow splash;
+    protected File localDir_;
+    protected Hashtable<String, File> copyMap_ = new Hashtable<String, File>();
 
     public AutoUpdater(String localDir, SplashWindow splash) {
         localDir_ = new File(localDir);
         this.splash = splash;
 
+    }
+
+    public static void main(String[] args) throws IOException {
+        String repositoryName = "http://www.navtools.com/cosm-client";
+        String localDir = ".";
+
+
+        if (args.length > 2) {
+            usage();
+            System.exit(0);
+        } else if (args.length > 0) {
+            //if args.length == 1 or 2
+            localDir = args[0];
+
+            if (args.length == 2) {
+                repositoryName = args[1];
+            }
+        }
+
+        //create instance of UpdateFixScript singleton so any old one is
+        //overwritten
+        //UpdateFixScript.instance();
+        update(localDir, repositoryName, null);
+        Terminator.instance().exit(0);
+    }
+
+    public static void usage() {
+        System.out.println("AutoUpdater: Update a local application from a " +
+                                 "remote repository.");
+        System.out.println();
+        System.out.println("Usage:");
+        System.out.println(
+              "java com.navtools.autoupdate.AutoUpdater [local directory=.] [repository=www.navtools.com/cosm-client]");
+    }
+
+    public static void update(String localDir, String repositoryName, SplashWindow splash) throws IOException {
+        AutoUpdater updater = new AutoUpdater(localDir, splash);
+        //updater.setProgressMonitor(new ProgressMonitor(new JWindow(),"Updating from remote repository","",0,1));
+        Repository repository = new Repository(repositoryName);
+        updater.updateToLatestVersion(repository);
     }
 
     public void updateToLatestVersion(Repository repository)
@@ -101,6 +143,23 @@ public class AutoUpdater {
 
 
         cleanUpLocalFiles(manifest);
+    }
+
+    public void setProgressNote(String note) {
+        if (splash != null) {this.splash.getAnimator().setLabelText(note);}
+    }
+
+    public void setMaximumSteps(int max) {
+        if (splash != null) {
+            splash.getProgressBar().setMaximum(max);
+        }
+    }
+
+    public void setProgress(int stepsCompleted) {
+        if (splash != null) {
+
+            splash.getProgressBar().setValue(stepsCompleted);
+        }
     }
 
     public void cleanUpLocalFiles(VersionManifest manifest) {
@@ -201,66 +260,5 @@ public class AutoUpdater {
     public String getLocalDir() {
         return localDir_.getAbsolutePath();
     }
-
-    public static void main(String[] args) throws IOException {
-        String repositoryName = "http://www.navtools.com/cosm-client";
-        String localDir = ".";
-
-
-        if (args.length > 2) {
-            usage();
-            System.exit(0);
-        } else if (args.length > 0) {
-            //if args.length == 1 or 2
-            localDir = args[0];
-
-            if (args.length == 2) {
-                repositoryName = args[1];
-            }
-        }
-
-        //create instance of UpdateFixScript singleton so any old one is
-        //overwritten
-        //UpdateFixScript.instance();
-        update(localDir, repositoryName, null);
-        Terminator.instance().exit(0);
-    }
-
-    public static void usage() {
-        System.out.println("AutoUpdater: Update a local application from a " +
-                                 "remote repository.");
-        System.out.println();
-        System.out.println("Usage:");
-        System.out.println(
-              "java com.navtools.autoupdate.AutoUpdater [local directory=.] [repository=www.navtools.com/cosm-client]");
-    }
-
-    public static void update(String localDir, String repositoryName, SplashWindow splash) throws IOException {
-        AutoUpdater updater = new AutoUpdater(localDir, splash);
-        //updater.setProgressMonitor(new ProgressMonitor(new JWindow(),"Updating from remote repository","",0,1));
-        Repository repository = new Repository(repositoryName);
-        updater.updateToLatestVersion(repository);
-    }
-
-
-    public void setMaximumSteps(int max) {
-        if (splash != null) {
-            splash.getProgressBar().setMaximum(max);
-        }
-    }
-
-    public void setProgressNote(String note) {
-        if (splash != null) {this.splash.getAnimator().setLabelText(note);}
-    }
-
-    public void setProgress(int stepsCompleted) {
-        if (splash != null) {
-
-            splash.getProgressBar().setValue(stepsCompleted);
-        }
-    }
-
-    protected File localDir_;
-    protected Hashtable<String, File> copyMap_ = new Hashtable<String, File>();
 }
 

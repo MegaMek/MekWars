@@ -284,14 +284,6 @@ public class TableViewerDialog extends javax.swing.JFrame implements java.awt.ev
         setVisible(true);
     }
 
-    // refresh
-    public void refresh() {
-        tvModel.refreshModel();
-        generalTable.setPreferredSize(new java.awt.Dimension(generalTable.getWidth(),
-              generalTable.getRowHeight() * (generalTable.getRowCount())));
-        generalTable.revalidate();
-    }
-
     // Override show to center on screen.
     @Override
     public void setVisible(boolean show) {
@@ -357,63 +349,121 @@ public class TableViewerDialog extends javax.swing.JFrame implements java.awt.ev
     }
 
     /**
-     * Helper which checks strings to see if they end with a known-good unit file extension.
+     * Method which loads tables and TableUnits, based on current ComboBox selections. This is the beef of the class
+     * ...
      */
-    public boolean hasValidExtension(String l) {
-        String lc = l.toLowerCase();
-        return lc.endsWith(".blk") || lc.endsWith(".mtf") || lc.endsWith(".mul");
-    }
+    @SuppressWarnings("unused")
+    public void loadTables() {
 
-    /**
-     * Helper which takes a File entry and returns an input stream. Handles errors, etc. to reduce clutter in
-     * loadTables().
-     */
-    public java.io.InputStream getEntryInputStream(java.io.File bf) {
-        java.io.InputStream is;
-        try {
-            is = new java.io.FileInputStream(bf);
-            return is;
-        } catch (java.io.IOException io) {
-            return null;
+        // System.out.println("loadTables() called");
+
+        String factionString = "";
+        String addOnString = "";
+
+        /*
+         * First, determine faction.
+         */
+        factionString += (String) factionCombo.getSelectedItem();
+        // System.out.println("Faction String: " + factionString);
+
+        /*
+         * Next, determine the weightclass.
+         */
+        addOnString += STR."_\{weightClassCombo.getSelectedItem()}";
+
+        /*
+         * Finally, determine the type of unit to look at.
+         */
+        String type = (String) unitTypeCombo.getSelectedItem();
+        if (type != null && !type.equals("Mek")) {
+            addOnString += type;
         }
-    }
 
-    /**
-     * Helper which loops through a table, ignoring filenames and tablenames. Returns total table weighting for use when
-     * analyzing names.
-     */
-    public int getTotalWeightForTable(java.io.File bf) {
+        // always look for a .txt
+        addOnString += ".txt";
+        // System.out.println("AddOn String: " + addOnString);
 
-        int totalweight = 0;
+        /*
+         * Look for the build tables
+         */
+        java.io.File buildTablePath = new java.io.File("./data/buildtables/standard");
+        if (!buildTablePath.exists()) {
+            MWLogger.errLog("Could not find build tables.");
+            return;
+        }
 
-        try {
-            java.io.FileInputStream fis = new java.io.FileInputStream(bf);
-            java.io.BufferedReader dis = new java.io.BufferedReader(new java.io.InputStreamReader(fis));
-            while (dis.ready()) {
-                // read the line and remove excess whitespace
-                String l = dis.readLine();
+        /*
+         * Reset currentUnits.
+         */
+        currentUnits.clear();
 
-                if ((l == null) || (l.trim().isEmpty())) {
-                    continue;
-                }
+        /*
+         * Found the zip. Now extract an appropriate entry. Try normal casing
+         * and lowercasing/
+         */
+        boolean overrideWithCommon = false;
+        File tableEntry = new File(buildTablePath.getPath() +
+                                         File.separatorChar +
+                                         factionString +
+                                         addOnString);
 
-                l = l.trim();
-                l = l.replaceAll("\\s+", " ");
-                if (l.indexOf(" ") == 0) {
-                    l = l.substring(1);
-                }
+        /*
+         * A clutch of treemaps. These are used to store info on crosslinked
+         * tables. Note that linkage hops could extend in perpetuity, so
+         * stopping after 3 hops will generate some minor rounding errors.
+         */
+        java.util.TreeMap<String, Double> crossMap1 = new java.util.TreeMap<>();
+        java.util.TreeMap<String, Double> crossMap2 = new java.util.TreeMap<>();
 
-                java.util.StringTokenizer ST = new java.util.StringTokenizer(l);
-                totalweight += Integer.parseInt((String) ST.nextElement());
+        /*
+         * Original Table. A dummy treemap is used here in order to pass a
+         * treemap to the doTableLayer method. The initial table is the only
+         * value and carries a 100% weight.
+         */
+        java.util.TreeMap<String, Double> temp = new java.util.TreeMap<>();
+        temp.put(factionString, 100.0);// using 100 makes things
+        // %'s instead of decimals
+        // ...
+        // System.out.println("this.doTableLayer - base");
+        doTableLayer(temp, crossMap1, addOnString, buildTablePath, overrideWithCommon);
+
+        while (true) {
+            // 1st cross-linkages (2nd degree)
+            // System.out.println("this.doTableLayer - map1");
+            doTableLayer(crossMap1, crossMap2, addOnString, buildTablePath, false);
+
+            if (crossMap2.isEmpty()) {
+                break;
             }
-            fis.close();
-            dis.close();
-        } catch (Exception e) {
-            // nothing
+
+            crossMap1 = crossMap2;
+            crossMap2 = new java.util.TreeMap<>();
         }
 
-        // System.out.println("totalweight of current table: " + totalweight);
-        return totalweight;
+        /*
+         * Table, and 3 degrees of separation, processed as well as possible.
+         * Holes may exist if linked tables are given bad pointers on the
+         * tables, or if linkages are pervasive and 3 hops are not enough to
+         * cover most of the crosstalk.
+         */
+
+        /*
+         * Update the total percentage counter.
+         */
+        double totalPercent = 0;
+        for (TableUnit currUnit : currentUnits.values()) {
+            totalPercent += currUnit.getFrequency();
+        }
+        java.text.DecimalFormat myFormatter = new java.text.DecimalFormat("###.#####");
+        percentageLabel.setText("Total Percentage: " + myFormatter.format(totalPercent) + "%");
+    }
+
+    // refresh
+    public void refresh() {
+        tvModel.refreshModel();
+        generalTable.setPreferredSize(new java.awt.Dimension(generalTable.getWidth(),
+              generalTable.getRowHeight() * (generalTable.getRowCount())));
+        generalTable.revalidate();
     }
 
     /**
@@ -627,117 +677,66 @@ public class TableViewerDialog extends javax.swing.JFrame implements java.awt.ev
     }// end doTableLayer()
 
     /**
-     * Method which loads tables and TableUnits, based on current ComboBox selections. This is the beef of the class
-     * ...
+     * Helper which loops through a table, ignoring filenames and tablenames. Returns total table weighting for use when
+     * analyzing names.
      */
-    @SuppressWarnings("unused")
-    public void loadTables() {
+    public int getTotalWeightForTable(java.io.File bf) {
 
-        // System.out.println("loadTables() called");
+        int totalweight = 0;
 
-        String factionString = "";
-        String addOnString = "";
+        try {
+            java.io.FileInputStream fis = new java.io.FileInputStream(bf);
+            java.io.BufferedReader dis = new java.io.BufferedReader(new java.io.InputStreamReader(fis));
+            while (dis.ready()) {
+                // read the line and remove excess whitespace
+                String l = dis.readLine();
 
-        /*
-         * First, determine faction.
-         */
-        factionString += (String) factionCombo.getSelectedItem();
-        // System.out.println("Faction String: " + factionString);
+                if ((l == null) || (l.trim().isEmpty())) {
+                    continue;
+                }
 
-        /*
-         * Next, determine the weightclass.
-         */
-        addOnString += STR."_\{weightClassCombo.getSelectedItem()}";
+                l = l.trim();
+                l = l.replaceAll("\\s+", " ");
+                if (l.indexOf(" ") == 0) {
+                    l = l.substring(1);
+                }
 
-        /*
-         * Finally, determine the type of unit to look at.
-         */
-        String type = (String) unitTypeCombo.getSelectedItem();
-        if (type != null && !type.equals("Mek")) {
-            addOnString += type;
-        }
-
-        // always look for a .txt
-        addOnString += ".txt";
-        // System.out.println("AddOn String: " + addOnString);
-
-        /*
-         * Look for the build tables
-         */
-        java.io.File buildTablePath = new java.io.File("./data/buildtables/standard");
-        if (!buildTablePath.exists()) {
-            MWLogger.errLog("Could not find build tables.");
-            return;
-        }
-
-        /*
-         * Reset currentUnits.
-         */
-        currentUnits.clear();
-
-        /*
-         * Found the zip. Now extract an appropriate entry. Try normal casing
-         * and lowercasing/
-         */
-        boolean overrideWithCommon = false;
-        File tableEntry = new File(buildTablePath.getPath() +
-                                         File.separatorChar +
-                                         factionString +
-                                         addOnString);
-
-        /*
-         * A clutch of treemaps. These are used to store info on crosslinked
-         * tables. Note that linkage hops could extend in perpetuity, so
-         * stopping after 3 hops will generate some minor rounding errors.
-         */
-        java.util.TreeMap<String, Double> crossMap1 = new java.util.TreeMap<>();
-        java.util.TreeMap<String, Double> crossMap2 = new java.util.TreeMap<>();
-
-        /*
-         * Original Table. A dummy treemap is used here in order to pass a
-         * treemap to the doTableLayer method. The initial table is the only
-         * value and carries a 100% weight.
-         */
-        java.util.TreeMap<String, Double> temp = new java.util.TreeMap<>();
-        temp.put(factionString, 100.0);// using 100 makes things
-        // %'s instead of decimals
-        // ...
-        // System.out.println("this.doTableLayer - base");
-        doTableLayer(temp, crossMap1, addOnString, buildTablePath, overrideWithCommon);
-
-        while (true) {
-            // 1st cross-linkages (2nd degree)
-            // System.out.println("this.doTableLayer - map1");
-            doTableLayer(crossMap1, crossMap2, addOnString, buildTablePath, false);
-
-            if (crossMap2.isEmpty()) {
-                break;
+                java.util.StringTokenizer ST = new java.util.StringTokenizer(l);
+                totalweight += Integer.parseInt((String) ST.nextElement());
             }
-
-            crossMap1 = crossMap2;
-            crossMap2 = new java.util.TreeMap<>();
+            fis.close();
+            dis.close();
+        } catch (Exception e) {
+            // nothing
         }
 
-        /*
-         * Table, and 3 degrees of separation, processed as well as possible.
-         * Holes may exist if linked tables are given bad pointers on the
-         * tables, or if linkages are pervasive and 3 hops are not enough to
-         * cover most of the crosstalk.
-         */
+        // System.out.println("totalweight of current table: " + totalweight);
+        return totalweight;
+    }
 
-        /*
-         * Update the total percentage counter.
-         */
-        double totalPercent = 0;
-        for (TableUnit currUnit : currentUnits.values()) {
-            totalPercent += currUnit.getFrequency();
+    /**
+     * Helper which takes a File entry and returns an input stream. Handles errors, etc. to reduce clutter in
+     * loadTables().
+     */
+    public java.io.InputStream getEntryInputStream(java.io.File bf) {
+        java.io.InputStream is;
+        try {
+            is = new java.io.FileInputStream(bf);
+            return is;
+        } catch (java.io.IOException io) {
+            return null;
         }
-        java.text.DecimalFormat myFormatter = new java.text.DecimalFormat("###.#####");
-        percentageLabel.setText("Total Percentage: " + myFormatter.format(totalPercent) + "%");
+    }
+
+    /**
+     * Helper which checks strings to see if they end with a known-good unit file extension.
+     */
+    public boolean hasValidExtension(String l) {
+        String lc = l.toLowerCase();
+        return lc.endsWith(".blk") || lc.endsWith(".mtf") || lc.endsWith(".mul");
     }
 
     // inner classes
-
 
     public void refreshButton_ActionPerformed() {
 

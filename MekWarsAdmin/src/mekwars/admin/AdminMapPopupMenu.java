@@ -28,6 +28,9 @@ import mekwars.admin.dialog.PlanetEditorDialog;
 import mekwars.common.CampaignData;
 import mekwars.common.Planet;
 import mekwars.common.campaign.clientutils.protocol.IClient;
+import mekwars.common.gui.CMapPanel;
+import mekwars.common.gui.InnerStellarMap;
+import mekwars.common.gui.dialogs.PlanetNameDialog;
 
 public class AdminMapPopupMenu extends JMenu {
 

@@ -112,7 +112,7 @@ $ Released Server, Ded, Client v0.6.0.1
 R Released Server v0.5.0.2, Client v0.5.0.1
 + Created Interfaces for Quartz jobs
 + Altered flu and comp jobs to make them reschedulable
-+ More work on Christmas mechs (almost done!)
++ More work on Christmas meks (almost done!)
 + Added JDatePicker to admin jar
   ***********************************
   * NOTE TO OPERATORS               *
@@ -1057,7 +1057,7 @@ Release Client&Server 0.2.30.0
 	manually updated.
 + RFE: add Check Access to army popup menu in HQ
 + Bug: Concurrent Modification error while trying to save house to DB.
-+ RFE 1883865: Chance for Salvageable mechs to get Destroyed
++ RFE 1883865: Chance for Salvageable meks to get Destroyed
 + Bug: purging player file used CONFIRMED instead of CONFIRM in unenroll command
 + New MegaMek.jar 0.33.23-MW043008-5623
 + RFE: have units displayed in games of more then 2 for /modgames command
@@ -3765,7 +3765,7 @@ Release Client 0.1.15.3 / Server 0.1.15.4
 + Added Fix so Admins could remove a specific unit from the market via the
   AdminRemoveUnitsOnMarketCommand().
 + new MM.jar
-	+ Bug 1410113: CT cockpit mechs are still destroyed when head is destroyed
+	+ Bug 1410113: CT cockpit meks are still destroyed when head is destroyed
 Release Client 0.1.15.1/Server 0.1.15.2
 + BUG: Issue with archiving and saving data files. now files wait to be
   archived before saving.
@@ -4243,7 +4243,7 @@ Release Client 0.1.10.1
 Release Client/Server 0.1.10.0
 + Released 0.1.10.0 to Sol7 to check on Bot bug fixes.
 + New MM with more City Building Code installed
-+ BUG: Sending blank AAA command to clear autoarmy was not working. Now sends
++ BUG: Sending blank AAA command to clear autoArmy was not working. Now sends
   CLEAR to clear the auto army if no arty is present.
 + BUG: Code was not waiting for bots to connect before sending data.
 + BUG 1372985: Astech Skill Broken
@@ -5922,7 +5922,7 @@ R Client/Server 0.0.17.2 [Released to SF as UNSTABLE]
 + added Navel and VTOL filters to unitviewer.
 + changed Ded backup log file to megameklog.txt
 + BUG: Global global var not getting reset each time the repod command was called.
-+ BUG: index 0 when there where no omni mechs to list.i.e. if it was turned off.
++ BUG: index 0 when there where no omni meks to list.i.e. if it was turned off.
 R Client/Server 0.0.17.1
 + Changed AdminHouseStatusCommand Now shows the selected houses Bays in the users House Status.
 + Deds always autoconnect
@@ -6621,7 +6621,7 @@ R Server 0.0.8.2
 + reverted unitfiles reference to mechfiles
 + Only show "Your mail has been sent to" message when mail is saved.
 + Bug: using values instead of keys from OLH treemap. (I'm a moron - urgru)
-+ Moved and renamed mechs to data/buildtables renamed mechfiles to unitfiles
++ Moved and renamed meks to data/buildtables renamed mechfiles to unitfiles
 + fixed ProduceComponentsWithNoFactory bug. now if you have no factories no components will be produced
 + replaced some hashtables with treemaps in OLH
 + Bug: NPE when scrapping unit w/ ID not owned by player
@@ -6812,7 +6812,7 @@ R Client 0.0.3.5 / Server 0.0.3.6 Declared
 + Added "AllowGreenPilots" option.
 + Task 107948: Have Standard Client log and Error files
 + Task 107775: Alter AdminCreateUnitCommand
-+ Bug 1079741: Pilots on engined mechs
++ Bug 1079741: Pilots on engined meks
 + Dialouge box confirming retire is Yes/No instead of Yes/No/Cancel
 + RFE 1080375: adminscrap any unit (syntax: /c adminscrap#player#ID)
 + RFE 1052759: Log in Message Updating (syntax: /setmotd text)
@@ -7032,7 +7032,7 @@ v0.0.0.x (11/15/04 No Binary Released)
 -> added a try/catch statment to SHouse to catch a bug when you have no meks in your bays
    and you are mek raided, this is a first time occurance when the system has been reset
    (Torren 10/18/04)
--> Added code to ExchangeUnitCommand to keep mechs that are being sold on the BM
+-> Added code to ExchangeUnitCommand to keep meks that are being sold on the BM
    from being added to an army
    Added Code to SellCommand to keep players from selling units on the BM
    that are currently in armies.

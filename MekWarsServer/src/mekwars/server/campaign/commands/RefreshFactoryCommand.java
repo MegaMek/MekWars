@@ -22,12 +22,6 @@ public class RefreshFactoryCommand implements Command {
     int accessLevel = server.MWChatServer.auth.IAuthenticator.GUEST;
     String syntax = "";
 
-    public int getExecutionLevel() {return accessLevel;}
-
-    public void setExecutionLevel(int i) {accessLevel = i;}
-
-    public String getSyntax() {return syntax;}
-
     public void process(java.util.StringTokenizer command, String Username) {
 
         //access level check
@@ -129,4 +123,10 @@ public class RefreshFactoryCommand implements Command {
               "NOTE",
               player.getName() + " refreshed " + uf.getName() + " on planet " + p.getName());
     }
+
+    public int getExecutionLevel() {return accessLevel;}
+
+    public void setExecutionLevel(int i) {accessLevel = i;}
+
+    public String getSyntax() {return syntax;}
 }

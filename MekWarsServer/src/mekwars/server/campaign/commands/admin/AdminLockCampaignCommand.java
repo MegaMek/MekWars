@@ -21,14 +21,6 @@ public class AdminLockCampaignCommand implements server.campaign.commands.Comman
     int accessLevel = server.MWChatServer.auth.IAuthenticator.ADMIN;
     String syntax = "";
 
-    public int getExecutionLevel() {
-        return accessLevel;
-    }
-
-    public void setExecutionLevel(int i) {
-        accessLevel = i;
-    }
-
     public String getSyntax() {
         return syntax;
     }
@@ -77,5 +69,13 @@ public class AdminLockCampaignCommand implements server.campaign.commands.Comman
         server.campaign.CampaignMain.cm.doSendModMail("NOTE", Username + " locked the campaign.");
 
     }// end Process()
+
+    public int getExecutionLevel() {
+        return accessLevel;
+    }
+
+    public void setExecutionLevel(int i) {
+        accessLevel = i;
+    }
 
 }

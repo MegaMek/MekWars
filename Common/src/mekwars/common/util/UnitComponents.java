@@ -35,14 +35,6 @@ public class UnitComponents {
         return tableizeComponents(components, year);
     }
 
-    public static Comparator<? super Object> stringComparator() {
-        return (Comparator<Object>) (o1, o2) -> {
-            String s1 = ((String) o1).toLowerCase();
-            String s2 = ((String) o2).toLowerCase();
-            return s1.compareTo(s2);
-        };
-    }
-
     public String tableizeComponents(Hashtable<String, Integer> parts, int year) {
 
         StringBuilder result = new StringBuilder();
@@ -79,6 +71,50 @@ public class UnitComponents {
         result.append("</table>");
 
         return result.toString();
+    }
+
+    public static Comparator<? super Object> stringComparator() {
+        return (Comparator<Object>) (o1, o2) -> {
+            String s1 = ((String) o1).toLowerCase();
+            String s2 = ((String) o2).toLowerCase();
+            return s1.compareTo(s2);
+        };
+    }
+
+    public static String getName(String crit) {
+        EquipmentType eq = EquipmentType.get(crit);
+        //Armor,IS,Engines,Actuators,Cockpit,Sensors anything that doesn't
+        //make a normal object in MM
+        if (eq == null) {
+            return crit;
+        }
+
+        return eq.getName();
+    }
+
+    public static String getTech(String crit, int year) {
+        EquipmentType eq = EquipmentType.get(crit);
+
+
+        //Armor, IS, Engines, Actuators, Cockpit, Sensors anything that doesn't
+        //make a normal object in MM
+        if (eq == null) {
+
+            return "All";
+        } else {
+
+            if (UnitUtils.isClanEQ(eq, year)) {
+                return "Clan";
+            }
+            if ((eq.getTechLevel(year) == TechConstants.T_ALL) ||
+                      (eq.getTechLevel(year) <= TechConstants.T_TW_ALL)) {
+                return "All";
+            }
+
+            return "IS";
+
+        }
+
     }
 
     public String toString(String token) {
@@ -130,20 +166,6 @@ public class UnitComponents {
             }
         } catch (Exception ex) {
             MWLogger.errLog(ex);
-        }
-
-    }
-
-    public void add(String part, int amount) {
-
-        if (amount < 1) {
-            return;
-        }
-
-        if (components.containsKey(part)) {
-            components.put(part, Math.max(0, components.get(part) + amount));
-        } else {
-            components.put(part, amount);
         }
 
     }
@@ -403,21 +425,18 @@ public class UnitComponents {
         return true;
     }
 
-    public int getPartsCritCount(String key) {
+    public void add(String part, int amount) {
 
-        if (components.get(key) == null) {
-            return 0;
-        }
-        return components.get(key);
-    }
-
-    public boolean hasEnoughCrits(String crit, int amount) {
-
-        if (components.get(crit) == null) {
-            return false;
+        if (amount < 1) {
+            return;
         }
 
-        return components.get(crit) >= amount;
+        if (components.containsKey(part)) {
+            components.put(part, Math.max(0, components.get(part) + amount));
+        } else {
+            components.put(part, amount);
+        }
+
     }
 
     public void remove(String key, int amount) {
@@ -438,40 +457,21 @@ public class UnitComponents {
 
     }
 
-    public static String getTech(String crit, int year) {
-        EquipmentType eq = EquipmentType.get(crit);
+    public int getPartsCritCount(String key) {
 
-
-        //Armor, IS, Engines, Actuators, Cockpit, Sensors anything that doesn't
-        //make a normal object in MM
-        if (eq == null) {
-
-            return "All";
-        } else {
-
-            if (UnitUtils.isClanEQ(eq, year)) {
-                return "Clan";
-            }
-            if ((eq.getTechLevel(year) == TechConstants.T_ALL) ||
-                      (eq.getTechLevel(year) <= TechConstants.T_TW_ALL)) {
-                return "All";
-            }
-
-            return "IS";
-
+        if (components.get(key) == null) {
+            return 0;
         }
-
+        return components.get(key);
     }
 
-    public static String getName(String crit) {
-        EquipmentType eq = EquipmentType.get(crit);
-        //Armor,IS,Engines,Actuators,Cockpit,Sensors anything that doesn't
-        //make a normal object in MM
-        if (eq == null) {
-            return crit;
+    public boolean hasEnoughCrits(String crit, int amount) {
+
+        if (components.get(crit) == null) {
+            return false;
         }
 
-        return eq.getName();
+        return components.get(crit) >= amount;
     }
 
     public void clear() {

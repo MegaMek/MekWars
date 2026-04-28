@@ -32,14 +32,6 @@ public class AdminRequestBuildTableCommand implements server.campaign.commands.C
     int accessLevel = server.MWChatServer.auth.IAuthenticator.ADMIN;
     String syntax = "list,get[#folder#filename]";
 
-    public int getExecutionLevel() {
-        return accessLevel;
-    }
-
-    public void setExecutionLevel(int i) {
-        accessLevel = i;
-    }
-
     public String getSyntax() {
         return syntax;
     }
@@ -145,5 +137,13 @@ public class AdminRequestBuildTableCommand implements server.campaign.commands.C
         } else if (subcommand.equalsIgnoreCase("view")) {
             server.campaign.CampaignMain.cm.toUser("BT|VS|", Username, false);
         }
+    }
+
+    public int getExecutionLevel() {
+        return accessLevel;
+    }
+
+    public void setExecutionLevel(int i) {
+        accessLevel = i;
     }
 }

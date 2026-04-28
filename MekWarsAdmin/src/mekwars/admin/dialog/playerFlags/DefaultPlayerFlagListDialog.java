@@ -25,11 +25,38 @@ public class DefaultPlayerFlagListDialog extends JDialog implements ActionListen
     private final PlayerFlags flags = new PlayerFlags();
     private final JButton addButton = new JButton("Add");
     private final Vector<String> pendingFlags = new Vector<>();
-    private Vector<String> flagNames = new Vector<>();
     private final Vector<String> deletedFlags = new Vector<>();
     private final JTable flagTable;
-
     private final JPopupMenu popup;
+    private Vector<String> flagNames = new Vector<>();
+
+    public DefaultPlayerFlagListDialog(IClient iClient) {
+        super(new JFrame(), "Player Flags", true);
+        mwClient = iClient;
+        loadPlayerFlags(mwClient.getPlayer().getDefaultPlayerFlags().export());
+        //flagTable = new JTable();
+        String[] columnNames = { "Flag Name", "Set by Default" };
+
+        PFTableModel model = new PFTableModel(columnNames);
+
+        for (String flagName : flagNames) {
+            model.addRow(new Object[] { flagName, flags.getFlagStatus(flagName) });
+        }
+
+        popup = new JPopupMenu();
+        JMenuItem delItem = new JMenuItem("Delete");
+        delItem.setActionCommand("Del");
+        delItem.addActionListener(this);
+        popup.add(delItem);
+
+        flagTable = new JTable(model);
+        flagTable.getColumnModel().getColumn(0).setPreferredWidth(200);
+        flagTable.getColumnModel().getColumn(1).setPreferredWidth(40);
+
+        flagTable.getModel().addTableModelListener(new PFTableChangeListener(flagTable, pendingFlags));
+
+        buildGUI();
+    }
 
     private void loadPlayerFlags(String f) {
         flags.loadDefaults(f);
@@ -98,7 +125,6 @@ public class DefaultPlayerFlagListDialog extends JDialog implements ActionListen
         }
     }
 
-
     public void actionPerformed(ActionEvent event) {
         String command = event.getActionCommand();
         if (command.equalsIgnoreCase("Add")) {
@@ -157,34 +183,6 @@ public class DefaultPlayerFlagListDialog extends JDialog implements ActionListen
             }
         }
         return -1;
-    }
-
-    public DefaultPlayerFlagListDialog(IClient iClient) {
-        super(new JFrame(), "Player Flags", true);
-        mwClient = iClient;
-        loadPlayerFlags(mwClient.getPlayer().getDefaultPlayerFlags().export());
-        //flagTable = new JTable();
-        String[] columnNames = { "Flag Name", "Set by Default" };
-
-        PFTableModel model = new PFTableModel(columnNames);
-
-        for (String flagName : flagNames) {
-            model.addRow(new Object[] { flagName, flags.getFlagStatus(flagName) });
-        }
-
-        popup = new JPopupMenu();
-        JMenuItem delItem = new JMenuItem("Delete");
-        delItem.setActionCommand("Del");
-        delItem.addActionListener(this);
-        popup.add(delItem);
-
-        flagTable = new JTable(model);
-        flagTable.getColumnModel().getColumn(0).setPreferredWidth(200);
-        flagTable.getColumnModel().getColumn(1).setPreferredWidth(40);
-
-        flagTable.getModel().addTableModelListener(new PFTableChangeListener(flagTable, pendingFlags));
-
-        buildGUI();
     }
 
     private class PFTableModel extends DefaultTableModel {

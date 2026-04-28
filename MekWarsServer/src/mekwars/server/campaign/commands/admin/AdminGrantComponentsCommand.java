@@ -24,10 +24,6 @@ public class AdminGrantComponentsCommand implements server.campaign.commands.Com
     int accessLevel = server.MWChatServer.auth.IAuthenticator.ADMIN;
     String syntax = "faction#type#weight#numcomponents";
 
-    public int getExecutionLevel() {return accessLevel;}
-
-    public void setExecutionLevel(int i) {accessLevel = i;}
-
     public String getSyntax() {return syntax;}
 
     public void process(java.util.StringTokenizer command, String Username) {
@@ -88,4 +84,8 @@ public class AdminGrantComponentsCommand implements server.campaign.commands.Com
               Username + " granted " + comps + " Comps to " + h.getName());
 
     }
+
+    public int getExecutionLevel() {return accessLevel;}
+
+    public void setExecutionLevel(int i) {accessLevel = i;}
 }

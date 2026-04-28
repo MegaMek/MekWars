@@ -48,6 +48,15 @@ public class Influences implements MutableSerializable {
     }
 
     /**
+     * Sets the whole influences.
+     *
+     * @param influences The new influences. Key=TimeUpdateHouse, Value=Integer.
+     */
+    public void setInfluence(HashMap<Integer, Integer> influences) {
+        this.influences = influences;
+    }
+
+    /**
      * Create an empty Influence.
      */
     public Influences() {
@@ -58,18 +67,6 @@ public class Influences implements MutableSerializable {
      */
     public Influences(Influences influences) {
         setInfluence(new HashMap<>(influences.influences));
-    }
-
-    /**
-     * Return the influence of a specific faction.
-     */
-    public int getInfluence(int factionID) {
-
-        if (!influences.containsKey(factionID)) {
-            return 0;
-        }
-
-        return influences.get(factionID);
     }
 
     /**
@@ -142,6 +139,30 @@ public class Influences implements MutableSerializable {
     }
 
     /**
+     * Returns the present factions.
+     */
+    public Set<House> getHouses() {
+        Set<House> result = new HashSet<>();
+        for (Integer integer : influences.keySet()) {
+            House faction = CampaignData.cd.getHouse(integer);
+            result.add(faction);
+        }
+        return result;
+    }
+
+    /**
+     * Return the influence of a specific faction.
+     */
+    public int getInfluence(int factionID) {
+
+        if (!influences.containsKey(factionID)) {
+            return 0;
+        }
+
+        return influences.get(factionID);
+    }
+
+    /**
      * Fairly distribute the influence under the factions in the list.
      *
      * @param factions All of these factions gain as much as possible influence divided equal
@@ -161,18 +182,6 @@ public class Influences implements MutableSerializable {
                 influences.put((gainer.getId()), (bonus));
             }
         }
-    }
-
-    /**
-     * Returns the present factions.
-     */
-    public Set<House> getHouses() {
-        Set<House> result = new HashSet<>();
-        for (Integer integer : influences.keySet()) {
-            House faction = CampaignData.cd.getHouse(integer);
-            result.add(faction);
-        }
-        return result;
     }
 
     /**
@@ -216,15 +225,6 @@ public class Influences implements MutableSerializable {
 
         if (loserInfluence == 0) {influences.remove(loserId);} else {influences.put(loserId, (loserInfluence));}
         return amount;
-    }
-
-    /**
-     * Sets the whole influences.
-     *
-     * @param influences The new influences. Key=TimeUpdateHouse, Value=Integer.
-     */
-    public void setInfluence(HashMap<Integer, Integer> influences) {
-        this.influences = influences;
     }
 
     /**

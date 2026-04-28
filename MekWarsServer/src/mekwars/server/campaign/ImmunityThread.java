@@ -39,17 +39,6 @@ public final class ImmunityThread extends Thread {//no extension
     //METHODS
 
     /**
-     * Method that waits the Immunity thread and prints any interuptions to the error log.
-     */
-    public void extendedWait(int time) {
-        try {
-            this.wait(time);
-        } catch (Exception ex) {
-            MWLogger.errLog(ex);
-        }
-    }
-
-    /**
      * Method that adds a newly immune player to the Thread. The player is informed of his immunity. If he's a newbie,
      * he is also told if/how to reset his units.
      *
@@ -191,5 +180,16 @@ public final class ImmunityThread extends Thread {//no extension
 
         }
     }// end run()
+
+    /**
+     * Method that waits the Immunity thread and prints any interuptions to the error log.
+     */
+    public void extendedWait(int time) {
+        try {
+            this.wait(time);
+        } catch (Exception ex) {
+            MWLogger.errLog(ex);
+        }
+    }
 
 }// end ImmunityThread

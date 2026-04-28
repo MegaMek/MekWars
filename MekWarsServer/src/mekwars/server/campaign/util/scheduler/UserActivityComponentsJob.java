@@ -45,33 +45,16 @@ public class UserActivityComponentsJob implements Job, MWRepeatingJob, JobIdenti
     public UserActivityComponentsJob() {}
 
     /**
-     * This method is called every X seconds, where X is defined by the server config variable
-     * "Scheduler_PlayerActivity_comps."
+     * A method to build the Components Job and get it into the scheduler.  Called when the user issues an Activate
+     * command
      *
-     * @param JobExecutionContext - data provided by the Quartz Scheduler
+     * @param userName          - the name of the user going active
+     * @param weightedArmyValue the value of the player's armies
+     * @param factionName       the faction the player fights for
      */
-    @Override
-    public void execute(JobExecutionContext context)
-          throws JobExecutionException {
-
-        // Grab and print passed parameters
-        JobDataMap data = context.getJobDetail().getJobDataMap();
-        String playerName = data.getString(PLAYER_NAME);
-        //String factionName = data.getString(FACTION_NAME);
-        //Double armyWeight = data.getDoubleFromString(ARMY_WEIGHT);
-
-        server.campaign.SPlayer p = server.campaign.CampaignMain.cm.getPlayer(playerName);
-        server.campaign.SHouse house = p.getMyHouse();
-
-        if (playerCountsForProduction(p)) {
-            Double value = howMuch(p);
-            java.text.DecimalFormat myFormatter = new java.text.DecimalFormat("###.##");
-            String output = myFormatter.format(value);
-            String toShow = "AM:You counted towards production (" + output + " points worth)";
-            server.campaign.CampaignMain.cm.toUser(toShow + ".", p.getName(), true);
-            house.addActivityPP(value);
-        }
-
+    public static void submit(String userName, Double weightedArmyValue, String factionName) {
+        int frequency = server.campaign.CampaignMain.cm.getIntegerConfig("Scheduler_PlayerActivity_comps");
+        submit(userName, weightedArmyValue, factionName, frequency);
     }
 
     /**
@@ -110,20 +93,6 @@ public class UserActivityComponentsJob implements Job, MWRepeatingJob, JobIdenti
         MWScheduler.getInstance().scheduleJob(job, trigger);
     }
 
-
-    /**
-     * A method to build the Components Job and get it into the scheduler.  Called when the user issues an Activate
-     * command
-     *
-     * @param userName          - the name of the user going active
-     * @param weightedArmyValue the value of the player's armies
-     * @param factionName       the faction the player fights for
-     */
-    public static void submit(String userName, Double weightedArmyValue, String factionName) {
-        int frequency = server.campaign.CampaignMain.cm.getIntegerConfig("Scheduler_PlayerActivity_comps");
-        submit(userName, weightedArmyValue, factionName, frequency);
-    }
-
     /**
      * A method to stop execution of this job and remove it from the scheduler.  Called when the player deactivates.
      *
@@ -132,6 +101,36 @@ public class UserActivityComponentsJob implements Job, MWRepeatingJob, JobIdenti
     public static void stop(String userName) {
         TriggerKey key = new TriggerKey(userName + "_compsTrigger", "ActivityGroup");
         MWScheduler.getInstance().unscheduleJob(key);
+    }
+
+    /**
+     * This method is called every X seconds, where X is defined by the server config variable
+     * "Scheduler_PlayerActivity_comps."
+     *
+     * @param JobExecutionContext - data provided by the Quartz Scheduler
+     */
+    @Override
+    public void execute(JobExecutionContext context)
+          throws JobExecutionException {
+
+        // Grab and print passed parameters
+        JobDataMap data = context.getJobDetail().getJobDataMap();
+        String playerName = data.getString(PLAYER_NAME);
+        //String factionName = data.getString(FACTION_NAME);
+        //Double armyWeight = data.getDoubleFromString(ARMY_WEIGHT);
+
+        server.campaign.SPlayer p = server.campaign.CampaignMain.cm.getPlayer(playerName);
+        server.campaign.SHouse house = p.getMyHouse();
+
+        if (playerCountsForProduction(p)) {
+            Double value = howMuch(p);
+            java.text.DecimalFormat myFormatter = new java.text.DecimalFormat("###.##");
+            String output = myFormatter.format(value);
+            String toShow = "AM:You counted towards production (" + output + " points worth)";
+            server.campaign.CampaignMain.cm.toUser(toShow + ".", p.getName(), true);
+            house.addActivityPP(value);
+        }
+
     }
 
     /**

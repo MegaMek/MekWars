@@ -15,6 +15,11 @@ public class DiscordAndDjangoPanel extends JPanel {
     @Serial
     private static final long serialVersionUID = -4629994177197999929L;
 
+    public DiscordAndDjangoPanel() {
+        super();
+        init();
+    }
+
     private void init() {
 
         setLayout(new VerticalLayout(5, VerticalLayout.CENTER, VerticalLayout.TOP));
@@ -101,11 +106,6 @@ public class DiscordAndDjangoPanel extends JPanel {
         add(panel3);
         //add(panel4);
 
-    }
-
-    public DiscordAndDjangoPanel() {
-        super();
-        init();
     }
 
 }

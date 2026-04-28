@@ -66,22 +66,6 @@ public final class SmallPlayer implements Comparable<Object> {
         lastonline = l;
     }
 
-    public double getRating() {
-        return rating;
-    }
-
-    public void setRating(double d) {
-        rating = d;
-    }
-
-    public String getName() {
-        return name;
-    }
-
-    public void setName(String s) {
-        name = s;
-    }
-
     public SHouse getMyHouse() {
         return faction;
     }
@@ -105,6 +89,14 @@ public final class SmallPlayer implements Comparable<Object> {
         }
     }//end equals(Object o)
 
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String s) {
+        name = s;
+    }
+
     /*
      * Comparable - used in Statistics to construct ranking
      * pages. If ratings are equal, sort in alpha order.
@@ -113,6 +105,14 @@ public final class SmallPlayer implements Comparable<Object> {
         mekwars.server.campaign.SmallPlayer p = (mekwars.server.campaign.SmallPlayer) o;
         if (this.getRating() > p.getRating()) {return 1;} else if (this.getRating() < p.getRating()) {return -1;}
         return p.getName().compareTo(this.getName());
+    }
+
+    public double getRating() {
+        return rating;
+    }
+
+    public void setRating(double d) {
+        rating = d;
     }
 
     //rounded rating for HTML output. copied from splayer.

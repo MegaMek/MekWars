@@ -21,15 +21,9 @@ import common.util.MWLogger;
 public class FactionLeaderMuteCommand implements server.campaign.commands.Command {
 
     int accessLevel = server.campaign.CampaignMain.cm.getIntegerConfig("factionLeaderLevel");
-
-    public int getExecutionLevel() {return accessLevel;}
-
-    public void setExecutionLevel(int i) {accessLevel = i;}
-
     String syntax = "";
 
     public String getSyntax() {return syntax;}
-
 
     public void process(java.util.StringTokenizer command, String Username) {
 
@@ -88,4 +82,8 @@ public class FactionLeaderMuteCommand implements server.campaign.commands.Comman
         }
 
     }
+
+    public int getExecutionLevel() {return accessLevel;}
+
+    public void setExecutionLevel(int i) {accessLevel = i;}
 }

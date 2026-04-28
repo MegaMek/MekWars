@@ -21,10 +21,6 @@ public class SetMultiPlayerGroupCommand implements server.campaign.commands.Comm
     int accessLevel = server.MWChatServer.auth.IAuthenticator.ADMIN;
     String syntax = "Player Name#Group Number";
 
-    public int getExecutionLevel() {return accessLevel;}
-
-    public void setExecutionLevel(int i) {accessLevel = i;}
-
     public String getSyntax() {return syntax;}
 
     public void process(java.util.StringTokenizer command, String Username) {
@@ -65,4 +61,8 @@ public class SetMultiPlayerGroupCommand implements server.campaign.commands.Comm
               Username + " added " + p.getName() + " to MultiPlayGroup #" + groupNum + ".");
 
     }
+
+    public int getExecutionLevel() {return accessLevel;}
+
+    public void setExecutionLevel(int i) {accessLevel = i;}
 }

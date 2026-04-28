@@ -22,10 +22,6 @@ public class AdminRestartTrackerThreadCommand implements server.campaign.command
     int accessLevel = server.MWChatServer.auth.IAuthenticator.ADMIN;
     String syntax = "AdminRestartTrackerThread";
 
-    public int getExecutionLevel() {return accessLevel;}
-
-    public void setExecutionLevel(int i) {accessLevel = i;}
-
     public String getSyntax() {return syntax;}
 
     public void process(java.util.StringTokenizer command, String Username) {
@@ -49,5 +45,9 @@ public class AdminRestartTrackerThreadCommand implements server.campaign.command
         server.campaign.CampaignMain.cm.getServer().startTracker();
         server.campaign.CampaignMain.cm.toUser("AM: Tracker Thread restarted.", Username, true);
     }
+
+    public int getExecutionLevel() {return accessLevel;}
+
+    public void setExecutionLevel(int i) {accessLevel = i;}
 
 }

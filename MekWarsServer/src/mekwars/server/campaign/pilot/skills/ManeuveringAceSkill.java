@@ -43,6 +43,12 @@ public class ManeuveringAceSkill extends SPilotSkill {
     }
 
     @Override
+    public void modifyPilot(Pilot pilot) {
+        pilot.addMegamekOption(new MegaMekPilotOption("maneuvering_ace", true));
+        // pilot.setBvMod(pilot.getBVMod() + 0.01);
+    }
+
+    @Override
     public int getChance(int unitType, Pilot pilot) {
         if (pilot.getSkills().has(this)) {
             return 0;
@@ -57,12 +63,6 @@ public class ManeuveringAceSkill extends SPilotSkill {
         }
 
         return house.getIntegerConfig(chance);
-    }
-
-    @Override
-    public void modifyPilot(Pilot pilot) {
-        pilot.addMegamekOption(new MegaMekPilotOption("maneuvering_ace", true));
-        // pilot.setBvMod(pilot.getBVMod() + 0.01);
     }
 
     @Override

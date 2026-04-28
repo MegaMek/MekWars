@@ -19,15 +19,7 @@ package mekwars.server.campaign.commands;
 
 public class LogoutCommand implements Command {
 
-    //conforming methods
-    public int getExecutionLevel() {return 0;}
-
-    public void setExecutionLevel(int i) {}
-
     String syntax = "";
-
-    public String getSyntax() {return syntax;}
-
 
     public void process(java.util.StringTokenizer command, String Username) {
 
@@ -50,4 +42,11 @@ public class LogoutCommand implements Command {
 
         server.campaign.CampaignMain.cm.doLogoutPlayer(Username);
     }
+
+    //conforming methods
+    public int getExecutionLevel() {return 0;}
+
+    public void setExecutionLevel(int i) {}
+
+    public String getSyntax() {return syntax;}
 }

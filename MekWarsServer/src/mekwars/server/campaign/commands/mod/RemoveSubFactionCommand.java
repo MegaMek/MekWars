@@ -26,10 +26,6 @@ public class RemoveSubFactionCommand implements server.campaign.commands.Command
     int accessLevel = server.MWChatServer.auth.IAuthenticator.MODERATOR;
     String syntax = "Faction name#Sub Faction Name";
 
-    public int getExecutionLevel() {return accessLevel;}
-
-    public void setExecutionLevel(int i) {accessLevel = i;}
-
     public String getSyntax() {return syntax;}
 
     public void process(java.util.StringTokenizer command, String Username) {
@@ -78,4 +74,8 @@ public class RemoveSubFactionCommand implements server.campaign.commands.Command
                                                      " for faction " +
                                                      faction.getName(), Username);
     }
+
+    public int getExecutionLevel() {return accessLevel;}
+
+    public void setExecutionLevel(int i) {accessLevel = i;}
 }

@@ -19,15 +19,9 @@ package mekwars.server.campaign.commands.leader;
 public class FactionLeaderFluffCommand implements server.campaign.commands.Command {
 
     int accessLevel = server.campaign.CampaignMain.cm.getIntegerConfig("factionLeaderLevel");
-
-    public int getExecutionLevel() {return accessLevel;}
-
-    public void setExecutionLevel(int i) {accessLevel = i;}
-
     String syntax = "";
 
     public String getSyntax() {return syntax;}
-
 
     public void process(java.util.StringTokenizer command, String Username) {
 
@@ -93,4 +87,8 @@ public class FactionLeaderFluffCommand implements server.campaign.commands.Comma
         server.campaign.CampaignMain.cm.doSendToAllOnlinePlayers("PI|FT|" + p.getName() + "|" + p.getFluffText(),
               false);
     }
+
+    public int getExecutionLevel() {return accessLevel;}
+
+    public void setExecutionLevel(int i) {accessLevel = i;}
 }

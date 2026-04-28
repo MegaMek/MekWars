@@ -27,6 +27,7 @@ import gd.xml.XMLParser;
 import gd.xml.XMLResponder;
 
 public class XMLPlanetDataParser implements XMLResponder {
+    public java.util.TreeMap<Integer, AdvancedTerrain> AdvTerrTreeMap = new java.util.TreeMap<Integer, AdvancedTerrain>();
     String lastElement = "";
     String lastInfFaction = "";
     String Name = "";
@@ -35,32 +36,18 @@ public class XMLPlanetDataParser implements XMLResponder {
     String MFFounder = null;
     String XCood = null;
     String YCood = null;
-
     int Income;
     int MFTicksUntilRefresh = 0;
     int MFRefreshSpeed = 100;
     int Type = 0;
-
     String buildTableFolder = "0";
-
     int accessLevel = 0;
-
     java.util.HashMap<Integer, Integer> Influence = new java.util.HashMap<Integer, Integer>();// House
     // ID,
     // Amount
     java.util.Vector<server.campaign.SPlanet> planets = new java.util.Vector<server.campaign.SPlanet>(1, 1);
-
     java.util.Vector<UnitFactory> unitFactories = new java.util.Vector<UnitFactory>(1, 1);
-
-    private String filename;
-    private String prefix;
-    private String Description = "";
-    private PlanetEnvironments PlanEnv = new PlanetEnvironments();
-    private AdvancedTerrain AdvTerr = null;
-    public java.util.TreeMap<Integer, AdvancedTerrain> AdvTerrTreeMap = new java.util.TreeMap<Integer, AdvancedTerrain>();
-    private java.util.TreeMap<String, String> OpFlags = new java.util.TreeMap<String, String>();
     boolean conquerable = true;
-    private int counter = 1;
     int xmap = 1;
     int ymap = 1;
     int xboard = 16;
@@ -80,11 +67,9 @@ public class XMLPlanetDataParser implements XMLResponder {
     int heavyRainfallChance = 0;
     int moderateWindsChance = 0;
     int highWindsChance = 0;
-
     boolean map = false;
     String mapname = "";
     String aterrainName = "";
-
     int CompProduction = 0;
     int Warehousesize = 0;
     boolean inWarehouse = false;
@@ -98,6 +83,13 @@ public class XMLPlanetDataParser implements XMLResponder {
     String OpName = "";
     boolean isHomeWorld = false;
     boolean singlePlayerFactions = server.campaign.CampaignMain.cm.getBooleanConfig("AllowSinglePlayerFactions");
+    private String filename;
+    private String prefix;
+    private String Description = "";
+    private PlanetEnvironments PlanEnv = new PlanetEnvironments();
+    private AdvancedTerrain AdvTerr = null;
+    private java.util.TreeMap<String, String> OpFlags = new java.util.TreeMap<String, String>();
+    private int counter = 1;
 
     public XMLPlanetDataParser(String filename) {
 
@@ -110,11 +102,23 @@ public class XMLPlanetDataParser implements XMLResponder {
         }
     }
 
-    public java.util.Vector<server.campaign.SPlanet> getPlanets() {
-        return planets;
+    public static String newLineToBR(String data) {
+        java.util.StringTokenizer tokened = new java.util.StringTokenizer(data, "\n");
+        String result = new String();
+        while (tokened.hasMoreElements()) {
+            result += tokened.nextElement();
+            if (tokened.hasMoreElements()) {
+                result += "<BR>";
+            }
+        }
+        return result;
     }
 
     /* DTD METHODS */
+
+    public java.util.Vector<server.campaign.SPlanet> getPlanets() {
+        return planets;
+    }
 
     public void recordNotationDeclaration(String name, String pubID, String sysID) throws ParseException {
         System.out.print(prefix + "!NOTATION: " + name);
@@ -156,6 +160,8 @@ public class XMLPlanetDataParser implements XMLResponder {
         MWLogger.mainLog((def == null) ? "" : "  def = " + notation);
     }
 
+    /* DOC METHDODS */
+
     public void recordDoctypeDeclaration(String name, String pubID, String sysID) throws ParseException {
         System.out.print(prefix + "!DOCTYPE: " + name);
         if (pubID != null) {
@@ -167,8 +173,6 @@ public class XMLPlanetDataParser implements XMLResponder {
         MWLogger.mainLog("");
         prefix = "";
     }
-
-    /* DOC METHDODS */
 
     public void recordDocStart() {
     }
@@ -502,6 +506,10 @@ public class XMLPlanetDataParser implements XMLResponder {
         }
     }
 
+    public java.io.InputStream resolveDTDEntity(String name, String pubID, String sysID) throws ParseException {
+        return resolveExternalEntity(name, pubID, sysID);
+    }
+
     public java.io.InputStream resolveExternalEntity(String name, String pubID, String sysID) throws ParseException {
         if (sysID != null) {
             java.io.File f = new java.io.File((new java.io.File(filename)).getParent(), sysID);
@@ -513,22 +521,6 @@ public class XMLPlanetDataParser implements XMLResponder {
         }
         // else
         return null;
-    }
-
-    public java.io.InputStream resolveDTDEntity(String name, String pubID, String sysID) throws ParseException {
-        return resolveExternalEntity(name, pubID, sysID);
-    }
-
-    public static String newLineToBR(String data) {
-        java.util.StringTokenizer tokened = new java.util.StringTokenizer(data, "\n");
-        String result = new String();
-        while (tokened.hasMoreElements()) {
-            result += tokened.nextElement();
-            if (tokened.hasMoreElements()) {
-                result += "<BR>";
-            }
-        }
-        return result;
     }
 
 }

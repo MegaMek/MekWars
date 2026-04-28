@@ -46,48 +46,39 @@ public class BulkRepairDialog extends JFrame implements ActionListener, KeyListe
 
     @Serial
     private static final long serialVersionUID = 2053155152906533410L;
-    // store the client backlink for other things to use
-    private final IClient client;
-    private Entity unit;
-    private final CUnit playerUnit;
-
     private final static String okayCommand = "Add";
     private final static String cancelCommand = "Close";
-
+    public static int TYPE_BULK = 0;
+    public static int TYPE_SIMPLE = 1;
+    public static int TYPE_SALVAGE = 2;
+    public static int UNIT_TYPE_SINGLE = 0;
+    public static int UNIT_TYPE_ALL = 1;
+    // store the client backlink for other things to use
+    private final IClient client;
+    private final CUnit playerUnit;
     private final int ARMOR = 1;
     private final int INTERNAL = 2;
+
+    // BUTTONS
     private final int WEAPONS = 3;
     private final int EQUIPMENT = 4;
     private final int SYSTEMS = 5;
     private final int ENGINES = 6;
-
-    // BUTTONS
-
     private final JPanel masterPanel = new JPanel();
-
     private final JPanel masterBox = new JPanel(new SpringLayout());
     private final JPanel repairBox = new JPanel();
     private final JPanel techBox = new JPanel();
     private final JPanel rollBox = new JPanel();
     private final JPanel costBox = new JPanel();
     private final JPanel timeBox = new JPanel();
-
     private final JPanel blankPanel1 = new JPanel();
     private final JPanel blankPanel2 = new JPanel();
     private final JPanel totalTextPanel = new JPanel();
     private final JPanel totalPanel = new JPanel();
     private final JPanel timePanel = new JPanel();
-
     private final int repairType;
-
-    public static int TYPE_BULK = 0;
-    public static int TYPE_SIMPLE = 1;
-    public static int TYPE_SALVAGE = 2;
-
-    public static int UNIT_TYPE_SINGLE = 0;
-    public static int UNIT_TYPE_ALL = 1;
-
     private final int unitRepairType;
+    private Entity unit;
 
     public BulkRepairDialog(IClient client, int unitID, int repairType, int unitRepairType) {
         // save the client

@@ -29,18 +29,16 @@ public class PromotePilotDialog extends javax.swing.JFrame
      */
     @Serial
     private static final long serialVersionUID = -8988175448434842033L;
+    private final static String okayCommand = "Ok";
+    private final static String cancelCommand = "Close";
     // store the client backlink for other things to use
     private final IClient client;
     private final CUnit playerUnit;
-    private Pilot pilot = null;
     private final boolean demoting;
-
-    private final static String okayCommand = "Ok";
-    private final static String cancelCommand = "Close";
-
     private final javax.swing.JPanel MasterPanel = new javax.swing.JPanel(new javax.swing.SpringLayout());
     private final javax.swing.JTextField currentExp = new javax.swing.JTextField();
     private final javax.swing.JTextField expCost = new javax.swing.JTextField();
+    private Pilot pilot = null;
 
     public PromotePilotDialog(IClient client, int unitID, boolean demoting) {
 
@@ -114,20 +112,6 @@ public class PromotePilotDialog extends javax.swing.JFrame
 
         pack();
         setVisible(true);
-    }
-
-    public void actionPerformed(java.awt.event.ActionEvent e) {
-        String command = e.getActionCommand();
-
-        if (command.equals(okayCommand)) {
-            sendPromoteCommands();
-            super.dispose();
-        } else if (command.equals(cancelCommand)) {
-            super.dispose();
-        } else if (e.getSource() instanceof javax.swing.JCheckBox) {
-            calculateExpCost();
-        }
-
     }
 
     private void loadPanel() {
@@ -639,18 +623,40 @@ public class PromotePilotDialog extends javax.swing.JFrame
         }
     }
 
-    public void keyPressed(java.awt.event.KeyEvent arg0) {
-    }
+    public void actionPerformed(java.awt.event.ActionEvent e) {
+        String command = e.getActionCommand();
 
-    public void keyReleased(java.awt.event.KeyEvent arg0) {
-    }
-
-    public void keyTyped(java.awt.event.KeyEvent arg0) {
-
-        if (arg0.getKeyCode() == java.awt.event.KeyEvent.VK_ESCAPE) {
-            super.dispose();
-        } else if (arg0.getKeyCode() == java.awt.event.KeyEvent.VK_ENTER) {
+        if (command.equals(okayCommand)) {
             sendPromoteCommands();
+            super.dispose();
+        } else if (command.equals(cancelCommand)) {
+            super.dispose();
+        } else if (e.getSource() instanceof javax.swing.JCheckBox) {
+            calculateExpCost();
+        }
+
+    }
+
+    private void sendPromoteCommands() {
+
+        String baseCommand = IClient.CAMPAIGN_PREFIX + "c promotepilot#" + playerUnit.getId() + "#";
+
+        if (demoting) {
+            baseCommand = IClient.CAMPAIGN_PREFIX + "c demotepilot#" + playerUnit.getId() + "#";
+        }
+
+        for (Object object : MasterPanel.getComponents()) {
+            if (object instanceof javax.swing.JCheckBox checkBox) {
+                if (checkBox.isSelected()) {
+                    String cmd = checkBox.getName();
+
+                    if (cmd.startsWith("chancefor")) {
+                        int startPos = "chancefor".length();
+                        cmd = cmd.substring(startPos, cmd.indexOf("for", startPos));
+                    }
+                    client.sendChat(baseCommand + cmd);
+                }
+            }
         }
 
     }
@@ -718,27 +724,19 @@ public class PromotePilotDialog extends javax.swing.JFrame
         expCost.setText(Integer.toString(cost));
     }
 
-    private void sendPromoteCommands() {
+    public void keyTyped(java.awt.event.KeyEvent arg0) {
 
-        String baseCommand = IClient.CAMPAIGN_PREFIX + "c promotepilot#" + playerUnit.getId() + "#";
-
-        if (demoting) {
-            baseCommand = IClient.CAMPAIGN_PREFIX + "c demotepilot#" + playerUnit.getId() + "#";
+        if (arg0.getKeyCode() == java.awt.event.KeyEvent.VK_ESCAPE) {
+            super.dispose();
+        } else if (arg0.getKeyCode() == java.awt.event.KeyEvent.VK_ENTER) {
+            sendPromoteCommands();
         }
 
-        for (Object object : MasterPanel.getComponents()) {
-            if (object instanceof javax.swing.JCheckBox checkBox) {
-                if (checkBox.isSelected()) {
-                    String cmd = checkBox.getName();
+    }
 
-                    if (cmd.startsWith("chancefor")) {
-                        int startPos = "chancefor".length();
-                        cmd = cmd.substring(startPos, cmd.indexOf("for", startPos));
-                    }
-                    client.sendChat(baseCommand + cmd);
-                }
-            }
-        }
+    public void keyPressed(java.awt.event.KeyEvent arg0) {
+    }
 
+    public void keyReleased(java.awt.event.KeyEvent arg0) {
     }
 }// end BulkRepairDialog.java

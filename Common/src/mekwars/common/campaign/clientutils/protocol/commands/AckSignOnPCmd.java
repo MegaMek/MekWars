@@ -11,8 +11,8 @@ import mekwars.common.util.MWLogger;
 
 public class AckSignOnPCmd extends CProtCommand {
 
-    public AckSignOnPCmd(IClient mwclient) {
-        super(mwclient);
+    public AckSignOnPCmd(IClient client) {
+        super(client);
         name = "ack_sign_on";
     }
 

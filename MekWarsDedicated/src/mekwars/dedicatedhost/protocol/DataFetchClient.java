@@ -1,15 +1,6 @@
 package mekwars.dedicatedhost.protocol;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.FileReader;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.PrintStream;
-import java.io.PrintWriter;
+import java.io.*;
 import java.net.Socket;
 import java.net.SocketException;
 import java.text.ParseException;
@@ -17,18 +8,16 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
-
 import javax.swing.JOptionPane;
 
 import com.Ostermiller.util.MD5;
-
 import common.CampaignData;
 import common.Influences;
 import common.util.BinReader;
 import common.util.BinWriter;
-
-import mekwars.dedicatedhost.MWDedHost;
 import common.util.MWLogger;
+import mekwars.common.gui.CMainFrame;
+import mekwars.dedicatedhost.MWDedHost;
 
 
 /**
@@ -490,6 +479,33 @@ public class DataFetchClient {
     }
 
     /**
+     * Store itself to disk.
+     */
+    public void store() {
+
+        if (lastTimestamp != null) {
+            try {
+                FileWriter fw = new FileWriter(cacheDir + "/dataLastUpdated.dat");
+                //write the time out in Milliseconds
+                //lastTimestamp = latestTimeStamp;
+
+                fw.write(Long.toString(lastTimestamp.getTime()));
+                fw.close();
+            } catch (IOException e) {
+                MWLogger.errLog(e);
+            }
+        }
+        try {
+            BinWriter binOut = new BinWriter(new PrintWriter(new FileWriter(cacheDir + "/data.dat")));
+            data.binOut(binOut);
+            binOut.close();
+        } catch (Exception ex) {
+            MWLogger.errLog(ex);
+            MWLogger.errLog("Error saving data.");
+        }
+    }
+
+    /**
      * Transfer the Access levels of all the commands but only save the ones that matchs the users.
      *
      * @author Torren (Jason Tighe)
@@ -567,33 +583,6 @@ public class DataFetchClient {
     public void setData(String hostAddr, String cacheDir) {
         this.hostAddr = hostAddr;
         this.cacheDir = cacheDir;
-    }
-
-    /**
-     * Store itself to disk.
-     */
-    public void store() {
-
-        if (lastTimestamp != null) {
-            try {
-                FileWriter fw = new FileWriter(cacheDir + "/dataLastUpdated.dat");
-                //write the time out in Milliseconds
-                //lastTimestamp = latestTimeStamp;
-
-                fw.write(Long.toString(lastTimestamp.getTime()));
-                fw.close();
-            } catch (IOException e) {
-                MWLogger.errLog(e);
-            }
-        }
-        try {
-            BinWriter binOut = new BinWriter(new PrintWriter(new FileWriter(cacheDir + "/data.dat")));
-            data.binOut(binOut);
-            binOut.close();
-        } catch (Exception ex) {
-            MWLogger.errLog(ex);
-            MWLogger.errLog("Error saving data.");
-        }
     }
 
     /**

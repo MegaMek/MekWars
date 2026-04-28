@@ -44,32 +44,17 @@ public class UserActivityInfluenceJob implements Job, MWRepeatingJob, JobIdentif
     public UserActivityInfluenceJob() {}
 
     /**
-     * This method is called every X seconds, where X is defined by the server config variable
-     * "Scheduler_PlayerActivity_flu."
+     * A method to build the Influence Job and get it into the scheduler.  Called when the user issues an Activate
+     * command
      *
-     * @param JobExecutionContext - data provided by the Quartz Scheduler
+     * @param userName          - the name of the user going active
+     * @param weightedArmyValue the value of the player's armies
+     * @param factionName       the faction the player fights for
      */
-    @Override
-    public void execute(JobExecutionContext context)
-          throws JobExecutionException {
+    public static void submit(String userName, Double weightedArmyValue, String factionName) {
+        int frequency = server.campaign.CampaignMain.cm.getIntegerConfig("Scheduler_PlayerActivity_flu");
 
-        JobDataMap data = context.getJobDetail().getJobDataMap();
-        String playerName = data.getString(PLAYER_NAME);
-        //String factionName = data.getString(FACTION_NAME);
-        //Double armyWeight = data.getDoubleFromString(ARMY_WEIGHT);
-
-        server.campaign.SPlayer p = server.campaign.CampaignMain.cm.getPlayer(playerName);
-        if (p == null) {
-            MWLogger.errLog("Null player " + playerName + " in UserActivityInfluenceJob.");
-            mekwars.server.campaign.util.scheduler.UserActivityInfluenceJob.stop(playerName);
-            return;
-        }
-        if (userGetsInfluence(p)) {
-            int flu = calculateInfluence(p);
-            p.addInfluence(flu);
-            String fluMessage = getInfluenceMessage(p, flu);
-            server.campaign.CampaignMain.cm.toUser(fluMessage, playerName);
-        }
+        submit(userName, weightedArmyValue, factionName, frequency);
     }
 
     /**
@@ -107,17 +92,32 @@ public class UserActivityInfluenceJob implements Job, MWRepeatingJob, JobIdentif
     }
 
     /**
-     * A method to build the Influence Job and get it into the scheduler.  Called when the user issues an Activate
-     * command
+     * This method is called every X seconds, where X is defined by the server config variable
+     * "Scheduler_PlayerActivity_flu."
      *
-     * @param userName          - the name of the user going active
-     * @param weightedArmyValue the value of the player's armies
-     * @param factionName       the faction the player fights for
+     * @param JobExecutionContext - data provided by the Quartz Scheduler
      */
-    public static void submit(String userName, Double weightedArmyValue, String factionName) {
-        int frequency = server.campaign.CampaignMain.cm.getIntegerConfig("Scheduler_PlayerActivity_flu");
+    @Override
+    public void execute(JobExecutionContext context)
+          throws JobExecutionException {
 
-        submit(userName, weightedArmyValue, factionName, frequency);
+        JobDataMap data = context.getJobDetail().getJobDataMap();
+        String playerName = data.getString(PLAYER_NAME);
+        //String factionName = data.getString(FACTION_NAME);
+        //Double armyWeight = data.getDoubleFromString(ARMY_WEIGHT);
+
+        server.campaign.SPlayer p = server.campaign.CampaignMain.cm.getPlayer(playerName);
+        if (p == null) {
+            MWLogger.errLog("Null player " + playerName + " in UserActivityInfluenceJob.");
+            mekwars.server.campaign.util.scheduler.UserActivityInfluenceJob.stop(playerName);
+            return;
+        }
+        if (userGetsInfluence(p)) {
+            int flu = calculateInfluence(p);
+            p.addInfluence(flu);
+            String fluMessage = getInfluenceMessage(p, flu);
+            server.campaign.CampaignMain.cm.toUser(fluMessage, playerName);
+        }
     }
 
     /**

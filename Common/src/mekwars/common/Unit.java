@@ -68,10 +68,12 @@ public class Unit {
     public static final int STATUS_FOR_SALE = 3;//@urgru 12.29.05
 
     public static final int TOTAL_TYPES = 6;
-
+    public int[] test = new int[4];
+    public int simpleRepairCost = 0;
     //VARIABLES
     protected int id;
     protected int DBId;
+    protected TargetSystem targetSystem = new TargetSystem();
     private Pilot pilot;
     private int type;
     private int weightClass;
@@ -80,17 +82,10 @@ public class Unit {
     private String unitFilename;
     private int posId;
     private String modelName;
-
     private int maintenanceLevel = 100;//@urgru 8/2/04
     private int unitC3Level = 0; //@Torren 12/13/04 0=None 1=Slave 2=Master 3=Independent
-
-    public int[] test = new int[4];
-    public int simpleRepairCost = 0;
     private int currentRepairCost = 0;
     private int lifeTimeRepairCost = 0;
-
-    protected TargetSystem targetSystem = new TargetSystem();
-
     private boolean isSupportUnit = false;
     private boolean ChristmasUnit = false;
 
@@ -253,20 +248,6 @@ public class Unit {
     }
 
     /**
-     * @return Returns the pilot.
-     */
-    public Pilot getPilot() {
-        return pilot;
-    }
-
-    /**
-     * @param pilot The pilot to set.
-     */
-    public void setPilot(Pilot pilot) {
-        this.pilot = pilot;
-    }
-
-    /**
      * @return Returns the posId.
      */
     public int getPosId() {
@@ -292,20 +273,6 @@ public class Unit {
      */
     public void setProducer(String producer) {
         this.producer = producer;
-    }
-
-    /**
-     * @return Returns the type.
-     */
-    public int getType() {
-        return type;
-    }
-
-    /**
-     * @param type The type to set.
-     */
-    public void setType(int type) {
-        this.type = type;
     }
 
     /**
@@ -348,20 +315,6 @@ public class Unit {
      */
     public void setStatus(int status) {
         this.status = status;
-    }
-
-    /**
-     * @return Returns the id.
-     */
-    public int getId() {
-        return id;
-    }
-
-    /**
-     * @param id The id to set.
-     */
-    public void setId(int id) {
-        this.id = id;
     }
 
     public int getDBId() {
@@ -467,6 +420,27 @@ public class Unit {
         return -1;
     }
 
+    /**
+     * @return Returns the id.
+     */
+    public int getId() {
+        return id;
+    }
+
+    /**
+     * @param id The id to set.
+     */
+    public void setId(int id) {
+        this.id = id;
+    }
+
+    /**
+     * Gets the units current C3 Level 0=None 1=Slave 2=Master 3=Independent 4=Dual Masters
+     */
+    public int getC3Level() {
+        return unitC3Level;
+    }
+
     //check to see if someone else is linked to this unit
     public boolean hasBeenC3LinkedTo(Army army) {
 
@@ -549,6 +523,13 @@ public class Unit {
         return unitCount < MAX_UNITS;
     }
 
+    /**
+     * @param level Sets the units current C3 Level
+     */
+    public void setC3Level(int level) {
+        unitC3Level = level;
+    }
+
     public void getC3Type(Entity unit) {
         unit.setShutDown(false);
         if (unit.hasC3S()) {
@@ -560,20 +541,6 @@ public class Unit {
         } else if (unit.hasC3i()) {
             this.setC3Level(C3_IMPROVED); //Improved
         } else {this.setC3Level(C3_NONE);}
-    }
-
-    /**
-     * Gets the units current C3 Level 0=None 1=Slave 2=Master 3=Independent 4=Dual Masters
-     */
-    public int getC3Level() {
-        return unitC3Level;
-    }
-
-    /**
-     * @param level Sets the units current C3 Level
-     */
-    public void setC3Level(int level) {
-        unitC3Level = level;
     }
 
     public AmmoType getEntityAmmo(AmmoType.AmmoTypeEnum weaponType, String ammoName) {
@@ -593,6 +560,20 @@ public class Unit {
 
     public boolean hasVacantPilot() {
         return this.getPilot() == null || this.getPilot().getName().equalsIgnoreCase("Vacant");
+    }
+
+    /**
+     * @return Returns the pilot.
+     */
+    public Pilot getPilot() {
+        return pilot;
+    }
+
+    /**
+     * @param pilot The pilot to set.
+     */
+    public void setPilot(Pilot pilot) {
+        this.pilot = pilot;
     }
 
     public void setRepairCosts(int current, int life) {
@@ -621,6 +602,20 @@ public class Unit {
                      this.getType() == Unit.PROTOMEK ||
                      this.getType() == Unit.QUAD ||
                      this.getType() == Unit.AERO;
+    }
+
+    /**
+     * @return Returns the type.
+     */
+    public int getType() {
+        return type;
+    }
+
+    /**
+     * @param type The type to set.
+     */
+    public void setType(int type) {
+        this.type = type;
     }
 
     /**

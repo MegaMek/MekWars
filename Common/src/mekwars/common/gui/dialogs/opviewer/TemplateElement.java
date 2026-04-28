@@ -9,10 +9,9 @@ public class TemplateElement {
     public final static int CONTROL_NAME = 2;
 
     private final String data;
+    private final IClient client;
     private boolean isControl = false;
     private int controlType;
-
-    private final IClient client;
 
     public TemplateElement(String s, IClient client) {
         this.client = client;
@@ -32,10 +31,6 @@ public class TemplateElement {
         } else {
             data = s;
         }
-    }
-
-    private String getData() {
-        return data;
     }
 
     public String getHTMLData(Operation op) {
@@ -60,6 +55,10 @@ public class TemplateElement {
                      || s.equalsIgnoreCase("IllegalAttackFactions")
                      || s.equalsIgnoreCase("LegalDefendFactions")
                      || s.equalsIgnoreCase("IllegalDefendFactions");
+    }
+
+    private String getData() {
+        return data;
     }
 
     private String format(String key, String value) {

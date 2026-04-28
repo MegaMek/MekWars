@@ -69,37 +69,28 @@ public class RePodSelectorDialog extends javax.swing.JFrame
 
     // how long after a key is typed does a new search begin
     private final static int KEY_TIMEOUT = 1000;
-
+    private static final String SPACES = "                        ";
     // frame which owns the dialog
     private final CMainFrame cMainFrame;
-
-    private MekSummary[] meksCurrent;
     private final UnitLoadingDialog unitLoadingDialog;
-
-    private StringBuilder m_sbSearch = new StringBuilder();
-    private long m_nLastSearch = 0;
-
+    private final javax.swing.JButton bRePod = new javax.swing.JButton("RePod");
+    private final javax.swing.JButton bCancel = new javax.swing.JButton("Close");
+    private final javax.swing.JButton bRandom = new javax.swing.JButton("Random");
+    private final javax.swing.JTextPane mechViewLeft;
+    private final javax.swing.JTextPane mechViewRight;
+    private final IClient client;
+    private final java.util.TreeMap<String, String> chassisList = new java.util.TreeMap<>();
+    private final String unitId;
     javax.swing.DefaultListModel<String> defaultModel;
     javax.swing.ListSelectionModel listSelectionModel;
     javax.swing.JList<String> mechList;
     javax.swing.JScrollPane listScrollPane = null;
     javax.swing.JScrollPane leftScrollPane = null;
     javax.swing.JScrollPane rightScrollPane = null;
-
-    private final javax.swing.JButton bRePod = new javax.swing.JButton("RePod");
-    private final javax.swing.JButton bCancel = new javax.swing.JButton("Close");
-    private final javax.swing.JButton bRandom = new javax.swing.JButton("Random");
-    private final javax.swing.JTextPane mechViewLeft;
-    private final javax.swing.JTextPane mechViewRight;
-
+    private MekSummary[] meksCurrent;
+    private StringBuilder m_sbSearch = new StringBuilder();
+    private long m_nLastSearch = 0;
     private javax.swing.JPanel pPreview = new javax.swing.JPanel();
-
-    private final IClient client;
-
-    private final java.util.TreeMap<String, String> chassisList = new java.util.TreeMap<>();
-
-    private final String unitId;
-
     private boolean global = false;
 
     public RePodSelectorDialog(CMainFrame cMainFrame, UnitLoadingDialog uld, IClient client,
@@ -214,6 +205,66 @@ public class RePodSelectorDialog extends javax.swing.JFrame
         addWindowListener(this);
     }
 
+    void clearMechPreview() {
+        mechViewLeft.setEditable(false);
+        mechViewRight.setEditable(false);
+        mechViewLeft.setText("");
+        mechViewRight.setText("");
+
+        // Remove preview image.
+        previewMech(null);
+
+    }
+
+    void previewMech(Entity entity) {
+
+        Entity currEntity = entity;
+        boolean populateTextFields = true;
+
+        // null entity, so load a default unit.
+        if (entity == null) {
+            try {
+                // MechSummary ms =
+                // MechSummaryCache.getInstance().getMech("Error OMG-UR-FD");
+                currEntity = UnitUtils.createOMG();// new
+                // MechFileParser(ms.getSourceFile(),
+                // ms.getEntryName()).getEntity();
+                populateTextFields = false;
+            } catch (Exception e) {
+                // this would be very very bad ...
+            }
+        }
+
+        ConfigurableMekViewPanel mechView = null;
+        try {
+            mechView = new ConfigurableMekViewPanel(currEntity);
+        } catch (Exception e) {
+            // error unit didn't load right. this is bad news.
+            populateTextFields = false;
+        }
+
+        mechViewLeft.setEditable(false);
+        mechViewRight.setEditable(false);
+        if (populateTextFields) {
+            mechViewLeft.setText(mechView.getMechReadoutBasic());
+            mechViewRight.setText(mechView.getMechReadoutLoadout());
+        } else {
+            mechViewLeft.setText("No unit selected");
+            mechViewRight.setText("No unit selected");
+        }
+        mechViewLeft.setCaretPosition(0);
+        mechViewRight.setCaretPosition(0);
+
+        // Preview image of the unit...
+        try {
+            ((MekInfo) pPreview).setUnit(currEntity);
+            ((MekInfo) pPreview).setImageVisible(true);
+            pPreview.paint(pPreview.getGraphics());
+        } catch (Exception ex) {
+            // shouldnt ever get here ...
+        }
+    }
+
     public void run() {
 
         // Loading mechs can take a while, so it will have its own thread.
@@ -280,16 +331,6 @@ public class RePodSelectorDialog extends javax.swing.JFrame
         repaint();
     }
 
-    private void searchFor(String search) {
-        for (int i = 0; i < meksCurrent.length; i++) {
-            if (meksCurrent[i].getName().toLowerCase().startsWith(search)) {
-                mechList.setSelectedIndex(i);
-                mechList.ensureIndexIsVisible(i);
-                break;
-            }
-        }
-    }
-
     @Override
     public void setVisible(boolean show) {
         setLocationRelativeTo(null);
@@ -316,6 +357,69 @@ public class RePodSelectorDialog extends javax.swing.JFrame
 
         return result;
         // ms.getYear();
+    }
+
+    /**
+     * for compliance with ListSelectionListener
+     */
+    public void valueChanged(javax.swing.event.ListSelectionEvent event) {
+
+        int selected = mechList.getSelectedIndex();
+        if (selected == -1) {
+            clearMechPreview();
+            return;
+        }
+        // else
+        MekSummary ms = meksCurrent[selected];
+        try {
+            Entity entity = new MekFileParser(ms.getSourceFile(), ms.getEntryName()).getEntity();
+            previewMech(entity);
+        } catch (EntityLoadingException ex) {
+            System.out.println(STR."Unable to load mech: \{ms.getSourceFile()}: \{ms.getEntryName()}: \{ex.getMessage()}");
+            MWLogger.errLog(ex);
+            clearMechPreview();
+        }
+    }
+
+    public void itemStateChanged(java.awt.event.ItemEvent ie) {
+
+        Object currSelection = mechList.getSelectedValue();
+
+        sortMechs();
+        filterMeks();
+
+        // try to reselect the previous choice. if the choice cant be found,
+        // the list automatically reverts to -1 (no selection)
+        mechList.setSelectedValue(currSelection, true);
+    }
+
+    private String makeLength(String s, int nLength) {
+        if (s.length() == nLength) {
+            return s;
+        } else if (s.length() > nLength) {
+            return s.substring(0, nLength - 2) + "..";
+        } else {
+            return s + SPACES.substring(0, nLength - s.length());
+        }
+    }
+
+    public void keyTyped(java.awt.event.KeyEvent ke) {
+    }
+
+    public void keyPressed(java.awt.event.KeyEvent ke) {
+        if (ke.getKeyCode() == java.awt.event.KeyEvent.VK_ENTER) {
+            java.awt.event.ActionEvent event = new java.awt.event.ActionEvent(bCancel,
+                  java.awt.event.ActionEvent.ACTION_PERFORMED,
+                  "");
+            actionPerformed(event);
+        }
+        long curTime = System.currentTimeMillis();
+        if ((curTime - m_nLastSearch) > KEY_TIMEOUT) {
+            m_sbSearch = new StringBuilder();
+        }
+        m_nLastSearch = curTime;
+        m_sbSearch.append(ke.getKeyChar());
+        searchFor(m_sbSearch.toString().toLowerCase());
     }
 
     public void actionPerformed(java.awt.event.ActionEvent ae) {
@@ -354,109 +458,13 @@ public class RePodSelectorDialog extends javax.swing.JFrame
         }
     }
 
-    /**
-     * for compliance with ListSelectionListener
-     */
-    public void valueChanged(javax.swing.event.ListSelectionEvent event) {
-
-        int selected = mechList.getSelectedIndex();
-        if (selected == -1) {
-            clearMechPreview();
-            return;
-        }
-        // else
-        MekSummary ms = meksCurrent[selected];
-        try {
-            Entity entity = new MekFileParser(ms.getSourceFile(), ms.getEntryName()).getEntity();
-            previewMech(entity);
-        } catch (EntityLoadingException ex) {
-            System.out.println(STR."Unable to load mech: \{ms.getSourceFile()}: \{ms.getEntryName()}: \{ex.getMessage()}");
-            MWLogger.errLog(ex);
-            clearMechPreview();
-        }
-    }
-
-    public void itemStateChanged(java.awt.event.ItemEvent ie) {
-
-        Object currSelection = mechList.getSelectedValue();
-
-        sortMechs();
-        filterMeks();
-
-        // try to reselect the previous choice. if the choice cant be found,
-        // the list automatically reverts to -1 (no selection)
-        mechList.setSelectedValue(currSelection, true);
-    }
-
-    void clearMechPreview() {
-        mechViewLeft.setEditable(false);
-        mechViewRight.setEditable(false);
-        mechViewLeft.setText("");
-        mechViewRight.setText("");
-
-        // Remove preview image.
-        previewMech(null);
-
-    }
-
-    void previewMech(Entity entity) {
-
-        Entity currEntity = entity;
-        boolean populateTextFields = true;
-
-        // null entity, so load a default unit.
-        if (entity == null) {
-            try {
-                // MechSummary ms =
-                // MechSummaryCache.getInstance().getMech("Error OMG-UR-FD");
-                currEntity = UnitUtils.createOMG();// new
-                // MechFileParser(ms.getSourceFile(),
-                // ms.getEntryName()).getEntity();
-                populateTextFields = false;
-            } catch (Exception e) {
-                // this would be very very bad ...
+    private void searchFor(String search) {
+        for (int i = 0; i < meksCurrent.length; i++) {
+            if (meksCurrent[i].getName().toLowerCase().startsWith(search)) {
+                mechList.setSelectedIndex(i);
+                mechList.ensureIndexIsVisible(i);
+                break;
             }
-        }
-
-        ConfigurableMekViewPanel mechView = null;
-        try {
-            mechView = new ConfigurableMekViewPanel(currEntity);
-        } catch (Exception e) {
-            // error unit didn't load right. this is bad news.
-            populateTextFields = false;
-        }
-
-        mechViewLeft.setEditable(false);
-        mechViewRight.setEditable(false);
-        if (populateTextFields) {
-            mechViewLeft.setText(mechView.getMechReadoutBasic());
-            mechViewRight.setText(mechView.getMechReadoutLoadout());
-        } else {
-            mechViewLeft.setText("No unit selected");
-            mechViewRight.setText("No unit selected");
-        }
-        mechViewLeft.setCaretPosition(0);
-        mechViewRight.setCaretPosition(0);
-
-        // Preview image of the unit...
-        try {
-            ((MekInfo) pPreview).setUnit(currEntity);
-            ((MekInfo) pPreview).setImageVisible(true);
-            pPreview.paint(pPreview.getGraphics());
-        } catch (Exception ex) {
-            // shouldnt ever get here ...
-        }
-    }
-
-    private static final String SPACES = "                        ";
-
-    private String makeLength(String s, int nLength) {
-        if (s.length() == nLength) {
-            return s;
-        } else if (s.length() > nLength) {
-            return s.substring(0, nLength - 2) + "..";
-        } else {
-            return s + SPACES.substring(0, nLength - s.length());
         }
     }
 
@@ -464,45 +472,26 @@ public class RePodSelectorDialog extends javax.swing.JFrame
         // no action on release
     }
 
-    public void keyPressed(java.awt.event.KeyEvent ke) {
-        if (ke.getKeyCode() == java.awt.event.KeyEvent.VK_ENTER) {
-            java.awt.event.ActionEvent event = new java.awt.event.ActionEvent(bCancel,
-                  java.awt.event.ActionEvent.ACTION_PERFORMED,
-                  "");
-            actionPerformed(event);
-        }
-        long curTime = System.currentTimeMillis();
-        if ((curTime - m_nLastSearch) > KEY_TIMEOUT) {
-            m_sbSearch = new StringBuilder();
-        }
-        m_nLastSearch = curTime;
-        m_sbSearch.append(ke.getKeyChar());
-        searchFor(m_sbSearch.toString().toLowerCase());
-    }
-
-    public void keyTyped(java.awt.event.KeyEvent ke) {
-    }
-
-    // WindowListener
-    public void windowActivated(java.awt.event.WindowEvent windowEvent) {
-    }
-
-    public void windowClosed(java.awt.event.WindowEvent windowEvent) {
+    public void windowOpened(java.awt.event.WindowEvent windowEvent) {
     }
 
     public void windowClosing(java.awt.event.WindowEvent windowEvent) {
         dispose();
     }
 
-    public void windowDeactivated(java.awt.event.WindowEvent windowEvent) {
-    }
-
-    public void windowDeiconified(java.awt.event.WindowEvent windowEvent) {
+    public void windowClosed(java.awt.event.WindowEvent windowEvent) {
     }
 
     public void windowIconified(java.awt.event.WindowEvent windowEvent) {
     }
 
-    public void windowOpened(java.awt.event.WindowEvent windowEvent) {
+    public void windowDeiconified(java.awt.event.WindowEvent windowEvent) {
+    }
+
+    // WindowListener
+    public void windowActivated(java.awt.event.WindowEvent windowEvent) {
+    }
+
+    public void windowDeactivated(java.awt.event.WindowEvent windowEvent) {
     }
 }

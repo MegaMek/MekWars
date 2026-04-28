@@ -40,29 +40,23 @@ import mekwars.common.util.UnitUtils;
 
 public final class ComponentDisplayDialog extends JDialog implements ActionListener {
 
-    // store the client backlink for other things to use
-    @Serial
-    private static final long serialVersionUID = 8839724432360797850L;
-    private final IClient client;
-
     public final static int WEAPON_TYPE = 0;
     public final static int MISC_TYPE = 1;
     public final static int AMMO_TYPE = 2;
     public final static int AMMO_COSTS_TYPE = 3;
-
+    // store the client backlink for other things to use
+    @Serial
+    private static final long serialVersionUID = 8839724432360797850L;
     private final static String okayCommand = "Add";
     private final static String cancelCommand = "Close";
-
-    private String windowName = "Component Display Dialog";
-
+    private final IClient client;
     // STOCK DIALOG AND PANE
     private final JDialog dialog;
     private final JScrollPane masterPanel = new JScrollPane();
-
     private final int displayType;
-
     // Text boxes
     JTabbedPane ConfigPane = new JTabbedPane();
+    private String windowName = "Component Display Dialog";
 
     public ComponentDisplayDialog(IClient client, int type) {
 

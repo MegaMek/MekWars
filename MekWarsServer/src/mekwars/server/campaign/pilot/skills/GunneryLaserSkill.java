@@ -46,6 +46,12 @@ public class GunneryLaserSkill extends SPilotSkill {
     }
 
     @Override
+    public void modifyPilot(Pilot pilot) {
+        pilot.addMegamekOption(new MegaMekPilotOption("gunnery_laser", true));
+        // pilot.setBvMod(pilot.getBVMod() + 0.02);
+    }
+
+    @Override
     public int getChance(int unitType, Pilot pilot) {
         if (pilot.getSkills().has(this)) {
             return 0;
@@ -60,12 +66,6 @@ public class GunneryLaserSkill extends SPilotSkill {
         }
 
         return house.getIntegerConfig(chance);
-    }
-
-    @Override
-    public void modifyPilot(Pilot pilot) {
-        pilot.addMegamekOption(new MegaMekPilotOption("gunnery_laser", true));
-        // pilot.setBvMod(pilot.getBVMod() + 0.02);
     }
 
     @Override

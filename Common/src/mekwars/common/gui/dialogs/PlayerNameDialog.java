@@ -38,6 +38,9 @@ import mekwars.common.util.SpringLayoutHelper;
 
 public class PlayerNameDialog extends JDialog implements ActionListener {
 
+    public static final int ANY_PLAYER = 0;
+    public static final int FACTION_ONLY = 1;
+    public static final int MERCS_ONLY = 2;
     /**
      *
      */
@@ -46,13 +49,7 @@ public class PlayerNameDialog extends JDialog implements ActionListener {
     //variables
     private final JList<String> matchingPlayersList;
     private final JTextField nameField;//input field
-
     private final String okayCommand = "Okay";
-
-    public static final int ANY_PLAYER = 0;
-    public static final int FACTION_ONLY = 1;
-    public static final int MERCS_ONLY = 2;
-
     private String toReturn = null;
     private ArrayList<String> possiblePlayers = null;
 
@@ -192,6 +189,29 @@ public class PlayerNameDialog extends JDialog implements ActionListener {
 
     }
 
+    private void checkMinimumSize() {
+
+        java.awt.Dimension curDim = this.getSize();
+
+        int height;
+        int width;
+        boolean shouldRedraw = false;
+
+        if (curDim.getWidth() < 300) {
+            width = 300;
+            shouldRedraw = true;
+        } else {width = (int) curDim.getWidth();}
+
+        if (curDim.getHeight() < 150) {
+            height = 150;
+            shouldRedraw = true;
+        } else {height = (int) curDim.getHeight();}
+
+        if (shouldRedraw) {
+            this.setSize(new java.awt.Dimension(width, height));
+        }
+
+    }//end checkMinimumSize
 
     /**
      * OK or CANCEL buttons pressed. Handle any changes and then close the dialouge.
@@ -221,35 +241,11 @@ public class PlayerNameDialog extends JDialog implements ActionListener {
 
     }//end actionPerformed
 
-    private void checkMinimumSize() {
-
-        java.awt.Dimension curDim = this.getSize();
-
-        int height;
-        int width;
-        boolean shouldRedraw = false;
-
-        if (curDim.getWidth() < 300) {
-            width = 300;
-            shouldRedraw = true;
-        } else {width = (int) curDim.getWidth();}
-
-        if (curDim.getHeight() < 150) {
-            height = 150;
-            shouldRedraw = true;
-        } else {height = (int) curDim.getHeight();}
-
-        if (shouldRedraw) {
-            this.setSize(new java.awt.Dimension(width, height));
-        }
-
-    }//end checkMinimumSize
+    public String getPlayerName() {
+        return this.toReturn;
+    }
 
     private void setPlayerName(String name) {
         this.toReturn = name;
-    }
-
-    public String getPlayerName() {
-        return this.toReturn;
     }
 }

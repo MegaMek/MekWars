@@ -456,6 +456,22 @@ final public class PlanetEnvironment {
 
     }
 
+    public int getRiverProb() {
+        return RiverProb;
+    }
+
+    public int getRoadProb() {
+        return RoadProb;
+    }
+
+    public void setRoadProb(int RoadProb) {
+        this.RoadProb = RoadProb;
+    }
+
+    public void setRiverProb(int RiverProb) {
+        this.RiverProb = RiverProb;
+    }
+
     /**
      * TODO: remove this code bloat - make a better way to get the images.
      */
@@ -504,6 +520,108 @@ final public class PlanetEnvironment {
 
         return result;
 
+    }
+
+    public String toString(String city) {
+
+        //no city info then use the normal one.
+        if (city.trim().length() <= 1) {return this.toString();}
+
+        //else
+        String result = "PE$";
+        result += Name + "$";
+        result += CraterProb + "$";
+        result += CraterMinNum + "$";
+        result += CraterMaxNum + "$";
+        result += CraterMinRadius + "$";
+        result += CraterMaxRadius + "$";
+        result += Hilliness + "$";
+        result += HillElevationRange + "$";
+        result += HillInvertProb + "$";
+        result += WaterMinSpots + "$";
+        result += WaterMaxSpots + "$";
+        result += WaterMinHexes + "$";
+        result += WaterMaxHexes + "$";
+        result += WaterDeepProb + "$";
+        result += ForestMinSpots + "$";
+        result += ForestMaxSpots + "$";
+        result += ForestMinHexes + "$";
+        result += ForestMaxHexes + "$";
+        result += ForestHeavyProb + "$";
+        result += RoughMinSpots + "$";
+        result += RoughMaxSpots + "$";
+        result += RoughMinHexes + "$";
+        result += RoughMaxHexes + "$";
+        result += RoadProb + "$";
+        result += RiverProb + "$";
+        result += Algorithm + "$";
+        result += id + "$";
+        result += SwampMinSpots + "$";
+        result += SwampMaxSpots + "$";
+        result += SwampMinHexes + "$";
+        result += SwampMaxHexes + "$";
+        result += PavementMinSpots + "$";
+        result += PavementMaxSpots + "$";
+        result += PavementMinHexes + "$";
+        result += PavementMaxHexes + "$";
+        result += fxMod + "$";
+        result += probForestFire + "$";
+        result += probFreeze + "$";
+        result += probFlood + "$";
+        result += probDrought + "$";
+        result += Theme + "$";
+        result += IceMinSpots + "$";
+        result += IceMaxSpots + "$";
+        result += IceMinHexes + "$";
+        result += IceMaxHexes + "$";
+
+        result += RubbleMinSpots + "$";
+        result += RubbleMaxSpots + "$";
+        result += RubbleMinHexes + "$";
+        result += RubbleMaxHexes + "$";
+
+        result += FortifiedMinSpots + "$";
+        result += FortifiedMaxSpots + "$";
+        result += FortifiedMinHexes + "$";
+        result += FortifiedMaxHexes + "$";
+
+        result += city + "$";
+
+        result += CliffProb + "$";
+        result += InvertNegativeTerrain + "$";
+        result += TownSize + "$";
+        result += MountPeaks + "$";
+        result += MountWidthMin + "$";
+        result += MountWidthMax + "$";
+        result += MountHeightMin + "$";
+        result += MountHeightMax + "$";
+        result += MountStyle + "$";
+        result += EnvironmentProb + "$";
+        result += staticMap;
+        result += "$";
+        result += staticMapName;
+        result += "$";
+        result += xSize;
+        result += "$";
+        result += ySize;
+        result += "$";
+        result += xBoardSize;
+        result += "$";
+        result += yBoardSize;
+        result += "$";
+
+        result += SandMinSpots + "$";
+        result += SandMaxSpots + "$";
+        result += SandMinHexes + "$";
+        result += SandMaxHexes + "$";
+
+
+        result += PlantedFieldMinSpots + "$";
+        result += PlantedFieldMaxSpots + "$";
+        result += PlantedFieldMinHexes + "$";
+        result += PlantedFieldMaxHexes + "$";
+
+        return result;
     }
 
     public String toString() {
@@ -611,355 +729,485 @@ final public class PlanetEnvironment {
         return result;
     }
 
-    public String toString(String city) {
-
-        //no city info then use the normal one.
-        if (city.trim().length() <= 1) {return this.toString();}
-
-        //else
-        String result = "PE$";
-        result += Name + "$";
-        result += CraterProb + "$";
-        result += CraterMinNum + "$";
-        result += CraterMaxNum + "$";
-        result += CraterMinRadius + "$";
-        result += CraterMaxRadius + "$";
-        result += Hilliness + "$";
-        result += HillElevationRange + "$";
-        result += HillInvertProb + "$";
-        result += WaterMinSpots + "$";
-        result += WaterMaxSpots + "$";
-        result += WaterMinHexes + "$";
-        result += WaterMaxHexes + "$";
-        result += WaterDeepProb + "$";
-        result += ForestMinSpots + "$";
-        result += ForestMaxSpots + "$";
-        result += ForestMinHexes + "$";
-        result += ForestMaxHexes + "$";
-        result += ForestHeavyProb + "$";
-        result += RoughMinSpots + "$";
-        result += RoughMaxSpots + "$";
-        result += RoughMinHexes + "$";
-        result += RoughMaxHexes + "$";
-        result += RoadProb + "$";
-        result += RiverProb + "$";
-        result += Algorithm + "$";
-        result += id + "$";
-        result += SwampMinSpots + "$";
-        result += SwampMaxSpots + "$";
-        result += SwampMinHexes + "$";
-        result += SwampMaxHexes + "$";
-        result += PavementMinSpots + "$";
-        result += PavementMaxSpots + "$";
-        result += PavementMinHexes + "$";
-        result += PavementMaxHexes + "$";
-        result += fxMod + "$";
-        result += probForestFire + "$";
-        result += probFreeze + "$";
-        result += probFlood + "$";
-        result += probDrought + "$";
-        result += Theme + "$";
-        result += IceMinSpots + "$";
-        result += IceMaxSpots + "$";
-        result += IceMinHexes + "$";
-        result += IceMaxHexes + "$";
-
-        result += RubbleMinSpots + "$";
-        result += RubbleMaxSpots + "$";
-        result += RubbleMinHexes + "$";
-        result += RubbleMaxHexes + "$";
-
-        result += FortifiedMinSpots + "$";
-        result += FortifiedMaxSpots + "$";
-        result += FortifiedMinHexes + "$";
-        result += FortifiedMaxHexes + "$";
-
-        result += city + "$";
-
-        result += CliffProb + "$";
-        result += InvertNegativeTerrain + "$";
-        result += TownSize + "$";
-        result += MountPeaks + "$";
-        result += MountWidthMin + "$";
-        result += MountWidthMax + "$";
-        result += MountHeightMin + "$";
-        result += MountHeightMax + "$";
-        result += MountStyle + "$";
-        result += EnvironmentProb + "$";
-        result += staticMap;
-        result += "$";
-        result += staticMapName;
-        result += "$";
-        result += xSize;
-        result += "$";
-        result += ySize;
-        result += "$";
-        result += xBoardSize;
-        result += "$";
-        result += yBoardSize;
-        result += "$";
-
-        result += SandMinSpots + "$";
-        result += SandMaxSpots + "$";
-        result += SandMinHexes + "$";
-        result += SandMaxHexes + "$";
-
-
-        result += PlantedFieldMinSpots + "$";
-        result += PlantedFieldMaxSpots + "$";
-        result += PlantedFieldMinHexes + "$";
-        result += PlantedFieldMaxHexes + "$";
-
-        return result;
-    }
-
     //Getter and Setter
     public int getWaterMinSpots() {
         return WaterMinSpots;
+    }
+
+    public void setWaterMinSpots(int WaterMinSpots) {
+        this.WaterMinSpots = WaterMinSpots;
     }
 
     public int getWaterMinHexes() {
         return WaterMinHexes;
     }
 
+    public void setWaterMinHexes(int WaterMinHexes) {
+        this.WaterMinHexes = WaterMinHexes;
+    }
+
     public int getWaterMaxHexes() {
         return WaterMaxHexes;
+    }
+
+    public void setWaterMaxHexes(int WaterMaxHexes) {
+        this.WaterMaxHexes = WaterMaxHexes;
     }
 
     public int getWaterMaxSpots() {
         return WaterMaxSpots;
     }
 
+    public void setWaterMaxSpots(int WaterMaxSpots) {
+        this.WaterMaxSpots = WaterMaxSpots;
+    }
+
     public int getWaterDeepProb() {
         return WaterDeepProb;
+    }
+
+    public void setWaterDeepProb(int WaterDeepProb) {
+        this.WaterDeepProb = WaterDeepProb;
     }
 
     public int getRoughMinSpots() {
         return RoughMinSpots;
     }
 
+    public void setRoughMinSpots(int RoughMinSpots) {
+        this.RoughMinSpots = RoughMinSpots;
+    }
+
     public int getRoughMinHexes() {
         return RoughMinHexes;
+    }
+
+    public void setRoughMinHexes(int RoughMinHexes) {
+        this.RoughMinHexes = RoughMinHexes;
     }
 
     public int getRoughMaxSpots() {
         return RoughMaxSpots;
     }
 
+    public void setRoughMaxSpots(int RoughMaxSpots) {
+        this.RoughMaxSpots = RoughMaxSpots;
+    }
+
     public int getRoughMaxHexes() {
         return RoughMaxHexes;
+    }
+
+    public void setRoughMaxHexes(int RoughMaxHexes) {
+        this.RoughMaxHexes = RoughMaxHexes;
     }
 
     public int getSwampMinSpots() {
         return SwampMinSpots;
     }
 
+    public void setSwampMinSpots(int SwampMinSpots) {
+        this.SwampMinSpots = SwampMinSpots;
+    }
+
     public int getSwampMinHexes() {
         return SwampMinHexes;
+    }
+
+    public void setSwampMinHexes(int SwampMinHexes) {
+        this.SwampMinHexes = SwampMinHexes;
     }
 
     public int getSwampMaxSpots() {
         return SwampMaxSpots;
     }
 
+    public void setSwampMaxSpots(int SwampMaxSpots) {
+        this.SwampMaxSpots = SwampMaxSpots;
+    }
+
     public int getSwampMaxHexes() {
         return SwampMaxHexes;
+    }
+
+    public void setSwampMaxHexes(int SwampMaxHexes) {
+        this.SwampMaxHexes = SwampMaxHexes;
     }
 
     public int getPavementMinSpots() {
         return PavementMinSpots;
     }
 
+    public void setPavementMinSpots(int PavementMinSpots) {
+        this.PavementMinSpots = PavementMinSpots;
+    }
+
     public int getPavementMinHexes() {
         return PavementMinHexes;
+    }
+
+    public void setPavementMinHexes(int PavementMinHexes) {
+        this.PavementMinHexes = PavementMinHexes;
     }
 
     public int getPavementMaxSpots() {
         return PavementMaxSpots;
     }
 
+    public void setPavementMaxSpots(int PavementMaxSpots) {
+        this.PavementMaxSpots = PavementMaxSpots;
+    }
+
     public int getPavementMaxHexes() {
         return PavementMaxHexes;
+    }
+
+    public void setPavementMaxHexes(int PavementMaxHexes) {
+        this.PavementMaxHexes = PavementMaxHexes;
     }
 
     public int getIceMinSpots() {
         return IceMinSpots;
     }
 
+    public void setIceMinSpots(int IceMinSpots) {
+        this.IceMinSpots = IceMinSpots;
+    }
+
     public int getIceMinHexes() {
         return IceMinHexes;
+    }
+
+    public void setIceMinHexes(int IceMinHexes) {
+        this.IceMinHexes = IceMinHexes;
     }
 
     public int getIceMaxSpots() {
         return IceMaxSpots;
     }
 
+    public void setIceMaxSpots(int IceMaxSpots) {
+        this.IceMaxSpots = IceMaxSpots;
+    }
+
     public int getIceMaxHexes() {
         return IceMaxHexes;
+    }
+
+    public void setIceMaxHexes(int IceMaxHexes) {
+        this.IceMaxHexes = IceMaxHexes;
     }
 
     public int getRubbleMinSpots() {
         return RubbleMinSpots;
     }
 
+    public void setRubbleMinSpots(int RubbleMinSpots) {
+        this.RubbleMinSpots = RubbleMinSpots;
+    }
+
     public int getRubbleMinHexes() {
         return RubbleMinHexes;
+    }
+
+    public void setRubbleMinHexes(int RubbleMinHexes) {
+        this.RubbleMinHexes = RubbleMinHexes;
     }
 
     public int getRubbleMaxSpots() {
         return RubbleMaxSpots;
     }
 
+    public void setRubbleMaxSpots(int RubbleMaxSpots) {
+        this.RubbleMaxSpots = RubbleMaxSpots;
+    }
+
     public int getRubbleMaxHexes() {
         return RubbleMaxHexes;
+    }
+
+    public void setRubbleMaxHexes(int RubbleMaxHexes) {
+        this.RubbleMaxHexes = RubbleMaxHexes;
     }
 
     public int getFortifiedMinSpots() {
         return FortifiedMinSpots;
     }
 
+    public void setFortifiedMinSpots(int FortifiedMinSpots) {
+        this.FortifiedMinSpots = FortifiedMinSpots;
+    }
+
     public int getFortifiedMinHexes() {
         return FortifiedMinHexes;
+    }
+
+    public void setFortifiedMinHexes(int FortifiedMinHexes) {
+        this.FortifiedMinHexes = FortifiedMinHexes;
     }
 
     public int getFortifiedMaxSpots() {
         return FortifiedMaxSpots;
     }
 
+    public void setFortifiedMaxSpots(int FortifiedMaxSpots) {
+        this.FortifiedMaxSpots = FortifiedMaxSpots;
+    }
+
     public int getFortifiedMaxHexes() {
         return FortifiedMaxHexes;
+    }
+
+    public void setFortifiedMaxHexes(int FortifiedMaxHexes) {
+        this.FortifiedMaxHexes = FortifiedMaxHexes;
     }
 
     public int getMaxBuildings() {
         return MaxBuildings;
     }
 
+    public void setMaxBuildings(int Buildings) {
+        this.MaxBuildings = Buildings;
+    }
+
     public int getMinBuildings() {
         return MinBuildings;
+    }
+
+    public void setMinBuildings(int Buildings) {
+        this.MinBuildings = Buildings;
     }
 
     public int getMaxCF() {
         return MaxCF;
     }
 
+    public void setMaxCF(int CF) {
+        this.MaxCF = CF;
+    }
+
     public int getMinCF() {
         return MinCF;
+    }
+
+    public void setMinCF(int CF) {
+        this.MinCF = CF;
     }
 
     public int getMaxFloors() {
         return MaxFloors;
     }
 
+    public void setMaxFloors(int Floors) {
+        this.MaxFloors = Floors;
+    }
+
     public int getMinFloors() {
         return MinFloors;
+    }
+
+    public void setMinFloors(int Floors) {
+        this.MinFloors = Floors;
     }
 
     public int getCityDensity() {
         return CityDensity;
     }
 
+    public void setCityDensity(int types) {
+        this.CityDensity = types;
+    }
+
     public int getRoads() {
         return Roads;
+    }
+
+    public void setRoads(int Roads) {
+        this.Roads = Roads;
     }
 
     public String getCityType() {
         return CityType;
     }
 
-    public int getRoadProb() {
-        return RoadProb;
-    }
-
-    public int getRiverProb() {
-        return RiverProb;
+    public void setCityType(String types) {
+        this.CityType = types;
     }
 
     public int getHillyness() {
         return Hilliness;
     }
 
+    public void setHillyness(int Hillyness) {
+        this.Hilliness = Hillyness;
+    }
+
     public int getForestMinSpots() {
         return ForestMinSpots;
+    }
+
+    public void setForestMinSpots(int ForestMinSpots) {
+        this.ForestMinSpots = ForestMinSpots;
     }
 
     public int getHillElevationRange() {
         return HillElevationRange;
     }
 
+    public void setHillElevationRange(int HillElevationRange) {
+        this.HillElevationRange = HillElevationRange;
+    }
+
     public int getForestMinHexes() {
         return ForestMinHexes;
+    }
+
+    public void setForestMinHexes(int ForestMinHexes) {
+        this.ForestMinHexes = ForestMinHexes;
     }
 
     public int getForestMaxSpots() {
         return ForestMaxSpots;
     }
 
+    public void setForestMaxSpots(int ForestMaxSpots) {
+        this.ForestMaxSpots = ForestMaxSpots;
+    }
+
     public int getForestMaxHexes() {
         return ForestMaxHexes;
+    }
+
+    public void setForestMaxHexes(int ForestMaxHexes) {
+        this.ForestMaxHexes = ForestMaxHexes;
     }
 
     public int getForestHeavyProb() {
         return ForestHeavyProb;
     }
 
+    public void setForestHeavyProb(int ForestHeavyProb) {
+        this.ForestHeavyProb = ForestHeavyProb;
+    }
+
     public int getCraterProb() {
         return CraterProb;
+    }
+
+    public void setCraterProb(int CraterProb) {
+        this.CraterProb = CraterProb;
     }
 
     public int getCraterMinRadius() {
         return CraterMinRadius;
     }
 
+    public void setCraterMinRadius(int CraterMinRadius) {
+        this.CraterMinRadius = CraterMinRadius;
+    }
+
     public int getCraterMaxRadius() {
         return CraterMaxRadius;
+    }
+
+    public void setCraterMaxRadius(int CraterMaxRadius) {
+        this.CraterMaxRadius = CraterMaxRadius;
     }
 
     public int getCraterMinNum() {
         return CraterMinNum;
     }
 
+    public void setCraterMinNum(int CraterMinNum) {
+        this.CraterMinNum = CraterMinNum;
+    }
+
     public int getCraterMaxNum() {
         return CraterMaxNum;
+    }
+
+    public void setCraterMaxNum(int CraterMaxNum) {
+        this.CraterMaxNum = CraterMaxNum;
     }
 
     public int getAlgorithm() {
         return Algorithm;
     }
 
+    public void setAlgorithm(int Algorithm) {
+        this.Algorithm = Algorithm;
+    }
+
     public int getCliffProb() {
         return CliffProb;
+    }
+
+    public void setCliffProb(int prob) {
+        this.CliffProb = prob;
     }
 
     public int getInvertNegativeTerrain() {
         return InvertNegativeTerrain;
     }
 
+    public void setInvertNegativeTerrain(int invert) {
+        this.InvertNegativeTerrain = invert;
+    }
+
     public int getTownSize() {
         return TownSize;
+    }
+
+    public void setTownSize(int amount) {
+        this.TownSize = amount;
     }
 
     public int getMountPeaks() {
         return MountPeaks;
     }
 
+    public void setMountPeaks(int amount) {
+        this.MountPeaks = amount;
+    }
+
     public int getMountWidthMin() {
         return MountWidthMin;
+    }
+
+    public void setMountWidthMin(int amount) {
+        this.MountWidthMin = amount;
     }
 
     public int getMountWidthMax() {
         return MountWidthMax;
     }
 
+    public void setMountWidthMax(int amount) {
+        this.MountWidthMax = amount;
+    }
+
     public int getMountHeightMin() {
         return MountHeightMin;
+    }
+
+    public void setMountHeightMin(int amount) {
+        this.MountHeightMin = amount;
     }
 
     public int getMountHeightMax() {
         return MountHeightMax;
     }
 
+    public void setMountHeightMax(int amount) {
+        this.MountHeightMax = amount;
+    }
+
     public int getMountStyle() {
         return MountStyle;
+    }
+
+    public void setMountStyle(int amount) {
+        this.MountStyle = amount;
     }
 
     public int getEnvironmentalProb() {
@@ -970,102 +1218,6 @@ final public class PlanetEnvironment {
         EnvironmentProb = prob;
     }
 
-    public void setAlgorithm(int Algorithm) {
-        this.Algorithm = Algorithm;
-    }
-
-    public void setCraterMaxNum(int CraterMaxNum) {
-        this.CraterMaxNum = CraterMaxNum;
-    }
-
-    public void setCraterMaxRadius(int CraterMaxRadius) {
-        this.CraterMaxRadius = CraterMaxRadius;
-    }
-
-    public void setCraterMinNum(int CraterMinNum) {
-        this.CraterMinNum = CraterMinNum;
-    }
-
-    public void setCraterMinRadius(int CraterMinRadius) {
-        this.CraterMinRadius = CraterMinRadius;
-    }
-
-    public void setCraterProb(int CraterProb) {
-        this.CraterProb = CraterProb;
-    }
-
-    public void setForestHeavyProb(int ForestHeavyProb) {
-        this.ForestHeavyProb = ForestHeavyProb;
-    }
-
-    public void setForestMaxHexes(int ForestMaxHexes) {
-        this.ForestMaxHexes = ForestMaxHexes;
-    }
-
-    public void setForestMaxSpots(int ForestMaxSpots) {
-        this.ForestMaxSpots = ForestMaxSpots;
-    }
-
-    public void setForestMinHexes(int ForestMinHexes) {
-        this.ForestMinHexes = ForestMinHexes;
-    }
-
-    public void setForestMinSpots(int ForestMinSpots) {
-        this.ForestMinSpots = ForestMinSpots;
-    }
-
-    public void setHillElevationRange(int HillElevationRange) {
-        this.HillElevationRange = HillElevationRange;
-    }
-
-    public void setHillyness(int Hillyness) {
-        this.Hilliness = Hillyness;
-    }
-
-    public void setRoadProb(int RoadProb) {
-        this.RoadProb = RoadProb;
-    }
-
-    public void setRiverProb(int RiverProb) {
-        this.RiverProb = RiverProb;
-    }
-
-    public void setRoughMaxHexes(int RoughMaxHexes) {
-        this.RoughMaxHexes = RoughMaxHexes;
-    }
-
-    public void setRoughMaxSpots(int RoughMaxSpots) {
-        this.RoughMaxSpots = RoughMaxSpots;
-    }
-
-    public void setRoughMinSpots(int RoughMinSpots) {
-        this.RoughMinSpots = RoughMinSpots;
-    }
-
-    public void setRoughMinHexes(int RoughMinHexes) {
-        this.RoughMinHexes = RoughMinHexes;
-    }
-
-    public void setWaterDeepProb(int WaterDeepProb) {
-        this.WaterDeepProb = WaterDeepProb;
-    }
-
-    public void setWaterMaxHexes(int WaterMaxHexes) {
-        this.WaterMaxHexes = WaterMaxHexes;
-    }
-
-    public void setWaterMaxSpots(int WaterMaxSpots) {
-        this.WaterMaxSpots = WaterMaxSpots;
-    }
-
-    public void setWaterMinHexes(int WaterMinHexes) {
-        this.WaterMinHexes = WaterMinHexes;
-    }
-
-    public void setWaterMinSpots(int WaterMinSpots) {
-        this.WaterMinSpots = WaterMinSpots;
-    }
-
     public int getHillInvertProb() {
         return HillInvertProb;
     }
@@ -1074,196 +1226,44 @@ final public class PlanetEnvironment {
         this.HillInvertProb = HillInvertProb;
     }
 
-    public void setSwampMaxHexes(int SwampMaxHexes) {
-        this.SwampMaxHexes = SwampMaxHexes;
-    }
-
-    public void setSwampMaxSpots(int SwampMaxSpots) {
-        this.SwampMaxSpots = SwampMaxSpots;
-    }
-
-    public void setSwampMinSpots(int SwampMinSpots) {
-        this.SwampMinSpots = SwampMinSpots;
-    }
-
-    public void setSwampMinHexes(int SwampMinHexes) {
-        this.SwampMinHexes = SwampMinHexes;
-    }
-
-    public void setPavementMaxHexes(int PavementMaxHexes) {
-        this.PavementMaxHexes = PavementMaxHexes;
-    }
-
-    public void setPavementMaxSpots(int PavementMaxSpots) {
-        this.PavementMaxSpots = PavementMaxSpots;
-    }
-
-    public void setPavementMinSpots(int PavementMinSpots) {
-        this.PavementMinSpots = PavementMinSpots;
-    }
-
-    public void setPavementMinHexes(int PavementMinHexes) {
-        this.PavementMinHexes = PavementMinHexes;
-    }
-
-    public void setIceMaxHexes(int IceMaxHexes) {
-        this.IceMaxHexes = IceMaxHexes;
-    }
-
-    public void setIceMaxSpots(int IceMaxSpots) {
-        this.IceMaxSpots = IceMaxSpots;
-    }
-
-    public void setIceMinSpots(int IceMinSpots) {
-        this.IceMinSpots = IceMinSpots;
-    }
-
-    public void setIceMinHexes(int IceMinHexes) {
-        this.IceMinHexes = IceMinHexes;
-    }
-
-    public void setRubbleMaxHexes(int RubbleMaxHexes) {
-        this.RubbleMaxHexes = RubbleMaxHexes;
-    }
-
-    public void setRubbleMaxSpots(int RubbleMaxSpots) {
-        this.RubbleMaxSpots = RubbleMaxSpots;
-    }
-
-    public void setRubbleMinSpots(int RubbleMinSpots) {
-        this.RubbleMinSpots = RubbleMinSpots;
-    }
-
-    public void setRubbleMinHexes(int RubbleMinHexes) {
-        this.RubbleMinHexes = RubbleMinHexes;
-    }
-
-    public void setFortifiedMaxHexes(int FortifiedMaxHexes) {
-        this.FortifiedMaxHexes = FortifiedMaxHexes;
-    }
-
-    public void setFortifiedMaxSpots(int FortifiedMaxSpots) {
-        this.FortifiedMaxSpots = FortifiedMaxSpots;
-    }
-
-    public void setFortifiedMinSpots(int FortifiedMinSpots) {
-        this.FortifiedMinSpots = FortifiedMinSpots;
-    }
-
-    public void setFortifiedMinHexes(int FortifiedMinHexes) {
-        this.FortifiedMinHexes = FortifiedMinHexes;
-    }
-
-    public void setMaxBuildings(int Buildings) {
-        this.MaxBuildings = Buildings;
-    }
-
-    public void setMinBuildings(int Buildings) {
-        this.MinBuildings = Buildings;
-    }
-
-    public void setMaxCF(int CF) {
-        this.MaxCF = CF;
-    }
-
-    public void setMinCF(int CF) {
-        this.MinCF = CF;
-    }
-
-    public void setMinFloors(int Floors) {
-        this.MinFloors = Floors;
-    }
-
-    public void setMaxFloors(int Floors) {
-        this.MaxFloors = Floors;
-    }
-
-    public void setCityDensity(int types) {
-        this.CityDensity = types;
-    }
-
-    public void setCityType(String types) {
-        this.CityType = types;
-    }
-
-    public void setRoads(int Roads) {
-        this.Roads = Roads;
+    public int getFxMod() {
+        return fxMod;
     }
 
     public void setFxMod(int mod) {
         this.fxMod = mod;
     }
 
-    public void setProbForestFire(int prob) {
-        this.probForestFire = prob;
-    }
-
-    public void setProbFreeze(int prob) {
-        this.probFreeze = prob;
-    }
-
-    public void setProbFlood(int prob) {
-        this.probFlood = prob;
-    }
-
-    public void setProbDrought(int prob) {
-        this.probDrought = prob;
-    }
-
-    public void setCliffProb(int prob) {
-        this.CliffProb = prob;
-    }
-
-    public void setInvertNegativeTerrain(int invert) {
-        this.InvertNegativeTerrain = invert;
-    }
-
-    public void setTownSize(int amount) {
-        this.TownSize = amount;
-    }
-
-    public void setMountPeaks(int amount) {
-        this.MountPeaks = amount;
-    }
-
-    public void setMountWidthMin(int amount) {
-        this.MountWidthMin = amount;
-    }
-
-    public void setMountWidthMax(int amount) {
-        this.MountWidthMax = amount;
-    }
-
-    public void setMountHeightMin(int amount) {
-        this.MountHeightMin = amount;
-    }
-
-    public void setMountHeightMax(int amount) {
-        this.MountHeightMax = amount;
-    }
-
-    public void setMountStyle(int amount) {
-        this.MountStyle = amount;
-    }
-
-    public int getFxMod() {
-        return fxMod;
-    }
-
     public int getProbForestFire() {
         return probForestFire;
+    }
+
+    public void setProbForestFire(int prob) {
+        this.probForestFire = prob;
     }
 
     public int getProbFreeze() {
         return probFreeze;
     }
 
+    public void setProbFreeze(int prob) {
+        this.probFreeze = prob;
+    }
+
     public int getProbFlood() {
         return probFlood;
     }
 
+    public void setProbFlood(int prob) {
+        this.probFlood = prob;
+    }
+
     public int getProbDrought() {
         return probDrought;
+    }
+
+    public void setProbDrought(int prob) {
+        this.probDrought = prob;
     }
 
     /**
@@ -1521,12 +1521,12 @@ final public class PlanetEnvironment {
         return xSize;
     }
 
-    public int getYSize() {
-        return ySize;
-    }
-
     public void setXSize(int xSize) {
         this.xSize = xSize;
+    }
+
+    public int getYSize() {
+        return ySize;
     }
 
     public void setYSize(int ySize) {

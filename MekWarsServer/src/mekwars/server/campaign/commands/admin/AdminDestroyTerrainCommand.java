@@ -23,10 +23,6 @@ public class AdminDestroyTerrainCommand implements server.campaign.commands.Comm
     int accessLevel = server.MWChatServer.auth.IAuthenticator.ADMIN;
     String syntax = "Planet Name#Terrain";
 
-    public int getExecutionLevel() {return accessLevel;}
-
-    public void setExecutionLevel(int i) {accessLevel = i;}
-
     public String getSyntax() {return syntax;}
 
     public void process(java.util.StringTokenizer command, String Username) {
@@ -63,4 +59,8 @@ public class AdminDestroyTerrainCommand implements server.campaign.commands.Comm
         }
 
     }
+
+    public int getExecutionLevel() {return accessLevel;}
+
+    public void setExecutionLevel(int i) {accessLevel = i;}
 }

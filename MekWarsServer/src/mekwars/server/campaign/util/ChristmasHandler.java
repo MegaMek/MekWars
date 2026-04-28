@@ -28,23 +28,22 @@ import server.campaign.util.scheduler.StartChristmasJob;
  * @version 2016.10.26
  */
 public class ChristmasHandler {
+    public static final int UNIT_METHOD_ONEOFEACH = 0;
+    public static final int UNIT_METHOD_XOFEACH = 1;
+    public static final int UNIT_METHOD_XTOTAL = 2;
     private static mekwars.server.campaign.util.ChristmasHandler handler;
-
     /**
      * Start date of the Christmas season
      */
     private java.util.Date startDate;
-
     /**
      * End date of the Christmas season
      */
     private java.util.Date endDate;
-
     /**
      * Whether or not it is the Christmas Season
      */
     private boolean isChristmasSeason = false;
-
     /**
      * A collection containing a list of names of folks who have received their gifts already
      * <p>
@@ -52,36 +51,27 @@ public class ChristmasHandler {
      * that a list wouldn't serve for, but that may change.
      */
     private java.util.concurrent.ConcurrentHashMap<String, Boolean> gifts = null;
-
     /**
      * Do we celebrate the holiday?
      */
     private boolean celebrateChristmas = false;
-
     /**
      * A list of all the units we are handing out as gifts.  Thread-safe.
      *
      */
     private java.util.concurrent.CopyOnWriteArrayList<String> christmasList = null;
-
     /**
      * What method are we using to hand out gifts?
      */
     private int unitMethod;
-
     /**
      * How many units are handed out in the case of XTotal and XofEach methods
      */
     private int numberOfUnits = 0;
-
     /**
      * Where do we store the recipients' list
      */
     private String giftRecipientsFile = "./campaign/giftRecipients.txt";
-
-    public static final int UNIT_METHOD_ONEOFEACH = 0;
-    public static final int UNIT_METHOD_XOFEACH = 1;
-    public static final int UNIT_METHOD_XTOTAL = 2;
 
     /**
      * Exists solely to defeat instantiation.
@@ -141,6 +131,26 @@ public class ChristmasHandler {
         christmasList = new java.util.concurrent.CopyOnWriteArrayList<String>(al);
     }
 
+    /*
+     * Loads the list of gift recipients from disk
+     */
+    private void loadGiftList() {
+        java.util.Scanner scanner = null;
+        try {
+            scanner = new java.util.Scanner(new java.io.File(giftRecipientsFile));
+            gifts = new java.util.concurrent.ConcurrentHashMap<String, Boolean>();
+            while (scanner.hasNextLine()) {
+                gifts.put(scanner.nextLine().toLowerCase(), true);
+            }
+        } catch (java.io.FileNotFoundException e) {
+            MWLogger.errLog(e);
+        } finally {
+            if (scanner != null) {
+                scanner.close();
+            }
+        }
+    }
+
     /**
      * Instantiates the ChristmasHandler if it is not yet instantiated.  Returns the ChristmasHandler if it is
      *
@@ -194,16 +204,10 @@ public class ChristmasHandler {
     }
 
     /**
-     * Set the starting and ending dates for the Christmas season
-     *
-     * @param start The start date of the season
-     * @param end   The end date of the season
+     * @return celebrateChristmas
      */
-    private void schedule(java.util.Date start, java.util.Date end) {
-        setStartDate(start);
-        setEndDate(end);
-        StartChristmasJob.submit();
-        EndChristmasJob.submit();
+    public boolean doWeCelebrateChristmas() {
+        return celebrateChristmas;
     }
 
     /**
@@ -224,6 +228,19 @@ public class ChristmasHandler {
             MWLogger.errLog(e);
         }
         schedule(start, end);
+    }
+
+    /**
+     * Set the starting and ending dates for the Christmas season
+     *
+     * @param start The start date of the season
+     * @param end   The end date of the season
+     */
+    private void schedule(java.util.Date start, java.util.Date end) {
+        setStartDate(start);
+        setEndDate(end);
+        StartChristmasJob.submit();
+        EndChristmasJob.submit();
     }
 
     /**
@@ -280,13 +297,6 @@ public class ChristmasHandler {
     }
 
     /**
-     * @return celebrateChristmas
-     */
-    public boolean doWeCelebrateChristmas() {
-        return celebrateChristmas;
-    }
-
-    /**
      * @param celebrateChristmas the celebrateChristmas to set
      */
     public void setCelebrateChristmas(boolean celebrateChristmas) {
@@ -327,6 +337,35 @@ public class ChristmasHandler {
     }
 
     /**
+     * Gets a random unit file name from the Christmas list
+     *
+     * @return the unit file name
+     */
+    private String getRandomUnitFileName() {
+        int size = christmasList.size();
+        return christmasList.get(server.campaign.CampaignMain.cm.getR().nextInt(size));
+    }
+
+    /**
+     * Instantiates a unit
+     *
+     * @param unitFileName the unit to be created
+     *
+     * @return SUnit the unit
+     */
+    private server.campaign.SUnit getUnit(String unitFileName) {
+        server.campaign.SUnit u;
+        String fluff = "Merry Christmas!";
+        int gunnery = 4;
+        int piloting = 5;
+        String skillTokens = "";
+
+        u = server.campaign.SUnit.create(unitFileName, fluff, gunnery, piloting, null, skillTokens);
+        u.setChristmasUnit(true);
+        return u;
+    }
+
+    /**
      * Note that the user has received his gifts
      *
      * @param p the user in question
@@ -337,26 +376,6 @@ public class ChristmasHandler {
         }
         gifts.put(p.getName().toLowerCase(), true);
         saveGiftList();
-    }
-
-    /*
-     * Loads the list of gift recipients from disk
-     */
-    private void loadGiftList() {
-        java.util.Scanner scanner = null;
-        try {
-            scanner = new java.util.Scanner(new java.io.File(giftRecipientsFile));
-            gifts = new java.util.concurrent.ConcurrentHashMap<String, Boolean>();
-            while (scanner.hasNextLine()) {
-                gifts.put(scanner.nextLine().toLowerCase(), true);
-            }
-        } catch (java.io.FileNotFoundException e) {
-            MWLogger.errLog(e);
-        } finally {
-            if (scanner != null) {
-                scanner.close();
-            }
-        }
     }
 
     /**
@@ -384,35 +403,6 @@ public class ChristmasHandler {
                 }
             }
         }
-    }
-
-    /**
-     * Instantiates a unit
-     *
-     * @param unitFileName the unit to be created
-     *
-     * @return SUnit the unit
-     */
-    private server.campaign.SUnit getUnit(String unitFileName) {
-        server.campaign.SUnit u;
-        String fluff = "Merry Christmas!";
-        int gunnery = 4;
-        int piloting = 5;
-        String skillTokens = "";
-
-        u = server.campaign.SUnit.create(unitFileName, fluff, gunnery, piloting, null, skillTokens);
-        u.setChristmasUnit(true);
-        return u;
-    }
-
-    /**
-     * Gets a random unit file name from the Christmas list
-     *
-     * @return the unit file name
-     */
-    private String getRandomUnitFileName() {
-        int size = christmasList.size();
-        return christmasList.get(server.campaign.CampaignMain.cm.getR().nextInt(size));
     }
 
     /**

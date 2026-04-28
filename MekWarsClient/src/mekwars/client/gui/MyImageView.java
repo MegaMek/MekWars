@@ -37,6 +37,43 @@ public class MyImageView extends javax.swing.text.View
 
 
     // --- Construction ----------------------------------------------
+    //$ move this someplace public
+    static final String IMAGE_CACHE_PROPERTY = "imageCache";
+    private static final String
+          PENDING_IMAGE_SRC = "icons/image-delayed.gif",  // both stolen from HotJava
+          MISSING_IMAGE_SRC = "icons/image-failed.gif";
+    private static final boolean DEBUG = false;
+    // Height/width to use before we know the real size:
+    private static final int
+          DEFAULT_WIDTH = 32,
+          DEFAULT_HEIGHT = 32,
+    // Default value of BORDER param:      //? possibly move into stylesheet?
+    DEFAULT_BORDER = 2;
+    /**
+     * Static properties for incremental drawing. Swiped from Component.java
+     *
+     * @see #imageUpdate
+     */
+    private static boolean sIsInc = true;
+    private static int sIncRate = 100;
+    private static javax.swing.Icon sPendingImageIcon,
+          sMissingImageIcon;
+    private javax.swing.text.AttributeSet attr;
+    private javax.swing.text.Element fElement;
+    private java.awt.Image fImage;
+    private int fHeight, fWidth;
+    private java.awt.Container fContainer;
+    private java.awt.Rectangle fBounds;
+    private java.awt.Component fComponent;
+    private java.awt.Point fGrowBase;        // base of drag while growing image
+    /**
+     * Set to true, while the receiver is locked, to indicate the reciever is loading the image. This is used in
+     * imageUpdate.
+     */
+    private boolean loading;
+
+
+    // --- Painting --------------------------------------------------------
 
     /**
      * Creates a new view that represents an IMG element.
@@ -49,7 +86,6 @@ public class MyImageView extends javax.swing.text.View
         javax.swing.text.html.StyleSheet sheet = getStyleSheet();
         attr = sheet.getViewAttributes(this);
     }
-
 
     @SuppressWarnings("unchecked")
     private void initialize(javax.swing.text.Element elem) {
@@ -140,6 +176,11 @@ public class MyImageView extends javax.swing.text.View
         }
     }
 
+    protected javax.swing.text.html.StyleSheet getStyleSheet() {
+        javax.swing.text.html.HTMLDocument doc = (javax.swing.text.html.HTMLDocument) getDocument();
+        return doc.getStyleSheet();
+    }
+
     /** Determines if path is in the form of a URL */
     private boolean isURL() {
         String src =
@@ -147,6 +188,24 @@ public class MyImageView extends javax.swing.text.View
         return src.toLowerCase().startsWith("file") ||
                      src.toLowerCase().startsWith("http");
     }
+
+    /**
+     * Return a URL for the image source, or null if it could not be determined.
+     */
+    private java.net.URL getSourceURL() {
+        String src = (String) fElement.getAttributes().getAttribute(javax.swing.text.html.HTML.Attribute.SRC);
+        if (src == null) {return null;}
+
+        java.net.URL reference = ((javax.swing.text.html.HTMLDocument) getDocument()).getBase();
+        try {
+            java.net.URL u = new java.net.URL(reference, src);
+            return u;
+        } catch (java.net.MalformedURLException e) {
+            return null;
+        }
+    }
+
+    // --- Progressive display ---------------------------------------------
 
     /**
      * Checks to see if the absolute path is availabe thru an application global static variable or thru a system
@@ -174,6 +233,8 @@ public class MyImageView extends javax.swing.text.View
         //MMClient.mwClientLog.clientOutputLog("src before: " + src + ", src after: " + val);
         return val;
     }
+    /*
+     */
 
     /**
      * Added this guy to make sure an image is loaded - ie no broken images. So far its used only for images loaded off
@@ -193,88 +254,13 @@ public class MyImageView extends javax.swing.text.View
             int flags = java.awt.Toolkit.getDefaultToolkit().checkImage(fImage, w, h, this);
 
             if (((flags & ERROR) != 0) || ((flags & ABORT) != 0)) {throw new InterruptedException();} else if ((flags &
-                                                                                                                      (ALLBITS | FRAMEBITS)) != 0) {
+                                                                                                                      (ALLBITS |
+                                                                                                                             FRAMEBITS)) !=
+                                                                                                                     0) {
                 return;
             }
             Thread.sleep(10);
             //MMClient.mwClientLog.clientOutputLog("rise and shine...");
-        }
-    }
-
-
-    /**
-     * Fetches the attributes to use when rendering.  This is implemented to multiplex the attributes specified in the
-     * model with a StyleSheet.
-     */
-    @Override
-    public javax.swing.text.AttributeSet getAttributes() {
-        return attr;
-    }
-
-    /** Is this image within a link? */
-    boolean isLink() {
-        //! It would be nice to cache this but in an editor it can change
-        // See if I have an HREF attribute courtesy of the enclosing A tag:
-        javax.swing.text.AttributeSet anchorAttr = (javax.swing.text.AttributeSet)
-                                                         fElement.getAttributes()
-                                                               .getAttribute(javax.swing.text.html.HTML.Tag.A);
-        if (anchorAttr != null) {
-            return anchorAttr.isDefined(javax.swing.text.html.HTML.Attribute.HREF);
-        }
-        return false;
-    }
-
-    /** Returns the size of the border to use. */
-    int getBorder() {
-        return getIntAttr(javax.swing.text.html.HTML.Attribute.BORDER, isLink() ? DEFAULT_BORDER : 0);
-    }
-
-    /** Returns the amount of extra space to add along an axis. */
-    int getSpace(int axis) {
-        return getIntAttr(axis == X_AXIS ?
-                                javax.swing.text.html.HTML.Attribute.HSPACE :
-                                javax.swing.text.html.HTML.Attribute.VSPACE,
-              0);
-    }
-
-    /** Returns the border's color, or null if this is not a link. */
-    java.awt.Color getBorderColor() {
-        javax.swing.text.StyledDocument doc = (javax.swing.text.StyledDocument) getDocument();
-        return doc.getForeground(getAttributes());
-    }
-
-    /** Returns the image's vertical alignment. */
-    float getVerticalAlignment() {
-        String align = (String) fElement.getAttributes().getAttribute(javax.swing.text.html.HTML.Attribute.ALIGN);
-        if (align != null) {
-            align = align.toLowerCase();
-            if (align.equals(TOP) || align.equals(TEXTTOP)) {
-                return 0.0f;
-            } else if (align.equals(mekwars.client.gui.MyImageView.CENTER) || align.equals(MIDDLE)
-                             || align.equals(ABSMIDDLE)) {return 0.5f;}
-        }
-        return 1.0f;        // default alignment is bottom
-    }
-
-    boolean hasPixels(java.awt.image.ImageObserver obs) {
-        return fImage != null && fImage.getHeight(obs) > 0
-                     && fImage.getWidth(obs) > 0;
-    }
-
-
-    /**
-     * Return a URL for the image source, or null if it could not be determined.
-     */
-    private java.net.URL getSourceURL() {
-        String src = (String) fElement.getAttributes().getAttribute(javax.swing.text.html.HTML.Attribute.SRC);
-        if (src == null) {return null;}
-
-        java.net.URL reference = ((javax.swing.text.html.HTMLDocument) getDocument()).getBase();
-        try {
-            java.net.URL u = new java.net.URL(reference, src);
-            return u;
-        } catch (java.net.MalformedURLException e) {
-            return null;
         }
     }
 
@@ -298,43 +284,133 @@ public class MyImageView extends javax.swing.text.View
         return deflt;
     }
 
+    // --- Layout ----------------------------------------------------------
+
+    /** Returns the text editor's highlight color. */
+    protected java.awt.Color getHighlightColor() {
+        javax.swing.text.JTextComponent textComp = (javax.swing.text.JTextComponent) fContainer;
+        return textComp.getSelectionColor();
+    }
+
+    // This can come on any thread. If we are in the process of reloading
+    // the image and determining our state (loading == true) we don't fire
+    // preference changed, or repaint, we just reset the fWidth/fHeight as
+    // necessary and return. This is ok as we know when loading finishes
+    // it will pick up the new height/width, if necessary.
+    public boolean imageUpdate(java.awt.Image img, int flags, int x, int y,
+          int width, int height) {
+        if (fImage == null || fImage != img) {return false;}
+
+        // Bail out if there was an error:
+        if ((flags & (ABORT | ERROR)) != 0) {
+            fImage = null;
+            repaint(0);
+            return false;
+        }
+
+        // Resize image if necessary:
+        short changed = 0;
+        if ((flags & java.awt.image.ImageObserver.HEIGHT) != 0) {
+            if (!getElement().getAttributes().isDefined(javax.swing.text.html.HTML.Attribute.HEIGHT)) {
+                changed |= 1;
+            }
+        }
+        if ((flags & java.awt.image.ImageObserver.WIDTH) != 0) {
+            if (!getElement().getAttributes().isDefined(javax.swing.text.html.HTML.Attribute.WIDTH)) {
+                changed |= 2;
+            }
+        }
+        synchronized (this) {
+            if ((changed & 1) == 1) {
+                fWidth = width;
+            }
+            if ((changed & 2) == 2) {
+                fHeight = height;
+            }
+            if (loading) {
+                // No need to resize or repaint, still in the process of
+                // loading.
+                return true;
+            }
+        }
+        if (changed != 0) {
+            // May need to resize myself, asynchronously:
+            if (DEBUG) {MWLogger.infoLog("ImageView: resized to " + fWidth + "x" + fHeight);}
+
+            javax.swing.text.Document doc = getDocument();
+            try {
+                if (doc instanceof javax.swing.text.AbstractDocument) {
+                    ((javax.swing.text.AbstractDocument) doc).readLock();
+                }
+                preferenceChanged(this, true, true);
+            } finally {
+                if (doc instanceof javax.swing.text.AbstractDocument) {
+                    ((javax.swing.text.AbstractDocument) doc).readUnlock();
+                }
+            }
+
+            return true;
+        }
+
+        // Repaint when done or when new pixels arrive:
+        if ((flags & (FRAMEBITS | ALLBITS)) != 0) {repaint(0);} else if ((flags & SOMEBITS) != 0) {
+            if (sIsInc) {repaint(sIncRate);}
+        }
+
+        return ((flags & ALLBITS) == 0);
+    }
 
     /**
-     * Establishes the parent view for this view. Seize this moment to cache the AWT Container I'm in.
+     * Request that this view be repainted. Assumes the view is still at its last-drawn location.
+     */
+    protected void repaint(long delay) {
+        if (fContainer != null && fBounds != null) {
+            fContainer.repaint(delay,
+                  fBounds.x, fBounds.y, fBounds.width, fBounds.height);
+        }
+    }
+
+    /**
+     * Determines the preferred span for this view along an axis.
+     *
+     * @param axis may be either X_AXIS or Y_AXIS
+     *
+     * @returns the span the view would like to be rendered into. Typically the view is told to render into the
+     *       span that is returned, although there is no guarantee. The parent may choose to resize or break the view.
      */
     @Override
-    public void setParent(javax.swing.text.View parent) {
-        super.setParent(parent);
-        fContainer = parent != null ? getContainer() : null;
-        if (parent == null && fComponent != null) {
-            fComponent.getParent().remove(fComponent);
-            fComponent = null;
+    public float getPreferredSpan(int axis) {
+        //if(DEBUG)MMClient.mwClientLog.clientOutputLog("ImageView: getPreferredSpan");
+        int extra = 2 * (getBorder() + getSpace(axis));
+        switch (axis) {
+            case javax.swing.text.View.X_AXIS:
+                return fWidth + extra;
+            case javax.swing.text.View.Y_AXIS:
+                return fHeight + extra;
+            default:
+                throw new IllegalArgumentException("Invalid axis: " + axis);
         }
     }
 
-    /** My attributes may have changed. */
+    /**
+     * Determines the desired alignment for this view along an axis.  This is implemented to give the alignment to the
+     * bottom of the icon along the y axis, and the default along the x axis.
+     *
+     * @param axis may be either X_AXIS or Y_AXIS
+     *
+     * @returns the desired alignment.  This should be a value between 0.0 and 1.0 where 0 indicates alignment at
+     *       the origin and 1.0 indicates alignment to the full span away from the origin.  An alignment of 0.5 would be
+     *       the center of the view.
+     */
     @Override
-    public void changedUpdate(javax.swing.event.DocumentEvent e, java.awt.Shape a, javax.swing.text.ViewFactory f) {
-        if (DEBUG) {MWLogger.infoLog("ImageView: changedUpdate begin...");}
-        super.changedUpdate(e, a, f);
-        float align = getVerticalAlignment();
-
-        int height = fHeight;
-        int width = fWidth;
-
-        initialize(getElement());
-
-        boolean hChanged = fHeight != height;
-        boolean wChanged = fWidth != width;
-        if (hChanged || wChanged || getVerticalAlignment() != align) {
-            if (DEBUG) {MWLogger.infoLog("ImageView: calling preferenceChanged");}
-            getParent().preferenceChanged(this, hChanged, wChanged);
+    public float getAlignment(int axis) {
+        switch (axis) {
+            case javax.swing.text.View.Y_AXIS:
+                return getVerticalAlignment();
+            default:
+                return super.getAlignment(axis);
         }
-        if (DEBUG) {MWLogger.infoLog("ImageView: changedUpdate end; valign=" + getVerticalAlignment());}
     }
-
-
-    // --- Painting --------------------------------------------------------
 
     /**
      * Paints the image.
@@ -421,14 +497,19 @@ public class MyImageView extends javax.swing.text.View
         }
     }
 
-    /**
-     * Request that this view be repainted. Assumes the view is still at its last-drawn location.
-     */
-    protected void repaint(long delay) {
-        if (fContainer != null && fBounds != null) {
-            fContainer.repaint(delay,
-                  fBounds.x, fBounds.y, fBounds.width, fBounds.height);
-        }
+    // --- Mouse event handling --------------------------------------------
+
+    /** Returns the size of the border to use. */
+    int getBorder() {
+        return getIntAttr(javax.swing.text.html.HTML.Attribute.BORDER, isLink() ? DEFAULT_BORDER : 0);
+    }
+
+    /** Returns the amount of extra space to add along an axis. */
+    int getSpace(int axis) {
+        return getIntAttr(axis == X_AXIS ?
+                                javax.swing.text.html.HTML.Attribute.HSPACE :
+                                javax.swing.text.html.HTML.Attribute.VSPACE,
+              0);
     }
 
     /**
@@ -453,139 +534,95 @@ public class MyImageView extends javax.swing.text.View
         return 0;
     }
 
+    boolean hasPixels(java.awt.image.ImageObserver obs) {
+        return fImage != null && fImage.getHeight(obs) > 0
+                     && fImage.getWidth(obs) > 0;
+    }
+
+    private void loadIcons() {
+        try {
+            if (sPendingImageIcon == null) {sPendingImageIcon = makeIcon(PENDING_IMAGE_SRC);}
+            if (sMissingImageIcon == null) {sMissingImageIcon = makeIcon(MISSING_IMAGE_SRC);}
+        } catch (Exception x) {
+            MWLogger.errLog("ImageView: Couldn't load image icons");
+        }
+    }
+
+    /** Returns the border's color, or null if this is not a link. */
+    java.awt.Color getBorderColor() {
+        javax.swing.text.StyledDocument doc = (javax.swing.text.StyledDocument) getDocument();
+        return doc.getForeground(getAttributes());
+    }
+
+    /** Is this image within a link? */
+    boolean isLink() {
+        //! It would be nice to cache this but in an editor it can change
+        // See if I have an HREF attribute courtesy of the enclosing A tag:
+        javax.swing.text.AttributeSet anchorAttr = (javax.swing.text.AttributeSet)
+                                                         fElement.getAttributes()
+                                                               .getAttribute(javax.swing.text.html.HTML.Tag.A);
+        if (anchorAttr != null) {
+            return anchorAttr.isDefined(javax.swing.text.html.HTML.Attribute.HREF);
+        }
+        return false;
+    }
+
+    // --- Static icon accessors -------------------------------------------
+
     protected boolean isEditable() {
         return fContainer instanceof javax.swing.JEditorPane
                      && ((javax.swing.JEditorPane) fContainer).isEditable();
     }
 
-    /** Returns the text editor's highlight color. */
-    protected java.awt.Color getHighlightColor() {
-        javax.swing.text.JTextComponent textComp = (javax.swing.text.JTextComponent) fContainer;
-        return textComp.getSelectionColor();
+    private javax.swing.Icon makeIcon(final String gifFile) throws java.io.IOException {
+        /* Copy resource into a byte array.  This is
+         * necessary because several browsers consider
+         * Class.getResource a security risk because it
+         * can be used to load additional classes.
+         * Class.getResourceAsStream just returns raw
+         * bytes, which we can convert to an image.
+         */
+        java.io.InputStream resource = mekwars.client.gui.MyImageView.class.getResourceAsStream(gifFile);
+
+        if (resource == null) {
+            //MMClient.mwClientLog.clientErrLog(MyImageView.class.getName() + "/" +gifFile + " not found.");
+            return null;
+        }
+        java.io.BufferedInputStream in =
+              new java.io.BufferedInputStream(resource);
+        java.io.ByteArrayOutputStream out =
+              new java.io.ByteArrayOutputStream(1024);
+        byte[] buffer = new byte[1024];
+        int n;
+        while ((n = in.read(buffer)) > 0) {
+            out.write(buffer, 0, n);
+        }
+        in.close();
+        out.flush();
+
+        buffer = out.toByteArray();
+        if (buffer.length == 0) {
+            MWLogger.errLog("warning: " + gifFile +
+                                  " is zero-length");
+            return null;
+        }
+        return new javax.swing.ImageIcon(buffer);
     }
 
-    // --- Progressive display ---------------------------------------------
-
-    // This can come on any thread. If we are in the process of reloading
-    // the image and determining our state (loading == true) we don't fire
-    // preference changed, or repaint, we just reset the fWidth/fHeight as
-    // necessary and return. This is ok as we know when loading finishes
-    // it will pick up the new height/width, if necessary.
-    public boolean imageUpdate(java.awt.Image img, int flags, int x, int y,
-          int width, int height) {
-        if (fImage == null || fImage != img) {return false;}
-
-        // Bail out if there was an error:
-        if ((flags & (ABORT | ERROR)) != 0) {
-            fImage = null;
-            repaint(0);
-            return false;
-        }
-
-        // Resize image if necessary:
-        short changed = 0;
-        if ((flags & java.awt.image.ImageObserver.HEIGHT) != 0) {
-            if (!getElement().getAttributes().isDefined(javax.swing.text.html.HTML.Attribute.HEIGHT)) {
-                changed |= 1;
-            }
-        }
-        if ((flags & java.awt.image.ImageObserver.WIDTH) != 0) {
-            if (!getElement().getAttributes().isDefined(javax.swing.text.html.HTML.Attribute.WIDTH)) {
-                changed |= 2;
-            }
-        }
-        synchronized (this) {
-            if ((changed & 1) == 1) {
-                fWidth = width;
-            }
-            if ((changed & 2) == 2) {
-                fHeight = height;
-            }
-            if (loading) {
-                // No need to resize or repaint, still in the process of
-                // loading.
-                return true;
-            }
-        }
-        if (changed != 0) {
-            // May need to resize myself, asynchronously:
-            if (DEBUG) {MWLogger.infoLog("ImageView: resized to " + fWidth + "x" + fHeight);}
-
-            javax.swing.text.Document doc = getDocument();
-            try {
-                if (doc instanceof javax.swing.text.AbstractDocument) {
-                    ((javax.swing.text.AbstractDocument) doc).readLock();
-                }
-                preferenceChanged(this, true, true);
-            } finally {
-                if (doc instanceof javax.swing.text.AbstractDocument) {
-                    ((javax.swing.text.AbstractDocument) doc).readUnlock();
-                }
-            }
-
-            return true;
-        }
-
-        // Repaint when done or when new pixels arrive:
-        if ((flags & (FRAMEBITS | ALLBITS)) != 0) {repaint(0);} else if ((flags & SOMEBITS) != 0) {
-            if (sIsInc) {repaint(sIncRate);}
-        }
-
-        return ((flags & ALLBITS) == 0);
-    }
-    /*
-     */
     /**
-     * Static properties for incremental drawing. Swiped from Component.java
-     *
-     * @see #imageUpdate
-     */
-    private static boolean sIsInc = true;
-    private static int sIncRate = 100;
-
-    // --- Layout ----------------------------------------------------------
-
-    /**
-     * Determines the preferred span for this view along an axis.
-     *
-     * @param axis may be either X_AXIS or Y_AXIS
-     *
-     * @returns the span the view would like to be rendered into. Typically the view is told to render into the
-     *       span that is returned, although there is no guarantee. The parent may choose to resize or break the view.
+     * Establishes the parent view for this view. Seize this moment to cache the AWT Container I'm in.
      */
     @Override
-    public float getPreferredSpan(int axis) {
-        //if(DEBUG)MMClient.mwClientLog.clientOutputLog("ImageView: getPreferredSpan");
-        int extra = 2 * (getBorder() + getSpace(axis));
-        switch (axis) {
-            case javax.swing.text.View.X_AXIS:
-                return fWidth + extra;
-            case javax.swing.text.View.Y_AXIS:
-                return fHeight + extra;
-            default:
-                throw new IllegalArgumentException("Invalid axis: " + axis);
+    public void setParent(javax.swing.text.View parent) {
+        super.setParent(parent);
+        fContainer = parent != null ? getContainer() : null;
+        if (parent == null && fComponent != null) {
+            fComponent.getParent().remove(fComponent);
+            fComponent = null;
         }
     }
 
-    /**
-     * Determines the desired alignment for this view along an axis.  This is implemented to give the alignment to the
-     * bottom of the icon along the y axis, and the default along the x axis.
-     *
-     * @param axis may be either X_AXIS or Y_AXIS
-     *
-     * @returns the desired alignment.  This should be a value between 0.0 and 1.0 where 0 indicates alignment at
-     *       the origin and 1.0 indicates alignment to the full span away from the origin.  An alignment of 0.5 would be
-     *       the center of the view.
-     */
-    @Override
-    public float getAlignment(int axis) {
-        switch (axis) {
-            case javax.swing.text.View.Y_AXIS:
-                return getVerticalAlignment();
-            default:
-                return super.getAlignment(axis);
-        }
-    }
+    // --- member variables ------------------------------------------------
 
     /**
      * Provides a mapping from the document model coordinate space to the coordinate space of the view mapped to it.
@@ -637,6 +674,36 @@ public class MyImageView extends javax.swing.text.View
         return getEndOffset();
     }
 
+    /** My attributes may have changed. */
+    @Override
+    public void changedUpdate(javax.swing.event.DocumentEvent e, java.awt.Shape a, javax.swing.text.ViewFactory f) {
+        if (DEBUG) {MWLogger.infoLog("ImageView: changedUpdate begin...");}
+        super.changedUpdate(e, a, f);
+        float align = getVerticalAlignment();
+
+        int height = fHeight;
+        int width = fWidth;
+
+        initialize(getElement());
+
+        boolean hChanged = fHeight != height;
+        boolean wChanged = fWidth != width;
+        if (hChanged || wChanged || getVerticalAlignment() != align) {
+            if (DEBUG) {MWLogger.infoLog("ImageView: calling preferenceChanged");}
+            getParent().preferenceChanged(this, hChanged, wChanged);
+        }
+        if (DEBUG) {MWLogger.infoLog("ImageView: changedUpdate end; valign=" + getVerticalAlignment());}
+    }
+
+    /**
+     * Fetches the attributes to use when rendering.  This is implemented to multiplex the attributes specified in the
+     * model with a StyleSheet.
+     */
+    @Override
+    public javax.swing.text.AttributeSet getAttributes() {
+        return attr;
+    }
+
     /**
      * Set the size of the view. (Ignored.)
      *
@@ -647,6 +714,42 @@ public class MyImageView extends javax.swing.text.View
     public void setSize(float width, float height) {
         // Ignore this -- image size is determined by the tag attrs and
         // the image itself, not the surrounding layout!
+    }
+
+    /** Returns the image's vertical alignment. */
+    float getVerticalAlignment() {
+        String align = (String) fElement.getAttributes().getAttribute(javax.swing.text.html.HTML.Attribute.ALIGN);
+        if (align != null) {
+            align = align.toLowerCase();
+            if (align.equals(TOP) || align.equals(TEXTTOP)) {
+                return 0.0f;
+            } else if (align.equals(mekwars.client.gui.MyImageView.CENTER) || align.equals(MIDDLE)
+                             || align.equals(ABSMIDDLE)) {return 0.5f;}
+        }
+        return 1.0f;        // default alignment is bottom
+    }
+
+    /** Resize image if initial click was in grow-box: */
+    public void mouseDragged(java.awt.event.MouseEvent e) {
+        if (fGrowBase != null) {
+            java.awt.Point loc = fComponent.getLocationOnScreen();
+            int width = Math.max(2, loc.x + e.getX() - fGrowBase.x);
+            int height = Math.max(2, loc.y + e.getY() - fGrowBase.y);
+
+            if (e.isShiftDown() && fImage != null) {
+                // Make sure size is proportional to actual image size:
+                float imgWidth = fImage.getWidth(this);
+                float imgHeight = fImage.getHeight(this);
+                if (imgWidth > 0 && imgHeight > 0) {
+                    float prop = imgHeight / imgWidth;
+                    float pwidth = height / prop;
+                    float pheight = width * prop;
+                    if (pwidth > width) {width = (int) pwidth;} else {height = (int) pheight;}
+                }
+            }
+
+            resize(width, height);
+        }
     }
 
     /**
@@ -668,8 +771,19 @@ public class MyImageView extends javax.swing.text.View
               fElement.getEndOffset(),
               attr, false);
     }
+    //private boolean   fGrowProportionally;	// should grow be proportional?
 
-    // --- Mouse event handling --------------------------------------------
+    public void mouseMoved(java.awt.event.MouseEvent e) {
+    }
+
+    // --- constants and static stuff --------------------------------
+
+    /** On double-click, open image properties dialog. */
+    public void mouseClicked(java.awt.event.MouseEvent e) {
+        if (e.getClickCount() == 2) {
+            //$ IMPLEMENT
+        }
+    }
 
     /** Select or grow image when clicked. */
     public void mousePressed(java.awt.event.MouseEvent e) {
@@ -701,136 +815,15 @@ public class MyImageView extends javax.swing.text.View
         }
     }
 
-    /** Resize image if initial click was in grow-box: */
-    public void mouseDragged(java.awt.event.MouseEvent e) {
-        if (fGrowBase != null) {
-            java.awt.Point loc = fComponent.getLocationOnScreen();
-            int width = Math.max(2, loc.x + e.getX() - fGrowBase.x);
-            int height = Math.max(2, loc.y + e.getY() - fGrowBase.y);
-
-            if (e.isShiftDown() && fImage != null) {
-                // Make sure size is proportional to actual image size:
-                float imgWidth = fImage.getWidth(this);
-                float imgHeight = fImage.getHeight(this);
-                if (imgWidth > 0 && imgHeight > 0) {
-                    float prop = imgHeight / imgWidth;
-                    float pwidth = height / prop;
-                    float pheight = width * prop;
-                    if (pwidth > width) {width = (int) pwidth;} else {height = (int) pheight;}
-                }
-            }
-
-            resize(width, height);
-        }
-    }
-
     public void mouseReleased(java.awt.event.MouseEvent e) {
         fGrowBase = null;
         //! Should post some command to make the action undo-able
     }
 
-    /** On double-click, open image properties dialog. */
-    public void mouseClicked(java.awt.event.MouseEvent e) {
-        if (e.getClickCount() == 2) {
-            //$ IMPLEMENT
-        }
-    }
-
     public void mouseEntered(java.awt.event.MouseEvent e) {
-    }
-
-    public void mouseMoved(java.awt.event.MouseEvent e) {
     }
 
     public void mouseExited(java.awt.event.MouseEvent e) {
     }
-
-    // --- Static icon accessors -------------------------------------------
-
-    private javax.swing.Icon makeIcon(final String gifFile) throws java.io.IOException {
-        /* Copy resource into a byte array.  This is
-         * necessary because several browsers consider
-         * Class.getResource a security risk because it
-         * can be used to load additional classes.
-         * Class.getResourceAsStream just returns raw
-         * bytes, which we can convert to an image.
-         */
-        java.io.InputStream resource = mekwars.client.gui.MyImageView.class.getResourceAsStream(gifFile);
-
-        if (resource == null) {
-            //MMClient.mwClientLog.clientErrLog(MyImageView.class.getName() + "/" +gifFile + " not found.");
-            return null;
-        }
-        java.io.BufferedInputStream in =
-              new java.io.BufferedInputStream(resource);
-        java.io.ByteArrayOutputStream out =
-              new java.io.ByteArrayOutputStream(1024);
-        byte[] buffer = new byte[1024];
-        int n;
-        while ((n = in.read(buffer)) > 0) {
-            out.write(buffer, 0, n);
-        }
-        in.close();
-        out.flush();
-
-        buffer = out.toByteArray();
-        if (buffer.length == 0) {
-            MWLogger.errLog("warning: " + gifFile +
-                                  " is zero-length");
-            return null;
-        }
-        return new javax.swing.ImageIcon(buffer);
-    }
-
-    private void loadIcons() {
-        try {
-            if (sPendingImageIcon == null) {sPendingImageIcon = makeIcon(PENDING_IMAGE_SRC);}
-            if (sMissingImageIcon == null) {sMissingImageIcon = makeIcon(MISSING_IMAGE_SRC);}
-        } catch (Exception x) {
-            MWLogger.errLog("ImageView: Couldn't load image icons");
-        }
-    }
-
-    protected javax.swing.text.html.StyleSheet getStyleSheet() {
-        javax.swing.text.html.HTMLDocument doc = (javax.swing.text.html.HTMLDocument) getDocument();
-        return doc.getStyleSheet();
-    }
-
-    // --- member variables ------------------------------------------------
-
-    private javax.swing.text.AttributeSet attr;
-    private javax.swing.text.Element fElement;
-    private java.awt.Image fImage;
-    private int fHeight, fWidth;
-    private java.awt.Container fContainer;
-    private java.awt.Rectangle fBounds;
-    private java.awt.Component fComponent;
-    private java.awt.Point fGrowBase;        // base of drag while growing image
-    //private boolean   fGrowProportionally;	// should grow be proportional?
-    /**
-     * Set to true, while the receiver is locked, to indicate the reciever is loading the image. This is used in
-     * imageUpdate.
-     */
-    private boolean loading;
-
-    // --- constants and static stuff --------------------------------
-
-    private static javax.swing.Icon sPendingImageIcon,
-          sMissingImageIcon;
-    private static final String
-          PENDING_IMAGE_SRC = "icons/image-delayed.gif",  // both stolen from HotJava
-          MISSING_IMAGE_SRC = "icons/image-failed.gif";
-
-    private static final boolean DEBUG = false;
-
-    //$ move this someplace public
-    static final String IMAGE_CACHE_PROPERTY = "imageCache";
-
-    // Height/width to use before we know the real size:
-    private static final int
-          DEFAULT_WIDTH = 32,
-          DEFAULT_HEIGHT = 32,
-    // Default value of BORDER param:      //? possibly move into stylesheet?
-    DEFAULT_BORDER = 2;
 
 }

@@ -60,21 +60,17 @@ public class Operation implements MWXmlSerializable {
 
     public static int MODS_NOT_ACCEPTED = 0;//default
     public static int MODS_ACCEPTED = 1;
-
-    //private ints which hold current state
-    private int type_indicator;
-    private int mods_indicator;
-
     //TreeMap of modifiers. As modifiers are loaded, those
     //targeting an operation are added to this map.
     TreeMap<String, ModifyingOperation> modifyingOperations;
-
     //Operation properties (hashtable of configured params)
     Properties opValues;
-
     //other loads ...
     DefaultOperation opsDefaults;
     String opName;//Name of this op. EG - "Assault"
+    //private ints which hold current state
+    private int type_indicator;
+    private int mods_indicator;
 
     /**
      * Operation CONSTRUCTOR. Takes a name (used to assemble filenames for param loading) and a set of default vals.
@@ -98,6 +94,14 @@ public class Operation implements MWXmlSerializable {
 
         //set the value tables
         opValues = params;
+    }
+
+    public boolean getBooleanValue(String valToGet) {
+        try {
+            return Boolean.parseBoolean(getValue(valToGet));
+        } catch (Exception ex) {
+            return false;
+        }
     }
 
     public String getValue(String valToGet) {
@@ -133,12 +137,11 @@ public class Operation implements MWXmlSerializable {
         return toReturn;
     }
 
-    public boolean getBooleanValue(String valToGet) {
-        try {
-            return Boolean.parseBoolean(getValue(valToGet));
-        } catch (Exception ex) {
-            return false;
-        }
+    /**
+     * Method which returns name of an operation, as drawn from filename.
+     */
+    public String getName() {
+        return this.opName;
     }
 
     public int getIntValue(String valToGet) {
@@ -177,7 +180,6 @@ public class Operation implements MWXmlSerializable {
         mods_indicator = Operation.MODS_ACCEPTED;
     }
 
-
     /**
      * Methods which return and set type info via a boolean (short only, long+short, etc.)
      */
@@ -198,13 +200,6 @@ public class Operation implements MWXmlSerializable {
 
     public void setModsIndicator(int i) {
         mods_indicator = i;
-    }
-
-    /**
-     * Method which returns name of an operation, as drawn from filename.
-     */
-    public String getName() {
-        return this.opName;
     }
 
     @Override

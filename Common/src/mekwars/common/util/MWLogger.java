@@ -26,9 +26,9 @@ import org.apache.logging.log4j.MarkerManager;
 
 public final class MWLogger {// final - no extension of the server logger
 
-    private File logDir;
     // private static PKLogManager log manager = null;
     private static MWLogger logger = null;
+    private File logDir;
 
     private MWLogger() {
         LogManager.getLogger().info("MWLogger Started");

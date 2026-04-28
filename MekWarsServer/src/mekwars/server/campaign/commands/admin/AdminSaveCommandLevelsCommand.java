@@ -24,12 +24,7 @@ public class AdminSaveCommandLevelsCommand implements server.campaign.commands.C
     int accessLevel = server.MWChatServer.auth.IAuthenticator.ADMIN;
     String syntax = "";
 
-    public int getExecutionLevel() {return accessLevel;}
-
-    public void setExecutionLevel(int i) {accessLevel = i;}
-
     public String getSyntax() {return syntax;}
-
 
     public void process(java.util.StringTokenizer command, String Username) {
 
@@ -74,4 +69,8 @@ public class AdminSaveCommandLevelsCommand implements server.campaign.commands.C
         server.campaign.CampaignMain.cm.doSendModMail("NOTE", Username + " has saved the command levels to file.");
 
     }
+
+    public int getExecutionLevel() {return accessLevel;}
+
+    public void setExecutionLevel(int i) {accessLevel = i;}
 }

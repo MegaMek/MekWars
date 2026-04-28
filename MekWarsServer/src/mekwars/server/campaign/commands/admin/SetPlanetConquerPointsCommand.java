@@ -20,10 +20,6 @@ public class SetPlanetConquerPointsCommand implements server.campaign.commands.C
     int accessLevel = server.MWChatServer.auth.IAuthenticator.ADMIN;
     String syntax = "Planet Name#Amount";
 
-    public int getExecutionLevel() {return accessLevel;}
-
-    public void setExecutionLevel(int i) {accessLevel = i;}
-
     public String getSyntax() {return syntax;}
 
     public void process(java.util.StringTokenizer command, String Username) {
@@ -66,4 +62,8 @@ public class SetPlanetConquerPointsCommand implements server.campaign.commands.C
               Username + " has changed " + p.getName() + "'s conquer points to " + points);
 
     }
+
+    public int getExecutionLevel() {return accessLevel;}
+
+    public void setExecutionLevel(int i) {accessLevel = i;}
 }

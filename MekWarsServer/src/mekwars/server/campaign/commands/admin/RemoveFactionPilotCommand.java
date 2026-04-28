@@ -10,10 +10,6 @@ public class RemoveFactionPilotCommand implements server.campaign.commands.Comma
     int accessLevel = server.MWChatServer.auth.IAuthenticator.ADMIN;
     String syntax = "Faction Name#Type[Mek,Vehicle,Infantry,Proto,BattleArmor,Aero]/ALL#Position[Not used if ALL is selected]";
 
-    public int getExecutionLevel() {return accessLevel;}
-
-    public void setExecutionLevel(int i) {accessLevel = i;}
-
     public String getSyntax() {return syntax;}
 
     public void process(java.util.StringTokenizer command, String Username) {
@@ -73,5 +69,9 @@ public class RemoveFactionPilotCommand implements server.campaign.commands.Comma
         server.campaign.CampaignMain.cm.doSendModMail("NOTE",
               Username + " has removed pilots from " + h.getName() + "'s pilot queue");
     }
+
+    public int getExecutionLevel() {return accessLevel;}
+
+    public void setExecutionLevel(int i) {accessLevel = i;}
 }
 

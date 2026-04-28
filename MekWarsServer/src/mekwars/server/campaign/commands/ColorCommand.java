@@ -24,14 +24,7 @@ package mekwars.server.campaign.commands;
 public class ColorCommand implements Command {
 
     int accessLevel = 0;
-
-    public int getExecutionLevel() {return accessLevel;}
-
-    public void setExecutionLevel(int i) {accessLevel = i;}
-
     String syntax = "";
-
-    public String getSyntax() {return syntax;}
 
     public void process(java.util.StringTokenizer command, String Username) {
 
@@ -69,4 +62,10 @@ public class ColorCommand implements Command {
                                       server.campaign.CampaignMain.cm.getServer().getUser(Username).getColor());
         }
     }
+
+    public int getExecutionLevel() {return accessLevel;}
+
+    public void setExecutionLevel(int i) {accessLevel = i;}
+
+    public String getSyntax() {return syntax;}
 }

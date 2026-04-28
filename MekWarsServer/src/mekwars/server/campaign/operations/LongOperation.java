@@ -86,31 +86,10 @@ public class LongOperation implements Comparable<LongOperation> {
     // METHODS
 
     /**
-     * Method which returns current op status.
-     */
-    public int getStatus() {
-        return currentStatus;
-    }
-
-    /**
-     * method which sets current status.
-     */
-    public void setStatus(int i) {
-        currentStatus = i;
-    }
-
-    /**
      * Method which returns world targetted by this op.
      */
     public server.campaign.SPlanet getTargetWorld() {
         return targetWorld;
-    }
-
-    /**
-     * Method which returns the ID # of this op. NOTE: this is by definition a long ID ...
-     */
-    public int getID() {
-        return longID;
     }
 
     /**
@@ -128,6 +107,20 @@ public class LongOperation implements Comparable<LongOperation> {
         if (this.getStatus() == STATUS_OPINPROGRESS) {return activeShorts;}
         // else
         return null;
+    }
+
+    /**
+     * Method which returns current op status.
+     */
+    public int getStatus() {
+        return currentStatus;
+    }
+
+    /**
+     * method which sets current status.
+     */
+    public void setStatus(int i) {
+        currentStatus = i;
     }
 
     /**
@@ -158,6 +151,13 @@ public class LongOperation implements Comparable<LongOperation> {
 
         // make return
         return resultString;
+    }
+
+    /**
+     * Method which returns the ID # of this op. NOTE: this is by definition a long ID ...
+     */
+    public int getID() {
+        return longID;
     }
 
     /**

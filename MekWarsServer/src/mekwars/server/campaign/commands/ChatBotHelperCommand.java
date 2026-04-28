@@ -34,12 +34,6 @@ public class ChatBotHelperCommand implements Command {
     int accessLevel = 0;
     String syntax = "";
 
-    public int getExecutionLevel() {return accessLevel;}
-
-    public void setExecutionLevel(int i) {accessLevel = i;}
-
-    public String getSyntax() {return syntax;}
-
     public void process(java.util.StringTokenizer command, String Username) {
 
         if (!accessChecks(Username)) {return;}
@@ -52,6 +46,12 @@ public class ChatBotHelperCommand implements Command {
         captureAllChatForBot(Username, buffer.toString());
 
     }
+
+    public int getExecutionLevel() {return accessLevel;}
+
+    public void setExecutionLevel(int i) {accessLevel = i;}
+
+    public String getSyntax() {return syntax;}
 
     private Boolean accessChecks(String Username) {
         int userLevel = server.campaign.CampaignMain.cm.getServer().getUserLevel(Username);

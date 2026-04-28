@@ -132,16 +132,16 @@ public class CUser implements Comparable<CUser>, IClientUser {
         this.userLevel = level;
     }
 
+    public String getHouse() {
+        return playerHouse;
+    }
+
     public String getFluff() {
         return this.fluff;
     }
 
     public void setFluff(String fluff) {
         this.fluff = fluff;
-    }
-
-    public String getHouse() {
-        return playerHouse;
     }
 
     public int getExp() {

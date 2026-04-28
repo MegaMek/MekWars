@@ -173,20 +173,6 @@ public class OperationEntity {
     }
 
     /**
-     * @return the entity's CT internals
-     */
-    public int getCTint() {
-        return CTint;
-    }
-
-    /**
-     * @param new CT internals to set. used to kill offboard artillery in ShortResolver
-     */
-    public void setCTint(int newInternals) {
-        CTint = newInternals;
-    }
-
-    /**
      * @return The IS remaning for entity's head.
      */
     public int getHDint() {
@@ -248,6 +234,20 @@ public class OperationEntity {
         return RemovalReason;
     }
 
+    /**
+     * @return the entity's CT internals
+     */
+    public int getCTint() {
+        return CTint;
+    }
+
+    /**
+     * @param new CT internals to set. used to kill offboard artillery in ShortResolver
+     */
+    public void setCTint(int newInternals) {
+        CTint = newInternals;
+    }
+
     public void setRemovalReason(int reason) {
         RemovalReason = reason;
     }
@@ -299,6 +299,41 @@ public class OperationEntity {
     }
 
     /**
+     * @return Returns the lLint.
+     */
+    public int getLLint() {
+        return LLint;
+    }
+
+    /**
+     * @return Returns the rLint.
+     */
+    public int getRLint() {
+        return RLint;
+    }
+
+    /**
+     * @return Returns the gyrohits.
+     */
+    public int getGyrohits() {
+        return gyrohits;
+    }
+
+    /**
+     * @return Returns the rAint.
+     */
+    public int getRAint() {
+        return RAint;
+    }
+
+    /**
+     * @return Returns the lAint.
+     */
+    public int getLAint() {
+        return LAint;
+    }
+
+    /**
      * @return true if this is a Mech with one or more missing legs
      */
     public boolean isLegged() {
@@ -336,13 +371,6 @@ public class OperationEntity {
     }
 
     /**
-     * @return Returns the crew's status. Should only use when checking veh salvage.
-     */
-    public boolean isCrewDead() {
-        return crewDead;
-    }
-
-    /**
      * @param boolean isSalvage. Used to set salvage to false when overrun.
      */
     public void setSalvage(boolean newSalvage) {
@@ -350,10 +378,10 @@ public class OperationEntity {
     }
 
     /**
-     * @return Returns the lLint.
+     * @return Returns the crew's status. Should only use when checking veh salvage.
      */
-    public int getLLint() {
-        return LLint;
+    public boolean isCrewDead() {
+        return crewDead;
     }
 
     /**
@@ -363,44 +391,16 @@ public class OperationEntity {
         return pilotUnconscious;
     }
 
-    /**
-     * @return Returns the rLint.
-     */
-    public int getRLint() {
-        return RLint;
-    }
-
-    /**
-     * @return Returns the gyrohits.
-     */
-    public int getGyrohits() {
-        return gyrohits;
-    }
-
-    /**
-     * @return Returns the lAint.
-     */
-    public int getLAint() {
-        return LAint;
-    }
-
-    /**
-     * @return Returns the rAint.
-     */
-    public int getRAint() {
-        return RAint;
-    }
-
     public boolean isOffBoard() {
         return offBoardRange > 0;
     }
 
-    public void setOffBoardRange(int range) {
-        offBoardRange = range;
-    }
-
     public int getOffBoardRange() {
         return offBoardRange;
+    }
+
+    public void setOffBoardRange(int range) {
+        offBoardRange = range;
     }
 
     public int getCockpitType() {

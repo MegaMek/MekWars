@@ -37,9 +37,21 @@ import mekwars.common.util.MWLogger;
 import mekwars.common.util.UnitUtils;
 
 public class NewUnitViewerDialog extends JDialog implements Runnable, KeyListener, ActionListener {
+    public static final int UNIT_VIEWER = 0;
+    public static final int OMNI_VARIANT_SELECTOR = 1;
+    public static final int UNIT_SELECTOR = 2;
+    public static final int UNIT_RESEARCH = 3;
     @Serial
     private static final long serialVersionUID = 8144354264100884817L;
-
+    // how long after a key is typed does a new search begin
+    private final static int KEY_TIMEOUT = 1000;
+    private final MekTableModel unitModel;
+    private final UnitLoadingDialog unitLoadingDialog;
+    private final Client mmClient = new Client("temp", "None", 0);
+    private final int viewerType;
+    JTextField txtFilter;
+    IClient client;
+    AdvancedSearchDialog asd;
     private JButton btnSelectClose;
     private JButton btnSelect;
     private JButton btnClose;
@@ -51,39 +63,17 @@ public class NewUnitViewerDialog extends JDialog implements Runnable, KeyListene
     private JComboBox<String> comboWeight;
     private JLabel lblImage;
     private JTable tableUnits;
-    JTextField txtFilter;
     private ConfigurableMekViewPanel panelMekView;
-
     private StringBuffer searchBuffer = new StringBuffer();
     private long lastSearch = 0;
-    // how long after a key is typed does a new search begin
-    private final static int KEY_TIMEOUT = 1000;
-
     private MekSummary[] meks;
-
-    private final MekTableModel unitModel;
     private MekSearchFilter searchFilter;
-
-    IClient client;
-    private final UnitLoadingDialog unitLoadingDialog;
-    AdvancedSearchDialog asd;
-
     private TableRowSorter<MekTableModel> sorter;
-
     private int selectedUnitType;
     private int selectedUnitWeight;
     private int selectedUnitRulesLevel;
     private int selectorSizeHeight;
     private int selectorSizeWidth;
-
-    private final Client mmClient = new Client("temp", "None", 0);
-
-    public static final int UNIT_VIEWER = 0;
-    public static final int OMNI_VARIANT_SELECTOR = 1;
-    public static final int UNIT_SELECTOR = 2;
-    public static final int UNIT_RESEARCH = 3;
-
-    private final int viewerType;
 
     /** Creates new form UnitSelectorDialog */
     public NewUnitViewerDialog(JFrame mainFrame, UnitLoadingDialog uld, IClient client, int viewer) {
@@ -262,15 +252,15 @@ public class NewUnitViewerDialog extends JDialog implements Runnable, KeyListene
         txtFilter.setMinimumSize(new Dimension(200, 28));
         txtFilter.setPreferredSize(new Dimension(200, 28));
         txtFilter.getDocument().addDocumentListener(new DocumentListener() {
-            public void changedUpdate(DocumentEvent e) {
-                filterUnits();
-            }
-
             public void insertUpdate(DocumentEvent e) {
                 filterUnits();
             }
 
             public void removeUpdate(DocumentEvent e) {
+                filterUnits();
+            }
+
+            public void changedUpdate(DocumentEvent e) {
                 filterUnits();
             }
         });
@@ -369,6 +359,18 @@ public class NewUnitViewerDialog extends JDialog implements Runnable, KeyListene
         pack();
     }
 
+    void refreshUnitView() {
+        Entity selectedUnit = getSelectedEntity();
+        // null entity, so load a default unit.
+        if (selectedUnit == null) {
+            panelMekView.reset();
+            lblImage.setIcon(null);
+            return;
+        }
+
+        panelMekView.setEntity(selectedUnit);
+    }
+
     void filterUnits() {
         javax.swing.RowFilter<MekTableModel, Integer> unitTypeFilter;
         final int nType = comboType.getSelectedIndex();
@@ -425,18 +427,6 @@ public class NewUnitViewerDialog extends JDialog implements Runnable, KeyListene
         sorter.setRowFilter(unitTypeFilter);
     }
 
-    void refreshUnitView() {
-        Entity selectedUnit = getSelectedEntity();
-        // null entity, so load a default unit.
-        if (selectedUnit == null) {
-            panelMekView.reset();
-            lblImage.setIcon(null);
-            return;
-        }
-
-        panelMekView.setEntity(selectedUnit);
-    }
-
     public Entity getSelectedEntity() {
         int view = tableUnits.getSelectedRow();
         if (view < 0) {
@@ -455,18 +445,6 @@ public class NewUnitViewerDialog extends JDialog implements Runnable, KeyListene
             ex.printStackTrace();
             return null;
         }
-    }
-
-    public MekSummary getSelectedMechSummary() {
-        int view = tableUnits.getSelectedRow();
-        if (view < 0) {
-            // selection got filtered away
-            return null;
-        }
-        int selected = tableUnits.convertRowIndexToModel(view);
-        // else
-        return meks[selected];
-
     }
 
     public void run() {
@@ -539,6 +517,8 @@ public class NewUnitViewerDialog extends JDialog implements Runnable, KeyListene
         }
     }
 
+    public void keyTyped(KeyEvent ke) {
+    }
 
     public void keyPressed(KeyEvent ke) {
         if (ke.getKeyCode() == KeyEvent.VK_ENTER) {
@@ -552,9 +532,6 @@ public class NewUnitViewerDialog extends JDialog implements Runnable, KeyListene
         lastSearch = curTime;
         searchBuffer.append(ke.getKeyChar());
         searchFor(searchBuffer.toString().toLowerCase());
-    }
-
-    public void keyTyped(KeyEvent ke) {
     }
 
     public void actionPerformed(ActionEvent ev) {
@@ -728,13 +705,34 @@ public class NewUnitViewerDialog extends JDialog implements Runnable, KeyListene
         }
     }
 
-    public void enableResetButton(boolean b) {
-        btnResetSearch.setEnabled(b);
+    private void saveComboBoxSettings() {
+
+        client.getConfig().setParam("UNITVIEWERWEIGHT", (String) comboWeight.getSelectedItem());
+        client.getConfig().setParam("UNITVIEWERTECH", (String) comboType.getSelectedItem());
+        client.getConfig().setParam("UNITVIEWERTYPE", (String) comboUnitType.getSelectedItem());
+        client.getConfig().saveConfig();
+        client.setConfig();
+    }
+
+    public MekSummary getSelectedMechSummary() {
+        int view = tableUnits.getSelectedRow();
+        if (view < 0) {
+            // selection got filtered away
+            return null;
+        }
+        int selected = tableUnits.convertRowIndexToModel(view);
+        // else
+        return meks[selected];
+
     }
 
     @Override
     public void keyReleased(java.awt.event.KeyEvent e) {
 
+    }
+
+    public void enableResetButton(boolean b) {
+        btnResetSearch.setEnabled(b);
     }
 
     public int getSelectorSizeHeight() {
@@ -751,15 +749,6 @@ public class NewUnitViewerDialog extends JDialog implements Runnable, KeyListene
 
     public void setSelectorSizeWidth(int selectorSizeWidth) {
         this.selectorSizeWidth = selectorSizeWidth;
-    }
-
-    private void saveComboBoxSettings() {
-
-        client.getConfig().setParam("UNITVIEWERWEIGHT", (String) comboWeight.getSelectedItem());
-        client.getConfig().setParam("UNITVIEWERTECH", (String) comboType.getSelectedItem());
-        client.getConfig().setParam("UNITVIEWERTYPE", (String) comboUnitType.getSelectedItem());
-        client.getConfig().saveConfig();
-        client.setConfig();
     }
 }
 

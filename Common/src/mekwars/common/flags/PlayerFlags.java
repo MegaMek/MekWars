@@ -4,6 +4,11 @@ import java.io.File;
 
 public class PlayerFlags extends FlagSet {
 
+    public PlayerFlags() {
+        super();
+        flagType = FLAG_TYPE_PLAYER;
+    }
+
     public void save() {
         File file = new File("./data/pFlags.dat");
         super.save(file);
@@ -12,11 +17,6 @@ public class PlayerFlags extends FlagSet {
     public void loadFromDisk() {
         File file = new File("./data/pFlags.dat");
         super.loadFromDisk(file);
-    }
-
-    public PlayerFlags() {
-        super();
-        flagType = FLAG_TYPE_PLAYER;
     }
 
     public boolean isEmpty() {

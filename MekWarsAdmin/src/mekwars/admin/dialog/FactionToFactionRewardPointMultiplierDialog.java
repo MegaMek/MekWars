@@ -56,10 +56,9 @@ public final class FactionToFactionRewardPointMultiplierDialog implements Action
     private final JOptionPane pane;
 
     private final JComboBox<String> faction1;
-    private JComboBox<String> faction2 = null;
     private final Hashtable<String, String> configChanges = new Hashtable<>();
-
     IClient client;
+    private JComboBox<String> faction2 = null;
 
     /**
      * @author jtighe
@@ -188,20 +187,17 @@ public final class FactionToFactionRewardPointMultiplierDialog implements Action
               multiplierText.getText());
     }
 
+    public void keyTyped(KeyEvent e) {
+        saveChanges();
+    }
 
     public void keyPressed(KeyEvent e) {
         saveChanges();
 
     }
 
-
     public void keyReleased(KeyEvent e) {
         saveChanges();
 
-    }
-
-
-    public void keyTyped(KeyEvent e) {
-        saveChanges();
     }
 }

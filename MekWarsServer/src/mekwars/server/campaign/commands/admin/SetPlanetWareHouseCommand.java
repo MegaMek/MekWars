@@ -26,10 +26,6 @@ public class SetPlanetWareHouseCommand implements server.campaign.commands.Comma
     int accessLevel = server.MWChatServer.auth.IAuthenticator.ADMIN;
     String syntax = "Planet Name#Number Of Warehouses";
 
-    public int getExecutionLevel() {return accessLevel;}
-
-    public void setExecutionLevel(int i) {accessLevel = i;}
-
     public String getSyntax() {return syntax;}
 
     public void process(java.util.StringTokenizer command, String Username) {
@@ -81,4 +77,8 @@ public class SetPlanetWareHouseCommand implements server.campaign.commands.Comma
               Username + " has set planet " + PlanetName + " warehouses to " + planet.getBaysProvided());
         planet.updated();
     }//end process
+
+    public int getExecutionLevel() {return accessLevel;}
+
+    public void setExecutionLevel(int i) {accessLevel = i;}
 }//end class

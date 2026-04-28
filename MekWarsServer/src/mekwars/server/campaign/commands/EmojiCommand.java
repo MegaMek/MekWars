@@ -21,13 +21,6 @@ public class EmojiCommand implements Command {
 
     int accessLevel = 0;
     String syntax = "ec#emoji";
-
-    public int getExecutionLevel() {return accessLevel;}
-
-    public void setExecutionLevel(int i) {accessLevel = i;}
-
-    public String getSyntax() {return syntax;}
-
     private String coloredName;
     private String username;
     private String emoji;
@@ -48,6 +41,11 @@ public class EmojiCommand implements Command {
         processEmoji();
     }
 
+    public int getExecutionLevel() {return accessLevel;}
+
+    public void setExecutionLevel(int i) {accessLevel = i;}
+
+    public String getSyntax() {return syntax;}
 
     private void initVars() {
         allowEmoji = server.campaign.CampaignMain.cm.getBooleanConfig("AllowEmoji");

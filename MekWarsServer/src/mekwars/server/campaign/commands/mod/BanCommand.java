@@ -27,10 +27,6 @@ public class BanCommand implements server.campaign.commands.Command {
     int accessLevel = server.MWChatServer.auth.IAuthenticator.MODERATOR;
     String syntax = "Type Ban with No Arguments for Syntax";
 
-    public int getExecutionLevel() {return accessLevel;}
-
-    public void setExecutionLevel(int i) {accessLevel = i;}
-
     public String getSyntax() {return syntax;}
 
     public void process(java.util.StringTokenizer command, String Username) {
@@ -128,7 +124,7 @@ public class BanCommand implements server.campaign.commands.Command {
                   .getBanAccounts()
                   .put(toKill.toLowerCase(), Long.toString(until));
 
-            //CampaignMain.cm.getServer().ISPlog.put(CampaignMain.cm.getServer().myCommunicator.getClient(toKill).getClientVersion(),until);
+            //CampaignMain.cm.getServer().ISPlog.put(CampaignMain.cm.getServer().myCommunicator.getMmClient(toKill).getClientVersion(),until);
             //retreiveISPS(until,toKill);
             server.campaign.CampaignMain.cm.getServer().bansUpdate();
             //MWLogger.modLog(Username + " banned " + toKill + " " +timeName+".");
@@ -155,4 +151,8 @@ public class BanCommand implements server.campaign.commands.Command {
                   Username);
         }
     }
+
+    public int getExecutionLevel() {return accessLevel;}
+
+    public void setExecutionLevel(int i) {accessLevel = i;}
 }

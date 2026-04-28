@@ -13,6 +13,11 @@ import java.util.List;
 
 
 public class Terminator {
+    //check every 5 seconds for a kill me or killme.txt file
+    public static final int KILL_CHECK_INTERVAL = 5000;
+    protected static Terminator instance_;
+    protected List<VoidFunction> jobsToRunOnExit_ = new LinkedList<>();
+
     protected Terminator() {
         //create a new thread to kill this app when a file called 'killme'
         //or 'killme.txt' is created in the directory from which the app
@@ -47,6 +52,11 @@ public class Terminator {
         killer.start();
     }
 
+    public void exit(int status) {
+        runExitJobs();
+        System.gc();
+    }
+
     public static Terminator instance() {
         if (instance_ == null) {
             instance_ = new Terminator();
@@ -55,29 +65,17 @@ public class Terminator {
         return instance_;
     }
 
-    public void runOnExit(VoidFunction vf) {
-        jobsToRunOnExit_.addFirst(vf);
-    }
-
-    public void exit(int status) {
-        runExitJobs();
-        System.gc();
-    }
-
     public void runExitJobs() {
         for (VoidFunction vf : jobsToRunOnExit_) {
             vf.execute();
         }
     }
 
-    protected List<VoidFunction> jobsToRunOnExit_ = new LinkedList<>();
-
-    protected static Terminator instance_;
-
-    //check every 5 seconds for a kill me or killme.txt file
-    public static final int KILL_CHECK_INTERVAL = 5000;
-
     //com.navtools.networking.armi.networking.test code follows
     public static void main(String[] args) {
+    }
+
+    public void runOnExit(VoidFunction vf) {
+        jobsToRunOnExit_.addFirst(vf);
     }
 }

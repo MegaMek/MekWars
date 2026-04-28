@@ -17,13 +17,7 @@ import common.util.MWLogger;
 
 public class SendClientDataCommand implements Command {
 
-    public int getExecutionLevel() {return 0;}
-
-    public void setExecutionLevel(int i) {}
-
     String syntax = "";
-
-    public String getSyntax() {return syntax;}
 
     public void process(java.util.StringTokenizer command, String Username) {
 
@@ -57,5 +51,11 @@ public class SendClientDataCommand implements Command {
             //do nothing
         }
     }//end process
+
+    public int getExecutionLevel() {return 0;}
+
+    public void setExecutionLevel(int i) {}
+
+    public String getSyntax() {return syntax;}
 
 }//end AttackFromReserveCommand

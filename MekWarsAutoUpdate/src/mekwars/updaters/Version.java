@@ -10,6 +10,10 @@ import java.net.URISyntaxException;
 import mekwars.updaters.utils.IOUtil;
 
 public class Version {
+    protected Repository repository_;
+    protected String version_;
+    protected VersionManifest manifest_;
+
     public Version(Repository repository, String version) {
         repository_ = repository;
         version_ = IOUtil.trimFileSeparator(version);
@@ -23,21 +27,17 @@ public class Version {
         return manifest_;
     }
 
+    public BufferedReader getCharFile(String filename) throws IOException, URISyntaxException {
+        return repository_.getCharFile(version_ + "/" + filename);
+    }
+
     public InputStream getBinaryFile(String filename) throws IOException, URISyntaxException {
         filename = filename.replace(" ", "%20");
         return repository_.getBinaryFile(version_ + "/" + filename);
     }
 
-    public BufferedReader getCharFile(String filename) throws IOException, URISyntaxException {
-        return repository_.getCharFile(version_ + "/" + filename);
-    }
-
     public String getName() {
         return version_;
     }
-
-    protected Repository repository_;
-    protected String version_;
-    protected VersionManifest manifest_;
 }
 

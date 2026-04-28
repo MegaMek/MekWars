@@ -27,8 +27,17 @@ import common.campaign.targetsystems.TargetTypeOutOfBoundsException;
 import common.util.MWLogger;
 import common.util.TokenReader;
 import common.util.UnitUtils;
-import megamek.common.*;
+import megamek.common.CriticalSlot;
+import megamek.common.battleArmor.BattleArmor;
+import megamek.common.equipment.AmmoType;
+import megamek.common.equipment.Mounted;
+import megamek.common.equipment.WeaponType;
+import megamek.common.loaders.MULParser;
 import megamek.common.options.PilotOptions;
+import megamek.common.units.Crew;
+import megamek.common.units.CrewType;
+import megamek.common.units.Infantry;
+import megamek.common.units.Tank;
 import server.campaign.pilot.SPilot;
 import server.campaign.pilot.SPilotSkills;
 import server.campaign.pilot.skills.SPilotSkill;
@@ -191,6 +200,110 @@ public final class SUnit extends Unit implements Comparable<SUnit> {
     }
 
     /**
+     * @return the megamek.common.entity this Unit represents
+     */
+    public Entity getEntity() {
+
+        // alreayd loaded. return.
+        if (unitEntity != null) {
+            return unitEntity;
+        }
+
+        // need to load. do so.
+        unitEntity = mekwars.server.campaign.SUnit.loadMech(getUnitFilename());
+        return unitEntity;
+    }
+
+    public void setEntity(Entity unitEntity) {
+        this.unitEntity = unitEntity;
+    }
+
+    public static Entity loadMech(String Filename) {
+
+        if (Filename == null) {
+            return null;
+        }
+
+        Entity ent = null;
+
+        if (new java.io.File("./data/mechfiles").exists()) {
+
+            try {
+                MechSummary ms = MechSummaryCache.getInstance().getMech(Filename.trim());
+                if (ms == null) {
+                    MechSummary[] units = MechSummaryCache.getInstance().getAllMechs();
+                    // System.err.println("unit: "+getUnitFilename());
+                    for (MechSummary unit : units) {
+                        // System.err.println("Source file:
+                        // "+unit.getSourceFile().getName());
+                        // System.err.println("Model: "+unit.getModel());
+                        // System.err.println("Chassis:
+                        // "+unit.getChassis());
+                        // System.err.flush();
+                        if (unit.getEntryName().equalsIgnoreCase(Filename) ||
+                                  unit.getModel().trim().equalsIgnoreCase(Filename.trim()) ||
+                                  unit.getChassis().trim().equalsIgnoreCase(Filename.trim())) {
+                            ms = unit;
+                            break;
+                        }
+                    }
+                }
+
+                if (ms != null) {
+                    ent = new MechFileParser(ms.getSourceFile(), ms.getEntryName()).getEntity();
+                }
+            } catch (Exception exep) {
+                ent = null;
+            }
+
+        }
+
+        if (ent != null) {
+            return ent;
+        }
+
+        // look for a mek first
+        try {
+            ent = new MechFileParser(new java.io.File("./data/mechfiles/Meks.zip"), Filename).getEntity();
+        } catch (Exception ex) {
+
+            // not a mek, see if file is a vehicle...
+            try {
+                ent = new MechFileParser(new java.io.File("./data/mechfiles/Vehicles.zip"), Filename).getEntity();
+            } catch (Exception exe) {
+
+                // neither mek nor veh. look for infantry.
+                try {
+                    ent = new MechFileParser(new java.io.File("./data/mechfiles/Infantry.zip"), Filename).getEntity();
+                } catch (Exception exei) {
+
+                    /*
+                     * Unit cannot be found in Meks.zip, Vehicles.zip or
+                     * Infantry.zip. Probably a bad filename (table type) or a
+                     * missing unit. Either way, need to set up and return a
+                     * failsafe unit.
+                     */
+                    MWLogger.errLog("Error loading: " + Filename);
+
+                    try {
+                        ent = UnitUtils.createOMG();// new MechFileParser(new
+                    } catch (Exception exep) {
+
+                        /*
+                         * Can't even find the default unit file. Are all the
+                         * .zip files missing? Misnamed? Read access is denied?
+                         */
+                        MWLogger.errLog("Unable to find default unit file. Server Exiting");
+                        MWLogger.errLog(exep);
+                        System.exit(1);
+                    }
+                }
+            }
+        }
+        return ent;
+    }// end loadMech
+
+    /**
      * Method which determines whether or not a given unit may be sold on the black market. Any "false" return prevents
      * house listings as well as player sales.
      */
@@ -323,6 +436,8 @@ public final class SUnit extends Unit implements Comparable<SUnit> {
         return 0;// no known type? return 0.
     }
 
+    // METHODS
+
     /*
      * AR-related statics.
      */
@@ -417,7 +532,161 @@ public final class SUnit extends Unit implements Comparable<SUnit> {
         return cost;
     }
 
-    // METHODS
+    public static java.util.Vector<SUnit> createMULUnits(String filename) {
+        return mekwars.server.campaign.SUnit.createMULUnits(filename, "autoassigned unit");
+    }
+
+    public static java.util.Vector<SUnit> createMULUnits(String filename, String fluff) {
+        java.util.Vector<SUnit> mulUnits = new java.util.Vector<SUnit>(1, 1);
+
+        java.util.Vector<Entity> loadedUnits = null;
+        java.io.File entityFile = new java.io.File("data/armies/" + filename);
+
+        try {
+            loadedUnits = new MULParser(entityFile, null).getEntities();
+            loadedUnits.trimToSize();
+        } catch (Exception ex) {
+            MWLogger.errLog("Unable to load file " + entityFile.getName());
+            MWLogger.errLog(ex);
+            return mulUnits;
+        }
+
+        for (Entity en : loadedUnits) {
+
+            mekwars.server.campaign.SUnit cm = new mekwars.server.campaign.SUnit();
+
+            cm.setEntity(en);
+            cm.setUnitFilename(UnitUtils.getEntityFileName(en));
+            cm.setId(CampaignMain.cm.getAndUpdateCurrentUnitID());
+            cm.init();
+            cm.setProducer(fluff);
+
+            SPilot pilot = null;
+            pilot = new SPilot(en.getCrew().getName(), en.getCrew().getGunnery(), en.getCrew().getPiloting());
+
+            if (pilot.getName().equalsIgnoreCase("Unnamed") || pilot.getName().equalsIgnoreCase("vacant")) {
+                pilot.setName(SPilot.getRandomPilotName(CampaignMain.cm.getR()));
+            }
+
+            pilot.setCurrentFaction("Common");
+            java.util.StringTokenizer skillList = new java.util.StringTokenizer(en.getCrew()
+                                                                                      .getOptionList(",",
+                                                                                            PilotOptions.LVL3_ADVANTAGES),
+                  ",");
+
+            while (skillList.hasMoreTokens()) {
+                String skill = skillList.nextToken();
+
+                if (skill.toLowerCase().startsWith("weapon_specialist")) {
+                    pilot.addMegamekOption(new MegaMekPilotOption("weapon_specialist", true));
+                    pilot.getSkills().add(SPilotSkills.getPilotSkill(PilotSkill.WeaponSpecialistSkillID));
+                    pilot.setWeapon(skill.substring("weapon_specialist".length()).trim());
+                } else if (skill.toLowerCase().startsWith("edge ")) {
+                    pilot.addMegamekOption(new MegaMekPilotOption("edge", true));
+                    pilot.getSkills().add(SPilotSkills.getPilotSkill(PilotSkill.EdgeSkillID));
+                    try {
+                        pilot.getSkills()
+                              .getPilotSkill(PilotSkill.EdgeSkillID)
+                              .setLevel(Integer.parseInt(skill.substring("edge ".length()).trim()));
+                    } catch (Exception ex) {
+                        pilot.getSkills().getPilotSkill(PilotSkill.EdgeSkillID).setLevel(1);
+                    }
+                } else if (skill.toLowerCase().equals("edge_when_headhit")) {
+                    pilot.setHeadHit(true);
+                } else if (skill.toLowerCase().equals("edge_when_tac")) {
+                    pilot.setTac(true);
+                } else if (skill.toLowerCase().equals("edge_when_ko")) {
+                    pilot.setKO(true);
+                } else if (skill.toLowerCase().equals("edge_when_explosion")) {
+                    pilot.setExplosion(true);
+                } else {
+                    pilot.getSkills().add(SPilotSkills.getPilotSkill(PilotSkill.getMMSkillID(skill)));
+                    pilot.addMegamekOption(new MegaMekPilotOption(skill, true));
+                }
+            }
+
+            skillList = new java.util.StringTokenizer(en.getCrew().getOptionList(",", PilotOptions.MD_ADVANTAGES), ",");
+
+            while (skillList.hasMoreTokens()) {
+                String skill = skillList.nextToken();
+
+                pilot.getSkills().add(SPilotSkills.getPilotSkill(PilotSkill.getMMSkillID(skill)));
+                pilot.addMegamekOption(new MegaMekPilotOption(skill, true));
+            }
+
+            cm.setPilot(pilot);
+
+            cm.setWeightclass(99);// let the SUnit code handle the weightclass
+
+            mulUnits.add(cm);
+        }
+        return mulUnits;
+    }
+
+    /**
+     * Creates a unit
+     * <p>
+     * create() takes a number of variables and creates a unit.  This is called by both the Christmas code and the
+     * /CreateUnit command.
+     *
+     * @param filename    The file name of the unit
+     * @param fluff       Any flavor text
+     * @param gunnery     Gunnery skill of the pilot
+     * @param piloting    Piloting skill of the pilot
+     * @param weight      Weight class to be used (note: why?  Why can't we get rid of this?)
+     * @param skillTokens Pilot skills
+     *
+     * @return the created unit
+     */
+    public static mekwars.server.campaign.SUnit create(String filename, String fluff, int gunnery, int piloting,
+          Integer weight, String skillTokens) {
+        boolean refigureWeightClass = false;
+
+        if (weight == null) {
+            weight = mekwars.server.campaign.SUnit.LIGHT;
+            // This is stupid.  We should not have to specify weight classes.  So now we do not.
+            refigureWeightClass = true;
+        }
+
+        mekwars.server.campaign.SUnit cm = new mekwars.server.campaign.SUnit(fluff, filename, weight);
+
+        if (refigureWeightClass) {
+            cm.setWeightclass(cm.getEntity().getWeightClass());
+            MWLogger.debugLog("Setting " +
+                                    cm.getEntity().getModel() +
+                                    " to weight class " +
+                                    cm.getEntity().getWeightClass());
+        }
+
+        SPilot pilot = null;
+        if (gunnery == 99 || piloting == 99) {pilot = new SPilot("Vacant", 99, 99);} else {
+            pilot = new SPilot(SPilot.getRandomPilotName(CampaignMain.cm.getR()), gunnery, piloting);
+        }
+
+        pilot.setCurrentFaction("Common");
+
+        if (skillTokens != null) {
+            java.util.StringTokenizer skillList = new java.util.StringTokenizer(skillTokens, ",");
+            while (skillList.hasMoreTokens()) {
+                String skill = skillList.nextToken();
+                SPilotSkill pSkill = null;
+                if (skill.equalsIgnoreCase("random")) {
+                    pSkill = SPilotSkills.getRandomSkill(pilot, cm.getType());
+                } else {pSkill = SPilotSkills.getPilotSkill(skill);}
+
+                if (pSkill != null) {
+                    if (pSkill instanceof TraitSkill) {
+                        ((TraitSkill) pSkill).assignTrait(pilot);
+                    }
+                    pSkill.addToPilot(pilot);
+                    pSkill.modifyPilot(pilot);
+                }
+            }
+        }
+
+        cm.setPilot(pilot);
+        return cm;
+    }
 
     /**
      * @return the Serialized Version of this entity
@@ -853,6 +1122,8 @@ public final class SUnit extends Unit implements Comparable<SUnit> {
         return checkModelName();
     }
 
+    // GETTER AND SETTER
+
     public String getVerboseModelName() {
         // Includes Pilot Stats in ModelName
         if ((getType() == Unit.MEK) || (getType() == Unit.VEHICLE) || (getType() == Unit.AERO)) {
@@ -1056,8 +1327,6 @@ public final class SUnit extends Unit implements Comparable<SUnit> {
 
     }// end setUnmaintainedStatus()
 
-    // GETTER AND SETTER
-
     public int getBVForMatch() {
         if (CampaignMain.cm.getBooleanConfig("UseBaseBVForMatching")) {
             return getBaseBV();
@@ -1087,116 +1356,12 @@ public final class SUnit extends Unit implements Comparable<SUnit> {
         BV = i;
     }
 
-    /**
-     * @return the megamek.common.entity this Unit represents
-     */
-    public Entity getEntity() {
-
-        // alreayd loaded. return.
-        if (unitEntity != null) {
-            return unitEntity;
-        }
-
-        // need to load. do so.
-        unitEntity = mekwars.server.campaign.SUnit.loadMech(getUnitFilename());
-        return unitEntity;
+    public long getPassesMaintainanceUntil() {
+        return passesMaintainanceUntil;
     }
-
-    public void setEntity(Entity unitEntity) {
-        this.unitEntity = unitEntity;
-    }
-
-    public static Entity loadMech(String Filename) {
-
-        if (Filename == null) {
-            return null;
-        }
-
-        Entity ent = null;
-
-        if (new java.io.File("./data/mechfiles").exists()) {
-
-            try {
-                MechSummary ms = MechSummaryCache.getInstance().getMech(Filename.trim());
-                if (ms == null) {
-                    MechSummary[] units = MechSummaryCache.getInstance().getAllMechs();
-                    // System.err.println("unit: "+getUnitFilename());
-                    for (MechSummary unit : units) {
-                        // System.err.println("Source file:
-                        // "+unit.getSourceFile().getName());
-                        // System.err.println("Model: "+unit.getModel());
-                        // System.err.println("Chassis:
-                        // "+unit.getChassis());
-                        // System.err.flush();
-                        if (unit.getEntryName().equalsIgnoreCase(Filename) ||
-                                  unit.getModel().trim().equalsIgnoreCase(Filename.trim()) ||
-                                  unit.getChassis().trim().equalsIgnoreCase(Filename.trim())) {
-                            ms = unit;
-                            break;
-                        }
-                    }
-                }
-
-                if (ms != null) {
-                    ent = new MechFileParser(ms.getSourceFile(), ms.getEntryName()).getEntity();
-                }
-            } catch (Exception exep) {
-                ent = null;
-            }
-
-        }
-
-        if (ent != null) {
-            return ent;
-        }
-
-        // look for a mek first
-        try {
-            ent = new MechFileParser(new java.io.File("./data/mechfiles/Meks.zip"), Filename).getEntity();
-        } catch (Exception ex) {
-
-            // not a mek, see if file is a vehicle...
-            try {
-                ent = new MechFileParser(new java.io.File("./data/mechfiles/Vehicles.zip"), Filename).getEntity();
-            } catch (Exception exe) {
-
-                // neither mek nor veh. look for infantry.
-                try {
-                    ent = new MechFileParser(new java.io.File("./data/mechfiles/Infantry.zip"), Filename).getEntity();
-                } catch (Exception exei) {
-
-                    /*
-                     * Unit cannot be found in Meks.zip, Vehicles.zip or
-                     * Infantry.zip. Probably a bad filename (table type) or a
-                     * missing unit. Either way, need to set up and return a
-                     * failsafe unit.
-                     */
-                    MWLogger.errLog("Error loading: " + Filename);
-
-                    try {
-                        ent = UnitUtils.createOMG();// new MechFileParser(new
-                    } catch (Exception exep) {
-
-                        /*
-                         * Can't even find the default unit file. Are all the
-                         * .zip files missing? Misnamed? Read access is denied?
-                         */
-                        MWLogger.errLog("Unable to find default unit file. Server Exiting");
-                        MWLogger.errLog(exep);
-                        System.exit(1);
-                    }
-                }
-            }
-        }
-        return ent;
-    }// end loadMech
 
     public void setPassesMaintainanceUntil(long l) {
         passesMaintainanceUntil = l;
-    }
-
-    public long getPassesMaintainanceUntil() {
-        return passesMaintainanceUntil;
     }
 
     public int getScrappableFor() {
@@ -1323,97 +1488,6 @@ public final class SUnit extends Unit implements Comparable<SUnit> {
         super.setWeightclass(i);
     }
 
-    public static java.util.Vector<SUnit> createMULUnits(String filename) {
-        return mekwars.server.campaign.SUnit.createMULUnits(filename, "autoassigned unit");
-    }
-
-    public static java.util.Vector<SUnit> createMULUnits(String filename, String fluff) {
-        java.util.Vector<SUnit> mulUnits = new java.util.Vector<SUnit>(1, 1);
-
-        java.util.Vector<Entity> loadedUnits = null;
-        java.io.File entityFile = new java.io.File("data/armies/" + filename);
-
-        try {
-            loadedUnits = new MULParser(entityFile, null).getEntities();
-            loadedUnits.trimToSize();
-        } catch (Exception ex) {
-            MWLogger.errLog("Unable to load file " + entityFile.getName());
-            MWLogger.errLog(ex);
-            return mulUnits;
-        }
-
-        for (Entity en : loadedUnits) {
-
-            mekwars.server.campaign.SUnit cm = new mekwars.server.campaign.SUnit();
-
-            cm.setEntity(en);
-            cm.setUnitFilename(UnitUtils.getEntityFileName(en));
-            cm.setId(CampaignMain.cm.getAndUpdateCurrentUnitID());
-            cm.init();
-            cm.setProducer(fluff);
-
-            SPilot pilot = null;
-            pilot = new SPilot(en.getCrew().getName(), en.getCrew().getGunnery(), en.getCrew().getPiloting());
-
-            if (pilot.getName().equalsIgnoreCase("Unnamed") || pilot.getName().equalsIgnoreCase("vacant")) {
-                pilot.setName(SPilot.getRandomPilotName(CampaignMain.cm.getR()));
-            }
-
-            pilot.setCurrentFaction("Common");
-            java.util.StringTokenizer skillList = new java.util.StringTokenizer(en.getCrew()
-                                                                                      .getOptionList(",",
-                                                                                            PilotOptions.LVL3_ADVANTAGES),
-                  ",");
-
-            while (skillList.hasMoreTokens()) {
-                String skill = skillList.nextToken();
-
-                if (skill.toLowerCase().startsWith("weapon_specialist")) {
-                    pilot.addMegamekOption(new MegaMekPilotOption("weapon_specialist", true));
-                    pilot.getSkills().add(SPilotSkills.getPilotSkill(PilotSkill.WeaponSpecialistSkillID));
-                    pilot.setWeapon(skill.substring("weapon_specialist".length()).trim());
-                } else if (skill.toLowerCase().startsWith("edge ")) {
-                    pilot.addMegamekOption(new MegaMekPilotOption("edge", true));
-                    pilot.getSkills().add(SPilotSkills.getPilotSkill(PilotSkill.EdgeSkillID));
-                    try {
-                        pilot.getSkills()
-                              .getPilotSkill(PilotSkill.EdgeSkillID)
-                              .setLevel(Integer.parseInt(skill.substring("edge ".length()).trim()));
-                    } catch (Exception ex) {
-                        pilot.getSkills().getPilotSkill(PilotSkill.EdgeSkillID).setLevel(1);
-                    }
-                } else if (skill.toLowerCase().equals("edge_when_headhit")) {
-                    pilot.setHeadHit(true);
-                } else if (skill.toLowerCase().equals("edge_when_tac")) {
-                    pilot.setTac(true);
-                } else if (skill.toLowerCase().equals("edge_when_ko")) {
-                    pilot.setKO(true);
-                } else if (skill.toLowerCase().equals("edge_when_explosion")) {
-                    pilot.setExplosion(true);
-                } else {
-                    pilot.getSkills().add(SPilotSkills.getPilotSkill(PilotSkill.getMMSkillID(skill)));
-                    pilot.addMegamekOption(new MegaMekPilotOption(skill, true));
-                }
-            }
-
-            skillList = new java.util.StringTokenizer(en.getCrew().getOptionList(",", PilotOptions.MD_ADVANTAGES), ",");
-
-            while (skillList.hasMoreTokens()) {
-                String skill = skillList.nextToken();
-
-                pilot.getSkills().add(SPilotSkills.getPilotSkill(PilotSkill.getMMSkillID(skill)));
-                pilot.addMegamekOption(new MegaMekPilotOption(skill, true));
-            }
-
-            cm.setPilot(pilot);
-
-            cm.setWeightclass(99);// let the SUnit code handle the weightclass
-
-            mulUnits.add(cm);
-        }
-        return mulUnits;
-    }
-
     /**
      * Compares SUnit IDs to support sorting of collections
      *
@@ -1468,70 +1542,5 @@ public final class SUnit extends Unit implements Comparable<SUnit> {
         }
 
         return false;
-    }
-
-    /**
-     * Creates a unit
-     * <p>
-     * create() takes a number of variables and creates a unit.  This is called by both the Christmas code and the
-     * /CreateUnit command.
-     *
-     * @param filename    The file name of the unit
-     * @param fluff       Any flavor text
-     * @param gunnery     Gunnery skill of the pilot
-     * @param piloting    Piloting skill of the pilot
-     * @param weight      Weight class to be used (note: why?  Why can't we get rid of this?)
-     * @param skillTokens Pilot skills
-     *
-     * @return the created unit
-     */
-    public static mekwars.server.campaign.SUnit create(String filename, String fluff, int gunnery, int piloting,
-          Integer weight, String skillTokens) {
-        boolean refigureWeightClass = false;
-
-        if (weight == null) {
-            weight = mekwars.server.campaign.SUnit.LIGHT;
-            // This is stupid.  We should not have to specify weight classes.  So now we do not.
-            refigureWeightClass = true;
-        }
-
-        mekwars.server.campaign.SUnit cm = new mekwars.server.campaign.SUnit(fluff, filename, weight);
-
-        if (refigureWeightClass) {
-            cm.setWeightclass(cm.getEntity().getWeightClass());
-            MWLogger.debugLog("Setting " +
-                                    cm.getEntity().getModel() +
-                                    " to weight class " +
-                                    cm.getEntity().getWeightClass());
-        }
-
-        SPilot pilot = null;
-        if (gunnery == 99 || piloting == 99) {pilot = new SPilot("Vacant", 99, 99);} else {
-            pilot = new SPilot(SPilot.getRandomPilotName(CampaignMain.cm.getR()), gunnery, piloting);
-        }
-
-        pilot.setCurrentFaction("Common");
-
-        if (skillTokens != null) {
-            java.util.StringTokenizer skillList = new java.util.StringTokenizer(skillTokens, ",");
-            while (skillList.hasMoreTokens()) {
-                String skill = skillList.nextToken();
-                SPilotSkill pSkill = null;
-                if (skill.equalsIgnoreCase("random")) {
-                    pSkill = SPilotSkills.getRandomSkill(pilot, cm.getType());
-                } else {pSkill = SPilotSkills.getPilotSkill(skill);}
-
-                if (pSkill != null) {
-                    if (pSkill instanceof TraitSkill) {
-                        ((TraitSkill) pSkill).assignTrait(pilot);
-                    }
-                    pSkill.addToPilot(pilot);
-                    pSkill.modifyPilot(pilot);
-                }
-            }
-        }
-
-        cm.setPilot(pilot);
-        return cm;
     }
 }

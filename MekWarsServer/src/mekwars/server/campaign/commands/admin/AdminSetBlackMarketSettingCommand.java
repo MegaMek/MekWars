@@ -27,10 +27,6 @@ public class AdminSetBlackMarketSettingCommand implements server.campaign.comman
     int accessLevel = server.MWChatServer.auth.IAuthenticator.ADMIN;
     String syntax = "Item Name#Min Cost#Max Cost#Min Production#Max Production";
 
-    public int getExecutionLevel() {return accessLevel;}
-
-    public void setExecutionLevel(int i) {accessLevel = i;}
-
     public String getSyntax() {return syntax;}
 
     public void process(java.util.StringTokenizer command, String Username) {
@@ -83,4 +79,8 @@ public class AdminSetBlackMarketSettingCommand implements server.campaign.comman
         //NO MODMAIL for setting changes. Server Config GUI would spam too much.
 
     }//end process
+
+    public int getExecutionLevel() {return accessLevel;}
+
+    public void setExecutionLevel(int i) {accessLevel = i;}
 }

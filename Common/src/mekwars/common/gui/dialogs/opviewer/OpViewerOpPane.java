@@ -25,14 +25,14 @@ public class OpViewerOpPane extends JTextPane implements IOpViewerPane {
     @Serial
     private static final long serialVersionUID = 1L;
 
-    public void setHTMLContents(String s) {
-        this.setContentType("text/html");
-        this.setText(s);
-    }
-
     public OpViewerOpPane(String s) {
         super();
         setHTMLContents(s);
+    }
+
+    public void setHTMLContents(String s) {
+        this.setContentType("text/html");
+        this.setText(s);
     }
 
 }

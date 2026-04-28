@@ -24,21 +24,21 @@
 
 package mekwars.server.campaign.operations;
 
-import common.AdvancedTerrain;
-import common.Continent;
-import common.PlanetEnvironment;
-import common.Unit;
-import common.UnitFactory;
-import common.campaign.Buildings;
-import common.campaign.operations.Operation;
-import common.util.MWLogger;
-import common.util.StringUtils;
-import common.util.UnitUtils;
-import megamek.common.PlanetaryConditions;
-import server.campaign.operations.resolvers.NewShortResolver;
-import server.campaign.operations.resolvers.ShortOpPlayers;
-import server.campaign.pilot.SPilot;
-import server.util.StringUtil;
+import megamek.common.planetaryConditions.EMI;
+import megamek.common.planetaryConditions.PlanetaryConditions;
+import mekwars.common.AdvancedTerrain;
+import mekwars.common.Continent;
+import mekwars.common.PlanetEnvironment;
+import mekwars.common.Unit;
+import mekwars.common.UnitFactory;
+import mekwars.common.campaign.Buildings;
+import mekwars.common.util.MWLogger;
+import mekwars.common.util.StringUtils;
+import mekwars.common.util.UnitUtils;
+import mekwars.server.campaign.operations.resolvers.NewShortResolver;
+import mekwars.server.campaign.operations.resolvers.ShortOpPlayers;
+import mekwars.server.campaign.pilot.SPilot;
+import mekwars.server.util.StringUtil;
 
 // IMPORTS
 
@@ -52,39 +52,32 @@ public class ShortOperation implements Comparable<Object> {
     public static int STATUS_INPROGRESS = 1;
     public static int STATUS_REPORTING = 2;
     public static int STATUS_FINISHED = 4;
-
+    public java.util.Vector<server.campaign.SUnit> preCapturedUnits = null;
     // Starting values. Used in /c modgames and in ShortResolver. Increased by
     // addAttacker/Defender.
     int startingBV = 0;
     int startingUnits = 0;
-
     // Finishing values. Use in /c modgames and *set* by the ShortResolver.
     int finishingBV = 0;
-
     // Header for modgames info.
     String modHeader = "";
-
     // holding vars for pertinant game info
     private server.campaign.SPlanet targetWorld;
     private boolean fromReserve;
     private int shortID = -1;
     private int longID = -1;// id of parent long op, if one exists
-
     private java.util.TreeMap<String, Integer> defenders;
     private java.util.TreeMap<String, Integer> attackers;
     private java.util.TreeMap<String, server.campaign.SPlayer> winners;
     private java.util.TreeMap<String, server.campaign.SPlayer> losers;
     private java.util.ArrayList<server.campaign.SArmy> pdlist;
     private java.util.TreeMap<String, OpsChickenThread> chickenThreads;
-
     private java.util.TreeMap<Integer, OperationEntity> unitsInProgress;
     private java.util.TreeMap<Integer, SPilot> pilotsInProgress;
-
     private server.campaign.SPlayer initiator;// player who sends the command to start an op
     private Continent playContinent;
     private PlanetEnvironment playEnvironment;
     private StringBuilder cityBuilder = new StringBuilder();
-
     // intel info
     private AdvancedTerrain aTerrain = null;
     private boolean intelVacuum = false;
@@ -95,7 +88,6 @@ public class ShortOperation implements Comparable<Object> {
     private int intelVisibility = 999;
     private int intelWeather = PlanetaryConditions.WE_NONE;
     private int intelWind = PlanetaryConditions.WI_NONE;
-
     private java.util.TreeSet<String> cancellingPlayers = new java.util.TreeSet<String>();
     /*
      * For the time being, we're only allowing 1 v 1 games. This will change in
@@ -105,16 +97,13 @@ public class ShortOperation implements Comparable<Object> {
     private int maxDefenders = 1;
     private int minAttackers = 1;
     private int minDefenders = 1;
-
     // string set by Resolver. Returned for getFinishedInfo()
     private String completeFinishedString;
     private String incompleteFinishedString;
-
     private int currentStatus;
     private int showsToClear;// number of tick-shows remaining before removal
     private long startTime = -1;
     private long completionTime = -1;
-
     /*
      * The GameOptions and Attacker/Defender AUtoArmies. Generated when
      * switching to INPROGRESS status. Save in case the game needs to be
@@ -131,9 +120,7 @@ public class ShortOperation implements Comparable<Object> {
     private String defendArtDesc = "";
     private float defenderArmyCount = 0;
     private float attackerArmyCount = 0;
-
     private java.util.HashMap<String, String> MULHash = new java.util.HashMap<String, String>();
-
     /*
      * Building Options for any building destruction tasks
      */
@@ -141,7 +128,6 @@ public class ShortOperation implements Comparable<Object> {
     private String buildingOptions = "";
     private int[] mapEdge = { Buildings.NORTH, Buildings.SOUTH, Buildings.EAST, Buildings.WEST };
     private int[] mapEdgeReverse = { Buildings.SOUTH, Buildings.NORTH, Buildings.WEST, Buildings.EAST };
-
     private int[] playerEdge = { Buildings.NORTHWEST, Buildings.NORTH, Buildings.NORTHEAST, Buildings.EAST,
                                  Buildings.SOUTHEAST, Buildings.SOUTH, Buildings.SOUTHWEST, Buildings.WEST,
                                  Buildings.EDGE, Buildings.CENTER, Buildings.NORTHWESTDEEP, Buildings.NORTHDEEP,
@@ -152,7 +138,6 @@ public class ShortOperation implements Comparable<Object> {
                                         Buildings.CENTER, Buildings.EDGE, Buildings.SOUTHEASTDEEP, Buildings.SOUTHDEEP,
                                         Buildings.SOUTHWESTDEEP, Buildings.WESTDEEP, Buildings.NORTHWESTDEEP,
                                         Buildings.NORTHDEEP, Buildings.NORTHEASTDEEP, Buildings.EASTDEEP };
-
     private int attackerEdge = -1;
     private int defenderEdge = -1;
     private int totalBuildings = -1;
@@ -160,10 +145,8 @@ public class ShortOperation implements Comparable<Object> {
     private int[] teamEdge = { Buildings.NORTH, Buildings.SOUTH, Buildings.EAST, Buildings.WEST, Buildings.NORTHWEST,
                                Buildings.SOUTHEAST, Buildings.NORTHEAST, Buildings.SOUTHWEST };
     private boolean isTeamOp = false;
-
     // The map size, to save. Default to 2x1 FASA. Store to resend after logout.
     private java.awt.Dimension mapsize = new java.awt.Dimension(32, 17);
-
     /*
      * last, but certainly not least, holders for the underlying operation and
      * (if extent) player ModifyingOperation names.
@@ -173,15 +156,11 @@ public class ShortOperation implements Comparable<Object> {
      */
     private String opName;
     private java.util.TreeMap<String, String> playerModifyingOps;
-
     // autoReport String
     private String autoReportString = null;
     private int playersReported = 0;
     private String bots;
     private String botTeams;
-
-    public java.util.Vector<server.campaign.SUnit> preCapturedUnits = null;
-
     private OperationReporter reporter = new OperationReporter();
     private NewShortResolver resolver;
 
@@ -1324,7 +1303,7 @@ public class ShortOperation implements Comparable<Object> {
                 }
 
                 if ((server.campaign.CampaignMain.cm.getRandomNumber(1000) + 1) <= aTerrain.getEMIChance()) {
-                    aTerrain.setEMI(true);
+                    aTerrain.setEMI(EMI.EMI);
                 }
 
                 if (aTerrain.getAtmosphere() <= PlanetaryConditions.ATMO_TRACE) {
@@ -1965,6 +1944,18 @@ public class ShortOperation implements Comparable<Object> {
     }// end send reconnectInfo
 
     /**
+     * Method which returns a collection of all players involved in the Operation.
+     * <p>
+     * Suitable for iterating.
+     */
+    public java.util.TreeMap<String, Integer> getAllPlayersAndArmies() {
+        java.util.TreeMap<String, Integer> c = new java.util.TreeMap<String, Integer>();
+        c.putAll(attackers);
+        c.putAll(defenders);
+        return c;
+    }
+
+    /**
      * Method which returns the maxattackers. Generally used by JoinAttackCommand to make sure an additional attacker is
      * still allowed.
      */
@@ -2005,20 +1996,6 @@ public class ShortOperation implements Comparable<Object> {
      */
     public server.campaign.SPlanet getTargetWorld() {
         return targetWorld;
-    }
-
-    /**
-     * Method which returns short ID # of this op.
-     */
-    public int getShortID() {
-        return shortID;
-    }
-
-    /**
-     * Method which sets the short ID # of this op. This should be called ONLY from the Manager.
-     */
-    public void setShortID(int newID) {
-        shortID = newID;
     }
 
     /**
@@ -2662,6 +2639,18 @@ public class ShortOperation implements Comparable<Object> {
     }
 
     /**
+     * Method which returns a collection of all players involved in the Operation.
+     * <p>
+     * Suitable for iterating.
+     */
+    public java.util.Collection<String> getAllPlayerNames() {
+        java.util.TreeMap<String, Integer> c = new java.util.TreeMap<String, Integer>();
+        c.putAll(attackers);
+        c.putAll(defenders);
+        return c.keySet();
+    }
+
+    /**
      * Method which loops through the attacker and defender maps in order to determine if any of the participating
      * players is from a given house.
      */
@@ -2679,7 +2668,9 @@ public class ShortOperation implements Comparable<Object> {
      * Method which determined whether or not the operation involves a player whose faction name begins with a given
      * string.
      * <p>
-     * Used by GamesCommand to filter output. We assume that s is all lowercase, b/c Games lowercases its faction filter
+     * Used by GamesCommand to filter output. We assume that s is all lowercase, b/c Games lowercases its faction
+     * filter
+     *
      * @ parse.
      */
     public boolean hasPlayerWhoseHouseBeginsWith(String s) {
@@ -2690,30 +2681,6 @@ public class ShortOperation implements Comparable<Object> {
             }
         }
         return false;
-    }
-
-    /**
-     * Method which returns a collection of all players involved in the Operation.
-     * <p>
-     * Suitable for iterating.
-     */
-    public java.util.Collection<String> getAllPlayerNames() {
-        java.util.TreeMap<String, Integer> c = new java.util.TreeMap<String, Integer>();
-        c.putAll(attackers);
-        c.putAll(defenders);
-        return c.keySet();
-    }
-
-    /**
-     * Method which returns a collection of all players involved in the Operation.
-     * <p>
-     * Suitable for iterating.
-     */
-    public java.util.TreeMap<String, Integer> getAllPlayersAndArmies() {
-        java.util.TreeMap<String, Integer> c = new java.util.TreeMap<String, Integer>();
-        c.putAll(attackers);
-        c.putAll(defenders);
-        return c;
     }
 
     /**
@@ -2753,6 +2720,20 @@ public class ShortOperation implements Comparable<Object> {
 
         // else
         return 0;
+    }
+
+    /**
+     * Method which returns short ID # of this op.
+     */
+    public int getShortID() {
+        return shortID;
+    }
+
+    /**
+     * Method which sets the short ID # of this op. This should be called ONLY from the Manager.
+     */
+    public void setShortID(int newID) {
+        shortID = newID;
     }
 
     public String planetIntel(String intel, server.campaign.SHouse house) {
@@ -2808,20 +2789,20 @@ public class ShortOperation implements Comparable<Object> {
 
     }
 
-    public void setAutoReport(String report) {
-        autoReportString = report;
-    }
-
     public String getAutoReport() {
         return autoReportString;
     }
 
-    public void setPlayersReported(int players) {
-        playersReported = players;
+    public void setAutoReport(String report) {
+        autoReportString = report;
     }
 
     public int getPlayersReported() {
         return playersReported;
+    }
+
+    public void setPlayersReported(int players) {
+        playersReported = players;
     }
 
     public int getStartingBV() {

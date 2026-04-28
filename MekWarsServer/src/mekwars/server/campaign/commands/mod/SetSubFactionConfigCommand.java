@@ -28,10 +28,6 @@ public class SetSubFactionConfigCommand implements server.campaign.commands.Comm
     int accessLevel = server.MWChatServer.auth.IAuthenticator.MODERATOR;
     String syntax = "SubFactionName#FactionName#Config#Value#Config#Value....";
 
-    public int getExecutionLevel() {return accessLevel;}
-
-    public void setExecutionLevel(int i) {accessLevel = i;}
-
     public String getSyntax() {return syntax;}
 
     public void process(java.util.StringTokenizer command, String Username) {
@@ -103,4 +99,8 @@ public class SetSubFactionConfigCommand implements server.campaign.commands.Comm
                                                      " for faction " +
                                                      faction.getName(), Username);
     }
+
+    public int getExecutionLevel() {return accessLevel;}
+
+    public void setExecutionLevel(int i) {accessLevel = i;}
 }

@@ -10,6 +10,10 @@ import mekwars.common.util.MWLogger;
 import mekwars.updaters.utils.IOUtil;
 
 public class VersionManifest {
+    public static String separator = "*";
+    protected List<FileInfo> fileList_ = new ArrayList<>();
+    protected List<String> dirsToCleanUp_ = new ArrayList<>();
+
     public VersionManifest(BufferedReader manifestStream) {
         String line;
         try {
@@ -26,120 +30,6 @@ public class VersionManifest {
         } catch (Exception e) {
             e.printStackTrace();
         }
-    }
-
-    public List<FileInfo> getDiffInfos(AutoUpdater updater) {
-        System.err.println("Getting diff infos");
-
-        List<FileInfo> retVal = new ArrayList<>();
-        long tempCRC = 0;
-        for (FileInfo file : fileList_) {
-
-            try {
-                /*
-                 * Get the local update-tmp CRC as well. If this matches, but
-                 * the real local CRC does not, we'll set a flag so that we
-                 * don't have to actually download the file...but it will still
-                 * be added to the script.
-                 */
-
-                // Use the current FileInfo class to create a temp FileInfo
-                // class representing the update-tmp version.
-                StringBuilder tempManifest = new StringBuilder("./");
-                tempManifest.append(AutoUpdater.UPDATE_TMP_DIR);
-                tempManifest.append(File.separator);
-                tempManifest.append(file.getLocalOffset());
-                tempManifest.append(VersionManifest.separator);
-                tempManifest.append(file.getRemoteOffset());
-                tempManifest.append(VersionManifest.separator);
-                tempManifest.append(file.getCRC32());
-                tempCRC = 0;
-
-                try {
-                    FileInfo tempFile = new FileInfo(tempManifest.toString());
-                    InputStream tempIs = updater.getLocalFileStream(tempFile);
-                    tempCRC = IOUtil.getCRC32(tempIs);
-                    tempIs.close();
-                } catch (FileNotFoundException fnfe) {
-                    // File does not exist in tmp directory, proceed
-                    // as usual.
-                    System.err.println("File " + file.getLocalOffset() + " is not in the temp directory.");
-                }
-
-                InputStream is = updater.getLocalFileStream(file);
-                long localCRC = IOUtil.getCRC32(is);
-                is.close();
-
-                if (localCRC != file.getCRC32()) {
-                    System.err.println("Noting difference between remote file " +
-                                             file.getRemoteOffset() +
-                                             " and local file " +
-                                             file.getLocalOffset());
-
-                    // If there is not a difference between the remote and
-                    // local temporary file, set flag so we don't download.
-                    if (tempCRC == file.getCRC32()) {
-                        file.setTempFileUpToDate(true);
-                        System.err.println("The file " +
-                                                 file.getLocalOffset() +
-                                                 " is different, but there is an up to date " +
-                                                 " file in the tmp directory.");
-                    } else {
-                        file.setTempFileUpToDate(false);
-                    }
-                    retVal.add(file);
-                } else {
-                    System.err.println("Remote file " +
-                                             file.getRemoteOffset() +
-                                             " and local file " +
-                                             file.getLocalOffset() +
-                                             " appear to be the same.");
-                }
-            }
-            // File does not exist locally; retrieve it
-            catch (FileNotFoundException e) {
-                System.err.println("File " + file.getLocalOffset() + " doesn't exist locally.  Retrieving.");
-
-                // check the temp CRC to see if we need to flag for
-                // no download
-                if (tempCRC == file.getCRC32()) {
-                    file.setTempFileUpToDate(true);
-                    System.err.println("File " +
-                                             file.getLocalOffset() +
-                                             " doesn't exist locally, but it is up " +
-                                             "to date in the temp directory, no need to download.");
-                } else {
-                    file.setTempFileUpToDate(false);
-                }
-                retVal.add(file);
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-        }
-
-        return retVal;
-    }
-
-    /**
-     * Returns a list of all of the files that this manifest specifies should be on the client.
-     */
-    public List<String> getClientFileStructure() {
-        System.err.println("Getting client file structure");
-
-        List<String> retVal = new ArrayList<>();
-        for (FileInfo file : fileList_) {
-            retVal.add(file.getLocalOffset());
-        }
-
-        return retVal;
-    }
-
-    /**
-     * Returns a list of directories that this manifest specifies must be cleaned up; i.e. all files in one of these
-     * directories that is not also in the manifest should be deleted.
-     */
-    public List<String>/* String */getDirectoriesToCleanUp() {
-        return dirsToCleanUp_;
     }
 
     protected static void createListFile() {
@@ -270,9 +160,117 @@ public class VersionManifest {
         }
     }
 
-    protected List<FileInfo> fileList_ = new ArrayList<>();
+    public List<FileInfo> getDiffInfos(AutoUpdater updater) {
+        System.err.println("Getting diff infos");
 
-    protected List<String> dirsToCleanUp_ = new ArrayList<>();
+        List<FileInfo> retVal = new ArrayList<>();
+        long tempCRC = 0;
+        for (FileInfo file : fileList_) {
 
-    public static String separator = "*";
+            try {
+                /*
+                 * Get the local update-tmp CRC as well. If this matches, but
+                 * the real local CRC does not, we'll set a flag so that we
+                 * don't have to actually download the file...but it will still
+                 * be added to the script.
+                 */
+
+                // Use the current FileInfo class to create a temp FileInfo
+                // class representing the update-tmp version.
+                StringBuilder tempManifest = new StringBuilder("./");
+                tempManifest.append(AutoUpdater.UPDATE_TMP_DIR);
+                tempManifest.append(File.separator);
+                tempManifest.append(file.getLocalOffset());
+                tempManifest.append(VersionManifest.separator);
+                tempManifest.append(file.getRemoteOffset());
+                tempManifest.append(VersionManifest.separator);
+                tempManifest.append(file.getCRC32());
+                tempCRC = 0;
+
+                try {
+                    FileInfo tempFile = new FileInfo(tempManifest.toString());
+                    InputStream tempIs = updater.getLocalFileStream(tempFile);
+                    tempCRC = IOUtil.getCRC32(tempIs);
+                    tempIs.close();
+                } catch (FileNotFoundException fnfe) {
+                    // File does not exist in tmp directory, proceed
+                    // as usual.
+                    System.err.println("File " + file.getLocalOffset() + " is not in the temp directory.");
+                }
+
+                InputStream is = updater.getLocalFileStream(file);
+                long localCRC = IOUtil.getCRC32(is);
+                is.close();
+
+                if (localCRC != file.getCRC32()) {
+                    System.err.println("Noting difference between remote file " +
+                                             file.getRemoteOffset() +
+                                             " and local file " +
+                                             file.getLocalOffset());
+
+                    // If there is not a difference between the remote and
+                    // local temporary file, set flag so we don't download.
+                    if (tempCRC == file.getCRC32()) {
+                        file.setTempFileUpToDate(true);
+                        System.err.println("The file " +
+                                                 file.getLocalOffset() +
+                                                 " is different, but there is an up to date " +
+                                                 " file in the tmp directory.");
+                    } else {
+                        file.setTempFileUpToDate(false);
+                    }
+                    retVal.add(file);
+                } else {
+                    System.err.println("Remote file " +
+                                             file.getRemoteOffset() +
+                                             " and local file " +
+                                             file.getLocalOffset() +
+                                             " appear to be the same.");
+                }
+            }
+            // File does not exist locally; retrieve it
+            catch (FileNotFoundException e) {
+                System.err.println("File " + file.getLocalOffset() + " doesn't exist locally.  Retrieving.");
+
+                // check the temp CRC to see if we need to flag for
+                // no download
+                if (tempCRC == file.getCRC32()) {
+                    file.setTempFileUpToDate(true);
+                    System.err.println("File " +
+                                             file.getLocalOffset() +
+                                             " doesn't exist locally, but it is up " +
+                                             "to date in the temp directory, no need to download.");
+                } else {
+                    file.setTempFileUpToDate(false);
+                }
+                retVal.add(file);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+
+        return retVal;
+    }
+
+    /**
+     * Returns a list of all of the files that this manifest specifies should be on the client.
+     */
+    public List<String> getClientFileStructure() {
+        System.err.println("Getting client file structure");
+
+        List<String> retVal = new ArrayList<>();
+        for (FileInfo file : fileList_) {
+            retVal.add(file.getLocalOffset());
+        }
+
+        return retVal;
+    }
+
+    /**
+     * Returns a list of directories that this manifest specifies must be cleaned up; i.e. all files in one of these
+     * directories that is not also in the manifest should be deleted.
+     */
+    public List<String>/* String */getDirectoriesToCleanUp() {
+        return dirsToCleanUp_;
+    }
 }

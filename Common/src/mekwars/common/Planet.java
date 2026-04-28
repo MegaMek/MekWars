@@ -150,118 +150,40 @@ public class Planet implements Comparable<Object>, MutableSerializable {
 
     // METHODS
 
-    /**
-     * @return Returns the baysProvided.
-     */
-    public int getBaysProvided() {
-        return baysProvided;
-    }
-
-    /**
-     * @param baysProvided The baysProvided to set.
-     */
-    public void setBaysProvided(int baysProvided) {
-        this.baysProvided = baysProvided;
-    }
-
-    /**
-     * @return Returns the compProduction.
-     */
-    public int getCompProduction() {
-        return compProduction;
-    }
-
-    /**
-     * @param compProduction The compProduction to set.
-     */
-    public void setCompProduction(int compProduction) {
-        this.compProduction = compProduction;
-    }
-
-    /**
-     * @return the id of the current owner of the planet
-     *
-     * @author Torren (Jason Tighe)
-     */
-    public Integer getPlanetOwner() {
-        return getInfluence().getOwner();
-    }
-
-    /**
-     * @return returns if the faction is the planet owner
-     *
-     * @author Torren (Jason Tighe)
-     */
-    public boolean isOwner(int factionId) {
-        Integer ownerID = getPlanetOwner();
-        if (ownerID == null) {
-            return false;
+    public void binIn(BinReader in, CampaignData data) throws IOException {
+        setId(in.readInt("id"));
+        setName(in.readLine("name"));
+        setPosition(new Position(in.readDouble("x"), in.readDouble("y")));
+        int size = in.readInt("unitFactories.size");
+        setUnitFactories(new Vector<>(size, 1));
+        for (int i = 0; i < size; ++i) {
+            UnitFactory uf = new UnitFactory();
+            uf.binIn(in);
+            getUnitFactories().add(uf);
         }
-        return ownerID == factionId;
-    }
+        setEnvironments(new PlanetEnvironments());
+        getEnvironments().binIn(in, data);
+        setDescription(in.readLine("description"));
+        setBaysProvided(in.readInt("baysProvided"));
+        setConquerable(in.readBoolean("conquerable"));
+        setCompProduction(in.readInt("compProduction"));
+        setInfluence(new Influences());
+        getInfluence().binIn(in);
+        setMinPlanetOwnerShip(in.readInt("minplanetownership"));
+        setHomeWorld(in.readBoolean("homeworld"));
+        setOriginalOwner(in.readLine("originalowner"));
+        TreeMap<String, String> map = new TreeMap<>();
+        size = in.readInt("PlanetFlags.size");
+        for (int i = 0; i < size; ++i) {
+            String key;
+            String value;
+            key = in.readLine("PlanetFlags.key");
+            value = in.readLine("PlanetFlags.value");
+            map.put(key, value);
+        }
+        setPlanetFlags(map);
 
-    /**
-     * @return Returns the conquerable.
-     */
-    public boolean isConquerable() {
-        return conquerable;
-    }
-
-    /**
-     * @param conquerable The conquerable to set.
-     */
-    public void setConquerable(boolean conquerable) {
-        this.conquerable = conquerable;
-    }
-
-    /**
-     * @return Returns the description.
-     */
-    public String getDescription() {
-        return description;
-    }
-
-    /**
-     * @param description The description to set.
-     */
-    public void setDescription(String description) {
-        this.description = description;
-    }
-
-    /**
-     * @return Returns the name.
-     */
-    public String getName() {
-        return name;
-    }
-
-    /**
-     *
-     * @return sting w/ link and name
-     */
-    public String getNameAsLink() {
-        return "<a href=\"JUMPTOPLANET" + name + "#\">" + name + "</a>";
-    }
-
-    /**
-     * @param name The name to set.
-     */
-    public void setName(String name) {
-        this.name = name;
-    }
-
-    /**
-     * @return Returns the position.
-     */
-    public Position getPosition() {
-        return position;
-    }
-
-    /**
-     * @param position The position to set.
-     */
-    public void setPosition(Position position) {
-        this.position = position;
+        setConquestPoints(in.readInt("MaxInfluence"));
     }
 
     /**
@@ -307,6 +229,36 @@ public class Planet implements Comparable<Object>, MutableSerializable {
     }
 
     /**
+     * @return returns if the faction is the planet owner
+     *
+     * @author Torren (Jason Tighe)
+     */
+    public boolean isOwner(int factionId) {
+        Integer ownerID = getPlanetOwner();
+        if (ownerID == null) {
+            return false;
+        }
+        return ownerID == factionId;
+    }
+
+    /**
+     * @return the id of the current owner of the planet
+     *
+     * @author Torren (Jason Tighe)
+     */
+    public Integer getPlanetOwner() {
+        return getInfluence().getOwner();
+    }
+
+    /**
+     *
+     * @return sting w/ link and name
+     */
+    public String getNameAsLink() {
+        return "<a href=\"JUMPTOPLANET" + name + "#\">" + name + "</a>";
+    }
+
+    /**
      * checks for any unused CP and assignes them to House None id -1
      */
     public void updateInfluences() {
@@ -325,12 +277,34 @@ public class Planet implements Comparable<Object>, MutableSerializable {
 
     }
 
+    public int getConquestPoints() {
+        return maxConquestPoints;
+    }
+
+    public void setConquestPoints(int points) {
+        maxConquestPoints = Math.max(1, points);
+    }
+
     /**
      * Comparable after the id
      */
     public int compareTo(@Nonnull Object o) {
         Planet p = (Planet) o;
         return Integer.compare(getId(), p.getId());
+    }
+
+    /**
+     * @return Returns the id.
+     */
+    public int getId() {
+        return id;
+    }
+
+    /**
+     * @param id The id to set.
+     */
+    public void setId(int id) {
+        this.id = id;
     }
 
     /**
@@ -384,40 +358,120 @@ public class Planet implements Comparable<Object>, MutableSerializable {
         out.println(getConquestPoints(), "MaxInfluence");
     }
 
-    public void binIn(BinReader in, CampaignData data) throws IOException {
-        setId(in.readInt("id"));
-        setName(in.readLine("name"));
-        setPosition(new Position(in.readDouble("x"), in.readDouble("y")));
-        int size = in.readInt("unitFactories.size");
-        setUnitFactories(new Vector<>(size, 1));
-        for (int i = 0; i < size; ++i) {
-            UnitFactory uf = new UnitFactory();
-            uf.binIn(in);
-            getUnitFactories().add(uf);
-        }
-        setEnvironments(new PlanetEnvironments());
-        getEnvironments().binIn(in, data);
-        setDescription(in.readLine("description"));
-        setBaysProvided(in.readInt("baysProvided"));
-        setConquerable(in.readBoolean("conquerable"));
-        setCompProduction(in.readInt("compProduction"));
-        setInfluence(new Influences());
-        getInfluence().binIn(in);
-        setMinPlanetOwnerShip(in.readInt("minplanetownership"));
-        setHomeWorld(in.readBoolean("homeworld"));
-        setOriginalOwner(in.readLine("originalowner"));
-        TreeMap<String, String> map = new TreeMap<>();
-        size = in.readInt("PlanetFlags.size");
-        for (int i = 0; i < size; ++i) {
-            String key;
-            String value;
-            key = in.readLine("PlanetFlags.key");
-            value = in.readLine("PlanetFlags.value");
-            map.put(key, value);
-        }
-        setPlanetFlags(map);
+    /**
+     * @return Returns the name.
+     */
+    public String getName() {
+        return name;
+    }
 
-        setConquestPoints(in.readInt("MaxInfluence"));
+    /**
+     * @param name The name to set.
+     */
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    /**
+     * @return Returns the position.
+     */
+    public Position getPosition() {
+        return position;
+    }
+
+    /**
+     * @return Returns the description.
+     */
+    public String getDescription() {
+        return description;
+    }
+
+    /**
+     * @return Returns the baysProvided.
+     */
+    public int getBaysProvided() {
+        return baysProvided;
+    }
+
+    /**
+     * @param baysProvided The baysProvided to set.
+     */
+    public void setBaysProvided(int baysProvided) {
+        this.baysProvided = baysProvided;
+    }
+
+    /**
+     * @return Returns the conquerable.
+     */
+    public boolean isConquerable() {
+        return conquerable;
+    }
+
+    /**
+     * @return Returns the compProduction.
+     */
+    public int getCompProduction() {
+        return compProduction;
+    }
+
+    /**
+     * @param compProduction The compProduction to set.
+     */
+    public void setCompProduction(int compProduction) {
+        this.compProduction = compProduction;
+    }
+
+    public int getMinPlanetOwnerShip() {
+        return minPlanetOwnerShip;
+    }
+
+    public void setMinPlanetOwnerShip(int ownership) {
+        minPlanetOwnerShip = ownership;
+    }
+
+    public boolean isHomeWorld() {
+        return homeWorld;
+    }
+
+    public void setHomeWorld(boolean homeworld) {
+        homeWorld = homeworld;
+    }
+
+    public String getOriginalOwner() {
+        return originalOwner;
+    }
+
+    public void setOriginalOwner(String owner) {
+        originalOwner = owner;
+    }
+
+    public TreeMap<String, String> getPlanetFlags() {
+        return planetFlags;
+    }
+
+    public void setPlanetFlags(TreeMap<String, String> flags) {
+        planetFlags = flags;
+    }
+
+    /**
+     * @param conquerable The conquerable to set.
+     */
+    public void setConquerable(boolean conquerable) {
+        this.conquerable = conquerable;
+    }
+
+    /**
+     * @param description The description to set.
+     */
+    public void setDescription(String description) {
+        this.description = description;
+    }
+
+    /**
+     * @param position The position to set.
+     */
+    public void setPosition(Position position) {
+        this.position = position;
     }
 
     /**
@@ -552,20 +606,6 @@ public class Planet implements Comparable<Object>, MutableSerializable {
             result.replace(result.length() - 2, result.length(), "<br> <br>");
         }// end if planet has flags
         return result;
-    }
-
-    /**
-     * @param id The id to set.
-     */
-    public void setId(int id) {
-        this.id = id;
-    }
-
-    /**
-     * @return Returns the id.
-     */
-    public int getId() {
-        return id;
     }
 
     public StringBuilder getAdvanceDescription(int level) {
@@ -711,45 +751,5 @@ public class Planet implements Comparable<Object>, MutableSerializable {
 
     public void setBoardSize(Dimension board) {
         BoardSize = board;
-    }
-
-    public int getMinPlanetOwnerShip() {
-        return minPlanetOwnerShip;
-    }
-
-    public void setMinPlanetOwnerShip(int ownership) {
-        minPlanetOwnerShip = ownership;
-    }
-
-    public void setHomeWorld(boolean homeworld) {
-        homeWorld = homeworld;
-    }
-
-    public boolean isHomeWorld() {
-        return homeWorld;
-    }
-
-    public void setOriginalOwner(String owner) {
-        originalOwner = owner;
-    }
-
-    public String getOriginalOwner() {
-        return originalOwner;
-    }
-
-    public TreeMap<String, String> getPlanetFlags() {
-        return planetFlags;
-    }
-
-    public void setPlanetFlags(TreeMap<String, String> flags) {
-        planetFlags = flags;
-    }
-
-    public int getConquestPoints() {
-        return maxConquestPoints;
-    }
-
-    public void setConquestPoints(int points) {
-        maxConquestPoints = Math.max(1, points);
     }
 }

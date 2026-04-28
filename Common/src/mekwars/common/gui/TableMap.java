@@ -31,21 +31,16 @@ public class TableMap extends javax.swing.table.AbstractTableModel implements ja
     // By default, implement TableModel by forwarding all messages
     // to the model.
 
-    public Object getValueAt(int aRow, int aColumn) {
-        return model.getValueAt(aRow, aColumn);
-    }
-
-    @Override
-    public void setValueAt(Object aValue, int aRow, int aColumn) {
-        model.setValueAt(aValue, aRow, aColumn);
-    }
-
     public int getRowCount() {
         return (model == null) ? 0 : model.getRowCount();
     }
 
     public int getColumnCount() {
         return (model == null) ? 0 : model.getColumnCount();
+    }
+
+    public Object getValueAt(int aRow, int aColumn) {
+        return model.getValueAt(aRow, aColumn);
     }
 
     @Override
@@ -61,6 +56,11 @@ public class TableMap extends javax.swing.table.AbstractTableModel implements ja
     @Override
     public boolean isCellEditable(int row, int column) {
         return model.isCellEditable(row, column);
+    }
+
+    @Override
+    public void setValueAt(Object aValue, int aRow, int aColumn) {
+        model.setValueAt(aValue, aRow, aColumn);
     }
 
     //

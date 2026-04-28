@@ -28,15 +28,6 @@ public class BanListCommand implements server.campaign.commands.Command {
 
     public String getSyntax() {return syntax;}
 
-
-    public int getExecutionLevel() {
-        return accessLevel;
-    }
-
-    public void setExecutionLevel(int i) {
-        accessLevel = i;
-    }
-
     public void process(java.util.StringTokenizer command, String Username) {
 
         if (accessLevel != 0) {
@@ -104,5 +95,13 @@ public class BanListCommand implements server.campaign.commands.Command {
         server.campaign.CampaignMain.cm.doSendModMail("NOTE", Username
                                                                     + " checked the ban list.");
         // MWLogger.modLog(Username + " checked the ban list.");
+    }
+
+    public int getExecutionLevel() {
+        return accessLevel;
+    }
+
+    public void setExecutionLevel(int i) {
+        accessLevel = i;
     }
 }

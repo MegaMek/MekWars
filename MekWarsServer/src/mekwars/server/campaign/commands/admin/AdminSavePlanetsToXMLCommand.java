@@ -27,14 +27,6 @@ public class AdminSavePlanetsToXMLCommand implements server.campaign.commands.Co
     int accessLevel = server.MWChatServer.auth.IAuthenticator.ADMIN;
     String syntax = "";
 
-    public int getExecutionLevel() {
-        return accessLevel;
-    }
-
-    public void setExecutionLevel(int i) {
-        accessLevel = i;
-    }
-
     public String getSyntax() {
         return syntax;
     }
@@ -138,5 +130,13 @@ public class AdminSavePlanetsToXMLCommand implements server.campaign.commands.Co
         server.campaign.CampaignMain.cm.toUser("XML saved!", Username, true);
         server.campaign.CampaignMain.cm.doSendModMail("NOTE", Username + " has saved the universe to XML");
 
+    }
+
+    public int getExecutionLevel() {
+        return accessLevel;
+    }
+
+    public void setExecutionLevel(int i) {
+        accessLevel = i;
     }
 }

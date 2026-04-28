@@ -28,11 +28,11 @@ import mekwars.common.util.MWLogger;
  * Class for Client's configuration.
  */
 public class GUIClientConfig implements IClientConfig, Serializable {
-    @Serial
-    private static final long serialVersionUID = 415432969624634387L;
     // VARIABLES
     public static final String IMAGE_PATH = "data/images/";
     public static final String CAMO_PATH = "data/images/camo/";
+    @Serial
+    private static final long serialVersionUID = 415432969624634387L;
     private final java.util.Properties config; // config. player values.
     private java.util.TreeMap<String, javax.swing.ImageIcon> images; // treemap with images
 
@@ -528,34 +528,6 @@ public class GUIClientConfig implements IClientConfig, Serializable {
         }
     }
 
-    /**
-     * Load an image. Used by the CConfig constructor to load client images (eg - player list icons). Only external call
-     * is from the camo dialog and is used to replace the UNITCAMO image with the newly selected imageicon.
-     */
-    public void loadImage(String imagename, String image, int width, int height) {
-        if (imagename.isEmpty()) {
-            return;
-        }
-        try {
-            images.put(image,
-                  new javax.swing.ImageIcon(new javax.swing.ImageIcon(imagename).getImage()
-                                                  .getScaledInstance(width, height, java.awt.Image.SCALE_DEFAULT)));
-        } catch (Exception ex) {
-            MWLogger.errLog(ex);
-        }
-    }
-
-    /**
-     * Get an ImageIcon from the client image cache.
-     *
-     * @param image - name of image to fetch
-     *
-     * @return an ImageIcon. Null if no match.
-     */
-    public javax.swing.ImageIcon getImage(String image) {
-        return images.get(image);
-    }
-
     /* (non-Javadoc)
      * @see client.IClientConfig#getParam(java.lang.String)
      */
@@ -588,45 +560,6 @@ public class GUIClientConfig implements IClientConfig, Serializable {
     public boolean isParam(String param) {
         String tparam = getParam(param);
         return tparam.equalsIgnoreCase("YES") || tparam.equalsIgnoreCase("TRUE") || tparam.equalsIgnoreCase("ON");
-    }
-
-    public boolean isUsingStatusIcons() {
-
-        if (Boolean.parseBoolean(getParam("RIGHTPILOTEJECT"))) {
-            return true;
-        }
-        if (Boolean.parseBoolean(getParam("RIGHTREPAIR"))) {
-            return true;
-        }
-        if (Boolean.parseBoolean(getParam("RIGHTENGINE"))) {
-            return true;
-        }
-        if (Boolean.parseBoolean(getParam("RIGHTEQUIPMENT"))) {
-            return true;
-        }
-        if (Boolean.parseBoolean(getParam("RIGHTARMOR"))) {
-            return true;
-        }
-        if (Boolean.parseBoolean(getParam("RIGHTAMMO"))) {
-            return true;
-        }
-
-        if (Boolean.parseBoolean(getParam("LEFTPILOTEJECT"))) {
-            return true;
-        }
-        if (Boolean.parseBoolean(getParam("LEFTREPAIR"))) {
-            return true;
-        }
-        if (Boolean.parseBoolean(getParam("LEFTENGINE"))) {
-            return true;
-        }
-        if (Boolean.parseBoolean(getParam("LEFTEQUIPMENT"))) {
-            return true;
-        }
-        if (Boolean.parseBoolean(getParam("LEFTARMOR"))) {
-            return true;
-        }
-        return Boolean.parseBoolean(getParam("LEFTAMMO"));
     }
 
     /* (non-Javadoc)
@@ -670,6 +603,73 @@ public class GUIClientConfig implements IClientConfig, Serializable {
         } catch (Exception ex) {
             MWLogger.errLog(ex);
             MWLogger.errLog("Failed saving config file");
+        }
+    }
+
+    /**
+     * Get an ImageIcon from the client image cache.
+     *
+     * @param image - name of image to fetch
+     *
+     * @return an ImageIcon. Null if no match.
+     */
+    public javax.swing.ImageIcon getImage(String image) {
+        return images.get(image);
+    }
+
+    public boolean isUsingStatusIcons() {
+
+        if (Boolean.parseBoolean(getParam("RIGHTPILOTEJECT"))) {
+            return true;
+        }
+        if (Boolean.parseBoolean(getParam("RIGHTREPAIR"))) {
+            return true;
+        }
+        if (Boolean.parseBoolean(getParam("RIGHTENGINE"))) {
+            return true;
+        }
+        if (Boolean.parseBoolean(getParam("RIGHTEQUIPMENT"))) {
+            return true;
+        }
+        if (Boolean.parseBoolean(getParam("RIGHTARMOR"))) {
+            return true;
+        }
+        if (Boolean.parseBoolean(getParam("RIGHTAMMO"))) {
+            return true;
+        }
+
+        if (Boolean.parseBoolean(getParam("LEFTPILOTEJECT"))) {
+            return true;
+        }
+        if (Boolean.parseBoolean(getParam("LEFTREPAIR"))) {
+            return true;
+        }
+        if (Boolean.parseBoolean(getParam("LEFTENGINE"))) {
+            return true;
+        }
+        if (Boolean.parseBoolean(getParam("LEFTEQUIPMENT"))) {
+            return true;
+        }
+        if (Boolean.parseBoolean(getParam("LEFTARMOR"))) {
+            return true;
+        }
+        return Boolean.parseBoolean(getParam("LEFTAMMO"));
+    }
+
+    /**
+     * Load an image. Used by the CConfig constructor to load client images (eg - player list icons). Only external call
+     * is from the camo dialog and is used to replace the UNITCAMO image with the newly selected imageicon.
+     */
+    public void loadImage(String imagename, String image, int width, int height) {
+        if (imagename.isEmpty()) {
+            return;
+        }
+        try {
+            images.put(image,
+                  new javax.swing.ImageIcon(new javax.swing.ImageIcon(imagename).getImage()
+                                                  .getScaledInstance(width, height, java.awt.Image.SCALE_DEFAULT)));
+        } catch (Exception ex) {
+            MWLogger.errLog(ex);
         }
     }
 

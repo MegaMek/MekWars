@@ -22,10 +22,6 @@ public class RestartRepairThreadCommand implements server.campaign.commands.Comm
     int accessLevel = server.MWChatServer.auth.IAuthenticator.ADMIN;
     String syntax = "";
 
-    public int getExecutionLevel() {return accessLevel;}
-
-    public void setExecutionLevel(int i) {accessLevel = i;}
-
     public String getSyntax() {return syntax;}
 
     public void process(java.util.StringTokenizer command, String Username) {
@@ -52,4 +48,8 @@ public class RestartRepairThreadCommand implements server.campaign.commands.Comm
         server.campaign.CampaignMain.cm.doSendModMail("NOTE", Username + " has restared the repair thread");
 
     }
+
+    public int getExecutionLevel() {return accessLevel;}
+
+    public void setExecutionLevel(int i) {accessLevel = i;}
 }

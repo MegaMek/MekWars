@@ -20,11 +20,6 @@ package mekwars.server.campaign.commands.admin;
 public class AddSongCommand implements server.campaign.commands.Command {
 
     int accessLevel = server.MWChatServer.auth.IAuthenticator.ADMIN;
-
-    public int getExecutionLevel() {return accessLevel;}
-
-    public void setExecutionLevel(int i) {accessLevel = i;}
-
     String syntax = "addsong#songname#lyric1#lyric2....";
 
     public String getSyntax() {return syntax;}
@@ -79,4 +74,8 @@ public class AddSongCommand implements server.campaign.commands.Command {
         server.campaign.CampaignMain.cm.doSendModMail("NOTE",
               Username + " has added " + songName + " to the song list!");
     }
+
+    public int getExecutionLevel() {return accessLevel;}
+
+    public void setExecutionLevel(int i) {accessLevel = i;}
 }

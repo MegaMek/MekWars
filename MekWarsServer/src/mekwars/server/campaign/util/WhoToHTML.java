@@ -6,6 +6,11 @@ public class WhoToHTML {
     private java.util.HashMap<String, mekwars.server.campaign.util.WhoToHTML.DataEntry> players = null;
     private String outputPath;
 
+    public WhoToHTML(String outputPath) {
+        players = new java.util.HashMap<String, mekwars.server.campaign.util.WhoToHTML.DataEntry>();
+        this.outputPath = outputPath;
+    }
+
     public void addPlayer(server.campaign.SPlayer p) {
         players.put(p.getName(), new mekwars.server.campaign.util.WhoToHTML.DataEntry(p));
     }
@@ -51,16 +56,11 @@ public class WhoToHTML {
         return;
     }
 
-    public WhoToHTML(String outputPath) {
-        players = new java.util.HashMap<String, mekwars.server.campaign.util.WhoToHTML.DataEntry>();
-        this.outputPath = outputPath;
-    }
-
     private class DataEntry {
         private String html;
 
-        public String getHTML() {
-            return html;
+        public DataEntry(server.campaign.SPlayer p) {
+            setHTML(p.getName(), p.getDutyStatus(), p.getMyHouse().getAbbreviation());
         }
 
         private void setHTML(String name, int status, String houseName) {
@@ -77,8 +77,8 @@ public class WhoToHTML {
             html = output.toString();
         }
 
-        public DataEntry(server.campaign.SPlayer p) {
-            setHTML(p.getName(), p.getDutyStatus(), p.getMyHouse().getAbbreviation());
+        public String getHTML() {
+            return html;
         }
     }
 }

@@ -86,20 +86,16 @@ public class CustomUnitDialog extends javax.swing.JDialog implements java.awt.ev
     private final javax.swing.JCheckBox koCB = new javax.swing.JCheckBox("KO Rolls");
     private final javax.swing.JCheckBox headHitsCB = new javax.swing.JCheckBox("Head Hit Rolls");
     private final javax.swing.JCheckBox explosionsCB = new javax.swing.JCheckBox("Explosion Rolls");
-    private javax.swing.JComboBox<String> targetSelection = new javax.swing.JComboBox<>();
     private final javax.swing.JPanel panTargeting = new javax.swing.JPanel();
-
     private final Entity entity;
-    private boolean okay = false;
-
     private final IClient client;
-    private boolean canDump = false;
-
     private final Client mmClient = new Client("temp", "None", 0);
     private final Pilot pilot;
     private final boolean usingCrits;
-
     private final CUnit unit;
+    private javax.swing.JComboBox<String> targetSelection = new javax.swing.JComboBox<>();
+    private boolean okay = false;
+    private boolean canDump = false;
 
     /** Creates new CustomMechDialog */
     public CustomUnitDialog(IClient client, Entity entity, Pilot pilot, CUnit unit) {
@@ -257,18 +253,25 @@ public class CustomUnitDialog extends javax.swing.JDialog implements java.awt.ev
         setLocationRelativeTo(null);
     }
 
-    private void setupTargetSystems() {
-        String[] names = unit.getTargetSystem().getNonBannedNameArray(client.getData().getBannedTargetingSystems());
+    private void loadAmmo() {
+        client.loadBannedAmmo();
+    }
 
-        targetSelection = new javax.swing.JComboBox<>(names);
-        String currentTargetSystemName = unit.getTargetSystemTypeDesc();
-        for (int i = 0; i < names.length; i++) {
-            if (targetSelection.getItemAt(i).equalsIgnoreCase(currentTargetSystemName)) {
-                targetSelection.setSelectedIndex(i);
-            }
-        }
-        panTargeting.add(new javax.swing.JLabel("Targeting System:"));
-        panTargeting.add(targetSelection);
+    private void setupEdgeSkills() {
+
+        panEdgeSkills.setLayout(new javax.swing.SpringLayout());
+
+        tacCB.setSelected(pilot.getTac());
+        koCB.setSelected(pilot.getKO());
+        explosionsCB.setSelected(pilot.getExplosion());
+        headHitsCB.setSelected(pilot.getHeadHit());
+
+        panEdgeSkills.add(tacCB);
+        panEdgeSkills.add(koCB);
+        panEdgeSkills.add(explosionsCB);
+        panEdgeSkills.add(headHitsCB);
+
+        SpringLayoutHelper.setupSpringGrid(panEdgeSkills, 4);
     }
 
     private void setupMunitions() {
@@ -472,23 +475,6 @@ public class CustomUnitDialog extends javax.swing.JDialog implements java.awt.ev
         }
     }
 
-    private void setupEdgeSkills() {
-
-        panEdgeSkills.setLayout(new javax.swing.SpringLayout());
-
-        tacCB.setSelected(pilot.getTac());
-        koCB.setSelected(pilot.getKO());
-        explosionsCB.setSelected(pilot.getExplosion());
-        headHitsCB.setSelected(pilot.getHeadHit());
-
-        panEdgeSkills.add(tacCB);
-        panEdgeSkills.add(koCB);
-        panEdgeSkills.add(explosionsCB);
-        panEdgeSkills.add(headHitsCB);
-
-        SpringLayoutHelper.setupSpringGrid(panEdgeSkills, 4);
-    }
-
     private void setupMachineGuns() {
 
         int mgRows = 0;
@@ -530,6 +516,33 @@ public class CustomUnitDialog extends javax.swing.JDialog implements java.awt.ev
         } else {
             SpringLayoutHelper.setupSpringGrid(panMachineGuns, 1);
         }
+    }
+
+    private void setupTargetSystems() {
+        String[] names = unit.getTargetSystem().getNonBannedNameArray(client.getData().getBannedTargetingSystems());
+
+        targetSelection = new javax.swing.JComboBox<>(names);
+        String currentTargetSystemName = unit.getTargetSystemTypeDesc();
+        for (int i = 0; i < names.length; i++) {
+            if (targetSelection.getItemAt(i).equalsIgnoreCase(currentTargetSystemName)) {
+                targetSelection.setSelectedIndex(i);
+            }
+        }
+        panTargeting.add(new javax.swing.JLabel("Targeting System:"));
+        panTargeting.add(targetSelection);
+    }
+
+    private boolean ammoAlreadyLoaded(AmmoType ammo) {
+
+        for (AmmoMounted mounted : entity.getAmmo()) {
+            AmmoType currAmmo = mounted.getType();
+
+            if (currAmmo.equals(ammo)) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     public boolean isOkay() {
@@ -593,23 +606,6 @@ public class CustomUnitDialog extends javax.swing.JDialog implements java.awt.ev
         }
 
         setVisible(false);
-    }
-
-    private void loadAmmo() {
-        client.loadBannedAmmo();
-    }
-
-    private boolean ammoAlreadyLoaded(AmmoType ammo) {
-
-        for (AmmoMounted mounted : entity.getAmmo()) {
-            AmmoType currAmmo = mounted.getType();
-
-            if (currAmmo.equals(ammo)) {
-                return true;
-            }
-        }
-
-        return false;
     }
 
     public Entity getEntity() {

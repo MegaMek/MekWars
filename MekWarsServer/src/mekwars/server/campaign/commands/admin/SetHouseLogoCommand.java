@@ -22,10 +22,6 @@ public class SetHouseLogoCommand implements server.campaign.commands.Command {
     int accessLevel = server.MWChatServer.auth.IAuthenticator.ADMIN;
     String syntax = "Faction Name#Logo URL";
 
-    public int getExecutionLevel() {return accessLevel;}
-
-    public void setExecutionLevel(int i) {accessLevel = i;}
-
     public String getSyntax() {return syntax;}
 
     public void process(java.util.StringTokenizer command, String Username) {
@@ -70,4 +66,8 @@ public class SetHouseLogoCommand implements server.campaign.commands.Command {
         server.campaign.CampaignMain.cm.toUser("You set " + h.getName() + "'s logo to " + h.getLogo(), Username, true);
 
     }
+
+    public int getExecutionLevel() {return accessLevel;}
+
+    public void setExecutionLevel(int i) {accessLevel = i;}
 }

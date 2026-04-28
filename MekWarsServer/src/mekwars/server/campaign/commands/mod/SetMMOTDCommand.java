@@ -30,10 +30,6 @@ public class SetMMOTDCommand implements server.campaign.commands.Command {
     int accessLevel = server.MWChatServer.auth.IAuthenticator.MODERATOR;
     String syntax = "Message[Clear to clear]";
 
-    public int getExecutionLevel() {return accessLevel;}
-
-    public void setExecutionLevel(int i) {accessLevel = i;}
-
     public String getSyntax() {return syntax;}
 
     public void process(java.util.StringTokenizer command, String Username) {
@@ -84,4 +80,8 @@ public class SetMMOTDCommand implements server.campaign.commands.Command {
         server.campaign.CampaignMain.cm.toUser("MMOTD set. Use /c mmotd to review.", Username, true);
 
     }//end process()
+
+    public int getExecutionLevel() {return accessLevel;}
+
+    public void setExecutionLevel(int i) {accessLevel = i;}
 }//end setMMOTDCommand.java

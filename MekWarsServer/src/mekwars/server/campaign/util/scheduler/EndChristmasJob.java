@@ -22,12 +22,6 @@ public class EndChristmasJob implements Job {
 
     }
 
-    @Override
-    public void execute(JobExecutionContext context)
-          throws JobExecutionException {
-        server.campaign.util.ChristmasHandler.getInstance().endChristmas();
-    }
-
     /**
      * Get the StartChristmasJob into the scheduler
      */
@@ -62,5 +56,11 @@ public class EndChristmasJob implements Job {
     public static void stop() {
         TriggerKey key = new TriggerKey("endChristmasTrigger", "ChristmasGroup");
         MWScheduler.getInstance().unscheduleJob(key);
+    }
+
+    @Override
+    public void execute(JobExecutionContext context)
+          throws JobExecutionException {
+        server.campaign.util.ChristmasHandler.getInstance().endChristmas();
     }
 }

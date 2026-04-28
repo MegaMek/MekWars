@@ -20,23 +20,15 @@ import mekwars.common.util.MWLogger;
  *
  */
 public class FlagSet {
+    // Flag Types - since they load differently and all
+    public static final int FLAG_TYPE_PLAYER = 0;
+    public static final int FLAG_TYPE_RESULTS = 1;
     protected BitSet flags = new BitSet();
     protected Map<Integer, String> flagNames;
     protected int flagType;
 
-    // Flag Types - since they load differently and all
-    public static final int FLAG_TYPE_PLAYER = 0;
-    public static final int FLAG_TYPE_RESULTS = 1;
-
-    /**
-     * Adds the flag name to the map.  Used so that the SOs can use flag names that make sense to them, rather than
-     * integers
-     *
-     * @param key
-     * @param name
-     */
-    public void setFlagName(int key, String name) {
-        flagNames.put(key, name);
+    public FlagSet() {
+        flagNames = new TreeMap<Integer, String>();
     }
 
     /**
@@ -50,40 +42,6 @@ public class FlagSet {
             v.add(flagNames.get(i));
         }
         return v;
-    }
-
-    /**
-     * Returns the integer key for a given name.  Needed to map between a flag name and the actual bitset
-     *
-     * @param name
-     *
-     * @return integer key ID
-     */
-    protected int getFlagKey(String name) {
-        if (flagNames.isEmpty()) {
-            return -1;
-        }
-        for (int i = 0; i < flagNames.size(); i++) {
-            if (flagNames.get(i).equalsIgnoreCase(name)) {
-                return i;
-            }
-        }
-        return -1;
-    }
-
-    /**
-     * Sets a named flag to true or false
-     *
-     * @param name
-     * @param value
-     */
-    public void setFlag(String name, boolean value) {
-        int flag = getFlagKey(name);
-        if (flag != -1) {
-            flags.set(flag, value);
-        } else {
-            MWLogger.errLog("Unknown Flag checked: " + name);
-        }
     }
 
     /**
@@ -104,28 +62,22 @@ public class FlagSet {
     }
 
     /**
-     * Loads a set of flags from a string.  This will be called only at player logon.  This should only be used to load
-     * the defaults so we can make sure all the proper flags exist.  If you're loading personal flags, use
-     * loadPersonal() instead
+     * Returns the integer key for a given name.  Needed to map between a flag name and the actual bitset
      *
-     * @param data
+     * @param name
+     *
+     * @return integer key ID
      */
-    public void loadDefaults(String data) {
-        if (data.equalsIgnoreCase(" ")) {
-            return;
+    protected int getFlagKey(String name) {
+        if (flagNames.isEmpty()) {
+            return -1;
         }
-        // clear out the existing flags, just in case
-
-        empty();
-        StringTokenizer st = new StringTokenizer(data, "$");
-        while (st.hasMoreTokens()) {
-            String element = st.nextToken();
-            StringTokenizer elementToken = new StringTokenizer(element, "#");
-            String name = elementToken.nextToken();
-            int id = Integer.parseInt(elementToken.nextToken());
-            boolean value = Boolean.parseBoolean(elementToken.nextToken());
-            addFlag(name, id, value);
+        for (int i = 0; i < flagNames.size(); i++) {
+            if (flagNames.get(i).equalsIgnoreCase(name)) {
+                return i;
+            }
         }
+        return -1;
     }
 
     /**
@@ -155,23 +107,18 @@ public class FlagSet {
     }
 
     /**
-     * Removes all player flags
-     */
-    public void empty() {
-        flagNames.clear();
-        flags.clear();
-    }
-
-    /**
-     * Adds a flag to the list
+     * Sets a named flag to true or false
      *
      * @param name
-     * @param id
      * @param value
      */
-    public void addFlag(String name, int id, boolean value) {
-        setFlagName(id, name);
-        setFlag(name, value);
+    public void setFlag(String name, boolean value) {
+        int flag = getFlagKey(name);
+        if (flag != -1) {
+            flags.set(flag, value);
+        } else {
+            MWLogger.errLog("Unknown Flag checked: " + name);
+        }
     }
 
     /**
@@ -187,25 +134,6 @@ public class FlagSet {
         }
         flagNames.remove(id);
         flags.clear(id);
-    }
-
-    /**
-     * Builds the string that is imported by load(String data) above Used server-side only, as I envision it, so I might
-     * move this method to SPlayer
-     *
-     * @return String flag settings - name, ID, and value
-     */
-    public String export() {
-        StringBuilder toReturn = new StringBuilder();
-        if (flagNames.isEmpty()) {
-            return " ";
-        }
-        for (int key : flagNames.keySet()) {
-            String name = flagNames.get(key);
-            String isTrue = Boolean.toString(flags.get(key));
-            toReturn.append(name).append("#").append(key).append("#").append(isTrue).append("$");
-        }
-        return toReturn.toString();
     }
 
     /**
@@ -236,6 +164,24 @@ public class FlagSet {
 
     }
 
+    /**
+     * Builds the string that is imported by load(String data) above Used server-side only, as I envision it, so I might
+     * move this method to SPlayer
+     *
+     * @return String flag settings - name, ID, and value
+     */
+    public String export() {
+        StringBuilder toReturn = new StringBuilder();
+        if (flagNames.isEmpty()) {
+            return " ";
+        }
+        for (int key : flagNames.keySet()) {
+            String name = flagNames.get(key);
+            String isTrue = Boolean.toString(flags.get(key));
+            toReturn.append(name).append("#").append(key).append("#").append(isTrue).append("$");
+        }
+        return toReturn.toString();
+    }
 
     /**
      * Reads data file from disk.  This should be overloaded by any class extending FlagSet to allow for a simple
@@ -260,6 +206,62 @@ public class FlagSet {
         }
     }
 
+    /**
+     * Loads a set of flags from a string.  This will be called only at player logon.  This should only be used to load
+     * the defaults so we can make sure all the proper flags exist.  If you're loading personal flags, use
+     * loadPersonal() instead
+     *
+     * @param data
+     */
+    public void loadDefaults(String data) {
+        if (data.equalsIgnoreCase(" ")) {
+            return;
+        }
+        // clear out the existing flags, just in case
+
+        empty();
+        StringTokenizer st = new StringTokenizer(data, "$");
+        while (st.hasMoreTokens()) {
+            String element = st.nextToken();
+            StringTokenizer elementToken = new StringTokenizer(element, "#");
+            String name = elementToken.nextToken();
+            int id = Integer.parseInt(elementToken.nextToken());
+            boolean value = Boolean.parseBoolean(elementToken.nextToken());
+            addFlag(name, id, value);
+        }
+    }
+
+    /**
+     * Removes all player flags
+     */
+    public void empty() {
+        flagNames.clear();
+        flags.clear();
+    }
+
+    /**
+     * Adds a flag to the list
+     *
+     * @param name
+     * @param id
+     * @param value
+     */
+    public void addFlag(String name, int id, boolean value) {
+        setFlagName(id, name);
+        setFlag(name, value);
+    }
+
+    /**
+     * Adds the flag name to the map.  Used so that the SOs can use flag names that make sense to them, rather than
+     * integers
+     *
+     * @param key
+     * @param name
+     */
+    public void setFlagName(int key, String name) {
+        flagNames.put(key, name);
+    }
+
     public int getAvailableID() {
         int toReturn = -1;
         for (int i = 0; i <= flagNames.size(); i++) {
@@ -268,10 +270,6 @@ public class FlagSet {
             }
         }
         return toReturn;
-    }
-
-    public FlagSet() {
-        flagNames = new TreeMap<Integer, String>();
     }
 
     public Set<Integer> getKeySet() {

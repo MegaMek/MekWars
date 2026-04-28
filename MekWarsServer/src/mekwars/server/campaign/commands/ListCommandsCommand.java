@@ -20,15 +20,7 @@ package mekwars.server.campaign.commands;
 public class ListCommandsCommand implements Command {
 
     int accessLevel = server.MWChatServer.auth.IAuthenticator.REGISTERED;
-
-    public int getExecutionLevel() {return accessLevel;}
-
-    public void setExecutionLevel(int i) {accessLevel = i;}
-
     String syntax = "";
-
-    public String getSyntax() {return syntax;}
-
 
     public void process(java.util.StringTokenizer command, String Username) {
 
@@ -110,4 +102,10 @@ public class ListCommandsCommand implements Command {
         result.append("</table>");
         server.campaign.CampaignMain.cm.toUser(result.toString(), Username, false);
     }
+
+    public int getExecutionLevel() {return accessLevel;}
+
+    public void setExecutionLevel(int i) {accessLevel = i;}
+
+    public String getSyntax() {return syntax;}
 }

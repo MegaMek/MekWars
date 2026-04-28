@@ -70,42 +70,22 @@ public class NewbieHouse extends NonConqHouse {
         return newbBays;
     }
 
-    public String cleanupHangarAndPP() {
-        //Should never be anything in training faction bay.
-        for (int type = 0; type < 3; type++) {
-            for (int size = 0; size < 4; size++) {
-                java.util.Vector<mekwars.server.campaign.SUnit> Weightclass = getHangar(type).elementAt(size);
-                Weightclass.clear();
-            }
-        }
-        return "";
-    }//end cleanup
-
     @Override
-    public SUnit getEntity(int weightclass, int type_id) {
-        SUnit m = super.getEntity(weightclass, type_id);
-        if (m == null) {m = this.getRandomUnit(type_id, weightclass, null).firstElement();}
-        return m;
-    }
-
-    public void setPP(int weight, int val) {
-        //Newbiefaction can never get PP
-        //currentPP.setElementAt(new Integer(0),weight-1);
-    }
-
-    public String potentialHouseProduction() {
-        return "";
-    }
-
-    @Override
-    public int getMoney() {
-        return 0;
+    public boolean isNewbieHouse() {
+        return true;
     }
 
     @Override
     public int getPP(int weight, int type_id) {
         //Always enough components to get raided..
         return 1 * this.getPPCost(weight, type_id);
+    }
+
+    @Override
+    public SUnit getEntity(int weightclass, int type_id) {
+        SUnit m = super.getEntity(weightclass, type_id);
+        if (m == null) {m = this.getRandomUnit(type_id, weightclass, null).firstElement();}
+        return m;
     }
 
     public java.util.Vector<mekwars.server.campaign.SUnit> getRandomUnit(int unitType, int weightClass,
@@ -133,6 +113,44 @@ public class NewbieHouse extends NonConqHouse {
             newbieUnits.add(newbieUnit);
         }
         return newbieUnits;
+    }
+
+    /**
+     * Override SHouse.removePlayer() in order to add a reset removal. Keeps SPlayers who defect out of the reset list.
+     */
+    @Override
+    public void removePlayer(SPlayer p, boolean donateMechs) {
+        super.removePlayer(p, donateMechs);
+        this.removeResetPlayer(p);
+    }
+
+    @Override
+    public int getMoney() {
+        return 0;
+    }
+
+    public void removeResetPlayer(SPlayer p) {
+        this.resetPlayers.remove(p.getName().toLowerCase());
+    }
+
+    public String cleanupHangarAndPP() {
+        //Should never be anything in training faction bay.
+        for (int type = 0; type < 3; type++) {
+            for (int size = 0; size < 4; size++) {
+                java.util.Vector<mekwars.server.campaign.SUnit> Weightclass = getHangar(type).elementAt(size);
+                Weightclass.clear();
+            }
+        }
+        return "";
+    }//end cleanup
+
+    public void setPP(int weight, int val) {
+        //Newbiefaction can never get PP
+        //currentPP.setElementAt(new Integer(0),weight-1);
+    }
+
+    public String potentialHouseProduction() {
+        return "";
     }
 
     /**
@@ -197,32 +215,6 @@ public class NewbieHouse extends NonConqHouse {
 
         //inform him of the positive outcome
         return toSend;
-    }
-
-    public void addResetPlayer(SPlayer p, Integer numResets) {
-        this.resetPlayers.put(p.getName().toLowerCase(), numResets);
-    }
-
-    public void removeResetPlayer(SPlayer p) {
-        this.resetPlayers.remove(p.getName().toLowerCase());
-    }
-
-    public int getResetsRemaining(SPlayer p) {
-        return this.resetPlayers.get(p.getName().toLowerCase());
-    }
-
-    /**
-     * Override SHouse.removePlayer() in order to add a reset removal. Keeps SPlayers who defect out of the reset list.
-     */
-    @Override
-    public void removePlayer(SPlayer p, boolean donateMechs) {
-        super.removePlayer(p, donateMechs);
-        this.removeResetPlayer(p);
-    }
-
-    @Override
-    public boolean isNewbieHouse() {
-        return true;
     }
 
     /**
@@ -393,6 +385,14 @@ public class NewbieHouse extends NonConqHouse {
 
         return toReturn.toString();
     }//end getNewSOLUnits
+
+    public void addResetPlayer(SPlayer p, Integer numResets) {
+        this.resetPlayers.put(p.getName().toLowerCase(), numResets);
+    }
+
+    public int getResetsRemaining(SPlayer p) {
+        return this.resetPlayers.get(p.getName().toLowerCase());
+    }
 
 
 }

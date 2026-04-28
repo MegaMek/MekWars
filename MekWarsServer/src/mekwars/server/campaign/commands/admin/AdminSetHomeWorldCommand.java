@@ -25,10 +25,6 @@ public class AdminSetHomeWorldCommand implements server.campaign.commands.Comman
     int accessLevel = server.MWChatServer.auth.IAuthenticator.ADMIN;
     String syntax = "Planet Name#[true/false]";
 
-    public int getExecutionLevel() {return accessLevel;}
-
-    public void setExecutionLevel(int i) {accessLevel = i;}
-
     public String getSyntax() {return syntax;}
 
     public void process(java.util.StringTokenizer command, String Username) {
@@ -68,4 +64,8 @@ public class AdminSetHomeWorldCommand implements server.campaign.commands.Comman
               Username + " has set " + planet.getName() + "'s homeworld status to: " + homeworld + ".");
         planet.updated();
     }
+
+    public int getExecutionLevel() {return accessLevel;}
+
+    public void setExecutionLevel(int i) {accessLevel = i;}
 }

@@ -35,17 +35,6 @@ public class PainShunt extends SPilotSkill {
     }
 
     @Override
-    public int getBVMod(Entity unit) {
-        return server.campaign.CampaignMain.cm.getIntegerConfig("PainShuntBaseBVMod");
-    }
-
-    @Override
-    public int getBVMod(Entity unit, server.campaign.pilot.SPilot p) {
-        server.campaign.SHouse house = server.campaign.CampaignMain.cm.getHouseFromPartialString(p.getCurrentFaction());
-        return house.getIntegerConfig("PainShuntBaseBVMod");
-    }
-
-    @Override
     public int getChance(int unitType, Pilot p) {
         if (p.getSkills().has(PilotSkill.PainShuntID)) {
             return 0;
@@ -64,6 +53,17 @@ public class PainShunt extends SPilotSkill {
         }
 
         return house.getIntegerConfig(chance);
+    }
+
+    @Override
+    public int getBVMod(Entity unit) {
+        return server.campaign.CampaignMain.cm.getIntegerConfig("PainShuntBaseBVMod");
+    }
+
+    @Override
+    public int getBVMod(Entity unit, server.campaign.pilot.SPilot p) {
+        server.campaign.SHouse house = server.campaign.CampaignMain.cm.getHouseFromPartialString(p.getCurrentFaction());
+        return house.getIntegerConfig("PainShuntBaseBVMod");
     }
 
 }

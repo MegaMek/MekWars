@@ -29,15 +29,9 @@ import common.util.MWLogger;
 public class ForceUpdateCommand implements server.campaign.commands.Command {
 
     int accessLevel = server.MWChatServer.auth.IAuthenticator.MODERATOR;
-
-    public int getExecutionLevel() {return accessLevel;}
-
-    public void setExecutionLevel(int i) {accessLevel = i;}
-
     String syntax = "Update Key#[Player/Dedicated/All]";
 
     public String getSyntax() {return syntax;}
-
 
     public void process(java.util.StringTokenizer command, String Username) {
 
@@ -105,4 +99,8 @@ public class ForceUpdateCommand implements server.campaign.commands.Command {
             }//end for
         }//end hasMore Commands
     }
+
+    public int getExecutionLevel() {return accessLevel;}
+
+    public void setExecutionLevel(int i) {accessLevel = i;}
 }

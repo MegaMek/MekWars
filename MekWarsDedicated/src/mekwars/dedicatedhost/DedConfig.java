@@ -233,54 +233,6 @@ public class DedConfig implements IClientConfig {
     }
 
     /**
-     * Get a config value.
-     */
-    public String getParam(String param) {
-        String tparam = null;
-
-        if (param.endsWith(":")) {
-            param = param.substring(0, param.lastIndexOf(":"));
-        }
-        tparam = config.getProperty(param);
-        if (tparam == null) {
-            tparam = "";
-        }
-        return tparam;
-    }
-
-    /**
-     * Set a config value.
-     */
-    public void setParam(String param, String value) {
-        config.setProperty(param, value);
-    }
-
-    /**
-     * See if a paramater is enabled (YES, TRUE or ON).
-     */
-    public boolean isParam(String param) {
-        String tparam = getParam(param);
-        if (tparam.equalsIgnoreCase("YES") || tparam.equalsIgnoreCase("TRUE") || tparam.equalsIgnoreCase("ON")) {
-            return true;
-        }
-        return false;
-    }
-
-    /**
-     * Return the int value of a given config property. Return a 0 if the property is a non-number. Used mostly by the
-     * misc. mail tab checks.
-     */
-    public int getIntParam(String param) {
-        int toReturn;
-        try {
-            toReturn = Integer.parseInt(getParam(param));
-        } catch (Exception ex) {
-            return 0;
-        }
-        return toReturn;
-    }
-
-    /**
      * Write the config file out to ./data/mwconfig.txt.
      */
     public void saveConfig() {
@@ -307,6 +259,54 @@ public class DedConfig implements IClientConfig {
             MWLogger.errLog(ex);
             MWLogger.errLog("Failed saving config file");
         }
+    }
+
+    /**
+     * Set a config value.
+     */
+    public void setParam(String param, String value) {
+        config.setProperty(param, value);
+    }
+
+    /**
+     * See if a paramater is enabled (YES, TRUE or ON).
+     */
+    public boolean isParam(String param) {
+        String tparam = getParam(param);
+        if (tparam.equalsIgnoreCase("YES") || tparam.equalsIgnoreCase("TRUE") || tparam.equalsIgnoreCase("ON")) {
+            return true;
+        }
+        return false;
+    }
+
+    /**
+     * Get a config value.
+     */
+    public String getParam(String param) {
+        String tparam = null;
+
+        if (param.endsWith(":")) {
+            param = param.substring(0, param.lastIndexOf(":"));
+        }
+        tparam = config.getProperty(param);
+        if (tparam == null) {
+            tparam = "";
+        }
+        return tparam;
+    }
+
+    /**
+     * Return the int value of a given config property. Return a 0 if the property is a non-number. Used mostly by the
+     * misc. mail tab checks.
+     */
+    public int getIntParam(String param) {
+        int toReturn;
+        try {
+            toReturn = Integer.parseInt(getParam(param));
+        } catch (Exception ex) {
+            return 0;
+        }
+        return toReturn;
     }
 
 }

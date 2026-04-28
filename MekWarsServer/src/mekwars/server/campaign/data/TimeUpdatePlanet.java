@@ -28,6 +28,11 @@ import common.util.Position;
  */
 public class TimeUpdatePlanet extends Planet {
 
+    /**
+     * The time at which this data was changed last.
+     */
+    private java.util.Date timestamp;
+
     public TimeUpdatePlanet(int id, String name, Position position, Influences flu) {
         super(id, name, position, flu);
     }
@@ -35,11 +40,6 @@ public class TimeUpdatePlanet extends Planet {
     public TimeUpdatePlanet() {
         super();
     }
-
-    /**
-     * The time at which this data was changed last.
-     */
-    private java.util.Date timestamp;
 
     /**
      * @return Returns the timestamp which this data was last changed.

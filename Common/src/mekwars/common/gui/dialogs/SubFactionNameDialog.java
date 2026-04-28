@@ -42,11 +42,9 @@ public class SubFactionNameDialog extends JDialog implements ActionListener {
     @Serial
     private static final long serialVersionUID = 3552906075410667280L;
     private final House faction;
-
+    private final String okayCommand = "Okay";
     private JList<String> matchingHousesList;
     private JTextField nameField;//input field
-    private final String okayCommand = "Okay";
-
     private String subFactionName = null;
 
     //constructor
@@ -159,6 +157,29 @@ public class SubFactionNameDialog extends JDialog implements ActionListener {
         this.setLocationRelativeTo(client.getMainFrame());
     }
 
+    private void checkMinimumSize() {
+
+        java.awt.Dimension curDim = this.getSize();
+
+        int height;
+        int width;
+        boolean shouldRedraw = false;
+
+        if (curDim.getWidth() < 300) {
+            width = 300;
+            shouldRedraw = true;
+        } else {width = (int) curDim.getWidth();}
+
+        if (curDim.getHeight() < 150) {
+            height = 150;
+            shouldRedraw = true;
+        } else {height = (int) curDim.getHeight();}
+
+        if (shouldRedraw) {
+            this.setSize(new java.awt.Dimension(width, height));
+        }
+
+    }//end checkMinimumSize
 
     /**
      * OK or CANCEL buttons pressed. Handle any changes and then close the dialouge.
@@ -193,35 +214,11 @@ public class SubFactionNameDialog extends JDialog implements ActionListener {
 
     }//end actionPerformed
 
-    private void checkMinimumSize() {
-
-        java.awt.Dimension curDim = this.getSize();
-
-        int height;
-        int width;
-        boolean shouldRedraw = false;
-
-        if (curDim.getWidth() < 300) {
-            width = 300;
-            shouldRedraw = true;
-        } else {width = (int) curDim.getWidth();}
-
-        if (curDim.getHeight() < 150) {
-            height = 150;
-            shouldRedraw = true;
-        } else {height = (int) curDim.getHeight();}
-
-        if (shouldRedraw) {
-            this.setSize(new java.awt.Dimension(width, height));
-        }
-
-    }//end checkMinimumSize
+    public String getSubFactionName() {
+        return this.subFactionName;
+    }
 
     private void setSubFactionName(String name) {
         this.subFactionName = name;
-    }
-
-    public String getSubFactionName() {
-        return this.subFactionName;
     }
 }

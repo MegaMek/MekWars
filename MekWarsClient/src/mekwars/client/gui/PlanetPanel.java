@@ -20,6 +20,7 @@ package mekwars.client.gui;
 import common.House;
 import common.Planet;
 import common.util.StringUtils;
+import mekwars.common.gui.CMapPanel;
 
 /**
  * Draws statistic for a specific CPlanet in the stellar map
@@ -35,28 +36,12 @@ class PlanetPanel extends javax.swing.JPanel {
     private static final long serialVersionUID = -2092699724451823560L;
     private CMapPanel map;
     private client.MWClient mwclient;
-
-    private static class WhiteLabel extends javax.swing.JLabel {
-        /**
-         *
-         */
-        private static final long serialVersionUID = -8911863558331233209L;
-
-        WhiteLabel(String name) {
-            super(name);
-            setOpaque(false);
-            setForeground(java.awt.Color.WHITE);
-        }
-    }
-
     private Planet planet;
     private javax.swing.JLabel name;
     //private JLabel position;
     private javax.swing.JLabel influence;
     //private JLabel terrain;
     private javax.swing.JLabel unitFactories;
-    //private JLabel warehouses;
-
     PlanetPanel(CMapPanel panel, client.MWClient client) {
         mwclient = client;
         setForeground(java.awt.Color.WHITE);
@@ -82,6 +67,7 @@ class PlanetPanel extends javax.swing.JPanel {
         setOpaque(false);
         add(unitFactories);
     }
+    //private JLabel warehouses;
 
     void update(Planet planet) {
         this.planet = planet;
@@ -98,7 +84,7 @@ class PlanetPanel extends javax.swing.JPanel {
         String planetOwner = "Disputed";
         if (faction == null ||
                   planet.getInfluence().getInfluence(faction.getId()) < mwclient.getMinPlanetOwnerShip(planet)) {
-            c = StringUtils.html2Color(mwclient.getserverConfigs("DisputedPlanetColor"));
+            c = StringUtils.html2Color(mwclient.getServerConfigs("DisputedPlanetColor"));
             planetOwner = "Disputed";
         } else {
             c = StringUtils.html2Color(faction.getHouseColor());
@@ -113,7 +99,6 @@ class PlanetPanel extends javax.swing.JPanel {
         map.getMapControl().setBounds(0, 0, 2000, 2000);
     }
 
-
     /**
      * @return Returns the planet.
      */
@@ -126,5 +111,18 @@ class PlanetPanel extends javax.swing.JPanel {
      */
     public void setPlanet(Planet planet) {
         this.planet = planet;
+    }
+
+    private static class WhiteLabel extends javax.swing.JLabel {
+        /**
+         *
+         */
+        private static final long serialVersionUID = -8911863558331233209L;
+
+        WhiteLabel(String name) {
+            super(name);
+            setOpaque(false);
+            setForeground(java.awt.Color.WHITE);
+        }
     }
 }

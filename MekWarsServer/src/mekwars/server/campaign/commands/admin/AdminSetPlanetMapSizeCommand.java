@@ -22,10 +22,6 @@ public class AdminSetPlanetMapSizeCommand implements server.campaign.commands.Co
     int accessLevel = server.MWChatServer.auth.IAuthenticator.ADMIN;
     String syntax = "Planet Name#X#Y";
 
-    public int getExecutionLevel() {return accessLevel;}
-
-    public void setExecutionLevel(int i) {accessLevel = i;}
-
     public String getSyntax() {return syntax;}
 
     public void process(java.util.StringTokenizer command, String Username) {
@@ -59,4 +55,8 @@ public class AdminSetPlanetMapSizeCommand implements server.campaign.commands.Co
               Username + " has set the mapsize for planet " + planet.getName());
 
     }
+
+    public int getExecutionLevel() {return accessLevel;}
+
+    public void setExecutionLevel(int i) {accessLevel = i;}
 }

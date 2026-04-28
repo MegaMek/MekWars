@@ -124,6 +124,20 @@ public class CArmy extends Army {
         legalOperations = ts;
     }
 
+    public double forceSizeModifier(double opposingForceSize) {
+        double myForceSize = 0;
+
+        this.setRawForceSize(0);
+        myForceSize = this.getRawForceSize();
+
+        if (myForceSize > opposingForceSize) {
+            return ((opposingForceSize / myForceSize) + (myForceSize / opposingForceSize)) - 1;
+        }
+
+        return 1.0;
+
+    }
+
     /**
      * @return returns the raw force size (Force Mod Rule)
      */
@@ -157,20 +171,6 @@ public class CArmy extends Army {
      */
     public void setRawForceSize(float rfs) {
         rawForceSize = rfs;
-    }
-
-    public double forceSizeModifier(double opposingForceSize) {
-        double myForceSize = 0;
-
-        this.setRawForceSize(0);
-        myForceSize = this.getRawForceSize();
-
-        if (myForceSize > opposingForceSize) {
-            return ((opposingForceSize / myForceSize) + (myForceSize / opposingForceSize)) - 1;
-        }
-
-        return 1.0;
-
     }
 
     public float getTotalTonnage() {

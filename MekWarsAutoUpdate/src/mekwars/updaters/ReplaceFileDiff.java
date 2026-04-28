@@ -10,6 +10,11 @@ import java.util.StringTokenizer;
 import mekwars.updaters.utils.IOUtil;
 
 public class ReplaceFileDiff extends FileDiff {
+    public String localFileOffset_;
+    public String remoteFileOffset_;
+    public Version version_;
+    private boolean tempFileUpToDate_ = false;
+
     public ReplaceFileDiff(FileInfo fileInfo, Version version) {
         localFileOffset_ = fileInfo.getLocalOffset();
         remoteFileOffset_ = fileInfo.getRemoteOffset();
@@ -156,10 +161,5 @@ public class ReplaceFileDiff extends FileDiff {
     public void setTempFileUpToDate(boolean isLatest) {
         tempFileUpToDate_ = isLatest;
     }
-
-    private boolean tempFileUpToDate_ = false;
-    public String localFileOffset_;
-    public String remoteFileOffset_;
-    public Version version_;
     // public Main jar_ = new Main(System.out, System.out, "jar");
 }

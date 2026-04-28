@@ -93,7 +93,7 @@ public class InfluencePanel extends JPanel {
                                            " needed to refresh a factory. Disabled if set to zero.");
         baseTextField.setName("FluToRefreshFactory");
         influenceSpring1.add(baseTextField);
-        
+
         SpringLayoutHelper.setupSpringGrid(influenceSpring1, 2);
 
         // then set up spring2

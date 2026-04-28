@@ -20,8 +20,14 @@ import common.Unit;
 import common.campaign.operations.Operation;
 import common.util.MWLogger;
 import common.util.TokenReader;
-import megamek.common.*;
+import megamek.common.battleArmor.BattleArmor;
 import megamek.common.battlevalue.BvMultiplier;
+import megamek.common.equipment.AmmoType;
+import megamek.common.equipment.Mounted;
+import megamek.common.units.Aero;
+import megamek.common.units.Infantry;
+import megamek.common.units.Tank;
+import megamek.common.units.VTOL;
 
 /**
  * @author Helge Richter
@@ -48,13 +54,6 @@ public class SArmy extends Army {
         setID(id);
         opponents = new java.util.Vector<SArmy>(1, 1);
         playerName = ownerName;
-    }
-
-    // METHODS
-    public void addUnit(SUnit u) {
-        super.addUnit(u);
-        super.setBV(0);
-        setRawForceSize(0);
     }
 
     public void addUnit(SUnit u, int position) {
@@ -612,6 +611,67 @@ public class SArmy extends Army {
         }
     }
 
+    @Override
+    public void setName(String name) {
+        super.setName(name);
+
+        if (name.trim().length() >= 0) {
+            CampaignMain.cm.toUser("PL|RNA|" + getID() + "#" + name, getPlayerName(), false);
+        }
+    }
+
+    @Override
+    public void setLowerLimiter(int lowerLimit) {
+
+        int buffer = CampaignMain.cm.getIntegerConfig("LowerLimitBuffer");
+        if (lowerLimit < buffer && lowerLimit != Army.NO_LIMIT) {
+            lowerLimit = buffer;
+            CampaignMain.cm.toUser("Army " + getID() + "'s lower limit set to " + buffer + ".", getPlayerName(), true);
+            CampaignMain.cm.toUser("PL|SAB|" + getID() + "#" + getLowerLimiter() + "#" + getUpperLimiter(),
+                  getPlayerName(),
+                  false);
+        }
+
+        super.setLowerLimiter(lowerLimit);
+    }
+
+    @Override
+    public void setUpperLimiter(int upperLimit) {
+
+        int buffer = CampaignMain.cm.getIntegerConfig("UpperLimitBuffer");
+        if (upperLimit < buffer && upperLimit != Army.NO_LIMIT) {
+            upperLimit = buffer;
+            CampaignMain.cm.toUser("Army " + getID() + "'s upper limit set to " + buffer + ".", getPlayerName(), true);
+            CampaignMain.cm.toUser("PL|SAB|" + getID() + "#" + getLowerLimiter() + "#" + getUpperLimiter(),
+                  getPlayerName(),
+                  false);
+
+        }
+
+        super.setUpperLimiter(upperLimit);
+    }
+
+    // METHODS
+    public void addUnit(SUnit u) {
+        super.addUnit(u);
+        super.setBV(0);
+        setRawForceSize(0);
+    }
+
+    /*
+     * Playername is stored by contructor in leiu of a complete backreference to
+     * the SPlayer who owns the army (and, in turn, back to his faction). It is
+     * used by checkattack to generate readible output like "Liao(4),
+     * Davion(3)."
+     *
+     * Also used to generate lists of players who should receive notification
+     * when SArmy's owner deactivates or joins a game and moves to
+     * STATUS_FIGHTING.
+     */
+    public String getPlayerName() {
+        return playerName;
+    }
+
     public String getMinimalInfo() {
         return getDescription(true);
     }
@@ -629,15 +689,15 @@ public class SArmy extends Army {
         return legalOperations;
     }
 
+    public java.util.Vector<SArmy> getOpponents() {
+        return opponents;
+    }
+
     /*
      * Opponent Methods. Used to get, set, add and remove opposing forces.
      */
     public void setOpponents(java.util.Vector<SArmy> v) {
         opponents = v;
-    }
-
-    public java.util.Vector<SArmy> getOpponents() {
-        return opponents;
     }
 
     public void addOpponent(mekwars.server.campaign.SArmy a) {
@@ -662,15 +722,6 @@ public class SArmy extends Army {
         }
     }// end removeOpponent()
 
-    @Override
-    public void setName(String name) {
-        super.setName(name);
-
-        if (name.trim().length() >= 0) {
-            CampaignMain.cm.toUser("PL|RNA|" + getID() + "#" + name, getPlayerName(), false);
-        }
-    }
-
     public void setPlayerLock(int aid, boolean lock) {
         if (lock) {
             super.playerLockArmy();
@@ -685,20 +736,6 @@ public class SArmy extends Army {
     public void toggleArmyDisabled() {
         super.toggleArmyDisabled();
         CampaignMain.cm.toUser("PL|TAD|" + getID(), getPlayerName(), false);
-    }
-
-    /*
-     * Playername is stored by contructor in leiu of a complete backreference to
-     * the SPlayer who owns the army (and, in turn, back to his faction). It is
-     * used by checkattack to generate readible output like "Liao(4),
-     * Davion(3)."
-     *
-     * Also used to generate lists of players who should receive notification
-     * when SArmy's owner deactivates or joins a game and moves to
-     * STATUS_FIGHTING.
-     */
-    public String getPlayerName() {
-        return playerName;
     }
 
     /**
@@ -728,6 +765,25 @@ public class SArmy extends Army {
 
         // same owner and ID number, so same army.
         return true;
+    }
+
+    public void checkLegalRatio(String Username) {
+
+        if (CampaignMain.cm.getBooleanConfig("AllowRatios")) {
+            if (!isLegalMekToInfantryRatio()) {
+                CampaignMain.cm.toUser(
+                      "This army has an Illegal Mek to Infantry ratio and will not be allowed to participate in games.",
+                      Username,
+                      true);
+            } else if (!isLegalMekToVehicleRatio()) {
+                CampaignMain.cm.toUser(
+                      "This army has an Illegal Mek to Vehicle ratio and will not be allowed to participate in games.",
+                      Username,
+                      true);
+            } else {
+                CampaignMain.cm.toUser("Army Ratio Checks", Username, true);
+            }
+        }
     }
 
     private boolean isLegalMekToInfantryRatio() {
@@ -782,56 +838,6 @@ public class SArmy extends Army {
             return false;
         }
         return true;
-    }
-
-    public void checkLegalRatio(String Username) {
-
-        if (CampaignMain.cm.getBooleanConfig("AllowRatios")) {
-            if (!isLegalMekToInfantryRatio()) {
-                CampaignMain.cm.toUser(
-                      "This army has an Illegal Mek to Infantry ratio and will not be allowed to participate in games.",
-                      Username,
-                      true);
-            } else if (!isLegalMekToVehicleRatio()) {
-                CampaignMain.cm.toUser(
-                      "This army has an Illegal Mek to Vehicle ratio and will not be allowed to participate in games.",
-                      Username,
-                      true);
-            } else {
-                CampaignMain.cm.toUser("Army Ratio Checks", Username, true);
-            }
-        }
-    }
-
-    @Override
-    public void setLowerLimiter(int lowerLimit) {
-
-        int buffer = CampaignMain.cm.getIntegerConfig("LowerLimitBuffer");
-        if (lowerLimit < buffer && lowerLimit != Army.NO_LIMIT) {
-            lowerLimit = buffer;
-            CampaignMain.cm.toUser("Army " + getID() + "'s lower limit set to " + buffer + ".", getPlayerName(), true);
-            CampaignMain.cm.toUser("PL|SAB|" + getID() + "#" + getLowerLimiter() + "#" + getUpperLimiter(),
-                  getPlayerName(),
-                  false);
-        }
-
-        super.setLowerLimiter(lowerLimit);
-    }
-
-    @Override
-    public void setUpperLimiter(int upperLimit) {
-
-        int buffer = CampaignMain.cm.getIntegerConfig("UpperLimitBuffer");
-        if (upperLimit < buffer && upperLimit != Army.NO_LIMIT) {
-            upperLimit = buffer;
-            CampaignMain.cm.toUser("Army " + getID() + "'s upper limit set to " + buffer + ".", getPlayerName(), true);
-            CampaignMain.cm.toUser("PL|SAB|" + getID() + "#" + getLowerLimiter() + "#" + getUpperLimiter(),
-                  getPlayerName(),
-                  false);
-
-        }
-
-        super.setUpperLimiter(upperLimit);
     }
 
     public boolean isUnitInArmy(SUnit unit) {

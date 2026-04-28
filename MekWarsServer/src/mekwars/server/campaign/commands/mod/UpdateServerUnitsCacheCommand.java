@@ -26,14 +26,6 @@ public class UpdateServerUnitsCacheCommand implements server.campaign.commands.C
     int accessLevel = server.MWChatServer.auth.IAuthenticator.MODERATOR;
     String syntax = "Player Name";
 
-    public int getExecutionLevel() {
-        return accessLevel;
-    }
-
-    public void setExecutionLevel(int i) {
-        accessLevel = i;
-    }
-
     public String getSyntax() {
         return syntax;
     }
@@ -64,5 +56,13 @@ public class UpdateServerUnitsCacheCommand implements server.campaign.commands.C
 
         server.campaign.CampaignMain.cm.doSendModMail("NOTE", Username + " has updated the servers unit cache.");
 
+    }
+
+    public int getExecutionLevel() {
+        return accessLevel;
+    }
+
+    public void setExecutionLevel(int i) {
+        accessLevel = i;
     }
 }

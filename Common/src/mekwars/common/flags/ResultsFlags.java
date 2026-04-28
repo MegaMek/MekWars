@@ -7,37 +7,14 @@ import java.util.TreeMap;
 import mekwars.common.util.MWLogger;
 
 public class ResultsFlags extends PlayerFlags {
-    private final Map<Integer, Integer> flagsApplyTo;
-
     public static final int APPLIES_TO_ATTACKER = 1;
     public static final int APPLIES_TO_DEFENDER = 2;
+    private final Map<Integer, Integer> flagsApplyTo;
 
-    /**
-     * Builds the string that is imported by load(String data) above Used server-side only, as I envision it, so I might
-     * move this method to SPlayer
-     *
-     * @return String flag settings - name, ID, and value
-     */
-    public String export() {
-        StringBuilder toReturn = new StringBuilder();
-        if (flagNames.isEmpty()) {
-            return "";
-        }
-        toReturn.append(this.flagType).append("$");
-        for (int key : flagNames.keySet()) {
-            String name = flagNames.get(key);
-            String isTrue = Boolean.toString(flags.get(key));
-            String appliesTo = Integer.toString(flagsApplyTo.get(key));
-            toReturn.append(name)
-                  .append("#")
-                  .append(key)
-                  .append("#")
-                  .append(isTrue)
-                  .append("#")
-                  .append(appliesTo)
-                  .append("$");
-        }
-        return toReturn.toString();
+    public ResultsFlags() {
+        super();
+        flagsApplyTo = new TreeMap<Integer, Integer>();
+        flagType = FLAG_TYPE_RESULTS;
     }
 
     /**
@@ -59,22 +36,6 @@ public class ResultsFlags extends PlayerFlags {
         }
         flagsApplyTo.put(id, appliesTo);
         //MWLogger.debugLog("Setting flag " + name + "(id: " + id + ") to value " + value);
-    }
-
-    /**
-     * Clears a single flag, removing it from the names and flags
-     *
-     * @param name
-     */
-    public void clearFlag(String name) {
-        int id = getFlagKey(name);
-        if (id == -1) {
-            // invalid name
-            return;
-        }
-        flagNames.remove(id);
-        flags.clear(id);
-        flagsApplyTo.remove(id);
     }
 
     public boolean flagAppliesToDefender(String name) {
@@ -138,7 +99,6 @@ public class ResultsFlags extends PlayerFlags {
         }
     }
 
-
     /**
      * Sets a named flag to true or false
      *
@@ -154,10 +114,48 @@ public class ResultsFlags extends PlayerFlags {
         }
     }
 
-    public ResultsFlags() {
-        super();
-        flagsApplyTo = new TreeMap<Integer, Integer>();
-        flagType = FLAG_TYPE_RESULTS;
+    /**
+     * Clears a single flag, removing it from the names and flags
+     *
+     * @param name
+     */
+    public void clearFlag(String name) {
+        int id = getFlagKey(name);
+        if (id == -1) {
+            // invalid name
+            return;
+        }
+        flagNames.remove(id);
+        flags.clear(id);
+        flagsApplyTo.remove(id);
+    }
+
+    /**
+     * Builds the string that is imported by load(String data) above Used server-side only, as I envision it, so I might
+     * move this method to SPlayer
+     *
+     * @return String flag settings - name, ID, and value
+     */
+    public String export() {
+        StringBuilder toReturn = new StringBuilder();
+        if (flagNames.isEmpty()) {
+            return "";
+        }
+        toReturn.append(this.flagType).append("$");
+        for (int key : flagNames.keySet()) {
+            String name = flagNames.get(key);
+            String isTrue = Boolean.toString(flags.get(key));
+            String appliesTo = Integer.toString(flagsApplyTo.get(key));
+            toReturn.append(name)
+                  .append("#")
+                  .append(key)
+                  .append("#")
+                  .append(isTrue)
+                  .append("#")
+                  .append(appliesTo)
+                  .append("$");
+        }
+        return toReturn.toString();
     }
 
 }

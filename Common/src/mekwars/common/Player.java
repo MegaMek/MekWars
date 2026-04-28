@@ -26,15 +26,15 @@ import mekwars.common.flags.PlayerFlags;
 
 public class Player implements IPlayer {
 
+    protected PlayerFlags flags = new PlayerFlags();
+    protected PlayerFlags defaultPlayerFlags = new PlayerFlags(); // This is only going to be set for staff
+    protected int mekToken = 0; // A counter for how many meks a player is allowed to create in free build
+    protected int bvTracker = 0; // used to track hangar BV in mini campaigns
     private int technicians = 0;//@urgru 7/17/04
     private int currentTechPayment = -1;//num Cbills owed to techs after games
     private boolean isInvisible = false;//Evil command for Big brother err admins.
     private int teamNumber = -1;
     private boolean autoReorderParts = false;
-    protected PlayerFlags flags = new PlayerFlags();
-    protected PlayerFlags defaultPlayerFlags = new PlayerFlags(); // This is only going to be set for staff
-    protected int mekToken = 0; // A counter for how many meks a player is allowed to create in free build
-    protected int bvTracker = 0; // used to track hangar BV in mini campaigns
 
     /**
      * @return bvTracker value
@@ -110,21 +110,21 @@ public class Player implements IPlayer {
     }
 
     /**
-     * Sets that a player now has the invisible flag. Of course, players with access levels >= this player will still
-     * beable to see them.
-     *
-     */
-    public void setInvisible(boolean invisible) {
-        isInvisible = invisible;
-    }
-
-    /**
      * does the player have the invisible flag.
      *
      * @return true/false.
      */
     public boolean isInvisible() {
         return isInvisible;
+    }
+
+    /**
+     * Sets that a player now has the invisible flag. Of course, players with access levels >= this player will still
+     * beable to see them.
+     *
+     */
+    public void setInvisible(boolean invisible) {
+        isInvisible = invisible;
     }
 
     /**
@@ -144,19 +144,19 @@ public class Player implements IPlayer {
     }
 
     /**
-     * Sets if the player wants to reorder parts.
-     *
-     */
-    public void setAutoReorder(boolean reorder) {
-        this.autoReorderParts = reorder;
-    }
-
-    /**
      * Returns if the player has auto reorder parts turned on.
      *
      */
     public boolean getAutoReorder() {
         return this.autoReorderParts;
+    }
+
+    /**
+     * Sets if the player wants to reorder parts.
+     *
+     */
+    public void setAutoReorder(boolean reorder) {
+        this.autoReorderParts = reorder;
     }
 
     /**

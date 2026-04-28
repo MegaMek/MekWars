@@ -24,10 +24,6 @@ public class RemovePartsCommand implements server.campaign.commands.Command {
     int accessLevel = server.MWChatServer.auth.IAuthenticator.MODERATOR;
     String syntax = "Player Name#Part Name#Amount";
 
-    public int getExecutionLevel() {return accessLevel;}
-
-    public void setExecutionLevel(int i) {accessLevel = i;}
-
     public String getSyntax() {return syntax;}
 
     public void process(java.util.StringTokenizer command, String Username) {
@@ -67,4 +63,8 @@ public class RemovePartsCommand implements server.campaign.commands.Command {
         server.campaign.CampaignMain.cm.doSendModMail("NOTE",
               Username + " has removed " + amount + " " + part + " from " + p.getName() + ".");
     }
+
+    public int getExecutionLevel() {return accessLevel;}
+
+    public void setExecutionLevel(int i) {accessLevel = i;}
 }

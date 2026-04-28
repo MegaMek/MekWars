@@ -20,11 +20,10 @@ import mekwars.common.util.SpringLayoutHelper;
 
 public class BannedTargetingDialog implements ActionListener {
 
-    private final JDialog dialog;
-    private final IClient client;
     private final static String okayCommand = "Add";
     private final static String cancelCommand = "Close";
-
+    private final JDialog dialog;
+    private final IClient client;
     private final String windowName = "Server Banned Target System Editor";
 
     private final HashMap<Integer, JCheckBox> newBans = new HashMap<>();
@@ -91,6 +90,10 @@ public class BannedTargetingDialog implements ActionListener {
         dialog.setVisible(true);
     }
 
+    private boolean getTargetSystemBanStatus(int type) {
+        return client.getTargetSystemBanStatus(type);
+    }
+
     public void actionPerformed(ActionEvent e) {
         String command = e.getActionCommand();
         if (command.equals(okayCommand)) {
@@ -109,9 +112,5 @@ public class BannedTargetingDialog implements ActionListener {
             dialog.dispose();
         }
 
-    }
-
-    private boolean getTargetSystemBanStatus(int type) {
-        return client.getTargetSystemBanStatus(type);
     }
 }

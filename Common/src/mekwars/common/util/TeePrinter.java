@@ -35,12 +35,12 @@ public final class TeePrinter extends Writer {
     }
 
     /**
-     * @see java.io.Writer#close()
+     * @see java.io.Writer#write(char[], int, int)
      */
     @Override
-    public void close() throws IOException {
-        tee.close();
-        too.close();
+    public void write(@Nonnull char[] charBuff, int off, int len) throws IOException {
+        tee.write(charBuff, off, len);
+        too.write(charBuff, off, len);
     }
 
     /**
@@ -53,11 +53,11 @@ public final class TeePrinter extends Writer {
     }
 
     /**
-     * @see java.io.Writer#write(char[], int, int)
+     * @see java.io.Writer#close()
      */
     @Override
-    public void write(@Nonnull char[] charBuff, int off, int len) throws IOException {
-        tee.write(charBuff, off, len);
-        too.write(charBuff, off, len);
+    public void close() throws IOException {
+        tee.close();
+        too.close();
     }
 }

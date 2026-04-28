@@ -32,7 +32,7 @@ public class AdminSpoofCommand implements server.campaign.commands.Command {
     public int getExecutionLevel() {return accessLevel;}
 
     public void setExecutionLevel(int i) {accessLevel = i;}//cannot be changed
-
+ 
     public void process(java.util.StringTokenizer command, String Username) {
 
         //access level check

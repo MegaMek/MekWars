@@ -41,6 +41,9 @@ public class CamoSelectionDialog extends javax.swing.JDialog
      */
     @Serial
     private static final long serialVersionUID = 491308053668750747L;
+    private final String originalCamo;
+    private final IClient client;
+    private final String okayCommand = "Okay";
     // IVARS
     private java.util.TreeMap<String, Object> camos;
     private javax.swing.JList<String> camoList;
@@ -48,9 +51,6 @@ public class CamoSelectionDialog extends javax.swing.JDialog
     private MekInfo newCamo;// mechinfo is a JPanel extension
     private Entity oldEntity;
     private Entity newEntity;
-    private final String originalCamo;
-    private final IClient client;
-    private final String okayCommand = "Okay";
 
     // CONSTRUCTOR
     public CamoSelectionDialog(javax.swing.JFrame parent, IClient client) {

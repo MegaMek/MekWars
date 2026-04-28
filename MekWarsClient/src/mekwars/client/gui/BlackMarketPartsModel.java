@@ -23,29 +23,22 @@ import common.BMEquipment;
 
 public class BlackMarketPartsModel extends javax.swing.table.AbstractTableModel {
 
-    private static final long serialVersionUID = -4312857440681697117L;
-    public client.MWClient mwclient;
-    client.campaign.CCampaign theCampaign;
-    public java.util.TreeMap<String, BMEquipment> components; // this collection is backed
-    // by the main map, so it
-    // should always be good
-    public Object[] sortedComponents = null; // not really though, sort is
-    // handled elsewhere...
-    private String type = "";
-
     public final static int PART = 0;
     public final static int TECH = 1;
     public final static int COST = 2;
     public final static int AMOUNT = 3;
     public final static int INTERNALPART = 4;
-
+    private static final long serialVersionUID = -4312857440681697117L;
     final String[] columnNames = { "Part", "Tech", "Cost", "Amount", };
-
     final String[] longValues = { "XXXXXX-XXXX-XXXXXX", "XXXXXXXXX", "XXXXXXXXX", "XXXXXXXXX", };
-
-    public int getColumnCount() {
-        return columnNames.length;
-    }
+    public client.MWClient mwclient;
+    public java.util.TreeMap<String, BMEquipment> components; // this collection is backed
+    // by the main map, so it
+    // should always be good
+    public Object[] sortedComponents = null; // not really though, sort is
+    client.campaign.CCampaign theCampaign;
+    // handled elsewhere...
+    private String type = "";
 
     public BlackMarketPartsModel(client.MWClient client, String type) {
         mwclient = client;
@@ -54,13 +47,6 @@ public class BlackMarketPartsModel extends javax.swing.table.AbstractTableModel 
         components = theCampaign.getBlackMarketParts();
 
         filter();
-    }
-
-    public void refreshModel() {
-        // do a resort
-        // this.sortedComponents = this.components.values().toArray();
-        filter();
-        fireTableDataChanged();
     }
 
     private void filter() {
@@ -76,6 +62,13 @@ public class BlackMarketPartsModel extends javax.swing.table.AbstractTableModel 
         if (tempTree.size() > 0) {
             sortedComponents = tempTree.values().toArray();
         }
+    }
+
+    public void refreshModel() {
+        // do a resort
+        // this.sortedComponents = this.components.values().toArray();
+        filter();
+        fireTableDataChanged();
     }
 
     public void initColumnSizes(javax.swing.JTable table) {
@@ -100,14 +93,8 @@ public class BlackMarketPartsModel extends javax.swing.table.AbstractTableModel 
         return sortedComponents.length;
     }
 
-    @Override
-    public String getColumnName(int col) {
-        return (columnNames[col]);
-    }
-
-    @Override
-    public boolean isCellEditable(int row, int col) {
-        return false;
+    public int getColumnCount() {
+        return columnNames.length;
     }
 
     public Object getValueAt(int row, int col) {
@@ -125,7 +112,7 @@ public class BlackMarketPartsModel extends javax.swing.table.AbstractTableModel 
                 java.text.DecimalFormat df = new java.text.DecimalFormat("#,###,###,##0.00");
                 return df.format(bme.getCost());
             case TECH:
-                return bme.getTech(Integer.parseInt(mwclient.getserverConfigs("CampaignYear")));
+                return bme.getTech(Integer.parseInt(mwclient.getServerConfigs("CampaignYear")));
             case AMOUNT:
                 if (mwclient.getPlayer().getPartsCache().getPartsCritCount(bme.getEquipmentInternalName()) < 1) {
                     return bme.getAmount();
@@ -138,6 +125,16 @@ public class BlackMarketPartsModel extends javax.swing.table.AbstractTableModel 
                 return bme.getEquipmentInternalName();
         }
         return "";
+    }
+
+    @Override
+    public String getColumnName(int col) {
+        return (columnNames[col]);
+    }
+
+    @Override
+    public boolean isCellEditable(int row, int col) {
+        return false;
     }
 
     public mekwars.client.gui.BlackMarketPartsModel.Renderer getRenderer() {
@@ -158,7 +155,7 @@ public class BlackMarketPartsModel extends javax.swing.table.AbstractTableModel 
         public java.awt.Component getTableCellRendererComponent(javax.swing.JTable table, Object value,
               boolean isSelected, boolean hasFocus, int row, int column) {
             java.awt.Component d = super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
-            int year = Integer.parseInt(mwclient.getserverConfigs("CampaignYear"));
+            int year = Integer.parseInt(mwclient.getServerConfigs("CampaignYear"));
             javax.swing.JLabel c = new javax.swing.JLabel(); // use a new label for everything (should
             // be made better later)
             c.setOpaque(true);

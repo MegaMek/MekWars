@@ -13,8 +13,14 @@ import java.net.URISyntaxException;
 import mekwars.updaters.utils.IOUtil;
 
 public class Repository {
+    String urlBase_;
+
     public Repository(String urlBase) {
         urlBase_ = fixURL(urlBase) + "/";
+    }
+
+    public static String fixURL(String url) {
+        return IOUtil.trimFileSeparator(url);
     }
 
     public Version getLatestVersion() throws IOException, URISyntaxException {
@@ -22,10 +28,6 @@ public class Repository {
 
         BufferedReader verFile = getCharFile("LatestVersion.ver");
         return new Version(this, verFile.readLine());
-    }
-
-    public FileDiff getDiff(FileInfo fileDiffInfo, Version version) {
-        return new ReplaceFileDiff(fileDiffInfo, version);
     }
 
     public BufferedReader getCharFile(String filename) throws IOException, URISyntaxException {
@@ -42,10 +44,8 @@ public class Repository {
         return new BufferedInputStream(new URI(url).toURL().openStream());
     }
 
-    public static String fixURL(String url) {
-        return IOUtil.trimFileSeparator(url);
+    public FileDiff getDiff(FileInfo fileDiffInfo, Version version) {
+        return new ReplaceFileDiff(fileDiffInfo, version);
     }
-
-    String urlBase_;
 }
 

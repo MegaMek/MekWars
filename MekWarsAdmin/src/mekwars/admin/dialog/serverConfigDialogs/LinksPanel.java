@@ -33,6 +33,11 @@ public class LinksPanel extends JPanel {
     @Serial
     private static final long serialVersionUID = -4629994177197981829L;
 
+    public LinksPanel() {
+        super();
+        init();
+    }
+
     private void init() {
 
         setLayout(new VerticalLayout(5, VerticalLayout.CENTER, VerticalLayout.TOP));
@@ -187,10 +192,5 @@ public class LinksPanel extends JPanel {
         add(panel4);
         //add(panel5);
 
-    }
-
-    public LinksPanel() {
-        super();
-        init();
     }
 }

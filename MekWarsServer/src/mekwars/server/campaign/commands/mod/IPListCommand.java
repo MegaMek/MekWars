@@ -27,10 +27,6 @@ public class IPListCommand implements server.campaign.commands.Command {
     int accessLevel = server.MWChatServer.auth.IAuthenticator.MODERATOR;
     String syntax = "";
 
-    public int getExecutionLevel() {return accessLevel;}
-
-    public void setExecutionLevel(int i) {accessLevel = i;}
-
     public String getSyntax() {return syntax;}
 
     public void process(java.util.StringTokenizer command, String Username) {
@@ -52,4 +48,8 @@ public class IPListCommand implements server.campaign.commands.Command {
         for (server.MWClientInfo m : sorted) {result += m.getName() + ": " + m.getAdr() + "<br>";}
         server.campaign.CampaignMain.cm.toUser(result, Username);
     }
+
+    public int getExecutionLevel() {return accessLevel;}
+
+    public void setExecutionLevel(int i) {accessLevel = i;}
 }

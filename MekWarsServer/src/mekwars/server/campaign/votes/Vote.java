@@ -2,16 +2,15 @@ package mekwars.server.campaign.votes;
 
 public class Vote {
 
-    //ivars
-    private int voteType = 0;//default to abstainance
-    private String caster;
-    private String recipient;
-
     //NOTE: Abstain must always be the lowest int
     //NOTE: Negative must always be the greatest int
     public static final int POSITIVE_VOTE = 1;
     public static final int NEGATIVE_VOTE = 2;
     public static final int ABSTAIN_VOTE = 0;//polling vote?
+    //ivars
+    private int voteType = 0;//default to abstainance
+    private String caster;
+    private String recipient;
 
     //CONSTRUCTOR
     public Vote(int i, String castingname, String receivingname) {
@@ -22,55 +21,6 @@ public class Vote {
 
     //METHODS
     //all getters and setters
-
-    /**
-     * @return int vote type
-     *       <p>
-     *       Types are declared as public final ints in Vote.java
-     */
-    public int getType() {
-        return voteType;
-    }
-
-    /**
-     *
-     * @param i type of vote to set
-     */
-    public void setType(int i) {
-        voteType = i;
-    }
-
-    /**
-     *
-     * @return string name of vote caster
-     */
-    public String getCaster() {
-        return caster;
-    }
-
-    /**
-     *
-     * @param s player name to set as caster
-     */
-    public void setCaster(String s) {
-        caster = s;
-    }
-
-    /**
-     *
-     * @return String name of receiving player
-     */
-    public String getRecipient() {
-        return recipient;
-    }
-
-    /**
-     *
-     * @param s String name to set as receiving player
-     */
-    public void setRecipient(String s) {
-        recipient = s;
-    }
 
     /**
      *
@@ -103,5 +53,54 @@ public class Vote {
 
         return toReturn;
     }//end isEqualTo
+
+    /**
+     *
+     * @return string name of vote caster
+     */
+    public String getCaster() {
+        return caster;
+    }
+
+    /**
+     *
+     * @param s player name to set as caster
+     */
+    public void setCaster(String s) {
+        caster = s;
+    }
+
+    /**
+     *
+     * @return String name of receiving player
+     */
+    public String getRecipient() {
+        return recipient;
+    }
+
+    /**
+     * @return int vote type
+     *       <p>
+     *       Types are declared as public final ints in Vote.java
+     */
+    public int getType() {
+        return voteType;
+    }
+
+    /**
+     *
+     * @param i type of vote to set
+     */
+    public void setType(int i) {
+        voteType = i;
+    }
+
+    /**
+     *
+     * @param s String name to set as receiving player
+     */
+    public void setRecipient(String s) {
+        recipient = s;
+    }
 
 }//end VoteManager class

@@ -32,17 +32,6 @@ public class PilotSkills {
      */
     private final LinkedList<PilotSkill> skills = new LinkedList<>();
 
-    /**
-     * Return whether a pilot obtains a specific skill or not.
-     */
-    public boolean has(PilotSkill p) {
-        if (p == null) {
-            return false;
-        }
-
-        return skills.contains(p);
-    }
-
     public boolean has(int id) {
         Iterator<PilotSkill> it = getSkillIterator();
         while (it.hasNext()) {
@@ -54,10 +43,31 @@ public class PilotSkills {
     }
 
     /**
+     * Returns an Iterator for the skills
+     *
+     * @author Helge Richter
+     *
+     */
+    public Iterator<PilotSkill> getSkillIterator() {
+        return skills.iterator();
+    }
+
+    /**
      * Add a skill to the pilot's skill list.
      */
     public void add(PilotSkill p) {
         if (p != null && !has(p)) {skills.add(p);}
+    }
+
+    /**
+     * Return whether a pilot obtains a specific skill or not.
+     */
+    public boolean has(PilotSkill p) {
+        if (p == null) {
+            return false;
+        }
+
+        return skills.contains(p);
     }
 
     /**
@@ -75,16 +85,6 @@ public class PilotSkills {
      */
     public int size() {
         return skills.size();
-    }
-
-    /**
-     * Returns an Iterator for the skills
-     *
-     * @author Helge Richter
-     *
-     */
-    public Iterator<PilotSkill> getSkillIterator() {
-        return skills.iterator();
     }
 
     public LinkedList<PilotSkill> getPilotSkills() {
@@ -131,7 +131,7 @@ public class PilotSkills {
                 result.append(", ");
             }
         }
-        
+
         return result.toString();
     }
 }

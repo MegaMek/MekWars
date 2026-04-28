@@ -34,12 +34,11 @@ public class SerializedMessage {
         message.append(delimiter);
     }
 
+    public String toString() {
+        return getMessage();
+    }
 
     public String getMessage() {
         return message.toString();
-    }
-
-    public String toString() {
-        return getMessage();
     }
 }

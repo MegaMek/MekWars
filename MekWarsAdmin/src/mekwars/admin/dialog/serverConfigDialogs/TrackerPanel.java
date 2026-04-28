@@ -37,6 +37,11 @@ public class TrackerPanel extends JPanel {
     @Serial
     private static final long serialVersionUID = -4629994177197981829L;
 
+    public TrackerPanel(String uuid) {
+        super();
+        init(uuid);
+    }
+
     private void init(String uuid) {
 
         setLayout(new VerticalLayout(5, VerticalLayout.CENTER, VerticalLayout.TOP));
@@ -107,10 +112,5 @@ public class TrackerPanel extends JPanel {
         add(descPanel);
         add(uuidPanel);
         add(detailsPanel);
-    }
-
-    public TrackerPanel(String uuid) {
-        super();
-        init(uuid);
     }
 }

@@ -15,6 +15,17 @@ public class NewShortResolver {
     boolean canTakeComponents;
     boolean affectsELO;
 
+    public NewShortResolver(int gameId, server.campaign.SPlanet p, server.campaign.operations.ShortOperation o,
+          ShortOpPlayers sop) {
+        this.gameID = gameId;
+        planet = p;
+        op = o;
+        players = sop;
+        opName = op.getName();
+
+
+    }
+
     private int calculateLandExchange() {
         return 0;
     }
@@ -25,16 +36,5 @@ public class NewShortResolver {
 
     private int calculateComponentExchange() {
         return 0;
-    }
-
-    public NewShortResolver(int gameId, server.campaign.SPlanet p, server.campaign.operations.ShortOperation o,
-          ShortOpPlayers sop) {
-        this.gameID = gameId;
-        planet = p;
-        op = o;
-        players = sop;
-        opName = op.getName();
-
-
     }
 }

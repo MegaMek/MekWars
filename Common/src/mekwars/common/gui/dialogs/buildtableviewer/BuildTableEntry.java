@@ -52,21 +52,12 @@ public class BuildTableEntry implements Comparable<BuildTableEntry> {
     }
 
     /**
-     * Set the type of entry (table, unit)
+     * Get the entry text
      *
-     * @param type the type to set
+     * @return the entry text
      */
-    public void setType(int type) {
-        this.type = type;
-    }
-
-    /**
-     * Set the frequency of the entry
-     *
-     * @param chance the chance to set
-     */
-    public void setChance(int chance) {
-        this.chance = chance;
+    public String getEntry() {
+        return entry;
     }
 
     /**
@@ -76,33 +67,6 @@ public class BuildTableEntry implements Comparable<BuildTableEntry> {
      */
     public void setEntry(String entry) {
         this.entry = entry;
-    }
-
-    /**
-     * Get the type of entry
-     *
-     * @return the type
-     */
-    public int getType() {
-        return type;
-    }
-
-    /**
-     * Get the frequency of the entry
-     *
-     * @return the frequency
-     */
-    public int getChance() {
-        return chance;
-    }
-
-    /**
-     * Get the entry text
-     *
-     * @return the entry text
-     */
-    public String getEntry() {
-        return entry;
     }
 
     /**
@@ -118,5 +82,41 @@ public class BuildTableEntry implements Comparable<BuildTableEntry> {
         }
 
         return (Integer.compare(getChance(), buildTableEntry.getChance())) * -1;
+    }
+
+    /**
+     * Get the type of entry
+     *
+     * @return the type
+     */
+    public int getType() {
+        return type;
+    }
+
+    /**
+     * Set the type of entry (table, unit)
+     *
+     * @param type the type to set
+     */
+    public void setType(int type) {
+        this.type = type;
+    }
+
+    /**
+     * Get the frequency of the entry
+     *
+     * @return the frequency
+     */
+    public int getChance() {
+        return chance;
+    }
+
+    /**
+     * Set the frequency of the entry
+     *
+     * @param chance the chance to set
+     */
+    public void setChance(int chance) {
+        this.chance = chance;
     }
 }

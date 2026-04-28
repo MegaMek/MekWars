@@ -209,8 +209,6 @@ public interface IClient {
 
     void setEnvironment(PlanetEnvironment planetEnvironment, Dimension dimension, int mapMedium);
 
-    void setBuildingTemplate(Buildings building);
-
     void serverSend(String s);
 
     void startClient(String curName, boolean b);
@@ -240,4 +238,20 @@ public interface IClient {
     String getStatus();
 
     void processGUIInput(String s);
+
+    Dimension getMapSize();
+
+    PlanetEnvironment getCurrentEnvironment();
+
+    Buildings getBuildingTemplate();
+
+    void setBuildingTemplate(Buildings building);
+
+    int getMapMedium();
+
+    AdvancedTerrain getCurrentAdvancedTerrain();
+
+    boolean isUsingBots();
+
+    void setUsingBots(boolean b);
 }

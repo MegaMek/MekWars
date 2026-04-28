@@ -55,18 +55,9 @@ public class EdgeSkill extends SPilotSkill {
     }
 
     @Override
-    public int getBVMod(Entity unit) {
-        return server.campaign.CampaignMain.cm.getIntegerConfig("EdgeBaseBVMod");
-    }
-
-    @Override
-    public int getBVMod(Entity unit, server.campaign.pilot.SPilot p) {
-        server.campaign.SHouse house = server.campaign.CampaignMain.cm.getHouseFromPartialString(p.getCurrentFaction());
-
-        if (house != null) {
-            return house.getIntegerConfig("EdgeBaseBVMod");
-        }
-        return server.campaign.CampaignMain.cm.getIntegerConfig("EdgeBaseBVMod");
+    public void addToPilot(Pilot pilot) {
+        // this.setLevel(1);
+        pilot.getSkills().add(this);
     }
 
     @Override
@@ -94,9 +85,18 @@ public class EdgeSkill extends SPilotSkill {
     }
 
     @Override
-    public void addToPilot(Pilot pilot) {
-        // this.setLevel(1);
-        pilot.getSkills().add(this);
+    public int getBVMod(Entity unit) {
+        return server.campaign.CampaignMain.cm.getIntegerConfig("EdgeBaseBVMod");
+    }
+
+    @Override
+    public int getBVMod(Entity unit, server.campaign.pilot.SPilot p) {
+        server.campaign.SHouse house = server.campaign.CampaignMain.cm.getHouseFromPartialString(p.getCurrentFaction());
+
+        if (house != null) {
+            return house.getIntegerConfig("EdgeBaseBVMod");
+        }
+        return server.campaign.CampaignMain.cm.getIntegerConfig("EdgeBaseBVMod");
     }
 
     /**
@@ -116,28 +116,28 @@ public class EdgeSkill extends SPilotSkill {
         return edge_when_tac;
     }
 
-    public boolean getKO() {
-        return edge_when_ko;
-    }
-
-    public boolean getHeadHit() {
-        return edge_when_headhit;
-    }
-
-    public boolean getExplosion() {
-        return edge_when_explosion;
-    }
-
     public void setTac(boolean value) {
         edge_when_tac = value;
+    }
+
+    public boolean getKO() {
+        return edge_when_ko;
     }
 
     public void setKO(boolean value) {
         edge_when_ko = value;
     }
 
+    public boolean getHeadHit() {
+        return edge_when_headhit;
+    }
+
     public void setHeadHit(boolean value) {
         edge_when_headhit = value;
+    }
+
+    public boolean getExplosion() {
+        return edge_when_explosion;
     }
 
     public void setExplosion(boolean value) {

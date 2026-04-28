@@ -26,6 +26,11 @@ import common.House;
  */
 public class TimeUpdateHouse extends House {
 
+    /**
+     * The time at which this data was changed last.
+     */
+    private java.util.Date timestamp;
+
     public TimeUpdateHouse(int id) {
         super(id);
     }
@@ -35,11 +40,6 @@ public class TimeUpdateHouse extends House {
      */
     public TimeUpdateHouse() {
     }
-
-    /**
-     * The time at which this data was changed last.
-     */
-    private java.util.Date timestamp;
 
     /**
      * @return Returns the timestamp which this data was last changed.

@@ -30,10 +30,6 @@ public class SetAdvancedPlanetTerrainCommand implements server.campaign.commands
     int accessLevel = server.MWChatServer.auth.IAuthenticator.ADMIN;
     String syntax = "Planet Name$Terrain ID$AdvTerrain ID";
 
-    public int getExecutionLevel() {return accessLevel;}
-
-    public void setExecutionLevel(int i) {accessLevel = i;}
-
     public String getSyntax() {return syntax;}
 
     public void process(java.util.StringTokenizer command, String Username) {
@@ -95,4 +91,8 @@ public class SetAdvancedPlanetTerrainCommand implements server.campaign.commands
                     planet.getName());
 
     }
+
+    public int getExecutionLevel() {return accessLevel;}
+
+    public void setExecutionLevel(int i) {accessLevel = i;}
 }

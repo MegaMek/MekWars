@@ -191,17 +191,6 @@ public class FlagTable extends JTable implements ActionListener {
         return toReturn.toString();
     }
 
-    public void clear() {
-        flags.empty();
-        PFTableModel model = (PFTableModel) this.getModel();
-        for (int i = this.getRowCount() - 1; i >= 0; i--) {
-            String flagName = (String) this.getValueAt(i, 0);
-            if (!flagName.equalsIgnoreCase(" ")) {
-                model.removeRow(i);
-            }
-        }
-    }
-
     private void replaceFlagsFromTable() {
         if (flagType == FlagSet.FLAGTYPE_PLAYER) {
             flags = new PlayerFlags();
@@ -223,6 +212,17 @@ public class FlagTable extends JTable implements ActionListener {
                           (Boolean) getValueAt(i, 2),
                           (Boolean) getValueAt(i, 3));
                 }
+            }
+        }
+    }
+
+    public void clear() {
+        flags.empty();
+        PFTableModel model = (PFTableModel) this.getModel();
+        for (int i = this.getRowCount() - 1; i >= 0; i--) {
+            String flagName = (String) this.getValueAt(i, 0);
+            if (!flagName.equalsIgnoreCase(" ")) {
+                model.removeRow(i);
             }
         }
     }
@@ -261,7 +261,16 @@ public class FlagTable extends JTable implements ActionListener {
             setColumnIdentifiers(columnNames);
         }
 
-        public void addRow(Object[] rowData) {
+        @SuppressWarnings("unchecked")
+        public Class getColumnClass(int c) {
+            if (c == 0) {
+                return String.class;
+            }
+            if (c >= 1) {
+                return Boolean.class;
+            }
+            return null;
+        }        public void addRow(Object[] rowData) {
             if (this.getRowCount() == 1 && this.getValueAt(0, 0).equals(" ")) {
                 this.removeInitialRow();
             }
@@ -287,15 +296,6 @@ public class FlagTable extends JTable implements ActionListener {
             }
         }
 
-        @SuppressWarnings("unchecked")
-        public Class getColumnClass(int c) {
-            if (c == 0) {
-                return String.class;
-            }
-            if (c >= 1) {
-                return Boolean.class;
-            }
-            return null;
-        }
+
     }
 }

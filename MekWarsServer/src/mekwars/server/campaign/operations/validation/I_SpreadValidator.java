@@ -40,16 +40,9 @@ public interface I_SpreadValidator {
      * @param a The army being validated
      * @param o The Operation being validated against
      *
-     * @return    True if the army passes Spread validation, false if not
+     * @return True if the army passes Spread validation, false if not
      */
     public boolean validate(server.campaign.SArmy a, Operation o);
-
-    /**
-     * Set debug logging on/off
-     *
-     * @param debug
-     */
-    public void setDebug(boolean debug);
 
     /**
      * See if debug logging is on
@@ -59,9 +52,16 @@ public interface I_SpreadValidator {
     public boolean getDebug();
 
     /**
+     * Set debug logging on/off
+     *
+     * @param debug
+     */
+    public void setDebug(boolean debug);
+
+    /**
      * Returns the actual spread between highest and lowest units
      *
-     * @return    the spread
+     * @return the spread
      */
     public int getSpread();
 
@@ -82,20 +82,6 @@ public interface I_SpreadValidator {
     public void setMinActual(server.campaign.SArmy a, Operation o);
 
     /**
-     * Sets the maximum spread allowed for the Operation
-     *
-     * @param max
-     */
-    public void setMaxAllowed(int max);
-
-    /**
-     * Sets the minimum spread allowed for the Operation
-     *
-     * @param min
-     */
-    public void setMinAllowed(int min);
-
-    /**
      * Returns the maximum spread allowed by the Operation
      *
      * @return the maximum
@@ -103,11 +89,25 @@ public interface I_SpreadValidator {
     public int getMaxAllowed();
 
     /**
+     * Sets the maximum spread allowed for the Operation
+     *
+     * @param max
+     */
+    public void setMaxAllowed(int max);
+
+    /**
      * Returns the minimum spread allowed by the Operation
      *
      * @return the minimum
      */
     public int getMinAllowed();
+
+    /**
+     * Sets the minimum spread allowed for the Operation
+     *
+     * @param min
+     */
+    public void setMinAllowed(int min);
 
     /**
      * Returns the minimum BV in the army. Meaningless until setMinActual is called

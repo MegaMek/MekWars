@@ -27,10 +27,6 @@ public class AdminRemovePlanetOwnershipCommand implements server.campaign.comman
     int accessLevel = server.MWChatServer.auth.IAuthenticator.ADMIN;
     String syntax = "Planet Name#Faction Name";
 
-    public int getExecutionLevel() {return accessLevel;}
-
-    public void setExecutionLevel(int i) {accessLevel = i;}
-
     public String getSyntax() {return syntax;}
 
     public void process(java.util.StringTokenizer command, String Username) {
@@ -77,4 +73,8 @@ public class AdminRemovePlanetOwnershipCommand implements server.campaign.comman
         server.campaign.CampaignMain.cm.doSendModMail("NOTE",
               Username + " removed " + removingHouse.getName() + " as an owner of " + planet.getName() + ".");
     }
+
+    public int getExecutionLevel() {return accessLevel;}
+
+    public void setExecutionLevel(int i) {accessLevel = i;}
 }

@@ -32,19 +32,19 @@ public class EXPRankingContainer implements Comparable<Object> {
         return player.getFluffText();
     }
 
-    public int getExperience() {
-        return player.getExperience();
-    }
-
-    public String getName() {
-        return player.getName();
-    }
-
     public int compareTo(Object o) {
         mekwars.server.campaign.util.EXPRankingContainer p = (mekwars.server.campaign.util.EXPRankingContainer) o;
         if (this.getExperience() > p.getExperience()) {return 1;} else if (this.getExperience() < p.getExperience()) {
             return -1;
         }
         return p.getName().compareTo(this.getName());
+    }
+
+    public int getExperience() {
+        return player.getExperience();
+    }
+
+    public String getName() {
+        return player.getName();
     }
 }

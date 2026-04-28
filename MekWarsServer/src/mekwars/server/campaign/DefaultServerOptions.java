@@ -20,8 +20,8 @@ package mekwars.server.campaign;
 import common.util.MWLogger;
 
 /**
- * @author Torren Oct 22, 2004 Loads the default settings for the server config If any configs are added please add them to this function as well as
- *         createConfig().
+ * @author Torren Oct 22, 2004 Loads the default settings for the server config If any configs are added please add them
+ *       to this function as well as createConfig().
  * @version 2016.10.06
  */
 public class DefaultServerOptions {

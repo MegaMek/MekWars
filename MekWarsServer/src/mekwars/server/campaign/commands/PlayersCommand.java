@@ -23,12 +23,6 @@ public class PlayersCommand implements Command {
     int accessLevel = 0;
     String syntax = "";
 
-    public int getExecutionLevel() {return accessLevel;}
-
-    public void setExecutionLevel(int i) {accessLevel = i;}
-
-    public String getSyntax() {return syntax;}
-
     //NOTE: There Are Problems WIth This Code and the display of MERCENARY PLAYERS
     public void process(java.util.StringTokenizer command, String Username) {
 
@@ -164,4 +158,10 @@ public class PlayersCommand implements Command {
         server.campaign.CampaignMain.cm.toUser("SM|" + toSend, Username, false);
 
     }//end process()
+
+    public int getExecutionLevel() {return accessLevel;}
+
+    public void setExecutionLevel(int i) {accessLevel = i;}
+
+    public String getSyntax() {return syntax;}
 }//end PlayersCommand

@@ -89,36 +89,6 @@ public class UnitUtils {
     public static final int SYSTEMS = 5;
     public static final int ENGINES = 6;
 
-    /**
-     * Method that determines whether a unit can successfully start its engine/reactor. Non-Mek units always have
-     * working engines. Meks with fewer than 3 engine-critical slots have working fusion reactors. Also, a missing
-     * cockpit or head will mean you cannot start up either.
-     */
-    public static boolean canStartUp(Entity unit) {
-        int engineHits = 0;
-
-        // non-Meks may always start engines
-        if (!(unit instanceof Mek)) {
-            return true;
-        }
-
-        // no head no startup
-        if (unit.getInternal(LOC_HEAD) <= 0) {
-            return false;
-        }
-
-        // no cockpit no startup
-        if (unit.getBadCriticalSlots(CriticalSlot.TYPE_SYSTEM, Mek.SYSTEM_COCKPIT,
-              Mek.LOC_HEAD) > 0) {
-            return false;
-        }
-
-        // else, check for engine critical slots
-        engineHits = UnitUtils.getNumberOfDamagedEngineCrits(unit);
-
-        return (engineHits < 3);
-    }
-
     public static boolean hasArmorDamage(Entity unit) {
 
         if (unit instanceof Infantry) {
@@ -150,33 +120,6 @@ public class UnitUtils {
             }
         }
 
-        return false;
-    }
-
-    public static boolean hasUndamagedCriticalSlots(Entity unit, int location) {
-
-        if ((unit instanceof Mek) || (unit instanceof Tank)) {
-            for (int y = 0; y < unit.getNumberOfCriticalSlots(location); y++) {
-                CriticalSlot criticalSlot = unit.getCritical(location, y);
-                if ((criticalSlot != null) &&
-                          !criticalSlot.isDamaged() &&
-                          !UnitUtils.isNonRepairableCrit(unit, criticalSlot)) {
-                    return true;
-                }
-            }
-        }
-        return false;
-    }
-
-    public static boolean hasCriticalSlotsUnderRepair(Entity unit, int location) {
-        if ((unit instanceof Mek) || (unit instanceof Tank)) {
-            for (int y = 0; y < unit.getNumberOfCriticalSlots(location); y++) {
-                CriticalSlot criticalSlot = unit.getCritical(location, y);
-                if ((criticalSlot != null) && criticalSlot.isRepairing()) {
-                    return true;
-                }
-            }
-        }
         return false;
     }
 
@@ -212,32 +155,6 @@ public class UnitUtils {
     }
 
     /**
-     * @param unit An @Entity unit
-     *
-     * @return the number of engine crits an Entity has.
-     *
-     * @author Torren (Jason Tighe)
-     */
-    public static int getNumberOfEngineCrits(Entity unit) {
-        int engines = 0;
-
-        if (unit instanceof Mek) {
-            // no reason to check for engines anywhere other then the torso
-            for (int x = LOC_CENTER_TORSO; x <= LOC_LT; x++) {
-                for (int y = 0; y < unit.getNumberOfCriticalSlots(x); y++) {
-                    CriticalSlot criticalSlot = unit.getCritical(x, y);
-                    if (UnitUtils.isEngineCrit(criticalSlot)) {
-                        engines++;
-                    }
-                }
-            }
-        } else {
-            engines = 6;
-        }
-        return engines;
-    }
-
-    /**
      * This destroys all the engine crits in the unit this means a botched salvage job or cored unit
      *
      */
@@ -256,58 +173,28 @@ public class UnitUtils {
         }
     }
 
-    /**
-     * @param unit An @Entity unit
-     *
-     * @return engine type of the Mek Used for getting what engine type the entity has.
-     *
-     * @author Torren (Jason Tighe)
-     */
-    public static int getEngineType(Entity unit) {
-        int engineNumber = UnitUtils.getNumberOfEngineCrits(unit);
-
-        // only check meks everyone else gets STD engine returned
-        if (unit instanceof Mek) {
-            // Check to see if its a clan unit.
-            if (unit.isClan()) {
-
-                if (engineNumber == 12) {
-                    return UnitUtils.CLAN_XXL_ENGINE;
-                }
-                if (engineNumber == 10) {
-                    return UnitUtils.CLAN_XL_ENGINE;
-                }
-            }// end tech level if
-            // Else they are IS
-            else {
-                if (engineNumber == 18) {
-                    return UnitUtils.IS_XXL_ENGINE;
-                }
-                if (engineNumber == 12) {
-                    return UnitUtils.IS_XL_ENGINE;
-                }
-                if (engineNumber == 10) {
-                    return UnitUtils.IS_LIGHT_ENGINE;
-                }
-            }// end tech level else
-        }// end istanceof if
-
-        return UnitUtils.STANDARD_ENGINE;
+    public static boolean isEngineCrit(CriticalSlot cs) {
+        return (cs != null) && (cs.getType() == CriticalSlot.TYPE_SYSTEM) && (cs.getIndex() == Mek.SYSTEM_ENGINE);
     }
 
-    public static int getNumberOfDamagedEngineCrits(Entity unit) {
-        int engineHits = 0;
-        // no reason to check for engines anywhere other then the torso
-        for (int x = LOC_CENTER_TORSO; x <= LOC_LT; x++) {
-            for (int y = 0; y < unit.getNumberOfCriticalSlots(x); y++) {
-                CriticalSlot criticalSlot = unit.getCritical(x, y);
-                if (UnitUtils.isEngineCrit(criticalSlot)
-                          && (criticalSlot.isBreached() || criticalSlot.isDamaged())) {
-                    engineHits++;
-                }
-            }
+    /**
+     * Salvage the crit and its mount set them all to destroyed.
+     *
+     */
+    public static void salvageCriticalSlot(CriticalSlot criticalSlot) {
+        if (criticalSlot.getType() == CriticalSlot.TYPE_EQUIPMENT) {
+            Mounted<?> mounted = criticalSlot.getMount();
+            mounted.setDestroyed(true);
+            mounted.setMissing(true);
+            mounted.setHit(true);
+            mounted.setBreached(false);
         }
-        return engineHits;
+
+        criticalSlot.setDestroyed(true);
+        criticalSlot.setHit(true);
+        criticalSlot.setMissing(true);
+        criticalSlot.setRepairing(false);
+        criticalSlot.setBreached(false);
     }
 
     /**
@@ -338,23 +225,67 @@ public class UnitUtils {
     }
 
     /**
-     * Salvage the crit and its mount set them all to destroyed.
+     * Repairs weapons that are split between locations Used for Meks Only.
      *
+     * @param unit
      */
-    public static void salvageCriticalSlot(CriticalSlot criticalSlot) {
-        if (criticalSlot.getType() == CriticalSlot.TYPE_EQUIPMENT) {
-            Mounted<?> mounted = criticalSlot.getMount();
-            mounted.setDestroyed(true);
-            mounted.setMissing(true);
-            mounted.setHit(true);
-            mounted.setBreached(false);
+    public static void repairSplitEquipment(Mounted<?> eq, Entity unit) {
+
+        // Only Meks should have split weapons crits.
+        if (!(unit instanceof Mek)) {
+            return;
         }
 
-        criticalSlot.setDestroyed(true);
-        criticalSlot.setHit(true);
-        criticalSlot.setMissing(true);
-        criticalSlot.setRepairing(false);
-        criticalSlot.setBreached(false);
+        // can only split weapons in toros and arms.
+        for (int x = LOC_CENTER_TORSO; x <= LOC_LEFT_ARM; x++) {
+
+            for (int y = 0; y < unit.getNumberOfCriticalSlots(x); y++) {
+                CriticalSlot cs = unit.getCritical(x, y);
+                if (cs == null) {
+                    continue;
+                }
+
+                if (cs.getType() == CriticalSlot.TYPE_EQUIPMENT) {
+                    Mounted<?> mounted = cs.getMount();
+
+                    if (eq.equals(mounted)) {
+                        UnitUtils.fixCriticalSlot(cs, unit, cs.isBreached());
+                        unit.setCritical(x, y, cs);
+                    }
+                }// end getType() if
+
+            }
+        }
+    }
+
+    /**
+     * Fix a crit based on if its damaged or breached. Breached flags are fixed first.
+     *
+     * @param cs
+     * @param unit
+     * @param breach
+     */
+    public static void fixCriticalSlot(CriticalSlot cs, Entity unit, boolean breach) {
+        if (cs.getType() == CriticalSlot.TYPE_EQUIPMENT) {
+            Mounted<?> mounted = cs.getMount();
+            if (breach) {
+                mounted.setBreached(false);
+            } else {
+                mounted.setDestroyed(false);
+                mounted.setMissing(false);
+                mounted.setHit(false);
+            }
+        }
+
+        if (breach) {
+            cs.setBreached(false);
+            cs.setRepairing(false);
+        } else {
+            cs.setDestroyed(false);
+            cs.setHit(false);
+            cs.setRepairing(false);
+            cs.setMissing(false);
+        }
     }
 
     /**
@@ -456,40 +387,6 @@ public class UnitUtils {
         }
     }
 
-    /**
-     * Repairs weapons that are split between locations Used for Meks Only.
-     *
-     * @param unit
-     */
-    public static void repairSplitEquipment(Mounted<?> eq, Entity unit) {
-
-        // Only Meks should have split weapons crits.
-        if (!(unit instanceof Mek)) {
-            return;
-        }
-
-        // can only split weapons in toros and arms.
-        for (int x = LOC_CENTER_TORSO; x <= LOC_LEFT_ARM; x++) {
-
-            for (int y = 0; y < unit.getNumberOfCriticalSlots(x); y++) {
-                CriticalSlot cs = unit.getCritical(x, y);
-                if (cs == null) {
-                    continue;
-                }
-
-                if (cs.getType() == CriticalSlot.TYPE_EQUIPMENT) {
-                    Mounted<?> mounted = cs.getMount();
-
-                    if (eq.equals(mounted)) {
-                        UnitUtils.fixCriticalSlot(cs, unit, cs.isBreached());
-                        unit.setCritical(x, y, cs);
-                    }
-                }// end getType() if
-
-            }
-        }
-    }
-
     public static void repairSystemCrit(int location, CriticalSlot cs,
           Entity unit) {
 
@@ -510,40 +407,6 @@ public class UnitUtils {
         } else {
             UnitUtils.fixCriticalSlot(cs, unit, cs.isBreached());
         }
-    }
-
-    /**
-     * Fix a crit based on if its damaged or breached. Breached flags are fixed first.
-     *
-     * @param cs
-     * @param unit
-     * @param breach
-     */
-    public static void fixCriticalSlot(CriticalSlot cs, Entity unit, boolean breach) {
-        if (cs.getType() == CriticalSlot.TYPE_EQUIPMENT) {
-            Mounted<?> mounted = cs.getMount();
-            if (breach) {
-                mounted.setBreached(false);
-            } else {
-                mounted.setDestroyed(false);
-                mounted.setMissing(false);
-                mounted.setHit(false);
-            }
-        }
-
-        if (breach) {
-            cs.setBreached(false);
-            cs.setRepairing(false);
-        } else {
-            cs.setDestroyed(false);
-            cs.setHit(false);
-            cs.setRepairing(false);
-            cs.setMissing(false);
-        }
-    }
-
-    public static boolean isEngineCrit(CriticalSlot cs) {
-        return (cs != null) && (cs.getType() == CriticalSlot.TYPE_SYSTEM) && (cs.getIndex() == Mek.SYSTEM_ENGINE);
     }
 
     public static int getNumberOfCrits(Entity unit, int slot, int location) {
@@ -587,51 +450,30 @@ public class UnitUtils {
         return Math.max(1, numberOfCrits);
     }
 
-    // Sets multiple system crits to repairing.
-    // Gyro Life support and Sensors.
-    public static void setRepairingSystems(Entity unit, CriticalSlot cs) {
-        if (cs.getIndex() == Mek.SYSTEM_GYRO) {
-            for (int slot = 0; slot < unit.getNumberOfCriticalSlots(Mek.LOC_CENTER_TORSO); slot++) {
-                CriticalSlot crit = unit.getCritical(Mek.LOC_CENTER_TORSO, slot);
-                if ((crit == null)
-                          || (crit.getType() != CriticalSlot.TYPE_SYSTEM)) {
-                    continue;
-                }
+    /**
+     * @param unit An @Entity unit
+     *
+     * @return the number of engine crits an Entity has.
+     *
+     * @author Torren (Jason Tighe)
+     */
+    public static int getNumberOfEngineCrits(Entity unit) {
+        int engines = 0;
 
-                if (crit.getIndex() == cs.getIndex()) {
-                    crit.setRepairing(true);
-                }
-            }
-        }// if its not a GYRO then its sensors or life support
-        // as engines have already been filtered
-        else {
-            if (((Mek) unit).getCockpitType() == Mek.COCKPIT_TORSO_MOUNTED) {
-                for (int location = LOC_CENTER_TORSO; location <= LOC_LT; location++) {
-                    for (int slot = 0; slot < unit.getNumberOfCriticalSlots(location); slot++) {
-                        CriticalSlot crit = unit.getCritical(location, slot);
-                        if ((crit == null) || (crit.getType() != CriticalSlot.TYPE_SYSTEM)) {
-                            continue;
-                        }
-
-                        if (crit.getIndex() == cs.getIndex()) {
-                            crit.setRepairing(true);
-                        }
-                    }
-                }
-            }// Normal cockpit in the head.
-            else {
-                for (int slot = 0; slot < unit.getNumberOfCriticalSlots(LOC_HEAD); slot++) {
-                    CriticalSlot crit = unit.getCritical(LOC_HEAD, slot);
-                    if ((crit == null) || (crit.getType() != CriticalSlot.TYPE_SYSTEM)) {
-                        continue;
-                    }
-
-                    if (crit.getIndex() == cs.getIndex()) {
-                        crit.setRepairing(true);
+        if (unit instanceof Mek) {
+            // no reason to check for engines anywhere other then the torso
+            for (int x = LOC_CENTER_TORSO; x <= LOC_LT; x++) {
+                for (int y = 0; y < unit.getNumberOfCriticalSlots(x); y++) {
+                    CriticalSlot criticalSlot = unit.getCritical(x, y);
+                    if (UnitUtils.isEngineCrit(criticalSlot)) {
+                        engines++;
                     }
                 }
             }
+        } else {
+            engines = 6;
         }
+        return engines;
     }
 
     // Sets multiple system crits to repairing.
@@ -688,64 +530,6 @@ public class UnitUtils {
         return count;
     }
 
-    // Sets multiple system crits to repairing.
-    // Gyro Life support and Sensors.
-    public static int getNumberOfDamagedSystemCriticalSlots(Entity unit, CriticalSlot cs) {
-        int count = 0;
-
-        // actuators are always 1.
-        if (cs.getIndex() > Mek.SYSTEM_GYRO) {
-            if (cs.isDamaged()) {
-                return 1;
-            }
-
-            return 0;
-        }
-
-        if (cs.getIndex() == Mek.SYSTEM_GYRO) {
-            for (int slot = 0; slot < unit.getNumberOfCriticalSlots(Mek.LOC_CENTER_TORSO); slot++) {
-                CriticalSlot crit = unit.getCritical(Mek.LOC_CENTER_TORSO, slot);
-                if ((crit == null) || (crit.getType() != CriticalSlot.TYPE_SYSTEM) || !crit.isDamaged()) {
-                    continue;
-                }
-
-                if (crit.getIndex() == cs.getIndex()) {
-                    count++;
-                }
-            }
-        }// if it's not a GYRO then its sensors or life support
-        // as engines have already been filtered
-        else {
-            if (((Mek) unit).getCockpitType() == Mek.COCKPIT_TORSO_MOUNTED) {
-                for (int location = LOC_CENTER_TORSO; location <= LOC_LT; location++) {
-                    for (int slot = 0; slot < unit.getNumberOfCriticalSlots(location); slot++) {
-                        CriticalSlot crit = unit.getCritical(location, slot);
-                        if ((crit == null) || (crit.getType() != CriticalSlot.TYPE_SYSTEM) || !crit.isDamaged()) {
-                            continue;
-                        }
-
-                        if (crit.getIndex() == cs.getIndex()) {
-                            count++;
-                        }
-                    }
-                }
-            }// Normal cockpit in the head.
-            else {
-                for (int slot = 0; slot < unit.getNumberOfCriticalSlots(LOC_HEAD); slot++) {
-                    CriticalSlot crit = unit.getCritical(LOC_HEAD, slot);
-                    if ((crit == null) || (crit.getType() != CriticalSlot.TYPE_SYSTEM) || !crit.isDamaged()) {
-                        continue;
-                    }
-
-                    if (crit.getIndex() == cs.getIndex()) {
-                        count++;
-                    }
-                }
-            }
-        }
-        return count;
-    }
-
     public static void setRepairing(Entity unit, CriticalSlot cs) {
 
         if (UnitUtils.isEngineCrit(cs)) {
@@ -782,6 +566,72 @@ public class UnitUtils {
         }
     }
 
+    /**
+     * Set all engine crits to repairing!
+     *
+     * @param unit
+     */
+    public static void setRepairingEngines(Entity unit) {
+
+        for (int x = 0; x < unit.locations(); x++) {
+            for (int y = 0; y < unit.getNumberOfCriticalSlots(x); y++) {
+                CriticalSlot criticalSlot = unit.getCritical(x, y);
+                if (!UnitUtils.isEngineCrit(criticalSlot)) {
+                    continue;
+                }
+                criticalSlot.setRepairing(true);
+                unit.setCritical(x, y, criticalSlot);
+            }
+        }
+    }
+
+    // Sets multiple system crits to repairing.
+    // Gyro Life support and Sensors.
+    public static void setRepairingSystems(Entity unit, CriticalSlot cs) {
+        if (cs.getIndex() == Mek.SYSTEM_GYRO) {
+            for (int slot = 0; slot < unit.getNumberOfCriticalSlots(Mek.LOC_CENTER_TORSO); slot++) {
+                CriticalSlot crit = unit.getCritical(Mek.LOC_CENTER_TORSO, slot);
+                if ((crit == null)
+                          || (crit.getType() != CriticalSlot.TYPE_SYSTEM)) {
+                    continue;
+                }
+
+                if (crit.getIndex() == cs.getIndex()) {
+                    crit.setRepairing(true);
+                }
+            }
+        }// if its not a GYRO then its sensors or life support
+        // as engines have already been filtered
+        else {
+            if (((Mek) unit).getCockpitType() == Mek.COCKPIT_TORSO_MOUNTED) {
+                for (int location = LOC_CENTER_TORSO; location <= LOC_LT; location++) {
+                    for (int slot = 0; slot < unit.getNumberOfCriticalSlots(location); slot++) {
+                        CriticalSlot crit = unit.getCritical(location, slot);
+                        if ((crit == null) || (crit.getType() != CriticalSlot.TYPE_SYSTEM)) {
+                            continue;
+                        }
+
+                        if (crit.getIndex() == cs.getIndex()) {
+                            crit.setRepairing(true);
+                        }
+                    }
+                }
+            }// Normal cockpit in the head.
+            else {
+                for (int slot = 0; slot < unit.getNumberOfCriticalSlots(LOC_HEAD); slot++) {
+                    CriticalSlot crit = unit.getCritical(LOC_HEAD, slot);
+                    if ((crit == null) || (crit.getType() != CriticalSlot.TYPE_SYSTEM)) {
+                        continue;
+                    }
+
+                    if (crit.getIndex() == cs.getIndex()) {
+                        crit.setRepairing(true);
+                    }
+                }
+            }
+        }
+    }
+
     public static void setRepairingSplit(Mounted<?> eq, Entity unit) {
 
         // Only Meks should have split weapons crits.
@@ -805,115 +655,6 @@ public class UnitUtils {
                         criticalSlot.setRepairing(true);
                     }
                 }// end getType() if
-            }
-        }
-    }
-
-    /*
-     * This method checks equipment slots for critcal skits that shouldn't really
-     * need repairing. i.e. endo armor slots. Non-equipment slots are
-     * automatically returned as false.
-     */
-    public static boolean isNonRepairableCrit(Entity unit, CriticalSlot cs) {
-
-        // only equipment slots should be checked
-        if (cs.getType() != CriticalSlot.TYPE_EQUIPMENT) {
-            return false;
-        }
-
-        try {
-            Mounted<?> mounted = cs.getMount();
-
-            if (mounted.getDesc().contains(EquipmentType.getArmorTypeName(EquipmentType.T_ARMOR_FERRO_FIBROUS))) {
-                return true;
-            }
-
-            if (mounted.getDesc().contains(EquipmentType.getArmorTypeName(EquipmentType.T_ARMOR_FERRO_FIBROUS_PROTO))) {
-                return true;
-            }
-
-            if (mounted.getDesc().contains(EquipmentType.getArmorTypeName(EquipmentType.T_ARMOR_HARDENED))) {
-                return true;
-            }
-
-            if (mounted.getDesc().contains(EquipmentType.getArmorTypeName(EquipmentType.T_ARMOR_HEAVY_FERRO))) {
-                return true;
-            }
-
-            if (mounted.getDesc().contains(EquipmentType.getArmorTypeName(EquipmentType.T_ARMOR_LIGHT_FERRO))) {
-                return true;
-            }
-
-            if (mounted.getDesc().contains(EquipmentType.getArmorTypeName(EquipmentType.T_ARMOR_PATCHWORK))) {
-                return true;
-            }
-
-            if (mounted.getDesc().contains(EquipmentType.getArmorTypeName(EquipmentType.T_ARMOR_REACTIVE))) {
-                return true;
-            }
-
-            if (mounted.getDesc().contains(EquipmentType.getArmorTypeName(EquipmentType.T_ARMOR_REFLECTIVE))) {
-                return true;
-            }
-
-            if (mounted.getDesc().contains(EquipmentType.getArmorTypeName(EquipmentType.T_ARMOR_STEALTH))) {
-                return true;
-            }
-
-            if (mounted.getDesc().contains(EquipmentType.getStructureTypeName(EquipmentType.T_STRUCTURE_ENDO_STEEL))) {
-                return true;
-            }
-
-            if (mounted.getDesc().contains(EquipmentType.getStructureTypeName(EquipmentType.T_STRUCTURE_COMPOSITE))) {
-                return true;
-            }
-
-            if (mounted.getDesc()
-                      .contains(EquipmentType.getStructureTypeName(EquipmentType.T_STRUCTURE_ENDO_PROTOTYPE))) {
-                return true;
-            }
-
-            if (mounted.getDesc().contains(EquipmentType.getStructureTypeName(EquipmentType.T_STRUCTURE_REINFORCED))) {
-                return true;
-            }
-
-            if (mounted.getDesc().contains(EquipmentType.getStructureTypeName(EquipmentType.T_STRUCTURE_REINFORCED))) {
-                return true;
-            }
-
-            if ((mounted.getType() instanceof MiscType) && mounted.getType().hasFlag(MiscType.F_TSM)) {
-                return true;
-            }
-
-            if ((mounted.getType() instanceof MiscType) &&
-                      mounted.getType().hasFlag(MiscType.F_CASE) &&
-                      unit.isClan()) {
-                return true;
-            }
-        } catch (Exception ex) {
-            MWLogger.errLog("Error in UnitUtils.isNonRepairableCrit");
-            MWLogger.errLog(ex);
-            return false;
-        }
-
-        return false;
-    }
-
-    /**
-     * Set all engine crits to repairing!
-     *
-     * @param unit
-     */
-    public static void setRepairingEngines(Entity unit) {
-
-        for (int x = 0; x < unit.locations(); x++) {
-            for (int y = 0; y < unit.getNumberOfCriticalSlots(x); y++) {
-                CriticalSlot criticalSlot = unit.getCritical(x, y);
-                if (!UnitUtils.isEngineCrit(criticalSlot)) {
-                    continue;
-                }
-                criticalSlot.setRepairing(true);
-                unit.setCritical(x, y, criticalSlot);
             }
         }
     }
@@ -946,16 +687,6 @@ public class UnitUtils {
         }
 
         return techType;
-    }
-
-    public static int techBaseRoll(int techType) {
-        int roll = 9;
-
-        if (techType != TECH_GREEN) {
-            roll = 8 - techType;
-        }
-
-        return roll;
     }
 
     public static int getTechRoll(Entity unit, int location, int slot, int techType, boolean armor, int techLevel) {
@@ -1130,111 +861,14 @@ public class UnitUtils {
         return Math.max(roll, 3);
     }
 
-    public static boolean isActuator(CriticalSlot cs) {
+    public static int techBaseRoll(int techType) {
+        int roll = 9;
 
-        if (cs.getType() != CriticalSlot.TYPE_SYSTEM) {
-            return false;
+        if (techType != TECH_GREEN) {
+            roll = 8 - techType;
         }
 
-        return (cs.getIndex() == Mek.ACTUATOR_FOOT)
-                     || (cs.getIndex() == Mek.ACTUATOR_HAND)
-                     || (cs.getIndex() == Mek.ACTUATOR_HIP)
-                     || (cs.getIndex() == Mek.ACTUATOR_LOWER_ARM)
-                     || (cs.getIndex() == Mek.ACTUATOR_LOWER_LEG)
-                     || (cs.getIndex() == Mek.ACTUATOR_SHOULDER)
-                     || (cs.getIndex() == Mek.ACTUATOR_UPPER_ARM)
-                     || (cs.getIndex() == Mek.ACTUATOR_UPPER_LEG);
-
-    }
-
-    /**
-     * Some EQ can take up multiple slots this will track them down and repair them.
-     *
-     */
-    public static void removeRepairEquipment(Mounted<?> eq, Entity unit, int location) {
-
-        if (eq.isSplit()) {
-            UnitUtils.removeRepairSplitEquipment(eq, unit);
-            return;
-        }
-
-        for (int slot = 0; slot < unit.getNumberOfCriticalSlots(location); slot++) {
-            CriticalSlot crit = unit.getCritical(location, slot);
-            if (crit == null) {
-                continue;
-            }
-            if (crit.getType() == CriticalSlot.TYPE_EQUIPMENT) {
-                Mounted<?> mounted = crit.getMount();
-
-                if (eq.equals(mounted) && crit.isRepairing()) {
-                    crit.setRepairing(false);
-                    unit.setCritical(location, slot, crit);
-                }
-            }// end getType() if
-        }// end for
-    }
-
-    public static void removeRepairing(Entity unit, CriticalSlot cs) {
-        if (UnitUtils.isEngineCrit(cs)) {
-            UnitUtils.removeRepairDamagedEngine(unit);
-        } else if (cs.getType() == CriticalSlot.TYPE_SYSTEM) {
-            if (cs.getIndex() <= Mek.SYSTEM_GYRO) {
-                UnitUtils.removeRepairingSystems(unit, cs);
-            } else {
-                cs.setRepairing(false);
-            }
-        } else {
-            Mounted<?> eq = cs.getMount();
-            int location = eq.getLocation();
-
-            UnitUtils.removeRepairEquipment(eq, unit, location);
-        }// end else
-    }// end removeRepairing
-
-    // Sets multiple system crits to repairing.
-    // Gyro Life support and Sensors.
-    public static void removeRepairingSystems(Entity unit, CriticalSlot cs) {
-        if (cs.getIndex() == Mek.SYSTEM_GYRO) {
-            for (int slot = 0; slot < unit.getNumberOfCriticalSlots(Mek.LOC_CENTER_TORSO); slot++) {
-                CriticalSlot crit = unit.getCritical(Mek.LOC_CENTER_TORSO, slot);
-                if ((crit == null) || (crit.getType() != CriticalSlot.TYPE_SYSTEM)) {
-                    continue;
-                }
-
-                if (crit.getIndex() == cs.getIndex()) {
-                    crit.setRepairing(false);
-                }
-            }
-        }// if it's not a GYRO then its sensors or life support
-        // as engines have already been filtered
-        else {
-            if (((Mek) unit).getCockpitType() == Mek.COCKPIT_TORSO_MOUNTED) {
-                for (int location = LOC_CENTER_TORSO; location <= LOC_LT; location++) {
-                    for (int slot = 0; slot < unit.getNumberOfCriticalSlots(location); slot++) {
-                        CriticalSlot crit = unit.getCritical(location, slot);
-                        if ((crit == null) || (crit.getType() != CriticalSlot.TYPE_SYSTEM)) {
-                            continue;
-                        }
-
-                        if (crit.getIndex() == cs.getIndex()) {
-                            crit.setRepairing(false);
-                        }
-                    }
-                }
-            }// Normal cockpit in the head.
-            else {
-                for (int slot = 0; slot < unit.getNumberOfCriticalSlots(LOC_HEAD); slot++) {
-                    CriticalSlot crit = unit.getCritical(LOC_HEAD, slot);
-                    if ((crit == null) || (crit.getType() != CriticalSlot.TYPE_SYSTEM)) {
-                        continue;
-                    }
-
-                    if (crit.getIndex() == cs.getIndex()) {
-                        crit.setRepairing(false);
-                    }
-                }
-            }
-        }
+        return roll;
     }
 
     public static void removeArmorRepair(Entity unit, int slot, int location) {
@@ -1283,6 +917,136 @@ public class UnitUtils {
         }
     }
 
+    public static boolean isCompatibleTech(Entity unit, int techLevel) {
+        // armor and IS are universal everything else gets a +4 to the roll if the tech levels are not compatible.
+        if ((techLevel != TechConstants.T_ALL)
+                  && (techLevel != TechConstants.T_ALLOWED_ALL)
+                  && (techLevel != TechConstants.T_TECH_UNKNOWN)) {
+            if (unit.getTechLevel() != techLevel) {
+                switch (unit.getTechLevel()) {
+                    case TechConstants.T_CLAN_UNOFFICIAL:
+                        if (techLevel != TechConstants.T_CLAN_UNOFFICIAL) {
+                            return false;
+                        }
+                        break;
+                    case TechConstants.T_CLAN_EXPERIMENTAL:
+                        if ((techLevel != TechConstants.T_CLAN_EXPERIMENTAL)
+                                  && (techLevel != TechConstants.T_CLAN_UNOFFICIAL)) {
+                            return false;
+                        }
+                        break;
+                    case TechConstants.T_CLAN_ADVANCED:
+                        if ((techLevel != TechConstants.T_CLAN_ADVANCED)
+                                  && (techLevel != TechConstants.T_CLAN_EXPERIMENTAL)
+                                  && (techLevel != TechConstants.T_CLAN_UNOFFICIAL)) {
+                            return false;
+                        }
+                        break;
+                    case TechConstants.T_CLAN_TW:
+                        if ((techLevel != TechConstants.T_CLAN_TW)
+                                  && (techLevel != TechConstants.T_CLAN_ADVANCED)
+                                  && (techLevel != TechConstants.T_CLAN_EXPERIMENTAL)
+                                  && (techLevel != TechConstants.T_CLAN_UNOFFICIAL)) {
+                            return false;
+                        }
+                        break;
+                    case TechConstants.T_IS_UNOFFICIAL:
+                        if (techLevel != TechConstants.T_IS_UNOFFICIAL) {
+                            return false;
+                        }
+                        break;
+                    case TechConstants.T_IS_EXPERIMENTAL:
+                        if ((techLevel != TechConstants.T_IS_UNOFFICIAL)
+                                  && (techLevel != TechConstants.T_IS_EXPERIMENTAL)) {
+                            return false;
+                        }
+                        break;
+                    case TechConstants.T_IS_ADVANCED:
+                        if ((techLevel != TechConstants.T_IS_ADVANCED)
+                                  && (techLevel != TechConstants.T_IS_UNOFFICIAL)
+                                  && (techLevel != TechConstants.T_IS_EXPERIMENTAL)) {
+                            return false;
+                        }
+                    case TechConstants.T_IS_TW_ALL:
+                        if ((techLevel != TechConstants.T_IS_TW_ALL)
+                                  && (techLevel != TechConstants.T_IS_ADVANCED)
+                                  && (techLevel != TechConstants.T_IS_UNOFFICIAL)
+                                  && (techLevel != TechConstants.T_IS_EXPERIMENTAL)) {
+                            return false;
+                        }
+                    case TechConstants.T_IS_TW_NON_BOX:
+                        if ((techLevel != TechConstants.T_IS_TW_NON_BOX)
+                                  && (techLevel != TechConstants.T_IS_TW_ALL)
+                                  && (techLevel != TechConstants.T_IS_ADVANCED)
+                                  && (techLevel != TechConstants.T_IS_UNOFFICIAL)
+                                  && (techLevel != TechConstants.T_IS_EXPERIMENTAL)) {
+                            return false;
+                        }
+                    case TechConstants.T_INTRO_BOX_SET:
+                        if ((techLevel != TechConstants.T_INTRO_BOX_SET)
+                                  && (techLevel != TechConstants.T_IS_TW_NON_BOX)
+                                  && (techLevel != TechConstants.T_IS_TW_ALL)
+                                  && (techLevel != TechConstants.T_IS_ADVANCED)
+                                  && (techLevel != TechConstants.T_IS_UNOFFICIAL)
+                                  && (techLevel != TechConstants.T_IS_EXPERIMENTAL)) {
+                            return false;
+                        }
+                }
+            }
+        }
+
+        return true;
+    }
+
+    public static int getNumberOfDamagedEngineCrits(Entity unit) {
+        int engineHits = 0;
+        // no reason to check for engines anywhere other then the torso
+        for (int x = LOC_CENTER_TORSO; x <= LOC_LT; x++) {
+            for (int y = 0; y < unit.getNumberOfCriticalSlots(x); y++) {
+                CriticalSlot criticalSlot = unit.getCritical(x, y);
+                if (UnitUtils.isEngineCrit(criticalSlot)
+                          && (criticalSlot.isBreached() || criticalSlot.isDamaged())) {
+                    engineHits++;
+                }
+            }
+        }
+        return engineHits;
+    }
+
+    public static boolean isActuator(CriticalSlot cs) {
+
+        if (cs.getType() != CriticalSlot.TYPE_SYSTEM) {
+            return false;
+        }
+
+        return (cs.getIndex() == Mek.ACTUATOR_FOOT)
+                     || (cs.getIndex() == Mek.ACTUATOR_HAND)
+                     || (cs.getIndex() == Mek.ACTUATOR_HIP)
+                     || (cs.getIndex() == Mek.ACTUATOR_LOWER_ARM)
+                     || (cs.getIndex() == Mek.ACTUATOR_LOWER_LEG)
+                     || (cs.getIndex() == Mek.ACTUATOR_SHOULDER)
+                     || (cs.getIndex() == Mek.ACTUATOR_UPPER_ARM)
+                     || (cs.getIndex() == Mek.ACTUATOR_UPPER_LEG);
+
+    }
+
+    public static void removeRepairing(Entity unit, CriticalSlot cs) {
+        if (UnitUtils.isEngineCrit(cs)) {
+            UnitUtils.removeRepairDamagedEngine(unit);
+        } else if (cs.getType() == CriticalSlot.TYPE_SYSTEM) {
+            if (cs.getIndex() <= Mek.SYSTEM_GYRO) {
+                UnitUtils.removeRepairingSystems(unit, cs);
+            } else {
+                cs.setRepairing(false);
+            }
+        } else {
+            Mounted<?> eq = cs.getMount();
+            int location = eq.getLocation();
+
+            UnitUtils.removeRepairEquipment(eq, unit, location);
+        }// end else
+    }// end removeRepairing
+
     /**
      * Repairs all of the engines in a unit.
      *
@@ -1302,6 +1066,79 @@ public class UnitUtils {
                 }
             }
         }
+    }
+
+    // Sets multiple system crits to repairing.
+    // Gyro Life support and Sensors.
+    public static void removeRepairingSystems(Entity unit, CriticalSlot cs) {
+        if (cs.getIndex() == Mek.SYSTEM_GYRO) {
+            for (int slot = 0; slot < unit.getNumberOfCriticalSlots(Mek.LOC_CENTER_TORSO); slot++) {
+                CriticalSlot crit = unit.getCritical(Mek.LOC_CENTER_TORSO, slot);
+                if ((crit == null) || (crit.getType() != CriticalSlot.TYPE_SYSTEM)) {
+                    continue;
+                }
+
+                if (crit.getIndex() == cs.getIndex()) {
+                    crit.setRepairing(false);
+                }
+            }
+        }// if it's not a GYRO then its sensors or life support
+        // as engines have already been filtered
+        else {
+            if (((Mek) unit).getCockpitType() == Mek.COCKPIT_TORSO_MOUNTED) {
+                for (int location = LOC_CENTER_TORSO; location <= LOC_LT; location++) {
+                    for (int slot = 0; slot < unit.getNumberOfCriticalSlots(location); slot++) {
+                        CriticalSlot crit = unit.getCritical(location, slot);
+                        if ((crit == null) || (crit.getType() != CriticalSlot.TYPE_SYSTEM)) {
+                            continue;
+                        }
+
+                        if (crit.getIndex() == cs.getIndex()) {
+                            crit.setRepairing(false);
+                        }
+                    }
+                }
+            }// Normal cockpit in the head.
+            else {
+                for (int slot = 0; slot < unit.getNumberOfCriticalSlots(LOC_HEAD); slot++) {
+                    CriticalSlot crit = unit.getCritical(LOC_HEAD, slot);
+                    if ((crit == null) || (crit.getType() != CriticalSlot.TYPE_SYSTEM)) {
+                        continue;
+                    }
+
+                    if (crit.getIndex() == cs.getIndex()) {
+                        crit.setRepairing(false);
+                    }
+                }
+            }
+        }
+    }
+
+    /**
+     * Some EQ can take up multiple slots this will track them down and repair them.
+     *
+     */
+    public static void removeRepairEquipment(Mounted<?> eq, Entity unit, int location) {
+
+        if (eq.isSplit()) {
+            UnitUtils.removeRepairSplitEquipment(eq, unit);
+            return;
+        }
+
+        for (int slot = 0; slot < unit.getNumberOfCriticalSlots(location); slot++) {
+            CriticalSlot crit = unit.getCritical(location, slot);
+            if (crit == null) {
+                continue;
+            }
+            if (crit.getType() == CriticalSlot.TYPE_EQUIPMENT) {
+                Mounted<?> mounted = crit.getMount();
+
+                if (eq.equals(mounted) && crit.isRepairing()) {
+                    crit.setRepairing(false);
+                    unit.setCritical(location, slot, crit);
+                }
+            }// end getType() if
+        }// end for
     }
 
     /**
@@ -1336,6 +1173,27 @@ public class UnitUtils {
 
             }
         }
+    }
+
+    public static int getTotalDamagedPartCost(Entity unit, int year) {
+
+        double totalCost = 0;
+
+        for (int location = 0; location < unit.locations(); location++) {
+            if ((location == LOC_CENTER_TORSO) || (location == LOC_RT) || (location == LOC_LT)) {
+                totalCost += UnitUtils.getPartCost(unit, location, LOC_FRONT_ARMOR, true, year);
+                totalCost += UnitUtils.getPartCost(unit, location, LOC_REAR_ARMOR, true, year);
+                totalCost += UnitUtils.getPartCost(unit, location, LOC_INTERNAL_ARMOR, true, year);
+            } else {
+                totalCost += UnitUtils.getPartCost(unit, location, LOC_FRONT_ARMOR, true, year);
+                totalCost += UnitUtils.getPartCost(unit, location, LOC_INTERNAL_ARMOR, true, year);
+            }
+            for (int slot = 0; slot < unit.getNumberOfCriticalSlots(location); slot++) {
+                totalCost += UnitUtils.getPartCost(unit, location, slot, false, year);
+            }
+        }
+
+        return (int) Math.ceil(totalCost);
     }
 
     public static int getPartCost(Entity unit, int location, int slot, boolean armor, int year) {
@@ -1457,27 +1315,6 @@ public class UnitUtils {
             }
         }
         return (int) Math.ceil(cost);
-    }
-
-    public static int getTotalDamagedPartCost(Entity unit, int year) {
-
-        double totalCost = 0;
-
-        for (int location = 0; location < unit.locations(); location++) {
-            if ((location == LOC_CENTER_TORSO) || (location == LOC_RT) || (location == LOC_LT)) {
-                totalCost += UnitUtils.getPartCost(unit, location, LOC_FRONT_ARMOR, true, year);
-                totalCost += UnitUtils.getPartCost(unit, location, LOC_REAR_ARMOR, true, year);
-                totalCost += UnitUtils.getPartCost(unit, location, LOC_INTERNAL_ARMOR, true, year);
-            } else {
-                totalCost += UnitUtils.getPartCost(unit, location, LOC_FRONT_ARMOR, true, year);
-                totalCost += UnitUtils.getPartCost(unit, location, LOC_INTERNAL_ARMOR, true, year);
-            }
-            for (int slot = 0; slot < unit.getNumberOfCriticalSlots(location); slot++) {
-                totalCost += UnitUtils.getPartCost(unit, location, slot, false, year);
-            }
-        }
-
-        return (int) Math.ceil(totalCost);
     }
 
     public static String getRepairMessage(Entity unit, int location, int slot, boolean armor) {
@@ -1649,6 +1486,123 @@ public class UnitUtils {
         return salvageMessage;
     }
 
+    public static boolean hasUndamagedCriticalSlots(Entity unit, int location) {
+
+        if ((unit instanceof Mek) || (unit instanceof Tank)) {
+            for (int y = 0; y < unit.getNumberOfCriticalSlots(location); y++) {
+                CriticalSlot criticalSlot = unit.getCritical(location, y);
+                if ((criticalSlot != null) &&
+                          !criticalSlot.isDamaged() &&
+                          !UnitUtils.isNonRepairableCrit(unit, criticalSlot)) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    public static boolean hasCriticalSlotsUnderRepair(Entity unit, int location) {
+        if ((unit instanceof Mek) || (unit instanceof Tank)) {
+            for (int y = 0; y < unit.getNumberOfCriticalSlots(location); y++) {
+                CriticalSlot criticalSlot = unit.getCritical(location, y);
+                if ((criticalSlot != null) && criticalSlot.isRepairing()) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    /*
+     * This method checks equipment slots for critcal skits that shouldn't really
+     * need repairing. i.e. endo armor slots. Non-equipment slots are
+     * automatically returned as false.
+     */
+    public static boolean isNonRepairableCrit(Entity unit, CriticalSlot cs) {
+
+        // only equipment slots should be checked
+        if (cs.getType() != CriticalSlot.TYPE_EQUIPMENT) {
+            return false;
+        }
+
+        try {
+            Mounted<?> mounted = cs.getMount();
+
+            if (mounted.getDesc().contains(EquipmentType.getArmorTypeName(EquipmentType.T_ARMOR_FERRO_FIBROUS))) {
+                return true;
+            }
+
+            if (mounted.getDesc().contains(EquipmentType.getArmorTypeName(EquipmentType.T_ARMOR_FERRO_FIBROUS_PROTO))) {
+                return true;
+            }
+
+            if (mounted.getDesc().contains(EquipmentType.getArmorTypeName(EquipmentType.T_ARMOR_HARDENED))) {
+                return true;
+            }
+
+            if (mounted.getDesc().contains(EquipmentType.getArmorTypeName(EquipmentType.T_ARMOR_HEAVY_FERRO))) {
+                return true;
+            }
+
+            if (mounted.getDesc().contains(EquipmentType.getArmorTypeName(EquipmentType.T_ARMOR_LIGHT_FERRO))) {
+                return true;
+            }
+
+            if (mounted.getDesc().contains(EquipmentType.getArmorTypeName(EquipmentType.T_ARMOR_PATCHWORK))) {
+                return true;
+            }
+
+            if (mounted.getDesc().contains(EquipmentType.getArmorTypeName(EquipmentType.T_ARMOR_REACTIVE))) {
+                return true;
+            }
+
+            if (mounted.getDesc().contains(EquipmentType.getArmorTypeName(EquipmentType.T_ARMOR_REFLECTIVE))) {
+                return true;
+            }
+
+            if (mounted.getDesc().contains(EquipmentType.getArmorTypeName(EquipmentType.T_ARMOR_STEALTH))) {
+                return true;
+            }
+
+            if (mounted.getDesc().contains(EquipmentType.getStructureTypeName(EquipmentType.T_STRUCTURE_ENDO_STEEL))) {
+                return true;
+            }
+
+            if (mounted.getDesc().contains(EquipmentType.getStructureTypeName(EquipmentType.T_STRUCTURE_COMPOSITE))) {
+                return true;
+            }
+
+            if (mounted.getDesc()
+                      .contains(EquipmentType.getStructureTypeName(EquipmentType.T_STRUCTURE_ENDO_PROTOTYPE))) {
+                return true;
+            }
+
+            if (mounted.getDesc().contains(EquipmentType.getStructureTypeName(EquipmentType.T_STRUCTURE_REINFORCED))) {
+                return true;
+            }
+
+            if (mounted.getDesc().contains(EquipmentType.getStructureTypeName(EquipmentType.T_STRUCTURE_REINFORCED))) {
+                return true;
+            }
+
+            if ((mounted.getType() instanceof MiscType) && mounted.getType().hasFlag(MiscType.F_TSM)) {
+                return true;
+            }
+
+            if ((mounted.getType() instanceof MiscType) &&
+                      mounted.getType().hasFlag(MiscType.F_CASE) &&
+                      unit.isClan()) {
+                return true;
+            }
+        } catch (Exception ex) {
+            MWLogger.errLog("Error in UnitUtils.isNonRepairableCrit");
+            MWLogger.errLog(ex);
+            return false;
+        }
+
+        return false;
+    }
+
     public static boolean checkRepairViability(Entity unit, int location, int slot, boolean armor) {
 
         if (((location == UnitUtils.LOC_RIGHT_ARM) &&
@@ -1702,14 +1656,6 @@ public class UnitUtils {
         return unit.getAmmo().isEmpty();
     }
 
-    public static int getShots(Mounted<?> mounted) {
-        if (mounted.getUsableShotsLeft() > 0) {
-            return mounted.getOriginalShots();
-        } else {
-            return ((AmmoType) mounted.getType()).getShots();
-        }
-    }
-
     public static boolean hasLowAmmo(Entity unit) {
         for (Mounted<?> ammo : unit.getAmmo()) {
             if (ammo == null) {
@@ -1729,6 +1675,14 @@ public class UnitUtils {
         }
 
         return false;
+    }
+
+    public static int getShots(Mounted<?> mounted) {
+        if (mounted.getUsableShotsLeft() > 0) {
+            return mounted.getOriginalShots();
+        } else {
+            return ((AmmoType) mounted.getType()).getShots();
+        }
     }
 
     public static boolean hasEmptyAmmo(Entity unit) {
@@ -1922,6 +1876,64 @@ public class UnitUtils {
         return UnitUtils.getNumberOfDamagedSystemCriticalSlots(unit, cs);
     }
 
+    // Sets multiple system crits to repairing.
+    // Gyro Life support and Sensors.
+    public static int getNumberOfDamagedSystemCriticalSlots(Entity unit, CriticalSlot cs) {
+        int count = 0;
+
+        // actuators are always 1.
+        if (cs.getIndex() > Mek.SYSTEM_GYRO) {
+            if (cs.isDamaged()) {
+                return 1;
+            }
+
+            return 0;
+        }
+
+        if (cs.getIndex() == Mek.SYSTEM_GYRO) {
+            for (int slot = 0; slot < unit.getNumberOfCriticalSlots(Mek.LOC_CENTER_TORSO); slot++) {
+                CriticalSlot crit = unit.getCritical(Mek.LOC_CENTER_TORSO, slot);
+                if ((crit == null) || (crit.getType() != CriticalSlot.TYPE_SYSTEM) || !crit.isDamaged()) {
+                    continue;
+                }
+
+                if (crit.getIndex() == cs.getIndex()) {
+                    count++;
+                }
+            }
+        }// if it's not a GYRO then its sensors or life support
+        // as engines have already been filtered
+        else {
+            if (((Mek) unit).getCockpitType() == Mek.COCKPIT_TORSO_MOUNTED) {
+                for (int location = LOC_CENTER_TORSO; location <= LOC_LT; location++) {
+                    for (int slot = 0; slot < unit.getNumberOfCriticalSlots(location); slot++) {
+                        CriticalSlot crit = unit.getCritical(location, slot);
+                        if ((crit == null) || (crit.getType() != CriticalSlot.TYPE_SYSTEM) || !crit.isDamaged()) {
+                            continue;
+                        }
+
+                        if (crit.getIndex() == cs.getIndex()) {
+                            count++;
+                        }
+                    }
+                }
+            }// Normal cockpit in the head.
+            else {
+                for (int slot = 0; slot < unit.getNumberOfCriticalSlots(LOC_HEAD); slot++) {
+                    CriticalSlot crit = unit.getCritical(LOC_HEAD, slot);
+                    if ((crit == null) || (crit.getType() != CriticalSlot.TYPE_SYSTEM) || !crit.isDamaged()) {
+                        continue;
+                    }
+
+                    if (crit.getIndex() == cs.getIndex()) {
+                        count++;
+                    }
+                }
+            }
+        }
+        return count;
+    }
+
     public static String getCritName(Entity unit, int slot, int location,
           boolean armor) {
 
@@ -1975,6 +1987,45 @@ public class UnitUtils {
 
         return crit.getMount().getType().getInternalName();
 
+    }
+
+    /**
+     * @param unit An @Entity unit
+     *
+     * @return engine type of the Mek Used for getting what engine type the entity has.
+     *
+     * @author Torren (Jason Tighe)
+     */
+    public static int getEngineType(Entity unit) {
+        int engineNumber = UnitUtils.getNumberOfEngineCrits(unit);
+
+        // only check meks everyone else gets STD engine returned
+        if (unit instanceof Mek) {
+            // Check to see if its a clan unit.
+            if (unit.isClan()) {
+
+                if (engineNumber == 12) {
+                    return UnitUtils.CLAN_XXL_ENGINE;
+                }
+                if (engineNumber == 10) {
+                    return UnitUtils.CLAN_XL_ENGINE;
+                }
+            }// end tech level if
+            // Else they are IS
+            else {
+                if (engineNumber == 18) {
+                    return UnitUtils.IS_XXL_ENGINE;
+                }
+                if (engineNumber == 12) {
+                    return UnitUtils.IS_XL_ENGINE;
+                }
+                if (engineNumber == 10) {
+                    return UnitUtils.IS_LIGHT_ENGINE;
+                }
+            }// end tech level else
+        }// end istanceof if
+
+        return UnitUtils.STANDARD_ENGINE;
     }
 
     public static String getCritExternalName(Entity unit, int slot,
@@ -2033,87 +2084,6 @@ public class UnitUtils {
         }// end CS type if
 
         return crit.getMount().getType().getInternalName();
-    }
-
-    public static boolean isCompatibleTech(Entity unit, int techLevel) {
-        // armor and IS are universal everything else gets a +4 to the roll if the tech levels are not compatible.
-        if ((techLevel != TechConstants.T_ALL)
-                  && (techLevel != TechConstants.T_ALLOWED_ALL)
-                  && (techLevel != TechConstants.T_TECH_UNKNOWN)) {
-            if (unit.getTechLevel() != techLevel) {
-                switch (unit.getTechLevel()) {
-                    case TechConstants.T_CLAN_UNOFFICIAL:
-                        if (techLevel != TechConstants.T_CLAN_UNOFFICIAL) {
-                            return false;
-                        }
-                        break;
-                    case TechConstants.T_CLAN_EXPERIMENTAL:
-                        if ((techLevel != TechConstants.T_CLAN_EXPERIMENTAL)
-                                  && (techLevel != TechConstants.T_CLAN_UNOFFICIAL)) {
-                            return false;
-                        }
-                        break;
-                    case TechConstants.T_CLAN_ADVANCED:
-                        if ((techLevel != TechConstants.T_CLAN_ADVANCED)
-                                  && (techLevel != TechConstants.T_CLAN_EXPERIMENTAL)
-                                  && (techLevel != TechConstants.T_CLAN_UNOFFICIAL)) {
-                            return false;
-                        }
-                        break;
-                    case TechConstants.T_CLAN_TW:
-                        if ((techLevel != TechConstants.T_CLAN_TW)
-                                  && (techLevel != TechConstants.T_CLAN_ADVANCED)
-                                  && (techLevel != TechConstants.T_CLAN_EXPERIMENTAL)
-                                  && (techLevel != TechConstants.T_CLAN_UNOFFICIAL)) {
-                            return false;
-                        }
-                        break;
-                    case TechConstants.T_IS_UNOFFICIAL:
-                        if (techLevel != TechConstants.T_IS_UNOFFICIAL) {
-                            return false;
-                        }
-                        break;
-                    case TechConstants.T_IS_EXPERIMENTAL:
-                        if ((techLevel != TechConstants.T_IS_UNOFFICIAL)
-                                  && (techLevel != TechConstants.T_IS_EXPERIMENTAL)) {
-                            return false;
-                        }
-                        break;
-                    case TechConstants.T_IS_ADVANCED:
-                        if ((techLevel != TechConstants.T_IS_ADVANCED)
-                                  && (techLevel != TechConstants.T_IS_UNOFFICIAL)
-                                  && (techLevel != TechConstants.T_IS_EXPERIMENTAL)) {
-                            return false;
-                        }
-                    case TechConstants.T_IS_TW_ALL:
-                        if ((techLevel != TechConstants.T_IS_TW_ALL)
-                                  && (techLevel != TechConstants.T_IS_ADVANCED)
-                                  && (techLevel != TechConstants.T_IS_UNOFFICIAL)
-                                  && (techLevel != TechConstants.T_IS_EXPERIMENTAL)) {
-                            return false;
-                        }
-                    case TechConstants.T_IS_TW_NON_BOX:
-                        if ((techLevel != TechConstants.T_IS_TW_NON_BOX)
-                                  && (techLevel != TechConstants.T_IS_TW_ALL)
-                                  && (techLevel != TechConstants.T_IS_ADVANCED)
-                                  && (techLevel != TechConstants.T_IS_UNOFFICIAL)
-                                  && (techLevel != TechConstants.T_IS_EXPERIMENTAL)) {
-                            return false;
-                        }
-                    case TechConstants.T_INTRO_BOX_SET:
-                        if ((techLevel != TechConstants.T_INTRO_BOX_SET)
-                                  && (techLevel != TechConstants.T_IS_TW_NON_BOX)
-                                  && (techLevel != TechConstants.T_IS_TW_ALL)
-                                  && (techLevel != TechConstants.T_IS_ADVANCED)
-                                  && (techLevel != TechConstants.T_IS_UNOFFICIAL)
-                                  && (techLevel != TechConstants.T_IS_EXPERIMENTAL)) {
-                            return false;
-                        }
-                }
-            }
-        }
-
-        return true;
     }
 
     public static boolean isSameTech(int partTechLevel, int houseTechLevel) {
@@ -2181,36 +2151,6 @@ public class UnitUtils {
 
     }
 
-    public static Entity createOMG() {
-        Mek entity = new BipedMek(Mek.GYRO_STANDARD, Mek.COCKPIT_STANDARD);
-
-        entity.setYear(2075);
-        entity.setTechLevel(TechConstants.T_INTRO_BOX_SET);
-        entity.setWeight(25);
-        entity.setEngine(new Engine(325, Engine.NORMAL_ENGINE, 0));
-        entity.setArmorType(EquipmentType.T_ARMOR_STANDARD);
-        entity.setStructureType(EquipmentType.T_STRUCTURE_STANDARD);
-
-        entity.addGyro();
-        entity.addEngineCrits();
-        entity.addCockpit();
-        entity.addEngineSinks(entity.getEngine().integralHeatSinkCapacity(false), MiscType.F_HEAT_SINK, false);
-
-        entity.autoSetInternal();
-        for (int loc = 0; loc <= Mek.LOC_LEFT_LEG; loc++) {
-            entity.initializeArmor(1, loc);
-            if (entity.hasRearArmor(loc)) {
-                entity.initializeRearArmor(1, loc);
-            }
-        }
-
-        entity.getFluff()
-              .setHistory("This is an Error Unit! If you've received this unit in error please let someone know.");
-        entity.setModel("OMG-UR-FD");
-        entity.setChassis("Error");
-        return entity;
-    }
-
     /**
      * Tries to set UnitEntity from the global MekFileName
      */
@@ -2247,6 +2187,36 @@ public class UnitUtils {
             }
         }
         return unitEntity;
+    }
+
+    public static Entity createOMG() {
+        Mek entity = new BipedMek(Mek.GYRO_STANDARD, Mek.COCKPIT_STANDARD);
+
+        entity.setYear(2075);
+        entity.setTechLevel(TechConstants.T_INTRO_BOX_SET);
+        entity.setWeight(25);
+        entity.setEngine(new Engine(325, Engine.NORMAL_ENGINE, 0));
+        entity.setArmorType(EquipmentType.T_ARMOR_STANDARD);
+        entity.setStructureType(EquipmentType.T_STRUCTURE_STANDARD);
+
+        entity.addGyro();
+        entity.addEngineCrits();
+        entity.addCockpit();
+        entity.addEngineSinks(entity.getEngine().integralHeatSinkCapacity(false), MiscType.F_HEAT_SINK, false);
+
+        entity.autoSetInternal();
+        for (int loc = 0; loc <= Mek.LOC_LEFT_LEG; loc++) {
+            entity.initializeArmor(1, loc);
+            if (entity.hasRearArmor(loc)) {
+                entity.initializeRearArmor(1, loc);
+            }
+        }
+
+        entity.getFluff()
+              .setHistory("This is an Error Unit! If you've received this unit in error please let someone know.");
+        entity.setModel("OMG-UR-FD");
+        entity.setChassis("Error");
+        return entity;
     }
 
     public static String getEntityFileName(Entity entity) {
@@ -2299,6 +2269,36 @@ public class UnitUtils {
         }
 
         return false;
+    }
+
+    /**
+     * Method that determines whether a unit can successfully start its engine/reactor. Non-Mek units always have
+     * working engines. Meks with fewer than 3 engine-critical slots have working fusion reactors. Also, a missing
+     * cockpit or head will mean you cannot start up either.
+     */
+    public static boolean canStartUp(Entity unit) {
+        int engineHits = 0;
+
+        // non-Meks may always start engines
+        if (!(unit instanceof Mek)) {
+            return true;
+        }
+
+        // no head no startup
+        if (unit.getInternal(LOC_HEAD) <= 0) {
+            return false;
+        }
+
+        // no cockpit no startup
+        if (unit.getBadCriticalSlots(CriticalSlot.TYPE_SYSTEM, Mek.SYSTEM_COCKPIT,
+              Mek.LOC_HEAD) > 0) {
+            return false;
+        }
+
+        // else, check for engine critical slots
+        engineHits = UnitUtils.getNumberOfDamagedEngineCrits(unit);
+
+        return (engineHits < 3);
     }
 
     public static void destroyCockPit(Entity unit) {

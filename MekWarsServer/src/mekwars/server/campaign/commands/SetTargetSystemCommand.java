@@ -5,12 +5,6 @@ public class SetTargetSystemCommand implements Command {
     int accessLevel = 0;
     String syntax = "";
 
-    public int getExecutionLevel() {return accessLevel;}
-
-    public void setExecutionLevel(int i) {accessLevel = i;}
-
-    public String getSyntax() {return syntax;}
-
     public void process(java.util.StringTokenizer command, String Username) {
         if (accessLevel != 0) {
             int userLevel = server.campaign.CampaignMain.cm.getServer().getUserLevel(Username);
@@ -40,6 +34,12 @@ public class SetTargetSystemCommand implements Command {
         unit.setTargetSystem(newTargetSystem);
         server.campaign.CampaignMain.cm.toUser("PL|STS|" + unitID + "|" + newTargetSystem + "|", Username, false);
     }
+
+    public int getExecutionLevel() {return accessLevel;}
+
+    public void setExecutionLevel(int i) {accessLevel = i;}
+
+    public String getSyntax() {return syntax;}
 
 
 }

@@ -25,12 +25,6 @@ public class EnrollCommand implements Command {
     int accessLevel = 0;
     String syntax = "";
 
-    public int getExecutionLevel() {return accessLevel;}
-
-    public void setExecutionLevel(int i) {accessLevel = i;}
-
-    public String getSyntax() {return syntax;}
-
     public void process(java.util.StringTokenizer command, String Username) {
 
         /*
@@ -202,4 +196,10 @@ public class EnrollCommand implements Command {
         server.campaign.CampaignMain.cm.doSendModMail("NOTE", Username + " enrolled in the campaign (IP: " + ip + ").");
 
     }//end process()
+
+    public int getExecutionLevel() {return accessLevel;}
+
+    public void setExecutionLevel(int i) {accessLevel = i;}
+
+    public String getSyntax() {return syntax;}
 }//end EnrollCommand

@@ -71,17 +71,194 @@ public class CUnit extends Unit {
         init();
     }
 
-    public CUnit(IClient client) {
-        this.client = client;
-        init();
-    }
-
     // PRIVATE METHODS
     private void init() {
         unitEntity = null;
         BV = 0;
         setStatus(STATUS_OK);
         setProducer("unknown origin");
+    }
+
+    public CUnit(IClient client) {
+        this.client = client;
+        init();
+    }
+
+    /**
+     * A method which returns the MU cost of a specified campaign unit.
+     *
+     * @return int - # of MU it takes to buy a unit of the given weight class
+     */
+    public static int getPriceForUnit(IClient client, int weightClass,
+          int type_id, House producer) {
+
+        int result = Integer.MAX_VALUE;
+        try {
+            String classType = Unit.getWeightClassDesc(weightClass) + Unit.getTypeClassDesc(type_id) + "Price";
+
+            if (type_id == Unit.MEK) {
+                result = Integer.parseInt(client.getServerConfigs(Unit.getWeightClassDesc(weightClass) + "Price"));
+            } else {
+                result = Integer.parseInt(client.getServerConfigs(classType));
+            }
+
+            // modify the result by the faction price modifier
+            result += producer.getHouseUnitPriceMod(type_id, weightClass);
+
+            // dont allow negative pricing
+            if (result < 0) {
+                result = 0;
+            }
+        } catch (Exception ex) {
+            MWLogger.errLog(ex);
+        }
+        return result;
+    }// end getPriceForCUnit()
+
+    /**
+     * A method which returns the influence cost of a specified campaign mech.
+     *
+     * @return int - # if IP it takes to buy a mech of the given units weight class
+     */
+    public static int getInfluenceForUnit(IClient mwclient, int weightClass, int type_id, House producer) {
+
+        int result;
+        String classType = Unit.getWeightClassDesc(weightClass) + Unit.getTypeClassDesc(type_id) + "Inf";
+
+        if (type_id == Unit.MEK) {
+            result = Integer.parseInt(mwclient.getServerConfigs(Unit.getWeightClassDesc(weightClass) + "Inf"));
+        } else {
+            result = Integer.parseInt(mwclient.getServerConfigs(classType));
+        }
+
+        // modify the result by the faction price modifier
+        result += producer.getHouseUnitFluMod(type_id, weightClass);
+
+        // dont allow negative pricing
+        if (result < 0) {
+            result = 0;
+        }
+
+        return result;
+    }
+
+    /**
+     * A method which returns the PP COST of a unit. Meks and Vehicles are segregated by weightClass. Infantry are flat
+     * priced accross
+     * <p>
+     * all weight classes. @ param weight - the weight class to be checked @ return int - the PP cost
+     */
+    public static int getPPForUnit(IClient client, int weightClass,
+          int type_id, House producer) {
+
+        int result;
+        String classType = Unit.getWeightClassDesc(weightClass) + Unit.getTypeClassDesc(type_id) + "PP";
+
+        if (type_id == Unit.MEK) {
+            result = Integer.parseInt(client.getServerConfigs(Unit.getWeightClassDesc(weightClass) + "PP"));
+        } else {
+            result = Integer.parseInt(client.getServerConfigs(classType));
+        }
+
+        // adjust PP cost by faction specific mod
+        result += producer.getHouseUnitComponentMod(type_id, weightClass);
+
+        // dont allow a unit to consume negative PP
+        if (result < 0) {
+            result = 0;
+        }
+
+        return result;
+    }
+
+    public static double getArmorCost(Entity unit, IClient client, int location) {
+        double cost;
+
+        if (Boolean.parseBoolean(client.getServerConfigs("UsePartsRepair"))) {
+            return 0;
+        }
+
+        String armorCost = "CostPoint" + UnitUtils.getArmorShortName(unit, location);
+        cost = Double.parseDouble(client.getServerConfigs(armorCost));
+
+        return cost;
+    }
+
+    public static double getStructureCost(Entity unit, IClient client) {
+        double cost;
+
+        if (Boolean.parseBoolean(client.getServerConfigs("UsePartsRepair"))) {
+            return 0;
+        }
+
+        String armorCost = "CostPoint" + UnitUtils.getInternalShortName(unit) + "IS";
+        cost = Double.parseDouble(client.getServerConfigs(armorCost));
+
+        return cost;
+    }
+
+    public static double getCritCost(Entity unit, IClient client,
+          CriticalSlot crit) {
+        double cost;
+
+        if (Boolean.parseBoolean(client.getServerConfigs("UsePartsRepair"))) {
+            return 0;
+        }
+
+        if (crit == null) {
+            return 0;
+        }
+
+        if (crit.isBreached() && !crit.isDamaged()) {
+            return 0;
+        }
+        // else
+        if (UnitUtils.isEngineCrit(crit)) {
+            cost = Double.parseDouble(client.getServerConfigs("EngineCritRepairCost"));
+        } else if (crit.getType() == CriticalSlot.TYPE_SYSTEM) {
+            if (crit.isMissing()) {
+                cost = Double.parseDouble(client.getServerConfigs("SystemCritReplaceCost"));
+            } else {
+                cost = Double.parseDouble(client.getServerConfigs("SystemCritRepairCost"));
+            }
+        } else {
+            Mounted<?> mounted = crit.getMount();
+
+            if (mounted.getType() instanceof WeaponType weapon) {
+                if (weapon.hasFlag(WeaponType.F_ENERGY)) {
+                    if (crit.isMissing()) {
+                        cost = Double.parseDouble(client.getServerConfigs("EnergyWeaponCritReplaceCost"));
+                    } else {
+                        cost = Double.parseDouble(client.getServerConfigs("EnergyWeaponCritRepairCost"));
+                    }
+                } else if (weapon.hasFlag(WeaponType.F_BALLISTIC)) {
+                    if (crit.isMissing()) {
+                        cost = Double.parseDouble(client.getServerConfigs("BallisticCritReplaceCost"));
+                    } else {
+                        cost = Double.parseDouble(client.getServerConfigs("BallisticCritRepairCost"));
+                    }
+                } else if (weapon.hasFlag(WeaponType.F_MISSILE)) {
+                    if (crit.isMissing()) {
+                        cost = Double.parseDouble(client.getServerConfigs("MissileCritReplaceCost"));
+                    } else {
+                        cost = Double.parseDouble(client.getServerConfigs("MissileCritRepairCost"));
+                    }
+                } else // use the misc eq costs.
+                    if (crit.isMissing()) {
+                        cost = Double.parseDouble(client.getServerConfigs("EquipmentCritReplaceCost"));
+                    } else {
+                        cost = Double.parseDouble(client.getServerConfigs("EquipmentCritRepairCost"));
+                    }
+            } else // use the misc eq costs.
+                if (crit.isMissing()) {
+                    cost = Double.parseDouble(client.getServerConfigs("EquipmentCritReplaceCost"));
+                } else {
+                    cost = Double.parseDouble(client.getServerConfigs("EquipmentCritRepairCost"));
+                }
+        }
+
+        cost = Math.max(cost, 1);
+        return cost;
     }
 
     // PUBLIC METHODS
@@ -259,6 +436,44 @@ public class CUnit extends Unit {
         return (true);
     }
 
+    /**
+     * Tries to set UnitEntity from the global MekFileName
+     */
+    public void createEntity() {
+        unitEntity = UnitUtils.createEntity(getUnitFilename());
+
+        if (unitEntity == null) {
+            MWLogger.errLog("Error unit failed to load. Exiting.");
+            System.exit(1);
+        }
+
+        unitEntity.setCrew(UnitUtils.createEntityPilot(this));
+
+        if (unitEntity.getChassis().equals("Error")) {
+            setProducer(STR."Unable to find \{getUnitFilename()} on clients system!");
+        }
+        getC3Type(unitEntity);
+    }
+
+    public String getModelName() {
+
+        if (getType() != MEK) {
+            return (STR."\{getEntity().getChassis()} \{getEntity().getModel()}").trim();
+        }
+
+        if (getEntity().isOmni()) {
+            return (STR."\{getEntity().getChassis()} \{getEntity().getModel()}").trim();
+        }
+
+        if (!getEntity().getModel().trim().isEmpty()) {
+            return getEntity().getModel().trim();
+        }
+
+        // else
+        return getEntity().getChassis().trim();
+
+    }
+
     //@salient this method is only accessible when quirks are enabled.
     private void setUnitQuirks(String data) {
         StringTokenizer st = new StringTokenizer(data, "!");
@@ -278,6 +493,10 @@ public class CUnit extends Unit {
             }
         }
 
+    }
+
+    public Entity getEntity() {
+        return unitEntity;
     }
 
     public String getHtmlQuirksList() {
@@ -451,31 +670,14 @@ public class CUnit extends Unit {
         return (tinfo);
     }
 
-    public String getModelName() {
-
-        if (getType() != MEK) {
-            return (STR."\{getEntity().getChassis()} \{getEntity().getModel()}").trim();
-        }
-
-        if (getEntity().isOmni()) {
-            return (STR."\{getEntity().getChassis()} \{getEntity().getModel()}").trim();
-        }
-
-        if (!getEntity().getModel().trim().isEmpty()) {
-            return getEntity().getModel().trim();
-        }
-
-        // else
-        return getEntity().getChassis().trim();
-
+    public int getBaseBV() {
+        return getEntity().calculateBattleValue(false, true);
     }
+
+    // STATIC METHODS
 
     public int getBV() {
         return Math.max(BV, 0);
-    }
-
-    public int getBaseBV() {
-        return getEntity().calculateBattleValue(false, true);
     }
 
     public int getBVForMatch() {
@@ -483,29 +685,6 @@ public class CUnit extends Unit {
             return getBaseBV();
         }
         return getBV();
-    }
-
-    public Entity getEntity() {
-        return unitEntity;
-    }
-
-    /**
-     * Tries to set UnitEntity from the global MekFileName
-     */
-    public void createEntity() {
-        unitEntity = UnitUtils.createEntity(getUnitFilename());
-
-        if (unitEntity == null) {
-            MWLogger.errLog("Error unit failed to load. Exiting.");
-            System.exit(1);
-        }
-
-        unitEntity.setCrew(UnitUtils.createEntityPilot(this));
-
-        if (unitEntity.getChassis().equals("Error")) {
-            setProducer(STR."Unable to find \{getUnitFilename()} on clients system!");
-        }
-        getC3Type(unitEntity);
     }
 
     public boolean isOmni() {
@@ -550,197 +729,9 @@ public class CUnit extends Unit {
         return pilotIsRepairing;
     }
 
-    // STATIC METHODS
-
-    /**
-     * A method which returns the MU cost of a specified campaign unit.
-     *
-     * @return int - # of MU it takes to buy a unit of the given weight class
-     */
-    public static int getPriceForUnit(IClient client, int weightClass,
-          int type_id, House producer) {
-
-        int result = Integer.MAX_VALUE;
-        try {
-            String classType = Unit.getWeightClassDesc(weightClass) + Unit.getTypeClassDesc(type_id) + "Price";
-
-            if (type_id == Unit.MEK) {
-                result = Integer.parseInt(client.getServerConfigs(Unit.getWeightClassDesc(weightClass) + "Price"));
-            } else {
-                result = Integer.parseInt(client.getServerConfigs(classType));
-            }
-
-            // modify the result by the faction price modifier
-            result += producer.getHouseUnitPriceMod(type_id, weightClass);
-
-            // dont allow negative pricing
-            if (result < 0) {
-                result = 0;
-            }
-        } catch (Exception ex) {
-            MWLogger.errLog(ex);
-        }
-        return result;
-    }// end getPriceForCUnit()
-
-    /**
-     * A method which returns the influence cost of a specified campaign mech.
-     *
-     * @return int - # if IP it takes to buy a mech of the given units weight class
-     */
-    public static int getInfluenceForUnit(IClient mwclient, int weightClass, int type_id, House producer) {
-
-        int result;
-        String classType = Unit.getWeightClassDesc(weightClass) + Unit.getTypeClassDesc(type_id) + "Inf";
-
-        if (type_id == Unit.MEK) {
-            result = Integer.parseInt(mwclient.getServerConfigs(Unit.getWeightClassDesc(weightClass) + "Inf"));
-        } else {
-            result = Integer.parseInt(mwclient.getServerConfigs(classType));
-        }
-
-        // modify the result by the faction price modifier
-        result += producer.getHouseUnitFluMod(type_id, weightClass);
-
-        // dont allow negative pricing
-        if (result < 0) {
-            result = 0;
-        }
-
-        return result;
-    }
-
-    /**
-     * A method which returns the PP COST of a unit. Meks and Vehicles are segregated by weightClass. Infantry are flat
-     * priced accross
-     * <p>
-     * all weight classes. @ param weight - the weight class to be checked @ return int - the PP cost
-     */
-    public static int getPPForUnit(IClient client, int weightClass,
-          int type_id, House producer) {
-
-        int result;
-        String classType = Unit.getWeightClassDesc(weightClass) + Unit.getTypeClassDesc(type_id) + "PP";
-
-        if (type_id == Unit.MEK) {
-            result = Integer.parseInt(client.getServerConfigs(Unit.getWeightClassDesc(weightClass) + "PP"));
-        } else {
-            result = Integer.parseInt(client.getServerConfigs(classType));
-        }
-
-        // adjust PP cost by faction specific mod
-        result += producer.getHouseUnitComponentMod(type_id, weightClass);
-
-        // dont allow a unit to consume negative PP
-        if (result < 0) {
-            result = 0;
-        }
-
-        return result;
-    }
-
-    public static double getArmorCost(Entity unit, IClient client, int location) {
-        double cost;
-
-        if (Boolean.parseBoolean(client.getServerConfigs("UsePartsRepair"))) {
-            return 0;
-        }
-
-        String armorCost = "CostPoint" + UnitUtils.getArmorShortName(unit, location);
-        cost = Double.parseDouble(client.getServerConfigs(armorCost));
-
-        return cost;
-    }
-
-    public static double getStructureCost(Entity unit, IClient client) {
-        double cost;
-
-        if (Boolean.parseBoolean(client.getServerConfigs("UsePartsRepair"))) {
-            return 0;
-        }
-
-        String armorCost = "CostPoint" + UnitUtils.getInternalShortName(unit) + "IS";
-        cost = Double.parseDouble(client.getServerConfigs(armorCost));
-
-        return cost;
-    }
-
     public void setAntiAir(boolean aa) {
         Quirks quirks = unitEntity.getQuirks();
         quirks.getOption("anti_air").setValue(aa);
-    }
-
-    public void setTargetSystem(int type) {
-        try {
-            targetSystem.setTargetSystem(type);
-        } catch (TargetTypeOutOfBoundsException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
-        }
-    }
-
-    public static double getCritCost(Entity unit, IClient client,
-          CriticalSlot crit) {
-        double cost;
-
-        if (Boolean.parseBoolean(client.getServerConfigs("UsePartsRepair"))) {
-            return 0;
-        }
-
-        if (crit == null) {
-            return 0;
-        }
-
-        if (crit.isBreached() && !crit.isDamaged()) {
-            return 0;
-        }
-        // else
-        if (UnitUtils.isEngineCrit(crit)) {
-            cost = Double.parseDouble(client.getServerConfigs("EngineCritRepairCost"));
-        } else if (crit.getType() == CriticalSlot.TYPE_SYSTEM) {
-            if (crit.isMissing()) {
-                cost = Double.parseDouble(client.getServerConfigs("SystemCritReplaceCost"));
-            } else {
-                cost = Double.parseDouble(client.getServerConfigs("SystemCritRepairCost"));
-            }
-        } else {
-            Mounted<?> mounted = crit.getMount();
-
-            if (mounted.getType() instanceof WeaponType weapon) {
-                if (weapon.hasFlag(WeaponType.F_ENERGY)) {
-                    if (crit.isMissing()) {
-                        cost = Double.parseDouble(client.getServerConfigs("EnergyWeaponCritReplaceCost"));
-                    } else {
-                        cost = Double.parseDouble(client.getServerConfigs("EnergyWeaponCritRepairCost"));
-                    }
-                } else if (weapon.hasFlag(WeaponType.F_BALLISTIC)) {
-                    if (crit.isMissing()) {
-                        cost = Double.parseDouble(client.getServerConfigs("BallisticCritReplaceCost"));
-                    } else {
-                        cost = Double.parseDouble(client.getServerConfigs("BallisticCritRepairCost"));
-                    }
-                } else if (weapon.hasFlag(WeaponType.F_MISSILE)) {
-                    if (crit.isMissing()) {
-                        cost = Double.parseDouble(client.getServerConfigs("MissileCritReplaceCost"));
-                    } else {
-                        cost = Double.parseDouble(client.getServerConfigs("MissileCritRepairCost"));
-                    }
-                } else // use the misc eq costs.
-                    if (crit.isMissing()) {
-                        cost = Double.parseDouble(client.getServerConfigs("EquipmentCritReplaceCost"));
-                    } else {
-                        cost = Double.parseDouble(client.getServerConfigs("EquipmentCritRepairCost"));
-                    }
-            } else // use the misc eq costs.
-                if (crit.isMissing()) {
-                    cost = Double.parseDouble(client.getServerConfigs("EquipmentCritReplaceCost"));
-                } else {
-                    cost = Double.parseDouble(client.getServerConfigs("EquipmentCritRepairCost"));
-                }
-        }
-
-        cost = Math.max(cost, 1);
-        return cost;
     }
 
     public String getTargetSystemTypeDesc() {
@@ -750,5 +741,14 @@ public class CUnit extends Unit {
 
     public TargetSystem getTargetSystem() {
         return targetSystem;
+    }
+
+    public void setTargetSystem(int type) {
+        try {
+            targetSystem.setTargetSystem(type);
+        } catch (TargetTypeOutOfBoundsException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
     }
 }// end CUnit.java

@@ -20,6 +20,10 @@ package mekwars.server.campaign.operations;
  * PayoutModifier takes the base payouts and modifies them by ELO, based on SO-configurable settings
  */
 public class PayoutModifier {
+    public PayoutModifier() {
+
+    }
+
     public java.util.TreeMap<String, Integer> calculate(String currName, ShortOperation so, int earnedMoney,
           int earnedRP, int earnedXP, int earnedFlu) {
 
@@ -169,10 +173,6 @@ public class PayoutModifier {
                                                        "ModifyOpPayoutByELO_Multiplier"))) + 0.5));
 
         return earnedRP;
-    }
-
-    public PayoutModifier() {
-
     }
 
 }

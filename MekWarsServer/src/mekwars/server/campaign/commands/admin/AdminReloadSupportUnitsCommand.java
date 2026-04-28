@@ -21,10 +21,6 @@ public class AdminReloadSupportUnitsCommand implements server.campaign.commands.
     int accessLevel = server.MWChatServer.auth.IAuthenticator.ADMIN;
     String syntax = "";
 
-    public int getExecutionLevel() {return accessLevel;}
-
-    public void setExecutionLevel(int i) {accessLevel = i;}
-
     public String getSyntax() {return syntax;}
 
     //calculate faction rankings by comparing with original owner
@@ -45,4 +41,8 @@ public class AdminReloadSupportUnitsCommand implements server.campaign.commands.
         server.campaign.CampaignMain.cm.doSendModMail("NOTE", Username + " has reloaded the support unit definitions");
         server.campaign.CampaignMain.cm.toUser("You have reloaded the support unit definitions", Username, true);
     }
+
+    public int getExecutionLevel() {return accessLevel;}
+
+    public void setExecutionLevel(int i) {accessLevel = i;}
 }

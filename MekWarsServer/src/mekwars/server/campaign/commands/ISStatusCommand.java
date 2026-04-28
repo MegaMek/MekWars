@@ -25,12 +25,6 @@ public class ISStatusCommand implements Command {
     int accessLevel = 0;
     String syntax = "";
 
-    public int getExecutionLevel() {return accessLevel;}
-
-    public void setExecutionLevel(int i) {accessLevel = i;}
-
-    public String getSyntax() {return syntax;}
-
     public void process(java.util.StringTokenizer command, String Username) {
 
         if (accessLevel != 0) {
@@ -63,6 +57,12 @@ public class ISStatusCommand implements Command {
             } else {doShowISStatus(Username, theone.getName(), "null", false);}
         }
     }
+
+    public int getExecutionLevel() {return accessLevel;}
+
+    public void setExecutionLevel(int i) {accessLevel = i;}
+
+    public String getSyntax() {return syntax;}
 
     public void doShowISStatus(String User, String h, String h2, boolean onlyOwner) {
         String result = "<h2>Universe Status";

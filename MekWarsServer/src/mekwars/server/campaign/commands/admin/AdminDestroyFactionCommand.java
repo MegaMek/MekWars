@@ -15,7 +15,6 @@ public class AdminDestroyFactionCommand implements server.campaign.commands.Comm
     }
 
     public String getSyntax() {
-        return syntax;
     }
 
     public void process(java.util.StringTokenizer command, String Username) {

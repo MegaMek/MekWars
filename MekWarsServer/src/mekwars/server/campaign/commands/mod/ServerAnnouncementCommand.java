@@ -27,10 +27,6 @@ public class ServerAnnouncementCommand implements server.campaign.commands.Comma
     int accessLevel = server.MWChatServer.auth.IAuthenticator.MODERATOR;
     String syntax = "Message";
 
-    public int getExecutionLevel() {return accessLevel;}
-
-    public void setExecutionLevel(int i) {accessLevel = i;}
-
     public String getSyntax() {return syntax;}
 
     public void process(java.util.StringTokenizer command, String Username) {
@@ -48,4 +44,8 @@ public class ServerAnnouncementCommand implements server.campaign.commands.Comma
         }
         server.campaign.CampaignMain.cm.getServer().sendChat("AM:" + Username + ": " + command.nextToken());
     }
+
+    public int getExecutionLevel() {return accessLevel;}
+
+    public void setExecutionLevel(int i) {accessLevel = i;}
 }

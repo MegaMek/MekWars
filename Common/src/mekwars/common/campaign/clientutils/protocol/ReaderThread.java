@@ -47,17 +47,15 @@ import mekwars.common.util.MWLogger;
  * Constantly read from the socket's input stream
  */
 public class ReaderThread extends Thread {
+    private static final int NL = 10; // "\n" in ASCII and UTF8
+    private final IConnectionHandler _connectionHandler;
+    private final Inflater inflater = new Inflater();
+    private final byte[] rlBuffer = new byte[256 * 256];
     private boolean keepGoing = true;
 
-    private InputStream _sis;
-
-    private IConnectionListener _listener;
-
-    private final IConnectionHandler _connectionHandler;
-
-    private final Inflater inflater = new Inflater();
-
     //private Checksum checksum = new CRC32();
+    private InputStream _sis;
+    private IConnectionListener _listener;
 
     public ReaderThread(IConnectionHandler handler, Socket s) {
         super("ConnectionHandler$ReaderThread");
@@ -72,72 +70,6 @@ public class ReaderThread extends Thread {
 
     public void setListener(IConnectionListener listener) {
         _listener = listener;
-    }
-
-    private final byte[] rlBuffer = new byte[256 * 256];
-
-    private static final int NL = 10; // "\n" in ASCII and UTF8
-
-    private String readLine() throws IOException {
-        try {
-            int n = 0;
-            int i;
-            while ((i = _sis.read()) != NL) {
-                rlBuffer[n++] = (byte) i;
-            }
-            // rlBuffer[n++] = (byte) NL;
-            byte[] a = new byte[n];
-            System.arraycopy(rlBuffer, 0, a, 0, n);
-            return new String(a, StandardCharsets.UTF_8);
-        } catch (Exception e) {
-            throw new IOException();
-        }
-    }
-
-    /**
-     * Decompose a raw message into an array of String, splitting on the DELIMITER defined in ICommands.
-     */
-
-    private String[] decompose(String input) {
-        StringTokenizer st = new StringTokenizer(input, IClient.DELIMITER);
-        Vector<String> v = new Vector<>(5, 1);
-        while (st.hasMoreTokens()) {
-            v.addElement(st.nextToken());
-        }
-        String[] args = new String[v.size()];
-        v.copyInto(args);
-        return args;
-    }
-
-    private void inflate(String command) throws Exception {
-        String[] args = decompose(command);
-        int size = Integer.parseInt(args[1]);
-        int fullSize = 29999;
-
-        //just in case
-        if (args.length > 2) {fullSize = Integer.parseInt(args[2]);}
-
-        byte[] compressedBytes = new byte[size];
-        byte[] rawBytes = new byte[fullSize];
-        // use an Inflater instead of InflaterInputStream so we don't
-        // have to worry about the internal IIS buffers screwing our stream
-        // position.
-        int totalRead = 0;
-        while (totalRead < size) {
-            totalRead += _sis.read(compressedBytes, totalRead, size - totalRead);
-            ConnectionHandlerLocal.DEBUG("< Read " + totalRead + " of " + size);
-        }
-
-        inflater.reset();
-        inflater.setInput(compressedBytes, 0, size);
-        int textLength = inflater.inflate(rawBytes);
-
-        BufferedReader br = new BufferedReader(new InputStreamReader(new ByteArrayInputStream(rawBytes, 0, textLength),
-              StandardCharsets.UTF_8));
-        while ((command = br.readLine()) != null) {
-            ConnectionHandlerLocal.DEBUG("< inflated: " + command);
-            _listener.incomingMessage(command);
-        }
     }
 
     @Override
@@ -186,7 +118,69 @@ public class ReaderThread extends Thread {
         }
     }
 
+    private String readLine() throws IOException {
+        try {
+            int n = 0;
+            int i;
+            while ((i = _sis.read()) != NL) {
+                rlBuffer[n++] = (byte) i;
+            }
+            // rlBuffer[n++] = (byte) NL;
+            byte[] a = new byte[n];
+            System.arraycopy(rlBuffer, 0, a, 0, n);
+            return new String(a, StandardCharsets.UTF_8);
+        } catch (Exception e) {
+            throw new IOException();
+        }
+    }
+
     public void pleaseStop() {
         keepGoing = false;
+    }
+
+    /**
+     * Decompose a raw message into an array of String, splitting on the DELIMITER defined in ICommands.
+     */
+
+    private String[] decompose(String input) {
+        StringTokenizer st = new StringTokenizer(input, IClient.DELIMITER);
+        Vector<String> v = new Vector<>(5, 1);
+        while (st.hasMoreTokens()) {
+            v.addElement(st.nextToken());
+        }
+        String[] args = new String[v.size()];
+        v.copyInto(args);
+        return args;
+    }
+
+    private void inflate(String command) throws Exception {
+        String[] args = decompose(command);
+        int size = Integer.parseInt(args[1]);
+        int fullSize = 29999;
+
+        //just in case
+        if (args.length > 2) {fullSize = Integer.parseInt(args[2]);}
+
+        byte[] compressedBytes = new byte[size];
+        byte[] rawBytes = new byte[fullSize];
+        // use an Inflater instead of InflaterInputStream so we don't
+        // have to worry about the internal IIS buffers screwing our stream
+        // position.
+        int totalRead = 0;
+        while (totalRead < size) {
+            totalRead += _sis.read(compressedBytes, totalRead, size - totalRead);
+            ConnectionHandlerLocal.DEBUG("< Read " + totalRead + " of " + size);
+        }
+
+        inflater.reset();
+        inflater.setInput(compressedBytes, 0, size);
+        int textLength = inflater.inflate(rawBytes);
+
+        BufferedReader br = new BufferedReader(new InputStreamReader(new ByteArrayInputStream(rawBytes, 0, textLength),
+              StandardCharsets.UTF_8));
+        while ((command = br.readLine()) != null) {
+            ConnectionHandlerLocal.DEBUG("< inflated: " + command);
+            _listener.incomingMessage(command);
+        }
     }
 }

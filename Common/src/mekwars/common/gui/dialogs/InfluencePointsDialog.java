@@ -28,15 +28,12 @@ import mekwars.common.util.SpringLayoutHelper;
 
 public final class InfluencePointsDialog implements java.awt.event.ActionListener, java.awt.event.KeyListener {
 
-    //store the client backlink for other things to use
-    private final IClient client;
-
     private final static String okayCommand = "Okay";
     private final static String cancelCommand = "Cancel";
     private final static String rewardCommand = "Reward";
     private final static String refreshCommand = "Refresh";
-
-
+    //store the client backlink for other things to use
+    private final IClient client;
     private final javax.swing.JButton cancelButton = new javax.swing.JButton("Cancel");
 
     //TEXT FIELDS
@@ -46,15 +43,13 @@ public final class InfluencePointsDialog implements java.awt.event.ActionListene
           javax.swing.SwingConstants.TRAILING);
 
     private final javax.swing.JComboBox<String> rewardsComboBox;
-    private javax.swing.JComboBox<String> refreshComboBox = new javax.swing.JComboBox<>();
-
     private final javax.swing.JTextField amountText = new javax.swing.JTextField(5);
     private final javax.swing.JLabel amountLabel;
-    int cost;
-
     //STOCK DIALOUG AND PANE
     private final javax.swing.JDialog dialog;
     private final javax.swing.JOptionPane pane;
+    int cost;
+    private javax.swing.JComboBox<String> refreshComboBox = new javax.swing.JComboBox<>();
     //	private int fluToRepod;
 
     public InfluencePointsDialog(IClient client) {
@@ -184,6 +179,9 @@ public final class InfluencePointsDialog implements java.awt.event.ActionListene
     public void keyTyped(java.awt.event.KeyEvent e) {
     }
 
+    public void keyPressed(java.awt.event.KeyEvent e) {
+    }
+
     public void keyReleased(java.awt.event.KeyEvent e) {
         String selection = (String) rewardsComboBox.getSelectedItem();
         cost = Integer.parseInt(amountText.getText());
@@ -198,9 +196,6 @@ public final class InfluencePointsDialog implements java.awt.event.ActionListene
                 costLabel.setText(STR."Result: Gain \{client.moneyOrFluMessage(true, true, total)}");
             }
         }
-    }
-
-    public void keyPressed(java.awt.event.KeyEvent e) {
     }
 
     public void actionPerformed(java.awt.event.ActionEvent e) {

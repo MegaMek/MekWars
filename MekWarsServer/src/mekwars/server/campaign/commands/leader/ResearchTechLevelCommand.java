@@ -19,15 +19,6 @@ public class ResearchTechLevelCommand implements server.campaign.commands.Comman
 
     // Starting out at mod level this can be lowered as needed
     int accessLevel = server.MWChatServer.auth.IAuthenticator.MODERATOR;
-
-    public int getExecutionLevel() {
-        return accessLevel;
-    }
-
-    public void setExecutionLevel(int i) {
-        accessLevel = i;
-    }
-
     String syntax = "";
 
     public String getSyntax() {
@@ -121,5 +112,13 @@ public class ResearchTechLevelCommand implements server.campaign.commands.Comman
                   Username + " has taken your faction another step closer to the next technology level!");
         }
         house.updated();
+    }
+
+    public int getExecutionLevel() {
+        return accessLevel;
+    }
+
+    public void setExecutionLevel(int i) {
+        accessLevel = i;
     }
 }// end RequestSubFactionPromotionCommand class

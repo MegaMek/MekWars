@@ -20,12 +20,6 @@ public class StartChristmasJob implements Job {
     public StartChristmasJob() {
     }
 
-    @Override
-    public void execute(JobExecutionContext context) {
-        MWLogger.debugLog("Starting Christmas");
-        server.campaign.util.ChristmasHandler.getInstance().startChristmas();
-    }
-
     /**
      * Get the StartChristmasJob into the scheduler
      */
@@ -69,5 +63,11 @@ public class StartChristmasJob implements Job {
     public static void stop() {
         TriggerKey key = new TriggerKey("StartChristmasTrigger", "ChristmasGroup");
         MWScheduler.getInstance().unscheduleJob(key);
+    }
+
+    @Override
+    public void execute(JobExecutionContext context) {
+        MWLogger.debugLog("Starting Christmas");
+        server.campaign.util.ChristmasHandler.getInstance().startChristmas();
     }
 }

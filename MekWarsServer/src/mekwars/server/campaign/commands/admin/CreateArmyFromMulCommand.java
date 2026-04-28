@@ -22,14 +22,6 @@ public class CreateArmyFromMulCommand implements server.campaign.commands.Comman
 
     String syntax = "Filename#Army Name#[Target Player]";
 
-    public int getExecutionLevel() {
-        return accessLevel;
-    }
-
-    public void setExecutionLevel(int i) {
-        accessLevel = i;
-    }
-
     public String getSyntax() {
         return syntax;
     }
@@ -95,5 +87,13 @@ public class CreateArmyFromMulCommand implements server.campaign.commands.Comman
         server.campaign.CampaignMain.cm.toUser("army created: " + armyname, p.getName(), true);
         server.campaign.CampaignMain.cm.doSendModMail("NOTE", Username + " has created an army from file " + filename);
 
+    }
+
+    public int getExecutionLevel() {
+        return accessLevel;
+    }
+
+    public void setExecutionLevel(int i) {
+        accessLevel = i;
     }
 }

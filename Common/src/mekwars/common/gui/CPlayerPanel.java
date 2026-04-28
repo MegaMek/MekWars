@@ -33,21 +33,16 @@ public class CPlayerPanel extends javax.swing.JScrollPane {
      *
      */
     private static final long serialVersionUID = -7036003412110367753L;
-    client.MWClient mwclient;
-    client.campaign.CPlayer player;
-    IClientConfig config;
-
     private static final String PP_NAME = "Name";
     private static final String PP_STATUS = "Status:";
     private static final String PP_EXP = "Experience:";
     private static final String PP_ELO = "Rating:";
-    private static String PP_REWARD;
     private static final String PP_TECHS = "Techs:";
     private static final String PP_PAIDTECHS = "Paid Techs:";
     private static final String PP_BAYS = "Bays:";
     private static final String PP_IDLETECHS = "Idle Techs:";
     private static final String PP_FREEUNITS = "Free Units:"; //@Salient for free build
-
+    private static String PP_REWARD;
     protected javax.swing.JPanel PlayerPanel = new javax.swing.JPanel();
     protected javax.swing.JEditorPane lblLogo = new javax.swing.JEditorPane("text/html", "");
     protected javax.swing.JPanel InfoPanel = new javax.swing.JPanel();
@@ -63,6 +58,9 @@ public class CPlayerPanel extends javax.swing.JScrollPane {
     protected javax.swing.JLabel lblNextTick = new javax.swing.JLabel();
     protected javax.swing.JLabel lblFreeMeks = new javax.swing.JLabel(); //@Salient for free build
     protected long nextTick = System.currentTimeMillis();
+    client.MWClient mwclient;
+    client.campaign.CPlayer player;
+    IClientConfig config;
 
     public CPlayerPanel(client.MWClient client) {
         PP_REWARD = client.getserverConfigs("RPLongName") + ":";

@@ -23,14 +23,6 @@ public class AdminPurgeHouseBaysCommand implements server.campaign.commands.Comm
     int accessLevel = server.MWChatServer.auth.IAuthenticator.ADMIN;
     String syntax = "Faction Name#[ALL]unittype#[ALL]unitsize";
 
-    public int getExecutionLevel() {
-        return accessLevel;
-    }
-
-    public void setExecutionLevel(int i) {
-        accessLevel = i;
-    }
-
     public String getSyntax() {
         return syntax;
     }
@@ -104,5 +96,13 @@ public class AdminPurgeHouseBaysCommand implements server.campaign.commands.Comm
 
         h.updated();
         server.campaign.CampaignMain.cm.doSendModMail("NOTE", Username + " has purged bays for " + h.getName());
+    }
+
+    public int getExecutionLevel() {
+        return accessLevel;
+    }
+
+    public void setExecutionLevel(int i) {
+        accessLevel = i;
     }
 }// end AdminPurgeHouseBaysCommand

@@ -25,9 +25,9 @@ import server.campaign.util.scheduler.MWScheduler;
 
 /**
  * Allows the administrator to change configs.  Used by Server Config dialog.
- *
- * Starting at v2016.10.26, added some catches for specific config changes to restart
- * services that would otherwise require a server restart
+ * <p>
+ * Starting at v2016.10.26, added some catches for specific config changes to restart services that would otherwise
+ * require a server restart
  *
  * @version 2016.10.26
  */
@@ -35,10 +35,6 @@ public class AdminChangeServerConfigCommand implements server.campaign.commands.
 
     int accessLevel = server.MWChatServer.auth.IAuthenticator.ADMIN;
     String syntax = "config#arg";
-
-    public int getExecutionLevel() {return accessLevel;}
-
-    public void setExecutionLevel(int i) {accessLevel = i;}
 
     public String getSyntax() {return syntax;}
 
@@ -99,4 +95,8 @@ public class AdminChangeServerConfigCommand implements server.campaign.commands.
         //NO MODMAIL for setting changes. Server Config GUI would spam too much.
 
     }//end process
+
+    public int getExecutionLevel() {return accessLevel;}
+
+    public void setExecutionLevel(int i) {accessLevel = i;}
 }

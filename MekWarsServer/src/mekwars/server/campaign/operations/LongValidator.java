@@ -28,28 +28,25 @@ import server.campaign.operations.newopmanager.I_OperationManager;
 //TODO: remove "unused" once longs are running
 public class LongValidator {
 
-    //IVARS
-    //backreference to manager which owns this object
-    private I_OperationManager manager;
+    //these failures are immediate (reserved, through 100)
+    public static final int LFAILS_UNAUTHORIZED = 0;
 
     //public static int MODE_ATTACKER = 0;
     //public static int MODE_DEFENDER = 1;
     //long presumes attack!
-
-    //these failures are immediate (reserved, through 100)
-    public static final int LFAILS_UNAUTHORIZED = 0;
     public static final int LFAILS_ALREADYTARGETTED = 1;
     public static final int LFAILS_HOUSEMAXED = 2;
-
     //these failures accumulate
     public static final int LFAILS_RANGE = 101;
     public static final int LFAILS_HOUSEMONEY = 102;
     public static final int LFAILS_HOUSEACTIONS = 103;
-
     public static final int LFAILS_PLAYERMONEY = 104;
     public static final int LFAILS_PLAYERREWARD = 105;
     public static final int LFAILS_PLAYERFLU = 106;
     public static final int LFAILS_PLAYEREXP = 107;
+    //IVARS
+    //backreference to manager which owns this object
+    private I_OperationManager manager;
 
     //CONSTRUCTORS
     public LongValidator(OperationManager m) {

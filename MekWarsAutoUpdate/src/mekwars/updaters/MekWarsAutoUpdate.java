@@ -45,24 +45,6 @@ public class MekWarsAutoUpdate {
     private static final String VERSION = "4.0";
     private Properties config = null;
 
-    public static void main(String[] args) {
-
-        try {
-            PrintStream ps = new PrintStream(new BufferedOutputStream(
-                  new FileOutputStream(logFileName), 64));
-            System.setOut(ps);
-            System.setErr(ps);
-        } catch (Exception ex) {
-            ex.printStackTrace();
-        }
-
-        System.err.println("Running MekWarsAutoUpdate: " + VERSION);
-        System.err.flush();
-
-        new MekWarsAutoUpdate(args);
-        System.exit(0);
-    }
-
     public MekWarsAutoUpdate(String[] args) {
 
         loadConfigs();
@@ -156,6 +138,24 @@ public class MekWarsAutoUpdate {
             ex.printStackTrace();
             System.exit(0);
         }
+    }
+
+    public static void main(String[] args) {
+
+        try {
+            PrintStream ps = new PrintStream(new BufferedOutputStream(
+                  new FileOutputStream(logFileName), 64));
+            System.setOut(ps);
+            System.setErr(ps);
+        } catch (Exception ex) {
+            ex.printStackTrace();
+        }
+
+        System.err.println("Running MekWarsAutoUpdate: " + VERSION);
+        System.err.flush();
+
+        new MekWarsAutoUpdate(args);
+        System.exit(0);
     }
 
     public void copyTempFiles(String path) {

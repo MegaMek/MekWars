@@ -24,10 +24,6 @@ public class ListMultiPlayerGroupsCommand implements server.campaign.commands.Co
     int accessLevel = server.MWChatServer.auth.IAuthenticator.MODERATOR;
     String syntax = "";
 
-    public int getExecutionLevel() {return accessLevel;}
-
-    public void setExecutionLevel(int i) {accessLevel = i;}
-
     public String getSyntax() {return syntax;}
 
     public void process(java.util.StringTokenizer command, String Username) {
@@ -88,4 +84,8 @@ public class ListMultiPlayerGroupsCommand implements server.campaign.commands.Co
         server.campaign.CampaignMain.cm.toUser(toSend, Username, true);
 
     }
+
+    public int getExecutionLevel() {return accessLevel;}
+
+    public void setExecutionLevel(int i) {accessLevel = i;}
 }

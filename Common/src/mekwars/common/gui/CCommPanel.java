@@ -103,6 +103,7 @@ public class CCommPanel extends javax.swing.JPanel
     boolean autoTextUpdate;
     mekwars.common.gui.CCommPanel.CTabForwardAction ForwardCommTab;
     mekwars.common.gui.CCommPanel.CTabBackwardAction BackwardCommTab;
+
     public CCommPanel(IClient client) {
         int index;
         int mnemo;

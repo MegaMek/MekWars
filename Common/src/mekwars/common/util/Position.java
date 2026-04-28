@@ -84,11 +84,11 @@ public class Position {
         this.y = y;
     }
 
-    public double distanceSq(double xpos, double ypos) {
-        return Math.sqrt(Math.pow(x - xpos, 2) + Math.pow(y - ypos, 2));
-    }
-
     public double distanceSq(Position p) {
         return distanceSq(p.x, p.y);
+    }
+
+    public double distanceSq(double xpos, double ypos) {
+        return Math.sqrt(Math.pow(x - xpos, 2) + Math.pow(y - ypos, 2));
     }
 }

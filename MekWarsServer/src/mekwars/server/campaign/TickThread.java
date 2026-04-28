@@ -37,16 +37,6 @@ public class TickThread extends Thread {
         return tickid;
     }
 
-    public void extendedWait(int time) {
-        until = System.currentTimeMillis() + time;
-        try {
-            this.wait(time);
-        } catch (Exception ex) {
-            MWLogger.errLog(ex);
-        }
-
-    }
-
     public long getRemainingSleepTime() {
         return Math.max(0, until - System.currentTimeMillis());
     }
@@ -101,5 +91,15 @@ public class TickThread extends Thread {
         } catch (Exception ex) {
             MWLogger.errLog(ex);
         }
+    }
+
+    public void extendedWait(int time) {
+        until = System.currentTimeMillis() + time;
+        try {
+            this.wait(time);
+        } catch (Exception ex) {
+            MWLogger.errLog(ex);
+        }
+
     }
 }

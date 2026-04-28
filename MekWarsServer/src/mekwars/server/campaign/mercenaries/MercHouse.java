@@ -60,16 +60,6 @@ public class MercHouse extends server.campaign.SHouse {
     }
 
     /**
-     * A method which override's SHouse's isMerc() and returns true.
-     *
-     * @return boolean - true
-     */
-    @Override
-    public boolean isMercHouse() {
-        return true;
-    }
-
-    /**
      * COULD USE containsKey(k) IN PLACE OF NULL CHECK! SHOULD PROLLY CHANGE.
      * <p>
      * A method which determines which faction a mercenary is currently fighting for by checking his contract
@@ -87,6 +77,24 @@ public class MercHouse extends server.campaign.SHouse {
             return playerContract.getEmployingHouse();
         }
         return this;
+    }
+
+    public java.util.Hashtable<String, ContractInfo> getOutstandingContracts() {
+        return OutstandingContracts;
+    }
+
+    public void setOutstandingContracts(java.util.Hashtable<String, ContractInfo> h) {
+        OutstandingContracts = h;
+    }
+
+    /**
+     * A method which override's SHouse's isMerc() and returns true.
+     *
+     * @return boolean - true
+     */
+    @Override
+    public boolean isMercHouse() {
+        return true;
     }
 
     /**
@@ -146,7 +154,6 @@ public class MercHouse extends server.campaign.SHouse {
         return mercBays;
     }
 
-
     /**
      * Mercs get no welfare, instead a loan rec. urgru 11/11/02
      * <p>
@@ -193,14 +200,6 @@ public class MercHouse extends server.campaign.SHouse {
             result.append("|");
         }
         return result.toString();
-    }
-
-    public java.util.Hashtable<String, ContractInfo> getOutstandingContracts() {
-        return OutstandingContracts;
-    }
-
-    public void setOutstandingContracts(java.util.Hashtable<String, ContractInfo> h) {
-        OutstandingContracts = h;
     }
 
     public boolean canConquerPlanets() {

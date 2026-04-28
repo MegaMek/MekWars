@@ -20,18 +20,10 @@ import server.util.discord.DiscordMessageHandler;
 
 public class CodeTestCommand implements Command {
 
-    int accessLevel = 0;
-
-    public int getExecutionLevel() {return 200;}
-
-    public void setExecutionLevel(int i) {}
-
-    String syntax = "start or stop";
-
-    public String getSyntax() {return syntax;}
-
     final int ACTION_START = 0;
     final int ACTION_STOP = 1;
+    int accessLevel = 0;
+    String syntax = "start or stop";
 
     public void process(java.util.StringTokenizer command, String Username) {
         if (accessLevel != 0) {
@@ -92,4 +84,10 @@ public class CodeTestCommand implements Command {
                 break;
         }
     }
+
+    public int getExecutionLevel() {return 200;}
+
+    public void setExecutionLevel(int i) {}
+
+    public String getSyntax() {return syntax;}
 }

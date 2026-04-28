@@ -21,10 +21,6 @@ public class AdminTerminateAllCommand implements server.campaign.commands.Comman
     int accessLevel = server.MWChatServer.auth.IAuthenticator.ADMIN;
     String syntax = "";
 
-    public int getExecutionLevel() {return accessLevel;}
-
-    public void setExecutionLevel(int i) {accessLevel = i;}
-
     public String getSyntax() {return syntax;}
 
     public void process(java.util.StringTokenizer command, String Username) {
@@ -69,4 +65,8 @@ public class AdminTerminateAllCommand implements server.campaign.commands.Comman
         server.campaign.CampaignMain.cm.doSendModMail("NOTE", Username + " terminated all unfinished games.");
 
     }//end process()
+
+    public int getExecutionLevel() {return accessLevel;}
+
+    public void setExecutionLevel(int i) {accessLevel = i;}
 }//end AdminTerminateAllCommand

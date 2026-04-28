@@ -36,13 +36,6 @@ import javax.swing.SwingConstants;
 
 public class SplashWindow {
 
-    public JFrame splashWindow;
-    private boolean continueAnimating;
-    private final JLabel versionLabel;
-    private final AnimationThread animator;
-    private int currentStatus;
-    private final JProgressBar progressBar;
-
     public final int STATUS_INITIALIZING = 0;
     public final int STATUS_FETCHING_DATA = 1;
     public final int STATUS_CONSTRUCTING_GUI = 2;
@@ -50,6 +43,12 @@ public class SplashWindow {
     public final int STATUS_INPUT_WAIT = 4;
     public final int STATUS_DATA_ERROR = 5;
     public final int STATUS_CONNECT_FAILED = 6;
+    private final JLabel versionLabel;
+    private final AnimationThread animator;
+    private final JProgressBar progressBar;
+    public JFrame splashWindow;
+    private boolean continueAnimating;
+    private int currentStatus;
 
     public SplashWindow() {
 
@@ -137,12 +136,12 @@ public class SplashWindow {
         return versionLabel;
     }
 
-    public void setStatus(int i) {
-        currentStatus = i;
-    }
-
     public int getStatus() {
         return currentStatus;
+    }
+
+    public void setStatus(int i) {
+        currentStatus = i;
     }
 
     public AnimationThread getAnimator() {

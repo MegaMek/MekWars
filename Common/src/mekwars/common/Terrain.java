@@ -29,10 +29,10 @@ import mekwars.common.persistence.BinWriter;
  */
 
 final public class Terrain {
+    private final Vector<PlanetEnvironment> environments = new Vector<>(10, 1);
     // id
     private int id = -1;
     private String Name = "";
-    private final Vector<PlanetEnvironment> environments = new Vector<>(10, 1);
 
     /**
      * For Serialisation.

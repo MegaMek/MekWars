@@ -23,16 +23,15 @@ import common.Unit;
 // AdminGrantComponents#Faction#Type#WeightClass#Components
 public class AdminResetFactionComponentsCommand implements server.campaign.commands.Command {
 
-    int accessLevel = server.MWChatServer.auth.IAuthenticator.ADMIN;
-    String syntax = "faction name or all#Full or a number";
-
     final int actionFill = 0;
     final int actionEmpty = 1;
     final int actionFillTo = 2;
+    int accessLevel = server.MWChatServer.auth.IAuthenticator.ADMIN;
+    String syntax = "faction name or all#Full or a number";
 
-    public int getExecutionLevel() {return accessLevel;}
+    public AdminResetFactionComponentsCommand() {
 
-    public void setExecutionLevel(int i) {accessLevel = i;}
+    }
 
     public String getSyntax() {return syntax;}
 
@@ -117,6 +116,10 @@ public class AdminResetFactionComponentsCommand implements server.campaign.comma
         }
     }
 
+    public int getExecutionLevel() {return accessLevel;}
+
+    public void setExecutionLevel(int i) {accessLevel = i;}
+
     private void reset(server.campaign.SHouse h, int action, int fillTo) {
         for (int weight = Unit.LIGHT; weight <= Unit.ASSAULT; weight++) {
             for (int type = Unit.MEK; type < Unit.MAXBUILD; type++) {
@@ -127,9 +130,5 @@ public class AdminResetFactionComponentsCommand implements server.campaign.comma
                 }
             }
         }
-    }
-
-    public AdminResetFactionComponentsCommand() {
-
     }
 }

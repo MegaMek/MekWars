@@ -21,10 +21,6 @@ public class AdminExchangePlanetOwnershipCommand implements server.campaign.comm
     int accessLevel = server.MWChatServer.auth.IAuthenticator.ADMIN;
     String syntax = "planet#winner#loser#amount";
 
-    public int getExecutionLevel() {return accessLevel;}
-
-    public void setExecutionLevel(int i) {accessLevel = i;}
-
     public String getSyntax() {return syntax;}
 
     public void process(java.util.StringTokenizer command, String Username) {
@@ -105,4 +101,8 @@ public class AdminExchangePlanetOwnershipCommand implements server.campaign.comm
                     winningHouse.getName() +
                     ".");
     }
+
+    public int getExecutionLevel() {return accessLevel;}
+
+    public void setExecutionLevel(int i) {accessLevel = i;}
 }

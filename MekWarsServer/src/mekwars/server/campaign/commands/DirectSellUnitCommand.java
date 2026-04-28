@@ -22,20 +22,7 @@ import common.util.StringUtils;
 public class DirectSellUnitCommand implements Command {
 
     int accessLevel = 2;
-
-    public int getExecutionLevel() {
-        return accessLevel;
-    }
-
-    public void setExecutionLevel(int i) {
-        accessLevel = i;
-    }
-
     String syntax = "buyer#seller#unitid#sellPrice";
-
-    public String getSyntax() {
-        return syntax;
-    }
 
     public void process(java.util.StringTokenizer command, String Username) {
 
@@ -302,5 +289,17 @@ public class DirectSellUnitCommand implements Command {
                   Username + " has used the Direct Sell Command and sent themself into welfare.");
         }
 
+    }
+
+    public int getExecutionLevel() {
+        return accessLevel;
+    }
+
+    public void setExecutionLevel(int i) {
+        accessLevel = i;
+    }
+
+    public String getSyntax() {
+        return syntax;
     }
 }

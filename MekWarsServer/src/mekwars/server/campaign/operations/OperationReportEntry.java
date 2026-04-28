@@ -44,6 +44,10 @@
         private String opType = "";
 
 
+        public OperationReportEntry() {
+
+        }
+
         public boolean gameIsDraw() {
             return drawGame;
         }
@@ -190,9 +194,5 @@
             timeString.append(minutes + "m");
             timeString.append(seconds + "s");
             return timeString.toString();
-        }
-
-        public OperationReportEntry() {
-
         }
     }

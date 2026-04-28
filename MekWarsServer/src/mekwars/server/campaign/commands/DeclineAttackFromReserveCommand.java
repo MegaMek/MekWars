@@ -16,15 +16,7 @@ package mekwars.server.campaign.commands;
 public class DeclineAttackFromReserveCommand implements Command {
 
     int accessLevel = 2;
-
-    public int getExecutionLevel() {return accessLevel;}
-
-    public void setExecutionLevel(int i) {accessLevel = i;}
-
     String syntax = "";
-
-    public String getSyntax() {return syntax;}
-
 
     public void process(java.util.StringTokenizer command, String Username) {
 
@@ -67,5 +59,11 @@ public class DeclineAttackFromReserveCommand implements Command {
         server.campaign.CampaignMain.cm.toUser("AM:You have declined " + ap.getName() + "'s proposal.", Username, true);
 
     }//end process
+
+    public int getExecutionLevel() {return accessLevel;}
+
+    public void setExecutionLevel(int i) {accessLevel = i;}
+
+    public String getSyntax() {return syntax;}
 
 }//end AttackFromReserveCommand

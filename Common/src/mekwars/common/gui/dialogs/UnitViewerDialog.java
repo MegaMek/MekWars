@@ -67,6 +67,10 @@ public class UnitViewerDialog extends javax.swing.JFrame
       implements java.awt.event.ActionListener, java.awt.event.KeyListener, javax.swing.event.ListSelectionListener,
                  Runnable, java.awt.event.WindowListener, java.awt.event.ItemListener {
 
+    public static final int UNIT_VIEWER = 0;
+    public static final int OMNI_VARIANT_SELECTOR = 1;
+    public static final int UNIT_SELECTOR = 2;
+    public static final int UNIT_RESEARCH = 3;
     /**
      *
      */
@@ -74,26 +78,15 @@ public class UnitViewerDialog extends javax.swing.JFrame
     private static final long serialVersionUID = -7210333306969855153L;
     // how long after a key is typed does a new search begin
     private final static int KEY_TIMEOUT = 1000;
-    public static final int UNIT_VIEWER = 0;
-    public static final int OMNI_VARIANT_SELECTOR = 1;
-    public static final int UNIT_SELECTOR = 2;
-    public static final int UNIT_RESEARCH = 3;
-
+    private static final String SPACES = "                        ";
+    // };
     // these indices should match up with the static values in the
     // MekSummaryComparator
     private final String[] saSorts =
           { "Name", "Ref", "Weight", "BV" };// , "Year"
-    // };
-
     // frame which owns the dialog
     private final CMainFrame clientGUI;
-
-    private MekSummary[] meksCurrent;
     private final UnitLoadingDialog unitLoadingDialog;
-
-    private StringBuilder m_sbSearch = new StringBuilder();
-    private long m_nLastSearch = 0;
-
     private final javax.swing.JComboBox<String> chType = new javax.swing.JComboBox<>();
     private final javax.swing.JComboBox<String> chUnitType = new javax.swing.JComboBox<>();
     private final javax.swing.JComboBox<String> chWeightClass = new javax.swing.JComboBox<>();
@@ -101,42 +94,25 @@ public class UnitViewerDialog extends javax.swing.JFrame
     private final javax.swing.JPanel textBoxSpring = new javax.swing.JPanel(new javax.swing.SpringLayout());
     private final javax.swing.JPanel springHolder = new javax.swing.JPanel(new javax.swing.SpringLayout());
     private final javax.swing.JPanel fluffBoxSpring = new javax.swing.JPanel(new javax.swing.SpringLayout());
-
-    javax.swing.DefaultListModel<String> defaultModel;
-    javax.swing.ListSelectionModel listSelectionModel;
-    javax.swing.JList<String> mechList;
-    javax.swing.JScrollPane listScrollPane = null;
-    javax.swing.JScrollPane leftScrollPane = null;
-    javax.swing.JScrollPane rightScrollPane = null;
-    javax.swing.JScrollPane fluffScrollPane = null;
-
     private final javax.swing.JButton bCancel = new javax.swing.JButton("Close");
     private final javax.swing.JButton bSelect = new javax.swing.JButton("Select");
-
     private final javax.swing.JTextPane mekViewLeft;
     private final javax.swing.JTextPane mekViewRight;
     private final javax.swing.JTextPane unitFluff;
-
     private final javax.swing.JPanel pUpper = new javax.swing.JPanel();
-    private javax.swing.JPanel pPreview = new javax.swing.JPanel();
-
     private final IClient client;
-
-    // private String selectedUnit = null;
-
     private final int viewerType;
     private final boolean viewFluff;
-
     private final javax.swing.JPanel m_pOpenAdvanced = new javax.swing.JPanel();
     private final javax.swing.JButton m_bToggleAdvanced = new javax.swing.JButton("< Show Advanced Search >");
-    private javax.swing.JPanel m_pSouthParams = new javax.swing.JPanel();
-
     private final javax.swing.JComboBox<String> m_cWalk = new javax.swing.JComboBox<>();
     private final javax.swing.JTextField m_tWalk = new javax.swing.JTextField(2);
     private final javax.swing.JComboBox<String> m_cJump = new javax.swing.JComboBox<>();
     private final javax.swing.JTextField m_tJump = new javax.swing.JTextField(2);
     private final javax.swing.JComboBox<String> m_cArmor = new javax.swing.JComboBox<>();
     private final javax.swing.JTextField m_tWeapons1 = new javax.swing.JTextField(2);
+
+    // private String selectedUnit = null;
     private final javax.swing.JComboBox<String> m_cWeapons1 = new javax.swing.JComboBox<>();
     private final javax.swing.JComboBox<String> m_cOrAnd = new javax.swing.JComboBox<>();
     private final javax.swing.JTextField m_tWeapons2 = new javax.swing.JTextField(2);
@@ -146,7 +122,18 @@ public class UnitViewerDialog extends javax.swing.JFrame
     private final javax.swing.JButton m_bSearch = new javax.swing.JButton("Search");
     private final javax.swing.JButton m_bReset = new javax.swing.JButton("Reset");
     private final javax.swing.JLabel m_lCount = new javax.swing.JLabel();
-
+    javax.swing.DefaultListModel<String> defaultModel;
+    javax.swing.ListSelectionModel listSelectionModel;
+    javax.swing.JList<String> mechList;
+    javax.swing.JScrollPane listScrollPane = null;
+    javax.swing.JScrollPane leftScrollPane = null;
+    javax.swing.JScrollPane rightScrollPane = null;
+    javax.swing.JScrollPane fluffScrollPane = null;
+    private MekSummary[] meksCurrent;
+    private StringBuilder m_sbSearch = new StringBuilder();
+    private long m_nLastSearch = 0;
+    private javax.swing.JPanel pPreview = new javax.swing.JPanel();
+    private javax.swing.JPanel m_pSouthParams = new javax.swing.JPanel();
     private int m_count;
     private int m_old_nType;
     private int m_old_nUnitType;
@@ -269,31 +256,55 @@ public class UnitViewerDialog extends javax.swing.JFrame
         addWindowListener(this);
     }
 
-    public void run() {
+    private void populateChoices() {
 
-        // Loading mechs can take a while, so it will have its own thread.
-        // This prevents the UI from freezing, and allows the
-        // "Please wait..." dialog to behave properly on various Java VMs.
-
-        filterMeks();
-        unitLoadingDialog.setVisible(false);
-
-        final java.util.Map<String, String> hFailedFiles = MekSummaryCache.getInstance().getFailedFiles();
-        if ((hFailedFiles != null) && (!hFailedFiles.isEmpty())) {
-            new UnitFailureDialog(clientGUI, hFailedFiles); // self-showing
-            // dialog
+        for (int i = 0; i < EntityWeightClass.SIZE; i++) {
+            chWeightClass.addItem(EntityWeightClass.getClassName(i));
         }
+        chWeightClass.addItem("All"); //$NON-NLS-1$
+        chWeightClass.setSelectedIndex(0);
 
-        try {
-            String previousIndex = client.getConfigParam("UNITVIEWERUNIT");
-            mechList.setSelectedValue(previousIndex, true);
-        } catch (Exception e) {
-            mechList.setSelectedIndex(-1);
+        for (int i = 0; i < TechConstants.SIZE; i++) {
+            chType.addItem(TechConstants.getLevelDisplayableName(i));
         }
+        chType.setSelectedIndex(0);
 
-        pPreview.setVisible(true);
-        setVisible(true);
-        mechList.requestFocus();
+        for (int i = 0; i < UnitType.SIZE; i++) {
+            chUnitType.addItem(UnitType.getTypeDisplayableName(i));
+        }
+        chUnitType.addItem("All"); //$NON-NLS-1$
+        chUnitType.setSelectedIndex(0);
+
+        m_cWalk.addItem("At Least");
+        m_cWalk.addItem("Equal To");
+        m_cWalk.addItem("No More Than");
+        m_cJump.addItem("At Least");
+        m_cJump.addItem("Equal To");
+        m_cJump.addItem("No More Than");
+        m_cArmor.addItem("Any");
+        m_cArmor.addItem("%25 maximum");
+        m_cArmor.addItem("%50 maximum");
+        m_cArmor.addItem("%75 maximum");
+        m_cArmor.addItem("%90 maximum");
+        m_cOrAnd.addItem("or");
+        m_cOrAnd.addItem("and");
+        populateWeaponsAndEquipmentChoices();
+    }
+
+    private void populateJComboBoxs() {
+
+        /*
+         * If you change any of the strings below, be sure to check the
+         * filterMeks method below as some strings may need to be changed there
+         * as well.
+         */
+
+        String weight = client.getConfigParam("UNITVIEWERWEIGHT");
+        chWeightClass.setSelectedItem(weight);
+        String tech = client.getConfigParam("UNITVIEWERTECH");
+        chType.setSelectedItem(tech);
+        String type = client.getConfigParam("UNITVIEWERTYPE");
+        chUnitType.setSelectedItem(type);
     }
 
     private void buildSouthParams(boolean showAdvanced) {
@@ -351,48 +362,217 @@ public class UnitViewerDialog extends javax.swing.JFrame
 
     }
 
-    private void toggleAdvanced() {
-        pUpper.remove(m_pSouthParams);
-        m_pSouthParams = new javax.swing.JPanel();
-        buildSouthParams(m_bToggleAdvanced.getText().equals("< Show Advanced Search >"));
-        pUpper.add(m_pSouthParams, java.awt.BorderLayout.SOUTH);
-        // invalidate();
-        pack();
-        repaint();
+    void clearMechPreview() {
+        mekViewLeft.setEditable(false);
+        mekViewRight.setEditable(false);
+        unitFluff.setEditable(false);
+        // fluffScrollPane.setVisible(false);
+        mekViewLeft.setText("");
+        mekViewRight.setText("");
+        unitFluff.setText("");
+
+        // Remove preview image.
+        previewMech(null);
+
     }
 
-    private void populateJComboBoxs() {
-
-        /*
-         * If you change any of the strings below, be sure to check the
-         * filterMeks method below as some strings may need to be changed there
-         * as well.
-         */
-
-        String weight = client.getConfigParam("UNITVIEWERWEIGHT");
-        chWeightClass.setSelectedItem(weight);
-        String tech = client.getConfigParam("UNITVIEWERTECH");
-        chType.setSelectedItem(tech);
-        String type = client.getConfigParam("UNITVIEWERTYPE");
-        chUnitType.setSelectedItem(type);
+    private void populateWeaponsAndEquipmentChoices() {
+        int year = Integer.parseInt(client.getServerConfigs("CampaignYear"));
+        m_cWeapons1.removeAllItems();
+        m_cWeapons2.removeAllItems();
+        m_cEquipment.removeAllItems();
+        m_tWeapons1.setText("");
+        m_tWeapons2.setText("");
+        m_chkEquipment.setSelected(false);
+        int nType = chType.getSelectedIndex();
+        int nUnitType = chUnitType.getSelectedIndex();
+        for (java.util.Enumeration<EquipmentType> e = EquipmentType.getAllTypes(); e.hasMoreElements(); ) {
+            EquipmentType et = e.nextElement();
+            if ((et instanceof WeaponType) &&
+                      ((et.getTechLevel(year) == nType) ||
+                             (nType == TechConstants.T_ALL) ||
+                             ((nType == TechConstants.T_IS_TW_ALL) &&
+                                    ((et.getTechLevel(year) <= TechConstants.T_IS_TW_NON_BOX) ||
+                                           (et.getTechLevel(year) == TechConstants.T_IS_ADVANCED) ||
+                                           (et.getTechLevel(year) == TechConstants.T_CLAN_ADVANCED))) ||
+                             (((nType == TechConstants.T_IS_TW_ALL) || (nType == TechConstants.T_IS_ADVANCED)) &&
+                                    ((et.getTechLevel(year) <= TechConstants.T_IS_TW_NON_BOX) ||
+                                           (et.getTechLevel(year) == TechConstants.T_IS_ADVANCED))))) {
+                if (!(nUnitType == UnitType.SIZE) &&
+                          ((UnitType.getTypeName(nUnitType).equals("Mek") ||
+                                  UnitType.getTypeName(nUnitType).equals("Tank")) &&
+                                 (et.hasFlag(WeaponType.F_INFANTRY) || et.hasFlag(WeaponType.F_INFANTRY_ONLY)))) {
+                    continue;
+                }
+                m_cWeapons1.addItem(et.getName());
+                m_cWeapons2.addItem(et.getName());
+            }
+            if ((et instanceof MiscType) &&
+                      ((et.getTechLevel(year) == nType) ||
+                             (nType == TechConstants.T_ALL) ||
+                             ((nType == TechConstants.T_TW_ALL) &&
+                                    ((et.getTechLevel(year) <= TechConstants.T_IS_TW_NON_BOX) ||
+                                           (et.getTechLevel(year) == TechConstants.T_IS_ADVANCED) ||
+                                           (et.getTechLevel(year) == TechConstants.T_CLAN_ADVANCED))) ||
+                             (((nType == TechConstants.T_IS_TW_ALL) || (nType == TechConstants.T_IS_ADVANCED)) &&
+                                    ((et.getTechLevel(year) <= TechConstants.T_IS_TW_NON_BOX) ||
+                                           (et.getTechLevel(year) == TechConstants.T_IS_ADVANCED))))) {
+                m_cEquipment.addItem(et.getName());
+            }
+        }
+        try {
+            m_cWeapons1.setSelectedIndex(0);
+            m_cWeapons2.setSelectedIndex(0);
+            m_cEquipment.setSelectedIndex(0);
+        } catch (IllegalArgumentException ex) {
+            MWLogger.errLog("Error in Unit Viewer. Could not set slider indices to 0");
+            MWLogger.errLog(ex);
+        }
+        m_cWeapons1.invalidate();
+        m_cWeapons2.invalidate();
+        m_cEquipment.invalidate();
     }
 
-    private void saveComboBoxSettings() {
+    private void paintScreen(boolean fluff) {
 
-        client.getConfig().setParam("UNITVIEWERWEIGHT", (String) chWeightClass.getSelectedItem());
-        client.getConfig().setParam("UNITVIEWERTECH", (String) chType.getSelectedItem());
-        client.getConfig().setParam("UNITVIEWERTYPE", (String) chUnitType.getSelectedItem());
-        client.getConfig().setParam("UNITVIEWERSORT", (String) chSort.getSelectedItem());
-        if (mechList.getSelectedValue() != null) {
-            client.getConfig().setParam("UNITVIEWERUNIT", mechList.getSelectedValue());
+        springHolder.removeAll();
+        textBoxSpring.removeAll();
+        fluffBoxSpring.removeAll();
+
+        if (fluff) {
+            // panel w/ 1x4 SpringLayout for the mechView bits
+            textBoxSpring.add(listScrollPane);
+            textBoxSpring.add(leftScrollPane);
+            textBoxSpring.add(rightScrollPane);
+            SpringLayoutHelper.setupSpringGrid(textBoxSpring, 3);
+            fluffBoxSpring.add(fluffScrollPane);
+            SpringLayoutHelper.setupSpringGrid(fluffBoxSpring, 1);
+        } else {
+            // panel w/ 1x3 SpringLayout for the mechView bits
+            textBoxSpring.add(listScrollPane);
+            textBoxSpring.add(leftScrollPane);
+            textBoxSpring.add(rightScrollPane);
+            SpringLayoutHelper.setupSpringGrid(textBoxSpring, 3);
         }
 
-        client.getConfig().saveConfig();
-        client.setConfig();
+        // set up a formatting holder for the cancel button
+        javax.swing.JPanel buttonHolder = new javax.swing.JPanel();
+        if (viewerType != mekwars.common.gui.dialogs.UnitViewerDialog.UNIT_VIEWER) {
+            buttonHolder.add(bSelect);
+        }
+        buttonHolder.add(bCancel);
+
+        // set up the overall SpringLayout
+        springHolder.add(pUpper);
+        // springHolder.add(flowHolder);
+        springHolder.add(textBoxSpring);
+        if (fluff) {
+            springHolder.add(fluffBoxSpring);
+        }
+        springHolder.add(buttonHolder);
+        SpringLayoutHelper.setupSpringGrid(springHolder, 1);
+        pack();
+        this.repaint();
+
+        mechList.grabFocus();
+
+    }
+
+    void previewMech(Entity entity) {
+
+        Entity currEntity = entity;
+        boolean populateTextFields = true;
+
+        paintScreen((entity != null) && (currEntity.getFluff() != null) && viewFluff);
+
+        // null entity, so load a default unit.
+        if (entity == null) {
+            try {
+                // MekSummary ms =
+                // MekSummaryCache.getInstance().getMech("Error OMG-UR-FD");
+                currEntity = UnitUtils.createOMG();// new
+                // MekFileParser(ms.getSourceFile(),
+                // ms.getEntryName()).getEntity();
+                populateTextFields = false;
+            } catch (Exception e) {
+                // this would be very very bad ...
+            }
+        }
+
+        ConfigurableMekViewPanel mechView = null;
+        try {
+            mechView = new ConfigurableMekViewPanel(currEntity);
+        } catch (Exception e) {
+            // error unit didn't load right. this is bad news.
+            populateTextFields = false;
+        }
+
+        mekViewLeft.setEditable(false);
+        mekViewRight.setEditable(false);
+        if (populateTextFields) {
+            mekViewLeft.setText(mechView.getMechReadoutBasic());
+            mekViewRight.setText(mechView.getMechReadoutLoadout());
+            if ((currEntity.getFluff() != null) && viewFluff) {
+                unitFluff.setEditable(false);
+                unitFluff.setText(currEntity.getFluff().getHistory());
+                unitFluff.setCaretPosition(0);
+
+            } else {
+                unitFluff.setText("");
+            }
+        } else {
+            mekViewLeft.setText("No unit selected");
+            mekViewRight.setText("No unit selected");
+        }
+        mekViewLeft.setCaretPosition(0);
+        mekViewRight.setCaretPosition(0);
+
+        // Preview image of the unit...
+        try {
+            ((MekInfo) pPreview).setUnit(currEntity);
+            ((MekInfo) pPreview).setImageVisible(true);
+            pPreview.paint(pPreview.getGraphics());
+        } catch (Exception ex) {
+            // shouldnt ever get here ...
+        }
+    }
+
+    public void run() {
+
+        // Loading mechs can take a while, so it will have its own thread.
+        // This prevents the UI from freezing, and allows the
+        // "Please wait..." dialog to behave properly on various Java VMs.
+
+        filterMeks();
+        unitLoadingDialog.setVisible(false);
+
+        final java.util.Map<String, String> hFailedFiles = MekSummaryCache.getInstance().getFailedFiles();
+        if ((hFailedFiles != null) && (!hFailedFiles.isEmpty())) {
+            new UnitFailureDialog(clientGUI, hFailedFiles); // self-showing
+            // dialog
+        }
+
+        try {
+            String previousIndex = client.getConfigParam("UNITVIEWERUNIT");
+            mechList.setSelectedValue(previousIndex, true);
+        } catch (Exception e) {
+            mechList.setSelectedIndex(-1);
+        }
+
+        pPreview.setVisible(true);
+        setVisible(true);
+        mechList.requestFocus();
     }
 
     private void filterMeks() {
         filterMeks(false);
+    }
+
+    @Override
+    public void setVisible(boolean show) {
+        setLocationRelativeTo(null);
+        super.setVisible(show);
+        pack();
     }
 
     private void filterMeks(boolean calledByAdvancedSearch) {
@@ -460,98 +640,6 @@ public class UnitViewerDialog extends javax.swing.JFrame
         sortMeks();
     }
 
-    private void populateChoices() {
-
-        for (int i = 0; i < EntityWeightClass.SIZE; i++) {
-            chWeightClass.addItem(EntityWeightClass.getClassName(i));
-        }
-        chWeightClass.addItem("All"); //$NON-NLS-1$
-        chWeightClass.setSelectedIndex(0);
-
-        for (int i = 0; i < TechConstants.SIZE; i++) {
-            chType.addItem(TechConstants.getLevelDisplayableName(i));
-        }
-        chType.setSelectedIndex(0);
-
-        for (int i = 0; i < UnitType.SIZE; i++) {
-            chUnitType.addItem(UnitType.getTypeDisplayableName(i));
-        }
-        chUnitType.addItem("All"); //$NON-NLS-1$
-        chUnitType.setSelectedIndex(0);
-
-        m_cWalk.addItem("At Least");
-        m_cWalk.addItem("Equal To");
-        m_cWalk.addItem("No More Than");
-        m_cJump.addItem("At Least");
-        m_cJump.addItem("Equal To");
-        m_cJump.addItem("No More Than");
-        m_cArmor.addItem("Any");
-        m_cArmor.addItem("%25 maximum");
-        m_cArmor.addItem("%50 maximum");
-        m_cArmor.addItem("%75 maximum");
-        m_cArmor.addItem("%90 maximum");
-        m_cOrAnd.addItem("or");
-        m_cOrAnd.addItem("and");
-        populateWeaponsAndEquipmentChoices();
-    }
-
-    private void populateWeaponsAndEquipmentChoices() {
-        int year = Integer.parseInt(client.getServerConfigs("CampaignYear"));
-        m_cWeapons1.removeAllItems();
-        m_cWeapons2.removeAllItems();
-        m_cEquipment.removeAllItems();
-        m_tWeapons1.setText("");
-        m_tWeapons2.setText("");
-        m_chkEquipment.setSelected(false);
-        int nType = chType.getSelectedIndex();
-        int nUnitType = chUnitType.getSelectedIndex();
-        for (java.util.Enumeration<EquipmentType> e = EquipmentType.getAllTypes(); e.hasMoreElements(); ) {
-            EquipmentType et = e.nextElement();
-            if ((et instanceof WeaponType) &&
-                      ((et.getTechLevel(year) == nType) ||
-                             (nType == TechConstants.T_ALL) ||
-                             ((nType == TechConstants.T_IS_TW_ALL) &&
-                                    ((et.getTechLevel(year) <= TechConstants.T_IS_TW_NON_BOX) ||
-                                           (et.getTechLevel(year) == TechConstants.T_IS_ADVANCED) ||
-                                           (et.getTechLevel(year) == TechConstants.T_CLAN_ADVANCED))) ||
-                             (((nType == TechConstants.T_IS_TW_ALL) || (nType == TechConstants.T_IS_ADVANCED)) &&
-                                    ((et.getTechLevel(year) <= TechConstants.T_IS_TW_NON_BOX) ||
-                                           (et.getTechLevel(year) == TechConstants.T_IS_ADVANCED))))) {
-                if (!(nUnitType == UnitType.SIZE) &&
-                          ((UnitType.getTypeName(nUnitType).equals("Mek") ||
-                                  UnitType.getTypeName(nUnitType).equals("Tank")) &&
-                                 (et.hasFlag(WeaponType.F_INFANTRY) || et.hasFlag(WeaponType.F_INFANTRY_ONLY)))) {
-                    continue;
-                }
-                m_cWeapons1.addItem(et.getName());
-                m_cWeapons2.addItem(et.getName());
-            }
-            if ((et instanceof MiscType) &&
-                      ((et.getTechLevel(year) == nType) ||
-                             (nType == TechConstants.T_ALL) ||
-                             ((nType == TechConstants.T_TW_ALL) &&
-                                    ((et.getTechLevel(year) <= TechConstants.T_IS_TW_NON_BOX) ||
-                                           (et.getTechLevel(year) == TechConstants.T_IS_ADVANCED) ||
-                                           (et.getTechLevel(year) == TechConstants.T_CLAN_ADVANCED))) ||
-                             (((nType == TechConstants.T_IS_TW_ALL) || (nType == TechConstants.T_IS_ADVANCED)) &&
-                                    ((et.getTechLevel(year) <= TechConstants.T_IS_TW_NON_BOX) ||
-                                           (et.getTechLevel(year) == TechConstants.T_IS_ADVANCED))))) {
-                m_cEquipment.addItem(et.getName());
-            }
-        }
-        try {
-            m_cWeapons1.setSelectedIndex(0);
-            m_cWeapons2.setSelectedIndex(0);
-            m_cEquipment.setSelectedIndex(0);
-        } catch (IllegalArgumentException ex) {
-            MWLogger.errLog("Error in Unit Viewer. Could not set slider indices to 0");
-            MWLogger.errLog(ex);
-        }
-        m_cWeapons1.invalidate();
-        m_cWeapons2.invalidate();
-        m_cEquipment.invalidate();
-    }
-
     private void sortMeks() {
         java.util.Arrays.sort(meksCurrent, new MekSummaryComparator(chSort.getSelectedIndex()));
         defaultModel.clear();
@@ -569,23 +657,6 @@ public class UnitViewerDialog extends javax.swing.JFrame
         repaint();
     }
 
-    private void searchFor(String search) {
-        for (int i = 0; i < meksCurrent.length; i++) {
-            if (meksCurrent[i].getName().toLowerCase().startsWith(search)) {
-                mechList.setSelectedIndex(i);
-                mechList.ensureIndexIsVisible(i);
-                break;
-            }
-        }
-    }
-
-    @Override
-    public void setVisible(boolean show) {
-        setLocationRelativeTo(null);
-        super.setVisible(show);
-        pack();
-    }
-
     private String formatMek(MekSummary ms) {
 
         String result =
@@ -597,6 +668,36 @@ public class UnitViewerDialog extends javax.swing.JFrame
         }
 
         return result;
+    }
+
+    private String makeLength(String s, int nLength) {
+        if (s.length() == nLength) {
+            return s;
+        } else if (s.length() > nLength) {
+            return s.substring(0, nLength - 2) + "..";
+        } else {
+            return s + SPACES.substring(0, nLength - s.length());
+        }
+    }
+
+    private void toggleAdvanced() {
+        pUpper.remove(m_pSouthParams);
+        m_pSouthParams = new javax.swing.JPanel();
+        buildSouthParams(m_bToggleAdvanced.getText().equals("< Show Advanced Search >"));
+        pUpper.add(m_pSouthParams, java.awt.BorderLayout.SOUTH);
+        // invalidate();
+        pack();
+        repaint();
+    }
+
+    private void searchFor(String search) {
+        for (int i = 0; i < meksCurrent.length; i++) {
+            if (meksCurrent[i].getName().toLowerCase().startsWith(search)) {
+                mechList.setSelectedIndex(i);
+                mechList.ensureIndexIsVisible(i);
+                break;
+            }
+        }
     }
 
     public void actionPerformed(java.awt.event.ActionEvent ae) {
@@ -950,93 +1051,7 @@ public class UnitViewerDialog extends javax.swing.JFrame
         mechList.setSelectedValue(currSelection, true);
     }
 
-    void clearMechPreview() {
-        mekViewLeft.setEditable(false);
-        mekViewRight.setEditable(false);
-        unitFluff.setEditable(false);
-        // fluffScrollPane.setVisible(false);
-        mekViewLeft.setText("");
-        mekViewRight.setText("");
-        unitFluff.setText("");
-
-        // Remove preview image.
-        previewMech(null);
-
-    }
-
-    void previewMech(Entity entity) {
-
-        Entity currEntity = entity;
-        boolean populateTextFields = true;
-
-        paintScreen((entity != null) && (currEntity.getFluff() != null) && viewFluff);
-
-        // null entity, so load a default unit.
-        if (entity == null) {
-            try {
-                // MekSummary ms =
-                // MekSummaryCache.getInstance().getMech("Error OMG-UR-FD");
-                currEntity = UnitUtils.createOMG();// new
-                // MekFileParser(ms.getSourceFile(),
-                // ms.getEntryName()).getEntity();
-                populateTextFields = false;
-            } catch (Exception e) {
-                // this would be very very bad ...
-            }
-        }
-
-        ConfigurableMekViewPanel mechView = null;
-        try {
-            mechView = new ConfigurableMekViewPanel(currEntity);
-        } catch (Exception e) {
-            // error unit didn't load right. this is bad news.
-            populateTextFields = false;
-        }
-
-        mekViewLeft.setEditable(false);
-        mekViewRight.setEditable(false);
-        if (populateTextFields) {
-            mekViewLeft.setText(mechView.getMechReadoutBasic());
-            mekViewRight.setText(mechView.getMechReadoutLoadout());
-            if ((currEntity.getFluff() != null) && viewFluff) {
-                unitFluff.setEditable(false);
-                unitFluff.setText(currEntity.getFluff().getHistory());
-                unitFluff.setCaretPosition(0);
-
-            } else {
-                unitFluff.setText("");
-            }
-        } else {
-            mekViewLeft.setText("No unit selected");
-            mekViewRight.setText("No unit selected");
-        }
-        mekViewLeft.setCaretPosition(0);
-        mekViewRight.setCaretPosition(0);
-
-        // Preview image of the unit...
-        try {
-            ((MekInfo) pPreview).setUnit(currEntity);
-            ((MekInfo) pPreview).setImageVisible(true);
-            pPreview.paint(pPreview.getGraphics());
-        } catch (Exception ex) {
-            // shouldnt ever get here ...
-        }
-    }
-
-    private static final String SPACES = "                        ";
-
-    private String makeLength(String s, int nLength) {
-        if (s.length() == nLength) {
-            return s;
-        } else if (s.length() > nLength) {
-            return s.substring(0, nLength - 2) + "..";
-        } else {
-            return s + SPACES.substring(0, nLength - s.length());
-        }
-    }
-
-    public void keyReleased(java.awt.event.KeyEvent ke) {
-        // no action on release
+    public void keyTyped(java.awt.event.KeyEvent ke) {
     }
 
     public void keyPressed(java.awt.event.KeyEvent ke) {
@@ -1056,59 +1071,11 @@ public class UnitViewerDialog extends javax.swing.JFrame
         searchFor(m_sbSearch.toString().toLowerCase());
     }
 
-    private void paintScreen(boolean fluff) {
-
-        springHolder.removeAll();
-        textBoxSpring.removeAll();
-        fluffBoxSpring.removeAll();
-
-        if (fluff) {
-            // panel w/ 1x4 SpringLayout for the mechView bits
-            textBoxSpring.add(listScrollPane);
-            textBoxSpring.add(leftScrollPane);
-            textBoxSpring.add(rightScrollPane);
-            SpringLayoutHelper.setupSpringGrid(textBoxSpring, 3);
-            fluffBoxSpring.add(fluffScrollPane);
-            SpringLayoutHelper.setupSpringGrid(fluffBoxSpring, 1);
-        } else {
-            // panel w/ 1x3 SpringLayout for the mechView bits
-            textBoxSpring.add(listScrollPane);
-            textBoxSpring.add(leftScrollPane);
-            textBoxSpring.add(rightScrollPane);
-            SpringLayoutHelper.setupSpringGrid(textBoxSpring, 3);
-        }
-
-        // set up a formatting holder for the cancel button
-        javax.swing.JPanel buttonHolder = new javax.swing.JPanel();
-        if (viewerType != mekwars.common.gui.dialogs.UnitViewerDialog.UNIT_VIEWER) {
-            buttonHolder.add(bSelect);
-        }
-        buttonHolder.add(bCancel);
-
-        // set up the overall SpringLayout
-        springHolder.add(pUpper);
-        // springHolder.add(flowHolder);
-        springHolder.add(textBoxSpring);
-        if (fluff) {
-            springHolder.add(fluffBoxSpring);
-        }
-        springHolder.add(buttonHolder);
-        SpringLayoutHelper.setupSpringGrid(springHolder, 1);
-        pack();
-        this.repaint();
-
-        mechList.grabFocus();
-
+    public void keyReleased(java.awt.event.KeyEvent ke) {
+        // no action on release
     }
 
-    public void keyTyped(java.awt.event.KeyEvent ke) {
-    }
-
-    // WindowListener
-    public void windowActivated(java.awt.event.WindowEvent windowEvent) {
-    }
-
-    public void windowClosed(java.awt.event.WindowEvent windowEvent) {
+    public void windowOpened(java.awt.event.WindowEvent windowEvent) {
     }
 
     public void windowClosing(java.awt.event.WindowEvent windowEvent) {
@@ -1116,15 +1083,33 @@ public class UnitViewerDialog extends javax.swing.JFrame
         dispose();
     }
 
-    public void windowDeactivated(java.awt.event.WindowEvent windowEvent) {
+    private void saveComboBoxSettings() {
+
+        client.getConfig().setParam("UNITVIEWERWEIGHT", (String) chWeightClass.getSelectedItem());
+        client.getConfig().setParam("UNITVIEWERTECH", (String) chType.getSelectedItem());
+        client.getConfig().setParam("UNITVIEWERTYPE", (String) chUnitType.getSelectedItem());
+        client.getConfig().setParam("UNITVIEWERSORT", (String) chSort.getSelectedItem());
+        if (mechList.getSelectedValue() != null) {
+            client.getConfig().setParam("UNITVIEWERUNIT", mechList.getSelectedValue());
+        }
+
+        client.getConfig().saveConfig();
+        client.setConfig();
     }
 
-    public void windowDeiconified(java.awt.event.WindowEvent windowEvent) {
+    public void windowClosed(java.awt.event.WindowEvent windowEvent) {
     }
 
     public void windowIconified(java.awt.event.WindowEvent windowEvent) {
     }
 
-    public void windowOpened(java.awt.event.WindowEvent windowEvent) {
+    public void windowDeiconified(java.awt.event.WindowEvent windowEvent) {
+    }
+
+    // WindowListener
+    public void windowActivated(java.awt.event.WindowEvent windowEvent) {
+    }
+
+    public void windowDeactivated(java.awt.event.WindowEvent windowEvent) {
     }
 }

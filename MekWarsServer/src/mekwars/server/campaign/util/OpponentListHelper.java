@@ -34,14 +34,12 @@ import common.util.StringUtils;
 
 public class OpponentListHelper {
 
+    public static final int MODE_ADD = 0;
+    public static final int MODE_REMOVE = 1;
     //VARIABLES
     private server.campaign.SPlayer searchPlayer;
     private java.util.TreeMap<String, java.util.ArrayList<server.campaign.SArmy>> potentialOpponents;
-
     private int currentMode = -1;
-
-    public static final int MODE_ADD = 0;
-    public static final int MODE_REMOVE = 1;
 
     //CONSTRUCTOR
     public OpponentListHelper(server.campaign.SPlayer p, int mode) {

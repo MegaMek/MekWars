@@ -20,11 +20,6 @@ package mekwars.server.campaign.commands.admin;
 public class RetrieveAllOperationsCommand implements server.campaign.commands.Command {
 
     int accessLevel = server.MWChatServer.auth.IAuthenticator.ADMIN;
-
-    public int getExecutionLevel() {return accessLevel;}
-
-    public void setExecutionLevel(int i) {accessLevel = i;}
-
     String syntax = "optype[Short/Long/Speical]";
 
     public String getSyntax() {return syntax;}
@@ -83,4 +78,8 @@ public class RetrieveAllOperationsCommand implements server.campaign.commands.Co
         }
 
     }
+
+    public int getExecutionLevel() {return accessLevel;}
+
+    public void setExecutionLevel(int i) {accessLevel = i;}
 }//end RetrieveAllOperations

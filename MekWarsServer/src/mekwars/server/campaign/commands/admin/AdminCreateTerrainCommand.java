@@ -25,10 +25,6 @@ public class AdminCreateTerrainCommand implements server.campaign.commands.Comma
     int accessLevel = server.MWChatServer.auth.IAuthenticator.ADMIN;
     String syntax = "Planet Name#TerrainType#AdvancedTerrain#Chance";
 
-    public int getExecutionLevel() {return accessLevel;}
-
-    public void setExecutionLevel(int i) {accessLevel = i;}
-
     public String getSyntax() {return syntax;}
 
     public void process(java.util.StringTokenizer command, String Username) {
@@ -82,4 +78,8 @@ public class AdminCreateTerrainCommand implements server.campaign.commands.Comma
             MWLogger.errLog(ex);
         }
     }
+
+    public int getExecutionLevel() {return accessLevel;}
+
+    public void setExecutionLevel(int i) {accessLevel = i;}
 }

@@ -3,24 +3,19 @@
  */
 package mekwars.server.campaign.util;
 
-import common.AdvancedTerrain;
-import common.util.MWLogger;
-import gd.xml.ParseException;
-import gd.xml.XMLParser;
-import gd.xml.XMLResponder;
+import megamek.common.planetaryConditions.EMI;
+import mekwars.common.AdvancedTerrain;
+import mekwars.common.util.MWLogger;
 
 /**
  * @author mike
  *
  */
 public class XMLAdvancedTerrainDataParser implements XMLResponder {
-    private String prefix;
     String Name = "";
-
     String lastElement = "";
     String name;
     String filename;
-
     int lowtemp = 25;
     int hitemp = 25;
     double gravity = 1.0;
@@ -39,6 +34,7 @@ public class XMLAdvancedTerrainDataParser implements XMLResponder {
     int atmo = 0;
     int emiChance = 0;
     boolean emi = false;
+    private String prefix;
     private int windStrength;
     private int windDir;
     private int tornadoF4WindChance;
@@ -81,13 +77,24 @@ public class XMLAdvancedTerrainDataParser implements XMLResponder {
         }
     }
 
+    public static String newLineToBR(String data) {
+        java.util.StringTokenizer tokened = new java.util.StringTokenizer(data, "\n");
+        String result = new String();
+        while (tokened.hasMoreElements()) {
+            result += tokened.nextElement();
+            if (tokened.hasMoreElements()) {
+                result += "<BR>";
+            }
+        }
+        return result;
+    }
+
     public void recordNotationDeclaration(String name, String pubID, String sysID) throws ParseException {
         System.out.print(prefix + "!NOTATION: " + name);
         if (pubID != null) {System.out.print("  pubID = " + pubID);}
         if (sysID != null) {System.out.print("  sysID = " + sysID);}
         MWLogger.mainLog("");
     }
-
 
     public void recordEntityDeclaration(String name, String value, String pubID, String sysID, String notation)
           throws ParseException {
@@ -113,6 +120,8 @@ public class XMLAdvancedTerrainDataParser implements XMLResponder {
         MWLogger.mainLog((def == null) ? "" : "  def = " + notation);
     }
 
+    /* DOC METHDODS */
+
     public void recordDoctypeDeclaration(String name, String pubID, String sysID) throws ParseException {
         System.out.print(prefix + "!DOCTYPE: " + name);
         if (pubID != null) {System.out.print("  pubID = " + pubID);}
@@ -120,8 +129,6 @@ public class XMLAdvancedTerrainDataParser implements XMLResponder {
         MWLogger.mainLog("");
         prefix = "";
     }
-
-    /* DOC METHDODS */
 
     public void recordDocStart() {
     }
@@ -144,11 +151,11 @@ public class XMLAdvancedTerrainDataParser implements XMLResponder {
             planetTerrain.setAtmosphere(atmo);
             planetTerrain.setDownPourChance(downPourChance);
             planetTerrain.setDuskChance(duskChance);
-            planetTerrain.setEMI(emi);
+            planetTerrain.setEMI(emi ? EMI.EMI : EMI.EMI_NONE);
             planetTerrain.setEMIChance(emiChance);
             planetTerrain.setFog(fogChance);
             planetTerrain.setGravity(gravity);
-            planetTerrain.setHeavyfogChance(heavyFogChance);
+            planetTerrain.setHeavyFogChance(heavyFogChance);
             planetTerrain.setHeavyHailChance(heavyHailChance);
             planetTerrain.setHeavyRainfallChance(heavyRainfallChance);
             planetTerrain.setHeavySnowfallChance(heavySnowfallChance);
@@ -311,23 +318,9 @@ public class XMLAdvancedTerrainDataParser implements XMLResponder {
         MWLogger.mainLog(prefix + "*" + name + " PI: " + pValue);
     }
 
-
     public java.io.InputStream resolveDTDEntity(String name, String pubID, String sysID) throws ParseException {
         return resolveExternalEntity(name, pubID, sysID);
     }
-
-    public static String newLineToBR(String data) {
-        java.util.StringTokenizer tokened = new java.util.StringTokenizer(data, "\n");
-        String result = new String();
-        while (tokened.hasMoreElements()) {
-            result += tokened.nextElement();
-            if (tokened.hasMoreElements()) {
-                result += "<BR>";
-            }
-        }
-        return result;
-    }
-
 
     @Override
     public java.io.InputStream resolveExternalEntity(String name, String pubID, String sysID) throws ParseException {

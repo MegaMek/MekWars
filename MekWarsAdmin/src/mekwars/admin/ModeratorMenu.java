@@ -279,17 +279,6 @@ public class ModeratorMenu extends JMenu {
         mwclient.sendChat(STR."\{IClient.CAMPAIGN_PREFIX}c modgames");
     }
 
-    public void jMenuModCheckVersion_actionPerformed(ActionEvent e) {
-        PlayerNameDialog playerDialog = new PlayerNameDialog(mwclient, "Choose a Player", PlayerNameDialog.ANY_PLAYER);
-        playerDialog.setVisible(true);
-        String name = playerDialog.getPlayerName();
-        playerDialog.dispose();
-        if ((name == null) || (name.isEmpty())) {
-            return;
-        }
-        mwclient.sendChat(STR."\{IClient.CAMPAIGN_PREFIX}c checkversion#\{name}");
-    }
-
     public void jMenuModGetModLog_actionPerformed(ActionEvent e) {
         mwclient.sendChat(STR."\{IClient.CAMPAIGN_PREFIX}c getmodlog");
     }
@@ -319,6 +308,31 @@ public class ModeratorMenu extends JMenu {
         mwclient.sendChat(STR."\{IClient.CAMPAIGN_PREFIX}c grantexp#\{name}#\{exp}");
     }
 
+    public void jMenuModGrantInfluence_actionPerformed(ActionEvent e, String player) {
+        String name;
+        if (player == null) {
+            PlayerNameDialog playerDialog = new PlayerNameDialog(mwclient,
+                  "Choose a Player",
+                  PlayerNameDialog.ANY_PLAYER);
+            playerDialog.setVisible(true);
+            name = playerDialog.getPlayerName();
+            playerDialog.dispose();
+        } else {
+            name = player;
+        }
+
+        if ((name == null) || (name.isEmpty())) {
+            return;
+        }
+        String exp = JOptionPane.showInputDialog(mwclient.getMainFrame(),
+              STR."\{mwclient.moneyOrFluMessage(false, true, -1)} Amount,- to remove");
+        if ((exp == null) || (exp.isEmpty())) {
+            return;
+        }
+
+        mwclient.sendChat(STR."\{IClient.CAMPAIGN_PREFIX}c grantinfluence#\{name}#\{exp}");
+    }
+
     public void jMenuModGrantMoney_actionPerformed(ActionEvent e, String player) {
 
         String name;
@@ -343,31 +357,6 @@ public class ModeratorMenu extends JMenu {
         }
 
         mwclient.sendChat(STR."\{IClient.CAMPAIGN_PREFIX}c grantmoney#\{name}#\{exp}");
-    }
-
-    public void jMenuModGrantInfluence_actionPerformed(ActionEvent e, String player) {
-        String name;
-        if (player == null) {
-            PlayerNameDialog playerDialog = new PlayerNameDialog(mwclient,
-                  "Choose a Player",
-                  PlayerNameDialog.ANY_PLAYER);
-            playerDialog.setVisible(true);
-            name = playerDialog.getPlayerName();
-            playerDialog.dispose();
-        } else {
-            name = player;
-        }
-
-        if ((name == null) || (name.isEmpty())) {
-            return;
-        }
-        String exp = JOptionPane.showInputDialog(mwclient.getMainFrame(),
-              STR."\{mwclient.moneyOrFluMessage(false, true, -1)} Amount,- to remove");
-        if ((exp == null) || (exp.isEmpty())) {
-            return;
-        }
-
-        mwclient.sendChat(STR."\{IClient.CAMPAIGN_PREFIX}c grantinfluence#\{name}#\{exp}");
     }
 
     public void jMenuModGrantReward_actionPerformed(ActionEvent e, String player) {
@@ -577,6 +566,17 @@ public class ModeratorMenu extends JMenu {
 
         mwclient.sendChat(STR."\{IClient.CAMPAIGN_PREFIX}c modrefreshFactory#\{planetNamestr}#\{Objects.requireNonNull(
               combo.getSelectedItem()).toString()}");
+    }
+
+    public void jMenuModCheckVersion_actionPerformed(ActionEvent e) {
+        PlayerNameDialog playerDialog = new PlayerNameDialog(mwclient, "Choose a Player", PlayerNameDialog.ANY_PLAYER);
+        playerDialog.setVisible(true);
+        String name = playerDialog.getPlayerName();
+        playerDialog.dispose();
+        if ((name == null) || (name.isEmpty())) {
+            return;
+        }
+        mwclient.sendChat(STR."\{IClient.CAMPAIGN_PREFIX}c checkversion#\{name}");
     }
 
 }// end AdminMenu class

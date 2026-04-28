@@ -316,6 +316,29 @@ public class PlanetNameDialog extends JDialog implements ActionListener {
 
     }
 
+    private void checkMinimumSize() {
+
+        java.awt.Dimension curDim = this.getSize();
+
+        int height;
+        int width;
+        boolean shouldRedraw = false;
+
+        if (curDim.getWidth() < 300) {
+            width = 300;
+            shouldRedraw = true;
+        } else {width = (int) curDim.getWidth();}
+
+        if (curDim.getHeight() < 300) {
+            height = 300;
+            shouldRedraw = true;
+        } else {height = (int) curDim.getHeight();}
+
+        if (shouldRedraw) {
+            this.setSize(new Dimension(width, height));
+        }
+
+    }//end checkMinimumSize
 
     /**
      * OK or CANCEL buttons pressed. Handle any changes and then close the dialouge.
@@ -346,35 +369,11 @@ public class PlanetNameDialog extends JDialog implements ActionListener {
 
     }//end actionPerformed
 
-    private void checkMinimumSize() {
-
-        java.awt.Dimension curDim = this.getSize();
-
-        int height;
-        int width;
-        boolean shouldRedraw = false;
-
-        if (curDim.getWidth() < 300) {
-            width = 300;
-            shouldRedraw = true;
-        } else {width = (int) curDim.getWidth();}
-
-        if (curDim.getHeight() < 300) {
-            height = 300;
-            shouldRedraw = true;
-        } else {height = (int) curDim.getHeight();}
-
-        if (shouldRedraw) {
-            this.setSize(new Dimension(width, height));
-        }
-
-    }//end checkMinimumSize
+    public String getPlanetName() {
+        return this.planetName;
+    }
 
     private void setPlanetName(String name) {
         this.planetName = name;
-    }
-
-    public String getPlanetName() {
-        return this.planetName;
     }
 }

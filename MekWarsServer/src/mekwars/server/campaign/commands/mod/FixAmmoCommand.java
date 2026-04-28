@@ -29,10 +29,6 @@ public class FixAmmoCommand implements server.campaign.commands.Command {
     int accessLevel = server.MWChatServer.auth.IAuthenticator.MODERATOR;
     String syntax = "Player Name#Unit ID";
 
-    public int getExecutionLevel() {return accessLevel;}
-
-    public void setExecutionLevel(int i) {accessLevel = i;}
-
     public String getSyntax() {return syntax;}
 
     public void process(java.util.StringTokenizer command, String Username) {
@@ -99,6 +95,10 @@ public class FixAmmoCommand implements server.campaign.commands.Command {
         target.checkAndUpdateArmies(m);
         server.campaign.CampaignMain.cm.toUser("PL|UU|" + m.getId() + "|" + m.toString(true), targetName, false);
     }
+
+    public int getExecutionLevel() {return accessLevel;}
+
+    public void setExecutionLevel(int i) {accessLevel = i;}
 
     /**
      * If the units ammo is different from the baseline entity the ammo is fixed.

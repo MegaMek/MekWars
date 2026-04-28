@@ -21,10 +21,6 @@ public class AdminTransferCommand implements server.campaign.commands.Command {
     int accessLevel = server.MWChatServer.auth.IAuthenticator.ADMIN;
     String syntax = "Sending Player#Receiving Player#Unit ID";
 
-    public int getExecutionLevel() {return accessLevel;}
-
-    public void setExecutionLevel(int i) {accessLevel = i;}
-
     public String getSyntax() {return syntax;}
 
     public void process(java.util.StringTokenizer command, String Username) {
@@ -109,5 +105,9 @@ public class AdminTransferCommand implements server.campaign.commands.Command {
         receiver.addUnit(m, true);
 
     }//end process()
+
+    public int getExecutionLevel() {return accessLevel;}
+
+    public void setExecutionLevel(int i) {accessLevel = i;}
 
 }//end AdminTransfer

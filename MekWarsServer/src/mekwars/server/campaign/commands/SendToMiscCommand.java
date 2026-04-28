@@ -20,14 +20,7 @@ package mekwars.server.campaign.commands;
 public class SendToMiscCommand implements Command {
 
     int accessLevel = 200;
-
-    public int getExecutionLevel() {return 200;}
-
-    public void setExecutionLevel(int i) {accessLevel = 200;}
-
     String syntax = "";
-
-    public String getSyntax() {return syntax;}
 
     public void process(java.util.StringTokenizer command, String Username) {
 
@@ -44,4 +37,10 @@ public class SendToMiscCommand implements Command {
             server.campaign.CampaignMain.cm.toUser("DMML|" + Username + "|" + result.toString(), endUser, false);
         }
     }
+
+    public int getExecutionLevel() {return 200;}
+
+    public void setExecutionLevel(int i) {accessLevel = 200;}
+
+    public String getSyntax() {return syntax;}
 }

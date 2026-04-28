@@ -29,6 +29,20 @@ public class PercentBVSpreadValidator extends BVSpreadValidator implements
     protected double percent;
     protected int base;
 
+    /**
+     * Validates BV spread based on percent of army total BV
+     *
+     * @param base    BV added to the percent spread
+     * @param percent Percent of army BV added to the base
+     */
+    public PercentBVSpreadValidator(int base, double percent) {
+        setValidatorClass(I_SpreadValidator.VALIDATOR_CLASS_BV_PERCENT);
+        setSpreadType(I_SpreadValidator.SPREADTYPE_BV);
+        setMinAllowed(0);
+        this.base = base;
+        this.percent = percent;
+    }
+
     @Override
     public boolean validate(server.campaign.SArmy a, Operation o) {
         int maximum = base;
@@ -56,19 +70,5 @@ public class PercentBVSpreadValidator extends BVSpreadValidator implements
         } else {
             return false;
         }
-    }
-
-    /**
-     * Validates BV spread based on percent of army total BV
-     *
-     * @param base    BV added to the percent spread
-     * @param percent Percent of army BV added to the base
-     */
-    public PercentBVSpreadValidator(int base, double percent) {
-        setValidatorClass(I_SpreadValidator.VALIDATOR_CLASS_BV_PERCENT);
-        setSpreadType(I_SpreadValidator.SPREADTYPE_BV);
-        setMinAllowed(0);
-        this.base = base;
-        this.percent = percent;
     }
 }

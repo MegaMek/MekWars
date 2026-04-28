@@ -46,16 +46,13 @@ public class SelectorPanel extends JPanel implements ActionListener {
     private static final long serialVersionUID = -7776384437283951081L;
 
     private final IClient client;
-
+    private final Vector<ActionListener> listeners = new Vector<>();
     private String[] factionArray = {};
     private String[] typeArray = {};
     private String[] weightArray = {};
-
     private JComboBox<String> weightCombo;
     private JComboBox<String> typeCombo;
     private JComboBox<String> factionCombo;
-
-    private final Vector<ActionListener> listeners = new Vector<>();
 
     /**
      * Constructor

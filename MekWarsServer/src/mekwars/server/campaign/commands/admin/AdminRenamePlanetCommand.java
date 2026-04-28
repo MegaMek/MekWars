@@ -5,10 +5,6 @@ public class AdminRenamePlanetCommand implements server.campaign.commands.Comman
     int accessLevel = server.MWChatServer.auth.IAuthenticator.ADMIN;
     String syntax = "PlanetID#OldName#NewName";
 
-    public int getExecutionLevel() {return accessLevel;}
-
-    public void setExecutionLevel(int i) {accessLevel = i;}
-
     public String getSyntax() {return syntax;}
 
     public void process(java.util.StringTokenizer command, String Username) {
@@ -56,5 +52,9 @@ public class AdminRenamePlanetCommand implements server.campaign.commands.Comman
         server.campaign.CampaignMain.cm.doSendModMail("NOTE", Username + " renamed " + oldName + " to " + newName);
 
     }
+
+    public int getExecutionLevel() {return accessLevel;}
+
+    public void setExecutionLevel(int i) {accessLevel = i;}
 
 }

@@ -21,14 +21,6 @@ public class GrantTechPointsCommand implements server.campaign.commands.Command 
     int accessLevel = server.MWChatServer.auth.IAuthenticator.MODERATOR;
     String syntax = "Faction Name#Amount";
 
-    public int getExecutionLevel() {
-        return accessLevel;
-    }
-
-    public void setExecutionLevel(int i) {
-        accessLevel = i;
-    }
-
     public String getSyntax() {
         return syntax;
     }
@@ -69,5 +61,13 @@ public class GrantTechPointsCommand implements server.campaign.commands.Command 
                   Username + " granted " + amount + " Tech Research Points to " + faction.getName());
         }
     }// end process()
+
+    public int getExecutionLevel() {
+        return accessLevel;
+    }
+
+    public void setExecutionLevel(int i) {
+        accessLevel = i;
+    }
 
 }

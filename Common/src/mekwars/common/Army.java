@@ -37,24 +37,18 @@ public class Army {
 
     // VARIABLES
     private final Vector<Unit> units = new Vector<>(1, 1);
+    private final Vector<Integer> commanders = new Vector<>(1, 1);
     private String name = " ";
-
     private int upperLimiter = NO_LIMIT;
     private int lowerLimiter = NO_LIMIT;
-
     private int bv = 0;
     private int id;
     private boolean locked = false;
-
     private boolean armyPlayerLocked = false; // Used by players to keep armies
     // from being cleared
     private boolean armyDisabled = false;
-
     private float opForceSize = NO_LIMIT;
-
     private Hashtable<Integer, Integer> c3Network = new Hashtable<>();
-
-    private final Vector<Integer> commanders = new Vector<>(1, 1);
 
     // CONSTRUCTORS
     public Army() {
@@ -95,62 +89,6 @@ public class Army {
     }
 
     /**
-     * @return Returns the locked.
-     */
-    public boolean isLocked() {
-        return locked;
-    }
-
-    /**
-     * @param locked The locked to set.
-     */
-    public void setLocked(boolean locked) {
-        this.locked = locked;
-    }
-
-    /**
-     * @return return the BV.
-     */
-    public int getBV() {
-        return Math.max(bv, 0);
-    }
-
-    /**
-     * @param bv The bV to set.
-     */
-    public void setBV(int bv) {
-        this.bv = bv;
-    }
-
-    /**
-     * @return Returns the lowerLimit.
-     */
-    public int getLowerLimiter() {
-        return lowerLimiter;
-    }
-
-    /**
-     * @param lowerLimit The lowerLimit to set.
-     */
-    public void setLowerLimiter(int lowerLimit) {
-        lowerLimiter = lowerLimit;
-    }
-
-    /**
-     * @return Returns the name.
-     */
-    public String getName() {
-        return name;
-    }
-
-    /**
-     * @param name The name to set.
-     */
-    public void setName(String name) {
-        this.name = name.trim();
-    }
-
-    /**
      * Add a unit to a specific position.
      *
      */
@@ -164,13 +102,6 @@ public class Army {
      */
     public void addUnit(Unit unit) {
         units.add(unit);
-    }
-
-    /**
-     * @return Returns the units.
-     */
-    public Vector<Unit> getUnits() {
-        return units;
     }
 
     /**
@@ -190,6 +121,13 @@ public class Army {
         }
 
         return count;
+    }
+
+    /**
+     * @return Returns the units.
+     */
+    public Vector<Unit> getUnits() {
+        return units;
     }
 
     /**
@@ -226,45 +164,6 @@ public class Army {
             }
         }
         return count;
-    }
-
-    /**
-     * @return Returns the upperLimit.
-     */
-    public int getUpperLimiter() {
-        return upperLimiter;
-    }
-
-    /**
-     * @param upperLimit The upperLimit to set.
-     */
-    public void setUpperLimiter(int upperLimit) {
-        upperLimiter = upperLimit;
-    }
-
-    /**
-     * @return Returns the iD.
-     */
-    public int getID() {
-        return id;
-    }
-
-    public Unit getUnit(int unitId) {
-
-        for (Unit currU : getUnits()) {
-            if (currU.getId() == unitId) {
-                return currU;
-            }
-        }
-
-        return null;
-    }
-
-    /**
-     * @param id The iD to set.
-     */
-    public void setID(int id) {
-        this.id = id;
     }
 
     public String toString(boolean toClient, String delimiter) {
@@ -319,6 +218,69 @@ public class Army {
     }
 
     /**
+     * @return Returns the iD.
+     */
+    public int getID() {
+        return id;
+    }
+
+    /**
+     * @return return the BV.
+     */
+    public int getBV() {
+        return Math.max(bv, 0);
+    }
+
+    /**
+     * @return Returns the locked.
+     */
+    public boolean isLocked() {
+        return locked;
+    }
+
+    /**
+     * @param locked The locked to set.
+     */
+    public void setLocked(boolean locked) {
+        this.locked = locked;
+    }
+
+    /**
+     * @return Returns the name.
+     */
+    public String getName() {
+        return name;
+    }
+
+    /**
+     * @return Returns the lowerLimit.
+     */
+    public int getLowerLimiter() {
+        return lowerLimiter;
+    }
+
+    /**
+     * @param lowerLimit The lowerLimit to set.
+     */
+    public void setLowerLimiter(int lowerLimit) {
+        lowerLimiter = lowerLimit;
+    }
+
+    /**
+     * @return Returns the upperLimit.
+     */
+    public int getUpperLimiter() {
+        return upperLimiter;
+    }
+
+    /**
+     * @param upperLimit The upperLimit to set.
+     */
+    public void setUpperLimiter(int upperLimit) {
+        upperLimiter = upperLimit;
+    }
+
+    /**
      * @return Returns the C3Networks.
      */
     public Hashtable<Integer, Integer> getC3Network() {
@@ -330,6 +292,27 @@ public class Army {
      */
     public void setC3Network(Hashtable<Integer, Integer> c3Network) {
         this.c3Network = c3Network;
+    }
+
+    /**
+     * @param name The name to set.
+     */
+    public void setName(String name) {
+        this.name = name.trim();
+    }
+
+    /**
+     * @param bv The bV to set.
+     */
+    public void setBV(int bv) {
+        this.bv = bv;
+    }
+
+    /**
+     * @param id The iD to set.
+     */
+    public void setID(int id) {
+        this.id = id;
     }
 
     public void removeUnitFromC3Network(int unitID) {
@@ -392,6 +375,17 @@ public class Army {
         return Math.max(1, count);
     }
 
+    public Unit getUnit(int unitId) {
+
+        for (Unit currU : getUnits()) {
+            if (currU.getId() == unitId) {
+                return currU;
+            }
+        }
+
+        return null;
+    }
+
     public float getOpForceSize() {
         return opForceSize;
     }
@@ -402,10 +396,6 @@ public class Army {
 
     public Vector<Integer> getCommanders() {
         return commanders;
-    }
-
-    public boolean isCommander(int id) {
-        return commanders.contains(id);
     }
 
     public void removeCommander(int id) {
@@ -419,6 +409,10 @@ public class Army {
         }
         commanders.add(id);
         commanders.trimToSize();
+    }
+
+    public boolean isCommander(int id) {
+        return commanders.contains(id);
     }
 
 }

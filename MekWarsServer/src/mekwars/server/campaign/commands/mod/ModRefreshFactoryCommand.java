@@ -22,10 +22,6 @@ public class ModRefreshFactoryCommand implements server.campaign.commands.Comman
     int accessLevel = server.MWChatServer.auth.IAuthenticator.MODERATOR;
     String syntax = "Planet Name#Factory Name";
 
-    public int getExecutionLevel() {return accessLevel;}
-
-    public void setExecutionLevel(int i) {accessLevel = i;}
-
     public String getSyntax() {return syntax;}
 
     public void process(java.util.StringTokenizer command, String Username) {
@@ -79,4 +75,8 @@ public class ModRefreshFactoryCommand implements server.campaign.commands.Comman
         server.campaign.CampaignMain.cm.doSendModMail("NOTE",
               Username + " has refreshed factory " + uf.getName() + " on planet " + p.getName() + "!");
     }
+
+    public int getExecutionLevel() {return accessLevel;}
+
+    public void setExecutionLevel(int i) {accessLevel = i;}
 }

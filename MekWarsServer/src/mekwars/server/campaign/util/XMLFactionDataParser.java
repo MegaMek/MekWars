@@ -274,6 +274,10 @@ public class XMLFactionDataParser implements XMLResponder {
         }
     }
 
+    public java.io.InputStream resolveDTDEntity(String name, String pubID, String sysID) throws ParseException {
+        return resolveExternalEntity(name, pubID, sysID);
+    }
+
     public java.io.InputStream resolveExternalEntity(String name, String pubID, String sysID) throws ParseException {
         if (sysID != null) {
             java.io.File f = new java.io.File((new java.io.File(Filename)).getParent(), sysID);
@@ -283,10 +287,6 @@ public class XMLFactionDataParser implements XMLResponder {
         }
         //else
         return null;
-    }
-
-    public java.io.InputStream resolveDTDEntity(String name, String pubID, String sysID) throws ParseException {
-        return resolveExternalEntity(name, pubID, sysID);
     }
 
 

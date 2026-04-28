@@ -27,10 +27,6 @@ public class AdminUpdatePlanetOwnershipCommand implements server.campaign.comman
     int accessLevel = server.MWChatServer.auth.IAuthenticator.ADMIN;
     String syntax = "Planet Name#Faction Name#amount";
 
-    public int getExecutionLevel() {return accessLevel;}
-
-    public void setExecutionLevel(int i) {accessLevel = i;}
-
     public String getSyntax() {return syntax;}
 
     public void process(java.util.StringTokenizer command, String Username) {
@@ -92,4 +88,8 @@ public class AdminUpdatePlanetOwnershipCommand implements server.campaign.comman
         server.campaign.CampaignMain.cm.doSendModMail("NOTE",
               Username + " updated " + houseName + " ownership of " + planet.getName() + " to " + ownerShip + ".");
     }
+
+    public int getExecutionLevel() {return accessLevel;}
+
+    public void setExecutionLevel(int i) {accessLevel = i;}
 }

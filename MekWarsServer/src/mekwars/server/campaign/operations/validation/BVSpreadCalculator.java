@@ -35,7 +35,7 @@ public class BVSpreadCalculator extends AbstractSpreadCalculator implements I_Sp
      * @param countProtos   Do protomeks count?
      * @param ignorePilot   Use BaseBV or BV modified by pilot skill?
      *
-     * @return                    Maximum BV
+     * @return Maximum BV
      */
     public static int calcMax(server.campaign.SArmy a, boolean countSupport, boolean countInfantry,
           boolean countVehicles, boolean countAero, boolean countProtos, boolean ignorePilot) {
@@ -64,7 +64,7 @@ public class BVSpreadCalculator extends AbstractSpreadCalculator implements I_Sp
      * @param countProtos   Do protomeks count?
      * @param ignorePilot   Use BaseBV or BV modified by pilot skill?
      *
-     * @return                    Minimum BV
+     * @return Minimum BV
      */
     public static int calcMin(server.campaign.SArmy a, boolean countSupport, boolean countInfantry,
           boolean countVehicles, boolean countAero, boolean countProtos, boolean ignorePilot) {

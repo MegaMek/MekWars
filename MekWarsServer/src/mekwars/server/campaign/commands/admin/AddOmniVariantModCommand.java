@@ -21,14 +21,6 @@ public class AddOmniVariantModCommand implements server.campaign.commands.Comman
     int accessLevel = server.MWChatServer.auth.IAuthenticator.ADMIN;
     String syntax = "Variant Name#mod Money$Mod components$Mod flu";
 
-    public int getExecutionLevel() {
-        return accessLevel;
-    }
-
-    public void setExecutionLevel(int i) {
-        accessLevel = i;
-    }
-
     public String getSyntax() {
         return syntax;
     }
@@ -83,6 +75,14 @@ public class AddOmniVariantModCommand implements server.campaign.commands.Comman
                     " components " +
                     server.campaign.CampaignMain.cm.moneyOrFluMessage(false, true, Integer.parseInt(flu)) +
                     ".");
+    }
+
+    public int getExecutionLevel() {
+        return accessLevel;
+    }
+
+    public void setExecutionLevel(int i) {
+        accessLevel = i;
     }
 
 }

@@ -37,17 +37,14 @@ import mekwars.common.util.SpringLayoutHelper;
 
 public final class TraitDialog implements ActionListener, KeyListener {
 
-    //store the client backlink for other things to use
-    private final IClient client;
-
     private final static String okayCommand = "Add";
     private final static String cancelCommand = "Close";
     private final static String removeCommand = "Remove";
     private final static String traitCommand = "Trait";
     private final static String factionCommand = "Faction";
-
     private final static String delimiter = "*";
-
+    //store the client backlink for other things to use
+    private final IClient client;
     private final JButton cancelButton = new JButton("Close");
 
     private final JTextField gunneryLaserText = new JTextField(3);
@@ -303,7 +300,14 @@ public final class TraitDialog implements ActionListener, KeyListener {
         }
     }
 
+    private void loadAllFiles() {
+        client.loadServerTraitFiles();
+    }
+
     public void keyTyped(KeyEvent e) {
+    }
+
+    public void keyPressed(KeyEvent e) {
     }
 
     public void keyReleased(KeyEvent e) {
@@ -316,76 +320,6 @@ public final class TraitDialog implements ActionListener, KeyListener {
                 loadFactionTraits(faction);
             } else {
                 populateTraits(faction, trait.trim());
-            }
-        }
-    }
-
-    public void keyPressed(KeyEvent e) {
-    }
-
-    public void actionPerformed(ActionEvent e) {
-        String command = e.getActionCommand();
-
-        switch (command) {
-            case okayCommand -> {
-                String faction = (String) factionComboBox.getSelectedItem();
-                String trait = ((String) traitComboBox.getSelectedItem());
-
-                if (faction != null && trait != null) {
-                    if (trait.trim().isEmpty()) {
-                        JOptionPane.showMessageDialog(null, "You did not enter a trait name!");
-                        return;
-                    }
-
-                    String result = getResults(faction, trait.trim());
-                    client.sendChat(STR."\{IClient.CAMPAIGN_PREFIX}c addtrait#\{result}");
-                    loadAllFiles();
-                    loadFactionTraits(faction);
-                }
-            }
-            case cancelCommand -> {
-                pane.setValue(cancelButton);
-                dialog.dispose();
-            }
-            case removeCommand -> {
-                String faction = (String) factionComboBox.getSelectedItem();
-                String trait = ((String) traitComboBox.getSelectedItem());
-
-                if (faction != null && trait != null) {
-                    if (trait.isEmpty()) {
-                        JOptionPane.showMessageDialog(null, "You have to select a trait before you can remove it!");
-                        return;
-                    }
-
-                    int choice = JOptionPane.showConfirmDialog(null,
-                          "Are you sure you want to remove this trait?",
-                          "Remove it?",
-                          JOptionPane.YES_NO_OPTION);
-                    if (choice == JOptionPane.OK_OPTION) {
-                        client.sendChat(STR."\{IClient.CAMPAIGN_PREFIX}c removetrait#\{faction}#\{trait.trim()}#CONFIRM");
-                        loadAllFiles();
-                        loadFactionTraits(faction);
-                    }
-                }
-            }
-            case factionCommand -> {
-                String selection = (String) factionComboBox.getSelectedItem();
-                if (selection != null) {
-                    loadFactionTraits(selection);
-                }
-            }
-            case traitCommand -> {
-                String faction = (String) factionComboBox.getSelectedItem();
-
-                if (traitComboBox.getSelectedItem() == null) {
-                    return;
-                }
-
-                String trait = ((String) traitComboBox.getSelectedItem());
-
-                if (faction != null && trait != null) {
-                    populateTraits(faction, trait.trim());
-                }
             }
         }
     }
@@ -416,10 +350,6 @@ public final class TraitDialog implements ActionListener, KeyListener {
         }
         if (traitComboBox.getItemCount() > 0) {traitComboBox.setSelectedIndex(0);}
         traitComboBox.revalidate();
-    }
-
-    private void loadAllFiles() {
-        client.loadServerTraitFiles();
     }
 
     private void populateTraits(String faction, String trait) {
@@ -502,6 +432,73 @@ public final class TraitDialog implements ActionListener, KeyListener {
                 dis.close();
             } catch (java.io.IOException e) {
                 MWLogger.errLog(e);
+            }
+        }
+    }
+
+    public void actionPerformed(ActionEvent e) {
+        String command = e.getActionCommand();
+
+        switch (command) {
+            case okayCommand -> {
+                String faction = (String) factionComboBox.getSelectedItem();
+                String trait = ((String) traitComboBox.getSelectedItem());
+
+                if (faction != null && trait != null) {
+                    if (trait.trim().isEmpty()) {
+                        JOptionPane.showMessageDialog(null, "You did not enter a trait name!");
+                        return;
+                    }
+
+                    String result = getResults(faction, trait.trim());
+                    client.sendChat(STR."\{IClient.CAMPAIGN_PREFIX}c addtrait#\{result}");
+                    loadAllFiles();
+                    loadFactionTraits(faction);
+                }
+            }
+            case cancelCommand -> {
+                pane.setValue(cancelButton);
+                dialog.dispose();
+            }
+            case removeCommand -> {
+                String faction = (String) factionComboBox.getSelectedItem();
+                String trait = ((String) traitComboBox.getSelectedItem());
+
+                if (faction != null && trait != null) {
+                    if (trait.isEmpty()) {
+                        JOptionPane.showMessageDialog(null, "You have to select a trait before you can remove it!");
+                        return;
+                    }
+
+                    int choice = JOptionPane.showConfirmDialog(null,
+                          "Are you sure you want to remove this trait?",
+                          "Remove it?",
+                          JOptionPane.YES_NO_OPTION);
+                    if (choice == JOptionPane.OK_OPTION) {
+                        client.sendChat(STR."\{IClient.CAMPAIGN_PREFIX}c removetrait#\{faction}#\{trait.trim()}#CONFIRM");
+                        loadAllFiles();
+                        loadFactionTraits(faction);
+                    }
+                }
+            }
+            case factionCommand -> {
+                String selection = (String) factionComboBox.getSelectedItem();
+                if (selection != null) {
+                    loadFactionTraits(selection);
+                }
+            }
+            case traitCommand -> {
+                String faction = (String) factionComboBox.getSelectedItem();
+
+                if (traitComboBox.getSelectedItem() == null) {
+                    return;
+                }
+
+                String trait = ((String) traitComboBox.getSelectedItem());
+
+                if (faction != null && trait != null) {
+                    populateTraits(faction, trait.trim());
+                }
             }
         }
     }

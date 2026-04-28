@@ -35,12 +35,10 @@ public interface MutableSerializable {
     /**
      * Encode all mutable fields into the stream. Use as few bits as possible.
      */
-    void encodeMutableFields(BinWriter out,
-          CampaignData dataProvider) throws IOException;
+    void encodeMutableFields(BinWriter out, CampaignData dataProvider) throws IOException;
 
     /**
      * Decode all mutable fields from the stream.
      */
-    void decodeMutableFields(BinReader in,
-          CampaignData dataProvider) throws IOException;
+    void decodeMutableFields(BinReader in, CampaignData dataProvider) throws IOException;
 }

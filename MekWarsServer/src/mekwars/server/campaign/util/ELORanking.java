@@ -18,12 +18,12 @@ package mekwars.server.campaign.util;
 
 public class ELORanking {
 
-    public static double calcWinProp(double PlayerRating, double OponentRating) {
-        return 1 / (Math.pow(10, ((OponentRating - PlayerRating) / 400)) + 1);
-    }
-
     public static double getNewRatingWinner(double WinnerRating, double LoserRating, int KValue) {
         return WinnerRating + (KValue * (1 - calcWinProp(WinnerRating, LoserRating)));
+    }
+
+    public static double calcWinProp(double PlayerRating, double OponentRating) {
+        return 1 / (Math.pow(10, ((OponentRating - PlayerRating) / 400)) + 1);
     }
 
     public static double getNewRatingLoser(double WinnerRating, double LoserRating, int KValue) {

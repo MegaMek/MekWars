@@ -26,6 +26,10 @@ import megamek.common.equipment.WeaponType;
  */
 public class BMEquipment {
 
+    static public String PART_AMMO = "Ammo";
+    static public String PART_WEAPON = "Weapons";
+    static public String PART_MISC = "Misc";
+    static public String PART_ARMOR = "Armor";
     private String equipmentInternalName = "";
     private String equipmentName = "";
     private double cost = 0;
@@ -35,21 +39,12 @@ public class BMEquipment {
     private String tech = "";
     private int techLevel = TechConstants.T_ALL;
 
-    static public String PART_AMMO = "Ammo";
-    static public String PART_WEAPON = "Weapons";
-    static public String PART_MISC = "Misc";
-    static public String PART_ARMOR = "Armor";
-
-    public void setEquipmentInternalName(String name) {
-        equipmentInternalName = name;
-    }
-
     public String getEquipmentInternalName() {
         return equipmentInternalName;
     }
 
-    public void setEquipmentName(String name) {
-        equipmentName = name;
+    public void setEquipmentInternalName(String name) {
+        equipmentInternalName = name;
     }
 
     public String getEquipmentName() {
@@ -94,17 +89,16 @@ public class BMEquipment {
         return equipmentName;
     }
 
-    public void setEquipmentType(String type) {
-        equipmentType = type;
+    public void setEquipmentName(String name) {
+        equipmentName = name;
     }
 
     public String getEquipmentType() {
         return equipmentType;
     }
 
-    public void setCost(double cost) {
-
-        this.cost = cost;
+    public void setEquipmentType(String type) {
+        equipmentType = type;
     }
 
     public double getCost() {
@@ -112,14 +106,19 @@ public class BMEquipment {
         return cost;
     }
 
-    public void setAmount(int amount) {
+    public void setCost(double cost) {
 
-        this.amount = amount;
+        this.cost = cost;
     }
 
     public int getAmount() {
 
         return amount;
+    }
+
+    public void setAmount(int amount) {
+
+        this.amount = amount;
     }
 
     public boolean isCostUp() {

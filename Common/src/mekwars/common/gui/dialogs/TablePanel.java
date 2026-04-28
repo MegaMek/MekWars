@@ -72,44 +72,6 @@ public class TablePanel extends javax.swing.JPanel implements java.awt.event.Act
     }
 
     /**
-     * The Selector changed, so display the new table
-     */
-    @Override
-    public void actionPerformed(java.awt.event.ActionEvent e) {
-        String tableToDisplay = selector.getSelectionString();
-        BuildTable bt = tables.get(tableToDisplay);
-
-        remove(displayPanel);
-
-        displayPanel = new javax.swing.JPanel();
-        //displayPanel.setLayout(new BorderLayout());
-        java.awt.Component table = bt.getTable();
-        if (table instanceof javax.swing.JTable) {
-            //displayPanel.add(((JTable)table).getTableHeader(), BorderLayout.NORTH);
-            table.addMouseListener(new java.awt.event.MouseAdapter() {
-                public void mouseClicked(java.awt.event.MouseEvent e) {
-                    if (e.getClickCount() == 2) {
-                        javax.swing.JTable target = (javax.swing.JTable) e.getSource();
-                        int row = target.getSelectedRow();
-                        String unit = (String) target.getValueAt(row, 1);
-                        actOnCell(unit);
-                    }
-                }
-            });
-            javax.swing.JScrollPane pane = new javax.swing.JScrollPane(table);
-            pane.setHorizontalScrollBarPolicy(javax.swing.JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
-            displayPanel.add(pane);
-        } else {
-            displayPanel.add(bt.getTable(), java.awt.BorderLayout.CENTER);
-        }
-
-
-        add(displayPanel);
-        this.revalidate();
-        viewer.refresh();
-    }
-
-    /**
      * Get the tables ready.  This currently does not handle anything that does not contain a faction name.  For
      * instance, on MMNet, we have a table called Contest_Light.txt.  That's a valid table, but the viewer will not
      * currently display it.  On the to-do list
@@ -153,6 +115,44 @@ public class TablePanel extends javax.swing.JPanel implements java.awt.event.Act
         bt.setName(sb.toString());
         bt.loadTable();
         return bt;
+    }
+
+    /**
+     * The Selector changed, so display the new table
+     */
+    @Override
+    public void actionPerformed(java.awt.event.ActionEvent e) {
+        String tableToDisplay = selector.getSelectionString();
+        BuildTable bt = tables.get(tableToDisplay);
+
+        remove(displayPanel);
+
+        displayPanel = new javax.swing.JPanel();
+        //displayPanel.setLayout(new BorderLayout());
+        java.awt.Component table = bt.getTable();
+        if (table instanceof javax.swing.JTable) {
+            //displayPanel.add(((JTable)table).getTableHeader(), BorderLayout.NORTH);
+            table.addMouseListener(new java.awt.event.MouseAdapter() {
+                public void mouseClicked(java.awt.event.MouseEvent e) {
+                    if (e.getClickCount() == 2) {
+                        javax.swing.JTable target = (javax.swing.JTable) e.getSource();
+                        int row = target.getSelectedRow();
+                        String unit = (String) target.getValueAt(row, 1);
+                        actOnCell(unit);
+                    }
+                }
+            });
+            javax.swing.JScrollPane pane = new javax.swing.JScrollPane(table);
+            pane.setHorizontalScrollBarPolicy(javax.swing.JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
+            displayPanel.add(pane);
+        } else {
+            displayPanel.add(bt.getTable(), java.awt.BorderLayout.CENTER);
+        }
+
+
+        add(displayPanel);
+        this.revalidate();
+        viewer.refresh();
     }
 
     /**

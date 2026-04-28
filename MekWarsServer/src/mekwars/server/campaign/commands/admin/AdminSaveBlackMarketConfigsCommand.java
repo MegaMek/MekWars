@@ -28,10 +28,6 @@ public class AdminSaveBlackMarketConfigsCommand implements server.campaign.comma
     int accessLevel = server.MWChatServer.auth.IAuthenticator.ADMIN;
     String syntax = "";
 
-    public int getExecutionLevel() {return accessLevel;}
-
-    public void setExecutionLevel(int i) {accessLevel = i;}
-
     public String getSyntax() {return syntax;}
 
     public void process(java.util.StringTokenizer command, String Username) {
@@ -78,4 +74,8 @@ public class AdminSaveBlackMarketConfigsCommand implements server.campaign.comma
         server.campaign.CampaignMain.cm.doSendModMail("NOTE", Username + " has saved the Black Market Settings");
 
     }//end process
+
+    public int getExecutionLevel() {return accessLevel;}
+
+    public void setExecutionLevel(int i) {accessLevel = i;}
 }

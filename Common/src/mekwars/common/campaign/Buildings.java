@@ -65,84 +65,20 @@ public final class Buildings {
         super();
     }
 
-    public void setTotalBuildings(int total) {
-        totalBuildings = total;
-    }
-
-    public int getTotalBuildings() {
-        return totalBuildings;
-    }
-
-    public void setMinBuildings(int min) {
-        minBuildings = min;
-    }
-
-    public int getMinBuildings() {
-        return minBuildings;
-    }
-
-    public void setMinFloors(int min) {
-        minFloors = min;
-    }
-
-    public int getMinFloors() {
-        return minFloors;
-    }
-
-    public void setMaxFloors(int max) {
-        maxFloors = max;
-    }
-
-    public int getMaxFloors() {
-        return maxFloors;
-    }
-
-    public void setMinCF(int cf) {
-        minCF = cf;
-    }
-
-    public int getMinCF() {
-        return minCF;
-    }
-
-    public void setMaxCF(int cf) {
-        maxCF = cf;
-    }
-
-    public int getMaxCF() {
-        return maxCF;
-    }
-
-    public void setStartingEdge(int edge) {
-        startingEdge = edge;
-    }
-
-    public int getStartingEdge() {
-        return startingEdge;
-    }
-
-    public void setBuildingType(String type) {
-        buildingType = type;
-    }
-
-    public String getBuildingType() {
-        return buildingType;
+    public String getCityType() {
+        return cityType;
     }
 
     public void setCityType(String type) {
         cityType = type;
     }
 
-    public String getCityType() {
-        return cityType;
+    public int getCityBlocks() {
+        return cityBlocks;
     }
 
     public void setCityBlocks(int blocks) {
         cityBlocks = blocks;
-    }
-
-    public int getCityBlocks() {
-        return cityBlocks;
     }
 
     @Override
@@ -167,6 +103,70 @@ public final class Buildings {
         result += "|";
 
         return result;
+    }
+
+    public int getTotalBuildings() {
+        return totalBuildings;
+    }
+
+    public void setTotalBuildings(int total) {
+        totalBuildings = total;
+    }
+
+    public int getMinBuildings() {
+        return minBuildings;
+    }
+
+    public void setMinBuildings(int min) {
+        minBuildings = min;
+    }
+
+    public int getMinFloors() {
+        return minFloors;
+    }
+
+    public void setMinFloors(int min) {
+        minFloors = min;
+    }
+
+    public int getMaxFloors() {
+        return maxFloors;
+    }
+
+    public void setMaxFloors(int max) {
+        maxFloors = max;
+    }
+
+    public int getMinCF() {
+        return minCF;
+    }
+
+    public void setMinCF(int cf) {
+        minCF = cf;
+    }
+
+    public int getMaxCF() {
+        return maxCF;
+    }
+
+    public void setMaxCF(int cf) {
+        maxCF = cf;
+    }
+
+    public String getBuildingType() {
+        return buildingType;
+    }
+
+    public int getStartingEdge() {
+        return startingEdge;
+    }
+
+    public void setStartingEdge(int edge) {
+        startingEdge = edge;
+    }
+
+    public void setBuildingType(String type) {
+        buildingType = type;
     }
 
     public void fromString(StringTokenizer buildingTemplate) {

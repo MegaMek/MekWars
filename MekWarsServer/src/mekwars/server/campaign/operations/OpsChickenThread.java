@@ -70,6 +70,184 @@ public class OpsChickenThread extends Thread {
         shouldContinue = false;
     }
 
+    @Override
+    public synchronized void run() {
+
+        server.campaign.CampaignMain.cm.toUser(generateAttackLinks(), pdefender.getName(), true);
+
+        // Send Attack Event so Client can play a sound
+        server.campaign.CampaignMain.cm.toUser(generateAttackDialogCall(), pdefender.getName(), false);
+
+        // message is extraneous now. null it.
+        message = null;
+
+        /*
+         * Chicken loop. shouldContinue is set to false when a player makes an
+         * external action which should prevent chickening:
+         *  - joins this game - becomes invovled in another RUNNING game -
+         * deactivates
+         *
+         * Deactivating will pull the players chicken threads from the manager,
+         * looping through to stop them. It will also punish the player for
+         * leeching, calling the public doPenalty() in order to give a
+         * punishment equal to that delivered for a timeout.
+         */
+        while (true) {
+
+            // wait for the proscribed amount of time
+            try {
+                this.wait(waittime * 1000);// time given in seconds
+            } catch (Exception ex) {
+                MWLogger.errLog(ex);
+            }
+
+            // if the stop signal was sent while we were
+            // waiting, return and end the run();
+            if (!shouldContinue) {return;}
+
+            if (pdefender.leechCount >
+                      server.campaign.CampaignMain.cm.getOpsManager()
+                            .getOperation(opName)
+                            .getIntValue("LeechesToDeactivate")) {
+                // Some other thing pushed this over the edge.  Don't do anything but return.
+                return;
+            }
+
+            // FFA ops start once the leech is done.
+            if (server.campaign.CampaignMain.cm.getOpsManager()
+                      .getOperation(opName)
+                      .getBooleanValue("FreeForAllOperation")) {
+
+                ShortOperation parentOp = server.campaign.CampaignMain.cm.getOpsManager().getRunningOps().get(opID);
+                // get the latest copy of the operation
+                Operation o = server.campaign.CampaignMain.cm.getOpsManager().getOperation(opName);
+
+                int minPlayers = 3;
+                try {
+                    minPlayers = o.getIntValue("MinNumberOfPlayers");
+                } catch (Exception ex) {
+                }
+
+                if (parentOp.getDefenders().size() + parentOp.getAttackers().size() > minPlayers) {
+                    parentOp.changeStatus(ShortOperation.STATUS_INPROGRESS);
+                } else {
+                    server.campaign.CampaignMain.cm.getOpsManager()
+                          .terminateOperation(parentOp, OperationManager.TERM_NOPOSSIBLEDEFENDERS, null);
+                }
+                return;
+            }
+            // not stopped. add a leech.
+            pdefender.leechCount++;
+
+            /*
+             * If we've reached the leach limit, deactivate the player. The
+             * deactivation process will, itself, cause a leech penalty, so we
+             * don't actually need to do one.
+             *
+             * Otherwise, penalize the player normally.
+             *
+             * SPlayer is reloaded as currP in case the person quit and
+             * rejoined, creating a new SPlayer instance.
+             */
+            if (pdefender.leechCount >
+                      server.campaign.CampaignMain.cm.getOpsManager()
+                            .getOperation(opName)
+                            .getIntValue("LeechesToDeactivate")) {
+                shouldContinue = false;
+                server.campaign.SPlayer currP = server.campaign.CampaignMain.cm.getPlayer(pdefender.getName());
+                currP.setActive(false);
+                currP.leechCount = 0;
+                server.campaign.CampaignMain.cm.sendPlayerStatusUpdate(currP, !Boolean.parseBoolean(
+                      server.campaign.CampaignMain.cm.getConfig("HideActiveStatus")));
+                server.campaign.CampaignMain.cm.toUser("You've been deactivated!", currP.getName(), true);
+                return;
+            }
+
+            this.doPenalty();
+
+        }// end the never ending while loop.
+    }// end run()
+
+    public String generateAttackLinks() {
+        /*
+         * Setup. Inform the player of the outstanding attack and send him links
+         * to join for defense.
+         */
+        Operation o = server.campaign.CampaignMain.cm.getOpsManager().getOperation(opName);
+        boolean hasAnArmy = false;// used to set up string for armies past the
+        // first
+        StringBuilder toSend = new StringBuilder(message + "<br>You may defend with: ");
+        int numberOfTeams = Math.max(2, Math.min(8, o.getIntValue("NumberOfTeams")));
+
+        for (server.campaign.SArmy currArmy : parmies) {
+            int aID = currArmy.getID();
+            int aBV = currArmy.getOperationsBV(null);
+            int aUnits = currArmy.getAmountOfUnits();
+
+            if (hasAnArmy) {toSend.append(", ");}
+
+            // Team Operations that are faction specific get teams assigned in
+            // the defendCommand
+            if (o.getBooleanValue("TeamOperation") &&
+                      !o.getBooleanValue("TeamsMustBeSameFaction") &&
+                      !o.getBooleanValue("RandomTeamDetermination")) {
+
+                for (int teamNumber = 1; teamNumber <= numberOfTeams; teamNumber++) {
+                    toSend.append("<a href=\"MEKWARS/c defend#" +
+                                        opID +
+                                        "#" +
+                                        aID +
+                                        "#" +
+                                        teamNumber +
+                                        "\"> Team #" +
+                                        teamNumber +
+                                        " Army #" +
+                                        aID +
+                                        "</a> (Units: " +
+                                        aUnits +
+                                        " / BV: " +
+                                        aBV +
+                                        ")");
+                }
+            } else {
+                toSend.append("<a href=\"MEKWARS/c defend#" +
+                                    opID +
+                                    "#" +
+                                    aID +
+                                    "#" +
+                                    -1 +
+                                    "\">Army #" +
+                                    aID +
+                                    "</a> (Units: " +
+                                    aUnits +
+                                    " / BV: " +
+                                    aBV +
+                                    ")");
+            }
+
+            hasAnArmy = true;
+        }
+        return toSend.toString();
+    }
+
+    public String generateAttackDialogCall() {
+        String opString = "CC|AT|" + opID;
+        StringBuilder defendingArmyList = new StringBuilder();
+        Operation o = server.campaign.CampaignMain.cm.getOpsManager().getOperation(opName);
+        int numberOfTeams = -1;
+        if (o.getBooleanValue("TeamOperation")) {
+            numberOfTeams = Math.max(2, Math.min(8, o.getIntValue("NumberOfTeams")));
+            if (o.getBooleanValue("RandomTeamDetermination")) {numberOfTeams = -1;}
+        }
+        for (server.campaign.SArmy currArmy : parmies) {
+
+            int aID = currArmy.getID();
+            defendingArmyList.append("|" + aID);
+        }
+
+        return opString + "|" + numberOfTeams + defendingArmyList.toString();
+    }
+
     /**
      * Method which gives a player a leech penalty.
      */
@@ -381,183 +559,5 @@ public class OpsChickenThread extends Thread {
                                toPlayer +
                                "<br> Main saw: " +
                                toMain);
-    }
-
-    @Override
-    public synchronized void run() {
-
-        server.campaign.CampaignMain.cm.toUser(generateAttackLinks(), pdefender.getName(), true);
-
-        // Send Attack Event so Client can play a sound
-        server.campaign.CampaignMain.cm.toUser(generateAttackDialogCall(), pdefender.getName(), false);
-
-        // message is extraneous now. null it.
-        message = null;
-
-        /*
-         * Chicken loop. shouldContinue is set to false when a player makes an
-         * external action which should prevent chickening:
-         *  - joins this game - becomes invovled in another RUNNING game -
-         * deactivates
-         *
-         * Deactivating will pull the players chicken threads from the manager,
-         * looping through to stop them. It will also punish the player for
-         * leeching, calling the public doPenalty() in order to give a
-         * punishment equal to that delivered for a timeout.
-         */
-        while (true) {
-
-            // wait for the proscribed amount of time
-            try {
-                this.wait(waittime * 1000);// time given in seconds
-            } catch (Exception ex) {
-                MWLogger.errLog(ex);
-            }
-
-            // if the stop signal was sent while we were
-            // waiting, return and end the run();
-            if (!shouldContinue) {return;}
-
-            if (pdefender.leechCount >
-                      server.campaign.CampaignMain.cm.getOpsManager()
-                            .getOperation(opName)
-                            .getIntValue("LeechesToDeactivate")) {
-                // Some other thing pushed this over the edge.  Don't do anything but return.
-                return;
-            }
-
-            // FFA ops start once the leech is done.
-            if (server.campaign.CampaignMain.cm.getOpsManager()
-                      .getOperation(opName)
-                      .getBooleanValue("FreeForAllOperation")) {
-
-                ShortOperation parentOp = server.campaign.CampaignMain.cm.getOpsManager().getRunningOps().get(opID);
-                // get the latest copy of the operation
-                Operation o = server.campaign.CampaignMain.cm.getOpsManager().getOperation(opName);
-
-                int minPlayers = 3;
-                try {
-                    minPlayers = o.getIntValue("MinNumberOfPlayers");
-                } catch (Exception ex) {
-                }
-
-                if (parentOp.getDefenders().size() + parentOp.getAttackers().size() > minPlayers) {
-                    parentOp.changeStatus(ShortOperation.STATUS_INPROGRESS);
-                } else {
-                    server.campaign.CampaignMain.cm.getOpsManager()
-                          .terminateOperation(parentOp, OperationManager.TERM_NOPOSSIBLEDEFENDERS, null);
-                }
-                return;
-            }
-            // not stopped. add a leech.
-            pdefender.leechCount++;
-
-            /*
-             * If we've reached the leach limit, deactivate the player. The
-             * deactivation process will, itself, cause a leech penalty, so we
-             * don't actually need to do one.
-             *
-             * Otherwise, penalize the player normally.
-             *
-             * SPlayer is reloaded as currP in case the person quit and
-             * rejoined, creating a new SPlayer instance.
-             */
-            if (pdefender.leechCount >
-                      server.campaign.CampaignMain.cm.getOpsManager()
-                            .getOperation(opName)
-                            .getIntValue("LeechesToDeactivate")) {
-                shouldContinue = false;
-                server.campaign.SPlayer currP = server.campaign.CampaignMain.cm.getPlayer(pdefender.getName());
-                currP.setActive(false);
-                currP.leechCount = 0;
-                server.campaign.CampaignMain.cm.sendPlayerStatusUpdate(currP, !Boolean.parseBoolean(
-                      server.campaign.CampaignMain.cm.getConfig("HideActiveStatus")));
-                server.campaign.CampaignMain.cm.toUser("You've been deactivated!", currP.getName(), true);
-                return;
-            }
-
-            this.doPenalty();
-
-        }// end the never ending while loop.
-    }// end run()
-
-    public String generateAttackLinks() {
-        /*
-         * Setup. Inform the player of the outstanding attack and send him links
-         * to join for defense.
-         */
-        Operation o = server.campaign.CampaignMain.cm.getOpsManager().getOperation(opName);
-        boolean hasAnArmy = false;// used to set up string for armies past the
-        // first
-        StringBuilder toSend = new StringBuilder(message + "<br>You may defend with: ");
-        int numberOfTeams = Math.max(2, Math.min(8, o.getIntValue("NumberOfTeams")));
-
-        for (server.campaign.SArmy currArmy : parmies) {
-            int aID = currArmy.getID();
-            int aBV = currArmy.getOperationsBV(null);
-            int aUnits = currArmy.getAmountOfUnits();
-
-            if (hasAnArmy) {toSend.append(", ");}
-
-            // Team Operations that are faction specific get teams assigned in
-            // the defendCommand
-            if (o.getBooleanValue("TeamOperation") &&
-                      !o.getBooleanValue("TeamsMustBeSameFaction") &&
-                      !o.getBooleanValue("RandomTeamDetermination")) {
-
-                for (int teamNumber = 1; teamNumber <= numberOfTeams; teamNumber++) {
-                    toSend.append("<a href=\"MEKWARS/c defend#" +
-                                        opID +
-                                        "#" +
-                                        aID +
-                                        "#" +
-                                        teamNumber +
-                                        "\"> Team #" +
-                                        teamNumber +
-                                        " Army #" +
-                                        aID +
-                                        "</a> (Units: " +
-                                        aUnits +
-                                        " / BV: " +
-                                        aBV +
-                                        ")");
-                }
-            } else {
-                toSend.append("<a href=\"MEKWARS/c defend#" +
-                                    opID +
-                                    "#" +
-                                    aID +
-                                    "#" +
-                                    -1 +
-                                    "\">Army #" +
-                                    aID +
-                                    "</a> (Units: " +
-                                    aUnits +
-                                    " / BV: " +
-                                    aBV +
-                                    ")");
-            }
-
-            hasAnArmy = true;
-        }
-        return toSend.toString();
-    }
-
-    public String generateAttackDialogCall() {
-        String opString = "CC|AT|" + opID;
-        StringBuilder defendingArmyList = new StringBuilder();
-        Operation o = server.campaign.CampaignMain.cm.getOpsManager().getOperation(opName);
-        int numberOfTeams = -1;
-        if (o.getBooleanValue("TeamOperation")) {
-            numberOfTeams = Math.max(2, Math.min(8, o.getIntValue("NumberOfTeams")));
-            if (o.getBooleanValue("RandomTeamDetermination")) {numberOfTeams = -1;}
-        }
-        for (server.campaign.SArmy currArmy : parmies) {
-
-            int aID = currArmy.getID();
-            defendingArmyList.append("|" + aID);
-        }
-
-        return opString + "|" + numberOfTeams + defendingArmyList.toString();
     }
 }// end OpsChickenThread class

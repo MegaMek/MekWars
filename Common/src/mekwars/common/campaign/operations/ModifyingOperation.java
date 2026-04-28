@@ -72,18 +72,18 @@ public class ModifyingOperation {
     //METHODS
 
     /**
+     * Method which returns values, pre-cast to string.
+     */
+    public String getValueAsString(String valToGet) {
+        return (String) getModValue(valToGet);
+    }
+
+    /**
      * Method which attempts to look up the value of a given Paramater in an ModOperation's local Tree. If the value is
      * unavailable, a null is returned.
      */
     public Object getModValue(String valToGet) {
         return modValues.get(valToGet);
-    }
-
-    /**
-     * Method which returns values, pre-cast to string.
-     */
-    public String getValueAsString(String valToGet) {
-        return (String) getModValue(valToGet);
     }
 
     /**

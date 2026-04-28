@@ -49,6 +49,27 @@ public class MeleeSpecialistSkill extends SPilotSkill {
     }
 
     @Override
+    public int getChance(int unitType, Pilot p) {
+        if (p.getSkills().has(this)) {
+            return 0;
+        }
+
+        if (unitType != Unit.MEK) {
+            return 0;
+        }
+
+        String chance = "chancefor" + getAbbreviation() + "for" + Unit.getTypeClassDesc(unitType);
+
+        server.campaign.SHouse house = server.campaign.CampaignMain.cm.getHouseFromPartialString(p.getCurrentFaction());
+
+        if (house == null) {
+            return server.campaign.CampaignMain.cm.getIntegerConfig(chance);
+        }
+
+        return house.getIntegerConfig(chance);
+    }
+
+    @Override
     public int getBVMod(Entity unit) {
         return 0;
     }
@@ -88,26 +109,5 @@ public class MeleeSpecialistSkill extends SPilotSkill {
 
         double total = baseBV * ((tonnage / 10) * speedFactor) + (hatchetMod * numberOfHatchets);
         return (int) total;
-    }
-
-    @Override
-    public int getChance(int unitType, Pilot p) {
-        if (p.getSkills().has(this)) {
-            return 0;
-        }
-
-        if (unitType != Unit.MEK) {
-            return 0;
-        }
-
-        String chance = "chancefor" + getAbbreviation() + "for" + Unit.getTypeClassDesc(unitType);
-
-        server.campaign.SHouse house = server.campaign.CampaignMain.cm.getHouseFromPartialString(p.getCurrentFaction());
-
-        if (house == null) {
-            return server.campaign.CampaignMain.cm.getIntegerConfig(chance);
-        }
-
-        return house.getIntegerConfig(chance);
     }
 }

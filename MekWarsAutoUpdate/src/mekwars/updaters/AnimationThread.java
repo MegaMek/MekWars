@@ -35,11 +35,6 @@ class AnimationThread extends Thread {
         this.progressText = "<HTML><CENTER><b>" + s + "</b></CENTER></HTML>";
     }
 
-    private void updateProgress() {
-        splash.getImageLabel().setText(progressText);
-        // splash.getProgressBar().setValue(progress);
-    }
-
     @Override
     public synchronized void run() {
 
@@ -83,4 +78,9 @@ class AnimationThread extends Thread {
         }// end while
 
     }// end run()
+
+    private void updateProgress() {
+        splash.getImageLabel().setText(progressText);
+        // splash.getProgressBar().setValue(progress);
+    }
 }// end CheckAttackThread

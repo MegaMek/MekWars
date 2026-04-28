@@ -34,17 +34,6 @@ public class BinReader {
     private final BufferedReader in;
     private boolean debug;
 
-    private String read(String debugName) throws IOException {
-        String s = in.readLine();
-        if (debug) {
-            if (!s.substring(0, s.indexOf('=')).equals(debugName)) {
-                throw new RuntimeException("serialization mismatch");
-            }
-            return s.substring(s.indexOf('=') + 1);
-        }
-        return s;
-    }
-
     /**
      * Construct an BinReader
      */
@@ -69,6 +58,17 @@ public class BinReader {
      */
     public int readInt(String debugName) throws IOException {
         return Integer.parseInt(read(debugName));
+    }
+
+    private String read(String debugName) throws IOException {
+        String s = in.readLine();
+        if (debug) {
+            if (!s.substring(0, s.indexOf('=')).equals(debugName)) {
+                throw new RuntimeException("serialization mismatch");
+            }
+            return s.substring(s.indexOf('=') + 1);
+        }
+        return s;
     }
 
     /**

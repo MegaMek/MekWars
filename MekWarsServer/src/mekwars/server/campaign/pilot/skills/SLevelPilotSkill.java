@@ -32,19 +32,14 @@ import common.campaign.pilot.Pilot;
 public abstract class SLevelPilotSkill extends SPilotSkill {
 
     /**
-     * Return the chance to get an upgrade to level "level" (from level-1).
-     *
-     * @param level The level to upgrade to. If this is 1, the chance to get the skill at all is requested.
+     * All leveled skills of one category are linked to each other. This defines the previous skill in this category or
+     * null, if it is the first skill.
      */
-    protected abstract int getUpgradeChance(int level, int unitType, Pilot pilot);
-
+    private mekwars.server.campaign.pilot.skills.SLevelPilotSkill previous;
     /**
-     * Return the current skill level
+     * The skill level. Determinated at construction time from the previous chain.
      */
-    @Override
-    public int getLevel() {
-        return level;
-    }
+    private int level = 1;
 
     /**
      * Construct a level based skill.
@@ -84,14 +79,18 @@ public abstract class SLevelPilotSkill extends SPilotSkill {
         return 0; // cannot jump over levels
     }
 
+    /**
+     * Return the current skill level
+     */
+    @Override
+    public int getLevel() {
+        return level;
+    }
 
     /**
-     * All leveled skills of one category are linked to each other. This defines the previous skill in this category or
-     * null, if it is the first skill.
+     * Return the chance to get an upgrade to level "level" (from level-1).
+     *
+     * @param level The level to upgrade to. If this is 1, the chance to get the skill at all is requested.
      */
-    private mekwars.server.campaign.pilot.skills.SLevelPilotSkill previous;
-    /**
-     * The skill level. Determinated at construction time from the previous chain.
-     */
-    private int level = 1;
+    protected abstract int getUpgradeChance(int level, int unitType, Pilot pilot);
 }

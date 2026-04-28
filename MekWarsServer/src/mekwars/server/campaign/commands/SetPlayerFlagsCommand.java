@@ -6,18 +6,6 @@ public class SetPlayerFlagsCommand implements Command {
     ;
     String syntax = "/c SetPlayerFlags#Player#FlagName#[true|false|toggle]...";
 
-    public int getExecutionLevel() {
-        return accessLevel;
-    }
-
-    public String getSyntax() {
-        return syntax;
-    }
-
-    public void setExecutionLevel(int i) {
-        accessLevel = i;
-    }
-
     public void process(java.util.StringTokenizer command, String Username) {
 
         int userLevel = server.campaign.CampaignMain.cm.getServer().getUserLevel(Username);
@@ -59,6 +47,18 @@ public class SetPlayerFlagsCommand implements Command {
             server.campaign.CampaignMain.cm.toUser(userCommand, pName, false);
         }
         server.campaign.CampaignMain.cm.toUser("AM: Flags set for " + pName, Username, true);
+    }
+
+    public int getExecutionLevel() {
+        return accessLevel;
+    }
+
+    public void setExecutionLevel(int i) {
+        accessLevel = i;
+    }
+
+    public String getSyntax() {
+        return syntax;
     }
 
 

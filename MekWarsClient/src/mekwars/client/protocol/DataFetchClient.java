@@ -1,5 +1,6 @@
 package mekwars.client.protocol;
 
+import mekwars.client.MWClient;
 import mekwars.common.CampaignData;
 import mekwars.common.Equipment;
 import mekwars.common.House;
@@ -50,7 +51,7 @@ public class DataFetchClient {
      * Transfer the server configuration files. Used to set up verious portions of the GUI, determing proper Money/Flu
      * names, and more.
      */
-    public void getServerConfigData(client.MWClient mwclient) throws java.io.IOException {
+    public void getServerConfigData(MWClient mwclient) throws java.io.IOException {
 
         /*
          * Look for an existing serverconfig.txt in the appropriate data dir. If

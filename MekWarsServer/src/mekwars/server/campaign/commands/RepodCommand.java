@@ -41,18 +41,6 @@ public class RepodCommand implements Command {
     String syntax = "";
     private boolean global = false;
 
-    public int getExecutionLevel() {
-        return accessLevel;
-    }
-
-    public void setExecutionLevel(int i) {
-        accessLevel = i;
-    }
-
-    public String getSyntax() {
-        return syntax;
-    }
-
     public void process(java.util.StringTokenizer command, String Username) {
 
         if (accessLevel != 0) {
@@ -392,6 +380,18 @@ public class RepodCommand implements Command {
         // CampaignMain.cm.toUser("Usage: <CODE>/c repod#{unitid}#{New Variant}</CODE>",
         // Username, true);
         return;
+    }
+
+    public int getExecutionLevel() {
+        return accessLevel;
+    }
+
+    public void setExecutionLevel(int i) {
+        accessLevel = i;
+    }
+
+    public String getSyntax() {
+        return syntax;
     }
 
     private void createOmni(

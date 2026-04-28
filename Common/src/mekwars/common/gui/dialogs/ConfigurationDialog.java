@@ -23,16 +23,13 @@ import mekwars.common.util.SpringLayoutHelper;
 
 public final class ConfigurationDialog implements java.awt.event.ActionListener {
 
-    // store the client backlink for other things to use
-    private final IClient client;
-
     private final static String okayCommand = "Okay";
     private final static String cancelCommand = "Cancel";
     private final static String camoCommand = "Camo";
     private final static String lookAndFeelCommand = "LAF";
-
     private final static String windowName = "MekWars Configuration";
-
+    // store the client backlink for other things to use
+    private final IClient client;
     // BUTTONS
     private final javax.swing.JButton okayButton = new javax.swing.JButton("OK");
     private final javax.swing.JButton cancelButton = new javax.swing.JButton("Cancel");
@@ -138,8 +135,6 @@ public final class ConfigurationDialog implements java.awt.event.ActionListener 
 
     private final String[] playerMessageTabChoices = { "Main", "Misc", "System", "Personal" };
     private final javax.swing.JComboBox playerMessageTabComboBox = new javax.swing.JComboBox(playerMessageTabChoices);
-
-    private javax.swing.JComboBox skinComboBox = null;
     // CHECK BOXEN
     // tab visibility
     private final javax.swing.JCheckBox hqTabVisBox = new javax.swing.JCheckBox();
@@ -155,7 +150,6 @@ public final class ConfigurationDialog implements java.awt.event.ActionListener 
     private final javax.swing.JCheckBox sysLogTabVisBox = new javax.swing.JCheckBox();// bottom only
     private final javax.swing.JCheckBox miscTabVisBox = new javax.swing.JCheckBox();// bottom only
     private final javax.swing.JCheckBox RPGTabVisBox = new javax.swing.JCheckBox();// bottom only
-
     // tab location
     private final javax.swing.JCheckBox hqTabonTopBox = new javax.swing.JCheckBox();
     private final javax.swing.JCheckBox rulesTabonTopBox = new javax.swing.JCheckBox();
@@ -164,7 +158,6 @@ public final class ConfigurationDialog implements java.awt.event.ActionListener 
     private final javax.swing.JCheckBox hsTabonTopBox = new javax.swing.JCheckBox();
     private final javax.swing.JCheckBox batTabonTopBox = new javax.swing.JCheckBox();
     private final javax.swing.JCheckBox mapTabonTopBox = new javax.swing.JCheckBox();
-
     // user options
     private final javax.swing.JCheckBox timeStampBox = new javax.swing.JCheckBox();
     private final javax.swing.JCheckBox showHexinHQBox = new javax.swing.JCheckBox();
@@ -178,7 +171,6 @@ public final class ConfigurationDialog implements java.awt.event.ActionListener 
     private final javax.swing.JCheckBox autoReOrder = new javax.swing.JCheckBox();
     private final javax.swing.JCheckBox testBuildTableBox = new javax.swing.JCheckBox();
     private final javax.swing.JCheckBox expandedUnitToolTipBox = new javax.swing.JCheckBox();
-
     // chat options
     private final javax.swing.JCheckBox hmInMainBox = new javax.swing.JCheckBox();
     private final javax.swing.JCheckBox pmInMainBox = new javax.swing.JCheckBox();
@@ -205,7 +197,6 @@ public final class ConfigurationDialog implements java.awt.event.ActionListener 
     private final javax.swing.JCheckBox enableSoundOnMenu = new javax.swing.JCheckBox();
     private final javax.swing.JCheckBox systemMessageKeyword = new javax.swing.JCheckBox();
     private final javax.swing.JCheckBox invertChatColors = new javax.swing.JCheckBox("Invert Chat Colors");
-
     // Dedicated Setup Tab
     private final javax.swing.JCheckBox enableDedicatedServerCB = new javax.swing.JCheckBox();
     private final javax.swing.JTextField portField = new javax.swing.JTextField();
@@ -214,7 +205,6 @@ public final class ConfigurationDialog implements java.awt.event.ActionListener 
     private final javax.swing.JTextField ownersField = new javax.swing.JTextField();
     private final javax.swing.JTextField memoryField = new javax.swing.JTextField();
     private final javax.swing.JTextField socketTimeOutField = new javax.swing.JTextField();
-
     // Unit Status Icons
     private final javax.swing.JCheckBox leftColumnDynamicCB = new javax.swing.JCheckBox();
     private final javax.swing.JCheckBox leftPilotEjectCB = new javax.swing.JCheckBox();
@@ -224,7 +214,6 @@ public final class ConfigurationDialog implements java.awt.event.ActionListener 
     private final javax.swing.JCheckBox leftArmorCB = new javax.swing.JCheckBox();
     private final javax.swing.JCheckBox leftAmmoCB = new javax.swing.JCheckBox();
     private final javax.swing.JCheckBox leftCommanderCB = new javax.swing.JCheckBox();
-
     private final javax.swing.JCheckBox rightColumnDynamicCB = new javax.swing.JCheckBox();
     private final javax.swing.JCheckBox rightPilotEjectCB = new javax.swing.JCheckBox();
     private final javax.swing.JCheckBox rightRepairCB = new javax.swing.JCheckBox();
@@ -233,12 +222,11 @@ public final class ConfigurationDialog implements java.awt.event.ActionListener 
     private final javax.swing.JCheckBox rightArmorCB = new javax.swing.JCheckBox();
     private final javax.swing.JCheckBox rightAmmoCB = new javax.swing.JCheckBox();
     private final javax.swing.JCheckBox rightCommanderCB = new javax.swing.JCheckBox();
-
+    javax.swing.JTabbedPane ConfigPane = new javax.swing.JTabbedPane(javax.swing.SwingConstants.TOP);
+    private javax.swing.JComboBox skinComboBox = null;
     // STOCK DIALOG AND PANE
     private javax.swing.JDialog dialog;
     private javax.swing.JOptionPane pane;
-
-    javax.swing.JTabbedPane ConfigPane = new javax.swing.JTabbedPane(javax.swing.SwingConstants.TOP);
 
     public ConfigurationDialog(IClient client) {
 

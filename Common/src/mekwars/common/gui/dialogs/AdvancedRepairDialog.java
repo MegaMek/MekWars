@@ -53,33 +53,14 @@ public class AdvancedRepairDialog extends JFrame implements ActionListener, Mous
 
     @Serial
     private static final long serialVersionUID = 381067715464633969L;
-    // store the client backlink for other things to use
-    private IClient client = null;
-    private Entity unit = null;
-    private CUnit playerUnit = null;
-
     private final static String okayCommand = "Add";
     private final static String cancelCommand = "Close";
     private final static String techComboCommand = "TechCombo";
-
-    // private final static String delimiter = "*";
-
-    private int critLocation = -1;
-    private int critSlot = -1;
-    private int selectedSlot = -1;
-    private boolean armor = false;
-    private int tabLocation = 0;
     private final Vector<Integer> techs = new Vector<>(1, 1);
-    private int techType = UnitUtils.TECH_GREEN;
-    private int baseLineCost = 0;
-    private int techWorkMod = 0;
-    private int retries = 0;
-    private boolean salvage = false;
-    // BUTTONS
-
     private final JPanel masterPanel = new JPanel(new SpringLayout());
     private final JPanel techPanel = new JPanel(new SpringLayout());
 
+    // private final static String delimiter = "*";
     // Text boxes
     private final JTextField costField = new JTextField(3);
     private final SpinnerListModel workHoursModel = new SpinnerListModel();
@@ -87,12 +68,24 @@ public class AdvancedRepairDialog extends JFrame implements ActionListener, Mous
     private final JTextField baseRollField = new JTextField(3);
     private final SpinnerNumberModel numberOfRetriesEditor = new SpinnerNumberModel();
     private final JSpinner numberOfRetriesField = new JSpinner(numberOfRetriesEditor);
-
-    private JComboBox<String> techComboBox = new JComboBox<>();
-
     JTabbedPane configPane = new JTabbedPane(SwingConstants.TOP);
-
     int year;
+    // store the client backlink for other things to use
+    private IClient client = null;
+    private Entity unit = null;
+    private CUnit playerUnit = null;
+    // BUTTONS
+    private int critLocation = -1;
+    private int critSlot = -1;
+    private int selectedSlot = -1;
+    private boolean armor = false;
+    private int tabLocation = 0;
+    private int techType = UnitUtils.TECH_GREEN;
+    private int baseLineCost = 0;
+    private int techWorkMod = 0;
+    private int retries = 0;
+    private boolean salvage = false;
+    private JComboBox<String> techComboBox = new JComboBox<>();
 
     public AdvancedRepairDialog(IClient client, int unitID, boolean salvage) {
         CUnit pUnit = client.getPlayer().getUnit(unitID);
@@ -184,360 +177,6 @@ public class AdvancedRepairDialog extends JFrame implements ActionListener, Mous
 
         pack();
         setVisible(true);
-    }
-
-    public void actionPerformed(ActionEvent e) {
-        String command = e.getActionCommand();
-
-        switch (command) {
-            case okayCommand -> {
-
-                if ((critLocation < 0) || (critSlot < 0)) {
-                    JOptionPane.showMessageDialog(null, "Invalid location/Slot please try again");
-                    return;
-                }
-
-                // sometimes the slot doesn't report as 0 for internal armor.
-                if (critLocation > UnitUtils.LOC_LTR) {
-                    critSlot = UnitUtils.LOC_INTERNAL_ARMOR;
-                }
-
-                techType = techComboBox.getSelectedIndex();
-
-                // Need to make sure that its really a pilot as it could be a Reward repair.
-                if (techType == UnitUtils.TECH_PILOT) {
-                    techType = UnitUtils.techType((String) Objects.requireNonNull(techComboBox.getSelectedItem()));
-                }
-
-                int retries = 0;
-
-                if (!salvage) {
-                    retries = Integer.parseInt(numberOfRetriesField.getValue().toString());
-                }
-
-                if (critSlot >= UnitUtils.LOC_FRONT_ARMOR) {
-                    client.getPlayer().setRepairLocation(1);
-                } else {
-                    client.getPlayer().setRepairLocation(0);
-                }
-                client.getPlayer().setRepairRetries(retries);
-                client.getPlayer().setRepairTechType(techType);
-
-                if (retries < 0) {
-                    retries = 999;
-                }
-
-                int numberOfTechs = 1;
-
-                if (techType < UnitUtils.TECH_PILOT) {
-                    numberOfTechs = client.getPlayer().getAvailableTechs().get(techType);
-                } else if ((techType == UnitUtils.TECH_PILOT) && playerUnit.getPilotIsRepairing()) {
-                    numberOfTechs = 0;
-                }
-
-                if (salvage) {
-                    client.sendChat(STR."/c salvageunit#\{unit.getExternalId()}#\{critLocation}#\{critSlot}#\{armor}#\{techType}#true");
-                    super.dispose();
-                    return;
-                }
-
-                if ((!UnitUtils.checkRepairViability(unit, critLocation, critSlot, armor) || (numberOfTechs <= 0)) &&
-                          (techType != UnitUtils.TECH_REWARD_POINTS)) {
-
-                    if (!client.getRMT().isQueued(critLocation, critSlot, unit.getExternalId())) {
-                        String workOrder = STR."\{unit.getExternalId()}#\{critLocation}#\{critSlot}#\{baseRollField.getText()}#\{retries}";
-                        client.getRMT().addWorkOrder(techType, workOrder);
-                        client.systemMessage("Work placed in queue.");
-                    } else {
-                        client.systemMessage("A work order has already been placed for that job!");
-                    }
-
-                    if (armor) {
-                        tabLocation = 1;
-                    } else {
-                        tabLocation = 0;
-                    }
-
-                    this.retries = retries;
-
-                    loadPanel();
-                    loadTechPanel();
-                } else {
-                    client.sendChat(STR."/c repairunit#\{unit.getExternalId()}#\{critLocation}#\{critSlot}#\{armor}#\{techType}#\{retries}#\{techWorkMod}#true");
-                    super.dispose();
-                }
-            }
-            case cancelCommand -> {
-                client.getPlayer().resetRepairs();
-                super.dispose();
-            }
-            case techComboCommand -> {
-                techType = techComboBox.getSelectedIndex();
-                String techString = (String) techComboBox.getSelectedItem();
-
-                if (techString != null) {
-                    if (UnitUtils.techType(techString) == UnitUtils.TECH_PILOT) {
-                        Pilot pilot = playerUnit.getPilot();
-                        techType = pilot.getSkills().getPilotSkill(PilotSkill.AstechSkillID).getLevel();
-                    } else if (UnitUtils.techType(techString) == UnitUtils.TECH_REWARD_POINTS) {
-                        techType = UnitUtils.TECH_REWARD_POINTS;
-                    }
-                }
-
-                setCost();
-                setBaseRoll();
-                setWorkHours();
-            }
-        }
-
-    }
-
-    public void mouseExited(MouseEvent e) {
-    }
-
-    public void mousePressed(MouseEvent arg0) {
-        if (arg0.getComponent() instanceof JList) {
-            JList<String> templist = (JList<String>) arg0.getComponent();
-            if (arg0.getButton() == java.awt.event.MouseEvent.BUTTON3) {
-                String component = templist.getSelectedValue();
-
-                if (component != null) {
-                    if ((unit instanceof Mek) && (component.contains("Cockpit"))) {
-                        JPopupMenu popup = getPopupMenuForCockpit();
-                        popup.show(this, arg0.getX() + 50, arg0.getY() + 120);
-                    }// end auto eject
-                    else if ((component.contains("Ammo")) || (component.contains("Pods"))) {
-                        javax.swing.JPopupMenu popup = new javax.swing.JPopupMenu();
-                        Client mmClient = new Client("temp", "None", 0);
-                        mmClient.getGame().getOptions().loadOptions();
-
-                        CriticalSlot criticalSlot = unit.getCritical(critLocation, critSlot);
-                        Mounted<?> mounted = criticalSlot.getMount();
-                        AmmoType ammoType = (AmmoType) unit.getEquipmentType(criticalSlot);
-
-                        Vector<AmmoType> vAllTypes = AmmoType.getMunitionsFor(ammoType.getAmmoType());
-
-                        boolean canDump = mmClient.getGame().getOptions().booleanOption("lobby_ammo_dump");
-
-                        if (vAllTypes == null) {
-                            return;
-                        }
-
-                        if ((vAllTypes.size() < 2) && !canDump) {
-                            return;
-                        }
-
-                        for (int x = 0, n = vAllTypes.size(); x < n; x++) {
-                            AmmoType atCheck = vAllTypes.elementAt(x);
-                            boolean bTechMatch = TechConstants.isLegal(unit.getTechLevel(),
-                                  atCheck.getTechLevel(year),
-                                  unit.isMixedTech());
-
-                            EnumSet<AmmoType.Munitions> munition = atCheck.getMunitionType();
-                            House faction = client.getData().getHouseByName(client.getPlayer().getHouse());
-
-                            // check banned ammo
-                            if (client.getData().getServerBannedAmmo().stream().anyMatch(munition::contains) ||
-                                      faction.getBannedAmmo().stream().anyMatch(munition::contains)) {
-                                continue;
-                            }
-
-                            // allow all lvl2 IS units to use level 1 ammo
-                            // lvl1 IS units don't need to be allowed to use
-                            // lvl1 ammo,
-                            // because there is no special lvl1 ammo, therefore
-                            // it doesn't
-                            // need to show up in this display.
-                            if (!bTechMatch &&
-                                      (unit.getTechLevel() == TechConstants.T_IS_ADVANCED) &&
-                                      (atCheck.getTechLevel(year) <= TechConstants.T_IS_TW_NON_BOX)) {
-                                bTechMatch = true;
-                            }
-
-                            // if is_eq_limits is unchecked allow L1 units to
-                            // use L2 munitions
-                            if (!mmClient.getGame().getOptions().booleanOption("is_eq_limits") &&
-                                      (unit.getTechLevel() <= TechConstants.T_IS_TW_NON_BOX) &&
-                                      (atCheck.getTechLevel(year) == TechConstants.T_IS_ADVANCED)) {
-                                bTechMatch = true;
-                            }
-
-                            // Possibly allow level 3 ammos, possibly not.
-                            if (mmClient.getGame().getOptions().booleanOption("allow_advanced_ammo")) {
-                                if (!mmClient.getGame().getOptions().booleanOption("is_eq_limits")) {
-                                    if ((unit.getTechLevel() == TechConstants.T_CLAN_EXPERIMENTAL) &&
-                                              (atCheck.getTechLevel(year) == TechConstants.T_CLAN_EXPERIMENTAL)) {
-                                        bTechMatch = true;
-                                    }
-                                    if (((unit.getTechLevel() <= TechConstants.T_IS_TW_NON_BOX) ||
-                                               (unit.getTechLevel() == TechConstants.T_IS_ADVANCED)) &&
-                                              (atCheck.getTechLevel(year) == TechConstants.T_IS_EXPERIMENTAL)) {
-                                        bTechMatch = true;
-                                    }
-                                }
-                            } else if ((atCheck.getTechLevel(year) == TechConstants.T_IS_EXPERIMENTAL) ||
-                                             (atCheck.getTechLevel(year) == TechConstants.T_CLAN_EXPERIMENTAL)) {
-                                bTechMatch = false;
-                            }
-
-                            // allow mixed Tech Meks to use both IS and Clan
-                            // Ammo
-                            if (unit.isMixedTech()) {
-                                bTechMatch = true;
-                            }
-
-                            // If clan_ignore_eq_limits is unchecked, do NOT allow Clans to use IS-only ammo. N.B.
-                            // play bit-shifting games to allow "incendiary" to be combined with other munition types.
-                            EnumSet<AmmoType.Munitions> muniType = atCheck.getMunitionType();
-
-                            muniType.add(AmmoType.Munitions.M_INCENDIARY_LRM);
-                            if (!mmClient.getGame().getOptions().booleanOption("clan_ignore_eq_limits") &&
-                                      unit.isClan() &&
-                                      ((muniType.contains(AmmoType.Munitions.M_SEMIGUIDED)) ||
-                                             (muniType.contains(AmmoType.Munitions.M_THUNDER_AUGMENTED)) ||
-                                             (muniType.contains(AmmoType.Munitions.M_THUNDER_INFERNO)) ||
-                                             (muniType.contains(AmmoType.Munitions.M_THUNDER_VIBRABOMB)) ||
-                                             (muniType.contains(AmmoType.Munitions.M_THUNDER_ACTIVE)) ||
-                                             (muniType.contains(AmmoType.Munitions.M_INFERNO_IV)) ||
-                                             (muniType.contains(AmmoType.Munitions.M_VIBRABOMB_IV)))) {
-                                bTechMatch = false;
-                            }
-
-                            if (!mmClient.getGame().getOptions().booleanOption("minefields") &&
-                                      AmmoType.canDeliverMinefield(atCheck)) {
-                                continue;
-                            }
-
-                            // Only Protos can use Proto-specific ammo
-                            if (atCheck.hasFlag(AmmoType.F_PROTOMEK) && !(unit instanceof ProtoMek)) {
-                                continue;
-                            }
-
-                            // When dealing with machine guns, Protos can only
-                            // use proto-specific machine gun ammo
-                            if ((unit instanceof ProtoMek) &&
-                                      atCheck.hasFlag(AmmoType.F_MG) &&
-                                      !atCheck.hasFlag(AmmoType.F_PROTOMEK)) {
-                                continue;
-                            }
-
-                            // BattleArmor ammo can't be selected ammoType all.
-                            // All other ammo types need to match on rack size
-                            // and tech.
-                            if (bTechMatch &&
-                                      (atCheck.getRackSize() == ammoType.getRackSize()) &&
-                                      !atCheck.hasFlag(AmmoType.F_BATTLEARMOR) &&
-                                      (atCheck.getTonnage(unit) == ammoType.getTonnage(unit))) {
-                                double ammoCost = client.getAmmoCost(atCheck.getInternalName());
-                                int cost;
-                                javax.swing.JMenuItem info = new javax.swing.JMenuItem();
-                                if (mounted.getLocation() == Entity.LOC_NONE) {
-                                    cost = (int) ammoCost;
-                                    info.setText(STR."\{atCheck.getName()} (\{mounted.getUsableShotsLeft()}/1) \{client.moneyOrFluMessage(
-                                          true,
-                                          true,
-                                          cost)}");
-                                } else {
-                                    int refillShots = ammoType.getShots();
-
-                                    if (mounted.getUsableShotsLeft() == 0) {
-                                        refillShots = mounted.getOriginalShots();
-                                    }
-
-                                    int shotsLeft = mounted.getUsableShotsLeft();
-
-                                    if (!atCheck.getInternalName().equalsIgnoreCase(ammoType.getInternalName())) {
-                                        shotsLeft = 0;
-                                    }
-
-                                    // No reason to continue if there are not
-                                    // shots to refill.
-                                    if (shotsLeft == refillShots) {
-                                        cost = 0;
-                                    } else {
-                                        cost = (int) Math.ceil(ammoCost * refillShots);
-                                    }
-
-                                    info.setText(STR."\{atCheck.getName()} (\{mounted.getUsableShotsLeft()}/\{refillShots}) \{client.moneyOrFluMessage(
-                                          true,
-                                          true,
-                                          cost)}");
-                                }
-
-                                info.addActionListener(new java.awt.event.ActionListener() {
-                                    public void actionPerformed(java.awt.event.ActionEvent e) {
-                                        client.sendChat(STR."\{IClient.CAMPAIGN_PREFIX}c setunitammobycrit#\{unit.getExternalId()}#\{critLocation}#\{critSlot}#\{e.getActionCommand()}");
-                                    }
-                                });
-                                info.setActionCommand(STR."\{atCheck.getAmmoType()}#\{atCheck.getInternalName()}#\{atCheck.getRackSize()}");
-                                popup.add(info);
-                            }
-                        }// end for
-                        popup.show(this, arg0.getX() + 50, arg0.getY() + 120);
-                    }// end component is ammo
-                }// end component != null
-            }// end if Button3
-        }// end if JList
-    }
-
-    private @org.jspecify.annotations.NonNull JPopupMenu getPopupMenuForCockpit() {
-        JPopupMenu popup = new JPopupMenu();
-
-        if (!((Mek) unit).isAutoEject()) {
-            JMenuItem info = new JMenuItem("Enable AutoEject");
-            info.addActionListener(e -> {
-                client.sendChat(
-                      STR."\{IClient.CAMPAIGN_PREFIX}c setautoeject#\{unit.getExternalId()}#true");
-                ((Mek) unit).setAutoEject(true);
-            });
-            popup.add(info);
-        } else {
-            JMenuItem info = new JMenuItem("Disable AutoEject");
-            info.addActionListener(e -> {
-                client.sendChat(
-                      STR."\{IClient.CAMPAIGN_PREFIX}c setautoeject#\{unit.getExternalId()}#false");
-                ((Mek) unit).setAutoEject(false);
-            });
-            popup.add(info);
-        }
-        return popup;
-    }
-
-    public void mouseEntered(java.awt.event.MouseEvent e) {
-    }
-
-    public void mouseClicked(MouseEvent arg0) {
-
-        if (arg0.getComponent() instanceof JList) {
-            JList<String> templist = (JList<String>) arg0.getComponent();
-            if (templist.getName().startsWith("armor")) {
-                critLocation = Integer.parseInt(templist.getName().substring(5));
-                selectedSlot = templist.getSelectedIndex();
-
-                if (selectedSlot == 0) {
-                    selectedSlot = UnitUtils.LOC_FRONT_ARMOR;
-                } else if (selectedSlot == 2) {
-                    selectedSlot = UnitUtils.LOC_INTERNAL_ARMOR;
-                } else {
-                    if (unit.hasRearArmor(critLocation)) {
-                        selectedSlot = UnitUtils.LOC_REAR_ARMOR;
-                    } else {
-                        selectedSlot = UnitUtils.LOC_INTERNAL_ARMOR;
-                    }
-                }
-            } else {
-                selectedSlot = templist.getSelectedIndex();
-                critLocation = Integer.parseInt(templist.getName());
-            }
-
-            setCost();
-            setBaseRoll();
-            setWorkHours();
-        }// end if JList
-    }
-
-    public void mouseReleased(MouseEvent arg0) {
-
     }
 
     private void loadPanel() {
@@ -1005,6 +644,112 @@ public class AdvancedRepairDialog extends JFrame implements ActionListener, Mous
         SpringLayoutHelper.setupSpringGrid(masterPanel, 2, 1);
     }
 
+    public void actionPerformed(ActionEvent e) {
+        String command = e.getActionCommand();
+
+        switch (command) {
+            case okayCommand -> {
+
+                if ((critLocation < 0) || (critSlot < 0)) {
+                    JOptionPane.showMessageDialog(null, "Invalid location/Slot please try again");
+                    return;
+                }
+
+                // sometimes the slot doesn't report as 0 for internal armor.
+                if (critLocation > UnitUtils.LOC_LTR) {
+                    critSlot = UnitUtils.LOC_INTERNAL_ARMOR;
+                }
+
+                techType = techComboBox.getSelectedIndex();
+
+                // Need to make sure that its really a pilot as it could be a Reward repair.
+                if (techType == UnitUtils.TECH_PILOT) {
+                    techType = UnitUtils.techType((String) Objects.requireNonNull(techComboBox.getSelectedItem()));
+                }
+
+                int retries = 0;
+
+                if (!salvage) {
+                    retries = Integer.parseInt(numberOfRetriesField.getValue().toString());
+                }
+
+                if (critSlot >= UnitUtils.LOC_FRONT_ARMOR) {
+                    client.getPlayer().setRepairLocation(1);
+                } else {
+                    client.getPlayer().setRepairLocation(0);
+                }
+                client.getPlayer().setRepairRetries(retries);
+                client.getPlayer().setRepairTechType(techType);
+
+                if (retries < 0) {
+                    retries = 999;
+                }
+
+                int numberOfTechs = 1;
+
+                if (techType < UnitUtils.TECH_PILOT) {
+                    numberOfTechs = client.getPlayer().getAvailableTechs().get(techType);
+                } else if ((techType == UnitUtils.TECH_PILOT) && playerUnit.getPilotIsRepairing()) {
+                    numberOfTechs = 0;
+                }
+
+                if (salvage) {
+                    client.sendChat(STR."/c salvageunit#\{unit.getExternalId()}#\{critLocation}#\{critSlot}#\{armor}#\{techType}#true");
+                    super.dispose();
+                    return;
+                }
+
+                if ((!UnitUtils.checkRepairViability(unit, critLocation, critSlot, armor) || (numberOfTechs <= 0)) &&
+                          (techType != UnitUtils.TECH_REWARD_POINTS)) {
+
+                    if (!client.getRMT().isQueued(critLocation, critSlot, unit.getExternalId())) {
+                        String workOrder = STR."\{unit.getExternalId()}#\{critLocation}#\{critSlot}#\{baseRollField.getText()}#\{retries}";
+                        client.getRMT().addWorkOrder(techType, workOrder);
+                        client.systemMessage("Work placed in queue.");
+                    } else {
+                        client.systemMessage("A work order has already been placed for that job!");
+                    }
+
+                    if (armor) {
+                        tabLocation = 1;
+                    } else {
+                        tabLocation = 0;
+                    }
+
+                    this.retries = retries;
+
+                    loadPanel();
+                    loadTechPanel();
+                } else {
+                    client.sendChat(STR."/c repairunit#\{unit.getExternalId()}#\{critLocation}#\{critSlot}#\{armor}#\{techType}#\{retries}#\{techWorkMod}#true");
+                    super.dispose();
+                }
+            }
+            case cancelCommand -> {
+                client.getPlayer().resetRepairs();
+                super.dispose();
+            }
+            case techComboCommand -> {
+                techType = techComboBox.getSelectedIndex();
+                String techString = (String) techComboBox.getSelectedItem();
+
+                if (techString != null) {
+                    if (UnitUtils.techType(techString) == UnitUtils.TECH_PILOT) {
+                        Pilot pilot = playerUnit.getPilot();
+                        techType = pilot.getSkills().getPilotSkill(PilotSkill.AstechSkillID).getLevel();
+                    } else if (UnitUtils.techType(techString) == UnitUtils.TECH_REWARD_POINTS) {
+                        techType = UnitUtils.TECH_REWARD_POINTS;
+                    }
+                }
+
+                setCost();
+                setBaseRoll();
+                setWorkHours();
+            }
+        }
+
+    }
+
     /**
      * This method sets the cost field with the cost of the repair based on the crit and the tech doing the job.
      *
@@ -1154,43 +899,6 @@ public class AdvancedRepairDialog extends JFrame implements ActionListener, Mous
         baseRollField.setText(Integer.toString(roll));
     }
 
-    public void keyTyped(java.awt.event.KeyEvent arg0) {
-    }
-
-    public void keyPressed(java.awt.event.KeyEvent arg0) {
-    }
-
-    public void keyReleased(KeyEvent arg0) {
-
-        if (arg0.getKeyCode() == KeyEvent.VK_ESCAPE) {
-            client.getPlayer().resetRepairs();
-            super.dispose();
-        }
-        if (arg0.getComponent().equals(numberOfRetriesField)) {
-            if (!numberOfRetriesField.getValue().toString().isEmpty()) {
-                try {
-                    Integer.parseInt(numberOfRetriesField.getValue().toString());
-                } catch (Exception ex) {
-                    numberOfRetriesEditor.setValue(0);
-                    numberOfRetriesField.setValue(0);
-                }
-            }
-        }
-
-        if (arg0.getComponent().equals(workHoursField)) {
-            workHoursField.setValue(workHoursField.getPreviousValue());
-        }
-
-        if (arg0.getComponent() instanceof JList) {
-            critLocation = configPane.getSelectedIndex();
-            JList<String> templist = (JList<String>) arg0.getComponent();
-            selectedSlot = templist.getSelectedIndex();
-            setCost();
-            setBaseRoll();
-            setWorkHours();
-        }// end if JList
-    }
-
     private void setWorkHours() {
 
         if ((critLocation < 0) || (critSlot < 0)) {
@@ -1237,6 +945,291 @@ public class AdvancedRepairDialog extends JFrame implements ActionListener, Mous
         workHoursModel.setList(tempVector);
         workHoursModel.setValue(baseLine);
         workHoursField.setModel(workHoursModel);
+    }
+
+    public void mouseClicked(MouseEvent arg0) {
+
+        if (arg0.getComponent() instanceof JList) {
+            JList<String> templist = (JList<String>) arg0.getComponent();
+            if (templist.getName().startsWith("armor")) {
+                critLocation = Integer.parseInt(templist.getName().substring(5));
+                selectedSlot = templist.getSelectedIndex();
+
+                if (selectedSlot == 0) {
+                    selectedSlot = UnitUtils.LOC_FRONT_ARMOR;
+                } else if (selectedSlot == 2) {
+                    selectedSlot = UnitUtils.LOC_INTERNAL_ARMOR;
+                } else {
+                    if (unit.hasRearArmor(critLocation)) {
+                        selectedSlot = UnitUtils.LOC_REAR_ARMOR;
+                    } else {
+                        selectedSlot = UnitUtils.LOC_INTERNAL_ARMOR;
+                    }
+                }
+            } else {
+                selectedSlot = templist.getSelectedIndex();
+                critLocation = Integer.parseInt(templist.getName());
+            }
+
+            setCost();
+            setBaseRoll();
+            setWorkHours();
+        }// end if JList
+    }
+
+    public void mousePressed(MouseEvent arg0) {
+        if (arg0.getComponent() instanceof JList) {
+            JList<String> templist = (JList<String>) arg0.getComponent();
+            if (arg0.getButton() == java.awt.event.MouseEvent.BUTTON3) {
+                String component = templist.getSelectedValue();
+
+                if (component != null) {
+                    if ((unit instanceof Mek) && (component.contains("Cockpit"))) {
+                        JPopupMenu popup = getPopupMenuForCockpit();
+                        popup.show(this, arg0.getX() + 50, arg0.getY() + 120);
+                    }// end auto eject
+                    else if ((component.contains("Ammo")) || (component.contains("Pods"))) {
+                        javax.swing.JPopupMenu popup = new javax.swing.JPopupMenu();
+                        Client mmClient = new Client("temp", "None", 0);
+                        mmClient.getGame().getOptions().loadOptions();
+
+                        CriticalSlot criticalSlot = unit.getCritical(critLocation, critSlot);
+                        Mounted<?> mounted = criticalSlot.getMount();
+                        AmmoType ammoType = (AmmoType) unit.getEquipmentType(criticalSlot);
+
+                        Vector<AmmoType> vAllTypes = AmmoType.getMunitionsFor(ammoType.getAmmoType());
+
+                        boolean canDump = mmClient.getGame().getOptions().booleanOption("lobby_ammo_dump");
+
+                        if (vAllTypes == null) {
+                            return;
+                        }
+
+                        if ((vAllTypes.size() < 2) && !canDump) {
+                            return;
+                        }
+
+                        for (int x = 0, n = vAllTypes.size(); x < n; x++) {
+                            AmmoType atCheck = vAllTypes.elementAt(x);
+                            boolean bTechMatch = TechConstants.isLegal(unit.getTechLevel(),
+                                  atCheck.getTechLevel(year),
+                                  unit.isMixedTech());
+
+                            EnumSet<AmmoType.Munitions> munition = atCheck.getMunitionType();
+                            House faction = client.getData().getHouseByName(client.getPlayer().getHouse());
+
+                            // check banned ammo
+                            if (client.getData().getServerBannedAmmo().stream().anyMatch(munition::contains) ||
+                                      faction.getBannedAmmo().stream().anyMatch(munition::contains)) {
+                                continue;
+                            }
+
+                            // allow all lvl2 IS units to use level 1 ammo
+                            // lvl1 IS units don't need to be allowed to use
+                            // lvl1 ammo,
+                            // because there is no special lvl1 ammo, therefore
+                            // it doesn't
+                            // need to show up in this display.
+                            if (!bTechMatch &&
+                                      (unit.getTechLevel() == TechConstants.T_IS_ADVANCED) &&
+                                      (atCheck.getTechLevel(year) <= TechConstants.T_IS_TW_NON_BOX)) {
+                                bTechMatch = true;
+                            }
+
+                            // if is_eq_limits is unchecked allow L1 units to
+                            // use L2 munitions
+                            if (!mmClient.getGame().getOptions().booleanOption("is_eq_limits") &&
+                                      (unit.getTechLevel() <= TechConstants.T_IS_TW_NON_BOX) &&
+                                      (atCheck.getTechLevel(year) == TechConstants.T_IS_ADVANCED)) {
+                                bTechMatch = true;
+                            }
+
+                            // Possibly allow level 3 ammos, possibly not.
+                            if (mmClient.getGame().getOptions().booleanOption("allow_advanced_ammo")) {
+                                if (!mmClient.getGame().getOptions().booleanOption("is_eq_limits")) {
+                                    if ((unit.getTechLevel() == TechConstants.T_CLAN_EXPERIMENTAL) &&
+                                              (atCheck.getTechLevel(year) == TechConstants.T_CLAN_EXPERIMENTAL)) {
+                                        bTechMatch = true;
+                                    }
+                                    if (((unit.getTechLevel() <= TechConstants.T_IS_TW_NON_BOX) ||
+                                               (unit.getTechLevel() == TechConstants.T_IS_ADVANCED)) &&
+                                              (atCheck.getTechLevel(year) == TechConstants.T_IS_EXPERIMENTAL)) {
+                                        bTechMatch = true;
+                                    }
+                                }
+                            } else if ((atCheck.getTechLevel(year) == TechConstants.T_IS_EXPERIMENTAL) ||
+                                             (atCheck.getTechLevel(year) == TechConstants.T_CLAN_EXPERIMENTAL)) {
+                                bTechMatch = false;
+                            }
+
+                            // allow mixed Tech Meks to use both IS and Clan
+                            // Ammo
+                            if (unit.isMixedTech()) {
+                                bTechMatch = true;
+                            }
+
+                            // If clan_ignore_eq_limits is unchecked, do NOT allow Clans to use IS-only ammo. N.B.
+                            // play bit-shifting games to allow "incendiary" to be combined with other munition types.
+                            EnumSet<AmmoType.Munitions> muniType = atCheck.getMunitionType();
+
+                            muniType.add(AmmoType.Munitions.M_INCENDIARY_LRM);
+                            if (!mmClient.getGame().getOptions().booleanOption("clan_ignore_eq_limits") &&
+                                      unit.isClan() &&
+                                      ((muniType.contains(AmmoType.Munitions.M_SEMIGUIDED)) ||
+                                             (muniType.contains(AmmoType.Munitions.M_THUNDER_AUGMENTED)) ||
+                                             (muniType.contains(AmmoType.Munitions.M_THUNDER_INFERNO)) ||
+                                             (muniType.contains(AmmoType.Munitions.M_THUNDER_VIBRABOMB)) ||
+                                             (muniType.contains(AmmoType.Munitions.M_THUNDER_ACTIVE)) ||
+                                             (muniType.contains(AmmoType.Munitions.M_INFERNO_IV)) ||
+                                             (muniType.contains(AmmoType.Munitions.M_VIBRABOMB_IV)))) {
+                                bTechMatch = false;
+                            }
+
+                            if (!mmClient.getGame().getOptions().booleanOption("minefields") &&
+                                      AmmoType.canDeliverMinefield(atCheck)) {
+                                continue;
+                            }
+
+                            // Only Protos can use Proto-specific ammo
+                            if (atCheck.hasFlag(AmmoType.F_PROTOMEK) && !(unit instanceof ProtoMek)) {
+                                continue;
+                            }
+
+                            // When dealing with machine guns, Protos can only
+                            // use proto-specific machine gun ammo
+                            if ((unit instanceof ProtoMek) &&
+                                      atCheck.hasFlag(AmmoType.F_MG) &&
+                                      !atCheck.hasFlag(AmmoType.F_PROTOMEK)) {
+                                continue;
+                            }
+
+                            // BattleArmor ammo can't be selected ammoType all.
+                            // All other ammo types need to match on rack size
+                            // and tech.
+                            if (bTechMatch &&
+                                      (atCheck.getRackSize() == ammoType.getRackSize()) &&
+                                      !atCheck.hasFlag(AmmoType.F_BATTLEARMOR) &&
+                                      (atCheck.getTonnage(unit) == ammoType.getTonnage(unit))) {
+                                double ammoCost = client.getAmmoCost(atCheck.getInternalName());
+                                int cost;
+                                javax.swing.JMenuItem info = new javax.swing.JMenuItem();
+                                if (mounted.getLocation() == Entity.LOC_NONE) {
+                                    cost = (int) ammoCost;
+                                    info.setText(STR."\{atCheck.getName()} (\{mounted.getUsableShotsLeft()}/1) \{client.moneyOrFluMessage(
+                                          true,
+                                          true,
+                                          cost)}");
+                                } else {
+                                    int refillShots = ammoType.getShots();
+
+                                    if (mounted.getUsableShotsLeft() == 0) {
+                                        refillShots = mounted.getOriginalShots();
+                                    }
+
+                                    int shotsLeft = mounted.getUsableShotsLeft();
+
+                                    if (!atCheck.getInternalName().equalsIgnoreCase(ammoType.getInternalName())) {
+                                        shotsLeft = 0;
+                                    }
+
+                                    // No reason to continue if there are not
+                                    // shots to refill.
+                                    if (shotsLeft == refillShots) {
+                                        cost = 0;
+                                    } else {
+                                        cost = (int) Math.ceil(ammoCost * refillShots);
+                                    }
+
+                                    info.setText(STR."\{atCheck.getName()} (\{mounted.getUsableShotsLeft()}/\{refillShots}) \{client.moneyOrFluMessage(
+                                          true,
+                                          true,
+                                          cost)}");
+                                }
+
+                                info.addActionListener(new java.awt.event.ActionListener() {
+                                    public void actionPerformed(java.awt.event.ActionEvent e) {
+                                        client.sendChat(STR."\{IClient.CAMPAIGN_PREFIX}c setunitammobycrit#\{unit.getExternalId()}#\{critLocation}#\{critSlot}#\{e.getActionCommand()}");
+                                    }
+                                });
+                                info.setActionCommand(STR."\{atCheck.getAmmoType()}#\{atCheck.getInternalName()}#\{atCheck.getRackSize()}");
+                                popup.add(info);
+                            }
+                        }// end for
+                        popup.show(this, arg0.getX() + 50, arg0.getY() + 120);
+                    }// end component is ammo
+                }// end component != null
+            }// end if Button3
+        }// end if JList
+    }
+
+    private @org.jspecify.annotations.NonNull JPopupMenu getPopupMenuForCockpit() {
+        JPopupMenu popup = new JPopupMenu();
+
+        if (!((Mek) unit).isAutoEject()) {
+            JMenuItem info = new JMenuItem("Enable AutoEject");
+            info.addActionListener(e -> {
+                client.sendChat(
+                      STR."\{IClient.CAMPAIGN_PREFIX}c setautoeject#\{unit.getExternalId()}#true");
+                ((Mek) unit).setAutoEject(true);
+            });
+            popup.add(info);
+        } else {
+            JMenuItem info = new JMenuItem("Disable AutoEject");
+            info.addActionListener(e -> {
+                client.sendChat(
+                      STR."\{IClient.CAMPAIGN_PREFIX}c setautoeject#\{unit.getExternalId()}#false");
+                ((Mek) unit).setAutoEject(false);
+            });
+            popup.add(info);
+        }
+        return popup;
+    }
+
+    public void mouseReleased(MouseEvent arg0) {
+
+    }
+
+    public void mouseEntered(java.awt.event.MouseEvent e) {
+    }
+
+    public void mouseExited(MouseEvent e) {
+    }
+
+    public void keyTyped(java.awt.event.KeyEvent arg0) {
+    }
+
+    public void keyPressed(java.awt.event.KeyEvent arg0) {
+    }
+
+    public void keyReleased(KeyEvent arg0) {
+
+        if (arg0.getKeyCode() == KeyEvent.VK_ESCAPE) {
+            client.getPlayer().resetRepairs();
+            super.dispose();
+        }
+        if (arg0.getComponent().equals(numberOfRetriesField)) {
+            if (!numberOfRetriesField.getValue().toString().isEmpty()) {
+                try {
+                    Integer.parseInt(numberOfRetriesField.getValue().toString());
+                } catch (Exception ex) {
+                    numberOfRetriesEditor.setValue(0);
+                    numberOfRetriesField.setValue(0);
+                }
+            }
+        }
+
+        if (arg0.getComponent().equals(workHoursField)) {
+            workHoursField.setValue(workHoursField.getPreviousValue());
+        }
+
+        if (arg0.getComponent() instanceof JList) {
+            critLocation = configPane.getSelectedIndex();
+            JList<String> templist = (JList<String>) arg0.getComponent();
+            selectedSlot = templist.getSelectedIndex();
+            setCost();
+            setBaseRoll();
+            setWorkHours();
+        }// end if JList
     }
 
     public void stateChanged(ChangeEvent arg0) {

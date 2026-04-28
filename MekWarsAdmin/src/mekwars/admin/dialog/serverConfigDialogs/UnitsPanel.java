@@ -43,6 +43,11 @@ public class UnitsPanel extends JPanel {
 
     //private Dimension screenSize; //not used?
 
+    public UnitsPanel() {
+        super();
+        init();
+    }
+
     private void init() {
         // Set up the costs (cbills, flu, PP)
         JPanel leftPanel = new JPanel();
@@ -342,10 +347,5 @@ public class UnitsPanel extends JPanel {
               leftPanel.getPreferredSize().height));
         add(leftPanel);
         add(rightPanel);
-    }
-
-    public UnitsPanel() {
-        super();
-        init();
     }
 }

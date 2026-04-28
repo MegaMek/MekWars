@@ -61,6 +61,34 @@ public class PilotQueues {
     }
 
     /**
+     * @param type
+     * @param p    This is called from SHouse.fromString to load pilots directly from the dat files without reprocessing
+     *             them.
+     *
+     * @@author Torren (Jason Tighe)
+     */
+    public void loadPilot(int type, SPilot p) {
+        p.setCurrentFaction(factionString);
+        queues.get(type).addLast(p);
+    }//end void loadPilot()
+
+    public SPilot getPilot(int type) {
+        java.util.LinkedList<SPilot> list = queues.get(type);
+        while (list.size() < 10) {addPilot(type, rollNewPilot(type), true);}
+
+        SPilot pilot = list.remove(CampaignMain.cm.getRandomNumber(list.size()));
+
+        java.util.StringTokenizer ST = new java.util.StringTokenizer(getBasePilotSkill(type), "$");
+
+        while (ST.hasMoreTokens()) {
+            SPilotSkill pSkill = SPilotSkills.getPilotSkill(ST.nextToken());
+            if (!pilot.getSkills().has(pSkill)) {pilot.getSkills().add(pSkill);}
+        }
+
+        return pilot;
+    }
+
+    /**
      *
      * @param type            int type of pilot (mek, veh, etc.)
      * @param p               pilot to add
@@ -97,6 +125,55 @@ public class PilotQueues {
         } else {//skip the skill adjustmebnt
             queues.get(type).addLast(p);
         }//end else(bypass the adjustmenbt)
+    }
+
+    private SPilot rollNewPilot(int unitType) {
+
+        SPilot result;
+        int gunnery = this.getBaseGunnery(unitType);
+        int piloting = this.getBasePiloting(unitType);
+        int skillChance = CampaignMain.cm.getIntegerConfig("BornSkillChance");
+
+        int rnd = CampaignMain.cm.getRandomNumber(100);//reroll rnd, use to check for improved pilots
+        boolean allowGreenPilots = CampaignMain.cm.getBooleanConfig("AllowGreenPilots");
+        boolean allowVetPilots = CampaignMain.cm.getBooleanConfig("AllowVetPilots");
+
+        //Green Pilots
+        if (rnd < 10 && allowGreenPilots) {
+            if (rnd < 5) {gunnery++;} else if (rnd >= 5 && rnd < 10) {piloting++;}
+            skillChance = 100;
+        }
+
+        //Improved Pilots
+        if (rnd >= 90 && allowVetPilots) {
+            if (rnd >= 90 && rnd < 95) {piloting--;} else if (rnd >= 95) {gunnery--;}
+        }
+
+        result = new SPilot(getRandomPilotName(), gunnery, piloting);
+        result.setCurrentFaction(factionString);
+
+        rnd = CampaignMain.cm.getRandomNumber(100);//reroll rnd, use to check for improved pilots
+        if (rnd <= skillChance && CampaignMain.cm.getBooleanConfig("PilotSkills")) {
+
+            SPilotSkill skill = SPilotSkills.getRandomSkill(result, unitType);
+            if (skill != null) {
+                if (skill instanceof TraitSkill) {((TraitSkill) skill).assignTrait(result);}
+                skill.addToPilot(result);
+                skill.modifyPilot(result);
+            }
+        }
+
+        result.setPilotId(CampaignMain.cm.getAndUpdateCurrentPilotID());
+        return result;
+    }
+
+    /**
+     * @param type
+     *
+     * @return base piloting skills for specific unit type.
+     */
+    public String getBasePilotSkill(int type) {
+        return this.basePilotSkills.elementAt(type);
     }
 
     /**
@@ -191,110 +268,6 @@ public class PilotQueues {
     }//end void addPilot()
 
     /**
-     * @param type
-     * @param p    This is called from SHouse.fromString to load pilots directly from the dat files without reprocessing
-     *             them.
-     *
-     * @@author Torren (Jason Tighe)
-     */
-    public void loadPilot(int type, SPilot p) {
-        p.setCurrentFaction(factionString);
-        queues.get(type).addLast(p);
-    }//end void loadPilot()
-
-    public SPilot getPilot(int type) {
-        java.util.LinkedList<SPilot> list = queues.get(type);
-        while (list.size() < 10) {addPilot(type, rollNewPilot(type), true);}
-
-        SPilot pilot = list.remove(CampaignMain.cm.getRandomNumber(list.size()));
-
-        java.util.StringTokenizer ST = new java.util.StringTokenizer(getBasePilotSkill(type), "$");
-
-        while (ST.hasMoreTokens()) {
-            SPilotSkill pSkill = SPilotSkills.getPilotSkill(ST.nextToken());
-            if (!pilot.getSkills().has(pSkill)) {pilot.getSkills().add(pSkill);}
-        }
-
-        return pilot;
-    }
-
-    private SPilot rollNewPilot(int unitType) {
-
-        SPilot result;
-        int gunnery = this.getBaseGunnery(unitType);
-        int piloting = this.getBasePiloting(unitType);
-        int skillChance = CampaignMain.cm.getIntegerConfig("BornSkillChance");
-
-        int rnd = CampaignMain.cm.getRandomNumber(100);//reroll rnd, use to check for improved pilots
-        boolean allowGreenPilots = CampaignMain.cm.getBooleanConfig("AllowGreenPilots");
-        boolean allowVetPilots = CampaignMain.cm.getBooleanConfig("AllowVetPilots");
-
-        //Green Pilots
-        if (rnd < 10 && allowGreenPilots) {
-            if (rnd < 5) {gunnery++;} else if (rnd >= 5 && rnd < 10) {piloting++;}
-            skillChance = 100;
-        }
-
-        //Improved Pilots
-        if (rnd >= 90 && allowVetPilots) {
-            if (rnd >= 90 && rnd < 95) {piloting--;} else if (rnd >= 95) {gunnery--;}
-        }
-
-        result = new SPilot(getRandomPilotName(), gunnery, piloting);
-        result.setCurrentFaction(factionString);
-
-        rnd = CampaignMain.cm.getRandomNumber(100);//reroll rnd, use to check for improved pilots
-        if (rnd <= skillChance && CampaignMain.cm.getBooleanConfig("PilotSkills")) {
-
-            SPilotSkill skill = SPilotSkills.getRandomSkill(result, unitType);
-            if (skill != null) {
-                if (skill instanceof TraitSkill) {((TraitSkill) skill).assignTrait(result);}
-                skill.addToPilot(result);
-                skill.modifyPilot(result);
-            }
-        }
-
-        result.setPilotId(CampaignMain.cm.getAndUpdateCurrentPilotID());
-        return result;
-    }
-
-    public int getQueueSize(int type) {
-        return queues.get(type).size();
-    }
-
-    /**
-     * @param s faction name string
-     *          <p>
-     *          A method which should be called immedaitely after a pilot que is contructed, if faction specific name
-     *          lists are enabled.
-     */
-    public void setFactionString(String s) {
-        factionString = s;
-    }
-
-    /**
-     * @return the faction string
-     */
-    public String getFactionString() {
-        return factionString;
-    }
-
-    public void setFactionBasePilotSkills(String skills) {
-        java.util.StringTokenizer ST = new java.util.StringTokenizer(skills);
-
-        while (ST.hasMoreTokens()) {
-
-        }
-    }
-
-    /**
-     * @return int this queue's base piloting #
-     */
-    public int getBasePiloting(int type) {
-        return this.basePiloting.elementAt(type);
-    }
-
-    /**
      * @return int this queue's base gunnery #
      */
     public int getBaseGunnery(int type) {
@@ -302,46 +275,10 @@ public class PilotQueues {
     }
 
     /**
-     * @param type
-     *
-     * @return base piloting skills for specific unit type.
+     * @return int this queue's base piloting #
      */
-    public String getBasePilotSkill(int type) {
-        return this.basePilotSkills.elementAt(type);
-    }
-
-    /*
-     * Sets BasePiloting for this queue
-     */
-
-    public void setBasePiloting(int piloting, int type) {
-        synchronized (basePiloting) {
-            this.basePiloting.set(type, piloting);
-        }
-    }
-
-    /*
-     * Sets Base Gunnery for this queue
-     */
-
-    public void setBaseGunnery(int gunnery, int type) {
-        synchronized (baseGunnery) {
-            this.baseGunnery.set(type, gunnery);
-        }
-    }
-
-    public void setBasePilotSkill(String skills, int type) {
-        synchronized (basePilotSkills) {
-            this.basePilotSkills.set(type, skills);
-        }
-    }
-
-    public void setFactionID(int factionID) {
-        this.factionID = factionID;
-    }
-
-    public int getFactionID() {
-        return this.factionID;
+    public int getBasePiloting(int type) {
+        return this.basePiloting.elementAt(type);
     }
 
     /**
@@ -384,6 +321,69 @@ public class PilotQueues {
 
         return result;
     }//end getRandomPilotName
+
+    public int getQueueSize(int type) {
+        return queues.get(type).size();
+    }
+
+    /**
+     * @return the faction string
+     */
+    public String getFactionString() {
+        return factionString;
+    }
+
+    /**
+     * @param s faction name string
+     *          <p>
+     *          A method which should be called immedaitely after a pilot que is contructed, if faction specific name
+     *          lists are enabled.
+     */
+    public void setFactionString(String s) {
+        factionString = s;
+    }
+
+    /*
+     * Sets BasePiloting for this queue
+     */
+
+    public void setFactionBasePilotSkills(String skills) {
+        java.util.StringTokenizer ST = new java.util.StringTokenizer(skills);
+
+        while (ST.hasMoreTokens()) {
+
+        }
+    }
+
+    /*
+     * Sets Base Gunnery for this queue
+     */
+
+    public void setBasePiloting(int piloting, int type) {
+        synchronized (basePiloting) {
+            this.basePiloting.set(type, piloting);
+        }
+    }
+
+    public void setBaseGunnery(int gunnery, int type) {
+        synchronized (baseGunnery) {
+            this.baseGunnery.set(type, gunnery);
+        }
+    }
+
+    public void setBasePilotSkill(String skills, int type) {
+        synchronized (basePilotSkills) {
+            this.basePilotSkills.set(type, skills);
+        }
+    }
+
+    public int getFactionID() {
+        return this.factionID;
+    }
+
+    public void setFactionID(int factionID) {
+        this.factionID = factionID;
+    }
 
     public java.util.LinkedList<SPilot> getPilotQueue(int type) {
         java.util.LinkedList<SPilot> list = queues.get(type);

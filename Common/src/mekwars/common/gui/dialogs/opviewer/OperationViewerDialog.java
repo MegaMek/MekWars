@@ -59,21 +59,63 @@ public class OperationViewerDialog extends JDialog implements Runnable {
     private final JPanel contentPanel = new JPanel();
     private final JPanel anchorPanel = new JPanel();
     private final JPanel htmlPanel = new JPanel();
-    private JComboBox<String> selector = new JComboBox<>();
     private final JFrame mainframe;
-
     private final Vector<TemplateElement> templateElements = new Vector<>();
-
+    private JComboBox<String> selector = new JComboBox<>();
     private IClient client;
 
-    private String getOpHTML(Operation operation) {
-        StringBuilder stringBuilder = new StringBuilder();
+    public OperationViewerDialog(JFrame mainframe, IClient client) {
+        super(mainframe, "Operations Viewer", false);
+        this.mainframe = mainframe;
+        this.client = client;
+    }
 
-        for (TemplateElement templateElement : templateElements) {
-            stringBuilder.append(templateElement.getHTMLData(operation));
+    @Override
+    public void run() {
+        parseTemplate();
+        loadOps();
+        initComponents();
+    }
+
+    private void parseTemplate() {
+        File file = new File("./data/operations/OpTemplate.html");
+        if (file.exists()) {
+            BufferedReader bufferedReader = null;
+            try {
+                bufferedReader = new BufferedReader(new FileReader(file));
+            } catch (FileNotFoundException e) {
+                // TODO Auto-generated catch block
+                e.printStackTrace();
+            }
+
+            try {
+                for (String line; (line = bufferedReader.readLine()) != null; ) {
+                    // Here, we will parse out the entire thing into a vector of phrases.
+                    if (line.startsWith("%%ANCHOR")) {
+                        continue;
+                    }
+                    if (line.contains("%%")) {
+                        String[] arr = line.split("%%");
+                        for (String s : arr) {
+                            templateElements.add(new TemplateElement(s, client));
+                        }
+                    } else {
+                        templateElements.add(new TemplateElement(line, client));
+                    }
+
+                }
+            } catch (java.io.IOException e) {
+                // TODO Auto-generated catch block
+                e.printStackTrace();
+            }
+
+            try {
+                bufferedReader.close();
+            } catch (java.io.IOException e) {
+                // TODO Auto-generated catch block
+                e.printStackTrace();
+            }
         }
-
-        return stringBuilder.toString();
     }
 
     // Load operations
@@ -98,20 +140,6 @@ public class OperationViewerDialog extends JDialog implements Runnable {
                 ops.put(operation.getName(), new OpViewerOpPane(getOpHTML(operation)));
             }
         }
-    }
-
-    private void setHTMLLocation(String loc) {
-        OpViewerOpPane pane = (OpViewerOpPane) htmlPanel.getComponent(0);
-        pane.scrollToReference(loc);
-    }
-
-    private void changeSelectedPanel() {
-        htmlPanel.removeAll();
-        OpViewerOpPane pane = ops.get(selector.getSelectedItem());
-        pane.setVisible(true);
-        htmlPanel.add(pane);
-        htmlPanel.revalidate();
-        htmlPanel.repaint();
     }
 
     private void initComponents() {
@@ -193,6 +221,25 @@ public class OperationViewerDialog extends JDialog implements Runnable {
         this.setVisible(true);
     }
 
+    private String getOpHTML(Operation operation) {
+        StringBuilder stringBuilder = new StringBuilder();
+
+        for (TemplateElement templateElement : templateElements) {
+            stringBuilder.append(templateElement.getHTMLData(operation));
+        }
+
+        return stringBuilder.toString();
+    }
+
+    private void changeSelectedPanel() {
+        htmlPanel.removeAll();
+        OpViewerOpPane pane = ops.get(selector.getSelectedItem());
+        pane.setVisible(true);
+        htmlPanel.add(pane);
+        htmlPanel.revalidate();
+        htmlPanel.repaint();
+    }
+
     private Vector<OpViewerAnchorButton> extractAnchorsFromTemplate(String fileName) {
         Vector<OpViewerAnchorButton> buttons = new Vector<>();
 
@@ -222,65 +269,16 @@ public class OperationViewerDialog extends JDialog implements Runnable {
         return buttons;
     }
 
+    private void setHTMLLocation(String loc) {
+        OpViewerOpPane pane = (OpViewerOpPane) htmlPanel.getComponent(0);
+        pane.scrollToReference(loc);
+    }
+
     private OpViewerAnchorButton buildAnchorButton(String line) {
         line = line.replace("%%ANCHOR%", "");
         line = line.replace("%%", "");
         String[] lines = line.split("%");
         return new OpViewerAnchorButton(lines[0], lines[1]);
-    }
-
-    public OperationViewerDialog(JFrame mainframe, IClient client) {
-        super(mainframe, "Operations Viewer", false);
-        this.mainframe = mainframe;
-        this.client = client;
-    }
-
-    @Override
-    public void run() {
-        parseTemplate();
-        loadOps();
-        initComponents();
-    }
-
-    private void parseTemplate() {
-        File file = new File("./data/operations/OpTemplate.html");
-        if (file.exists()) {
-            BufferedReader bufferedReader = null;
-            try {
-                bufferedReader = new BufferedReader(new FileReader(file));
-            } catch (FileNotFoundException e) {
-                // TODO Auto-generated catch block
-                e.printStackTrace();
-            }
-
-            try {
-                for (String line; (line = bufferedReader.readLine()) != null; ) {
-                    // Here, we will parse out the entire thing into a vector of phrases.
-                    if (line.startsWith("%%ANCHOR")) {
-                        continue;
-                    }
-                    if (line.contains("%%")) {
-                        String[] arr = line.split("%%");
-                        for (String s : arr) {
-                            templateElements.add(new TemplateElement(s, client));
-                        }
-                    } else {
-                        templateElements.add(new TemplateElement(line, client));
-                    }
-
-                }
-            } catch (java.io.IOException e) {
-                // TODO Auto-generated catch block
-                e.printStackTrace();
-            }
-
-            try {
-                bufferedReader.close();
-            } catch (java.io.IOException e) {
-                // TODO Auto-generated catch block
-                e.printStackTrace();
-            }
-        }
     }
 
 }

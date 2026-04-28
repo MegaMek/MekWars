@@ -61,7 +61,7 @@ public class PilotSkill {
     /**
      * Each skill has an abbreviation to display for when the name takes too much space.
      */
-    private String abbreviation = "US";
+    private String abbreviation = "UsersCommand";
 
 
     private String description = "None";
@@ -72,32 +72,13 @@ public class PilotSkill {
     private int level = -1;
 
     /**
-     * get the Name of this skill
-     *
-     * @return
-     */
-    final public String getName() {
-        return name;
-    }
-
-
-    /**
-     * get the Abbreviation of this skill
-     *
-     * @return
-     */
-    final public String getAbbreviation() {
-        return abbreviation;
-    }
-
-
-    /**
      * Creates a skill with a given name and id.
      */
 
     public PilotSkill(int id, String name, int level) {
         this(id, name, level, "");
     }
+
 
     public PilotSkill(int id, String name, int level, String abbreviation) {
         this.name = name;
@@ -106,46 +87,11 @@ public class PilotSkill {
         this.abbreviation = abbreviation;
     }
 
+
     /**
      * Needed for serialization. Creates an unamed skill.
      */
     public PilotSkill() {
-    }
-
-    /**
-     * @return Returns the id.
-     */
-    final public int getId() {
-        return id;
-    }
-
-    /**
-     * @return Returns the level.
-     */
-    public int getLevel() {
-        return level;
-    }
-
-    /**
-     * @param name The name to set.
-     */
-    public void setName(String name) {
-        this.name = name;
-    }
-
-    /**
-     * @param level The level to set.
-     */
-    public void setLevel(int level) {
-        this.level = level;
-    }
-
-    public String getDescription() {
-        return description;
-    }
-
-    public void setDescription(String description) {
-        this.description = description;
     }
 
     public static int getMMSkillID(String skill) {
@@ -170,5 +116,59 @@ public class PilotSkill {
 
 
         return skillID;
+    }
+
+    /**
+     * get the Name of this skill
+     *
+     * @return
+     */
+    final public String getName() {
+        return name;
+    }
+
+    /**
+     * @param name The name to set.
+     */
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    /**
+     * get the Abbreviation of this skill
+     *
+     * @return
+     */
+    final public String getAbbreviation() {
+        return abbreviation;
+    }
+
+    /**
+     * @return Returns the id.
+     */
+    final public int getId() {
+        return id;
+    }
+
+    /**
+     * @return Returns the level.
+     */
+    public int getLevel() {
+        return level;
+    }
+
+    /**
+     * @param level The level to set.
+     */
+    public void setLevel(int level) {
+        this.level = level;
+    }
+
+    public String getDescription() {
+        return description;
+    }
+
+    public void setDescription(String description) {
+        this.description = description;
     }
 }

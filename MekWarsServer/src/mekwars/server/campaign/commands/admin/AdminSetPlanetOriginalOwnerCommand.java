@@ -25,10 +25,6 @@ public class AdminSetPlanetOriginalOwnerCommand implements server.campaign.comma
     int accessLevel = server.MWChatServer.auth.IAuthenticator.ADMIN;
     String syntax = "Planet Name#Faction Name";
 
-    public int getExecutionLevel() {return accessLevel;}
-
-    public void setExecutionLevel(int i) {accessLevel = i;}
-
     public String getSyntax() {return syntax;}
 
     public void process(java.util.StringTokenizer command, String Username) {
@@ -65,4 +61,8 @@ public class AdminSetPlanetOriginalOwnerCommand implements server.campaign.comma
               Username + " changed " + PlanetName + " 's original owner to: " + originalOwner + ".");
         planet.updated();
     }
+
+    public int getExecutionLevel() {return accessLevel;}
+
+    public void setExecutionLevel(int i) {accessLevel = i;}
 }

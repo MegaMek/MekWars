@@ -30,7 +30,7 @@ import mekwars.common.persistence.BinWriter;
  * @author Imi (immanuel.scholz@gmx.de) seen, modified and made totally bad by McWizard
  *       <p>
  *       Imi: *crhm*..."totally bad"... ;-)
- *                                                                                                                         TODO: simplify this class. subclass it from ArrayList or something like that
+ *                                                                                                                               TODO: simplify this class. subclass it from ArrayList or something like that
  */
 
 public class PlanetEnvironments {
@@ -72,16 +72,6 @@ public class PlanetEnvironments {
         return Counts;
     }
 
-    /**
-     * Add a terrain to the current set. This will vanish, when Terrains are initialized through XStream.
-     * <p>
-     * TODO You should not need this and you should only initialize the terrain set with either XStream or
-     *       binIn()
-     */
-    synchronized public void add(Continent newPE) {
-        continents.add(newPE);
-    }
-
     synchronized public void remove(String terrain) {
 
         int count = 0;
@@ -118,19 +108,6 @@ public class PlanetEnvironments {
     }
 
     /**
-     * Return the total probability of all environments.
-     */
-    public int getTotalEnvironmentProbabilities() {
-        int result = 0;
-
-        for (Continent continent : continents) {
-            result += continent.getSize();
-        }
-
-        return result;
-    }
-
-    /**
      * Returns a randomEnvironment based on the probability of each Environment.
      */
     public Continent getRandomEnvironment(Random r) {
@@ -154,6 +131,19 @@ public class PlanetEnvironments {
         }
 
         return new Continent(0, null, null);
+    }
+
+    /**
+     * Return the total probability of all environments.
+     */
+    public int getTotalEnvironmentProbabilities() {
+        int result = 0;
+
+        for (Continent continent : continents) {
+            result += continent.getSize();
+        }
+
+        return result;
     }
 
     /**
@@ -182,6 +172,16 @@ public class PlanetEnvironments {
             Continent continent = new Continent(percent, T, AT);
             add(continent);
         }
+    }
+
+    /**
+     * Add a terrain to the current set. This will vanish, when Terrains are initialized through XStream.
+     * <p>
+     * TODO You should not need this and you should only initialize the terrain set with either XStream or
+     *       binIn()
+     */
+    synchronized public void add(Continent newPE) {
+        continents.add(newPE);
     }
 
     /**

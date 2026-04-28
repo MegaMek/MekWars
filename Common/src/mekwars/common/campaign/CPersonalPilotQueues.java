@@ -66,20 +66,24 @@ public class CPersonalPilotQueues {
     // METHODS
 
     /**
-     * Rather than if/else'ing meks and protos throughout the other methods of the class, use a private get method which
-     * returns mek or proto as needed and then work on the arraylist without regard to type.
+     * Method to add a pilot to the client side queue. This discrete update saves bandwidth by allowing a single pilot
+     * (instead of the whole queue, as was done in the past) to be sent down when a game ends w/ a dispossessed pilot, a
+     * new pilot is hired, etc.
+     * <p>
+     * Format: PL|AP2PPQ|Unit Type|Unit Weight Class|Pilot Data
      */
-    private ArrayList<LinkedList<Pilot>> getUnitTypeQueue(int typeToGet) {
+    public void addPilot(StringTokenizer ST) {
+        try {
+            int pilotType = TokenReader.readInt(ST);
+            int pilotClass = TokenReader.readInt(ST);
+            Pilot pilot = getPilotFromString(TokenReader.readString(ST));
 
-        if (typeToGet == Unit.PROTOMEK) {
-            return protoPilots;
+            this.getUnitTypeQueue(pilotType).get(pilotClass).addLast(pilot);
+        } catch (Exception ex) {
+            MWLogger.errLog("Error while adding pilot to PPQ");
+            MWLogger.errLog(ex);
         }
 
-        if (typeToGet == Unit.AERO) {
-            return aeroPilots;
-        }
-
-        return mekPilots;
     }
 
     /**
@@ -130,24 +134,20 @@ public class CPersonalPilotQueues {
     }
 
     /**
-     * Method to add a pilot to the client side queue. This discrete update saves bandwidth by allowing a single pilot
-     * (instead of the whole queue, as was done in the past) to be sent down when a game ends w/ a dispossessed pilot, a
-     * new pilot is hired, etc.
-     * <p>
-     * Format: PL|AP2PPQ|Unit Type|Unit Weight Class|Pilot Data
+     * Rather than if/else'ing meks and protos throughout the other methods of the class, use a private get method which
+     * returns mek or proto as needed and then work on the arraylist without regard to type.
      */
-    public void addPilot(StringTokenizer ST) {
-        try {
-            int pilotType = TokenReader.readInt(ST);
-            int pilotClass = TokenReader.readInt(ST);
-            Pilot pilot = getPilotFromString(TokenReader.readString(ST));
+    private ArrayList<LinkedList<Pilot>> getUnitTypeQueue(int typeToGet) {
 
-            this.getUnitTypeQueue(pilotType).get(pilotClass).addLast(pilot);
-        } catch (Exception ex) {
-            MWLogger.errLog("Error while adding pilot to PPQ");
-            MWLogger.errLog(ex);
+        if (typeToGet == Unit.PROTOMEK) {
+            return protoPilots;
         }
 
+        if (typeToGet == Unit.AERO) {
+            return aeroPilots;
+        }
+
+        return mekPilots;
     }
 
     /**

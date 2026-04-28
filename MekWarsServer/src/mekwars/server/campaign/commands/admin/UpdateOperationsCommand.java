@@ -20,11 +20,6 @@ package mekwars.server.campaign.commands.admin;
 public class UpdateOperationsCommand implements server.campaign.commands.Command {
 
     int accessLevel = server.MWChatServer.auth.IAuthenticator.ADMIN;
-
-    public int getExecutionLevel() {return accessLevel;}
-
-    public void setExecutionLevel(int i) {accessLevel = i;}
-
     String syntax = "";
 
     public String getSyntax() {return syntax;}
@@ -56,4 +51,8 @@ public class UpdateOperationsCommand implements server.campaign.commands.Command
         server.campaign.CampaignMain.cm.updateAllOnlinePlayerArmies();
         server.campaign.CampaignMain.cm.doSendToAllOnlinePlayers("PL|UDAO|1", false);
     }
+
+    public int getExecutionLevel() {return accessLevel;}
+
+    public void setExecutionLevel(int i) {accessLevel = i;}
 }//end RetrieveOperation

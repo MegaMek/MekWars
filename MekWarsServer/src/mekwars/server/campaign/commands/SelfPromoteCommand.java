@@ -20,21 +20,7 @@ import common.SubFaction;
 public class SelfPromoteCommand implements Command {
 
     int accessLevel = 2;
-
-    public int getExecutionLevel() {
-        return accessLevel;
-    }
-
-    public void setExecutionLevel(int i) {
-        accessLevel = i;
-    }
-
     String syntax = "/selfpromote SubFactionName";
-
-    public String getSyntax() {
-        return syntax;
-    }
-
 
     public void process(java.util.StringTokenizer command, String Username) {
         if (!server.campaign.CampaignMain.cm.getBooleanConfig("Self_Promote_Subfaction")) {
@@ -127,5 +113,17 @@ public class SelfPromoteCommand implements Command {
         server.campaign.CampaignMain.cm.doSendModMail("NOTE",
               Username + " promoted " + user.getName() + " to SubFaction " + subFactionName + ".");
 
+    }
+
+    public int getExecutionLevel() {
+        return accessLevel;
+    }
+
+    public void setExecutionLevel(int i) {
+        accessLevel = i;
+    }
+
+    public String getSyntax() {
+        return syntax;
     }
 }// end RequestSubFactionPromotionCommand class

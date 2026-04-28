@@ -45,10 +45,15 @@ public class CPlayer extends Player {
     public static final String DELIMITER = "#"; // delimiter for player strings
 
     private final IClient client;
+    private final int[][] hangarPurchasePenalties = new int[6][4];
+    private final ArrayList<String> adminExcludes;
+    private final ArrayList<String> playerExcludes;
+    private final ArrayList<Integer> totalTechs = new ArrayList<>(4);
+    private final ArrayList<Integer> availableTechs = new ArrayList<>(4);
+    private final UnitComponents partsCache = new UnitComponents();
     private String Name;
     private String House;
     private String myLogo = "";
-
     private int Exp;
     private int Money;
     private int Bays;
@@ -59,32 +64,17 @@ public class CPlayer extends Player {
     private int RewardPoints;
     private double Rating;
     private int hangarPenalty;
-    private final int[][] hangarPurchasePenalties = new int[6][4];
-
     private Vector<CUnit> Hangar;
     private Vector<CArmy> Armies;
     private ArrayList<CUnit> AutoArmy;
-
-    private final ArrayList<String> adminExcludes;
-    private final ArrayList<String> playerExcludes;
-
     private CPersonalPilotQueues personalPilotQueue;
-
     private House myHouse;
     private House houseFightingFor;
-
-    private final ArrayList<Integer> totalTechs = new ArrayList<>(4);
-    private final ArrayList<Integer> availableTechs = new ArrayList<>(4);
-
     private int repairLocation = 0;
     private int repairTechType = 0;
     private int repairRetries = 0;
-
     private int conventionalMinesAllowed = 0;
     private int vibraMinesAllowed = 0;
-
-    private final UnitComponents partsCache = new UnitComponents();
-
     private String subFactionName = "";
 
     public CPlayer(IClient client) {
@@ -130,30 +120,6 @@ public class CPlayer extends Player {
         }
 
         return (false);
-    }
-
-    /**
-     * Called from PL after PL|SAD received. Adds a new army OR replaces an old army's data with new dump.
-     */
-    public void setArmyData(String data) {
-
-        CArmy newArmy = new CArmy();
-        newArmy.fromString(data, this, "%", client);
-
-        // Save the old army's legal operations.
-        CArmy oldArmy = getArmy(newArmy.getID());
-
-        if (oldArmy != null) {
-            newArmy.setLegalOperations(oldArmy.getLegalOperations());
-        }
-
-        // swap the armies
-        removeArmy(newArmy.getID());
-        if (Armies.size() < newArmy.getID()) {
-            Armies.add(newArmy);
-        } else {
-            Armies.add(newArmy.getID(), newArmy);
-        }
     }
 
     /**
@@ -235,206 +201,12 @@ public class CPlayer extends Player {
         return true;
     }
 
-    /**
-     * Called by PL|HD - adds a single unit to the hangar.
-     */
-    public void setHangarData(String data) {
-        try {
-            CUnit unit = new CUnit(client);
-            if (unit.setData(data)) {
-                Hangar.add(unit);
-                sortHangar();// sort it!
-            }
-        } catch (Exception e) {
-            MWLogger.errLog(e);
-        }
+    public void setTotalTechs(int slot, int techs) {
+        totalTechs.set(slot, techs);
     }
 
-    /**
-     * Called by PL|UU - updates a unit's data.
-     */
-    public void updateUnitData(StringTokenizer st) {
-        try {
-            CUnit currUnit = getUnit(TokenReader.readInt(st));
-            currUnit.setData(TokenReader.readString(st));
-            sortHangar();// properties have changes. sort. YARR!
-        } catch (Exception e) {
-            MWLogger.errLog(e);
-        }
-    }
-
-    public void updateUnitMachineGuns(StringTokenizer st) {
-        try {
-            CUnit currUnit = getUnit(TokenReader.readInt(st));
-            int location = TokenReader.readInt(st);
-            int slot = TokenReader.readInt(st);
-            boolean selection = TokenReader.readBoolean(st);
-
-            CriticalSlot crit = currUnit.getEntity().getCritical(location, slot);
-            crit.getMount().setRapidfire(selection);
-
-            sortHangar();// properties have changes. sort. YARR!
-        } catch (Exception e) {
-            MWLogger.errLog(e);
-        }
-    }
-
-    /**
-     * Remove an army from a player's set. This can be called directly from a PL|RA command, or indirectly by PL|SAD via
-     * CPlayer.setArmyData(), which removes all old instances of an army before adding the new data.
-     */
-    public boolean removeArmy(int lanceID) {
-
-        for (java.util.Iterator<mekwars.common.campaign.CArmy> i = Armies.iterator(); i.hasNext(); ) {
-            if (i.next().getID() == lanceID) {
-                i.remove();
-                client.getMainFrame().updateAttackMenu();// removing an army
-                return (true);
-            }
-        }
-        return (false);
-    }
-
-    /**
-     * Remove a unit from the player's hangar. Called from PL after receipt of a PL|RU|ID (RemoveUnit#ID) command.
-     * <p>
-     * Note that there is NOT an analagous addUnit() method. Single additions are sent to the clients using (obtusely
-     * enough) the PL|HD (hangar data) command. See .setHangarData()'s comments, as well as those in SUnit.addUnit(),
-     * for details/explanation.
-     */
-    public boolean removeUnit(int unitID) {
-
-        for (java.util.Iterator<mekwars.common.campaign.CUnit> i = Hangar.iterator(); i.hasNext(); ) {
-            if (i.next().getId() == unitID) {
-                i.remove();
-                return (true);
-            }
-        }
-        return (false);
-    }
-
-    /**
-     * @return Returns the armies.
-     */
-    public Vector<CArmy> getArmies() {
-        return Armies;
-    }
-
-    public void setExp(int texp) {
-        Exp = texp;
-    }
-
-    public void setMoney(int tmoney) {
-        Money = tmoney;
-    }
-
-    public void setRewardPoints(int rewards) {
-        RewardPoints = rewards;
-    }
-
-    public void setBays(int tbays) {
-        Bays = tbays;
-    }
-
-    public void setFreeBays(int tfreebays) {
-        FreeBays = tfreebays;
-    }
-
-    public void setInfluence(int tinfluence) {
-        Influence = tinfluence;
-    }
-
-    public void setRating(double trating) {
-        Rating = trating;
-    }
-
-    public void setHouse(String faction) {
-        myHouse = client.getData().getHouseByName(faction);
-        House = faction;
-
-        /*
-         * Get the faction configs before starting anything else. I could pause
-         * the client and wait for the configs but I'll let it go. --Torren
-         */
-        client.sendChat(IClient.CAMPAIGN_PREFIX +
-                              "c getfactionconfigs#0" +
-                              client.getserverConfigs("TIMESTAMP"));
-
-        /*
-         * Now that we have a house set, we can check for BM access properly. Do
-         * the BM buy and sell button checks.
-         */
-        if (client.getMainFrame().getMainPanel().getBMPanel() != null) {
-            client.getMainFrame().getMainPanel().getBMPanel().checkFactionAccess();
-        }
-
-        /*
-         * Same thing for the HQ. We have a house, so we can rebuild the button
-         * bar w/ or w/o a reset button, as appropriate.
-         */
-        if (client.getMainFrame().getMainPanel().getHQPanel() != null) {
-            client.getMainFrame().getMainPanel().getHQPanel().reinitialize();
-        }
-    }
-
-    public String getHouse() {
-        return House;
-    }
-
-    public void setHouseFightingFor(String faction) {
-        houseFightingFor = client.getData().getHouseByName(faction);
-    }
-
-    public House getHouseFightingFor() {
-        return houseFightingFor;
-    }
-
-    public void setLogo(String logo) {
-        myLogo = logo;
-    }
-
-    public String getLogo() {
-        return "<img height=\"140\" width=\"130\" src =\"" + myLogo + "\">";
-    }
-
-    public String getMyLogo() {
-        return myLogo;
-    }
-
-    public String getName() {
-        return Name;
-    }
-
-    public int getExp() {
-        return Exp;
-    }
-
-    public double getRating() {
-        return Rating;
-    }
-
-    public int getRewardPoints() {
-        return RewardPoints;
-    }
-
-    public int getMoney() {
-        return Money;
-    }
-
-    public int getBays() {
-        return Bays;
-    }
-
-    public int getFreeBays() {
-        return FreeBays;
-    }
-
-    public int getInfluence() {
-        return Influence;
-    }
-
-    public int getTechs() {
-        return Techs;
+    public void setAvailableTechs(int slot, int techs) {
+        availableTechs.set(slot, techs);
     }
 
     @Override
@@ -443,210 +215,8 @@ public class CPlayer extends Player {
         doPayTechniciansMath();
     }
 
-    public int getTechCost() {
-        if (TechCost < 0) {
-            return 0;
-        }
-        // else
-        return TechCost +
-                     getHangarPenalty();  // If not using sliding hangar costs, hangarPenalty will be 0, so will still return the same.
-    }
-
-    public java.util.Vector<mekwars.common.campaign.CUnit> getHangar() {
-        return Hangar;
-    }
-
-    /**
-     * Calculate the the ID that would be assined to a newly created army. This is used by the army builder to construct
-     * /c exm# commands for an as-yet non-existant army.
-     */
-    public int getNextNewArmyID() {
-        int newID = -1;
-        int possibleNewID = 0;
-        while (newID == -1) {
-            for (int i = 0; i < Armies.size(); i++) {
-                if ((Armies.get(i)).getID() == possibleNewID) {
-                    newID = i;
-                }
-            }
-            if (newID == -1) {
-                newID = possibleNewID;
-            } else {
-                possibleNewID++;
-                newID = -1;
-            }
-        }
-        return newID;
-    }
-
-    /**
-     * Method which greates an autoarmy. takes in a string with weight classes, and uses server configs (path,
-     * filenames) to construct units of those weights.
-     * <p>
-     * Units are added to servers when a player joins a game, same as units from locked armies.
-     */
-    public void setAutoArmy(StringTokenizer st) {
-
-        /*
-         * clear the previous auto army. Auto army is always called first, and is
-         * cleared correctly even if only gun emplacements are sent.
-         */
-        AutoArmy = new ArrayList<>();
-
-        // if its a null, this was just a clearing call.
-        if (st == null) {
-            return;
-        }
-
-        while (st.hasMoreTokens()) {
-            String filename = TokenReader.readString(st);
-            if (filename.equals("CLEAR")) {
-                return;
-            }
-
-            // get the distance
-            int distInBoards = Integer.parseInt(client.getserverConfigs("DistanceFromMap"));
-            int distInHexes = distInBoards * 17;// 17 hexes per board.
-
-            CUnit currUnit = new CUnit(client);
-
-            /*
-             * This is needed to set the edge for auto arty when auto edge is
-             * set for players. Else, arty edge is set in MM when the players
-             * click on the edge they want.
-             */
-            OffBoardDirection direction = OffBoardDirection.NORTH;
-            switch (client.getPlayerStartingEdge()) {
-                case 0:
-                    break;
-                case 1:
-                case 2:
-                case 3:
-                    direction = OffBoardDirection.NORTH;
-                    break;
-                case 4:
-                    direction = OffBoardDirection.EAST;
-                    break;
-                case 5:
-                case 6:
-                case 7:
-                    direction = OffBoardDirection.SOUTH;
-                    break;
-                case 8:
-                    direction = OffBoardDirection.WEST;
-                    break;
-            }
-
-            currUnit.setAutoUnitData(filename, distInHexes, direction);
-            AutoArmy.add(currUnit);
-        }// end while(tokens)
-    }// end setAutoArmy()
-
-    /**
-     * Method which greates an autoarmy gun emplacements. takes in a string with weight classes, and uses server configs
-     * (path, filenames) to construct units of those weights.
-     * <p>
-     * Units are added to servers when a player joins a game, same as units from locked armies.
-     */
-    public void setAutoGunEmplacements(StringTokenizer st) {
-
-        // if its a null, this was just a clearing call.
-        if (st == null) {
-            return;
-        }
-
-        while (st.hasMoreTokens()) {
-            String filename = TokenReader.readString(st);
-            if (filename.equals("CLEAR")) {
-                return;
-            }
-
-            CUnit currUnit = new CUnit(client);
-            currUnit.setAutoUnitData(filename, 0, OffBoardDirection.NORTH);
-            AutoArmy.add(currUnit);
-        }// end while(tokens)
-    }// end setAutoArmy()
-
-    public void setMULCreatedArmy(StringTokenizer st) {
-
-        while (st.hasMoreElements()) {
-            String data = TokenReader.readString(st);
-            if (data.equalsIgnoreCase("CLEAR")) {
-                return;
-            }
-
-            CUnit cm = new CUnit();
-            cm.setData(data);
-            AutoArmy.add(cm);
-        }
-    }
-
-    /**
-     * Method which returns the autoArmy arraylist.
-     */
-    public ArrayList<CUnit> getAutoArmy() {
-        return AutoArmy;
-    }
-
-    public CUnit getUnit(int unitID) {
-
-        for (CUnit currU : Hangar) {
-            if (currU.getId() == unitID) {
-                return currU;
-            }
-        }
-        return null;
-    }
-
-    public CArmy getArmy(int id) {
-
-        for (CArmy currA : Armies) {
-            if (currA.getID() == id) {
-                return currA;
-            }
-        }
-        return null;
-    }
-
-    public int getAmountOfTimesUnitExistsInArmies(int unitID) {
-        int result = 0;
-        for (CArmy currA : Armies) {
-            if (currA.getUnit(unitID) != null) {
-                result++;
-            }
-        }
-        return result;
-    }
-
-    public String getArmiesUnitIsIn(int unitID) {
-        StringBuilder result = new StringBuilder();
-        for (CArmy currA : Armies) {
-            if (currA.getUnit(unitID) != null) {
-                result.append(currA.getID()).append(" ");
-            }
-        }
-        return result.toString();
-    }
-
-    public synchronized ArrayList<Unit> getLockedUnits() {
-
-        ArrayList<Unit> result = new java.util.ArrayList<>();
-        for (CArmy currA : Armies) {
-            if (currA.isLocked()) {
-                result.addAll(currA.getUnits());
-            }
-        }
-        return result;
-    }
-
-    public synchronized CArmy getLockedArmy() {
-
-        for (CArmy currA : Armies) {
-            if (currA.isLocked()) {
-                return currA;
-            }
-        }
-        return null;
+    public String getName() {
+        return Name;
     }
 
     public void doPayTechniciansMath() {
@@ -713,6 +283,508 @@ public class CPlayer extends Player {
         TechCost = Math.round(amountToPay);
     }
 
+    /**
+     * Method which resorts every unit. Inefficient, but we hate clients. Because we're evil. So there.
+     *
+     * @urgru 4.4.05
+     */
+    public void sortHangar() {
+
+        // load configs
+        String primeSortOrder = client.getConfigParam("PRIMARYHQSORTORDER");
+        String secondarySortOrder = client.getConfigParam("SECONDARYHQSORTORDER");
+        String tertiarySortOrder = client.getConfigParam("TERTIARYHQSORTORDER");
+
+        // Choices [note - this array must be duplicated in CHQPanel's
+        // maybeShowPopup()]
+        String[] choices =
+              { "Name", "Battle Value", "Gunnery Skill", "ID Number", "MP (Jumping)", "MP (Walking)", "Pilot Kills",
+                "Unit Type", "Weight (Class)", "Weight (Tons)", "No Sort" };
+
+        // determine which sort will dominate
+        int primarySort = CUnitComparator.HQ_SORT_NONE;
+        for (int i = 0; i < choices.length; i++) {
+            if (primeSortOrder.equals(choices[i])) {
+                primarySort = i;
+            }
+        }
+
+        // determine secondary sort
+        int secondarySort = CUnitComparator.HQ_SORT_NONE;
+        for (int i = 0; i < choices.length; i++) {
+            if (secondarySortOrder.equals(choices[i])) {
+                secondarySort = i;
+            }
+        }
+
+        // determine tertiary sort
+        int tertiarySort = CUnitComparator.HQ_SORT_NONE;
+        for (int i = 0; i < choices.length; i++) {
+            if (tertiarySortOrder.equals(choices[i])) {
+                tertiarySort = i;
+            }
+        }
+
+        // we know this holds CUnits. Can safely cast.
+        Object[] unitsArray = Hangar.toArray();
+
+        // run third sort
+        if ((tertiarySort != primarySort) &&
+                  (tertiarySort != secondarySort) &&
+                  (tertiarySort != CUnitComparator.HQ_SORT_NONE)) {
+            Arrays.sort(unitsArray, new CUnitComparator(tertiarySort));
+        }
+
+        // run the second sort
+        if ((primarySort != secondarySort) && (secondarySort != CUnitComparator.HQ_SORT_NONE)) {
+            Arrays.sort(unitsArray, new CUnitComparator(secondarySort));
+        }
+
+        // now the primary sort
+        if (primarySort != CUnitComparator.HQ_SORT_NONE) {
+            Arrays.sort(unitsArray, new CUnitComparator(primarySort));
+        }
+
+        // overwrite the hangar with a new arraylist constructed from the
+        // unitsArray.
+        Vector<CUnit> Hangar2 = new Vector<>(1, 1);
+        for (Object element : unitsArray) {
+            Hangar2.add((CUnit) element);
+        }
+
+        // replace the hangar and flush the array
+        Hangar = Hangar2;
+    }
+
+    /**
+     * Called from PL after PL|SAD received. Adds a new army OR replaces an old army's data with new dump.
+     */
+    public void setArmyData(String data) {
+
+        CArmy newArmy = new CArmy();
+        newArmy.fromString(data, this, "%", client);
+
+        // Save the old army's legal operations.
+        CArmy oldArmy = getArmy(newArmy.getID());
+
+        if (oldArmy != null) {
+            newArmy.setLegalOperations(oldArmy.getLegalOperations());
+        }
+
+        // swap the armies
+        removeArmy(newArmy.getID());
+        if (Armies.size() < newArmy.getID()) {
+            Armies.add(newArmy);
+        } else {
+            Armies.add(newArmy.getID(), newArmy);
+        }
+    }
+
+    public CArmy getArmy(int id) {
+
+        for (CArmy currA : Armies) {
+            if (currA.getID() == id) {
+                return currA;
+            }
+        }
+        return null;
+    }
+
+    /**
+     * Remove an army from a player's set. This can be called directly from a PL|RA command, or indirectly by PL|SAD via
+     * CPlayer.setArmyData(), which removes all old instances of an army before adding the new data.
+     */
+    public boolean removeArmy(int lanceID) {
+
+        for (java.util.Iterator<mekwars.common.campaign.CArmy> i = Armies.iterator(); i.hasNext(); ) {
+            if (i.next().getID() == lanceID) {
+                i.remove();
+                client.getMainFrame().updateAttackMenu();// removing an army
+                return (true);
+            }
+        }
+        return (false);
+    }
+
+    /**
+     * Called by PL|HD - adds a single unit to the hangar.
+     */
+    public void setHangarData(String data) {
+        try {
+            CUnit unit = new CUnit(client);
+            if (unit.setData(data)) {
+                Hangar.add(unit);
+                sortHangar();// sort it!
+            }
+        } catch (Exception e) {
+            MWLogger.errLog(e);
+        }
+    }
+
+    /**
+     * Called by PL|UU - updates a unit's data.
+     */
+    public void updateUnitData(StringTokenizer st) {
+        try {
+            CUnit currUnit = getUnit(TokenReader.readInt(st));
+            currUnit.setData(TokenReader.readString(st));
+            sortHangar();// properties have changes. sort. YARR!
+        } catch (Exception e) {
+            MWLogger.errLog(e);
+        }
+    }
+
+    public CUnit getUnit(int unitID) {
+
+        for (CUnit currU : Hangar) {
+            if (currU.getId() == unitID) {
+                return currU;
+            }
+        }
+        return null;
+    }
+
+    public void updateUnitMachineGuns(StringTokenizer st) {
+        try {
+            CUnit currUnit = getUnit(TokenReader.readInt(st));
+            int location = TokenReader.readInt(st);
+            int slot = TokenReader.readInt(st);
+            boolean selection = TokenReader.readBoolean(st);
+
+            CriticalSlot crit = currUnit.getEntity().getCritical(location, slot);
+            crit.getMount().setRapidfire(selection);
+
+            sortHangar();// properties have changes. sort. YARR!
+        } catch (Exception e) {
+            MWLogger.errLog(e);
+        }
+    }
+
+    /**
+     * Remove a unit from the player's hangar. Called from PL after receipt of a PL|RU|ID (RemoveUnit#ID) command.
+     * <p>
+     * Note that there is NOT an analagous addUnit() method. Single additions are sent to the clients using (obtusely
+     * enough) the PL|HD (hangar data) command. See .setHangarData()'s comments, as well as those in SUnit.addUnit(),
+     * for details/explanation.
+     */
+    public boolean removeUnit(int unitID) {
+
+        for (java.util.Iterator<mekwars.common.campaign.CUnit> i = Hangar.iterator(); i.hasNext(); ) {
+            if (i.next().getId() == unitID) {
+                i.remove();
+                return (true);
+            }
+        }
+        return (false);
+    }
+
+    public String getHouse() {
+        return House;
+    }
+
+    public void setHouse(String faction) {
+        myHouse = client.getData().getHouseByName(faction);
+        House = faction;
+
+        /*
+         * Get the faction configs before starting anything else. I could pause
+         * the client and wait for the configs but I'll let it go. --Torren
+         */
+        client.sendChat(IClient.CAMPAIGN_PREFIX +
+                              "c getfactionconfigs#0" +
+                              client.getserverConfigs("TIMESTAMP"));
+
+        /*
+         * Now that we have a house set, we can check for BM access properly. Do
+         * the BM buy and sell button checks.
+         */
+        if (client.getMainFrame().getMainPanel().getBMPanel() != null) {
+            client.getMainFrame().getMainPanel().getBMPanel().checkFactionAccess();
+        }
+
+        /*
+         * Same thing for the HQ. We have a house, so we can rebuild the button
+         * bar w/ or w/o a reset button, as appropriate.
+         */
+        if (client.getMainFrame().getMainPanel().getHQPanel() != null) {
+            client.getMainFrame().getMainPanel().getHQPanel().reinitialize();
+        }
+    }
+
+    public House getHouseFightingFor() {
+        return houseFightingFor;
+    }
+
+    public void setHouseFightingFor(String faction) {
+        houseFightingFor = client.getData().getHouseByName(faction);
+    }
+
+    public String getLogo() {
+        return "<img height=\"140\" width=\"130\" src =\"" + myLogo + "\">";
+    }
+
+    public void setLogo(String logo) {
+        myLogo = logo;
+    }
+
+    public String getMyLogo() {
+        return myLogo;
+    }
+
+    public int getExp() {
+        return Exp;
+    }
+
+    public void setExp(int texp) {
+        Exp = texp;
+    }
+
+    public double getRating() {
+        return Rating;
+    }
+
+    public void setRating(double trating) {
+        Rating = trating;
+    }
+
+    public int getRewardPoints() {
+        return RewardPoints;
+    }
+
+    public void setRewardPoints(int rewards) {
+        RewardPoints = rewards;
+    }
+
+    public int getMoney() {
+        return Money;
+    }
+
+    public void setMoney(int tmoney) {
+        Money = tmoney;
+    }
+
+    public int getBays() {
+        return Bays;
+    }
+
+    public void setBays(int tbays) {
+        Bays = tbays;
+    }
+
+    public int getFreeBays() {
+        return FreeBays;
+    }
+
+    public void setFreeBays(int tfreebays) {
+        FreeBays = tfreebays;
+    }
+
+    public int getInfluence() {
+        return Influence;
+    }
+
+    public void setInfluence(int tinfluence) {
+        Influence = tinfluence;
+    }
+
+    public int getTechs() {
+        return Techs;
+    }
+
+    public int getTechCost() {
+        if (TechCost < 0) {
+            return 0;
+        }
+        // else
+        return TechCost +
+                     getHangarPenalty();  // If not using sliding hangar costs, hangarPenalty will be 0, so will still return the same.
+    }
+
+    public int getHangarPenalty() {
+        return hangarPenalty;
+    }
+
+    public void setHangarPenalty(int p) {
+        hangarPenalty = p;
+    }
+
+    public java.util.Vector<mekwars.common.campaign.CUnit> getHangar() {
+        return Hangar;
+    }
+
+    /**
+     * Calculate the the ID that would be assined to a newly created army. This is used by the army builder to construct
+     * /c exm# commands for an as-yet non-existant army.
+     */
+    public int getNextNewArmyID() {
+        int newID = -1;
+        int possibleNewID = 0;
+        while (newID == -1) {
+            for (int i = 0; i < Armies.size(); i++) {
+                if ((Armies.get(i)).getID() == possibleNewID) {
+                    newID = i;
+                }
+            }
+            if (newID == -1) {
+                newID = possibleNewID;
+            } else {
+                possibleNewID++;
+                newID = -1;
+            }
+        }
+        return newID;
+    }
+
+    /**
+     * Method which greates an autoarmy gun emplacements. takes in a string with weight classes, and uses server configs
+     * (path, filenames) to construct units of those weights.
+     * <p>
+     * Units are added to servers when a player joins a game, same as units from locked armies.
+     */
+    public void setAutoGunEmplacements(StringTokenizer st) {
+
+        // if its a null, this was just a clearing call.
+        if (st == null) {
+            return;
+        }
+
+        while (st.hasMoreTokens()) {
+            String filename = TokenReader.readString(st);
+            if (filename.equals("CLEAR")) {
+                return;
+            }
+
+            CUnit currUnit = new CUnit(client);
+            currUnit.setAutoUnitData(filename, 0, OffBoardDirection.NORTH);
+            AutoArmy.add(currUnit);
+        }// end while(tokens)
+    }// end setAutoArmy()
+
+    public void setMULCreatedArmy(StringTokenizer st) {
+
+        while (st.hasMoreElements()) {
+            String data = TokenReader.readString(st);
+            if (data.equalsIgnoreCase("CLEAR")) {
+                return;
+            }
+
+            CUnit cm = new CUnit();
+            cm.setData(data);
+            AutoArmy.add(cm);
+        }
+    }
+
+    /**
+     * Method which returns the autoArmy arraylist.
+     */
+    public ArrayList<CUnit> getAutoArmy() {
+        return AutoArmy;
+    }
+
+    /**
+     * Method which greates an autoarmy. takes in a string with weight classes, and uses server configs (path,
+     * filenames) to construct units of those weights.
+     * <p>
+     * Units are added to servers when a player joins a game, same as units from locked armies.
+     */
+    public void setAutoArmy(StringTokenizer st) {
+
+        /*
+         * clear the previous auto army. Auto army is always called first, and is
+         * cleared correctly even if only gun emplacements are sent.
+         */
+        AutoArmy = new ArrayList<>();
+
+        // if its a null, this was just a clearing call.
+        if (st == null) {
+            return;
+        }
+
+        while (st.hasMoreTokens()) {
+            String filename = TokenReader.readString(st);
+            if (filename.equals("CLEAR")) {
+                return;
+            }
+
+            // get the distance
+            int distInBoards = Integer.parseInt(client.getserverConfigs("DistanceFromMap"));
+            int distInHexes = distInBoards * 17;// 17 hexes per board.
+
+            CUnit currUnit = new CUnit(client);
+
+            /*
+             * This is needed to set the edge for auto arty when auto edge is
+             * set for players. Else, arty edge is set in MM when the players
+             * click on the edge they want.
+             */
+            OffBoardDirection direction = OffBoardDirection.NORTH;
+            switch (client.getPlayerStartingEdge()) {
+                case 0:
+                    break;
+                case 1:
+                case 2:
+                case 3:
+                    direction = OffBoardDirection.NORTH;
+                    break;
+                case 4:
+                    direction = OffBoardDirection.EAST;
+                    break;
+                case 5:
+                case 6:
+                case 7:
+                    direction = OffBoardDirection.SOUTH;
+                    break;
+                case 8:
+                    direction = OffBoardDirection.WEST;
+                    break;
+            }
+
+            currUnit.setAutoUnitData(filename, distInHexes, direction);
+            AutoArmy.add(currUnit);
+        }// end while(tokens)
+    }// end setAutoArmy()
+
+    public int getAmountOfTimesUnitExistsInArmies(int unitID) {
+        int result = 0;
+        for (CArmy currA : Armies) {
+            if (currA.getUnit(unitID) != null) {
+                result++;
+            }
+        }
+        return result;
+    }
+
+    public String getArmiesUnitIsIn(int unitID) {
+        StringBuilder result = new StringBuilder();
+        for (CArmy currA : Armies) {
+            if (currA.getUnit(unitID) != null) {
+                result.append(currA.getID()).append(" ");
+            }
+        }
+        return result.toString();
+    }
+
+    public synchronized ArrayList<Unit> getLockedUnits() {
+
+        ArrayList<Unit> result = new java.util.ArrayList<>();
+        for (CArmy currA : Armies) {
+            if (currA.isLocked()) {
+                result.addAll(currA.getUnits());
+            }
+        }
+        return result;
+    }
+
+    public synchronized CArmy getLockedArmy() {
+
+        for (CArmy currA : Armies) {
+            if (currA.isLocked()) {
+                return currA;
+            }
+        }
+        return null;
+    }
+
     public void addArmyUnit(String data) {
         StringTokenizer ST = new StringTokenizer(data, DELIMITER);
 
@@ -729,6 +801,79 @@ public class CPlayer extends Player {
             getArmy(army).setBV(bv);
             sortArmies();
         }
+    }
+
+    /**
+     * Method which resorts every unit. Inefficient, but we hate clients. Because we're evil. So there.
+     *
+     * @urgru 4.4.05
+     */
+    public void sortArmies() {
+
+        // load configs
+        String primeSortOrder = client.getConfigParam("PRIMARYARMYSORTORDER");
+        String secondarySortOrder = client.getConfigParam("SECONDARYARMYSORTORDER");
+        String tertiarySortOrder = client.getConfigParam("TERTIARYARMYSORTORDER");
+
+        // Choices [note - this array must be duplicated in CHQPanel's
+        // maybeShowPopup()]
+        String[] choices =
+              { "Name", "Battle Value", "ID Number", "Max Tonnage", "Avg Walk MP", "Avg Jump MP", "Number Of Units",
+                "No Sort" };
+
+        // determine which sort will dominate
+        int primarySort = CArmyComparator.ARMY_SORT_NONE;
+        for (int i = 0; i < choices.length; i++) {
+            if (primeSortOrder.equals(choices[i])) {
+                primarySort = i;
+            }
+        }
+
+        // determine secondary sort
+        int secondarySort = CArmyComparator.ARMY_SORT_NONE;
+        for (int i = 0; i < choices.length; i++) {
+            if (secondarySortOrder.equals(choices[i])) {
+                secondarySort = i;
+            }
+        }
+
+        // determine tertiary sort
+        int tertiarySort = CArmyComparator.ARMY_SORT_NONE;
+        for (int i = 0; i < choices.length; i++) {
+            if (tertiarySortOrder.equals(choices[i])) {
+                tertiarySort = i;
+            }
+        }
+
+        // we know this holds CUnits. Can safely cast.
+        Object[] armiesArray = Armies.toArray();
+
+        // run third sort
+        if ((tertiarySort != primarySort) &&
+                  (tertiarySort != secondarySort) &&
+                  (tertiarySort != CArmyComparator.ARMY_SORT_NONE)) {
+            Arrays.sort(armiesArray, new CArmyComparator(tertiarySort));
+        }
+
+        // run the second sort
+        if ((primarySort != secondarySort) && (secondarySort != CArmyComparator.ARMY_SORT_NONE)) {
+            Arrays.sort(armiesArray, new CArmyComparator(secondarySort));
+        }
+
+        // now the primary sort
+        if (primarySort != CArmyComparator.ARMY_SORT_NONE) {
+            Arrays.sort(armiesArray, new CArmyComparator(primarySort));
+        }
+
+        // overwrite the hangar with a new arraylist constructed from the
+        // unitsArray.
+        Vector<CArmy> Army2 = new Vector<>(1, 1);
+        for (Object element : armiesArray) {
+            Army2.add((CArmy) element);
+        }
+
+        // replace the hangar and flush the array
+        Armies = Army2;
     }
 
     public void removeArmyUnit(String data) {
@@ -796,6 +941,13 @@ public class CPlayer extends Player {
         client.getMainFrame().updateAttackMenu();
 
     }// end updateOperations
+
+    /**
+     * @return Returns the armies.
+     */
+    public Vector<CArmy> getArmies() {
+        return Armies;
+    }
 
     public void repositionArmyUnit(String data) {
         StringTokenizer ST = new StringTokenizer(data, DELIMITER);
@@ -916,9 +1068,33 @@ public class CPlayer extends Player {
         }
     }
 
+    /*
+     * Hangar sorting mechanisms. Client and server need not order hangars in
+     * the same fashion, since all transactions (after the initial data feed)
+     * take place on a unit by unit basis.
+     *
+     * Sort options: - BV - Name - Type - Unit ID - Weight - No sort [load
+     * order]
+     *
+     * BV is (for all intents and purposes) an exclusive sort. The others can
+     * lead to significant clustering. Hence, secondary filters can be applied.
+     */
+
     public void setPlayerPersonalPilotQueue(CPersonalPilotQueues queue) {
         personalPilotQueue = queue;
     }
+
+    /*
+     * Hangar sorting mechanisms. Client and server need not order hangars in
+     * the same fashion, since all transactions (after the initial data feed)
+     * take place on a unit by unit basis.
+     *
+     * Sort options: - BV - Name - Type - Unit ID - Weight - No sort [load
+     * order]
+     *
+     * BV is (for all intents and purposes) an exclusive sort. The others can
+     * lead to significant clustering. Hence, secondary filters can be applied.
+     */
 
     public CPersonalPilotQueues getPersonalPilotQueue() {
         return personalPilotQueue;
@@ -964,176 +1140,6 @@ public class CPlayer extends Player {
 
     public java.util.ArrayList<String> getPlayerExcludes() {
         return playerExcludes;
-    }
-
-    /*
-     * Hangar sorting mechanisms. Client and server need not order hangars in
-     * the same fashion, since all transactions (after the initial data feed)
-     * take place on a unit by unit basis.
-     *
-     * Sort options: - BV - Name - Type - Unit ID - Weight - No sort [load
-     * order]
-     *
-     * BV is (for all intents and purposes) an exclusive sort. The others can
-     * lead to significant clustering. Hence, secondary filters can be applied.
-     */
-
-    /**
-     * Method which resorts every unit. Inefficient, but we hate clients. Because we're evil. So there.
-     *
-     * @urgru 4.4.05
-     */
-    public void sortHangar() {
-
-        // load configs
-        String primeSortOrder = client.getConfigParam("PRIMARYHQSORTORDER");
-        String secondarySortOrder = client.getConfigParam("SECONDARYHQSORTORDER");
-        String tertiarySortOrder = client.getConfigParam("TERTIARYHQSORTORDER");
-
-        // Choices [note - this array must be duplicated in CHQPanel's
-        // maybeShowPopup()]
-        String[] choices =
-              { "Name", "Battle Value", "Gunnery Skill", "ID Number", "MP (Jumping)", "MP (Walking)", "Pilot Kills",
-                "Unit Type", "Weight (Class)", "Weight (Tons)", "No Sort" };
-
-        // determine which sort will dominate
-        int primarySort = CUnitComparator.HQ_SORT_NONE;
-        for (int i = 0; i < choices.length; i++) {
-            if (primeSortOrder.equals(choices[i])) {
-                primarySort = i;
-            }
-        }
-
-        // determine secondary sort
-        int secondarySort = CUnitComparator.HQ_SORT_NONE;
-        for (int i = 0; i < choices.length; i++) {
-            if (secondarySortOrder.equals(choices[i])) {
-                secondarySort = i;
-            }
-        }
-
-        // determine tertiary sort
-        int tertiarySort = CUnitComparator.HQ_SORT_NONE;
-        for (int i = 0; i < choices.length; i++) {
-            if (tertiarySortOrder.equals(choices[i])) {
-                tertiarySort = i;
-            }
-        }
-
-        // we know this holds CUnits. Can safely cast.
-        Object[] unitsArray = Hangar.toArray();
-
-        // run third sort
-        if ((tertiarySort != primarySort) &&
-                  (tertiarySort != secondarySort) &&
-                  (tertiarySort != CUnitComparator.HQ_SORT_NONE)) {
-            Arrays.sort(unitsArray, new CUnitComparator(tertiarySort));
-        }
-
-        // run the second sort
-        if ((primarySort != secondarySort) && (secondarySort != CUnitComparator.HQ_SORT_NONE)) {
-            Arrays.sort(unitsArray, new CUnitComparator(secondarySort));
-        }
-
-        // now the primary sort
-        if (primarySort != CUnitComparator.HQ_SORT_NONE) {
-            Arrays.sort(unitsArray, new CUnitComparator(primarySort));
-        }
-
-        // overwrite the hangar with a new arraylist constructed from the
-        // unitsArray.
-        Vector<CUnit> Hangar2 = new Vector<>(1, 1);
-        for (Object element : unitsArray) {
-            Hangar2.add((CUnit) element);
-        }
-
-        // replace the hangar and flush the array
-        Hangar = Hangar2;
-    }
-
-    /*
-     * Hangar sorting mechanisms. Client and server need not order hangars in
-     * the same fashion, since all transactions (after the initial data feed)
-     * take place on a unit by unit basis.
-     *
-     * Sort options: - BV - Name - Type - Unit ID - Weight - No sort [load
-     * order]
-     *
-     * BV is (for all intents and purposes) an exclusive sort. The others can
-     * lead to significant clustering. Hence, secondary filters can be applied.
-     */
-
-    /**
-     * Method which resorts every unit. Inefficient, but we hate clients. Because we're evil. So there.
-     *
-     * @urgru 4.4.05
-     */
-    public void sortArmies() {
-
-        // load configs
-        String primeSortOrder = client.getConfigParam("PRIMARYARMYSORTORDER");
-        String secondarySortOrder = client.getConfigParam("SECONDARYARMYSORTORDER");
-        String tertiarySortOrder = client.getConfigParam("TERTIARYARMYSORTORDER");
-
-        // Choices [note - this array must be duplicated in CHQPanel's
-        // maybeShowPopup()]
-        String[] choices =
-              { "Name", "Battle Value", "ID Number", "Max Tonnage", "Avg Walk MP", "Avg Jump MP", "Number Of Units",
-                "No Sort" };
-
-        // determine which sort will dominate
-        int primarySort = CArmyComparator.ARMY_SORT_NONE;
-        for (int i = 0; i < choices.length; i++) {
-            if (primeSortOrder.equals(choices[i])) {
-                primarySort = i;
-            }
-        }
-
-        // determine secondary sort
-        int secondarySort = CArmyComparator.ARMY_SORT_NONE;
-        for (int i = 0; i < choices.length; i++) {
-            if (secondarySortOrder.equals(choices[i])) {
-                secondarySort = i;
-            }
-        }
-
-        // determine tertiary sort
-        int tertiarySort = CArmyComparator.ARMY_SORT_NONE;
-        for (int i = 0; i < choices.length; i++) {
-            if (tertiarySortOrder.equals(choices[i])) {
-                tertiarySort = i;
-            }
-        }
-
-        // we know this holds CUnits. Can safely cast.
-        Object[] armiesArray = Armies.toArray();
-
-        // run third sort
-        if ((tertiarySort != primarySort) &&
-                  (tertiarySort != secondarySort) &&
-                  (tertiarySort != CArmyComparator.ARMY_SORT_NONE)) {
-            Arrays.sort(armiesArray, new CArmyComparator(tertiarySort));
-        }
-
-        // run the second sort
-        if ((primarySort != secondarySort) && (secondarySort != CArmyComparator.ARMY_SORT_NONE)) {
-            Arrays.sort(armiesArray, new CArmyComparator(secondarySort));
-        }
-
-        // now the primary sort
-        if (primarySort != CArmyComparator.ARMY_SORT_NONE) {
-            Arrays.sort(armiesArray, new CArmyComparator(primarySort));
-        }
-
-        // overwrite the hangar with a new arraylist constructed from the
-        // unitsArray.
-        Vector<CArmy> Army2 = new Vector<>(1, 1);
-        for (Object element : armiesArray) {
-            Army2.add((CArmy) element);
-        }
-
-        // replace the hangar and flush the array
-        Armies = Army2;
     }
 
     public int getHangarSpaceRequired(int typeid, int weightclass, int baymod, String model) {
@@ -1189,10 +1195,6 @@ public class CPlayer extends Player {
         }
     }
 
-    public void setTotalTechs(int slot, int techs) {
-        totalTechs.set(slot, techs);
-    }
-
     public ArrayList<Integer> getTotalTechs() {
         return totalTechs;
     }
@@ -1207,36 +1209,32 @@ public class CPlayer extends Player {
         }
     }
 
-    public void setAvailableTechs(int slot, int techs) {
-        availableTechs.set(slot, techs);
-    }
-
     public ArrayList<Integer> getAvailableTechs() {
         return availableTechs;
-    }
-
-    public void setRepairLocation(int loc) {
-        repairLocation = loc;
     }
 
     public int getRepairLocation() {
         return repairLocation;
     }
 
-    public void setRepairTechType(int type) {
-        repairTechType = type;
+    public void setRepairLocation(int loc) {
+        repairLocation = loc;
     }
 
     public int getRepairTechType() {
         return repairTechType;
     }
 
-    public void setRepairRetries(int retries) {
-        repairRetries = retries;
+    public void setRepairTechType(int type) {
+        repairTechType = type;
     }
 
     public int getRepairRetries() {
         return repairRetries;
+    }
+
+    public void setRepairRetries(int retries) {
+        repairRetries = retries;
     }
 
     public void resetRepairs() {
@@ -1245,20 +1243,20 @@ public class CPlayer extends Player {
         repairRetries = 0;
     }
 
-    public void setConventionalMinesAllowed(int mines) {
-        conventionalMinesAllowed = mines;
-    }
-
     public int getConventionalMinesAllowed() {
         return conventionalMinesAllowed;
     }
 
-    public void setVibraMinesAllowed(int mines) {
-        vibraMinesAllowed = mines;
+    public void setConventionalMinesAllowed(int mines) {
+        conventionalMinesAllowed = mines;
     }
 
     public int getVibraMinesAllowed() {
         return vibraMinesAllowed;
+    }
+
+    public void setVibraMinesAllowed(int mines) {
+        vibraMinesAllowed = mines;
     }
 
     public void setMines(StringTokenizer st) {
@@ -1287,10 +1285,6 @@ public class CPlayer extends Player {
         return partsCache;
     }
 
-    public void setSubFaction(String name) {
-        subFactionName = name;
-    }
-
     public SubFaction getSubFaction() {
 
         SubFaction mySubFaction = myHouse.getSubFactionList().get(subFactionName);
@@ -1299,6 +1293,10 @@ public class CPlayer extends Player {
         }
 
         return mySubFaction;
+    }
+
+    public void setSubFaction(String name) {
+        subFactionName = name;
     }
 
     public int getSubFactionAccess() {
@@ -1316,20 +1314,8 @@ public class CPlayer extends Player {
         return subFactionName;
     }
 
-    public int getHangarPenalty() {
-        return hangarPenalty;
-    }
-
     public int getHangarPurchasePenalty(int type, int weight) {
         return hangarPurchasePenalties[type][weight];
-    }
-
-    public void setHangarPenalty(int p) {
-        hangarPenalty = p;
-    }
-
-    public void setHangarPurchasePenalty(int type, int weight, int p) {
-        hangarPurchasePenalties[type][weight] = p;
     }
 
     public void parseHangarPenaltyString(String readString) {
@@ -1341,5 +1327,9 @@ public class CPlayer extends Player {
             }
         }
         client.getMainFrame().getMainPanel().getHSPanel().updateDisplay();
+    }
+
+    public void setHangarPurchasePenalty(int type, int weight, int p) {
+        hangarPurchasePenalties[type][weight] = p;
     }
 }

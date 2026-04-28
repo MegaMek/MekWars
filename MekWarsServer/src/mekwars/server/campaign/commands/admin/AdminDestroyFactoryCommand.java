@@ -22,15 +22,9 @@ import common.util.MWLogger;
 public class AdminDestroyFactoryCommand implements server.campaign.commands.Command {
 
     int accessLevel = server.MWChatServer.auth.IAuthenticator.ADMIN, factoryID;
-
-    public int getExecutionLevel() {return accessLevel;}
-
-    public void setExecutionLevel(int i) {accessLevel = i;}
-
     String syntax = "Planet Name#Factory Name";
 
     public String getSyntax() {return syntax;}
-
 
     public void process(java.util.StringTokenizer command, String Username) {
 
@@ -86,4 +80,8 @@ public class AdminDestroyFactoryCommand implements server.campaign.commands.Comm
         }//end catch
 
     }
+
+    public int getExecutionLevel() {return accessLevel;}
+
+    public void setExecutionLevel(int i) {accessLevel = i;}
 }
