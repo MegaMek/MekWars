@@ -1,24 +1,42 @@
 /*
- * MekWars - Copyright (C) 2004, 2005, 2006
- *
  * Derived from MegaMekNET (http://www.sourceforge.net/projects/megamek)
- * Original author Helge Richter (McWizard)
+ * Copyright (C) 2004-2006 Helge Richter (McWizard)
+ * Copyright (C) 2026 The MegaMek Team. All Rights Reserved.
  *
- * This program is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License as published by the Free
- * Software Foundation; either version 2 of the License, or (at your option)
- * any later version.
+ * This file is part of MekWars.
  *
- * This program is distributed in the hope that it will be useful, but
- * WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
- * or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License
- * for more details.
+ * MekWars is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License (GPL),
+ * version 3 or (at your option) any later version,
+ * as published by the Free Software Foundation.
+ *
+ * MekWars is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty
+ * of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU General Public License for more details.
+ *
+ * A copy of the GPL should have been included with this project;
+ * if not, see <https://www.gnu.org/licenses/>.
+ *
+ * NOTICE: The MegaMek organization is a non-profit group of volunteers
+ * creating free software for the BattleTech community.
+ *
+ * MechWarrior, BattleMech, `Mech and AeroTech are registered trademarks
+ * of The Topps Company, Inc. All Rights Reserved.
+ *
+ * Catalyst Game Labs and the Catalyst Game Labs logo are trademarks of
+ * InMediaRes Productions, LLC.
+ *
+ * MechWarrior Copyright Microsoft Corporation. MekWars was created under
+ * Microsoft's "Game Content Usage Rules"
+ * <https://www.xbox.com/en-US/developers/rules> and it is not endorsed by or
+ * affiliated with Microsoft.
  */
+
 
 package mekwars.common.campaign;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.StringTokenizer;
 import java.util.Vector;
 
@@ -35,6 +53,7 @@ import mekwars.common.util.MWLogger;
 import mekwars.common.util.TokenReader;
 import mekwars.common.util.UnitComponents;
 import mekwars.common.util.UnitUtils;
+import org.jspecify.annotations.NonNull;
 
 /**
  * Class for Player object used by Client
@@ -125,9 +144,9 @@ public class CPlayer extends Player {
     /**
      * Complete setData command. Called in response to a PS| sent by the server.
      *
-     * @param - data
+     * @param data
      *
-     * @return - success
+     * @return success
      */
     public boolean setData(String data) {
         java.util.StringTokenizer ST;
@@ -193,20 +212,12 @@ public class CPlayer extends Player {
 
         setAutoReorder(TokenReader.readBoolean(ST));
 
-        MWLogger.infoLog("My Player Flags: " + flags.export());
+        MWLogger.infoLog(STR."My Player Flags: \{flags.export()}");
 
         // traps run. sort the HQ. this isn't duplicative, b/c
         // direct lods (PS instead of PL) don't trigger sorts.
         sortHangar();
         return true;
-    }
-
-    public void setTotalTechs(int slot, int techs) {
-        totalTechs.set(slot, techs);
-    }
-
-    public void setAvailableTechs(int slot, int techs) {
-        availableTechs.set(slot, techs);
     }
 
     @Override
@@ -235,9 +246,8 @@ public class CPlayer extends Player {
         float ceiling = Float.parseFloat(client.getServerConfigs("AdditiveCostCeiling"));
 
         /*
-         * divide the ceiling by the additive. techs past this number are all
-         * charged at the ceiling rate. Example: (With 1.20 and .04, the result
-         * is 30. Every additional tech (31, 32, etc.) is paid at the ceiling
+         * divide the ceiling by the additive. techs past this number are all charged at the ceiling rate. Example:
+         * (With 1.20 and .04, the result is 30). Every additional tech (31, 32, etc.) is paid at the ceiling
          * wage.
          */
         int techCeiling = (int) (ceiling / additive);
@@ -254,19 +264,7 @@ public class CPlayer extends Player {
          * reached, just use the number of techToPay from the param.
          */
 
-        int techsUsingAdditive = Math.min(Techs, techCeiling);
-
-        /*
-         * Faster too just to a for loop to determine the number of times the
-         * additive was made (1 + 2 + 3 + 4, and so on) with ints, and THEN
-         * multiply by the double additive than do a lot of floating point math
-         * by for-in through and multiplying by the additive each time.
-         */
-        int totalAdditions = 0;
-
-        for (int i = 1; i <= techsUsingAdditive; i++) {
-            totalAdditions += i;
-        }// end for(all counted techs)
+        int totalAdditions = getTotalAdditions(techCeiling);
 
         // now figure out the final amount to pay ...
         amountToPay += totalAdditions * additive;
@@ -283,8 +281,89 @@ public class CPlayer extends Player {
         TechCost = Math.round(amountToPay);
     }
 
+    private int getTotalAdditions(int techCeiling) {
+        int techsUsingAdditive = Math.min(Techs, techCeiling);
+
+        /*
+         * Faster too just to a for loop to determine the number of times the
+         * additive was made (1 + 2 + 3 + 4, and so on) with ints, and THEN
+         * multiply by the double additive than do a lot of floating point math
+         * by for-in through and multiplying by the additive each time.
+         */
+        int totalAdditions = 0;
+
+        for (int i = 1; i <= techsUsingAdditive; i++) {
+            totalAdditions += i;
+        }// end for(all counted techs)
+        return totalAdditions;
+    }
+
     /**
-     * Method which resorts every unit. Inefficient, but we hate clients. Because we're evil. So there.
+     * Called from PL after PL|SAD received. Adds a new army OR replaces an old army's data with new dump.
+     */
+    public void setArmyData(String data) {
+
+        CArmy newArmy = new CArmy();
+        newArmy.fromString(data, this, "%", client);
+
+        // Save the old army's legal operations.
+        CArmy oldArmy = getArmy(newArmy.getID());
+
+        if (oldArmy != null) {
+            newArmy.setLegalOperations(oldArmy.getLegalOperations());
+        }
+
+        // swap the armies
+        removeArmy(newArmy.getID());
+        if (Armies.size() < newArmy.getID()) {
+            Armies.add(newArmy);
+        } else {
+            Armies.add(newArmy.getID(), newArmy);
+        }
+    }
+
+    public CArmy getArmy(int id) {
+
+        for (CArmy currA : Armies) {
+            if (currA.getID() == id) {
+                return currA;
+            }
+        }
+        return null;
+    }
+
+    /**
+     * Remove an army from a player's set. This can be called directly from a PL|RA command, or indirectly by PL|SAD via
+     * CPlayer.setArmyData(), which removes all old instances of an army before adding the new data.
+     */
+    public void removeArmy(int lanceID) {
+
+        for (java.util.Iterator<mekwars.common.campaign.CArmy> i = Armies.iterator(); i.hasNext(); ) {
+            if (i.next().getID() == lanceID) {
+                i.remove();
+                client.getMainFrame().updateAttackMenu();// removing an army
+                return;
+            }
+        }
+    }
+
+    /**
+     * Called by PL|HD - adds a single unit to the hangar.
+     */
+    public void setHangarData(String data) {
+        try {
+            CUnit unit = new CUnit(client);
+            if (unit.setData(data)) {
+                Hangar.add(unit);
+                sortHangar();// sort it!
+            }
+        } catch (Exception e) {
+            MWLogger.errLog(e);
+        }
+    }
+
+    /**
+     * Method that resorts every unit. Inefficient, but we hate clients. Because we're evil. So there.
      *
      * @urgru 4.4.05
      */
@@ -326,99 +405,32 @@ public class CPlayer extends Player {
         }
 
         // we know this holds CUnits. Can safely cast.
-        Object[] unitsArray = Hangar.toArray();
+        Vector<CUnit> unitsArray = new Vector<>(Hangar);
 
         // run third sort
         if ((tertiarySort != primarySort) &&
                   (tertiarySort != secondarySort) &&
                   (tertiarySort != CUnitComparator.HQ_SORT_NONE)) {
-            Arrays.sort(unitsArray, new CUnitComparator(tertiarySort));
+            unitsArray.sort(new CUnitComparator(tertiarySort));
         }
 
         // run the second sort
         if ((primarySort != secondarySort) && (secondarySort != CUnitComparator.HQ_SORT_NONE)) {
-            Arrays.sort(unitsArray, new CUnitComparator(secondarySort));
+            unitsArray.sort(new CUnitComparator(secondarySort));
         }
 
         // now the primary sort
         if (primarySort != CUnitComparator.HQ_SORT_NONE) {
-            Arrays.sort(unitsArray, new CUnitComparator(primarySort));
+            unitsArray.sort(new CUnitComparator(primarySort));
         }
 
         // overwrite the hangar with a new arraylist constructed from the
         // unitsArray.
         Vector<CUnit> Hangar2 = new Vector<>(1, 1);
-        for (Object element : unitsArray) {
-            Hangar2.add((CUnit) element);
-        }
+        Hangar2.addAll(unitsArray);
 
         // replace the hangar and flush the array
         Hangar = Hangar2;
-    }
-
-    /**
-     * Called from PL after PL|SAD received. Adds a new army OR replaces an old army's data with new dump.
-     */
-    public void setArmyData(String data) {
-
-        CArmy newArmy = new CArmy();
-        newArmy.fromString(data, this, "%", client);
-
-        // Save the old army's legal operations.
-        CArmy oldArmy = getArmy(newArmy.getID());
-
-        if (oldArmy != null) {
-            newArmy.setLegalOperations(oldArmy.getLegalOperations());
-        }
-
-        // swap the armies
-        removeArmy(newArmy.getID());
-        if (Armies.size() < newArmy.getID()) {
-            Armies.add(newArmy);
-        } else {
-            Armies.add(newArmy.getID(), newArmy);
-        }
-    }
-
-    public CArmy getArmy(int id) {
-
-        for (CArmy currA : Armies) {
-            if (currA.getID() == id) {
-                return currA;
-            }
-        }
-        return null;
-    }
-
-    /**
-     * Remove an army from a player's set. This can be called directly from a PL|RA command, or indirectly by PL|SAD via
-     * CPlayer.setArmyData(), which removes all old instances of an army before adding the new data.
-     */
-    public boolean removeArmy(int lanceID) {
-
-        for (java.util.Iterator<mekwars.common.campaign.CArmy> i = Armies.iterator(); i.hasNext(); ) {
-            if (i.next().getID() == lanceID) {
-                i.remove();
-                client.getMainFrame().updateAttackMenu();// removing an army
-                return (true);
-            }
-        }
-        return (false);
-    }
-
-    /**
-     * Called by PL|HD - adds a single unit to the hangar.
-     */
-    public void setHangarData(String data) {
-        try {
-            CUnit unit = new CUnit(client);
-            if (unit.setData(data)) {
-                Hangar.add(unit);
-                sortHangar();// sort it!
-            }
-        } catch (Exception e) {
-            MWLogger.errLog(e);
-        }
     }
 
     /**
@@ -452,7 +464,7 @@ public class CPlayer extends Player {
             boolean selection = TokenReader.readBoolean(st);
 
             CriticalSlot crit = currUnit.getEntity().getCritical(location, slot);
-            crit.getMount().setRapidfire(selection);
+            crit.getMount().setRapidFire(selection);
 
             sortHangar();// properties have changes. sort. YARR!
         } catch (Exception e) {
@@ -463,7 +475,7 @@ public class CPlayer extends Player {
     /**
      * Remove a unit from the player's hangar. Called from PL after receipt of a PL|RU|ID (RemoveUnit#ID) command.
      * <p>
-     * Note that there is NOT an analagous addUnit() method. Single additions are sent to the clients using (obtusely
+     * Note that there is NOT an analogous addUnit() method. Single additions are sent to the clients using (obtusely
      * enough) the PL|HD (hangar data) command. See .setHangarData()'s comments, as well as those in SUnit.addUnit(),
      * for details/explanation.
      */
@@ -490,9 +502,7 @@ public class CPlayer extends Player {
          * Get the faction configs before starting anything else. I could pause
          * the client and wait for the configs but I'll let it go. --Torren
          */
-        client.sendChat(IClient.CAMPAIGN_PREFIX +
-                              "c getfactionconfigs#0" +
-                              client.getserverConfigs("TIMESTAMP"));
+        client.sendChat(STR."\{IClient.CAMPAIGN_PREFIX}c getfactionconfigs#0\{client.getServerConfigs("TIMESTAMP")}");
 
         /*
          * Now that we have a house set, we can check for BM access properly. Do
@@ -520,7 +530,7 @@ public class CPlayer extends Player {
     }
 
     public String getLogo() {
-        return "<img height=\"140\" width=\"130\" src =\"" + myLogo + "\">";
+        return STR."<img height='140' width='130' src ='\{myLogo}'>";
     }
 
     public void setLogo(String logo) {
@@ -707,42 +717,47 @@ public class CPlayer extends Player {
             }
 
             // get the distance
-            int distInBoards = Integer.parseInt(client.getserverConfigs("DistanceFromMap"));
+            int distInBoards = Integer.parseInt(client.getServerConfigs("DistanceFromMap"));
             int distInHexes = distInBoards * 17;// 17 hexes per board.
 
-            CUnit currUnit = new CUnit(client);
-
-            /*
-             * This is needed to set the edge for auto arty when auto edge is
-             * set for players. Else, arty edge is set in MM when the players
-             * click on the edge they want.
-             */
-            OffBoardDirection direction = OffBoardDirection.NORTH;
-            switch (client.getPlayerStartingEdge()) {
-                case 0:
-                    break;
-                case 1:
-                case 2:
-                case 3:
-                    direction = OffBoardDirection.NORTH;
-                    break;
-                case 4:
-                    direction = OffBoardDirection.EAST;
-                    break;
-                case 5:
-                case 6:
-                case 7:
-                    direction = OffBoardDirection.SOUTH;
-                    break;
-                case 8:
-                    direction = OffBoardDirection.WEST;
-                    break;
-            }
-
-            currUnit.setAutoUnitData(filename, distInHexes, direction);
+            CUnit currUnit = getCUnit(filename, distInHexes);
             AutoArmy.add(currUnit);
         }// end while(tokens)
     }// end setAutoArmy()
+
+    private @NonNull CUnit getCUnit(String filename, int distInHexes) {
+        CUnit currUnit = new CUnit(client);
+
+        /*
+         * This is needed to set the edge for auto arty when auto edge is
+         * set for players. Else, arty edge is set in MM when the players
+         * click on the edge they want.
+         */
+        OffBoardDirection direction = OffBoardDirection.NORTH;
+        switch (client.getPlayerStartingEdge()) {
+            case 0:
+                break;
+            case 1:
+            case 2:
+            case 3:
+                direction = OffBoardDirection.NORTH;
+                break;
+            case 4:
+                direction = OffBoardDirection.EAST;
+                break;
+            case 5:
+            case 6:
+            case 7:
+                direction = OffBoardDirection.SOUTH;
+                break;
+            case 8:
+                direction = OffBoardDirection.WEST;
+                break;
+        }
+
+        currUnit.setAutoUnitData(filename, distInHexes, direction);
+        return currUnit;
+    }
 
     public int getAmountOfTimesUnitExistsInArmies(int unitID) {
         int result = 0;
@@ -846,31 +861,29 @@ public class CPlayer extends Player {
         }
 
         // we know this holds CUnits. Can safely cast.
-        Object[] armiesArray = Armies.toArray();
+        Vector<CArmy> armiesArray = new Vector<>(Armies);
 
         // run third sort
         if ((tertiarySort != primarySort) &&
                   (tertiarySort != secondarySort) &&
                   (tertiarySort != CArmyComparator.ARMY_SORT_NONE)) {
-            Arrays.sort(armiesArray, new CArmyComparator(tertiarySort));
+            armiesArray.sort(new CArmyComparator(tertiarySort));
         }
 
         // run the second sort
         if ((primarySort != secondarySort) && (secondarySort != CArmyComparator.ARMY_SORT_NONE)) {
-            Arrays.sort(armiesArray, new CArmyComparator(secondarySort));
+            armiesArray.sort(new CArmyComparator(secondarySort));
         }
 
         // now the primary sort
         if (primarySort != CArmyComparator.ARMY_SORT_NONE) {
-            Arrays.sort(armiesArray, new CArmyComparator(primarySort));
+            armiesArray.sort(new CArmyComparator(primarySort));
         }
 
         // overwrite the hangar with a new arraylist constructed from the
         // unitsArray.
         Vector<CArmy> Army2 = new Vector<>(1, 1);
-        for (Object element : armiesArray) {
-            Army2.add((CArmy) element);
-        }
+        Army2.addAll(armiesArray);
 
         // replace the hangar and flush the array
         Armies = Army2;
@@ -920,8 +933,8 @@ public class CPlayer extends Player {
         }
 
         while (tokenizer.hasMoreTokens()) {
-            String mode = "";
-            String name = "";
+            String mode;
+            String name;
 
             try {
                 mode = TokenReader.readString(tokenizer);
@@ -1031,7 +1044,7 @@ public class CPlayer extends Player {
             if (getArmy(army) != null) {
                 getArmy(army).setBV(TokenReader.readInt(ST));
             } else {
-                MWLogger.errLog("Bad Army id: " + army);
+                MWLogger.errLog(STR."Bad Army id: \{army}");
             }
         }
     }
@@ -1068,22 +1081,14 @@ public class CPlayer extends Player {
         }
     }
 
-    /*
-     * Hangar sorting mechanisms. Client and server need not order hangars in
-     * the same fashion, since all transactions (after the initial data feed)
-     * take place on a unit by unit basis.
-     *
-     * Sort options: - BV - Name - Type - Unit ID - Weight - No sort [load
-     * order]
-     *
-     * BV is (for all intents and purposes) an exclusive sort. The others can
-     * lead to significant clustering. Hence, secondary filters can be applied.
-     */
-
     public void setPlayerPersonalPilotQueue(CPersonalPilotQueues queue) {
         personalPilotQueue = queue;
     }
 
+    public CPersonalPilotQueues getPersonalPilotQueue() {
+        return personalPilotQueue;
+    }
+
     /*
      * Hangar sorting mechanisms. Client and server need not order hangars in
      * the same fashion, since all transactions (after the initial data feed)
@@ -1095,10 +1100,6 @@ public class CPlayer extends Player {
      * BV is (for all intents and purposes) an exclusive sort. The others can
      * lead to significant clustering. Hence, secondary filters can be applied.
      */
-
-    public CPersonalPilotQueues getPersonalPilotQueue() {
-        return personalPilotQueue;
-    }
 
     /**
      * Exclude method, called after receipt of PL|AEU| (Admin Exclude Update). Because NP lists are expected to be small
@@ -1117,6 +1118,18 @@ public class CPlayer extends Player {
         }
         client.getMainFrame().getMainPanel().getUserListPanel().repaint();
     }
+
+    /*
+     * Hangar sorting mechanisms. Client and server need not order hangars in
+     * the same fashion, since all transactions (after the initial data feed)
+     * take place on a unit by unit basis.
+     *
+     * Sort options: - BV - Name - Type - Unit ID - Weight - No sort [load
+     * order]
+     *
+     * BV is (for all intents and purposes) an exclusive sort. The others can
+     * lead to significant clustering. Hence, secondary filters can be applied.
+     */
 
     /**
      * Exclude method, called after receipt of PL|PEU| (Player Exclude Update). Because NP lists are expected to be
@@ -1159,8 +1172,8 @@ public class CPlayer extends Player {
             }
         }
 
-        int result = 1;
-        String techAmount = "TechsFor" + Unit.getWeightClassDesc(weightclass) + Unit.getTypeClassDesc(typeid);
+        int result;
+        String techAmount = STR."TechsFor\{Unit.getWeightClassDesc(weightclass)}\{Unit.getTypeClassDesc(typeid)}";
         result = Integer.parseInt(client.getServerConfigs(techAmount));
 
         // Apply Pilot Mods (Astech skill)
@@ -1195,6 +1208,10 @@ public class CPlayer extends Player {
         }
     }
 
+    public void setTotalTechs(int slot, int techs) {
+        totalTechs.set(slot, techs);
+    }
+
     public ArrayList<Integer> getTotalTechs() {
         return totalTechs;
     }
@@ -1207,6 +1224,10 @@ public class CPlayer extends Player {
             setAvailableTechs(slot, TokenReader.readInt(techs));
             slot++;
         }
+    }
+
+    public void setAvailableTechs(int slot, int techs) {
+        availableTechs.set(slot, techs);
     }
 
     public ArrayList<Integer> getAvailableTechs() {
@@ -1276,7 +1297,7 @@ public class CPlayer extends Player {
             String key = TokenReader.readString(ST);
             String value = TokenReader.readString(ST);
 
-            client.getServerConfigs().setProperty(key, value);
+            client.setServerConfigs(key, value);
         }
         client.setWaiting(false);
     }

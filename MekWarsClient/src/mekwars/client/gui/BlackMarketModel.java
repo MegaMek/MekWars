@@ -24,7 +24,8 @@
 package mekwars.client.gui;
 
 
-import common.Unit;
+import mekwars.common.Unit;
+import mekwars.common.campaign.CCampaign;
 
 /**
  *
@@ -60,7 +61,7 @@ public class BlackMarketModel extends javax.swing.table.AbstractTableModel {
     public java.util.TreeMap<Integer, client.campaign.CBMUnit> mechs; //this collection is backed by the main map, so it should always be good
     //public TreeMap bids;
     public Object[] sortedMechs; //not really though, sort is handled elsewhere...
-    client.campaign.CCampaign theCampaign;
+    CCampaign theCampaign;
     private boolean hiddenUnits = false;
 
     public BlackMarketModel(client.MWClient client, boolean hideBMUnits) {

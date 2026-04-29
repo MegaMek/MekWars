@@ -26,6 +26,7 @@ import java.rmi.AccessException;
 
 import common.util.MWLogger;
 import common.util.StringUtils;
+import mekwars.common.campaign.clientutils.protocol.TransportCodec;
 import server.MWChatServer.MWChatClient;
 import server.MWChatServer.MWChatServer;
 import server.MWChatServer.auth.Auth;
@@ -82,7 +83,7 @@ public class ServerWrapper extends MWChatServer {
         MWChatClient client = this.getClient(MWChatServer.clientKey(name));
         if (client != null) {
             try {
-                client.sendRaw("/comm" + ICommands.DELIMITER + common.comm.TransportCodec.encode(msg));
+                client.sendRaw("/comm" + ICommands.DELIMITER + TransportCodec.encode(msg));
             } catch (Exception e) {
                 MWLogger.errLog(e);
             }

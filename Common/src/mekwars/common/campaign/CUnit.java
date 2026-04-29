@@ -1,19 +1,38 @@
 /*
- * MekWars - Copyright (C) 2004
- *
  * Derived from MegaMekNET (http://www.sourceforge.net/projects/megamek)
- * Original author Helge Richter (McWizard)
+ * Copyright (C) 2004 Helge Richter (McWizard)
+ * Copyright (C) 2026 The MegaMek Team. All Rights Reserved.
  *
- * This program is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License as published by the Free
- * Software Foundation; either version 2 of the License, or (at your option)
- * any later version.
+ * This file is part of MekWars.
  *
- * This program is distributed in the hope that it will be useful, but
- * WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
- * or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License
- * for more details.
+ * MekWars is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License (GPL),
+ * version 3 or (at your option) any later version,
+ * as published by the Free Software Foundation.
+ *
+ * MekWars is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty
+ * of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU General Public License for more details.
+ *
+ * A copy of the GPL should have been included with this project;
+ * if not, see <https://www.gnu.org/licenses/>.
+ *
+ * NOTICE: The MegaMek organization is a non-profit group of volunteers
+ * creating free software for the BattleTech community.
+ *
+ * MechWarrior, BattleMech, `Mech and AeroTech are registered trademarks
+ * of The Topps Company, Inc. All Rights Reserved.
+ *
+ * Catalyst Game Labs and the Catalyst Game Labs logo are trademarks of
+ * InMediaRes Productions, LLC.
+ *
+ * MechWarrior Copyright Microsoft Corporation. MekWars was created under
+ * Microsoft's "Game Content Usage Rules"
+ * <https://www.xbox.com/en-US/developers/rules> and it is not endorsed by or
+ * affiliated with Microsoft.
  */
+
 
 package mekwars.common.campaign;
 
@@ -94,10 +113,10 @@ public class CUnit extends Unit {
 
         int result = Integer.MAX_VALUE;
         try {
-            String classType = Unit.getWeightClassDesc(weightClass) + Unit.getTypeClassDesc(type_id) + "Price";
+            String classType = STR."\{Unit.getWeightClassDesc(weightClass)}\{Unit.getTypeClassDesc(type_id)}Price";
 
             if (type_id == Unit.MEK) {
-                result = Integer.parseInt(client.getServerConfigs(Unit.getWeightClassDesc(weightClass) + "Price"));
+                result = Integer.parseInt(client.getServerConfigs(STR."\{Unit.getWeightClassDesc(weightClass)}Price"));
             } else {
                 result = Integer.parseInt(client.getServerConfigs(classType));
             }
@@ -123,10 +142,10 @@ public class CUnit extends Unit {
     public static int getInfluenceForUnit(IClient mwclient, int weightClass, int type_id, House producer) {
 
         int result;
-        String classType = Unit.getWeightClassDesc(weightClass) + Unit.getTypeClassDesc(type_id) + "Inf";
+        String classType = STR."\{Unit.getWeightClassDesc(weightClass)}\{Unit.getTypeClassDesc(type_id)}Inf";
 
         if (type_id == Unit.MEK) {
-            result = Integer.parseInt(mwclient.getServerConfigs(Unit.getWeightClassDesc(weightClass) + "Inf"));
+            result = Integer.parseInt(mwclient.getServerConfigs(STR."\{Unit.getWeightClassDesc(weightClass)}Inf"));
         } else {
             result = Integer.parseInt(mwclient.getServerConfigs(classType));
         }
@@ -152,10 +171,10 @@ public class CUnit extends Unit {
           int type_id, House producer) {
 
         int result;
-        String classType = Unit.getWeightClassDesc(weightClass) + Unit.getTypeClassDesc(type_id) + "PP";
+        String classType = STR."\{Unit.getWeightClassDesc(weightClass)}\{Unit.getTypeClassDesc(type_id)}PP";
 
         if (type_id == Unit.MEK) {
-            result = Integer.parseInt(client.getServerConfigs(Unit.getWeightClassDesc(weightClass) + "PP"));
+            result = Integer.parseInt(client.getServerConfigs(STR."\{Unit.getWeightClassDesc(weightClass)}PP"));
         } else {
             result = Integer.parseInt(client.getServerConfigs(classType));
         }
@@ -178,7 +197,7 @@ public class CUnit extends Unit {
             return 0;
         }
 
-        String armorCost = "CostPoint" + UnitUtils.getArmorShortName(unit, location);
+        String armorCost = STR."CostPoint\{UnitUtils.getArmorShortName(unit, location)}";
         cost = Double.parseDouble(client.getServerConfigs(armorCost));
 
         return cost;
@@ -191,14 +210,13 @@ public class CUnit extends Unit {
             return 0;
         }
 
-        String armorCost = "CostPoint" + UnitUtils.getInternalShortName(unit) + "IS";
+        String armorCost = STR."CostPoint\{UnitUtils.getInternalShortName(unit)}IS";
         cost = Double.parseDouble(client.getServerConfigs(armorCost));
 
         return cost;
     }
 
-    public static double getCritCost(Entity unit, IClient client,
-          CriticalSlot crit) {
+    public static double getCritCost(Entity unit, IClient client, CriticalSlot crit) {
         double cost;
 
         if (Boolean.parseBoolean(client.getServerConfigs("UsePartsRepair"))) {
@@ -212,6 +230,7 @@ public class CUnit extends Unit {
         if (crit.isBreached() && !crit.isDamaged()) {
             return 0;
         }
+
         // else
         if (UnitUtils.isEngineCrit(crit)) {
             cost = Double.parseDouble(client.getServerConfigs("EngineCritRepairCost"));
@@ -266,8 +285,8 @@ public class CUnit extends Unit {
 
         StringTokenizer ST;
         String element;
-        String unitDamage = null;
-        MWLogger.infoLog("PDATA: " + data);
+        String unitDamage;
+        MWLogger.infoLog(STR."PDATA: \{data}");
 
         ST = new StringTokenizer(data, "$");
         element = TokenReader.readString(ST);
@@ -392,7 +411,7 @@ public class CUnit extends Unit {
 
                 Mounted<?> mg = criticalSlot.getMount();
 
-                mg.setRapidfire(selection);
+                mg.setRapidFire(selection);
 
             }
         }// Machine Guns
@@ -565,7 +584,7 @@ public class CUnit extends Unit {
      */
     public String getSmallDescription() {
         if ((getType() == Unit.MEK) || (getType() == Unit.VEHICLE) || (getType() == Unit.AERO)) {
-            return getModelName() + " [" + getPilot().getGunnery() + "/" + getPilot().getPiloting() + "]";
+            return STR."\{getModelName()} [\{getPilot().getGunnery()}/\{getPilot().getPiloting()}]";
         }
 
         if ((getType() == Unit.INFANTRY) || (getType() == Unit.BATTLEARMOR)) {

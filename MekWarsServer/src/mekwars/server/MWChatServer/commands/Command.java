@@ -17,7 +17,9 @@
  */
 package mekwars.server.MWChatServer.commands;
 
-import common.util.MWLogger;
+
+import mekwars.common.campaign.clientutils.protocol.TransportCodec;
+import mekwars.common.util.MWLogger;
 
 /**
  *
@@ -31,7 +33,7 @@ public class Command extends CommandBase implements ICommands {
     public boolean process(server.MWChatServer.MWChatClient client, String[] args) {
         try {
             ((server.ServerWrapper) client.getServer()).processCommand(client.getUserId(),
-                  common.comm.TransportCodec.unescape(args[1]));
+                  TransportCodec.unescape(args[1]));
         } catch (Exception e) {
             MWLogger.errLog(e);
             MWLogger.errLog("Not supposed to happen");

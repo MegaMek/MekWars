@@ -1,19 +1,38 @@
 /*
- * MekWars - Copyright (C) 2004
- *
  * Derived from MegaMekNET (http://www.sourceforge.net/projects/megameknet)
- * Original author Helge Richter (McWizard)
+ * Copyright (C) 2004 Helge Richter (McWizard)
+ * Copyright (C) 2026 The MegaMek Team. All Rights Reserved.
  *
- * This program is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License as published by the Free
- * Software Foundation; either version 2 of the License, or (at your option)
- * any later version.
+ * This file is part of MekWars.
  *
- * This program is distributed in the hope that it will be useful, but
- * WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
- * or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License
- * for more details.
+ * MekWars is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License (GPL),
+ * version 3 or (at your option) any later version,
+ * as published by the Free Software Foundation.
+ *
+ * MekWars is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty
+ * of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU General Public License for more details.
+ *
+ * A copy of the GPL should have been included with this project;
+ * if not, see <https://www.gnu.org/licenses/>.
+ *
+ * NOTICE: The MegaMek organization is a non-profit group of volunteers
+ * creating free software for the BattleTech community.
+ *
+ * MechWarrior, BattleMech, `Mech and AeroTech are registered trademarks
+ * of The Topps Company, Inc. All Rights Reserved.
+ *
+ * Catalyst Game Labs and the Catalyst Game Labs logo are trademarks of
+ * InMediaRes Productions, LLC.
+ *
+ * MechWarrior Copyright Microsoft Corporation. MekWars was created under
+ * Microsoft's "Game Content Usage Rules"
+ * <https://www.xbox.com/en-US/developers/rules> and it is not endorsed by or
+ * affiliated with Microsoft.
  */
+
 
 package mekwars.common.campaign.pilot.skills;
 
@@ -97,31 +116,32 @@ public class PilotSkill {
     public static int getMMSkillID(String skill) {
         int skillID = -1;
 
-        if (skill.equals("dodge_maneuver")) {return PilotSkill.DodgeManeuverSkillID;}
-        if (skill.equals("maneuvering_ace")) {return PilotSkill.ManeuveringAceSkillID;}
-        if (skill.equals("melee_specialist")) {return PilotSkill.MeleeSpecialistSkillID;}
-        if (skill.equals("pain_resistance")) {return PilotSkill.PainResistanceSkillID;}
-        if (skill.equals("tactical_genius")) {return PilotSkill.TacticalGeniusSkillID;}
-        if (skill.equals("weapon_specialist")) {return PilotSkill.WeaponSpecialistSkillID;}
-        if (skill.equals("gunnery_laser")) {return PilotSkill.GunneryLaserSkillID;}
-        if (skill.equals("gunnery_missile")) {return PilotSkill.GunneryMissileSkillID;}
-        if (skill.equals("gunnery_ballistic")) {return PilotSkill.GunneryBallisticSkillID;}
-        if (skill.equals("iron_man")) {return PilotSkill.IronManSkillID;}
-        if (skill.equals("ei_implant")) {return PilotSkill.EnhancedInterfaceID;}
-        if (skill.equals("clan_pilot_training")) {return PilotSkill.ClanPilotTrainingID;}
-        if (skill.equals("edge")) {return PilotSkill.EdgeSkillID;}
-        if (skill.equals("vdni")) {return PilotSkill.VDNIID;}
-        if (skill.equals("bvdni")) {return PilotSkill.BufferedVDNIID;}
-        if (skill.equals("pain_shunt")) {return PilotSkill.PainShuntID;}
+        return switch (skill) {
+            case "dodge_maneuver" -> PilotSkill.DodgeManeuverSkillID;
+            case "maneuvering_ace" -> PilotSkill.ManeuveringAceSkillID;
+            case "melee_specialist" -> PilotSkill.MeleeSpecialistSkillID;
+            case "pain_resistance" -> PilotSkill.PainResistanceSkillID;
+            case "tactical_genius" -> PilotSkill.TacticalGeniusSkillID;
+            case "weapon_specialist" -> PilotSkill.WeaponSpecialistSkillID;
+            case "gunnery_laser" -> PilotSkill.GunneryLaserSkillID;
+            case "gunnery_missile" -> PilotSkill.GunneryMissileSkillID;
+            case "gunnery_ballistic" -> PilotSkill.GunneryBallisticSkillID;
+            case "iron_man" -> PilotSkill.IronManSkillID;
+            case "ei_implant" -> PilotSkill.EnhancedInterfaceID;
+            case "clan_pilot_training" -> PilotSkill.ClanPilotTrainingID;
+            case "edge" -> PilotSkill.EdgeSkillID;
+            case "vdni" -> PilotSkill.VDNIID;
+            case "bvdni" -> PilotSkill.BufferedVDNIID;
+            case "pain_shunt" -> PilotSkill.PainShuntID;
+            default -> skillID;
+        };
 
 
-        return skillID;
     }
 
     /**
      * get the Name of this skill
      *
-     * @return
      */
     final public String getName() {
         return name;
@@ -137,7 +157,6 @@ public class PilotSkill {
     /**
      * get the Abbreviation of this skill
      *
-     * @return
      */
     final public String getAbbreviation() {
         return abbreviation;

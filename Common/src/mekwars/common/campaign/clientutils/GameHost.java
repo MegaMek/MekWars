@@ -1,10 +1,41 @@
+/*
+ * Copyright (C) 2026 The MegaMek Team. All Rights Reserved.
+ *
+ * This file is part of MekWars.
+ *
+ * MekWars is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License (GPL),
+ * version 3 or (at your option) any later version,
+ * as published by the Free Software Foundation.
+ *
+ * MekWars is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty
+ * of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU General Public License for more details.
+ *
+ * A copy of the GPL should have been included with this project;
+ * if not, see <https://www.gnu.org/licenses/>.
+ *
+ * NOTICE: The MegaMek organization is a non-profit group of volunteers
+ * creating free software for the BattleTech community.
+ *
+ * MechWarrior, BattleMech, `Mech and AeroTech are registered trademarks
+ * of The Topps Company, Inc. All Rights Reserved.
+ *
+ * Catalyst Game Labs and the Catalyst Game Labs logo are trademarks of
+ * InMediaRes Productions, LLC.
+ *
+ * MechWarrior Copyright Microsoft Corporation. MekWars was created under
+ * Microsoft's "Game Content Usage Rules"
+ * <https://www.xbox.com/en-US/developers/rules> and it is not endorsed by or
+ * affiliated with Microsoft.
+ */
 package mekwars.common.campaign.clientutils;
 
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.InputStreamReader;
-import java.util.Date;
 import java.util.Enumeration;
 import java.util.StringTokenizer;
 import java.util.TreeMap;
@@ -43,7 +74,6 @@ public abstract class GameHost implements GameListener, IGameHost {
     protected CConnector Connector;
 
     protected Server myServer = null;
-    protected Date myTime = new Date(System.currentTimeMillis());
     protected TreeMap<String, MMGame> servers = new TreeMap<>();// hostname,mmgame
     protected Vector<String> decodeBuffer = new Vector<>(1, 1);// used to buffer incoming data until CMainFrame is built
 
@@ -213,7 +243,7 @@ public abstract class GameHost implements GameListener, IGameHost {
 
     protected abstract void sendServerGameUpdate();
 
-    public void gameVictory(GameVictoryEvent e) {
+    public void gameVictory(GameVictoryEvent event) {
         sendGameReport();
         MWLogger.infoLog("GAME END");
     }
@@ -253,20 +283,21 @@ public abstract class GameHost implements GameListener, IGameHost {
             return;
         }
         File[] fileList = saveFiles.listFiles();
-        for (File savedFile : fileList) {
-            long lastTime = savedFile.lastModified();
-            if (savedFile.exists()
-                      && savedFile.isFile()
-                      && (lastTime < (System.currentTimeMillis() - daysInSeconds))) {
-                try {
-                    MWLogger.infoLog("Purging File: "
-                                           + savedFile.getName() + " Time: " + lastTime
-                                           + " purge Time: "
-                                           + (System.currentTimeMillis() - daysInSeconds));
-                    savedFile.delete();
-                } catch (Exception ex) {
-                    MWLogger.errLog("Error trying to delete these files!");
-                    MWLogger.errLog(ex);
+        if (fileList != null) {
+            for (File savedFile : fileList) {
+                long lastTime = savedFile.lastModified();
+                if (savedFile.exists()
+                          && savedFile.isFile()
+                          && (lastTime < (System.currentTimeMillis() - daysInSeconds))) {
+                    try {
+                        MWLogger.infoLog(STR."Purging File: \{savedFile.getName()} Time: \{lastTime} purge Time: \{
+                                                   System.currentTimeMillis() -
+                                                         daysInSeconds}");
+                        savedFile.delete();
+                    } catch (Exception ex) {
+                        MWLogger.errLog("Error trying to delete these files!");
+                        MWLogger.errLog(ex);
+                    }
                 }
             }
         }
@@ -287,7 +318,7 @@ public abstract class GameHost implements GameListener, IGameHost {
         } catch (Exception ex) {
         }
 
-        sendChat(GameHost.CAMPAIGN_PREFIX + "c servergameoptions#" + packet);
+        sendChat(STR."\{IClient.CAMPAIGN_PREFIX}c servergameoptions#\{packet}");
     }
 
     public void sendChat(String s) {
@@ -324,7 +355,7 @@ public abstract class GameHost implements GameListener, IGameHost {
 
     public String doEscapeString(String t, int character, String replace) {
 
-        // find all occurrences of character in t and replace them with replace
+        // find all occurrences of character in t and replace them with replacement
         int pos = t.indexOf(character);
         if (pos != -1) {
             String res = "";
@@ -332,9 +363,7 @@ public abstract class GameHost implements GameListener, IGameHost {
                 res += t.substring(0, pos);
             }
             res += replace;
-            if (pos < t.length()) {
-                res += doEscapeString(t.substring(pos + 1), character, replace);
-            }
+            res += doEscapeString(t.substring(pos + 1), character, replace);
             return res;
         }
         return t;

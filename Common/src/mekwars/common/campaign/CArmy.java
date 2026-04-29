@@ -1,25 +1,43 @@
 /*
- * Created on 21.05.2004
+ * Derived from MegaMekNET (http://www.sourceforge.net/projects/megameknet)
+ * Copyright (C) 2004  Helge Richter (McWizard)
+ * Copyright (C) 2026 The MegaMek Team. All Rights Reserved.
+ *
+ * This file is part of MekWars.
+ *
+ * MekWars is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License (GPL),
+ * version 3 or (at your option) any later version,
+ * as published by the Free Software Foundation.
+ *
+ * MekWars is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty
+ * of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU General Public License for more details.
+ *
+ * A copy of the GPL should have been included with this project;
+ * if not, see <https://www.gnu.org/licenses/>.
+ *
+ * NOTICE: The MegaMek organization is a non-profit group of volunteers
+ * creating free software for the BattleTech community.
+ *
+ * MechWarrior, BattleMech, `Mech and AeroTech are registered trademarks
+ * of The Topps Company, Inc. All Rights Reserved.
+ *
+ * Catalyst Game Labs and the Catalyst Game Labs logo are trademarks of
+ * InMediaRes Productions, LLC.
+ *
+ * MechWarrior Copyright Microsoft Corporation. MekWars was created under
+ * Microsoft's "Game Content Usage Rules"
+ * <https://www.xbox.com/en-US/developers/rules> and it is not endorsed by or
+ * affiliated with Microsoft.
  */
 
-/*
- * MekWars - Copyright (C) 2004
- *
- * Derived from MegaMekNET (http://www.sourceforge.net/projects/megameknet)
- * Original author Helge Richter (McWizard)
- *
- * This program is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License as published by the Free
- * Software Foundation; either version 2 of the License, or (at your option)
- * any later version.
- *
- * This program is distributed in the hope that it will be useful, but
- * WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
- * or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License
- * for more details.
- */
 
 package mekwars.common.campaign;
+
+import java.util.StringTokenizer;
+import java.util.TreeSet;
 
 import mekwars.common.Army;
 import mekwars.common.Unit;
@@ -35,13 +53,13 @@ public class CArmy extends Army {
 
     // VARS
     private IClient client;
-    private java.util.TreeSet<String> legalOperations;
+    private TreeSet<String> legalOperations;
     private float rawForceSize = 0;
 
     // CONSTRUCTOR
     public CArmy() {
         super();
-        legalOperations = new java.util.TreeSet<String>();
+        legalOperations = new TreeSet<>();
     }
 
     // METHODS
@@ -53,7 +71,7 @@ public class CArmy extends Army {
      */
     public void fromString(String s, CPlayer player, String delimiter, IClient client) {
         this.client = client;
-        java.util.StringTokenizer ST = new java.util.StringTokenizer(s, delimiter);
+        StringTokenizer ST = new StringTokenizer(s, delimiter);
         setID(TokenReader.readInt(ST));
         setBV(TokenReader.readInt(ST));
         setLocked(TokenReader.readBoolean(ST));
@@ -67,7 +85,9 @@ public class CArmy extends Army {
 
             // do not add units with id 0 as their id has already been replaced
             // --Torren
-            if (unit.getId() != 0) {addUnit(unit);}
+            if (unit.getId() != 0) {
+                addUnit(unit);
+            }
         }
 
         count = TokenReader.readInt(ST);
@@ -86,9 +106,20 @@ public class CArmy extends Army {
         }
 
         boolean locked = TokenReader.readBoolean(ST);
-        if (locked) {playerLockArmy();} else {playerUnlockArmy();}
+
+        if (locked) {
+            playerLockArmy();
+        } else {
+            playerUnlockArmy();
+        }
+
         boolean disabled = TokenReader.readBoolean(ST);
-        if (disabled) {disableArmy();} else {enableArmy();}
+
+        if (disabled) {
+            disableArmy();
+        } else {
+            enableArmy();
+        }
     }
 
     /**
@@ -107,7 +138,7 @@ public class CArmy extends Army {
     }
 
     /**
-     * Method that returns an amriy's legal operations. Used throughout the client to build GUI elements.
+     * Method that returns an amity's legal operations. Used throughout the client to build GUI elements.
      */
     public java.util.TreeSet<String> getLegalOperations() {
         return legalOperations;
@@ -125,7 +156,7 @@ public class CArmy extends Army {
     }
 
     public double forceSizeModifier(double opposingForceSize) {
-        double myForceSize = 0;
+        double myForceSize;
 
         this.setRawForceSize(0);
         myForceSize = this.getRawForceSize();
@@ -149,17 +180,17 @@ public class CArmy extends Army {
         // no break, generate a raw force size
         for (Unit unit : this.getUnits()) {
             if (unit.getType() == Unit.INFANTRY) {
-                rawForceSize += Float.parseFloat(client.getserverConfigs("InfantryOperationsBVMod"));
+                rawForceSize += Float.parseFloat(client.getServerConfigs("InfantryOperationsBVMod"));
             } else if (unit.getType() == Unit.VEHICLE) {
-                rawForceSize += Float.parseFloat(client.getserverConfigs("VehicleOperationsBVMod"));
+                rawForceSize += Float.parseFloat(client.getServerConfigs("VehicleOperationsBVMod"));
             } else if (unit.getType() == Unit.BATTLEARMOR) {
-                rawForceSize += Float.parseFloat(client.getserverConfigs("BAOperationsBVMod"));
+                rawForceSize += Float.parseFloat(client.getServerConfigs("BAOperationsBVMod"));
             } else if (unit.getType() == Unit.AERO) {
-                rawForceSize += Float.parseFloat(client.getserverConfigs("AeroOperationsBVMod"));
+                rawForceSize += Float.parseFloat(client.getServerConfigs("AeroOperationsBVMod"));
             } else if (unit.getType() == Unit.PROTOMEK) {
-                rawForceSize += Float.parseFloat(client.getserverConfigs("ProtoOperationsBVMod"));
+                rawForceSize += Float.parseFloat(client.getServerConfigs("ProtoOperationsBVMod"));
             } else {
-                rawForceSize += Float.parseFloat(client.getserverConfigs("MekOperationsBVMod"));
+                rawForceSize += Float.parseFloat(client.getServerConfigs("MekOperationsBVMod"));
             }
         }
 
@@ -167,17 +198,20 @@ public class CArmy extends Army {
     }// end getRawForceSize()
 
     /**
-     * @param rfs - the forcesize to set (Operations Rule)
+     * @param rfs - the force size to set (Operations Rule)
      */
     public void setRawForceSize(float rfs) {
         rawForceSize = rfs;
     }
 
-    public float getTotalTonnage() {
+    public double getTotalTonnage() {
 
-        float totalTonnage = 0;
+        double totalTonnage = 0;
 
-        for (Unit unit : this.getUnits()) {totalTonnage += ((CUnit) unit).getEntity().getWeight();}
+        for (Unit unit : this.getUnits()) {
+            totalTonnage += ((CUnit) unit).getEntity().getWeight();
+        }
+
         return totalTonnage;
     }
 
@@ -185,7 +219,9 @@ public class CArmy extends Army {
 
         int walk = 0;
 
-        if (this.getUnits().isEmpty()) {return 0;}
+        if (this.getUnits().isEmpty()) {
+            return 0;
+        }
 
         for (Unit unit : this.getUnits()) {
             CUnit cUnit = (CUnit) unit;
@@ -202,7 +238,9 @@ public class CArmy extends Army {
 
         int walk = 0;
 
-        if (this.getUnits().isEmpty()) {return 0;}
+        if (this.getUnits().isEmpty()) {
+            return 0;
+        }
 
         for (Unit unit : this.getUnits()) {
             CUnit en = (CUnit) unit;

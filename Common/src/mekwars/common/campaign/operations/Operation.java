@@ -1,18 +1,37 @@
 /*
- * MekWars - Copyright (C) 2005
+ * Copyright (C) 2005 - nmorris (urgru@users.sourceforge.net)
+ * Copyright (C) 2026 The MegaMek Team. All Rights Reserved.
  *
- * Original author - nmorris (urgru@users.sourceforge.net)
+ * This file is part of MekWars.
  *
- * This program is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License as published by the Free
- * Software Foundation; either version 2 of the License, or (at your option)
- * any later version.
+ * MekWars is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License (GPL),
+ * version 3 or (at your option) any later version,
+ * as published by the Free Software Foundation.
  *
- * This program is distributed in the hope that it will be useful, but
- * WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
- * or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License
- * for more details.
+ * MekWars is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty
+ * of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU General Public License for more details.
+ *
+ * A copy of the GPL should have been included with this project;
+ * if not, see <https://www.gnu.org/licenses/>.
+ *
+ * NOTICE: The MegaMek organization is a non-profit group of volunteers
+ * creating free software for the BattleTech community.
+ *
+ * MechWarrior, BattleMech, `Mech and AeroTech are registered trademarks
+ * of The Topps Company, Inc. All Rights Reserved.
+ *
+ * Catalyst Game Labs and the Catalyst Game Labs logo are trademarks of
+ * InMediaRes Productions, LLC.
+ *
+ * MechWarrior Copyright Microsoft Corporation. MekWars was created under
+ * Microsoft's "Game Content Usage Rules"
+ * <https://www.xbox.com/en-US/developers/rules> and it is not endorsed by or
+ * affiliated with Microsoft.
  */
+
 
 /*
  * Stores all params and info relevant to this particular
@@ -21,7 +40,7 @@
  *
  * There's actually very little interaction between an Operation
  * and ongoing games/resolutions. Operation should be looked at
- * as a template or guidebook. When fed to a resolver in conjuntion
+ * as a template or guidebook. When fed to a resolver in conjunction
  * with a functional operation (long or short), actual results are
  * generated.
  *
@@ -52,8 +71,8 @@ public class Operation implements MWXmlSerializable {
     /*
      * Static ints, used as quick indicators. In particular:
      * - indicate that op is pure short (no long portion)
-     * - indicate that modifiers can be used with an op
-     * [Expect more over time ???]
+     * - indicate that modifiers can be used with op
+     * [Expect more overtime ???]
      */
     public static int TYPE_SHORT_ONLY = 0; //default
     public static int TYPE_SHORT_AND_LONG = 1;
@@ -90,7 +109,7 @@ public class Operation implements MWXmlSerializable {
         mods_indicator = Operation.MODS_NOT_ACCEPTED;
 
         //create mod map
-        modifyingOperations = new TreeMap<String, ModifyingOperation>();
+        modifyingOperations = new TreeMap<>();
 
         //set the value tables
         opValues = params;
@@ -122,11 +141,7 @@ public class Operation implements MWXmlSerializable {
 
         //catastrophic failure. sysexit.
         if (toReturn == null && log) {
-            MWLogger.errLog("Failed getting value \"" +
-                                  valToGet +
-                                  "\" from " +
-                                  this.getName() +
-                                  " and DefaultOp. Returning null.");
+            MWLogger.errLog(STR."Failed getting value \"\{valToGet}\" from \{this.getName()} and DefaultOp. Returning null.");
             try {
                 throw new Exception();
             } catch (Exception ex) {

@@ -15,7 +15,8 @@
 
 package mekwars.client.gui;
 
-import common.BMEquipment;
+import mekwars.common.BMEquipment;
+import mekwars.common.campaign.CCampaign;
 
 /**
  * Adapted from BlackMarketModel by Steve Hawkins
@@ -36,7 +37,7 @@ public class BlackMarketPartsModel extends javax.swing.table.AbstractTableModel 
     // by the main map, so it
     // should always be good
     public Object[] sortedComponents = null; // not really though, sort is
-    client.campaign.CCampaign theCampaign;
+    CCampaign theCampaign;
     // handled elsewhere...
     private String type = "";
 

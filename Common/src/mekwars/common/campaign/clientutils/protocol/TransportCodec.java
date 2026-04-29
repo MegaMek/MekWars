@@ -1,9 +1,35 @@
 /*
- * TransportCodec.java
+ * Copyright (C) 2026 The MegaMek Team. All Rights Reserved.
  *
- * Created on June 13, 2002, 5:11 PM
+ * This file is part of MekWars.
+ *
+ * MekWars is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License (GPL),
+ * version 3 or (at your option) any later version,
+ * as published by the Free Software Foundation.
+ *
+ * MekWars is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty
+ * of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU General Public License for more details.
+ *
+ * A copy of the GPL should have been included with this project;
+ * if not, see <https://www.gnu.org/licenses/>.
+ *
+ * NOTICE: The MegaMek organization is a non-profit group of volunteers
+ * creating free software for the BattleTech community.
+ *
+ * MechWarrior, BattleMech, `Mech and AeroTech are registered trademarks
+ * of The Topps Company, Inc. All Rights Reserved.
+ *
+ * Catalyst Game Labs and the Catalyst Game Labs logo are trademarks of
+ * InMediaRes Productions, LLC.
+ *
+ * MechWarrior Copyright Microsoft Corporation. MekWars was created under
+ * Microsoft's "Game Content Usage Rules"
+ * <https://www.xbox.com/en-US/developers/rules> and it is not endorsed by or
+ * affiliated with Microsoft.
  */
-
 package mekwars.common.campaign.clientutils.protocol;
 
 import java.io.ByteArrayInputStream;
@@ -12,6 +38,7 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 
 import mekwars.common.util.MWLogger;
+import org.jspecify.annotations.NonNull;
 
 /**
  * Provides a method to encode any string into a URL-safe form. Non-ASCII characters are first encoded as sequences of
@@ -56,11 +83,11 @@ public class TransportCodec {
 
     public static String encode(Object obj) {
         try {
-            ByteArrayOutputStream baos = new ByteArrayOutputStream();
-            ObjectOutputStream oos = new ObjectOutputStream(baos);
+            ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+            ObjectOutputStream oos = new ObjectOutputStream(byteArrayOutputStream);
             oos.writeObject(obj);
             oos.close();
-            return TransportCodec.encode(baos.toString());
+            return TransportCodec.encode(byteArrayOutputStream.toString());
         } catch (Exception e) {
             MWLogger.errLog(e);
         }
@@ -94,36 +121,42 @@ public class TransportCodec {
      * @return The encoded string
      */
     public static String encode(String s) {
-        StringBuilder sbuf = new StringBuilder();
-        int len = s.length();
+        return encodeString(s, hex);
+    }
+
+    @NonNull
+    public static String encodeString(String stringToEncode, String[] hex) {
+        StringBuilder stringBuilder = new StringBuilder();
+        int len = stringToEncode.length();
+
         for (int i = 0; i < len; i++) {
-            int ch = s.charAt(i);
+            char ch = stringToEncode.charAt(i);
             if ('A' <= ch && ch <= 'Z') {        // 'A'..'Z'
-                sbuf.append((char) ch);
+                stringBuilder.append(ch);
             } else if ('a' <= ch && ch <= 'z') {    // 'a'..'z'
-                sbuf.append((char) ch);
+                stringBuilder.append(ch);
             } else if ('0' <= ch && ch <= '9') {    // '0'..'9'
-                sbuf.append((char) ch);
+                stringBuilder.append(ch);
             } else if (ch == ' ') {            // space
-                sbuf.append('+');
+                stringBuilder.append('+');
             } else if (ch == '-' || ch == '_'        // unreserved
                              || ch == '.' || ch == '!'
                              || ch == '~' || ch == '*'
                              || ch == '\'' || ch == '('
                              || ch == ')') {
-                sbuf.append((char) ch);
+                stringBuilder.append(ch);
             } else if (ch <= 0x007f) {        // other ASCII
-                sbuf.append(hex[ch]);
+                stringBuilder.append(hex[ch]);
             } else if (ch <= 0x07FF) {        // non-ASCII <= 0x7FF
-                sbuf.append(hex[0xc0 | (ch >> 6)]);
-                sbuf.append(hex[0x80 | (ch & 0x3F)]);
+                stringBuilder.append(hex[0xc0 | (ch >> 6)]);
+                stringBuilder.append(hex[0x80 | (ch & 0x3F)]);
             } else {                    // 0x7FF < ch <= 0xFFFF
-                sbuf.append(hex[0xe0 | (ch >> 12)]);
-                sbuf.append(hex[0x80 | ((ch >> 6) & 0x3F)]);
-                sbuf.append(hex[0x80 | (ch & 0x3F)]);
+                stringBuilder.append(hex[0xe0 | (ch >> 12)]);
+                stringBuilder.append(hex[0x80 | ((ch >> 6) & 0x3F)]);
+                stringBuilder.append(hex[0x80 | (ch & 0x3F)]);
             }
         }
-        return sbuf.toString();
+        return stringBuilder.toString();
     }
 
     public static Object decode(String s) {
@@ -144,20 +177,20 @@ public class TransportCodec {
     public static String unescape(String s) {
         StringBuilder sbuf = new StringBuilder();
         int l = s.length();
-        int ch;
+        char ch;
         int b, sumb = 0;
         for (int i = 0, more = -1; i < l; i++) {
             /* Get next byte b from URL segment s */
             switch (ch = s.charAt(i)) {
                 case '%':
                     ch = s.charAt(++i);
-                    int hb = (Character.isDigit((char) ch)
+                    int hb = (Character.isDigit(ch)
                                     ? ch - '0'
-                                    : 10 + Character.toLowerCase((char) ch) - 'a') & 0xF;
+                                    : 10 + Character.toLowerCase(ch) - 'a') & 0xF;
                     ch = s.charAt(++i);
-                    int lb = (Character.isDigit((char) ch)
+                    int lb = (Character.isDigit(ch)
                                     ? ch - '0'
-                                    : 10 + Character.toLowerCase((char) ch) - 'a') & 0xF;
+                                    : 10 + Character.toLowerCase(ch) - 'a') & 0xF;
                     b = (hb << 4) | lb;
                     break;
                 case '+':

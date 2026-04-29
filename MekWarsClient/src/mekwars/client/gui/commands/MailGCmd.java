@@ -19,10 +19,10 @@ package mekwars.client.gui.commands;
 
 import java.io.Serial;
 
-import common.campaign.clientutils.protocol.TransportCodec;
-import common.util.StringUtils;
 import mekwars.client.MWClient;
+import mekwars.common.campaign.clientutils.protocol.TransportCodec;
 import mekwars.common.gui.GUIClientConfig;
+import mekwars.common.util.StringUtils;
 
 /**
  * Mail command

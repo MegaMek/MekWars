@@ -754,31 +754,6 @@ public final class MWClient extends GameHost implements IClient {
     private static void createLoggers() {
     }
 
-    public String createFilenameChecksum(String filename) throws Exception {
-        byte[] b = createChecksum(filename);
-        String result = "";
-        for (int i = 0; i < b.length; i++) {
-            result += Integer.toString((b[i] & 0xff) + 0x100, 16).substring(1);
-        }
-        return result;
-    }
-
-    public byte[] createChecksum(String filename) throws Exception {
-        java.io.InputStream fis = new java.io.FileInputStream(filename);
-
-        byte[] buffer = new byte[1024];
-        java.security.MessageDigest complete = java.security.MessageDigest.getInstance("MD5");
-        int numRead;
-        do {
-            numRead = fis.read(buffer);
-            if (numRead > 0) {
-                complete.update(buffer, 0, numRead);
-            }
-        } while (numRead != -1);
-        fis.close();
-        return complete.digest();
-    }
-
     /*
      * Actual GUI-mode parseData. Before we started streaming data over the chat
      * part, this was called directly. Now we buffer all incoming non-data chat
@@ -846,15 +821,6 @@ public final class MWClient extends GameHost implements IClient {
         return IgnorePrivate;
     }
 
-    public boolean hasKeyWords(String input) {
-        for (String currS : KeyWords) {
-            if (input.toLowerCase().indexOf(currS.toLowerCase()) > -1) {
-                return true;
-            }
-        }
-        return (false);
-    }
-
     public synchronized java.util.ArrayList<String> getPartialUser(String u) {
 
         String result = "";
@@ -898,6 +864,188 @@ public final class MWClient extends GameHost implements IClient {
 
     public void setBotsOnSameTeam(Boolean sameTeam) {
         botsOnSameTeam = sameTeam;
+    }
+
+    public void retrieveOpData(String type, String data) {
+
+        java.util.StringTokenizer st = new java.util.StringTokenizer(data, "#");
+
+        String opName = st.nextToken();
+
+        java.io.File opFile = new java.io.File("./data/operations/" + type);
+
+        if (!opFile.exists()) {
+            opFile.mkdirs();
+        }
+
+        opFile = new java.io.File("./data/operations/" + type + "/" + opName + ".txt");
+        try {
+            java.io.FileOutputStream out = new java.io.FileOutputStream(opFile);
+            java.io.PrintStream p = new java.io.PrintStream(out);
+            while (st.hasMoreTokens()) {
+                p.println(st.nextToken().replaceAll("\\(pound\\)", "#"));
+            }
+            p.close();
+            out.close();
+        } catch (Exception ex) {
+            MWLogger.errLog(ex);
+        }
+
+    }
+
+    public void updateParam(java.util.StringTokenizer ST) {
+        try {
+            getConfig().setParam(ST.nextToken(), ST.nextToken());
+            getConfig().saveConfig();
+            setConfig();
+        } catch (Exception ex) {
+            MWLogger.errLog(ex);
+        }
+    }
+
+    public void setServerOpFlags(java.util.StringTokenizer st) {
+        java.util.TreeMap<String, String> map = new java.util.TreeMap<String, String>();
+
+        try {
+            while (st.hasMoreTokens()) {
+                map.put(st.nextToken(), st.nextToken());
+            }
+            getData().getPlanetOpFlags().clear();
+            getData().getPlanetOpFlags().putAll(map);
+        } catch (Exception ex) {
+        }
+    }
+
+    public void updatePartsBlackMarket(String data, int year) {
+
+        java.util.StringTokenizer ST = new java.util.StringTokenizer(data, "#");
+        boolean allowTechCrossOver = Boolean.parseBoolean(this
+                                                                .getServerConfigs("AllowCrossOverTech"));
+        int houseTechLevel = getData().getHouseByName(getPlayer().getHouse())
+                                   .getTechLevel();
+
+        getCampaign().getBlackMarketParts().clear();
+
+        while (ST.hasMoreTokens()) {
+
+            BMEquipment bme = new BMEquipment();
+            boolean error = false;
+            boolean disallowed = false;
+            try {
+                error = false;
+                disallowed = false;
+                bme.setEquipmentInternalName(ST.nextToken());
+                bme.setAmount(Integer.parseInt(ST.nextToken()));
+                bme.setCost(Double.parseDouble(ST.nextToken()));
+                bme.setCostUp(Boolean.parseBoolean(ST.nextToken()));
+
+                bme.getTech(year);
+
+                if (!allowTechCrossOver
+                          && !UnitUtils
+                                    .isSameTech(bme.getTechLevel(), houseTechLevel)) {
+                    disallowed = true;
+                }
+            } catch (Exception e) {
+                // TODO Auto-generated catch block
+                MWLogger.errLog("Exception in Parts BM");
+                MWLogger.errLog(e.getLocalizedMessage());
+                error = true;
+            }
+
+            if (!error && !disallowed) {
+                getCampaign().getBlackMarketParts().put(
+                      bme.getEquipmentInternalName(), bme);
+            }
+        }
+
+        getMainFrame().getMainPanel().refreshBME();
+    }
+
+    public void updatePlayerPartsCache(String data) {
+
+        java.util.StringTokenizer ST = new java.util.StringTokenizer(data, "#");
+        String key = ST.nextToken();
+        int value = Integer.parseInt(ST.nextToken());
+
+        if (value < 1) {
+            getPlayer().getPartsCache().remove(key, Math.abs(value));
+        } else {
+            getPlayer().getPartsCache().add(key, value);
+        }
+
+        getMainFrame().getMainPanel().refreshBME();
+    }
+
+    public void retrieveMul(String data) {
+
+        java.util.StringTokenizer st = new java.util.StringTokenizer(data, "#");
+
+        String mulName = st.nextToken();
+
+        java.io.File mulFile = new java.io.File("./data/armies/");
+
+        if (!mulFile.exists()) {
+            mulFile.mkdirs();
+        }
+
+        mulFile = new java.io.File("./data/armies/" + mulName);
+        try {
+            java.io.FileOutputStream out = new java.io.FileOutputStream(mulFile);
+            java.io.PrintStream p = new java.io.PrintStream(out);
+            while (st.hasMoreTokens()) {
+                p.println(st.nextToken().replaceAll("\\(pound\\)", "#"));
+            }
+            p.close();
+            out.close();
+        } catch (Exception ex) {
+            MWLogger.errLog(ex);
+        }
+
+    }
+
+    public void createNewHouse(java.util.StringTokenizer st) {
+        House house = new House();
+
+        house.setId(TokenReader.readInt(st));
+        house.setName(TokenReader.readString(st));
+        house.setLogo(TokenReader.readString(st));
+        house.setBaseGunner(TokenReader.readInt(st));
+        house.setBasePilot(TokenReader.readInt(st));
+        house.setHouseColor(TokenReader.readString(st));
+        house.setHousePlayerColors(TokenReader.readString(st));
+        house.setAbbreviation(TokenReader.readString(st));
+        house.setConquerable(TokenReader.readBoolean(st));
+        house.setTechLevel(TokenReader.readInt(st));
+        house.setHouseDefectionFrom(TokenReader.readBoolean(st));
+        house.setHouseDefectionTo(TokenReader.readBoolean(st));
+        house.setUsedMekBayMultiplier(TokenReader.readFloat(st));
+        getData().addHouse(house);
+    }
+
+    public String createFilenameChecksum(String filename) throws Exception {
+        byte[] b = createChecksum(filename);
+        StringBuilder result = new StringBuilder();
+        for (byte value : b) {
+            result.append(Integer.toString((value & 0xff) + 0x100, 16).substring(1));
+        }
+        return result.toString();
+    }
+
+    public byte[] createChecksum(String filename) throws Exception {
+        java.io.InputStream fis = new java.io.FileInputStream(filename);
+
+        byte[] buffer = new byte[1024];
+        java.security.MessageDigest complete = java.security.MessageDigest.getInstance("MD5");
+        int numRead;
+        do {
+            numRead = fis.read(buffer);
+            if (numRead > 0) {
+                complete.update(buffer, 0, numRead);
+            }
+        } while (numRead != -1);
+        fis.close();
+        return complete.digest();
     }
 
     // IClient interface
@@ -2883,6 +3031,43 @@ public final class MWClient extends GameHost implements IClient {
         usingBots = using;
     }
 
+    public void addToChat(String s, int channelMail, String tabName) {
+
+        s = "<BODY  TEXT=\"" + Config.getParam("CHATFONTCOLOR")
+                  + "\" BGCOLOR=\"" + Config.getParam("BACKGROUNDCOLOR")
+                  + "\"><font size=\"" + Config.getParam("CHATFONTSIZE") + "\">"
+                  + s + "</font></BODY>";
+        // MWLogger.infoLog("String: "+s);
+        try {
+            javax.swing.SwingUtilities.invokeLater(new CAddToChat(this, s, channelMail, tabName));
+        } catch (Exception ex) {
+            MWLogger.errLog(ex);
+        }
+
+    }
+
+    public boolean hasKeyWords(String input) {
+        for (String currS : KeyWords) {
+            if (input.toLowerCase().indexOf(currS.toLowerCase()) > -1) {
+                return true;
+            }
+        }
+        return (false);
+    }
+
+    public void updateClient() {
+        try {
+            // this.stopHost();
+            goodbye();
+            Runtime runtime = Runtime.getRuntime();
+            String[] call = { "java", "-jar", "MekWarsAutoUpdate.jar", "PLAYER" };
+            runtime.exec(call);
+        } catch (Exception ex) {
+            MWLogger.errLog(ex);
+        }
+        System.exit(0);
+    }
+
     public java.util.Vector<String> getIgnored(int type) {
         if (type == IGNORE_PUBLIC) {
             return IgnorePublic;
@@ -2898,21 +3083,6 @@ public final class MWClient extends GameHost implements IClient {
 
     public void setGame(Game game) {
         this.game = game;
-    }
-
-    public void addToChat(String s, int channel, String tabName) {
-
-        s = "<BODY  TEXT=\"" + Config.getParam("CHATFONTCOLOR")
-                  + "\" BGCOLOR=\"" + Config.getParam("BACKGROUNDCOLOR")
-                  + "\"><font size=\"" + Config.getParam("CHATFONTSIZE") + "\">"
-                  + s + "</font></BODY>";
-        // MWLogger.infoLog("String: "+s);
-        try {
-            javax.swing.SwingUtilities.invokeLater(new CAddToChat(this, s, channel, tabName));
-        } catch (Exception ex) {
-            MWLogger.errLog(ex);
-        }
-
     }
 
     public void resetGame() { // reset hosted game
@@ -3290,18 +3460,15 @@ public final class MWClient extends GameHost implements IClient {
         return cost;
     }
 
-    public void setServerOpFlags(java.util.StringTokenizer st) {
-        java.util.TreeMap<String, String> map = new java.util.TreeMap<String, String>();
 
-        try {
-            while (st.hasMoreTokens()) {
-                map.put(st.nextToken(), st.nextToken());
-            }
-            getData().getPlanetOpFlags().clear();
-            getData().getPlanetOpFlags().putAll(map);
-        } catch (Exception ex) {
-        }
-    }
+    //@Salient ... ugh... how can i get to the damn house configs
+    //    public String getHouseConfigs(String key)
+    //    {
+    //    	//CampaignData.cd.ge
+    //    	SHouse house = CampaignData.cd.getHouseByName(this.getPlayer().getHouse());
+    //
+    //    	return CampaignData.cd.getServerConfigs().getProperty(key).trim();
+    //    }
 
     public int getTechLaborCosts(Entity unit, int techType) {
         int cost = 0;
@@ -3376,175 +3543,8 @@ public final class MWClient extends GameHost implements IClient {
         return cost;
     }
 
-    public void retrieveOpData(String type, String data) {
-
-        java.util.StringTokenizer st = new java.util.StringTokenizer(data, "#");
-
-        String opName = st.nextToken();
-
-        java.io.File opFile = new java.io.File("./data/operations/" + type);
-
-        if (!opFile.exists()) {
-            opFile.mkdirs();
-        }
-
-        opFile = new java.io.File("./data/operations/" + type + "/" + opName + ".txt");
-        try {
-            java.io.FileOutputStream out = new java.io.FileOutputStream(opFile);
-            java.io.PrintStream p = new java.io.PrintStream(out);
-            while (st.hasMoreTokens()) {
-                p.println(st.nextToken().replaceAll("\\(pound\\)", "#"));
-            }
-            p.close();
-            out.close();
-        } catch (Exception ex) {
-            MWLogger.errLog(ex);
-        }
-
-    }
-
-    public void retrieveMul(String data) {
-
-        java.util.StringTokenizer st = new java.util.StringTokenizer(data, "#");
-
-        String mulName = st.nextToken();
-
-        java.io.File mulFile = new java.io.File("./data/armies/");
-
-        if (!mulFile.exists()) {
-            mulFile.mkdirs();
-        }
-
-        mulFile = new java.io.File("./data/armies/" + mulName);
-        try {
-            java.io.FileOutputStream out = new java.io.FileOutputStream(mulFile);
-            java.io.PrintStream p = new java.io.PrintStream(out);
-            while (st.hasMoreTokens()) {
-                p.println(st.nextToken().replaceAll("\\(pound\\)", "#"));
-            }
-            p.close();
-            out.close();
-        } catch (Exception ex) {
-            MWLogger.errLog(ex);
-        }
-
-    }
-
-    public void updateParam(java.util.StringTokenizer ST) {
-        try {
-            getConfig().setParam(ST.nextToken(), ST.nextToken());
-            getConfig().saveConfig();
-            setConfig();
-        } catch (Exception ex) {
-            MWLogger.errLog(ex);
-        }
-    }
-
     public Server getMyServer() {
         return myServer;
-    }
-
-    public void updatePartsBlackMarket(String data, int year) {
-
-        java.util.StringTokenizer ST = new java.util.StringTokenizer(data, "#");
-        boolean allowTechCrossOver = Boolean.parseBoolean(this
-                                                                .getServerConfigs("AllowCrossOverTech"));
-        int houseTechLevel = getData().getHouseByName(getPlayer().getHouse())
-                                   .getTechLevel();
-
-        getCampaign().getBlackMarketParts().clear();
-
-        while (ST.hasMoreTokens()) {
-
-            BMEquipment bme = new BMEquipment();
-            boolean error = false;
-            boolean disallowed = false;
-            try {
-                error = false;
-                disallowed = false;
-                bme.setEquipmentInternalName(ST.nextToken());
-                bme.setAmount(Integer.parseInt(ST.nextToken()));
-                bme.setCost(Double.parseDouble(ST.nextToken()));
-                bme.setCostUp(Boolean.parseBoolean(ST.nextToken()));
-
-                bme.getTech(year);
-
-                if (!allowTechCrossOver
-                          && !UnitUtils
-                                    .isSameTech(bme.getTechLevel(), houseTechLevel)) {
-                    disallowed = true;
-                }
-            } catch (Exception e) {
-                // TODO Auto-generated catch block
-                MWLogger.errLog("Exception in Parts BM");
-                MWLogger.errLog(e.getLocalizedMessage());
-                error = true;
-            }
-
-            if (!error && !disallowed) {
-                getCampaign().getBlackMarketParts().put(
-                      bme.getEquipmentInternalName(), bme);
-            }
-        }
-
-        getMainFrame().getMainPanel().refreshBME();
-    }
-
-    public void updatePlayerPartsCache(String data) {
-
-        java.util.StringTokenizer ST = new java.util.StringTokenizer(data, "#");
-        String key = ST.nextToken();
-        int value = Integer.parseInt(ST.nextToken());
-
-        if (value < 1) {
-            getPlayer().getPartsCache().remove(key, Math.abs(value));
-        } else {
-            getPlayer().getPartsCache().add(key, value);
-        }
-
-        getMainFrame().getMainPanel().refreshBME();
-    }
-
-
-    //@Salient ... ugh... how can i get to the damn house configs
-    //    public String getHouseConfigs(String key)
-    //    {
-    //    	//CampaignData.cd.ge
-    //    	SHouse house = CampaignData.cd.getHouseByName(this.getPlayer().getHouse());
-    //
-    //    	return CampaignData.cd.getServerConfigs().getProperty(key).trim();
-    //    }
-
-    public void updateClient() {
-        try {
-            // this.stopHost();
-            goodbye();
-            Runtime runtime = Runtime.getRuntime();
-            String[] call = { "java", "-jar", "MekWarsAutoUpdate.jar", "PLAYER" };
-            runtime.exec(call);
-        } catch (Exception ex) {
-            MWLogger.errLog(ex);
-        }
-        System.exit(0);
-    }
-
-    public void createNewHouse(java.util.StringTokenizer st) {
-        House house = new House();
-
-        house.setId(TokenReader.readInt(st));
-        house.setName(TokenReader.readString(st));
-        house.setLogo(TokenReader.readString(st));
-        house.setBaseGunner(TokenReader.readInt(st));
-        house.setBasePilot(TokenReader.readInt(st));
-        house.setHouseColor(TokenReader.readString(st));
-        house.setHousePlayerColors(TokenReader.readString(st));
-        house.setAbbreviation(TokenReader.readString(st));
-        house.setConquerable(TokenReader.readBoolean(st));
-        house.setTechLevel(TokenReader.readInt(st));
-        house.setHouseDefectionFrom(TokenReader.readBoolean(st));
-        house.setHouseDefectionTo(TokenReader.readBoolean(st));
-        house.setUsedMekBayMultiplier(TokenReader.readFloat(st));
-        getData().addHouse(house);
     }
 
     /**

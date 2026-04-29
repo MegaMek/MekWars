@@ -1,23 +1,46 @@
 /*
- * MekWars - Copyright (C) 2005
+ * Copyright (C) 2005 - nmorris (urgru@users.sourceforge.net)
+ * Copyright (C) 2026 The MegaMek Team. All Rights Reserved.
  *
- * Original author - nmorris (urgru@users.sourceforge.net)
+ * This file is part of MekWars.
  *
- * This program is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software
- * Foundation; either version 2 of the License, or (at your option) any later version.
+ * MekWars is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License (GPL),
+ * version 3 or (at your option) any later version,
+ * as published by the Free Software Foundation.
  *
- * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
- * A PARTICULAR PURPOSE. See the GNU General Public License for more details.
+ * MekWars is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty
+ * of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU General Public License for more details.
+ *
+ * A copy of the GPL should have been included with this project;
+ * if not, see <https://www.gnu.org/licenses/>.
+ *
+ * NOTICE: The MegaMek organization is a non-profit group of volunteers
+ * creating free software for the BattleTech community.
+ *
+ * MechWarrior, BattleMech, `Mech and AeroTech are registered trademarks
+ * of The Topps Company, Inc. All Rights Reserved.
+ *
+ * Catalyst Game Labs and the Catalyst Game Labs logo are trademarks of
+ * InMediaRes Productions, LLC.
+ *
+ * MechWarrior Copyright Microsoft Corporation. MekWars was created under
+ * Microsoft's "Game Content Usage Rules"
+ * <https://www.xbox.com/en-US/developers/rules> and it is not endorsed by or
+ * affiliated with Microsoft.
  */
 
+
 /*
- * A set of default values for an Operation. If an Operation does not have a value specified for a paramater, the default is used.
+ * A set of default values for an Operation. If an Operation does not have a value specified for a parameter, the default is used.
  *
  * DefaultOperation is useful in several ways:
  *
- * First, it makes Ops fault tolerant. Typos may very well break results, but at least they won't crash a server.
+ * First, it makes Ops fault-tolerant. Typos may very well break results, but at least they won't crash a server.
  *
- * Second, makes adding new paramaters much simpler. So long as new params are added such that they have no impact on Operations (eg- default to disuse),
+ * Second, makes adding new parameters much simpler. So long as new params are added such that they have no impact on Operations (eg- default to disuse),
  * running servers can load new versions without updating/expanding their Operations datasets.
  *
  * NOTE: Defaults stored in a TreeMap, -not- a hash.

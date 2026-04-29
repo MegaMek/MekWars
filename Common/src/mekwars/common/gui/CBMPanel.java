@@ -16,11 +16,12 @@
 
 package mekwars.common.gui;
 
-import client.gui.dialog.SellUnitDialog;
-import common.util.MWLogger;
-import common.util.SpringLayoutHelper;
-import megamek.client.ui.swing.unitDisplay.UnitDisplay;
-import megamek.common.Entity;
+import megamek.common.units.Entity;
+import mekwars.common.campaign.CBMUnit;
+import mekwars.common.campaign.CCampaign;
+import mekwars.common.gui.dialogs.SellUnitDialog;
+import mekwars.common.util.MWLogger;
+import mekwars.common.util.SpringLayoutHelper;
 
 /**
  * Black Market Panel
@@ -55,9 +56,9 @@ public class CBMPanel extends javax.swing.JPanel {
     private boolean factionBidsAllowed = true;
     private boolean hideBMUnits;
 
-    private client.campaign.CCampaign theCampaign;
+    private CCampaign theCampaign;
     private java.awt.GridBagConstraints gridBagConstraints;
-    private client.campaign.CBMUnit mm;
+    private CBMUnit mm;
 
     public CBMPanel(client.MWClient client) {
         setLayout(new java.awt.GridBagLayout());

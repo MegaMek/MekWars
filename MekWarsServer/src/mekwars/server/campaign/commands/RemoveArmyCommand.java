@@ -17,6 +17,8 @@
 package mekwars.server.campaign.commands;
 
 
+import mekwars.server.campaign.SPlayer;
+
 public class RemoveArmyCommand implements Command {
 
     int accessLevel = 0;
@@ -37,7 +39,7 @@ public class RemoveArmyCommand implements Command {
         }
 
         //get the player
-        server.campaign.SPlayer p = server.campaign.CampaignMain.cm.getPlayer(Username);
+        SPlayer p = server.campaign.CampaignMain.cm.getPlayer(Username);
 
         if (p == null) {
             server.campaign.CampaignMain.cm.toUser(

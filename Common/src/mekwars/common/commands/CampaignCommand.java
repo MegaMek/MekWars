@@ -1,4 +1,6 @@
 /*
+ * Derived from MegaMekNET (http://www.sourceforge.net/projects/megamek)
+ * Copyright (C) 2004 Helge Richter (McWizard)
  * Copyright (C) 2026 The MegaMek Team. All Rights Reserved.
  *
  * This file is part of MekWars.
@@ -30,54 +32,55 @@
  * <https://www.xbox.com/en-US/developers/rules> and it is not endorsed by or
  * affiliated with Microsoft.
  */
-package mekwars.common.campaign.clientutils;
 
-import javax.swing.ImageIcon;
+package mekwars.common.commands;
 
-public interface IClientConfig {
+import mekwars.common.campaign.clientutils.protocol.IClient;
 
-    String CONFIG_FILE = "./data/mwconfig.txt";
-    String CONFIG_BACKUP_FILE = "./data/mwconfig.txt.bak";
-
-    // Creates a new config file
-    /*
-     * All this does ATM is create an empty mwconfig.txt. Lines commented out
-     * are old MMNET options that the client code supports, but which are not
-     * presented to the user in the MekWars client GUI. The vast majority are
-     * totally unused because the players don't know about them. Over time, the
-     * options will be made public or removed.
-     */
-    void createConfig();
+/**
+ * @author Imi (immanuel.scholz@gmx.de)
+ */
+public class CampaignCommand extends Command {
 
     /**
-     * Get a config value.
+     *
      */
-    String getParam(String param);
+    public CampaignCommand(IClient client) {
+        super(client);
+    }
 
     /**
-     * Set a config value.
+     * @see Command#execute(String)
      */
-    void setParam(String param, String value);
+    @Override
+    public void execute(String input) {
+        client.getCampaign().decodeCommand(input);
+        client.refreshGUI(IClient.REFRESH_HQ_PANEL);
+        client.refreshGUI(IClient.REFRESH_PLAYER_PANEL);
+        client.refreshGUI(IClient.REFRESH_BM_PANEL);
+    }
 
     /**
-     * See if a parameter is enabled (YES, TRUE or ON).
+     *
      */
-    boolean isParam(String param);
+    @Override
+    public void parseReplyArgs(String s) {
+
+    }
 
     /**
-     * Return the int value of a given config property. Return a 0 if the property is a non-number. Used mostly by the
-     * misc. mail tab checks.
+     *
      */
-    int getIntParam(String param);
+    @Override
+    public void setClient(IClient client) {
+
+    }
 
     /**
-     * Write the config file out to ./data/mwconfig.txt.
+     *
      */
-    void saveConfig();
+    @Override
+    public void parseArguments(String s) {
 
-    ImageIcon getImage(String repair);
-
-    boolean isUsingStatusIcons();
-
-    void loadImage(String s, String camo, int i, int i1);
+    }
 }

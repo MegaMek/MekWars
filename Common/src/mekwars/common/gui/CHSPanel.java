@@ -17,20 +17,17 @@
 
 package mekwars.common.gui;
 
-import common.House;
-import common.Unit;
-import common.UnitFactory;
-import common.util.MWLogger;
-import common.util.SpringLayoutHelper;
-import common.util.UnitUtils;
 import megamek.client.generator.RandomGenderGenerator;
-import megamek.client.ui.swing.unitDisplay.UnitDisplay;
-import megamek.common.CrewType;
-import megamek.common.Entity;
-import megamek.common.Infantry;
-import mekwars.client.gui.HSMek;
-import mekwars.client.gui.MMNetHyperLinkListener;
-import mekwars.client.gui.MyHTMLEditorKit;
+import megamek.common.units.CrewType;
+import megamek.common.units.Infantry;
+import mekwars.common.House;
+import mekwars.common.Unit;
+import mekwars.common.UnitFactory;
+import mekwars.common.campaign.CCampaign;
+import mekwars.common.campaign.CPlayer;
+import mekwars.common.util.MWLogger;
+import mekwars.common.util.SpringLayoutHelper;
+import mekwars.common.util.UnitUtils;
 
 /**
  * SHouse Status Panel
@@ -42,9 +39,9 @@ public class CHSPanel extends javax.swing.JPanel {
      *
      */
     private static final long serialVersionUID = -6985292870326367798L;
-    client.MWClient mwclient;
-    client.campaign.CPlayer thePlayer;
-    client.campaign.CCampaign theCampaign;
+    MWClient mwclient;
+    CPlayer thePlayer;
+    CCampaign theCampaign;
     javax.swing.JEditorPane mainPane = new javax.swing.JEditorPane();
     javax.swing.JScrollPane scrollPane = new javax.swing.JScrollPane();
     MyHTMLEditorKit kit = new MyHTMLEditorKit();

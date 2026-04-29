@@ -16,8 +16,9 @@
 
 package mekwars.common.gui;
 
-import common.BMEquipment;
-import common.util.SpringLayoutHelper;
+import mekwars.common.BMEquipment;
+import mekwars.common.campaign.CCampaign;
+import mekwars.common.util.SpringLayoutHelper;
 
 /**
  * Black Market Parts Panel
@@ -42,7 +43,7 @@ public class CBMPartsPanel extends javax.swing.JPanel {
     private javax.swing.JPanel spacingPanel1 = new javax.swing.JPanel();
     private javax.swing.JPanel spacingPanel3 = new javax.swing.JPanel();
 
-    private client.campaign.CCampaign theCampaign;
+    private CCampaign theCampaign;
     private java.awt.GridBagConstraints gridBagConstraints;
     private BMEquipment bme;
 

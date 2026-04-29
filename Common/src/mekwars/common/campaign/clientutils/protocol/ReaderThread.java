@@ -1,33 +1,45 @@
 /*
- * Copyright (c) 2000 Lyrisoft Solutions, Inc.
- * Used by permission
+ * Copyright (C) 2000 Lyrisoft Solutions, Inc. - Used by permission.
+ * Copyright (C) 2005 - Torren (torren@users.sourceforge.net)
+ * Copyright (C) 2026 The MegaMek Team. All Rights Reserved.
+ *
+ * This file is part of MekWars.
+ *
+ * MekWars is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License (GPL),
+ * version 3 or (at your option) any later version,
+ * as published by the Free Software Foundation.
+ *
+ * MekWars is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty
+ * of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU General Public License for more details.
+ *
+ * A copy of the GPL should have been included with this project;
+ * if not, see <https://www.gnu.org/licenses/>.
+ *
+ * NOTICE: The MegaMek organization is a non-profit group of volunteers
+ * creating free software for the BattleTech community.
+ *
+ * MechWarrior, BattleMech, `Mech and AeroTech are registered trademarks
+ * of The Topps Company, Inc. All Rights Reserved.
+ *
+ * Catalyst Game Labs and the Catalyst Game Labs logo are trademarks of
+ * InMediaRes Productions, LLC.
+ *
+ * MechWarrior Copyright Microsoft Corporation. MekWars was created under
+ * Microsoft's "Game Content Usage Rules"
+ * <https://www.xbox.com/en-US/developers/rules> and it is not endorsed by or
+ * affiliated with Microsoft.
  */
-/*
- * MekWars - Copyright (C) 2005
- *
- * Original author - Torren (torren@users.sourceforge.net)
- *
- * This program is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License as published by the Free
- * Software Foundation; either version 2 of the License, or (at your option)
- * any later version.
- *
- * This program is distributed in the hope that it will be useful, but
- * WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
- * or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License
- * for more details.
- */
+
 
 /*
  * Derived from NFCChat, a GPL chat client/server.
  * Original code can be found @ http://nfcchat.sourceforge.net
  * Our thanks to the original authors.
  */
-/**
- *
- * @author Torren (Jason Tighe) 11.5.05
- *
- */
+
 package mekwars.common.campaign.clientutils.protocol;
 
 import java.io.BufferedReader;
@@ -79,11 +91,6 @@ public class ReaderThread extends Thread {
             while (keepGoing) {
 
                 newLine = readLine();
-                if (newLine == null) {
-                    pleaseStop();
-                    continue;
-                }
-
                 if (_listener != null) {
 
                     if (newLine.startsWith(IClient.DEFLATED)) {
@@ -99,11 +106,11 @@ public class ReaderThread extends Thread {
                     }
 
                     //else
-                    ConnectionHandlerLocal.DEBUG("< " + newLine);
+                    ConnectionHandlerLocal.DEBUG(STR."< \{newLine}");
                     _listener.incomingMessage(newLine);
 
                 } else {
-                    MWLogger.errLog("Null listener: " + newLine);
+                    MWLogger.errLog(STR."Null listener: \{newLine}");
                 }
             }
             MWLogger.errLog("ReaderThread: stopping gracefully.");
@@ -132,10 +139,6 @@ public class ReaderThread extends Thread {
         } catch (Exception e) {
             throw new IOException();
         }
-    }
-
-    public void pleaseStop() {
-        keepGoing = false;
     }
 
     /**
@@ -169,7 +172,7 @@ public class ReaderThread extends Thread {
         int totalRead = 0;
         while (totalRead < size) {
             totalRead += _sis.read(compressedBytes, totalRead, size - totalRead);
-            ConnectionHandlerLocal.DEBUG("< Read " + totalRead + " of " + size);
+            ConnectionHandlerLocal.DEBUG(STR."< Read \{totalRead} of \{size}");
         }
 
         inflater.reset();
@@ -179,8 +182,12 @@ public class ReaderThread extends Thread {
         BufferedReader br = new BufferedReader(new InputStreamReader(new ByteArrayInputStream(rawBytes, 0, textLength),
               StandardCharsets.UTF_8));
         while ((command = br.readLine()) != null) {
-            ConnectionHandlerLocal.DEBUG("< inflated: " + command);
+            ConnectionHandlerLocal.DEBUG(STR."< inflated: \{command}");
             _listener.incomingMessage(command);
         }
+    }
+
+    public void pleaseStop() {
+        keepGoing = false;
     }
 }

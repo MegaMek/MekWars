@@ -1,19 +1,38 @@
 /*
- * MekWars - Copyright (C) 2014
- *
  * Derived from MegaMekNET (http://www.sourceforge.net/projects/megamek)
- * Original author Helge Richter (McWizard)
+ * Copuright (C) 2014 Helge Richter (McWizard)
+ * Copyright (C) 2026 The MegaMek Team. All Rights Reserved.
  *
- * This program is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License as published by the Free
- * Software Foundation; either version 2 of the License, or (at your option)
- * any later version.
+ * This file is part of MekWars.
  *
- * This program is distributed in the hope that it will be useful, but
- * WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
- * or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License
- * for more details.
+ * MekWars is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License (GPL),
+ * version 3 or (at your option) any later version,
+ * as published by the Free Software Foundation.
+ *
+ * MekWars is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty
+ * of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU General Public License for more details.
+ *
+ * A copy of the GPL should have been included with this project;
+ * if not, see <https://www.gnu.org/licenses/>.
+ *
+ * NOTICE: The MegaMek organization is a non-profit group of volunteers
+ * creating free software for the BattleTech community.
+ *
+ * MechWarrior, BattleMech, `Mech and AeroTech are registered trademarks
+ * of The Topps Company, Inc. All Rights Reserved.
+ *
+ * Catalyst Game Labs and the Catalyst Game Labs logo are trademarks of
+ * InMediaRes Productions, LLC.
+ *
+ * MechWarrior Copyright Microsoft Corporation. MekWars was created under
+ * Microsoft's "Game Content Usage Rules"
+ * <https://www.xbox.com/en-US/developers/rules> and it is not endorsed by or
+ * affiliated with Microsoft.
  */
+
 
 package mekwars.common.commands;
 
@@ -52,7 +71,7 @@ public class OperationCommand extends Command {
                 java.util.Properties properties = (java.util.Properties) xml.fromXML(stringTokenizer.nextToken());
                 Operation operation = new Operation(name, new DefaultOperation(), properties);
                 String folder = "./data/operations/xml";
-                String fileName = name + ".xml";
+                String fileName = STR."\{name}.xml";
                 operation.writeToXmlFile(folder, fileName);
                 break;
             case "view":
@@ -73,39 +92,34 @@ public class OperationCommand extends Command {
                     // No, we do not.
                     // Write it out. Since we don't know if we're synced up
                     // locally, pull *all* operations
-                    java.io.FileWriter fw = null;
+
+                    java.io.FileWriter fw;
+
                     try {
                         fw = new java.io.FileWriter(md5File);
-                    } catch (java.io.IOException e1) {
-                        // TODO Auto-generated catch block
-                        e1.printStackTrace();
-                    }
-                    for (String key : serverMd5s.keySet()) {
-                        try {
-                            fw.write(key + "#" + serverMd5s.get(key) + "\n");
-                        } catch (java.io.IOException e) {
-                            // TODO Auto-generated catch block
-                            e.printStackTrace();
+                        for (String key : serverMd5s.keySet()) {
+                            fw.write(STR."\{key}#\{serverMd5s.get(key)}\n");
                         }
-                    }
-                    try {
                         fw.close();
                     } catch (java.io.IOException e) {
                         // TODO Auto-generated catch block
                         e.printStackTrace();
                     }
+
                     // Delete all local op xmls
                     java.io.File dir = new java.io.File("./data/operations/xml");
                     if (dir.exists()) {
                         String[] fileList = dir.list();
-                        for (String s : fileList) {
-                            if (s.endsWith(".xml")) {
-                                java.io.File file = new java.io.File(dir + "/" + s);
-                                file.delete();
+                        if (fileList != null) {
+                            for (String s : fileList) {
+                                if (s.endsWith(".xml")) {
+                                    java.io.File file = new java.io.File(STR."\{dir}/\{s}");
+                                    file.delete();
+                                }
                             }
                         }
                     }
-                    client.sendChat(client.MWClient.CAMPAIGN_PREFIX + "getops getall");
+                    client.sendChat(STR."\{IClient.CAMPAIGN_PREFIX}getops getall");
                     return;
                 } else {
                     // We *do* have the file.  Check the contents.
@@ -133,24 +147,16 @@ public class OperationCommand extends Command {
                     // If opsToGet is populated, then our MD5 file is wrong.
                     // Write out a new one
                     if (!opsToGet.isEmpty()) {
-                        java.io.FileWriter fw = null;
+                        java.io.FileWriter fw;
                         try {
                             fw = new java.io.FileWriter(md5File);
-                        } catch (java.io.IOException e1) {
-                            // TODO Auto-generated catch block
-                            e1.printStackTrace();
-                        }
 
-                        for (String key : serverMd5s.keySet()) {
-                            try {
-                                fw.write(key + "#" + serverMd5s.get(key) + "\n");
-                            } catch (java.io.IOException e) {
-                                // TODO Auto-generated catch block
-                                e.printStackTrace();
+                            for (String key : serverMd5s.keySet()) {
+                                fw.write(STR."""
+\{key}#\{serverMd5s.get(key)}
+""");
                             }
-                        }
 
-                        try {
                             fw.close();
                         } catch (java.io.IOException e) {
                             // TODO Auto-generated catch block
@@ -162,11 +168,13 @@ public class OperationCommand extends Command {
                     java.io.File dir = new java.io.File("./data/operations/xml");
                     if (dir.exists()) {
                         String[] fileList = dir.list();
-                        for (String s : fileList) {
-                            if (s.endsWith(".xml")) {
-                                if (!opsToTest.contains(s.replace(".xml", ""))) {
-                                    java.io.File file = new java.io.File(dir + "/" + s);
-                                    file.delete();
+                        if (fileList != null) {
+                            for (String s : fileList) {
+                                if (s.endsWith(".xml")) {
+                                    if (!opsToTest.contains(s.replace(".xml", ""))) {
+                                        java.io.File file = new java.io.File(STR."\{dir}/\{s}");
+                                        file.delete();
+                                    }
                                 }
                             }
                         }
@@ -175,11 +183,11 @@ public class OperationCommand extends Command {
                     // Now, check that files that should exist do
                     if (!dir.exists()) {
                         // The xml dir doesn't exist.  Obviously we need to get everything
-                        client.sendChat(client.MWClient.CAMPAIGN_PREFIX + "getops getall");
+                        client.sendChat(STR."\{IClient.CAMPAIGN_PREFIX}getops getall");
                         return;
                     } else {
                         for (String opName : opsToTest) {
-                            java.io.File file = new java.io.File(dir + "/" + opName + ".xml");
+                            java.io.File file = new java.io.File(STR."\{dir}/\{opName}.xml");
                             if (!file.exists()) {
                                 opsToGet.add(opName);
                             }
@@ -203,16 +211,16 @@ public class OperationCommand extends Command {
                                 sb.append(opName);
                                 first = false;
                             } else {
-                                sb.append("#" + opName);
+                                sb.append("#").append(opName);
                             }
                         }
+
                         // Now, request these
-                        //JOptionPane.showMessageDialog(null, opsToGet);
-                        client.sendChat(client.MWClient.CAMPAIGN_PREFIX + "getops getsome#" + sb.toString());
+                        client.sendChat(STR."\{IClient.CAMPAIGN_PREFIX}getops getsome#\{sb.toString()}");
                     } else {
                         // Our ops are good
-                        ojd = new client.gui.dialog.opviewer.OperationViewerDialog(client.getMainFrame(), client);
-                        new Thread(ojd).run();
+                        ojd = new OperationViewerDialog(client.getMainFrame(), client);
+                        new Thread(ojd).start();
                     }
                 }
                 break;
@@ -228,7 +236,7 @@ public class OperationCommand extends Command {
      */
     @Override
     public void parseReplyArgs(String s) {
-        
+
     }
 
     /**

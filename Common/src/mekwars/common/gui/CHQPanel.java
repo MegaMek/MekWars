@@ -12,6 +12,8 @@
 
 package mekwars.common.gui;
 
+import java.io.Serial;
+
 import megamek.common.units.Infantry;
 import mekwars.common.Army;
 import mekwars.common.Unit;
@@ -37,12 +39,10 @@ import mekwars.common.util.UnitUtils;
 
 public class CHQPanel extends javax.swing.JPanel {
 
-    /**
-     *
-     */
+    @Serial
     private static final long serialVersionUID = -5137503055464771160L;
     public mekwars.common.gui.CHQPanel.MekTableModel MekTable;
-    protected mekwars.common.gui.CHQPanel.MechTableMouseAdapter mouseAdapter;
+    protected MekTableMouseAdapter mouseAdapter;
     IClient mwclient;
     client.campaign.CPlayer Player;
 
@@ -3311,10 +3311,8 @@ public class CHQPanel extends javax.swing.JPanel {
                     boolean useOpRule = Boolean.parseBoolean(mwclient.getserverConfigs("UseOperationsRule"));
                     String modifiedBV = "";
                     if (useOpRule && (army.getOpForceSize() < army.getUnits().size()) && (army.getOpForceSize() > 0)) {
-                        modifiedBV = "(" +
-                                           Long.toString(Math.round((army.getBV() *
-                                                                           army.forceSizeModifier(army.getOpForceSize())))) +
-                                           ")";
+                        modifiedBV = STR."(\{Math.round((army.getBV() *
+                                                               army.forceSizeModifier(army.getOpForceSize())))})";
                     }
 
                     toReturn += "BV: " + army.getBV() + modifiedBV + "<br>" + range + "</center>";
@@ -3326,7 +3324,7 @@ public class CHQPanel extends javax.swing.JPanel {
                     }
 
                     // Put in the tonnage info
-                    toReturn += "Tons: " + (int) army.getTotalTonnage() + "<br>";
+                    toReturn += "Tons: " + army.getTotalTonnage() + "<br>";
                     //toReturn += army.getSkillInfoForDisplay();
                     toReturn += "</HTML>";
                     return toReturn;

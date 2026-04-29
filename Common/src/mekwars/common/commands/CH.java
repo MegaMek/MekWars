@@ -1,18 +1,36 @@
 /*
- * MekWars - Copyright (C) 2004
- *
  * Derived from MegaMekNET (http://www.sourceforge.net/projects/megamek)
- * Original author Helge Richter (McWizard)
+ * Copyright (C) 2004 Helge Richter (McWizard)
+ * Copyright (C) 2026 The MegaMek Team. All Rights Reserved.
  *
- * This program is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License as published by the Free
- * Software Foundation; either version 2 of the License, or (at your option)
- * any later version.
+ * This file is part of MekWars.
  *
- * This program is distributed in the hope that it will be useful, but
- * WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
- * or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License
- * for more details.
+ * MekWars is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License (GPL),
+ * version 3 or (at your option) any later version,
+ * as published by the Free Software Foundation.
+ *
+ * MekWars is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty
+ * of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU General Public License for more details.
+ *
+ * A copy of the GPL should have been included with this project;
+ * if not, see <https://www.gnu.org/licenses/>.
+ *
+ * NOTICE: The MegaMek organization is a non-profit group of volunteers
+ * creating free software for the BattleTech community.
+ *
+ * MechWarrior, BattleMech, `Mech and AeroTech are registered trademarks
+ * of The Topps Company, Inc. All Rights Reserved.
+ *
+ * Catalyst Game Labs and the Catalyst Game Labs logo are trademarks of
+ * InMediaRes Productions, LLC.
+ *
+ * MechWarrior Copyright Microsoft Corporation. MekWars was created under
+ * Microsoft's "Game Content Usage Rules"
+ * <https://www.xbox.com/en-US/developers/rules> and it is not endorsed by or
+ * affiliated with Microsoft.
  */
 
 package mekwars.common.commands;
@@ -72,12 +90,153 @@ public class CH extends Command {
                 uncoloredName = name;
 
                 // only proceed if player isn't muted
-                CUser user = client.getUser(name);
+                CUser user = (CUser) client.getUser(name);
                 if (user.isInvisible() && (user.getUserLevel() > client.getUser(client.getUsername()).getUserLevel())) {
                     isInvisible = true;
                 }
 
                 if (!client.isIgnored(name, IClient.IGNORE_HOUSE) || isModMail) {
+
+                    if (!isInvisible) {
+
+                        // faction letter
+                        addon = user.getAddon();
+
+                        // user's colour
+                        usercolor = user.getHtmlColor(); // Get the Color
+
+                        // draw a faction color from the datafeed
+                        if ((user.getHouse().length() > 1) &&
+                                  (client.getData().getHouseByName(user.getHouse()) != null)) {
+                            factioncolor = client.getData().getHouseByName(user.getHouse()).getHouseColor();
+                        } else {
+                            factioncolor = defaultColor;
+                        }
+
+                    } else {
+                        usercolor = defaultColor;
+                        factioncolor = defaultColor;
+                        addon = "";
+                        name = "Someone";
+                    }
+
+                    /*
+                     * Set up colors. Sadly, all the color code is extremely duplicative, but a necessary evil ATM
+                     * since the messages come in with wildly different formatting. Should consider rewriting the
+                     * messages to standardize things like name placement and headers.
+                     */
+
+                    if (Boolean.parseBoolean(client.getConfigParam("INVERTCHATCOLOR"))) {
+                        factioncolor = StringUtils.color2html(StringUtils.invertColor(StringUtils.html2Color(
+                              factioncolor)));
+                        usercolor = StringUtils.color2html(StringUtils.invertColor(StringUtils.html2Color(usercolor)));
+                    }
+
+                    String colorSetting = client.getConfig().getParam("PLAYERCHATCOLORMODE").toLowerCase();
+                    if (colorSetting.equals("factionadd") || colorSetting.equals("factionall")) {
+                        addon = addon.isEmpty() ?
+                                      "" :
+                                      STR." <b><font color=\"\{factioncolor}\" size=\"\{fontSize}\">[\{addon}]</b></font>";
+                    } else {
+                        addon = addon.isEmpty() ?
+                                      "" :
+                                      STR." <b><font color=\"\{usercolor}\" size=\"\{fontSize}\">[\{addon}]</b></font>";
+                    }
+
+                    if (colorSetting.equals("factionname") || colorSetting.equals("factionall")) {
+                        name = name.isEmpty() ?
+                                     "" :
+                                     STR." <b><font color=\"\{factioncolor}\" size=\"\{fontSize}\">\{name}</b></font>";
+                    } else {
+                        name = name.isEmpty() ?
+                                     "" :
+                                     STR." <b><font color=\"\{usercolor}\" size=\"\{fontSize}\">\{name}</b></font>";
+                    }
+
+                    // load the message
+                    message = new StringBuilder(nextString.substring(nextString.indexOf(":") + 1).trim());
+                    while (ST.hasMoreTokens()) {
+                        message.append("|").append(ST.nextToken());
+                    }
+
+                    // faction mail emote. [does this work server side? never seen it used.]
+                    if (message.toString().startsWith("#me")) {
+                        if (client.getConfig().isParam("COLOREDEMOTES")) {
+                            message = new StringBuilder(STR."*** \{name}\{message.substring(3)}");
+                        } else {
+                            message = new StringBuilder(STR."*** \{uncoloredName}\{message.substring(3)}");
+                        }
+                        message = new StringBuilder(STR."<font size=\"\{fontSize}\">\{message}</font>");
+                    }
+
+                    // normal faction mail message
+                    else {
+                        message = new StringBuilder(STR."<font size=\"\{fontSize}\">\{message}</font>");
+                        message = new StringBuilder(STR."\{name}\{addon}<b>:</b> \{message.toString().trim()}");
+                    }
+
+                    // if the user wants to, remove any img tags
+                    if (client.getConfig().isParam("NOIMGINCHAT")) {
+
+                        int start = message.toString().toLowerCase().indexOf("<img");
+                        int finish = -1;
+
+                        if (start != -1) {
+                            finish = message.indexOf(">", start);
+                        }
+
+                        if ((start != -1) && (finish != -1)) {
+                            String firstHalf = message.substring(0, start);
+                            String secondHalf = message.substring(finish + 1, message.length());
+
+                            message = new StringBuilder(STR."\{firstHalf}(img blocked)\{secondHalf}");
+                        }
+                    }
+
+                    // add timestamp
+                    if (client.getConfig().isParam("TIMESTAMP")) {
+                        message.insert(0, client.getShortTime());
+                    }
+
+                    if (isModMail) {
+                        client.addToChat(message.toString(), CCommPanel.CHANNEL_MOD);
+                        // also add to main, if configured to do so
+                        if (client.getConfig().isParam("MAINCHANNELMM")) {
+                            client.addToChat(STR."<font color=\"red\" size=\"\{fontSize}\"><b>Mod Mail: </b></font>\{message}");
+                        }
+                    } else {
+                        // add message to faction panel
+                        client.addToChat(message.toString(), CCommPanel.CHANNEL_HMAIL);
+
+                        // also add to main, if configured to do so
+                        if (client.getConfig().isParam("MAINCHANNELHM")) {
+                            client.addToChat(STR."<font color=\"red\" size=\"\{fontSize}\"><b>House Mail: </b></font>\{message}");
+                        }
+                    }
+                }
+            }// end HM and MM
+
+            // else, this is a system message
+            else if (nextString.startsWith("(Error Log):")) {
+                message = new StringBuilder(nextString.substring(nextString.indexOf(":") + 1));
+                message.insert(0, client.getShortTime());
+                client.addToChat(message.toString(), CCommPanel.CHANNEL_ERROR);
+            }// end ErrorLog
+
+            else if (nextString.startsWith("(In Character)")) {
+
+                wasICMessage = true;
+
+                name = nextString.substring(14, nextString.indexOf(":"));
+                uncoloredName = name;
+
+                // only proceed if player isnt muted
+                CUser user = (CUser) client.getUser(name);
+                if (user.isInvisible() && (user.getUserLevel() > client.getUser(client.getUsername()).getUserLevel())) {
+                    isInvisible = true;
+                }
+
+                if (!client.isIgnored(name, IClient.IGNORE_PUBLIC)) {
 
                     if (!isInvisible) {
 
@@ -103,7 +262,9 @@ public class CH extends Command {
                     }
 
                     /*
-                     * Set up colours. Sadly, all the colour code is extremely duplicative, but a necessary evil ATM since the messages come in with wildly different formatting. Should consider rewritting the messages to standardize things like name placement and headers.
+                     * Set up colors. Sadly, all the color code is extremely duplicative, but a necessary evil ATM
+                     * since the messages come in with wildly different formatting. Should consider rewriting the
+                     * messages to standardize things like name placement and headers.
                      */
 
                     if (Boolean.parseBoolean(client.getConfigParam("INVERTCHATCOLOR"))) {
@@ -116,214 +277,21 @@ public class CH extends Command {
                     if (colorSetting.equals("factionadd") || colorSetting.equals("factionall")) {
                         addon = addon.isEmpty() ?
                                       "" :
-                                      " <b><font color=\"" +
-                                      factioncolor +
-                                      "\" size=\"" +
-                                      fontSize +
-                                      "\">[" +
-                                      addon +
-                                      "]</b></font>";
+                                      STR." <b><font color=\"\{factioncolor}\" size=\"\{fontSize}\">[\{addon}]</b></font>";
                     } else {
                         addon = addon.isEmpty() ?
                                       "" :
-                                      " <b><font color=\"" +
-                                      usercolor +
-                                      "\" size=\"" +
-                                      fontSize +
-                                      "\">[" +
-                                      addon +
-                                      "]</b></font>";
+                                      STR." <b><font color=\"\{usercolor}\" size=\"\{fontSize}\">[\{addon}]</b></font>";
                     }
 
                     if (colorSetting.equals("factionname") || colorSetting.equals("factionall")) {
                         name = name.isEmpty() ?
                                      "" :
-                                     " <b><font color=\"" +
-                                     factioncolor +
-                                     "\" size=\"" +
-                                     fontSize +
-                                     "\">" +
-                                     name +
-                                     "</b></font>";
+                                     STR." <b><font color=\"\{factioncolor}\" size=\"\{fontSize}\">\{name}</b></font>";
                     } else {
                         name = name.isEmpty() ?
                                      "" :
-                                     " <b><font color=\"" +
-                                     usercolor +
-                                     "\" size=\"" +
-                                     fontSize +
-                                     "\">" +
-                                     name +
-                                     "</b></font>";
-                    }
-
-                    // load the message
-                    message = new StringBuilder(nextString.substring(nextString.indexOf(":") + 1).trim());
-                    while (ST.hasMoreTokens()) {
-                        message.append("|").append(ST.nextToken());
-                    }
-
-                    // faction mail emote. [does this work server side? never seen it used.]
-                    if (message.toString().startsWith("#me")) {
-                        if (client.getConfig().isParam("COLOREDEMOTES")) {
-                            message = new StringBuilder("*** " + name + message.substring(3));
-                        } else {
-                            message = new StringBuilder("*** " + uncoloredName + message.substring(3));
-                        }
-                        message = new StringBuilder("<font size=\"" + fontSize + "\">" + message + "</font>");
-                    }
-
-                    // normal factionmail message
-                    else {
-                        message = new StringBuilder("<font size=\"" + fontSize + "\">" + message + "</font>");
-                        message = new StringBuilder(name + addon + "<b>:</b> " + message.toString().trim());
-                    }
-
-                    // if the user wants to, remove any img tags
-                    if (client.getConfig().isParam("NOIMGINCHAT")) {
-
-                        int start = message.toString().toLowerCase().indexOf("<img");
-                        int finish = -1;
-
-                        if (start != -1) {
-                            finish = message.indexOf(">", start);
-                        }
-
-                        if ((start != -1) && (finish != -1)) {
-                            String firstHalf = message.substring(0, start);
-                            String secondHalf = message.substring(finish + 1, message.length());
-
-                            message = new StringBuilder(firstHalf + "(img blocked)" + secondHalf);
-                        }
-                    }
-
-                    // add timestamp
-                    if (client.getConfig().isParam("TIMESTAMP")) {
-                        message.insert(0, client.getShortTime());
-                    }
-
-                    if (isModMail) {
-                        client.addToChat(message.toString(), CCommPanel.CHANNEL_MOD);
-                        // also add to main, if configured to do so
-                        if (client.getConfig().isParam("MAINCHANNELMM")) {
-                            client.addToChat("<font color=\"red\" size=\"" +
-                                                   fontSize +
-                                                   "\"><b>Mod Mail: </b></font>" +
-                                                   message);
-                        }
-                    } else {
-                        // add message to faction panel
-                        client.addToChat(message.toString(), CCommPanel.CHANNEL_HMAIL);
-
-                        // also add to main, if configured to do so
-                        if (client.getConfig().isParam("MAINCHANNELHM")) {
-                            client.addToChat("<font color=\"red\" size=\"" +
-                                                   fontSize +
-                                                   "\"><b>House Mail: </b></font>" +
-                                                   message);
-                        }
-                    }
-                }
-            }// end HM and MM
-
-            // else, this is a system message
-            else if (nextString.startsWith("(Error Log):")) {
-                message = new StringBuilder(nextString.substring(nextString.indexOf(":") + 1));
-                message.insert(0, client.getShortTime());
-                client.addToChat(message.toString(), CCommPanel.CHANNEL_ERROR);
-            }// end ErrorLog
-
-            else if (nextString.startsWith("(In Character)")) {
-
-                wasICMessage = true;
-
-                name = nextString.substring(14, nextString.indexOf(":"));
-                uncoloredName = name;
-
-                // only proceed if player isnt muted
-                CUser user = client.getUser(name);
-                if (user.isInvisible() && (user.getUserLevel() > client.getUser(client.getUsername()).getUserLevel())) {
-                    isInvisible = true;
-                }
-
-                if (!client.isIgnored(name, IClient.IGNORE_PUBLIC)) {
-
-                    if (!isInvisible) {
-
-                        // faction letter
-                        addon = user.getAddon();
-
-                        // user's colour
-                        usercolor = user.getHtmlColor(); // Get the Color
-
-                        // draw a factioncolour from the datafeed
-                        if ((user.getHouse().length() > 1) &&
-                                  (client.getData().getHouseByName(user.getHouse()) != null)) {
-                            factioncolor = client.getData().getHouseByName(user.getHouse()).getHouseColor();
-                        } else {
-                            factioncolor = defaultColor;
-                        }
-
-                    } else {
-                        usercolor = defaultColor;
-                        factioncolor = defaultColor;
-                        addon = "";
-                        name = "Someone";
-                    }
-
-                    /*
-                     * Set up colours. Sadly, all the colour code is extremely duplicative, but a necessary evil ATM since the messages come in with wildly different formatting. Should consider rewritting the messages to standardize things like name placement and headers.
-                     */
-
-                    if (Boolean.parseBoolean(client.getConfigParam("INVERTCHATCOLOR"))) {
-                        factioncolor = StringUtils.color2html(StringUtils.invertColor(StringUtils.html2Color(
-                              factioncolor)));
-                        usercolor = StringUtils.color2html(StringUtils.invertColor(StringUtils.html2Color(usercolor)));
-                    }
-
-                    String colorSetting = client.getConfig().getParam("PLAYERCHATCOLORMODE").toLowerCase();
-                    if (colorSetting.equals("factionadd") || colorSetting.equals("factionall")) {
-                        addon = addon.isEmpty() ?
-                                      "" :
-                                      " <b><font color=\"" +
-                                      factioncolor +
-                                      "\" size=\"" +
-                                      fontSize +
-                                      "\">[" +
-                                      addon +
-                                      "]</b></font>";
-                    } else {
-                        addon = addon.isEmpty() ?
-                                      "" :
-                                      " <b><font color=\"" +
-                                      usercolor +
-                                      "\" size=\"" +
-                                      fontSize +
-                                      "\">[" +
-                                      addon +
-                                      "]</b></font>";
-                    }
-
-                    if (colorSetting.equals("factionname") || colorSetting.equals("factionall")) {
-                        name = name.isEmpty() ?
-                                     "" :
-                                     " <b><font color=\"" +
-                                     factioncolor +
-                                     "\" size=\"" +
-                                     fontSize +
-                                     "\">" +
-                                     name +
-                                     "</b></font>";
-                    } else {
-                        name = name.isEmpty() ?
-                                     "" :
-                                     " <b><font color=\"" +
-                                     usercolor +
-                                     "\" size=\"" +
-                                     fontSize +
-                                     "\">" +
-                                     name +
-                                     "</b></font>";
+                                     STR." <b><font color=\"\{usercolor}\" size=\"\{fontSize}\">\{name}</b></font>";
                     }
 
                     // load the message
@@ -339,19 +307,19 @@ public class CH extends Command {
                     // IC emote. [does this work server side? never seen it used.]
                     if (message.toString().startsWith("#me")) {
                         if (client.getConfig().isParam("COLOREDEMOTES")) {
-                            message = new StringBuilder("*** " + name + message.substring(3));
+                            message = new StringBuilder(STR."*** \{name}\{message.substring(3)}");
                         } else {
-                            message = new StringBuilder("*** " + uncoloredName + message.substring(3));
+                            message = new StringBuilder(STR."*** \{uncoloredName}\{message.substring(3)}");
                         }
-                        message = new StringBuilder("<font size=\"" + fontSize + "\">" + message + "</font>");
+                        message = new StringBuilder(STR."<font size=\"\{fontSize}\">\{message}</font>");
 
                     }
 
                     // normal message
                     else {
-                        message = new StringBuilder("<font size=\"" + fontSize + "\">" + message + "</font>");
+                        message = new StringBuilder(STR."<font size=\"\{fontSize}\">\{message}</font>");
 
-                        message = new StringBuilder(name + addon + "<b>:</b> " + message.toString().trim());
+                        message = new StringBuilder(STR."\{name}\{addon}<b>:</b> \{message.toString().trim()}");
                     }
 
                     // if the user wants to, remove any img tags
@@ -368,7 +336,7 @@ public class CH extends Command {
                             String firstHalf = message.substring(0, start);
                             String secondHalf = message.substring(finish + 1, message.length());
 
-                            message = new StringBuilder(firstHalf + "(img blocked)" + secondHalf);
+                            message = new StringBuilder(STR."\{firstHalf}(img blocked)\{secondHalf}");
                         }
                     }
 
@@ -381,10 +349,7 @@ public class CH extends Command {
 
                     // also add to main, if configured to do so
                     if (client.getConfig().isParam("MAINCHANNELRPG")) {
-                        client.addToChat("<font color=\"red\" size=\"" +
-                                               fontSize +
-                                               "\"><b>In Character: </b></font>" +
-                                               message);
+                        client.addToChat(STR."<font color=\"red\" size=\"\{fontSize}\"><b>In Character: </b></font>\{message}");
                     }
                 }
             }// end In Character
@@ -401,7 +366,7 @@ public class CH extends Command {
                 // don't display anything from a muted user
                 if (!client.isIgnored(name, IClient.IGNORE_PUBLIC)) {
 
-                    CUser user = client.getUser(name);
+                    CUser user = (CUser) client.getUser(name);
 
                     isInvisible = user.isInvisible() &&
                                         (user.getUserLevel() > client.getUser(client.getUsername()).getUserLevel());
@@ -445,45 +410,21 @@ public class CH extends Command {
                     if (colorSetting.equals("factionadd") || colorSetting.equals("factionall")) {
                         addon = addon.isEmpty() ?
                                       "" :
-                                      " <b><font color=\"" +
-                                      factioncolor +
-                                      "\" size=\"" +
-                                      fontSize +
-                                      "\">[" +
-                                      addon +
-                                      "]</b></font>";
+                                      STR." <b><font color=\"\{factioncolor}\" size=\"\{fontSize}\">[\{addon}]</b></font>";
                     } else {
                         addon = addon.isEmpty() ?
                                       "" :
-                                      " <b><font color=\"" +
-                                      usercolor +
-                                      "\" size=\"" +
-                                      fontSize +
-                                      "\">[" +
-                                      addon +
-                                      "]</b></font>";
+                                      STR." <b><font color=\"\{usercolor}\" size=\"\{fontSize}\">[\{addon}]</b></font>";
                     }
 
                     if (colorSetting.equals("factionname") || colorSetting.equals("factionall")) {
                         name = name.isEmpty() ?
                                      "" :
-                                     " <b><font color=\"" +
-                                     factioncolor +
-                                     "\" size=\"" +
-                                     fontSize +
-                                     "\">" +
-                                     name +
-                                     "</b></font>";
+                                     STR." <b><font color=\"\{factioncolor}\" size=\"\{fontSize}\">\{name}</b></font>";
                     } else {
                         name = name.isEmpty() ?
                                      "" :
-                                     " <b><font color=\"" +
-                                     usercolor +
-                                     "\" size=\"" +
-                                     fontSize +
-                                     "\">" +
-                                     name +
-                                     "</b></font>";
+                                     STR." <b><font color=\"\{usercolor}\" size=\"\{fontSize}\">\{name}</b></font>";
                     }
 
                     message = new StringBuilder(ST.nextToken());
@@ -497,17 +438,17 @@ public class CH extends Command {
                     // handle emote ("me" command) formatting
                     if (message.toString().startsWith("#me")) {
                         if (client.getConfig().isParam("COLOREDEMOTES")) {
-                            message = new StringBuilder("*** " + name + message.substring(3));
+                            message = new StringBuilder(STR."*** \{name}\{message.substring(3)}");
                         } else {
-                            message = new StringBuilder("*** " + uncoloredName + message.substring(3));
+                            message = new StringBuilder(STR."*** \{uncoloredName}\{message.substring(3)}");
                         }
-                        message = new StringBuilder("<font size=\"" + fontSize + "\">" + message + "</font>");
+                        message = new StringBuilder(STR."<font size=\"\{fontSize}\">\{message}</font>");
                     }
 
                     // if not me, its a normal message
                     else {
-                        message = new StringBuilder("<font size=\"" + fontSize + "\">" + message + "</font>");
-                        message = new StringBuilder(name + addon + "<b>:</b> " + message.toString().trim());
+                        message = new StringBuilder(STR."<font size=\"\{fontSize}\">\{message}</font>");
+                        message = new StringBuilder(STR."\{name}\{addon}<b>:</b> \{message.toString().trim()}");
                     }
 
                     // add timestamp
@@ -530,11 +471,7 @@ public class CH extends Command {
 
                 if (nextString.startsWith("AM:")) {
                     String sysColour = client.getConfigParam("SYSMESSAGECOLOR");
-                    message = new StringBuilder("<font color=\"" +
-                                                      sysColour +
-                                                      "\"><b>" +
-                                                      nextString.substring(3) +
-                                                      "</b></font>");
+                    message = new StringBuilder(STR."<font color=\"\{sysColour}\"><b>\{nextString.substring(3)}</b></font>");
                 } else if (nextString.startsWith("ED:")) {
                     message = new StringBuilder(nextString.substring(3));
                     if (client.getConfig().isParam("ENABLEENEMYDETECTEDSOUND")) {
@@ -548,7 +485,9 @@ public class CH extends Command {
             }
 
             /*
-             * Check for sound triggers. 2 methods to fire a sound: - someone else calls the player's name - a word from the player's keyword list is in the message Check for opt outs before triggering. If a message has both the playername and a keyword, the namesound dominates
+             * Check for sound triggers. 2 methods to fire a sound: - someone else calls the player's name - a word
+             * from the player's keyword list is in the message Check for opt outs before triggering. If a message
+             * has both the player name and a keyword, the name sound dominates
              */
             boolean checkSysMessages = client.getConfig().isParam("SOUNDSFROMSYSMESSAGES");
             if (!wasSystemMessage || checkSysMessages) {
@@ -587,7 +526,7 @@ public class CH extends Command {
      */
     @Override
     public void parseReplyArgs(String s) {
-        
+
     }
 
     /**

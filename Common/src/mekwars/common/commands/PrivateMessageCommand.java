@@ -1,24 +1,44 @@
 /*
- * MekWars - Copyright (C) 2004
- *
  * Derived from MegaMekNET (http://www.sourceforge.net/projects/megamek)
- * Original author Helge Richter (McWizard)
+ * Copyright (C) 2004 Helge Richter (McWizard)
+ * Copyright (C) 2026 The MegaMek Team. All Rights Reserved.
  *
- * This program is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License as published by the Free
- * Software Foundation; either version 2 of the License, or (at your option)
- * any later version.
+ * This file is part of MekWars.
  *
- * This program is distributed in the hope that it will be useful, but
- * WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
- * or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License
- * for more details.
+ * MekWars is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License (GPL),
+ * version 3 or (at your option) any later version,
+ * as published by the Free Software Foundation.
+ *
+ * MekWars is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty
+ * of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU General Public License for more details.
+ *
+ * A copy of the GPL should have been included with this project;
+ * if not, see <https://www.gnu.org/licenses/>.
+ *
+ * NOTICE: The MegaMek organization is a non-profit group of volunteers
+ * creating free software for the BattleTech community.
+ *
+ * MechWarrior, BattleMech, `Mech and AeroTech are registered trademarks
+ * of The Topps Company, Inc. All Rights Reserved.
+ *
+ * Catalyst Game Labs and the Catalyst Game Labs logo are trademarks of
+ * InMediaRes Productions, LLC.
+ *
+ * MechWarrior Copyright Microsoft Corporation. MekWars was created under
+ * Microsoft's "Game Content Usage Rules"
+ * <https://www.xbox.com/en-US/developers/rules> and it is not endorsed by or
+ * affiliated with Microsoft.
  */
+
 
 package mekwars.common.commands;
 
 import mekwars.common.campaign.CUser;
 import mekwars.common.campaign.clientutils.protocol.IClient;
+import mekwars.common.gui.CCommPanel;
 import mekwars.common.util.StringUtils;
 
 /**
@@ -29,8 +49,8 @@ public class PrivateMessageCommand extends Command {
     /**
      * @see Command#Command(IClient)
      */
-    public PrivateMessageCommand(IClient mwclient) {
-        super(mwclient);
+    public PrivateMessageCommand(IClient client) {
+        super(client);
 
     }
 
@@ -40,7 +60,7 @@ public class PrivateMessageCommand extends Command {
     @Override
     public void execute(String input) {
         java.util.StringTokenizer st = decode(input);
-        javax.swing.JPanel mailTab = null;
+        javax.swing.JPanel mailTab;
 
         if (st.hasMoreElements()) {
 
@@ -52,10 +72,10 @@ public class PrivateMessageCommand extends Command {
                     client.setLastQuery(name);
                 }
 
-                //set up strings for colours, and the user sending the message
-                CUser sender = client.getUser(name);
-                String usercolor = client.getUser(name).getColor();//preferred colour
-                String addon = client.getUser(name).getAddon();//addon
+                //set up strings for colors, and the user sending the message
+                CUser sender = (CUser) client.getUser(name);
+                String usercolor = ((CUser) client.getUser(name)).getHtmlColor();//preferred colour
+                String addon = ((CUser) client.getUser(name)).getAddon();//addon
                 String message = st.nextToken(); // Parse the message --Torren
                 String factioncolor = client.getConfig().getParam("CHATFONTCOLOR");
                 String tabName = name;
@@ -74,17 +94,10 @@ public class PrivateMessageCommand extends Command {
                         int count = client.getMainFrame().getMainPanel().getCommPanel().countMailTabs();
 
                         if (count >= maxTabs) {
-                            client.sendChat(IClient.CAMPAIGN_PREFIX +
-                                                  "mail " +
-                                                  name +
-                                                  ", " +
-                                                  client.getConfigParam("MAXPMMESSAGE"));
+                            client.sendChat(STR."\{IClient.CAMPAIGN_PREFIX}mail \{name}, \{client.getConfigParam(
+                                  "MAXPMMESSAGE")}");
                             String sysColour = client.getConfigParam("SYSMESSAGECOLOR");
-                            message = "<font color=\"" +
-                                            sysColour +
-                                            "\"><b>" +
-                                            name +
-                                            " tried to PrivateMessageCommand you while you where busy</b></font>";
+                            message = STR."<font color=\"\{sysColour}\"><b>\{name} tried to PrivateMessageCommand you while you where busy</b></font>";
                             client.addToChat(message);
                             return;
                         }
@@ -101,26 +114,28 @@ public class PrivateMessageCommand extends Command {
                 if (colorSetting.equals("factionadd") || colorSetting.equals("factionall")) {
                     addon = addon.isEmpty() ?
                                   "" :
-                                  " <b><font color=\"" + factioncolor + "\">[" + addon + "]</b></font>";
+                                  STR." <b><font color=\"\{factioncolor}\">[\{addon}]</b></font>";
                 } else {
-                    addon = addon.isEmpty() ? "" : " <b><font color=\"" + usercolor + "\">[" + addon + "]</b></font>";
+                    addon = addon.isEmpty() ? "" : STR." <b><font color=\"\{usercolor}\">[\{addon}]</b></font>";
                 }
 
                 if (colorSetting.equals("factionname") || colorSetting.equals("factionall")) {
-                    name = name.isEmpty() ? "" : " <b><font color=\"" + factioncolor + "\">" + name + "</b></font>";
+                    name = name.isEmpty() ? "" : STR." <b><font color=\"\{factioncolor}\">\{name}</b></font>";
                 } else {
-                    name = name.isEmpty() ? "" : " <b><font color=\"" + usercolor + "\">" + name + "</b></font>";
+                    name = name.isEmpty() ? "" : STR." <b><font color=\"\{usercolor}\">\{name}</b></font>";
                 }
                 //faction mail emote. [does this work server side? never seen it used.]
                 if (message.startsWith("#me")) {
                     if (client.getConfig().isParam("COLOREDEMOTES")) {
-                        message = "*** " + name + message.substring(3);
-                    } else {message = "*** " + tabName + message.substring(3);}
-                    message = "<font size=\"" + fontSize + "\">" + message + "</font>";
+                        message = STR."*** \{name}\{message.substring(3)}";
+                    } else {
+                        message = STR."*** \{tabName}\{message.substring(3)}";
+                    }
+                    message = STR."<font size=\"\{fontSize}\">\{message}</font>";
                 } else {
                     //load and set chat font colour
-                    message = "<font size=\"" + fontSize + "\">" + message + "</font>";
-                    message = name + addon + "<b>:</b> " + message.trim();
+                    message = STR."<font size=\"\{fontSize}\">\{message}</font>";
+                    message = STR."\{name}\{addon}<b>:</b> \{message.trim()}";
                 }
 
                 //if the user wants to, remove any img tags
@@ -134,7 +149,7 @@ public class PrivateMessageCommand extends Command {
                         String firstHalf = message.substring(0, start);
                         String secondHalf = message.substring(finish + 1);
 
-                        message = firstHalf + "(img blocked)" + secondHalf;
+                        message = STR."\{firstHalf}(img blocked)\{secondHalf}";
                     }
                 }
 
@@ -142,12 +157,12 @@ public class PrivateMessageCommand extends Command {
                 if (client.getConfig().isParam("TIMESTAMP")) {message = client.getShortTime() + message;}
 
                 //put the message in PrivateMessageCommand panel
-                client.addToChat(message, client.gui.CCommPanel.CHANNEL_PMAIL, tabName);
+                client.addToChat(message, CCommPanel.CHANNEL_PMAIL, tabName);
 
                 //if PMs show in main, make it red and show there too
                 if (client.getConfig().isParam("MAINCHANNELPM")) {
                     String sysColour = client.getConfigParam("SYSMESSAGECOLOR");
-                    message = "<font color=\"" + sysColour + "\"><b>Private Mail: </b></font>" + message;
+                    message = STR."<font color=\"\{sysColour}\"><b>Private Mail: </b></font>\{message}";
                     client.addToChat(message);
                 }
 
@@ -173,7 +188,7 @@ public class PrivateMessageCommand extends Command {
      */
     @Override
     public void parseReplyArgs(String s) {
-        
+
     }
 
     /**

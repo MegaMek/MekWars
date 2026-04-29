@@ -1,18 +1,37 @@
 /*
- * MekWars - Copyright (C) 2007
+ * Copyright (C) 2007 - Torren (torren@users.sourceforge.net)
+ * Copyright (C) 2026 The MegaMek Team. All Rights Reserved.
  *
- * Original author - Torren (torren@users.sourceforge.net)
+ * This file is part of MekWars.
  *
- * This program is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License as published by the Free
- * Software Foundation; either version 2 of the License, or (at your option)
- * any later version.
+ * MekWars is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License (GPL),
+ * version 3 or (at your option) any later version,
+ * as published by the Free Software Foundation.
  *
- * This program is distributed in the hope that it will be useful, but
- * WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
- * or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License
- * for more details.
+ * MekWars is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty
+ * of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU General Public License for more details.
+ *
+ * A copy of the GPL should have been included with this project;
+ * if not, see <https://www.gnu.org/licenses/>.
+ *
+ * NOTICE: The MegaMek organization is a non-profit group of volunteers
+ * creating free software for the BattleTech community.
+ *
+ * MechWarrior, BattleMech, `Mech and AeroTech are registered trademarks
+ * of The Topps Company, Inc. All Rights Reserved.
+ *
+ * Catalyst Game Labs and the Catalyst Game Labs logo are trademarks of
+ * InMediaRes Productions, LLC.
+ *
+ * MechWarrior Copyright Microsoft Corporation. MekWars was created under
+ * Microsoft's "Game Content Usage Rules"
+ * <https://www.xbox.com/en-US/developers/rules> and it is not endorsed by or
+ * affiliated with Microsoft.
  */
+
 
 package mekwars.common.campaign.clientutils;
 
@@ -44,14 +63,13 @@ public class SerializeEntity {
         /*
          * James Allred (wildj79@gmail.com) 2016-08-09
          *
-         * MM was changed to assign a UUID to the externalID field of
-         * an entity when it was created in MM. This was causing issues
-         * with Mekwars, because MW uses integers to keep track of Unit ID's
-         * internally. This block of code would attempt to call Entity.getExternalId
-         * and would fail because Integer.parse() won't parse a UUID that is stored as
-         * a string correctly.  The fix is to catch the exception, assign a sane default
-         * and then let MW go on it's way.
+         * MM was changed to assign a UUID to the externalID field of an entity when it was created in MM. This was
+         * causing issues with Mekwars, because MW uses integers to keep track of Unit ID's internally. This block of
+         * code would attempt to call Entity.getExternalId and would fail because Integer.parse() won't parse a UUID
+         * stored as a string correctly. The fix is to catch the exception, assign a sane default and then let MW
+         * go on its way.
          */
+
         try {
             externalID = entity.getExternalId();
         } catch (NumberFormatException ex) {
@@ -64,18 +82,18 @@ public class SerializeEntity {
                 result.append(entity.getOwner().getName().trim()).append("*");
                 result.append(entity.getCrew().getHits()).append("*");
 
-                if (forceDevastate) {result.append(IEntityRemovalConditions.REMOVE_DEVASTATED + "*");} else {
+                if (forceDevastate) {result.append(STR."\{IEntityRemovalConditions.REMOVE_DEVASTATED}*");} else {
                     result.append(entity.getRemovalCondition()).append("*");
                 }
 
                 switch (entity) {
-                    case BipedMek ignored -> result.append(Unit.MEK + "*");
-                    case QuadMek ignored -> result.append(Unit.QUAD + "*");
-                    case Tank ignored -> result.append(Unit.VEHICLE + "*");
-                    case ProtoMek ignored -> result.append(Unit.PROTOMEK + "*");
-                    case BattleArmor ignored -> result.append(Unit.BATTLEARMOR + "*");
-                    case Aero ignored -> result.append(Unit.AERO + "*");
-                    default -> result.append(Unit.INFANTRY + "*");
+                    case BipedMek ignored -> result.append(STR."\{Unit.MEK}*");
+                    case QuadMek ignored -> result.append(STR."\{Unit.QUAD}*");
+                    case Tank ignored -> result.append(STR."\{Unit.VEHICLE}*");
+                    case ProtoMek ignored -> result.append(STR."\{Unit.PROTOMEK}*");
+                    case BattleArmor ignored -> result.append(STR."\{Unit.BATTLEARMOR}*");
+                    case Aero ignored -> result.append(STR."\{Unit.AERO}*");
+                    default -> result.append(STR."\{Unit.INFANTRY}*");
                 }
 
                 //Collect kills
@@ -147,12 +165,11 @@ public class SerializeEntity {
         }
 
         /*
-         * FullStatus is used when auto reporting. This status, which
-         * sends less information, is used for InProgressUpdates.
+         * FullStatus is used when auto reporting. This status, which sends less information, is used for
+         * InProgressUpdates.
          */
         else {
-            //if the entity is a mechwarrior, send an IPU command
-            //(InProgressUpdate) to the server.
+            // if the entity is a mechwarrior, send an IPU command (InProgressUpdate) to the server.
             if (entity instanceof MekWarrior mw) {
                 result.append("MW*").append(mw.getOriginalRideExternalId()).append("*");
                 result.append(mw.getPickedUpByExternalId()).append("*");
@@ -161,7 +178,7 @@ public class SerializeEntity {
                 result.append(entity.getOwner().getName()).append("*");
                 result.append(externalID).append("*");
 
-                if (forceDevastate) {result.append(IEntityRemovalConditions.REMOVE_DEVASTATED + "*");} else {
+                if (forceDevastate) {result.append(STR."\{IEntityRemovalConditions.REMOVE_DEVASTATED}*");} else {
                     result.append(entity.getRemovalCondition()).append("*");
                 }
 
@@ -174,7 +191,7 @@ public class SerializeEntity {
                 }
                 result.append(entity.isRepairable()).append("*");
             }
-        } //end else(un-full status)
+        } //end else(unfull status)
 
         return result.toString();
     }
