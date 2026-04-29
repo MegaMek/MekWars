@@ -10,16 +10,6 @@ public class StringUtil {
 
     private static Cleaner HTMLCleaner = null;
 
-
-    public static String replacePlanetTags(String input) {
-        String regex = "<planet name=\"([^\"]+)\">([^<]+)</planet>";
-        String replacement = "<a href=\"JUMPTOPLANET$1\">$2</a>";
-        java.util.regex.Pattern planetPattern = java.util.regex.Pattern.compile(regex,
-              java.util.regex.Pattern.CASE_INSENSITIVE);
-        java.util.regex.Matcher matcher = planetPattern.matcher(input);
-        return matcher.replaceAll(replacement);
-    }
-
     /**
      * Returns a string sanitized of potentially harmful HTML
      *
@@ -39,6 +29,19 @@ public class StringUtil {
         }
 
         return toReturn;
+    }
+
+    public static String replacePlanetTags(String input) {
+        String regex = "<planet name=\"([^\"]+)\">([^<]+)</planet>";
+        String replacement = "<a href=\"JUMPTOPLANET$1\">$2</a>";
+        java.util.regex.Pattern planetPattern = java.util.regex.Pattern.compile(regex,
+              java.util.regex.Pattern.CASE_INSENSITIVE);
+        java.util.regex.Matcher matcher = planetPattern.matcher(input);
+        return matcher.replaceAll(replacement);
+    }
+
+    public static void reloadSanitizer() {
+        loadSanitizer();
     }
 
     public static void loadSanitizer() {
@@ -111,10 +114,6 @@ public class StringUtil {
         HTMLCleaner = c;
     }
 
-    public static void reloadSanitizer() {
-        loadSanitizer();
-    }
-
     /**
      * Method which generates human readible times from miliseconds. Useful only for times which are known to be minutes
      * or seconds in length. Produces full-word output.
@@ -174,18 +173,17 @@ public class StringUtil {
      *
      * @param text The string to be evaluated.
      */
-    public static boolean isNullOrEmpty(String text) {
-        return (text == null) || (text.trim().isEmpty());
+    public static boolean isNullOrEmpty(StringBuilder text) {
+        return (text == null) || isNullOrEmpty(text.toString());
     }
-
 
     /**
      * Returns TRUE if the passed in text is either a NULL value or is an empty string.
      *
      * @param text The string to be evaluated.
      */
-    public static boolean isNullOrEmpty(StringBuilder text) {
-        return (text == null) || isNullOrEmpty(text.toString());
+    public static boolean isNullOrEmpty(String text) {
+        return (text == null) || (text.trim().isEmpty());
     }
 
 }

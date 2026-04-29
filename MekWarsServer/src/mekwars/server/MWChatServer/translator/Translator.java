@@ -27,6 +27,10 @@ package mekwars.server.MWChatServer.translator;
 public class Translator {
     private static java.util.Properties _messages;
 
+    public Translator() {
+        this(new java.util.Properties());
+    }
+
     /**
      * Construct a Translator that will used the specified Properties.
      */
@@ -36,42 +40,11 @@ public class Translator {
         }
     }
 
-    public Translator() {
-        this(new java.util.Properties());
-    }
-
-    /**
-     * Get a message without any variable substition.
-     */
-    public String getMessage(String key) {
-        String s = _messages.getProperty(key);
-        if (s == null) {
-            throw new RuntimeException("No such key: " + key);
-        }
-        return s;
-    }
-
     /**
      * Get a message and substitute {0} with arg1
      */
     public String getMessage(String key, String arg1) {
         String[] args = { arg1 };
-        return getMessage(key, args);
-    }
-
-    /**
-     * Get a message and substitute {0} and {1} with arg1 and arg2
-     */
-    public String getMessage(String key, String arg1, String arg2) {
-        String[] args = { arg1, arg2 };
-        return getMessage(key, args);
-    }
-
-    /**
-     * Get a message and substitute {0}, {1}, and {2} with arg1, arg2, and arg3.
-     */
-    public String getMessage(String key, String arg1, String arg2, String arg3) {
-        String[] args = { arg1, arg2, arg3 };
         return getMessage(key, args);
     }
 
@@ -103,10 +76,37 @@ public class Translator {
     }
 
     /**
+     * Get a message without any variable substition.
+     */
+    public String getMessage(String key) {
+        String s = _messages.getProperty(key);
+        if (s == null) {
+            throw new RuntimeException("No such key: " + key);
+        }
+        return s;
+    }
+
+    /**
      * Extract an int from in between { and } characters.
      */
     int extractInt(char[] buf, int start, int end) {
         start++;
         return Integer.parseInt(new String(buf, start, end - start));
+    }
+
+    /**
+     * Get a message and substitute {0} and {1} with arg1 and arg2
+     */
+    public String getMessage(String key, String arg1, String arg2) {
+        String[] args = { arg1, arg2 };
+        return getMessage(key, args);
+    }
+
+    /**
+     * Get a message and substitute {0}, {1}, and {2} with arg1, arg2, and arg3.
+     */
+    public String getMessage(String key, String arg1, String arg2, String arg3) {
+        String[] args = { arg1, arg2, arg3 };
+        return getMessage(key, args);
     }
 }

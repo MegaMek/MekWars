@@ -34,29 +34,19 @@ import common.util.MWLogger;
 
 public class MWPasswd implements server.MWChatServer.commands.ICommands {
 
+    /**
+     * Load the whole passwd file into memory, as a Hashtable of PasswdRecords
+     */
+    static {
+        reloadFile();
+    }
+
     public static String getUserId(String target) {
         server.campaign.SPlayer player = server.campaign.CampaignMain.cm.getPlayer(target);
 
         if (player == null) {return null;}
 
         return player.getName();
-    }
-
-    public static final MWPasswdRecord getRecord(String userId) {
-        server.campaign.SPlayer player = server.campaign.CampaignMain.cm.getPlayer(userId);
-
-        if (player == null) {
-            //MWLogger.errLog("Player is null");
-            return null;
-        }
-
-        if (player.getPassword() == null) {
-            //MWPasswd.reloadFile();
-            //MWLogger.errLog("password is null");
-            return null;
-        }
-        //else
-        return player.getPassword();
     }
 
     /**
@@ -102,6 +92,23 @@ public class MWPasswd implements server.MWChatServer.commands.ICommands {
         throw new Exception(ACCESS_DENIED);
     }
 
+    public static final MWPasswdRecord getRecord(String userId) {
+        server.campaign.SPlayer player = server.campaign.CampaignMain.cm.getPlayer(userId);
+
+        if (player == null) {
+            //MWLogger.errLog("Player is null");
+            return null;
+        }
+
+        if (player.getPassword() == null) {
+            //MWPasswd.reloadFile();
+            //MWLogger.errLog("password is null");
+            return null;
+        }
+        //else
+        return player.getPassword();
+    }
+
     /**
      * Write a PasswdRecord to the passwd file. If an line already existed for the user specified, it gets overwritten,
      * otherwise, it is appended.
@@ -126,32 +133,6 @@ public class MWPasswd implements server.MWChatServer.commands.ICommands {
     }
 
     /**
-     * Write a new entry to the passwd file.  If an entry already exists for the given userId, it gets overwritten,
-     * otherwise, it is appended.  The password specified here gets encrypted.
-     *
-     * @param userId the user Id
-     * @param access the access level
-     * @param passwd the plaintext password that will get encrypted
-     */
-    public static final void writeRecord(String userId, int access, String passwd)
-          throws java.io.IOException {
-        server.campaign.SPlayer player = server.campaign.CampaignMain.cm.getPlayer(userId);
-
-        if (player == null) {
-            MWLogger.errLog("writeRecord::Player is null");
-            return;
-        }
-
-        MWPasswdRecord r = new MWPasswdRecord(userId, access, passwd, System.currentTimeMillis(), "");
-        String salt = String.valueOf(System.currentTimeMillis());
-        int len = salt.length();
-        salt = salt.substring(len - 2, len);
-        r.passwd = server.MWChatServer.translator.jcrypt.crypt(salt, passwd);
-        player.setPassword(r);
-        //writeRecord(r);
-    }
-
-    /**
      * Save the in-memory Hashtable of PasswdRecords out to disk.
      */
     public synchronized static final void save() throws java.io.IOException {
@@ -168,13 +149,6 @@ public class MWPasswd implements server.MWChatServer.commands.ICommands {
                 out.close();
             }
         }*/
-    }
-
-    /**
-     * Load the whole passwd file into memory, as a Hashtable of PasswdRecords
-     */
-    static {
-        reloadFile();
     }
 
     public static void reloadFile() {
@@ -218,6 +192,32 @@ public class MWPasswd implements server.MWChatServer.commands.ICommands {
         } catch (Exception e) {
             showUsageAndExit();
         }
+    }
+
+    /**
+     * Write a new entry to the passwd file.  If an entry already exists for the given userId, it gets overwritten,
+     * otherwise, it is appended.  The password specified here gets encrypted.
+     *
+     * @param userId the user Id
+     * @param access the access level
+     * @param passwd the plaintext password that will get encrypted
+     */
+    public static final void writeRecord(String userId, int access, String passwd)
+          throws java.io.IOException {
+        server.campaign.SPlayer player = server.campaign.CampaignMain.cm.getPlayer(userId);
+
+        if (player == null) {
+            MWLogger.errLog("writeRecord::Player is null");
+            return;
+        }
+
+        MWPasswdRecord r = new MWPasswdRecord(userId, access, passwd, System.currentTimeMillis(), "");
+        String salt = String.valueOf(System.currentTimeMillis());
+        int len = salt.length();
+        salt = salt.substring(len - 2, len);
+        r.passwd = server.MWChatServer.translator.jcrypt.crypt(salt, passwd);
+        player.setPassword(r);
+        //writeRecord(r);
     }
 
     private static final void showUsageAndExit() {

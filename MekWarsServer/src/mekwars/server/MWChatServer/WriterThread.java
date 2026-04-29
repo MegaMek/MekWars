@@ -87,6 +87,10 @@ public class WriterThread extends Thread {
         }
     }
 
+    void pleaseStop() {
+        _keepGoing = false;
+    }
+
     /**
      * Called by dispatcher. Sends queued messages to a downstream client. Small messages are sent uncompressed, but
      * large items are GZIP'ed before transmission.
@@ -227,10 +231,6 @@ public class WriterThread extends Thread {
             // shutdown(true);
         }
 
-    }
-
-    void pleaseStop() {
-        _keepGoing = false;
     }
 
 }

@@ -27,6 +27,16 @@ public class MWPasswdRecord {
     }
 
     /**
+     * Constructor for convenience
+     */
+    public MWPasswdRecord(String userId, int access, String cryptedPasswd, long time, String logo) {
+        this.userId = userId;
+        this.access = access;
+        this.passwd = cryptedPasswd;
+        this.time = time;
+    }
+
+    /**
      * @return Returns the id.
      */
     public Long getId() {
@@ -76,6 +86,13 @@ public class MWPasswdRecord {
     }
 
     /**
+     * @param access The access to set.
+     */
+    public void setAccess(int access) {
+        this.access = access;
+    }
+
+    /**
      * @return Returns the time.
      */
     public long getTime() {
@@ -83,27 +100,10 @@ public class MWPasswdRecord {
     }
 
     /**
-     * Constructor for convenience
-     */
-    public MWPasswdRecord(String userId, int access, String cryptedPasswd, long time, String logo) {
-        this.userId = userId;
-        this.access = access;
-        this.passwd = cryptedPasswd;
-        this.time = time;
-    }
-
-    /**
      * @param time The time to set.
      */
     public void setTime(long time) {
         this.time = time;
-    }
-
-    /**
-     * @param access The access to set.
-     */
-    public void setAccess(int access) {
-        this.access = access;
     }
 
 }

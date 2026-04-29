@@ -322,6 +322,15 @@ public class CommandMakerRemote implements ICommands {
         return constructUserDiff(userId, "+");
     }
 
+    private static String constructUserDiff(String userId, String diff) {
+        StringBuilder sb = new StringBuilder(USER_DIFF);
+        sb.append(DELIMITER);
+        sb.append(diff);
+        sb.append(DELIMITER);
+        sb.append(userId);
+        return sb.toString();
+    }
+
     /**
      * Method constructUserSignOff.
      *
@@ -331,15 +340,6 @@ public class CommandMakerRemote implements ICommands {
      */
     public static String constructUserSignOff(String userId) {
         return constructUserDiff(userId, "-");
-    }
-
-    private static String constructUserDiff(String userId, String diff) {
-        StringBuilder sb = new StringBuilder(USER_DIFF);
-        sb.append(DELIMITER);
-        sb.append(diff);
-        sb.append(DELIMITER);
-        sb.append(userId);
-        return sb.toString();
     }
 
     /**
@@ -353,6 +353,15 @@ public class CommandMakerRemote implements ICommands {
         return constructRoomDiff(room, "+");
     }
 
+    private static String constructRoomDiff(String room, String diff) {
+        StringBuilder sb = new StringBuilder(ROOM_DIFF);
+        sb.append(DELIMITER);
+        sb.append(diff);
+        sb.append(DELIMITER);
+        sb.append(room);
+        return sb.toString();
+    }
+
     /**
      * Method constructRoomDestroyed.
      *
@@ -362,15 +371,6 @@ public class CommandMakerRemote implements ICommands {
      */
     public static String constructRoomDestroyed(String room) {
         return constructRoomDiff(room, "-");
-    }
-
-    private static String constructRoomDiff(String room, String diff) {
-        StringBuilder sb = new StringBuilder(ROOM_DIFF);
-        sb.append(DELIMITER);
-        sb.append(diff);
-        sb.append(DELIMITER);
-        sb.append(room);
-        return sb.toString();
     }
 
     public static String constructAckMail(String toUser) {

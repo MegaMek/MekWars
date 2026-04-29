@@ -45,22 +45,16 @@ public class Feed {
     }
 
     /**
-     * getChannel returns the channel information at the head of the RSS feed
+     * Adds a message to the feed
+     *
+     * @param message
      */
-    private String getChannel() {
-        StringBuilder sb = new StringBuilder();
-        sb.append("<channel>\n");
-        sb.append("<atom:link href=\"" +
-                        server.campaign.CampaignMain.cm.getConfig("NewsURL") +
-                        "\" rel=\"self\" type=\"application/rss+xml\" />\n");
-        sb.append("<title>");
-        sb.append(server.campaign.CampaignMain.cm.getServer().getConfigParam("SERVERNAME") + " News Feed");
-        sb.append("</title>\n");
-        sb.append("<link>");
-        sb.append(server.campaign.CampaignMain.cm.getServer().getConfigParam("TRACKERLINK"));
-        sb.append("</link>\n");
-        sb.append("<description>Campaign News</description>\n");
-        return sb.toString();
+    public void addMessage(FeedMessage message) {
+        messages.add(message);
+        if (messages.size() > 200) {
+            messages.remove(0);
+        }
+        write();
     }
 
     /**
@@ -91,15 +85,21 @@ public class Feed {
     }
 
     /**
-     * Adds a message to the feed
-     *
-     * @param message
+     * getChannel returns the channel information at the head of the RSS feed
      */
-    public void addMessage(FeedMessage message) {
-        messages.add(message);
-        if (messages.size() > 200) {
-            messages.remove(0);
-        }
-        write();
+    private String getChannel() {
+        StringBuilder sb = new StringBuilder();
+        sb.append("<channel>\n");
+        sb.append("<atom:link href=\"" +
+                        server.campaign.CampaignMain.cm.getConfig("NewsURL") +
+                        "\" rel=\"self\" type=\"application/rss+xml\" />\n");
+        sb.append("<title>");
+        sb.append(server.campaign.CampaignMain.cm.getServer().getConfigParam("SERVERNAME") + " News Feed");
+        sb.append("</title>\n");
+        sb.append("<link>");
+        sb.append(server.campaign.CampaignMain.cm.getServer().getConfigParam("TRACKERLINK"));
+        sb.append("</link>\n");
+        sb.append("<description>Campaign News</description>\n");
+        return sb.toString();
     }
 }

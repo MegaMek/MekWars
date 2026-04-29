@@ -152,18 +152,12 @@ public class BattleToJSON {
         jsonString += "{";
     }
 
-    private static void startObject(String key) {
+    private static void stringJson(String key, String item) {
         String comma = "";
 
         if (skipComma == false) {comma = ",";} else {skipComma = false;}
 
-        jsonString += comma + "\"" + key + "\":" + "{";
-
-        skipComma = true;
-    }
-
-    private static void closeObject() {
-        jsonString += "}";
+        jsonString += comma + "\"" + key + "\":" + "\"" + item + "\"";
     }
 
     private static void startArray(String key) {
@@ -186,18 +180,6 @@ public class BattleToJSON {
         skipComma = true;
     }
 
-    private static void closeArray() {
-        jsonString += "]";
-    }
-
-    private static void stringJson(String key, String item) {
-        String comma = "";
-
-        if (skipComma == false) {comma = ",";} else {skipComma = false;}
-
-        jsonString += comma + "\"" + key + "\":" + "\"" + item + "\"";
-    }
-
     private static void intJson(String key, int item) {
         String comma = "";
 
@@ -206,17 +188,35 @@ public class BattleToJSON {
         jsonString += comma + "\"" + key + "\":" + item;
     }
 
+    private static void closeObject() {
+        jsonString += "}";
+    }
+
+    private static void closeArray() {
+        jsonString += "]";
+    }
+
+    private static void endJson() {
+        jsonString += "}";
+        skipComma = true;
+    }
+
+    private static void startObject(String key) {
+        String comma = "";
+
+        if (skipComma == false) {comma = ",";} else {skipComma = false;}
+
+        jsonString += comma + "\"" + key + "\":" + "{";
+
+        skipComma = true;
+    }
+
     private static void doubleJson(String key, double item) {
         String comma = "";
 
         if (skipComma == false) {comma = ",";} else {skipComma = false;}
 
         jsonString += comma + "\"" + key + "\":" + item;
-    }
-
-    private static void endJson() {
-        jsonString += "}";
-        skipComma = true;
     }
 
 }

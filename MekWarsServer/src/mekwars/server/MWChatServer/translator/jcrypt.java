@@ -10,10 +10,7 @@
 package mekwars.server.MWChatServer.translator;
 
 public class jcrypt {
-    private jcrypt() {}
-
     private static final int ITERATIONS = 16;
-
     private static final int con_salt[] =
           {
                 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
@@ -33,13 +30,11 @@ public class jcrypt {
                 0x35, 0x36, 0x37, 0x38, 0x39, 0x3A, 0x3B, 0x3C,
                 0x3D, 0x3E, 0x3F, 0x00, 0x00, 0x00, 0x00, 0x00,
                 };
-
     private static final boolean shifts2[] =
           {
                 false, false, true, true, true, true, true, true,
                 false, true, true, true, true, true, true, false
           };
-
     private static final int skb[][] =
           {
                 {
@@ -195,7 +190,6 @@ public class jcrypt {
                       0x00002822, 0x04002822, 0x00042822, 0x04042822,
                       },
                 };
-
     private static final int SPtrans[][] =
           {
                 {
@@ -351,7 +345,6 @@ public class jcrypt {
                       0x08000000, 0x08200020, 0x00008000, 0x00208020
                 }
           };
-
     private static final int cov_2char[] =
           {
                 0x2E, 0x2F, 0x30, 0x31, 0x32, 0x33, 0x34, 0x35,
@@ -364,48 +357,67 @@ public class jcrypt {
                 0x73, 0x74, 0x75, 0x76, 0x77, 0x78, 0x79, 0x7A
           };
 
-    private static final int byteToUnsigned(byte b) {
-        int value = b;
+    private jcrypt() {}
 
-        return (value >= 0 ? value : value + 256);
+    public static void main(String args[]) {
+        if (args.length >= 2) {
+            System.out.println
+                            (
+                                  "[" + args[0] + "] [" + args[1] + "] => [" +
+                                        mekwars.server.MWChatServer.translator.jcrypt.crypt(args[0], args[1]) + "]"
+                            );
+        }
     }
 
-    private static int fourBytesToInt(byte b[], int offset) {
-        int value;
+    public static final String crypt(String salt, String original) {
+        while (salt.length() < 2) {salt += "A";}
 
-        value = byteToUnsigned(b[offset++]);
-        value |= (byteToUnsigned(b[offset++]) << 8);
-        value |= (byteToUnsigned(b[offset++]) << 16);
-        value |= (byteToUnsigned(b[offset++]) << 24);
+        StringBuilder buffer = new StringBuilder("             ");
 
-        return (value);
-    }
+        char charZero = salt.charAt(0);
+        char charOne = salt.charAt(1);
 
-    private static final void intToFourBytes(int iValue, byte b[], int offset) {
-        b[offset++] = (byte) ((iValue) & 0xff);
-        b[offset++] = (byte) ((iValue >>> 8) & 0xff);
-        b[offset++] = (byte) ((iValue >>> 16) & 0xff);
-        b[offset++] = (byte) ((iValue >>> 24) & 0xff);
-    }
+        buffer.setCharAt(0, charZero);
+        buffer.setCharAt(1, charOne);
 
-    private static final void PERM_OP(int a, int b, int n, int m, int results[]) {
-        int t;
+        int Eswap0 = con_salt[charZero];
+        int Eswap1 = con_salt[charOne] << 4;
 
-        t = ((a >>> n) ^ b) & m;
-        a ^= t << n;
-        b ^= t;
+        byte key[] = new byte[8];
 
-        results[0] = a;
-        results[1] = b;
-    }
+        for (int i = 0; i < key.length; i++) {key[i] = (byte) 0;}
 
-    private static final int HPERM_OP(int a, int n, int m) {
-        int t;
+        for (int i = 0; i < key.length && i < original.length(); i++) {
+            int iChar = original.charAt(i);
 
-        t = ((a << (16 - n)) ^ a) & m;
-        a = a ^ t ^ (t >>> (16 - n));
+            key[i] = (byte) (iChar << 1);
+        }
 
-        return (a);
+        int schedule[] = des_set_key(key);
+        int out[] = body(schedule, Eswap0, Eswap1);
+
+        byte b[] = new byte[9];
+
+        intToFourBytes(out[0], b, 0);
+        intToFourBytes(out[1], b, 4);
+        b[8] = 0;
+
+        for (int i = 2, y = 0, u = 0x80; i < 13; i++) {
+            for (int j = 0, c = 0; j < 6; j++) {
+                c <<= 1;
+
+                if ((b[y] & u) != 0) {c |= 1;}
+
+                u >>>= 1;
+
+                if (u == 0) {
+                    y++;
+                    u = 0x80;
+                }
+                buffer.setCharAt(i, (char) cov_2char[c]);
+            }
+        }
+        return (buffer.toString());
     }
 
     private static int[] des_set_key(byte key[]) {
@@ -474,31 +486,6 @@ public class jcrypt {
         return (schedule);
     }
 
-    private static final int D_ENCRYPT
-          (
-                int L, int R, int S, int E0, int E1, int s[]
-          ) {
-        int t, u, v;
-
-        v = R ^ (R >>> 16);
-        u = v & E0;
-        v = v & E1;
-        u = (u ^ (u << 16)) ^ R ^ s[S];
-        t = (v ^ (v << 16)) ^ R ^ s[S + 1];
-        t = (t >>> 4) | (t << 28);
-
-        L ^= SPtrans[1][(t) & 0x3f] |
-                   SPtrans[3][(t >>> 8) & 0x3f] |
-                   SPtrans[5][(t >>> 16) & 0x3f] |
-                   SPtrans[7][(t >>> 24) & 0x3f] |
-                   SPtrans[0][(u) & 0x3f] |
-                   SPtrans[2][(u >>> 8) & 0x3f] |
-                   SPtrans[4][(u >>> 16) & 0x3f] |
-                   SPtrans[6][(u >>> 24) & 0x3f];
-
-        return (L);
-    }
-
     private static final int[] body(int schedule[], int Eswap0, int Eswap1) {
         int left = 0;
         int right = 0;
@@ -552,64 +539,72 @@ public class jcrypt {
         return (out);
     }
 
-    public static final String crypt(String salt, String original) {
-        while (salt.length() < 2) {salt += "A";}
-
-        StringBuilder buffer = new StringBuilder("             ");
-
-        char charZero = salt.charAt(0);
-        char charOne = salt.charAt(1);
-
-        buffer.setCharAt(0, charZero);
-        buffer.setCharAt(1, charOne);
-
-        int Eswap0 = con_salt[charZero];
-        int Eswap1 = con_salt[charOne] << 4;
-
-        byte key[] = new byte[8];
-
-        for (int i = 0; i < key.length; i++) {key[i] = (byte) 0;}
-
-        for (int i = 0; i < key.length && i < original.length(); i++) {
-            int iChar = original.charAt(i);
-
-            key[i] = (byte) (iChar << 1);
-        }
-
-        int schedule[] = des_set_key(key);
-        int out[] = body(schedule, Eswap0, Eswap1);
-
-        byte b[] = new byte[9];
-
-        intToFourBytes(out[0], b, 0);
-        intToFourBytes(out[1], b, 4);
-        b[8] = 0;
-
-        for (int i = 2, y = 0, u = 0x80; i < 13; i++) {
-            for (int j = 0, c = 0; j < 6; j++) {
-                c <<= 1;
-
-                if ((b[y] & u) != 0) {c |= 1;}
-
-                u >>>= 1;
-
-                if (u == 0) {
-                    y++;
-                    u = 0x80;
-                }
-                buffer.setCharAt(i, (char) cov_2char[c]);
-            }
-        }
-        return (buffer.toString());
+    private static final void intToFourBytes(int iValue, byte b[], int offset) {
+        b[offset++] = (byte) ((iValue) & 0xff);
+        b[offset++] = (byte) ((iValue >>> 8) & 0xff);
+        b[offset++] = (byte) ((iValue >>> 16) & 0xff);
+        b[offset++] = (byte) ((iValue >>> 24) & 0xff);
     }
 
-    public static void main(String args[]) {
-        if (args.length >= 2) {
-            System.out.println
-                            (
-                                  "[" + args[0] + "] [" + args[1] + "] => [" +
-                                        mekwars.server.MWChatServer.translator.jcrypt.crypt(args[0], args[1]) + "]"
-                            );
-        }
+    private static int fourBytesToInt(byte b[], int offset) {
+        int value;
+
+        value = byteToUnsigned(b[offset++]);
+        value |= (byteToUnsigned(b[offset++]) << 8);
+        value |= (byteToUnsigned(b[offset++]) << 16);
+        value |= (byteToUnsigned(b[offset++]) << 24);
+
+        return (value);
+    }
+
+    private static final void PERM_OP(int a, int b, int n, int m, int results[]) {
+        int t;
+
+        t = ((a >>> n) ^ b) & m;
+        a ^= t << n;
+        b ^= t;
+
+        results[0] = a;
+        results[1] = b;
+    }
+
+    private static final int HPERM_OP(int a, int n, int m) {
+        int t;
+
+        t = ((a << (16 - n)) ^ a) & m;
+        a = a ^ t ^ (t >>> (16 - n));
+
+        return (a);
+    }
+
+    private static final int D_ENCRYPT
+          (
+                int L, int R, int S, int E0, int E1, int s[]
+          ) {
+        int t, u, v;
+
+        v = R ^ (R >>> 16);
+        u = v & E0;
+        v = v & E1;
+        u = (u ^ (u << 16)) ^ R ^ s[S];
+        t = (v ^ (v << 16)) ^ R ^ s[S + 1];
+        t = (t >>> 4) | (t << 28);
+
+        L ^= SPtrans[1][(t) & 0x3f] |
+                   SPtrans[3][(t >>> 8) & 0x3f] |
+                   SPtrans[5][(t >>> 16) & 0x3f] |
+                   SPtrans[7][(t >>> 24) & 0x3f] |
+                   SPtrans[0][(u) & 0x3f] |
+                   SPtrans[2][(u >>> 8) & 0x3f] |
+                   SPtrans[4][(u >>> 16) & 0x3f] |
+                   SPtrans[6][(u >>> 24) & 0x3f];
+
+        return (L);
+    }
+
+    private static final int byteToUnsigned(byte b) {
+        int value = b;
+
+        return (value >= 0 ? value : value + 256);
     }
 }

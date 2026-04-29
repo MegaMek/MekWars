@@ -57,17 +57,6 @@ public final class MWTracker {
 
     private int oneWeek = (7 * 24 * 60 * 60 * 1000);
 
-    //MAIN METHOD [Create the mwtracker]
-    public static void main(String[] args) {
-
-        try {
-            //MWTracker tracker =
-            new MWTracker();
-        } catch (Exception e) {
-            System.out.println(e.toString());
-        }
-    }
-
     //CONSTRUCTOR
     public MWTracker() {
 
@@ -120,6 +109,34 @@ public final class MWTracker {
         lthread.start();
     }
 
+    public void addToLog(String s) {
+        boolean loggingEnabled = true;//Turn on if testing.
+        if (loggingEnabled) {
+            String fileName = "log.txt";
+            try {
+                FileOutputStream out = new FileOutputStream(fileName, true);
+                PrintStream p = new PrintStream(out);
+                p.println(s);//1st line is server name
+                p.close();
+                out.close();
+            } catch (Exception e) {
+                System.out.println("Error writing to log file!");
+                return;
+            }
+        }
+    }//end addToLog
+
+    //MAIN METHOD [Create the mwtracker]
+    public static void main(String[] args) {
+
+        try {
+            //MWTracker tracker =
+            new MWTracker();
+        } catch (Exception e) {
+            System.out.println(e.toString());
+        }
+    }
+
     //METHODS
     public boolean isProcessing() {
         if (processingThreads.size() > 0) {return true;}
@@ -165,23 +182,6 @@ public final class MWTracker {
         SimpleDateFormat sdf1 = new SimpleDateFormat(dateTimeFormat1);
         return sdf1.format(d);
     }
-
-    public void addToLog(String s) {
-        boolean loggingEnabled = true;//Turn on if testing.
-        if (loggingEnabled) {
-            String fileName = "log.txt";
-            try {
-                FileOutputStream out = new FileOutputStream(fileName, true);
-                PrintStream p = new PrintStream(out);
-                p.println(s);//1st line is server name
-                p.close();
-                out.close();
-            } catch (Exception e) {
-                System.out.println("Error writing to log file!");
-                return;
-            }
-        }
-    }//end addToLog
 
     public void addToLog(Exception e) {
         boolean loggingEnabled = true;
@@ -503,33 +503,6 @@ public final class MWTracker {
             tracker = t;
         }
 
-        //METHODS
-        public void ExtendedWait(long time) {
-            try {
-                wait(time);
-            } catch (Exception ex) {
-                //do not respond to waitbreaks
-            }
-        }//end ExtendedWait(time)
-
-        public String readableTime(long elapsed) {
-
-            //to return
-            String result = "";
-
-            long elapsedDays = (elapsed / 86400000);
-            long elapsedHours = (elapsed % 86400000) / 3600000;
-            long elapsedMinutes = (elapsed % 3600000) / 60000;
-
-            if (elapsedDays > 0) {result += elapsedDays + "d ";}
-
-            if (elapsedHours > 0 || elapsedDays > 0) {result += elapsedHours + "h ";}
-
-            result += elapsedMinutes + "m";
-
-            return result;
-        }
-
         @Override
         public synchronized void run() {
 
@@ -835,6 +808,33 @@ public final class MWTracker {
 
         }
 
+        //METHODS
+        public void ExtendedWait(long time) {
+            try {
+                wait(time);
+            } catch (Exception ex) {
+                //do not respond to waitbreaks
+            }
+        }//end ExtendedWait(time)
+
+        public String readableTime(long elapsed) {
+
+            //to return
+            String result = "";
+
+            long elapsedDays = (elapsed / 86400000);
+            long elapsedHours = (elapsed % 86400000) / 3600000;
+            long elapsedMinutes = (elapsed % 3600000) / 60000;
+
+            if (elapsedDays > 0) {result += elapsedDays + "d ";}
+
+            if (elapsedHours > 0 || elapsedDays > 0) {result += elapsedHours + "h ";}
+
+            result += elapsedMinutes + "m";
+
+            return result;
+        }
+
     }//end HTMLThread
 
     /**
@@ -852,15 +852,6 @@ public final class MWTracker {
         public PurgeThread(MWTracker t) {
             tracker = t;
         }
-
-        //METHODS
-        public void ExtendedWait(long time) {
-            try {
-                wait(time);
-            } catch (Exception ex) {
-                //a-splode
-            }
-        }//end ExtendedWait(time)
 
         @Override
         public synchronized void run() {
@@ -973,6 +964,15 @@ public final class MWTracker {
 
             }//end while(forever)
         }//end run()
+
+        //METHODS
+        public void ExtendedWait(long time) {
+            try {
+                wait(time);
+            } catch (Exception ex) {
+                //a-splode
+            }
+        }//end ExtendedWait(time)
     }//end PurgeThread
 
 }//end MWTracker class

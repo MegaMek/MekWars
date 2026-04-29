@@ -37,13 +37,13 @@ public class ServerWrapper extends MWChatServer {
 
     MWServ myServer;
 
-    public static mekwars.server.ServerWrapper createServer(MWServ server) throws Exception {
-        return new mekwars.server.ServerWrapper(server);
-    }
-
     public ServerWrapper(MWServ server) throws Exception {
         super(server.getConfigParam("SERVERIP"), Integer.parseInt(server.getConfigParam("SERVERPORT")));
         this.myServer = server;
+    }
+
+    public static mekwars.server.ServerWrapper createServer(MWServ server) throws Exception {
+        return new mekwars.server.ServerWrapper(server);
     }
 
     public void start() {
@@ -66,17 +66,6 @@ public class ServerWrapper extends MWChatServer {
         }
     }
 
-    public void sendServerMessage(String msg, String name) {
-        MWChatClient client = this.getClient(MWChatServer.clientKey(name));
-        if (client != null) {
-            try {
-                client.sendRaw("/comm" + ICommands.DELIMITER + common.comm.TransportCodec.encode(msg));
-            } catch (Exception e) {
-                MWLogger.errLog(e);
-            }
-        }
-    }
-
     //this is a hack...
     //there should be comm objects
     public void broadcastComm(String command) {
@@ -85,6 +74,17 @@ public class ServerWrapper extends MWChatServer {
             for (java.util.Iterator<MWChatClient> i = _users.values().iterator(); i.hasNext(); ) {
                 MWChatClient cc = i.next();
                 this.sendServerMessage(command, MWChatServer.clientKey(cc));
+            }
+        }
+    }
+
+    public void sendServerMessage(String msg, String name) {
+        MWChatClient client = this.getClient(MWChatServer.clientKey(name));
+        if (client != null) {
+            try {
+                client.sendRaw("/comm" + ICommands.DELIMITER + common.comm.TransportCodec.encode(msg));
+            } catch (Exception e) {
+                MWLogger.errLog(e);
             }
         }
     }
@@ -176,16 +176,6 @@ public class ServerWrapper extends MWChatServer {
         return this.myServer.clientLogin(client.getUserId());
     }
 
-    @Override
-    public void signOff(MWChatClient client) {
-        super.signOff(client);
-        try {
-            this.myServer.clientLogout(client.getUserId());
-        } catch (Exception e) {
-            MWLogger.errLog(e);
-        }
-    }
-
     /**
      * Determines if a user id is valid.  Ensures that the name is made up of alphanumerical characters and contains no
      * spaces.
@@ -198,5 +188,15 @@ public class ServerWrapper extends MWChatServer {
             throw new Exception(INVALID_CHARACTER);
         }
 
+    }
+
+    @Override
+    public void signOff(MWChatClient client) {
+        super.signOff(client);
+        try {
+            this.myServer.clientLogout(client.getUserId());
+        } catch (Exception e) {
+            MWLogger.errLog(e);
+        }
     }
 }

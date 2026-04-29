@@ -10,14 +10,10 @@ package mekwars.server.util;
  */
 
 public class IpCountry {
-    private mekwars.server.util.FileOps file;
-    private mekwars.server.util.FileOps fileNames;
     private static int dim = 32;
     int iteracion = 0;
-
-    public IpCountry() {
-        this.file = new mekwars.server.util.FileOps();
-    }
+    private mekwars.server.util.FileOps file;
+    private mekwars.server.util.FileOps fileNames;
 
     public IpCountry(String fileIps, String fileNames) {
         this();
@@ -25,24 +21,8 @@ public class IpCountry {
         this.fileNames = new mekwars.server.util.FileOps(fileNames);
     }
 
-    private boolean[] ipToBytes(String ip) {
-        boolean[] ipResult = new boolean[dim];
-        int pos = ip.indexOf(".");
-        int[] ipVal = new int[4];
-        int pos2 = ip.indexOf(".", pos + 1);
-        int pos3 = ip.indexOf(".", pos2 + 1);
-        int pos4 = ip.length();
-        int decVal = 0;
-        ipVal[0] = Integer.parseInt(ip.substring(0, pos));
-        ipVal[1] = Integer.parseInt(ip.substring(pos + 1, pos2));
-        ipVal[2] = Integer.parseInt(ip.substring(pos2 + 1, pos3));
-        ipVal[3] = Integer.parseInt(ip.substring(pos3 + 1, pos4));
-        for (int i = ipResult.length - 1; i >= 0; i--) {//binary conversion
-            decVal = (int) StrictMath.pow(2, (((dim - i) - 1) % (dim / 4)));
-            ipResult[i] = (decVal & ipVal[i / 8]) == decVal;
-        }
-
-        return ipResult;
+    public IpCountry() {
+        this.file = new mekwars.server.util.FileOps();
     }
 
     public String seachIpCountry(String ipSource) {
@@ -74,6 +54,26 @@ public class IpCountry {
         } catch (Exception ex) {
             return "Moon";
         }
+    }
+
+    private boolean[] ipToBytes(String ip) {
+        boolean[] ipResult = new boolean[dim];
+        int pos = ip.indexOf(".");
+        int[] ipVal = new int[4];
+        int pos2 = ip.indexOf(".", pos + 1);
+        int pos3 = ip.indexOf(".", pos2 + 1);
+        int pos4 = ip.length();
+        int decVal = 0;
+        ipVal[0] = Integer.parseInt(ip.substring(0, pos));
+        ipVal[1] = Integer.parseInt(ip.substring(pos + 1, pos2));
+        ipVal[2] = Integer.parseInt(ip.substring(pos2 + 1, pos3));
+        ipVal[3] = Integer.parseInt(ip.substring(pos3 + 1, pos4));
+        for (int i = ipResult.length - 1; i >= 0; i--) {//binary conversion
+            decVal = (int) StrictMath.pow(2, (((dim - i) - 1) % (dim / 4)));
+            ipResult[i] = (decVal & ipVal[i / 8]) == decVal;
+        }
+
+        return ipResult;
     }
 
     private boolean[] getIp(String cad) {
@@ -131,96 +131,3 @@ public class IpCountry {
 
 }
 
-class BoolMatrixOps {
-    public BoolMatrixOps() {
-
-    }
-
-    public static boolean[] and(boolean[] a, boolean[] b) {
-        if (a.length != b.length) {
-            return null;
-        }
-        boolean[] r = new boolean[a.length];
-        for (int i = 0; i < r.length; i++) {
-            r[i] = a[i] && b[i];
-        }
-        return r;
-    }
-
-    public static boolean equal(boolean[] a, boolean[] b) {
-        if (a.length != b.length) {
-            return false;
-        }
-        boolean res = true;
-        for (int i = 0; i < a.length; i++) {
-            res &= a[i] == b[i];
-        }
-        return res;
-    }
-
-    public static boolean GreaterOrEqual(boolean[] a, boolean[] b) throws ArrayIndexOutOfBoundsException {
-        if (a.length != b.length) {
-            throw new ArrayIndexOutOfBoundsException();
-        }
-        boolean res = true;
-        for (int i = 0; i < a.length; i++) {
-            if (a[i] != b[i]) {
-                res = a[i];
-                break;
-            }
-        }
-        return res;
-    }
-}
-
-class FileOps {
-    private java.io.File file;
-    private java.io.FileInputStream fis;
-    private java.io.BufferedReader br;
-
-    public FileOps() {
-
-    }
-
-    public FileOps(String file) {
-        this();
-        this.file = new java.io.File(file);
-    }
-
-    public int openFile() {
-        try {
-            fis = new java.io.FileInputStream(file);
-            br = new java.io.BufferedReader(new java.io.InputStreamReader(fis));
-            return 0;
-        } catch (java.io.FileNotFoundException ex) {
-            return 1;
-        }
-    }
-
-    public int closeFile() {
-        try {
-            fis.close();
-            br.close();
-            return 0;
-        } catch (java.io.IOException ex) {
-            return 1;
-        }
-    }
-
-    public String getTextFromFile() {
-
-        try {
-            return br.readLine();
-        } catch (java.io.IOException ex) {
-            return "";
-        }
-    }
-
-    public boolean eofFile() {
-        try {
-            return !br.ready();
-        } catch (java.io.IOException ex) {
-            return true;
-        }
-    }
-}

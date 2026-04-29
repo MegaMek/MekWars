@@ -61,14 +61,6 @@ public class MWClientInfo implements java.io.Serializable, Comparable<MWClientIn
         return Checktime;
     }
 
-    public String getName() {
-        return name;
-    }
-
-    public void setName(String name) {
-        this.name = name;
-    }
-
     public void setChecktime(long Checktime) {
         this.Checktime = Checktime;
     }
@@ -79,11 +71,6 @@ public class MWClientInfo implements java.io.Serializable, Comparable<MWClientIn
 
     public void setAdr(java.net.InetAddress Adr) {
         this.Adr = Adr;
-    }
-
-    @Override
-    public String toString() {
-        return name + "~" + color + "~" + country + "~" + level + "~" + isInvis;
     }
 
     public String getColor() {
@@ -118,6 +105,19 @@ public class MWClientInfo implements java.io.Serializable, Comparable<MWClientIn
         if ((mmci.getName().equals(getName()))) {return true;}
 
         return false;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    @Override
+    public String toString() {
+        return name + "~" + color + "~" + country + "~" + level + "~" + isInvis;
     }
 
     public String getCountry() {

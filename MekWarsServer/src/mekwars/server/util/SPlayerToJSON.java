@@ -63,7 +63,7 @@ public class SPlayerToJSON {
         jsonString += comma + "\"" + key + "\":" + "\"" + item + "\"";
     }
 
-    private static void intJson(String key, int item) {
+    private static void doubleJson(String key, double item) {
         String comma = "";
 
         if (jsonStart == false) {comma = ",";} else {jsonStart = false;}
@@ -71,7 +71,7 @@ public class SPlayerToJSON {
         jsonString += comma + "\"" + key + "\":" + item;
     }
 
-    private static void doubleJson(String key, double item) {
+    private static void intJson(String key, int item) {
         String comma = "";
 
         if (jsonStart == false) {comma = ",";} else {jsonStart = false;}

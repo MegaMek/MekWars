@@ -126,6 +126,13 @@ public class ConnectionHandler extends AbstractConnectionHandler {
 
     }// end init()
 
+    @Override
+    public void queueMessage(String message) {
+        if (_writer != null) {
+            _writer.queueMessage(message);
+        }
+    }
+
     /**
      * Bypass the message queue to send something immediately. This is used for pings and to kill clients (bad chars,
      * banned folks, etc).
@@ -169,12 +176,5 @@ public class ConnectionHandler extends AbstractConnectionHandler {
             super.shutdown(notify);
         }
     }// end shutdown()
-
-    @Override
-    public void queueMessage(String message) {
-        if (_writer != null) {
-            _writer.queueMessage(message);
-        }
-    }
 
 }

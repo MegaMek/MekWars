@@ -118,8 +118,8 @@ public class AutomaticBackup extends Thread {
 
     /**
      * @author Torren (Jason Tighe)
-     *
-     * Backup the filename into a nice zip file.
+     *       <p>
+     *       Backup the filename into a nice zip file.
      *
      */
 

@@ -39,34 +39,6 @@ public class QuirkHandler {
      *
      * @return quirksList
      */
-    public String returnHtmlQuirkList(server.campaign.SUnit unit) {
-        java.util.StringJoiner quirksList = new java.util.StringJoiner("<br>*");
-
-        for (java.util.Enumeration<IOptionGroup> optionGroups = unit.getEntity().getQuirks().getGroups();
-              optionGroups.hasMoreElements(); ) {
-            IOptionGroup group = optionGroups.nextElement();
-            if (unit.getEntity().getQuirks().count(group.getKey()) > 0) {
-                for (java.util.Enumeration<IOption> options = group.getOptions(); options.hasMoreElements(); ) {
-                    IOption option = options.nextElement();
-                    if (option != null && option.booleanValue()) {
-                        quirksList.add(option.getDisplayableNameWithValue());
-                    }
-                }
-            }
-        }
-
-        if (StringUtil.isNullOrEmpty(quirksList.toString())) {
-            quirksList.add("None");
-        }
-
-        return quirksList.toString();
-    }
-
-    /**
-     * @param unit
-     *
-     * @return quirksList
-     */
     public String returnQuirkList(server.campaign.SUnit unit) {
         java.util.StringJoiner quirksList = new java.util.StringJoiner("&");
 
@@ -107,6 +79,34 @@ public class QuirkHandler {
         }
 
         return " ";
+    }
+
+    /**
+     * @param unit
+     *
+     * @return quirksList
+     */
+    public String returnHtmlQuirkList(server.campaign.SUnit unit) {
+        java.util.StringJoiner quirksList = new java.util.StringJoiner("<br>*");
+
+        for (java.util.Enumeration<IOptionGroup> optionGroups = unit.getEntity().getQuirks().getGroups();
+              optionGroups.hasMoreElements(); ) {
+            IOptionGroup group = optionGroups.nextElement();
+            if (unit.getEntity().getQuirks().count(group.getKey()) > 0) {
+                for (java.util.Enumeration<IOption> options = group.getOptions(); options.hasMoreElements(); ) {
+                    IOption option = options.nextElement();
+                    if (option != null && option.booleanValue()) {
+                        quirksList.add(option.getDisplayableNameWithValue());
+                    }
+                }
+            }
+        }
+
+        if (StringUtil.isNullOrEmpty(quirksList.toString())) {
+            quirksList.add("None");
+        }
+
+        return quirksList.toString();
     }
 
     public boolean hasQuirks(server.campaign.SUnit unit) {

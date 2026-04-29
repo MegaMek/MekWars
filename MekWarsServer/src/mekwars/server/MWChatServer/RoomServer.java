@@ -44,17 +44,17 @@ public class RoomServer implements ICommands {
     private String _password;
     //    private HashSet _invitations = new HashSet();
 
+    public RoomServer(String name, String password, MWChatServer server) {
+        this(name, server);
+        _password = password;
+    }
+
     public RoomServer(String name, MWChatServer server) {
         _server = server;
         _roomName = name;
         _users = new java.util.ArrayList<MWChatClient>();
         _ops = new java.util.HashMap<String, MWChatClient>();
         _kickedUsers = new TimedUserList(_server.getKickBanSeconds());
-    }
-
-    public RoomServer(String name, String password, MWChatServer server) {
-        this(name, server);
-        _password = password;
     }
 
     public MWChatClient getOldestClient() {
@@ -80,19 +80,6 @@ public class RoomServer implements ICommands {
     }
 
     /**
-     * Send a general message to all the clients in this room
-     *
-     * @param message the general message
-     */
-    public void broadcast(String message) {
-        synchronized (_users) {
-            for (MWChatClient rcpt : _users) {
-                rcpt.generalRoomMessage(_roomName, message);
-            }
-        }
-    }
-
-    /**
      * Say something to everyone in the room
      *
      * @param sender  the person doing the talking
@@ -111,6 +98,10 @@ public class RoomServer implements ICommands {
         }
     }
 
+    public void remoteJoin(String username, String password) {
+        notifyJoin(username);
+    }
+
     protected void notifyJoin(String userId) {
         synchronized (_users) {
             // notify the other people
@@ -120,8 +111,8 @@ public class RoomServer implements ICommands {
         }
     }
 
-    public void remoteJoin(String username, String password) {
-        notifyJoin(username);
+    public void remotePart(String username, boolean isSignoff) {
+        notifyPart(username, isSignoff);
     }
 
     protected void notifyPart(String userId, boolean isSignoff) {
@@ -131,10 +122,6 @@ public class RoomServer implements ICommands {
                 rcpt.userPartedRoom(userId, _roomName, isSignoff);
             }
         }
-    }
-
-    public void remotePart(String username, boolean isSignoff) {
-        notifyPart(username, isSignoff);
     }
 
     /**
@@ -185,10 +172,6 @@ public class RoomServer implements ICommands {
         op(null, client);
     }
 
-    public void deop(MWChatClient client) {
-        deop(null, client);
-    }
-
     public void op(MWChatClient op, MWChatClient newOp) {
         synchronized (_ops) {
             if (op == null || _ops.keySet().contains(MWChatServer.clientKey(op))) {
@@ -203,23 +186,15 @@ public class RoomServer implements ICommands {
         }
     }
 
-    public void deop(MWChatClient op, MWChatClient newOp) {
-        synchronized (_ops) {
-            if (op == null || _ops.keySet().contains(MWChatServer.clientKey(op))) {
-                if (_ops.keySet().contains(MWChatServer.clientKey(newOp))) {
-                    _ops.remove(MWChatServer.clientKey(newOp));
-                    newOp.generalMessage(Translator.getMessage("op.remove.confirm", _roomName));
-                    //					String actor = (op == null) ? "Server" : op.getUserId();
-                    // we don't broadcast deop; it's (almost?) never interesting
-                }
-                if (_ops.size() == 0) {
-                    MWChatClient nextOp = _server.getRoomNextOp(this);
-                    if (nextOp != null) {
-                        op(nextOp);
-                    }
-                }
-            } else {
-                op.generalError(Translator.getMessage("op.denied"));
+    /**
+     * Send a general message to all the clients in this room
+     *
+     * @param message the general message
+     */
+    public void broadcast(String message) {
+        synchronized (_users) {
+            for (MWChatClient rcpt : _users) {
+                rcpt.generalRoomMessage(_roomName, message);
             }
         }
     }
@@ -245,6 +220,31 @@ public class RoomServer implements ICommands {
             }
         }
         deop(client);
+    }
+
+    public void deop(MWChatClient client) {
+        deop(null, client);
+    }
+
+    public void deop(MWChatClient op, MWChatClient newOp) {
+        synchronized (_ops) {
+            if (op == null || _ops.keySet().contains(MWChatServer.clientKey(op))) {
+                if (_ops.keySet().contains(MWChatServer.clientKey(newOp))) {
+                    _ops.remove(MWChatServer.clientKey(newOp));
+                    newOp.generalMessage(Translator.getMessage("op.remove.confirm", _roomName));
+                    //					String actor = (op == null) ? "Server" : op.getUserId();
+                    // we don't broadcast deop; it's (almost?) never interesting
+                }
+                if (_ops.size() == 0) {
+                    MWChatClient nextOp = _server.getRoomNextOp(this);
+                    if (nextOp != null) {
+                        op(nextOp);
+                    }
+                }
+            } else {
+                op.generalError(Translator.getMessage("op.denied"));
+            }
+        }
     }
 
     /**

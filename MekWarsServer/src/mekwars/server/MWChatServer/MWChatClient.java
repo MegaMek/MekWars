@@ -90,6 +90,13 @@ public class MWChatClient implements IConnectionListener, ICommands {
     }
 
     /**
+     * Set the access level for this user
+     */
+    public void setAccessLevel(int level) {
+        _accessLevel = level;
+    }
+
+    /**
      * Get the version of the client
      *
      * @return the version of the client
@@ -116,21 +123,10 @@ public class MWChatClient implements IConnectionListener, ICommands {
     }
 
     /**
-     * Set the access level for this user
-     */
-    public void setAccessLevel(int level) {
-        _accessLevel = level;
-    }
-
-    /**
      * Get the user's id
      */
     public String getUserId() {
         return _userId;
-    }
-
-    public static String getKey(String userId) {
-        return userId.toLowerCase();
     }
 
     /**
@@ -159,6 +155,10 @@ public class MWChatClient implements IConnectionListener, ICommands {
              * (String)i.next(); _ignored.put(s.toLowerCase(), s); }
              */
         }
+    }
+
+    public static String getKey(String userId) {
+        return userId.toLowerCase();
     }
 
     /**

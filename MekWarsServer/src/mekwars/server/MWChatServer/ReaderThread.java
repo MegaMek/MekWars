@@ -53,6 +53,12 @@ public class ReaderThread extends Thread {
         }
     }
 
+    @Override
+    public synchronized void run() {
+        normalRun();
+        _connectionHandler.shutdown(true);
+    }
+
     public void normalRun() {
         while (_keepGoing) {
             try {
@@ -79,12 +85,6 @@ public class ReaderThread extends Thread {
                 MWLogger.errLog(ex);
             }
         }
-    }
-
-    @Override
-    public synchronized void run() {
-        normalRun();
-        _connectionHandler.shutdown(true);
     }
 
     void pleaseStop() {

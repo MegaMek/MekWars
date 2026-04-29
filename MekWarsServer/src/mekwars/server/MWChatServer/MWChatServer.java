@@ -111,20 +111,20 @@ public class MWChatServer implements ICommands {
         _killedUsers = new TimedUserList(60 * 60 * 2);
     }
 
+    public void initCommandProcessor(java.util.Properties p) {
+        CommandProcessorRemote.init(p);
+    }
+
+    public void initTranslator(java.util.Properties p) {
+        Translator.init(p);
+    }
+
     public static java.util.Properties getProperties() {
         return _properties;
     }
 
     public int getKickBanSeconds() {
         return _kickBanSeconds;
-    }
-
-    public int getRoomAccessLevel(MWChatClient client, RoomServer rs) {
-        return _roomAuthenticator.getAccessLevel(client, rs);
-    }
-
-    public MWChatClient getRoomNextOp(RoomServer rs) {
-        return _roomAuthenticator.getNextOp(rs);
     }
 
     /*protected Dispatcher createDispatcher() {
@@ -135,45 +135,12 @@ public class MWChatServer implements ICommands {
         return _dispatcher;
     }*/
 
-    public void initTranslator(java.util.Properties p) {
-        Translator.init(p);
+    public int getRoomAccessLevel(MWChatClient client, RoomServer rs) {
+        return _roomAuthenticator.getAccessLevel(client, rs);
     }
 
-    public void initCommandProcessor(java.util.Properties p) {
-        CommandProcessorRemote.init(p);
-    }
-
-    /**
-     * Get a MWChatClient by name
-     */
-    public MWChatClient getClient(String target) {
-        try {
-            return _users.get(clientKey(target));
-        } catch (Exception ex) {
-            MWLogger.errLog(ex);
-            return null;
-        }
-    }
-
-    /**
-     * Determines if a user id is valid. Ensures that the name is made up of alphanumerical characters and contains no
-     * spaces.
-     */
-    protected void validateUserId(String user) throws Exception {
-        if (getName().toLowerCase().equals(user.toLowerCase())) {throw new Exception(user + " is a reserved name");}
-
-        if (user.toLowerCase().startsWith("war bot")) {throw new Exception(ACCESS_DENIED);}
-
-        char[] chars = user.toLowerCase().toCharArray();
-        for (int i = 0; i < chars.length; i++) {
-            char ch = chars[i];
-            if (!(Character.isLetterOrDigit(chars[i]) || ch == '_' || ch == '-'
-                        || ch == '\\' || ch == '^' || ch == '`' || ch == '|'
-                        || ch == '[' || ch == '{' || ch == ']' || ch == '}'
-                        || ch == '(' || ch == ')' || ch == '\'')) {
-                throw new Exception(INVALID_CHARACTER);
-            }
-        }
+    public MWChatClient getRoomNextOp(RoomServer rs) {
+        return _roomAuthenticator.getNextOp(rs);
     }
 
     /**
@@ -225,6 +192,34 @@ public class MWChatServer implements ICommands {
     }
 
     /**
+     * Determines if a user id is valid. Ensures that the name is made up of alphanumerical characters and contains no
+     * spaces.
+     */
+    protected void validateUserId(String user) throws Exception {
+        if (getName().toLowerCase().equals(user.toLowerCase())) {throw new Exception(user + " is a reserved name");}
+
+        if (user.toLowerCase().startsWith("war bot")) {throw new Exception(ACCESS_DENIED);}
+
+        char[] chars = user.toLowerCase().toCharArray();
+        for (int i = 0; i < chars.length; i++) {
+            char ch = chars[i];
+            if (!(Character.isLetterOrDigit(chars[i]) || ch == '_' || ch == '-'
+                        || ch == '\\' || ch == '^' || ch == '`' || ch == '|'
+                        || ch == '[' || ch == '{' || ch == ']' || ch == '}'
+                        || ch == '(' || ch == ')' || ch == '\'')) {
+                throw new Exception(INVALID_CHARACTER);
+            }
+        }
+    }
+
+    /**
+     * returns a key for referencing the users hashmap. mainly to avoid case-sensitivity problems.
+     */
+    public static String clientKey(MWChatClient client) {
+        return client.getKey();
+    }
+
+    /**
      * Sign off of the system. This is called by the MWChatClient when the socket unexpectedly closes, or when the user
      * quits.
      */
@@ -268,6 +263,63 @@ public class MWChatServer implements ICommands {
         client.die();
     }
 
+    public void joinRoom(MWChatClient client, String roomName, String password) throws Exception {
+        String key = roomKey(roomName);
+        RoomServer room = _rooms.get(key);
+        synchronized (_rooms) {
+            if (room == null) {
+                if (!_roomAuthenticator.isCreateAllowed(client, roomName,
+                      password)) {
+                    throw new Exception(ICommands.ROOM_ACCESS_DENIED);
+                }
+                room = _rooms.get(roomKey(roomName));
+                if (room == null) {
+                    if (_asciiRoomNames) {
+                        for (int i = 0; i < roomName.length(); i++) {
+                            int c = roomName.charAt(i);
+                            // don't include space or DEL
+                            if (c <= 32 && c >= 128) {
+                                MWLogger.infoLog(client.getUserId() + " room creation rejected: " + roomName);
+                                throw new Exception(ICommands.INVALID_CHARACTER);
+                            }
+                        }
+                    }
+                    MWLogger.infoLog(client.getUserId()
+                                           + " created new room: " + roomName);
+                    room = createRoomServer(roomName, password);
+                    _rooms.put(roomKey(room), room);
+                }
+            }
+        }
+        room.join(client, password);
+    }
+
+    public String getName() {
+        try {
+            return java.net.InetAddress.getLocalHost().getHostName() + ":" + _port;
+        } catch (java.net.UnknownHostException e) {
+            throw new RuntimeException(e.toString());
+        }
+    }
+
+    /**
+     * returns a key for referencing the rooms hashmap. mainly to avoid case-sensitivity problems.
+     */
+    public static String roomKey(String room) {
+        return room.toLowerCase();
+    }
+
+    public RoomServer createRoomServer(String roomName, String password) {
+        return new RoomServer(roomName, password, this);
+    }
+
+    /**
+     * returns a key for referencing the rooms hashmap. mainly to avoid case-sensitivity problems.
+     */
+    public static String roomKey(RoomServer room) {
+        return roomKey(room.getName());
+    }
+
     /**
      * Kick a user off the system.
      */
@@ -301,6 +353,35 @@ public class MWChatServer implements ICommands {
     }
 
     /**
+     * Get a MWChatClient by name
+     */
+    public MWChatClient getClient(String target) {
+        try {
+            return _users.get(clientKey(target));
+        } catch (Exception ex) {
+            MWLogger.errLog(ex);
+            return null;
+        }
+    }
+
+    /**
+     * returns a key for referencing the users hashmap. mainly to avoid case-sensitivity problems.
+     */
+    public static String clientKey(String client) {
+
+        // Sometimes bad strings are set up. Not much to do about it except
+        // return the null and hope for the best --Torren.
+        if (client == null) {return null;}
+
+        try {
+            return client.toLowerCase();
+        } catch (Exception ex) {
+            MWLogger.errLog(ex);
+            return null;
+        }
+    }
+
+    /**
      * Kick a user off the system by the system itself.
      */
     public void kill(String victim, String message) {
@@ -321,79 +402,6 @@ public class MWChatServer implements ICommands {
             // killer.generalMessage(Translator.getMessage("kill_queued",
             // killedKey, String.valueOf(_killBanMinutes)));
             _killedUsers.add(killedKey);
-        }
-    }
-
-    public void joinRoom(MWChatClient client, String roomName, String password) throws Exception {
-        String key = roomKey(roomName);
-        RoomServer room = _rooms.get(key);
-        synchronized (_rooms) {
-            if (room == null) {
-                if (!_roomAuthenticator.isCreateAllowed(client, roomName,
-                      password)) {
-                    throw new Exception(ICommands.ROOM_ACCESS_DENIED);
-                }
-                room = _rooms.get(roomKey(roomName));
-                if (room == null) {
-                    if (_asciiRoomNames) {
-                        for (int i = 0; i < roomName.length(); i++) {
-                            int c = roomName.charAt(i);
-                            // don't include space or DEL
-                            if (c <= 32 && c >= 128) {
-                                MWLogger.infoLog(client.getUserId() + " room creation rejected: " + roomName);
-                                throw new Exception(ICommands.INVALID_CHARACTER);
-                            }
-                        }
-                    }
-                    MWLogger.infoLog(client.getUserId()
-                                           + " created new room: " + roomName);
-                    room = createRoomServer(roomName, password);
-                    _rooms.put(roomKey(room), room);
-                }
-            }
-        }
-        room.join(client, password);
-    }
-
-    public RoomServer createRoomServer(String roomName, String password) {
-        return new RoomServer(roomName, password, this);
-    }
-
-    /**
-     * returns a key for referencing the rooms hashmap. mainly to avoid case-sensitivity problems.
-     */
-    public static String roomKey(String room) {
-        return room.toLowerCase();
-    }
-
-    /**
-     * returns a key for referencing the rooms hashmap. mainly to avoid case-sensitivity problems.
-     */
-    public static String roomKey(RoomServer room) {
-        return roomKey(room.getName());
-    }
-
-    /**
-     * returns a key for referencing the users hashmap. mainly to avoid case-sensitivity problems.
-     */
-    public static String clientKey(MWChatClient client) {
-        return client.getKey();
-    }
-
-    /**
-     * returns a key for referencing the users hashmap. mainly to avoid case-sensitivity problems.
-     */
-    public static String clientKey(String client) {
-
-        // Sometimes bad strings are set up. Not much to do about it except
-        // return the null and hope for the best --Torren.
-        if (client == null) {return null;}
-
-        try {
-            return client.toLowerCase();
-        } catch (Exception ex) {
-            MWLogger.errLog(ex);
-            return null;
         }
     }
 
@@ -436,14 +444,6 @@ public class MWChatServer implements ICommands {
 
     protected MWChatClient createMWChatClient(java.net.Socket s) throws java.io.IOException {
         return new MWChatClient(this, s);
-    }
-
-    public String getName() {
-        try {
-            return java.net.InetAddress.getLocalHost().getHostName() + ":" + _port;
-        } catch (java.net.UnknownHostException e) {
-            throw new RuntimeException(e.toString());
-        }
     }
 
     public boolean userExists(String username) {
