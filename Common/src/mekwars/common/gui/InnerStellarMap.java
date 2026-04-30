@@ -44,6 +44,7 @@ import mekwars.common.Influences;
 import mekwars.common.Planet;
 import mekwars.common.campaign.clientutils.protocol.IClient;
 import mekwars.common.gui.dialogs.PlanetSearchDialog;
+import mekwars.common.gui.panels.CMapPanel;
 import mekwars.common.util.MMNetXStream;
 import mekwars.common.util.MWLogger;
 import mekwars.common.util.StringUtils;

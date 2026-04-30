@@ -38,6 +38,7 @@ import mekwars.common.campaign.clientutils.protocol.IClient;
 import mekwars.common.campaign.pilot.Pilot;
 import mekwars.common.gui.dialogs.*;
 import mekwars.common.gui.dialogs.buildtableviewer.BuildTableViewer;
+import mekwars.common.gui.panels.CMainPanel;
 import mekwars.common.sounds.MenuPopupSound;
 import mekwars.common.sounds.MenuSound;
 import mekwars.common.threads.ClientThread;

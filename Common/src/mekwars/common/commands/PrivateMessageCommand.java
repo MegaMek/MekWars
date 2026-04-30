@@ -38,7 +38,7 @@ package mekwars.common.commands;
 
 import mekwars.common.campaign.CUser;
 import mekwars.common.campaign.clientutils.protocol.IClient;
-import mekwars.common.gui.CCommPanel;
+import mekwars.common.gui.panels.CCommPanel;
 import mekwars.common.util.StringUtils;
 
 /**

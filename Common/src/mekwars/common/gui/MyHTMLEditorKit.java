@@ -15,32 +15,43 @@
  * for more details.
  */
 
-package mekwars.client.gui;
+package mekwars.common.gui;
 
-public class MyHTMLEditorKit extends javax.swing.text.html.HTMLEditorKit {
+import java.io.Serial;
+
+import javax.swing.text.Element;
+import javax.swing.text.StyleConstants;
+import javax.swing.text.View;
+import javax.swing.text.ViewFactory;
+import javax.swing.text.html.HTML;
+import javax.swing.text.html.HTMLEditorKit;
+
+import mekwars.client.gui.MyImageView;
+
+public class MyHTMLEditorKit extends HTMLEditorKit {
 
     /**
      *
      */
+    @Serial
     private static final long serialVersionUID = -891227318566572289L;
 
 
     @Override
-    public javax.swing.text.ViewFactory getViewFactory() {
-        return new mekwars.client.gui.MyHTMLEditorKit.HTMLFactoryX();
+    public ViewFactory getViewFactory() {
+        return new MyHTMLEditorKit.HTMLFactoryX();
     }
 
 
-    public static class HTMLFactoryX extends javax.swing.text.html.HTMLEditorKit.HTMLFactory
-          implements javax.swing.text.ViewFactory {
+    public static class HTMLFactoryX extends HTMLEditorKit.HTMLFactory implements ViewFactory {
 
         @Override
-        public javax.swing.text.View create(javax.swing.text.Element elem) {
-            Object o =
-                  elem.getAttributes().getAttribute(javax.swing.text.StyleConstants.NameAttribute);
-            if (o instanceof javax.swing.text.html.HTML.Tag) {
-                javax.swing.text.html.HTML.Tag kind = (javax.swing.text.html.HTML.Tag) o;
-                if (kind == javax.swing.text.html.HTML.Tag.IMG) {return new MyImageView(elem);}
+        public View create(Element elem) {
+            Object o = elem.getAttributes().getAttribute(StyleConstants.NameAttribute);
+            if (o instanceof HTML.Tag kind) {
+                if (kind == HTML.Tag.IMG) {
+                    return new MyImageView(elem);
+                }
             }
             return super.create(elem);
         }

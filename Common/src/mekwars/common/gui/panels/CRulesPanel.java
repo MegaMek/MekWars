@@ -15,7 +15,7 @@
  * for more details.
  */
 
-package mekwars.common.gui;
+package mekwars.common.gui.panels;
 
 /**
  * Class to display simple rules tab

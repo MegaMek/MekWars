@@ -38,7 +38,7 @@ import java.io.File;
 import java.util.StringTokenizer;
 
 import mekwars.common.campaign.clientutils.protocol.IClient;
-import mekwars.common.gui.CCommPanel;
+import mekwars.common.gui.panels.CCommPanel;
 import mekwars.common.util.MWLogger;
 
 /**

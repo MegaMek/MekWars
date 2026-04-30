@@ -15,7 +15,7 @@
  * for more details.
  */
 
-package mekwars.common.gui;
+package mekwars.common.gui.panels;
 
 import java.awt.Rectangle;
 import javax.swing.text.DefaultCaret;
@@ -62,47 +62,47 @@ public class CCommPanel extends javax.swing.JPanel
     javax.swing.JTabbedPane CommTPane = new javax.swing.JTabbedPane(javax.swing.SwingConstants.BOTTOM);
     mekwars.client.gui.MyHTMLEditorKit kit = new mekwars.client.gui.MyHTMLEditorKit();
     javax.swing.JPanel MChannelPanel = new javax.swing.JPanel();
-    mekwars.common.gui.CCommPanel.CSelectTabAction MChannelSelect = null;
+    CCommPanel.CSelectTabAction MChannelSelect = null;
     javax.swing.JEditorPane MChannelEPane = new javax.swing.JEditorPane("text/html", "");
     javax.swing.JScrollPane MChannelSPane = new javax.swing.JScrollPane();
     javax.swing.JPanel HMailPanel = new javax.swing.JPanel();
-    mekwars.common.gui.CCommPanel.CSelectTabAction HMailSelect = null;
+    CCommPanel.CSelectTabAction HMailSelect = null;
     javax.swing.JEditorPane HMailEPane = new javax.swing.JEditorPane("text/html", "");
     javax.swing.JScrollPane HMailSPane = new javax.swing.JScrollPane();
     javax.swing.JPanel PMailPanel = new javax.swing.JPanel();
-    mekwars.common.gui.CCommPanel.CSelectTabAction PMailSelect = null;
+    CCommPanel.CSelectTabAction PMailSelect = null;
     javax.swing.JEditorPane PMailEPane = new javax.swing.JEditorPane("text/html", "");
     javax.swing.JScrollPane PMailSPane = new javax.swing.JScrollPane();
     javax.swing.JPanel PLogPanel = new javax.swing.JPanel();
-    mekwars.common.gui.CCommPanel.CSelectTabAction PLogSelect = null;
+    CCommPanel.CSelectTabAction PLogSelect = null;
     javax.swing.JEditorPane PLogEPane = new javax.swing.JEditorPane("text/html", "");
     javax.swing.JScrollPane PLogSPane = new javax.swing.JScrollPane();
     javax.swing.JPanel SLogPanel = new javax.swing.JPanel();
-    mekwars.common.gui.CCommPanel.CSelectTabAction SLogSelect = null;
+    CCommPanel.CSelectTabAction SLogSelect = null;
     javax.swing.JEditorPane SLogEPane = new javax.swing.JEditorPane("text/html", "");
     javax.swing.JScrollPane SLogSPane = new javax.swing.JScrollPane();
     javax.swing.JPanel MiscChannelPanel = new javax.swing.JPanel();
-    mekwars.common.gui.CCommPanel.CSelectTabAction MiscChannelSelect = null;
+    CCommPanel.CSelectTabAction MiscChannelSelect = null;
     javax.swing.JEditorPane MiscChannelEPane = new javax.swing.JEditorPane("text/html", "");
     javax.swing.JScrollPane MiscChannelSPane = new javax.swing.JScrollPane();
     javax.swing.JPanel ModMailPanel = new javax.swing.JPanel();
-    mekwars.common.gui.CCommPanel.CSelectTabAction ModMailSelect = null;
+    CCommPanel.CSelectTabAction ModMailSelect = null;
     javax.swing.JEditorPane ModMailEPane = new javax.swing.JEditorPane("text/html", "");
     javax.swing.JScrollPane ModMailSPane = new javax.swing.JScrollPane();
     javax.swing.JPanel ErrorLogPanel = new javax.swing.JPanel();
-    mekwars.common.gui.CCommPanel.CSelectTabAction ErrorLogSelect = null;
+    CCommPanel.CSelectTabAction ErrorLogSelect = null;
     javax.swing.JEditorPane ErrorLogEPane = new javax.swing.JEditorPane("text/html", "");
     javax.swing.JScrollPane ErrorLogSPane = new javax.swing.JScrollPane();
     javax.swing.JPanel RPGChannelPanel = new javax.swing.JPanel();
-    mekwars.common.gui.CCommPanel.CSelectTabAction RPGChannelSelect = null;
+    CCommPanel.CSelectTabAction RPGChannelSelect = null;
     javax.swing.JEditorPane RPGChannelEPane = new javax.swing.JEditorPane("text/html", "");
     javax.swing.JScrollPane RPGChannelSPane = new javax.swing.JScrollPane();
-    mekwars.common.gui.CCommPanel.CChatField chatField;
+    CCommPanel.CChatField chatField;
     java.awt.Color TabForeground;
     java.awt.Color TabBackground;
     boolean autoTextUpdate;
-    mekwars.common.gui.CCommPanel.CTabForwardAction ForwardCommTab;
-    mekwars.common.gui.CCommPanel.CTabBackwardAction BackwardCommTab;
+    CCommPanel.CTabForwardAction ForwardCommTab;
+    CCommPanel.CTabBackwardAction BackwardCommTab;
 
     public CCommPanel(IClient client) {
         int index;
@@ -126,7 +126,7 @@ public class CCommPanel extends javax.swing.JPanel
         setLayout(new java.awt.BorderLayout());
         addComponentListener(this);
         MChannelEPane.setEditable(false);
-        MChannelEPane.setCaret(new mekwars.common.gui.CCommPanel.ScrollCaret());
+        MChannelEPane.setCaret(new CCommPanel.ScrollCaret());
         MChannelEPane.addHyperlinkListener(chatHLL);
         MChannelEPane.setEditorKit(kit);
         MChannelEPane.addMouseListener(this);
@@ -147,13 +147,13 @@ public class CCommPanel extends javax.swing.JPanel
         mnemo = CommTPane.getTitleAt(index).indexOf(mnemonicText.toUpperCase());
         if (mnemo == -1) {mnemo = CommTPane.getTitleAt(index).indexOf(mnemonicText.toLowerCase());}
         CommTPane.setDisplayedMnemonicIndexAt(index, mnemo);
-        MChannelSelect = new mekwars.common.gui.CCommPanel.CSelectTabAction(MChannelPanel);
+        MChannelSelect = new CCommPanel.CSelectTabAction(MChannelPanel);
         getInputMap(WHEN_IN_FOCUSED_WINDOW).put(javax.swing.KeyStroke.getKeyStroke("alt " + mnemonicText.toUpperCase()),
               "MChannelSelect");
         getActionMap().put("MChannelSelect", MChannelSelect);
 
         HMailEPane.setEditable(false);
-        HMailEPane.setCaret(new mekwars.common.gui.CCommPanel.ScrollCaret());
+        HMailEPane.setCaret(new CCommPanel.ScrollCaret());
         HMailEPane.addHyperlinkListener(chatHLL);
         HMailEPane.setEditorKit(kit);
         HMailEPane.addMouseListener(this);
@@ -179,7 +179,7 @@ public class CCommPanel extends javax.swing.JPanel
                 mnemo = CommTPane.getTitleAt(index).indexOf(mnemonicText.toLowerCase());
             }
             CommTPane.setDisplayedMnemonicIndexAt(index, mnemo);
-            HMailSelect = new mekwars.common.gui.CCommPanel.CSelectTabAction(HMailPanel);
+            HMailSelect = new CCommPanel.CSelectTabAction(HMailPanel);
             getInputMap(WHEN_IN_FOCUSED_WINDOW).put(javax.swing.KeyStroke.getKeyStroke("alt " +
                                                                                              mnemonicText.toUpperCase()),
                   "HMailSelect");
@@ -188,7 +188,7 @@ public class CCommPanel extends javax.swing.JPanel
 
         /* RPG-Channel */
         RPGChannelEPane.setEditable(false);
-        RPGChannelEPane.setCaret(new mekwars.common.gui.CCommPanel.ScrollCaret());
+        RPGChannelEPane.setCaret(new CCommPanel.ScrollCaret());
         RPGChannelEPane.addHyperlinkListener(chatHLL);
         RPGChannelEPane.setEditorKit(kit);
         RPGChannelEPane.addMouseListener(this);
@@ -223,7 +223,7 @@ public class CCommPanel extends javax.swing.JPanel
             }
 
             CommTPane.setDisplayedMnemonicIndexAt(index, mnemo);
-            RPGChannelSelect = new mekwars.common.gui.CCommPanel.CSelectTabAction(RPGChannelPanel);
+            RPGChannelSelect = new CCommPanel.CSelectTabAction(RPGChannelPanel);
             getInputMap(WHEN_IN_FOCUSED_WINDOW).put(javax.swing.KeyStroke.getKeyStroke("alt " +
                                                                                              mnemonicText.toUpperCase()),
                   "RPGChannelSelect");
@@ -232,7 +232,7 @@ public class CCommPanel extends javax.swing.JPanel
 
         if (!mwclient.getConfig().isParam("USEMULTIPLEPM")) {
             PMailEPane.setEditable(false);
-            PMailEPane.setCaret(new mekwars.common.gui.CCommPanel.ScrollCaret());
+            PMailEPane.setCaret(new CCommPanel.ScrollCaret());
             PMailEPane.addHyperlinkListener(chatHLL);
             PMailEPane.setEditorKit(kit);
             PMailEPane.addMouseListener(this);
@@ -255,7 +255,7 @@ public class CCommPanel extends javax.swing.JPanel
                     mnemo = CommTPane.getTitleAt(index).indexOf(mnemonicText.toLowerCase());
                 }
                 CommTPane.setDisplayedMnemonicIndexAt(index, mnemo);
-                PMailSelect = new mekwars.common.gui.CCommPanel.CSelectTabAction(PMailPanel);
+                PMailSelect = new CCommPanel.CSelectTabAction(PMailPanel);
                 getInputMap(WHEN_IN_FOCUSED_WINDOW).put(javax.swing.KeyStroke.getKeyStroke("alt " +
                                                                                                  mnemonicText.toUpperCase()),
                       "PMailSelect");
@@ -265,7 +265,7 @@ public class CCommPanel extends javax.swing.JPanel
         }
 
         PLogEPane.setEditable(false);
-        PLogEPane.setCaret(new mekwars.common.gui.CCommPanel.ScrollCaret());
+        PLogEPane.setCaret(new CCommPanel.ScrollCaret());
         PLogEPane.addHyperlinkListener(chatHLL);
         PLogEPane.setEditorKit(kit);
         PLogEPane.addMouseListener(this);
@@ -289,14 +289,14 @@ public class CCommPanel extends javax.swing.JPanel
                 mnemo = CommTPane.getTitleAt(index).indexOf(mnemonicText.toLowerCase());
             }
             CommTPane.setDisplayedMnemonicIndexAt(index, mnemo);
-            PLogSelect = new mekwars.common.gui.CCommPanel.CSelectTabAction(PLogPanel);
+            PLogSelect = new CCommPanel.CSelectTabAction(PLogPanel);
             getInputMap(WHEN_IN_FOCUSED_WINDOW).put(javax.swing.KeyStroke.getKeyStroke("alt " +
                                                                                              mnemonicText.toUpperCase()),
                   "PLogSelect (Alt + " + mnemonicText.toUpperCase() + ")");
             getActionMap().put("PLogSelect", PLogSelect);
         }
         SLogEPane.setEditable(false);
-        SLogEPane.setCaret(new mekwars.common.gui.CCommPanel.ScrollCaret());
+        SLogEPane.setCaret(new CCommPanel.ScrollCaret());
         SLogEPane.addHyperlinkListener(chatHLL);
         SLogEPane.setEditorKit(kit);
         SLogEPane.addMouseListener(this);
@@ -319,7 +319,7 @@ public class CCommPanel extends javax.swing.JPanel
                 mnemo = CommTPane.getTitleAt(index).indexOf(mnemonicText.toLowerCase());
             }
             CommTPane.setDisplayedMnemonicIndexAt(index, mnemo);
-            SLogSelect = new mekwars.common.gui.CCommPanel.CSelectTabAction(SLogPanel);
+            SLogSelect = new CCommPanel.CSelectTabAction(SLogPanel);
             getInputMap(WHEN_IN_FOCUSED_WINDOW).put(javax.swing.KeyStroke.getKeyStroke("alt " +
                                                                                              mnemonicText.toUpperCase()),
                   "SLogSelect");
@@ -328,7 +328,7 @@ public class CCommPanel extends javax.swing.JPanel
 
         /* Misc-Channel */
         MiscChannelEPane.setEditable(false);
-        MiscChannelEPane.setCaret(new mekwars.common.gui.CCommPanel.ScrollCaret());
+        MiscChannelEPane.setCaret(new CCommPanel.ScrollCaret());
         MiscChannelEPane.addHyperlinkListener(chatHLL);
         MiscChannelEPane.setEditorKit(kit);
         MiscChannelEPane.addMouseListener(this);
@@ -356,7 +356,7 @@ public class CCommPanel extends javax.swing.JPanel
             }
 
             CommTPane.setDisplayedMnemonicIndexAt(index, mnemo);
-            MiscChannelSelect = new mekwars.common.gui.CCommPanel.CSelectTabAction(MiscChannelPanel);
+            MiscChannelSelect = new CCommPanel.CSelectTabAction(MiscChannelPanel);
             getInputMap(WHEN_IN_FOCUSED_WINDOW).put(javax.swing.KeyStroke.getKeyStroke("alt " +
                                                                                              mnemonicText.toUpperCase()),
                   "MiscChannelSelect");
@@ -364,7 +364,7 @@ public class CCommPanel extends javax.swing.JPanel
         }
 
         ModMailEPane.setEditable(false);
-        ModMailEPane.setCaret(new mekwars.common.gui.CCommPanel.ScrollCaret());
+        ModMailEPane.setCaret(new CCommPanel.ScrollCaret());
         ModMailEPane.addHyperlinkListener(chatHLL);
         ModMailEPane.setEditorKit(kit);
         ModMailEPane.addMouseListener(this);
@@ -376,7 +376,7 @@ public class CCommPanel extends javax.swing.JPanel
         ModMailPanel.add(ModMailSPane, java.awt.BorderLayout.CENTER);
 
         ErrorLogEPane.setEditable(false);
-        ErrorLogEPane.setCaret(new mekwars.common.gui.CCommPanel.ScrollCaret());
+        ErrorLogEPane.setCaret(new CCommPanel.ScrollCaret());
         ErrorLogEPane.addHyperlinkListener(chatHLL);
         ErrorLogEPane.setEditorKit(kit);
         ErrorLogEPane.addMouseListener(this);
@@ -405,21 +405,21 @@ public class CCommPanel extends javax.swing.JPanel
         CommTPane.setSelectedIndex(CHANNEL_MAIN);
         CommTPane.addChangeListener(this);
         add(CommTPane, java.awt.BorderLayout.CENTER);
-        chatField = new mekwars.common.gui.CCommPanel.CChatField(mwclient);
+        chatField = new CCommPanel.CChatField(mwclient);
         chatField.setMaximumSize(new java.awt.Dimension(10000, 100));
         chatField.setMinimumSize(new java.awt.Dimension(550, 20));
         chatField.addMouseListener(this);
         // this is a little messy, can be fixed later...
-        chatField.setReceiver(new mekwars.common.gui.CCommPanel.IInputReceiver() {
+        chatField.setReceiver(new CCommPanel.IInputReceiver() {
             public boolean processInput(String input) {
                 return (sendChat(input));
             }
         });
         add(chatField, java.awt.BorderLayout.SOUTH);
-        ForwardCommTab = new mekwars.common.gui.CCommPanel.CTabForwardAction();
+        ForwardCommTab = new CCommPanel.CTabForwardAction();
         getInputMap(WHEN_IN_FOCUSED_WINDOW).put(javax.swing.KeyStroke.getKeyStroke("alt Z"), "TabForward");
         getActionMap().put("TabForward", ForwardCommTab);
-        BackwardCommTab = new mekwars.common.gui.CCommPanel.CTabBackwardAction();
+        BackwardCommTab = new CCommPanel.CTabBackwardAction();
         getInputMap(WHEN_IN_FOCUSED_WINDOW).put(javax.swing.KeyStroke.getKeyStroke("shift alt Z"), "TabBackward");
         getActionMap().put("TabBackward", BackwardCommTab);
 
@@ -439,11 +439,11 @@ public class CCommPanel extends javax.swing.JPanel
         getInputMap(WHEN_IN_FOCUSED_WINDOW).put(javax.swing.KeyStroke.getKeyStroke("F3"), "HitF3");
         getInputMap(WHEN_IN_FOCUSED_WINDOW).put(javax.swing.KeyStroke.getKeyStroke("F4"), "HitF4");
         getInputMap(WHEN_IN_FOCUSED_WINDOW).put(javax.swing.KeyStroke.getKeyStroke("F5"), "HitF5");
-        getActionMap().put("HitF1", new mekwars.common.gui.CCommPanel.CF1KeyAction());
-        getActionMap().put("HitF2", new mekwars.common.gui.CCommPanel.CF2KeyAction());
-        getActionMap().put("HitF3", new mekwars.common.gui.CCommPanel.CF3KeyAction());
-        getActionMap().put("HitF4", new mekwars.common.gui.CCommPanel.CF4KeyAction());
-        getActionMap().put("HitF5", new mekwars.common.gui.CCommPanel.CF5KeyAction());
+        getActionMap().put("HitF1", new CCommPanel.CF1KeyAction());
+        getActionMap().put("HitF2", new CCommPanel.CF2KeyAction());
+        getActionMap().put("HitF3", new CCommPanel.CF3KeyAction());
+        getActionMap().put("HitF4", new CCommPanel.CF4KeyAction());
+        getActionMap().put("HitF5", new CCommPanel.CF5KeyAction());
     }// end CommPanel()
 
     // something that the user has typed
@@ -553,7 +553,7 @@ public class CCommPanel extends javax.swing.JPanel
         String mnoemonic = Integer.toString(getNextMailTabNumber());
 
         newETab.setEditable(false);
-        newETab.setCaret(new mekwars.common.gui.CCommPanel.ScrollCaret());
+        newETab.setCaret(new CCommPanel.ScrollCaret());
         newETab.addHyperlinkListener(chatHLL);
         newETab.setEditorKit(kit);
         newSTab.setHorizontalScrollBarPolicy(javax.swing.ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
@@ -575,7 +575,7 @@ public class CCommPanel extends javax.swing.JPanel
         if (mnemo == -1) {mnemo = CommTPane.getTitleAt(index).indexOf(mnoemonic.toLowerCase());}
 
         CommTPane.setDisplayedMnemonicIndexAt(index, mnemo);
-        mekwars.common.gui.CCommPanel.CSelectTabAction LogSelect = new mekwars.common.gui.CCommPanel.CSelectTabAction(
+        CCommPanel.CSelectTabAction LogSelect = new CCommPanel.CSelectTabAction(
               newPanel);
         getInputMap(WHEN_IN_FOCUSED_WINDOW).put(javax.swing.KeyStroke.getKeyStroke("alt " + mnoemonic.toUpperCase()),
               "Mail From " + tabName);
@@ -716,8 +716,8 @@ public class CCommPanel extends javax.swing.JPanel
                   !autoTextUpdate &&
                   (scrollbar.getValue() + scrollbar.getVisibleAmount()) < scrollbar.getMaximum() * 0.97) {
             scroll = false;
-            ((mekwars.common.gui.CCommPanel.ScrollCaret) editorpane.getCaret()).showCaret = false;
-        } else {((mekwars.common.gui.CCommPanel.ScrollCaret) editorpane.getCaret()).showCaret = true;}
+            ((CCommPanel.ScrollCaret) editorpane.getCaret()).showCaret = false;
+        } else {((CCommPanel.ScrollCaret) editorpane.getCaret()).showCaret = true;}
 
         try {
             if (s.endsWith("<br>")) {
@@ -797,7 +797,7 @@ public class CCommPanel extends javax.swing.JPanel
         if (mnemo == -1) {mnemo = CommTPane.getTitleAt(index).indexOf("o");}
 
         CommTPane.setDisplayedMnemonicIndexAt(index, mnemo);
-        ModMailSelect = new mekwars.common.gui.CCommPanel.CSelectTabAction(ModMailPanel);
+        ModMailSelect = new CCommPanel.CSelectTabAction(ModMailPanel);
         getInputMap(WHEN_IN_FOCUSED_WINDOW).put(javax.swing.KeyStroke.getKeyStroke("alt O"), "ModMailSelect");
         getActionMap().put("ModMailSelect", ModMailSelect);
 
@@ -813,7 +813,7 @@ public class CCommPanel extends javax.swing.JPanel
         if (mnemo == -1) {mnemo = CommTPane.getTitleAt(index).indexOf("r");}
 
         CommTPane.setDisplayedMnemonicIndexAt(index, mnemo);
-        ErrorLogSelect = new mekwars.common.gui.CCommPanel.CSelectTabAction(ErrorLogPanel);
+        ErrorLogSelect = new CCommPanel.CSelectTabAction(ErrorLogPanel);
         getInputMap(WHEN_IN_FOCUSED_WINDOW).put(javax.swing.KeyStroke.getKeyStroke("alt R"), "ErrorLogSelect");
         getActionMap().put("ErrorLogSelect", ErrorLogSelect);
     }
@@ -1041,7 +1041,7 @@ public class CCommPanel extends javax.swing.JPanel
             return;
         }
 
-        if (e.getSource() instanceof mekwars.common.gui.CCommPanel.CChatField) {
+        if (e.getSource() instanceof CCommPanel.CChatField) {
             javax.swing.JPopupMenu clipboard = new javax.swing.JPopupMenu();
             javax.swing.JMenuItem copy = new javax.swing.JMenuItem("Cut");
 
@@ -1215,7 +1215,7 @@ public class CCommPanel extends javax.swing.JPanel
             mnemo = CommTPane.getTitleAt(index).indexOf(mnemonicText.toUpperCase());
             if (mnemo == -1) {mnemo = CommTPane.getTitleAt(index).indexOf(mnemonicText.toLowerCase());}
             CommTPane.setDisplayedMnemonicIndexAt(index, mnemo);
-            if (HMailSelect == null) {HMailSelect = new mekwars.common.gui.CCommPanel.CSelectTabAction(HMailPanel);}
+            if (HMailSelect == null) {HMailSelect = new CCommPanel.CSelectTabAction(HMailPanel);}
             getInputMap(WHEN_IN_FOCUSED_WINDOW).put(javax.swing.KeyStroke.getKeyStroke("alt " +
                                                                                              mnemonicText.toUpperCase()),
                   "HMailSelect");
@@ -1233,7 +1233,7 @@ public class CCommPanel extends javax.swing.JPanel
                 mnemo = CommTPane.getTitleAt(index).indexOf(mnemonicText.toUpperCase());
                 if (mnemo == -1) {mnemo = CommTPane.getTitleAt(index).indexOf(mnemonicText.toLowerCase());}
                 CommTPane.setDisplayedMnemonicIndexAt(index, mnemo);
-                if (PMailSelect == null) {PMailSelect = new mekwars.common.gui.CCommPanel.CSelectTabAction(PMailPanel);}
+                if (PMailSelect == null) {PMailSelect = new CCommPanel.CSelectTabAction(PMailPanel);}
                 getInputMap(WHEN_IN_FOCUSED_WINDOW).put(javax.swing.KeyStroke.getKeyStroke("alt " +
                                                                                                  mnemonicText.toUpperCase()),
                       "PMailSelect");
@@ -1252,7 +1252,7 @@ public class CCommPanel extends javax.swing.JPanel
             mnemo = CommTPane.getTitleAt(index).indexOf(mnemonicText.toUpperCase());
             if (mnemo == -1) {mnemo = CommTPane.getTitleAt(index).indexOf(mnemonicText.toLowerCase());}
             CommTPane.setDisplayedMnemonicIndexAt(index, mnemo);
-            if (PLogSelect == null) {PLogSelect = new mekwars.common.gui.CCommPanel.CSelectTabAction(PLogPanel);}
+            if (PLogSelect == null) {PLogSelect = new CCommPanel.CSelectTabAction(PLogPanel);}
             getInputMap(WHEN_IN_FOCUSED_WINDOW).put(javax.swing.KeyStroke.getKeyStroke("alt " +
                                                                                              mnemonicText.toUpperCase()),
                   "PLogSelect (Alt + " + mnemonicText.toUpperCase() + ")");
@@ -1269,7 +1269,7 @@ public class CCommPanel extends javax.swing.JPanel
             mnemo = CommTPane.getTitleAt(index).indexOf(mnemonicText.toUpperCase());
             if (mnemo == -1) {mnemo = CommTPane.getTitleAt(index).indexOf(mnemonicText.toLowerCase());}
             CommTPane.setDisplayedMnemonicIndexAt(index, mnemo);
-            if (SLogSelect == null) {SLogSelect = new mekwars.common.gui.CCommPanel.CSelectTabAction(SLogPanel);}
+            if (SLogSelect == null) {SLogSelect = new CCommPanel.CSelectTabAction(SLogPanel);}
             getInputMap(WHEN_IN_FOCUSED_WINDOW).put(javax.swing.KeyStroke.getKeyStroke("alt " +
                                                                                              mnemonicText.toUpperCase()),
                   "SLogSelect");
@@ -1291,7 +1291,7 @@ public class CCommPanel extends javax.swing.JPanel
             if (mnemo == -1) {mnemo = CommTPane.getTitleAt(index).indexOf(mnemonicText.toLowerCase());}
             CommTPane.setDisplayedMnemonicIndexAt(index, mnemo);
             if (MiscChannelSelect == null) {
-                MiscChannelSelect = new mekwars.common.gui.CCommPanel.CSelectTabAction(MiscChannelPanel);
+                MiscChannelSelect = new CCommPanel.CSelectTabAction(MiscChannelPanel);
             }
             getInputMap(WHEN_IN_FOCUSED_WINDOW).put(javax.swing.KeyStroke.getKeyStroke("alt " +
                                                                                              mnemonicText.toUpperCase()),
@@ -1309,7 +1309,7 @@ public class CCommPanel extends javax.swing.JPanel
             mnemo = CommTPane.getTitleAt(index).indexOf(mnemonicText.toUpperCase());
             if (mnemo == -1) {mnemo = CommTPane.getTitleAt(index).indexOf(mnemonicText.toLowerCase());}
             CommTPane.setDisplayedMnemonicIndexAt(index, mnemo);
-            RPGChannelSelect = new mekwars.common.gui.CCommPanel.CSelectTabAction(RPGChannelPanel);
+            RPGChannelSelect = new CCommPanel.CSelectTabAction(RPGChannelPanel);
             getInputMap(WHEN_IN_FOCUSED_WINDOW).put(javax.swing.KeyStroke.getKeyStroke("alt " +
                                                                                              mnemonicText.toUpperCase()),
                   "RPGChannelSelect");
@@ -1474,7 +1474,7 @@ public class CCommPanel extends javax.swing.JPanel
         java.util.ArrayList<String> ChatHistory = new java.util.ArrayList<String>();
         java.util.ArrayList<String> Users = new java.util.ArrayList<String>();
 
-        mekwars.common.gui.CCommPanel.IInputReceiver myReceiver;
+        CCommPanel.IInputReceiver myReceiver;
         String textandnick = "";
 
         public CChatField(IClient client) {
@@ -1487,7 +1487,7 @@ public class CCommPanel extends javax.swing.JPanel
             this.setCaretColor(StringUtils.html2Color(mwclient.getConfigParam("CHATFONTCOLOR")));
         }
 
-        public void setReceiver(mekwars.common.gui.CCommPanel.IInputReceiver receiver) {
+        public void setReceiver(CCommPanel.IInputReceiver receiver) {
             this.myReceiver = receiver;
         }
 

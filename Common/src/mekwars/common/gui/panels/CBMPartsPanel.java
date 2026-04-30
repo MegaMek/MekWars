@@ -14,10 +14,11 @@
  */
 
 
-package mekwars.common.gui;
+package mekwars.common.gui.panels;
 
 import mekwars.common.BMEquipment;
 import mekwars.common.campaign.CCampaign;
+import mekwars.common.gui.TableSorter;
 import mekwars.common.util.SpringLayoutHelper;
 
 /**

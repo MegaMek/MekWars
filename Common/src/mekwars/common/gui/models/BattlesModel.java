@@ -1,6 +1,7 @@
-package mekwars.common.gui;
+package mekwars.common.gui.models;
 
 import mekwars.common.MMGame;
+import mekwars.common.gui.panels.CBattlePanel;
 
 public class BattlesModel extends javax.swing.table.AbstractTableModel {
 

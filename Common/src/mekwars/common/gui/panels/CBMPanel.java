@@ -14,11 +14,13 @@
  * for more details.
  */
 
-package mekwars.common.gui;
+package mekwars.common.gui.panels;
 
 import megamek.common.units.Entity;
 import mekwars.common.campaign.CBMUnit;
 import mekwars.common.campaign.CCampaign;
+import mekwars.common.gui.MWUnitDisplay;
+import mekwars.common.gui.TableSorter;
 import mekwars.common.gui.dialogs.SellUnitDialog;
 import mekwars.common.util.MWLogger;
 import mekwars.common.util.SpringLayoutHelper;

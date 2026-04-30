@@ -67,7 +67,7 @@ import mekwars.common.campaign.clientutils.protocol.commands.IProtCommand;
 import mekwars.common.campaign.clientutils.protocol.commands.PingPCmd;
 import mekwars.common.campaign.clientutils.protocol.commands.PongPCmd;
 import mekwars.common.gui.Browser;
-import mekwars.common.gui.CCommPanel;
+import mekwars.common.gui.panels.CCommPanel;
 import mekwars.common.gui.CMainFrame;
 import mekwars.common.gui.GUIClientConfig;
 import mekwars.common.gui.SplashWindow;

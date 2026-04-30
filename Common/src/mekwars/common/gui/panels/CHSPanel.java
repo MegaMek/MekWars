@@ -15,7 +15,7 @@
  * for more details.
  */
 
-package mekwars.common.gui;
+package mekwars.common.gui.panels;
 
 import megamek.client.generator.RandomGenderGenerator;
 import megamek.common.units.CrewType;
@@ -25,6 +25,9 @@ import mekwars.common.Unit;
 import mekwars.common.UnitFactory;
 import mekwars.common.campaign.CCampaign;
 import mekwars.common.campaign.CPlayer;
+import mekwars.common.gui.MMNetHyperLinkListener;
+import mekwars.common.gui.MWUnitDisplay;
+import mekwars.common.gui.MyHTMLEditorKit;
 import mekwars.common.util.MWLogger;
 import mekwars.common.util.SpringLayoutHelper;
 import mekwars.common.util.UnitUtils;
@@ -53,7 +56,7 @@ public class CHSPanel extends javax.swing.JPanel {
     private javax.swing.JButton buyNewButton = new javax.swing.JButton();
     private javax.swing.JButton buyUsedButton = new javax.swing.JButton();
     private javax.swing.JLabel lblInfo = new javax.swing.JLabel();
-    private mekwars.common.gui.CHSPanel.BuyPopupListener myPopup = null;
+    private CHSPanel.BuyPopupListener myPopup = null;
 
     // Needed to internally store SHouse Status
     private String HouseName;
@@ -68,7 +71,7 @@ public class CHSPanel extends javax.swing.JPanel {
         mwclient = client;
         theCampaign = mwclient.getCampaign();
         thePlayer = theCampaign.getPlayer();
-        myPopup = new mekwars.common.gui.CHSPanel.BuyPopupListener();
+        myPopup = new CHSPanel.BuyPopupListener();
 
         mainPane.setEditorKit(kit);
         mainPane.setEditable(false);

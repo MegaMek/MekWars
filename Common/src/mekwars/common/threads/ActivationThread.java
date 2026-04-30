@@ -3,7 +3,9 @@ package mekwars.common.threads;
 import javax.swing.Icon;
 import javax.swing.JButton;
 
-class ActivationThread extends Thread {
+import mekwars.common.campaign.clientutils.protocol.IClient;
+
+public class ActivationThread extends Thread {
 
     Icon flashIcon = null;
     Icon startIcon = null;

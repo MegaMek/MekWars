@@ -15,13 +15,15 @@
  * for more details.
  */
 
-package mekwars.common.gui;
+package mekwars.common.gui.panels;
 
 
 import java.io.Serial;
 
 import mekwars.common.MMGame;
 import mekwars.common.campaign.clientutils.protocol.IClient;
+import mekwars.common.gui.models.BattlesModel;
+import mekwars.common.gui.TableSorter;
 
 /**
  * The panel where all currently active battles are shown
@@ -39,7 +41,7 @@ public class CBattlePanel extends javax.swing.JPanel {
     private static final long serialVersionUID = -1556406945897698254L;
     private final IClient mwclient;
     private final javax.swing.JTable BattleTable;
-    private final mekwars.common.gui.CBattlePanel.BattlesModel battleTableModel;
+    private final CBattlePanel.BattlesModel battleTableModel;
     private final javax.swing.JScrollPane battleScrollPane;
     private final TableSorter battleSorter;
 
@@ -51,7 +53,7 @@ public class CBattlePanel extends javax.swing.JPanel {
         setLayout(new javax.swing.BoxLayout(this, javax.swing.BoxLayout.Y_AXIS));
 
         //make table and set sorted model
-        battleTableModel = new mekwars.common.gui.CBattlePanel.BattlesModel();
+        battleTableModel = new CBattlePanel.BattlesModel();
         BattleTable = new javax.swing.JTable();
 
         battleSorter = new TableSorter(battleTableModel, mwclient, TableSorter.SORTER_BATTLES);
@@ -59,7 +61,7 @@ public class CBattlePanel extends javax.swing.JPanel {
         battleSorter.addMouseListenerToHeaderInTable(this.BattleTable);
 
         BattleTable.setDefaultRenderer(Object.class, battleTableModel.getRenderer());
-        BattleTable.addMouseListener(new mekwars.common.gui.CBattlePanel.BattlePopupListener());
+        BattleTable.addMouseListener(new CBattlePanel.BattlePopupListener());
         //Host name
         BattleTable.getColumnModel().getColumn(0).setMinWidth(10);
         BattleTable.getColumnModel().getColumn(0).setPreferredWidth(100);

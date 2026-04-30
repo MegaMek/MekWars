@@ -20,7 +20,7 @@ package mekwars.client.gui;
 import common.House;
 import common.Planet;
 import common.util.StringUtils;
-import mekwars.common.gui.CMapPanel;
+import mekwars.common.gui.panels.CMapPanel;
 
 /**
  * Draws statistic for a specific CPlanet in the stellar map
@@ -42,6 +42,7 @@ class PlanetPanel extends javax.swing.JPanel {
     private javax.swing.JLabel influence;
     //private JLabel terrain;
     private javax.swing.JLabel unitFactories;
+
     PlanetPanel(CMapPanel panel, client.MWClient client) {
         mwclient = client;
         setForeground(java.awt.Color.WHITE);

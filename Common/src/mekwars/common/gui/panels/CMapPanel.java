@@ -15,11 +15,13 @@
  * for more details.
  */
 
-package mekwars.common.gui;
+package mekwars.common.gui.panels;
 
 import common.CampaignData;
 import common.util.MWLogger;
 import mekwars.common.campaign.clientutils.protocol.IClient;
+import mekwars.common.gui.CMainFrame;
+import mekwars.common.gui.InnerStellarMap;
 
 /**
  * Class used to display Stellar InnerStellarMap in GUI
@@ -76,7 +78,7 @@ public class CMapPanel extends javax.swing.JPanel {
         planetPanel.setAlignmentY(java.awt.Component.TOP_ALIGNMENT);
 
         // zoom slider
-        slider = new mekwars.common.gui.CMapPanel.ZoomSlider();
+        slider = new CMapPanel.ZoomSlider();
         slider.setValue((int) Math.round(50 / map.conf.scale));
         slider.setAlignmentX(java.awt.Component.LEFT_ALIGNMENT);
         slider.setAlignmentY(java.awt.Component.TOP_ALIGNMENT);
@@ -165,7 +167,7 @@ public class CMapPanel extends javax.swing.JPanel {
 
         public void stateChanged(javax.swing.event.ChangeEvent e) {
             map.setScale(50 / (double) getValue());
-            mekwars.common.gui.CMapPanel.this.repaint();
+            CMapPanel.this.repaint();
         }
     }
 }
