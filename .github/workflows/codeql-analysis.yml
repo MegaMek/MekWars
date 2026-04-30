@@ -20,7 +20,7 @@ jobs:
     runs-on: ${{ matrix.os }}
 
     steps:
-      - name: "Check out MegaMek"
+      - name: "Check out MekWars"
         uses: actions/checkout@v6
 
       - name: Set up ${{ matrix.java-distribution }} JDK ${{ matrix.java-version }}
