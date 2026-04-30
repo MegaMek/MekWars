@@ -41,7 +41,7 @@ import javax.swing.border.LineBorder;
 import javax.swing.plaf.basic.BasicButtonUI;
 
 import mekwars.common.campaign.clientutils.protocol.IClient;
-import mekwars.common.gui.UserListPopupListener;
+import mekwars.common.gui.listeners.UserListPopupListener;
 import mekwars.common.gui.models.CUserListModel;
 import mekwars.common.threads.ActivationThread;
 import mekwars.common.util.MWLogger;
@@ -330,6 +330,10 @@ public class CUserListPanel extends JPanel implements ActionListener {
         bottomPanel.add(linksPanel, BorderLayout.SOUTH);
 
         add(bottomPanel, BorderLayout.SOUTH);
+    }
+
+    public IClient getClient() {
+        return client;
     }
 
     public CUserListModel getUsers() {

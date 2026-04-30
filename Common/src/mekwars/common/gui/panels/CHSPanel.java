@@ -25,9 +25,10 @@ import mekwars.common.Unit;
 import mekwars.common.UnitFactory;
 import mekwars.common.campaign.CCampaign;
 import mekwars.common.campaign.CPlayer;
-import mekwars.common.gui.MMNetHyperLinkListener;
+import mekwars.common.campaign.clientutils.protocol.IClient;
 import mekwars.common.gui.MWUnitDisplay;
 import mekwars.common.gui.MyHTMLEditorKit;
+import mekwars.common.gui.listeners.MMNetHyperLinkListener;
 import mekwars.common.util.MWLogger;
 import mekwars.common.util.SpringLayoutHelper;
 import mekwars.common.util.UnitUtils;
@@ -42,7 +43,7 @@ public class CHSPanel extends javax.swing.JPanel {
      *
      */
     private static final long serialVersionUID = -6985292870326367798L;
-    MWClient mwclient;
+    IClient client;
     CPlayer thePlayer;
     CCampaign theCampaign;
     javax.swing.JEditorPane mainPane = new javax.swing.JEditorPane();
@@ -68,14 +69,14 @@ public class CHSPanel extends javax.swing.JPanel {
     public CHSPanel(client.MWClient client) {
 
         setLayout(new java.awt.GridBagLayout());
-        mwclient = client;
-        theCampaign = mwclient.getCampaign();
+        this.client = client;
+        theCampaign = this.client.getCampaign();
         thePlayer = theCampaign.getPlayer();
         myPopup = new CHSPanel.BuyPopupListener();
 
         mainPane.setEditorKit(kit);
         mainPane.setEditable(false);
-        mainPane.addHyperlinkListener(new MMNetHyperLinkListener(mwclient, this));
+        mainPane.addHyperlinkListener(new MMNetHyperLinkListener(this.client, this));
         scrollPane.setHorizontalScrollBarPolicy(javax.swing.ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
         scrollPane.setViewportBorder(new javax.swing.border.LineBorder(new java.awt.Color(0, 0, 0)));
         scrollPane.setViewportView(mainPane);
@@ -187,7 +188,7 @@ public class CHSPanel extends javax.swing.JPanel {
         menuItem.addActionListener(myPopup);
         tmenu.add(menuItem);
 
-        if (Boolean.parseBoolean(mwclient.getserverConfigs("UseVehicle"))) {
+        if (Boolean.parseBoolean(client.getserverConfigs("UseVehicle"))) {
             tmenu = new javax.swing.JMenu("Vehicle");
             buy.add(tmenu);
             menuItem = new javax.swing.JMenuItem("Light Vehicle");
@@ -208,7 +209,7 @@ public class CHSPanel extends javax.swing.JPanel {
             tmenu.add(menuItem);
         }
 
-        if (Boolean.parseBoolean(mwclient.getserverConfigs("UseInfantry"))) {
+        if (Boolean.parseBoolean(client.getserverConfigs("UseInfantry"))) {
             tmenu = new javax.swing.JMenu("Infantry");
             buy.add(tmenu);
             menuItem = new javax.swing.JMenuItem("Light Infantry");
@@ -229,7 +230,7 @@ public class CHSPanel extends javax.swing.JPanel {
             tmenu.add(menuItem);
         }
 
-        if (Boolean.parseBoolean(mwclient.getserverConfigs("UseProtoMek"))) {
+        if (Boolean.parseBoolean(client.getserverConfigs("UseProtoMek"))) {
             tmenu = new javax.swing.JMenu("ProtoMek");
             buy.add(tmenu);
             menuItem = new javax.swing.JMenuItem("Light ProtoMek");
@@ -250,7 +251,7 @@ public class CHSPanel extends javax.swing.JPanel {
             tmenu.add(menuItem);
         }
 
-        if (Boolean.parseBoolean(mwclient.getserverConfigs("UseBattleArmor"))) {
+        if (Boolean.parseBoolean(client.getserverConfigs("UseBattleArmor"))) {
             tmenu = new javax.swing.JMenu("Battle Armor");
             buy.add(tmenu);
             menuItem = new javax.swing.JMenuItem("Light Battle Armor");
@@ -271,7 +272,7 @@ public class CHSPanel extends javax.swing.JPanel {
             tmenu.add(menuItem);
         }
 
-        if (Boolean.parseBoolean(mwclient.getserverConfigs("UseAero"))) {
+        if (Boolean.parseBoolean(client.getserverConfigs("UseAero"))) {
             tmenu = new javax.swing.JMenu("Aero");
             buy.add(tmenu);
             menuItem = new javax.swing.JMenuItem("Light Aero");
@@ -292,7 +293,7 @@ public class CHSPanel extends javax.swing.JPanel {
             tmenu.add(menuItem);
         }
 
-        if (Boolean.parseBoolean(mwclient.getserverConfigs("AllowPersonalPilotQueues"))) {
+        if (Boolean.parseBoolean(client.getserverConfigs("AllowPersonalPilotQueues"))) {
             tmenu = new javax.swing.JMenu("Pilots");
             buy.add(tmenu);
             javax.swing.JMenu smenu = new javax.swing.JMenu("Mek");
@@ -314,7 +315,7 @@ public class CHSPanel extends javax.swing.JPanel {
             smenu.add(menuItem);
             tmenu.add(smenu);
 
-            if (Boolean.parseBoolean(mwclient.getserverConfigs("UseProtoMek"))) {
+            if (Boolean.parseBoolean(client.getserverConfigs("UseProtoMek"))) {
                 smenu = new javax.swing.JMenu("Proto");
                 menuItem = new javax.swing.JMenuItem("Light Pilot");
                 menuItem.setActionCommand("BUYP|" + Unit.PROTOMEK + "|" + Unit.LIGHT);
@@ -363,7 +364,7 @@ public class CHSPanel extends javax.swing.JPanel {
         menuItem.addActionListener(myPopup);
         tmenu.add(menuItem);
 
-        if (Boolean.parseBoolean(mwclient.getserverConfigs("UseVehicle"))) {
+        if (Boolean.parseBoolean(client.getserverConfigs("UseVehicle"))) {
             tmenu = new javax.swing.JMenu("Vehicle");
             buy.add(tmenu);
             menuItem = new javax.swing.JMenuItem("Light Vehicle");
@@ -383,7 +384,7 @@ public class CHSPanel extends javax.swing.JPanel {
             menuItem.addActionListener(myPopup);
             tmenu.add(menuItem);
         }
-        if (Boolean.parseBoolean(mwclient.getserverConfigs("UseInfantry"))) {
+        if (Boolean.parseBoolean(client.getserverConfigs("UseInfantry"))) {
             tmenu = new javax.swing.JMenu("Infantry");
             buy.add(tmenu);
             menuItem = new javax.swing.JMenuItem("Light Infantry");
@@ -404,7 +405,7 @@ public class CHSPanel extends javax.swing.JPanel {
             tmenu.add(menuItem);
         }
 
-        if (Boolean.parseBoolean(mwclient.getserverConfigs("UseProtoMek"))) {
+        if (Boolean.parseBoolean(client.getserverConfigs("UseProtoMek"))) {
             tmenu = new javax.swing.JMenu("ProtoMek");
             buy.add(tmenu);
             menuItem = new javax.swing.JMenuItem("Light ProtoMek");
@@ -425,7 +426,7 @@ public class CHSPanel extends javax.swing.JPanel {
             tmenu.add(menuItem);
         }
 
-        if (Boolean.parseBoolean(mwclient.getserverConfigs("UseBattleArmor"))) {
+        if (Boolean.parseBoolean(client.getserverConfigs("UseBattleArmor"))) {
             tmenu = new javax.swing.JMenu("Battle Armor");
             buy.add(tmenu);
             menuItem = new javax.swing.JMenuItem("Light Battle Armor");
@@ -446,7 +447,7 @@ public class CHSPanel extends javax.swing.JPanel {
             tmenu.add(menuItem);
         }
 
-        if (Boolean.parseBoolean(mwclient.getserverConfigs("UseAero"))) {
+        if (Boolean.parseBoolean(client.getserverConfigs("UseAero"))) {
             tmenu = new javax.swing.JMenu("Aero");
             buy.add(tmenu);
             menuItem = new javax.swing.JMenuItem("Light Aero");
@@ -497,7 +498,7 @@ public class CHSPanel extends javax.swing.JPanel {
         String weight = tokenizer.nextToken();
         String type = tokenizer.nextToken();
 
-        HSMek currHSUnit = new HSMek(mwclient, tokenizer);// reads rest of
+        HSMek currHSUnit = new HSMek(client, tokenizer);// reads rest of
         // tokens
 
         // if there isn't a vector for this type + weight combo already, create
@@ -853,22 +854,22 @@ public class CHSPanel extends javax.swing.JPanel {
 
         // Returns the Private Status for Members only
         StringBuilder result = new StringBuilder("<BODY  TEXT=\"" +
-                                                       mwclient.getConfigParam("CHATFONTCOLOR") +
+                                                       client.getConfigParam("CHATFONTCOLOR") +
                                                        "\" BGCOLOR=\"" +
-                                                       mwclient.getConfigParam("BACKGROUNDCOLOR") +
+                                                       client.getConfigParam("BACKGROUNDCOLOR") +
                                                        "\">");
-        boolean usingAdvanceRepairs = mwclient.isUsingAdvanceRepairs();
-        int playerAccessLevel = mwclient.getPlayer().getSubFactionAccess();
+        boolean usingAdvanceRepairs = client.isUsingAdvanceRepairs();
+        int playerAccessLevel = client.getPlayer().getSubFactionAccess();
         result.append("<TABLE Border=\"1\"><TR><TH>" +
                             HouseName +
                             "</TH><TH>" +
-                            mwclient.getserverConfigs("LightFactoryTypeTitle") +
+                            client.getserverConfigs("LightFactoryTypeTitle") +
                             "</TH><TH>" +
-                            mwclient.getserverConfigs("MediumFactoryTypeTitle") +
+                            client.getserverConfigs("MediumFactoryTypeTitle") +
                             "</TH><TH>" +
-                            mwclient.getserverConfigs("HeavyFactoryTypeTitle") +
+                            client.getserverConfigs("HeavyFactoryTypeTitle") +
                             "</TH><TH>" +
-                            mwclient.getserverConfigs("AssaultFactoryTypeTitle") +
+                            client.getserverConfigs("AssaultFactoryTypeTitle") +
                             "</TH></TR>");
         int factoryGifCounter;
         for (int type_id = 0; type_id < Unit.TOTALTYPES; type_id++) {
@@ -876,14 +877,14 @@ public class CHSPanel extends javax.swing.JPanel {
             // hide unit types that aren't in use on the server
             String useIt = "Use" + Unit.getTypeClassDesc(type_id);
 
-            if (!Boolean.parseBoolean(mwclient.getserverConfigs(useIt))) {
+            if (!Boolean.parseBoolean(client.getserverConfigs(useIt))) {
                 continue;
             }
             if (!hasFactories(type_id)) {
                 continue;
             }
 
-            String factoryTitle = mwclient.getserverConfigs(Unit.getTypeClassDesc(type_id) + "FactoryClassTitle");
+            String factoryTitle = client.getserverConfigs(Unit.getTypeClassDesc(type_id) + "FactoryClassTitle");
             result.append("<TR><TD VALIGN=MIDDLE><b>" + factoryTitle + "</b></TD>");
 
             for (int weight = 0; weight < 4; weight++) {
@@ -939,34 +940,34 @@ public class CHSPanel extends javax.swing.JPanel {
                             }
                             if (refreshTime == 0) {
 
-                                House foundH = mwclient.getData().getHouseByName(founder);
-                                int cbillCost = client.campaign.CUnit.getPriceForUnit(mwclient,
+                                House foundH = client.getData().getHouseByName(founder);
+                                int cbillCost = client.campaign.CUnit.getPriceForUnit(client,
                                       weight,
                                       type_id,
-                                      foundH) + mwclient.getPlayer().getHangarPurchasePenalty(type_id, weight);
-                                int fluCost = client.campaign.CUnit.getInfluenceForUnit(mwclient,
+                                      foundH) + client.getPlayer().getHangarPurchasePenalty(type_id, weight);
+                                int fluCost = client.campaign.CUnit.getInfluenceForUnit(client,
                                       weight,
                                       type_id,
                                       foundH);
-                                int ppCost = client.campaign.CUnit.getPPForUnit(mwclient, weight, type_id, foundH);
+                                int ppCost = client.campaign.CUnit.getPPForUnit(client, weight, type_id, foundH);
 
-                                if (!mwclient.getPlayer().getMyHouse().getName().equalsIgnoreCase(foundH.getName())) {
+                                if (!client.getPlayer().getMyHouse().getName().equalsIgnoreCase(foundH.getName())) {
                                     cbillCost = Math.round(cbillCost *
-                                                                 Float.parseFloat(mwclient.getserverConfigs(
+                                                                 Float.parseFloat(client.getserverConfigs(
                                                                        "NonOriginalCBillMultiplier"))) +
-                                                      mwclient.getPlayer().getHangarPurchasePenalty(type_id, weight);
+                                                      client.getPlayer().getHangarPurchasePenalty(type_id, weight);
                                     fluCost = Math.round(fluCost *
-                                                               Float.parseFloat(mwclient.getserverConfigs(
+                                                               Float.parseFloat(client.getserverConfigs(
                                                                      "NonOriginalInfluenceMultiplier")));
                                     ppCost = Math.round(ppCost *
-                                                              Float.parseFloat(mwclient.getserverConfigs(
+                                                              Float.parseFloat(client.getserverConfigs(
                                                                     "NonOriginalComponentMultiplier")));
                                 }
 
                                 String costString = "(Cost: " +
-                                                          mwclient.moneyOrFluMessage(true, true, cbillCost, false) +
+                                                          client.moneyOrFluMessage(true, true, cbillCost, false) +
                                                           ", " +
-                                                          mwclient.moneyOrFluMessage(false, true, fluCost, false) +
+                                                          client.moneyOrFluMessage(false, true, fluCost, false) +
                                                           ", " +
                                                           ppCost +
                                                           " Components)";
@@ -1041,7 +1042,7 @@ public class CHSPanel extends javax.swing.JPanel {
 
             // is not using units of the type, skip the listings
             String useIt = "Use" + Unit.getTypeClassDesc(type);
-            if (!Boolean.parseBoolean(mwclient.getserverConfigs(useIt))) {
+            if (!Boolean.parseBoolean(client.getserverConfigs(useIt))) {
                 continue;
             }
 
@@ -1053,7 +1054,7 @@ public class CHSPanel extends javax.swing.JPanel {
                 }
             }
             if (hasUnits) {
-                String factoryTitle = mwclient.getserverConfigs(Unit.getTypeClassDesc(type) + "FactoryClassTitle");
+                String factoryTitle = client.getserverConfigs(Unit.getTypeClassDesc(type) + "FactoryClassTitle");
                 result.append("<b>" + factoryTitle + " Bays</b><br>");
             }
 
@@ -1066,20 +1067,20 @@ public class CHSPanel extends javax.swing.JPanel {
                 }
 
                 if ((unitsInfo.get(weight + "$" + type) != null) && (unitsInfo.get(weight + "$" + type).size() > 0)) {
-                    House foundH = mwclient.getData().getHouseByName(mwclient.getPlayer().getMyHouse().getName());
-                    int cbillCost = Math.round(client.campaign.CUnit.getPriceForUnit(mwclient, weight, type, foundH) *
+                    House foundH = client.getData().getHouseByName(client.getPlayer().getMyHouse().getName());
+                    int cbillCost = Math.round(client.campaign.CUnit.getPriceForUnit(client, weight, type, foundH) *
                                                      foundH.getUsedMekBayMultiplier()) +
-                                          mwclient.getPlayer().getHangarPurchasePenalty(type, weight);
-                    int fluCost = Math.round(client.campaign.CUnit.getInfluenceForUnit(mwclient, weight, type, foundH) *
+                                          client.getPlayer().getHangarPurchasePenalty(type, weight);
+                    int fluCost = Math.round(client.campaign.CUnit.getInfluenceForUnit(client, weight, type, foundH) *
                                                    foundH.getUsedMekBayMultiplier());
                     result.append("<a href=\"MEKWARS/c requestdonated#" +
                                         weight +
                                         "#" +
                                         type +
                                         "\"><img border=\"0\" alt=\"Request one of the Units from this bay (Cost: " +
-                                        mwclient.moneyOrFluMessage(true, true, cbillCost, false) +
+                                        client.moneyOrFluMessage(true, true, cbillCost, false) +
                                         ", " +
-                                        mwclient.moneyOrFluMessage(false, true, fluCost, false) +
+                                        client.moneyOrFluMessage(false, true, fluCost, false) +
                                         ")\" src=\"data/images/cart.gif\"></a> " +
                                         Unit.getWeightClassDesc(weight) +
                                         ": ");
@@ -1290,7 +1291,7 @@ public class CHSPanel extends javax.swing.JPanel {
         unitEntity = embeddedUnit.getEntity();
 
         javax.swing.JFrame InfoWindow = new javax.swing.JFrame();
-        UnitDisplay unitDetailInfo = new MWUnitDisplay(null, mwclient);
+        UnitDisplay unitDetailInfo = new MWUnitDisplay(null, client);
         unitEntity.loadAllWeapons();
         unitEntity.setCrew(new megamek.common.Crew(CrewType.SINGLE,
               "",
@@ -1308,7 +1309,7 @@ public class CHSPanel extends javax.swing.JPanel {
         InfoWindow.setSize(300, 400);
         InfoWindow.setResizable(false);
         InfoWindow.setTitle(unitEntity.getModel());
-        InfoWindow.setLocationRelativeTo(mwclient.getMainFrame());
+        InfoWindow.setLocationRelativeTo(client.getMainFrame());
         InfoWindow.setVisible(true);
         unitDetailInfo.displayEntity(unitEntity);
     }
@@ -1321,7 +1322,7 @@ public class CHSPanel extends javax.swing.JPanel {
             String command = st.nextToken();
 
             if (command.equalsIgnoreCase("BUY")) {
-                mwclient.sendChat(client.MWClient.CAMPAIGN_PREFIX +
+                client.sendChat(client.MWClient.CAMPAIGN_PREFIX +
                                         "c request#" +
                                         st.nextToken() +
                                         "#" +
@@ -1329,7 +1330,7 @@ public class CHSPanel extends javax.swing.JPanel {
                 // (Client.getMainFrame().getMainPanel().getCommPanel()).
                 // removeHttpLinksFromEditorPane(CCommPanel.CHANNEL_MISC);
             } else if (command.equalsIgnoreCase("BUYU")) {
-                mwclient.sendChat(client.MWClient.CAMPAIGN_PREFIX +
+                client.sendChat(client.MWClient.CAMPAIGN_PREFIX +
                                         "c requestdonated#" +
                                         st.nextToken() +
                                         "#" +
@@ -1337,7 +1338,7 @@ public class CHSPanel extends javax.swing.JPanel {
                 // (Client.getMainFrame().getMainPanel().getCommPanel()).
                 // removeHttpLinksFromEditorPane(CCommPanel.CHANNEL_MISC);
             } else if (command.equalsIgnoreCase("BUYP")) {
-                mwclient.sendChat(client.MWClient.CAMPAIGN_PREFIX +
+                client.sendChat(client.MWClient.CAMPAIGN_PREFIX +
                                         "c buypilotsfromhouse#" +
                                         st.nextToken() +
                                         "#" +

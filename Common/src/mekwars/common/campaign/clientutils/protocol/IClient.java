@@ -33,10 +33,12 @@
 package mekwars.common.campaign.clientutils.protocol;
 
 import java.awt.Dimension;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.StringTokenizer;
 import java.util.TreeMap;
+import java.util.Vector;
 
 import megamek.common.game.Game;
 import megamek.common.options.IBasicOption;
@@ -240,7 +242,7 @@ public interface IClient {
 
     void changeStatus(int i);
 
-    List<IBasicOption> getGameOptions();
+    Vector<IBasicOption> getGameOptions();
 
     void setEnvironment(PlanetEnvironment planetEnvironment, Dimension dimension, int mapMedium);
 
@@ -316,5 +318,9 @@ public interface IClient {
 
     String createFilenameChecksum(String s) throws Exception;
 
+    String getLastQuery();
+
     void setLastQuery(String name);
+
+    ArrayList<String> getPartialUser(String text);
 }

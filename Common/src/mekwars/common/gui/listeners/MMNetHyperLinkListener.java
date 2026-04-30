@@ -31,7 +31,7 @@ import mekwars.common.gui.InnerStellarMap;
 import mekwars.common.gui.panels.CHSPanel;
 import mekwars.common.util.MWLogger;
 
-class MMNetHyperLinkListener implements HyperlinkListener {
+public class MMNetHyperLinkListener implements HyperlinkListener {
 
     protected boolean isHovering = false;
     protected String Tooltip = null;
@@ -39,7 +39,7 @@ class MMNetHyperLinkListener implements HyperlinkListener {
     IClient client;
 
     /*
-     * Construct which takes only MWClient
+     * Construct, which takes only IClient,
      * is used for chat tabs.
      *
      * Construct which takes CHSPanel is

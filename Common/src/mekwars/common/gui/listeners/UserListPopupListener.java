@@ -1,26 +1,31 @@
 package mekwars.common.gui.listeners;
 
+import java.awt.event.ActionListener;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
+
 import mekwars.common.campaign.CUser;
 import mekwars.common.campaign.clientutils.protocol.IClient;
 import mekwars.common.gui.models.CUserListModel;
 import mekwars.common.gui.panels.CUserListPanel;
 import mekwars.common.util.MWLogger;
 
-class UserListPopupListener extends java.awt.event.MouseAdapter implements java.awt.event.ActionListener {
+public class UserListPopupListener extends MouseAdapter implements ActionListener {
 
     private final CUserListPanel cUserListPanel;
 
-    public UserListPopupListener(CUserListPanel cUserListPanel) {this.cUserListPanel = cUserListPanel;}
+    public UserListPopupListener(CUserListPanel cUserListPanel) {
+        this.cUserListPanel = cUserListPanel;
+    }
 
     @Override
-    public void mouseClicked(java.awt.event.MouseEvent e) {
-        if (e.getClickCount() == 2) {
+    public void mouseClicked(MouseEvent event) {
+        if (event.getClickCount() == 2) {
 
-            int row = cUserListPanel.UserList.locationToIndex(e.getPoint());
-            if (row > -1 && row < cUserListPanel.UserList.getModel().getSize()) {
+            int row = cUserListPanel.getUserList().locationToIndex(event.getPoint());
+            if (row > -1 && row < cUserListPanel.getUserList().getModel().getSize()) {
                 //don't show mail/money/mute/noplay for player himself
-                CUser user = ((CUserListModel) cUserListPanel.UserList.getModel()).getUser(
-                      row);
+                CUser user = ((CUserListModel) cUserListPanel.getUserList().getModel()).getUser(row);
                 String input = STR."\{IClient.GUI_PREFIX}mail \{user.getName()}, ";
                 input = input + cUserListPanel.client.getMainFrame().getMainPanel().getCommPanel().getInput();
                 cUserListPanel.client.getMainFrame().getMainPanel().getCommPanel().setInput(input);

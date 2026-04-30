@@ -14,18 +14,17 @@ package mekwars.common.gui.panels;
 
 import java.awt.GridBagConstraints;
 import java.io.Serial;
-
 import javax.swing.JButton;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTable;
 
 import mekwars.common.campaign.clientutils.protocol.IClient;
-import mekwars.common.gui.models.MekTableModel;
-import mekwars.common.gui.adapters.MechTableMouseAdapter;
+import mekwars.common.gui.adapters.MekTableMouseAdapter;
 import mekwars.common.gui.dialogs.BulkRepairDialog;
 import mekwars.common.gui.dialogs.CamoSelectionDialog;
 import mekwars.common.gui.dialogs.SolFreeBuildDialog;
+import mekwars.common.gui.models.MekTableModel;
 import mekwars.common.util.SpringLayoutHelper;
 import mekwars.common.util.UnitUtils;
 

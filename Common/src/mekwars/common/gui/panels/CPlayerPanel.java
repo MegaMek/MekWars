@@ -35,8 +35,8 @@ import javax.swing.border.LineBorder;
 import mekwars.common.campaign.CPlayer;
 import mekwars.common.campaign.clientutils.IClientConfig;
 import mekwars.common.campaign.clientutils.protocol.IClient;
-import mekwars.common.gui.MMNetHyperLinkListener;
 import mekwars.common.gui.MyHTMLEditorKit;
+import mekwars.common.gui.listeners.MMNetHyperLinkListener;
 import mekwars.common.util.MWLogger;
 import mekwars.common.util.UnitUtils;
 

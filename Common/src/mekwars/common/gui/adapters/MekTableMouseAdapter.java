@@ -1,43 +1,48 @@
 package mekwars.common.gui.adapters;
 
+import java.awt.Cursor;
+import java.awt.Image;
+import java.awt.Point;
+import java.awt.event.ActionListener;
+import java.awt.geom.Rectangle2D;
+import javax.swing.event.MouseInputAdapter;
+
 import megamek.common.units.Infantry;
 import mekwars.common.Army;
 import mekwars.common.Unit;
+import mekwars.common.campaign.CArmy;
+import mekwars.common.campaign.CUnit;
 import mekwars.common.campaign.pilot.Pilot;
 import mekwars.common.gui.AttackMenu;
-import mekwars.common.gui.panels.CHQPanel;
 import mekwars.common.gui.MWUnitDisplay;
 import mekwars.common.gui.dialogs.AdvancedRepairDialog;
 import mekwars.common.gui.dialogs.BulkRepairDialog;
 import mekwars.common.gui.dialogs.CustomUnitDialog;
 import mekwars.common.gui.dialogs.PromotePilotDialog;
+import mekwars.common.gui.panels.CHQPanel;
 import mekwars.common.util.UnitUtils;
 
-class MechTableMouseAdapter extends javax.swing.event.MouseInputAdapter implements java.awt.event.ActionListener {
+public class MekTableMouseAdapter extends MouseInputAdapter implements ActionListener {
 
     private final CHQPanel chqPanel;
+    private final Cursor exchangeCursor;
+    private final Cursor positionCursor;
+    private final Cursor addCursor;
+    private final Cursor removeCursor;
+    private final Cursor notAllowedCursor;
+    private final Cursor dupeCursor;
+    private final Cursor maxCursor;
     // VARS
     private boolean isDrag;
-    // private MekTableModel tableModel;
-
-    private java.awt.Image dragImage;
-    private java.awt.geom.Rectangle2D dragRect;
-    private java.awt.Point offset;
-
-    private client.campaign.CUnit dragUnit = null;
-    private client.campaign.CArmy startArmy = null;
-    private client.campaign.CArmy currArmy = null;
-
-    private java.awt.Cursor exchangeCursor;
-    private java.awt.Cursor positionCursor;
-    private java.awt.Cursor addCursor;
-    private java.awt.Cursor removeCursor;
-    private java.awt.Cursor notAllowedCursor;
-    private java.awt.Cursor dupeCursor;
-    private java.awt.Cursor maxCursor;
+    private Image dragImage;
+    private Rectangle2D dragRect;
+    private Point offset;
+    private CUnit dragUnit = null;
+    private CArmy startArmy = null;
+    private CArmy currArmy = null;
 
     // CONSTRUCTOR
-    public MechTableMouseAdapter(CHQPanel chqPanel) {
+    public MekTableMouseAdapter(CHQPanel chqPanel) {
         super();
         this.chqPanel = chqPanel;
 

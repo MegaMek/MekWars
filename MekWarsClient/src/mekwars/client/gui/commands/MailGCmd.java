@@ -22,6 +22,7 @@ import java.io.Serial;
 import mekwars.client.MWClient;
 import mekwars.common.campaign.clientutils.protocol.TransportCodec;
 import mekwars.common.gui.GUIClientConfig;
+import mekwars.common.gui.panels.CCommPanel;
 import mekwars.common.util.StringUtils;
 
 /**
@@ -134,7 +135,7 @@ public class MailGCmd extends CGUICommand {
         }
 
         //add to PrivateMessageCommand Channel
-        mwclient.addToChat(message, client.gui.CCommPanel.CHANNEL_PMAIL, tabName);
+        mwclient.addToChat(message, CCommPanel.CHANNEL_PMAIL, tabName);
 
         //if should be shown in main, add there as well
         if (Config.isParam("MAINCHANNELPM")) {
