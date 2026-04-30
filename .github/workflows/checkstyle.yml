@@ -26,7 +26,7 @@ jobs:
         uses: gradle/actions/setup-gradle@v6
 
       - name: Checkstyle
-        working-directory: megamek
+        working-directory: mekwars
         run: ./gradlew checkstyleMain checkstyleTest
 
       - name: Upload Test Logs on Failure
@@ -34,4 +34,4 @@ jobs:
         if: failure()
         with:
           name: cd-failure-logs
-          path: megamek/megamek/build/reports/
+          path: mekwars/build/reports/
