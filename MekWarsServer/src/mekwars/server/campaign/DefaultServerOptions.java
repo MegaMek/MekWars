@@ -865,7 +865,7 @@ public class DefaultServerOptions {
         defaults.setProperty("GunneryLaserBaseBVMod", "35");
         defaults.setProperty("GunneryMissileBaseBVMod", "35");
 
-        // Mega Mek Client Settings
+        // Mega Mek client Settings
         defaults.setProperty("MMTimeStampLogFile", "false");
         defaults.setProperty("MMShowUnitId", "true");
         defaults.setProperty("MMKeepGameLog", "false");

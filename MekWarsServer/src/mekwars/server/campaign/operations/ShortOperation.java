@@ -19,7 +19,7 @@
  * In some senses, the ShortOp is the closest thing the Operations system as a whole has to the old MMNET/early-MekWars style Task; however, many Task functions
  * are carried out by the Manager, Validators and Resolvers.
  *
- * Like the old Task, ShortOp handles game options, board settings, and other pertinent Client-loaded info.
+ * Like the old Task, ShortOp handles game options, board settings, and other pertinent client-loaded info.
  */
 
 package mekwars.server.campaign.operations;
@@ -2008,7 +2008,7 @@ public class ShortOperation implements Comparable<Object> {
 
     /**
      * Method which updates the ShortOperation's removedTree and pilotTree. String taken as a param is sent from a
-     * Client when a unit is removed, via MWServ and CampaignMain.
+     * client when a unit is removed, via MWServ and CampaignMain.
      * <p>
      * Each string will contain info for one, and only one, Entity, which may be either a "real" unit or a pilot.
      */

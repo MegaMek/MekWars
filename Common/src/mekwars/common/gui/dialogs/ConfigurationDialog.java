@@ -583,7 +583,7 @@ public final class ConfigurationDialog implements java.awt.event.ActionListener 
         hostPanelWrapper.add(dedicatedServiceHeader);
         hostPanelWrapper.add(new javax.swing.JLabel("\n"));
 
-        enableDedicatedServerCB.setText("Convert Client To Dedicated Host");
+        enableDedicatedServerCB.setText("Convert client To Dedicated Host");
         enableDedicatedServerCB.setToolTipText(
               "<HTML>Warning: Only check this box if you<BR> want this client to be turned into a dedicated host!</HTML>");
         enableDedicatedServerCB.setAlignmentX(java.awt.Component.CENTER_ALIGNMENT);
@@ -806,7 +806,7 @@ public final class ConfigurationDialog implements java.awt.event.ActionListener 
         enableSoundOnEnemyDetected.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
         soundFieldsPanel.add(enableSoundOnEnemyDetected);
 
-        soundFieldsPanel.add(new javax.swing.JLabel("Exit Client:", javax.swing.SwingConstants.TRAILING));
+        soundFieldsPanel.add(new javax.swing.JLabel("Exit client:", javax.swing.SwingConstants.TRAILING));
         soundFieldsPanel.add(soundOnExitClientField);
         enableSoundOnExitClient.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
         soundFieldsPanel.add(enableSoundOnExitClient);

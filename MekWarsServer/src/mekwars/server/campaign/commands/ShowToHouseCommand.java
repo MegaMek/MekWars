@@ -20,7 +20,7 @@ package mekwars.server.campaign.commands;
 /*
  * A command which is used to pase lane or army information
  * into a factionchat stream. Convenience command used by links
- * in MyStatusCommand and in portions of the Client GUI.
+ * in MyStatusCommand and in portions of the client GUI.
  */
 public class ShowToHouseCommand implements Command {
 

@@ -47,7 +47,7 @@ import mekwars.common.util.SpringLayoutHelper;
 
 /**
  *
- * @deprecated As of Client v0.7.0.1, replaced by BuildTableViewer.java
+ * @deprecated As of client v0.7.0.1, replaced by BuildTableViewer.java
  *
  */
 @Deprecated

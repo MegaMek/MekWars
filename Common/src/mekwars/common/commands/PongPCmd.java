@@ -30,48 +30,34 @@
  * <https://www.xbox.com/en-US/developers/rules> and it is not endorsed by or
  * affiliated with Microsoft.
  */
-
-package mekwars.common.campaign.clientutils.protocol.commands;
+package mekwars.common.commands;
 
 import java.util.StringTokenizer;
 
 import mekwars.common.campaign.clientutils.protocol.IClient;
-import mekwars.common.util.MWLogger;
 
 /**
- * AckSignOn command
+ * Pong command
  */
 
-public class AckSignOnPCmd extends CProtCommand {
+public class PongPCmd extends CProtCommand {
 
-    public AckSignOnPCmd(IClient client) {
+    public PongPCmd(IClient client) {
         super(client);
-        name = "ack_sign_on";
+        name = "pong";
     }
 
     // execute command
     @Override
     public boolean execute(String input) {
+
         StringTokenizer ST = new StringTokenizer(input, delimiter);
         if (check(ST.nextToken()) && ST.hasMoreTokens()) {
             input = decompose(input);
-            ST = new StringTokenizer(input, delimiter);
-            client.setUsername(ST.nextToken());
             echo(input);
-            if (client.isDedicated()) {
-
-                try {Thread.sleep(5000);} catch (Exception ex) {MWLogger.errLog(ex);}
-
-                try {
-                    client.startHost(true, false, false);
-                } catch (Exception ex) {
-                    MWLogger.errLog("AckSignOnPCmd: Error attempting to start host on sign on.");
-                    MWLogger.errLog(ex);
-                }
-            }
-
             return true;
         }
+
         //else
         return false;
     }
@@ -79,8 +65,11 @@ public class AckSignOnPCmd extends CProtCommand {
     // echo command in GUI
     @Override
     protected void echo(String input) {
-        MWLogger.infoLog("Sign On acknowledged");
-        MWLogger.errLog("Sign On acknowledged");
+        StringTokenizer ST = new StringTokenizer(input, delimiter);
+        String sender = ST.nextToken();
+        if (sender.equals("server")) {return;}
+        float time = (float) (System.currentTimeMillis() - Long.parseLong(ST.nextToken())) / 1000;
+        client.systemMessage(STR."Ping reply from \{sender}: \{time} s");
     }
 
 }

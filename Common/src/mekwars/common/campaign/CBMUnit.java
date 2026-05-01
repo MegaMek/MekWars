@@ -44,7 +44,7 @@ import mekwars.common.campaign.pilot.Pilot;
 import mekwars.common.util.TokenReader;
 
 /**
- * Client-side market unit. The market uses the filenames and other data from the CBMUnit to generate temporary CUnits
+ * client-side market unit. The market uses the filenames and other data from the CBMUnit to generate temporary CUnits
  * (to determine BV, etc.).
  * <p>
  * In the past, this class extended CUnit. This is no longer the case. Using minimal data (not sending ammo settings and

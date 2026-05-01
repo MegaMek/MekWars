@@ -17,17 +17,36 @@
 
 package mekwars.common.gui.panels;
 
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
+import java.awt.event.ActionEvent;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
+import java.io.File;
+import java.io.Serial;
+import java.util.Iterator;
+import java.util.StringTokenizer;
+import java.util.TreeMap;
+import java.util.Vector;
+import javax.swing.*;
+import javax.swing.border.LineBorder;
+
 import megamek.client.generator.RandomGenderGenerator;
+import megamek.common.units.Crew;
 import megamek.common.units.CrewType;
+import megamek.common.units.Entity;
 import megamek.common.units.Infantry;
 import mekwars.common.House;
 import mekwars.common.Unit;
 import mekwars.common.UnitFactory;
 import mekwars.common.campaign.CCampaign;
 import mekwars.common.campaign.CPlayer;
+import mekwars.common.campaign.CUnit;
 import mekwars.common.campaign.clientutils.protocol.IClient;
+import mekwars.common.gui.HSMek;
 import mekwars.common.gui.MWUnitDisplay;
 import mekwars.common.gui.MyHTMLEditorKit;
+import mekwars.common.gui.listeners.BuyPopupListener;
 import mekwars.common.gui.listeners.MMNetHyperLinkListener;
 import mekwars.common.util.MWLogger;
 import mekwars.common.util.SpringLayoutHelper;
@@ -37,86 +56,76 @@ import mekwars.common.util.UnitUtils;
  * SHouse Status Panel
  */
 
-public class CHSPanel extends javax.swing.JPanel {
+public class CHSPanel extends JPanel {
 
     /**
      *
      */
+    @Serial
     private static final long serialVersionUID = -6985292870326367798L;
+    private final JPanel hsButtonSpringPanel;
+    private final JLabel lblInfo = new JLabel();
+    // hashtable of Hashtable
+    private final TreeMap<String, String> componentsInfo;
+    private final TreeMap<String, TreeMap<String, String>> factoriesInfo;
+    private final TreeMap<String, Vector<HSMek>> unitsInfo;
+    private final BuyPopupListener myPopup;
     IClient client;
     CPlayer thePlayer;
     CCampaign theCampaign;
-    javax.swing.JEditorPane mainPane = new javax.swing.JEditorPane();
-    javax.swing.JScrollPane scrollPane = new javax.swing.JScrollPane();
+    JEditorPane mainPane = new JEditorPane();
+    JScrollPane scrollPane = new JScrollPane();
     MyHTMLEditorKit kit = new MyHTMLEditorKit();
-    java.awt.GridBagConstraints gridBagConstraints;
-
-    private javax.swing.JPanel pnlBtns = new javax.swing.JPanel();
-    private javax.swing.JPanel hsButtonSpringPanel = new javax.swing.JPanel();
-
-    private javax.swing.JButton buyNewButton = new javax.swing.JButton();
-    private javax.swing.JButton buyUsedButton = new javax.swing.JButton();
-    private javax.swing.JLabel lblInfo = new javax.swing.JLabel();
-    private CHSPanel.BuyPopupListener myPopup = null;
-
+    GridBagConstraints gridBagConstraints;
     // Needed to internally store SHouse Status
     private String HouseName;
-    // hastable of Hashtables
-    private java.util.TreeMap<String, String> componentsInfo;
-    private java.util.TreeMap<String, java.util.TreeMap<String, String>> factoriesInfo;
-    private java.util.TreeMap<String, java.util.Vector<HSMek>> unitsInfo;
 
-    public CHSPanel(client.MWClient client) {
+    public CHSPanel(IClient client) {
 
-        setLayout(new java.awt.GridBagLayout());
+        setLayout(new GridBagLayout());
         this.client = client;
         theCampaign = this.client.getCampaign();
         thePlayer = theCampaign.getPlayer();
-        myPopup = new CHSPanel.BuyPopupListener();
+        myPopup = new BuyPopupListener(this);
 
         mainPane.setEditorKit(kit);
         mainPane.setEditable(false);
         mainPane.addHyperlinkListener(new MMNetHyperLinkListener(this.client, this));
-        scrollPane.setHorizontalScrollBarPolicy(javax.swing.ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
-        scrollPane.setViewportBorder(new javax.swing.border.LineBorder(new java.awt.Color(0, 0, 0)));
+        scrollPane.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
+        scrollPane.setViewportBorder(new LineBorder(new java.awt.Color(0, 0, 0)));
         scrollPane.setViewportView(mainPane);
-        gridBagConstraints = new java.awt.GridBagConstraints();
+        gridBagConstraints = new GridBagConstraints();
         gridBagConstraints.gridx = 0;
         gridBagConstraints.gridy = 0;
-        gridBagConstraints.fill = java.awt.GridBagConstraints.BOTH;
+        gridBagConstraints.fill = GridBagConstraints.BOTH;
         gridBagConstraints.weightx = 1.0;
         gridBagConstraints.weighty = 1.0;
         this.add(scrollPane, gridBagConstraints);
 
         // set up the button row
-        pnlBtns.setLayout(new javax.swing.BoxLayout(pnlBtns, javax.swing.BoxLayout.Y_AXIS));
-        hsButtonSpringPanel = new javax.swing.JPanel(new javax.swing.SpringLayout());
+        JPanel pnlButtons = new JPanel();
+        pnlButtons.setLayout(new BoxLayout(pnlButtons, BoxLayout.Y_AXIS));
+        hsButtonSpringPanel = new JPanel(new SpringLayout());
 
         // button to buy new units
+        JButton buyNewButton = new JButton();
         buyNewButton.setText("Buy New");
-        buyNewButton.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                buyNewButtonActionPerformed(evt);
-            }
-        });
-        buyNewButton.addMouseListener(new java.awt.event.MouseAdapter() {
+        buyNewButton.addActionListener(this::buyNewButtonActionPerformed);
+        buyNewButton.addMouseListener(new MouseAdapter() {
             @Override
-            public void mousePressed(java.awt.event.MouseEvent evt) {
+            public void mousePressed(MouseEvent evt) {
                 buyNewUnitMouseEvent(evt);
             }
         });
         hsButtonSpringPanel.add(buyNewButton);
 
         // button to buy used units
+        JButton buyUsedButton = new JButton();
         buyUsedButton.setText("Buy Used");
-        buyUsedButton.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                buyUsedButtonActionPerformed(evt);
-            }
-        });
-        buyUsedButton.addMouseListener(new java.awt.event.MouseAdapter() {
+        buyUsedButton.addActionListener(this::buyUsedButtonActionPerformed);
+        buyUsedButton.addMouseListener(new MouseAdapter() {
             @Override
-            public void mousePressed(java.awt.event.MouseEvent evt) {
+            public void mousePressed(MouseEvent evt) {
                 buyUsedUnitMouseEvent(evt);
             }
         });
@@ -128,209 +137,208 @@ public class CHSPanel extends javax.swing.JPanel {
         lblInfo.setAlignmentX(java.awt.Component.CENTER_ALIGNMENT);
         lblInfo.setSize(0, 0);
 
-        pnlBtns.add(lblInfo);
-        pnlBtns.add(hsButtonSpringPanel);
+        pnlButtons.add(lblInfo);
+        pnlButtons.add(hsButtonSpringPanel);
 
-        gridBagConstraints = new java.awt.GridBagConstraints();
+        gridBagConstraints = new GridBagConstraints();
         gridBagConstraints.gridx = 0;
         gridBagConstraints.gridy = 1;
-        gridBagConstraints.fill = java.awt.GridBagConstraints.HORIZONTAL;
+        gridBagConstraints.fill = GridBagConstraints.HORIZONTAL;
         gridBagConstraints.weightx = 1.0;
         gridBagConstraints.weighty = 0.0;
-        // gridBagConstraints.insets = new Insets(0, 0, 0, 0);
-        this.add(pnlBtns, gridBagConstraints);
+        this.add(pnlButtons, gridBagConstraints);
 
         // make information holders
-        componentsInfo = new java.util.TreeMap<String, String>();
-        factoriesInfo = new java.util.TreeMap<String, java.util.TreeMap<String, String>>();
-        unitsInfo = new java.util.TreeMap<String, java.util.Vector<HSMek>>();
+        componentsInfo = new java.util.TreeMap<>();
+        factoriesInfo = new java.util.TreeMap<>();
+        unitsInfo = new java.util.TreeMap<>();
     }
 
     // BUY MENU METHODS AND LISTENERS
-    private void buyNewButtonActionPerformed(java.awt.event.ActionEvent e) {
+    private void buyNewButtonActionPerformed(ActionEvent event) {
     }// do nothing on action
 
     // make popup on press or release of New button
-    private void buyNewUnitMouseEvent(java.awt.event.MouseEvent e) {
+    private void buyNewUnitMouseEvent(MouseEvent event) {
         javax.swing.JPopupMenu buy = createBuyNewPopupMenu();
-        buy.show(e.getComponent(), e.getX(), e.getY());
+        buy.show(event.getComponent(), event.getX(), event.getY());
     }
 
-    private void buyUsedButtonActionPerformed(java.awt.event.ActionEvent e) {
+    private void buyUsedButtonActionPerformed(ActionEvent event) {
     }// do nothing
 
-    private void buyUsedUnitMouseEvent(java.awt.event.MouseEvent e) {
+    private void buyUsedUnitMouseEvent(MouseEvent event) {
         javax.swing.JPopupMenu buy = createBuyUsedPopupMenu();
-        buy.show(e.getComponent(), e.getX(), e.getY());
+        buy.show(event.getComponent(), event.getX(), event.getY());
     }
 
-    private javax.swing.JPopupMenu createBuyNewPopupMenu() {
-        javax.swing.JMenu tmenu;
-        javax.swing.JPopupMenu buy = new javax.swing.JPopupMenu();
-        javax.swing.JMenuItem menuItem = null;
+    private JPopupMenu createBuyNewPopupMenu() {
+        JMenu tmenu;
+        JPopupMenu buy = new JPopupMenu();
+        JMenuItem menuItem;
 
-        tmenu = new javax.swing.JMenu("Mek");
+        tmenu = new JMenu("Mek");
         buy.add(tmenu);
-        menuItem = new javax.swing.JMenuItem("Light Mek");
-        menuItem.setActionCommand("BUY|LIGHT|" + Unit.MEK);
+        menuItem = new JMenuItem("Light Mek");
+        menuItem.setActionCommand(STR."BUY|LIGHT|\{Unit.MEK}");
         menuItem.addActionListener(myPopup);
         tmenu.add(menuItem);
-        menuItem = new javax.swing.JMenuItem("Medium Mek");
-        menuItem.setActionCommand("BUY|MEDIUM|" + Unit.MEK);
+        menuItem = new JMenuItem("Medium Mek");
+        menuItem.setActionCommand(STR."BUY|MEDIUM|\{Unit.MEK}");
         menuItem.addActionListener(myPopup);
         tmenu.add(menuItem);
-        menuItem = new javax.swing.JMenuItem("Heavy Mek");
-        menuItem.setActionCommand("BUY|HEAVY|" + Unit.MEK);
+        menuItem = new JMenuItem("Heavy Mek");
+        menuItem.setActionCommand(STR."BUY|HEAVY|\{Unit.MEK}");
         menuItem.addActionListener(myPopup);
         tmenu.add(menuItem);
-        menuItem = new javax.swing.JMenuItem("Assault Mek");
-        menuItem.setActionCommand("BUY|ASSAULT|" + Unit.MEK);
+        menuItem = new JMenuItem("Assault Mek");
+        menuItem.setActionCommand(STR."BUY|ASSAULT|\{Unit.MEK}");
         menuItem.addActionListener(myPopup);
         tmenu.add(menuItem);
 
-        if (Boolean.parseBoolean(client.getserverConfigs("UseVehicle"))) {
-            tmenu = new javax.swing.JMenu("Vehicle");
+        if (Boolean.parseBoolean(client.getServerConfigs("UseVehicle"))) {
+            tmenu = new JMenu("Vehicle");
             buy.add(tmenu);
-            menuItem = new javax.swing.JMenuItem("Light Vehicle");
-            menuItem.setActionCommand("BUY|LIGHT|" + Unit.VEHICLE);
+            menuItem = new JMenuItem("Light Vehicle");
+            menuItem.setActionCommand(STR."BUY|LIGHT|\{Unit.VEHICLE}");
             menuItem.addActionListener(myPopup);
             tmenu.add(menuItem);
-            menuItem = new javax.swing.JMenuItem("Medium Vehicle");
-            menuItem.setActionCommand("BUY|MEDIUM|" + Unit.VEHICLE);
+            menuItem = new JMenuItem("Medium Vehicle");
+            menuItem.setActionCommand(STR."BUY|MEDIUM|\{Unit.VEHICLE}");
             menuItem.addActionListener(myPopup);
             tmenu.add(menuItem);
-            menuItem = new javax.swing.JMenuItem("Heavy Vehicle");
-            menuItem.setActionCommand("BUY|HEAVY|" + Unit.VEHICLE);
+            menuItem = new JMenuItem("Heavy Vehicle");
+            menuItem.setActionCommand(STR."BUY|HEAVY|\{Unit.VEHICLE}");
             menuItem.addActionListener(myPopup);
             tmenu.add(menuItem);
-            menuItem = new javax.swing.JMenuItem("Assault Vehicle");
-            menuItem.setActionCommand("BUY|ASSAULT|" + Unit.VEHICLE);
+            menuItem = new JMenuItem("Assault Vehicle");
+            menuItem.setActionCommand(STR."BUY|ASSAULT|\{Unit.VEHICLE}");
             menuItem.addActionListener(myPopup);
             tmenu.add(menuItem);
         }
 
-        if (Boolean.parseBoolean(client.getserverConfigs("UseInfantry"))) {
-            tmenu = new javax.swing.JMenu("Infantry");
+        if (Boolean.parseBoolean(client.getServerConfigs("UseInfantry"))) {
+            tmenu = new JMenu("Infantry");
             buy.add(tmenu);
-            menuItem = new javax.swing.JMenuItem("Light Infantry");
-            menuItem.setActionCommand("BUY|LIGHT|" + Unit.INFANTRY);
+            menuItem = new JMenuItem("Light Infantry");
+            menuItem.setActionCommand(STR."BUY|LIGHT|\{Unit.INFANTRY}");
             menuItem.addActionListener(myPopup);
             tmenu.add(menuItem);
-            menuItem = new javax.swing.JMenuItem("Medium Infantry");
-            menuItem.setActionCommand("BUY|MEDIUM|" + Unit.INFANTRY);
+            menuItem = new JMenuItem("Medium Infantry");
+            menuItem.setActionCommand(STR."BUY|MEDIUM|\{Unit.INFANTRY}");
             menuItem.addActionListener(myPopup);
             tmenu.add(menuItem);
-            menuItem = new javax.swing.JMenuItem("Heavy Infantry");
-            menuItem.setActionCommand("BUY|HEAVY|" + Unit.INFANTRY);
+            menuItem = new JMenuItem("Heavy Infantry");
+            menuItem.setActionCommand(STR."BUY|HEAVY|\{Unit.INFANTRY}");
             menuItem.addActionListener(myPopup);
             tmenu.add(menuItem);
-            menuItem = new javax.swing.JMenuItem("Assault Infantry");
-            menuItem.setActionCommand("BUY|ASSAULT|" + Unit.INFANTRY);
+            menuItem = new JMenuItem("Assault Infantry");
+            menuItem.setActionCommand(STR."BUY|ASSAULT|\{Unit.INFANTRY}");
             menuItem.addActionListener(myPopup);
             tmenu.add(menuItem);
         }
 
-        if (Boolean.parseBoolean(client.getserverConfigs("UseProtoMek"))) {
-            tmenu = new javax.swing.JMenu("ProtoMek");
+        if (Boolean.parseBoolean(client.getServerConfigs("UseProtoMek"))) {
+            tmenu = new JMenu("ProtoMek");
             buy.add(tmenu);
-            menuItem = new javax.swing.JMenuItem("Light ProtoMek");
-            menuItem.setActionCommand("BUY|LIGHT|" + Unit.PROTOMEK);
+            menuItem = new JMenuItem("Light ProtoMek");
+            menuItem.setActionCommand(STR."BUY|LIGHT|\{Unit.PROTOMEK}");
             menuItem.addActionListener(myPopup);
             tmenu.add(menuItem);
-            menuItem = new javax.swing.JMenuItem("Medium ProtoMek");
-            menuItem.setActionCommand("BUY|MEDIUM|" + Unit.PROTOMEK);
+            menuItem = new JMenuItem("Medium ProtoMek");
+            menuItem.setActionCommand(STR."BUY|MEDIUM|\{Unit.PROTOMEK}");
             menuItem.addActionListener(myPopup);
             tmenu.add(menuItem);
-            menuItem = new javax.swing.JMenuItem("Heavy ProtoMek");
-            menuItem.setActionCommand("BUY|HEAVY|" + Unit.PROTOMEK);
+            menuItem = new JMenuItem("Heavy ProtoMek");
+            menuItem.setActionCommand(STR."BUY|HEAVY|\{Unit.PROTOMEK}");
             menuItem.addActionListener(myPopup);
             tmenu.add(menuItem);
-            menuItem = new javax.swing.JMenuItem("Assault ProtoMek");
-            menuItem.setActionCommand("BUY|ASSAULT|" + Unit.PROTOMEK);
+            menuItem = new JMenuItem("Assault ProtoMek");
+            menuItem.setActionCommand(STR."BUY|ASSAULT|\{Unit.PROTOMEK}");
             menuItem.addActionListener(myPopup);
             tmenu.add(menuItem);
         }
 
-        if (Boolean.parseBoolean(client.getserverConfigs("UseBattleArmor"))) {
-            tmenu = new javax.swing.JMenu("Battle Armor");
+        if (Boolean.parseBoolean(client.getServerConfigs("UseBattleArmor"))) {
+            tmenu = new JMenu("Battle Armor");
             buy.add(tmenu);
-            menuItem = new javax.swing.JMenuItem("Light Battle Armor");
-            menuItem.setActionCommand("BUY|LIGHT|" + Unit.BATTLEARMOR);
+            menuItem = new JMenuItem("Light Battle Armor");
+            menuItem.setActionCommand(STR."BUY|LIGHT|\{Unit.BATTLEARMOR}");
             menuItem.addActionListener(myPopup);
             tmenu.add(menuItem);
-            menuItem = new javax.swing.JMenuItem("Medium Battle Armor");
-            menuItem.setActionCommand("BUY|MEDIUM|" + Unit.BATTLEARMOR);
+            menuItem = new JMenuItem("Medium Battle Armor");
+            menuItem.setActionCommand(STR."BUY|MEDIUM|\{Unit.BATTLEARMOR}");
             menuItem.addActionListener(myPopup);
             tmenu.add(menuItem);
-            menuItem = new javax.swing.JMenuItem("Heavy Battle Armor");
-            menuItem.setActionCommand("BUY|HEAVY|" + Unit.BATTLEARMOR);
+            menuItem = new JMenuItem("Heavy Battle Armor");
+            menuItem.setActionCommand(STR."BUY|HEAVY|\{Unit.BATTLEARMOR}");
             menuItem.addActionListener(myPopup);
             tmenu.add(menuItem);
-            menuItem = new javax.swing.JMenuItem("Assault Battle Armor");
-            menuItem.setActionCommand("BUY|ASSAULT|" + Unit.BATTLEARMOR);
+            menuItem = new JMenuItem("Assault Battle Armor");
+            menuItem.setActionCommand(STR."BUY|ASSAULT|\{Unit.BATTLEARMOR}");
             menuItem.addActionListener(myPopup);
             tmenu.add(menuItem);
         }
 
-        if (Boolean.parseBoolean(client.getserverConfigs("UseAero"))) {
-            tmenu = new javax.swing.JMenu("Aero");
+        if (Boolean.parseBoolean(client.getServerConfigs("UseAero"))) {
+            tmenu = new JMenu("Aero");
             buy.add(tmenu);
-            menuItem = new javax.swing.JMenuItem("Light Aero");
-            menuItem.setActionCommand("BUY|LIGHT|" + Unit.AERO);
+            menuItem = new JMenuItem("Light Aero");
+            menuItem.setActionCommand(STR."BUY|LIGHT|\{Unit.AERO}");
             menuItem.addActionListener(myPopup);
             tmenu.add(menuItem);
-            menuItem = new javax.swing.JMenuItem("Medium Aero");
-            menuItem.setActionCommand("BUY|MEDIUM|" + Unit.AERO);
+            menuItem = new JMenuItem("Medium Aero");
+            menuItem.setActionCommand(STR."BUY|MEDIUM|\{Unit.AERO}");
             menuItem.addActionListener(myPopup);
             tmenu.add(menuItem);
-            menuItem = new javax.swing.JMenuItem("Heavy Aero");
-            menuItem.setActionCommand("BUY|HEAVY|" + Unit.AERO);
+            menuItem = new JMenuItem("Heavy Aero");
+            menuItem.setActionCommand(STR."BUY|HEAVY|\{Unit.AERO}");
             menuItem.addActionListener(myPopup);
             tmenu.add(menuItem);
-            menuItem = new javax.swing.JMenuItem("Assault Aero");
-            menuItem.setActionCommand("BUY|ASSAULT|" + Unit.AERO);
+            menuItem = new JMenuItem("Assault Aero");
+            menuItem.setActionCommand(STR."BUY|ASSAULT|\{Unit.AERO}");
             menuItem.addActionListener(myPopup);
             tmenu.add(menuItem);
         }
 
-        if (Boolean.parseBoolean(client.getserverConfigs("AllowPersonalPilotQueues"))) {
-            tmenu = new javax.swing.JMenu("Pilots");
+        if (Boolean.parseBoolean(client.getServerConfigs("AllowPersonalPilotQueues"))) {
+            tmenu = new JMenu("Pilots");
             buy.add(tmenu);
-            javax.swing.JMenu smenu = new javax.swing.JMenu("Mek");
-            menuItem = new javax.swing.JMenuItem("Light Pilot");
-            menuItem.setActionCommand("BUYP|" + Unit.MEK + "|" + Unit.LIGHT);
+            JMenu smenu = new JMenu("Mek");
+            menuItem = new JMenuItem("Light Pilot");
+            menuItem.setActionCommand(STR."BUYP|\{Unit.MEK}|\{Unit.LIGHT}");
             menuItem.addActionListener(myPopup);
             smenu.add(menuItem);
-            menuItem = new javax.swing.JMenuItem("Medium Pilot");
-            menuItem.setActionCommand("BUYP|" + Unit.MEK + "|" + Unit.MEDIUM);
+            menuItem = new JMenuItem("Medium Pilot");
+            menuItem.setActionCommand(STR."BUYP|\{Unit.MEK}|\{Unit.MEDIUM}");
             menuItem.addActionListener(myPopup);
             smenu.add(menuItem);
-            menuItem = new javax.swing.JMenuItem("Heavy Pilot");
-            menuItem.setActionCommand("BUYP|" + Unit.MEK + "|" + Unit.HEAVY);
+            menuItem = new JMenuItem("Heavy Pilot");
+            menuItem.setActionCommand(STR."BUYP|\{Unit.MEK}|\{Unit.HEAVY}");
             menuItem.addActionListener(myPopup);
             smenu.add(menuItem);
-            menuItem = new javax.swing.JMenuItem("Assault Pilot");
-            menuItem.setActionCommand("BUYP|" + Unit.MEK + "|" + Unit.ASSAULT);
+            menuItem = new JMenuItem("Assault Pilot");
+            menuItem.setActionCommand(STR."BUYP|\{Unit.MEK}|\{Unit.ASSAULT}");
             menuItem.addActionListener(myPopup);
             smenu.add(menuItem);
             tmenu.add(smenu);
 
-            if (Boolean.parseBoolean(client.getserverConfigs("UseProtoMek"))) {
-                smenu = new javax.swing.JMenu("Proto");
-                menuItem = new javax.swing.JMenuItem("Light Pilot");
-                menuItem.setActionCommand("BUYP|" + Unit.PROTOMEK + "|" + Unit.LIGHT);
+            if (Boolean.parseBoolean(client.getServerConfigs("UseProtoMek"))) {
+                smenu = new JMenu("Proto");
+                menuItem = new JMenuItem("Light Pilot");
+                menuItem.setActionCommand(STR."BUYP|\{Unit.PROTOMEK}|\{Unit.LIGHT}");
                 menuItem.addActionListener(myPopup);
                 smenu.add(menuItem);
-                menuItem = new javax.swing.JMenuItem("Medium Pilot");
-                menuItem.setActionCommand("BUYP|" + Unit.PROTOMEK + "|" + Unit.MEDIUM);
+                menuItem = new JMenuItem("Medium Pilot");
+                menuItem.setActionCommand(STR."BUYP|\{Unit.PROTOMEK}|\{Unit.MEDIUM}");
                 menuItem.addActionListener(myPopup);
                 smenu.add(menuItem);
-                menuItem = new javax.swing.JMenuItem("Heavy Pilot");
-                menuItem.setActionCommand("BUYP|" + Unit.PROTOMEK + "|" + Unit.HEAVY);
+                menuItem = new JMenuItem("Heavy Pilot");
+                menuItem.setActionCommand(STR."BUYP|\{Unit.PROTOMEK}|\{Unit.HEAVY}");
                 menuItem.addActionListener(myPopup);
                 smenu.add(menuItem);
-                menuItem = new javax.swing.JMenuItem("Assault Pilot");
-                menuItem.setActionCommand("BUYP|" + Unit.PROTOMEK + "|" + Unit.ASSAULT);
+                menuItem = new JMenuItem("Assault Pilot");
+                menuItem.setActionCommand(STR."BUYP|\{Unit.PROTOMEK}|\{Unit.ASSAULT}");
                 menuItem.addActionListener(myPopup);
                 smenu.add(menuItem);
                 tmenu.add(smenu);
@@ -340,130 +348,130 @@ public class CHSPanel extends javax.swing.JPanel {
         return buy;
     }
 
-    private javax.swing.JPopupMenu createBuyUsedPopupMenu() {
-        javax.swing.JMenu tmenu;
-        javax.swing.JPopupMenu buy = new javax.swing.JPopupMenu();
-        javax.swing.JMenuItem menuItem = null;
+    private JPopupMenu createBuyUsedPopupMenu() {
+        JMenu tmenu;
+        JPopupMenu buy = new JPopupMenu();
+        JMenuItem menuItem;
 
-        tmenu = new javax.swing.JMenu("Mek");
+        tmenu = new JMenu("Mek");
         buy.add(tmenu);
-        menuItem = new javax.swing.JMenuItem("Light Mek");
-        menuItem.setActionCommand("BUYU|LIGHT|" + Unit.MEK);
+        menuItem = new JMenuItem("Light Mek");
+        menuItem.setActionCommand(STR."BUYU|LIGHT|\{Unit.MEK}");
         menuItem.addActionListener(myPopup);
         tmenu.add(menuItem);
-        menuItem = new javax.swing.JMenuItem("Medium Mek");
-        menuItem.setActionCommand("BUYU|MEDIUM|" + Unit.MEK);
+        menuItem = new JMenuItem("Medium Mek");
+        menuItem.setActionCommand(STR."BUYU|MEDIUM|\{Unit.MEK}");
         menuItem.addActionListener(myPopup);
         tmenu.add(menuItem);
-        menuItem = new javax.swing.JMenuItem("Heavy Mek");
-        menuItem.setActionCommand("BUYU|HEAVY|" + Unit.MEK);
+        menuItem = new JMenuItem("Heavy Mek");
+        menuItem.setActionCommand(STR."BUYU|HEAVY|\{Unit.MEK}");
         menuItem.addActionListener(myPopup);
         tmenu.add(menuItem);
-        menuItem = new javax.swing.JMenuItem("Assault Mek");
-        menuItem.setActionCommand("BUYU|ASSAULT|" + Unit.MEK);
+        menuItem = new JMenuItem("Assault Mek");
+        menuItem.setActionCommand(STR."BUYU|ASSAULT|\{Unit.MEK}");
         menuItem.addActionListener(myPopup);
         tmenu.add(menuItem);
 
-        if (Boolean.parseBoolean(client.getserverConfigs("UseVehicle"))) {
-            tmenu = new javax.swing.JMenu("Vehicle");
+        if (Boolean.parseBoolean(client.getServerConfigs("UseVehicle"))) {
+            tmenu = new JMenu("Vehicle");
             buy.add(tmenu);
-            menuItem = new javax.swing.JMenuItem("Light Vehicle");
-            menuItem.setActionCommand("BUYU|LIGHT|" + Unit.VEHICLE);
+            menuItem = new JMenuItem("Light Vehicle");
+            menuItem.setActionCommand(STR."BUYU|LIGHT|\{Unit.VEHICLE}");
             menuItem.addActionListener(myPopup);
             tmenu.add(menuItem);
-            menuItem = new javax.swing.JMenuItem("Medium Vehicle");
-            menuItem.setActionCommand("BUYU|MEDIUM|" + Unit.VEHICLE);
+            menuItem = new JMenuItem("Medium Vehicle");
+            menuItem.setActionCommand(STR."BUYU|MEDIUM|\{Unit.VEHICLE}");
             menuItem.addActionListener(myPopup);
             tmenu.add(menuItem);
-            menuItem = new javax.swing.JMenuItem("Heavy Vehicle");
-            menuItem.setActionCommand("BUYU|HEAVY|" + Unit.VEHICLE);
+            menuItem = new JMenuItem("Heavy Vehicle");
+            menuItem.setActionCommand(STR."BUYU|HEAVY|\{Unit.VEHICLE}");
             menuItem.addActionListener(myPopup);
             tmenu.add(menuItem);
-            menuItem = new javax.swing.JMenuItem("Assault Vehicle");
-            menuItem.setActionCommand("BUYU|ASSAULT|" + Unit.VEHICLE);
+            menuItem = new JMenuItem("Assault Vehicle");
+            menuItem.setActionCommand(STR."BUYU|ASSAULT|\{Unit.VEHICLE}");
             menuItem.addActionListener(myPopup);
             tmenu.add(menuItem);
         }
-        if (Boolean.parseBoolean(client.getserverConfigs("UseInfantry"))) {
-            tmenu = new javax.swing.JMenu("Infantry");
+        if (Boolean.parseBoolean(client.getServerConfigs("UseInfantry"))) {
+            tmenu = new JMenu("Infantry");
             buy.add(tmenu);
-            menuItem = new javax.swing.JMenuItem("Light Infantry");
-            menuItem.setActionCommand("BUYU|LIGHT|" + Unit.INFANTRY);
+            menuItem = new JMenuItem("Light Infantry");
+            menuItem.setActionCommand(STR."BUYU|LIGHT|\{Unit.INFANTRY}");
             menuItem.addActionListener(myPopup);
             tmenu.add(menuItem);
-            menuItem = new javax.swing.JMenuItem("Medium Infantry");
-            menuItem.setActionCommand("BUYU|MEDIUM|" + Unit.INFANTRY);
+            menuItem = new JMenuItem("Medium Infantry");
+            menuItem.setActionCommand(STR."BUYU|MEDIUM|\{Unit.INFANTRY}");
             menuItem.addActionListener(myPopup);
             tmenu.add(menuItem);
-            menuItem = new javax.swing.JMenuItem("Heavy Infantry");
-            menuItem.setActionCommand("BUYU|HEAVY|" + Unit.INFANTRY);
+            menuItem = new JMenuItem("Heavy Infantry");
+            menuItem.setActionCommand(STR."BUYU|HEAVY|\{Unit.INFANTRY}");
             menuItem.addActionListener(myPopup);
             tmenu.add(menuItem);
-            menuItem = new javax.swing.JMenuItem("Assault Infantry");
-            menuItem.setActionCommand("BUYU|ASSAULT|" + Unit.INFANTRY);
-            menuItem.addActionListener(myPopup);
-            tmenu.add(menuItem);
-        }
-
-        if (Boolean.parseBoolean(client.getserverConfigs("UseProtoMek"))) {
-            tmenu = new javax.swing.JMenu("ProtoMek");
-            buy.add(tmenu);
-            menuItem = new javax.swing.JMenuItem("Light ProtoMek");
-            menuItem.setActionCommand("BUYU|LIGHT|" + Unit.PROTOMEK);
-            menuItem.addActionListener(myPopup);
-            tmenu.add(menuItem);
-            menuItem = new javax.swing.JMenuItem("Medium Infantry");
-            menuItem.setActionCommand("BUYU|MEDIUM|" + Unit.PROTOMEK);
-            menuItem.addActionListener(myPopup);
-            tmenu.add(menuItem);
-            menuItem = new javax.swing.JMenuItem("Heavy Infantry");
-            menuItem.setActionCommand("BUYU|HEAVY|" + Unit.PROTOMEK);
-            menuItem.addActionListener(myPopup);
-            tmenu.add(menuItem);
-            menuItem = new javax.swing.JMenuItem("Assault Infantry");
-            menuItem.setActionCommand("BUYU|ASSAULT|" + Unit.PROTOMEK);
+            menuItem = new JMenuItem("Assault Infantry");
+            menuItem.setActionCommand(STR."BUYU|ASSAULT|\{Unit.INFANTRY}");
             menuItem.addActionListener(myPopup);
             tmenu.add(menuItem);
         }
 
-        if (Boolean.parseBoolean(client.getserverConfigs("UseBattleArmor"))) {
-            tmenu = new javax.swing.JMenu("Battle Armor");
+        if (Boolean.parseBoolean(client.getServerConfigs("UseProtoMek"))) {
+            tmenu = new JMenu("ProtoMek");
             buy.add(tmenu);
-            menuItem = new javax.swing.JMenuItem("Light Battle Armor");
-            menuItem.setActionCommand("BUYU|LIGHT|" + Unit.BATTLEARMOR);
+            menuItem = new JMenuItem("Light ProtoMek");
+            menuItem.setActionCommand(STR."BUYU|LIGHT|\{Unit.PROTOMEK}");
             menuItem.addActionListener(myPopup);
             tmenu.add(menuItem);
-            menuItem = new javax.swing.JMenuItem("Medium Battle Armor");
-            menuItem.setActionCommand("BUYU|MEDIUM|" + Unit.BATTLEARMOR);
+            menuItem = new JMenuItem("Medium Infantry");
+            menuItem.setActionCommand(STR."BUYU|MEDIUM|\{Unit.PROTOMEK}");
             menuItem.addActionListener(myPopup);
             tmenu.add(menuItem);
-            menuItem = new javax.swing.JMenuItem("Heavy Battle Armor");
-            menuItem.setActionCommand("BUYU|HEAVY|" + Unit.BATTLEARMOR);
+            menuItem = new JMenuItem("Heavy Infantry");
+            menuItem.setActionCommand(STR."BUYU|HEAVY|\{Unit.PROTOMEK}");
             menuItem.addActionListener(myPopup);
             tmenu.add(menuItem);
-            menuItem = new javax.swing.JMenuItem("Assault Battle Armor");
-            menuItem.setActionCommand("BUYU|ASSAULT|" + Unit.BATTLEARMOR);
+            menuItem = new JMenuItem("Assault Infantry");
+            menuItem.setActionCommand(STR."BUYU|ASSAULT|\{Unit.PROTOMEK}");
             menuItem.addActionListener(myPopup);
             tmenu.add(menuItem);
         }
 
-        if (Boolean.parseBoolean(client.getserverConfigs("UseAero"))) {
-            tmenu = new javax.swing.JMenu("Aero");
+        if (Boolean.parseBoolean(client.getServerConfigs("UseBattleArmor"))) {
+            tmenu = new JMenu("Battle Armor");
             buy.add(tmenu);
-            menuItem = new javax.swing.JMenuItem("Light Aero");
-            menuItem.setActionCommand("BUYU|LIGHT|" + Unit.AERO);
+            menuItem = new JMenuItem("Light Battle Armor");
+            menuItem.setActionCommand(STR."BUYU|LIGHT|\{Unit.BATTLEARMOR}");
             menuItem.addActionListener(myPopup);
             tmenu.add(menuItem);
-            menuItem = new javax.swing.JMenuItem("Medium Aero");
-            menuItem.setActionCommand("BUYU|MEDIUM|" + Unit.AERO);
+            menuItem = new JMenuItem("Medium Battle Armor");
+            menuItem.setActionCommand(STR."BUYU|MEDIUM|\{Unit.BATTLEARMOR}");
             menuItem.addActionListener(myPopup);
             tmenu.add(menuItem);
-            menuItem = new javax.swing.JMenuItem("Heavy Aero");
-            menuItem.setActionCommand("BUYU|HEAVY|" + Unit.AERO);
+            menuItem = new JMenuItem("Heavy Battle Armor");
+            menuItem.setActionCommand(STR."BUYU|HEAVY|\{Unit.BATTLEARMOR}");
             menuItem.addActionListener(myPopup);
             tmenu.add(menuItem);
-            menuItem = new javax.swing.JMenuItem("Assault Aero");
-            menuItem.setActionCommand("BUYU|ASSAULT|" + Unit.AERO);
+            menuItem = new JMenuItem("Assault Battle Armor");
+            menuItem.setActionCommand(STR."BUYU|ASSAULT|\{Unit.BATTLEARMOR}");
+            menuItem.addActionListener(myPopup);
+            tmenu.add(menuItem);
+        }
+
+        if (Boolean.parseBoolean(client.getServerConfigs("UseAero"))) {
+            tmenu = new JMenu("Aero");
+            buy.add(tmenu);
+            menuItem = new JMenuItem("Light Aero");
+            menuItem.setActionCommand(STR."BUYU|LIGHT|\{Unit.AERO}");
+            menuItem.addActionListener(myPopup);
+            tmenu.add(menuItem);
+            menuItem = new JMenuItem("Medium Aero");
+            menuItem.setActionCommand(STR."BUYU|MEDIUM|\{Unit.AERO}");
+            menuItem.addActionListener(myPopup);
+            tmenu.add(menuItem);
+            menuItem = new JMenuItem("Heavy Aero");
+            menuItem.setActionCommand(STR."BUYU|HEAVY|\{Unit.AERO}");
+            menuItem.addActionListener(myPopup);
+            tmenu.add(menuItem);
+            menuItem = new JMenuItem("Assault Aero");
+            menuItem.setActionCommand(STR."BUYU|ASSAULT|\{Unit.AERO}");
             menuItem.addActionListener(myPopup);
             tmenu.add(menuItem);
         }
@@ -488,26 +496,23 @@ public class CHSPanel extends javax.swing.JPanel {
     }
 
     /**
-     * Add a unit to the units' hash. Called from FactionStatusScreenUpdateCommand.java when client receives
+     * Add a unit to the units' hash. Called from FactionStatusScreenUpdateCommand.java when the client receives
      * FactionStatusScreenUpdateCommand|AU|data command.
      */
     public void addFactionUnit(String unitData) {
 
-        java.util.StringTokenizer tokenizer = new java.util.StringTokenizer(unitData, "$");
+        StringTokenizer tokenizer = new StringTokenizer(unitData, "$");
 
         String weight = tokenizer.nextToken();
         String type = tokenizer.nextToken();
 
-        HSMek currHSUnit = new HSMek(client, tokenizer);// reads rest of
+        HSMek currHSUnit = new HSMek(tokenizer);// reads rest of
         // tokens
 
         // if there isn't a vector for this type + weight combo already, create
         // one
-        java.util.Vector<mekwars.client.gui.HSMek> weightAndTypeVec = unitsInfo.get(weight + "$" + type);
-        if (weightAndTypeVec == null) {
-            weightAndTypeVec = new java.util.Vector<mekwars.client.gui.HSMek>(1, 1);
-            unitsInfo.put(weight + "$" + type, weightAndTypeVec);
-        }
+        Vector<HSMek> weightAndTypeVec = unitsInfo.computeIfAbsent(STR."\{weight}$\{type}",
+              _ -> new Vector<>(1, 1));
 
         // add the unit to the vector
         weightAndTypeVec.add(currHSUnit);
@@ -519,21 +524,21 @@ public class CHSPanel extends javax.swing.JPanel {
      */
     public void removeFactionUnit(String unitData) {
 
-        java.util.StringTokenizer tokenizer = new java.util.StringTokenizer(unitData, "$");
+        StringTokenizer tokenizer = new StringTokenizer(unitData, "$");
 
         String weight = tokenizer.nextToken();
         String type = tokenizer.nextToken();
-        int unitID = Integer.valueOf(tokenizer.nextToken());
+        int unitID = Integer.parseInt(tokenizer.nextToken());
 
-        java.util.Vector<mekwars.client.gui.HSMek> weightAndTypeVec = unitsInfo.get(weight + "$" + type);
+        Vector<HSMek> weightAndTypeVec = unitsInfo.get(STR."\{weight}$\{type}");
 
         // if weight and type are null, there is no way to remove the unit.
         if (weightAndTypeVec == null) {
             return;
         }
 
-        // iterate through all units of this wieght&type. remove matching id.
-        java.util.Iterator<mekwars.client.gui.HSMek> i = weightAndTypeVec.iterator();
+        // iterate through all units of this weight &type. remove matching id.
+        Iterator<HSMek> i = weightAndTypeVec.iterator();
         while (i.hasNext()) {
             HSMek currHSMek = i.next();
             if (currHSMek.getUnitID() == unitID) {
@@ -550,7 +555,7 @@ public class CHSPanel extends javax.swing.JPanel {
      */
     public void changeFactionComponents(String componentData) {
 
-        java.util.StringTokenizer tokenizer = new java.util.StringTokenizer(componentData, "$");
+        StringTokenizer tokenizer = new StringTokenizer(componentData, "$");
 
         String weight = tokenizer.nextToken();
         String type = tokenizer.nextToken();
@@ -559,8 +564,8 @@ public class CHSPanel extends javax.swing.JPanel {
         String prodUnits = tokenizer.nextToken();
 
         // remove old value, if any, and insert new value
-        componentsInfo.remove(weight + "$" + type);
-        componentsInfo.put(weight + "$" + type, currentPP + "$" + prodUnits);
+        componentsInfo.remove(STR."\{weight}$\{type}");
+        componentsInfo.put(STR."\{weight}$\{type}", STR."\{currentPP}$\{prodUnits}");
     }
 
     /**
@@ -569,17 +574,17 @@ public class CHSPanel extends javax.swing.JPanel {
      */
     public void addFactionFactory(String factoryData) {
 
-        java.util.StringTokenizer tokenizer = new java.util.StringTokenizer(factoryData, "$");
+        StringTokenizer tokenizer = new StringTokenizer(factoryData, "$");
 
         // read factory data
-        int weight = Integer.valueOf(tokenizer.nextToken());
-        int type = Integer.valueOf(tokenizer.nextToken());
+        int weight = Integer.parseInt(tokenizer.nextToken());
+        int type = Integer.parseInt(tokenizer.nextToken());
 
         String founder = tokenizer.nextToken();
         String planet = tokenizer.nextToken();
         String factoryName = tokenizer.nextToken();
 
-        int timeToRefresh = Integer.valueOf(tokenizer.nextToken());
+        int timeToRefresh = Integer.parseInt(tokenizer.nextToken());
         int accessLevel = Integer.parseInt(tokenizer.nextToken());
 
         String factoryID = tokenizer.nextToken();
@@ -587,16 +592,18 @@ public class CHSPanel extends javax.swing.JPanel {
         /*
          * Check for multiproduction and add to all appropriate factory
          * categories. Overly complex, and makes me want to punch the person who
-         * RFE'ed multifacs in the face
+         * RFE'ed Multics in the face
          *
          * :-(
          */
         if (canProduce(Unit.MEK, type)) {
             addFactoryHelper(weight, Unit.MEK, timeToRefresh, founder, planet, factoryName, accessLevel, factoryID);
         }
+
         if (canProduce(Unit.VEHICLE, type)) {
             addFactoryHelper(weight, Unit.VEHICLE, timeToRefresh, founder, planet, factoryName, accessLevel, factoryID);
         }
+
         if (canProduce(Unit.INFANTRY, type)) {
             addFactoryHelper(weight,
                   Unit.INFANTRY,
@@ -607,6 +614,7 @@ public class CHSPanel extends javax.swing.JPanel {
                   accessLevel,
                   factoryID);
         }
+
         if (canProduce(Unit.PROTOMEK, type)) {
             addFactoryHelper(weight,
                   Unit.PROTOMEK,
@@ -617,6 +625,7 @@ public class CHSPanel extends javax.swing.JPanel {
                   accessLevel,
                   factoryID);
         }
+
         if (canProduce(Unit.BATTLEARMOR, type)) {
             addFactoryHelper(weight,
                   Unit.BATTLEARMOR,
@@ -627,6 +636,7 @@ public class CHSPanel extends javax.swing.JPanel {
                   accessLevel,
                   factoryID);
         }
+
         if (canProduce(Unit.AERO, type)) {
             addFactoryHelper(weight, Unit.AERO, timeToRefresh, founder, planet, factoryName, accessLevel, factoryID);
         }
@@ -638,57 +648,55 @@ public class CHSPanel extends javax.swing.JPanel {
     private boolean canProduce(int type_id, int productionCapabilities) {
 
         // Exception 0 = everything;
-        if (productionCapabilities == UnitFactory.BUILDALL) {
+        if (productionCapabilities == UnitFactory.BUILD_ALL) {
             return true;
         }
 
         int test = productionCapabilities;
-        if ((test - UnitFactory.BUILDAERO) >= 0) {
-            test -= UnitFactory.BUILDAERO;
+        if ((test - UnitFactory.BUILD_AERO) >= 0) {
+            test -= UnitFactory.BUILD_AERO;
             if (type_id == Unit.AERO) {
                 return true;
             }
         }
 
-        if ((test - UnitFactory.BUILDBATTLEARMOR) >= 0) {
-            test -= UnitFactory.BUILDBATTLEARMOR;
+        if ((test - UnitFactory.BUILD_BATTLEARMOR) >= 0) {
+            test -= UnitFactory.BUILD_BATTLEARMOR;
             if (type_id == Unit.BATTLEARMOR) {
                 return true;
             }
         }
 
-        if ((test - UnitFactory.BUILDPROTOMECHS) >= 0) {
-            test -= UnitFactory.BUILDPROTOMECHS;
+        if ((test - UnitFactory.BUILD_PROTOMEKS) >= 0) {
+            test -= UnitFactory.BUILD_PROTOMEKS;
             if (type_id == Unit.PROTOMEK) {
                 return true;
             }
         }
 
-        if ((test - UnitFactory.BUILDINFANTRY) >= 0) {
-            test -= UnitFactory.BUILDINFANTRY;
+        if ((test - UnitFactory.BUILD_INFANTRY) >= 0) {
+            test -= UnitFactory.BUILD_INFANTRY;
             if (type_id == Unit.INFANTRY) {
                 return true;
             }
         }
 
-        if ((test - UnitFactory.BUILDVEHICLES) >= 0) {
-            test -= UnitFactory.BUILDVEHICLES;
+        if ((test - UnitFactory.BUILD_VEHICLES) >= 0) {
+            test -= UnitFactory.BUILD_VEHICLES;
             if (type_id == Unit.VEHICLE) {
                 return true;
             }
         }
 
-        if ((test - UnitFactory.BUILDMEK) >= 0) {
-            if (type_id == Unit.MEK) {
-                return true;
-            }
+        if ((test - UnitFactory.BUILD_MEK) >= 0) {
+            return type_id == Unit.MEK;
         }
 
         return false;
     }
 
     /**
-     * Private method called only from addFactionFactory. Abstracts out some repetetive code that checks for factory
+     * Private method called only from addFactionFactory. Abstracts out some repetitive code that checks for factory
      * vectors and creates missing listings.
      */
     private void addFactoryHelper(int weight, int type, int timeToRefresh, String founder, String planet,
@@ -696,18 +704,15 @@ public class CHSPanel extends javax.swing.JPanel {
 
         // if there isn't a vector for this type + weight combo already, create
         // one
-        java.util.TreeMap<String, String> weightAndTypeMap = factoriesInfo.get(weight + "$" + type);
-        if (weightAndTypeMap == null) {
-            weightAndTypeMap = new java.util.TreeMap<String, String>();
-            factoriesInfo.put(weight + "$" + type, weightAndTypeMap);
-        }
+        TreeMap<String, String> weightAndTypeMap = factoriesInfo.computeIfAbsent(STR."\{weight}$\{type}",
+              _ -> new TreeMap<>());
 
         /*
          * Add the factory to the map. Note that we use a map so the factories
          * appear in alpha order, by world.
          */
-        weightAndTypeMap.put(planet + "$" + factoryName,
-              founder + "$" + planet + "$" + factoryName + "$" + timeToRefresh + "$" + accessLevel + "$" + factoryID);
+        weightAndTypeMap.put(STR."\{planet}$\{factoryName}",
+              STR."\{founder}$\{planet}$\{factoryName}$\{timeToRefresh}$\{accessLevel}$\{factoryID}");
     }
 
     /**
@@ -718,10 +723,10 @@ public class CHSPanel extends javax.swing.JPanel {
      */
     public void removeFactionFactory(String factoryData) {
 
-        java.util.StringTokenizer tokenizer = new java.util.StringTokenizer(factoryData, "$");
+        StringTokenizer tokenizer = new StringTokenizer(factoryData, "$");
 
-        int weight = Integer.valueOf(tokenizer.nextToken());
-        int type = Integer.valueOf(tokenizer.nextToken());
+        int weight = Integer.parseInt(tokenizer.nextToken());
+        int type = Integer.parseInt(tokenizer.nextToken());
 
         String planet = tokenizer.nextToken();
         String factoryName = tokenizer.nextToken();
@@ -729,34 +734,39 @@ public class CHSPanel extends javax.swing.JPanel {
         /*
          * Check for multiproduction and remove from all appropriate factory
          * categories. Overly complex, and makes me want to punch the person who
-         * RFE'ed multifacs in the face :-(
+         * RFE'ed Multics in the face :-(
          */
         if (canProduce(Unit.MEK, type)) {
             removeFactoryHelper(weight, Unit.MEK, planet, factoryName);
         }
+
         if (canProduce(Unit.VEHICLE, type)) {
             removeFactoryHelper(weight, Unit.VEHICLE, planet, factoryName);
         }
+
         if (canProduce(Unit.INFANTRY, type)) {
             removeFactoryHelper(weight, Unit.INFANTRY, planet, factoryName);
         }
+
         if (canProduce(Unit.PROTOMEK, type)) {
             removeFactoryHelper(weight, Unit.PROTOMEK, planet, factoryName);
         }
+
         if (canProduce(Unit.BATTLEARMOR, type)) {
             removeFactoryHelper(weight, Unit.BATTLEARMOR, planet, factoryName);
         }
+
         if (canProduce(Unit.AERO, type)) {
             removeFactoryHelper(weight, Unit.AERO, planet, factoryName);
         }
     }
 
     /**
-     * Helper that abstracts out some repetetive checks from removeFactionFactory.
+     * Helper that abstracts out some repetitive checks from removeFactionFactory.
      */
     private void removeFactoryHelper(int weight, int type, String planet, String factoryName) {
 
-        java.util.TreeMap<String, String> weightAndTypeMap = factoriesInfo.get(weight + "$" + type);
+        TreeMap<String, String> weightAndTypeMap = factoriesInfo.get(STR."\{weight}$\{type}");
 
         // if weight and type map is null, there is no way to remove the
         // factory.
@@ -764,14 +774,8 @@ public class CHSPanel extends javax.swing.JPanel {
             return;
         }
 
-        // iterate through all facs of this wieght&type. remove matching names.
-        java.util.Iterator<String> i = weightAndTypeMap.keySet().iterator();
-        while (i.hasNext()) {
-            String currName = i.next();
-            if (currName.equals(planet + "$" + factoryName)) {
-                i.remove();
-            }
-        }
+        // iterate through all facs of this weight&type. remove matching names.
+        weightAndTypeMap.keySet().removeIf(currName -> currName.equals(STR."\{planet}$\{factoryName}"));
     }
 
     /**
@@ -780,15 +784,15 @@ public class CHSPanel extends javax.swing.JPanel {
      */
     public void changeFactionFactory(String factoryData) {
 
-        java.util.StringTokenizer tokenizer = new java.util.StringTokenizer(factoryData, "$");
+        StringTokenizer tokenizer = new StringTokenizer(factoryData, "$");
 
-        int weight = Integer.valueOf(tokenizer.nextToken());
-        int type = Integer.valueOf(tokenizer.nextToken());
+        int weight = Integer.parseInt(tokenizer.nextToken());
+        int type = Integer.parseInt(tokenizer.nextToken());
 
         String planet = tokenizer.nextToken();
         String factoryName = tokenizer.nextToken();
 
-        int timeToRefresh = Integer.valueOf(tokenizer.nextToken());
+        int timeToRefresh = Integer.parseInt(tokenizer.nextToken());
 
         int accessLevel = Integer.parseInt(tokenizer.nextToken());
 
@@ -797,35 +801,40 @@ public class CHSPanel extends javax.swing.JPanel {
         /*
          * Check for multiproduction and update in all appropriate factory
          * categories. Overly complex, and makes me want to punch the person who
-         * RFE'ed multifacs in the face :-(
+         * RFE'ed Multics in the face :-(
          */
         if (canProduce(Unit.MEK, type)) {
             changeFactoryHelper(weight, Unit.MEK, planet, factoryName, timeToRefresh, accessLevel, factoryID);
         }
+
         if (canProduce(Unit.VEHICLE, type)) {
             changeFactoryHelper(weight, Unit.VEHICLE, planet, factoryName, timeToRefresh, accessLevel, factoryID);
         }
+
         if (canProduce(Unit.INFANTRY, type)) {
             changeFactoryHelper(weight, Unit.INFANTRY, planet, factoryName, timeToRefresh, accessLevel, factoryID);
         }
+
         if (canProduce(Unit.PROTOMEK, type)) {
             changeFactoryHelper(weight, Unit.PROTOMEK, planet, factoryName, timeToRefresh, accessLevel, factoryID);
         }
+
         if (canProduce(Unit.BATTLEARMOR, type)) {
             changeFactoryHelper(weight, Unit.BATTLEARMOR, planet, factoryName, timeToRefresh, accessLevel, factoryID);
         }
+
         if (canProduce(Unit.AERO, type)) {
             changeFactoryHelper(weight, Unit.AERO, planet, factoryName, timeToRefresh, accessLevel, factoryID);
         }
     }
 
     /**
-     * Helper that abstracts out some repetetive checks from checkFactionFactory.
+     * Helper that abstracts out some repetitive checks from checkFactionFactory.
      */
     private void changeFactoryHelper(int weight, int type, String planet, String factoryName, int timeToRefresh,
           int accessLevel, String factoryID) {
 
-        java.util.TreeMap<String, String> weightAndTypeMap = factoriesInfo.get(weight + "$" + type);
+        TreeMap<String, String> weightAndTypeMap = factoriesInfo.get(STR."\{weight}$\{type}");
 
         // if weight and type map is null, there is no way to change the
         // factory.
@@ -835,97 +844,88 @@ public class CHSPanel extends javax.swing.JPanel {
         }
 
         // no factory with matching name on planet. return.
-        String oldFactoryInfo = weightAndTypeMap.get(planet + "$" + factoryName);
+        String oldFactoryInfo = weightAndTypeMap.get(STR."\{planet}$\{factoryName}");
         if (oldFactoryInfo == null) {
             MWLogger.errLog("Error updating factory: null oldFactory.");
             return;
         }
 
         // get the founder, which wasn't transferred.
-        java.util.StringTokenizer tokenizer = new java.util.StringTokenizer(oldFactoryInfo, "$");
+        StringTokenizer tokenizer = new StringTokenizer(oldFactoryInfo, "$");
         String founder = tokenizer.nextToken();
 
         // overwrite the old entry
-        weightAndTypeMap.put(planet + "$" + factoryName,
-              founder + "$" + planet + "$" + factoryName + "$" + timeToRefresh + "$" + accessLevel + "$" + factoryID);
+        weightAndTypeMap.put(STR."\{planet}$\{factoryName}",
+              STR."\{founder}$\{planet}$\{factoryName}$\{timeToRefresh}$\{accessLevel}$\{factoryID}");
     }
 
     public void updateDisplay() {
 
         // Returns the Private Status for Members only
-        StringBuilder result = new StringBuilder("<BODY  TEXT=\"" +
-                                                       client.getConfigParam("CHATFONTCOLOR") +
-                                                       "\" BGCOLOR=\"" +
-                                                       client.getConfigParam("BACKGROUNDCOLOR") +
-                                                       "\">");
+        StringBuilder result = new StringBuilder(STR."<BODY  TEXT=\"\{client.getConfigParam("CHATFONTCOLOR")}\" BGCOLOR=\"\{client.getConfigParam(
+              "BACKGROUNDCOLOR")}\">");
         boolean usingAdvanceRepairs = client.isUsingAdvanceRepairs();
         int playerAccessLevel = client.getPlayer().getSubFactionAccess();
-        result.append("<TABLE Border=\"1\"><TR><TH>" +
-                            HouseName +
-                            "</TH><TH>" +
-                            client.getserverConfigs("LightFactoryTypeTitle") +
-                            "</TH><TH>" +
-                            client.getserverConfigs("MediumFactoryTypeTitle") +
-                            "</TH><TH>" +
-                            client.getserverConfigs("HeavyFactoryTypeTitle") +
-                            "</TH><TH>" +
-                            client.getserverConfigs("AssaultFactoryTypeTitle") +
-                            "</TH></TR>");
+        result.append(STR."<TABLE Border=\"1\"><TR><TH>\{HouseName}</TH><TH>\{client.getServerConfigs(
+              "LightFactoryTypeTitle")}</TH><TH>\{client.getServerConfigs("MediumFactoryTypeTitle")}</TH><TH>\{client.getServerConfigs(
+              "HeavyFactoryTypeTitle")}</TH><TH>\{client.getServerConfigs("AssaultFactoryTypeTitle")}</TH></TR>");
         int factoryGifCounter;
-        for (int type_id = 0; type_id < Unit.TOTALTYPES; type_id++) {
+
+        for (int type_id = 0; type_id < Unit.TOTAL_TYPES; type_id++) {
 
             // hide unit types that aren't in use on the server
-            String useIt = "Use" + Unit.getTypeClassDesc(type_id);
+            String useIt = STR."Use\{Unit.getTypeClassDesc(type_id)}";
 
-            if (!Boolean.parseBoolean(client.getserverConfigs(useIt))) {
+            if (!Boolean.parseBoolean(client.getServerConfigs(useIt))) {
                 continue;
             }
+
             if (!hasFactories(type_id)) {
                 continue;
             }
 
-            String factoryTitle = client.getserverConfigs(Unit.getTypeClassDesc(type_id) + "FactoryClassTitle");
-            result.append("<TR><TD VALIGN=MIDDLE><b>" + factoryTitle + "</b></TD>");
+            String factoryTitle = client.getServerConfigs(STR."\{Unit.getTypeClassDesc(type_id)}FactoryClassTitle");
+            result.append("<TR><TD VALIGN=MIDDLE><b>").append(factoryTitle).append("</b></TD>");
 
             for (int weight = 0; weight < 4; weight++) {
 
-                String buyNew = "CanBuyNew" + Unit.getWeightClassDesc(weight) + Unit.getTypeClassDesc(type_id);
+                String buyNew = STR."CanBuyNew\{Unit.getWeightClassDesc(weight)}\{Unit.getTypeClassDesc(type_id)}";
 
-                String Comps = componentsInfo.get(weight + "$" + type_id);
-                java.util.StringTokenizer ST = new java.util.StringTokenizer(Comps, "$");
+                String Comps = componentsInfo.get(STR."\{weight}$\{type_id}");
+                StringTokenizer ST = new StringTokenizer(Comps, "$");
                 int comps = Integer.parseInt(ST.nextToken());
                 if ((comps > 0) || (factoriesInfo.get(weight + "$" + type_id) != null)) {
 
-                    result.append("<TD>" + "<img src=\"data/images/miniticks.gif\">:" + comps);
-                    result.append("<img src=\"data/images/units.gif\">:" + ST.nextToken() + "<br>");
+                    result.append("<TD>" + "<img src=\"data/images/miniticks.gif\">:").append(comps);
+                    result.append("<img src=\"data/images/units.gif\">:").append(ST.nextToken()).append("<br>");
 
                     // Needed because of the binary coding.
-                    int typetocheck = type_id;
 
-                    java.util.TreeMap<String, String> facs = factoriesInfo.get(weight + "$" + typetocheck);
-                    if ((facs != null) && Boolean.parseBoolean(thePlayer.getSubFaction().getConfig(buyNew))) {
+                    TreeMap<String, String> factories = factoriesInfo.get(STR."\{weight}$\{type_id}");
+                    if ((factories != null) && Boolean.parseBoolean(thePlayer.getSubFaction().getConfig(buyNew))) {
 
                         boolean hasOpen = false;
                         int minrefresh = Integer.MAX_VALUE;
 
                         factoryGifCounter = 0;
-                        for (String Fac : facs.values()) {
+                        for (String Fac : factories.values()) {
 
-                            ST = new java.util.StringTokenizer(Fac, "$");
+                            ST = new StringTokenizer(Fac, "$");
                             String founder = ST.nextToken();
                             String planet = ST.nextToken();
                             String factoryName = ST.nextToken();
                             int refreshTime = Integer.parseInt(ST.nextToken());
                             int accessLevel = Integer.parseInt(ST.nextToken());
-                            String factoryID = ST.nextToken();
+                            ST.nextToken();
 
-                            String openImage = "data/images/open" + founder + ".gif";
-                            String closeImage = "data/images/closed" + founder + ".gif";
+                            String openImage = STR."data/images/open\{founder}.gif";
+                            String closeImage = STR."data/images/closed\{founder}.gif";
 
-                            if (!new java.io.File(openImage).exists()) {
+                            if (!new File(openImage).exists()) {
                                 openImage = "data/images/open.gif";
                             }
-                            if (!new java.io.File(closeImage).exists()) {
+
+                            if (!new File(closeImage).exists()) {
                                 closeImage = "data/images/closed.gif";
                             }
 
@@ -933,88 +933,53 @@ public class CHSPanel extends javax.swing.JPanel {
                                 hasOpen = true;
                                 continue;
                             }
+
                             factoryGifCounter++;
+
                             if (factoryGifCounter == 11) {
                                 result.append("<br>");
                                 factoryGifCounter = 1;
                             }
-                            if (refreshTime == 0) {
 
+                            if (refreshTime == 0) {
                                 House foundH = client.getData().getHouseByName(founder);
-                                int cbillCost = client.campaign.CUnit.getPriceForUnit(client,
+                                int cbillCost = CUnit.getPriceForUnit(client,
                                       weight,
                                       type_id,
                                       foundH) + client.getPlayer().getHangarPurchasePenalty(type_id, weight);
-                                int fluCost = client.campaign.CUnit.getInfluenceForUnit(client,
+                                int fluCost = CUnit.getInfluenceForUnit(client,
                                       weight,
                                       type_id,
                                       foundH);
-                                int ppCost = client.campaign.CUnit.getPPForUnit(client, weight, type_id, foundH);
+                                int ppCost = CUnit.getPPForUnit(client, weight, type_id, foundH);
 
                                 if (!client.getPlayer().getMyHouse().getName().equalsIgnoreCase(foundH.getName())) {
                                     cbillCost = Math.round(cbillCost *
-                                                                 Float.parseFloat(client.getserverConfigs(
+                                                                 Float.parseFloat(client.getServerConfigs(
                                                                        "NonOriginalCBillMultiplier"))) +
                                                       client.getPlayer().getHangarPurchasePenalty(type_id, weight);
                                     fluCost = Math.round(fluCost *
-                                                               Float.parseFloat(client.getserverConfigs(
+                                                               Float.parseFloat(client.getServerConfigs(
                                                                      "NonOriginalInfluenceMultiplier")));
                                     ppCost = Math.round(ppCost *
-                                                              Float.parseFloat(client.getserverConfigs(
+                                                              Float.parseFloat(client.getServerConfigs(
                                                                     "NonOriginalComponentMultiplier")));
                                 }
 
-                                String costString = "(Cost: " +
-                                                          client.moneyOrFluMessage(true, true, cbillCost, false) +
-                                                          ", " +
-                                                          client.moneyOrFluMessage(false, true, fluCost, false) +
-                                                          ", " +
-                                                          ppCost +
-                                                          " Components)";
+                                String costString = STR."(Cost: \{client.moneyOrFluMessage(true,
+                                      true,
+                                      cbillCost,
+                                      false)}, \{client.moneyOrFluMessage(false,
+                                      true,
+                                      fluCost,
+                                      false)}, \{ppCost} Components)";
 
-                                result.append("<a href=\"MEKWARS/c request#" +
-                                                    weight +
-                                                    "#" +
-                                                    type_id +
-                                                    "#" +
-                                                    planet +
-                                                    "#" +
-                                                    factoryName +
-                                                    "\"><img border=\"0\" alt=\"Click to buy a " +
-                                                    founder +
-                                                    " " +
-                                                    Unit.getTypeClassDesc(type_id) +
-                                                    " from " +
-                                                    factoryName +
-                                                    " on " +
-                                                    planet +
-                                                    ". " +
-                                                    costString +
-                                                    "\" src=\"" +
-                                                    openImage +
-                                                    "\"></a>");
+                                result.append(STR."<a href=\"MEKWARS/c request#\{weight}#\{type_id}#\{planet}#\{factoryName}\"><img border=\"0\" alt=\"Click to buy a \{founder} \{Unit.getTypeClassDesc(
+                                      type_id)} from \{factoryName} on \{planet}. \{costString}\" src=\"\{openImage}\"></a>");
                                 hasOpen = true;
 
                             } else {
-                                result.append("<a href=\"MEKWARS/c request#" +
-                                                    weight +
-                                                    "#" +
-                                                    type_id +
-                                                    "#" +
-                                                    planet +
-                                                    "#" +
-                                                    factoryName +
-                                                    "\"<img border=\"0\" alt=\"" +
-                                                    factoryName +
-                                                    " on " +
-                                                    planet +
-                                                    " built by " +
-                                                    founder +
-                                                    " (Refresh Time: " +
-                                                    refreshTime +
-                                                    ")\" src=\"" +
-                                                    closeImage +
-                                                    "\"></a>");
+                                result.append(STR."<a href=\"MEKWARS/c request#\{weight}#\{type_id}#\{planet}#\{factoryName}\"<img border=\"0\" alt=\"\{factoryName} on \{planet} built by \{founder} (Refresh Time: \{refreshTime})\" src=\"\{closeImage}\"></a>");
                                 if (refreshTime < minrefresh) {
                                     minrefresh = refreshTime;
                                 }
@@ -1022,7 +987,7 @@ public class CHSPanel extends javax.swing.JPanel {
                         }
 
                         if (!hasOpen) {
-                            result.append("<img src=\"data/images/clock.gif\">:" + minrefresh);
+                            result.append("<img src=\"data/images/clock.gif\">:").append(minrefresh);
                         }
                     } else {
                         result.append("<img src=\"data/images/absent.gif\">");
@@ -1038,94 +1003,87 @@ public class CHSPanel extends javax.swing.JPanel {
         result.append("</TABLE>");
 
         // Bays
-        for (int type = 0; type < Unit.TOTALTYPES; type++) {
+        for (int type = 0; type < Unit.TOTAL_TYPES; type++) {
 
             // is not using units of the type, skip the listings
-            String useIt = "Use" + Unit.getTypeClassDesc(type);
-            if (!Boolean.parseBoolean(client.getserverConfigs(useIt))) {
+            String useIt = STR."Use\{Unit.getTypeClassDesc(type)}";
+            if (!Boolean.parseBoolean(client.getServerConfigs(useIt))) {
                 continue;
             }
 
             // if the house has any units at all, add a Bays: title.
             boolean hasUnits = false;
             for (int weight = 0; weight < 4; weight++) {
-                if (unitsInfo.get(weight + "$" + type) != null) {
+                if (unitsInfo.get(STR."\{weight}$\{type}") != null) {
                     hasUnits = true;
                 }
             }
             if (hasUnits) {
-                String factoryTitle = client.getserverConfigs(Unit.getTypeClassDesc(type) + "FactoryClassTitle");
-                result.append("<b>" + factoryTitle + " Bays</b><br>");
+                String factoryTitle = client.getServerConfigs(STR."\{Unit.getTypeClassDesc(type)}FactoryClassTitle");
+                result.append(STR."<b>\{factoryTitle} Bays</b><br>");
             }
 
             // fill out bays
             for (int weight = 0; weight < 4; weight++) {
 
-                String buyUsed = "CanBuyUsed" + Unit.getWeightClassDesc(weight) + Unit.getTypeClassDesc(type);
+                String buyUsed = STR."CanBuyUsed\{Unit.getWeightClassDesc(weight)}\{Unit.getTypeClassDesc(type)}";
                 if (!Boolean.parseBoolean(thePlayer.getSubFaction().getConfig(buyUsed))) {
                     continue;
                 }
 
-                if ((unitsInfo.get(weight + "$" + type) != null) && (unitsInfo.get(weight + "$" + type).size() > 0)) {
+                if ((unitsInfo.get(STR."\{weight}$\{type}") != null) &&
+                          (!unitsInfo.get(STR."\{weight}$\{type}").isEmpty())) {
                     House foundH = client.getData().getHouseByName(client.getPlayer().getMyHouse().getName());
-                    int cbillCost = Math.round(client.campaign.CUnit.getPriceForUnit(client, weight, type, foundH) *
+                    int cBillCost = Math.round(CUnit.getPriceForUnit(client, weight, type, foundH) *
                                                      foundH.getUsedMekBayMultiplier()) +
                                           client.getPlayer().getHangarPurchasePenalty(type, weight);
-                    int fluCost = Math.round(client.campaign.CUnit.getInfluenceForUnit(client, weight, type, foundH) *
+                    int fluCost = Math.round(CUnit.getInfluenceForUnit(client, weight, type, foundH) *
                                                    foundH.getUsedMekBayMultiplier());
-                    result.append("<a href=\"MEKWARS/c requestdonated#" +
-                                        weight +
-                                        "#" +
-                                        type +
-                                        "\"><img border=\"0\" alt=\"Request one of the Units from this bay (Cost: " +
-                                        client.moneyOrFluMessage(true, true, cbillCost, false) +
-                                        ", " +
-                                        client.moneyOrFluMessage(false, true, fluCost, false) +
-                                        ")\" src=\"data/images/cart.gif\"></a> " +
-                                        Unit.getWeightClassDesc(weight) +
-                                        ": ");
-                    java.util.Vector<mekwars.client.gui.HSMek> v = unitsInfo.get(weight + "$" + type);
+                    result.append(STR."<a href=\"MEKWARS/c requestdonated#\{weight}#\{type}\"><img border=\"0\" alt=\"Request one of the Units from this bay (Cost: \{client.moneyOrFluMessage(
+                          true,
+                          true,
+                          cBillCost,
+                          false)}, \{client.moneyOrFluMessage(false,
+                          true,
+                          fluCost,
+                          false)})\" src=\"data/images/cart.gif\"></a> \{Unit.getWeightClassDesc(weight)}: ");
+                    Vector<HSMek> v = unitsInfo.get(STR."\{weight}$\{type}");
                     HSMek[] entities = new HSMek[v.size()];
                     for (int i = 0; i < v.size(); i++) {
                         entities[i] = v.elementAt(i);
                     }
 
                     // alpha sort
-                    java.util.Arrays.sort(entities, new java.util.Comparator<mekwars.client.gui.HSMek>() {
-                        public int compare(HSMek obj1, HSMek obj2) {
+                    java.util.Arrays.sort(entities, (obj1, obj2) -> {
 
-                            HSMek a = obj1;
-                            HSMek b = obj2;
+                        // if the names are the same, check for damage
+                        if (obj1.getName().compareTo(obj2.getName()) == 0) {
 
-                            // if the names are the same, check for damage
-                            if (a.getName().compareTo(b.getName()) == 0) {
+                            Integer gunneryA = obj1.getEntity().getCrew().getGunnery();
+                            Integer gunneryB = obj2.getEntity().getCrew().getGunnery();
 
-                                Integer gunneryA = a.getEntity().getCrew().getGunnery();
-                                Integer gunneryB = b.getEntity().getCrew().getGunnery();
+                            int compare = gunneryA.compareTo(gunneryB);
 
-                                int compare = gunneryA.compareTo(gunneryB);
-
-                                if (compare != 0) {
-                                    return compare;
-                                }
-
-                                Integer pilotingA = a.getEntity().getCrew().getPiloting();
-                                Integer pilotingB = b.getEntity().getCrew().getPiloting();
-
-                                compare = pilotingA.compareTo(pilotingB);
-
-                                if (compare != 0) {
-                                    return compare;
-                                }
-
-                                String damA = a.getBattleDamage();
-                                String damB = b.getBattleDamage();
-
-                                return damA.compareTo(damB);
+                            if (compare != 0) {
+                                return compare;
                             }
-                            // else
-                            return a.getName().compareTo(b.getName());
+
+                            Integer pilotingA = obj1.getEntity().getCrew().getPiloting();
+                            Integer pilotingB = obj2.getEntity().getCrew().getPiloting();
+
+                            compare = pilotingA.compareTo(pilotingB);
+
+                            if (compare != 0) {
+                                return compare;
+                            }
+
+                            String damA = obj1.getBattleDamage();
+                            String damB = obj2.getBattleDamage();
+
+                            return damA.compareTo(damB);
                         }
+                        // else
+                        return obj1.getName().compareTo(obj2.getName());
                     });
 
                     // group identical units together and add to result
@@ -1164,66 +1122,42 @@ public class CHSPanel extends javax.swing.JPanel {
                         }
 
                         if (m.getType().equalsIgnoreCase("mek") || m.getType().equalsIgnoreCase("vehicle")) {
-                            unitString.append("<a href=\"MEKINFO" +
-                                                    m.getMekFile() +
-                                                    "#" +
-                                                    m.getBV() +
-                                                    "#" +
-                                                    m.getEntity().getCrew().getGunnery() +
-                                                    "#" +
-                                                    m.getEntity().getCrew().getPiloting() +
-                                                    "#" +
-                                                    m.getBattleDamage() +
-                                                    "\">" +
-                                                    m.getName() +
-                                                    " (" +
-                                                    m.getEntity().getCrew().getGunnery() +
-                                                    "/" +
-                                                    m.getEntity().getCrew().getPiloting() +
-                                                    ")");
+                            unitString.append(STR."<a href=\"MEKINFO\{m.getMekFile()}#\{m.getBV()}#\{m.getEntity()
+                                                                                                           .getCrew()
+                                                                                                           .getGunnery()}#\{m.getEntity()
+                                                                                                                                  .getCrew()
+                                                                                                                                  .getPiloting()}#\{m.getBattleDamage()}\">\{m.getName()} (\{m.getEntity()
+                                                                                                                                                                                                   .getCrew()
+                                                                                                                                                                                                   .getGunnery()}/\{m.getEntity()
+                                                                                                                                                                                                                          .getCrew()
+                                                                                                                                                                                                                          .getPiloting()})");
                         } else {
                             if ((m.getEntity() instanceof Infantry) &&
                                       ((Infantry) m.getEntity()).canMakeAntiMekAttacks()) {
-                                unitString.append("<a href=\"MEKINFO" +
-                                                        m.getMekFile() +
-                                                        "#" +
-                                                        m.getBV() +
-                                                        "#" +
-                                                        m.getEntity().getCrew().getGunnery() +
-                                                        "#" +
-                                                        m.getEntity().getCrew().getPiloting() +
-                                                        "#" +
-                                                        m.getBattleDamage() +
-                                                        "\">" +
-                                                        m.getName() +
-                                                        " (" +
-                                                        m.getEntity().getCrew().getGunnery() +
-                                                        "/" +
-                                                        m.getEntity().getCrew().getPiloting() +
-                                                        ")");
+                                unitString.append(STR."<a href=\"MEKINFO\{m.getMekFile()}#\{m.getBV()}#\{m.getEntity()
+                                                                                                               .getCrew()
+                                                                                                               .getGunnery()}#\{m.getEntity()
+                                                                                                                                      .getCrew()
+                                                                                                                                      .getPiloting()}#\{m.getBattleDamage()}\">\{m.getName()} (\{m.getEntity()
+                                                                                                                                                                                                       .getCrew()
+                                                                                                                                                                                                       .getGunnery()}/\{m.getEntity()
+                                                                                                                                                                                                                              .getCrew()
+                                                                                                                                                                                                                              .getPiloting()})");
                             } else {
-                                unitString.append("<a href=\"MEKINFO" +
-                                                        m.getMekFile() +
-                                                        "#" +
-                                                        m.getBV() +
-                                                        "#" +
-                                                        m.getEntity().getCrew().getGunnery() +
-                                                        "#" +
-                                                        m.getEntity().getCrew().getPiloting() +
-                                                        "#" +
-                                                        m.getBattleDamage() +
-                                                        "\">" +
-                                                        m.getName() +
-                                                        " (" +
-                                                        m.getEntity().getCrew().getGunnery() +
-                                                        ")");
+                                unitString.append(STR."<a href=\"MEKINFO\{m.getMekFile()}#\{m.getBV()}#\{m.getEntity()
+                                                                                                               .getCrew()
+                                                                                                               .getGunnery()}#\{m.getEntity()
+                                                                                                                                      .getCrew()
+                                                                                                                                      .getPiloting()}#\{m.getBattleDamage()}\">\{m.getName()} (\{m.getEntity()
+                                                                                                                                                                                                       .getCrew()
+                                                                                                                                                                                                       .getGunnery()})");
                             }
                         }
 
-                        // frontload the dupe indicator, to reduce confusion
+                        // front load the dupe indicator, to reduce confusion
                         // with mono-skill units
                         if (num > 1) {
-                            unitString.insert(0, num + " x ");
+                            unitString.insert(0, STR."\{num} x ");
                         }
 
                         unitString.append("</a>");
@@ -1237,7 +1171,7 @@ public class CHSPanel extends javax.swing.JPanel {
                         }
 
                         // add this unit's string to the overall result
-                        result.append(unitString.toString());
+                        result.append(unitString);
                     }
                 }
             }
@@ -1252,7 +1186,7 @@ public class CHSPanel extends javax.swing.JPanel {
     private boolean hasFactories(int type) {
 
         for (int weight = 0; weight <= Unit.ASSAULT; weight++) {
-            if (factoriesInfo.get(weight + "$" + type) != null) {
+            if (factoriesInfo.get(STR."\{weight}$\{type}") != null) {
                 return true;
             }
         }
@@ -1264,7 +1198,7 @@ public class CHSPanel extends javax.swing.JPanel {
         if (s == null) {
             hsButtonSpringPanel.setVisible(true);
             lblInfo.setVisible(false);
-        } else if (s.equals("")) {
+        } else if (s.isEmpty()) {
             hsButtonSpringPanel.setVisible(true);
             lblInfo.setVisible(false);
         } else {
@@ -1284,16 +1218,16 @@ public class CHSPanel extends javax.swing.JPanel {
     }
 
     public void showInfoWindow(String mekFile, int bv, int gunnery, int piloting, String battleDamage) {
-        Entity unitEntity = null;
-        client.campaign.CUnit embeddedUnit = new client.campaign.CUnit();
+        Entity unitEntity;
+        CUnit embeddedUnit = new CUnit();
         embeddedUnit.setUnitFilename(mekFile);
         embeddedUnit.createEntity();
         unitEntity = embeddedUnit.getEntity();
 
         javax.swing.JFrame InfoWindow = new javax.swing.JFrame();
-        UnitDisplay unitDetailInfo = new MWUnitDisplay(null, client);
+        MWUnitDisplay unitDetailInfo = new MWUnitDisplay(null, client);
         unitEntity.loadAllWeapons();
-        unitEntity.setCrew(new megamek.common.Crew(CrewType.SINGLE,
+        unitEntity.setCrew(new Crew(CrewType.SINGLE,
               "",
               1,
               gunnery,
@@ -1301,10 +1235,13 @@ public class CHSPanel extends javax.swing.JPanel {
               gunnery,
               piloting,
               RandomGenderGenerator.generate(),
+              true,
               null));
+
         if (battleDamage.trim().length() > 1) {
             UnitUtils.applyBattleDamage(unitEntity, battleDamage, false);
         }
+
         InfoWindow.getContentPane().add(unitDetailInfo);
         InfoWindow.setSize(300, 400);
         InfoWindow.setResizable(false);
@@ -1312,41 +1249,6 @@ public class CHSPanel extends javax.swing.JPanel {
         InfoWindow.setLocationRelativeTo(client.getMainFrame());
         InfoWindow.setVisible(true);
         unitDetailInfo.displayEntity(unitEntity);
-    }
-
-    class BuyPopupListener extends java.awt.event.MouseAdapter implements java.awt.event.ActionListener {
-
-        public void actionPerformed(java.awt.event.ActionEvent actionEvent) {
-            String s = actionEvent.getActionCommand();
-            java.util.StringTokenizer st = new java.util.StringTokenizer(s, "|");
-            String command = st.nextToken();
-
-            if (command.equalsIgnoreCase("BUY")) {
-                client.sendChat(client.MWClient.CAMPAIGN_PREFIX +
-                                        "c request#" +
-                                        st.nextToken() +
-                                        "#" +
-                                        st.nextToken());
-                // (Client.getMainFrame().getMainPanel().getCommPanel()).
-                // removeHttpLinksFromEditorPane(CCommPanel.CHANNEL_MISC);
-            } else if (command.equalsIgnoreCase("BUYU")) {
-                client.sendChat(client.MWClient.CAMPAIGN_PREFIX +
-                                        "c requestdonated#" +
-                                        st.nextToken() +
-                                        "#" +
-                                        st.nextToken());
-                // (Client.getMainFrame().getMainPanel().getCommPanel()).
-                // removeHttpLinksFromEditorPane(CCommPanel.CHANNEL_MISC);
-            } else if (command.equalsIgnoreCase("BUYP")) {
-                client.sendChat(client.MWClient.CAMPAIGN_PREFIX +
-                                        "c buypilotsfromhouse#" +
-                                        st.nextToken() +
-                                        "#" +
-                                        st.nextToken());
-                // (Client.getMainFrame().getMainPanel().getCommPanel()).
-                // removeHttpLinksFromEditorPane(CCommPanel.CHANNEL_MISC);
-            }
-        }
     }
 
 }

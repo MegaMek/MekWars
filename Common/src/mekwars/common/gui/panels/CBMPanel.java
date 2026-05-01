@@ -16,12 +16,32 @@
 
 package mekwars.common.gui.panels;
 
+import java.awt.Dimension;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
+import java.awt.event.ActionEvent;
+import java.io.Serial;
+import java.util.StringTokenizer;
+
+import javax.swing.JButton;
+import javax.swing.JFrame;
+import javax.swing.JOptionPane;
+import javax.swing.JPanel;
+import javax.swing.JScrollPane;
+import javax.swing.JTable;
+import javax.swing.ListSelectionModel;
+import javax.swing.SpringLayout;
+
 import megamek.common.units.Entity;
 import mekwars.common.campaign.CBMUnit;
 import mekwars.common.campaign.CCampaign;
+import mekwars.common.campaign.CPlayer;
+import mekwars.common.campaign.clientutils.protocol.IClient;
 import mekwars.common.gui.MWUnitDisplay;
+import mekwars.common.gui.MekInfo;
 import mekwars.common.gui.TableSorter;
 import mekwars.common.gui.dialogs.SellUnitDialog;
+import mekwars.common.gui.models.BlackMarketModel;
 import mekwars.common.util.MWLogger;
 import mekwars.common.util.SpringLayoutHelper;
 
@@ -33,50 +53,42 @@ public class CBMPanel extends javax.swing.JPanel {
     /**
      *
      */
+    @Serial
     private static final long serialVersionUID = -432087180209544906L;
+    private final JTable tblMarket = new JTable();
+    private final JButton btnShowMek = new JButton();
+    private final JButton btnRecallBid = new JButton();
+    private final JButton btnRecallUnit = new JButton();
+    private final JButton btnSellUnit = new JButton();
+    private final JButton btnBid = new JButton();
+    private final JPanel pnlBuyButtons = new JPanel();
+    private final JPanel spacingPanel1;
+    private final JPanel spacingPanel2;
+    private final JPanel pnlMekIconHolder;
+    private final boolean hideBMUnits;
+    private final CCampaign theCampaign;
     public BlackMarketModel BlackMarketInfo;
-    client.MWClient mwclient;
-    client.campaign.CPlayer Player;
-    long lastUpdate = -1;//update time for button
-    private javax.swing.JTable tblMarket = new javax.swing.JTable();
-    private javax.swing.JScrollPane spMarket = new javax.swing.JScrollPane();
-
-    private javax.swing.JButton btnShowMek = new javax.swing.JButton();
-    private javax.swing.JButton btnRecallBid = new javax.swing.JButton();
-    private javax.swing.JButton btnRecallUnit = new javax.swing.JButton();
-    private javax.swing.JButton btnSellUnit = new javax.swing.JButton();
-    private javax.swing.JButton btnBid = new javax.swing.JButton();
-
-    private javax.swing.JPanel pnlBuy = new javax.swing.JPanel();
-    private javax.swing.JPanel pnlBuyBtns = new javax.swing.JPanel();
-    private javax.swing.JPanel spacingPanel1 = new javax.swing.JPanel();
-    private javax.swing.JPanel spacingPanel2 = new javax.swing.JPanel();
-    private javax.swing.JPanel spacingPanel3 = new javax.swing.JPanel();
-    private javax.swing.JPanel pnlMekIconHolder = new javax.swing.JPanel();
-    private javax.swing.JPanel pnlMekIcon = new javax.swing.JPanel();
-
+    IClient client;
+    CPlayer Player;
+    private JPanel pnlMekIcon;
     private boolean factionBidsAllowed = true;
-    private boolean hideBMUnits;
-
-    private CCampaign theCampaign;
-    private java.awt.GridBagConstraints gridBagConstraints;
     private CBMUnit mm;
 
-    public CBMPanel(client.MWClient client) {
-        setLayout(new java.awt.GridBagLayout());
-        mwclient = client;
-        hideBMUnits = Boolean.parseBoolean(mwclient.getserverConfigs("HiddenBMUnits"));
+    public CBMPanel(IClient client) {
+        setLayout(new GridBagLayout());
+        this.client = client;
+        hideBMUnits = Boolean.parseBoolean(this.client.getServerConfigs("HiddenBMUnits"));
 
-        pnlMekIconHolder = new javax.swing.JPanel();
-        pnlMekIconHolder.setMaximumSize(new java.awt.Dimension(84, 72));
-        pnlMekIconHolder.setMaximumSize(new java.awt.Dimension(84, 72));
+        pnlMekIconHolder = new JPanel();
+        pnlMekIconHolder.setMaximumSize(new Dimension(84, 72));
+        pnlMekIconHolder.setMaximumSize(new Dimension(84, 72));
 
-        pnlMekIcon = new MechInfo(mwclient.getConfig().getImage("CAMO"));
-        pnlMekIcon.setMinimumSize(new java.awt.Dimension(84, 72));
-        pnlMekIcon.setPreferredSize(new java.awt.Dimension(84, 72));
-        pnlMekIcon.setMaximumSize(new java.awt.Dimension(84, 72));
+        pnlMekIcon = new MekInfo(this.client.getConfig().getImage("CAMO"));
+        pnlMekIcon.setMinimumSize(new Dimension(84, 72));
+        pnlMekIcon.setPreferredSize(new Dimension(84, 72));
+        pnlMekIcon.setMaximumSize(new Dimension(84, 72));
 
-        BlackMarketInfo = new BlackMarketModel(mwclient, hideBMUnits);
+        BlackMarketInfo = new BlackMarketModel(this.client, hideBMUnits);
         theCampaign = client.getCampaign();
         Player = theCampaign.getPlayer();
         TableSorter sorter = new TableSorter(BlackMarketInfo, client, TableSorter.SORTER_BM);
@@ -97,144 +109,127 @@ public class CBMPanel extends javax.swing.JPanel {
         }
 
         sorter.addMouseListenerToHeaderInTable(tblMarket);
-        tblMarket.setSelectionMode(javax.swing.ListSelectionModel.SINGLE_SELECTION);
-        javax.swing.ListSelectionModel rowSM = tblMarket.getSelectionModel();
-        rowSM.addListSelectionListener(new javax.swing.event.ListSelectionListener() {
-            public void valueChanged(javax.swing.event.ListSelectionEvent e) {
+        tblMarket.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+        ListSelectionModel rowSM = tblMarket.getSelectionModel();
+        rowSM.addListSelectionListener(event -> {
 
-                //ignore dragging
-                if (e.getValueIsAdjusting()) {
-                    return;
-                }
-
-                javax.swing.ListSelectionModel lsm = (javax.swing.ListSelectionModel) e.getSource();
-
-                if (lsm.isSelectionEmpty()) {
-                    ((MechInfo) pnlMekIcon).setImageVisible(false);
-                }
-
-                int selectedRow = lsm.getMinSelectionIndex();
-                Integer auctionId = (Integer) tblMarket.getModel().getValueAt(selectedRow, BlackMarketModel.AUCTION_ID);
-                if (auctionId != null) {
-                    mm = getMarketMechAtRow(tblMarket.getSelectedRow());
-
-                    //if there is a unit in the row, update the dynamic buttons.
-                    if (mm != null) {
-
-                        if (!hideBMUnits) {
-                            btnShowMek.setEnabled(true);
-                        }
-
-                        if (mm.getBid() > 0) {
-                            btnRecallBid.setEnabled(true);
-                        } else {
-                            btnRecallBid.setEnabled(false);
-                        }
-
-                        if (mm.playerIsSeller()) {
-                            btnBid.setEnabled(false);
-                            btnRecallUnit.setEnabled(true);
-                        } else {
-                            //check cached faction ban value
-                            if (factionBidsAllowed) {
-                                btnBid.setEnabled(true);
-                            } else {
-                                btnBid.setEnabled(false);
-                            }
-                            btnRecallUnit.setEnabled(false);
-                        }
-
-
-                        //refresh the camo ... may have changed.
-                        mwclient.getMainFrame().getMainPanel().getBMPanel().resetCamo();
-
-                    } else {//dim them all
-                        btnRecallBid.setEnabled(false);
-                        btnRecallUnit.setEnabled(false);
-                        btnBid.setEnabled(false);
-                        btnShowMek.setEnabled(false);
-                    }
-                }
-
+            //ignore dragging
+            if (event.getValueIsAdjusting()) {
+                return;
             }
+
+            ListSelectionModel lsm = (ListSelectionModel) event.getSource();
+
+            if (lsm.isSelectionEmpty()) {
+                ((MekInfo) pnlMekIcon).setImageVisible(false);
+            }
+
+            int selectedRow = lsm.getMinSelectionIndex();
+            Integer auctionId = (Integer) tblMarket.getModel().getValueAt(selectedRow, BlackMarketModel.AUCTION_ID);
+            if (auctionId != null) {
+                mm = getMarketMechAtRow(tblMarket.getSelectedRow());
+
+                //if there is a unit in the row, update the dynamic buttons.
+                if (mm != null) {
+
+                    if (!hideBMUnits) {
+                        btnShowMek.setEnabled(true);
+                    }
+
+                    btnRecallBid.setEnabled(mm.getBid() > 0);
+
+                    if (mm.playerIsSeller()) {
+                        btnBid.setEnabled(false);
+                        btnRecallUnit.setEnabled(true);
+                    } else {
+                        //check cached faction ban value
+                        if (factionBidsAllowed) {
+                            btnBid.setEnabled(true);
+                        } else {
+                            btnBid.setEnabled(false);
+                        }
+                        btnRecallUnit.setEnabled(false);
+                    }
+
+
+                    //refresh the camo ... may have changed.
+                    CBMPanel.this.client.getMainFrame().getMainPanel().getBMPanel().resetCamo();
+
+                } else {//dim them all
+                    btnRecallBid.setEnabled(false);
+                    btnRecallUnit.setEnabled(false);
+                    btnBid.setEnabled(false);
+                    btnShowMek.setEnabled(false);
+                }
+            }
+
         });
 
-        pnlBuy.setLayout(new java.awt.GridBagLayout());
+        JPanel pnlBuy = new JPanel();
+        pnlBuy.setLayout(new GridBagLayout());
 
+        JScrollPane spMarket = new JScrollPane();
         spMarket.setToolTipText("Click on the column header to sort.");
-        spMarket.setPreferredSize(new java.awt.Dimension(300, 370));
+        spMarket.setPreferredSize(new Dimension(300, 370));
         tblMarket.setDoubleBuffered(true);
         spMarket.setViewportView(tblMarket);
-        gridBagConstraints = new java.awt.GridBagConstraints();
+        GridBagConstraints gridBagConstraints = new GridBagConstraints();
         gridBagConstraints.gridx = 0;
         gridBagConstraints.gridy = 0;
-        gridBagConstraints.fill = java.awt.GridBagConstraints.BOTH;
+        gridBagConstraints.fill = GridBagConstraints.BOTH;
         gridBagConstraints.weightx = 1.0;
         gridBagConstraints.weighty = 1.0;
-        //gridBagConstraints.insets = new Insets(0, 0, 0, 0);
         pnlBuy.add(spMarket, gridBagConstraints);
 
         //lay out the buttons
-        javax.swing.JPanel panelButtonWrapper = new javax.swing.JPanel();
-        //panelButtonWrapper.setLayout(new BoxLayout(panelButtonWrapper, BoxLayout.Y_AXIS));
-        pnlBuyBtns.setLayout(new javax.swing.SpringLayout());
+        JPanel panelButtonWrapper = new JPanel();
+        pnlBuyButtons.setLayout(new SpringLayout());
 
         btnShowMek.setText("Show Unit");
-        btnShowMek.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {btnShowMekActionPerformed(evt);}
-        });
+        btnShowMek.addActionListener(this::btnShowMekActionPerformed);
 
-        spacingPanel1 = new javax.swing.JPanel();
-        spacingPanel1.setMaximumSize(new java.awt.Dimension(20, 1));
-        //pnlBuyBtns.add(spacingPanel1);
+        spacingPanel1 = new JPanel();
+        spacingPanel1.setMaximumSize(new Dimension(20, 1));
 
         btnBid.setText("Place Bid");
         btnBid.setEnabled(false);
-        btnBid.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {btnBidActionPerformed(evt);}
-        });
+        btnBid.addActionListener(this::btnBidActionPerformed);
 
         btnRecallBid.setText("Retract Bid");
         btnRecallBid.setEnabled(false);
-        btnRecallBid.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {btnRecallBidActionPerformed(evt);}
-        });
+        btnRecallBid.addActionListener(this::btnRecallBidActionPerformed);
 
-        spacingPanel2 = new javax.swing.JPanel();
-        spacingPanel2.setMaximumSize(new java.awt.Dimension(20, 1));
+        spacingPanel2 = new JPanel();
+        spacingPanel2.setMaximumSize(new Dimension(20, 1));
 
         btnRecallUnit.setText("Remove Unit");
         btnRecallUnit.setEnabled(false);
-        btnRecallUnit.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {btnRecallUnitActionPerformed(evt);}
-        });
+        btnRecallUnit.addActionListener(this::btnRecallUnitActionPerformed);
 
         btnSellUnit.setText("Sell Unit");
-        btnSellUnit.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {btnSellUnitActionPerformed(evt);}
-        });
+        btnSellUnit.addActionListener(this::btnSellUnitActionPerformed);
 
-        spacingPanel3 = new javax.swing.JPanel();
-        spacingPanel3.setMaximumSize(new java.awt.Dimension(20, 1));
+        JPanel spacingPanel3 = new JPanel();
+        spacingPanel3.setMaximumSize(new Dimension(20, 1));
 
-        //do the actual button layout, springmanagement, etc.
+        //do the actual button layout, spring management, etc.
         resetButtonBar();
 
-        panelButtonWrapper.add(pnlBuyBtns);
+        panelButtonWrapper.add(pnlBuyButtons);
 
-        gridBagConstraints = new java.awt.GridBagConstraints();
+        gridBagConstraints = new GridBagConstraints();
         gridBagConstraints.gridx = 0;
         gridBagConstraints.gridy = 1;
-        gridBagConstraints.fill = java.awt.GridBagConstraints.HORIZONTAL;
+        gridBagConstraints.fill = GridBagConstraints.HORIZONTAL;
         gridBagConstraints.weightx = 1.0;
         gridBagConstraints.weighty = 0.0;
         pnlBuy.add(panelButtonWrapper, gridBagConstraints);
 
-        gridBagConstraints = new java.awt.GridBagConstraints();
+        gridBagConstraints = new GridBagConstraints();
         gridBagConstraints.gridx = 1;
         gridBagConstraints.gridy = 0;
         gridBagConstraints.gridheight = 2;
-        gridBagConstraints.fill = java.awt.GridBagConstraints.BOTH;
+        gridBagConstraints.fill = GridBagConstraints.BOTH;
         gridBagConstraints.ipadx = 30;
         gridBagConstraints.weightx = 1.0;
         gridBagConstraints.weighty = 1.0;
@@ -248,29 +243,31 @@ public class CBMPanel extends javax.swing.JPanel {
      *
      * @param evt
      */
-    private void btnShowMekActionPerformed(java.awt.event.ActionEvent evt) {
+    private void btnShowMekActionPerformed(ActionEvent evt) {
         if (hideBMUnits) {
             return;
         }
         mm = getMarketMechAtRow(tblMarket.getSelectedRow());
-        if (mm == null) {return;}
+        if (mm == null) {
+            return;
+        }
         Entity theEntity = mm.getEmbeddedUnit().getEntity();
         theEntity.loadAllWeapons();
 
-        javax.swing.JFrame infoWindow = new javax.swing.JFrame();
-        UnitDisplay unitDisplay = new MWUnitDisplay(null, mwclient);
+        JFrame infoWindow = new JFrame();
+        MWUnitDisplay unitDisplay = new MWUnitDisplay(null, client);
 
         infoWindow.getContentPane().add(unitDisplay);
         infoWindow.setSize(300, 400);
         infoWindow.setResizable(false);
 
         infoWindow.setTitle(mm.getModelName());
-        infoWindow.setLocationRelativeTo(mwclient.getMainFrame());//center it
+        infoWindow.setLocationRelativeTo(client.getMainFrame());//center it
         infoWindow.setVisible(true);
         unitDisplay.displayEntity(theEntity);
     }
 
-    public client.campaign.CBMUnit getMarketMechAtRow(int row) {
+    public CBMUnit getMarketMechAtRow(int row) {
         mm = null;
         Integer auctionId = (Integer) tblMarket.getModel().getValueAt(row, BlackMarketModel.AUCTION_ID);
         if (auctionId != null) {
@@ -279,16 +276,45 @@ public class CBMPanel extends javax.swing.JPanel {
         return mm;
     }
 
+    //refresh preview image
+    public void resetCamo() {
+
+        if (!hideBMUnits && client.getConfig().isParam("BMPREVIEWIMAGE")) {
+
+            //refresh the camo ... may have been changed.
+            pnlMekIcon = new MekInfo(client.getConfig().getImage("CAMO"));
+            pnlMekIcon.setMinimumSize(new Dimension(84, 72));
+            pnlMekIcon.setPreferredSize(new Dimension(84, 72));
+            pnlMekIcon.setMaximumSize(new Dimension(84, 72));
+
+
+            try {
+                ((MekInfo) pnlMekIcon).setUnit(mm.getEmbeddedUnit().getEntity());
+                ((MekInfo) pnlMekIcon).setImageVisible(true);
+            } catch (Exception e) {
+                //just means no entity has been selected yet
+            }
+
+            pnlMekIconHolder.removeAll();
+            pnlMekIconHolder.add(pnlMekIcon);
+
+        } else {
+            ((MekInfo) pnlMekIcon).setImageVisible(false);
+        }
+
+        pnlBuyButtons.validate();
+    }
+
     /**
      * Called from an action listener. Opens a dialo for input, checks the input, and places a bid with the server if
-     * the bid is sufficient.
+     * the bid is enough.
      *
      * @param evt
      */
-    private void btnBidActionPerformed(java.awt.event.ActionEvent evt) {
+    private void btnBidActionPerformed(ActionEvent evt) {
         int row = tblMarket.getSelectedRow();
 
-        //shouldnt ever happen, but still trap
+        //shouldn't ever happen, but still trap
         if (row < 0) {
             return;
         }
@@ -307,17 +333,16 @@ public class CBMPanel extends javax.swing.JPanel {
             if (auctionID != -1) {//-1 is the default value. indicates null auction.
 
                 //generate a new option dialog
-                String playerBidString = javax.swing.JOptionPane.showInputDialog(mwclient.getMainFrame(),
-                      "<HTML><center>How much would you like to bid on the " +
-                            mm.getModelName() +
-                            "?<BR>Minimum is " +
-                            mwclient.moneyOrFluMessage(true, true, mm.getMinBid()) +
-                            ".</center></HTML>",
+                String playerBidString = JOptionPane.showInputDialog(client.getMainFrame(),
+                      STR."<HTML><center>How much would you like to bid on the \{mm.getModelName()}?<BR>Minimum is \{client.moneyOrFluMessage(
+                            true,
+                            true,
+                            mm.getMinBid())}.</center></HTML>",
                       "Amount to Bid",
                       javax.swing.JOptionPane.PLAIN_MESSAGE);
 
                 //Clicked Cancel
-                if ((playerBidString == null) || (playerBidString.trim().length() == 0)) {
+                if ((playerBidString == null) || (playerBidString.trim().isEmpty())) {
                     return;
                 }
 
@@ -325,17 +350,15 @@ public class CBMPanel extends javax.swing.JPanel {
                     int playerBid = Integer.parseInt(playerBidString);
 
                     if (playerBid < mm.getMinBid()) {
-                        String toUser = "CH|CLIENT: You tried to bid less than the minimum your contacts are" +
-                                              " willing to accept for the " +
-                                              mm.getModelName() +
-                                              ". Try bidding " +
-                                              mwclient.moneyOrFluMessage(true, false, mm.getMinBid()) +
-                                              " or more.";
-                        mwclient.doParseDataInput(toUser);
+                        String toUser = STR."CH|CLIENT: You tried to bid less than the minimum your contacts are willing to accept for the \{mm.getModelName()}. Try bidding \{client.moneyOrFluMessage(
+                              true,
+                              false,
+                              mm.getMinBid())} or more.";
+                        client.doParseDataInput(toUser);
                         return;
                     }
 
-                    mwclient.sendChat(client.MWClient.CAMPAIGN_PREFIX + "c bid#" + auctionID + "#" + playerBid);
+                    client.sendChat(STR."\{IClient.CAMPAIGN_PREFIX}c bid#\{auctionID}#\{playerBid}");
 
                     //this clears the selection, so unhighlight the bid button. sometimes the
                     //bid and retract buttons will be active simultaneously, so disable both
@@ -343,7 +366,7 @@ public class CBMPanel extends javax.swing.JPanel {
                     btnRecallBid.setEnabled(false);
                 } catch (NumberFormatException NFE) {
                     String toUser = "CH|CLIENT: Invalid Bid amount. Try using numbers next time!";
-                    mwclient.doParseDataInput(toUser);
+                    client.doParseDataInput(toUser);
                     return;
                 } catch (Exception ex) {
                     MWLogger.errLog(ex);
@@ -355,7 +378,7 @@ public class CBMPanel extends javax.swing.JPanel {
     /**
      * Called by action listener. Retracts a bid placed on a unit.
      */
-    private void btnRecallBidActionPerformed(java.awt.event.ActionEvent evt) {
+    private void btnRecallBidActionPerformed(ActionEvent evt) {
 
         mm = getMarketMechAtRow(tblMarket.getSelectedRow());
 
@@ -370,7 +393,7 @@ public class CBMPanel extends javax.swing.JPanel {
         }
 
         //returns passed. send the recall command and deselect the buttons.
-        mwclient.sendChat(client.MWClient.CAMPAIGN_PREFIX + "c recallbid#" + mm.getAuctionID());
+        client.sendChat(STR."\{IClient.CAMPAIGN_PREFIX}c recallbid#\{mm.getAuctionID()}");
         btnRecallBid.setEnabled(false);
         btnRecallUnit.setEnabled(false);
         btnBid.setEnabled(false);
@@ -378,9 +401,9 @@ public class CBMPanel extends javax.swing.JPanel {
     }
 
     /**
-     * Called by action listener. Recinds a unit sale.
+     * Called by action listener. Rebinds a unit sale.
      */
-    private void btnRecallUnitActionPerformed(java.awt.event.ActionEvent evt) {
+    private void btnRecallUnitActionPerformed(ActionEvent evt) {
 
         mm = getMarketMechAtRow(tblMarket.getSelectedRow());
 
@@ -395,38 +418,38 @@ public class CBMPanel extends javax.swing.JPanel {
         }
 
         //returns passed. send the recall command and deselect the buttons.
-        mwclient.sendChat(client.MWClient.CAMPAIGN_PREFIX + "c recall#" + mm.getAuctionID());
+        client.sendChat(STR."\{IClient.CAMPAIGN_PREFIX}c recall#\{mm.getAuctionID()}");
         btnRecallBid.setEnabled(false);
         btnRecallUnit.setEnabled(false);
         btnBid.setEnabled(false);
     }
 
     /**
-     * Called from an action listener. Creates a SellUnitDialog. The dialog does all of the work ;-)
+     * Called from an action listener. Creates a SellUnitDialog. The dialog does all the work ;-)
      */
-    public void btnSellUnitActionPerformed(java.awt.event.ActionEvent evt) {
-        SellUnitDialog sud = new SellUnitDialog(null, mwclient, null);
+    public void btnSellUnitActionPerformed(ActionEvent evt) {
+        SellUnitDialog sud = new SellUnitDialog(null, client, null);
         sud.setVisible(true);
     }
 
     public void resetButtonBar() {
 
-        if (mwclient.getConfig().isParam("BMPREVIEWIMAGE")) {
+        if (client.getConfig().isParam("BMPREVIEWIMAGE")) {
 
             /*
              * Pain in the ass layout. Have to keep the
-             * button heights down, etc. Using a maxheight
-             * isnt preferable, since it can screw up the
+             * button heights down, etc. Using a max height
+             * isn't preferable, since it can screw up the
              * layout when no preview is in use ... so we
              * work with stupidly embedded panels instead.
              */
 
             //clear panels
-            pnlBuyBtns.removeAll();
+            pnlBuyButtons.removeAll();
             pnlMekIconHolder.removeAll();
 
             //standard spring layout for the buttons
-            javax.swing.JPanel buttonSpring = new javax.swing.JPanel(new javax.swing.SpringLayout());
+            JPanel buttonSpring = new JPanel(new SpringLayout());
             if (!hideBMUnits) {
                 buttonSpring.add(btnShowMek);
             }
@@ -444,12 +467,12 @@ public class CBMPanel extends javax.swing.JPanel {
             //stick the pnlMekIcon in its holder, and add
             //the combined struct inot the button bar.
             pnlMekIconHolder.add(pnlMekIcon);
-            pnlBuyBtns.add(pnlMekIconHolder);
+            pnlBuyButtons.add(pnlMekIconHolder);
 
             SpringLayoutHelper.setupSpringGrid(buttonSpring, 1, 8);
-            pnlBuyBtns.add(new javax.swing.JLabel("\n "));
-            pnlBuyBtns.add(buttonSpring);
-            SpringLayoutHelper.setupSpringGrid(pnlBuyBtns, 1, 3);
+            pnlBuyButtons.add(new javax.swing.JLabel("\n "));
+            pnlBuyButtons.add(buttonSpring);
+            SpringLayoutHelper.setupSpringGrid(pnlBuyButtons, 1, 3);
 
         } else {
 
@@ -457,23 +480,23 @@ public class CBMPanel extends javax.swing.JPanel {
              * no image, just buttons. this is a nice, simple,
              * centered spring layout. no fuss, no muss.
              */
-            pnlBuyBtns.removeAll();
+            pnlBuyButtons.removeAll();
 
             if (!hideBMUnits) {
-                pnlBuyBtns.add(btnShowMek);
+                pnlBuyButtons.add(btnShowMek);
             }
-            pnlBuyBtns.add(btnBid);
-            pnlBuyBtns.add(spacingPanel1);
-            pnlBuyBtns.add(btnBid);
-            pnlBuyBtns.add(btnRecallBid);
-            pnlBuyBtns.add(spacingPanel2);
-            pnlBuyBtns.add(btnRecallUnit);
-            pnlBuyBtns.add(btnSellUnit);
+            pnlBuyButtons.add(btnBid);
+            pnlBuyButtons.add(spacingPanel1);
+            pnlBuyButtons.add(btnBid);
+            pnlBuyButtons.add(btnRecallBid);
+            pnlBuyButtons.add(spacingPanel2);
+            pnlBuyButtons.add(btnRecallUnit);
+            pnlBuyButtons.add(btnSellUnit);
 
-            SpringLayoutHelper.setupSpringGrid(pnlBuyBtns, 1, 8);
+            SpringLayoutHelper.setupSpringGrid(pnlBuyButtons, 1, 8);
         }
 
-        pnlBuyBtns.validate();
+        pnlBuyButtons.validate();
         this.repaint();
     }
 
@@ -481,40 +504,11 @@ public class CBMPanel extends javax.swing.JPanel {
         fireMarketChanged();
     }
 
-    //refresh preview image
-    public void resetCamo() {
-
-        if (!hideBMUnits && mwclient.getConfig().isParam("BMPREVIEWIMAGE")) {
-
-            //refresh the camo ... may have been changed.
-            pnlMekIcon = new MechInfo(mwclient.getConfig().getImage("CAMO"));
-            pnlMekIcon.setMinimumSize(new java.awt.Dimension(84, 72));
-            pnlMekIcon.setPreferredSize(new java.awt.Dimension(84, 72));
-            pnlMekIcon.setMaximumSize(new java.awt.Dimension(84, 72));
-
-
-            try {
-                ((MechInfo) pnlMekIcon).setUnit(mm.getEmbeddedUnit().getEntity());
-                ((MechInfo) pnlMekIcon).setImageVisible(true);
-            } catch (Exception e) {
-                //just means no entity has been selected yet
-            }
-
-            pnlMekIconHolder.removeAll();
-            pnlMekIconHolder.add(pnlMekIcon);
-
-        } else {
-            ((MechInfo) pnlMekIcon).setImageVisible(false);
-        }
-
-        pnlBuyBtns.validate();
-    }
-
     public void fireMarketChanged() {
         //here's a problem MyBlackMarket has to be created somehow (by parsing BM or from Player data)
         BlackMarketInfo.refreshModel();
 
-        tblMarket.setPreferredSize(new java.awt.Dimension(tblMarket.getWidth(),
+        tblMarket.setPreferredSize(new Dimension(tblMarket.getWidth(),
               tblMarket.getRowHeight() * (tblMarket.getRowCount())));
         tblMarket.revalidate();
     }
@@ -530,23 +524,18 @@ public class CBMPanel extends javax.swing.JPanel {
 
         //check to see if selling is forbidden for the player's faction
         boolean sellingEnabled = true;
-        java.util.StringTokenizer blockedFactions = new java.util.StringTokenizer(mwclient.getserverConfigs("BMNoSell"),
-              "$");
+        StringTokenizer blockedFactions = new StringTokenizer(client.getServerConfigs("BMNoSell"), "$");
         while (blockedFactions.hasMoreTokens()) {
             if (Player.getMyHouse().getName().equals(blockedFactions.nextToken())) {
                 sellingEnabled = false;
             }
         }
 
-        if (sellingEnabled) {
-            btnSellUnit.setEnabled(true);
-        } else {
-            btnSellUnit.setEnabled(false);
-        }
+        btnSellUnit.setEnabled(sellingEnabled);
 
-        //check to see if buying is forbidds, and save boolean.
+        //check to see if buying is forbids, and save boolean.
         boolean buyingEnabled = true;
-        blockedFactions = new java.util.StringTokenizer(mwclient.getserverConfigs("BMNoBuy"), "$");
+        blockedFactions = new java.util.StringTokenizer(client.getServerConfigs("BMNoBuy"), "$");
         while (blockedFactions.hasMoreTokens()) {
             if (Player.getMyHouse().getName().equals(blockedFactions.nextToken())) {
                 buyingEnabled = false;
@@ -554,11 +543,7 @@ public class CBMPanel extends javax.swing.JPanel {
         }
 
         //have to use an ivar and check the perm so bidding is re-enabled after defection
-        if (buyingEnabled) {
-            factionBidsAllowed = true;
-        } else {
-            factionBidsAllowed = false;
-        }
+        factionBidsAllowed = buyingEnabled;
 
     }
 

@@ -138,7 +138,7 @@ public class WriterThread extends Thread {
             // then return.
             if (s.length() < 200) {
                 try {
-                    // MWLogger.warnLog("Client: " +
+                    // MWLogger.warnLog("client: " +
                     // _client.getUserId() + " /" + _client.getHost() +
                     // " Size: " + s.length() + " Message: " + s);
                     MWLogger.debugLog("Sending data to " + _host + ":Size:" + s.length());

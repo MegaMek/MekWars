@@ -17,11 +17,16 @@
 
 package mekwars.common.gui.panels;
 
-import common.CampaignData;
-import common.util.MWLogger;
+import java.io.Serial;
+import javax.swing.JPanel;
+import javax.swing.JSlider;
+import javax.swing.event.ChangeListener;
+
+import mekwars.common.CampaignData;
 import mekwars.common.campaign.clientutils.protocol.IClient;
 import mekwars.common.gui.CMainFrame;
 import mekwars.common.gui.InnerStellarMap;
+import mekwars.common.util.MWLogger;
 
 /**
  * Class used to display Stellar InnerStellarMap in GUI
@@ -31,35 +36,36 @@ import mekwars.common.gui.InnerStellarMap;
  * @author Imi (immanuel.scholz@gmx.de)
  */
 
-public class CMapPanel extends javax.swing.JPanel {
+public class CMapPanel extends JPanel {
 
     /**
      *
      */
+    @Serial
     private static final long serialVersionUID = 5547551465585402891L;
     /**
      * The main map
      */
-    private InnerStellarMap map;
+    private final InnerStellarMap map;
     /**
      * The zoom slider
      */
-    private javax.swing.JSlider slider;
+    private final JSlider slider;
     /**
      * Statistics of the current selected planet.
      */
-    private mekwars.client.gui.PlanetPanel planetPanel;
+    private final PlanetPanel planetPanel;
     /**
-     * The map control in topleft corner
+     * The map control in top left corner
      */
-    private javax.swing.JPanel mapControl;
+    private final JPanel mapControl;
     /**
      * A vector of all planets to be drawn at demand.
      */
-    private client.MWClient mwclient;
+    private final IClient client;
 
     public CMapPanel(IClient client, CMainFrame mainFrame, int xsize, int ysize) {
-        this.mwclient = client;
+        this.client = client;
         setLayout(null);
         mapControl = new javax.swing.JPanel();
         mapControl.setOpaque(false);
@@ -69,25 +75,22 @@ public class CMapPanel extends javax.swing.JPanel {
         mapControl.setLayout(new javax.swing.BoxLayout(mapControl, javax.swing.BoxLayout.Y_AXIS));
 
         // ISMap
-        map = new InnerStellarMap(this, mwclient, mainFrame);
+        map = new InnerStellarMap(this, this.client, mainFrame);
 
         // planet info
-        planetPanel = new mekwars.client.gui.PlanetPanel(this, mwclient);
+        planetPanel = new PlanetPanel(this, this.client);
         mapControl.add(planetPanel);
         planetPanel.setAlignmentX(java.awt.Component.LEFT_ALIGNMENT);
         planetPanel.setAlignmentY(java.awt.Component.TOP_ALIGNMENT);
 
         // zoom slider
         slider = new CMapPanel.ZoomSlider();
-        slider.setValue((int) Math.round(50 / map.conf.scale));
+        slider.setValue((int) Math.round(50 / map.getConf().getScale()));
         slider.setAlignmentX(java.awt.Component.LEFT_ALIGNMENT);
         slider.setAlignmentY(java.awt.Component.TOP_ALIGNMENT);
         slider.setOpaque(false);
         slider.setMajorTickSpacing(slider.getMaximum() / 5);
         slider.setMinorTickSpacing(slider.getMaximum() / 10);
-        //slider.createStandardLabels(10);
-        //slider.setSnapToTicks(true);
-        //slider.setPaintTrack(true);
         slider.setPaintTicks(true);
         add(slider);
         add(map);
@@ -109,7 +112,7 @@ public class CMapPanel extends javax.swing.JPanel {
         //if the map is visible, select the correct planet last(since this involves several updates)
         if (client.getConfig().isParam("MAPTABVISIBLE")) {
             try {
-                map.activate(client.getData().getPlanet(map.conf.planetID));
+                map.activate(client.getData().getPlanet(map.getConf().getPlanetID()));
             } catch (Exception ex) {
                 MWLogger.errLog(ex);
             }
@@ -121,7 +124,7 @@ public class CMapPanel extends javax.swing.JPanel {
      * @return Returns the data.
      */
     public CampaignData getData() {
-        return mwclient.getData();
+        return client.getData();
     }
 
     /**
@@ -134,14 +137,14 @@ public class CMapPanel extends javax.swing.JPanel {
     /**
      * @return Returns the planetPanel.
      */
-    public mekwars.client.gui.PlanetPanel getPPanel() {
+    public PlanetPanel getPPanel() {
         return planetPanel;
     }
 
     /**
      * @return Returns the mapControl.
      */
-    public javax.swing.JPanel getMapControl() {
+    public JPanel getMapControl() {
         return mapControl;
     }
 
@@ -152,16 +155,17 @@ public class CMapPanel extends javax.swing.JPanel {
         return map;
     }
 
-    private class ZoomSlider extends javax.swing.JSlider implements javax.swing.event.ChangeListener {
+    private class ZoomSlider extends JSlider implements ChangeListener {
         /**
          *
          */
+        @Serial
         private static final long serialVersionUID = -2214264904474265394L;
 
         ZoomSlider() {
-            super(HORIZONTAL, map.conf.reverseScaleMin, map.conf.reverseScaleMax,
-                  map.conf.reverseScaleMin +
-                        (map.conf.reverseScaleMax - map.conf.reverseScaleMin) / 2);
+            super(HORIZONTAL, map.getConf().getReverseScaleMin(), map.getConf().getReverseScaleMax(),
+                  map.getConf().getReverseScaleMin() +
+                        (map.getConf().getReverseScaleMax() - map.getConf().getReverseScaleMin()) / 2);
             addChangeListener(this);
         }
 

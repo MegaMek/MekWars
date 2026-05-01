@@ -430,7 +430,7 @@ public class AutoArmy {
         StringBuilder result = new StringBuilder();
 
         /*
-         * Just send a list of the weightclasses. Client has the
+         * Just send a list of the weightclasses. client has the
          * file path and file names in the server config it received
          * during connection.
          */

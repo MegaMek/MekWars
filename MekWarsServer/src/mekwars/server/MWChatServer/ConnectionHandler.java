@@ -140,7 +140,7 @@ public class ConnectionHandler extends AbstractConnectionHandler {
     @Override
     public void queuePriorityMessage(String message) {
         synchronized (message) {
-            // MWLogger.warnLog("queuePriorityMessage Client: "
+            // MWLogger.warnLog("queuePriorityMessage client: "
             // + _client.getUserId() + "Size: " + message.length()
             // + " Host: " + _client.getHost());
             _out.print(message + "\n");

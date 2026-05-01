@@ -16,17 +16,6 @@
 
 package mekwars.server.campaign;
 
-import common.CampaignData;
-import common.MegaMekPilotOption;
-import common.Unit;
-import common.campaign.operations.Operation;
-import common.campaign.pilot.skills.PilotSkill;
-import common.campaign.targetsystems.TargetSystem;
-import common.campaign.targetsystems.TargetTypeNotImplementedException;
-import common.campaign.targetsystems.TargetTypeOutOfBoundsException;
-import common.util.MWLogger;
-import common.util.TokenReader;
-import common.util.UnitUtils;
 import megamek.common.CriticalSlot;
 import megamek.common.battleArmor.BattleArmor;
 import megamek.common.equipment.AmmoType;
@@ -36,15 +25,26 @@ import megamek.common.loaders.MULParser;
 import megamek.common.options.PilotOptions;
 import megamek.common.units.Crew;
 import megamek.common.units.CrewType;
+import megamek.common.units.Entity;
 import megamek.common.units.Infantry;
 import megamek.common.units.Tank;
-import server.campaign.pilot.SPilot;
-import server.campaign.pilot.SPilotSkills;
-import server.campaign.pilot.skills.SPilotSkill;
-import server.campaign.pilot.skills.TraitSkill;
-import server.campaign.pilot.skills.WeaponSpecialistSkill;
-import server.campaign.util.SerializedMessage;
-import server.util.QuirkHandler;
+import mekwars.common.CampaignData;
+import mekwars.common.MegaMekPilotOption;
+import mekwars.common.Unit;
+import mekwars.common.campaign.pilot.skills.PilotSkill;
+import mekwars.common.campaign.targetsystems.TargetSystem;
+import mekwars.common.campaign.targetsystems.TargetTypeNotImplementedException;
+import mekwars.common.campaign.targetsystems.TargetTypeOutOfBoundsException;
+import mekwars.common.util.MWLogger;
+import mekwars.common.util.TokenReader;
+import mekwars.common.util.UnitUtils;
+import mekwars.server.campaign.pilot.SPilot;
+import mekwars.server.campaign.pilot.SPilotSkills;
+import mekwars.server.campaign.pilot.skills.SPilotSkill;
+import mekwars.server.campaign.pilot.skills.TraitSkill;
+import mekwars.server.campaign.pilot.skills.WeaponSpecialistSkill;
+import mekwars.server.campaign.util.SerializedMessage;
+import mekwars.server.util.QuirkHandler;
 
 /**
  * A class representing an MM.Net Entity
@@ -59,7 +59,7 @@ public final class SUnit extends Unit implements Comparable<SUnit> {
     private Integer BV = 0;
     private Integer scrappableFor = -1;
 
-    private long passesMaintainanceUntil = 0;
+    private long passesMaintenanceUntil = 0;
     private boolean pilotIsRepairing = false;
 
     private Entity unitEntity = null;
@@ -78,7 +78,7 @@ public final class SUnit extends Unit implements Comparable<SUnit> {
      * Construct a new unit.
      *
      * @param p        flavour string (es: Built by Kurita on An-Ting)
-     * @param filename to read this entity from
+     * @param Filename to read this entity from
      */
     public SUnit(String p, String Filename, int weightclass) {
         super();
@@ -1356,12 +1356,12 @@ public final class SUnit extends Unit implements Comparable<SUnit> {
         BV = i;
     }
 
-    public long getPassesMaintainanceUntil() {
-        return passesMaintainanceUntil;
+    public long getPassesMaintenanceUntil() {
+        return passesMaintenanceUntil;
     }
 
-    public void setPassesMaintainanceUntil(long l) {
-        passesMaintainanceUntil = l;
+    public void setPassesMaintenanceUntil(long l) {
+        passesMaintenanceUntil = l;
     }
 
     public int getScrappableFor() {

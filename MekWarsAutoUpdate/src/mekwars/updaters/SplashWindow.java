@@ -57,7 +57,7 @@ public class SplashWindow {
 
         splashWindow = new JFrame();
         splashWindow.setUndecorated(true);
-        splashWindow.setTitle("MekWars Client Update");
+        splashWindow.setTitle("MekWars client Update");
         progressBar = new JProgressBar(0, 9);
         progressBar.setMaximumSize(new Dimension(350, 10));
         progressBar.setAlignmentX(Component.CENTER_ALIGNMENT);
@@ -73,7 +73,7 @@ public class SplashWindow {
         splashImage.setImage(tempImage);
 
         // format the label
-        JLabel imageLabel = new JLabel("<HTML><CENTER>Updating MekWars Client<br>Please Wait</CENTER></HTML>",
+        JLabel imageLabel = new JLabel("<HTML><CENTER>Updating MekWars client<br>Please Wait</CENTER></HTML>",
               splashImage,
               SwingConstants.CENTER);
         imageLabel.setVerticalTextPosition(SwingConstants.BOTTOM);

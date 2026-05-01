@@ -30,15 +30,34 @@
  * <https://www.xbox.com/en-US/developers/rules> and it is not endorsed by or
  * affiliated with Microsoft.
  */
+package mekwars.common.commands;
 
-package mekwars.common.campaign.clientutils.protocol.commands;
+import java.util.StringTokenizer;
 
-public interface IProtCommand {
-    // check if this is proper command
-    boolean check(String name);
+import mekwars.common.campaign.clientutils.protocol.IClient;
+import mekwars.common.campaign.clientutils.protocol.TransportCodec;
 
-    // invoked when command is executed
-    boolean execute(String command);
+/**
+ * Comm command
+ */
 
-    String getName();
+public class CommPCmd extends CProtCommand {
+    public CommPCmd(IClient client) {
+        super(client);
+        name = "comm";
+    }
+
+    // execute command
+    @Override
+    public boolean execute(String input) {
+
+        StringTokenizer ST = new StringTokenizer(input, delimiter);
+        if (check(ST.nextToken()) && ST.hasMoreTokens()) {
+            input = TransportCodec.unescape(ST.nextToken());
+            if (!client.isDedicated()) {client.doParseDataInput(input);} else {client.parseDedDataInput(input);}
+            return true;
+        }
+
+        return false;
+    }
 }

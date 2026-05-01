@@ -31,7 +31,7 @@ import common.campaign.clientutils.IClientConfig;
 import common.util.MWLogger;
 
 /**
- * Class for Client's configuration.
+ * Class for client's configuration.
  */
 public class DedConfig implements IClientConfig {
 
@@ -241,7 +241,7 @@ public class DedConfig implements IClientConfig {
 
             FileOutputStream fos = new FileOutputStream(CONFIG_BACKUP_FILE);
             PrintStream ps = new PrintStream(fos);
-            config.store(ps, "Client Config Backup");
+            config.store(ps, "client Config Backup");
             fos.close();
             ps.close();
         } catch (Exception ex) {
@@ -252,7 +252,7 @@ public class DedConfig implements IClientConfig {
         try {
             FileOutputStream fos = new FileOutputStream(CONFIG_FILE);
             PrintStream ps = new PrintStream(fos);
-            config.store(ps, "Client Config");
+            config.store(ps, "client Config");
             fos.close();
             ps.close();
         } catch (Exception ex) {

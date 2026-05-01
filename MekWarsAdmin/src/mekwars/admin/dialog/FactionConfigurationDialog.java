@@ -3018,28 +3018,28 @@ public final class FactionConfigurationDialog implements ActionListener {
         baseTextField = new JTextField(5);
         unit3TextFlow.add(new JLabel("Light Type:", SwingConstants.TRAILING));
         baseTextField.setToolTipText(
-              "<html>Title to be displayed of light factories<br>in the Client House Bays Tab</html>");
+              "<html>Title to be displayed of light factories<br>in the client House Bays Tab</html>");
         baseTextField.setName("LightFactoryTypeTitle");
         unit3TextFlow.add(baseTextField);
 
         baseTextField = new JTextField(5);
         unit3TextFlow.add(new JLabel("Medium Type:", SwingConstants.TRAILING));
         baseTextField.setToolTipText(
-              "<html>Title to be displayed of medium factories<br>in the Client House Bays Tab</html>");
+              "<html>Title to be displayed of medium factories<br>in the client House Bays Tab</html>");
         baseTextField.setName("MediumFactoryTypeTitle");
         unit3TextFlow.add(baseTextField);
 
         baseTextField = new JTextField(5);
         unit3TextFlow.add(new JLabel("Heavy Type:", SwingConstants.TRAILING));
         baseTextField.setToolTipText(
-              "<html>Title to be displayed of heavy factories<br>in the Client House Bays Tab</html>");
+              "<html>Title to be displayed of heavy factories<br>in the client House Bays Tab</html>");
         baseTextField.setName("HeavyFactoryTypeTitle");
         unit3TextFlow.add(baseTextField);
 
         baseTextField = new JTextField(5);
         unit3TextFlow.add(new JLabel("Assault Type:", SwingConstants.TRAILING));
         baseTextField.setToolTipText(
-              "<html>Title to be displayed of assault factories<br>in the Client House Bays Tab</html>");
+              "<html>Title to be displayed of assault factories<br>in the client House Bays Tab</html>");
         baseTextField.setName("AssaultFactoryTypeTitle");
         unit3TextFlow.add(baseTextField);
 
@@ -3048,42 +3048,42 @@ public final class FactionConfigurationDialog implements ActionListener {
         baseTextField = new JTextField(5);
         unit4TextFlow.add(new JLabel("Mek Class:", SwingConstants.TRAILING));
         baseTextField.setToolTipText(
-              "<html>Title to be displayed of mek factories<br>in the Client House Bays Tab</html>");
+              "<html>Title to be displayed of mek factories<br>in the client House Bays Tab</html>");
         baseTextField.setName("MekFactoryClassTitle");
         unit4TextFlow.add(baseTextField);
 
         baseTextField = new JTextField(5);
         unit4TextFlow.add(new JLabel("Vee Class:", SwingConstants.TRAILING));
         baseTextField.setToolTipText(
-              "<html>Title to be displayed of vee factories<br>in the Client House Bays Tab</html>");
+              "<html>Title to be displayed of vee factories<br>in the client House Bays Tab</html>");
         baseTextField.setName("VehicleFactoryClassTitle");
         unit4TextFlow.add(baseTextField);
 
         baseTextField = new JTextField(5);
         unit4TextFlow.add(new JLabel("Inf Class:", SwingConstants.TRAILING));
         baseTextField.setToolTipText(
-              "<html>Title to be displayed of infantry factories<br>in the Client House Bays Tab</html>");
+              "<html>Title to be displayed of infantry factories<br>in the client House Bays Tab</html>");
         baseTextField.setName("InfantryFactoryClassTitle");
         unit4TextFlow.add(baseTextField);
 
         baseTextField = new JTextField(7);
         unit4TextFlow.add(new JLabel("Proto Class:", SwingConstants.TRAILING));
         baseTextField.setToolTipText(
-              "<html>Title to be displayed of ProtoMek factories<br>in the Client House Bays Tab</html>");
+              "<html>Title to be displayed of ProtoMek factories<br>in the client House Bays Tab</html>");
         baseTextField.setName("ProtoMekFactoryClassTitle");
         unit4TextFlow.add(baseTextField);
 
         baseTextField = new JTextField(11);
         unit4TextFlow.add(new JLabel("BA Class:", SwingConstants.TRAILING));
         baseTextField.setToolTipText(
-              "<html>Title to be displayed of battlearmor factories<br>in the Client House Bays Tab</html>");
+              "<html>Title to be displayed of battlearmor factories<br>in the client House Bays Tab</html>");
         baseTextField.setName("BattleArmorFactoryClassTitle");
         unit4TextFlow.add(baseTextField);
 
         baseTextField = new JTextField(5);
         unit4TextFlow.add(new JLabel("Aero Class:", SwingConstants.TRAILING));
         baseTextField.setToolTipText(
-              "<html>Title to be displayed of aero factories<br>in the Client House Bays Tab</html>");
+              "<html>Title to be displayed of aero factories<br>in the client House Bays Tab</html>");
         baseTextField.setName("AeroFactoryClassTitle");
         unit4TextFlow.add(baseTextField);
 

@@ -18,9 +18,13 @@
 package mekwars.common.gui;
 
 import java.awt.BorderLayout;
+import java.awt.Desktop;
 import java.awt.event.WindowAdapter;
 import java.io.File;
+import java.io.IOException;
 import java.io.Serial;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.Objects;
 
 import javax.swing.*;
@@ -204,7 +208,7 @@ public class CMainFrame extends JFrame {
         setResizable(true);
         setSize(new java.awt.Dimension(640, 480));
         setExtendedState(java.awt.Frame.MAXIMIZED_BOTH);
-        setTitle(client.getConfigParam("CAMPAIGNSERVERNAME") + " (MekWars Client " + IClient.CLIENT_VERSION + ")");
+        setTitle(client.getConfigParam("CAMPAIGNSERVERNAME") + " (MekWars client " + IClient.CLIENT_VERSION + ")");
         contentPane = (JPanel) getContentPane();
         contentPane.setLayout(new java.awt.BorderLayout());
         useAdvanceRepairs = client.isUsingAdvanceRepairs();
@@ -800,17 +804,25 @@ public class CMainFrame extends JFrame {
         JMenuItem jMenuMekWarsBug = new JMenuItem("Report Bug/RFE (MekWars)");
         JMenuItem jMenuMegaMekBug = new JMenuItem("Report Bug/REF (MegaMek)");
         java.awt.event.ActionListener mekWarsListener = _ -> {
-            try {
-                Browser.displayURL("https://github.com/MegaMek/MekWars");
-            } catch (Exception ex) {
-                MWLogger.errLog(ex);
+            if (Desktop.isDesktopSupported() && Desktop.getDesktop().isSupported(Desktop.Action.BROWSE)) {
+                try {
+                    Desktop.getDesktop().browse(new URI("https://github.com/MegaMek/MekWars"));
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
+                } catch (URISyntaxException e) {
+                    throw new RuntimeException(e);
+                }
             }
         };
         java.awt.event.ActionListener megaMekListener = _ -> {
-            try {
-                Browser.displayURL("https://github.com/MegaMek/megamek");
-            } catch (Exception ex) {
-                MWLogger.errLog(ex);
+            if (Desktop.isDesktopSupported() && Desktop.getDesktop().isSupported(Desktop.Action.BROWSE)) {
+                try {
+                    Desktop.getDesktop().browse(new URI("https://github.com/MegaMek/megamek"));
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
+                } catch (URISyntaxException e) {
+                    throw new RuntimeException(e);
+                }
             }
         };
         jMenuMekWarsBug.addActionListener(mekWarsListener);
@@ -2384,17 +2396,17 @@ public class CMainFrame extends JFrame {
     public void jMenuHelpAbout_actionPerformed() {
 
         // make the dialog
-        JDialog dlg = new JDialog(this, "MekWars Client Info");
+        JDialog dlg = new JDialog(this, "MekWars client Info");
 
         // set up the contents
         JPanel child = new JPanel();
         child.setLayout(new BoxLayout(child, BoxLayout.Y_AXIS));
 
         // set the text up.
-        JLabel mekwars = new JLabel("MekWars Client Version: " +
+        JLabel mekwars = new JLabel("MekWars client Version: " +
                                           IClient.CLIENT_VERSION);
         JLabel version = new JLabel("MegaMek Version: " + megamek.SuiteConstants.VERSION);
-        JLabel license1 = new JLabel("MekWars Client software is under GPL. See");
+        JLabel license1 = new JLabel("MekWars client software is under GPL. See");
         JLabel license2 = new JLabel("license.txt in ./MekWars Docs/ for details.");
         JLabel license3 = new JLabel("Project Info and Server Packages:");
         JLabel license4 = new JLabel("       http://www.sourceforge.net/projects/mekwars       ");

@@ -32,7 +32,7 @@ import server.MWChatServer.auth.IAuthenticator;
 import server.MWChatServer.commands.ICommands;
 
 /**
- * This is the representation of a Client, on the server side. All the IChatClient interface methods are implemented by
+ * This is the representation of a client, on the server side. All the IChatClient interface methods are implemented by
  * constructing a message (with the help of CommandMakerRemote), and queuing it up to be sent to the client.
  *
  * @see CommandMakerRemote

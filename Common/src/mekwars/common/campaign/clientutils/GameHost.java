@@ -55,16 +55,17 @@ import megamek.common.event.player.GamePlayerConnectedEvent;
 import megamek.common.event.player.GamePlayerDisconnectedEvent;
 import megamek.common.units.Entity;
 import megamek.common.units.IBuilding;
+import megamek.logging.MMLogger;
 import megamek.server.Server;
 import mekwars.common.MMGame;
 import mekwars.common.campaign.Buildings;
 import mekwars.common.campaign.clientutils.protocol.CConnector;
 import mekwars.common.campaign.clientutils.protocol.IClient;
-import mekwars.common.campaign.clientutils.protocol.TransportCodec;
-import mekwars.common.campaign.clientutils.protocol.commands.IProtCommand;
-import mekwars.common.util.MWLogger;
+import mekwars.common.commands.IProtCommand;
 
 public abstract class GameHost implements GameListener, IGameHost {
+    private static final MMLogger LOGGER = MMLogger.create(GameHost.class);
+
     public String myUsername = "";// public b/c used in RGTS command to set server status. HACK!
 
     protected TreeMap<String, IProtCommand> ProtCommands;
@@ -113,7 +114,7 @@ public abstract class GameHost implements GameListener, IGameHost {
     public void gameTurnChange(GameTurnChangeEvent e) {
         if (myServer != null) {
             if (turn == 0) {
-                serverSend("SHS|" + getUsername() + "|Running");
+                serverSend(STR."SHS|\{getUsername()}|Running");
             } else if ((myServer.getGame().getPhase() != currentPhase) &&
                              myServer.getGame().getOptions().booleanOption("paranoid_autosave")) {
                 sendServerGameUpdate();
@@ -137,8 +138,7 @@ public abstract class GameHost implements GameListener, IGameHost {
 
         }// end try
         catch (Exception ex) {
-            MWLogger.errLog("Error reporting game!");
-            MWLogger.errLog(ex);
+            LOGGER.error(ex, "Error reporting game: {}", ex.getMessage());
         }
     }
 
@@ -206,11 +206,8 @@ public abstract class GameHost implements GameListener, IGameHost {
             return;
         }
 
-        String toSend = mekwars.common.campaign.clientutils.SerializeEntity.serializeEntity(removedE,
-              true,
-              false,
-              isUsingAdvanceRepairs());
-        serverSend("IPU|" + toSend);
+        String toSend = SerializeEntity.serializeEntity(removedE, true, false, isUsingAdvanceRepairs());
+        serverSend(STR."IPU|\{toSend}");
     }
 
     @Override
@@ -235,9 +232,9 @@ public abstract class GameHost implements GameListener, IGameHost {
 
     public void serverSend(String s) {
         try {
-            Connector.send(IClient.PROTOCOL_PREFIX + "comm" + "\t" + TransportCodec.encode(s));
+            Connector.send(STR."\{IClient.PROTOCOL_PREFIX}comm\t\{CConnector.encode(s)}");
         } catch (Exception e) {
-            MWLogger.errLog(e);
+            LOGGER.error(e, "Error sending to server: {}", e.getMessage());
         }
     }
 
@@ -245,7 +242,7 @@ public abstract class GameHost implements GameListener, IGameHost {
 
     public void gameVictory(GameVictoryEvent event) {
         sendGameReport();
-        MWLogger.infoLog("GAME END");
+        LOGGER.info("GAME END");
     }
 
     protected abstract void sendGameReport();
@@ -290,13 +287,12 @@ public abstract class GameHost implements GameListener, IGameHost {
                           && savedFile.isFile()
                           && (lastTime < (System.currentTimeMillis() - daysInSeconds))) {
                     try {
-                        MWLogger.infoLog(STR."Purging File: \{savedFile.getName()} Time: \{lastTime} purge Time: \{
-                                                   System.currentTimeMillis() -
-                                                         daysInSeconds}");
+                        LOGGER.info(STR."Purging File: \{savedFile.getName()} Time: \{lastTime} purge Time: \{
+                                              System.currentTimeMillis() -
+                                                    daysInSeconds}");
                         savedFile.delete();
                     } catch (Exception ex) {
-                        MWLogger.errLog("Error trying to delete these files!");
-                        MWLogger.errLog(ex);
+                        LOGGER.error(ex, "Error trying to delete these files! {}", savedFile.getName());
                     }
                 }
             }
@@ -330,7 +326,7 @@ public abstract class GameHost implements GameListener, IGameHost {
             String str = (String) st.nextElement();
             // don't send empty lines
             if (!str.trim().isEmpty()) {
-                serverSend("CH|" + str);
+                serverSend(STR."CH|\{str}");
             }
         }
     }

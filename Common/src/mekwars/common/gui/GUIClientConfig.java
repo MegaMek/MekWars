@@ -25,7 +25,7 @@ import mekwars.common.util.MWLogger;
 
 
 /**
- * Class for Client's configuration.
+ * Class for client's configuration.
  */
 public class GUIClientConfig implements IClientConfig, Serializable {
     // VARIABLES
@@ -395,7 +395,7 @@ public class GUIClientConfig implements IClientConfig, Serializable {
         defaults.setProperty("SALVAGESYSTEMSTECH", "0");
         defaults.setProperty("SALVAGEENGINESTECH", "0");
 
-        // Client colors
+        // client colors
         defaults.setProperty("BACKGROUNDCOLOR", "#FFFFFF");
 
         defaults.setProperty("USERDEFINDMESSAGETAB", "0");
@@ -586,7 +586,7 @@ public class GUIClientConfig implements IClientConfig, Serializable {
 
             java.io.FileOutputStream fos = new java.io.FileOutputStream(CONFIG_BACKUP_FILE);
             java.io.PrintStream ps = new java.io.PrintStream(fos);
-            config.store(ps, "Client Config Backup");
+            config.store(ps, "client Config Backup");
             fos.close();
             ps.close();
         } catch (Exception ex) {
@@ -597,7 +597,7 @@ public class GUIClientConfig implements IClientConfig, Serializable {
         try {
             java.io.FileOutputStream fos = new java.io.FileOutputStream(CONFIG_FILE);
             java.io.PrintStream ps = new java.io.PrintStream(fos);
-            config.store(ps, "Client Config");
+            config.store(ps, "client Config");
             fos.close();
             ps.close();
         } catch (Exception ex) {

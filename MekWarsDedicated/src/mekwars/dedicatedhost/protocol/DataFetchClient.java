@@ -192,7 +192,7 @@ public class DataFetchClient {
 
         serverVersion = serverVersion.substring(0, serverVersion.lastIndexOf("."));
 
-        MWLogger.errLog("Client Version: " + clientVersion + " Server Version: " + serverVersion);
+        MWLogger.errLog("client Version: " + clientVersion + " Server Version: " + serverVersion);
         mustUpdate = !serverVersion.equalsIgnoreCase(clientVersion);
 
         //If the versions dont match then the client has to update anyways
@@ -211,8 +211,8 @@ public class DataFetchClient {
             int update = JOptionPane.NO_OPTION;
             if (!dedHost.isDedicated()) {
                 update = JOptionPane.showConfirmDialog(null,
-                      "You have an invalid version\n\rof the MekWars Client\n\rWould you like to update now?",
-                      "Invalid Client update now!",
+                      "You have an invalid version\n\rof the MekWars client\n\rWould you like to update now?",
+                      "Invalid client update now!",
                       JOptionPane.YES_NO_OPTION);
 
                 if (update == JOptionPane.YES_OPTION) {

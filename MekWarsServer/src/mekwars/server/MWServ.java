@@ -62,9 +62,9 @@ public class MWServ {
     /*
      * List of Abreviations for the protocol used by the client only: NG = New
      * Game (NG|<IP>|<Port>|<MaxPlayers>|<Version>|<Comment>) CG = Close Game
-     * (CG) RU = Refresh Users (RU) GB = Goodbye (Client exit) (GB) SO = Sign-On
+     * (CG) RU = Refresh Users (RU) GB = Goodbye (client exit) (GB) SO = Sign-On
      * (SO|<Version>|<UserName>) Used by Both: CH = Chat Server news:(CH|<text>)
-     * Client Chat: (CH|<UserName>|<Color>|<Text>) Used only by the Server: GS =
+     * client Chat: (CH|<UserName>|<Color>|<Text>) Used only by the Server: GS =
      * Games (GS|<MMGame.toString()>|<MMGame.toString()|...) UsersCommand = Users
      * (UsersCommand|<MWClientInfo.toString()>|<MWClientInfo.toString()>|..) UR = Update
      * Request (UR|<Text to Show>) UserGoneCommand = User Gone
@@ -750,7 +750,7 @@ public class MWServ {
         } else {
             sendRemoveUserToAll(name, true);
         }
-        MWLogger.infoLog("Client " + name + "logged out.");
+        MWLogger.infoLog("client " + name + "logged out.");
         users.remove(name.toLowerCase());
 
         // remove his host, if he has a game open
@@ -942,7 +942,7 @@ public class MWServ {
                 // Most propably an out of date client. Send him the request to
                 // update
                 clientSend(
-                      "CH|Your Client sent a false packet or caused a server error. You probably entered an illegal server command.",
+                      "CH|Your client sent a false packet or caused a server error. You probably entered an illegal server command.",
                       name);
                 MWLogger.errLog("False packet/illegal command (from " + name + "):");
                 MWLogger.errLog(ex);

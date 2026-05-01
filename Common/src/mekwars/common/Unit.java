@@ -89,17 +89,12 @@ public class Unit {
     private boolean isSupportUnit = false;
     private boolean ChristmasUnit = false;
 
+    private boolean isLocked = false;
+
     //CONSTRUCTOR
     public Unit() {
         //no content
     }
-
-    //STATIC METHODS
-    /*
-     * Unit's static methods handle generalized information
-     * about unit weight classes and types, including text to
-     * int conversion, and vice versa.
-     */
 
     /**
      *
@@ -146,6 +141,13 @@ public class Unit {
 
         return 0;
     }
+
+    //STATIC METHODS
+    /*
+     * Unit's static methods handle generalized information
+     * about unit weight classes and types, including text to
+     * int conversion, and vice versa.
+     */
 
     public static int getEntityWeight(Entity ent) {
         int weight = ent.getWeightClass();
@@ -223,6 +225,14 @@ public class Unit {
 
         //Default = Mek
         return MEK;
+    }
+
+    public boolean isLocked() {
+        return isLocked;
+    }
+
+    public void setLocked(boolean isLocked) {
+        this.isLocked = isLocked;
     }
 
     //METHODS

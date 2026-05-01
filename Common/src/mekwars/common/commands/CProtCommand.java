@@ -30,7 +30,7 @@
  * <https://www.xbox.com/en-US/developers/rules> and it is not endorsed by or
  * affiliated with Microsoft.
  */
-package mekwars.common.campaign.clientutils.protocol.commands;
+package mekwars.common.commands;
 
 import mekwars.common.campaign.clientutils.protocol.CConnector;
 import mekwars.common.campaign.clientutils.protocol.IClient;

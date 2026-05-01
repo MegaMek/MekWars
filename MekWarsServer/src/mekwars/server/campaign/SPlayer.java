@@ -257,7 +257,7 @@ public final class SPlayer extends Player implements Comparable<Object>, IBuyer,
 
         if (isNew) {
             long immunityTime = Long.parseLong(getMyHouse().getConfig("ImmunityTime")) * 1000;
-            m.setPassesMaintainanceUntil(System.currentTimeMillis() + immunityTime * 2);
+            m.setPassesMaintenanceUntil(System.currentTimeMillis() + immunityTime * 2);
         }
 
         // clear any scrap allowance
@@ -299,7 +299,7 @@ public final class SPlayer extends Player implements Comparable<Object>, IBuyer,
         }
 
         /*
-         * Send PL|HD. Client-side reading of HD adds units to the hangar
+         * Send PL|HD. client-side reading of HD adds units to the hangar
          * instead of clearing/replacing the hangar, so we can send just this
          * one, if we like. Send status update to the client (status determined
          * above), along with total and free bay/tech info.
@@ -406,33 +406,6 @@ public final class SPlayer extends Player implements Comparable<Object>, IBuyer,
               Double.parseDouble(getMyHouse().getConfig("SlidingHangarLimitModifier"))));
 
         return penalty;
-    }
-
-    /**
-     * A method to count the units of a given type and weight in a player's hangar
-     *
-     * @param uType
-     * @param uWeightClass
-     *
-     * @return number of units
-     */
-    public int countUnits(int uType, int uWeightClass) {
-        if ((uType < 0) || (uType > Unit.AERO)) {
-            MWLogger.errLog("Invalid uType in SPlayer.countUnits: " + uType);
-            return 0;
-        }
-        if ((uWeightClass < 0) || (uWeightClass > Unit.ASSAULT)) {
-            MWLogger.errLog("Invalid uWeightClass in SPlayer.countUnits: " + uWeightClass);
-            return 0;
-        }
-        // Actually count them now
-        int count = 0;
-        for (SUnit u : units) {
-            if (!u.isChristmasUnit() && (u.getType() == uType) && (u.getWeightclass() == uWeightClass)) {
-                count++;
-            }
-        }
-        return count;
     }
 
     /**
@@ -961,7 +934,7 @@ public final class SPlayer extends Player implements Comparable<Object>, IBuyer,
 
                 // immediately after a game, only decrement. don't scrap.
                 long currTime = System.currentTimeMillis();
-                if (CampaignMain.cm.getIThread().isImmune(this) || (currUnit.getPassesMaintainanceUntil() > currTime)) {
+                if (CampaignMain.cm.getIThread().isImmune(this) || (currUnit.getPassesMaintenanceUntil() > currTime)) {
                     currUnit.addToMaintainanceLevel(-decrease);
                 } else if (rnd <= currUnit.getMaintainanceLevel()) {
                     currUnit.addToMaintainanceLevel(-decrease);
@@ -1026,78 +999,6 @@ public final class SPlayer extends Player implements Comparable<Object>, IBuyer,
     }// end doMaintainance()
 
     /**
-     * Get the amount of money the player currently has on hand. Required for IBuyer.
-     */
-    public int getMoney() {
-        return money;
-    }
-
-    /**
-     * Add money to a player. Money is always modified relative to a previous amount (this.fromString is an expetion,
-     * but sets the value directly), so there is no need for a public SPlayer.setMoney() method.
-     */
-    public void addMoney(int i) {
-
-        // holder, amount to store.
-        int moneyToSet = money + i;
-
-        // don't let SOL exceed cap, or anyone have negative cash
-        int maxNewbieCbills = Integer.parseInt(getMyHouse().getConfig("MaxSOLCBills"));
-        if (myHouse.isNewbieHouse() && (moneyToSet > maxNewbieCbills)) {
-            moneyToSet = maxNewbieCbills;
-        }
-        if (moneyToSet < 0) {
-            moneyToSet = 0;
-        }
-
-        // change the value and send an update
-        money = moneyToSet;
-        CampaignMain.cm.toUser("PL|SM|" + money, name, false);
-        setSave();
-    }
-
-    /**
-     * A method which returns a players influence
-     *
-     * @return int - influence amount
-     */
-    public int getInfluence() {
-        return influence;
-    }
-
-    /**
-     * A method to add a specified amount of influence
-     *
-     * @param i - amount of influence to add
-     */
-    public void addInfluence(int i) {
-        setInfluence(getInfluence() + i);
-    }
-
-    /**
-     * A method which directly sets the amount of influence a player has
-     *
-     * @param i - value to give influence
-     */
-    public void setInfluence(int i) {
-        influence = i;
-        if (influence > Integer.parseInt(getMyHouse().getConfig("InfluenceCeiling"))) {
-            influence = (Integer.parseInt(getMyHouse().getConfig("InfluenceCeiling")));// set
-            // to
-            // ceiling
-            // if
-            // above
-        }
-
-        if (influence < 0) {
-            influence = 0; // Set to 0 if below
-        }
-
-        CampaignMain.cm.toUser("PL|SI|" + influence, name, false);
-        setSave();
-    }
-
-    /**
      * Method which checks to see if a player owns an unmaintained unit. Called from Request, RequestDonated, Transfer
      * and other commands. Hacky direct access of SUnitData, but constructing an SUnit when we have direct access to the
      * status and no intent to change it is a bit wasteful.
@@ -1115,8 +1016,6 @@ public final class SPlayer extends Player implements Comparable<Object>, IBuyer,
         // no unmaintained unit found.
         return false;
     }
-
-    // EXPERIENCE SET/ADD/GET Methods
 
     /**
      * Transition a player from reserve to active, or vice versa. See in-line comments for more detail.
@@ -1202,8 +1101,6 @@ public final class SPlayer extends Player implements Comparable<Object>, IBuyer,
         return experience;
     }
 
-    // SPECIAL USE METHODS (PRIVATE OR PUBLIC&STATIC)
-
     public double getRating() {
         return rating;
     }
@@ -1243,7 +1140,7 @@ public final class SPlayer extends Player implements Comparable<Object>, IBuyer,
         return "";
     }
 
-    // METHODS TO CHECK/COMMENT
+    // EXPERIENCE SET/ADD/GET Methods
 
     public void setFluffText(String s) {
         fluffText = s;
@@ -1255,8 +1152,6 @@ public final class SPlayer extends Player implements Comparable<Object>, IBuyer,
         setSave();
     }
 
-    //MINI CAMPAIGN CODE
-
     /**
      * Standard active/fighting rotation. Use setFighting(bool,bool) to move a player to reserve from fighting after an
      * AFR game, and this method for everything else.
@@ -1264,6 +1159,8 @@ public final class SPlayer extends Player implements Comparable<Object>, IBuyer,
     public void setFighting(boolean newStatus) {
         this.setFighting(newStatus, false);
     }
+
+    // SPECIAL USE METHODS (PRIVATE OR PUBLIC&STATIC)
 
     /**
      * Transition a player between fighting and active status.
@@ -1580,10 +1477,14 @@ public final class SPlayer extends Player implements Comparable<Object>, IBuyer,
         return armies;
     }
 
+    // METHODS TO CHECK/COMMENT
+
     public void setArmies(java.util.Vector<mekwars.server.campaign.SArmy> v) {
         armies = v;
         setSave();
     }
+
+    //MINI CAMPAIGN CODE
 
     /**
      * A method which resets the weightedArmyNumber to -1, forcing a recalculation next time the above method
@@ -1644,27 +1545,6 @@ public final class SPlayer extends Player implements Comparable<Object>, IBuyer,
         password = pass;
         setSave();
     }
-
-    // doesnt work, dunno why... might work, just didn't work in shortresolver?
-    //    //@salient
-    //    public void removeLockedUnitsFromArmiesMC()
-    //    {
-    //    	if(!getMyHouse().getBooleanConfig("LockUnits"))
-    //    		return;
-    //
-    //    	getLockedArmy();
-    //        for (SArmy army : getArmies())
-    //        {
-    //        	for (Unit aUnit : army.getUnits())
-    //        	{
-    //        		if(aUnit.isLocked())
-    //        			army.removeUnit(aUnit.getId());
-    //        	}
-    //        }
-    //
-    //    	refreshGUI();
-    //    	toSelf("AM: Locked Units Removed From Army!");
-    //    }
 
     /**
      * Method required for ISeller compliance. Used to distinguish between human controlled actors (this class) and
@@ -1859,6 +1739,27 @@ public final class SPlayer extends Player implements Comparable<Object>, IBuyer,
         return id;
     }
 
+    // doesnt work, dunno why... might work, just didn't work in shortresolver?
+    //    //@salient
+    //    public void removeLockedUnitsFromArmiesMC()
+    //    {
+    //    	if(!getMyHouse().getBooleanConfig("LockUnits"))
+    //    		return;
+    //
+    //    	getLockedArmy();
+    //        for (SArmy army : getArmies())
+    //        {
+    //        	for (Unit aUnit : army.getUnits())
+    //        	{
+    //        		if(aUnit.isLocked())
+    //        			army.removeUnit(aUnit.getId());
+    //        	}
+    //        }
+    //
+    //    	refreshGUI();
+    //    	toSelf("AM: Locked Units Removed From Army!");
+    //    }
+
     public int getFreeArmyId() {
         int i = 0;
         boolean free = false;
@@ -1908,6 +1809,13 @@ public final class SPlayer extends Player implements Comparable<Object>, IBuyer,
             bv += currU.getBVForMatch();
         }
         return bv;
+    }
+
+    /**
+     * Get the amount of money the player currently has on hand. Required for IBuyer.
+     */
+    public int getMoney() {
+        return money;
     }
 
     /**
@@ -2211,6 +2119,38 @@ public final class SPlayer extends Player implements Comparable<Object>, IBuyer,
         return rewardPoints;
     }
 
+    /**
+     * A method which returns a players influence
+     *
+     * @return int - influence amount
+     */
+    public int getInfluence() {
+        return influence;
+    }
+
+    /**
+     * A method which directly sets the amount of influence a player has
+     *
+     * @param i - value to give influence
+     */
+    public void setInfluence(int i) {
+        influence = i;
+        if (influence > Integer.parseInt(getMyHouse().getConfig("InfluenceCeiling"))) {
+            influence = (Integer.parseInt(getMyHouse().getConfig("InfluenceCeiling")));// set
+            // to
+            // ceiling
+            // if
+            // above
+        }
+
+        if (influence < 0) {
+            influence = 0; // Set to 0 if below
+        }
+
+        CampaignMain.cm.toUser("PL|SI|" + influence, name, false);
+        setSave();
+    }
+
     //@salient
     public int getRemainingMekTokens() {
         int limit = getMyHouse().getIntegerConfig("FreeBuild_Limit");
@@ -2317,9 +2257,60 @@ public final class SPlayer extends Player implements Comparable<Object>, IBuyer,
 
     }
 
+    /**
+     * A method to count the units of a given type and weight in a player's hangar
+     *
+     * @param uType
+     * @param uWeightClass
+     *
+     * @return number of units
+     */
+    public int countUnits(int uType, int uWeightClass) {
+        if ((uType < 0) || (uType > Unit.AERO)) {
+            MWLogger.errLog("Invalid uType in SPlayer.countUnits: " + uType);
+            return 0;
+        }
+        if ((uWeightClass < 0) || (uWeightClass > Unit.ASSAULT)) {
+            MWLogger.errLog("Invalid uWeightClass in SPlayer.countUnits: " + uWeightClass);
+            return 0;
+        }
+        // Actually count them now
+        int count = 0;
+        for (SUnit u : units) {
+            if (!u.isChristmasUnit() && (u.getType() == uType) && (u.getWeightclass() == uWeightClass)) {
+                count++;
+            }
+        }
+        return count;
+    }
+
     //@salient
     public boolean hasMoney() {
         if (getMoney() != 0) {return true;} else {return false;}
+    }
+
+    /**
+     * Add money to a player. Money is always modified relative to a previous amount (this.fromString is an expetion,
+     * but sets the value directly), so there is no need for a public SPlayer.setMoney() method.
+     */
+    public void addMoney(int i) {
+
+        // holder, amount to store.
+        int moneyToSet = money + i;
+
+        // don't let SOL exceed cap, or anyone have negative cash
+        int maxNewbieCbills = Integer.parseInt(getMyHouse().getConfig("MaxSOLCBills"));
+        if (myHouse.isNewbieHouse() && (moneyToSet > maxNewbieCbills)) {
+            moneyToSet = maxNewbieCbills;
+        }
+        if (moneyToSet < 0) {
+            moneyToSet = 0;
+        }
+
+        // change the value and send an update
+        money = moneyToSet;
+        CampaignMain.cm.toUser("PL|SM|" + money, name, false);
+        setSave();
     }
 
     //@salient
@@ -2334,6 +2325,15 @@ public final class SPlayer extends Player implements Comparable<Object>, IBuyer,
     //@salient
     public boolean hasFlu() {
         if (getInfluence() != 0) {return true;} else {return false;}
+    }
+
+    /**
+     * A method to add a specified amount of influence
+     *
+     * @param i - amount of influence to add
+     */
+    public void addInfluence(int i) {
+        setInfluence(getInfluence() + i);
     }
 
     //@salient

@@ -12,7 +12,7 @@
 
 package mekwars.client;
 
-// This is the Client used for connecting to the master server.
+// This is the client used for connecting to the master server.
 // @Author: Helge Richter (McWizard@gmx.de)
 
 import java.awt.Dimension;
@@ -29,9 +29,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.TreeMap;
 import java.util.Vector;
-
 import javax.swing.JOptionPane;
 
+import io.sentry.protocol.Browser;
 import megamek.client.ui.dialogs.buttonDialogs.GameOptionsDialog;
 import megamek.common.CriticalSlot;
 import megamek.common.equipment.EquipmentType;
@@ -46,7 +46,6 @@ import megamek.common.units.Entity;
 import megamek.common.units.Mek;
 import megamek.common.units.MekWarrior;
 import megamek.server.Server;
-import mekwars.client.commands.Command;
 import mekwars.client.gui.commands.IGUICommand;
 import mekwars.client.gui.commands.MailGCmd;
 import mekwars.client.gui.commands.PingGCmd;
@@ -61,19 +60,19 @@ import mekwars.common.campaign.clientutils.GameHost;
 import mekwars.common.campaign.clientutils.SerializeEntity;
 import mekwars.common.campaign.clientutils.protocol.CConnector;
 import mekwars.common.campaign.clientutils.protocol.IClient;
-import mekwars.common.campaign.clientutils.protocol.commands.AckSignOnPCmd;
-import mekwars.common.campaign.clientutils.protocol.commands.CommPCmd;
-import mekwars.common.campaign.clientutils.protocol.commands.IProtCommand;
-import mekwars.common.campaign.clientutils.protocol.commands.PingPCmd;
-import mekwars.common.campaign.clientutils.protocol.commands.PongPCmd;
-import mekwars.common.gui.Browser;
-import mekwars.common.gui.panels.CCommPanel;
+import mekwars.common.commands.AcknowledgeSignOnPlayerCommand;
+import mekwars.common.commands.CommPCmd;
+import mekwars.common.commands.Command;
+import mekwars.common.commands.IProtCommand;
+import mekwars.common.commands.PingPCmd;
+import mekwars.common.commands.PongPCmd;
 import mekwars.common.gui.CMainFrame;
 import mekwars.common.gui.GUIClientConfig;
 import mekwars.common.gui.SplashWindow;
 import mekwars.common.gui.dialogs.InfluencePointsDialog;
 import mekwars.common.gui.dialogs.RewardPointsDialog;
 import mekwars.common.gui.dialogs.SignOnDialog;
+import mekwars.common.gui.panels.CCommPanel;
 import mekwars.common.threads.ClientThread;
 import mekwars.common.threads.RepairManagmentThread;
 import mekwars.common.threads.SalvageManagmentThread;
@@ -491,7 +490,7 @@ public final class MWClient extends GameHost implements IClient {
 
             /*
              * Send a client version and saved mail request to the server. Doing this after the main frame is build
-             * and visible will (I hope) fix the "PrivateMessageCommand Ping Crash" TT users have with Client 0.1.44.5.
+             * and visible will (I hope) fix the "PrivateMessageCommand Ping Crash" TT users have with client 0.1.44.5.
              */
             sendChat(mekwars.client.MWClient.CAMPAIGN_PREFIX +
                            "c setclientversion#" +
@@ -542,7 +541,7 @@ public final class MWClient extends GameHost implements IClient {
         addProtCommand(new CommPCmd(this));
         addProtCommand(new PingPCmd(this));
         addProtCommand(new PongPCmd(this));
-        addProtCommand(new AckSignOnPCmd(this));
+        addProtCommand(new AcknowledgeSignOnPlayerCommand(this));
     }
 
     private void createGUICommands() {
@@ -703,7 +702,7 @@ public final class MWClient extends GameHost implements IClient {
                                   + logFileName);
         }
 
-        MWLogger.infoLog("Starting MekWars Client Version: "
+        MWLogger.infoLog("Starting MekWars client Version: "
                                + CLIENT_VERSION);
         try {
             for (i = 0; i < args.length; i++) {
@@ -737,7 +736,7 @@ public final class MWClient extends GameHost implements IClient {
 
             /*
              * Config files have been loaded, and command line args have been
-             * parsed. Construct the actual client. NOTE: Client constrtuctor
+             * parsed. Construct the actual client. NOTE: client constrtuctor
              * attempts to pull the oplist, campaign config and other
              * non-interactive data over the DATAPORT before client.start()
              * attempts to connect to the chat server on the SERVERPORT.
@@ -746,7 +745,7 @@ public final class MWClient extends GameHost implements IClient {
 
         } catch (Exception ex) {
             MWLogger.errLog(ex);
-            MWLogger.errLog("Couldn't create Client Object");
+            MWLogger.errLog("Couldn't create client Object");
             System.exit(1);
         }
     }
@@ -801,14 +800,6 @@ public final class MWClient extends GameHost implements IClient {
         }
     }
 
-    public String getLastQuery() {
-        return LastQuery;
-    }
-
-    public void setLastQuery(String name) {
-        LastQuery = name;
-    }
-
     public java.util.Vector<String> getIgnorePublic() {
         return IgnorePublic;
     }
@@ -819,39 +810,6 @@ public final class MWClient extends GameHost implements IClient {
 
     public java.util.Vector<String> getIgnorePrivate() {
         return IgnorePrivate;
-    }
-
-    public synchronized java.util.ArrayList<String> getPartialUser(String u) {
-
-        String result = "";
-        java.util.TreeSet<String> userNames = new java.util.TreeSet<String>();
-
-        // there are spaces in the text so get the last word
-        if (u.trim().indexOf(" ") != -1) {
-            result = u.substring(u.trim().lastIndexOf(" ")).trim();
-            u = u.substring(0, u.trim().lastIndexOf(" ")).trim();
-        } else {// The name is the first word.
-            result = u.trim();
-            u = "";
-        }
-
-        if (result.isEmpty()) {
-            return null;
-        }
-
-        int myLevel = getUser(getPlayer().getName()).getUserLevel();
-        for (CUser usr : Users) {
-            if (usr.getName().toLowerCase().startsWith(result.toLowerCase())
-                      && (!usr.isInvisible() || (usr.isInvisible() && (myLevel >= usr.getUserLevel())))) {
-                userNames.add(usr.getName());
-            }
-        }
-
-        // We have a sorted tree set. Convert to an ArrayList so we can work
-        // with them more easily.
-        java.util.ArrayList<String> test = new java.util.ArrayList<String>();
-        test.addAll(userNames);
-        return test;
     }
 
     public boolean isMuted() {
@@ -1030,6 +988,216 @@ public final class MWClient extends GameHost implements IClient {
             result.append(Integer.toString((value & 0xff) + 0x100, 16).substring(1));
         }
         return result.toString();
+    }
+
+    public String getLastQuery() {
+        return LastQuery;
+    }
+
+    public void setLastQuery(String name) {
+        LastQuery = name;
+    }
+
+    public synchronized java.util.ArrayList<String> getPartialUser(String u) {
+
+        String result = "";
+        java.util.TreeSet<String> userNames = new java.util.TreeSet<String>();
+
+        // there are spaces in the text so get the last word
+        if (u.trim().indexOf(" ") != -1) {
+            result = u.substring(u.trim().lastIndexOf(" ")).trim();
+            u = u.substring(0, u.trim().lastIndexOf(" ")).trim();
+        } else {// The name is the first word.
+            result = u.trim();
+            u = "";
+        }
+
+        if (result.isEmpty()) {
+            return null;
+        }
+
+        int myLevel = getUser(getPlayer().getName()).getUserLevel();
+        for (CUser usr : Users) {
+            if (usr.getName().toLowerCase().startsWith(result.toLowerCase())
+                      && (!usr.isInvisible() || (usr.isInvisible() && (myLevel >= usr.getUserLevel())))) {
+                userNames.add(usr.getName());
+            }
+        }
+
+        // We have a sorted tree set. Convert to an ArrayList so we can work
+        // with them more easily.
+        java.util.ArrayList<String> test = new java.util.ArrayList<String>();
+        test.addAll(userNames);
+        return test;
+    }
+
+    public java.util.Map<Integer, Influences> getChangesSinceLastRefresh() {
+        return dataFetcher.getChangesSinceLastRefresh();
+    }
+
+    public int getMinPlanetOwnerShip(Planet p) {
+
+        if (p.getMinPlanetOwnerShip() == -1) {
+            return Integer.parseInt(getServerConfigs("MinPlanetOwnerShip"));
+        }
+
+        return p.getMinPlanetOwnerShip();
+    }
+
+    public int getTechLaborCosts(Entity unit, int techType) {
+        int cost = 0;
+        int techCost = Integer.parseInt(getServerConfigs(UnitUtils
+                                                               .techDescription(techType) + "TechRepairCost"));
+        int totalCrits = 0;
+        boolean damagedEngine = false;
+
+        for (int critLocation = 0; critLocation < unit.locations(); critLocation++) {
+            // These three location have rear armor so the user might be
+            // selecting that armor instead of crit.
+            if ((critLocation == Mek.LOC_CENTER_TORSO) || (critLocation == Mek.LOC_LEFT_TORSO)
+                      || (critLocation == Mek.LOC_RIGHT_TORSO)) {
+                if (unit.getArmor(critLocation, false) != unit.getOArmor(
+                      critLocation, false)) {
+                    cost += techCost;
+                }
+                if (unit.getArmor(critLocation, true) != unit.getOArmor(
+                      critLocation, true)) {
+                    cost += techCost;
+                }
+                if (unit.getInternal(critLocation) != unit
+                                                            .getOInternal(critLocation)) {
+                    cost += techCost;
+                }
+            }// end toros armor
+            else {
+                if (unit.getArmor(critLocation, false) != unit.getOArmor(
+                      critLocation, false)) {
+                    cost += techCost;
+                }
+                if (unit.getInternal(critLocation) != unit
+                                                            .getOInternal(critLocation)) {
+                    cost += techCost;
+                }
+            }// end armor
+
+            // check for damage system crits.
+            for (int critSlot = 0; critSlot < unit
+                                                    .getNumberOfCriticals(critLocation); critSlot++) {
+
+                CriticalSlot cs = unit.getCritical(critLocation, critSlot);
+
+                if (cs == null) {
+                    continue;
+                }
+
+                if (cs.isBreached()) {
+                    continue;
+                }
+
+                if (!cs.isDamaged()) {
+                    continue;
+                }
+
+                if (UnitUtils.isEngineCrit(cs)) {
+                    damagedEngine = true;
+                    continue;
+                }
+                totalCrits++;
+
+            }// end slot for
+        }// end location for
+
+        // check for damaged engines
+        if (damagedEngine) {
+            totalCrits = +UnitUtils.getNumberOfEngineCrits(unit);
+        }
+
+        cost += (techCost * totalCrits) + techCost;
+
+        return cost;
+    }
+
+    public double getTotalRepairCosts(Entity unit) {
+
+        int cost = 0;
+        int systemCrits = 0;
+        int engineCrits = 0;
+
+        for (int critLocation = 0; critLocation < unit.locations(); critLocation++) {
+            // These three location have rear armor so the user might be
+            // selecting that armor instead of crit.
+            if ((critLocation == Mek.LOC_CENTER_TORSO) || (critLocation == Mek.LOC_LEFT_TORSO)
+                      || (critLocation == Mek.LOC_RIGHT_TORSO)) {
+                if (unit.getArmor(critLocation, false) != unit.getOArmor(
+                      critLocation, false)) {
+                    cost += (int) (CUnit.getArmorCost(unit, this, critLocation)
+                                         * (unit.getOArmor(critLocation, false) - unit
+                                                                                        .getArmor(critLocation,
+                                                                                              false)));
+                }
+                if (unit.getArmor(critLocation, true) != unit.getOArmor(
+                      critLocation, true)) {
+                    cost += (int) (CUnit.getArmorCost(unit, this, critLocation)
+                                         * (unit.getOArmor(critLocation, false) - unit
+                                                                                        .getArmor(critLocation,
+                                                                                              false)));
+                }
+                if (unit.getInternal(critLocation) != unit
+                                                            .getOInternal(critLocation)) {
+                    cost += (int) (CUnit.getStructureCost(unit, this)
+                                         * (unit.getOInternal(critLocation) - unit
+                                                                                    .getInternal(critLocation)));
+                }
+            }// end toros armor
+            else {
+                if (unit.getArmor(critLocation, false) != unit.getOArmor(
+                      critLocation, false)) {
+                    cost += (int) (CUnit.getArmorCost(unit, this, critLocation)
+                                         * (unit.getOArmor(critLocation, false) - unit
+                                                                                        .getArmor(critLocation,
+                                                                                              false)));
+                }
+                if (unit.getInternal(critLocation) != unit
+                                                            .getOInternal(critLocation)) {
+                    cost += CUnit.getStructureCost(unit, this)
+                                  * (unit.getOInternal(critLocation) - unit
+                                                                             .getInternal(critLocation));
+                }
+            }// end armor
+
+            for (int critSlot = 0; critSlot < unit
+                                                    .getNumberOfCriticals(critLocation); critSlot++) {
+
+                CriticalSlot cs = unit.getCritical(critLocation, critSlot);
+
+                if (cs == null) {
+                    continue;
+                }
+
+                if (cs.isBreached()) {
+                    continue;
+                }
+
+                if (!cs.isDamaged()) {
+                    continue;
+                }
+
+                if (UnitUtils.isEngineCrit(cs)) {
+                    engineCrits = UnitUtils.getNumberOfEngineCrits(unit);
+                } else if (cs.getType() == CriticalSlot.TYPE_SYSTEM) {
+                    systemCrits++;
+                } else {
+                    cost += CUnit.getCritCost(unit, this, cs);
+                }
+            }// end slot for
+        }// end location for
+
+        cost += Integer.parseInt(this.getServerConfigs("SystemCritRepairCost"))
+                      * systemCrits;
+        cost += Integer.parseInt(this.getServerConfigs("EngineCritRepairCost"))
+                      * engineCrits;
+
+        return cost;
     }
 
     public byte[] createChecksum(String filename) throws Exception {
@@ -1338,8 +1506,8 @@ public final class MWClient extends GameHost implements IClient {
      * NOTE: this list is ancient. sometimes useful. often out of date. List of
      * Abreviations for the protocol used by the client only: NG = New Game
      * (NG|<IP>|<Port>|<MaxPlayers>|<Version>|<Comment>) CG = Close Game (CG) GB
-     * = Goodbye (Client exit) (GB) SO = Sign-On (SO|<Version>|<UserName>) Used
-     * by Both: CH = Chat Server news:(CH|<text>) Client Chat:
+     * = Goodbye (client exit) (GB) SO = Sign-On (SO|<Version>|<UserName>) Used
+     * by Both: CH = Chat Server news:(CH|<text>) client Chat:
      * (CH|<UserName>|<Color>|<Text>) Used only by the Server: ServerListCommand|NG = Games
      * (GS|<MMGame.toString()>|<MMGame.toString()|...) ServerListCommand|CG = close game ServerListCommand|JG
      * = add a player to game list ServerListCommand|LG = remove a player from game list ServerListCommand|SHS
@@ -2141,6 +2309,11 @@ public final class MWClient extends GameHost implements IClient {
             return "-1";
         }
         return CampaignData.cd.getServerConfigs().getProperty(key).trim();
+    }
+
+    @Override
+    public void setServerConfigs(String rpShortName, String rpValue) {
+
     }
 
     /**
@@ -3027,6 +3200,11 @@ public final class MWClient extends GameHost implements IClient {
         return usingBots;
     }
 
+    @Override
+    public void setUsingBots(boolean b) {
+
+    }
+
     public void setUsingBots(Boolean using) {
         usingBots = using;
     }
@@ -3142,14 +3320,6 @@ public final class MWClient extends GameHost implements IClient {
         serverSend("LG|" + hostName);
 
         System.gc();
-    }
-
-    public Browser getBrowser() {
-        return browser;
-    }    // IClient interface
-
-    public java.util.Map<Integer, Influences> getChangesSinceLastRefresh() {
-        return dataFetcher.getChangesSinceLastRefresh();
     }
 
     /**
@@ -3322,6 +3492,16 @@ public final class MWClient extends GameHost implements IClient {
         // the timestamp on the first line, the first time and now dont.
     }
 
+
+    //@Salient ... ugh... how can i get to the damn house configs
+    //    public String getHouseConfigs(String key)
+    //    {
+    //    	//CampaignData.cd.ge
+    //    	SHouse house = CampaignData.cd.getHouseByName(this.getPlayer().getHouse());
+    //
+    //    	return CampaignData.cd.getServerConfigs().getProperty(key).trim();
+    //    }
+
     public void saveBannedAmmo(String timestamp) {
         // Save banned ammo
         try {
@@ -3366,181 +3546,6 @@ public final class MWClient extends GameHost implements IClient {
         } catch (Exception ex) {
             // TODO: Log error?
         }
-    }
-
-    public int getMinPlanetOwnerShip(Planet p) {
-
-        if (p.getMinPlanetOwnerShip() == -1) {
-            return Integer.parseInt(getServerConfigs("MinPlanetOwnerShip"));
-        }
-
-        return p.getMinPlanetOwnerShip();
-    }
-
-    public int getTotalRepairCosts(Entity unit) {
-
-        int cost = 0;
-        int systemCrits = 0;
-        int engineCrits = 0;
-
-        for (int critLocation = 0; critLocation < unit.locations(); critLocation++) {
-            // These three location have rear armor so the user might be
-            // selecting that armor instead of crit.
-            if ((critLocation == Mek.LOC_CENTER_TORSO) || (critLocation == Mek.LOC_LEFT_TORSO)
-                      || (critLocation == Mek.LOC_RIGHT_TORSO)) {
-                if (unit.getArmor(critLocation, false) != unit.getOArmor(
-                      critLocation, false)) {
-                    cost += (int) (CUnit.getArmorCost(unit, this, critLocation)
-                                         * (unit.getOArmor(critLocation, false) - unit
-                                                                                        .getArmor(critLocation,
-                                                                                              false)));
-                }
-                if (unit.getArmor(critLocation, true) != unit.getOArmor(
-                      critLocation, true)) {
-                    cost += (int) (CUnit.getArmorCost(unit, this, critLocation)
-                                         * (unit.getOArmor(critLocation, false) - unit
-                                                                                        .getArmor(critLocation,
-                                                                                              false)));
-                }
-                if (unit.getInternal(critLocation) != unit
-                                                            .getOInternal(critLocation)) {
-                    cost += (int) (CUnit.getStructureCost(unit, this)
-                                         * (unit.getOInternal(critLocation) - unit
-                                                                                    .getInternal(critLocation)));
-                }
-            }// end toros armor
-            else {
-                if (unit.getArmor(critLocation, false) != unit.getOArmor(
-                      critLocation, false)) {
-                    cost += (int) (CUnit.getArmorCost(unit, this, critLocation)
-                                         * (unit.getOArmor(critLocation, false) - unit
-                                                                                        .getArmor(critLocation,
-                                                                                              false)));
-                }
-                if (unit.getInternal(critLocation) != unit
-                                                            .getOInternal(critLocation)) {
-                    cost += CUnit.getStructureCost(unit, this)
-                                  * (unit.getOInternal(critLocation) - unit
-                                                                             .getInternal(critLocation));
-                }
-            }// end armor
-
-            for (int critSlot = 0; critSlot < unit
-                                                    .getNumberOfCriticals(critLocation); critSlot++) {
-
-                CriticalSlot cs = unit.getCritical(critLocation, critSlot);
-
-                if (cs == null) {
-                    continue;
-                }
-
-                if (cs.isBreached()) {
-                    continue;
-                }
-
-                if (!cs.isDamaged()) {
-                    continue;
-                }
-
-                if (UnitUtils.isEngineCrit(cs)) {
-                    engineCrits = UnitUtils.getNumberOfEngineCrits(unit);
-                } else if (cs.getType() == CriticalSlot.TYPE_SYSTEM) {
-                    systemCrits++;
-                } else {
-                    cost += CUnit.getCritCost(unit, this, cs);
-                }
-            }// end slot for
-        }// end location for
-
-        cost += Integer.parseInt(this.getServerConfigs("SystemCritRepairCost"))
-                      * systemCrits;
-        cost += Integer.parseInt(this.getServerConfigs("EngineCritRepairCost"))
-                      * engineCrits;
-
-        return cost;
-    }
-
-
-    //@Salient ... ugh... how can i get to the damn house configs
-    //    public String getHouseConfigs(String key)
-    //    {
-    //    	//CampaignData.cd.ge
-    //    	SHouse house = CampaignData.cd.getHouseByName(this.getPlayer().getHouse());
-    //
-    //    	return CampaignData.cd.getServerConfigs().getProperty(key).trim();
-    //    }
-
-    public int getTechLaborCosts(Entity unit, int techType) {
-        int cost = 0;
-        int techCost = Integer.parseInt(getServerConfigs(UnitUtils
-                                                               .techDescription(techType) + "TechRepairCost"));
-        int totalCrits = 0;
-        boolean damagedEngine = false;
-
-        for (int critLocation = 0; critLocation < unit.locations(); critLocation++) {
-            // These three location have rear armor so the user might be
-            // selecting that armor instead of crit.
-            if ((critLocation == Mek.LOC_CENTER_TORSO) || (critLocation == Mek.LOC_LEFT_TORSO)
-                      || (critLocation == Mek.LOC_RIGHT_TORSO)) {
-                if (unit.getArmor(critLocation, false) != unit.getOArmor(
-                      critLocation, false)) {
-                    cost += techCost;
-                }
-                if (unit.getArmor(critLocation, true) != unit.getOArmor(
-                      critLocation, true)) {
-                    cost += techCost;
-                }
-                if (unit.getInternal(critLocation) != unit
-                                                            .getOInternal(critLocation)) {
-                    cost += techCost;
-                }
-            }// end toros armor
-            else {
-                if (unit.getArmor(critLocation, false) != unit.getOArmor(
-                      critLocation, false)) {
-                    cost += techCost;
-                }
-                if (unit.getInternal(critLocation) != unit
-                                                            .getOInternal(critLocation)) {
-                    cost += techCost;
-                }
-            }// end armor
-
-            // check for damage system crits.
-            for (int critSlot = 0; critSlot < unit
-                                                    .getNumberOfCriticals(critLocation); critSlot++) {
-
-                CriticalSlot cs = unit.getCritical(critLocation, critSlot);
-
-                if (cs == null) {
-                    continue;
-                }
-
-                if (cs.isBreached()) {
-                    continue;
-                }
-
-                if (!cs.isDamaged()) {
-                    continue;
-                }
-
-                if (UnitUtils.isEngineCrit(cs)) {
-                    damagedEngine = true;
-                    continue;
-                }
-                totalCrits++;
-
-            }// end slot for
-        }// end location for
-
-        // check for damaged engines
-        if (damagedEngine) {
-            totalCrits = +UnitUtils.getNumberOfEngineCrits(unit);
-        }
-
-        cost += (techCost * totalCrits) + techCost;
-
-        return cost;
     }
 
     public Server getMyServer() {

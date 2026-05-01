@@ -17,6 +17,8 @@
 
 package mekwars.common.gui;
 
+import java.awt.Color;
+import java.awt.Dimension;
 import java.awt.Point;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -24,9 +26,21 @@ import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.awt.event.MouseMotionListener;
 import java.awt.event.MouseWheelListener;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileReader;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.io.Serial;
+import java.io.StreamTokenizer;
+import java.net.URL;
+import java.net.URLClassLoader;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.Map;
+import java.util.StringTokenizer;
 import java.util.TreeMap;
 import javax.swing.ImageIcon;
 import javax.swing.JCheckBoxMenuItem;
@@ -36,17 +50,18 @@ import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
 import javax.swing.JPopupMenu;
 import javax.swing.JScrollPane;
-import javax.swing.text.Position;
 
 import com.thoughtworks.xstream.io.xml.DomDriver;
 import mekwars.common.House;
 import mekwars.common.Influences;
 import mekwars.common.Planet;
+import mekwars.common.campaign.CArmy;
 import mekwars.common.campaign.clientutils.protocol.IClient;
 import mekwars.common.gui.dialogs.PlanetSearchDialog;
 import mekwars.common.gui.panels.CMapPanel;
 import mekwars.common.util.MMNetXStream;
 import mekwars.common.util.MWLogger;
+import mekwars.common.util.Position;
 import mekwars.common.util.StringUtils;
 
 /**
@@ -93,7 +108,7 @@ public class InnerStellarMap extends JComponent
     private final JCheckBoxMenuItem[] display = new JCheckBoxMenuItem[displayStr.length];
     private final JCheckBoxMenuItem[] filter = new JCheckBoxMenuItem[filterStr.length];
     /**
-     * A data stucture to hold all planets marked as "changed" since last update. - see
+     * A data structure to hold all planets marked as "changed" since last update. - see
      * common.CampaignData.decodeMutablePlanets()
      */
     private final Map<Integer, Influences> changesSinceLastRefresh;
@@ -106,21 +121,20 @@ public class InnerStellarMap extends JComponent
      * Map filtering options ; ALL, _FILLER_, Factories, Facilities, Disputed, Contested
      */
     boolean[] filterSettings = new boolean[] { true, false, true, true, true, true, true };
-    java.awt.Point lastMousePos = null;
+    Point lastMousePos = null;
     int mouseMod = 0;
     private Planet selectedPlanet = null;
     /**
      * Used to indicate the blinking of a planet. If true, the planets are drawn white.
      */
     private boolean blinkPhase = false;
-    private java.net.URLClassLoader loader;
 
     /**
      * Constructs the ISMap.
      *
      * @param panel - The panel it belongs to.
      */
-    InnerStellarMap(CMapPanel panel, IClient client, CMainFrame mainFrame) {
+    public InnerStellarMap(CMapPanel panel, IClient client, CMainFrame mainFrame) {
         this.client = client;
         setBackground(java.awt.Color.BLACK);
         mapPanel = panel;
@@ -135,39 +149,32 @@ public class InnerStellarMap extends JComponent
             if (!dir.exists()) {
                 dir.mkdirs();
             }
-            conf = (mekwars.common.gui.InnerStellarMap.InnerStellarMapConfig) xml.fromXML(new java.io.FileReader(client.getCacheDir() +
-                                                                                                                       "/mapconf.xml"));
-            if (conf.display.length != displayStr.length) {
+            conf = (InnerStellarMapConfig) xml.fromXML(new FileReader(STR."\{client.getCacheDir()}/mapconf.xml"));
+            if (conf.getDisplay().length != displayStr.length) {
                 throw new RuntimeException("not my file");
             }
-        } catch (Throwable e) {
-            if (!(e instanceof java.io.FileNotFoundException)) {
-                MWLogger.errLog((Exception) e);
-            }
+        } catch (Exception e) {
+            MWLogger.errLog(e);
             MWLogger.infoLog("could not read map config file. Will use defaults");
-            conf = new mekwars.common.gui.InnerStellarMap.InnerStellarMapConfig();
+            conf = new InnerStellarMapConfig();
         }
 
         try {
             parseOverlayFile();
-        } catch (Throwable e) {
-            if (!(e instanceof java.io.FileNotFoundException)) {
-                MWLogger.errLog((Exception) e);
-            }
+        } catch (Exception e) {
+            MWLogger.errLog(e);
             MWLogger.infoLog("could not read map overlay file.");
         }
 
         for (int i = 0; i < displayStr.length; ++i) {
-            display[i] = new javax.swing.JCheckBoxMenuItem(displayStr[i], conf.display[i]);
+            display[i] = new JCheckBoxMenuItem(displayStr[i], conf.getDisplay()[i]);
             display[i].addActionListener(this);
         }
 
         // read in map filter settings
-        java.util.StringTokenizer tokenizer = new java.util.StringTokenizer(this.client.getConfigParam("MAPFILTER1"),
-              "$");
+        StringTokenizer tokenizer = new StringTokenizer(this.client.getConfigParam("MAPFILTER1"), "$");
         int currFilter = FILTER_ALL;
         while (tokenizer.hasMoreElements() || currFilter < filterStr.length) {
-
             String nextToken = tokenizer.nextToken();
 
             if (currFilter == FILTER_SEP) {
@@ -178,61 +185,57 @@ public class InnerStellarMap extends JComponent
             if (nextToken != null) {
                 boolean filterState = Boolean.parseBoolean(nextToken);
                 filterSettings[currFilter] = filterState;
-                filter[currFilter] = new javax.swing.JCheckBoxMenuItem(filterStr[currFilter], filterState);
+                filter[currFilter] = new JCheckBoxMenuItem(filterStr[currFilter], filterState);
                 filter[currFilter].addActionListener(this);
             }
 
             // null. default to true and add.
             else {
                 filterSettings[currFilter] = true;
-                filter[currFilter] = new javax.swing.JCheckBoxMenuItem(filterStr[currFilter], true);
+                filter[currFilter] = new JCheckBoxMenuItem(filterStr[currFilter], true);
                 filter[currFilter].addActionListener(this);
             }
 
             currFilter++;
         }
 
-        mainFrame.addWindowListener(new java.awt.event.WindowAdapter() {
+        mainFrame.addWindowListener(new WindowAdapter() {
             @Override
-            public void windowClosing(java.awt.event.WindowEvent evt) {
+            public void windowClosing(WindowEvent evt) {
                 processTick();
             }
         });
 
         changesSinceLastRefresh = client.getChangesSinceLastRefresh();
-        new Thread() {
-            @Override
-            public void run() {
-                while (true) {
-                    try {
-                        Thread.sleep(1000);
-                    } catch (InterruptedException e) {
-                    }
-                    blinkPhase = !blinkPhase;
-                    if (changesSinceLastRefresh.size() > 0) {
-                        mapPanel.repaint();
-                    }
+        new Thread(() -> {
+            while (true) {
+                try {
+                    Thread.sleep(1000);
+                } catch (InterruptedException e) {
+                }
+                blinkPhase = !blinkPhase;
+
+                if (!changesSinceLastRefresh.isEmpty()) {
+                    mapPanel.repaint();
                 }
             }
-        }.start();
+        }).start();
 
         // restore previous zoom level
-        Double storedZoom = Double.parseDouble(client.getConfigParam("MAPZOOMLEVEL"));
-        if (storedZoom != null) {
-            double storedValue = storedZoom.doubleValue();
-            if (storedValue != 0) {
-                conf.scale = storedValue;
-            }
+        double storedValue = Double.parseDouble(client.getConfigParam("MAPZOOMLEVEL"));
+
+        if (storedValue != 0) {
+            conf.setScale(storedValue);
         }
 
         // restore previous offset
         int storedXOffset = Integer.parseInt(client.getConfigParam("MAPXOFFSET"));
         int storedYOffset = Integer.parseInt(client.getConfigParam("MAPYOFFSET"));
-        conf.offset = new java.awt.Point(storedXOffset, storedYOffset);
+        conf.setOffset(new Point(storedXOffset, storedYOffset));
 
         // restore previously selected planet
         String storedPlanetName = client.getConfigParam("SELECTEDPLANET");
-        if (storedPlanetName != null && !storedPlanetName.trim().equals("")) {
+        if (storedPlanetName != null && !storedPlanetName.trim().isEmpty()) {
             // planet setting exists. lets see if the planet does ...
             Planet currPlan = client.getData().getPlanetByName(storedPlanetName);
             if (currPlan != null) {
@@ -243,33 +246,37 @@ public class InnerStellarMap extends JComponent
     }
 
     private void parseOverlayFile() throws Exception {
-        java.io.File file = new java.io.File("data/mapoverlay.txt");
-        java.io.Reader r = new java.io.BufferedReader(new java.io.FileReader(file));
-        java.io.StreamTokenizer st = new java.io.StreamTokenizer(r);
-        st.eolIsSignificant(true);
-        st.commentChar('#');
-        java.util.ArrayList<Position> line = new java.util.ArrayList<Position>();
-        Position position = null;
+        File file = new File("data/mapoverlay.txt");
+        BufferedReader bufferedReader = new BufferedReader(new FileReader(file));
+        StreamTokenizer streamTokenizer = new StreamTokenizer(bufferedReader);
+        streamTokenizer.eolIsSignificant(true);
+        streamTokenizer.commentChar('#');
+        ArrayList<Position> line = new ArrayList<>();
+        Position position;
         String color = client.getConfigParam("MAPOVERLAYCOLOR");
-        while (st.nextToken() != java.io.StreamTokenizer.TT_EOF) {
-            if (st.ttype == java.io.StreamTokenizer.TT_WORD && st.sval.equals("LINE") && line.size() > 0) {
+        while (streamTokenizer.nextToken() != StreamTokenizer.TT_EOF) {
+            if (streamTokenizer.ttype == StreamTokenizer.TT_WORD &&
+                      streamTokenizer.sval.equals("LINE") &&
+                      !line.isEmpty()) {
                 overlayLines.add(line);
-                line = new java.util.ArrayList<Position>();
-            } else if (st.ttype == java.io.StreamTokenizer.TT_WORD && st.sval.startsWith("COLOR")) {
-                color = st.sval.substring("COLOR".length());
-            } else if (st.ttype == java.io.StreamTokenizer.TT_NUMBER) {
-                double x = st.nval;
-                if (st.nextToken() == java.io.StreamTokenizer.TT_NUMBER) {
-                    position = new Position(x, st.nval);
+                line = new ArrayList<>();
+            } else if (streamTokenizer.ttype == StreamTokenizer.TT_WORD && streamTokenizer.sval.startsWith("COLOR")) {
+                color = streamTokenizer.sval.substring("COLOR".length());
+            } else if (streamTokenizer.ttype == StreamTokenizer.TT_NUMBER) {
+                double x = streamTokenizer.nval;
+                if (streamTokenizer.nextToken() == StreamTokenizer.TT_NUMBER) {
+                    position = new Position(x, streamTokenizer.nval);
                     position.setColor(color);
                     line.add(position);
                 }
-                while (st.ttype != java.io.StreamTokenizer.TT_EOF && st.ttype != java.io.StreamTokenizer.TT_EOL) {
-                    st.nextToken();
+                while (streamTokenizer.ttype != StreamTokenizer.TT_EOF &&
+                             streamTokenizer.ttype != StreamTokenizer.TT_EOL) {
+                    streamTokenizer.nextToken();
                 }
             }
         }
-        if (line.size() > 0) {
+
+        if (!line.isEmpty()) {
             overlayLines.add(line);
         }
     }
@@ -279,8 +286,8 @@ public class InnerStellarMap extends JComponent
      */
     public void processTick() {
         try {
-            new MMNetXStream().toXML(conf, new java.io.FileWriter(client.getCacheDir() + "/mapconf.xml"));
-        } catch (java.io.IOException e1) {
+            new MMNetXStream().toXML(conf, new FileWriter(STR."\{client.getCacheDir()}/mapconf.xml"));
+        } catch (IOException e1) {
             MWLogger.errLog(e1);
         }
     }
@@ -288,40 +295,41 @@ public class InnerStellarMap extends JComponent
     /**
      * Activate and Center
      */
-    public void activate(Planet p, boolean center) {
+    public void activate(Planet planet, boolean center) {
 
-        if (p == null) {
+        if (planet == null) {
             return;
         }
 
         // activate normally
-        this.activate(p);
+        this.activate(planet);
 
         // then center on the world
         if (center) {
-            conf.offset.setLocation(-p.getPosition().x * conf.scale, p.getPosition().y * conf.scale);
+            conf.getOffset().setLocation(-planet.getPosition().x * conf.getScale(), planet.getPosition().y *
+                                                                                          conf.getScale());
         }
 
-    }// end activate(p,center)
+    }// end activate(planet,center)
 
     /**
-     * Activate a specfic planet
+     * Activate a specific planet
      *
-     * @param p This planet becomes the selected one.
+     * @param planet This planet becomes the selected one.
      */
-    public void activate(Planet p) {
+    public void activate(Planet planet) {
 
-        if (p == null) {
+        if (planet == null) {
             return;
         }
 
-        if (mapPanel.getPPanel() != null && mapPanel.getPPanel().getPlanet() != p) {
+        if (mapPanel.getPPanel() != null && mapPanel.getPPanel().getPlanet() != planet) {
 
-            mapPanel.getPPanel().update(p);
-            conf.planetID = p.getId();
+            mapPanel.getPPanel().update(planet);
+            conf.setPlanetID(planet.getId());
             mapPanel.repaint();
 
-            saveMapSelection(p);
+            saveMapSelection(planet);
         }
     }
 
@@ -329,17 +337,21 @@ public class InnerStellarMap extends JComponent
      * Method which saves current map properties. Called when a new planet is selected. The settings are restored when a
      * client is loaded, preserving map selections between user sessions.
      */
-    public void saveMapSelection(Planet p) {
+    public void saveMapSelection(Planet planet) {
 
         // save the config
-        client.getConfig().setParam("SELECTEDPLANET", p.getName());
-        client.getConfig().setParam("MAPZOOMLEVEL", "" + conf.scale);
-        client.getConfig().setParam("MAPYOFFSET", "" + (int) conf.offset.getY());
-        client.getConfig().setParam("MAPXOFFSET", "" + (int) conf.offset.getX());
+        client.getConfig().setParam("SELECTEDPLANET", planet.getName());
+        client.getConfig().setParam("MAPZOOMLEVEL", STR."\{conf.getScale()}");
+        client.getConfig().setParam("MAPYOFFSET", STR."\{(int) conf.getOffset().getY()}");
+        client.getConfig().setParam("MAPXOFFSET", STR."\{(int) conf.getOffset().getX()}");
 
         client.getConfig().saveConfig();
         client.setConfig();
 
+    }
+
+    public InnerStellarMapConfig getConf() {
+        return conf;
     }
 
     /**
@@ -369,7 +381,7 @@ public class InnerStellarMap extends JComponent
 
             // Information
             JMenuItem info = new JMenuItem("Information");
-            info.addActionListener(ae -> {
+            info.addActionListener(_ -> {
                 JEditorPane label;
                 if (Boolean.parseBoolean(client.getServerConfigs("UseStaticMaps"))) {
                     House house = client.getData().getHouseByName(mapPanel.getPPanel().getPlanet().getOriginalOwner());
@@ -385,7 +397,7 @@ public class InnerStellarMap extends JComponent
                           STR."<html>\{mapPanel.getPPanel()
                                              .getPlanet()
                                              .getAdvanceDescription(client.getUser(client.getUsername())
-                                                                          .getUserlevel())}<b>Original Owner:</b><br><font color=\{color}>\{name}</font></html>");
+                                                                          .getUserLevel())}<b>Original Owner:</b><br><font color=\{color}>\{name}</font></html>");
                     label.setEditable(false);
                     label.setCaretPosition(0);
                     label.setPreferredSize(new java.awt.Dimension(500, 400));
@@ -426,7 +438,7 @@ public class InnerStellarMap extends JComponent
              * If a planet is selected and the player is active, build an attack menu and include it in the popup.
              */
             if (planet != null) {
-                mekwars.client.gui.AttackMenu aMenu = new mekwars.client.gui.AttackMenu(client, -1, planet.getName());
+                AttackMenu aMenu = new AttackMenu(client, -1, planet.getName());
                 aMenu.updateMenuItems(false);
                 popup.add(aMenu);
             }
@@ -436,35 +448,27 @@ public class InnerStellarMap extends JComponent
 
             // Search, using planet dialog.
             javax.swing.JMenuItem search = new javax.swing.JMenuItem("Find Planet");
-            search.addActionListener(new java.awt.event.ActionListener() {
-                public void actionPerformed(java.awt.event.ActionEvent ae) {
-                    createPlanetSearchDialog();
-                }
-            });
+            search.addActionListener(_ -> createPlanetSearchDialog());
             popup.add(search);
 
             // CENTER Menu.
             javax.swing.JMenu centerM = new javax.swing.JMenu("Center Map");
             javax.swing.JMenuItem item = new javax.swing.JMenuItem("On Selected Planet");
             if (planet != null) {// only add if there is a planet to center on
-                item.addActionListener(new java.awt.event.ActionListener() {
-                    public void actionPerformed(java.awt.event.ActionEvent ae) {
-                        conf.offset.setLocation(-planet.getPosition().x * conf.scale,
-                              planet.getPosition().y * conf.scale);
-                        mapPanel.repaint();
-                    }
+                item.addActionListener(_ -> {
+                    conf.getOffset().setLocation(-planet.getPosition().x * conf.getScale(),
+                          planet.getPosition().y * conf.getScale());
+                    mapPanel.repaint();
                 });
                 centerM.add(item);
             }
 
             item = new javax.swing.JMenuItem("On Natural Center");
-            item.addActionListener(new java.awt.event.ActionListener() {
-                public void actionPerformed(java.awt.event.ActionEvent ae) {
-                    conf.offset = new java.awt.Point();
-                    conf.scale = 1;
-                    mapPanel.getSlider().setValue((int) Math.round(50 / conf.scale));
-                    mapPanel.repaint();
-                }
+            item.addActionListener(_ -> {
+                conf.setOffset(new Point());
+                conf.setScale(1);
+                mapPanel.getSlider().setValue((int) Math.round(50 / conf.getScale()));
+                mapPanel.repaint();
             });
             centerM.add(item);
             popup.add(centerM);
@@ -492,12 +496,10 @@ public class InnerStellarMap extends JComponent
             if (client.isLeader() &&
                       client.getUserLevel() >= client.getData().getAccessLevel("PurchaseFactory")) {
                 item = new javax.swing.JMenuItem("Purchase Factory");
-                item.addActionListener(new java.awt.event.ActionListener() {
-                    public void actionPerformed(java.awt.event.ActionEvent ae) {
-                        client.getMainFrame()
-                              .jMenuLeaderPurchaseFactory_actionPerformed(planet == null ? null : planet.getName());
-                    }
-                });
+                item.addActionListener(_ -> client.getMainFrame()
+                                                  .jMenuLeaderPurchaseFactory_actionPerformed(planet == null ?
+                                                                                                    null :
+                                                                                                    planet.getName()));
                 popup.add(item);
             }
 
@@ -505,12 +507,10 @@ public class InnerStellarMap extends JComponent
 
             // REFRESH - one button
             item = new javax.swing.JMenuItem("Refresh");
-            item.addActionListener(new java.awt.event.ActionListener() {
-                public void actionPerformed(java.awt.event.ActionEvent ae) {
-                    changesSinceLastRefresh.clear();
-                    client.refreshData();
-                    mapPanel.repaint();
-                }
+            item.addActionListener(_ -> {
+                changesSinceLastRefresh.clear();
+                client.refreshData();
+                mapPanel.repaint();
             });
             popup.add(item);
 
@@ -522,16 +522,16 @@ public class InnerStellarMap extends JComponent
                     if (!loadJar.exists()) {
                         MWLogger.errLog("AdminMapPopupMenu creation skipped. No MekWarsAdmin.jar present.");
                     } else {
-                        loader = new java.net.URLClassLoader(new java.net.URL[] { loadJar.toURI().toURL() });
-                        Class<?> c = loader.loadClass("admin.AdminMapPopupMenu");
-                        Object o = c.newInstance();
-                        c.getDeclaredMethod("createMenu",
-                                    new Class[] { client.MWClient.class, mekwars.common.gui.InnerStellarMap.class,
+                        URLClassLoader loader = new URLClassLoader(new URL[] { loadJar.toURI().toURL() });
+                        Class<?> clazz = loader.loadClass("admin.AdminMapPopupMenu");
+                        Object object = clazz.getDeclaredConstructor().newInstance();
+                        clazz.getDeclaredMethod("createMenu",
+                                    new Class[] { IClient.class, mekwars.common.gui.InnerStellarMap.class,
                                                   Integer.class, Integer.class, Planet.class })
-                              .invoke(o,
-                                    new Object[] { client, this, (int) scr2mapX(e.getX()), (int) scr2mapY(e.getY()),
-                                                   mapPanel.getPPanel().getPlanet() });
-                        popup.add((javax.swing.JMenu) o);
+                              .invoke(object,
+                                    client, this, (int) scr2mapX(e.getX()), (int) scr2mapY(e.getY()),
+                                    mapPanel.getPPanel().getPlanet());
+                        popup.add((javax.swing.JMenu) object);
                     }
                 } catch (Exception ex) {
                     MWLogger.errLog("AdminMapPopupMenu creation FAILED!");
@@ -543,14 +543,14 @@ public class InnerStellarMap extends JComponent
         }
 
         // normal left click
-        else if (e.getButton() == java.awt.event.MouseEvent.BUTTON1) {
+        else if (e.getButton() == MouseEvent.BUTTON1) {
 
             if (e.getClickCount() >= 2) {
 
                 javax.swing.JEditorPane label;
-                if (Boolean.parseBoolean(client.getserverConfigs("UseStaticMaps"))) {
+                if (Boolean.parseBoolean(client.getServerConfigs("UseStaticMaps"))) {
                     House h = client.getData().getHouseByName(mapPanel.getPPanel().getPlanet().getOriginalOwner());
-                    String color = client.getserverConfigs("DisputedPlanetColor");
+                    String color = client.getServerConfigs("DisputedPlanetColor");
                     String name = "None";
 
                     if (h != null) {
@@ -558,33 +558,28 @@ public class InnerStellarMap extends JComponent
                         name = h.getName();
                     }
 
-                    label = new javax.swing.JEditorPane("text/html",
-                          "<html>" +
-                                mapPanel.getPPanel()
-                                      .getPlanet()
-                                      .getAdvanceDescription(client.getUser(client.getUsername()).getUserlevel()) +
-                                "<b>Original Owner:</b><br><font color=" +
-                                color +
-                                ">" +
-                                name +
-                                "</font>" +
-                                "</html>");
+                    label = new JEditorPane("text/html",
+                          STR."<html>\{mapPanel.getPPanel()
+                                             .getPlanet()
+                                             .getAdvanceDescription(client.getUser(client.getUsername())
+                                                                          .getUserLevel())}<b>Original Owner:</b><br><font color=\{color}>\{name}</font></html>");
                     label.setEditable(false);
                     label.setCaretPosition(0);
-                    label.setPreferredSize(new java.awt.Dimension(500, 400));
-                    javax.swing.JOptionPane.showMessageDialog(
-                          mekwars.common.gui.InnerStellarMap.this,
-                          new javax.swing.JScrollPane(label),
-                          "Information for " + mapPanel.getPPanel().getPlanet().getName(),
-                          javax.swing.JOptionPane.INFORMATION_MESSAGE);
+                    label.setPreferredSize(new Dimension(500, 400));
+                    JOptionPane.showMessageDialog(
+                          InnerStellarMap.this,
+                          new JScrollPane(label),
+                          STR."Information for \{mapPanel.getPPanel().getPlanet().getName()}",
+                          JOptionPane.INFORMATION_MESSAGE);
                 } else {
-                    House h = client.getData().getHouseByName(mapPanel.getPPanel().getPlanet().getOriginalOwner());
-                    String color = client.getserverConfigs("DisputedPlanetColor");
+                    House houseByName = client.getData()
+                                              .getHouseByName(mapPanel.getPPanel().getPlanet().getOriginalOwner());
+                    String color = client.getServerConfigs("DisputedPlanetColor");
                     String name = "None";
 
-                    if (h != null) {
-                        color = h.getHouseColor();
-                        name = h.getName();
+                    if (houseByName != null) {
+                        color = houseByName.getHouseColor();
+                        name = houseByName.getName();
                     }
 
                     label = new javax.swing.JEditorPane("text/html",
@@ -616,9 +611,9 @@ public class InnerStellarMap extends JComponent
      * sweep algorithm from Steven Fortune.
      */
     private Planet nearestNeighbour(double x, double y) {
-        java.util.Iterator<Planet> it = mapPanel.getData().getAllPlanets().iterator();
+        Iterator<Planet> it = mapPanel.getData().getAllPlanets().iterator();
         double minDiff = Double.MAX_VALUE;
-        double diff = 0.0;
+        double diff;
         Planet minPlanet = null;
         while (it.hasNext()) {
             Planet p = it.next();
@@ -632,27 +627,14 @@ public class InnerStellarMap extends JComponent
     }
 
     /**
-     * Finds the best factory on a planet
-     *
-     * @author Torren
-     * @param p -
-     *            planet to get fac on
-     * @return 2 character string of factory icon. i.e. am for assault mek factory.
-     */
-    /*
-     * private String getBestFactory(Planet p){ int type = Integer.MAX_VALUE; int weight = Integer.MIN_VALUE; int tempType = 0; int tempWeight = 0; String id =""; Iterator i = p.getUnitFactories().iterator(); //No factories on this planet. if ( !i.hasNext() ) return ""; while (i.hasNext()) { UnitFactory uf = (UnitFactory)i.next(); tempType = uf.getBestTypeProducable(); tempWeight = uf.getWeightclass(); if ( tempType <= type && tempWeight > weight ) { weight = tempWeight; type = tempType; } //Found an Assault Mek Factory not going to get any better then that! if ( type == Unit.MEK && weight == Unit.ASSAULT) return ("am"); } //no factories redundent check. if ( type == Integer.MAX_VALUE && weight == Integer.MIN_VALUE) return ""; switch ( weight ){ case Unit.LIGHT: id="l";break; case Unit.MEDIUM: id="m";break; case Unit.HEAVY: id="h";break; case Unit.ASSAULT: id="a";break; } switch ( type ){
-     * case Unit.MEK: id += "m";break; case Unit.VEHICLE: id += "v";break; case Unit.INFANTRY: id += "i";break; } return id; }
-     */
-
-    /**
-     * Computes the map-coordinate from the screen koordinate system
+     * Computes the map-coordinate from the screen coordinate system
      */
     private double scr2mapX(int x) {
-        return Math.round((x - getWidth() / 2 - conf.offset.x) / conf.scale);
+        return Math.round((x - (double) getWidth() / 2 - conf.getOffset().x) / conf.getScale());
     }
 
     private double scr2mapY(int y) {
-        return Math.round((getHeight() / 2 - (y - conf.offset.y)) / conf.scale);
+        return Math.round(((double) getHeight() / 2 - (y - conf.getOffset().y)) / conf.getScale());
     }
 
     /*
@@ -664,15 +646,12 @@ public class InnerStellarMap extends JComponent
     }
 
     /**
-     * Utility method which checks the visibility of a given planet.
+     * Utility method that checks the visibility of a given planet.
      *
-     * @param p
-     *
-     * @return
      */
-    private boolean planetIsVisible(Planet p) {
+    private boolean planetIsVisible(Planet planet) {
 
-        if (null == p) {
+        if (null == planet) {
             return false;
         }
 
@@ -684,17 +663,17 @@ public class InnerStellarMap extends JComponent
         /*
          * Not showing all, so do check all relevant server options and determine whether this particular world should be visible @ this time.
          */
-        if (filterSettings[FILTER_FACTORIES] && p.getFactoryCount() > 0) {
+        if (filterSettings[FILTER_FACTORIES] && planet.getFactoryCount() > 0) {
             return true;
         }
 
-        if (filterSettings[FILTER_FACILITIES] && p.getBaysProvided() > 0) {
+        if (filterSettings[FILTER_FACILITIES] && planet.getBaysProvided() > 0) {
             return true;
         }
 
         if (filterSettings[FILTER_DISPUTED]) {
 
-            Integer houseID = p.getInfluence().getOwner();
+            Integer houseID = planet.getInfluence().getOwner();
 
             // no owner means disputed
             if (houseID == null) {
@@ -702,22 +681,19 @@ public class InnerStellarMap extends JComponent
             }
 
             // there's a high ID, but it doesn't own enough of the world to be undisputed
-            if (p.getInfluence().getInfluence(houseID) < client.getMinPlanetOwnerShip(p)) {
+            if (planet.getInfluence().getInfluence(houseID) < client.getMinPlanetOwnerShip(planet)) {
                 return true;
             }
         }
 
-        if (filterSettings[FILTER_CONTESTED] && p.getInfluence().getHouses().size() > 1) {
+        if (filterSettings[FILTER_CONTESTED] && planet.getInfluence().getHouses().size() > 1) {
             return true;
         }
 
-        if (filterSettings[FILTER_FACTION] &&
-                  p.getInfluence().getInfluence(client.getPlayer().getMyHouse().getId()) > 0) {
-            return true;
-        }
+        return filterSettings[FILTER_FACTION] &&
+                     planet.getInfluence().getInfluence(client.getPlayer().getMyHouse().getId()) > 0;
 
         // no qualifiers. we shouldn't see the world.
-        return false;
     }
 
     public void mousePressed(java.awt.event.MouseEvent e) {
@@ -749,12 +725,12 @@ public class InnerStellarMap extends JComponent
     public void paint(java.awt.Graphics g) {
         java.util.Collection<Planet> planets = mapPanel.getData().getAllPlanets();
         // background
-        g.setColor(StringUtils.html2Color(conf.backgroundColor));
+        g.setColor(StringUtils.html2Color(conf.getBackgroundColor()));
         g.fillRect(0, 0, getWidth(), getHeight());
-        int size = (int) Math.round(Math.max(5, Math.log(conf.scale) * 15 + 5));
-        size = Math.max(Math.min(size, conf.maxDotSize), conf.minDotSize);
+        int size = (int) Math.round(Math.max(5, Math.log(conf.getScale()) * 15 + 5));
+        size = Math.clamp(size, conf.getMinDotSize(), conf.getMaxDotSize());
 
-        if (conf.display[DISPLAY_OVERLAY] && overlayLines != null) {
+        if (conf.getDisplay()[DISPLAY_OVERLAY] && overlayLines != null) {
             for (java.util.ArrayList<Position> points : overlayLines) {
                 Position last = null;
                 for (Position p : points) {
@@ -769,9 +745,9 @@ public class InnerStellarMap extends JComponent
             try {
                 int x = client.getConfig().getIntParam("MAPIMAGEX");
                 int y = client.getConfig().getIntParam("MAPIMAGEY");
-                int height = (int) (client.getConfig().getIntParam("MAPIMAGEHEIGHT") * conf.scale);
-                int width = (int) (client.getConfig().getIntParam("MAPIMAGEWIDTH") * conf.scale);
-                javax.swing.ImageIcon ic = null;
+                int height = (int) (client.getConfig().getIntParam("MAPIMAGEHEIGHT") * conf.getScale());
+                int width = (int) (client.getConfig().getIntParam("MAPIMAGEWIDTH") * conf.getScale());
+                javax.swing.ImageIcon ic;
 
                 boolean useJPGImage = new java.io.File("data/images/mekwarsmap.jpg").exists();
                 if (useJPGImage) {
@@ -800,36 +776,36 @@ public class InnerStellarMap extends JComponent
 
             // calculate the color of the faction owner
             Integer houseID = p.getInfluence().getOwner();
-            String houseColor = "";
+            String houseColor;
 
             if (houseID == null ||
                       houseID == -1 ||
                       p.getInfluence().getInfluence(houseID) < client.getMinPlanetOwnerShip(p)) {
-                houseColor = client.getserverConfigs("DisputedPlanetColor");
+                houseColor = client.getServerConfigs("DisputedPlanetColor");
             } else {
                 houseColor = client.getData().getHouse(houseID).getHouseColor();
             }
 
-            java.awt.Color c = java.awt.Color.WHITE;
+            Color white = Color.WHITE;
 
             if (Boolean.parseBoolean(client.getConfigParam("DARKERMAP"))) {
                 try {
-                    c = StringUtils.html2Color(houseColor);
+                    white = StringUtils.html2Color(houseColor);
                 } catch (Exception ex) {
                     MWLogger.errLog(ex);
-                    MWLogger.errLog("Bad House for planet: " + p.getName());
+                    MWLogger.errLog(STR."Bad House for planet: \{p.getName()}");
                 }
             } else {
                 try {
-                    c = adjustColor(StringUtils.html2Color(houseColor));
+                    white = adjustColor(StringUtils.html2Color(houseColor));
                 } catch (Exception ex) {
                     MWLogger.errLog(ex);
-                    MWLogger.errLog("Bad House for planet: " + p.getName());
+                    MWLogger.errLog(STR."Bad House for planet: \{p.getName()}");
                 }
             }
 
-            if ((c.getRed() == 0 && c.getBlue() == 0)) {
-                c = java.awt.Color.white;
+            if ((white.getRed() == 0 && white.getBlue() == 0)) {
+                white = java.awt.Color.white;
             }
 
             // calculate the current screen position
@@ -845,12 +821,14 @@ public class InnerStellarMap extends JComponent
             // planet dot
             int dotSize = size;
             boolean blink = false;
-            if (conf.display[DISPLAY_LAST_CHANGED] && blinkPhase && changesSinceLastRefresh.containsKey(p.getId())) {
+            if (conf.getDisplay()[DISPLAY_LAST_CHANGED] &&
+                      blinkPhase &&
+                      changesSinceLastRefresh.containsKey(p.getId())) {
                 g.setColor(java.awt.Color.WHITE);
                 dotSize++;
                 blink = true;
             } else {
-                g.setColor(c);
+                g.setColor(white);
             }
             if (size < 3) {
                 g.fillRect(x, y, dotSize, dotSize);
@@ -859,21 +837,20 @@ public class InnerStellarMap extends JComponent
             }
             // names
             if (!blink) {
-                g.setColor(c);
+                g.setColor(white);
             }
-            if (conf.display[DISPLAY_NAMES] &&
-                      (conf.showPlanetNamesThreshold == 0 || conf.scale > conf.showPlanetNamesThreshold)) {
+            if (conf.getDisplay()[DISPLAY_NAMES] &&
+                      (conf.getShowPlanetNamesThreshold() == 0 ||
+                             conf.getScale() > conf.getShowPlanetNamesThreshold())) {
                 g.drawString(p.getName(), x + size, y);
             }
 
             // influence icon
-            if (conf.display[DISPLAY_INFLUENCE] &&
-                      (conf.showInfluenceThreshold == 0 || conf.scale > conf.showInfluenceThreshold)) {
+            if (conf.getDisplay()[DISPLAY_INFLUENCE] &&
+                      (conf.getShowInfluenceThreshold() == 0 || conf.getScale() > conf.getShowInfluenceThreshold())) {
                 int pos = 0;
-                java.util.Iterator<House> infIt = p.getInfluence().getHouses().iterator();
-                while (infIt.hasNext()) {
-                    House h = infIt.next();
-                    String color = client.getserverConfigs("DisputedPlanetColor");
+                for (House h : p.getInfluence().getHouses()) {
+                    String color = client.getServerConfigs("DisputedPlanetColor");
                     int id = -1;
 
                     if (h != null) {
@@ -883,8 +860,7 @@ public class InnerStellarMap extends JComponent
 
                     int flu = p.getInfluence().getInfluence(id) / 10;
                     if (flu != 10) {
-                        java.awt.Color factionColor = StringUtils.html2Color(color);
-                        // g.setColor(mplanet.getMap().adjustColor(factionColor));
+                        Color factionColor = StringUtils.html2Color(color);
                         g.setColor(factionColor);
                         g.fillRect(x - 10, y + size + pos, 10, flu);
                         pos += flu;
@@ -893,18 +869,19 @@ public class InnerStellarMap extends JComponent
             }
 
             // unit factories
-            if (conf.display[DISPLAY_UNITS] &&
-                      (conf.showUnitFactoriesThreshold == 0 || conf.scale > conf.showUnitFactoriesThreshold)) {
+            if (conf.getDisplay()[DISPLAY_UNITS] &&
+                      (conf.getShowUnitFactoriesThreshold() == 0 || conf.getScale() >
+                                                                          conf.getShowUnitFactoriesThreshold())) {
                 int pos = 0;
 
                 if (p.getFactoryCount() > 0) {
-                    javax.swing.ImageIcon staricon = iconCache.get("data/images/star.gif");
-                    staricon.paintIcon(this, g, x + size + pos, y + size / 2);
+                    javax.swing.ImageIcon starIcon = iconCache.get("data/images/star.gif");
+                    starIcon.paintIcon(this, g, x + size + pos, y + size / 2);
                 }
             }
 
             // warehouses
-            if (conf.display[DISPLAY_WAREHOUSES] && p.getBaysProvided() > 0) {
+            if (conf.getDisplay()[DISPLAY_WAREHOUSES] && p.getBaysProvided() > 0) {
                 g.setColor(java.awt.Color.WHITE);
                 g.drawString(Integer.toString(p.getBaysProvided()), x - 8, y);
             }
@@ -921,11 +898,11 @@ public class InnerStellarMap extends JComponent
              * Draw Range Circles. This is not so simple as it was with Tasks.
              */
 
-            if (conf.display[DISPLAY_RANGES]) {
+            if (conf.getDisplay()[DISPLAY_RANGES]) {
 
                 // determine which ops the player is eligible for
-                java.util.TreeSet<String> legalOps = new java.util.TreeSet<String>();
-                for (client.campaign.CArmy currA : client.getPlayer().getArmies()) {
+                java.util.TreeSet<String> legalOps = new java.util.TreeSet<>();
+                for (CArmy currA : client.getPlayer().getArmies()) {
                     legalOps.addAll(currA.getLegalOperations());
                 }
 
@@ -952,7 +929,7 @@ public class InnerStellarMap extends JComponent
                         java.awt.Color c = StringUtils.html2Color(vals[1]);
 
                         g.setColor(c);
-                        int rSize = (int) Math.round(2 * range * conf.scale);
+                        int rSize = (int) Math.round(2 * range * conf.getScale());
                         g.drawArc(x - rSize / 2, y - rSize / 2, rSize, rSize, 0, 360);
                     }
 
@@ -966,11 +943,11 @@ public class InnerStellarMap extends JComponent
     }
 
     private int map2scrX(double x) {
-        return (int) Math.round(getWidth() / 2 + x * conf.scale) + conf.offset.x;
+        return (int) Math.round((double) getWidth() / 2 + x * conf.getScale()) + conf.getOffset().x;
     }
 
     private int map2scrY(double y) {
-        return (int) Math.round(getHeight() / 2 - y * conf.scale) + conf.offset.y;
+        return (int) Math.round((double) getHeight() / 2 - y * conf.getScale()) + conf.getOffset().y;
     }
 
     /**
@@ -985,17 +962,17 @@ public class InnerStellarMap extends JComponent
      * Color.brighter() which simple looks good. (But it had to be adjusted a bit) Imi
      */
     private int adj(int r) {
-        if (conf.colorAdjustment == 0) {
+        if (conf.getColorAdjustment() == 0) {
             return r;
         }
-        if (conf.colorAdjustment == 1) {
+        if (conf.getColorAdjustment() == 1) {
             return 255;
         }
-        int i = (int) (1.0 / conf.colorAdjustment);
+        int i = (int) (1.0 / conf.getColorAdjustment());
         if (r > 0 && r < i) {
             r = i;
         }
-        return Math.min((int) (r / (1 - conf.colorAdjustment)), 255);
+        return Math.min((int) (r / (1 - conf.getColorAdjustment())), 255);
     }
 
     public void mouseDragged(java.awt.event.MouseEvent e) {
@@ -1003,8 +980,8 @@ public class InnerStellarMap extends JComponent
             return;
         }
         if (lastMousePos != null) {
-            conf.offset.x -= lastMousePos.x - e.getX();
-            conf.offset.y -= lastMousePos.y - e.getY();
+            conf.getOffset().x -= lastMousePos.x - e.getX();
+            conf.getOffset().y -= lastMousePos.y - e.getY();
         }
         mouseMoved(e);
         mapPanel.repaint();
@@ -1019,16 +996,14 @@ public class InnerStellarMap extends JComponent
             lastMousePos.y = e.getY();
         }
 
-        if (conf.display[DISPLAY_TOOLTIPS]) {
+        if (conf.getDisplay()[DISPLAY_TOOLTIPS]) {
 
             Planet planet = nearestNeighbour(scr2mapX(e.getX()), scr2mapY(e.getY()));
-            StringBuilder result = new StringBuilder("<html><center><b><u>" + planet.getName() + "</b></u></center>");
+            StringBuilder result = new StringBuilder(STR."<html><center><b><u>\{planet.getName()}</b></u></center>");
             result.append("<TABLE CELLPADDING=1 CELLSPACING=1>");
 
-            java.util.Iterator<House> it = planet.getInfluence().getHouses().iterator();
-            while (it.hasNext()) {
-                House h = it.next();
-                String color = client.getserverConfigs("DisputedPlanetColor");
+            for (House h : planet.getInfluence().getHouses()) {
+                String color = client.getServerConfigs("DisputedPlanetColor");
                 String name = "None";
                 int id = -1;
 
@@ -1038,14 +1013,11 @@ public class InnerStellarMap extends JComponent
                     id = h.getId();
                 }
 
-                result.append("<TR><TD><font color=" +
-                                    color +
-                                    ">" +
-                                    name +
-                                    "</font></TD><TD>" +
-                                    Math.floor(100 * planet.getInfluence().getInfluence(id) /
-                                                     planet.getConquestPoints()) +
-                                    "%</TD></TR>");
+                result.append(STR."<TR><TD><font color=\{color}>\{name}</font></TD><TD>\{Math.floor((double) (100 *
+                                                                                                                    planet.getInfluence()
+                                                                                                                          .getInfluence(
+                                                                                                                                id)) /
+                                                                                                          planet.getConquestPoints())}%</TD></TR>");
             }
             result.append("</TABLE></html>");
 
@@ -1061,16 +1033,16 @@ public class InnerStellarMap extends JComponent
 
         if (keyCode == 37)// left arrow
         {
-            conf.offset.y -= conf.scale;
+            conf.getOffset().y -= (int) conf.getScale();
         } else if (keyCode == 38) // uparrow
         {
-            conf.offset.x -= conf.scale;
+            conf.getOffset().x -= (int) conf.getScale();
         } else if (keyCode == 39)// right arrow
         {
-            conf.offset.y += conf.scale;
+            conf.getOffset().y += (int) conf.getScale();
         } else if (keyCode == 40)// down arrow
         {
-            conf.offset.x += conf.scale;
+            conf.getOffset().x += (int) conf.getScale();
         } else {
             return;
         }
@@ -1080,8 +1052,8 @@ public class InnerStellarMap extends JComponent
     public void mouseWheelMoved(java.awt.event.MouseWheelEvent e) {
         mapPanel.getSlider().setValue(mapPanel.getSlider().getValue() + e.getWheelRotation() * 3);
         if (selectedPlanet != null) {
-            conf.offset.setLocation(-selectedPlanet.getPosition().x * conf.scale,
-                  selectedPlanet.getPosition().y * conf.scale);
+            conf.getOffset().setLocation(-selectedPlanet.getPosition().x * conf.getScale(),
+                  selectedPlanet.getPosition().y * conf.getScale());
             mapPanel.repaint();
         }
 
@@ -1091,10 +1063,10 @@ public class InnerStellarMap extends JComponent
      * @param scale The scale to set.
      */
     public void setScale(double scale) {
-        conf.scale = scale;
+        conf.setScale(scale);
         if (selectedPlanet != null) {
-            conf.offset.setLocation(-selectedPlanet.getPosition().x * conf.scale,
-                  selectedPlanet.getPosition().y * conf.scale);
+            conf.getOffset().setLocation(-selectedPlanet.getPosition().x * conf.getScale(),
+                  selectedPlanet.getPosition().y * conf.getScale());
         }
     }
 
@@ -1102,14 +1074,14 @@ public class InnerStellarMap extends JComponent
      * @param off The conf.offset.x to set.
      */
     public void setXOff(int off) {
-        conf.offset.x = off;
+        conf.getOffset().x = off;
     }
 
     /**
      * @param off The conf.offset.y to set.
      */
     public void setYOff(int off) {
-        conf.offset.y = off;
+        conf.getOffset().y = off;
     }
 
     /**
@@ -1130,22 +1102,22 @@ public class InnerStellarMap extends JComponent
 
         // save display settings
         for (int i = 0; i < displayStr.length; ++i) {
-            conf.display[i] = display[i].isSelected();
+            conf.getDisplay()[i] = display[i].isSelected();
         }
 
         // save filter settings
-        String filterString = "";
+        StringBuilder filterString = new StringBuilder();
         for (int i = 0; i < filterSettings.length; i++) {
 
             if (i == FILTER_SEP) {
-                filterString += "false$";
+                filterString.append("false$");
                 continue;
             }
             filterSettings[i] = filter[i].isSelected();
-            filterString += filterSettings[i] + "$";
+            filterString.append(filterSettings[i]).append("$");
         }
 
-        client.getConfig().setParam("MAPFILTER", filterString);
+        client.getConfig().setParam("MAPFILTER", filterString.toString());
         client.getConfig().saveConfig();
     }
 
@@ -1173,68 +1145,8 @@ public class InnerStellarMap extends JComponent
     /**
      * @return Returns the changesSinceLastRefresh.
      */
-    public java.util.Map<Integer, Influences> getChangesSinceLastRefresh() {
+    public Map<Integer, Influences> getChangesSinceLastRefresh() {
         return changesSinceLastRefresh;
-    }
-
-    /**
-     * All configuration behaviour of InterStellarMap are saved here.
-     *
-     * @author Imi (immanuel.scholz@gmx.de)
-     */
-    static public final class InnerStellarMapConfig {
-        /**
-         * Whether to scale planet dots on zoom or not
-         */
-        int minDotSize = 2;
-        int maxDotSize = 25;
-        /**
-         * The scaling maximum dimension
-         */
-        int reverseScaleMax = 100;
-        /**
-         * The scaling minimum dimension
-         */
-        int reverseScaleMin = 2;
-        /**
-         * Threshold to not show influence anymore. 0 means show always
-         */
-        double showInfluenceThreshold = 0.0;
-        /**
-         * Threshold to not show unit factories anymore. 0 means show always
-         */
-        double showUnitFactoriesThreshold = 0.0;
-        /**
-         * Threshold to not show planet names. 0 means show always
-         */
-        double showPlanetNamesThreshold = 0.0;
-        /**
-         * brightness correction for colors. This is no gamma correction! Gamma correction brightens medium level colors
-         * more than extreme ones. 0 means no brightening.
-         */
-        double colorAdjustment = 0.5;
-        /**
-         * The maps background color
-         */
-        String backgroundColor = "#000000";
-
-        /**
-         * Various display options - Names, Control, Factories, Warehouses, Ranges, Changes
-         */
-        boolean[] display = new boolean[] { true, false, true, true, true, true, true, true };
-
-        /**
-         * The actual scale factor. 1.0 for default, higher means bigger.
-         */
-        double scale = 1.0;
-        /**
-         * The scrolling offset
-         */
-        Point offset = new Point();
-        /**
-         * The current selected Planet-id
-         */
-        int planetID;
     }
 
     /**

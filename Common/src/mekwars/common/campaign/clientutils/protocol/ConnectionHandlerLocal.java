@@ -45,7 +45,9 @@ import java.io.IOException;
 import java.io.PrintStream;
 import java.net.Socket;
 
-import mekwars.common.util.MWLogger;
+import megamek.logging.MMLogger;
+import mekwars.common.threads.ReaderThread;
+import mekwars.common.threads.WriterThread;
 
 /**
  * The keeper of the Socket on the client side. Using deprecated JDK1.0.2 I/O methods on purpose, because this may be
@@ -54,11 +56,11 @@ import mekwars.common.util.MWLogger;
  * This method spawns two threads: One for reading and one for writing.  When new messages are read, they are passed to
  * the ChatServerLocal via its incomingMessage () method
  *
- * @see ChatServerLocal#incomingMessage
  */
 
 public class ConnectionHandlerLocal implements IConnectionHandler {
-    static final boolean DEBUG = false;
+    private final static MMLogger LOGGER = MMLogger.create(ConnectionHandlerLocal.class);
+
     private final Socket _socket;
     protected PrintStream _out;
     protected IConnectionListener _listener;
@@ -74,12 +76,6 @@ public class ConnectionHandlerLocal implements IConnectionHandler {
         _reader = new ReaderThread(this, _socket);
         _writer = new WriterThread(_out);
         _writer.start();
-    }
-
-    public static void DEBUG(String s) {
-        if (DEBUG) {
-            MWLogger.errLog(s);
-        }
     }
 
     /**
@@ -103,9 +99,8 @@ public class ConnectionHandlerLocal implements IConnectionHandler {
         _writer.pleaseStop();
         _writer.flushOutputQueue();
 
-        try {_socket.close();} catch (IOException e) {
-            MWLogger.errLog("Error closing socket.");
-            MWLogger.errLog(e);
+        try {_socket.close();} catch (IOException ex) {
+            LOGGER.error(ex, "Error while shutting down: {}", ex.getMessage());
         }
 
         if (notify) {

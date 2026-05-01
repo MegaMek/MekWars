@@ -45,7 +45,7 @@ import mekwars.common.campaign.clientutils.protocol.IClient;
 import mekwars.common.util.TokenReader;
 
 /**
- * Client-side representation of an Army. The CArmy has, when compared to its server-side counterpart, very few
+ * client-side representation of an Army. The CArmy has, when compared to its server-side counterpart, very few
  * functional methods, and mostly serves as a holder for server data that the client needs in order to represent forces
  * graphically, load units into games, etc.
  */

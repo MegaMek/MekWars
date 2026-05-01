@@ -407,7 +407,7 @@ public class CUserListPanel extends JPanel implements ActionListener {
     /**
      * ActionPerformed method, to comply with ActionListener.
      * <p>
-     * If ActivityButton is pressed, look at Client's current login/activity status and act accordingly.
+     * If ActivityButton is pressed, look at client's current login/activity status and act accordingly.
      */
     public void actionPerformed(java.awt.event.ActionEvent e) {
         if (e.getSource() == ActivityButton) {

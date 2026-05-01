@@ -30,34 +30,57 @@
  * <https://www.xbox.com/en-US/developers/rules> and it is not endorsed by or
  * affiliated with Microsoft.
  */
-package mekwars.common.campaign.clientutils.protocol.commands;
+
+package mekwars.common.commands;
 
 import java.util.StringTokenizer;
 
+import megamek.logging.MMLogger;
 import mekwars.common.campaign.clientutils.protocol.IClient;
-import mekwars.common.campaign.clientutils.protocol.TransportCodec;
 
 /**
- * Comm command
+ * AckSignOn command
  */
 
-public class CommPCmd extends CProtCommand {
-    public CommPCmd(IClient client) {
+public class AcknowledgeSignOnPlayerCommand extends CProtCommand {
+    static private final MMLogger LOGGER = MMLogger.create(AcknowledgeSignOnPlayerCommand.class);
+
+    public AcknowledgeSignOnPlayerCommand(IClient client) {
         super(client);
-        name = "comm";
+        name = "ack_sign_on";
     }
 
     // execute command
     @Override
     public boolean execute(String input) {
-
         StringTokenizer ST = new StringTokenizer(input, delimiter);
         if (check(ST.nextToken()) && ST.hasMoreTokens()) {
-            input = TransportCodec.unescape(ST.nextToken());
-            if (!client.isDedicated()) {client.doParseDataInput(input);} else {client.parseDedDataInput(input);}
+            input = decompose(input);
+            ST = new StringTokenizer(input, delimiter);
+            client.setUsername(ST.nextToken());
+            echo(input);
+            if (client.isDedicated()) {
+
+                try {Thread.sleep(5000);} catch (Exception ex) {
+                    LOGGER.error(ex);
+                }
+
+                try {
+                    client.startHost(true, false, false);
+                } catch (Exception ex) {
+                    LOGGER.error(ex, "AckSignOnPCmd: Error attempting to start host on sign on.");
+                }
+            }
+
             return true;
         }
-
+        //else
         return false;
+    }
+
+    // echo command in GUI
+    @Override
+    protected void echo(String input) {
+        LOGGER.info("Message from server: {}", input);
     }
 }

@@ -2,7 +2,7 @@ package mekwars.common.threads;
 
 import mekwars.common.gui.SplashWindow;
 
-class AnimationThread extends Thread {
+public class AnimationThread extends Thread {
 
     //vars
     private final SplashWindow splash;
@@ -39,7 +39,7 @@ class AnimationThread extends Thread {
                 if (currStatus == splash.STATUS_DATA_ERROR ||
                           currStatus == splash.STATUS_INPUT_WAIT ||
                           currStatus == splash.STATUS_CONNECT_FAILED) {
-                    //do not advanced the progress meter. roll back the cycle.
+                    //do not advance the progress meter. roll back the cycle.
                     cycle--;
                 } else if (cycle == 0) {
                     progress++;
@@ -64,7 +64,6 @@ class AnimationThread extends Thread {
                     splash.getImageLabel()
                           .setText("<HTML><CENTER><b>Connecting to Server<br>[Connection Failed]</b></CENTER></HTML>");
                 }
-
                 if (!splash.shouldAnimate()) {
                     return;
                 }
@@ -78,7 +77,7 @@ class AnimationThread extends Thread {
     }//end run()
 
     private void setLabelText(String s) {
-        splash.getImageLabel().setText("<HTML><CENTER><b>" + s + "</b></CENTER></HTML>");
+        splash.getImageLabel().setText(STR."<HTML><CENTER><b>\{s}</b></CENTER></HTML>");
         splash.getProgressBar().setValue(progress);
     }
 }//end AnimationThread

@@ -24,7 +24,7 @@ import mekwars.common.persistence.BinWriter;
 
 /**
  * Implementing this interface allows the object to be serialized with only mutable fields. Mutable fields are those
- * which change often and thus required to be transferred between Server and Client a lot.
+ * which change often and thus required to be transferred between Server and client a lot.
  * <p>
  * Since it could be impossible to decide which data to be transferred (when encoding) or what object instance should be
  * created (decoding), a data provider is given as argument to retrieve necessary cross references.

@@ -16,7 +16,7 @@
 
 package mekwars.server;
 
-//A Class Holding a Client Object might need some more information
+//A Class Holding a client Object might need some more information
 //@Author Helge Richter (McWizard@gmx.de)
 //@Version 0.1
 

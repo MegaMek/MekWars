@@ -6,7 +6,7 @@
  * $Log: VoidFunction.java,v $
  * Revision 1.1  2006/05/22 19:42:34  torren
  * + Added new MekWarsAutoUpdate.jar run in stand alone this can be used to update
- * 	the Client or create a manifest.
+ * 	the client or create a manifest.
  *
  * Revision 1.2  2003/09/06 21:49:23  wurp
  * Migrated stuff from ARMI into here

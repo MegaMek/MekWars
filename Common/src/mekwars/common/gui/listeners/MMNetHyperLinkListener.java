@@ -17,6 +17,9 @@
 
 package mekwars.common.gui.listeners;
 
+import java.awt.Desktop;
+import java.io.IOException;
+import java.net.URISyntaxException;
 import java.util.StringTokenizer;
 import javax.swing.JEditorPane;
 import javax.swing.event.HyperlinkEvent;
@@ -193,7 +196,15 @@ public class MMNetHyperLinkListener implements HyperlinkListener {
                         client.getSMT().removeWorkOrder(tech, position);
 
                     } else {
-                        mekwars.common.gui.Browser.displayURL(event.getURL().toExternalForm());
+                        if (Desktop.isDesktopSupported() && Desktop.getDesktop().isSupported(Desktop.Action.BROWSE)) {
+                            try {
+                                Desktop.getDesktop().browse(event.getURL().toURI());
+                            } catch (IOException e) {
+                                throw new RuntimeException(e);
+                            } catch (URISyntaxException e) {
+                                throw new RuntimeException(e);
+                            }
+                        }
                     }
                 } catch (Throwable t) {
                     MWLogger.errLog((Exception) t);

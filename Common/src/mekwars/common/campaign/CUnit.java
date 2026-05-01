@@ -44,6 +44,7 @@ import java.util.List;
 import java.util.StringJoiner;
 import java.util.StringTokenizer;
 
+import megamek.client.generator.RandomGenderGenerator;
 import megamek.common.CriticalSlot;
 import megamek.common.OffBoardDirection;
 import megamek.common.equipment.AmmoMounted;
@@ -71,7 +72,7 @@ import mekwars.common.util.TokenReader;
 import mekwars.common.util.UnitUtils;
 
 /**
- * Class for unit object used by Client
+ * Class for unit object used by client
  */
 public class CUnit extends Unit {
 
@@ -280,6 +281,14 @@ public class CUnit extends Unit {
         return cost;
     }
 
+    public String getHtmlQuirkList() {
+        return htmlQuirkList;
+    }
+
+    public void setHtmlQuirkList(String htmlQuirkList) {
+        this.htmlQuirkList = htmlQuirkList;
+    }
+
     // PUBLIC METHODS
     public boolean setData(String data) {
 
@@ -366,7 +375,10 @@ public class CUnit extends Unit {
                   pilot.getName(),
                   1,
                   pilot.getGunnery(),
-                  pilot.getPiloting()));
+                  pilot.getPiloting(),
+                  RandomGenderGenerator.generate(),
+                  false,
+                  null));
             return true;
         }
 

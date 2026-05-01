@@ -40,7 +40,7 @@
  * Our thanks to the original authors.
  */
 
-package mekwars.common.campaign.clientutils.protocol;
+package mekwars.common.threads;
 
 import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
@@ -53,6 +53,10 @@ import java.util.StringTokenizer;
 import java.util.Vector;
 import java.util.zip.Inflater;
 
+import mekwars.common.campaign.clientutils.protocol.ConnectionHandlerLocal;
+import mekwars.common.campaign.clientutils.protocol.IClient;
+import mekwars.common.campaign.clientutils.protocol.IConnectionHandler;
+import mekwars.common.campaign.clientutils.protocol.IConnectionListener;
 import mekwars.common.util.MWLogger;
 
 /**

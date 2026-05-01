@@ -75,7 +75,7 @@ public class OpsChickenThread extends Thread {
 
         server.campaign.CampaignMain.cm.toUser(generateAttackLinks(), pdefender.getName(), true);
 
-        // Send Attack Event so Client can play a sound
+        // Send Attack Event so client can play a sound
         server.campaign.CampaignMain.cm.toUser(generateAttackDialogCall(), pdefender.getName(), false);
 
         // message is extraneous now. null it.

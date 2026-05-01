@@ -30,7 +30,7 @@
  * <https://www.xbox.com/en-US/developers/rules> and it is not endorsed by or
  * affiliated with Microsoft.
  */
-package mekwars.common.campaign.clientutils.protocol;
+package mekwars.common.threads;
 
 import java.io.PrintStream;
 import java.util.Vector;

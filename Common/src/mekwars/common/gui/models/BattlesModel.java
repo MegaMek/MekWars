@@ -1,18 +1,27 @@
 package mekwars.common.gui.models;
 
+import java.awt.Component;
+import java.io.Serial;
+import java.util.ArrayList;
+import java.util.List;
+import javax.swing.JTable;
+import javax.swing.table.AbstractTableModel;
+import javax.swing.table.DefaultTableCellRenderer;
+
 import mekwars.common.MMGame;
 import mekwars.common.gui.panels.CBattlePanel;
 
-public class BattlesModel extends javax.swing.table.AbstractTableModel {
+public class BattlesModel extends AbstractTableModel {
 
     public final static int NAME = 0;
-    public final static int PLAYERCOUNT = 1;
+    public final static int PLAYER_COUNT = 1;
     public final static int VERSION = 2;
     public final static int COMMENT = 3;
-    public final static int PLAYERNAMES = 4;
+    public final static int PLAYER_NAMES = 4;
     /**
      *
      */
+    @Serial
     private static final long serialVersionUID = -6384905445657195650L;
     final String[] columnNames = {
           "Name",
@@ -29,21 +38,29 @@ public class BattlesModel extends javax.swing.table.AbstractTableModel {
           "XXXXXXXXXXXXXXXXX",
           };
     private final CBattlePanel cBattlePanel;
-    public Object[] sortedGames; //not really though, sort is handled elsewhere...
+    private List<MMGame> sortedGames; //not really though, sort is handled elsewhere...
 
     public BattlesModel(CBattlePanel cBattlePanel) {
         this.cBattlePanel = cBattlePanel;
-        this.sortedGames = cBattlePanel.mwclient.getServers().values().toArray();
+        this.sortedGames = new ArrayList<>(cBattlePanel.getClient().getServers().values());
+    }
+
+    public List<MMGame> getSortedGames() {
+        return sortedGames;
+    }
+
+    public CBattlePanel getCBattlePanel() {
+        return cBattlePanel;
     }
 
     public void refreshModel() {
         //do a resort
-        this.sortedGames = cBattlePanel.mwclient.getServers().values().toArray();
+        this.sortedGames = new ArrayList<>(cBattlePanel.getClient().getServers().values());
         this.fireTableDataChanged();
     }
 
     public int getRowCount() {
-        return this.sortedGames.length;
+        return this.sortedGames.size();
     }
 
     public int getColumnCount() {
@@ -52,28 +69,36 @@ public class BattlesModel extends javax.swing.table.AbstractTableModel {
 
     public Object getValueAt(int row, int col) {
 
-        if (row < 0) {return "";}
+        if (row < 0) {
+            return "";
+        }
 
-        if (row >= sortedGames.length) {return "";}
+        if (row >= sortedGames.size()) {
+            return "";
+        }
 
-        MMGame aGame = (MMGame) this.sortedGames[row];
+        MMGame aGame = sortedGames.get(row);
 
         switch (col) {
             case NAME:
                 return aGame.getHostName();
-            case PLAYERCOUNT:
-                return aGame.getCurrentPlayers().size() + "/" + aGame.getMaxPlayers();
+            case PLAYER_COUNT:
+                return STR."\{aGame.getCurrentPlayers().size()}/\{aGame.getMaxPlayers()}";
             case VERSION:
                 return aGame.getVersion();
             case COMMENT:
                 return aGame.getComment();
-            case PLAYERNAMES:
+            case PLAYER_NAMES:
 
-                StringBuffer result = new StringBuffer();
-                for (String currName : aGame.getCurrentPlayers()) {result.append(currName + ", ");}
+                StringBuilder result = new StringBuilder();
+                for (String currName : aGame.getCurrentPlayers()) {
+                    result.append(currName).append(", ");
+                }
 
                 String toReturn = result.toString().trim();
-                if (toReturn.lastIndexOf(",") >= 0) {toReturn = toReturn.substring(0, toReturn.lastIndexOf(","));}
+                if (toReturn.lastIndexOf(",") >= 0) {
+                    toReturn = toReturn.substring(0, toReturn.lastIndexOf(","));
+                }
 
                 return toReturn;
         }
@@ -86,52 +111,60 @@ public class BattlesModel extends javax.swing.table.AbstractTableModel {
         return (columnNames[col]);
     }
 
-    @Override
-    public boolean isCellEditable(int row, int col) {
-        return false;
-    }
-
     public Renderer getRenderer() {
-        return new Renderer();
+        return new Renderer(this);
     }
 
     /*
      * Renderer cannot be static because it uses parent data structs.
      */
-
-    class Renderer extends javax.swing.table.DefaultTableCellRenderer {
+    public static class Renderer extends DefaultTableCellRenderer {
 
         /**
          *
          */
+        @Serial
         private static final long serialVersionUID = -2353501701911884548L;
 
+        private final BattlesModel battlesModel;
+
+        public Renderer(BattlesModel battlesModel) {
+            this.battlesModel = battlesModel;
+        }
+
         @Override
-        public java.awt.Component getTableCellRendererComponent(javax.swing.JTable table, Object value,
-              boolean isSelected, boolean hasFocus, int row, int column) {
-            java.awt.Component c = super.getTableCellRendererComponent(table,
+        public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus,
+              int row, int column) {
+            Component tableCellRendererComponent = super.getTableCellRendererComponent(table,
                   value,
                   isSelected,
                   hasFocus,
                   row,
                   column);
 
-            if (sortedGames.length <= row) {return c;}
-            if (isSelected) {return c;}
+            if (battlesModel.getSortedGames().size() <= row) {
+                return tableCellRendererComponent;
+            }
 
-            String gameName = (String) cBattlePanel.battleSorter.getValueAt(row, 0);//host name
-            MMGame game = cBattlePanel.mwclient.getServers().get(gameName);
+            if (isSelected) {
+                return tableCellRendererComponent;
+            }
+
+            String gameName = (String) battlesModel.getCBattlePanel().getBattleSorter().getValueAt(row, 0);//host name
+            MMGame game = battlesModel.getCBattlePanel().getClient().getServers().get(gameName);
 
             //set background color
             if (game.getCurrentPlayers().size() >= game.getMaxPlayers()) {
-                c.setBackground(java.awt.Color.red);
+                tableCellRendererComponent.setBackground(java.awt.Color.red);
             } else if (game.getStatus().equals("Open")) {
-                c.setBackground(java.awt.Color.green);
-            } else if (game.getStatus().equals("Running")) {c.setBackground(java.awt.Color.yellow);} else {
-                c.setBackground(getBackground());
+                tableCellRendererComponent.setBackground(java.awt.Color.green);
+            } else if (game.getStatus().equals("Running")) {
+                tableCellRendererComponent.setBackground(java.awt.Color.yellow);
+            } else {
+                tableCellRendererComponent.setBackground(getBackground());
             }
 
-            return c;
+            return tableCellRendererComponent;
         }
     }
 }

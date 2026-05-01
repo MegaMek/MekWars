@@ -15,19 +15,22 @@
  * for more details.
  */
 
-package mekwars.client.gui;
+package mekwars.common.gui;
 
-import common.Unit;
-import common.campaign.pilot.Pilot;
-import common.util.TokenReader;
+import java.util.StringTokenizer;
+
 import megamek.client.generator.RandomGenderGenerator;
-import megamek.common.BattleArmor;
-import megamek.common.CrewType;
-import megamek.common.Entity;
-import megamek.common.Infantry;
-import megamek.common.Mech;
-import megamek.common.Protomech;
-import megamek.common.QuadMech;
+import megamek.common.battleArmor.BattleArmor;
+import megamek.common.units.Crew;
+import megamek.common.units.CrewType;
+import megamek.common.units.Entity;
+import megamek.common.units.Infantry;
+import megamek.common.units.Mek;
+import megamek.common.units.ProtoMek;
+import mekwars.common.Unit;
+import mekwars.common.campaign.CUnit;
+import mekwars.common.campaign.pilot.Pilot;
+import mekwars.common.util.TokenReader;
 
 public class HSMek {
 
@@ -38,9 +41,9 @@ public class HSMek {
     String type;
     String battleDamage = "";
 
-    client.campaign.CUnit embeddedUnit;//bury a CUnit in HSMek, a la BMUnit
+    CUnit embeddedUnit;//bury a CUnit in HSMek, a la BMUnit
 
-    public HSMek(client.MWClient mwclient, java.util.StringTokenizer tokenizer) {
+    public HSMek(StringTokenizer tokenizer) {
 
         MekFile = TokenReader.readString(tokenizer);
         unitID = TokenReader.readInt(tokenizer);
@@ -53,7 +56,7 @@ public class HSMek {
         }
 
         //bury a CUnit
-        embeddedUnit = new client.campaign.CUnit();
+        embeddedUnit = new CUnit();
         embeddedUnit.setUnitFilename(MekFile);
         embeddedUnit.createEntity();
 
@@ -82,7 +85,7 @@ public class HSMek {
          * a faction-default crew. See CHSPanel.java for usage.
          */
         embeddedUnit.getEntity()
-              .setCrew(new megamek.common.Crew(CrewType.SINGLE,
+              .setCrew(new Crew(CrewType.SINGLE,
                     "Generic Pilot",
                     1,
                     factionGunnery,
@@ -93,32 +96,28 @@ public class HSMek {
                     null));
 
         //set type
-        Entity e = embeddedUnit.getEntity();
-        if ((e instanceof Mech) || (e instanceof QuadMech)) {
-            type = "Mek";
-        } else if (e instanceof Protomech) {
-            type = "Protomek";
-        } else if (e instanceof BattleArmor) {
-            type = "BattleArmor";
-        } else if (e instanceof Infantry) {
-            type = "Infantry";
-        } else {
-            type = "Vehicle";
+        Entity entity = embeddedUnit.getEntity();
+        switch (entity) {
+            case Mek _ -> type = "Mek";
+            case ProtoMek _ -> type = "ProtoMek";
+            case BattleArmor _ -> type = "BattleArmor";
+            case Infantry _ -> type = "Infantry";
+            case null, default -> type = "Vehicle";
         }
 
         //vehicles and inf prepend chassis
         if (type.equalsIgnoreCase("Mek")) {
-            if (e.isOmni()) {
-                name = e.getChassis() + " " + e.getModel();
+            if (entity.isOmni()) {
+                name = STR."\{entity.getChassis()} \{entity.getModel()}";
             } else {
-                if (e.getModel().trim().length() > 0) {
-                    name = e.getModel().trim();
+                if (!entity.getModel().trim().isEmpty()) {
+                    name = entity.getModel().trim();
                 } else {
-                    name = e.getChassis().trim();
+                    name = entity.getChassis().trim();
                 }
             }
         } else {
-            name = e.getShortNameRaw();
+            name = entity.getShortNameRaw();
         }
     }
 
@@ -131,7 +130,7 @@ public class HSMek {
     }
 
     public String getName() {
-        return name.toString();
+        return name;
     }
 
     public String getType() {

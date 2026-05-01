@@ -47,7 +47,7 @@ import mekwars.common.util.TokenReader;
 /**
  * @author Torren (Jason Tighe)
  *       <p>
- *       Client-side holder of Personal Pilot Queue information. The queue is a collection of pilots, managed by a
+ *       client-side holder of Personal Pilot Queue information. The queue is a collection of pilots, managed by a
  *       player, which may be moved between eligible units (restricted by type and weightclass). This client-side
  *       representation is necessary in order to draw menus and controls in the CHQPanel.
  */

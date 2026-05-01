@@ -78,10 +78,10 @@ public class SplashWindow {
         splashImage.setImage(tempImage);
 
         //format the label
-        JLabel imageLabel = new JLabel("<HTML><CENTER>MekWars Client " +
+        JLabel imageLabel = new JLabel("<HTML><CENTER>MekWars client " +
                                              "Update With Version Capture" +
                                              "</CENTER></HTML>", splashImage, SwingConstants.CENTER);
-        splashWindow.setTitle("MekWars Client " + "Update WIth Version Capture");
+        splashWindow.setTitle("MekWars client " + "Update With Version Capture");
         imageLabel.setVerticalTextPosition(SwingConstants.BOTTOM);
         imageLabel.setHorizontalTextPosition(SwingConstants.CENTER);
         imageLabel.setVerticalTextPosition(SwingConstants.BOTTOM);

@@ -49,7 +49,7 @@ import mekwars.common.util.MWLogger;
 import mekwars.common.util.TokenReader;
 
 /**
- * Class for Campaign object used by Client
+ * Class for Campaign object used by client
  * TODO: Rewrite command decoding. Its crazy right now.
  * TODO: Properly comment this class.
  */
@@ -199,7 +199,7 @@ public class CCampaign {
     }
 
     /**
-     * Method that removes a unit from the Client's BM representation.
+     * Method that removes a unit from the client's BM representation.
      */
     public void removeBMUnit(String command) {
         BlackMarket.remove(Integer.valueOf(command));

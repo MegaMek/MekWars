@@ -46,12 +46,15 @@ package mekwars.common.campaign.clientutils.protocol;
 
 import java.io.IOException;
 import java.net.Socket;
+import java.util.Base64;
 
+import megamek.logging.MMLogger;
 import mekwars.common.gui.SplashWindow;
-import mekwars.common.util.MWLogger;
 
 public class CConnector implements IConnectionListener {
-    protected IClient Client;
+    final private static MMLogger LOGGER = MMLogger.create(CConnector.class);
+
+    protected IClient client;
 
     protected String _host = "";
     protected int _port = -1;
@@ -60,13 +63,25 @@ public class CConnector implements IConnectionListener {
     private SplashWindow splash;
 
     public CConnector(IClient client) {
-        Client = client;
+        this.client = client;
     }
 
     public CConnector(IClient client, String host, int port) {
-        Client = client;
+        this.client = client;
         _host = host;
         _port = port;
+    }
+
+    public static String encode(String data) {
+        return encode(data.getBytes());
+    }
+
+    public static String encode(byte[] data) {
+        return Base64.getEncoder().encodeToString(data);
+    }
+
+    public static byte[] decode(String data) {
+        return Base64.getDecoder().decode(data);
     }
 
     public boolean isConnected() {
@@ -77,7 +92,7 @@ public class CConnector implements IConnectionListener {
      * This method is called by ConnectionHandlerLocal when a new message comes in from the server.
      */
     public void incomingMessage(String message) {
-        Client.processIncoming(message);
+        client.processIncoming(message);
     }
 
     /**
@@ -86,7 +101,7 @@ public class CConnector implements IConnectionListener {
      */
     public void socketClosed() {
         _connected = false;
-        Client.connectionLost();
+        client.connectionLost();
     }
 
     /**
@@ -96,8 +111,9 @@ public class CConnector implements IConnectionListener {
         if (!message.contains("CH%7c%2fc+sendclientdata%23")
                   && !message.contains("CH%7c%2fc+sendtomisc%23")
                   && !message.contains("/pong")) {
-            MWLogger.infoLog(STR."SENT: \{message}");
+            LOGGER.info("SENT: {}", message);
         }
+
         _connectionHandler.queueMessage(message);
     }
 
@@ -115,44 +131,33 @@ public class CConnector implements IConnectionListener {
     }
 
     public void connect() {
+        if (_connected) {
+            LOGGER.info("Already connected...");
+            return;
+        }
+
+        if (_host.isEmpty() || _port == -1) {
+            LOGGER.info("no host or port set...");
+            return;
+        }
+
+        LOGGER.info("Opening socket connection to {}: {}", _host, _port);
+        Socket socket;
 
         try {
-            if (_connected) {
-                MWLogger.errLog("already connected...");
-                return;
-            }
+            socket = new Socket(_host, _port);
+            LOGGER.info("CConnector: connected to {}:{}", _host, _port);
+            socket.setTcpNoDelay(true);
+            _connectionHandler = new ConnectionHandlerLocal(socket);
+            _connectionHandler.setListener(this);
+            _connected = true;
+            client.connectionEstablished();
+        } catch (IOException ex) {
+            LOGGER.error(ex, "Failed to Connect: {}", ex.getMessage());
 
-            if (_host.isEmpty() || _port == -1) {
-                MWLogger.errLog("no host or port set...");
-                return;
-            }
-
-            IOException ioexception = null;
-
-            MWLogger.errLog(STR."Opening socket connection to \{_host}:\{_port}");
-            Socket s;
-            try {
-                s = new Socket(_host, _port);
-                MWLogger.errLog(STR."CConnector: connected to \{_host}:\{_port}");
-                s.setTcpNoDelay(true);
-                _connectionHandler = new ConnectionHandlerLocal(s);
-                _connectionHandler.setListener(this);
-                _connected = true;
-                Client.connectionEstablished();
-                return;
-            } catch (IOException e) {
-                ioexception = e;
-            }
-
-            MWLogger.errLog("giving up");
-
-            throw ioexception;
-        } catch (IOException e) {
             if (splash != null) {
                 splash.setStatus(splash.STATUS_CONNECT_FAILED);
             }
-
-            MWLogger.errLog(e);
         }
     }
 

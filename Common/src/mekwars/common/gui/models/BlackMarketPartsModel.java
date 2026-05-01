@@ -13,7 +13,7 @@
  * for more details.
  */
 
-package mekwars.client.gui;
+package mekwars.common.gui.models;
 
 import mekwars.common.BMEquipment;
 import mekwars.common.campaign.CCampaign;
@@ -77,7 +77,7 @@ public class BlackMarketPartsModel extends javax.swing.table.AbstractTableModel 
         java.awt.Component comp = null;
         int headerWidth = 0;
         int cellWidth = 0;
-        mekwars.client.gui.BlackMarketPartsModel model = this;
+        mekwars.common.gui.models.BlackMarketPartsModel model = this;
         for (int i = 0; i < getColumnCount(); i++) {
             column = table.getColumnModel().getColumn(i);
             comp = table.getDefaultRenderer(model.getColumnClass(i))
@@ -138,8 +138,8 @@ public class BlackMarketPartsModel extends javax.swing.table.AbstractTableModel 
         return false;
     }
 
-    public mekwars.client.gui.BlackMarketPartsModel.Renderer getRenderer() {
-        return new mekwars.client.gui.BlackMarketPartsModel.Renderer();
+    public mekwars.common.gui.models.BlackMarketPartsModel.Renderer getRenderer() {
+        return new mekwars.common.gui.models.BlackMarketPartsModel.Renderer();
     }
 
     /*
@@ -164,7 +164,7 @@ public class BlackMarketPartsModel extends javax.swing.table.AbstractTableModel 
                       row < 0 ||
                       !components.containsKey(table.getModel()
                                                     .getValueAt(row,
-                                                          mekwars.client.gui.BlackMarketPartsModel.INTERNALPART))) {
+                                                          mekwars.common.gui.models.BlackMarketPartsModel.INTERNALPART))) {
                 return c;
             }
             if (table.getModel().getValueAt(row, column) != null) {
@@ -174,7 +174,7 @@ public class BlackMarketPartsModel extends javax.swing.table.AbstractTableModel 
 
             BMEquipment bme = components.get(table.getModel()
                                                    .getValueAt(row,
-                                                         mekwars.client.gui.BlackMarketPartsModel.INTERNALPART));
+                                                         mekwars.common.gui.models.BlackMarketPartsModel.INTERNALPART));
             String description = "<html><body>" +
                                        bme.getEquipmentName() +
                                        " C:" +

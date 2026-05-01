@@ -42,10 +42,13 @@ import java.util.Vector;
 
 import megamek.common.game.Game;
 import megamek.common.options.IBasicOption;
+import megamek.common.units.Entity;
 import mekwars.common.AdvancedTerrain;
 import mekwars.common.CampaignData;
 import mekwars.common.Equipment;
+import mekwars.common.Influences;
 import mekwars.common.MMGame;
+import mekwars.common.Planet;
 import mekwars.common.PlanetEnvironment;
 import mekwars.common.campaign.Buildings;
 import mekwars.common.campaign.CCampaign;
@@ -323,4 +326,12 @@ public interface IClient {
     void setLastQuery(String name);
 
     ArrayList<String> getPartialUser(String text);
+
+    Map<Integer, Influences> getChangesSinceLastRefresh();
+
+    int getMinPlanetOwnerShip(Planet planet);
+
+    int getTechLaborCosts(Entity entity, int techGreen);
+
+    double getTotalRepairCosts(Entity entity);
 }

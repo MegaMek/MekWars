@@ -1,26 +1,48 @@
 package mekwars.common.gui.adapters;
 
+import java.awt.Component;
 import java.awt.Cursor;
+import java.awt.Graphics2D;
 import java.awt.Image;
 import java.awt.Point;
+import java.awt.Toolkit;
+import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.MouseEvent;
+import java.awt.geom.AffineTransform;
 import java.awt.geom.Rectangle2D;
+import java.awt.image.FilteredImageSource;
+
+import javax.swing.JComboBox;
+import javax.swing.JDialog;
+import javax.swing.JFrame;
+import javax.swing.JMenu;
+import javax.swing.JMenuItem;
+import javax.swing.JOptionPane;
+import javax.swing.JPopupMenu;
 import javax.swing.event.MouseInputAdapter;
 
+import megamek.common.units.Entity;
 import megamek.common.units.Infantry;
+import megamek.common.units.Mek;
 import mekwars.common.Army;
 import mekwars.common.Unit;
 import mekwars.common.campaign.CArmy;
+import mekwars.common.campaign.CBMUnit;
 import mekwars.common.campaign.CUnit;
+import mekwars.common.campaign.clientutils.protocol.IClient;
 import mekwars.common.campaign.pilot.Pilot;
 import mekwars.common.gui.AttackMenu;
 import mekwars.common.gui.MWUnitDisplay;
+import mekwars.common.gui.MekInfo;
 import mekwars.common.gui.dialogs.AdvancedRepairDialog;
 import mekwars.common.gui.dialogs.BulkRepairDialog;
 import mekwars.common.gui.dialogs.CustomUnitDialog;
 import mekwars.common.gui.dialogs.PromotePilotDialog;
+import mekwars.common.gui.filters.AlphaFilter;
 import mekwars.common.gui.panels.CHQPanel;
 import mekwars.common.util.UnitUtils;
+import org.jspecify.annotations.NonNull;
 
 public class MekTableMouseAdapter extends MouseInputAdapter implements ActionListener {
 
@@ -46,289 +68,110 @@ public class MekTableMouseAdapter extends MouseInputAdapter implements ActionLis
         super();
         this.chqPanel = chqPanel;
 
-        java.awt.Image plusI = java.awt.Toolkit.getDefaultToolkit().createImage("./data/images/hqadd.gif");
-        java.awt.Image minusI = java.awt.Toolkit.getDefaultToolkit().createImage("./data/images/hqremove.gif");
-        java.awt.Image exchangeI = java.awt.Toolkit.getDefaultToolkit().createImage("./data/images/hqexchange.gif");
-        java.awt.Image positionI = java.awt.Toolkit.getDefaultToolkit().createImage("./data/images/hqposition.gif");
-        java.awt.Image notallowedI = java.awt.Toolkit.getDefaultToolkit()
-                                           .createImage("./data/images/hqnotallowed.gif");
-        java.awt.Image dupeI = java.awt.Toolkit.getDefaultToolkit().createImage("./data/images/hqdouble.gif");
-        java.awt.Image maxI = java.awt.Toolkit.getDefaultToolkit().createImage("./data/images/hqmax.gif");
-        addCursor = java.awt.Toolkit.getDefaultToolkit()
-                          .createCustomCursor(plusI, new java.awt.Point(0, 0), "addcursor");
-        removeCursor = java.awt.Toolkit.getDefaultToolkit()
-                             .createCustomCursor(minusI, new java.awt.Point(0, 0), "removecursor");
-        exchangeCursor = java.awt.Toolkit.getDefaultToolkit()
-                               .createCustomCursor(exchangeI, new java.awt.Point(0, 0), "exchangecursor");
-        positionCursor = java.awt.Toolkit.getDefaultToolkit()
-                               .createCustomCursor(positionI, new java.awt.Point(0, 0), "positioncursor");
-        notAllowedCursor = java.awt.Toolkit.getDefaultToolkit()
-                                 .createCustomCursor(notallowedI, new java.awt.Point(0, 0), "noallowedcursor");
-        dupeCursor = java.awt.Toolkit.getDefaultToolkit()
-                           .createCustomCursor(dupeI, new java.awt.Point(0, 0), "dupecursor");
-        maxCursor = java.awt.Toolkit.getDefaultToolkit()
-                          .createCustomCursor(maxI, new java.awt.Point(0, 0), "maxcursor");
+        Image plusI = Toolkit.getDefaultToolkit().createImage("./data/images/hqadd.gif");
+        Image minusI = Toolkit.getDefaultToolkit().createImage("./data/images/hqremove.gif");
+        Image exchangeI = Toolkit.getDefaultToolkit().createImage("./data/images/hqexchange.gif");
+        Image positionI = Toolkit.getDefaultToolkit().createImage("./data/images/hqposition.gif");
+        Image notAllowedI = Toolkit.getDefaultToolkit().createImage("./data/images/hqnotallowed.gif");
+        Image dupeI = Toolkit.getDefaultToolkit().createImage("./data/images/hqdouble.gif");
+        Image maxI = Toolkit.getDefaultToolkit().createImage("./data/images/hqmax.gif");
+        addCursor = Toolkit.getDefaultToolkit().createCustomCursor(plusI, new Point(0, 0), "addcursor");
+        removeCursor = Toolkit.getDefaultToolkit().createCustomCursor(minusI, new Point(0, 0), "removecursor");
+        exchangeCursor = Toolkit.getDefaultToolkit().createCustomCursor(exchangeI, new Point(0, 0), "exchangecursor");
+        positionCursor = Toolkit.getDefaultToolkit().createCustomCursor(positionI, new Point(0, 0), "positioncursor");
+        notAllowedCursor = Toolkit.getDefaultToolkit()
+                                 .createCustomCursor(notAllowedI, new Point(0, 0), "noallowedcursor");
+        dupeCursor = Toolkit.getDefaultToolkit().createCustomCursor(dupeI, new Point(0, 0), "dupecursor");
+        maxCursor = Toolkit.getDefaultToolkit().createCustomCursor(maxI, new Point(0, 0), "maxcursor");
     }
 
     @Override
-    public void mouseClicked(java.awt.event.MouseEvent e) {
+    public void mouseClicked(MouseEvent e) {
 
         if (e.getClickCount() == 2) {
 
-            int row = chqPanel.tblMeks.rowAtPoint(e.getPoint());
-            int col = chqPanel.tblMeks.columnAtPoint(e.getPoint());
-            client.campaign.CUnit mek = chqPanel.MekTable.getMekAt(row, col);
+            int row = chqPanel.getTableMeks().rowAtPoint(e.getPoint());
+            int col = chqPanel.getTableMeks().columnAtPoint(e.getPoint());
+            CUnit mek = chqPanel.getMekTable().getMekAt(row, col);
 
             if (mek != null) {
-                javax.swing.JFrame infoWindow = new javax.swing.JFrame();
-                UnitDisplay unitdisplay = new MWUnitDisplay(null, chqPanel.client);
+                JFrame infoWindow = new JFrame();
+                MWUnitDisplay unitDisplay = new MWUnitDisplay(null, chqPanel.getClient());
                 Entity theEntity = mek.getEntity();
                 theEntity.loadAllWeapons();
-                infoWindow.getContentPane().add(unitdisplay);
+                infoWindow.getContentPane().add(unitDisplay);
                 infoWindow.setSize(300, 400);
                 infoWindow.setResizable(false);
                 infoWindow.setTitle(mek.getModelName());
                 infoWindow.setLocationRelativeTo(null);
                 infoWindow.setVisible(true);
-                unitdisplay.displayEntity(theEntity);
+                unitDisplay.displayEntity(theEntity);
             }
         }
-        chqPanel.tblMeks.repaint();
+        chqPanel.getTableMeks().repaint();
     }
 
     // METHODS
     @Override
-    public void mousePressed(java.awt.event.MouseEvent e) {
+    public void mousePressed(MouseEvent mouseEvent) {
 
-        int row = chqPanel.tblMeks.rowAtPoint(e.getPoint());
-        int col = chqPanel.tblMeks.columnAtPoint(e.getPoint());
-        dragUnit = chqPanel.MekTable.getMekAt(row, col);
-        startArmy = chqPanel.MekTable.getArmyAt(row);
+        int row = chqPanel.getTableMeks().rowAtPoint(mouseEvent.getPoint());
+        int col = chqPanel.getTableMeks().columnAtPoint(mouseEvent.getPoint());
+        dragUnit = chqPanel.getMekTable().getMekAt(row, col);
+        startArmy = chqPanel.getMekTable().getArmyAt(row);
 
-        if ((dragUnit != null) && (e.getButton() == java.awt.event.MouseEvent.BUTTON1)) {
+        if ((dragUnit != null) && (mouseEvent.getButton() == MouseEvent.BUTTON1)) {
 
             // make isDrag true and save origins
             isDrag = true;
 
             // determine the offset
-            offset = new java.awt.Point(28, 22);// TODO: Make this a real offset,
+            offset = new Point(28, 22);// TODO: Make this a real offset,
             // not a simple re-centering.
 
-            // Get a MechInfo image from the table cell renderer. The
+            // Get a MekInfo image from the table cell renderer. The
             // renderer sets entity, camo etc. as part of normal drawing.
-            MechInfo unitImage = (MechInfo) chqPanel.tblMeks.getCellRenderer(row, col)
-                                                  .getTableCellRendererComponent(chqPanel.tblMeks,
-                                                        null,
-                                                        false,
-                                                        false,
-                                                        row,
-                                                        col);
+            MekInfo unitImage = (MekInfo) chqPanel.getTableMeks().getCellRenderer(row, col)
+                                                .getTableCellRendererComponent(chqPanel.getTableMeks(),
+                                                      null,
+                                                      false,
+                                                      false,
+                                                      row,
+                                                      col);
 
             // save the image, drawn from mechinfo, to use as a drag
             // under-image
             dragImage = unitImage.getEmbeddedImage();
-            dragRect = new java.awt.geom.Rectangle2D.Float();
-            dragRect.setRect(e.getX(), e.getY(), 84, 72);
+            dragRect = new Rectangle2D.Float();
+            dragRect.setRect(mouseEvent.getX(), mouseEvent.getY(), 84, 72);
 
             // give the image some alpha
-            CHQPanel.AlphaFilter aFilter = new CHQPanel.AlphaFilter(95);
-            dragImage = java.awt.Toolkit.getDefaultToolkit()
-                              .createImage(new java.awt.image.FilteredImageSource(dragImage.getSource(), aFilter));
+            AlphaFilter aFilter = new AlphaFilter(95);
+            dragImage = Toolkit.getDefaultToolkit()
+                              .createImage(new FilteredImageSource(dragImage.getSource(), aFilter));
         }
 
         /*
          * and ... check to see if this should trigger a popup.
          */
-        maybeShowPopup(e);
-    }
-
-    @Override
-    public void mouseReleased(java.awt.event.MouseEvent e) {
-
-        /*
-         * If this was a drag, try to drop the unit into a target army or the hangar.
-         */
-        if (isDrag) {
-
-            // regardless of outcome, clear drag image.
-            chqPanel.tblMeks.paintImmediately(dragRect.getBounds());
-
-            boolean validRelease = false;
-            if (chqPanel.tblMeks.contains(e.getPoint())) {
-                validRelease = true;
-            }
-
-            int row = chqPanel.tblMeks.rowAtPoint(e.getPoint());
-            int col = chqPanel.tblMeks.columnAtPoint(e.getPoint());
-            client.campaign.CUnit exchangeUnit = chqPanel.MekTable.getMekAt(row, col);
-            currArmy = chqPanel.MekTable.getArmyAt(row);
-
-            // null finish army. moving to hangar.
-            if ((currArmy == null) && validRelease) {
-
-                // if the unit is from an army, remove it
-                if (startArmy != null) {
-                    chqPanel.client.sendChat(chqPanel.client.MWClient.CAMPAIGN_PREFIX +
-                                                   "c EXM#" +
-                                                   startArmy.getID() +
-                                                   "," +
-                                                   dragUnit.getId());
-                }
-
-            }// end if(release over hangar)
-
-            // finish army exists
-            else if (validRelease) {
-
-                // from hangar to an army
-                if (startArmy == null) {
-
-                    // army # or empty space. add the unit.
-                    if (exchangeUnit == null) {
-                        chqPanel.client.sendChat(
-                              chqPanel.client.MWClient.CAMPAIGN_PREFIX +
-                                    "c EXM#" +
-                                    currArmy.getID() +
-                                    ",-1" +
-                                    "#" +
-                                    dragUnit.getId());
-                    } else if (dragUnit.getId() != exchangeUnit.getId()) {
-                        chqPanel.client.sendChat(chqPanel.client.MWClient.CAMPAIGN_PREFIX +
-                                                       "c EXM#" +
-                                                       currArmy.getID() +
-                                                       "," +
-                                                       exchangeUnit.getId() +
-                                                       "#" +
-                                                       dragUnit.getId());
-                    }
-                }
-
-                // within the same army, change positions
-                else if ((currArmy.getID() == startArmy.getID()) &&
-                               (exchangeUnit != null) &&
-                               (dragUnit.getId() != exchangeUnit.getId())) {
-                    int newpos = 0;
-                    for (Unit currU : currArmy.getUnits()) {
-                        if (currU.getId() == exchangeUnit.getId()) {
-                            break;
-                        }
-                        newpos++;
-                    }
-                    chqPanel.client.sendChat(
-                          chqPanel.client.MWClient.CAMPAIGN_PREFIX +
-                                "c unitposition#" +
-                                startArmy.getID() +
-                                "#" +
-                                dragUnit.getId() +
-                                "#" +
-                                newpos);
-                }
-
-            }// end else(target army exists)
-
-            // revert to normal cursor
-            chqPanel.tblMeks.setCursor(java.awt.Cursor.getDefaultCursor());
-
-        }// end if(isDrag)
-
-        isDrag = false;
-        maybeShowPopup(e);
-    }
-
-    @Override
-    public void mouseDragged(java.awt.event.MouseEvent e) {
-
-        if (isDrag) {
-
-            // repaint the old image location
-            chqPanel.tblMeks.paintImmediately(dragRect.getBounds());
-
-            // determine new boundaries for the rectangle
-            dragRect.setRect(e.getX() - offset.x, e.getY() - offset.y, 84, 72);
-
-            // place the label in a new location
-            java.awt.Graphics2D g = (java.awt.Graphics2D) chqPanel.tblMeks.getGraphics();
-            g.drawImage(dragImage,
-                  java.awt.geom.AffineTransform.getTranslateInstance(dragRect.getX(), dragRect.getY()),
-                  null);
-
-            /*
-             * Update the cursor depending on current drag status. If dragging a unit into an army which already contains the unit, mark ineligible. Else, show the drag cursor.
-             */
-            int row = chqPanel.tblMeks.rowAtPoint(e.getPoint());
-            int col = chqPanel.tblMeks.columnAtPoint(e.getPoint());
-            client.campaign.CUnit currUnit = chqPanel.MekTable.getMekAt(row, col);
-            currArmy = chqPanel.MekTable.getArmyAt(row);
-
-            // null curr army. is an attempt to move to hangar.
-            if (currArmy == null) {
-
-                // if the unit is from an army, could remove. show minus.
-                if ((startArmy != null) && (chqPanel.client.getMyStatus() == chqPanel.client.MWClient.STATUS_RESERVE)) {
-                    chqPanel.tblMeks.setCursor(removeCursor);
-                } else if (startArmy != null) {
-                    chqPanel.tblMeks.setCursor(notAllowedCursor);
-                } else {
-                    chqPanel.tblMeks.setCursor(java.awt.Cursor.getDefaultCursor());
-                }
-
-            }// end if(release over hangar)
-
-            // currArmy exists
-            else {
-
-                // from hangar to an army
-                if (startArmy == null) {
-
-                    if (chqPanel.client.getMyStatus() != chqPanel.client.MWClient.STATUS_RESERVE) {
-                        chqPanel.tblMeks.setCursor(notAllowedCursor);
-                    } else if (chqPanel.Player.getAmountOfTimesUnitExistsInArmies(dragUnit.getId()) >=
-                                     Integer.parseInt(chqPanel.client.getserverConfigs("UnitsInMultipleArmiesAmount"))) {
-                        chqPanel.tblMeks.setCursor(maxCursor);
-                    } else if (currArmy.getUnit(dragUnit.getId()) != null) {
-                        chqPanel.tblMeks.setCursor(dupeCursor);
-                    } else if (currUnit == null) {
-                        chqPanel.tblMeks.setCursor(addCursor);
-                    } else if (dragUnit.getId() != currUnit.getId()) {
-                        chqPanel.tblMeks.setCursor(exchangeCursor);
-                    }
-                }
-
-                // within the same army, change positions
-                else if (currArmy.getID() == startArmy.getID()) {
-
-                    if ((currUnit != null) &&
-                              (dragUnit.getId() != currUnit.getId()) &&
-                              (chqPanel.client.getMyStatus() != chqPanel.client.MWClient.STATUS_FIGHTING)) {
-                        chqPanel.tblMeks.setCursor(positionCursor);
-                    } else {
-                        chqPanel.tblMeks.setCursor(notAllowedCursor);
-                    }
-                } else {
-                    chqPanel.tblMeks.setCursor(java.awt.Cursor.getDefaultCursor());
-                }
-
-            }// end else(target army exists)
-
-        }
-
+        maybeShowPopup(mouseEvent);
     }
 
     /**
      * Private method called on click and release. Checks to see if if mouse event should open a contextual menu (right
      * click, OS X control+click, etc) and shows a popup menu if appropriate.
      */
-    private void maybeShowPopup(java.awt.event.MouseEvent e) {
-        javax.swing.JPopupMenu popup = new javax.swing.JPopupMenu();
-        if (e.isPopupTrigger()) {
-            int row = chqPanel.tblMeks.rowAtPoint(e.getPoint());
-            int col = chqPanel.tblMeks.columnAtPoint(e.getPoint());
-            javax.swing.JMenuItem menuItem = null;
+    private void maybeShowPopup(MouseEvent mouseEvent) {
+        JPopupMenu popup = new JPopupMenu();
+        if (mouseEvent.isPopupTrigger()) {
+            int row = chqPanel.getTableMeks().rowAtPoint(mouseEvent.getPoint());
+            int col = chqPanel.getTableMeks().columnAtPoint(mouseEvent.getPoint());
+            JMenuItem menuItem;
 
-            if ((col == 0) && (row >= chqPanel.MekTable.getRowsForArmies())) {
-                javax.swing.JMenu primeSortMenu = new javax.swing.JMenu("Sort (1st)");
-                javax.swing.JMenu secondarySortMenu = new javax.swing.JMenu("Sort (2nd)");
-                javax.swing.JMenu tertiarySortMenu = new javax.swing.JMenu("Sort (3rd)");
+            if ((col == 0) && (row >= chqPanel.getMekTable().getRowsForArmies())) {
+                JMenu primeSortMenu = new JMenu("Sort (1st)");
+                JMenu secondarySortMenu = new JMenu("Sort (2nd)");
+                JMenu tertiarySortMenu = new JMenu("Sort (3rd)");
 
                 popup.add(primeSortMenu);
                 popup.add(secondarySortMenu);
@@ -341,19 +184,19 @@ public class MekTableMouseAdapter extends MouseInputAdapter implements ActionLis
                                      "No Sort" };
 
                 // indicate current selections w/ Italics
-                String menuName = "";
+                String menuName;
                 // boolean selectionFound = true;
 
                 // prime sort menu construction
                 for (int i = 0; i < choices.length; i++) {
 
                     menuName = choices[i];
-                    if (chqPanel.client.getConfigParam("PRIMARYHQSORTORDER").equals(choices[i])) {
-                        menuName = "<HTML><i>" + menuName + "</i></HTML>";
+                    if (chqPanel.getClient().getConfigParam("PRIMARYHQSORTORDER").equals(choices[i])) {
+                        menuName = STR."<HTML><i>\{menuName}</i></HTML>";
                         // selectionFound = false;
                     }
-                    menuItem = new javax.swing.JMenuItem(menuName);
-                    menuItem.setActionCommand("PHQS|" + choices[i]);
+                    menuItem = new JMenuItem(menuName);
+                    menuItem.setActionCommand(STR."PHQS|\{choices[i]}");
                     menuItem.addActionListener(this);
                     primeSortMenu.add(menuItem);
 
@@ -362,19 +205,18 @@ public class MekTableMouseAdapter extends MouseInputAdapter implements ActionLis
                     }
                 }
 
-                // reset selectionFound
-                // selectionFound = true;
-
                 // secondary sort menu construction
                 for (int i = 0; i < choices.length; i++) {
 
                     menuName = choices[i];
-                    if (chqPanel.client.getConfigParam("SECONDARYHQSORTORDER").equals(choices[i])) {
-                        menuName = "<HTML><i>" + menuName + "</i></HTML>";
+
+                    if (chqPanel.getClient().getConfigParam("SECONDARYHQSORTORDER").equals(choices[i])) {
+                        menuName = STR."<HTML><i>\{menuName}</i></HTML>";
                         // selectionFound = false;
                     }
-                    menuItem = new javax.swing.JMenuItem(menuName);
-                    menuItem.setActionCommand("SHQS|" + choices[i]);
+
+                    menuItem = new JMenuItem(menuName);
+                    menuItem.setActionCommand(STR."SHQS|\{choices[i]}");
                     menuItem.addActionListener(this);
                     secondarySortMenu.add(menuItem);
 
@@ -383,19 +225,17 @@ public class MekTableMouseAdapter extends MouseInputAdapter implements ActionLis
                     }
                 }
 
-                // reset selectionFound
-                // selectionFound = true;
-
                 // tertiary sort menu construction
                 for (int i = 0; i < choices.length; i++) {
 
                     menuName = choices[i];
-                    if (chqPanel.client.getConfigParam("TERTIARYHQSORTORDER").equals(choices[i])) {
-                        menuName = "<HTML><i>" + menuName + "</i></HTML>";
-                        // selectionFound = false;
+
+                    if (chqPanel.getClient().getConfigParam("TERTIARYHQSORTORDER").equals(choices[i])) {
+                        menuName = STR."<HTML><i>\{menuName}</i></HTML>";
                     }
-                    menuItem = new javax.swing.JMenuItem(menuName);
-                    menuItem.setActionCommand("THQS|" + choices[i]);
+
+                    menuItem = new JMenuItem(menuName);
+                    menuItem.setActionCommand(STR."THQS|\{choices[i]}");
                     menuItem.addActionListener(this);
                     tertiarySortMenu.add(menuItem);
 
@@ -404,130 +244,125 @@ public class MekTableMouseAdapter extends MouseInputAdapter implements ActionLis
                     }
                 }
 
-                popup.show(e.getComponent(), e.getX(), e.getY());
+                popup.show(mouseEvent.getComponent(), mouseEvent.getX(), mouseEvent.getY());
 
             } else if ((row < 0) || (col == 0)) {
-
-                client.campaign.CArmy l = chqPanel.MekTable.getArmyAt(row);
+                CArmy l = chqPanel.getMekTable().getArmyAt(row);
                 if (l != null) {
 
                     int lid = l.getID();
                     if (l.getBV() > 0) {
 
-                        /*
-                         * if (!l.isReady()){ menuItem = new JMenuItem("Set Active"); menuItem.setActionCommand("SA|"+lid); menuItem.addActionListener(this); popup.add(menuItem); } else { menuItem = new JMenuItem("Set Inactive"); menuItem.setActionCommand("SI|"+lid); menuItem.addActionListener(this); popup.add(menuItem); }
-                         */
-
-                        menuItem = new javax.swing.JMenuItem("Attack Options");
-                        menuItem.setActionCommand("AO|" + lid);
+                        menuItem = new JMenuItem("Attack Options");
+                        menuItem.setActionCommand(STR."AO|\{lid}");
                         menuItem.addActionListener(this);
-                        boolean canCheckFromReserve = Boolean.parseBoolean(chqPanel.client.getserverConfigs(
-                              "ProbeInReserve"));
-                        if ((chqPanel.client.getMyStatus() != chqPanel.client.MWClient.STATUS_ACTIVE) &&
-                                  !canCheckFromReserve) {
+                        boolean canCheckFromReserve = Boolean.parseBoolean(chqPanel.getClient()
+                                                                                 .getServerConfigs("ProbeInReserve"));
+                        if ((chqPanel.getClient().getMyStatus() != IClient.STATUS_ACTIVE) && !canCheckFromReserve) {
                             menuItem.setEnabled(false);
                         }
                         popup.add(menuItem);
 
-                        menuItem = new javax.swing.JMenuItem("Check Access");
-                        menuItem.setActionCommand("CAA|" + lid);
+                        menuItem = new JMenuItem("Check Access");
+                        menuItem.setActionCommand(STR."CAA|\{lid}");
                         menuItem.addActionListener(this);
                         popup.add(menuItem);
 
                         // only show "Limits" option if limits allowed
-                        boolean limitsAllowed = Boolean.parseBoolean(chqPanel.client.getserverConfigs("AllowLimiters"));
+                        boolean limitsAllowed = Boolean.parseBoolean(chqPanel.getClient()
+                                                                           .getServerConfigs("AllowLimiters"));
                         if (limitsAllowed) {
-                            javax.swing.JMenu limitmenu = new javax.swing.JMenu("Limits");
-                            popup.add(limitmenu);
-                            menuItem = new javax.swing.JMenuItem("Set Lower Unit Limit");
-                            menuItem.setActionCommand("SLUL|" + lid);
+                            JMenu limitMenu = new JMenu("Limits");
+                            popup.add(limitMenu);
+                            menuItem = new JMenuItem("Set Lower Unit Limit");
+                            menuItem.setActionCommand(STR."SLUL|\{lid}");
                             menuItem.addActionListener(this);
-                            limitmenu.add(menuItem);
-                            menuItem = new javax.swing.JMenuItem("Set Upper Unit Limit");
-                            menuItem.setActionCommand("SUUL|" + lid);
+                            limitMenu.add(menuItem);
+                            menuItem = new JMenuItem("Set Upper Unit Limit");
+                            menuItem.setActionCommand(STR."SUUL|\{lid}");
                             menuItem.addActionListener(this);
-                            limitmenu.add(menuItem);
+                            limitMenu.add(menuItem);
                         }
 
                         // Only show when Force Size is used.
-                        if (Boolean.parseBoolean(chqPanel.client.getserverConfigs("UseOperationsRule"))) {
-                            menuItem = new javax.swing.JMenuItem("Force Size To Face");
+                        if (Boolean.parseBoolean(chqPanel.getClient().getServerConfigs("UseOperationsRule"))) {
+                            menuItem = new JMenuItem("Force Size To Face");
                             popup.add(menuItem);
-                            menuItem.setActionCommand("SFS|" + lid);
+                            menuItem.setActionCommand(STR."SFS|\{lid}");
                             menuItem.addActionListener(this);
                         }
 
-                        AttackMenu aMenu = new AttackMenu(chqPanel.client, lid, "-1");
+                        AttackMenu aMenu = new AttackMenu(chqPanel.getClient(), lid, "-1");
                         aMenu.updateMenuItems(false);
                         popup.add(aMenu);
 
                         popup.addSeparator();
                     }
 
-                    menuItem = new javax.swing.JMenuItem("Lock Army");
-                    menuItem.setActionCommand("LA|" + lid);
+                    menuItem = new JMenuItem("Lock Army");
+                    menuItem.setActionCommand(STR."LA|\{lid}");
                     menuItem.addActionListener(this);
                     popup.add(menuItem);
-                    if (chqPanel.client.getPlayer().getArmy(lid).isPlayerLocked()) {
-                        menuItem.setVisible(false);
-                    }
-                    menuItem = new javax.swing.JMenuItem("Unlock Army");
-                    menuItem.setActionCommand("ULA|" + lid);
-                    menuItem.addActionListener(this);
-                    popup.add(menuItem);
-                    if (!chqPanel.client.getPlayer().getArmy(lid).isPlayerLocked()) {
-                        menuItem.setVisible(false);
-                    }
-                    menuItem = new javax.swing.JMenuItem("Remove Army");
-                    menuItem.setActionCommand("RA|" + lid);
-                    menuItem.addActionListener(this);
-                    popup.add(menuItem);
-                    menuItem = new javax.swing.JMenuItem("Rename Army");
-                    menuItem.setActionCommand("NA|" + lid);
-                    menuItem.addActionListener(this);
-                    popup.add(menuItem);
-                    menuItem = new javax.swing.JMenuItem("Disable Army");
-                    menuItem.setActionCommand("DAA|" + lid);
-                    menuItem.addActionListener(this);
-                    popup.add(menuItem);
-                    if (chqPanel.client.getPlayer().getArmy(lid).isDisabled()) {
-                        menuItem.setVisible(false);
-                    }
-                    menuItem = new javax.swing.JMenuItem("Enable Army");
-                    menuItem.setActionCommand("DAA|" + lid);
-                    menuItem.addActionListener(this);
-                    popup.add(menuItem);
-                    if (!chqPanel.client.getPlayer().getArmy(lid).isDisabled()) {
+
+                    if (chqPanel.getClient().getPlayer().getArmy(lid).isPlayerLocked()) {
                         menuItem.setVisible(false);
                     }
 
-                    javax.swing.JMenu primeSortMenu = new javax.swing.JMenu("Sort (1st)");
-                    // JMenu secondarySortMenu = new JMenu("Sort (2nd)");
-                    // JMenu tertiarySortMenu = new JMenu("Sort (3rd)");
+                    menuItem = new JMenuItem("Unlock Army");
+                    menuItem.setActionCommand(STR."ULA|\{lid}");
+                    menuItem.addActionListener(this);
+                    popup.add(menuItem);
+
+                    if (!chqPanel.getClient().getPlayer().getArmy(lid).isPlayerLocked()) {
+                        menuItem.setVisible(false);
+                    }
+
+                    menuItem = new JMenuItem("Remove Army");
+                    menuItem.setActionCommand(STR."RA|\{lid}");
+                    menuItem.addActionListener(this);
+                    popup.add(menuItem);
+                    menuItem = new JMenuItem("Rename Army");
+                    menuItem.setActionCommand(STR."NA|\{lid}");
+                    menuItem.addActionListener(this);
+                    popup.add(menuItem);
+                    menuItem = new JMenuItem("Disable Army");
+                    menuItem.setActionCommand(STR."DAA|\{lid}");
+                    menuItem.addActionListener(this);
+                    popup.add(menuItem);
+
+                    if (chqPanel.getClient().getPlayer().getArmy(lid).isDisabled()) {
+                        menuItem.setVisible(false);
+                    }
+
+                    menuItem = new JMenuItem("Enable Army");
+                    menuItem.setActionCommand(STR."DAA|\{lid}");
+                    menuItem.addActionListener(this);
+                    popup.add(menuItem);
+
+                    if (!chqPanel.getClient().getPlayer().getArmy(lid).isDisabled()) {
+                        menuItem.setVisible(false);
+                    }
+
+                    JMenu primeSortMenu = new JMenu("Sort (1st)");
 
                     popup.add(primeSortMenu);
-                    // popup.add(secondarySortMenu);
-                    // popup.add(tertiarySortMenu);
 
                     // Choices [note - this array must be duplicated in
-                    // CPlayer's sortArmies()]
                     String[] choices = { "Name", "Battle Value", "ID Number", "Max Tonnage", "Avg Walk MP",
                                          "Avg Jump MP", "Number Of Units", "No Sort" };
 
                     // indicate current selections w/ Italics
-                    String menuName = "";
-                    // boolean selectionFound = true;
+                    String menuName;
 
                     // prime sort menu construction
                     for (int i = 0; i < choices.length; i++) {
-
                         menuName = choices[i];
-                        if (chqPanel.client.getConfigParam("PRIMARYARMYSORTORDER").equalsIgnoreCase(choices[i])) {
-                            menuName = "<HTML><i>" + menuName + "</i></HTML>";
-                            // selectionFound = false;
+                        if (chqPanel.getClient().getConfigParam("PRIMARYARMYSORTORDER").equalsIgnoreCase(choices[i])) {
+                            menuName = STR."<HTML><i>\{menuName}</i></HTML>";
                         }
-                        menuItem = new javax.swing.JMenuItem(menuName);
-                        menuItem.setActionCommand("PAS|" + choices[i]);
+
+                        menuItem = new JMenuItem(menuName);
+                        menuItem.setActionCommand(STR."PAS|\{choices[i]}");
                         menuItem.addActionListener(this);
                         primeSortMenu.add(menuItem);
 
@@ -537,293 +372,314 @@ public class MekTableMouseAdapter extends MouseInputAdapter implements ActionLis
                     }
 
                     // reset selectionFound
-                    // selectionFound = true;
 
-                    /*
-                     * secondary sort menu construction for (int i = 0; i < choices.length; i++) { menuName = choices[i]; if (client.getConfigParam("SECONDARYARMYSORTORDER").equals(choices[i])) { menuName = "<HTML><i>" + menuName + "</i></HTML>"; //selectionFound = false; } menuItem = new JMenuItem(menuName); menuItem.setActionCommand("SAS|" + choices[i]); menuItem.addActionListener(this); secondarySortMenu.add(menuItem); if (i + 2 == choices.length) secondarySortMenu.addSeparator(); } //reset selectionFound //selectionFound = true; //tertiary sort menu construction for (int i = 0; i < choices.length; i++) { menuName = choices[i]; if (client.getConfigParam("TERTIARYARMYSORTORDER").equals(choices[i])) { menuName = "<HTML><i>" + menuName + "</i></HTML>"; //selectionFound = false; } menuItem = new JMenuItem(menuName); menuItem.setActionCommand("TAS|" + choices[i]);
-                     * menuItem.addActionListener(this); tertiarySortMenu.add(menuItem); if (i + 2 == choices.length) tertiarySortMenu.addSeparator(); }
-                     */
                     popup.addSeparator();
 
-                    menuItem = new javax.swing.JMenuItem("Show To Faction");
-                    menuItem.setActionCommand("SATH|" + lid);
+                    menuItem = new JMenuItem("Show To Faction");
+                    menuItem.setActionCommand(STR."SATH|\{lid}");
                     menuItem.addActionListener(this);
                     popup.add(menuItem);
 
-                    // disable showtofaction if army has 0 units
-                    if (chqPanel.client.getPlayer().getArmy(lid).getUnits().size() <= 0) {
+                    // disable show olfaction if army has 0 units
+                    if (chqPanel.getClient().getPlayer().getArmy(lid).getUnits().isEmpty()) {
                         menuItem.setEnabled(false);
                     }
 
-                    client.campaign.CArmy army = chqPanel.client.getPlayer().getArmy(lid);
+                    CArmy army = chqPanel.getClient().getPlayer().getArmy(lid);
 
-                    javax.swing.JMenu challengeMenu = new javax.swing.JMenu("Request Match");
+                    JMenu challengeMenu = new JMenu("Request Match");
                     popup.add(challengeMenu);
 
-                    javax.swing.JMenu allArmies = new javax.swing.JMenu("All Armies");
-                    javax.swing.JMenu singleArmy = new javax.swing.JMenu("This Army");
+                    JMenu allArmies = new JMenu("All Armies");
+                    JMenu singleArmy = new JMenu("This Army");
 
                     challengeMenu.add(singleArmy);
                     challengeMenu.add(allArmies);
 
                     // disable if army has 0 units
-                    if (chqPanel.client.getPlayer().getArmy(lid).getUnits().size() <= 0) {
+                    if (chqPanel.getClient().getPlayer().getArmy(lid).getUnits().isEmpty()) {
                         challengeMenu.setEnabled(false);
                     }
 
-                    javax.swing.JMenu submenu = new javax.swing.JMenu("Unit");
+                    JMenu submenu = new JMenu("Unit");
 
-                    javax.swing.JMenu requestMenu = new javax.swing.JMenu("BV Only");
+                    JMenu requestMenu = new JMenu("BV Only");
 
-                    menuItem = new javax.swing.JMenuItem("None");
-                    menuItem.setActionCommand("MPC|1|" + lid + "|none");
+                    menuItem = new JMenuItem("None");
+                    menuItem.setActionCommand(STR."MPC|1|\{lid}|none");
                     menuItem.addActionListener(this);
                     requestMenu.add(menuItem);
+
                     for (String op : army.getLegalOperations()) {
-                        menuItem = new javax.swing.JMenuItem(op);
-                        menuItem.setActionCommand("MPC|1|" + lid + "|" + op);
+                        menuItem = new JMenuItem(op);
+                        menuItem.setActionCommand(STR."MPC|1|\{lid}|\{op}");
                         menuItem.addActionListener(this);
                         requestMenu.add(menuItem);
                     }
+
                     submenu.add(requestMenu);
 
-                    requestMenu = new javax.swing.JMenu("Unit Count and BV");
-                    menuItem = new javax.swing.JMenuItem("None");
-                    menuItem.setActionCommand("MPC|2|" + lid + "|none");
+                    requestMenu = new JMenu("Unit Count and BV");
+                    menuItem = new JMenuItem("None");
+                    menuItem.setActionCommand(STR."MPC|2|\{lid}|none");
                     menuItem.addActionListener(this);
                     requestMenu.add(menuItem);
+
                     for (String op : army.getLegalOperations()) {
-                        menuItem = new javax.swing.JMenuItem(op);
-                        menuItem.setActionCommand("MPC|2|" + lid + "|" + op);
+                        menuItem = new JMenuItem(op);
+                        menuItem.setActionCommand(STR."MPC|2|\{lid}|\{op}");
                         menuItem.addActionListener(this);
                         requestMenu.add(menuItem);
                     }
+
                     submenu.add(requestMenu);
 
-                    requestMenu = new javax.swing.JMenu("Unit Classes and BV");
-                    menuItem = new javax.swing.JMenuItem("None");
-                    menuItem.setActionCommand("MPC|3|" + lid + "|none");
+                    requestMenu = new JMenu("Unit Classes and BV");
+                    menuItem = new JMenuItem("None");
+                    menuItem.setActionCommand(STR."MPC|3|\{lid}|none");
                     menuItem.addActionListener(this);
                     requestMenu.add(menuItem);
-                    for (String op : army.getLegalOperations()) {
-                        menuItem = new javax.swing.JMenuItem(op);
-                        menuItem.setActionCommand("MPC|3|" + lid + "|" + op);
-                        menuItem.addActionListener(this);
-                        requestMenu.add(menuItem);
-                    }
-                    submenu.add(requestMenu);
-                    singleArmy.add(submenu);
 
-                    submenu = new javax.swing.JMenu("Total Weight");
-                    requestMenu = new javax.swing.JMenu("Total Weight");
-                    menuItem = new javax.swing.JMenuItem("None");
-                    menuItem.setActionCommand("MPC|4|" + lid + "|none");
-                    menuItem.addActionListener(this);
-                    requestMenu.add(menuItem);
                     for (String op : army.getLegalOperations()) {
-                        menuItem = new javax.swing.JMenuItem(op);
-                        menuItem.setActionCommand("MPC|4|" + lid + "|" + op);
+                        menuItem = new JMenuItem(op);
+                        menuItem.setActionCommand(STR."MPC|3|\{lid}|\{op}");
                         menuItem.addActionListener(this);
                         requestMenu.add(menuItem);
                     }
-                    submenu.add(requestMenu);
 
-                    requestMenu = new javax.swing.JMenu("Total Weight with BV");
-                    menuItem = new javax.swing.JMenuItem("None");
-                    menuItem.setActionCommand("MPC|5|" + lid + "|none");
-                    menuItem.addActionListener(this);
-                    requestMenu.add(menuItem);
-                    for (String op : army.getLegalOperations()) {
-                        menuItem = new javax.swing.JMenuItem(op);
-                        menuItem.setActionCommand("MPC|5|" + lid + "|" + op);
-                        menuItem.addActionListener(this);
-                        requestMenu.add(menuItem);
-                    }
-                    submenu.add(requestMenu);
-
-                    requestMenu = new javax.swing.JMenu("Total Weight and Unit Count");
-                    menuItem = new javax.swing.JMenuItem("None");
-                    menuItem.setActionCommand("MPC|6|" + lid + "|none");
-                    menuItem.addActionListener(this);
-                    requestMenu.add(menuItem);
-                    for (String op : army.getLegalOperations()) {
-                        menuItem = new javax.swing.JMenuItem(op);
-                        menuItem.setActionCommand("MPC|6|" + lid + "|" + op);
-                        menuItem.addActionListener(this);
-                        requestMenu.add(menuItem);
-                    }
-                    submenu.add(requestMenu);
-
-                    requestMenu = new javax.swing.JMenu("Total Weight, Unit Count and BV");
-                    menuItem = new javax.swing.JMenuItem("None");
-                    menuItem.setActionCommand("MPC|7|" + lid + "|none");
-                    menuItem.addActionListener(this);
-                    requestMenu.add(menuItem);
-                    for (String op : army.getLegalOperations()) {
-                        menuItem = new javax.swing.JMenuItem(op);
-                        menuItem.setActionCommand("MPC|7|" + lid + "|" + op);
-                        menuItem.addActionListener(this);
-                        requestMenu.add(menuItem);
-                    }
                     submenu.add(requestMenu);
                     singleArmy.add(submenu);
 
-                    submenu = new javax.swing.JMenu("Unit Types");
-                    requestMenu = new javax.swing.JMenu("Unit Types");
-                    menuItem = new javax.swing.JMenuItem("None");
-                    menuItem.setActionCommand("MPC|8|" + lid + "|none");
+                    submenu = new JMenu("Total Weight");
+                    requestMenu = new JMenu("Total Weight");
+                    menuItem = new JMenuItem("None");
+                    menuItem.setActionCommand(STR."MPC|4|\{lid}|none");
                     menuItem.addActionListener(this);
                     requestMenu.add(menuItem);
+
                     for (String op : army.getLegalOperations()) {
-                        menuItem = new javax.swing.JMenuItem(op);
-                        menuItem.setActionCommand("MPC|8|" + lid + "|" + op);
+                        menuItem = new JMenuItem(op);
+                        menuItem.setActionCommand(STR."MPC|4|\{lid}|\{op}");
                         menuItem.addActionListener(this);
                         requestMenu.add(menuItem);
                     }
+
                     submenu.add(requestMenu);
 
-                    requestMenu = new javax.swing.JMenu("Unit Types with BV");
-                    menuItem = new javax.swing.JMenuItem("None");
-                    menuItem.setActionCommand("MPC|9|" + lid + "|none");
+                    requestMenu = new JMenu("Total Weight with BV");
+                    menuItem = new JMenuItem("None");
+                    menuItem.setActionCommand(STR."MPC|5|\{lid}|none");
                     menuItem.addActionListener(this);
                     requestMenu.add(menuItem);
-                    for (String op : army.getLegalOperations()) {
-                        menuItem = new javax.swing.JMenuItem(op);
-                        menuItem.setActionCommand("MPC|9|" + lid + "|" + op);
-                        menuItem.addActionListener(this);
-                        requestMenu.add(menuItem);
-                    }
-                    submenu.add(requestMenu);
-                    singleArmy.add(submenu);
 
-                    submenu = new javax.swing.JMenu("Unit Models");
-                    requestMenu = new javax.swing.JMenu("Unit Models");
-                    menuItem = new javax.swing.JMenuItem("None");
-                    menuItem.setActionCommand("MPC|10|" + lid + "|none");
-                    menuItem.addActionListener(this);
-                    requestMenu.add(menuItem);
                     for (String op : army.getLegalOperations()) {
-                        menuItem = new javax.swing.JMenuItem(op);
-                        menuItem.setActionCommand("MPC|10|" + lid + "|" + op);
+                        menuItem = new JMenuItem(op);
+                        menuItem.setActionCommand(STR."MPC|5|\{lid}|\{op}");
                         menuItem.addActionListener(this);
                         requestMenu.add(menuItem);
                     }
+
                     submenu.add(requestMenu);
 
-                    requestMenu = new javax.swing.JMenu("Unit Models with BV");
-                    menuItem = new javax.swing.JMenuItem("None");
-                    menuItem.setActionCommand("MPC|11|" + lid + "|none");
+                    requestMenu = new JMenu("Total Weight and Unit Count");
+                    menuItem = new JMenuItem("None");
+                    menuItem.setActionCommand(STR."MPC|6|\{lid}|none");
                     menuItem.addActionListener(this);
                     requestMenu.add(menuItem);
-                    for (String op : army.getLegalOperations()) {
-                        menuItem = new javax.swing.JMenuItem(op);
-                        menuItem.setActionCommand("MPC|11|" + lid + "|" + op);
-                        menuItem.addActionListener(this);
-                        requestMenu.add(menuItem);
-                    }
-                    submenu.add(requestMenu);
-                    singleArmy.add(submenu);
 
-                    submenu = new javax.swing.JMenu("Actual Weight");
-                    requestMenu = new javax.swing.JMenu("Actual Unit Weights");
-                    menuItem = new javax.swing.JMenuItem("None");
-                    menuItem.setActionCommand("MPC|12|" + lid + "|none");
-                    menuItem.addActionListener(this);
-                    requestMenu.add(menuItem);
                     for (String op : army.getLegalOperations()) {
-                        menuItem = new javax.swing.JMenuItem(op);
-                        menuItem.setActionCommand("MPC|12|" + lid + "|" + op);
+                        menuItem = new JMenuItem(op);
+                        menuItem.setActionCommand(STR."MPC|6|\{lid}|\{op}");
                         menuItem.addActionListener(this);
                         requestMenu.add(menuItem);
                     }
+
                     submenu.add(requestMenu);
 
-                    requestMenu = new javax.swing.JMenu("Actual Unit Weights with BV");
-                    menuItem = new javax.swing.JMenuItem("None");
-                    menuItem.setActionCommand("MPC|13|" + lid + "|none");
+                    requestMenu = new JMenu("Total Weight, Unit Count and BV");
+                    menuItem = new JMenuItem("None");
+                    menuItem.setActionCommand(STR."MPC|7|\{lid}|none");
                     menuItem.addActionListener(this);
                     requestMenu.add(menuItem);
+
                     for (String op : army.getLegalOperations()) {
-                        menuItem = new javax.swing.JMenuItem(op);
-                        menuItem.setActionCommand("MPC|13|" + lid + "|" + op);
+                        menuItem = new JMenuItem(op);
+                        menuItem.setActionCommand(STR."MPC|7|\{lid}|\{op}");
                         menuItem.addActionListener(this);
                         requestMenu.add(menuItem);
                     }
+
                     submenu.add(requestMenu);
                     singleArmy.add(submenu);
 
-                    submenu = new javax.swing.JMenu("Unit");
+                    submenu = new JMenu("Unit Types");
+                    requestMenu = new JMenu("Unit Types");
+                    menuItem = new JMenuItem("None");
+                    menuItem.setActionCommand(STR."MPC|8|\{lid}|none");
+                    menuItem.addActionListener(this);
+                    requestMenu.add(menuItem);
 
-                    menuItem = new javax.swing.JMenuItem("BV Only");
+                    for (String op : army.getLegalOperations()) {
+                        menuItem = new JMenuItem(op);
+                        menuItem.setActionCommand(STR."MPC|8|\{lid}|\{op}");
+                        menuItem.addActionListener(this);
+                        requestMenu.add(menuItem);
+                    }
+
+                    submenu.add(requestMenu);
+
+                    requestMenu = new JMenu("Unit Types with BV");
+                    menuItem = new JMenuItem("None");
+                    menuItem.setActionCommand(STR."MPC|9|\{lid}|none");
+                    menuItem.addActionListener(this);
+                    requestMenu.add(menuItem);
+
+                    for (String op : army.getLegalOperations()) {
+                        menuItem = new JMenuItem(op);
+                        menuItem.setActionCommand(STR."MPC|9|\{lid}|\{op}");
+                        menuItem.addActionListener(this);
+                        requestMenu.add(menuItem);
+                    }
+
+                    submenu.add(requestMenu);
+                    singleArmy.add(submenu);
+
+                    submenu = new JMenu("Unit Models");
+                    requestMenu = new JMenu("Unit Models");
+                    menuItem = new JMenuItem("None");
+                    menuItem.setActionCommand(STR."MPC|10|\{lid}|none");
+                    menuItem.addActionListener(this);
+                    requestMenu.add(menuItem);
+
+                    for (String op : army.getLegalOperations()) {
+                        menuItem = new JMenuItem(op);
+                        menuItem.setActionCommand(STR."MPC|10|\{lid}|\{op}");
+                        menuItem.addActionListener(this);
+                        requestMenu.add(menuItem);
+                    }
+
+                    submenu.add(requestMenu);
+
+                    requestMenu = new JMenu("Unit Models with BV");
+                    menuItem = new JMenuItem("None");
+                    menuItem.setActionCommand(STR."MPC|11|\{lid}|none");
+                    menuItem.addActionListener(this);
+                    requestMenu.add(menuItem);
+
+                    for (String op : army.getLegalOperations()) {
+                        menuItem = new JMenuItem(op);
+                        menuItem.setActionCommand(STR."MPC|11|\{lid}|\{op}");
+                        menuItem.addActionListener(this);
+                        requestMenu.add(menuItem);
+                    }
+
+                    submenu.add(requestMenu);
+                    singleArmy.add(submenu);
+
+                    submenu = new JMenu("Actual Weight");
+                    requestMenu = new JMenu("Actual Unit Weights");
+                    menuItem = new JMenuItem("None");
+                    menuItem.setActionCommand(STR."MPC|12|\{lid}|none");
+                    menuItem.addActionListener(this);
+                    requestMenu.add(menuItem);
+
+                    for (String op : army.getLegalOperations()) {
+                        menuItem = new JMenuItem(op);
+                        menuItem.setActionCommand(STR."MPC|12|\{lid}|\{op}");
+                        menuItem.addActionListener(this);
+                        requestMenu.add(menuItem);
+                    }
+
+                    submenu.add(requestMenu);
+
+                    requestMenu = new JMenu("Actual Unit Weights with BV");
+                    menuItem = new JMenuItem("None");
+                    menuItem.setActionCommand(STR."MPC|13|\{lid}|none");
+                    menuItem.addActionListener(this);
+                    requestMenu.add(menuItem);
+
+                    for (String op : army.getLegalOperations()) {
+                        menuItem = new JMenuItem(op);
+                        menuItem.setActionCommand(STR."MPC|13|\{lid}|\{op}");
+                        menuItem.addActionListener(this);
+                        requestMenu.add(menuItem);
+                    }
+
+                    submenu.add(requestMenu);
+                    singleArmy.add(submenu);
+
+                    submenu = new JMenu("Unit");
+
+                    menuItem = new JMenuItem("BV Only");
                     // All armies so set the lid to -1;
                     menuItem.setActionCommand("MPC|1|-1|none");
                     menuItem.addActionListener(this);
                     submenu.add(menuItem);
 
-                    menuItem = new javax.swing.JMenuItem("Unit Count and BV");
+                    menuItem = new JMenuItem("Unit Count and BV");
                     menuItem.setActionCommand("MPC|2|-1|none");
                     menuItem.addActionListener(this);
                     submenu.add(menuItem);
 
-                    menuItem = new javax.swing.JMenuItem("Unit Classes and BV");
+                    menuItem = new JMenuItem("Unit Classes and BV");
                     menuItem.setActionCommand("MPC|3|-1|none");
                     menuItem.addActionListener(this);
                     submenu.add(menuItem);
                     allArmies.add(submenu);
 
-                    submenu = new javax.swing.JMenu("Total Weight");
-                    menuItem = new javax.swing.JMenuItem("Total Weight");
+                    submenu = new JMenu("Total Weight");
+                    menuItem = new JMenuItem("Total Weight");
                     menuItem.setActionCommand("MPC|4|-1|none");
                     menuItem.addActionListener(this);
                     submenu.add(menuItem);
 
-                    menuItem = new javax.swing.JMenuItem("Total Weight with BV");
+                    menuItem = new JMenuItem("Total Weight with BV");
                     menuItem.setActionCommand("MPC|5|-1|none");
                     menuItem.addActionListener(this);
                     submenu.add(menuItem);
 
-                    menuItem = new javax.swing.JMenuItem("Total Weight and Unit Count");
+                    menuItem = new JMenuItem("Total Weight and Unit Count");
                     menuItem.setActionCommand("MPC|6|-1|none");
                     menuItem.addActionListener(this);
                     submenu.add(menuItem);
 
-                    menuItem = new javax.swing.JMenuItem("Total Weight, Unit Count and BV");
+                    menuItem = new JMenuItem("Total Weight, Unit Count and BV");
                     menuItem.setActionCommand("MPC|7|-1|none");
                     menuItem.addActionListener(this);
                     submenu.add(menuItem);
                     allArmies.add(submenu);
 
-                    submenu = new javax.swing.JMenu("Unit Types");
-                    menuItem = new javax.swing.JMenuItem("Unit Types");
+                    submenu = new JMenu("Unit Types");
+                    menuItem = new JMenuItem("Unit Types");
                     menuItem.setActionCommand("MPC|8|-1|none");
                     menuItem.addActionListener(this);
                     submenu.add(menuItem);
 
-                    menuItem = new javax.swing.JMenuItem("Unit Types with BV");
+                    menuItem = new JMenuItem("Unit Types with BV");
                     menuItem.setActionCommand("MPC|9|-1|none");
                     menuItem.addActionListener(this);
                     submenu.add(menuItem);
                     allArmies.add(submenu);
 
-                    submenu = new javax.swing.JMenu("Unit Models");
-                    menuItem = new javax.swing.JMenuItem("Unit Models");
+                    submenu = new JMenu("Unit Models");
+                    menuItem = new JMenuItem("Unit Models");
                     menuItem.setActionCommand("MPC|10|-1|none");
                     menuItem.addActionListener(this);
                     submenu.add(menuItem);
 
-                    menuItem = new javax.swing.JMenuItem("Unit Models with BV");
+                    menuItem = new JMenuItem("Unit Models with BV");
                     menuItem.setActionCommand("MPC|11|-1|none");
                     menuItem.addActionListener(this);
                     submenu.add(menuItem);
                     allArmies.add(submenu);
 
-                    submenu = new javax.swing.JMenu("Actual Weight");
-                    menuItem = new javax.swing.JMenuItem("Actual Unit Weights");
+                    submenu = new JMenu("Actual Weight");
+                    menuItem = new JMenuItem("Actual Unit Weights");
                     menuItem.setActionCommand("MPC|12|-1|none");
                     menuItem.addActionListener(this);
                     submenu.add(menuItem);
 
-                    menuItem = new javax.swing.JMenuItem("Actual Unit Weights with BV");
+                    menuItem = new JMenuItem("Actual Unit Weights with BV");
                     menuItem.setActionCommand("MPC|13|-1|none");
                     menuItem.addActionListener(this);
                     submenu.add(menuItem);
@@ -831,23 +687,23 @@ public class MekTableMouseAdapter extends MouseInputAdapter implements ActionLis
 
                 }
 
-                popup.show(e.getComponent(), e.getX(), e.getY());
-            } else if (row < chqPanel.MekTable.getRowsForArmies()) {
-                client.campaign.CUnit cm = null;
-                client.campaign.CArmy l = chqPanel.MekTable.getArmyAt(row);
+                popup.show(mouseEvent.getComponent(), mouseEvent.getX(), mouseEvent.getY());
+            } else if (row < chqPanel.getMekTable().getRowsForArmies()) {
+                CUnit cm;
+                CArmy l = chqPanel.getMekTable().getArmyAt(row);
                 int mid = col;
                 int lid = l.getID();
-                cm = chqPanel.MekTable.getMekAt(row, col);
+                cm = chqPanel.getMekTable().getMekAt(row, col);
                 boolean hasUnitsFree = false;
 
                 /*
                  * CONSTRUCT the ADD menu here. It will be added to the actual format later. @urgru 12/7/04
                  */
-                javax.swing.JMenu addMenu = new javax.swing.JMenu("Add");
-                if ((chqPanel.client.getPlayer().getHangar().size() > 0) && !l.isLocked()) {
-                    Object[] mechArray = chqPanel.client.getPlayer().getHangar().toArray();
-                    if (mechArray.length > 0) {
-                        java.util.Vector<java.util.Vector<javax.swing.JMenuItem>> SubMenus = new java.util.Vector<java.util.Vector<javax.swing.JMenuItem>>(
+                JMenu addMenu = new JMenu("Add");
+                if ((!chqPanel.getClient().getPlayer().getHangar().isEmpty()) && !l.isLocked()) {
+                    Object[] mekArray = chqPanel.getClient().getPlayer().getHangar().toArray();
+                    if (mekArray.length > 0) {
+                        java.util.Vector<java.util.Vector<JMenuItem>> SubMenus = new java.util.Vector<>(
                               1,
                               1);
 
@@ -855,17 +711,18 @@ public class MekTableMouseAdapter extends MouseInputAdapter implements ActionLis
                          * 6 entries Weights: 0-3 Protomech: 4 Infantry: 5
                          */
                         for (int i = 0; i < 6; i++) {
-                            SubMenus.add(new java.util.Vector<javax.swing.JMenuItem>(1, 1));
+                            SubMenus.add(new java.util.Vector<>(1, 1));
                         }
 
-                        for (Object element : mechArray) {
-                            client.campaign.CUnit mm = (client.campaign.CUnit) element;
+                        for (Object element : mekArray) {
+                            CUnit mm = (CUnit) element;
                             if ((mm.getStatus() == Unit.STATUS_UNMAINTAINED) ||
-                                      (mm.getStatus() == Unit.STATUS_FORSALE)) {
+                                      (mm.getStatus() == Unit.STATUS_FOR_SALE)) {
                                 continue;
                             }
-                            if (chqPanel.Player.getAmountOfTimesUnitExistsInArmies(mm.getId()) >=
-                                      Integer.parseInt(chqPanel.client.getserverConfigs("UnitsInMultipleArmiesAmount"))) {
+                            if (chqPanel.getPlayer().getAmountOfTimesUnitExistsInArmies(mm.getId()) >=
+                                      Integer.parseInt(chqPanel.getClient()
+                                                             .getServerConfigs("UnitsInMultipleArmiesAmount"))) {
                                 continue;
                             }
                             if (l.getUnit(mm.getId()) == null) {// only add
@@ -877,41 +734,23 @@ public class MekTableMouseAdapter extends MouseInputAdapter implements ActionLis
                                 if ((mm.getType() == Unit.MEK) ||
                                           (mm.getType() == Unit.VEHICLE) ||
                                           (mm.getType() == Unit.AERO)) {
-                                    menuItem = new javax.swing.JMenuItem(mm.getModelName() +
-                                                                               " (" +
-                                                                               mm.getPilot().getGunnery() +
-                                                                               "/" +
-                                                                               mm.getPilot().getPiloting() +
-                                                                               ") " +
-                                                                               mm.getBVForMatch() +
-                                                                               " BV");
+                                    menuItem = new JMenuItem(STR."\{mm.getModelName()} (\{mm.getPilot()
+                                                                                                .getGunnery()}/\{mm.getPilot()
+                                                                                                                       .getPiloting()}) \{mm.getBVForMatch()} BV");
                                 } else if ((mm.getType() == Unit.INFANTRY) || (mm.getType() == Unit.BATTLEARMOR)) {
                                     if (((Infantry) mm.getEntity()).canMakeAntiMekAttacks()) {
-                                        menuItem = new javax.swing.JMenuItem(mm.getModelName() +
-                                                                                   " (" +
-                                                                                   mm.getPilot().getGunnery() +
-                                                                                   "/" +
-                                                                                   mm.getPilot().getPiloting() +
-                                                                                   ") " +
-                                                                                   mm.getBVForMatch() +
-                                                                                   " BV");
+                                        menuItem = new JMenuItem(STR."\{mm.getModelName()} (\{mm.getPilot()
+                                                                                                    .getGunnery()}/\{mm.getPilot()
+                                                                                                                           .getPiloting()}) \{mm.getBVForMatch()} BV");
                                     } else {
-                                        menuItem = new javax.swing.JMenuItem(mm.getModelName() +
-                                                                                   " (" +
-                                                                                   mm.getPilot().getGunnery() +
-                                                                                   ") " +
-                                                                                   mm.getBVForMatch() +
-                                                                                   " BV");
+                                        menuItem = new JMenuItem(STR."\{mm.getModelName()} (\{mm.getPilot()
+                                                                                                    .getGunnery()}) \{mm.getBVForMatch()} BV");
                                     }
                                 } else {
-                                    menuItem = new javax.swing.JMenuItem(mm.getModelName() +
-                                                                               " (" +
-                                                                               mm.getPilot().getGunnery() +
-                                                                               ") " +
-                                                                               mm.getBVForMatch() +
-                                                                               " BV");
+                                    menuItem = new JMenuItem(STR."\{mm.getModelName()} (\{mm.getPilot()
+                                                                                                .getGunnery()}) \{mm.getBVForMatch()} BV");
                                 }
-                                menuItem.setActionCommand("EXM|" + lid + "|" + "-1" + "|" + mm.getId());
+                                menuItem.setActionCommand(STR."EXM|\{lid}|-1|\{mm.getId()}");
                                 menuItem.addActionListener(this);
 
                                 if (mm.getType() == Unit.PROTOMEK) {
@@ -923,13 +762,13 @@ public class MekTableMouseAdapter extends MouseInputAdapter implements ActionLis
                                     // BA
                                     // slot
                                 } else {// else, sort by weightclass
-                                    int size = mm.getWeightclass();
+                                    int size = mm.getWeightClass();
                                     SubMenus.elementAt(size).add(menuItem);
                                 }
                             }
                         }
                         for (int i = 0; i < SubMenus.size(); i++) {
-                            java.util.Vector<javax.swing.JMenuItem> SizeMenu = SubMenus.elementAt(i);
+                            java.util.Vector<JMenuItem> SizeMenu = SubMenus.elementAt(i);
                             if (SizeMenu.size() > 10) {
                                 // More than one menu of the given size
                                 // class is needed
@@ -937,15 +776,7 @@ public class MekTableMouseAdapter extends MouseInputAdapter implements ActionLis
                                 for (int j = 0; j < iterations; j++) {
                                     int mechcount = 0;
 
-                                    javax.swing.JMenu menux = null;
-                                    if (i < 4) {
-                                        menux = new javax.swing.JMenu(Unit.getWeightClassDesc(i) + " " + (j + 1));
-                                    } else if (i == 4) {// proto
-                                        menux = new javax.swing.JMenu("Proto " + (j + 1));
-                                    } else {// BA, can assume this is i ==
-                                        // 5.
-                                        menux = new javax.swing.JMenu("Infantry " + (j + 1));
-                                    }
+                                    JMenu menux = getMenux(i, j);
 
                                     while (!SizeMenu.isEmpty() && (mechcount < 10)) {
                                         menux.add(SizeMenu.elementAt(0));
@@ -959,19 +790,11 @@ public class MekTableMouseAdapter extends MouseInputAdapter implements ActionLis
                                     // to see if a divider should be added
                                     if (i >= 4) {
 
-                                        java.awt.Component[] components = addMenu.getMenuComponents();
+                                        Component[] components = addMenu.getMenuComponents();
                                         if ((i == 4) && (components.length != 0)) {
                                             addMenu.addSeparator();
                                         } else if (i == 5) {
-                                            boolean hasProtoMenu = false;
-                                            for (java.awt.Component currComponent : components) {
-                                                if (currComponent instanceof javax.swing.JMenu) {
-                                                    javax.swing.JMenu currMenu = (javax.swing.JMenu) currComponent;
-                                                    if (currMenu.getText().startsWith("Proto")) {
-                                                        hasProtoMenu = true;
-                                                    }
-                                                }
-                                            }
+                                            boolean hasProtoMenu = isProtoMenu(components);
                                             if (!hasProtoMenu &&
                                                       (components.length > 0) &&
                                                       (menux.getComponentCount() > 0)) {
@@ -985,24 +808,23 @@ public class MekTableMouseAdapter extends MouseInputAdapter implements ActionLis
                             } else {// Only one menu for the given size
                                 // class is needed
 
-                                javax.swing.JMenu menux = null;
+                                JMenu menux;
                                 if (i < 4) {
-                                    menux = new javax.swing.JMenu(Unit.getWeightClassDesc(i));
+                                    menux = new JMenu(Unit.getWeightClassDesc(i));
                                 } else if (i == 4) {// proto
-                                    menux = new javax.swing.JMenu("Proto");
+                                    menux = new JMenu("Proto");
                                 } else {// BA, can assume i = 5.
-                                    menux = new javax.swing.JMenu("Infantry");
+                                    menux = new JMenu("Infantry");
                                 }
 
                                 // if adding proto or infantry menu, check
                                 // previous elements
                                 // to see if a divider should be added
                                 boolean hasProtoMenu = false;
-                                java.awt.Component[] components = addMenu.getMenuComponents();
+                                Component[] components = addMenu.getMenuComponents();
                                 if (i == 5) {
-                                    for (java.awt.Component currComponent : components) {
-                                        if (currComponent instanceof javax.swing.JMenu) {
-                                            javax.swing.JMenu currMenu = (javax.swing.JMenu) currComponent;
+                                    for (Component currComponent : components) {
+                                        if (currComponent instanceof JMenu currMenu) {
                                             if (currMenu.getText().startsWith("Proto")) {
                                                 hasProtoMenu = true;
                                             }
@@ -1023,61 +845,12 @@ public class MekTableMouseAdapter extends MouseInputAdapter implements ActionLis
                                 }
                             }
                         }
-                    } else {
-                        for (Object element : mechArray) {
-                            client.campaign.CUnit mm = (client.campaign.CUnit) element;
-                            if ((mm.getStatus() == Unit.STATUS_UNMAINTAINED) ||
-                                      (mm.getStatus() == Unit.STATUS_FORSALE)) {
-                                continue;
-                            }
-                            if ((mm.getType() == Unit.MEK) ||
-                                      (mm.getType() == Unit.VEHICLE) ||
-                                      (mm.getType() == Unit.AERO)) {
-                                menuItem = new javax.swing.JMenuItem(mm.getModelName() +
-                                                                           " (" +
-                                                                           mm.getPilot().getGunnery() +
-                                                                           "/" +
-                                                                           mm.getPilot().getPiloting() +
-                                                                           ") " +
-                                                                           mm.getBVForMatch() +
-                                                                           " BV");
-                            } else if ((mm.getType() == Unit.INFANTRY) || (mm.getType() == Unit.BATTLEARMOR)) {
-                                if (((Infantry) mm.getEntity()).canMakeAntiMekAttacks()) {
-                                    menuItem = new javax.swing.JMenuItem(mm.getModelName() +
-                                                                               " (" +
-                                                                               mm.getPilot().getGunnery() +
-                                                                               "/" +
-                                                                               mm.getPilot().getPiloting() +
-                                                                               ") " +
-                                                                               mm.getBVForMatch() +
-                                                                               " BV");
-                                } else {
-                                    menuItem = new javax.swing.JMenuItem(mm.getModelName() +
-                                                                               " (" +
-                                                                               mm.getPilot().getGunnery() +
-                                                                               ") " +
-                                                                               mm.getBVForMatch() +
-                                                                               " BV");
-                                }
-                            } else {
-                                menuItem = new javax.swing.JMenuItem(mm.getModelName() +
-                                                                           " (" +
-                                                                           mm.getPilot().getGunnery() +
-                                                                           ") " +
-                                                                           mm.getBVForMatch() +
-                                                                           " BV");
-                            }
-
-                            menuItem.setActionCommand("EXM|" + lid + "|" + mid + "|" + mm.getId());
-                            menuItem.addActionListener(this);
-                            addMenu.add(menuItem);
-                        }
                     }
 
                     // disable the menu if there are no units to add
                     addMenu.setEnabled(hasUnitsFree);
 
-                }// end ADD menu contruction
+                }// end ADD menu construction
 
                 // if the unit isnt null, include remove/show/etc
                 if (cm != null) {
@@ -1085,20 +858,19 @@ public class MekTableMouseAdapter extends MouseInputAdapter implements ActionLis
                     /*
                      * the unit isnt null, so construct the link menu here. It will be added to the actual format later. @Torren 12/19/04
                      */
-                    javax.swing.JMenu linkMenu = new javax.swing.JMenu("Link");
-                    if ((l.getUnits().size() > 0) && !l.isLocked()) {
-                        java.util.Vector<client.campaign.CUnit> Masters = new java.util.Vector<client.campaign.CUnit>(
-                              1,
-                              1);
+                    JMenu linkMenu = new JMenu("Link");
+                    if ((!l.getUnits().isEmpty()) && !l.isLocked()) {
+                        java.util.Vector<CUnit> Masters = new java.util.Vector<>(1, 1);
                         java.util.Enumeration<Unit> c3M = l.getUnits().elements();
                         while (c3M.hasMoreElements()) {
-                            client.campaign.CUnit c3Unit = (client.campaign.CUnit) c3M.nextElement();
+                            CUnit c3Unit = (CUnit) c3M.nextElement();
                             if (c3Unit.equals(cm)) {
                                 continue;
                             }
+
                             if (cm.getC3Level() != Unit.C3_IMPROVED) {
                                 if (((c3Unit.getC3Level() == Unit.C3_MASTER) ||
-                                           (c3Unit.getC3Level() == Unit.C3_MMASTER)) &&
+                                           (c3Unit.getC3Level() == Unit.C3M_MASTER)) &&
                                           c3Unit.checkC3mNetworkHasOpen(l, cm.getC3Level())) {
                                     Masters.add(c3Unit);
                                 }
@@ -1109,21 +881,15 @@ public class MekTableMouseAdapter extends MouseInputAdapter implements ActionLis
                             }
                         }
                         for (int i = 0; i < Masters.size(); i++) {
-                            client.campaign.CUnit mm = Masters.elementAt(i);
+                            CUnit mm = Masters.elementAt(i);
                             if (l.getUnit(mm.getId()) != null) {
-                                menuItem = new javax.swing.JMenuItem(mm.getModelName() +
-                                                                           " " +
-                                                                           mm.getBVForMatch() +
-                                                                           " BV");
-                                menuItem.setActionCommand("LCN|" + lid + "|" + cm.getId() + "|" + mm.getId());
+                                menuItem = new JMenuItem(STR."\{mm.getModelName()} \{mm.getBVForMatch()} BV");
+                                menuItem.setActionCommand(STR."LCN|\{lid}|\{cm.getId()}|\{mm.getId()}");
                                 menuItem.addActionListener(this);
                                 linkMenu.add(menuItem);
                             }
                         }
-                        /*
-                         * if ( cm.getC3Level() == CUnit.C3_MASTER ){ linkMenu.addSeparator(); menuItem = new JMenuItem("Set as Company Commander"); menuItem.setActionCommand("LCN|"+lid+"|"+ cm.getId() +"|"+cm.getId()); menuItem.addActionListener(this); linkMenu.add(menuItem); }
-                         */
-                    }// end Link menu contruction
+                    }// end Link menu construction
 
                     // Link menu has been preformed. Proceed with the usual
                     // bits.
@@ -1132,8 +898,8 @@ public class MekTableMouseAdapter extends MouseInputAdapter implements ActionLis
                     // move to hangar
                     if (!l.isLocked()) {
                         String text = "Move To Hangar";
-                        menuItem = new javax.swing.JMenuItem(text);
-                        menuItem.setActionCommand("MH|" + lid + "|" + mid);
+                        menuItem = new JMenuItem(text);
+                        menuItem.setActionCommand(STR."MH|\{lid}|\{mid}");
                         menuItem.addActionListener(this);
                         popup.add(menuItem);
                     }
@@ -1141,28 +907,28 @@ public class MekTableMouseAdapter extends MouseInputAdapter implements ActionLis
                     /*
                      * EXCHANGE. Derived from ADD. Same, but returns clicked unit to hangar.
                      */
-                    if ((chqPanel.client.getPlayer().getHangar().size() > 0) && !l.isLocked()) {
-                        javax.swing.JMenu jm = new javax.swing.JMenu("Exchange");
+                    if ((!chqPanel.getClient().getPlayer().getHangar().isEmpty()) && !l.isLocked()) {
+                        JMenu jm = new JMenu("Exchange");
                         popup.add(jm);
-                        Object[] mechs = chqPanel.client.getPlayer().getHangar().toArray();
-                        if (mechs.length > 0) {
-                            java.util.Vector<java.util.Vector<javax.swing.JMenuItem>> SubMenus = new java.util.Vector<java.util.Vector<javax.swing.JMenuItem>>();
+                        Object[] meks = chqPanel.getClient().getPlayer().getHangar().toArray();
+                        if (meks.length > 0) {
+                            java.util.Vector<java.util.Vector<JMenuItem>> SubMenus = new java.util.Vector<>();
 
                             /*
                              * 6 entries Weights: 0-3 Protomech: 4 Infantry: 5
                              */
                             for (int i = 0; i < 6; i++) {
-                                SubMenus.add(new java.util.Vector<javax.swing.JMenuItem>(1, 1));
+                                SubMenus.add(new java.util.Vector<>(1, 1));
                             }
 
-                            for (Object mech : mechs) {
-                                client.campaign.CUnit mm = (client.campaign.CUnit) mech;
+                            for (Object mech : meks) {
+                                CUnit mm = (CUnit) mech;
                                 if ((mm.getStatus() == Unit.STATUS_UNMAINTAINED) ||
-                                          (mm.getStatus() == Unit.STATUS_FORSALE)) {
+                                          (mm.getStatus() == Unit.STATUS_FOR_SALE)) {
                                     continue;
                                 }
-                                if (chqPanel.Player.getAmountOfTimesUnitExistsInArmies(mm.getId()) >=
-                                          Integer.parseInt(chqPanel.client.getserverConfigs(
+                                if (chqPanel.getPlayer().getAmountOfTimesUnitExistsInArmies(mm.getId()) >=
+                                          Integer.parseInt(chqPanel.getClient().getServerConfigs(
                                                 "UnitsInMultipleArmiesAmount"))) {
                                     continue;
                                 }
@@ -1178,42 +944,24 @@ public class MekTableMouseAdapter extends MouseInputAdapter implements ActionLis
                                     if ((mm.getType() == Unit.MEK) ||
                                               (mm.getType() == Unit.VEHICLE) ||
                                               (mm.getType() == Unit.AERO)) {
-                                        menuItem = new javax.swing.JMenuItem(mm.getModelName() +
-                                                                                   " (" +
-                                                                                   mm.getPilot().getGunnery() +
-                                                                                   "/" +
-                                                                                   mm.getPilot().getPiloting() +
-                                                                                   ") " +
-                                                                                   mm.getBVForMatch() +
-                                                                                   " BV");
+                                        menuItem = new JMenuItem(STR."\{mm.getModelName()} (\{mm.getPilot()
+                                                                                                    .getGunnery()}/\{mm.getPilot()
+                                                                                                                           .getPiloting()}) \{mm.getBVForMatch()} BV");
                                     } else if ((mm.getType() == Unit.INFANTRY) ||
                                                      (mm.getType() == Unit.BATTLEARMOR)) {
                                         if (((Infantry) mm.getEntity()).canMakeAntiMekAttacks()) {
-                                            menuItem = new javax.swing.JMenuItem(mm.getModelName() +
-                                                                                       " (" +
-                                                                                       mm.getPilot().getGunnery() +
-                                                                                       "/" +
-                                                                                       mm.getPilot().getPiloting() +
-                                                                                       ") " +
-                                                                                       mm.getBVForMatch() +
-                                                                                       " BV");
+                                            menuItem = new JMenuItem(STR."\{mm.getModelName()} (\{mm.getPilot()
+                                                                                                        .getGunnery()}/\{mm.getPilot()
+                                                                                                                               .getPiloting()}) \{mm.getBVForMatch()} BV");
                                         } else {
-                                            menuItem = new javax.swing.JMenuItem(mm.getModelName() +
-                                                                                       " (" +
-                                                                                       mm.getPilot().getGunnery() +
-                                                                                       ") " +
-                                                                                       mm.getBVForMatch() +
-                                                                                       " BV");
+                                            menuItem = new JMenuItem(STR."\{mm.getModelName()} (\{mm.getPilot()
+                                                                                                        .getGunnery()}) \{mm.getBVForMatch()} BV");
                                         }
                                     } else {
-                                        menuItem = new javax.swing.JMenuItem(mm.getModelName() +
-                                                                                   " (" +
-                                                                                   mm.getPilot().getGunnery() +
-                                                                                   ") " +
-                                                                                   mm.getBVForMatch() +
-                                                                                   " BV");
+                                        menuItem = new JMenuItem(STR."\{mm.getModelName()} (\{mm.getPilot()
+                                                                                                    .getGunnery()}) \{mm.getBVForMatch()} BV");
                                     }
-                                    menuItem.setActionCommand("EXM|" + lid + "|" + cm.getId() + "|" + mm.getId());
+                                    menuItem.setActionCommand(STR."EXM|\{lid}|\{cm.getId()}|\{mm.getId()}");
                                     menuItem.addActionListener(this);
 
                                     if (mm.getType() == Unit.PROTOMEK) {
@@ -1226,14 +974,14 @@ public class MekTableMouseAdapter extends MouseInputAdapter implements ActionLis
                                         // BA
                                         // slot
                                     } else {// else, sort by weightclass
-                                        int size = mm.getWeightclass();
+                                        int size = mm.getWeightClass();
                                         SubMenus.elementAt(size).add(menuItem);
                                     }
                                 }
                             }
                             for (int i = 0; i < SubMenus.size(); i++) {
-                                java.util.Vector<javax.swing.JMenuItem> SizeMenu = SubMenus.elementAt(i);
-                                javax.swing.JMenu menux = null;
+                                java.util.Vector<JMenuItem> SizeMenu = SubMenus.elementAt(i);
+                                JMenu menux;
                                 if (SizeMenu.size() > 10) {
                                     // More than one menu of the given size
                                     // class is needed
@@ -1242,13 +990,11 @@ public class MekTableMouseAdapter extends MouseInputAdapter implements ActionLis
                                         int mechcount = 0;
 
                                         if (i < 4) {
-                                            menux = new javax.swing.JMenu(Unit.getWeightClassDesc(i) +
-                                                                                " " +
-                                                                                (j + 1));
+                                            menux = new JMenu(STR."\{Unit.getWeightClassDesc(i)} \{j + 1}");
                                         } else if (i == 4) {// proto
-                                            menux = new javax.swing.JMenu("Proto " + (j + 1));
+                                            menux = new JMenu(STR."Proto \{j + 1}");
                                         } else {// BA, assume an i of 5
-                                            menux = new javax.swing.JMenu("Infantry " + (j + 1));
+                                            menux = new JMenu(STR."Infantry \{j + 1}");
                                         }
 
                                         while (!SizeMenu.isEmpty() && (mechcount < 10)) {
@@ -1264,19 +1010,11 @@ public class MekTableMouseAdapter extends MouseInputAdapter implements ActionLis
                                         // added
                                         if (i >= 4) {
 
-                                            java.awt.Component[] components = addMenu.getMenuComponents();
+                                            Component[] components = addMenu.getMenuComponents();
                                             if ((i == 4) && (components.length != 0)) {
                                                 jm.addSeparator();
                                             } else if (i == 5) {
-                                                boolean hasProtoMenu = false;
-                                                for (java.awt.Component currComponent : components) {
-                                                    if (currComponent instanceof javax.swing.JMenu) {
-                                                        javax.swing.JMenu currMenu = (javax.swing.JMenu) currComponent;
-                                                        if (currMenu.getText().startsWith("Proto")) {
-                                                            hasProtoMenu = true;
-                                                        }
-                                                    }
-                                                }
+                                                boolean hasProtoMenu = isProtoMenu(components);
                                                 if (!hasProtoMenu &&
                                                           (components.length > 0) &&
                                                           (menux.getComponentCount() > 0)) {
@@ -1291,22 +1029,21 @@ public class MekTableMouseAdapter extends MouseInputAdapter implements ActionLis
                                     // class is needed
 
                                     if (i < 4) {
-                                        menux = new javax.swing.JMenu(Unit.getWeightClassDesc(i));
+                                        menux = new JMenu(Unit.getWeightClassDesc(i));
                                     } else if (i == 4) {// proto
-                                        menux = new javax.swing.JMenu("Proto");
+                                        menux = new JMenu("Proto");
                                     } else {// BA, assume an i of 5.
-                                        menux = new javax.swing.JMenu("Infantry");
+                                        menux = new JMenu("Infantry");
                                     }
 
                                     // if adding proto or infantry menu,
                                     // check previous elements
                                     // to see if a divider should be added
                                     boolean hasProtoMenu = false;
-                                    java.awt.Component[] components = jm.getMenuComponents();
+                                    Component[] components = jm.getMenuComponents();
                                     if (i == 5) {
-                                        for (java.awt.Component currComponent : components) {
-                                            if (currComponent instanceof javax.swing.JMenu) {
-                                                javax.swing.JMenu currMenu = (javax.swing.JMenu) currComponent;
+                                        for (Component currComponent : components) {
+                                            if (currComponent instanceof JMenu currMenu) {
                                                 if (currMenu.getText().startsWith("Proto")) {
                                                     hasProtoMenu = true;
                                                 }
@@ -1328,55 +1065,7 @@ public class MekTableMouseAdapter extends MouseInputAdapter implements ActionLis
                                 }
 
                             }
-                        } else {
-                            for (Object mech : mechs) {
-                                client.campaign.CUnit mm = (client.campaign.CUnit) mech;
-                                if ((mm.getStatus() == Unit.STATUS_UNMAINTAINED) ||
-                                          (mm.getStatus() == Unit.STATUS_FORSALE)) {
-                                    continue;
-                                }
-                                if ((mm.getType() == Unit.MEK) ||
-                                          (mm.getType() == Unit.VEHICLE) ||
-                                          (mm.getType() == Unit.AERO)) {
-                                    menuItem = new javax.swing.JMenuItem(mm.getModelName() +
-                                                                               " (" +
-                                                                               mm.getPilot().getGunnery() +
-                                                                               "/" +
-                                                                               mm.getPilot().getPiloting() +
-                                                                               ") " +
-                                                                               mm.getBVForMatch() +
-                                                                               " BV");
-                                } else if ((mm.getType() == Unit.INFANTRY) || (mm.getType() == Unit.BATTLEARMOR)) {
-                                    if (((Infantry) mm.getEntity()).canMakeAntiMekAttacks()) {
-                                        menuItem = new javax.swing.JMenuItem(mm.getModelName() +
-                                                                                   " (" +
-                                                                                   mm.getPilot().getGunnery() +
-                                                                                   "/" +
-                                                                                   mm.getPilot().getPiloting() +
-                                                                                   ") " +
-                                                                                   mm.getBVForMatch() +
-                                                                                   " BV");
-                                    } else {
-                                        menuItem = new javax.swing.JMenuItem(mm.getModelName() +
-                                                                                   " (" +
-                                                                                   mm.getPilot().getGunnery() +
-                                                                                   ") " +
-                                                                                   mm.getBVForMatch() +
-                                                                                   " BV");
-                                    }
-                                } else {
-                                    menuItem = new javax.swing.JMenuItem(mm.getModelName() +
-                                                                               " (" +
-                                                                               mm.getPilot().getGunnery() +
-                                                                               ") " +
-                                                                               mm.getBVForMatch() +
-                                                                               " BV");
-                                }
-                                menuItem.setActionCommand("EXM|" + lid + "|" + cm.getId() + "|" + mm.getId());
-                                menuItem.addActionListener(this);
-                                jm.add(menuItem);
-                            }
-                        }// end exchange
+                        }
 
                         // hasUnitsFree is set during add menu creation, but
                         // applies equally to the Exchange menu.
@@ -1391,14 +1080,14 @@ public class MekTableMouseAdapter extends MouseInputAdapter implements ActionLis
                          * The POSITION menu. Moves units around -within- the army. Only shown if there are enough units to warrant movement (>1).
                          */
                         if (l.getAmountOfUnits() > 1) {
-                            javax.swing.JMenu pjm = new javax.swing.JMenu("Position");
+                            JMenu pjm = new JMenu("Position");
                             popup.add(pjm);
                             int currPos = 0;
                             for (Unit u : l.getUnits()) {
-                                client.campaign.CUnit currUnit = (client.campaign.CUnit) u;
+                                CUnit currUnit = (CUnit) u;
                                 if (currUnit.getId() != mid) {
-                                    menuItem = new javax.swing.JMenuItem("Move to #" + (currPos + 1));
-                                    menuItem.setActionCommand("RPU|" + lid + "|" + cm.getId() + "|" + currPos);
+                                    menuItem = new JMenuItem(STR."Move to #\{currPos + 1}");
+                                    menuItem.setActionCommand(STR."RPU|\{lid}|\{cm.getId()}|\{currPos}");
                                     menuItem.addActionListener(this);
                                     pjm.add(menuItem);
                                 }
@@ -1411,8 +1100,8 @@ public class MekTableMouseAdapter extends MouseInputAdapter implements ActionLis
                         popup.add(linkMenu);
                     }
                     if (cm.hasBeenC3LinkedTo(l) || (l.getC3Network().get(cm.getId()) != null)) {
-                        menuItem = new javax.swing.JMenuItem("Unlink");
-                        menuItem.setActionCommand("LCN|" + lid + "|" + cm.getId() + "|-1");
+                        menuItem = new JMenuItem("Unlink");
+                        menuItem.setActionCommand(STR."LCN|\{lid}|\{cm.getId()}|-1");
                         menuItem.addActionListener(this);
                         popup.add(menuItem);
 
@@ -1421,129 +1110,124 @@ public class MekTableMouseAdapter extends MouseInputAdapter implements ActionLis
                     popup.addSeparator();
 
                     // Add Show Mek Option
-                    menuItem = new javax.swing.JMenuItem("View Unit");
-                    menuItem.setActionCommand("SM|" + row + "|" + col);
+                    menuItem = new JMenuItem("View Unit");
+                    menuItem.setActionCommand(STR."SM|\{row}|\{col}");
                     menuItem.addActionListener(this);
                     popup.add(menuItem);
 
                     // Add Customize Unit Option
-                    menuItem = new javax.swing.JMenuItem("Customize Unit");
-                    menuItem.setActionCommand("CMU|" + row + "|" + col);
+                    menuItem = new JMenuItem("Customize Unit");
+                    menuItem.setActionCommand(STR."CMU|\{row}|\{col}");
                     menuItem.addActionListener(this);
                     popup.add(menuItem);
 
                     // Add Autoeject Option
-                    if (cm.getEntity() instanceof Mech) {
-                        Mech mech = (Mech) cm.getEntity();
-                        if (mech.isAutoEject()) {
-                            menuItem = new javax.swing.JMenuItem("Disable Autoeject");
-                            menuItem.setActionCommand("DAE|" + row + "|" + col);
-                            menuItem.addActionListener(this);
-                            popup.add(menuItem);
+                    if (cm.getEntity() instanceof Mek mek) {
+                        if (mek.isAutoEject()) {
+                            menuItem = new JMenuItem("Disable Autoeject");
+                            menuItem.setActionCommand(STR."DAE|\{row}|\{col}");
                         } else {
-                            menuItem = new javax.swing.JMenuItem("Enable Autoeject");
-                            menuItem.setActionCommand("EAE|" + row + "|" + col);
-                            menuItem.addActionListener(this);
-                            popup.add(menuItem);
+                            menuItem = new JMenuItem("Enable Autoeject");
+                            menuItem.setActionCommand(STR."EAE|\{row}|\{col}");
                         }
+                        menuItem.addActionListener(this);
+                        popup.add(menuItem);
                     }
 
                     if (l.isCommander(cm.getId())) {
-                        menuItem = new javax.swing.JMenuItem("Remove Commander");
-                        menuItem.setActionCommand("REMOVEUNITCOMMANDER|" + row + "|" + col + "|" + lid);
-                        menuItem.addActionListener(this);
-                        popup.add(menuItem);
+                        menuItem = new JMenuItem("Remove Commander");
+                        menuItem.setActionCommand(STR."REMOVEUNITCOMMANDER|\{row}|\{col}|\{lid}");
                     } else {
-                        menuItem = new javax.swing.JMenuItem("Set Commander");
-                        menuItem.setActionCommand("SETUNITCOMMANDER|" + row + "|" + col + "|" + lid);
-                        menuItem.addActionListener(this);
-                        popup.add(menuItem);
+                        menuItem = new JMenuItem("Set Commander");
+                        menuItem.setActionCommand(STR."SETUNITCOMMANDER|\{row}|\{col}|\{lid}");
                     }
+                    menuItem.addActionListener(this);
+                    popup.add(menuItem);
 
                 }// end if(cm in click area != null)
                 else {
                     popup.add(addMenu);
                 }
 
-                popup.show(e.getComponent(), e.getX(), e.getY());
+                popup.show(mouseEvent.getComponent(), mouseEvent.getX(), mouseEvent.getY());
             } else {
-                client.campaign.CUnit cm = chqPanel.MekTable.getMekAt(row, col);
+                CUnit cm = chqPanel.getMekTable().getMekAt(row, col);
                 if (cm != null) {
 
-                    menuItem = new javax.swing.JMenuItem("View Unit");
-                    menuItem.setActionCommand("SM|" + row + "|" + col);
+                    menuItem = new JMenuItem("View Unit");
+                    menuItem.setActionCommand(STR."SM|\{row}|\{col}");
                     menuItem.addActionListener(this);
                     popup.add(menuItem);
 
                     // Add Customize Unit Option
-                    menuItem = new javax.swing.JMenuItem("Customize Unit");
-                    menuItem.setActionCommand("CMU|" + row + "|" + col);
+                    menuItem = new JMenuItem("Customize Unit");
+                    menuItem.setActionCommand(STR."CMU|\{row}|\{col}");
                     menuItem.addActionListener(this);
                     popup.add(menuItem);
 
-                    if (chqPanel.useAdvanceRepairs) {
+                    if (chqPanel.useAdvanceRepairs()) {
 
-                        javax.swing.JMenu repairs = new javax.swing.JMenu("Repairs");
+                        JMenu repairs = new JMenu("Repairs");
                         if (UnitUtils.hasArmorDamage(cm.getEntity()) ||
                                   UnitUtils.hasCriticalDamage(cm.getEntity())) {
-                            if (!Boolean.parseBoolean(chqPanel.client.getserverConfigs("UseSimpleRepair"))) {
+                            if (!Boolean.parseBoolean(chqPanel.getClient().getServerConfigs("UseSimpleRepair"))) {
                                 // Add repair unit option
-                                menuItem = new javax.swing.JMenuItem("Repair Unit");
-                                menuItem.setActionCommand("ARU|" + row + "|" + col);
+                                menuItem = new JMenuItem("Repair Unit");
+                                menuItem.setActionCommand(STR."ARU|\{row}|\{col}");
                                 menuItem.addActionListener(this);
                                 repairs.add(menuItem);
-                                menuItem = new javax.swing.JMenuItem("Bulk Repair");
-                                menuItem.setActionCommand("BUR|" + row + "|" + col);
+                                menuItem = new JMenuItem("Bulk Repair");
+                                menuItem.setActionCommand(STR."BUR|\{row}|\{col}");
                                 menuItem.addActionListener(this);
                                 repairs.add(menuItem);
                             } else {
-                                menuItem = new javax.swing.JMenuItem("Repair Unit");
-                                menuItem.setActionCommand("SUR|" + row + "|" + col);
+                                menuItem = new JMenuItem("Repair Unit");
+                                menuItem.setActionCommand(STR."SUR|\{row}|\{col}");
                                 menuItem.addActionListener(this);
                                 repairs.add(menuItem);
                             }
 
                         }
 
-                        if (Boolean.parseBoolean(chqPanel.client.getserverConfigs("UsePartsRepair")) &&
+                        if (Boolean.parseBoolean(chqPanel.getClient().getServerConfigs("UsePartsRepair")) &&
                                   ((cm.getType() == Unit.MEK) || (cm.getType() == Unit.VEHICLE))) {
-                            menuItem = new javax.swing.JMenuItem("Salvage Unit Crits");
-                            menuItem.setActionCommand("SUC|" + row + "|" + col);
+                            menuItem = new JMenuItem("Salvage Unit Crits");
+                            menuItem.setActionCommand(STR."SUC|\{row}|\{col}");
                             menuItem.addActionListener(this);
                             repairs.add(menuItem);
-                            menuItem = new javax.swing.JMenuItem("Bulk Salvage");
-                            menuItem.setActionCommand("BSU|" + row + "|" + col);
+                            menuItem = new JMenuItem("Bulk Salvage");
+                            menuItem.setActionCommand(STR."BSU|\{row}|\{col}");
                             menuItem.addActionListener(this);
                             repairs.add(menuItem);
                         }
 
                         if (UnitUtils.isRepairing(cm.getEntity())) {
                             // Add display repair job option
-                            menuItem = new javax.swing.JMenuItem("Display Repair Jobs");
-                            menuItem.setActionCommand("DRJ|" + row + "|" + col);
+                            menuItem = new JMenuItem("Display Repair Jobs");
+                            menuItem.setActionCommand(STR."DRJ|\{row}|\{col}");
                             menuItem.addActionListener(this);
                             repairs.add(menuItem);
                         }
 
-                        if (((chqPanel.client.getRMT() != null) &&
-                                   chqPanel.client.getRMT().hasQueuedOrders(cm.getId())) ||
-                                  ((chqPanel.client.getSMT() != null) &&
-                                         chqPanel.client.getSMT().hasQueuedOrders(cm.getId()))) {
+                        if (((chqPanel.getClient().getRMT() != null) &&
+                                   chqPanel.getClient().getRMT().hasQueuedOrders(cm.getId())) ||
+                                  ((chqPanel.getClient().getSMT() != null) &&
+                                         chqPanel.getClient().getSMT().hasQueuedOrders(cm.getId()))) {
                             // Add display pending job option
-                            menuItem = new javax.swing.JMenuItem("Display Pending Work Orders");
-                            menuItem.setActionCommand("DPWO|" + row + "|" + col);
+                            menuItem = new JMenuItem("Display Pending Work Orders");
+                            menuItem.setActionCommand(STR."DPWO|\{row}|\{col}");
                             menuItem.addActionListener(this);
                             repairs.add(menuItem);
                             // Add stop all pending jobs
-                            menuItem = new javax.swing.JMenuItem("Stop All Pending Work Orders");
-                            menuItem.setActionCommand("SAPWO|" + row + "|" + col);
+                            menuItem = new JMenuItem("Stop All Pending Work Orders");
+                            menuItem.setActionCommand(STR."SAPWO|\{row}|\{col}");
                             menuItem.addActionListener(this);
                             repairs.add(menuItem);
                         }
 
                         if (!UnitUtils.hasAllAmmo(cm.getEntity())) {
-                            menuItem = new javax.swing.JMenuItem("Reload All Ammo");
-                            menuItem.setActionCommand("RAA|" + row + "|" + col);
+                            menuItem = new JMenuItem("Reload All Ammo");
+                            menuItem.setActionCommand(STR."RAA|\{row}|\{col}");
                             menuItem.addActionListener(this);
                             repairs.add(menuItem);
                         }
@@ -1553,75 +1237,70 @@ public class MekTableMouseAdapter extends MouseInputAdapter implements ActionLis
                     }
 
                     // Add Autoeject Option
-                    if (cm.getEntity() instanceof Mech) {
-                        Mech mech = (Mech) cm.getEntity();
-                        if (mech.isAutoEject()) {
-                            menuItem = new javax.swing.JMenuItem("Disable Autoeject");
-                            menuItem.setActionCommand("DAE|" + row + "|" + col);
-                            menuItem.addActionListener(this);
-                            popup.add(menuItem);
+                    if (cm.getEntity() instanceof Mek mek) {
+                        if (mek.isAutoEject()) {
+                            menuItem = new JMenuItem("Disable Autoeject");
+                            menuItem.setActionCommand(STR."DAE|\{row}|\{col}");
                         } else {
-                            menuItem = new javax.swing.JMenuItem("Enable Autoeject");
-                            menuItem.setActionCommand("EAE|" + row + "|" + col);
-                            menuItem.addActionListener(this);
-                            popup.add(menuItem);
+                            menuItem = new JMenuItem("Enable Autoeject");
+                            menuItem.setActionCommand(STR."EAE|\{row}|\{col}");
                         }
-                    }
-
-                    popup.addSeparator();
-
-                    if (!chqPanel.useAdvanceRepairs) {
-                        if (cm.getStatus() == Unit.STATUS_UNMAINTAINED) {
-                            menuItem = new javax.swing.JMenuItem("Maintain");
-                            menuItem.setActionCommand("MM|" + cm.getId());
-                            menuItem.addActionListener(this);
-                            popup.add(menuItem);
-                        } else {
-                            menuItem = new javax.swing.JMenuItem("Unmaintain");
-                            menuItem.setActionCommand("UMM|" + cm.getId());
-                            menuItem.addActionListener(this);
-                            popup.add(menuItem);
-                        }
-                    }
-                    if (cm.isOmni()) {
-                        menuItem = new javax.swing.JMenuItem("Repod Unit");
-                        menuItem.setActionCommand("RM|" + cm.getId());
                         menuItem.addActionListener(this);
                         popup.add(menuItem);
                     }
 
-                    javax.swing.JMenu hm = new javax.swing.JMenu("Transactions");
+                    popup.addSeparator();
+
+                    if (!chqPanel.useAdvanceRepairs()) {
+                        if (cm.getStatus() == Unit.STATUS_UNMAINTAINED) {
+                            menuItem = new JMenuItem("Maintain");
+                            menuItem.setActionCommand(STR."MM|\{cm.getId()}");
+                        } else {
+                            menuItem = new JMenuItem("Unmaintain");
+                            menuItem.setActionCommand(STR."UMM|\{cm.getId()}");
+                        }
+                        menuItem.addActionListener(this);
+                        popup.add(menuItem);
+                    }
+                    if (cm.isOmni()) {
+                        menuItem = new JMenuItem("Repod Unit");
+                        menuItem.setActionCommand(STR."RM|\{cm.getId()}");
+                        menuItem.addActionListener(this);
+                        popup.add(menuItem);
+                    }
+
+                    JMenu hm = new JMenu("Transactions");
                     int numItems = 0;
                     if (!cm.isChristmasUnit() ||
-                              Boolean.parseBoolean(chqPanel.client.getserverConfigs("Christmas_AllowDonate"))) {
-                        menuItem = new javax.swing.JMenuItem("Donate Unit");
-                        menuItem.setActionCommand("DO|" + cm.getId());
+                              Boolean.parseBoolean(chqPanel.getClient().getServerConfigs("Christmas_AllowDonate"))) {
+                        menuItem = new JMenuItem("Donate Unit");
+                        menuItem.setActionCommand(STR."DO|\{cm.getId()}");
                         menuItem.addActionListener(this);
                         hm.add(menuItem);
                         numItems++;
                     }
                     if (!cm.isChristmasUnit() ||
-                              Boolean.parseBoolean(chqPanel.client.getserverConfigs("Christmas_AllowScrap"))) {
-                        menuItem = new javax.swing.JMenuItem("Scrap Unit");
-                        menuItem.setActionCommand("S|" + cm.getId());
+                              Boolean.parseBoolean(chqPanel.getClient().getServerConfigs("Christmas_AllowScrap"))) {
+                        menuItem = new JMenuItem("Scrap Unit");
+                        menuItem.setActionCommand(STR."S|\{cm.getId()}");
                         menuItem.addActionListener(this);
                         hm.add(menuItem);
                         numItems++;
                     }
                     //@Salient for SOL free build
-                    if (chqPanel.Player.getHouse()
-                              .equalsIgnoreCase(chqPanel.client.getserverConfigs("NewbieHouseName")) &&
-                              Boolean.parseBoolean(chqPanel.client.getserverConfigs("Sol_FreeBuild"))) {
-                        menuItem = new javax.swing.JMenuItem("Delete Unit");
-                        menuItem.setActionCommand("DL|" + cm.getId());
+                    if (chqPanel.getPlayer().getHouse()
+                              .equalsIgnoreCase(chqPanel.getClient().getServerConfigs("NewbieHouseName")) &&
+                              Boolean.parseBoolean(chqPanel.getClient().getServerConfigs("Sol_FreeBuild"))) {
+                        menuItem = new JMenuItem("Delete Unit");
+                        menuItem.setActionCommand(STR."DL|\{cm.getId()}");
                         menuItem.addActionListener(this);
                         hm.add(menuItem);
                         numItems++;
                     }
                     if (!cm.isChristmasUnit() ||
-                              Boolean.parseBoolean(chqPanel.client.getserverConfigs("Christmas_AllowTransfer"))) {
-                        menuItem = new javax.swing.JMenuItem("Transfer Unit");
-                        menuItem.setActionCommand("TM|" + cm.getId());
+                              Boolean.parseBoolean(chqPanel.getClient().getServerConfigs("Christmas_AllowTransfer"))) {
+                        menuItem = new JMenuItem("Transfer Unit");
+                        menuItem.setActionCommand(STR."TM|\{cm.getId()}");
                         menuItem.addActionListener(this);
                         hm.add(menuItem);
                         numItems++;
@@ -1630,85 +1309,90 @@ public class MekTableMouseAdapter extends MouseInputAdapter implements ActionLis
                         popup.add(hm);
                     }
                     // Test unit for BM access
-                    boolean canSellUnit = true;
-                    if (cm.isChristmasUnit() &&
-                              !Boolean.parseBoolean(chqPanel.client.getserverConfigs("Christmas_AllowBM"))) {
-                        canSellUnit = false;
-                    }
+                    boolean canSellUnit = !cm.isChristmasUnit() ||
+                                                Boolean.parseBoolean(chqPanel.getClient()
+                                                                           .getServerConfigs("Christmas_AllowBM"));
                     if ((cm.getType() == Unit.MEK) &&
-                              !Boolean.parseBoolean(chqPanel.client.getserverConfigs("MeksMayBeSoldOnBM"))) {
+                              !Boolean.parseBoolean(chqPanel.getClient().getServerConfigs("MeksMayBeSoldOnBM"))) {
                         canSellUnit = false;
                     } else if ((cm.getType() == Unit.VEHICLE) &&
-                                     !Boolean.parseBoolean(chqPanel.client.getserverConfigs("VehsMayBeSoldOnBM"))) {
+                                     !Boolean.parseBoolean(chqPanel.getClient()
+                                                                 .getServerConfigs("VehsMayBeSoldOnBM"))) {
                         canSellUnit = false;
                     } else if ((cm.getType() == Unit.BATTLEARMOR) &&
-                                     !Boolean.parseBoolean(chqPanel.client.getserverConfigs("BAMayBeSoldOnBM"))) {
+                                     !Boolean.parseBoolean(chqPanel.getClient().getServerConfigs("BAMayBeSoldOnBM"))) {
                         canSellUnit = false;
                     } else if ((cm.getType() == Unit.AERO) &&
-                                     !Boolean.parseBoolean(chqPanel.client.getserverConfigs("AerosMayBeSoldOnBM"))) {
+                                     !Boolean.parseBoolean(chqPanel.getClient()
+                                                                 .getServerConfigs("AerosMayBeSoldOnBM"))) {
                         canSellUnit = false;
                     } else if ((cm.getType() == Unit.PROTOMEK) &&
-                                     !Boolean.parseBoolean(chqPanel.client.getserverConfigs("ProtosMayBeSoldOnBM"))) {
+                                     !Boolean.parseBoolean(chqPanel.getClient()
+                                                                 .getServerConfigs("ProtosMayBeSoldOnBM"))) {
                         canSellUnit = false;
                     } else if ((cm.getType() == Unit.INFANTRY) &&
-                                     !Boolean.parseBoolean(chqPanel.client.getserverConfigs("InfantryMayBeSoldOnBM"))) {
+                                     !Boolean.parseBoolean(chqPanel.getClient()
+                                                                 .getServerConfigs("InfantryMayBeSoldOnBM"))) {
                         canSellUnit = false;
-                    } else if (Boolean.parseBoolean(chqPanel.client.getserverConfigs("BMNoClan")) &&
+                    } else if (Boolean.parseBoolean(chqPanel.getClient().getServerConfigs("BMNoClan")) &&
                                      cm.getEntity().isClan()) {
                         canSellUnit = false;
                     }
 
                     // Test for faction BM access
-                    java.util.StringTokenizer blockedFactions = new java.util.StringTokenizer(chqPanel.client.getserverConfigs(
-                          "BMNoSell"), "$");
+                    java.util.StringTokenizer blockedFactions = new java.util.StringTokenizer(chqPanel.getClient()
+                                                                                                    .getServerConfigs(
+                                                                                                          "BMNoSell"),
+                          "$");
                     while (blockedFactions.hasMoreTokens()) {
-                        if (chqPanel.Player.getMyHouse().getName().equals(blockedFactions.nextToken())) {
+                        if (chqPanel.getPlayer().getMyHouse().getName().equals(blockedFactions.nextToken())) {
                             canSellUnit = false;
                         }
                     }
 
-                    if (canSellUnit && (cm.getStatus() != Unit.STATUS_FORSALE)) {
-                        menuItem = new javax.swing.JMenuItem("Sell on BM");
-                        menuItem.setActionCommand("AB|" + cm.getId());
+                    if (canSellUnit && (cm.getStatus() != Unit.STATUS_FOR_SALE)) {
+                        menuItem = new JMenuItem("Sell on BM");
+                        menuItem.setActionCommand(STR."AB|\{cm.getId()}");
                         menuItem.addActionListener(this);
                         hm.add(menuItem);
                     }
 
-                    if (cm.getStatus() == Unit.STATUS_FORSALE) {
-                        menuItem = new javax.swing.JMenuItem("Recall from BM");
-                        menuItem.setActionCommand("RFM|" + cm.getId());
+                    if (cm.getStatus() == Unit.STATUS_FOR_SALE) {
+                        menuItem = new JMenuItem("Recall from BM");
+                        menuItem.setActionCommand(STR."RFM|\{cm.getId()}");
                         menuItem.addActionListener(this);
                         hm.add(menuItem);
                     }
 
-                    if (Boolean.parseBoolean(chqPanel.client.getserverConfigs("UseDirectSell")) &&
-                              (cm.getStatus() != Unit.STATUS_FORSALE)) {
-                        menuItem = new javax.swing.JMenuItem("Direct Sell Unit");
-                        menuItem.setActionCommand("DSU|" + cm.getId());
+                    if (Boolean.parseBoolean(chqPanel.getClient().getServerConfigs("UseDirectSell")) &&
+                              (cm.getStatus() != Unit.STATUS_FOR_SALE)) {
+                        menuItem = new JMenuItem("Direct Sell Unit");
+                        menuItem.setActionCommand(STR."DSU|\{cm.getId()}");
                         menuItem.addActionListener(this);
                         hm.add(menuItem);
                     }
 
-                    javax.swing.JMenu pm = new javax.swing.JMenu("Pilot");
+                    JMenu pm = new JMenu("Pilot");
                     popup.add(pm);
                     // Cannot Retire or rename Vacant pilots.
                     if (!cm.hasVacantPilot()) {
-                        menuItem = new javax.swing.JMenuItem("Retire");
-                        menuItem.setActionCommand("RT|" + cm.getId());
+                        menuItem = new JMenuItem("Retire");
+                        menuItem.setActionCommand(STR."RT|\{cm.getId()}");
                         menuItem.addActionListener(this);
                         pm.add(menuItem);
-                        menuItem = new javax.swing.JMenuItem("Rename");
-                        menuItem.setActionCommand("RP|" + cm.getId());
+                        menuItem = new JMenuItem("Rename");
+                        menuItem.setActionCommand(STR."RP|\{cm.getId()}");
                         menuItem.addActionListener(this);
                         pm.add(menuItem);
-                        if (Boolean.parseBoolean(chqPanel.client.getserverConfigs("PlayersCanBuyPilotUpgrades"))) {
-                            menuItem = new javax.swing.JMenuItem("Promote Pilot");
-                            menuItem.setActionCommand("PP|" + cm.getId());
+                        if (Boolean.parseBoolean(chqPanel.getClient().getServerConfigs("PlayersCanBuyPilotUpgrades"))) {
+                            menuItem = new JMenuItem("Promote Pilot");
+                            menuItem.setActionCommand(STR."PP|\{cm.getId()}");
                             menuItem.addActionListener(this);
                             pm.add(menuItem);
-                            if (Boolean.parseBoolean(chqPanel.client.getserverConfigs("PlayersCanSellPilotUpgrades"))) {
-                                menuItem = new javax.swing.JMenuItem("Demote Pilot");
-                                menuItem.setActionCommand("DP|" + cm.getId());
+                            if (Boolean.parseBoolean(chqPanel.getClient()
+                                                           .getServerConfigs("PlayersCanSellPilotUpgrades"))) {
+                                menuItem = new JMenuItem("Demote Pilot");
+                                menuItem.setActionCommand(STR."DP|\{cm.getId()}");
                                 menuItem.addActionListener(this);
                                 pm.add(menuItem);
                             }
@@ -1716,26 +1400,26 @@ public class MekTableMouseAdapter extends MouseInputAdapter implements ActionLis
                     }
 
                     // Pilot Queues Block
-                    boolean ppqsEnabled = Boolean.parseBoolean(chqPanel.client.getserverConfigs(
+                    boolean ppqsEnabled = Boolean.parseBoolean(chqPanel.getClient().getServerConfigs(
                           "AllowPersonalPilotQueues"));
                     if (ppqsEnabled && (cm.isSinglePilotUnit())) {
 
                         // load possible pilots
-                        Object[] pilots = chqPanel.Player.getPersonalPilotQueue()
-                                                .getPilotQueue(cm.getType(), cm.getWeightclass())
+                        Object[] pilots = chqPanel.getPlayer().getPersonalPilotQueue()
+                                                .getPilotQueue(cm.getType(), cm.getWeightClass())
                                                 .toArray();
-                        javax.swing.JMenu jm = new javax.swing.JMenu("Exchange");
+                        JMenu jm = new JMenu("Exchange");
 
                         // option to remove pilot, if that hasn't been done
                         // already
                         if (!cm.hasVacantPilot()) {
                             pm.addSeparator();
-                            menuItem = new javax.swing.JMenuItem("Remove");
-                            menuItem.setActionCommand("EXP|" + cm.getId() + "|-1");
+                            menuItem = new JMenuItem("Remove");
+                            menuItem.setActionCommand(STR."EXP|\{cm.getId()}|-1");
                             menuItem.addActionListener(this);
                             pm.add(menuItem);
                         } else {
-                            jm = new javax.swing.JMenu("Assign");
+                            jm = new JMenu("Assign");
                         }
 
                         /*
@@ -1746,42 +1430,15 @@ public class MekTableMouseAdapter extends MouseInputAdapter implements ActionLis
                         } else {
 
                             /*
-                             * Contruction of EXCHANGE pilot. Derived from the other exchange options.
+                             * Construction of EXCHANGE pilot. Derived from the other exchange options.
                              */
                             pm.add(jm);
 
                             for (int i = 0; i < pilots.length; i++) {
-                                Pilot mm = (Pilot) pilots[i];
-                                if (cm.getType() == Unit.MEK) {
-                                    String pilotString = mm.getName() +
-                                                               " (" +
-                                                               mm.getGunnery() +
-                                                               "/" +
-                                                               mm.getPiloting();
-                                    String skills = mm.getSkillString(true);
-                                    if (skills.trim().equals("")) {
-                                        pilotString += ")";
-                                    } else {
-                                        pilotString += ", " + skills + ")";
-                                    }
+                                String pilotString = getPilotString(cm, pilots[i]);
+                                menuItem = new JMenuItem(pilotString);
 
-                                    if (mm.getHits() > 0) {
-                                        pilotString += " Hits: " + mm.getHits();
-                                    }
-
-                                    menuItem = new javax.swing.JMenuItem(pilotString);
-                                } else {
-                                    String pilotString = mm.getName() + " (" + mm.getGunnery();
-                                    String skills = mm.getSkillString(true);
-                                    if (skills.trim().equals("")) {
-                                        pilotString += ")";
-                                    } else {
-                                        pilotString += ", " + skills + ")";
-                                    }
-                                    menuItem = new javax.swing.JMenuItem(pilotString);
-                                }
-
-                                menuItem.setActionCommand("EXP|" + cm.getId() + "|" + i);
+                                menuItem.setActionCommand(STR."EXP|\{cm.getId()}|\{i}");
                                 menuItem.addActionListener(this);
                                 jm.add(menuItem);
                             }
@@ -1790,13 +1447,13 @@ public class MekTableMouseAdapter extends MouseInputAdapter implements ActionLis
 
                     popup.addSeparator();
 
-                    menuItem = new javax.swing.JMenuItem("Show To Faction");
-                    menuItem.setActionCommand("SUTH|" + cm.getId());
+                    menuItem = new JMenuItem("Show To Faction");
+                    menuItem.setActionCommand(STR."SUTH|\{cm.getId()}");
                     menuItem.addActionListener(this);
                     popup.add(menuItem);
 
-                    menuItem = new javax.swing.JMenuItem("Remove From All");
-                    menuItem.setActionCommand("RFAA|" + cm.getId());
+                    menuItem = new JMenuItem("Remove From All");
+                    menuItem.setActionCommand(STR."RFAA|\{cm.getId()}");
                     menuItem.addActionListener(this);
                     popup.add(menuItem);
 
@@ -1804,7 +1461,7 @@ public class MekTableMouseAdapter extends MouseInputAdapter implements ActionLis
                      * Disable RFAA option if unit isnt actually IN any of the player's armies.
                      */
                     boolean isInArmy = false;
-                    for (client.campaign.CArmy currA : chqPanel.client.getPlayer().getArmies()) {
+                    for (CArmy currA : chqPanel.getClient().getPlayer().getArmies()) {
                         if (currA.getUnit(cm.getId()) != null) {
                             isInArmy = true;
                             break;
@@ -1815,52 +1472,233 @@ public class MekTableMouseAdapter extends MouseInputAdapter implements ActionLis
                         menuItem.setEnabled(false);
                     }
 
-                    popup.show(e.getComponent(), e.getX(), e.getY());
-                } else if (chqPanel.Player.getFreeBays() > 0) {
-                    int hangernum = (((row - chqPanel.MekTable.getRowsForArmies()) *
-                                            (chqPanel.MekTable.getColumnCount() - 1)) +
+                    popup.show(mouseEvent.getComponent(), mouseEvent.getX(), mouseEvent.getY());
+                } else if (chqPanel.getPlayer().getFreeBays() > 0) {
+                    int hangernum = (((row - chqPanel.getMekTable().getRowsForArmies()) *
+                                            (chqPanel.getMekTable().getColumnCount() - 1)) +
                                            col) - 1;
-                    if (hangernum == chqPanel.client.getPlayer().getHangar().size()) {// only
-                        // show
-                        // in
-                        // first
-                        // free
-                        // cell
-                        if (chqPanel.useAdvanceRepairs) {
-                            menuItem = new javax.swing.JMenuItem("Sell Excess Bays");
+                    if (hangernum == chqPanel.getClient().getPlayer().getHangar().size()) {// only
+                        // show in first free cell
+                        if (chqPanel.useAdvanceRepairs()) {
+                            menuItem = new JMenuItem("Sell Excess Bays");
                             menuItem.setActionCommand("SEB");
-                            menuItem.addActionListener(this);
-                            popup.add(menuItem);
-                            popup.show(e.getComponent(), e.getX(), e.getY());
                         } else {
-                            menuItem = new javax.swing.JMenuItem("Fire Excess Techs");
+                            menuItem = new JMenuItem("Fire Excess Techs");
                             menuItem.setActionCommand("FET");
-                            menuItem.addActionListener(this);
-                            popup.add(menuItem);
-                            popup.show(e.getComponent(), e.getX(), e.getY());
                         }
+                        menuItem.addActionListener(this);
+                        popup.add(menuItem);
+                        popup.show(mouseEvent.getComponent(), mouseEvent.getX(), mouseEvent.getY());
                     }
                 }
-                // {
-                // JMenu buy = createBuySubMenu();
-                // popup.add(buy);
-                // }
-                // else if (Player.getFreeBays() > 0)
-                // {
-                // menuItem = new JMenuItem("Low Funds");
-                // popup.add(menuItem);
-                // }
-                // else
-                // {
-                // menuItem = new JMenuItem("No Room");
-                // popup.add(menuItem);
-                // }
-                // popup.show(e.getComponent(), e.getX(), e.getY());
             }
         }
     }
 
-    public void actionPerformed(java.awt.event.ActionEvent actionEvent) {
+    private static @NonNull JMenu getMenux(int i, int j) {
+        JMenu menux;
+        if (i < 4) {
+            menux = new JMenu(STR."\{Unit.getWeightClassDesc(i)} \{j + 1}");
+        } else if (i == 4) {// proto
+            menux = new JMenu(STR."Proto \{j + 1}");
+        } else {// BA, can assume this is i ==
+            // 5.
+            menux = new JMenu(STR."Infantry \{j + 1}");
+        }
+        return menux;
+    }
+
+    private static boolean isProtoMenu(Component[] components) {
+        boolean hasProtoMenu = false;
+        for (Component currComponent : components) {
+            if (currComponent instanceof JMenu currMenu) {
+                if (currMenu.getText().startsWith("Proto")) {
+                    hasProtoMenu = true;
+                }
+            }
+        }
+        return hasProtoMenu;
+    }
+
+    private static @NonNull String getPilotString(CUnit cm, Object pilots) {
+        Pilot mm = (Pilot) pilots;
+        String pilotString;
+        String skills = mm.getSkillString(true);
+        if (cm.getType() == Unit.MEK) {
+            pilotString = STR."\{mm.getName()} (\{mm.getGunnery()}/\{mm.getPiloting()}";
+            if (skills.trim().isEmpty()) {
+                pilotString += ")";
+            } else {
+                pilotString += STR.", \{skills})";
+            }
+
+            if (mm.getHits() > 0) {
+                pilotString += STR." Hits: \{mm.getHits()}";
+            }
+
+        } else {
+            pilotString = STR."\{mm.getName()} (\{mm.getGunnery()}";
+            if (skills.trim().isEmpty()) {
+                pilotString += ")";
+            } else {
+                pilotString += STR.", \{skills})";
+            }
+        }
+        return pilotString;
+    }
+
+    @Override
+    public void mouseReleased(MouseEvent e) {
+
+        /*
+         * If this was a drag, try to drop the unit into a target army or the hangar.
+         */
+        if (isDrag) {
+
+            // regardless of outcome, clear drag image.
+            chqPanel.getTableMeks().paintImmediately(dragRect.getBounds());
+
+            boolean validRelease = chqPanel.getTableMeks().contains(e.getPoint());
+
+            int row = chqPanel.getTableMeks().rowAtPoint(e.getPoint());
+            int col = chqPanel.getTableMeks().columnAtPoint(e.getPoint());
+            CUnit exchangeUnit = chqPanel.getMekTable().getMekAt(row, col);
+            currArmy = chqPanel.getMekTable().getArmyAt(row);
+
+            // null finish army. moving to hangar.
+            if ((currArmy == null) && validRelease) {
+
+                // if the unit is from an army, remove it
+                if (startArmy != null) {
+                    chqPanel.getClient()
+                          .sendChat(STR."\{IClient.CAMPAIGN_PREFIX}c EXM#\{startArmy.getID()},\{dragUnit.getId()}");
+                }
+
+            }// end if(release over hangar)
+
+            // finish army exists
+            else if (validRelease) {
+
+                // from hangar to an army
+                if (startArmy == null) {
+
+                    // army # or empty space. add the unit.
+                    if (exchangeUnit == null) {
+                        chqPanel.getClient().sendChat(
+                              STR."\{IClient.CAMPAIGN_PREFIX}c EXM#\{currArmy.getID()},-1#\{dragUnit.getId()}");
+                    } else if (dragUnit.getId() != exchangeUnit.getId()) {
+                        chqPanel.getClient()
+                              .sendChat(STR."\{IClient.CAMPAIGN_PREFIX}c EXM#\{currArmy.getID()},\{exchangeUnit.getId()}#\{dragUnit.getId()}");
+                    }
+                }
+
+                // within the same army, change positions
+                else if ((currArmy.getID() == startArmy.getID()) &&
+                               (exchangeUnit != null) &&
+                               (dragUnit.getId() != exchangeUnit.getId())) {
+                    int newpos = 0;
+                    for (Unit currU : currArmy.getUnits()) {
+                        if (currU.getId() == exchangeUnit.getId()) {
+                            break;
+                        }
+                        newpos++;
+                    }
+                    chqPanel.getClient().sendChat(
+                          STR."\{IClient.CAMPAIGN_PREFIX}c unitposition#\{startArmy.getID()}#\{dragUnit.getId()}#\{newpos}");
+                }
+
+            }// end else(target army exists)
+
+            // revert to normal cursor
+            chqPanel.getTableMeks().setCursor(Cursor.getDefaultCursor());
+
+        }// end if(isDrag)
+
+        isDrag = false;
+        maybeShowPopup(e);
+    }
+
+    @Override
+    public void mouseDragged(MouseEvent e) {
+
+        if (isDrag) {
+
+            // repaint the old image location
+            chqPanel.getTableMeks().paintImmediately(dragRect.getBounds());
+
+            // determine new boundaries for the rectangle
+            dragRect.setRect(e.getX() - offset.x, e.getY() - offset.y, 84, 72);
+
+            // place the label in a new location
+            Graphics2D g = (Graphics2D) chqPanel.getTableMeks().getGraphics();
+            g.drawImage(dragImage,
+                  AffineTransform.getTranslateInstance(dragRect.getX(), dragRect.getY()), null);
+
+            /*
+             * Update the cursor depending on current drag status. If dragging a unit into an army which already contains the unit, mark ineligible. Else, show the drag cursor.
+             */
+            int row = chqPanel.getTableMeks().rowAtPoint(e.getPoint());
+            int col = chqPanel.getTableMeks().columnAtPoint(e.getPoint());
+            CUnit currUnit = chqPanel.getMekTable().getMekAt(row, col);
+            currArmy = chqPanel.getMekTable().getArmyAt(row);
+
+            // null curr army. is an attempt to move to hangar.
+            if (currArmy == null) {
+
+                // if the unit is from an army, could remove. show minus.
+                if ((startArmy != null) &&
+                          (chqPanel.getClient().getMyStatus() == IClient.STATUS_RESERVE)) {
+                    chqPanel.getTableMeks().setCursor(removeCursor);
+                } else if (startArmy != null) {
+                    chqPanel.getTableMeks().setCursor(notAllowedCursor);
+                } else {
+                    chqPanel.getTableMeks().setCursor(Cursor.getDefaultCursor());
+                }
+
+            }// end if(release over hangar)
+
+            // currArmy exists
+            else {
+
+                // from hangar to an army
+                if (startArmy == null) {
+
+                    if (chqPanel.getClient().getMyStatus() != IClient.STATUS_RESERVE) {
+                        chqPanel.getTableMeks().setCursor(notAllowedCursor);
+                    } else if (chqPanel.getPlayer().getAmountOfTimesUnitExistsInArmies(dragUnit.getId()) >=
+                                     Integer.parseInt(chqPanel.getClient()
+                                                            .getServerConfigs("UnitsInMultipleArmiesAmount"))) {
+                        chqPanel.getTableMeks().setCursor(maxCursor);
+                    } else if (currArmy.getUnit(dragUnit.getId()) != null) {
+                        chqPanel.getTableMeks().setCursor(dupeCursor);
+                    } else if (currUnit == null) {
+                        chqPanel.getTableMeks().setCursor(addCursor);
+                    } else if (dragUnit.getId() != currUnit.getId()) {
+                        chqPanel.getTableMeks().setCursor(exchangeCursor);
+                    }
+                }
+
+                // within the same army, change positions
+                else if (currArmy.getID() == startArmy.getID()) {
+
+                    if ((currUnit != null) &&
+                              (dragUnit.getId() != currUnit.getId()) &&
+                              (chqPanel.getClient().getMyStatus() != IClient.STATUS_FIGHTING)) {
+                        chqPanel.getTableMeks().setCursor(positionCursor);
+                    } else {
+                        chqPanel.getTableMeks().setCursor(notAllowedCursor);
+                    }
+                } else {
+                    chqPanel.getTableMeks().setCursor(Cursor.getDefaultCursor());
+                }
+
+            }// end else(target army exists)
+
+        }
+
+    }
+
+    public void actionPerformed(ActionEvent actionEvent) {
 
         String s = actionEvent.getActionCommand();
         java.util.StringTokenizer st = new java.util.StringTokenizer(s, "|");
@@ -1871,111 +1709,101 @@ public class MekTableMouseAdapter extends MouseInputAdapter implements ActionLis
             int lid = Integer.parseInt(st.nextToken());
             int mid = Integer.parseInt(st.nextToken());
             int hid = Integer.parseInt(st.nextToken());
-            chqPanel.client.sendChat(chqPanel.client.MWClient.CAMPAIGN_PREFIX + "c EXM#" + lid + "," + mid + "#" + hid);
+            chqPanel.getClient()
+                  .sendChat(STR."\{IClient.CAMPAIGN_PREFIX}c EXM#\{lid},\{mid}#\{hid}");
             // move to hanger
         } else if (command.equalsIgnoreCase("MH")) {
             int lid = Integer.parseInt(st.nextToken());
             int mid = Integer.parseInt(st.nextToken());
-            chqPanel.client.sendChat(chqPanel.client.MWClient.CAMPAIGN_PREFIX + "c EXM#" + lid + "," + mid);
+            chqPanel.getClient().sendChat(STR."\{IClient.CAMPAIGN_PREFIX}c EXM#\{lid},\{mid}");
             // add lance
         } else if (command.equalsIgnoreCase("AA")) {
-            chqPanel.client.sendChat(chqPanel.client.MWClient.CAMPAIGN_PREFIX +
-                                           "c cra#" +
-                                           chqPanel.client.getConfigParam("DEFAULTARMYNAME"));
+            chqPanel.getClient().sendChat(STR."\{IClient.CAMPAIGN_PREFIX}c cra#\{chqPanel.getClient()
+                                                                                       .getConfigParam("DEFAULTARMYNAME")}");
             // set lance active
         } else if (command.equalsIgnoreCase("SA")) {
-            // int lid = Integer.parseInt(st.nextToken());
-            // MekTable.getLanceAt(lid).setReady(true);
-            // set lance inactive
         } else if (command.equalsIgnoreCase("SI")) {
-            // int lid = Integer.parseInt(st.nextToken());
-            // MekTable.getLanceAt(lid).setReady(false);
-            // check attack options
         } else if (command.equalsIgnoreCase("AO")) {
             int lid = Integer.parseInt(st.nextToken());
-            chqPanel.client.getMainFrame().jMenuCommanderCheckAttack_actionPerformed(lid);
+            chqPanel.getClient().getMainFrame().jMenuCommanderCheckAttack_actionPerformed(lid);
             // check access
         } else if (command.equalsIgnoreCase("CAA")) {
             int armyID = Integer.parseInt(st.nextToken());
-            javax.swing.JComboBox attackCombo = new javax.swing.JComboBox(chqPanel.client.getAllOps()
-                                                                                .keySet()
-                                                                                .toArray()); //Barukkhazad! 20151108 removed castings
+            JComboBox<String> attackCombo = new JComboBox<>(); //Barukkhazad! 20151108 removed castings
+            chqPanel.getClient().getAllOps().keySet().forEach(attackCombo::addItem);
             attackCombo.setEditable(false);
 
             attackCombo.grabFocus();
             attackCombo.getEditor().selectAll();
 
-            javax.swing.JOptionPane jop = new javax.swing.JOptionPane(attackCombo,
-                  javax.swing.JOptionPane.QUESTION_MESSAGE,
-                  javax.swing.JOptionPane.OK_CANCEL_OPTION);
-            javax.swing.JDialog dlg = jop.createDialog(chqPanel.client.getMainFrame(), "Select Operation.");
+            JOptionPane jop = new JOptionPane(attackCombo,
+                  JOptionPane.QUESTION_MESSAGE,
+                  JOptionPane.OK_CANCEL_OPTION);
+            JDialog dlg = jop.createDialog(chqPanel.getClient().getMainFrame(), "Select Operation.");
             attackCombo.grabFocus();
             attackCombo.getEditor().selectAll();
             dlg.setVisible(true);
 
-            if ((Integer) jop.getValue() == javax.swing.JOptionPane.CANCEL_OPTION) {
+            if ((Integer) jop.getValue() == JOptionPane.CANCEL_OPTION) {
                 return;
             }
 
             String attackName = (String) attackCombo.getSelectedItem();
-            chqPanel.client.sendChat(chqPanel.client.MWClient.CAMPAIGN_PREFIX +
-                                           "c checkarmyeligibility#" +
-                                           armyID +
-                                           "#" +
-                                           attackName);
+            chqPanel.getClient()
+                  .sendChat(STR."\{IClient.CAMPAIGN_PREFIX}c checkarmyeligibility#\{armyID}#\{attackName}");
             // Remove Army
         } else if (command.equalsIgnoreCase("RA")) {
             int lid = Integer.parseInt(st.nextToken());
-            chqPanel.client.getMainFrame().jMenuCommanderRemoveLance_actionPerformed(lid);
+            chqPanel.getClient().getMainFrame().jMenuCommanderRemoveLance_actionPerformed(lid);
             // rename army
         } else if (command.equalsIgnoreCase("LA")) {
             int lid = Integer.parseInt(st.nextToken());
-            chqPanel.client.getMainFrame().jMenuCommanderPlayerLockArmy_actionPerformed(lid);
+            chqPanel.getClient().getMainFrame().jMenuCommanderPlayerLockArmy_actionPerformed(lid);
             // lock army
         } else if (command.equalsIgnoreCase("ULA")) {
             int lid = Integer.parseInt(st.nextToken());
-            chqPanel.client.getMainFrame().jMenuCommanderPlayerUnlockArmy_actionPerformed(lid);
+            chqPanel.getClient().getMainFrame().jMenuCommanderPlayerUnlockArmy_actionPerformed(lid);
             // unlock army
         } else if (command.equalsIgnoreCase("DAA")) {
             int lid = Integer.parseInt(st.nextToken());
-            chqPanel.client.getMainFrame().jMenuCommanderDisableArmy_actionPerformed(lid);
+            chqPanel.getClient().getMainFrame().jMenuCommanderDisableArmy_actionPerformed(lid);
         } else if (command.equalsIgnoreCase("NA")) {
             int mid = Integer.parseInt(st.nextToken());
-            chqPanel.client.getMainFrame().jMenuCommanderNameArmy_actionPerformed(mid);
+            chqPanel.getClient().getMainFrame().jMenuCommanderNameArmy_actionPerformed(mid);
             // set Lower Unit Limit
         } else if (command.equalsIgnoreCase("SLUL")) {
             int lid = Integer.parseInt(st.nextToken());
-            chqPanel.client.getMainFrame().jMenuCommanderSetLowerUnitLimit_actionPerformed(lid);
+            chqPanel.getClient().getMainFrame().jMenuCommanderSetLowerUnitLimit_actionPerformed(lid);
             // set upper Unit Limit
         } else if (command.equalsIgnoreCase("SUUL")) {
             int lid = Integer.parseInt(st.nextToken());
-            chqPanel.client.getMainFrame().jMenuCommanderSetUpperUnitLimit_actionPerformed(lid);
+            chqPanel.getClient().getMainFrame().jMenuCommanderSetUpperUnitLimit_actionPerformed(lid);
             // Set Force Size you plan on facing
         } else if (command.equalsIgnoreCase("SFS")) {
             int aid = Integer.parseInt(st.nextToken());
-            chqPanel.client.getMainFrame().jMenuCommanderSetForceSizeToFace_actionPerformed(aid);
+            chqPanel.getClient().getMainFrame().jMenuCommanderSetForceSizeToFace_actionPerformed(aid);
             // showtofaction - army
         } else if (command.equalsIgnoreCase("SATH")) {
             int lid = Integer.parseInt(st.nextToken());
-            chqPanel.client.sendChat(chqPanel.client.MWClient.CAMPAIGN_PREFIX + "c sth#a#" + lid);
+            chqPanel.getClient().sendChat(STR."\{IClient.CAMPAIGN_PREFIX}c sth#a#\{lid}");
             // make public challenge
         } else if (command.equalsIgnoreCase("MPC")) {
 
             int mode = Integer.parseInt(st.nextToken());
             int lid = Integer.parseInt(st.nextToken());
-            boolean useForceSize = Boolean.parseBoolean(chqPanel.client.getserverConfigs("UseOperationsRule"));
+            boolean useForceSize = Boolean.parseBoolean(chqPanel.getClient().getServerConfigs("UseOperationsRule"));
             float opForceSize = Army.NO_LIMIT;
             double forceSizeMod = 1;
 
             String operation = st.nextToken();
 
-            for (client.campaign.CArmy currArmy : chqPanel.client.getPlayer().getArmies()) {
+            for (CArmy currArmy : chqPanel.getClient().getPlayer().getArmies()) {
 
                 if ((lid != -1) && (currArmy.getID() != lid)) {
                     continue;
                 }
 
-                String toSend = chqPanel.client.getConfigParam("CHALLENGESTRING");
+                StringBuilder toSend = new StringBuilder(chqPanel.getClient().getConfigParam("CHALLENGESTRING"));
 
                 if (useForceSize) {
                     opForceSize = currArmy.getOpForceSize();
@@ -1984,31 +1812,31 @@ public class MekTableMouseAdapter extends MouseInputAdapter implements ActionLis
                     }
                 }
                 // load the default if a non-entry is set.
-                if (toSend.trim().equals("")) {
-                    toSend = "Looking for a game at";// matches default
+                if (toSend.toString().trim().isEmpty()) {
+                    toSend = new StringBuilder("Looking for a game at");// matches default
                     // config
                 }
 
                 // BV only
                 if (mode == 1) {
-                    toSend += " " + Math.round(currArmy.getBV() * forceSizeMod) + " BV";
+                    toSend.append(STR." \{Math.round(currArmy.getBV() * forceSizeMod)} BV");
                     if (forceSizeMod > 1) {
-                        toSend += " vs " + opForceSize + " units";
+                        toSend.append(STR." vs \{opForceSize} units");
                     }
-                    toSend += ".";
+                    toSend.append(".");
                 }
                 // BV and Count
                 else if (mode == 2) {
                     int armySize = currArmy.getUnits().size();
-                    toSend += " " + Math.round(currArmy.getBV() * forceSizeMod) + " BV";
+                    toSend.append(" ").append(Math.round(currArmy.getBV() * forceSizeMod)).append(" BV");
                     if (forceSizeMod > 1) {
-                        toSend += " vs " + opForceSize + " units";
+                        toSend.append(" vs ").append(opForceSize).append(" units");
                     }
-                    toSend += ", with  " + armySize + " unit";
+                    toSend.append(", with  ").append(armySize).append(" unit");
                     if (armySize > 1) {
-                        toSend += "s.";
+                        toSend.append("s.");
                     } else {
-                        toSend += ".";
+                        toSend.append(".");
                     }
                 }
 
@@ -2029,22 +1857,22 @@ public class MekTableMouseAdapter extends MouseInputAdapter implements ActionLis
                     int lightV = 0;
                     int inf = 0;
 
-                    boolean showVeeWeights = Boolean.parseBoolean(chqPanel.client.getserverConfigs(
+                    boolean showVeeWeights = Boolean.parseBoolean(chqPanel.getClient().getServerConfigs(
                           "ShowVehWeightclassInChallenges"));
 
                     java.util.Enumeration<Unit> e = currArmy.getUnits().elements();
                     // boolean firstUnit = true;
                     while (e.hasMoreElements()) {
 
-                        client.campaign.CUnit currUnit = (client.campaign.CUnit) e.nextElement();
+                        CUnit currUnit = (CUnit) e.nextElement();
 
                         // mechs
                         if ((currUnit.getType() == Unit.MEK) || (currUnit.getType() == Unit.QUAD)) {
-                            if (currUnit.getWeightclass() == Unit.ASSAULT) {
+                            if (currUnit.getWeightClass() == Unit.ASSAULT) {
                                 assaultM++;
-                            } else if (currUnit.getWeightclass() == Unit.HEAVY) {
+                            } else if (currUnit.getWeightClass() == Unit.HEAVY) {
                                 heavyM++;
-                            } else if (currUnit.getWeightclass() == Unit.MEDIUM) {
+                            } else if (currUnit.getWeightClass() == Unit.MEDIUM) {
                                 mediumM++;
                             } else {
                                 lightM++;
@@ -2057,11 +1885,11 @@ public class MekTableMouseAdapter extends MouseInputAdapter implements ActionLis
                         } else if (currUnit.getType() == Unit.VEHICLE) {
                             vehs++;
                             if (showVeeWeights) {
-                                if (currUnit.getWeightclass() == Unit.ASSAULT) {
+                                if (currUnit.getWeightClass() == Unit.ASSAULT) {
                                     assaultV++;
-                                } else if (currUnit.getWeightclass() == Unit.HEAVY) {
+                                } else if (currUnit.getWeightClass() == Unit.HEAVY) {
                                     heavyV++;
-                                } else if (currUnit.getWeightclass() == Unit.MEDIUM) {
+                                } else if (currUnit.getWeightClass() == Unit.MEDIUM) {
                                     mediumV++;
                                 } else {
                                     lightV++;
@@ -2080,106 +1908,106 @@ public class MekTableMouseAdapter extends MouseInputAdapter implements ActionLis
                     }
 
                     // assemble the string
-                    toSend += " " + Math.round(currArmy.getBV() * forceSizeMod) + " BV";
+                    toSend.append(" ").append(Math.round(currArmy.getBV() * forceSizeMod)).append(" BV");
                     if (forceSizeMod > 1) {
-                        toSend += " vs " + opForceSize + " units";
+                        toSend.append(" vs ").append(opForceSize).append(" units");
                     }
-                    toSend += ".";
+                    toSend.append(".");
                     if (assaultM > 0) {
-                        toSend += " " + assaultM + "A,";
+                        toSend.append(" ").append(assaultM).append("A,");
                     }
                     if (heavyM > 0) {
-                        toSend += " " + heavyM + "H,";
+                        toSend.append(" ").append(heavyM).append("H,");
                     }
                     if (mediumM > 0) {
-                        toSend += " " + mediumM + "M,";
+                        toSend.append(" ").append(mediumM).append("M,");
                     }
                     if (lightM > 0) {
-                        toSend += " " + lightM + "L,";
+                        toSend.append(" ").append(lightM).append("L,");
                     }
                     if (protoM > 0) {
-                        toSend += " " + protoM + " Protos,";
+                        toSend.append(" ").append(protoM).append(" Protos,");
                     }
                     if (ba > 0) {
-                        toSend += " " + ba + " BAs,";
+                        toSend.append(" ").append(ba).append(" BAs,");
                     }
                     if (ba > 0) {
-                        toSend += " " + aero + " Aeros,";
+                        toSend.append(" ").append(aero).append(" Aeros,");
                     }
                     if (vehs > 0) {
                         if (showVeeWeights) {
                             if (assaultV > 0) {
-                                toSend += " " + assaultV + "A Vehs,";
+                                toSend.append(" ").append(assaultV).append("A Vehs,");
                             }
                             if (heavyV > 0) {
-                                toSend += " " + heavyV + "H Vehs,";
+                                toSend.append(" ").append(heavyV).append("H Vehs,");
                             }
                             if (mediumV > 0) {
-                                toSend += " " + mediumV + "M Vehs,";
+                                toSend.append(" ").append(mediumV).append("M Vehs,");
                             }
                             if (lightV > 0) {
-                                toSend += " " + lightV + "L Vehs,";
+                                toSend.append(" ").append(lightV).append("L Vehs,");
                             }
                         } else {
-                            toSend += " " + vehs + " Vehs,";
+                            toSend.append(" ").append(vehs).append(" Vehs,");
                         }
                     } else if (inf > 0) {
-                        toSend += " " + inf + " Inf,";
+                        toSend.append(" ").append(inf).append(" Inf,");
                     }
 
                     // replace final comma with a period.
                     int sendLength = toSend.lastIndexOf(",");
-                    toSend = toSend.substring(0, sendLength) + ".";
+                    toSend = new StringBuilder(STR."\{toSend.substring(0, sendLength)}.");
                 } else if (mode == 4) {
                     int Tonnage = 0;
                     java.util.Enumeration<Unit> e = currArmy.getUnits().elements();
                     while (e.hasMoreElements()) {
-                        client.campaign.CUnit unit = (client.campaign.CUnit) e.nextElement();
+                        CUnit unit = (CUnit) e.nextElement();
                         Tonnage += (int) unit.getEntity().getWeight();
                     }
-                    toSend += " " + Tonnage + " tons.";
+                    toSend.append(" ").append(Tonnage).append(" tons.");
 
                 } else if (mode == 5) {
                     int Tonnage = 0;
                     java.util.Enumeration<Unit> e = currArmy.getUnits().elements();
                     while (e.hasMoreElements()) {
-                        client.campaign.CUnit unit = (client.campaign.CUnit) e.nextElement();
+                        CUnit unit = (CUnit) e.nextElement();
                         Tonnage += (int) unit.getEntity().getWeight();
                     }
-                    toSend += " " + Math.round(currArmy.getBV() * forceSizeMod) + " BV";
+                    toSend.append(" ").append(Math.round(currArmy.getBV() * forceSizeMod)).append(" BV");
                     if (forceSizeMod > 1) {
-                        toSend += " vs " + opForceSize + " units";
+                        toSend.append(" vs ").append(opForceSize).append(" units");
                     }
-                    toSend += ", at " + Tonnage + " tons";
+                    toSend.append(", at ").append(Tonnage).append(" tons");
                 } else if (mode == 6) {
                     int Tonnage = 0;
                     java.util.Enumeration<Unit> e = currArmy.getUnits().elements();
                     while (e.hasMoreElements()) {
-                        client.campaign.CUnit unit = (client.campaign.CUnit) e.nextElement();
+                        CUnit unit = (CUnit) e.nextElement();
                         Tonnage += (int) unit.getEntity().getWeight();
                     }
-                    toSend += " " + Tonnage + " tons, with " + currArmy.getUnits().size();
+                    toSend.append(" ").append(Tonnage).append(" tons, with ").append(currArmy.getUnits().size());
                     if (currArmy.getUnits().size() == 1) {
-                        toSend += " unit.";
+                        toSend.append(" unit.");
                     } else {
-                        toSend += " units.";
+                        toSend.append(" units.");
                     }
                 } else if (mode == 7) {
                     int Tonnage = 0;
                     java.util.Enumeration<Unit> e = currArmy.getUnits().elements();
                     while (e.hasMoreElements()) {
-                        client.campaign.CUnit unit = (client.campaign.CUnit) e.nextElement();
+                        CUnit unit = (CUnit) e.nextElement();
                         Tonnage += (int) unit.getEntity().getWeight();
                     }
-                    toSend += " " + Math.round(currArmy.getBV() * forceSizeMod) + " BV";
+                    toSend.append(" ").append(Math.round(currArmy.getBV() * forceSizeMod)).append(" BV");
                     if (forceSizeMod > 1) {
-                        toSend += " vs " + opForceSize + " units";
+                        toSend.append(" vs ").append(opForceSize).append(" units");
                     }
-                    toSend += ", at " + Tonnage + " tons, with " + currArmy.getUnits().size();
+                    toSend.append(", at ").append(Tonnage).append(" tons, with ").append(currArmy.getUnits().size());
                     if (currArmy.getUnits().size() == 1) {
-                        toSend += " unit.";
+                        toSend.append(" unit.");
                     } else {
-                        toSend += " units.";
+                        toSend.append(" units.");
                     }
                 } else if (mode == 8) {
                     int assault = 0;
@@ -2189,8 +2017,8 @@ public class MekTableMouseAdapter extends MouseInputAdapter implements ActionLis
 
                     java.util.Enumeration<Unit> e = currArmy.getUnits().elements();
                     while (e.hasMoreElements()) {
-                        client.campaign.CUnit unit = (client.campaign.CUnit) e.nextElement();
-                        switch (unit.getWeightclass()) {
+                        CUnit unit = (CUnit) e.nextElement();
+                        switch (unit.getWeightClass()) {
                             case Unit.ASSAULT:
                                 assault++;
                                 break;
@@ -2206,20 +2034,20 @@ public class MekTableMouseAdapter extends MouseInputAdapter implements ActionLis
                         }
                     }
                     if (assault > 0) {
-                        toSend += " " + assault + "A,";
+                        toSend.append(" ").append(assault).append("A,");
                     }
                     if (heavy > 0) {
-                        toSend += " " + heavy + "H,";
+                        toSend.append(" ").append(heavy).append("H,");
                     }
                     if (medium > 0) {
-                        toSend += " " + medium + "M,";
+                        toSend.append(" ").append(medium).append("M,");
                     }
                     if (light > 0) {
-                        toSend += " " + light + "L,";
+                        toSend.append(" ").append(light).append("L,");
                     }
                     // replace final comma with a period.
                     int sendLength = toSend.lastIndexOf(",");
-                    toSend = toSend.substring(0, sendLength) + ".";
+                    toSend = new StringBuilder(STR."\{toSend.substring(0, sendLength)}.");
 
                 } else if (mode == 9) {
                     int assault = 0;
@@ -2229,8 +2057,8 @@ public class MekTableMouseAdapter extends MouseInputAdapter implements ActionLis
 
                     java.util.Enumeration<Unit> e = currArmy.getUnits().elements();
                     while (e.hasMoreElements()) {
-                        client.campaign.CUnit unit = (client.campaign.CUnit) e.nextElement();
-                        switch (unit.getWeightclass()) {
+                        CUnit unit = (CUnit) e.nextElement();
+                        switch (unit.getWeightClass()) {
                             case Unit.ASSAULT:
                                 assault++;
                                 break;
@@ -2245,79 +2073,79 @@ public class MekTableMouseAdapter extends MouseInputAdapter implements ActionLis
                                 break;
                         }
                     }
-                    toSend += " " + Math.round(currArmy.getBV() * forceSizeMod) + " BV";
+                    toSend.append(" ").append(Math.round(currArmy.getBV() * forceSizeMod)).append(" BV");
                     if (forceSizeMod > 1) {
-                        toSend += " vs " + opForceSize + " units";
+                        toSend.append(" vs ").append(opForceSize).append(" units");
                     }
-                    toSend += ", with";
+                    toSend.append(", with");
                     if (assault > 0) {
-                        toSend += " " + assault + "A,";
+                        toSend.append(" ").append(assault).append("A,");
                     }
                     if (heavy > 0) {
-                        toSend += " " + heavy + "H,";
+                        toSend.append(" ").append(heavy).append("H,");
                     }
                     if (medium > 0) {
-                        toSend += " " + medium + "M,";
+                        toSend.append(" ").append(medium).append("M,");
                     }
                     if (light > 0) {
-                        toSend += " " + light + "L,";
+                        toSend.append(" ").append(light).append("L,");
                     }
                     // replace final comma with a period.
                     int sendLength = toSend.lastIndexOf(",");
-                    toSend = toSend.substring(0, sendLength) + ".";
+                    toSend = new StringBuilder(STR."\{toSend.substring(0, sendLength)}.");
 
                 } else if (mode == 10) {
                     java.util.Enumeration<Unit> e = currArmy.getUnits().elements();
                     while (e.hasMoreElements()) {
-                        client.campaign.CUnit unit = (client.campaign.CUnit) e.nextElement();
-                        toSend += " <a href=\"MEKINFO" +
-                                        unit.getUnitFilename() +
-                                        "#" +
-                                        unit.getBVForMatch() +
-                                        "#" +
-                                        unit.getPilot().getGunnery() +
-                                        "#" +
-                                        unit.getPilot().getPiloting() +
-                                        "\">" +
-                                        unit.getModelName() +
-                                        "</a>,";
+                        CUnit unit = (CUnit) e.nextElement();
+                        toSend.append(" <a href=\"MEKINFO")
+                              .append(unit.getUnitFilename())
+                              .append("#")
+                              .append(unit.getBVForMatch())
+                              .append("#")
+                              .append(unit.getPilot().getGunnery())
+                              .append("#")
+                              .append(unit.getPilot().getPiloting())
+                              .append("\">")
+                              .append(unit.getModelName())
+                              .append("</a>,");
                     }
                     // replace final comma with a period.
                     int sendLength = toSend.lastIndexOf(",");
-                    toSend = toSend.substring(0, sendLength) + ".";
+                    toSend = new StringBuilder(STR."\{toSend.substring(0, sendLength)}.");
 
                 } else if (mode == 11) {
 
-                    toSend += " " + Math.round(currArmy.getBV() * forceSizeMod) + " BV";
+                    toSend.append(" ").append(Math.round(currArmy.getBV() * forceSizeMod)).append(" BV");
                     if (forceSizeMod > 1) {
-                        toSend += " vs " + opForceSize + " units";
+                        toSend.append(" vs ").append(opForceSize).append(" units");
                     }
-                    toSend += ",";
+                    toSend.append(",");
                     java.util.Enumeration<Unit> e = currArmy.getUnits().elements();
                     while (e.hasMoreElements()) {
-                        client.campaign.CUnit unit = (client.campaign.CUnit) e.nextElement();
-                        toSend += " <a href=\"MEKINFO" +
-                                        unit.getUnitFilename() +
-                                        "#" +
-                                        unit.getBVForMatch() +
-                                        "#" +
-                                        unit.getPilot().getGunnery() +
-                                        "#" +
-                                        unit.getPilot().getPiloting() +
-                                        "\">" +
-                                        unit.getModelName() +
-                                        "</a>,";
+                        CUnit unit = (CUnit) e.nextElement();
+                        toSend.append(" <a href=\"MEKINFO")
+                              .append(unit.getUnitFilename())
+                              .append("#")
+                              .append(unit.getBVForMatch())
+                              .append("#")
+                              .append(unit.getPilot().getGunnery())
+                              .append("#")
+                              .append(unit.getPilot().getPiloting())
+                              .append("\">")
+                              .append(unit.getModelName())
+                              .append("</a>,");
                     }
                     // replace final comma with a period.
                     int sendLength = toSend.lastIndexOf(",");
-                    toSend = toSend.substring(0, sendLength) + ".";
+                    toSend = new StringBuilder(STR."\{toSend.substring(0, sendLength)}.");
 
                 } else if (mode == 12) {
 
                     java.util.Enumeration<Unit> e = currArmy.getUnits().elements();
-                    java.util.TreeMap<Double, Integer> unitWeights = new java.util.TreeMap<Double, Integer>();
+                    java.util.TreeMap<Double, Integer> unitWeights = new java.util.TreeMap<>();
                     while (e.hasMoreElements()) {
-                        client.campaign.CUnit unit = (client.campaign.CUnit) e.nextElement();
+                        CUnit unit = (CUnit) e.nextElement();
                         if (!unitWeights.containsKey(unit.getEntity().getWeight())) {
                             unitWeights.put(unit.getEntity().getWeight(), 1);
                         } else {
@@ -2327,23 +2155,23 @@ public class MekTableMouseAdapter extends MouseInputAdapter implements ActionLis
                     }
 
                     for (Double weight : unitWeights.keySet()) {
-                        toSend += " " +
-                                        Integer.toString(unitWeights.get(weight)) +
-                                        "x " +
-                                        weight.intValue() +
-                                        " tons,";
+                        toSend.append(" ")
+                              .append(unitWeights.get(weight))
+                              .append("x ")
+                              .append(weight.intValue())
+                              .append(" tons,");
                     }
                     // replace final comma with a period.
                     int sendLength = toSend.lastIndexOf(",");
-                    toSend = toSend.substring(0, sendLength) + ".";
+                    toSend = new StringBuilder(STR."\{toSend.substring(0, sendLength)}.");
 
                 } else if (mode == 13) {
 
-                    toSend += " " + currArmy.getBV() + " BV,";
+                    toSend.append(" ").append(currArmy.getBV()).append(" BV,");
                     java.util.Enumeration<Unit> e = currArmy.getUnits().elements();
-                    java.util.TreeMap<Double, Integer> unitWeights = new java.util.TreeMap<Double, Integer>();
+                    java.util.TreeMap<Double, Integer> unitWeights = new java.util.TreeMap<>();
                     while (e.hasMoreElements()) {
-                        client.campaign.CUnit unit = (client.campaign.CUnit) e.nextElement();
+                        CUnit unit = (CUnit) e.nextElement();
                         if (!unitWeights.containsKey(unit.getEntity().getWeight())) {
                             unitWeights.put(unit.getEntity().getWeight(), 1);
                         } else {
@@ -2353,27 +2181,27 @@ public class MekTableMouseAdapter extends MouseInputAdapter implements ActionLis
                     }
 
                     for (Double weight : unitWeights.keySet()) {
-                        toSend += " " +
-                                        Integer.toString(unitWeights.get(weight)) +
-                                        "x " +
-                                        weight.intValue() +
-                                        " tons,";
+                        toSend.append(" ")
+                              .append(unitWeights.get(weight))
+                              .append("x ")
+                              .append(weight.intValue())
+                              .append(" tons,");
                     }
                     // replace final comma with a period.
                     int sendLength = toSend.lastIndexOf(",");
-                    toSend = toSend.substring(0, sendLength) + ".";
+                    toSend = new StringBuilder(STR."\{toSend.substring(0, sendLength)}.");
 
                 }
 
-                if (currArmy.getName().trim().length() > 0) {
-                    toSend += " \"" + currArmy.getName() + "\"";
+                if (!currArmy.getName().trim().isEmpty()) {
+                    toSend.append(" \"").append(currArmy.getName()).append("\"");
                 }
 
                 if ((operation.length() > 1) && !operation.equalsIgnoreCase("none")) {
-                    toSend += " (" + operation + ")";
+                    toSend.append(" (").append(operation).append(")");
                 }
 
-                chqPanel.client.sendChat(toSend);
+                chqPanel.getClient().sendChat(toSend.toString());
                 // if lid != -1 it means only send one army and if we've
                 // gotten this far that means we've matched
                 // the army with the correct ID.
@@ -2384,62 +2212,63 @@ public class MekTableMouseAdapter extends MouseInputAdapter implements ActionLis
             // showtofaction - unit
         } else if (command.equalsIgnoreCase("SUTH")) {
             int mid = Integer.parseInt(st.nextToken());
-            chqPanel.client.sendChat(chqPanel.client.MWClient.CAMPAIGN_PREFIX + "c sth#u#" + mid);
+            chqPanel.getClient().sendChat(STR."\{IClient.CAMPAIGN_PREFIX}c sth#u#\{mid}");
             // rename pilot
         } else if (command.equalsIgnoreCase("RP")) {
             int mid = Integer.parseInt(st.nextToken());
-            chqPanel.client.getMainFrame().jMenuCommanderNamePilot_actionPerformed(mid);
+            chqPanel.getClient().getMainFrame().jMenuCommanderNamePilot_actionPerformed(mid);
             // Promote Pilot
         } else if (command.equalsIgnoreCase("PP")) {
             int mid = Integer.parseInt(st.nextToken());
-            new PromotePilotDialog(chqPanel.client, mid, false);
+            new PromotePilotDialog(chqPanel.getClient(), mid, false);
             // Demote pilot
         } else if (command.equalsIgnoreCase("DP")) {
             int mid = Integer.parseInt(st.nextToken());
-            new PromotePilotDialog(chqPanel.client, mid, true);
+            new PromotePilotDialog(chqPanel.getClient(), mid, true);
             // retire pilot
         } else if (command.equalsIgnoreCase("RT")) {
             int mid = Integer.parseInt(st.nextToken());
-            chqPanel.client.sendChat(chqPanel.client.MWClient.CAMPAIGN_PREFIX + "c retirepilot#" + mid);// send
+            chqPanel.getClient()
+                  .sendChat(STR."\{IClient.CAMPAIGN_PREFIX}c retirepilot#\{mid}");// send
             // directly
             // show mek
         } else if (command.equalsIgnoreCase("SM")) {
             int row = Integer.parseInt(st.nextToken());
             int col = Integer.parseInt(st.nextToken());
-            client.campaign.CUnit mek = chqPanel.MekTable.getMekAt(row, col);
+            CUnit mek = chqPanel.getMekTable().getMekAt(row, col);
             Entity theEntity = mek.getEntity();
-            javax.swing.JFrame infoWindow = new javax.swing.JFrame();
-            UnitDisplay unitDisplay = new MWUnitDisplay(null, chqPanel.client);
+            JFrame infoWindow = new JFrame();
+            MWUnitDisplay unitDisplay = new MWUnitDisplay(null, chqPanel.getClient());
             theEntity.loadAllWeapons();
             infoWindow.getContentPane().add(unitDisplay);
             infoWindow.setSize(300, 400);
             infoWindow.setResizable(false);
             infoWindow.setTitle(mek.getModelName());
-            infoWindow.setLocationRelativeTo(chqPanel.client.getMainFrame());
+            infoWindow.setLocationRelativeTo(chqPanel.getClient().getMainFrame());
             infoWindow.setVisible(true);
             unitDisplay.displayEntity(theEntity);
         } else if (command.equalsIgnoreCase("CMU")) {
             int row = Integer.parseInt(st.nextToken());
             int col = Integer.parseInt(st.nextToken());
-            client.campaign.CUnit mek = chqPanel.MekTable.getMekAt(row, col);
+            CUnit mek = chqPanel.getMekTable().getMekAt(row, col);
             Entity theEntity = mek.getEntity();
             // JFrame InfoWindow = new JFrame();
             theEntity.loadAllWeapons();
-            CustomUnitDialog customizeUnit = new CustomUnitDialog(chqPanel.client, theEntity, mek.getPilot(), mek);
+            CustomUnitDialog customizeUnit = new CustomUnitDialog(chqPanel.getClient(), theEntity, mek.getPilot(), mek);
             customizeUnit.setVisible(true);
 
         }// Repair a unit
         else if (command.equalsIgnoreCase("ARU")) {
             int row = Integer.parseInt(st.nextToken());
             int col = Integer.parseInt(st.nextToken());
-            client.campaign.CUnit mek = chqPanel.MekTable.getMekAt(row, col);
-            new AdvancedRepairDialog(chqPanel.client, mek.getId(), false);
+            CUnit mek = chqPanel.getMekTable().getMekAt(row, col);
+            new AdvancedRepairDialog(chqPanel.getClient(), mek.getId(), false);
         }// Repair a unit
         else if (command.equalsIgnoreCase("BUR")) {
             int row = Integer.parseInt(st.nextToken());
             int col = Integer.parseInt(st.nextToken());
-            client.campaign.CUnit mek = chqPanel.MekTable.getMekAt(row, col);
-            new BulkRepairDialog(chqPanel.client,
+            CUnit mek = chqPanel.getMekTable().getMekAt(row, col);
+            new BulkRepairDialog(chqPanel.getClient(),
                   mek.getId(),
                   BulkRepairDialog.TYPE_BULK,
                   BulkRepairDialog.UNIT_TYPE_SINGLE);
@@ -2447,8 +2276,8 @@ public class MekTableMouseAdapter extends MouseInputAdapter implements ActionLis
         else if (command.equalsIgnoreCase("SUR")) {
             int row = Integer.parseInt(st.nextToken());
             int col = Integer.parseInt(st.nextToken());
-            client.campaign.CUnit mek = chqPanel.MekTable.getMekAt(row, col);
-            new BulkRepairDialog(chqPanel.client,
+            CUnit mek = chqPanel.getMekTable().getMekAt(row, col);
+            new BulkRepairDialog(chqPanel.getClient(),
                   mek.getId(),
                   BulkRepairDialog.TYPE_SIMPLE,
                   BulkRepairDialog.UNIT_TYPE_SINGLE);
@@ -2456,215 +2285,154 @@ public class MekTableMouseAdapter extends MouseInputAdapter implements ActionLis
         else if (command.equalsIgnoreCase("BSU")) {
             int row = Integer.parseInt(st.nextToken());
             int col = Integer.parseInt(st.nextToken());
-            client.campaign.CUnit mek = chqPanel.MekTable.getMekAt(row, col);
-            new BulkRepairDialog(chqPanel.client,
+            CUnit mek = chqPanel.getMekTable().getMekAt(row, col);
+            new BulkRepairDialog(chqPanel.getClient(),
                   mek.getId(),
                   BulkRepairDialog.TYPE_SALVAGE,
                   BulkRepairDialog.UNIT_TYPE_SINGLE);
         } else if (command.equalsIgnoreCase("SUC")) {
             int row = Integer.parseInt(st.nextToken());
             int col = Integer.parseInt(st.nextToken());
-            client.campaign.CUnit mek = chqPanel.MekTable.getMekAt(row, col);
-            new AdvancedRepairDialog(chqPanel.client, mek.getId(), true);
+            CUnit mek = chqPanel.getMekTable().getMekAt(row, col);
+            new AdvancedRepairDialog(chqPanel.getClient(), mek.getId(), true);
         }// Display Unit Repair Jobs
         else if (command.equalsIgnoreCase("DRJ")) {
             int row = Integer.parseInt(st.nextToken());
             int col = Integer.parseInt(st.nextToken());
-            client.campaign.CUnit mek = chqPanel.MekTable.getMekAt(row, col);
+            CUnit mek = chqPanel.getMekTable().getMekAt(row, col);
 
-            chqPanel.client.sendChat(chqPanel.client.MWClient.CAMPAIGN_PREFIX +
-                                           "c DisplayUnitRepairJobs#" +
-                                           mek.getId());
+            chqPanel.getClient().sendChat(STR."\{IClient.CAMPAIGN_PREFIX}c DisplayUnitRepairJobs#\{mek.getId()}");
         }// Display Pending Work Orders
         else if (command.equalsIgnoreCase("DPWO")) {
             int row = Integer.parseInt(st.nextToken());
             int col = Integer.parseInt(st.nextToken());
-            client.campaign.CUnit mek = chqPanel.MekTable.getMekAt(row, col);
-            if (chqPanel.client.getRMT() != null) {
-                chqPanel.client.systemMessage(chqPanel.client.getRMT().getRepairQueue(mek.getId()));
+            CUnit mek = chqPanel.getMekTable().getMekAt(row, col);
+            if (chqPanel.getClient().getRMT() != null) {
+                chqPanel.getClient().systemMessage(chqPanel.getClient().getRMT().getRepairQueue(mek.getId()));
             }
-            if (chqPanel.client.getSMT() != null) {
-                chqPanel.client.systemMessage(chqPanel.client.getSMT().getSalvageQueue(mek.getId()));
+            if (chqPanel.getClient().getSMT() != null) {
+                chqPanel.getClient().systemMessage(chqPanel.getClient().getSMT().getSalvageQueue(mek.getId()));
             }
         }// Stop all pending work orders
         else if (command.equalsIgnoreCase("SAPWO")) {
             int row = Integer.parseInt(st.nextToken());
             int col = Integer.parseInt(st.nextToken());
-            client.campaign.CUnit mek = chqPanel.MekTable.getMekAt(row, col);
-            if (chqPanel.client.getRMT() != null) {
-                chqPanel.client.getRMT().removeAllWorkOrders(mek.getId());
+            CUnit mek = chqPanel.getMekTable().getMekAt(row, col);
+            if (chqPanel.getClient().getRMT() != null) {
+                chqPanel.getClient().getRMT().removeAllWorkOrders(mek.getId());
             }
-            if (chqPanel.client.getSMT() != null) {
-                chqPanel.client.getSMT().removeAllWorkOrders(mek.getId());
+            if (chqPanel.getClient().getSMT() != null) {
+                chqPanel.getClient().getSMT().removeAllWorkOrders(mek.getId());
             }
-            chqPanel.client.systemMessage("Cancelled all pending work orders.");
+            chqPanel.getClient().systemMessage("Cancelled all pending work orders.");
         }// Reload all ammo
         else if (command.equalsIgnoreCase("RAA")) {
             int row = Integer.parseInt(st.nextToken());
             int col = Integer.parseInt(st.nextToken());
-            client.campaign.CUnit mek = chqPanel.MekTable.getMekAt(row, col);
-            int result = javax.swing.JOptionPane.showConfirmDialog(chqPanel.client.getMainFrame(),
-                  "Are you sure you want to reload all the ammo on this unit " +
-                        chqPanel.client.getPlayer().getName() +
-                        "?",
+            CUnit mek = chqPanel.getMekTable().getMekAt(row, col);
+            int result = JOptionPane.showConfirmDialog(chqPanel.getClient().getMainFrame(),
+                  STR."Are you sure you want to reload all the ammo on this unit \{chqPanel.getClient()
+                                                                                         .getPlayer()
+                                                                                         .getName()}?",
                   "Reload it?",
-                  javax.swing.JOptionPane.YES_NO_OPTION);
-            if (result == javax.swing.JOptionPane.YES_OPTION) {
-                chqPanel.client.sendChat(chqPanel.client.MWClient.CAMPAIGN_PREFIX + "c RELOADALLAMMO#" + mek.getId());
+                  JOptionPane.YES_NO_OPTION);
+            if (result == JOptionPane.YES_OPTION) {
+                chqPanel.getClient()
+                      .sendChat(STR."\{IClient.CAMPAIGN_PREFIX}c RELOADALLAMMO#\{mek.getId()}");
             }
         }
         // Estimate Unit Repairs
         else if (command.equalsIgnoreCase("EUR")) {
             int row = Integer.parseInt(st.nextToken());
             int col = Integer.parseInt(st.nextToken());
-            int year = Integer.parseInt(chqPanel.client.getserverConfigs("CampaignYear"));
-            client.campaign.CUnit mek = chqPanel.MekTable.getMekAt(row, col);
-            int greenTechCost = 0;
-            int regTechCost = 0;
-            int vetTechCost = 0;
-            int eliteTechCost = 0;
+            int year = Integer.parseInt(chqPanel.getClient().getServerConfigs("CampaignYear"));
+            CUnit mek = chqPanel.getMekTable().getMekAt(row, col);
+            int greenTechCost;
+            int regTechCost;
+            int vetTechCost;
+            int eliteTechCost;
 
-            double repairCost = 0;
-            if (Boolean.parseBoolean(chqPanel.client.getserverConfigs("UseRealRepairCosts"))) {
+            double repairCost;
+
+            if (Boolean.parseBoolean(chqPanel.getClient().getServerConfigs("UseRealRepairCosts"))) {
                 repairCost = UnitUtils.getTotalDamagedPartCost(mek.getEntity(), year);
-                repairCost *= Double.parseDouble(chqPanel.client.getserverConfigs("RealRepairCostMod"));
-                greenTechCost = chqPanel.client.getTechLaborCosts(mek.getEntity(), UnitUtils.TECH_GREEN);
-                regTechCost = chqPanel.client.getTechLaborCosts(mek.getEntity(), UnitUtils.TECH_REG);
-                vetTechCost = chqPanel.client.getTechLaborCosts(mek.getEntity(), UnitUtils.TECH_VET);
-                eliteTechCost = chqPanel.client.getTechLaborCosts(mek.getEntity(), UnitUtils.TECH_ELITE);
+                repairCost *= Double.parseDouble(chqPanel.getClient().getServerConfigs("RealRepairCostMod"));
 
-                chqPanel.client.systemMessage("It'll cost you at least the following to repair your " +
-                                                    mek.getModelName() +
-                                                    ".<br><table>" +
-                                                    "<tr><th>Green Tech:</th><th>" +
-                                                    chqPanel.client.moneyOrFluMessage(true,
-                                                          true,
-                                                          (int) repairCost,
-                                                          false) +
-                                                    " in parts and " +
-                                                    chqPanel.client.moneyOrFluMessage(true,
-                                                          true,
-                                                          greenTechCost,
-                                                          false) +
-                                                    " in labor for a total of " +
-                                                    chqPanel.client.moneyOrFluMessage(true,
-                                                          true,
-                                                          (int) repairCost + greenTechCost,
-                                                          false) +
-                                                    ".</th></tr>" +
-                                                    "<tr><th>Reg Tech:</th><th>" +
-                                                    chqPanel.client.moneyOrFluMessage(true,
-                                                          true,
-                                                          (int) repairCost,
-                                                          false) +
-                                                    " in parts and " +
-                                                    chqPanel.client.moneyOrFluMessage(true, true, regTechCost, false) +
-                                                    " in labor for a total of " +
-                                                    chqPanel.client.moneyOrFluMessage(true,
-                                                          true,
-                                                          (int) repairCost + regTechCost,
-                                                          false) +
-                                                    ".</th></tr>" +
-                                                    "<tr><th>Vet Tech:</th><th>" +
-                                                    chqPanel.client.moneyOrFluMessage(true,
-                                                          true,
-                                                          (int) repairCost,
-                                                          false) +
-                                                    " in parts and "
-                                                    +
-                                                    chqPanel.client.moneyOrFluMessage(true, true, vetTechCost, false) +
-                                                    " in labor for a total of " +
-                                                    chqPanel.client.moneyOrFluMessage(true,
-                                                          true,
-                                                          (int) repairCost + vetTechCost,
-                                                          false) +
-                                                    ".</th></tr>" +
-                                                    "<tr><th>Elite Tech:</th><th>" +
-                                                    chqPanel.client.moneyOrFluMessage(true,
-                                                          true,
-                                                          (int) repairCost,
-                                                          false) +
-                                                    " in parts and " +
-                                                    chqPanel.client.moneyOrFluMessage(true,
-                                                          true,
-                                                          eliteTechCost,
-                                                          false) +
-                                                    " in labor for a total of " +
-                                                    chqPanel.client.moneyOrFluMessage(true,
-                                                          true,
-                                                          (int) repairCost + eliteTechCost,
-                                                          false) +
-                                                    ".</th></tr></table>");
             } else {
-                repairCost = chqPanel.client.getTotalRepairCosts(mek.getEntity());
-                greenTechCost = chqPanel.client.getTechLaborCosts(mek.getEntity(), UnitUtils.TECH_GREEN);
-                regTechCost = chqPanel.client.getTechLaborCosts(mek.getEntity(), UnitUtils.TECH_REG);
-                vetTechCost = chqPanel.client.getTechLaborCosts(mek.getEntity(), UnitUtils.TECH_VET);
-                eliteTechCost = chqPanel.client.getTechLaborCosts(mek.getEntity(), UnitUtils.TECH_ELITE);
+                repairCost = chqPanel.getClient().getTotalRepairCosts(mek.getEntity());
 
-                chqPanel.client.systemMessage("It'll cost you at least the following to repair your " +
-                                                    mek.getModelName() +
-                                                    ".<br><table>" +
-                                                    "<tr><th>Green Tech:</th><th>" +
-                                                    chqPanel.client.moneyOrFluMessage(true,
-                                                          true,
-                                                          (int) repairCost,
-                                                          false) +
-                                                    " in parts and " +
-                                                    chqPanel.client.moneyOrFluMessage(true,
-                                                          true,
-                                                          greenTechCost,
-                                                          false) +
-                                                    " in labor for a total of " +
-                                                    chqPanel.client.moneyOrFluMessage(true,
-                                                          true,
-                                                          (int) repairCost + greenTechCost,
-                                                          false) +
-                                                    ".</th></tr>" +
-                                                    "<tr><th>Reg Tech:</th><th>" +
-                                                    chqPanel.client.moneyOrFluMessage(true,
-                                                          true,
-                                                          (int) repairCost,
-                                                          false) +
-                                                    " in parts and " +
-                                                    chqPanel.client.moneyOrFluMessage(true, true, regTechCost, false) +
-                                                    " in labor for a total of " +
-                                                    chqPanel.client.moneyOrFluMessage(true,
-                                                          true,
-                                                          (int) repairCost + regTechCost,
-                                                          false) +
-                                                    ".</th></tr>" +
-                                                    "<tr><th>Vet Tech:</th><th>" +
-                                                    chqPanel.client.moneyOrFluMessage(true,
-                                                          true,
-                                                          (int) repairCost,
-                                                          false) +
-                                                    " in parts and "
-                                                    +
-                                                    chqPanel.client.moneyOrFluMessage(true, true, vetTechCost, false) +
-                                                    " in labor for a total of " +
-                                                    chqPanel.client.moneyOrFluMessage(true,
-                                                          true,
-                                                          (int) repairCost + vetTechCost,
-                                                          false) +
-                                                    ".</th></tr>" +
-                                                    "<tr><th>Elite Tech:</th><th>" +
-                                                    chqPanel.client.moneyOrFluMessage(true,
-                                                          true,
-                                                          (int) repairCost,
-                                                          false) +
-                                                    " in parts and " +
-                                                    chqPanel.client.moneyOrFluMessage(true,
-                                                          true,
-                                                          eliteTechCost,
-                                                          false) +
-                                                    " in labor for a total of " +
-                                                    chqPanel.client.moneyOrFluMessage(true,
-                                                          true,
-                                                          (int) repairCost + eliteTechCost,
-                                                          false) +
-                                                    ".</th></tr></table>");
             }
+
+            greenTechCost = chqPanel.getClient().getTechLaborCosts(mek.getEntity(), UnitUtils.TECH_GREEN);
+            regTechCost = chqPanel.getClient().getTechLaborCosts(mek.getEntity(), UnitUtils.TECH_REG);
+            vetTechCost = chqPanel.getClient().getTechLaborCosts(mek.getEntity(), UnitUtils.TECH_VET);
+            eliteTechCost = chqPanel.getClient().getTechLaborCosts(mek.getEntity(), UnitUtils.TECH_ELITE);
+            chqPanel.getClient()
+                  .systemMessage(STR."It'll cost you at least the following to repair your \{mek.getModelName()}.<br><table><tr><th>Green Tech:</th><th>\{chqPanel.getClient()
+                                                                                                                                                                .moneyOrFluMessage(
+                                                                                                                                                                      true,
+                                                                                                                                                                      true,
+                                                                                                                                                                      (int) repairCost,
+                                                                                                                                                                      false)} in parts and \{chqPanel.getClient()
+                                                                                                                                                                                                   .moneyOrFluMessage(
+                                                                                                                                                                                                         true,
+                                                                                                                                                                                                         true,
+                                                                                                                                                                                                         greenTechCost,
+                                                                                                                                                                                                         false)} in labor for a total of \{chqPanel.getClient()
+                                                                                                                                                                                                                                                 .moneyOrFluMessage(
+                                                                                                                                                                                                                                                       true,
+                                                                                                                                                                                                                                                       true,
+                                                                                                                                                                                                                                                       (int) repairCost +
+                                                                                                                                                                                                                                                             greenTechCost,
+                                                                                                                                                                                                                                                       false)}.</th></tr><tr><th>Reg Tech:</th><th>\{chqPanel.getClient()
+                                                                                                                                                                                                                                                                                                           .moneyOrFluMessage(
+                                                                                                                                                                                                                                                                                                                 true,
+                                                                                                                                                                                                                                                                                                                 true,
+                                                                                                                                                                                                                                                                                                                 (int) repairCost,
+                                                                                                                                                                                                                                                                                                                 false)} in parts and \{chqPanel.getClient()
+                                                                                                                                                                                                                                                                                                                                              .moneyOrFluMessage(
+                                                                                                                                                                                                                                                                                                                                                    true,
+                                                                                                                                                                                                                                                                                                                                                    true,
+                                                                                                                                                                                                                                                                                                                                                    regTechCost,
+                                                                                                                                                                                                                                                                                                                                                    false)} in labor for a total of \{chqPanel.getClient()
+                                                                                                                                                                                                                                                                                                                                                                                            .moneyOrFluMessage(
+                                                                                                                                                                                                                                                                                                                                                                                                  true,
+                                                                                                                                                                                                                                                                                                                                                                                                  true,
+                                                                                                                                                                                                                                                                                                                                                                                                  (int) repairCost +
+                                                                                                                                                                                                                                                                                                                                                                                                        regTechCost,
+                                                                                                                                                                                                                                                                                                                                                                                                  false)}.</th></tr><tr><th>Vet Tech:</th><th>\{chqPanel.getClient()
+                                                                                                                                                                                                                                                                                                                                                                                                                                                      .moneyOrFluMessage(
+                                                                                                                                                                                                                                                                                                                                                                                                                                                            true,
+                                                                                                                                                                                                                                                                                                                                                                                                                                                            true,
+                                                                                                                                                                                                                                                                                                                                                                                                                                                            (int) repairCost,
+                                                                                                                                                                                                                                                                                                                                                                                                                                                            false)} in parts and \{chqPanel.getClient()
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         .moneyOrFluMessage(
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               true,
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               true,
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               vetTechCost,
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               false)} in labor for a total of \{chqPanel.getClient()
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       .moneyOrFluMessage(
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             true,
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             true,
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             (int) repairCost +
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   vetTechCost,
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             false)}.</th></tr><tr><th>Elite Tech:</th><th>\{chqPanel.getClient()
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   .moneyOrFluMessage(
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         true,
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         true,
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         (int) repairCost,
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         false)} in parts and \{chqPanel.getClient()
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      .moneyOrFluMessage(
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            true,
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            true,
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            eliteTechCost,
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            false)} in labor for a total of \{chqPanel.getClient()
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    .moneyOrFluMessage(
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          true,
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          true,
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          (int) repairCost +
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                eliteTechCost,
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          false)}.</th></tr></table>");
 
         }// remove from all armies
         else if (command.equalsIgnoreCase("RFAA")) {
@@ -2673,190 +2441,157 @@ public class MekTableMouseAdapter extends MouseInputAdapter implements ActionLis
             int mid = Integer.parseInt(st.nextToken());
 
             // check all armies for the selected unit
-            for (client.campaign.CArmy currA : chqPanel.client.getPlayer().getArmies()) {
+            for (CArmy currA : chqPanel.getClient().getPlayer().getArmies()) {
                 if (currA.getUnit(mid) != null) {
-                    chqPanel.client.sendChat(chqPanel.client.MWClient.CAMPAIGN_PREFIX +
-                                                   "c EXM#" +
-                                                   currA.getID() +
-                                                   "," +
-                                                   mid);
+                    chqPanel.getClient().sendChat(STR."\{IClient.CAMPAIGN_PREFIX}c EXM#\{currA.getID()},\{mid}");
                 }
             }
 
             // transfer mek
         } else if (command.equalsIgnoreCase("TM")) {
             int mid = Integer.parseInt(st.nextToken());
-            chqPanel.client.getMainFrame().jMenuCommanderTransferUnit_actionPerformed(null, mid);
+            chqPanel.getClient().getMainFrame().jMenuCommanderTransferUnit_actionPerformed(null, mid);
             // repod mek
         } else if (command.equalsIgnoreCase("RM")) {
             int mid = Integer.parseInt(st.nextToken());
-            chqPanel.client.sendChat(chqPanel.client.MWClient.CAMPAIGN_PREFIX + "c repod#" + mid);
+            chqPanel.getClient().sendChat(STR."\{IClient.CAMPAIGN_PREFIX}c repod#\{mid}");
             // add to bm
         } else if (command.equalsIgnoreCase("AB")) {
             int mid = Integer.parseInt(st.nextToken());
-            chqPanel.client.getMainFrame().jMenuCommanderAddToBM_actionPerformed(mid);
+            chqPanel.getClient().getMainFrame().jMenuCommanderAddToBM_actionPerformed(mid);
             // remove from market
         } else if (command.equalsIgnoreCase("RFM")) {
             int mid = Integer.parseInt(st.nextToken());
-            java.util.TreeMap<Integer, client.campaign.CBMUnit> marketUnits = chqPanel.client.getCampaign()
-                                                                                    .getBlackMarket();
-            for (client.campaign.CBMUnit currU : marketUnits.values()) {
+            java.util.TreeMap<Integer, CBMUnit> marketUnits = chqPanel.getClient().getCampaign()
+                                                                    .getBlackMarket();
+            for (CBMUnit currU : marketUnits.values()) {
                 if (currU.getUnitID() == mid) {
-                    chqPanel.client.sendChat(chqPanel.client.MWClient.CAMPAIGN_PREFIX +
-                                                   "c recall#" +
-                                                   currU.getAuctionID());
+                    chqPanel.getClient().sendChat(STR."\{IClient.CAMPAIGN_PREFIX}c recall#\{currU.getAuctionID()}");
                     break;
                 }
             }
             // direct sell unit
         } else if (command.equalsIgnoreCase("DSU")) {
             String mid = st.nextToken();
-            chqPanel.client.getMainFrame().jMenuCommanderDirectSell_actionPerformed(null, mid);
+            chqPanel.getClient().getMainFrame().jMenuCommanderDirectSell_actionPerformed(null, mid);
             // scrap mek
         } else if (command.equalsIgnoreCase("S")) {
             int num = Integer.parseInt(st.nextToken());
-            int result = javax.swing.JOptionPane.showConfirmDialog(chqPanel.client.getMainFrame(),
+            int result = JOptionPane.showConfirmDialog(chqPanel.getClient().getMainFrame(),
                   "Are you sure you want to scrap this unit?",
                   "Scrap it?",
-                  javax.swing.JOptionPane.YES_NO_OPTION);
-            if (result == javax.swing.JOptionPane.YES_OPTION) {
-                chqPanel.client.sendChat(chqPanel.client.MWClient.CAMPAIGN_PREFIX + "c scrap#" + num);
+                  JOptionPane.YES_NO_OPTION);
+            if (result == JOptionPane.YES_OPTION) {
+                chqPanel.getClient().sendChat(STR."\{IClient.CAMPAIGN_PREFIX}c scrap#\{num}");
                 // Maintain Mek
             }
             //@Salient for SOL freebuild option
         } else if (command.equalsIgnoreCase("DL")) {
             int num = Integer.parseInt(st.nextToken());
-            //int result = JOptionPane.showConfirmDialog(client.getMainFrame(), "Are you sure you want to Remove this unit?", "Delete it?", JOptionPane.YES_NO_OPTION);
-            chqPanel.client.sendChat(chqPanel.client.MWClient.CAMPAIGN_PREFIX + "SOLDELETEUNIT " + num);
+            chqPanel.getClient().sendChat(STR."\{IClient.CAMPAIGN_PREFIX}SOLDELETEUNIT \{num}");
         } else if (command.equalsIgnoreCase("MM")) {
             int num = Integer.parseInt(st.nextToken());
-            chqPanel.client.sendChat(chqPanel.client.MWClient.CAMPAIGN_PREFIX + "c setmaintained#" + num);
-            chqPanel.client.refreshGUI(chqPanel.client.MWClient.REFRESH_HQPANEL);
+            chqPanel.getClient().sendChat(STR."\{IClient.CAMPAIGN_PREFIX}c setmaintained#\{num}");
+            chqPanel.getClient().refreshGUI(IClient.REFRESH_HQ_PANEL);
             // unmaintain mek
         } else if (command.equalsIgnoreCase("UMM")) {
             int num = Integer.parseInt(st.nextToken());
-            int result = javax.swing.JOptionPane.showConfirmDialog(chqPanel.client.getMainFrame(),
+            int result = JOptionPane.showConfirmDialog(chqPanel.getClient().getMainFrame(),
                   "Are you sure you want to stop maintaining this unit?",
                   "Unmaintain?",
-                  javax.swing.JOptionPane.YES_NO_OPTION);
-            if (result == javax.swing.JOptionPane.YES_OPTION) {
-                chqPanel.client.sendChat(chqPanel.client.MWClient.CAMPAIGN_PREFIX + "c setunmaintained#" + num);
+                  JOptionPane.YES_NO_OPTION);
+            if (result == JOptionPane.YES_OPTION) {
+                chqPanel.getClient()
+                      .sendChat(STR."\{IClient.CAMPAIGN_PREFIX}c setunmaintained#\{num}");
             }
-            chqPanel.client.refreshGUI(chqPanel.client.MWClient.REFRESH_HQPANEL);
+            chqPanel.getClient().refreshGUI(IClient.REFRESH_HQ_PANEL);
             // donate mek
         } else if (command.equalsIgnoreCase("DO")) {
             int mid = Integer.parseInt(st.nextToken());
-            int result = javax.swing.JOptionPane.showConfirmDialog(chqPanel.client.getMainFrame(),
+            int result = JOptionPane.showConfirmDialog(chqPanel.getClient().getMainFrame(),
                   "Are you sure you want to donate this unit?",
                   "Donate?",
-                  javax.swing.JOptionPane.YES_NO_OPTION);
-            if (result == javax.swing.JOptionPane.YES_OPTION) {
-                chqPanel.client.sendChat(chqPanel.client.MWClient.CAMPAIGN_PREFIX + "c donate#" + mid);
+                  JOptionPane.YES_NO_OPTION);
+            if (result == JOptionPane.YES_OPTION) {
+                chqPanel.getClient().sendChat(STR."\{IClient.CAMPAIGN_PREFIX}c donate#\{mid}");
                 // buy mek
             }
         } else if (command.equalsIgnoreCase("LCN")) {
             int lid = Integer.parseInt(st.nextToken());
             int mid = Integer.parseInt(st.nextToken());
             int hid = Integer.parseInt(st.nextToken());
-            chqPanel.client.sendChat(chqPanel.client.MWClient.CAMPAIGN_PREFIX +
-                                           "c linkunit#" +
-                                           lid +
-                                           "#" +
-                                           mid +
-                                           "#" +
-                                           hid);
+            chqPanel.getClient().sendChat(STR."\{IClient.CAMPAIGN_PREFIX}c linkunit#\{lid}#\{mid}#\{hid}");
         } else if (command.equalsIgnoreCase("EAE")) {
             int row = Integer.parseInt(st.nextToken());
             int col = Integer.parseInt(st.nextToken());
-            client.campaign.CUnit mek = chqPanel.MekTable.getMekAt(row, col);
-            Mech mech = (Mech) mek.getEntity();
+            CUnit mek = chqPanel.getMekTable().getMekAt(row, col);
+            Mek mech = (Mek) mek.getEntity();
             mech.setAutoEject(true);
-            chqPanel.client.sendChat(chqPanel.client.MWClient.CAMPAIGN_PREFIX +
-                                           "c setautoeject#" +
-                                           mech.getExternalId() +
-                                           "#" +
-                                           true);
+            chqPanel.getClient().sendChat(STR."\{IClient.CAMPAIGN_PREFIX}c setautoeject#\{mech.getExternalId()}#true");
         } else if (command.equalsIgnoreCase("DAE")) {
             int row = Integer.parseInt(st.nextToken());
             int col = Integer.parseInt(st.nextToken());
-            client.campaign.CUnit mek = chqPanel.MekTable.getMekAt(row, col);
-            Mech mech = (Mech) mek.getEntity();
+            CUnit mek = chqPanel.getMekTable().getMekAt(row, col);
+            Mek mech = (Mek) mek.getEntity();
             mech.setAutoEject(false);
-            chqPanel.client.sendChat(chqPanel.client.MWClient.CAMPAIGN_PREFIX +
-                                           "c setautoeject#" +
-                                           mech.getExternalId() +
-                                           "#" +
-                                           false);
+            chqPanel.getClient().sendChat(STR."\{IClient.CAMPAIGN_PREFIX}c setautoeject#\{mech.getExternalId()}#false");
             // exchange pilot
         } else if (command.equalsIgnoreCase("EXP")) {
             int uid = Integer.parseInt(st.nextToken());
             int pid = Integer.parseInt(st.nextToken());
-            chqPanel.client.sendChat(chqPanel.client.MWClient.CAMPAIGN_PREFIX + "c EXP#" + uid + "#" + pid);
+            chqPanel.getClient().sendChat(STR."\{IClient.CAMPAIGN_PREFIX}c EXP#\{uid}#\{pid}");
         } else if (command.equalsIgnoreCase("FET")) {// fire excess techs
-            chqPanel.client.getMainFrame().jMenuCommanderFireTechs_actionPerformed();
+            chqPanel.getClient().getMainFrame().jMenuCommanderFireTechs_actionPerformed();
         } else if (command.equalsIgnoreCase("SEB")) {// sell excess bays
-            chqPanel.client.getMainFrame().jMenuCommanderSellBays_actionPerformed();
+            chqPanel.getClient().getMainFrame().jMenuCommanderSellBays_actionPerformed();
         } else if (command.equals("RPU")) {// reposition unit
             int armyid = Integer.parseInt(st.nextToken());
             int unitid = Integer.parseInt(st.nextToken());
             int newpos = Integer.parseInt(st.nextToken());
-            chqPanel.client.sendChat(chqPanel.client.MWClient.CAMPAIGN_PREFIX +
-                                           "c unitposition#" +
-                                           armyid +
-                                           "#" +
-                                           unitid +
-                                           "#" +
-                                           newpos);
+            chqPanel.getClient()
+                  .sendChat(STR."\{IClient.CAMPAIGN_PREFIX}c unitposition#\{armyid}#\{unitid}#\{newpos}");
         } else if (command.equals("PHQS")) {// primary HQ sort
-            chqPanel.client.getConfig().setParam("PRIMARYHQSORTORDER", st.nextToken());
-            chqPanel.client.getConfig().saveConfig();
-            chqPanel.client.getPlayer().sortHangar();
+            chqPanel.getClient().getConfig().setParam("PRIMARYHQSORTORDER", st.nextToken());
+            chqPanel.getClient().getConfig().saveConfig();
+            chqPanel.getClient().getPlayer().sortHangar();
         } else if (command.equals("SHQS")) {
-            chqPanel.client.getConfig().setParam("SECONDARYHQSORTORDER", st.nextToken());
-            chqPanel.client.getConfig().saveConfig();
-            chqPanel.client.getPlayer().sortHangar();
+            chqPanel.getClient().getConfig().setParam("SECONDARYHQSORTORDER", st.nextToken());
+            chqPanel.getClient().getConfig().saveConfig();
+            chqPanel.getClient().getPlayer().sortHangar();
         } else if (command.equals("THQS")) {
-            chqPanel.client.getConfig().setParam("TERTIARYHQSORTORDER", st.nextToken());
-            chqPanel.client.getConfig().saveConfig();
-            chqPanel.client.getPlayer().sortHangar();
+            chqPanel.getClient().getConfig().setParam("TERTIARYHQSORTORDER", st.nextToken());
+            chqPanel.getClient().getConfig().saveConfig();
+            chqPanel.getClient().getPlayer().sortHangar();
         } else if (command.equals("PAS")) {// primary HQ sort
-            chqPanel.client.getConfig().setParam("PRIMARYARMYSORTORDER", st.nextToken());
-            chqPanel.client.getConfig().saveConfig();
-            chqPanel.client.getPlayer().sortArmies();
+            chqPanel.getClient().getConfig().setParam("PRIMARYARMYSORTORDER", st.nextToken());
+            chqPanel.getClient().getConfig().saveConfig();
+            chqPanel.getClient().getPlayer().sortArmies();
         } else if (command.equals("SAS")) {
-            chqPanel.client.getConfig().setParam("SECONDARYARMYSORTORDER", st.nextToken());
-            chqPanel.client.getConfig().saveConfig();
-            chqPanel.client.getPlayer().sortArmies();
+            chqPanel.getClient().getConfig().setParam("SECONDARYARMYSORTORDER", st.nextToken());
+            chqPanel.getClient().getConfig().saveConfig();
+            chqPanel.getClient().getPlayer().sortArmies();
         } else if (command.equals("TAS")) {
-            chqPanel.client.getConfig().setParam("TERTIARYARMYSORTORDER", st.nextToken());
-            chqPanel.client.getConfig().saveConfig();
-            chqPanel.client.getPlayer().sortArmies();
+            chqPanel.getClient().getConfig().setParam("TERTIARYARMYSORTORDER", st.nextToken());
+            chqPanel.getClient().getConfig().saveConfig();
+            chqPanel.getClient().getPlayer().sortArmies();
         } else if (command.equalsIgnoreCase("REMOVEUNITCOMMANDER")) {
             int row = Integer.parseInt(st.nextToken());
             int col = Integer.parseInt(st.nextToken());
             String armyId = st.nextToken();
-            client.campaign.CUnit mek = chqPanel.MekTable.getMekAt(row, col);
-            chqPanel.client.sendChat(chqPanel.client.MWClient.CAMPAIGN_PREFIX +
-                                           "c setunitcommander#" +
-                                           mek.getId() +
-                                           "#" +
-                                           armyId +
-                                           "#false");
+            CUnit mek = chqPanel.getMekTable().getMekAt(row, col);
+            chqPanel.getClient()
+                  .sendChat(STR."\{IClient.CAMPAIGN_PREFIX}c setunitcommander#\{mek.getId()}#\{armyId}#false");
             // exchange pilot
         } else if (command.equalsIgnoreCase("SETUNITCOMMANDER")) {
             int row = Integer.parseInt(st.nextToken());
             int col = Integer.parseInt(st.nextToken());
             String armyId = st.nextToken();
-            client.campaign.CUnit mek = chqPanel.MekTable.getMekAt(row, col);
-            chqPanel.client.sendChat(chqPanel.client.MWClient.CAMPAIGN_PREFIX +
-                                           "c setunitcommander#" +
-                                           mek.getId() +
-                                           "#" +
-                                           armyId +
-                                           "#true");
+            CUnit mek = chqPanel.getMekTable().getMekAt(row, col);
+            chqPanel.getClient()
+                  .sendChat(STR."\{IClient.CAMPAIGN_PREFIX}c setunitcommander#\{mek.getId()}#\{armyId}#true");
             // exchange pilot
         }
 
-        chqPanel.tblMeks.repaint();
+        chqPanel.getTableMeks().repaint();
     }
 }

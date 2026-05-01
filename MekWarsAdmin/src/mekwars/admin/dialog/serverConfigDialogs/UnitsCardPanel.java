@@ -280,7 +280,7 @@ public class UnitsCardPanel extends JPanel {
             weightPanel.add(new JLabel(Unit.getWeightClassDesc(i) + ":", SwingConstants.TRAILING));
             baseTextField.setToolTipText("<html>Title to be displayed of " +
                                                Unit.getWeightClassDesc(i).toLowerCase() +
-                                               " factories<br>in the Client House Bays Tab</html>");
+                                               " factories<br>in the client House Bays Tab</html>");
             baseTextField.setName(Unit.getWeightClassDesc(i) + "FactoryTypeTitle");
             weightPanel.add(baseTextField);
         }
@@ -294,7 +294,7 @@ public class UnitsCardPanel extends JPanel {
             typesPanel.add(new JLabel(Unit.getTypeClassDesc(i) + ":", SwingConstants.TRAILING));
             baseTextField.setToolTipText("<html>Title to be displayed of " +
                                                Unit.getTypeClassDesc(i) +
-                                               " factories<br>in the Client House Bays Tab</html>");
+                                               " factories<br>in the client House Bays Tab</html>");
             baseTextField.setName(Unit.getTypeClassDesc(i) + "FactoryClassTitle");
             typesPanel.add(baseTextField);
         }

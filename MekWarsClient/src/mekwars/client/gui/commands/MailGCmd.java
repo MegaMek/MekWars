@@ -20,7 +20,8 @@ package mekwars.client.gui.commands;
 import java.io.Serial;
 
 import mekwars.client.MWClient;
-import mekwars.common.campaign.clientutils.protocol.TransportCodec;
+import mekwars.common.campaign.clientutils.protocol.CConnector;
+import mekwars.common.campaign.clientutils.protocol.IClient;
 import mekwars.common.gui.GUIClientConfig;
 import mekwars.common.gui.panels.CCommPanel;
 import mekwars.common.util.StringUtils;
@@ -70,7 +71,7 @@ public class MailGCmd extends CGUICommand {
             if (Config.isParam("REPLYTORECEIVER") && receiver != null && !receiver.equals("")) {
                 mwclient.setLastQuery(receiver);
             }
-            send(TransportCodec.encode("CH|" + client.MWClient.CAMPAIGN_PREFIX + "mail " + input));
+            send(CConnector.encode("CH|" + IClient.CAMPAIGN_PREFIX + "mail " + input));
             echo(input);
             return true;
         }

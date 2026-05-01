@@ -15,7 +15,7 @@
  * for more details.
  */
 
-package mekwars.client.gui;
+package mekwars.common.gui;
 
 import javax.swing.text.BadLocationException;
 import javax.swing.text.View;
@@ -499,19 +499,6 @@ public class MyImageView extends javax.swing.text.View
 
     // --- Mouse event handling --------------------------------------------
 
-    /** Returns the size of the border to use. */
-    int getBorder() {
-        return getIntAttr(javax.swing.text.html.HTML.Attribute.BORDER, isLink() ? DEFAULT_BORDER : 0);
-    }
-
-    /** Returns the amount of extra space to add along an axis. */
-    int getSpace(int axis) {
-        return getIntAttr(axis == X_AXIS ?
-                                javax.swing.text.html.HTML.Attribute.HSPACE :
-                                javax.swing.text.html.HTML.Attribute.VSPACE,
-              0);
-    }
-
     /**
      * Determines whether the image is selected, and if it's the only thing selected.
      *
@@ -554,21 +541,6 @@ public class MyImageView extends javax.swing.text.View
         return doc.getForeground(getAttributes());
     }
 
-    /** Is this image within a link? */
-    boolean isLink() {
-        //! It would be nice to cache this but in an editor it can change
-        // See if I have an HREF attribute courtesy of the enclosing A tag:
-        javax.swing.text.AttributeSet anchorAttr = (javax.swing.text.AttributeSet)
-                                                         fElement.getAttributes()
-                                                               .getAttribute(javax.swing.text.html.HTML.Tag.A);
-        if (anchorAttr != null) {
-            return anchorAttr.isDefined(javax.swing.text.html.HTML.Attribute.HREF);
-        }
-        return false;
-    }
-
-    // --- Static icon accessors -------------------------------------------
-
     protected boolean isEditable() {
         return fContainer instanceof javax.swing.JEditorPane
                      && ((javax.swing.JEditorPane) fContainer).isEditable();
@@ -582,7 +554,7 @@ public class MyImageView extends javax.swing.text.View
          * Class.getResourceAsStream just returns raw
          * bytes, which we can convert to an image.
          */
-        java.io.InputStream resource = mekwars.client.gui.MyImageView.class.getResourceAsStream(gifFile);
+        java.io.InputStream resource = mekwars.common.gui.MyImageView.class.getResourceAsStream(gifFile);
 
         if (resource == null) {
             //MMClient.mwClientLog.clientErrLog(MyImageView.class.getName() + "/" +gifFile + " not found.");
@@ -622,7 +594,7 @@ public class MyImageView extends javax.swing.text.View
         }
     }
 
-    // --- member variables ------------------------------------------------
+    // --- Static icon accessors -------------------------------------------
 
     /**
      * Provides a mapping from the document model coordinate space to the coordinate space of the view mapped to it.
@@ -695,6 +667,8 @@ public class MyImageView extends javax.swing.text.View
         if (DEBUG) {MWLogger.infoLog("ImageView: changedUpdate end; valign=" + getVerticalAlignment());}
     }
 
+    // --- member variables ------------------------------------------------
+
     /**
      * Fetches the attributes to use when rendering.  This is implemented to multiplex the attributes specified in the
      * model with a StyleSheet.
@@ -723,10 +697,36 @@ public class MyImageView extends javax.swing.text.View
             align = align.toLowerCase();
             if (align.equals(TOP) || align.equals(TEXTTOP)) {
                 return 0.0f;
-            } else if (align.equals(mekwars.client.gui.MyImageView.CENTER) || align.equals(MIDDLE)
+            } else if (align.equals(mekwars.common.gui.MyImageView.CENTER) || align.equals(MIDDLE)
                              || align.equals(ABSMIDDLE)) {return 0.5f;}
         }
         return 1.0f;        // default alignment is bottom
+    }
+
+    /** Returns the size of the border to use. */
+    int getBorder() {
+        return getIntAttr(javax.swing.text.html.HTML.Attribute.BORDER, isLink() ? DEFAULT_BORDER : 0);
+    }
+
+    /** Returns the amount of extra space to add along an axis. */
+    int getSpace(int axis) {
+        return getIntAttr(axis == X_AXIS ?
+                                javax.swing.text.html.HTML.Attribute.HSPACE :
+                                javax.swing.text.html.HTML.Attribute.VSPACE,
+              0);
+    }
+
+    /** Is this image within a link? */
+    boolean isLink() {
+        //! It would be nice to cache this but in an editor it can change
+        // See if I have an HREF attribute courtesy of the enclosing A tag:
+        javax.swing.text.AttributeSet anchorAttr = (javax.swing.text.AttributeSet)
+                                                         fElement.getAttributes()
+                                                               .getAttribute(javax.swing.text.html.HTML.Tag.A);
+        if (anchorAttr != null) {
+            return anchorAttr.isDefined(javax.swing.text.html.HTML.Attribute.HREF);
+        }
+        return false;
     }
 
     /** Resize image if initial click was in grow-box: */

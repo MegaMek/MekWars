@@ -56,7 +56,7 @@ import mekwars.common.util.UnitUtils;
 import org.jspecify.annotations.NonNull;
 
 /**
- * Class for Player object used by Client
+ * Class for Player object used by client
  */
 public class CPlayer extends Player {
 
@@ -1090,7 +1090,7 @@ public class CPlayer extends Player {
     }
 
     /*
-     * Hangar sorting mechanisms. Client and server need not order hangars in
+     * Hangar sorting mechanisms. client and server need not order hangars in
      * the same fashion, since all transactions (after the initial data feed)
      * take place on a unit by unit basis.
      *
@@ -1120,7 +1120,7 @@ public class CPlayer extends Player {
     }
 
     /*
-     * Hangar sorting mechanisms. Client and server need not order hangars in
+     * Hangar sorting mechanisms. client and server need not order hangars in
      * the same fashion, since all transactions (after the initial data feed)
      * take place on a unit by unit basis.
      *

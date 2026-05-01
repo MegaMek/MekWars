@@ -7,7 +7,7 @@
  * loops, generics, and other warnings being thrown in Eclipse 3.2 that weren't caught in 3.1.
  * <p>
  * Revision 1.1  2006/05/22 19:42:35  torren + Added new MekWarsAutoUpdate.jar run in stand alone this can be used to
- * update the Client or create a manifest.
+ * update the client or create a manifest.
  * <p>
  * Revision 1.5  2002/12/04 22:49:24  cactushack76
  * <p>

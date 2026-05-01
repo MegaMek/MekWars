@@ -138,7 +138,7 @@ public class CampaignData implements TerrainProvider {
      *
      * @param faction The faction to hold.
      *                <p>
-     *                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   TODO You should use XStream to initialize CampaignData
+     *                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  TODO You should use XStream to initialize CampaignData
      */
     public void addHouse(House faction) {
         if (faction.getId() == -1 && !faction.getName().equalsIgnoreCase("None")) {
@@ -205,8 +205,8 @@ public class CampaignData implements TerrainProvider {
      *
      * @return An House id not used yet.
      *       <p>
-     *                                                                               TODO There should be no need for such function, since ID's should extracted from resource files. This
-     *                                                                                     function will vanish if ids are part of the resource.
+     *                                                                                     TODO There should be no need for such function, since ID's should extracted from resource files. This
+     *                                                                                           function will vanish if ids are part of the resource.
      */
     public int getUnusedHouseID() {
         int id = -1;
@@ -226,8 +226,8 @@ public class CampaignData implements TerrainProvider {
      *
      * @return An Planet id not used yet.
      *       <p>
-     *                                                                                                                                                                                                                                                                                                             TODO There should be no need for such function, since ID's should extracted from resource files. This
-     *                                                                                                                                                                                                                                                                                                                   function will vanish if ids are part of the resource.
+     *                                                                                                                                                                                                                                                                                                                   TODO There should be no need for such function, since ID's should extracted from resource files. This
+     *                                                                                                                                                                                                                                                                                                                         function will vanish if ids are part of the resource.
      */
     public int getUnusedPlanetID() {
         int id = 0;
@@ -238,7 +238,7 @@ public class CampaignData implements TerrainProvider {
     }
 
     /**
-     * @param factory Updates the Client side factories Useful for the factory Refresh with RP
+     * @param factory Updates the client side factories Useful for the factory Refresh with RP
      *
      * @author Torren (Jason Tighe)
      */
