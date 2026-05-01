@@ -16,12 +16,12 @@
 
 package mekwars.server.dataProvider.commands;
 
-import common.CampaignData;
-import common.House;
-import common.Planet;
-import common.util.BinWriter;
-import server.campaign.CampaignMain;
-import server.campaign.data.TimeUpdatePlanet;
+import mekwars.common.CampaignData;
+import mekwars.common.House;
+import mekwars.common.Planet;
+import mekwars.common.persistence.BinWriter;
+import mekwars.server.campaign.CampaignMain;
+import mekwars.server.campaign.data.TimeUpdatePlanet;
 
 /**
  * Request for data diff.

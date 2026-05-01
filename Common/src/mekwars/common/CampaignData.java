@@ -28,10 +28,9 @@ import java.util.TreeMap;
 import java.util.Vector;
 
 import megamek.common.equipment.AmmoType;
+import megamek.logging.MMLogger;
 import mekwars.common.persistence.BinReader;
 import mekwars.common.persistence.BinWriter;
-import mekwars.common.util.MWLogger;
-
 
 /**
  * TODO: It seems, that all operations done here are needed independent of the semantic of the underlying structure.
@@ -51,6 +50,7 @@ import mekwars.common.util.MWLogger;
  * @author Imi (immanuel.scholz@gmx.de)
  */
 public class CampaignData implements TerrainProvider {
+    private final static MMLogger LOGGER = MMLogger.create(CampaignData.class);
 
     public static CampaignData cd;
 
@@ -101,12 +101,15 @@ public class CampaignData implements TerrainProvider {
         cd = this;
         PlanetEnvironments.data = this;
         int size = in.readInt("terrains.size");
+
         for (int i = 0; i < size; ++i) {
             Terrain terrain = new Terrain();
             terrain.binIn(in, this);
             addTerrain(terrain);
         }
+
         int advTerrainSize = in.readInt("advTerrains.size");
+
         for (int i = 0; i < advTerrainSize; ++i) {
             AdvancedTerrain advancedTerrain = new AdvancedTerrain();
             advancedTerrain.binIn(in);
@@ -114,18 +117,20 @@ public class CampaignData implements TerrainProvider {
         }
 
         size = in.readInt("factions.size");
+
         for (int i = 0; i < size; ++i) {
             addHouse(new House(in));
         }
 
         size = in.readInt("planets.size");
+
         for (int i = 0; i < size; ++i) {
             addPlanet(new Planet(in, factions, this));
         }
     }
 
     /**
-     * @see TerrainProvider#addTerrain(PlanetEnvironment)
+     * @see TerrainProvider#addAdvancedTerrain(AdvancedTerrain)
      */
     public void addTerrain(Terrain terrain) {
         terrain.setId(getUnusedTerrainID());
@@ -138,12 +143,13 @@ public class CampaignData implements TerrainProvider {
      *
      * @param faction The faction to hold.
      *                <p>
-     *                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  TODO You should use XStream to initialize CampaignData
+     *                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 TODO You should use XStream to initialize CampaignData
      */
     public void addHouse(House faction) {
         if (faction.getId() == -1 && !faction.getName().equalsIgnoreCase("None")) {
             faction.setId(getUnusedHouseID());
         }
+
         factions.put(faction.getId(), faction);
         factionID.put(faction.getName().toLowerCase(), faction.getId());
     }
@@ -205,8 +211,8 @@ public class CampaignData implements TerrainProvider {
      *
      * @return An House id not used yet.
      *       <p>
-     *                                                                                     TODO There should be no need for such function, since ID's should extracted from resource files. This
-     *                                                                                           function will vanish if ids are part of the resource.
+     *                                                                                                                                                                                           TODO There should be no need for such function, since ID's should extracted from resource files. This
+     *                                                                                                                                                                                                 function will vanish if ids are part of the resource.
      */
     public int getUnusedHouseID() {
         int id = -1;
@@ -226,14 +232,16 @@ public class CampaignData implements TerrainProvider {
      *
      * @return An Planet id not used yet.
      *       <p>
-     *                                                                                                                                                                                                                                                                                                                   TODO There should be no need for such function, since ID's should extracted from resource files. This
-     *                                                                                                                                                                                                                                                                                                                         function will vanish if ids are part of the resource.
+     *                                                                                                                                                                                                                                                                                                                                                                                                                         TODO There should be no need for such function, since ID's should extracted from resource files. This
+     *                                                                                                                                                                                                                                                                                                                                                                                                                               function will vanish if ids are part of the resource.
      */
     public int getUnusedPlanetID() {
         int id = 0;
+
         while (planets.containsKey(id)) {
             id++;
         }
+
         return id;
     }
 
@@ -258,7 +266,7 @@ public class CampaignData implements TerrainProvider {
             Integer planetID = this.planetID.get(name.toLowerCase());
             return getPlanet(planetID);
         } catch (Exception ex) {
-            MWLogger.errLog("Looking for planet: " + name);
+            LOGGER.debug("Planet not found: {}", name);
             return null;
         }
     }
@@ -268,11 +276,12 @@ public class CampaignData implements TerrainProvider {
      *
      */
     public UnitFactory getFactoryByName(Planet planet, String name) {
-        for (UnitFactory e : planet.getUnitFactories()) {
-            if (e.getName().equalsIgnoreCase(name)) {
-                return e;
+        for (UnitFactory unitFactory : planet.getUnitFactories()) {
+            if (unitFactory.getName().equalsIgnoreCase(name)) {
+                return unitFactory;
             }
         }
+
         return null;
     }
 
@@ -300,6 +309,7 @@ public class CampaignData implements TerrainProvider {
                 return planet;
             }
         }
+
         return null;
     }
 
@@ -343,12 +353,12 @@ public class CampaignData implements TerrainProvider {
         factionID.remove(factionName);
         factions.remove(id);
 
-        File factionFile = new File("./campaign/factions/" + factionName + ".dat");
+        File factionFile = new File(STR."./campaign/factions/\{factionName}.dat");
         if (factionFile.exists()) {
             factionFile.delete();
         }
 
-        factionFile = new File("./campaign/factions/" + factionName + ".bak");
+        factionFile = new File(STR."./campaign/factions/\{factionName}.bak");
         if (factionFile.exists()) {
             factionFile.delete();
         }
@@ -412,14 +422,16 @@ public class CampaignData implements TerrainProvider {
      */
     public void binTerrainsOut(BinWriter out) throws IOException {
         out.println(terrains.size(), "terrains.size");
-        for (Terrain pe : terrains) {
-            pe.binOut(out);
-        }
-        out.println(advTerrains.size(), "advTerrains.size");
-        for (AdvancedTerrain pe : advTerrains) {
-            pe.binOut(out);
+
+        for (Terrain terrain : terrains) {
+            terrain.binOut(out);
         }
 
+        out.println(advTerrains.size(), "advTerrains.size");
+
+        for (AdvancedTerrain advancedTerrain : advTerrains) {
+            advancedTerrain.binOut(out);
+        }
     }
 
     /**
@@ -427,8 +439,9 @@ public class CampaignData implements TerrainProvider {
      *
      * @see CampaignData#binOut(BinWriter)
      */
-    public void binHousesOut(BinWriter out) throws IOException {
+    public void binHousesOut(BinWriter out) {
         out.println(factions.size(), "factions.size");
+
         for (House house : factions.values()) {
             house.binOut(out);
         }
@@ -439,7 +452,7 @@ public class CampaignData implements TerrainProvider {
      *
      * @see CampaignData#binOut(BinWriter)
      */
-    public void binPlanetsOut(BinWriter out) throws IOException {
+    public void binPlanetsOut(BinWriter out) {
         out.println(planets.size(), "planets.size");
         for (Planet p : planets.values()) {
             p.binOut(out);
@@ -451,7 +464,7 @@ public class CampaignData implements TerrainProvider {
      *
      * @see CampaignData#binOut(BinWriter)
      */
-    public void binHousesOut(ArrayList<House> houses, BinWriter out) throws IOException {
+    public void binHousesOut(ArrayList<House> houses, BinWriter out) {
         out.println(houses.size(), "houses.size");
         for (House house : houses) {
             house.binOut(out);
@@ -463,7 +476,7 @@ public class CampaignData implements TerrainProvider {
      *
      * @see CampaignData#binOut(BinWriter)
      */
-    public void binPlanetsOut(ArrayList<Planet> planets, BinWriter out) throws IOException {
+    public void binPlanetsOut(ArrayList<Planet> planets, BinWriter out) {
         out.println(planets.size(), "planets.size");
         for (Planet planet : planets) {
             planet.binOut(out);
@@ -479,8 +492,9 @@ public class CampaignData implements TerrainProvider {
     public void decodeMutablePlanets(BinReader in, Map<Integer, Influences> changesSinceLastRefresh)
           throws IOException {
         int count = in.readInt("mutableplanetsize");
-        System.out.println("retrieving " + count + " planets due differential update.");
+        LOGGER.info("Retrieving {} planets due differential update.", count);
         changesSinceLastRefresh.clear();
+
         for (int i = 0; i < count; ++i) {
             int id = in.readInt("planetID");
             Influences infOld = new Influences(getPlanet(id).getInfluence());
@@ -491,30 +505,11 @@ public class CampaignData implements TerrainProvider {
     }
 
     /**
-     * Saves itself to disk. This uses the dynamic type of each object to make a
-     * copy as close to the real data as possible. Use loadData() to read it
-     * back to memory.
-     *
-     * public void saveData(File directory) throws IOException { if (directory
-     * == null) throw new
-     * IllegalArgumentException("Please specify a directory."); if
-     * (directory.exists() && !directory.isDirectory()) throw new
-     * IllegalArgumentException(directory.getName()+" is not a directory."); if
-     * (!directory.exists()) directory.mkdir(); MMNetXStream xml = new
-     * MMNetXStream(new DomDriver()); xml.toXML(this,new
-     * FileWriter(directory.getPath()+"/data.xml"));
-     *
-     * DatWriter datWriter = new
-     * DatWriter(directory.getPath()+"/CampaignData.dat");
-     * datWriter.write(this,"CampaignData"); datWriter.close(); }
-     */
-
-    /**
      * Writes some planets due a differential update
      *
      * @param ids A collection of java.lang.Integer with the ids to send.
      */
-    public void encodeMutablePlanets(BinWriter out, Collection<Integer> ids) throws IOException {
+    public void encodeMutablePlanets(BinWriter out, Collection<Integer> ids) {
         out.println(ids.size(), "mutableplanetsize");
         for (Integer id : ids) {
             out.println(id, "planetID");
@@ -526,11 +521,13 @@ public class CampaignData implements TerrainProvider {
      * @see TerrainProvider#getTerrain(int)
      */
     public Terrain getTerrain(int id) {
+
         for (Terrain env : terrains) {
             if (env.getId() == id) {
                 return env;
             }
         }
+
         return null;
 
     }
@@ -543,7 +540,7 @@ public class CampaignData implements TerrainProvider {
     }
 
     /**
-     * @see TerrainProvider#addTerrain(PlanetEnvironment)
+     * @see TerrainProvider#addAdvancedTerrain(AdvancedTerrain)
      */
     public void addAdvancedTerrain(AdvancedTerrain newAdvTerrain) {
         newAdvTerrain.setId(getUnusedAdvTerrainID());
@@ -765,16 +762,14 @@ public class CampaignData implements TerrainProvider {
     public void importAccessLevels(BinReader in) {
         Hashtable<String, Integer> commandTemp = getCommandTable();
 
-        try {
-            int size = in.readInt("CommandSize");
-            for (int pos = 0; pos < size; pos++) {
-                String commandName = in.readLine("CommandName");
-                int accessLevel = in.readInt("AccessLevel");
-                commandTemp.put(commandName, accessLevel);
-            }// end while
-        }// end try
-        catch (Exception ex) {
-        }// in is empty move on.
+
+        int size = in.readInt("CommandSize");
+        for (int pos = 0; pos < size; pos++) {
+            String commandName = in.read("CommandName");
+            int accessLevel = in.readInt("AccessLevel");
+            commandTemp.put(commandName, accessLevel);
+        }// end while
+
         setCommandTable(commandTemp);
     }
 
@@ -791,7 +786,6 @@ public class CampaignData implements TerrainProvider {
 
         if (getCommandTable().get(command.toUpperCase()) != null) {
             level = getCommandTable().get(command.toUpperCase()).intValue();
-            // MWLogger.errLog("Command: "+command+" level: "+level);
         }
 
         return level;

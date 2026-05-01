@@ -17,32 +17,28 @@
 package mekwars.server.campaign;
 
 
-import common.Player;
-import common.SubFaction;
-import common.Unit;
-import common.campaign.pilot.Pilot;
-import common.campaign.pilot.skills.PilotSkill;
-import common.flags.PlayerFlags;
-import common.util.MWLogger;
-import common.util.TokenReader;
-import common.util.UnitComponents;
-import common.util.UnitUtils;
-import megamek.common.Protomech;
-import server.campaign.market2.IBuyer;
-import server.campaign.market2.ISeller;
-import server.campaign.mercenaries.ContractInfo;
-import server.campaign.mercenaries.MercHouse;
-import server.campaign.pilot.SPilot;
-import server.campaign.util.ExclusionList;
-import server.campaign.util.OpponentListHelper;
-import server.campaign.util.SerializedMessage;
-import server.campaign.util.scheduler.UserActivityComponentsJob;
-import server.campaign.util.scheduler.UserActivityInfluenceJob;
-import server.util.MWPasswdRecord;
-import server.util.QuirkHandler;
-
-
 //import org.json.simple.JSONObject;
+
+import mekwars.common.SubFaction;
+import mekwars.common.Unit;
+import mekwars.common.campaign.pilot.Pilot;
+import mekwars.common.campaign.pilot.skills.PilotSkill;
+import mekwars.common.flags.PlayerFlags;
+import mekwars.common.util.TokenReader;
+import mekwars.common.util.UnitComponents;
+import mekwars.common.util.UnitUtils;
+import mekwars.server.campaign.market.IBuyer;
+import mekwars.server.campaign.market.ISeller;
+import mekwars.server.campaign.mercenaries.ContractInfo;
+import mekwars.server.campaign.mercenaries.MercHouse;
+import mekwars.server.campaign.pilot.SPilot;
+import mekwars.server.campaign.util.ExclusionList;
+import mekwars.server.campaign.util.OpponentListHelper;
+import mekwars.server.campaign.util.SerializedMessage;
+import mekwars.server.campaign.util.scheduler.UserActivityComponentsJob;
+import mekwars.server.campaign.util.scheduler.UserActivityInfluenceJob;
+import mekwars.server.util.MWPasswdRecord;
+import mekwars.server.util.QuirkHandler;
 
 /**
  * A class representing a Player DOCU is not finished
@@ -853,27 +849,6 @@ public final class SPlayer extends Player implements Comparable<Object>, IBuyer,
         return technicians;
     }
 
-    public int getBaysOwned() {
-        return baysOwned;
-    }
-
-    public void setBaysOwned(int bays) {
-
-        int maxBays = 0;
-
-        if (getMyHouse() != null) {
-            maxBays = Integer.parseInt(getMyHouse().getConfig("MaxBaysToBuy"));
-        } else {
-            maxBays = CampaignMain.cm.getIntegerConfig("MaxBaysToBuy");
-        }
-
-        if (maxBays != -1) {
-            baysOwned = Math.min(maxBays, bays);
-        } else {
-            baysOwned = bays;
-        }
-    }
-
     /**
      * @param t - int to set technicians to.
      */
@@ -905,6 +880,27 @@ public final class SPlayer extends Player implements Comparable<Object>, IBuyer,
         CampaignMain.cm.toUser("PL|SB|" + getTotalMekBays(), name, false);
         CampaignMain.cm.toUser("PL|SF|" + getFreeBays(), name, false);
         setSave();
+    }
+
+    public int getBaysOwned() {
+        return baysOwned;
+    }
+
+    public void setBaysOwned(int bays) {
+
+        int maxBays = 0;
+
+        if (getMyHouse() != null) {
+            maxBays = Integer.parseInt(getMyHouse().getConfig("MaxBaysToBuy"));
+        } else {
+            maxBays = CampaignMain.cm.getIntegerConfig("MaxBaysToBuy");
+        }
+
+        if (maxBays != -1) {
+            baysOwned = Math.min(maxBays, bays);
+        } else {
+            baysOwned = bays;
+        }
     }
 
     /**
@@ -2119,6 +2115,21 @@ public final class SPlayer extends Player implements Comparable<Object>, IBuyer,
         return rewardPoints;
     }
 
+    // set the current amount of reward points a player has.
+    public void setReward(int i) {
+        rewardPoints = i;
+        if (rewardPoints > (Integer.parseInt(getMyHouse().getConfig("XPRewardCap")))) {
+            rewardPoints = (Integer.parseInt(getMyHouse().getConfig("XPRewardCap")));
+        }
+
+        if (rewardPoints < 0) {
+            rewardPoints = 0;
+        }
+
+        CampaignMain.cm.toUser("PL|SRP|" + rewardPoints, name, false);
+        setSave();
+    }
+
     /**
      * A method which returns a players influence
      *
@@ -2358,21 +2369,6 @@ public final class SPlayer extends Player implements Comparable<Object>, IBuyer,
         int limit = Integer.parseInt(getMyHouse().getConfig("FreeBuild_Limit"));
 
         return limit; //mek tokens count up to limit
-    }
-
-    // set the current amount of reward points a player has.
-    public void setReward(int i) {
-        rewardPoints = i;
-        if (rewardPoints > (Integer.parseInt(getMyHouse().getConfig("XPRewardCap")))) {
-            rewardPoints = (Integer.parseInt(getMyHouse().getConfig("XPRewardCap")));
-        }
-
-        if (rewardPoints < 0) {
-            rewardPoints = 0;
-        }
-
-        CampaignMain.cm.toUser("PL|SRP|" + rewardPoints, name, false);
-        setSave();
     }
 
     // -- MC DATA SAVE/LOAD --

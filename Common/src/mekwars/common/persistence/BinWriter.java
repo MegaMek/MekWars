@@ -20,7 +20,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
 
-import mekwars.common.util.MWLogger;
+import megamek.logging.MMLogger;
 import mekwars.common.util.TeePrinter;
 
 /**
@@ -29,55 +29,41 @@ import mekwars.common.util.TeePrinter;
  * @author Imi (immanuel.scholz@gmx.de)
  */
 public class BinWriter {
+    private final static MMLogger LOGGER = MMLogger.create(BinWriter.class);
 
     private PrintWriter out;
-    private boolean debug;
     private BinWriter dataBlock = null;
     private boolean open = true;
 
     public BinWriter(PrintWriter out) {
         this.out = out;
-        debug = false;
     }
 
     public BinWriter(PrintWriter out, String debugFilename) {
         try {
-            String ls = System.getProperty("line.seperator");
-            System.setProperty("line.seperator", String.valueOf((char) 13));
             this.out = new PrintWriter(new TeePrinter(out, new FileWriter(debugFilename)));
-            System.setProperty("line.seperator", ls);
         } catch (IOException e) {
-            MWLogger.errLog(e);
+            LOGGER.error(e, "Could not open debug file: {}", debugFilename);
             this.out = new PrintWriter(out);
         }
-        debug = true;
         this.out.println("###DEBUG_ON###");
     }
 
 
     public void println(int v, String debugName) {
-        if (debug) {out.print(debugName + "=");}
-        out.println(v);
+        out.println(STR."\{debugName}=\{v}");
     }
 
     public void println(double v, String debugName) {
-        if (debug) {out.print(debugName + "=");}
-        out.println(v);
+        out.print(STR."\{debugName}=\{v}");
     }
 
     public void println(String v, String debugName) {
-        if (debug) {out.print(debugName + "=");}
-        out.println(v);
+        out.print(STR."\{debugName}=\{v}");
     }
 
     public void println(boolean v, String debugName) {
-        if (debug) {out.print(debugName + "=");}
-        out.println(v);
-    }
-
-    public void printStringln(String v, String debugName) {
-        if (debug) {out.print(debugName + "=");}
-        out.println(v);
+        out.print(STR."\{debugName}=\{v}");
     }
 
     public void close() {
