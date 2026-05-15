@@ -17,6 +17,8 @@
 package mekwars.server.campaign.commands.admin;
 
 
+import mekwars.server.campaign.CampaignMain;
+
 public class AdminHouseStatusCommand implements server.campaign.commands.Command {
 
     int accessLevel = server.MWChatServer.auth.IAuthenticator.ADMIN;
@@ -27,37 +29,37 @@ public class AdminHouseStatusCommand implements server.campaign.commands.Command
     public void process(java.util.StringTokenizer command, String Username) {
 
         //access level check
-        int userLevel = server.campaign.CampaignMain.cm.getServer().getUserLevel(Username);
+        int userLevel = CampaignMain.campaignMain.getServer().getUserLevel(Username);
         if (userLevel < getExecutionLevel()) {
-            server.campaign.CampaignMain.cm.toUser("AM:Insufficient access level for command. Level: " +
-                                                         userLevel +
-                                                         ". Required: " +
-                                                         accessLevel +
-                                                         ".", Username, true);
+            CampaignMain.campaignMain.toUser("AM:Insufficient access level for command. Level: " +
+                                                   userLevel +
+                                                   ". Required: " +
+                                                   accessLevel +
+                                                   ".", Username, true);
             return;
         }
 
         server.campaign.SHouse h = null;
 
         try {
-            h = server.campaign.CampaignMain.cm.getHouseFromPartialString(command.nextToken(), Username);
+            h = CampaignMain.campaignMain.getHouseFromPartialString(command.nextToken(), Username);
         } catch (Exception e) {
-            server.campaign.CampaignMain.cm.toUser("Improper command. Try: /c adminhousestatus#faction",
+            CampaignMain.campaignMain.toUser("Improper command. Try: /c adminhousestatus#faction",
                   Username,
                   true);
             return;
         }
 
         if (h == null) {
-            server.campaign.CampaignMain.cm.toUser("Couldn't find a faction with that name.", Username, true);
+            CampaignMain.campaignMain.toUser("Couldn't find a faction with that name.", Username, true);
             return;
         }
 
         //feed back the faction status
-        server.campaign.CampaignMain.cm.toUser("HS|CA|0", Username, false);//clear old data
-        server.campaign.CampaignMain.cm.toUser(h.getCompleteStatus(), Username, false);
+        CampaignMain.campaignMain.toUser("HS|CA|0", Username, false);//clear old data
+        CampaignMain.campaignMain.toUser(h.getCompleteStatus(), Username, false);
         //server.MWLogger.modLog(Username + " checked " + h.getName());
-        server.campaign.CampaignMain.cm.doSendModMail("NOTE", Username + " checked " + h.getName());
+        CampaignMain.campaignMain.doSendModMail("NOTE", Username + " checked " + h.getName());
 
     }
 

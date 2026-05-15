@@ -16,6 +16,8 @@
 
 package mekwars.server.campaign.commands.admin;
 
+import mekwars.server.campaign.CampaignMain;
+
 // AdminSetPlanetVacuum#Planet#true/false
 public class AdminSetPlanetVacuumCommand implements server.campaign.commands.Command {
 
@@ -25,13 +27,13 @@ public class AdminSetPlanetVacuumCommand implements server.campaign.commands.Com
     public int getExecutionLevel() {return accessLevel;}
 
     public void setExecutionLevel(int i) {accessLevel = i;}
- 
+
     public String getSyntax() {return syntax;}
 
     public void process(java.util.StringTokenizer command, String Username) {
 
         //access level check
-        server.campaign.CampaignMain.cm.toUser("AM: This command is deprecated, please use SetPlanetAdvancedTerrain",
+        CampaignMain.campaignMain.toUser("AM: This command is deprecated, please use SetPlanetAdvancedTerrain",
               Username,
               true);
         return;

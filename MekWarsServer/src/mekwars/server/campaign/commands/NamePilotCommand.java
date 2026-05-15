@@ -17,6 +17,7 @@
 package mekwars.server.campaign.commands;
 
 import common.util.StringUtils;
+import mekwars.server.campaign.CampaignMain;
 import server.campaign.pilot.SPilot;
 
 
@@ -28,13 +29,13 @@ public class NamePilotCommand implements Command {
     public void process(java.util.StringTokenizer command, String Username) {
 
         if (accessLevel != 0) {
-            int userLevel = server.campaign.CampaignMain.cm.getServer().getUserLevel(Username);
+            int userLevel = CampaignMain.campaignMain.getServer().getUserLevel(Username);
             if (userLevel < getExecutionLevel()) {
-                server.campaign.CampaignMain.cm.toUser("AM:Insufficient access level for command. Level: " +
-                                                             userLevel +
-                                                             ". Required: " +
-                                                             accessLevel +
-                                                             ".", Username, true);
+                CampaignMain.campaignMain.toUser("AM:Insufficient access level for command. Level: " +
+                                                       userLevel +
+                                                       ". Required: " +
+                                                       accessLevel +
+                                                       ".", Username, true);
                 return;
             }
         }
@@ -46,7 +47,7 @@ public class NamePilotCommand implements Command {
             unitid = Integer.parseInt((String) command.nextElement());
             name = (String) command.nextElement();
         } catch (Exception e) {
-            server.campaign.CampaignMain.cm.toUser("AM:Improper syntx. Try: /c namepilot#unitid#newname",
+            CampaignMain.campaignMain.toUser("AM:Improper syntx. Try: /c namepilot#unitid#newname",
                   Username,
                   true);
             return;
@@ -56,14 +57,14 @@ public class NamePilotCommand implements Command {
         if (name.length() > 30) {name = name.substring(0, 30);}
 
         if (StringUtils.hasBadChars(name, true).trim().length() > 0) {
-            server.campaign.CampaignMain.cm.toUser(StringUtils.hasBadChars(name, true).trim(), Username);
+            CampaignMain.campaignMain.toUser(StringUtils.hasBadChars(name, true).trim(), Username);
             return;
         }
 
         //check player
-        server.campaign.SPlayer p = server.campaign.CampaignMain.cm.getPlayer(Username);
+        server.campaign.SPlayer p = CampaignMain.campaignMain.getPlayer(Username);
         if (p == null) {
-            server.campaign.CampaignMain.cm.toUser("AM:Null player while naming pilot. Report to an admin.",
+            CampaignMain.campaignMain.toUser("AM:Null player while naming pilot. Report to an admin.",
                   Username,
                   true);
             return;
@@ -72,14 +73,14 @@ public class NamePilotCommand implements Command {
         //fetch unit
         server.campaign.SUnit u = p.getUnit(unitid);
         if (u == null) {
-            server.campaign.CampaignMain.cm.toUser("AM:Could not find a unit with ID#" + unitid + ".", Username, true);
+            CampaignMain.campaignMain.toUser("AM:Could not find a unit with ID#" + unitid + ".", Username, true);
             return;
         }
 
         //fetch pilot
         SPilot pilot = (SPilot) u.getPilot();
         if (pilot == null) {
-            server.campaign.CampaignMain.cm.toUser("AM:Unit #" + unitid + " has a null pilot. Report this to an admin.",
+            CampaignMain.campaignMain.toUser("AM:Unit #" + unitid + " has a null pilot. Report this to an admin.",
                   Username,
                   true);
             return;
@@ -87,20 +88,20 @@ public class NamePilotCommand implements Command {
 
         //make sure pilot isn't Vacant (99/99)
         if (pilot.getName().toLowerCase().startsWith("vacant")) {
-            server.campaign.CampaignMain.cm.toUser("AM:There is no pilot in that unit! It is vacant!", Username, true);
+            CampaignMain.campaignMain.toUser("AM:There is no pilot in that unit! It is vacant!", Username, true);
             return;
         }
 
         //checks passed. change name,
         pilot.setName(name);
-        server.campaign.CampaignMain.cm.toUser("AM:The pilot of the " +
-                                                     u.getModelName() +
-                                                     " (#" +
-                                                     unitid +
-                                                     ") was renamed. New name: " +
-                                                     name +
-                                                     ".", Username, true);
-        server.campaign.CampaignMain.cm.toUser("PL|UU|" + u.getId() + "|" + u.toString(true), Username, false);
+        CampaignMain.campaignMain.toUser("AM:The pilot of the " +
+                                               u.getModelName() +
+                                               " (#" +
+                                               unitid +
+                                               ") was renamed. New name: " +
+                                               name +
+                                               ".", Username, true);
+        CampaignMain.campaignMain.toUser("PL|UU|" + u.getId() + "|" + u.toString(true), Username, false);
 
     }//end process()
 

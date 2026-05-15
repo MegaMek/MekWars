@@ -20,6 +20,8 @@
  */
 package mekwars.server.campaign.commands;
 
+import mekwars.server.campaign.CampaignMain;
+
 /**
  * @author Vertigo (11-feb-2004)
  */
@@ -34,26 +36,26 @@ public class MOTDCommand implements Command {
     public void process(java.util.StringTokenizer command, String Username) {
 
         if (accessLevel != 0) {
-            int userLevel = server.campaign.CampaignMain.cm.getServer().getUserLevel(Username);
+            int userLevel = CampaignMain.campaignMain.getServer().getUserLevel(Username);
             if (userLevel < getExecutionLevel()) {
-                server.campaign.CampaignMain.cm.toUser("AM:Insufficient access level for command. Level: " +
-                                                             userLevel +
-                                                             ". Required: " +
-                                                             accessLevel +
-                                                             ".", Username, true);
+                CampaignMain.campaignMain.toUser("AM:Insufficient access level for command. Level: " +
+                                                       userLevel +
+                                                       ". Required: " +
+                                                       accessLevel +
+                                                       ".", Username, true);
                 return;
             }
         }
 
-        server.campaign.SPlayer p = server.campaign.CampaignMain.cm.getPlayer(Username);
+        server.campaign.SPlayer p = CampaignMain.campaignMain.getPlayer(Username);
         if (p != null && p.getMyHouse().getMotd().trim().length() > 0) {
-            server.campaign.CampaignMain.cm.toUser("(Housemail)<h2><b>MOTD:</b></h2><br>" + p.getMyHouse().getMotd(),
+            CampaignMain.campaignMain.toUser("(Housemail)<h2><b>MOTD:</b></h2><br>" + p.getMyHouse().getMotd(),
                   Username,
                   true);
         }
         if (p != null && p.getMyHouse().getAnnouncement().trim().length() > 0) {
-            server.campaign.CampaignMain.cm.toUser("(Housemail)<br /><hr><h3><b>Staff Announcements:</b></h3><br />" +
-                                                         p.getMyHouse().getAnnouncement(), Username, true);
+            CampaignMain.campaignMain.toUser("(Housemail)<br /><hr><h3><b>Staff Announcements:</b></h3><br />" +
+                                                   p.getMyHouse().getAnnouncement(), Username, true);
         }
 
 

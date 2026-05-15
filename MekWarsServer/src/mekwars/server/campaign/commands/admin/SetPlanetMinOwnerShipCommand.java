@@ -15,6 +15,8 @@
 package mekwars.server.campaign.commands.admin;
 
 
+import mekwars.server.campaign.CampaignMain;
+
 public class SetPlanetMinOwnerShipCommand implements server.campaign.commands.Command {
 
     int accessLevel = server.MWChatServer.auth.IAuthenticator.ADMIN;
@@ -25,40 +27,40 @@ public class SetPlanetMinOwnerShipCommand implements server.campaign.commands.Co
     public void process(java.util.StringTokenizer command, String Username) {
 
         //access level check
-        int userLevel = server.campaign.CampaignMain.cm.getServer().getUserLevel(Username);
+        int userLevel = CampaignMain.campaignMain.getServer().getUserLevel(Username);
         if (userLevel < getExecutionLevel()) {
-            server.campaign.CampaignMain.cm.toUser("AM:Insufficient access level for command. Level: " +
-                                                         userLevel +
-                                                         ". Required: " +
-                                                         accessLevel +
-                                                         ".", Username, true);
+            CampaignMain.campaignMain.toUser("AM:Insufficient access level for command. Level: " +
+                                                   userLevel +
+                                                   ". Required: " +
+                                                   accessLevel +
+                                                   ".", Username, true);
             return;
         }
 
         server.campaign.SPlanet p = null;
         int ownership = 0;
         try {
-            p = server.campaign.CampaignMain.cm.getPlanetFromPartialString(command.nextToken(), Username);
+            p = CampaignMain.campaignMain.getPlanetFromPartialString(command.nextToken(), Username);
             ownership = Integer.parseInt(command.nextToken());
         } catch (Exception e) {
-            server.campaign.CampaignMain.cm.toUser("Improper command. Try: /c setplanetminownership#planet#percent",
+            CampaignMain.campaignMain.toUser("Improper command. Try: /c setplanetminownership#planet#percent",
                   Username,
                   true);
             return;
         }
 
         if (p == null) {
-            server.campaign.CampaignMain.cm.toUser("Couldn't find a planet with that name.", Username, true);
+            CampaignMain.campaignMain.toUser("Couldn't find a planet with that name.", Username, true);
             return;
         }
 
         p.setMinPlanetOwnerShip(ownership);
         p.updated();
 
-        server.campaign.CampaignMain.cm.toUser("You set " + p.getName() + "'s min owner ship to " + ownership,
+        CampaignMain.campaignMain.toUser("You set " + p.getName() + "'s min owner ship to " + ownership,
               Username,
               true);
-        server.campaign.CampaignMain.cm.doSendModMail("PLANETARY CHANGE",
+        CampaignMain.campaignMain.doSendModMail("PLANETARY CHANGE",
               Username + " has changed " + p.getName() + "'s min ownership to " + ownership);
 
     }

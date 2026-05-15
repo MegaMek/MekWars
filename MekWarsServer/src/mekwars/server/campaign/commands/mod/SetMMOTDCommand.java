@@ -20,6 +20,8 @@
 
 package mekwars.server.campaign.commands.mod;
 
+import mekwars.server.campaign.CampaignMain;
+
 /**
  * Set a faction's message of the day. Can be of arbitrary length and use HTML.
  * <p>
@@ -35,13 +37,13 @@ public class SetMMOTDCommand implements server.campaign.commands.Command {
     public void process(java.util.StringTokenizer command, String Username) {
 
         if (accessLevel != 0) {
-            int userLevel = server.campaign.CampaignMain.cm.getServer().getUserLevel(Username);
+            int userLevel = CampaignMain.campaignMain.getServer().getUserLevel(Username);
             if (userLevel < getExecutionLevel()) {
-                server.campaign.CampaignMain.cm.toUser("AM:Insufficient access level for command. Level: " +
-                                                             userLevel +
-                                                             ". Required: " +
-                                                             accessLevel +
-                                                             ".", Username, true);
+                CampaignMain.campaignMain.toUser("AM:Insufficient access level for command. Level: " +
+                                                       userLevel +
+                                                       ". Required: " +
+                                                       accessLevel +
+                                                       ".", Username, true);
                 return;
             }
         }
@@ -54,30 +56,30 @@ public class SetMMOTDCommand implements server.campaign.commands.Command {
             while (command.hasMoreTokens()) {motd += "#" + command.nextToken();}
 
         } catch (Exception e) {
-            server.campaign.CampaignMain.cm.toUser("Improper syntax. Try: /setmmotd text or /setmmotd clear to clear",
+            CampaignMain.campaignMain.toUser("Improper syntax. Try: /setmmotd text or /setmmotd clear to clear",
                   Username,
                   true);
             return;
         }
 
         if (motd.trim().equals("") || motd.equalsIgnoreCase("clear")) {
-            server.campaign.CampaignMain.cm.getConfig().setProperty("MMOTD", "");
-            server.campaign.CampaignMain.cm.toUser("MMOTD cleared.", Username, true);
+            CampaignMain.campaignMain.getConfig().setProperty("MMOTD", "");
+            CampaignMain.campaignMain.toUser("MMOTD cleared.", Username, true);
             return;
         }
 
         int size = motd.length();
         if (size > 7000) {
-            server.campaign.CampaignMain.cm.toUser("MMOTD's may contain up to 7000 charachters. Your message was " +
-                                                         size +
-                                                         "chars long. Reduce its length and try again.",
+            CampaignMain.campaignMain.toUser("MMOTD's may contain up to 7000 charachters. Your message was " +
+                                                   size +
+                                                   "chars long. Reduce its length and try again.",
                   Username,
                   true);
             return;
         }
 
-        server.campaign.CampaignMain.cm.getConfig().setProperty("MMOTD", motd + "<br>- Set by " + Username);
-        server.campaign.CampaignMain.cm.toUser("MMOTD set. Use /c mmotd to review.", Username, true);
+        CampaignMain.campaignMain.getConfig().setProperty("MMOTD", motd + "<br>- Set by " + Username);
+        CampaignMain.campaignMain.toUser("MMOTD set. Use /c mmotd to review.", Username, true);
 
     }//end process()
 

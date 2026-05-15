@@ -1,5 +1,6 @@
 package mekwars.server.campaign.commands.admin;
 
+import mekwars.server.campaign.CampaignMain;
 import server.campaign.util.ChristmasHandler;
 
 /**
@@ -18,18 +19,18 @@ public class EndChristmasCommand implements server.campaign.commands.Command {
     @Override
     public void process(java.util.StringTokenizer command, String Username) {
         //access level check
-        int userLevel = server.campaign.CampaignMain.cm.getServer().getUserLevel(Username);
+        int userLevel = CampaignMain.campaignMain.getServer().getUserLevel(Username);
         if (userLevel < getExecutionLevel()) {
-            server.campaign.CampaignMain.cm.toUser("AM:Insufficient access level for command. Level: " +
-                                                         userLevel +
-                                                         ". Required: " +
-                                                         accessLevel +
-                                                         ".", Username, true);
+            CampaignMain.campaignMain.toUser("AM:Insufficient access level for command. Level: " +
+                                                   userLevel +
+                                                   ". Required: " +
+                                                   accessLevel +
+                                                   ".", Username, true);
             return;
         }
         ChristmasHandler.getInstance().endChristmas();
-        server.campaign.CampaignMain.cm.doSendModMail("SERVER", Username + " ended the Christmas season.");
-        server.campaign.CampaignMain.cm.doSendToAllOnlinePlayers("AM: The Christmas season has officially ended.",
+        CampaignMain.campaignMain.doSendModMail("SERVER", Username + " ended the Christmas season.");
+        CampaignMain.campaignMain.doSendToAllOnlinePlayers("AM: The Christmas season has officially ended.",
               true);
     }
 

@@ -16,6 +16,8 @@
 
 package mekwars.server.campaign.commands.admin;
 
+import mekwars.server.campaign.CampaignMain;
+
 public class AdminExchangePlanetOwnershipCommand implements server.campaign.commands.Command {
 
     int accessLevel = server.MWChatServer.auth.IAuthenticator.ADMIN;
@@ -26,13 +28,13 @@ public class AdminExchangePlanetOwnershipCommand implements server.campaign.comm
     public void process(java.util.StringTokenizer command, String Username) {
 
         //access level check
-        int userLevel = server.campaign.CampaignMain.cm.getServer().getUserLevel(Username);
+        int userLevel = CampaignMain.campaignMain.getServer().getUserLevel(Username);
         if (userLevel < getExecutionLevel()) {
-            server.campaign.CampaignMain.cm.toUser("AM:Insufficient access level for command. Level: " +
-                                                         userLevel +
-                                                         ". Required: " +
-                                                         accessLevel +
-                                                         ".", Username, true);
+            CampaignMain.campaignMain.toUser("AM:Insufficient access level for command. Level: " +
+                                                   userLevel +
+                                                   ". Required: " +
+                                                   accessLevel +
+                                                   ".", Username, true);
             return;
         }
 
@@ -43,13 +45,13 @@ public class AdminExchangePlanetOwnershipCommand implements server.campaign.comm
         int amount = 0;
 
         try {
-            planet = server.campaign.CampaignMain.cm.getPlanetFromPartialString(command.nextToken(), Username);
-            winningHouse = server.campaign.CampaignMain.cm.getHouseFromPartialString(command.nextToken(), Username);
-            losingHouse = server.campaign.CampaignMain.cm.getHouseFromPartialString(command.nextToken(), Username);
+            planet = CampaignMain.campaignMain.getPlanetFromPartialString(command.nextToken(), Username);
+            winningHouse = CampaignMain.campaignMain.getHouseFromPartialString(command.nextToken(), Username);
+            losingHouse = CampaignMain.campaignMain.getHouseFromPartialString(command.nextToken(), Username);
             amount = Integer.parseInt(command.nextToken());
 
         } catch (Exception e) {
-            server.campaign.CampaignMain.cm.toUser(
+            CampaignMain.campaignMain.toUser(
                   "Improper command. Try: /c adminexchangeplanetownership#planet#winner#loser#amount",
                   Username,
                   true);
@@ -57,22 +59,22 @@ public class AdminExchangePlanetOwnershipCommand implements server.campaign.comm
         }
 
         if (planet == null) {
-            server.campaign.CampaignMain.cm.toUser("Could not find a matching planet.", Username, true);
+            CampaignMain.campaignMain.toUser("Could not find a matching planet.", Username, true);
             return;
         }
 
         if (winningHouse == null) {
-            server.campaign.CampaignMain.cm.toUser("Could not find a matching faction for the winner.", Username, true);
+            CampaignMain.campaignMain.toUser("Could not find a matching faction for the winner.", Username, true);
             return;
         }
 
         if (losingHouse == null) {
-            server.campaign.CampaignMain.cm.toUser("Could not find a matching faction for the loser.", Username, true);
+            CampaignMain.campaignMain.toUser("Could not find a matching faction for the loser.", Username, true);
             return;
         }
 
         if (amount <= 0) {
-            server.campaign.CampaignMain.cm.toUser("Get real try a number above 0!", Username, true);
+            CampaignMain.campaignMain.toUser("Get real try a number above 0!", Username, true);
             return;
         }
 
@@ -80,16 +82,16 @@ public class AdminExchangePlanetOwnershipCommand implements server.campaign.comm
         int newAmount = planet.doGainInfluence(winningHouse, losingHouse, amount, true);
 
         //server.MWLogger.modLog(Username + " took " + newAmount + "% of "+ planet.getName() + " from " + losingHouse.getName() + " and gave it to " + winningHouse.getName() + ".");
-        server.campaign.CampaignMain.cm.toUser("You took " +
-                                                     newAmount +
-                                                     "% of " +
-                                                     planet.getName() +
-                                                     " from " +
-                                                     losingHouse.getName() +
-                                                     " and gave it to " +
-                                                     winningHouse.getName() +
-                                                     ".", Username, true);
-        server.campaign.CampaignMain.cm.doSendModMail("NOTE",
+        CampaignMain.campaignMain.toUser("You took " +
+                                               newAmount +
+                                               "% of " +
+                                               planet.getName() +
+                                               " from " +
+                                               losingHouse.getName() +
+                                               " and gave it to " +
+                                               winningHouse.getName() +
+                                               ".", Username, true);
+        CampaignMain.campaignMain.doSendModMail("NOTE",
               Username +
                     " took " +
                     newAmount +

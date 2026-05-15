@@ -43,7 +43,6 @@ import jakarta.annotation.Nonnull;
 import mekwars.common.House;
 import mekwars.common.campaign.clientutils.IClientUser;
 import mekwars.common.campaign.clientutils.protocol.IClient;
-import mekwars.common.util.MWLogger;
 import mekwars.common.util.StringUtils;
 
 /*

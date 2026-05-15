@@ -16,6 +16,8 @@
 
 package mekwars.server.campaign.commands;
 
+import mekwars.server.campaign.CampaignMain;
+
 public class PlanetCommand implements Command {
 
     int accessLevel = 0;
@@ -24,28 +26,28 @@ public class PlanetCommand implements Command {
     public void process(java.util.StringTokenizer command, String Username) {
 
         if (accessLevel != 0) {
-            int userLevel = server.campaign.CampaignMain.cm.getServer().getUserLevel(Username);
+            int userLevel = CampaignMain.campaignMain.getServer().getUserLevel(Username);
             if (userLevel < getExecutionLevel()) {
-                server.campaign.CampaignMain.cm.toUser("AM:Insufficient access level for command. Level: " +
-                                                             userLevel +
-                                                             ". Required: " +
-                                                             accessLevel +
-                                                             ".", Username, true);
+                CampaignMain.campaignMain.toUser("AM:Insufficient access level for command. Level: " +
+                                                       userLevel +
+                                                       ". Required: " +
+                                                       accessLevel +
+                                                       ".", Username, true);
                 return;
             }
         }
 
         server.campaign.SPlanet p = null;
         try {
-            p = server.campaign.CampaignMain.cm.getPlanetFromPartialString(command.nextToken(), Username);
+            p = CampaignMain.campaignMain.getPlanetFromPartialString(command.nextToken(), Username);
             if (p == null) {return;}
         } catch (Exception e) {
-            server.campaign.CampaignMain.cm.toUser("AM:Improper format. Try: /c planet#NAME", Username, true);
+            CampaignMain.campaignMain.toUser("AM:Improper format. Try: /c planet#NAME", Username, true);
             return;
         }
 
         //found a valid world. send info.
-        server.campaign.CampaignMain.cm.toUser("SM|" + p.getLongDescription(false), Username, false);
+        CampaignMain.campaignMain.toUser("SM|" + p.getLongDescription(false), Username, false);
 
     }//end process()
 

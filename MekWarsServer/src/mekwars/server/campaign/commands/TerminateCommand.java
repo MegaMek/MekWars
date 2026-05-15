@@ -13,6 +13,8 @@
  */
 package mekwars.server.campaign.commands;
 
+import mekwars.server.campaign.CampaignMain;
+
 /**
  * Terminate command is analagous to the old cancel command used for Tasks. Should be mirrored in the CampaignMain
  * command tree.
@@ -25,13 +27,13 @@ public class TerminateCommand implements Command {
     public void process(java.util.StringTokenizer command, String Username) {
 
         if (accessLevel != 0) {
-            int userLevel = server.campaign.CampaignMain.cm.getServer().getUserLevel(Username);
+            int userLevel = CampaignMain.campaignMain.getServer().getUserLevel(Username);
             if (userLevel < getExecutionLevel()) {
-                server.campaign.CampaignMain.cm.toUser("AM:Insufficient access level for command. Level: " +
-                                                             userLevel +
-                                                             ". Required: " +
-                                                             accessLevel +
-                                                             ".", Username, true);
+                CampaignMain.campaignMain.toUser("AM:Insufficient access level for command. Level: " +
+                                                       userLevel +
+                                                       ". Required: " +
+                                                       accessLevel +
+                                                       ".", Username, true);
                 return;
             }
         }
@@ -41,30 +43,30 @@ public class TerminateCommand implements Command {
         server.campaign.operations.ShortOperation so = null;
 
         //get the player
-        server.campaign.SPlayer tp = server.campaign.CampaignMain.cm.getPlayer(Username);
+        server.campaign.SPlayer tp = CampaignMain.campaignMain.getPlayer(Username);
         if (tp == null) {
-            server.campaign.CampaignMain.cm.toUser("AM:Null player. Report this immediately!", Username, true);
+            CampaignMain.campaignMain.toUser("AM:Null player. Report this immediately!", Username, true);
             return;
         }
 
         if (command.hasMoreTokens()) {
             try {
                 opID = Integer.parseInt(command.nextToken());
-                so = server.campaign.CampaignMain.cm.getOpsManager().getRunningOps().get(opID);
+                so = CampaignMain.campaignMain.getOpsManager().getRunningOps().get(opID);
             } catch (Exception e) {
-                server.campaign.CampaignMain.cm.toUser("AM:Improper format. Try: /c terminate#attack number",
+                CampaignMain.campaignMain.toUser("AM:Improper format. Try: /c terminate#attack number",
                       Username,
                       true);
                 return;
             }
         } else {
-            so = server.campaign.CampaignMain.cm.getOpsManager().getShortOpForPlayer(tp);
+            so = CampaignMain.campaignMain.getOpsManager().getShortOpForPlayer(tp);
         }
 
         //check the attack
 
         if (so == null) {
-            server.campaign.CampaignMain.cm.toUser("AM:Terminate failed. Attack #" + opID + " does not exist.",
+            CampaignMain.campaignMain.toUser("AM:Terminate failed. Attack #" + opID + " does not exist.",
                   Username,
                   true);
             return;
@@ -72,7 +74,7 @@ public class TerminateCommand implements Command {
 
         //if the player isnt in the game, reject
         if (!so.getAllPlayerNames().contains(tp.getName().toLowerCase())) {
-            server.campaign.CampaignMain.cm.toUser(
+            CampaignMain.campaignMain.toUser(
                   "AM:Terminate failed. You must be a participant in order to terminate an Attack.",
                   Username,
                   true);
@@ -82,14 +84,14 @@ public class TerminateCommand implements Command {
         //don't cancel finished or reporting games
         if (so.getStatus() == server.campaign.operations.ShortOperation.STATUS_FINISHED ||
                   so.getStatus() == server.campaign.operations.ShortOperation.STATUS_REPORTING) {
-            server.campaign.CampaignMain.cm.toUser("AM:Terminate failed. You may not terminate a completed game.",
+            CampaignMain.campaignMain.toUser("AM:Terminate failed. You may not terminate a completed game.",
                   Username,
                   true);
             return;
         }
 
         if (so.getStatus() == server.campaign.operations.ShortOperation.STATUS_WAITING) {
-            server.campaign.CampaignMain.cm.toUser(
+            CampaignMain.campaignMain.toUser(
                   "AM:Terminate failed. You may not terminate a game that has yet to start!",
                   Username);
             return;
@@ -99,7 +101,7 @@ public class TerminateCommand implements Command {
 
         // Check if opponents are offline.  Otherwise, this game cannot be cancelled by a user who has been disconnected on
         for (String currPlayerName : so.getAllPlayerNames()) {
-            if (server.campaign.CampaignMain.cm.getPlayer(currPlayerName).getDutyStatus() ==
+            if (CampaignMain.campaignMain.getPlayer(currPlayerName).getDutyStatus() ==
                       server.campaign.SPlayer.STATUS_LOGGEDOUT) {
                 if (!so.getCancelledPlayers().contains(currPlayerName.toLowerCase())) {
                     so.getCancelledPlayers().add(currPlayerName.toLowerCase());
@@ -111,13 +113,13 @@ public class TerminateCommand implements Command {
 
             String msg = "Cancelling Operation " + so.getName();
             for (String currPlayerName : so.getAllPlayerNames()) {
-                server.campaign.CampaignMain.cm.toUser(msg, currPlayerName);
+                CampaignMain.campaignMain.toUser(msg, currPlayerName);
             }
             //terminate
-            server.campaign.CampaignMain.cm.getOpsManager()
+            CampaignMain.campaignMain.getOpsManager()
                   .terminateOperation(so, server.campaign.operations.OperationManager.TERM_TERMCOMMAND, tp);
         } else {
-            server.campaign.CampaignMain.cm.toUser(
+            CampaignMain.campaignMain.toUser(
                   "AM:Informing all other participants of your wish to cancel the operation.",
                   Username);
 
@@ -134,7 +136,7 @@ public class TerminateCommand implements Command {
 
                 if (!so.getCancelledPlayers().contains(currPlayerName.toLowerCase()) &&
                           !Username.equalsIgnoreCase(currPlayerName)) {
-                    server.campaign.CampaignMain.cm.toUser(msg, currPlayerName);
+                    CampaignMain.campaignMain.toUser(msg, currPlayerName);
                 }
             }
         }

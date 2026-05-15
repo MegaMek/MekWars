@@ -14,6 +14,8 @@
 
 package mekwars.server.campaign.commands;
 
+import mekwars.server.campaign.CampaignMain;
+
 public class GamesCommand implements Command {
 
     int accessLevel = 0;
@@ -22,21 +24,21 @@ public class GamesCommand implements Command {
     public void process(java.util.StringTokenizer command, String Username) {
 
         if (accessLevel != 0) {
-            int userLevel = server.campaign.CampaignMain.cm.getServer().getUserLevel(Username);
+            int userLevel = CampaignMain.campaignMain.getServer().getUserLevel(Username);
             if (userLevel < getExecutionLevel()) {
-                server.campaign.CampaignMain.cm.toUser("AM:Insufficient access level for command. Level: " +
-                                                             userLevel +
-                                                             ". Required: " +
-                                                             accessLevel +
-                                                             ".", Username, true);
+                CampaignMain.campaignMain.toUser("AM:Insufficient access level for command. Level: " +
+                                                       userLevel +
+                                                       ". Required: " +
+                                                       accessLevel +
+                                                       ".", Username, true);
                 return;
             }
         }
 
         //load player
-        server.campaign.SPlayer p = server.campaign.CampaignMain.cm.getPlayer(Username);
+        server.campaign.SPlayer p = CampaignMain.campaignMain.getPlayer(Username);
         if (p == null) {
-            server.campaign.CampaignMain.cm.toUser(
+            CampaignMain.campaignMain.toUser(
                   "AM:Null player. Contact an administrator to report this, immediately!",
                   Username,
                   true);
@@ -53,8 +55,8 @@ public class GamesCommand implements Command {
                 factionName = command.nextToken().toLowerCase();
                 if (factionName.trim().length() > 0) {factionSort = true;}
             } catch (Exception ex) {
-                server.campaign.CampaignMain.cm.toUser("AM:Games command failed. Check your input. It should be:" +
-                                                             "/c games (to get all games) or /c games#faction (for a filtered list)",
+                CampaignMain.campaignMain.toUser("AM:Games command failed. Check your input. It should be:" +
+                                                       "/c games (to get all games) or /c games#faction (for a filtered list)",
                       Username,
                       true);
                 return;
@@ -68,7 +70,7 @@ public class GamesCommand implements Command {
         int runningGamesCount = 0;
         java.util.TreeMap<Long, server.campaign.operations.ShortOperation> timeSort = new java.util.TreeMap<Long, server.campaign.operations.ShortOperation>();
 
-        for (server.campaign.operations.ShortOperation currO : server.campaign.CampaignMain.cm.getOpsManager()
+        for (server.campaign.operations.ShortOperation currO : CampaignMain.campaignMain.getOpsManager()
                                                                      .getRunningOps()
                                                                      .values()) {
 
@@ -104,7 +106,7 @@ public class GamesCommand implements Command {
             }
         }
 
-        server.campaign.CampaignMain.cm.toUser("SM|" + runningGames + finishedGames, Username, false);
+        CampaignMain.campaignMain.toUser("SM|" + runningGames + finishedGames, Username, false);
     }
 
     public int getExecutionLevel() {return accessLevel;}

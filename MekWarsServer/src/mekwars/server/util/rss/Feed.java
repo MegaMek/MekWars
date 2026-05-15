@@ -15,7 +15,7 @@
  */
 package mekwars.server.util.rss;
 
-import common.util.MWLogger;
+import mekwars.server.campaign.CampaignMain;
 
 /**
  * The Feed class implements an RSS feed, getting the functionality out of CampaignMain This feed is compliant with RSS
@@ -62,7 +62,7 @@ public class Feed {
      */
     private void write() {
         try {
-            java.io.FileOutputStream out = new java.io.FileOutputStream(server.campaign.CampaignMain.cm.getConfig(
+            java.io.FileOutputStream out = new java.io.FileOutputStream(CampaignMain.campaignMain.getConfig(
                   "NewsPath"));
             java.io.PrintStream ps = new java.io.PrintStream(out);
             ps.println(header);
@@ -91,13 +91,13 @@ public class Feed {
         StringBuilder sb = new StringBuilder();
         sb.append("<channel>\n");
         sb.append("<atom:link href=\"" +
-                        server.campaign.CampaignMain.cm.getConfig("NewsURL") +
+                        CampaignMain.campaignMain.getConfig("NewsURL") +
                         "\" rel=\"self\" type=\"application/rss+xml\" />\n");
         sb.append("<title>");
-        sb.append(server.campaign.CampaignMain.cm.getServer().getConfigParam("SERVERNAME") + " News Feed");
+        sb.append(CampaignMain.campaignMain.getServer().getConfigParam("SERVERNAME") + " News Feed");
         sb.append("</title>\n");
         sb.append("<link>");
-        sb.append(server.campaign.CampaignMain.cm.getServer().getConfigParam("TRACKERLINK"));
+        sb.append(CampaignMain.campaignMain.getServer().getConfigParam("TRACKERLINK"));
         sb.append("</link>\n");
         sb.append("<description>Campaign News</description>\n");
         return sb.toString();

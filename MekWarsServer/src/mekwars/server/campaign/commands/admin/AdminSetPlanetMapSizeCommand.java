@@ -17,6 +17,8 @@
 package mekwars.server.campaign.commands.admin;
 
 
+import mekwars.server.campaign.CampaignMain;
+
 public class AdminSetPlanetMapSizeCommand implements server.campaign.commands.Command {
 
     int accessLevel = server.MWChatServer.auth.IAuthenticator.ADMIN;
@@ -27,20 +29,20 @@ public class AdminSetPlanetMapSizeCommand implements server.campaign.commands.Co
     public void process(java.util.StringTokenizer command, String Username) {
 
         //access level check
-        int userLevel = server.campaign.CampaignMain.cm.getServer().getUserLevel(Username);
+        int userLevel = CampaignMain.campaignMain.getServer().getUserLevel(Username);
         if (userLevel < getExecutionLevel()) {
-            server.campaign.CampaignMain.cm.toUser("AM:Insufficient access level for command. Level: " +
-                                                         userLevel +
-                                                         ". Required: " +
-                                                         accessLevel +
-                                                         ".", Username, true);
+            CampaignMain.campaignMain.toUser("AM:Insufficient access level for command. Level: " +
+                                                   userLevel +
+                                                   ". Required: " +
+                                                   accessLevel +
+                                                   ".", Username, true);
             return;
         }
 
-        server.campaign.SPlanet planet = (server.campaign.SPlanet) server.campaign.CampaignMain.cm.getData()
+        server.campaign.SPlanet planet = (server.campaign.SPlanet) CampaignMain.campaignMain.getData()
                                                                          .getPlanetByName(command.nextToken());
         if (planet == null) {
-            server.campaign.CampaignMain.cm.toUser("Unknown Planet", Username, true);
+            CampaignMain.campaignMain.toUser("Unknown Planet", Username, true);
             return;
         }
         int x = Integer.parseInt(command.nextToken());
@@ -49,9 +51,9 @@ public class AdminSetPlanetMapSizeCommand implements server.campaign.commands.Co
         planet.setMapSize(new java.awt.Dimension(x, y));
         planet.updated();
 
-        server.campaign.CampaignMain.cm.toUser("Map size set for planet " + planet.getName(), Username, true);
+        CampaignMain.campaignMain.toUser("Map size set for planet " + planet.getName(), Username, true);
         //server.MWLogger.modLog(Username + " set the map size for planet "+planet.getName());
-        server.campaign.CampaignMain.cm.doSendModMail("NOTE",
+        CampaignMain.campaignMain.doSendModMail("NOTE",
               Username + " has set the mapsize for planet " + planet.getName());
 
     }

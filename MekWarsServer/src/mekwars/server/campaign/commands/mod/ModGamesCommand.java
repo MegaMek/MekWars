@@ -15,6 +15,8 @@
 package mekwars.server.campaign.commands.mod;
 
 
+import mekwars.server.campaign.CampaignMain;
+
 public class ModGamesCommand implements server.campaign.commands.Command {
 
     int accessLevel = server.MWChatServer.auth.IAuthenticator.MODERATOR;
@@ -24,20 +26,20 @@ public class ModGamesCommand implements server.campaign.commands.Command {
 
     public void process(java.util.StringTokenizer command, String Username) {
 
-        int userLevel = server.campaign.CampaignMain.cm.getServer().getUserLevel(Username);
+        int userLevel = CampaignMain.campaignMain.getServer().getUserLevel(Username);
         if (userLevel < getExecutionLevel()) {
-            server.campaign.CampaignMain.cm.toUser("AM:Insufficient access level for command. Level: " +
-                                                         userLevel +
-                                                         ". Required: " +
-                                                         accessLevel +
-                                                         ".", Username, true);
+            CampaignMain.campaignMain.toUser("AM:Insufficient access level for command. Level: " +
+                                                   userLevel +
+                                                   ". Required: " +
+                                                   accessLevel +
+                                                   ".", Username, true);
             return;
         }
 
         //load player
-        server.campaign.SPlayer p = server.campaign.CampaignMain.cm.getPlayer(Username);
+        server.campaign.SPlayer p = CampaignMain.campaignMain.getPlayer(Username);
         if (p == null) {
-            server.campaign.CampaignMain.cm.toUser("Null player. Contact an administrator to report this, immediately!",
+            CampaignMain.campaignMain.toUser("Null player. Contact an administrator to report this, immediately!",
                   Username,
                   true);
             return;
@@ -53,8 +55,8 @@ public class ModGamesCommand implements server.campaign.commands.Command {
                 factionName = command.nextToken().toLowerCase();
                 if (!factionName.equals("") && !factionName.startsWith(" ")) {factionSort = true;}
             } catch (Exception ex) {
-                server.campaign.CampaignMain.cm.toUser("Games command failed. Check your input. It should be:" +
-                                                             "/c modames (to get all games) or /c modgames#faction (for a filtered list)",
+                CampaignMain.campaignMain.toUser("Games command failed. Check your input. It should be:" +
+                                                       "/c modames (to get all games) or /c modgames#faction (for a filtered list)",
                       Username,
                       true);
                 return;
@@ -68,7 +70,7 @@ public class ModGamesCommand implements server.campaign.commands.Command {
         int runningGamesCount = 0;
         int finishedGamesCount = 0;
 
-        for (server.campaign.operations.ShortOperation currO : server.campaign.CampaignMain.cm.getOpsManager()
+        for (server.campaign.operations.ShortOperation currO : CampaignMain.campaignMain.getOpsManager()
                                                                      .getRunningOps()
                                                                      .values()) {
 
@@ -96,11 +98,11 @@ public class ModGamesCommand implements server.campaign.commands.Command {
 
         if (finishedGamesCount == 0) {finishedGames += "- None<br>";}
 
-        server.campaign.CampaignMain.cm.toUser("SM|" + runningGames + finishedGames, Username, false);
+        CampaignMain.campaignMain.toUser("SM|" + runningGames + finishedGames, Username, false);
 
         //show use of command to mods.
         //server.MWLogger.modLog(Username + " used /c modgames.");
-        server.campaign.CampaignMain.cm.doSendModMail("NOTE", Username + " used /c modgames.");
+        CampaignMain.campaignMain.doSendModMail("NOTE", Username + " used /c modgames.");
     }
 
     public int getExecutionLevel() {return accessLevel;}

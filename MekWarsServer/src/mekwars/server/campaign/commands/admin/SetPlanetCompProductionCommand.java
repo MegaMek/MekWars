@@ -20,6 +20,8 @@
  */
 package mekwars.server.campaign.commands.admin;
 
+import mekwars.server.campaign.CampaignMain;
+
 public class SetPlanetCompProductionCommand implements server.campaign.commands.Command {
 
     int accessLevel = server.MWChatServer.auth.IAuthenticator.ADMIN;
@@ -30,30 +32,30 @@ public class SetPlanetCompProductionCommand implements server.campaign.commands.
     public void process(java.util.StringTokenizer command, String Username) {
 
         //access level check
-        int userLevel = server.campaign.CampaignMain.cm.getServer().getUserLevel(Username);
+        int userLevel = CampaignMain.campaignMain.getServer().getUserLevel(Username);
         if (userLevel < getExecutionLevel()) {
-            server.campaign.CampaignMain.cm.toUser("AM:Insufficient access level for command. Level: " +
-                                                         userLevel +
-                                                         ". Required: " +
-                                                         accessLevel +
-                                                         ".", Username, true);
+            CampaignMain.campaignMain.toUser("AM:Insufficient access level for command. Level: " +
+                                                   userLevel +
+                                                   ". Required: " +
+                                                   accessLevel +
+                                                   ".", Username, true);
             return;
         }
 
         String PlanetName = command.nextToken();
         int compProduction = 0;
-        server.campaign.SPlanet planet = server.campaign.CampaignMain.cm.getPlanetFromPartialString(PlanetName,
+        server.campaign.SPlanet planet = CampaignMain.campaignMain.getPlanetFromPartialString(PlanetName,
               Username);
 
         if (planet == null) {
-            server.campaign.CampaignMain.cm.toUser(PlanetName + " not found.", Username, true);
+            CampaignMain.campaignMain.toUser(PlanetName + " not found.", Username, true);
             return;
         }
 
         try {
             if (command.hasMoreTokens()) {compProduction = Integer.parseInt(command.nextToken());}
         } catch (Exception ex) {
-            server.campaign.CampaignMain.cm.toUser(
+            CampaignMain.campaignMain.toUser(
                   "Invalid Syntax: SetPlanetCompProduction#PlanetName#NumberOfComponents",
                   Username,
                   true);
@@ -68,10 +70,10 @@ public class SetPlanetCompProductionCommand implements server.campaign.commands.
 
         planet.setCompProduction(compProduction);
 
-        server.campaign.CampaignMain.cm.toUser(planet.getName() +
-                                                     " has had its component production set to " +
-                                                     planet.getCompProduction(), Username, true);
-        server.campaign.CampaignMain.cm.doSendModMail("NOTE",
+        CampaignMain.campaignMain.toUser(planet.getName() +
+                                               " has had its component production set to " +
+                                               planet.getCompProduction(), Username, true);
+        CampaignMain.campaignMain.doSendModMail("NOTE",
               Username + " has set planet " + PlanetName + "'s component production to " + planet.getCompProduction());
         planet.updated();
     }

@@ -54,15 +54,15 @@ public class SliceThread extends Thread {
                 try {
                     myCampaign.slice(getSliceID());
 
-                    if (CampaignMain.cm.getBooleanConfig("ProcessHouseTicksAtSlice")) {
+                    if (CampaignMain.campaignMain.getBooleanConfig("ProcessHouseTicksAtSlice")) {
                         long endTime = startTime + Duration / 2;
                         while (endTime > System.currentTimeMillis()) {
-                            if (lastHouseId > CampaignMain.cm.getData().getAllHouses().size()) {
+                            if (lastHouseId > CampaignMain.campaignMain.getData().getAllHouses().size()) {
                                 lastHouseId = 0;
                             }
-                            SHouse house = CampaignMain.cm.getHouseById(lastHouseId);
+                            SHouse house = CampaignMain.campaignMain.getHouseById(lastHouseId);
                             if (house != null && house.getAllOnlinePlayers().size() > 0) {
-                                CampaignMain.cm.getHouseById(lastHouseId).tick(true, sliceid);
+                                CampaignMain.campaignMain.getHouseById(lastHouseId).tick(true, sliceid);
                                 lastHouseId++;
                             } else {
                                 lastHouseId++;

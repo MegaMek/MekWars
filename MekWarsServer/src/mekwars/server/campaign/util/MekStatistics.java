@@ -16,16 +16,21 @@
 
 package mekwars.server.campaign.util;
 
+import java.util.StringTokenizer;
+
+import jakarta.annotation.Nonnull;
+import megamek.codeUtilities.MathUtility;
+
 /**
  *
  * @author McWizard
  *       <p>
  *       Represents a MechStats Entry
  */
-public class MechStatistics implements Cloneable, Comparable<Object> {
+public class MekStatistics implements Cloneable, Comparable<MekStatistics> {
     private Long ID;
-    private String mechFileName;
-    private int mechSize;
+    private String mekFileName;
+    private int mekSize;
     private int gamesWon = 0;
     private int gamesPlayed = 0;
     private int timesScrapped = 0;
@@ -36,34 +41,49 @@ public class MechStatistics implements Cloneable, Comparable<Object> {
     private int timesDestroyed = 0;
     private int DBID = 0;
 
-    public MechStatistics(String Filename, int mechsize) {
-        this.mechFileName = Filename;
-        this.mechSize = mechsize;
+    public MekStatistics(String Filename, int mekSize) {
+        this.mekFileName = Filename;
+        this.mekSize = mekSize;
         this.gamesPlayed = 0;
         this.gamesWon = 0;
         this.timesDestroyed = 0;
     }
 
-    public MechStatistics(String s) {
-        java.util.StringTokenizer ST = new java.util.StringTokenizer(s, "*");
-        this.mechFileName = ST.nextToken();
-        this.mechSize = Integer.parseInt(ST.nextToken());
-        this.gamesWon = Integer.parseInt(ST.nextToken());
-        this.gamesPlayed = Integer.parseInt(ST.nextToken());
-        this.timesScrapped = Integer.parseInt(ST.nextToken());
-        if (ST.hasMoreElements()) {this.lastTimeUpdated = Long.parseLong(ST.nextToken());}
-        if (ST.hasMoreElements()) {this.currentGamesWon = Integer.parseInt(ST.nextToken());}
-        if (ST.hasMoreElements()) {this.currentGamesPlayed = Integer.parseInt(ST.nextToken());}
-        if (ST.hasMoreElements()) {this.OriginalBV = Integer.parseInt(ST.nextToken());}
-        if (ST.hasMoreElements()) {this.timesDestroyed = Integer.parseInt(ST.nextToken());}
+    public MekStatistics(String s) {
+        StringTokenizer stringTokenizer = new StringTokenizer(s, "*");
+        this.mekFileName = stringTokenizer.nextToken();
+        this.mekSize = MathUtility.parseInt(stringTokenizer.nextToken(), 0);
+        this.gamesWon = MathUtility.parseInt(stringTokenizer.nextToken(), 0);
+        this.gamesPlayed = MathUtility.parseInt(stringTokenizer.nextToken(), 0);
+        this.timesScrapped = MathUtility.parseInt(stringTokenizer.nextToken(), 0);
+
+        if (stringTokenizer.hasMoreElements()) {
+            this.lastTimeUpdated = Long.parseLong(stringTokenizer.nextToken());
+        }
+
+        if (stringTokenizer.hasMoreElements()) {
+            this.currentGamesWon = Integer.parseInt(stringTokenizer.nextToken());
+        }
+
+        if (stringTokenizer.hasMoreElements()) {
+            this.currentGamesPlayed = Integer.parseInt(stringTokenizer.nextToken());
+        }
+
+        if (stringTokenizer.hasMoreElements()) {
+            this.OriginalBV = Integer.parseInt(stringTokenizer.nextToken());
+        }
+
+        if (stringTokenizer.hasMoreElements()) {
+            this.timesDestroyed = Integer.parseInt(stringTokenizer.nextToken());
+        }
     }
 
     @Override
     public String toString() {
         String result = "";
-        result += this.mechFileName;
+        result += this.mekFileName;
         result += "*";
-        result += this.mechSize;
+        result += this.mekSize;
         result += "*";
         result += this.gamesWon;
         result += "*";
@@ -114,34 +134,32 @@ public class MechStatistics implements Cloneable, Comparable<Object> {
      * @hibernate.property
      */
     public int getOriginalBV() {
-        if (OriginalBV == 0 && getMechFileName() != null) {
+        if (OriginalBV == 0 && getMekFileName() != null) {
             // make a MegaMek entity and get it's BV
-            OriginalBV = server.campaign.SUnit.loadMech(getMechFileName()).calculateBattleValue();
+            OriginalBV = server.campaign.SUnit.loadMech(getMekFileName()).calculateBattleValue();
         }
         return OriginalBV;
-    }
-
-    public String getMechFileName() {
-        return mechFileName;
-    }
-
-    public void setMechFileName(String mechFileName) {
-        this.mechFileName = mechFileName;
     }
 
     public void setOriginalBV(int OriginalBV) {
         this.OriginalBV = OriginalBV;
     }
 
-    public String addStats(int gamesPlayed, int gamesWon, int originalBV) {
+    public String getMekFileName() {
+        return mekFileName;
+    }
 
-        String result = "";
+    public void setMekFileName(String mekFileName) {
+        this.mekFileName = mekFileName;
+    }
+
+    public void addStats(int gamesPlayed, int gamesWon, int originalBV) {
         this.setGamesPlayed(getGamesPlayed() + gamesPlayed);
         this.setGamesWon(getGamesWon() + gamesWon);
 
-        if (getOriginalBV() == 0) {setOriginalBV(originalBV);}
-
-        return result;
+        if (getOriginalBV() == 0) {
+            setOriginalBV(originalBV);
+        }
     }
 
     /**
@@ -151,6 +169,15 @@ public class MechStatistics implements Cloneable, Comparable<Object> {
      */
     public int getGamesPlayed() {
         return gamesPlayed;
+    }
+
+    public void setGamesPlayed(int gamesPlayed) {
+        //Update the last time this int was changed
+        if (gamesPlayed != this.gamesPlayed) {
+            this.lastTimeUpdated = System.currentTimeMillis();
+        }
+
+        this.gamesPlayed = gamesPlayed;
     }
 
     /**
@@ -166,15 +193,8 @@ public class MechStatistics implements Cloneable, Comparable<Object> {
         this.gamesWon = gamesWon;
     }
 
-    public void setGamesPlayed(int gamesPlayed) {
-        //Update the last time this int was changed
-        if (gamesPlayed != this.gamesPlayed) {this.lastTimeUpdated = System.currentTimeMillis();}
-        this.gamesPlayed = gamesPlayed;
-    }
-
-    public int compareTo(Object o) {
-        mekwars.server.campaign.util.MechStatistics m = (mekwars.server.campaign.util.MechStatistics) o;
-        return (this.getMechFileName().compareTo(m.getMechFileName()));
+    public int compareTo(@Nonnull MekStatistics mekStatistics) {
+        return (this.getMekFileName().compareTo(mekStatistics.getMekFileName()));
     }
 
     /**
@@ -182,12 +202,12 @@ public class MechStatistics implements Cloneable, Comparable<Object> {
      *
      * @hibernate.property
      */
-    public int getMechSize() {
-        return mechSize;
+    public int getMekSize() {
+        return mekSize;
     }
 
-    public void setMechSize(int mechSize) {
-        this.mechSize = mechSize;
+    public void setMekSize(int mekSize) {
+        this.mekSize = mekSize;
     }
 
     /**
@@ -226,8 +246,6 @@ public class MechStatistics implements Cloneable, Comparable<Object> {
 
     /**
      * @return Integer
-     *
-     * @hibernate.id generator-class="native"
      */
     public Long getID() {
         return ID;
@@ -261,5 +279,28 @@ public class MechStatistics implements Cloneable, Comparable<Object> {
 
     public void setCurrentGamesWon(int currentGamesWon) {
         this.currentGamesWon = currentGamesWon;
+    }
+
+    @Override
+    public MekStatistics clone() {
+        try {
+            MekStatistics clone = (MekStatistics) super.clone();
+            clone.setID(this.ID);
+            clone.setMekFileName(this.mekFileName);
+            clone.setMekSize(this.mekSize);
+            clone.setGamesWon(this.gamesWon);
+            clone.setGamesPlayed(this.gamesPlayed);
+            clone.setTimesScrapped(this.timesScrapped);
+            clone.setLastTimeUpdated(this.lastTimeUpdated);
+            clone.setOriginalBV(this.OriginalBV);
+            clone.setCurrentGamesWon(this.currentGamesWon);
+            clone.setCurrentGamesPlayed(this.currentGamesPlayed);
+            clone.setTimesDestroyed(this.timesDestroyed);
+            clone.setDBId(this.DBID);
+
+            return clone;
+        } catch (CloneNotSupportedException e) {
+            throw new AssertionError();
+        }
     }
 }

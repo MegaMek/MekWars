@@ -76,7 +76,7 @@ public class PilotQueues {
         java.util.LinkedList<SPilot> list = queues.get(type);
         while (list.size() < 10) {addPilot(type, rollNewPilot(type), true);}
 
-        SPilot pilot = list.remove(CampaignMain.cm.getRandomNumber(list.size()));
+        SPilot pilot = list.remove(CampaignMain.campaignMain.getRandomNumber(list.size()));
 
         java.util.StringTokenizer ST = new java.util.StringTokenizer(getBasePilotSkill(type), "$");
 
@@ -132,11 +132,11 @@ public class PilotQueues {
         SPilot result;
         int gunnery = this.getBaseGunnery(unitType);
         int piloting = this.getBasePiloting(unitType);
-        int skillChance = CampaignMain.cm.getIntegerConfig("BornSkillChance");
+        int skillChance = CampaignMain.campaignMain.getIntegerConfig("BornSkillChance");
 
-        int rnd = CampaignMain.cm.getRandomNumber(100);//reroll rnd, use to check for improved pilots
-        boolean allowGreenPilots = CampaignMain.cm.getBooleanConfig("AllowGreenPilots");
-        boolean allowVetPilots = CampaignMain.cm.getBooleanConfig("AllowVetPilots");
+        int rnd = CampaignMain.campaignMain.getRandomNumber(100);//reroll rnd, use to check for improved pilots
+        boolean allowGreenPilots = CampaignMain.campaignMain.getBooleanConfig("AllowGreenPilots");
+        boolean allowVetPilots = CampaignMain.campaignMain.getBooleanConfig("AllowVetPilots");
 
         //Green Pilots
         if (rnd < 10 && allowGreenPilots) {
@@ -152,8 +152,8 @@ public class PilotQueues {
         result = new SPilot(getRandomPilotName(), gunnery, piloting);
         result.setCurrentFaction(factionString);
 
-        rnd = CampaignMain.cm.getRandomNumber(100);//reroll rnd, use to check for improved pilots
-        if (rnd <= skillChance && CampaignMain.cm.getBooleanConfig("PilotSkills")) {
+        rnd = CampaignMain.campaignMain.getRandomNumber(100);//reroll rnd, use to check for improved pilots
+        if (rnd <= skillChance && CampaignMain.campaignMain.getBooleanConfig("PilotSkills")) {
 
             SPilotSkill skill = SPilotSkills.getRandomSkill(result, unitType);
             if (skill != null) {
@@ -163,7 +163,7 @@ public class PilotQueues {
             }
         }
 
-        result.setPilotId(CampaignMain.cm.getAndUpdateCurrentPilotID());
+        result.setPilotId(CampaignMain.campaignMain.getAndUpdateCurrentPilotID());
         return result;
     }
 
@@ -208,10 +208,10 @@ public class PilotQueues {
             }
         }
 
-        if (CampaignMain.cm.getBooleanConfig("ReduceSkillsInQue")) {
+        if (CampaignMain.campaignMain.getBooleanConfig("ReduceSkillsInQue")) {
 
-            int rnd = CampaignMain.cm.getRandomNumber(100);
-            if (rnd >= CampaignMain.cm.getIntegerConfig("ClearXPInQue")) {
+            int rnd = CampaignMain.campaignMain.getRandomNumber(100);
+            if (rnd >= CampaignMain.campaignMain.getIntegerConfig("ClearXPInQue")) {
                 p.setExperience(0);
             }//end if(XP should be cleared)
 
@@ -222,12 +222,12 @@ public class PilotQueues {
 
             if (!gunnerAdjust && !pilotAdjust) {
                 if (p.getGunnery() > this.getBaseGunnery(type)) {
-                    int i = CampaignMain.cm.getRandomNumber(100);
+                    int i = CampaignMain.campaignMain.getRandomNumber(100);
                     if (i >= 50) {
                         p.setGunnery(this.getBaseGunnery(type));
                     }//end if(rnd roll decreases gunnery)
                 } else if (p.getPiloting() > this.getBasePiloting(type)) {
-                    int i = CampaignMain.cm.getRandomNumber(100);
+                    int i = CampaignMain.campaignMain.getRandomNumber(100);
                     if (i >= 50) {
                         p.setPiloting(this.getBasePiloting(type));
                     }//end if(rnd roll decreases piloting)
@@ -247,7 +247,7 @@ public class PilotQueues {
             }//end else if(piloting needs to be increased)
             else if (gunnerAdjust && pilotAdjust) {
                 if (p.getGunnery() + 1 == p.getPiloting()) {
-                    int i = CampaignMain.cm.getRandomNumber(100);
+                    int i = CampaignMain.campaignMain.getRandomNumber(100);
                     if (i >= 50) {
                         p.setPiloting(p.getPiloting() + 1);
                     }//end if(rnd roll increases piloting)
@@ -290,8 +290,8 @@ public class PilotQueues {
     public String getRandomPilotName() {
 
         String result = "Noelle";//something we hope never returns
-        if (CampaignMain.cm.getBooleanConfig("UseCommonPilotNameFileOnly")) {
-            return SPilot.getRandomPilotName(CampaignMain.cm.getR());
+        if (CampaignMain.campaignMain.getBooleanConfig("UseCommonPilotNameFileOnly")) {
+            return SPilot.getRandomPilotName(CampaignMain.campaignMain.getR());
         }
 
         try {
@@ -299,7 +299,7 @@ public class PilotQueues {
             java.io.FileInputStream fis = new java.io.FileInputStream(configFile);
             dis = new java.io.BufferedReader(new java.io.InputStreamReader(fis));
             int names = Integer.parseInt(dis.readLine());
-            int pilotid = CampaignMain.cm.getRandomNumber(names);
+            int pilotid = CampaignMain.campaignMain.getRandomNumber(names);
             while (dis.ready()) {
                 String line = dis.readLine();
                 if (pilotid <= 0) {return line;}
@@ -314,7 +314,7 @@ public class PilotQueues {
             MWLogger.errLog("A problem occured while retreiving a name from the " +
                                   factionString +
                                   " Pilotnames File! Tried using Pilotnames.txt instead.");
-            result = SPilot.getRandomPilotName(CampaignMain.cm.getR());
+            result = SPilot.getRandomPilotName(CampaignMain.campaignMain.getR());
         } finally {
 
         }

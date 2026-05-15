@@ -16,6 +16,8 @@
 
 package mekwars.server.campaign.commands.admin;
 
+import mekwars.server.campaign.CampaignMain;
+
 public class AdminSetHouseAbbreviationCommand implements server.campaign.commands.Command {
 
     int accessLevel = server.MWChatServer.auth.IAuthenticator.ADMIN;
@@ -26,13 +28,13 @@ public class AdminSetHouseAbbreviationCommand implements server.campaign.command
     public void process(java.util.StringTokenizer command, String Username) {
 
         //access level check
-        int userLevel = server.campaign.CampaignMain.cm.getServer().getUserLevel(Username);
+        int userLevel = CampaignMain.campaignMain.getServer().getUserLevel(Username);
         if (userLevel < getExecutionLevel()) {
-            server.campaign.CampaignMain.cm.toUser("AM:Insufficient access level for command. Level: " +
-                                                         userLevel +
-                                                         ". Required: " +
-                                                         accessLevel +
-                                                         ".", Username, true);
+            CampaignMain.campaignMain.toUser("AM:Insufficient access level for command. Level: " +
+                                                   userLevel +
+                                                   ". Required: " +
+                                                   accessLevel +
+                                                   ".", Username, true);
             return;
         }
 
@@ -43,23 +45,23 @@ public class AdminSetHouseAbbreviationCommand implements server.campaign.command
         try {
             HouseName = command.nextToken();
         } catch (Exception e) {
-            server.campaign.CampaignMain.cm.toUser(
+            CampaignMain.campaignMain.toUser(
                   "Improper command. Try: /c adminsethouseabbreviation#faction#shortname",
                   Username,
                   true);
             return;
         }
 
-        faction = server.campaign.CampaignMain.cm.getHouseFromPartialString(HouseName, Username);
+        faction = CampaignMain.campaignMain.getHouseFromPartialString(HouseName, Username);
         if (faction == null) {
-            server.campaign.CampaignMain.cm.toUser("Couldn't find a faction with that name.", Username, true);
+            CampaignMain.campaignMain.toUser("Couldn't find a faction with that name.", Username, true);
             return;
         }
 
         try {
             houseAbbreviation = command.nextToken();
         } catch (Exception e) {
-            server.campaign.CampaignMain.cm.toUser(
+            CampaignMain.campaignMain.toUser(
                   "Improper command. Try: /c adminsethouseabbreviation#faction#shortname",
                   Username,
                   true);
@@ -69,11 +71,11 @@ public class AdminSetHouseAbbreviationCommand implements server.campaign.command
         faction.setAbbreviation(houseAbbreviation);
         faction.updated();
 
-        server.campaign.CampaignMain.cm.doSendModMail("NOTE",
+        CampaignMain.campaignMain.doSendModMail("NOTE",
               Username + " changed the faction abbreviation for " + HouseName);
         //server.MWLogger.modLog(Username + " changed the faction playerlist color for " + HouseName);
 
-        server.campaign.CampaignMain.cm.toUser(HouseName + " abbreviation changed.", Username, true);
+        CampaignMain.campaignMain.toUser(HouseName + " abbreviation changed.", Username, true);
 
     }
 

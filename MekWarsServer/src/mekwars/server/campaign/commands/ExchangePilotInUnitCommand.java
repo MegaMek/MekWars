@@ -17,6 +17,7 @@
 package mekwars.server.campaign.commands;
 
 import common.util.MWLogger;
+import mekwars.server.campaign.CampaignMain;
 import server.campaign.pilot.SPilot;
 
 public class ExchangePilotInUnitCommand implements Command {
@@ -27,21 +28,21 @@ public class ExchangePilotInUnitCommand implements Command {
     public void process(java.util.StringTokenizer command, String Username) {
 
         if (accessLevel != 0) {
-            int userLevel = server.campaign.CampaignMain.cm.getServer().getUserLevel(Username);
+            int userLevel = CampaignMain.campaignMain.getServer().getUserLevel(Username);
             if (userLevel < getExecutionLevel()) {
-                server.campaign.CampaignMain.cm.toUser("AM:Insufficient access level for command. Level: " +
-                                                             userLevel +
-                                                             ". Required: " +
-                                                             accessLevel +
-                                                             ".", Username, true);
+                CampaignMain.campaignMain.toUser("AM:Insufficient access level for command. Level: " +
+                                                       userLevel +
+                                                       ". Required: " +
+                                                       accessLevel +
+                                                       ".", Username, true);
                 return;
             }
         }
 
-        if (!Boolean.parseBoolean(server.campaign.CampaignMain.cm.getConfig("AllowPersonalPilotQueues"))) {return;}
+        if (!Boolean.parseBoolean(CampaignMain.campaignMain.getConfig("AllowPersonalPilotQueues"))) {return;}
 
         if (command.hasMoreElements()) {
-            server.campaign.SPlayer p = server.campaign.CampaignMain.cm.getPlayer(Username);
+            server.campaign.SPlayer p = CampaignMain.campaignMain.getPlayer(Username);
             int mechid = Integer.parseInt(command.nextToken());
             int newPilotId = -1;
 
@@ -51,7 +52,7 @@ public class ExchangePilotInUnitCommand implements Command {
             if (m != null) {
 
                 if (!m.isSinglePilotUnit()) {
-                    server.campaign.CampaignMain.cm.toUser("AM:You may not remove that pilot from this unit.",
+                    CampaignMain.campaignMain.toUser("AM:You may not remove that pilot from this unit.",
                           Username,
                           true);
                     return;
@@ -59,18 +60,18 @@ public class ExchangePilotInUnitCommand implements Command {
 
                 if (p.getDutyStatus() == server.campaign.SPlayer.STATUS_ACTIVE &&
                           p.getAmountOfTimesUnitExistsInArmies(mechid) > 0) {
-                    server.campaign.CampaignMain.cm.toUser(m.getModelName() +
-                                                                 " cannot have its pilot switched out while active and in an exisiting army.",
+                    CampaignMain.campaignMain.toUser(m.getModelName() +
+                                                           " cannot have its pilot switched out while active and in an exisiting army.",
                           Username,
                           true);
                     return;
                 }
 
                 if (m.getPilotIsReparing()) {
-                    server.campaign.CampaignMain.cm.toUser(m.getPilot().getName() +
-                                                                 " is currently repairing the " +
-                                                                 m.getModelName() +
-                                                                 " you may not remove them util the job is complete.",
+                    CampaignMain.campaignMain.toUser(m.getPilot().getName() +
+                                                           " is currently repairing the " +
+                                                           m.getModelName() +
+                                                           " you may not remove them util the job is complete.",
                           Username,
                           true);
                     return;
@@ -78,13 +79,13 @@ public class ExchangePilotInUnitCommand implements Command {
 
                 SPilot pilot = (SPilot) m.getPilot();
 
-                int capSize = server.campaign.CampaignMain.cm.getIntegerConfig("MaxAllowedPilotsInQueueToBuyFromHouse");
+                int capSize = CampaignMain.campaignMain.getIntegerConfig("MaxAllowedPilotsInQueueToBuyFromHouse");
 
                 if (newPilotId == -1 &&
                           p.getPersonalPilotQueue().getPilotQueue(m.getType(), m.getWeightclass()).size() >= capSize) {
-                    server.campaign.CampaignMain.cm.toUser("AM:There are no free beds in the barracks " +
-                                                                 pilot.getName() +
-                                                                 " will have to sleep in his unit.", Username);
+                    CampaignMain.campaignMain.toUser("AM:There are no free beds in the barracks " +
+                                                           pilot.getName() +
+                                                           " will have to sleep in his unit.", Username);
                     return;
                 }
                 //issues where protomeks are getting set to the wrong unit type so they become Mek pilots.
@@ -92,16 +93,16 @@ public class ExchangePilotInUnitCommand implements Command {
                 if (!pilot.getName().equals("Vacant")) {
                     p.getPersonalPilotQueue().addPilot(pilot, m.getWeightclass());
 
-                    server.campaign.CampaignMain.cm.toUser("PL|AP2PPQ|" +
-                                                                 m.getType() +
-                                                                 "|" +
-                                                                 m.getWeightclass() +
-                                                                 "|" +
-                                                                 pilot.toFileFormat("#", true), Username, false);
-                    server.campaign.CampaignMain.cm.toUser(pilot.getName() +
-                                                                 " was moved from your " +
-                                                                 m.getModelName() +
-                                                                 " to your barracks.", Username, true);
+                    CampaignMain.campaignMain.toUser("PL|AP2PPQ|" +
+                                                           m.getType() +
+                                                           "|" +
+                                                           m.getWeightclass() +
+                                                           "|" +
+                                                           pilot.toFileFormat("#", true), Username, false);
+                    CampaignMain.campaignMain.toUser(pilot.getName() +
+                                                           " was moved from your " +
+                                                           m.getModelName() +
+                                                           " to your barracks.", Username, true);
                 }
 
                 SPilot p2 = null;
@@ -110,26 +111,26 @@ public class ExchangePilotInUnitCommand implements Command {
                     try {
                         p2 = (SPilot) p.getPersonalPilotQueue().getPilot(m.getType(), m.getWeightclass(), newPilotId);
                         if (p2 != null) {
-                            server.campaign.CampaignMain.cm.toUser("PL|RPPPQ|" +
-                                                                         m.getType() +
-                                                                         "|" +
-                                                                         m.getWeightclass() +
-                                                                         "|" +
-                                                                         newPilotId, Username, false);
+                            CampaignMain.campaignMain.toUser("PL|RPPPQ|" +
+                                                                   m.getType() +
+                                                                   "|" +
+                                                                   m.getWeightclass() +
+                                                                   "|" +
+                                                                   newPilotId, Username, false);
                             m.setPilot(p2);
-                            server.campaign.CampaignMain.cm.toUser(p2.getName() +
-                                                                         " is now assigned to the " +
-                                                                         m.getModelName() +
-                                                                         " [New BV: " +
-                                                                         m.getBVForMatch() +
-                                                                         "].", Username, true);
+                            CampaignMain.campaignMain.toUser(p2.getName() +
+                                                                   " is now assigned to the " +
+                                                                   m.getModelName() +
+                                                                   " [New BV: " +
+                                                                   m.getBVForMatch() +
+                                                                   "].", Username, true);
                         } else {
-                            server.campaign.CampaignMain.cm.toUser("AM:Invalid Pilot try again!", Username, true);
+                            CampaignMain.campaignMain.toUser("AM:Invalid Pilot try again!", Username, true);
                             return;
                         }
                     } catch (Exception ex) {
                         MWLogger.errLog(ex);
-                        server.campaign.CampaignMain.cm.toUser("AM:Invalid Pilot try again!", Username, true);
+                        CampaignMain.campaignMain.toUser("AM:Invalid Pilot try again!", Username, true);
                         return;
                     }
                 } else {
@@ -140,17 +141,17 @@ public class ExchangePilotInUnitCommand implements Command {
                 //m.setExperience(new Integer(0)); -- trying to decide if I want to keep it this way or the old way Torren.
 
                 //CampaignMain.cm.toUser("PL|PPQ|"+p.getPersonalPilotQueue().toString(true),Username,false);
-                server.campaign.CampaignMain.cm.toUser("PL|UU|" + m.getId() + "|" + m.toString(true), Username, false);
+                CampaignMain.campaignMain.toUser("PL|UU|" + m.getId() + "|" + m.toString(true), Username, false);
 
                 java.util.Enumeration<server.campaign.SArmy> f = p.getArmies().elements();
                 while (f.hasMoreElements()) {
                     server.campaign.SArmy currArmy = f.nextElement();
                     if (currArmy.getUnit(m.getId()) != null) {
                         currArmy.setBV(0);//not null so recalc BV of the army
-                        server.campaign.CampaignMain.cm.toUser("PL|SAD|" + currArmy.toString(true, "%"),
+                        CampaignMain.campaignMain.toUser("PL|SAD|" + currArmy.toString(true, "%"),
                               Username,
                               false);
-                        server.campaign.CampaignMain.cm.getOpsManager()
+                        CampaignMain.campaignMain.getOpsManager()
                               .checkOperations(currArmy, true);//update legal operations
                     }//end if(army contains the )
                 }//end while(more armies to check)

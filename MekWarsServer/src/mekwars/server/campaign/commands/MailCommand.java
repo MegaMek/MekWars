@@ -16,6 +16,8 @@
 
 package mekwars.server.campaign.commands;
 
+import mekwars.server.campaign.CampaignMain;
+
 /**
  * Moving the Me command from MWServ into the normal command structure.
  * <p>
@@ -29,19 +31,19 @@ public class MailCommand implements Command {
     public void process(java.util.StringTokenizer command, String Username) {
 
         if (accessLevel != 0) {
-            int userLevel = server.campaign.CampaignMain.cm.getServer().getUserLevel(Username);
+            int userLevel = CampaignMain.campaignMain.getServer().getUserLevel(Username);
             if (userLevel < getExecutionLevel()) {
-                server.campaign.CampaignMain.cm.toUser("AM:Insufficient access level for command. Level: " +
-                                                             userLevel +
-                                                             ". Required: " +
-                                                             accessLevel +
-                                                             ".", Username, true);
+                CampaignMain.campaignMain.toUser("AM:Insufficient access level for command. Level: " +
+                                                       userLevel +
+                                                       ". Required: " +
+                                                       accessLevel +
+                                                       ".", Username, true);
                 return;
             }
         }
 
         if (!command.hasMoreTokens()) {
-            server.campaign.CampaignMain.cm.toUser("AM:Syntax: /mail name,text", Username);
+            CampaignMain.campaignMain.toUser("AM:Syntax: /mail name,text", Username);
             return;
         }
 
@@ -50,7 +52,7 @@ public class MailCommand implements Command {
 
         if (toSend.trim().length() == 0) {return;}
 
-        server.campaign.CampaignMain.cm.getServer().doStoreMail(toSend, Username);
+        CampaignMain.campaignMain.getServer().doStoreMail(toSend, Username);
 
     }
 

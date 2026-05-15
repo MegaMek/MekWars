@@ -24,6 +24,7 @@ import common.MegaMekPilotOption;
 import common.Unit;
 import common.campaign.pilot.Pilot;
 import megamek.common.Entity;
+import mekwars.server.campaign.CampaignMain;
 
 /**
  * Maneuvering like a quad.
@@ -56,10 +57,10 @@ public class ManeuveringAceSkill extends SPilotSkill {
 
         String chance = "chancefor" + getAbbreviation() + "for" + Unit.getTypeClassDesc(unitType);
 
-        server.campaign.SHouse house = server.campaign.CampaignMain.cm.getHouseFromPartialString(pilot.getCurrentFaction());
+        server.campaign.SHouse house = CampaignMain.campaignMain.getHouseFromPartialString(pilot.getCurrentFaction());
 
         if (house == null) {
-            return server.campaign.CampaignMain.cm.getIntegerConfig(chance);
+            return CampaignMain.campaignMain.getIntegerConfig(chance);
         }
 
         return house.getIntegerConfig(chance);
@@ -70,8 +71,8 @@ public class ManeuveringAceSkill extends SPilotSkill {
         try {
 
             double topSpeed = unit.getRunMP();
-            double baseBVMod = server.campaign.CampaignMain.cm.getDoubleConfig("ManeuveringAceBaseBVMod");
-            double speedRating = server.campaign.CampaignMain.cm.getDoubleConfig("ManeuveringAceSpeedRating");
+            double baseBVMod = CampaignMain.campaignMain.getDoubleConfig("ManeuveringAceBaseBVMod");
+            double speedRating = CampaignMain.campaignMain.getDoubleConfig("ManeuveringAceSpeedRating");
             double total = topSpeed / speedRating;
             total *= baseBVMod;
             return (int) total;
@@ -86,7 +87,7 @@ public class ManeuveringAceSkill extends SPilotSkill {
         try {
 
             double topSpeed = unit.getRunMP();
-            server.campaign.SHouse house = server.campaign.CampaignMain.cm.getHouseFromPartialString(p.getCurrentFaction());
+            server.campaign.SHouse house = CampaignMain.campaignMain.getHouseFromPartialString(p.getCurrentFaction());
             double baseBVMod = house.getDoubleConfig("ManeuveringAceBaseBVMod");
             double speedRating = house.getDoubleConfig("ManeuveringAceSpeedRating");
             double total = topSpeed / speedRating;

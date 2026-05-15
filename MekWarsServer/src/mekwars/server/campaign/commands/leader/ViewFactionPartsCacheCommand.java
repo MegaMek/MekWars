@@ -15,9 +15,11 @@
 
 package mekwars.server.campaign.commands.leader;
 
+import mekwars.server.campaign.CampaignMain;
+
 public class ViewFactionPartsCacheCommand implements server.campaign.commands.Command {
 
-    int accessLevel = server.campaign.CampaignMain.cm.getIntegerConfig("factionLeaderLevel");
+    int accessLevel = CampaignMain.campaignMain.getIntegerConfig("factionLeaderLevel");
     String syntax = "";
 
     public String getSyntax() {
@@ -27,31 +29,31 @@ public class ViewFactionPartsCacheCommand implements server.campaign.commands.Co
     public void process(java.util.StringTokenizer command, String Username) {
 
         if (accessLevel != 0) {
-            int userLevel = server.campaign.CampaignMain.cm.getServer().getUserLevel(Username);
+            int userLevel = CampaignMain.campaignMain.getServer().getUserLevel(Username);
             if (userLevel < getExecutionLevel()) {
-                server.campaign.CampaignMain.cm.toUser("AM:Insufficient access level for command. Level: " +
-                                                             userLevel +
-                                                             ". Required: " +
-                                                             accessLevel +
-                                                             ".", Username, true);
+                CampaignMain.campaignMain.toUser("AM:Insufficient access level for command. Level: " +
+                                                       userLevel +
+                                                       ". Required: " +
+                                                       accessLevel +
+                                                       ".", Username, true);
                 return;
             }
         }
 
-        int year = server.campaign.CampaignMain.cm.getIntegerConfig("CampaignYear");
+        int year = CampaignMain.campaignMain.getIntegerConfig("CampaignYear");
 
-        server.campaign.SPlayer player = server.campaign.CampaignMain.cm.getPlayer(Username);
+        server.campaign.SPlayer player = CampaignMain.campaignMain.getPlayer(Username);
         server.campaign.SHouse house = player.getMyHouse();
 
-        if (command.hasMoreElements() && server.campaign.CampaignMain.cm.getServer().isModerator(Username)) {
-            house = server.campaign.CampaignMain.cm.getHouseFromPartialString(command.nextToken(), Username);
+        if (command.hasMoreElements() && CampaignMain.campaignMain.getServer().isModerator(Username)) {
+            house = CampaignMain.campaignMain.getHouseFromPartialString(command.nextToken(), Username);
         }
 
         if (house == null) {return;}
 
         String results = "SM|" + house.getUnitParts().tableizeComponents(year);
 
-        server.campaign.CampaignMain.cm.toUser(results, Username, false);
+        CampaignMain.campaignMain.toUser(results, Username, false);
     }
 
     public int getExecutionLevel() {

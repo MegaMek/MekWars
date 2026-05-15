@@ -1,6 +1,7 @@
 package mekwars.server.campaign.commands;
 
 import common.campaign.pilot.Pilot;
+import mekwars.server.campaign.CampaignMain;
 import server.campaign.pilot.SPilot;
 
 /**
@@ -14,29 +15,29 @@ public class DonatePilotCommand implements Command {
     public void process(java.util.StringTokenizer command, String Username) {
 
         if (accessLevel != 0) {
-            int userLevel = server.campaign.CampaignMain.cm.getServer().getUserLevel(Username);
+            int userLevel = CampaignMain.campaignMain.getServer().getUserLevel(Username);
             if (userLevel < getExecutionLevel()) {
-                server.campaign.CampaignMain.cm.toUser("AM:Insufficient access level for command. Level: " +
-                                                             userLevel +
-                                                             ". Required: " +
-                                                             accessLevel +
-                                                             ".", Username, true);
+                CampaignMain.campaignMain.toUser("AM:Insufficient access level for command. Level: " +
+                                                       userLevel +
+                                                       ". Required: " +
+                                                       accessLevel +
+                                                       ".", Username, true);
                 return;
             }
         }
 
-        server.campaign.SPlayer p = server.campaign.CampaignMain.cm.getPlayer(Username);
+        server.campaign.SPlayer p = CampaignMain.campaignMain.getPlayer(Username);
         server.campaign.SHouse house = p.getMyHouse();
 
         int donationsAllowed = Integer.parseInt(house.getConfig("DonationsAllowed"));
         if (donationsAllowed <= 0) {
-            server.campaign.CampaignMain.cm.toUser("AM:Donations are not allowed on this server.", Username, true);
+            CampaignMain.campaignMain.toUser("AM:Donations are not allowed on this server.", Username, true);
             return;
         }
 
 
         if (p.mayAcquireWelfareUnits()) {
-            server.campaign.CampaignMain.cm.toUser("AM:You may not donate any of your pilots while you are on welfare.",
+            CampaignMain.campaignMain.toUser("AM:You may not donate any of your pilots while you are on welfare.",
                   Username,
                   true);
 
@@ -44,7 +45,7 @@ public class DonatePilotCommand implements Command {
         }
 
         if (p.getMyHouse().isNewbieHouse()) {
-            server.campaign.CampaignMain.cm.toUser("AM:SOL Players are not allowed to donate pilots, sorry!",
+            CampaignMain.campaignMain.toUser("AM:SOL Players are not allowed to donate pilots, sorry!",
                   Username,
                   true);
             return;
@@ -57,7 +58,7 @@ public class DonatePilotCommand implements Command {
         Pilot pilot = p.getPersonalPilotQueue().getPilot(unitType, weightClass, pilotLocation);
 
         if (pilot == null) {
-            server.campaign.CampaignMain.cm.toUser("AM:Unable to find pilot!", Username, true);
+            CampaignMain.campaignMain.toUser("AM:Unable to find pilot!", Username, true);
             return;
         }
         int mechdonateprize = 0;
@@ -68,7 +69,7 @@ public class DonatePilotCommand implements Command {
                 p.addMoney(-mechdonateprize);
                 p.addInfluence(-infToDonate);
             } else if (p.getUnits().size() < 4) {
-                server.campaign.CampaignMain.cm.toUser(
+                CampaignMain.campaignMain.toUser(
                       "AM:HQ has allowed you to retrain this pilot, at a reduced rate, due to your current situation.",
                       Username,
                       true);
@@ -78,15 +79,15 @@ public class DonatePilotCommand implements Command {
                 }
                 p.addInfluence(-infToDonate);
             } else {
-                server.campaign.CampaignMain.cm.toUser("AM:You can't afford to retrain this pilot. You need " +
-                                                             server.campaign.CampaignMain.cm.moneyOrFluMessage(true,
-                                                                   true,
-                                                                   mechdonateprize) +
-                                                             " and " +
-                                                             server.campaign.CampaignMain.cm.moneyOrFluMessage(false,
-                                                                   false,
-                                                                   infToDonate) +
-                                                             ".", Username, true);
+                CampaignMain.campaignMain.toUser("AM:You can't afford to retrain this pilot. You need " +
+                                                       CampaignMain.campaignMain.moneyOrFluMessage(true,
+                                                             true,
+                                                             mechdonateprize) +
+                                                       " and " +
+                                                       CampaignMain.campaignMain.moneyOrFluMessage(false,
+                                                             false,
+                                                             infToDonate) +
+                                                       ".", Username, true);
                 //send the pilot back to the players queue.
                 p.getPersonalPilotQueue().addPilot(pilot, weightClass);
                 return;
@@ -97,16 +98,16 @@ public class DonatePilotCommand implements Command {
         String toUser = "AM:You've sent pilot " + pilot.getName() + " back to the faction for more training";
         if (mechdonateprize > 0) {
             toUser += ". Your faction charges you " +
-                            server.campaign.CampaignMain.cm.moneyOrFluMessage(true, true, mechdonateprize) +
+                            CampaignMain.campaignMain.moneyOrFluMessage(true, true, mechdonateprize) +
                             " for the transfer";
         }
         toUser += ".";
 
         p.getMyHouse().getPilotQueues().addPilot(unitType, (SPilot) pilot);
-        server.campaign.CampaignMain.cm.toUser("PL|RPPPQ|" + unitType + "|" + weightClass + "|" + pilotLocation,
+        CampaignMain.campaignMain.toUser("PL|RPPPQ|" + unitType + "|" + weightClass + "|" + pilotLocation,
               Username,
               false);
-        server.campaign.CampaignMain.cm.doSendHouseMail(p.getMyHouse(),
+        CampaignMain.campaignMain.doSendHouseMail(p.getMyHouse(),
               "NOTE",
               p.getName() + " donated a " + pilot.getName().trim() + " to the faction pools!");
 

@@ -16,6 +16,8 @@
 
 package mekwars.server.campaign.commands.admin;
 
+import mekwars.server.campaign.CampaignMain;
+
 public class DeleteAccountCommand implements server.campaign.commands.Command {
 
     int accessLevel = server.MWChatServer.auth.IAuthenticator.ADMIN;
@@ -26,13 +28,13 @@ public class DeleteAccountCommand implements server.campaign.commands.Command {
     public void process(java.util.StringTokenizer command, String Username) {
 
         //access level check
-        int userLevel = server.campaign.CampaignMain.cm.getServer().getUserLevel(Username);
+        int userLevel = CampaignMain.campaignMain.getServer().getUserLevel(Username);
         if (userLevel < getExecutionLevel()) {
-            server.campaign.CampaignMain.cm.toUser("AM:Insufficient access level for command. Level: " +
-                                                         userLevel +
-                                                         ". Required: " +
-                                                         accessLevel +
-                                                         ".", Username, true);
+            CampaignMain.campaignMain.toUser("AM:Insufficient access level for command. Level: " +
+                                                   userLevel +
+                                                   ". Required: " +
+                                                   accessLevel +
+                                                   ".", Username, true);
             return;
         }
 
@@ -41,22 +43,22 @@ public class DeleteAccountCommand implements server.campaign.commands.Command {
         boolean scrapUnits;
 
         try {
-            p = server.campaign.CampaignMain.cm.getPlayer(command.nextToken());
+            p = CampaignMain.campaignMain.getPlayer(command.nextToken());
             scrapUnits = Boolean.parseBoolean(command.nextToken());
         } catch (Exception e) {
-            server.campaign.CampaignMain.cm.toUser("Improper command. Try: /c deleteaccount#Name#ScrapUnits",
+            CampaignMain.campaignMain.toUser("Improper command. Try: /c deleteaccount#Name#ScrapUnits",
                   Username,
                   true);
             return;
         }
 
         if (p == null) {
-            server.campaign.CampaignMain.cm.toUser("Couldn't find a player with that name.", Username, true);
+            CampaignMain.campaignMain.toUser("Couldn't find a player with that name.", Username, true);
             return;
         }
 
         if (p.getDutyStatus() > server.campaign.SPlayer.STATUS_RESERVE) {
-            server.campaign.CampaignMain.cm.toUser("Fighting and active players may not be deleted.", Username, true);
+            CampaignMain.campaignMain.toUser("Fighting and active players may not be deleted.", Username, true);
             return;
         }
 
@@ -67,14 +69,14 @@ public class DeleteAccountCommand implements server.campaign.commands.Command {
         java.io.File fp = new java.io.File("./campaign/players/" + p.getName().toLowerCase() + ".dat");
         if (fp.exists()) {fp.delete();}
 
-        server.campaign.CampaignMain.cm.toUser("You deleted " + p.getName() + "'s account.", Username, true);
-        server.campaign.CampaignMain.cm.toUser(Username + " deleted your account.", p.getName(), true);
-        server.campaign.CampaignMain.cm.doSendModMail("NOTE", Username + " deleted " + p.getName() + "'s account.");
+        CampaignMain.campaignMain.toUser("You deleted " + p.getName() + "'s account.", Username, true);
+        CampaignMain.campaignMain.toUser(Username + " deleted your account.", p.getName(), true);
+        CampaignMain.campaignMain.doSendModMail("NOTE", Username + " deleted " + p.getName() + "'s account.");
         //server.MWLogger.modLog(Username + " deleted " + p.getName() + "'s account.");
-        server.campaign.CampaignMain.cm.doLogoutPlayer(p.getName(), false);  //Baruk Khazad! 20151110
-        if (server.campaign.CampaignMain.cm.getServer()
+        CampaignMain.campaignMain.doLogoutPlayer(p.getName(), false);  //Baruk Khazad! 20151110
+        if (CampaignMain.campaignMain.getServer()
                   .getClient(server.MWChatServer.MWChatServer.clientKey(p.getName())) != null) {
-            server.campaign.CampaignMain.cm.getServer().killClient(p.getName(), Username);
+            CampaignMain.campaignMain.getServer().killClient(p.getName(), Username);
         }
 
     }//end process()

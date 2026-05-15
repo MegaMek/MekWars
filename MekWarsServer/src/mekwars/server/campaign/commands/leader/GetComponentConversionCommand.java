@@ -16,10 +16,11 @@
 package mekwars.server.campaign.commands.leader;
 
 import common.util.ComponentToCritsConverter;
+import mekwars.server.campaign.CampaignMain;
 
 public class GetComponentConversionCommand implements server.campaign.commands.Command {
 
-    int accessLevel = server.campaign.CampaignMain.cm.getIntegerConfig("factionLeaderLevel");
+    int accessLevel = CampaignMain.campaignMain.getIntegerConfig("factionLeaderLevel");
     String syntax = "[house name option Staff only]";
 
     public String getSyntax() {
@@ -29,22 +30,22 @@ public class GetComponentConversionCommand implements server.campaign.commands.C
     public void process(java.util.StringTokenizer command, String Username) {
 
         if (accessLevel != 0) {
-            int userLevel = server.campaign.CampaignMain.cm.getServer().getUserLevel(Username);
+            int userLevel = CampaignMain.campaignMain.getServer().getUserLevel(Username);
             if (userLevel < getExecutionLevel()) {
-                server.campaign.CampaignMain.cm.toUser("AM:Insufficient access level for command. Level: " +
-                                                             userLevel +
-                                                             ". Required: " +
-                                                             accessLevel +
-                                                             ".", Username, true);
+                CampaignMain.campaignMain.toUser("AM:Insufficient access level for command. Level: " +
+                                                       userLevel +
+                                                       ". Required: " +
+                                                       accessLevel +
+                                                       ".", Username, true);
                 return;
             }
         }
 
-        server.campaign.SPlayer player = server.campaign.CampaignMain.cm.getPlayer(Username);
+        server.campaign.SPlayer player = CampaignMain.campaignMain.getPlayer(Username);
         server.campaign.SHouse house = player.getMyHouse();
 
-        if (server.campaign.CampaignMain.cm.getServer().isModerator(Username) && command.hasMoreElements()) {
-            house = server.campaign.CampaignMain.cm.getHouseFromPartialString(command.nextToken(), Username);
+        if (CampaignMain.campaignMain.getServer().isModerator(Username) && command.hasMoreElements()) {
+            house = CampaignMain.campaignMain.getHouseFromPartialString(command.nextToken(), Username);
         }
 
 
@@ -53,7 +54,7 @@ public class GetComponentConversionCommand implements server.campaign.commands.C
             results.append(converter.toString("#"));
         }
 
-        server.campaign.CampaignMain.cm.toUser(results.toString(), Username, false);
+        CampaignMain.campaignMain.toUser(results.toString(), Username, false);
     }
 
     public int getExecutionLevel() {

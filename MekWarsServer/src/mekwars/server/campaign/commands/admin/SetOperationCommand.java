@@ -16,6 +16,8 @@
 
 package mekwars.server.campaign.commands.admin;
 
+import mekwars.server.campaign.CampaignMain;
+
 //Syntax setoperation#optype#opname#data
 public class SetOperationCommand implements server.campaign.commands.Command {
 
@@ -27,13 +29,13 @@ public class SetOperationCommand implements server.campaign.commands.Command {
     public void process(java.util.StringTokenizer command, String Username) {
 
         //access level check
-        int userLevel = server.campaign.CampaignMain.cm.getServer().getUserLevel(Username);
+        int userLevel = CampaignMain.campaignMain.getServer().getUserLevel(Username);
         if (userLevel < getExecutionLevel()) {
-            server.campaign.CampaignMain.cm.toUser("AM:Insufficient access level for command. Level: " +
-                                                         userLevel +
-                                                         ". Required: " +
-                                                         accessLevel +
-                                                         ".", Username, true);
+            CampaignMain.campaignMain.toUser("AM:Insufficient access level for command. Level: " +
+                                                   userLevel +
+                                                   ". Required: " +
+                                                   accessLevel +
+                                                   ".", Username, true);
             return;
         }
 
@@ -44,7 +46,7 @@ public class SetOperationCommand implements server.campaign.commands.Command {
             opType = command.nextToken();
             opName = command.nextToken();
         } catch (Exception ex) {
-            server.campaign.CampaignMain.cm.toUser("Syntax setoperation#optype#opname", Username, true);
+            CampaignMain.campaignMain.toUser("Syntax setoperation#optype#opname", Username, true);
             return;
         }
 
@@ -60,11 +62,11 @@ public class SetOperationCommand implements server.campaign.commands.Command {
             fos.close();
 
         } catch (Exception ex) {
-            server.campaign.CampaignMain.cm.toUser("Unable to write to " + opFile.getName(), Username, true);
+            CampaignMain.campaignMain.toUser("Unable to write to " + opFile.getName(), Username, true);
             return;
         }
 
-        server.campaign.CampaignMain.cm.doSendModMail("NOTE", Username + " has updated " + opFile.getName());
+        CampaignMain.campaignMain.doSendModMail("NOTE", Username + " has updated " + opFile.getName());
         // Delete md5 file so clients will refresh properly
         java.io.File md5File = new java.io.File("./data/operations/opsmd5.txt");
         if (md5File.exists()) {

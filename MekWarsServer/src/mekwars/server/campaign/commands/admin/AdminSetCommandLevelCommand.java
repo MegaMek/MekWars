@@ -17,6 +17,8 @@
 package mekwars.server.campaign.commands.admin;
 
 
+import mekwars.server.campaign.CampaignMain;
+
 public class AdminSetCommandLevelCommand implements server.campaign.commands.Command {
 
     int accessLevel = server.MWChatServer.auth.IAuthenticator.ADMIN;
@@ -27,18 +29,18 @@ public class AdminSetCommandLevelCommand implements server.campaign.commands.Com
     public void process(java.util.StringTokenizer command, String Username) {
 
         //access level check
-        int userLevel = server.campaign.CampaignMain.cm.getServer().getUserLevel(Username);
+        int userLevel = CampaignMain.campaignMain.getServer().getUserLevel(Username);
         if (userLevel < getExecutionLevel()) {
-            server.campaign.CampaignMain.cm.toUser("AM:Insufficient access level for command. Level: " +
-                                                         userLevel +
-                                                         ". Required: " +
-                                                         accessLevel +
-                                                         ".", Username, true);
+            CampaignMain.campaignMain.toUser("AM:Insufficient access level for command. Level: " +
+                                                   userLevel +
+                                                   ". Required: " +
+                                                   accessLevel +
+                                                   ".", Username, true);
             return;
         }
 
 
-        java.util.Hashtable<String, server.campaign.commands.Command> commandTable = server.campaign.CampaignMain.cm.getServerCommands();
+        java.util.Hashtable<String, server.campaign.commands.Command> commandTable = CampaignMain.campaignMain.getServerCommands();
 
         String commandName = command.nextToken().toUpperCase();
         int commandLevel = Integer.parseInt(command.nextToken());
@@ -46,15 +48,15 @@ public class AdminSetCommandLevelCommand implements server.campaign.commands.Com
         if (commandTable.containsKey(commandName)) {
             commandTable.get(commandName).setExecutionLevel(commandLevel);
         } else {
-            server.campaign.CampaignMain.cm.toUser("Command " + commandName + " not found!", Username, true);
+            CampaignMain.campaignMain.toUser("Command " + commandName + " not found!", Username, true);
             return;
         }
 
-        server.campaign.CampaignMain.cm.toUser("Command level changed on " +
-                                                     commandName.toLowerCase() +
-                                                     " to " +
-                                                     commandLevel, Username, true);
-        server.campaign.CampaignMain.cm.doSendModMail("NOTE",
+        CampaignMain.campaignMain.toUser("Command level changed on " +
+                                               commandName.toLowerCase() +
+                                               " to " +
+                                               commandLevel, Username, true);
+        CampaignMain.campaignMain.doSendModMail("NOTE",
               Username + " has changed the command level for " + commandName.toLowerCase() + " to " + commandLevel);
 
     }

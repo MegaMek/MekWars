@@ -16,6 +16,8 @@
 
 package mekwars.server.campaign.commands.mod;
 
+import mekwars.server.campaign.CampaignMain;
+
 public class UnlockLancesCommand implements server.campaign.commands.Command {
 
     int accessLevel = server.MWChatServer.auth.IAuthenticator.MODERATOR;
@@ -26,24 +28,24 @@ public class UnlockLancesCommand implements server.campaign.commands.Command {
     public void process(java.util.StringTokenizer command, String Username) {
 
         //access level check
-        int userLevel = server.campaign.CampaignMain.cm.getServer().getUserLevel(Username);
+        int userLevel = CampaignMain.campaignMain.getServer().getUserLevel(Username);
         if (userLevel < getExecutionLevel()) {
-            server.campaign.CampaignMain.cm.toUser("AM:Insufficient access level for command. Level: " +
-                                                         userLevel +
-                                                         ". Required: " +
-                                                         accessLevel +
-                                                         ".", Username, true);
+            CampaignMain.campaignMain.toUser("AM:Insufficient access level for command. Level: " +
+                                                   userLevel +
+                                                   ". Required: " +
+                                                   accessLevel +
+                                                   ".", Username, true);
             return;
         }
 
         //get the player
-        server.campaign.SPlayer p = server.campaign.CampaignMain.cm.getPlayer(command.nextToken());
+        server.campaign.SPlayer p = CampaignMain.campaignMain.getPlayer(command.nextToken());
 
         p.lockArmy(-1);
 
-        server.campaign.CampaignMain.cm.toUser("You unlocked " + p.getName() + "'s armies.", Username, true);
+        CampaignMain.campaignMain.toUser("You unlocked " + p.getName() + "'s armies.", Username, true);
         //server.MWLogger.modLog(Username + " unlocked " + p.getName() + "'s armies.");
-        server.campaign.CampaignMain.cm.doSendModMail("NOTE", Username + " unlocked " + p.getName() + "'s armies.");
+        CampaignMain.campaignMain.doSendModMail("NOTE", Username + " unlocked " + p.getName() + "'s armies.");
         //server.MWLogger.modLog(Username + " unlocked " + p.getName() + "'s armies.");
 
     }

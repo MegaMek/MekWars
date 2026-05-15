@@ -19,6 +19,7 @@
     import common.Unit;
     import common.util.MWLogger;
     import megamek.common.IEntityRemovalConditions;
+    import mekwars.server.campaign.CampaignMain;
 
     public class OperationReporter {
 
@@ -159,9 +160,9 @@
 
         public void addAttacker(String playerName, int armyID) {
             attackerMap.put(playerName,
-                  server.campaign.CampaignMain.cm.getPlayer(playerName).getHouseFightingFor().getName());
+                  CampaignMain.campaignMain.getPlayer(playerName).getHouseFightingFor().getName());
             String playerString = playerName + " (" + attackerMap.get(playerName) + ")";
-            server.campaign.SArmy army = server.campaign.CampaignMain.cm.getPlayer(playerName).getArmy(armyID);
+            server.campaign.SArmy army = CampaignMain.campaignMain.getPlayer(playerName).getArmy(armyID);
             if (army != null) {
                 opData.addStartingBV(true, army.getBV());
                 addArmy(true, army);
@@ -186,9 +187,9 @@
 
         public void addDefender(String playerName, int armyID) {
             defenderMap.put(playerName,
-                  server.campaign.CampaignMain.cm.getPlayer(playerName).getHouseFightingFor().getName());
+                  CampaignMain.campaignMain.getPlayer(playerName).getHouseFightingFor().getName());
             String playerString = playerName + " (" + defenderMap.get(playerName) + ")";
-            server.campaign.SArmy army = server.campaign.CampaignMain.cm.getPlayer(playerName).getArmy(armyID);
+            server.campaign.SArmy army = CampaignMain.campaignMain.getPlayer(playerName).getArmy(armyID);
             if (army != null) {
                 opData.addStartingBV(false, army.getBV());
                 addArmy(false, army);

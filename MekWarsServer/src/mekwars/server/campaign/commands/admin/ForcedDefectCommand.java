@@ -17,6 +17,8 @@
 package mekwars.server.campaign.commands.admin;
 
 
+import mekwars.server.campaign.CampaignMain;
+
 public class ForcedDefectCommand implements server.campaign.commands.Command {
 
     int accessLevel = server.MWChatServer.auth.IAuthenticator.ADMIN;
@@ -27,13 +29,13 @@ public class ForcedDefectCommand implements server.campaign.commands.Command {
     public void process(java.util.StringTokenizer command, String Username) {
 
         //access level check
-        int userLevel = server.campaign.CampaignMain.cm.getServer().getUserLevel(Username);
+        int userLevel = CampaignMain.campaignMain.getServer().getUserLevel(Username);
         if (userLevel < getExecutionLevel()) {
-            server.campaign.CampaignMain.cm.toUser("AM:Insufficient access level for command. Level: " +
-                                                         userLevel +
-                                                         ". Required: " +
-                                                         accessLevel +
-                                                         ".", Username, true);
+            CampaignMain.campaignMain.toUser("AM:Insufficient access level for command. Level: " +
+                                                   userLevel +
+                                                   ". Required: " +
+                                                   accessLevel +
+                                                   ".", Username, true);
             return;
         }
 
@@ -47,25 +49,25 @@ public class ForcedDefectCommand implements server.campaign.commands.Command {
         try {
 
             String name = command.nextToken();
-            playerOnline = server.campaign.CampaignMain.cm.isLoggedIn(name);
+            playerOnline = CampaignMain.campaignMain.isLoggedIn(name);
 
-            p = server.campaign.CampaignMain.cm.getPlayer(name);
-            h = server.campaign.CampaignMain.cm.getHouseFromPartialString(command.nextToken(), null);
+            p = CampaignMain.campaignMain.getPlayer(name);
+            h = CampaignMain.campaignMain.getHouseFromPartialString(command.nextToken(), null);
 
         } catch (Exception e) {
-            server.campaign.CampaignMain.cm.toUser("AM:Improper command. Try: /c forceddefect#player#faction",
+            CampaignMain.campaignMain.toUser("AM:Improper command. Try: /c forceddefect#player#faction",
                   Username,
                   true);
             return;
         }
 
         if (p == null) {
-            server.campaign.CampaignMain.cm.toUser("AM:Couldn't find a player with that name.", Username, true);
+            CampaignMain.campaignMain.toUser("AM:Couldn't find a player with that name.", Username, true);
             return;
         }
 
         if (h == null) {
-            server.campaign.CampaignMain.cm.toUser("AM:Couldn't find a faction with that name.", Username, true);
+            CampaignMain.campaignMain.toUser("AM:Couldn't find a faction with that name.", Username, true);
             return;
         }
 
@@ -78,18 +80,18 @@ public class ForcedDefectCommand implements server.campaign.commands.Command {
 
         //log the player into his new faction
         if (playerOnline) {
-            server.campaign.CampaignMain.cm.getPlayer(p.getName());
-            server.campaign.CampaignMain.cm.doLoginPlayer(p.getName());
+            CampaignMain.campaignMain.getPlayer(p.getName());
+            CampaignMain.campaignMain.doLoginPlayer(p.getName());
         }
 
         //send appropraite messages
-        server.campaign.CampaignMain.cm.toUser("AM:" + Username + " forced you to defect to " + h.getName(),
+        CampaignMain.campaignMain.toUser("AM:" + Username + " forced you to defect to " + h.getName(),
               p.getName(),
               true);
-        server.campaign.CampaignMain.cm.toUser("AM:You forced " + p.getName() + " to defect to " + h.getName(),
+        CampaignMain.campaignMain.toUser("AM:You forced " + p.getName() + " to defect to " + h.getName(),
               Username,
               true);
-        server.campaign.CampaignMain.cm.doSendModMail("NOTE",
+        CampaignMain.campaignMain.doSendModMail("NOTE",
               Username + " forced " + p.getName() + " to defect to " + h.getName());
         p.setPlayerClientVersion(clientVersion);
 

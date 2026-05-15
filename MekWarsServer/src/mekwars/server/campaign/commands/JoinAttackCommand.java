@@ -13,6 +13,8 @@
  */
 package mekwars.server.campaign.commands;
 
+import mekwars.server.campaign.CampaignMain;
+
 /**
  * JoinAttackCommand is used to join a faction ShortOperations. Checks the validity of the attacking force. syntax
  * JoinAttack attackingPlayerName#JoiningPlayersArmyId
@@ -25,22 +27,22 @@ public class JoinAttackCommand implements Command {
     public void process(java.util.StringTokenizer command, String Username) {
 
         if (accessLevel != 0) {
-            int userLevel = server.campaign.CampaignMain.cm.getServer().getUserLevel(Username);
+            int userLevel = CampaignMain.campaignMain.getServer().getUserLevel(Username);
             if (userLevel < getExecutionLevel()) {
-                server.campaign.CampaignMain.cm.toUser("AM:Insufficient access level for command. Level: " +
-                                                             userLevel +
-                                                             ". Required: " +
-                                                             accessLevel +
-                                                             ".", Username, true);
+                CampaignMain.campaignMain.toUser("AM:Insufficient access level for command. Level: " +
+                                                       userLevel +
+                                                       ". Required: " +
+                                                       accessLevel +
+                                                       ".", Username, true);
                 return;
             }
         }
 
-        server.campaign.operations.newopmanager.I_OperationManager manager = server.campaign.CampaignMain.cm.getOpsManager();
-        server.campaign.SPlayer jp = server.campaign.CampaignMain.cm.getPlayer(Username);
+        server.campaign.operations.newopmanager.I_OperationManager manager = CampaignMain.campaignMain.getOpsManager();
+        server.campaign.SPlayer jp = CampaignMain.campaignMain.getPlayer(Username);
 
         if (jp == null) {
-            server.campaign.CampaignMain.cm.toUser(
+            CampaignMain.campaignMain.toUser(
                   "AM:Null player. Contact an administrator to report this, immediately!",
                   Username,
                   true);
@@ -49,7 +51,7 @@ public class JoinAttackCommand implements Command {
 
         //throw up if the player is not active or fighting
         if (jp.getDutyStatus() < server.campaign.SPlayer.STATUS_ACTIVE) {
-            server.campaign.CampaignMain.cm.toUser(
+            CampaignMain.campaignMain.toUser(
                   "AM:You aren't on the front lines! (You are currently in Reserve. Activate in order to attack.)",
                   Username,
                   true);
@@ -58,23 +60,23 @@ public class JoinAttackCommand implements Command {
 
         //can't attack while in a game
         if (jp.getDutyStatus() == server.campaign.SPlayer.STATUS_FIGHTING) {
-            server.campaign.CampaignMain.cm.toUser("AM:You are already fighting!", Username, true);
+            CampaignMain.campaignMain.toUser("AM:You are already fighting!", Username, true);
             return;
         }
 
         //can only attack once
-        int altID = server.campaign.CampaignMain.cm.getOpsManager().playerIsAnAttacker(jp);
+        int altID = CampaignMain.campaignMain.getOpsManager().playerIsAnAttacker(jp);
         if (altID >= 0) {
-            server.campaign.CampaignMain.cm.toUser("AM:You're only allowed to attack once, and are already in Attack #" +
-                                                         altID +
-                                                         ".", Username, true);
+            CampaignMain.campaignMain.toUser("AM:You're only allowed to attack once, and are already in Attack #" +
+                                                   altID +
+                                                   ".", Username, true);
             return;
         }
 
         //cant only defend once
-        altID = server.campaign.CampaignMain.cm.getOpsManager().playerIsADefender(jp);
+        altID = CampaignMain.campaignMain.getOpsManager().playerIsADefender(jp);
         if (altID >= 0) {
-            server.campaign.CampaignMain.cm.toUser("AM:You're already defending against Attack #" + altID + ".",
+            CampaignMain.campaignMain.toUser("AM:You're already defending against Attack #" + altID + ".",
                   Username,
                   true);
             return;
@@ -82,10 +84,10 @@ public class JoinAttackCommand implements Command {
 
         //narc if the player hasn't been active long enough to attack
         boolean minActiveMet = (System.currentTimeMillis() - jp.getActiveSince()) >=
-                                     (Long.parseLong(server.campaign.CampaignMain.cm.getConfig("MinActiveTime")) *
+                                     (Long.parseLong(CampaignMain.campaignMain.getConfig("MinActiveTime")) *
                                             1000);
         if (!minActiveMet) {
-            server.campaign.CampaignMain.cm.toUser(
+            CampaignMain.campaignMain.toUser(
                   "AM:You're still on your way to the frontline. You cannot attack until you arrive.",
                   Username,
                   true);
@@ -95,9 +97,9 @@ public class JoinAttackCommand implements Command {
         server.campaign.SPlayer ap;
 
         try {
-            ap = server.campaign.CampaignMain.cm.getPlayer(command.nextToken());
+            ap = CampaignMain.campaignMain.getPlayer(command.nextToken());
         } catch (Exception e) {
-            server.campaign.CampaignMain.cm.toUser("AM:Attacking Player not found.", Username, true);
+            CampaignMain.campaignMain.toUser("AM:Attacking Player not found.", Username, true);
             return;
         }
 
@@ -105,7 +107,7 @@ public class JoinAttackCommand implements Command {
         server.campaign.operations.ShortOperation o = manager.getShortOpForPlayer(ap);
 
         if (o == null) {
-            server.campaign.CampaignMain.cm.toUser("AM:Short Operation not found for " + ap.getName() + ".", Username);
+            CampaignMain.campaignMain.toUser("AM:Short Operation not found for " + ap.getName() + ".", Username);
             return;
         }
 
@@ -114,28 +116,28 @@ public class JoinAttackCommand implements Command {
         try {
             armyID = Integer.parseInt(command.nextToken());
         } catch (Exception e) {
-            server.campaign.CampaignMain.cm.toUser("AM:Non-number given for Army ID. Try again.", Username, true);
+            CampaignMain.campaignMain.toUser("AM:Non-number given for Army ID. Try again.", Username, true);
             return;
         }
 
         server.campaign.SArmy aa = ap.getArmy(armyID);
         if (aa == null) {
-            server.campaign.CampaignMain.cm.toUser(
+            CampaignMain.campaignMain.toUser(
                   "AM:An error occured while creating your Army (The Army was null. This usually means " +
                         "the army doesn't exist. Example: you tried to use Army 1, but you only have Armies 0 and 2.)",
                   Username,
                   true);
             return;
         } else if (aa.getBV() == 0) {
-            server.campaign.CampaignMain.cm.toUser("AM:Army #" +
-                                                         armyID +
-                                                         " has a BV of 0 and may not be used to attack.",
+            CampaignMain.campaignMain.toUser("AM:Army #" +
+                                                   armyID +
+                                                   " has a BV of 0 and may not be used to attack.",
                   Username,
                   true);
             return;
         }
 
-        server.campaign.CampaignMain.cm.toUser("AM:" + o.checkTeam(ap.getTeamNumber(), aa.getBV(), true), Username);
+        CampaignMain.campaignMain.toUser("AM:" + o.checkTeam(ap.getTeamNumber(), aa.getBV(), true), Username);
         /*
          * Breaks passed. lets validate the attack =)
          *
@@ -146,8 +148,8 @@ public class JoinAttackCommand implements Command {
 
         o.addAttacker(jp, aa, "");
 
-        server.campaign.CampaignMain.cm.toUser("PL|STN|" + ap.getTeamNumber(), Username, false);
-        server.campaign.CampaignMain.cm.toUser("AM:You have been assigned to team #" + ap.getTeamNumber(), Username);
+        CampaignMain.campaignMain.toUser("PL|STN|" + ap.getTeamNumber(), Username, false);
+        CampaignMain.campaignMain.toUser("AM:You have been assigned to team #" + ap.getTeamNumber(), Username);
         jp.setTeamNumber(ap.getTeamNumber());
     }//end process
 

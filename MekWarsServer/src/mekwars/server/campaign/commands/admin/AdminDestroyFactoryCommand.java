@@ -18,6 +18,7 @@ package mekwars.server.campaign.commands.admin;
 
 import common.UnitFactory;
 import common.util.MWLogger;
+import mekwars.server.campaign.CampaignMain;
 
 public class AdminDestroyFactoryCommand implements server.campaign.commands.Command {
 
@@ -29,27 +30,27 @@ public class AdminDestroyFactoryCommand implements server.campaign.commands.Comm
     public void process(java.util.StringTokenizer command, String Username) {
 
         //access level check
-        int userLevel = server.campaign.CampaignMain.cm.getServer().getUserLevel(Username);
+        int userLevel = CampaignMain.campaignMain.getServer().getUserLevel(Username);
         if (userLevel < getExecutionLevel()) {
-            server.campaign.CampaignMain.cm.toUser("AM:Insufficient access level for command. Level: " +
-                                                         userLevel +
-                                                         ". Required: " +
-                                                         accessLevel +
-                                                         ".", Username, true);
+            CampaignMain.campaignMain.toUser("AM:Insufficient access level for command. Level: " +
+                                                   userLevel +
+                                                   ". Required: " +
+                                                   accessLevel +
+                                                   ".", Username, true);
             return;
         }
 
         try {
-            server.campaign.SPlanet p = server.campaign.CampaignMain.cm.getPlanetFromPartialString(command.nextToken(),
+            server.campaign.SPlanet p = CampaignMain.campaignMain.getPlanetFromPartialString(command.nextToken(),
                   Username);
             String factoryname = command.nextToken();
             if (p == null) {
-                server.campaign.CampaignMain.cm.toUser("Planet not found:", Username, true);
+                CampaignMain.campaignMain.toUser("Planet not found:", Username, true);
                 return;
             }
 
             if (p.getUnitFactories().size() < 1) {
-                server.campaign.CampaignMain.cm.toUser("This planet does not have any factories!", Username, true);
+                CampaignMain.campaignMain.toUser("This planet does not have any factories!", Username, true);
                 return;
             }
 
@@ -62,7 +63,7 @@ public class AdminDestroyFactoryCommand implements server.campaign.commands.Comm
             }
 
             if (foundFactory == null) {
-                server.campaign.CampaignMain.cm.toUser("Factory " + factoryname + " not found", Username, true);
+                CampaignMain.campaignMain.toUser("Factory " + factoryname + " not found", Username, true);
                 return;
             }
 
@@ -72,8 +73,8 @@ public class AdminDestroyFactoryCommand implements server.campaign.commands.Comm
 
             p.updated();
             //server.MWLogger.modLog(Username + "  removed " + factoryname + " from " + p.getName() + ".");
-            server.campaign.CampaignMain.cm.toUser(factoryname + " removed from " + p.getName() + ".", Username, true);
-            server.campaign.CampaignMain.cm.doSendModMail("NOTE",
+            CampaignMain.campaignMain.toUser(factoryname + " removed from " + p.getName() + ".", Username, true);
+            CampaignMain.campaignMain.doSendModMail("NOTE",
                   Username + "  removed " + factoryname + " from " + p.getName() + ".");
         } catch (Exception ex) {
             MWLogger.errLog(ex);

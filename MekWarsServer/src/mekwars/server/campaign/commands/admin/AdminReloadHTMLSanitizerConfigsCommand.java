@@ -16,6 +16,7 @@
 
 package mekwars.server.campaign.commands.admin;
 
+import mekwars.server.campaign.CampaignMain;
 import server.util.StringUtil;
 
 public class AdminReloadHTMLSanitizerConfigsCommand implements server.campaign.commands.Command {
@@ -29,19 +30,19 @@ public class AdminReloadHTMLSanitizerConfigsCommand implements server.campaign.c
     public void process(java.util.StringTokenizer command, String Username) {
 
         //access level check
-        int userLevel = server.campaign.CampaignMain.cm.getServer().getUserLevel(Username);
+        int userLevel = CampaignMain.campaignMain.getServer().getUserLevel(Username);
         if (userLevel < getExecutionLevel()) {
-            server.campaign.CampaignMain.cm.toUser("AM:Insufficient access level for command. Level: " +
-                                                         userLevel +
-                                                         ". Required: " +
-                                                         accessLevel +
-                                                         ".", Username, true);
+            CampaignMain.campaignMain.toUser("AM:Insufficient access level for command. Level: " +
+                                                   userLevel +
+                                                   ". Required: " +
+                                                   accessLevel +
+                                                   ".", Username, true);
             return;
         }
 
         StringUtil.reloadSanitizer();
-        server.campaign.CampaignMain.cm.doSendModMail("NOTE", Username + " has reloaded the HTML Sanitizer configs");
-        server.campaign.CampaignMain.cm.toUser("You have reloaded the HTML Sanitizer configs", Username, true);
+        CampaignMain.campaignMain.doSendModMail("NOTE", Username + " has reloaded the HTML Sanitizer configs");
+        CampaignMain.campaignMain.toUser("You have reloaded the HTML Sanitizer configs", Username, true);
     }
 
     public int getExecutionLevel() {return accessLevel;}

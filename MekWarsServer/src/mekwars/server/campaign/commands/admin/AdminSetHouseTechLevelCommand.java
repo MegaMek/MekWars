@@ -19,6 +19,7 @@
 package mekwars.server.campaign.commands.admin;
 
 import megamek.common.TechConstants;
+import mekwars.server.campaign.CampaignMain;
 
 
 // comand /c AdminSetHouseTechLevel#House#TechLevel
@@ -32,13 +33,13 @@ public class AdminSetHouseTechLevelCommand implements server.campaign.commands.C
     public void process(java.util.StringTokenizer command, String Username) {
 
         //access level check
-        int userLevel = server.campaign.CampaignMain.cm.getServer().getUserLevel(Username);
+        int userLevel = CampaignMain.campaignMain.getServer().getUserLevel(Username);
         if (userLevel < getExecutionLevel()) {
-            server.campaign.CampaignMain.cm.toUser("AM:Insufficient access level for command. Level: " +
-                                                         userLevel +
-                                                         ". Required: " +
-                                                         accessLevel +
-                                                         ".", Username, true);
+            CampaignMain.campaignMain.toUser("AM:Insufficient access level for command. Level: " +
+                                                   userLevel +
+                                                   ". Required: " +
+                                                   accessLevel +
+                                                   ".", Username, true);
             return;
         }
 
@@ -46,10 +47,10 @@ public class AdminSetHouseTechLevelCommand implements server.campaign.commands.C
         int techLevel;
 
         try {
-            house = server.campaign.CampaignMain.cm.getHouseFromPartialString(command.nextToken());
+            house = CampaignMain.campaignMain.getHouseFromPartialString(command.nextToken());
             techLevel = Integer.parseInt(command.nextToken());
         } catch (Exception e) {
-            server.campaign.CampaignMain.cm.toUser("Improper command. Try: /c adminsethousetechlevel#faction#techlevel",
+            CampaignMain.campaignMain.toUser("Improper command. Try: /c adminsethousetechlevel#faction#techlevel",
                   Username,
                   true);
             return;
@@ -58,7 +59,7 @@ public class AdminSetHouseTechLevelCommand implements server.campaign.commands.C
         house.setTechLevel(techLevel);
         house.updated();
 
-        server.campaign.CampaignMain.cm.doSendModMail("NOTE",
+        CampaignMain.campaignMain.doSendModMail("NOTE",
               Username +
                     " has set " +
                     house.getName() +

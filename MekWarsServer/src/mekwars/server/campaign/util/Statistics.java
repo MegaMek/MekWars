@@ -19,20 +19,21 @@ package mekwars.server.campaign.util;
 import common.House;
 import common.Unit;
 import common.util.MWLogger;
+import mekwars.server.campaign.CampaignMain;
 import server.util.StringUtil;
 
 
 public class Statistics {
 
     public static String doGetMechStats(int size) {
-        java.util.TreeSet<MechStatistics> Sorted = new java.util.TreeSet<MechStatistics>();
-        java.util.Enumeration<MechStatistics> e = server.campaign.CampaignMain.cm.getMechStats().elements();
+        java.util.TreeSet<MekStatistics> Sorted = new java.util.TreeSet<MekStatistics>();
+        java.util.Enumeration<MekStatistics> e = CampaignMain.campaignMain.getMechStats().elements();
         while (e.hasMoreElements()) {
-            MechStatistics m = e.nextElement();
-            if (m.getMechSize() == size) {Sorted.add(m);}
+            MekStatistics m = e.nextElement();
+            if (m.getMekSize() == size) {Sorted.add(m);}
         }
         boolean color = false;
-        java.util.Iterator<MechStatistics> i = Sorted.iterator();
+        java.util.Iterator<MekStatistics> i = Sorted.iterator();
         StringBuilder result = new StringBuilder();
         result.append("<h2>" + Unit.getWeightClassDesc(size) + " Units</h2>");
         result.append("<table cellpadding=\"3\" cellspacing=\"0\"><tr bgcolor=\"#0066FF\">" +
@@ -44,7 +45,7 @@ public class Statistics {
                             "<th width=\"50\" align=\"center\"><font color=\"#FFFFFF\">BV</th>" +
                             "</font><th><font color=\"#FFFFFF\">Last Used</font></th></tr>");
         while (i.hasNext()) {
-            MechStatistics m = i.next();
+            MekStatistics m = i.next();
             //Get the color for this line
             if (color) {result.append("<tr class=\"trcolored\"><td>");} else {
                 result.append("<tr class=\"truncolored\"><td>");
@@ -52,7 +53,7 @@ public class Statistics {
             color = !color;
             //result.append("</td><td>");
             result.append("<center>");
-            result.append(m.getMechFileName());
+            result.append(m.getMekFileName());
             result.append("</td><td>");
             result.append(m.getGamesPlayed());
             result.append("</td><td>");
@@ -82,7 +83,7 @@ public class Statistics {
                   "<html><head><link rel=\"stylesheet\" type=\"text/css\" href=\"format.css\"><style type=\"text/css\"></style></head><body><font face=\"Verdana, Arial, Helvetica, sans-serif\">");
             result.append("<h2>Player Ranking:</h2><p>");
             //result.append("(Only Players with more than 1000 EXP shown)<p>";
-            java.util.Iterator<House> e = server.campaign.CampaignMain.cm.getData().getAllHouses().iterator();
+            java.util.Iterator<House> e = CampaignMain.campaignMain.getData().getAllHouses().iterator();
             java.util.Hashtable<String, server.campaign.SmallPlayer> allplayers = new java.util.Hashtable<String, server.campaign.SmallPlayer>();
             //Player DefaultPlayer = null;
             synchronized (allplayers) {
@@ -111,7 +112,7 @@ public class Statistics {
                     color = !color;
                     result.append("<td>" + rank + "</td>");
                     result.append("<td>" + p.getName() + "</td>");
-                    if (server.campaign.CampaignMain.cm.getBooleanConfig("HideELO")) {
+                    if (CampaignMain.campaignMain.getBooleanConfig("HideELO")) {
                         result.append("<td> -- </td>");
                     } else {result.append("<td>" + p.getRatingRounded() + "</td>");}
                     result.append("<td>" + p.getMyHouse().getColoredName() + "</td>");
@@ -131,7 +132,7 @@ public class Statistics {
             //Save Planets
             //      FileOutputStream out = new FileOutputStream("Ranking.htm");
             java.io.FileOutputStream out = new java.io.FileOutputStream(
-                  server.campaign.CampaignMain.cm.getConfig("RankingPath"));
+                  CampaignMain.campaignMain.getConfig("RankingPath"));
             java.io.PrintStream p = new java.io.PrintStream(out);
             p.println(result.toString());
             p.close();
@@ -148,7 +149,7 @@ public class Statistics {
               "<html><head><link rel=\"stylesheet\" type=\"text/css\" href=\"format.css\"><style type=\"text/css\"></style></head><body><font face=\"Verdana, Arial, Helvetica, sans-serif\">");
         result.append("<h2>Player Ranking:</h2><p>");
         //  result.append("(Only Players with more than 1000 EXP shown)<p>";
-        java.util.Iterator<House> e = server.campaign.CampaignMain.cm.getData().getAllHouses().iterator();
+        java.util.Iterator<House> e = CampaignMain.campaignMain.getData().getAllHouses().iterator();
         java.util.Hashtable<String, EXPRankingContainer> allplayers = new java.util.Hashtable<String, EXPRankingContainer>();
         //Player DefaultPlayer = null;
         while (e.hasNext()) {
@@ -188,7 +189,7 @@ public class Statistics {
         result.append("</body></html>");
 
         try {
-            java.io.FileOutputStream out = new java.io.FileOutputStream(server.campaign.CampaignMain.cm.getConfig(
+            java.io.FileOutputStream out = new java.io.FileOutputStream(CampaignMain.campaignMain.getConfig(
                   "EXPRankingPath"));
             java.io.PrintStream p = new java.io.PrintStream(out);
             p.println(result.toString());
@@ -204,7 +205,7 @@ public class Statistics {
         String result = "";
         if (useHTML) {result += "<b><i>Faction Ranking: </i><br>";} else {result += "Faction Ranking: ";}
 
-        java.util.TreeSet<HouseRankingHelpContainer> s = server.campaign.CampaignMain.cm.getHouseRanking();
+        java.util.TreeSet<HouseRankingHelpContainer> s = CampaignMain.campaignMain.getHouseRanking();
         if (s.size() < 1) {return "";}
 
         for (HouseRankingHelpContainer h : s) {

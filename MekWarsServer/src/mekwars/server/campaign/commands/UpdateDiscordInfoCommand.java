@@ -1,28 +1,30 @@
 package mekwars.server.campaign.commands;
 
+import mekwars.server.campaign.CampaignMain;
+
 public class UpdateDiscordInfoCommand implements Command {
     int accessLevel = 1;
     String syntax = "updatediscordinfo id";
 
     public void process(java.util.StringTokenizer command, String Username) {
         //access level checks
-        int userLevel = server.campaign.CampaignMain.cm.getServer().getUserLevel(Username);
+        int userLevel = CampaignMain.campaignMain.getServer().getUserLevel(Username);
 
         if (userLevel < getExecutionLevel()) {
-            server.campaign.CampaignMain.cm.toUser("AM:Insufficient access level for command. Level: " +
-                                                         userLevel +
-                                                         ". Required: " +
-                                                         accessLevel +
-                                                         ".", Username, true);
+            CampaignMain.campaignMain.toUser("AM:Insufficient access level for command. Level: " +
+                                                   userLevel +
+                                                   ". Required: " +
+                                                   accessLevel +
+                                                   ".", Username, true);
             return;
         }
 
-        if (!Boolean.parseBoolean(server.campaign.CampaignMain.cm.getConfig("Enable_BotPlayerInfo"))) {
-            server.campaign.CampaignMain.cm.toUser("AM:This command is disabled on this server.", Username, true);
+        if (!Boolean.parseBoolean(CampaignMain.campaignMain.getConfig("Enable_BotPlayerInfo"))) {
+            CampaignMain.campaignMain.toUser("AM:This command is disabled on this server.", Username, true);
             return;
         }
 
-        server.campaign.SPlayer player = server.campaign.CampaignMain.cm.getPlayer(Username);
+        server.campaign.SPlayer player = CampaignMain.campaignMain.getPlayer(Username);
 
         player.toSelf("AM:Discord ID currently set to: " + player.getDiscordID());
 

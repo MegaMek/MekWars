@@ -19,6 +19,8 @@
 package mekwars.server.campaign.commands;
 
 
+import mekwars.server.campaign.CampaignMain;
+
 public class SetAutoReorderCommand implements Command {
 
     int accessLevel = 0;
@@ -27,33 +29,33 @@ public class SetAutoReorderCommand implements Command {
     public void process(java.util.StringTokenizer command, String Username) {
 
         if (accessLevel != 0) {
-            int userLevel = server.campaign.CampaignMain.cm.getServer().getUserLevel(Username);
+            int userLevel = CampaignMain.campaignMain.getServer().getUserLevel(Username);
             if (userLevel < getExecutionLevel()) {
-                server.campaign.CampaignMain.cm.toUser("AM:Insufficient access level for command. Level: " +
-                                                             userLevel +
-                                                             ". Required: " +
-                                                             accessLevel +
-                                                             ".", Username, true);
+                CampaignMain.campaignMain.toUser("AM:Insufficient access level for command. Level: " +
+                                                       userLevel +
+                                                       ". Required: " +
+                                                       accessLevel +
+                                                       ".", Username, true);
                 return;
             }
         }
 
-        if (!server.campaign.CampaignMain.cm.getBooleanConfig("UsePartsRepair")) {return;}
+        if (!CampaignMain.campaignMain.getBooleanConfig("UsePartsRepair")) {return;}
 
-        server.campaign.SPlayer p = server.campaign.CampaignMain.cm.getPlayer(Username);
+        server.campaign.SPlayer p = CampaignMain.campaignMain.getPlayer(Username);
 
         try {
             p.setAutoReorder(Boolean.parseBoolean(command.nextToken()));
-            server.campaign.CampaignMain.cm.toUser("PL|ROP|" + p.getAutoReorder(), Username, false);
+            CampaignMain.campaignMain.toUser("PL|ROP|" + p.getAutoReorder(), Username, false);
         }//end try
         catch (Exception ex) {
-            server.campaign.CampaignMain.cm.toUser(
+            CampaignMain.campaignMain.toUser(
                   "AM:SetAutoAutoReorder command failed. Check your input. It should be something like this: /c setAutoReorder#True/False",
                   Username);
             return;
         }//end catch
 
-        server.campaign.CampaignMain.cm.toUser("AM:Auto Reorder set.", Username, true);
+        CampaignMain.campaignMain.toUser("AM:Auto Reorder set.", Username, true);
 
     }//end process()
 

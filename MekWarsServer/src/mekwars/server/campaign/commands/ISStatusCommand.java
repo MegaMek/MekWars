@@ -18,6 +18,7 @@ package mekwars.server.campaign.commands;
 
 
 import common.Planet;
+import mekwars.server.campaign.CampaignMain;
 import server.campaign.util.PlanetNameComparator;
 
 public class ISStatusCommand implements Command {
@@ -28,13 +29,13 @@ public class ISStatusCommand implements Command {
     public void process(java.util.StringTokenizer command, String Username) {
 
         if (accessLevel != 0) {
-            int userLevel = server.campaign.CampaignMain.cm.getServer().getUserLevel(Username);
+            int userLevel = CampaignMain.campaignMain.getServer().getUserLevel(Username);
             if (userLevel < getExecutionLevel()) {
-                server.campaign.CampaignMain.cm.toUser("AM:Insufficient access level for command. Level: " +
-                                                             userLevel +
-                                                             ". Required: " +
-                                                             accessLevel +
-                                                             ".", Username, true);
+                CampaignMain.campaignMain.toUser("AM:Insufficient access level for command. Level: " +
+                                                       userLevel +
+                                                       ". Required: " +
+                                                       accessLevel +
+                                                       ".", Username, true);
                 return;
             }
         }
@@ -42,7 +43,7 @@ public class ISStatusCommand implements Command {
         if (command.hasMoreElements()) {
             String HouseString = (String) command.nextElement();
             //Check if the factionname was only partial and complete it..
-            server.campaign.SHouse theone = server.campaign.CampaignMain.cm.getHouseFromPartialString(HouseString,
+            server.campaign.SHouse theone = CampaignMain.campaignMain.getHouseFromPartialString(HouseString,
                   Username);
             if (theone == null) {return;}
             if (command.hasMoreElements()) {
@@ -67,10 +68,10 @@ public class ISStatusCommand implements Command {
     public void doShowISStatus(String User, String h, String h2, boolean onlyOwner) {
         String result = "<h2>Universe Status";
         java.util.TreeSet<server.campaign.SPlanet> Sorted = new java.util.TreeSet<server.campaign.SPlanet>(new PlanetNameComparator());
-        int hID = server.campaign.CampaignMain.cm.getData().getHouseByName(h).getId();
+        int hID = CampaignMain.campaignMain.getData().getHouseByName(h).getId();
         int hID2 = -1;
-        if (server.campaign.CampaignMain.cm.getData().getHouseByName(h2) != null) {
-            hID2 = server.campaign.CampaignMain.cm.getData().getHouseByName(h2).getId();
+        if (CampaignMain.campaignMain.getData().getHouseByName(h2) != null) {
+            hID2 = CampaignMain.campaignMain.getData().getHouseByName(h2).getId();
         }
 
         if (h != null) {
@@ -79,7 +80,7 @@ public class ISStatusCommand implements Command {
             if (hID2 != -1) {result += " and Faction " + h2;}
         }
         result += ":</h2>";
-        java.util.Iterator<Planet> e = server.campaign.CampaignMain.cm.getData().getAllPlanets().iterator();
+        java.util.Iterator<Planet> e = CampaignMain.campaignMain.getData().getAllPlanets().iterator();
         while (e.hasNext()) {
             server.campaign.SPlanet p = (server.campaign.SPlanet) e.next();
             boolean show = false;
@@ -109,7 +110,7 @@ public class ISStatusCommand implements Command {
         while (it.hasNext()) {
             result += it.next().getSmallStatus(true);
         }
-        server.campaign.CampaignMain.cm.toUser("SM|" + result, User, false);
+        CampaignMain.campaignMain.toUser("SM|" + result, User, false);
     }
 
 }

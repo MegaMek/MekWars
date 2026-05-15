@@ -17,6 +17,7 @@
 package mekwars.server.campaign.commands;
 
 import common.Army;
+import mekwars.server.campaign.CampaignMain;
 
 public class ArmyOpForceSizeCommand implements Command {
 
@@ -27,13 +28,13 @@ public class ArmyOpForceSizeCommand implements Command {
 
         //access check
         if (accessLevel != 0) {
-            int userLevel = server.campaign.CampaignMain.cm.getServer().getUserLevel(Username);
+            int userLevel = CampaignMain.campaignMain.getServer().getUserLevel(Username);
             if (userLevel < getExecutionLevel()) {
-                server.campaign.CampaignMain.cm.toUser("AM:Insufficient access level for command. Level: " +
-                                                             userLevel +
-                                                             ". Required: " +
-                                                             accessLevel +
-                                                             ".", Username, true);
+                CampaignMain.campaignMain.toUser("AM:Insufficient access level for command. Level: " +
+                                                       userLevel +
+                                                       ". Required: " +
+                                                       accessLevel +
+                                                       ".", Username, true);
                 return;
             }
         }
@@ -41,9 +42,9 @@ public class ArmyOpForceSizeCommand implements Command {
         if (command.hasMoreElements()) {
 
             //first, make sure limiters are allowed ...
-            boolean useForceSize = Boolean.parseBoolean(server.campaign.CampaignMain.cm.getConfig("UseOperationsRule"));
+            boolean useForceSize = Boolean.parseBoolean(CampaignMain.campaignMain.getConfig("UseOperationsRule"));
             if (!useForceSize) {
-                server.campaign.CampaignMain.cm.toUser("AM:Force size is disabled.", Username, true);
+                CampaignMain.campaignMain.toUser("AM:Force size is disabled.", Username, true);
                 return;
             }
 
@@ -52,10 +53,10 @@ public class ArmyOpForceSizeCommand implements Command {
             if (command.hasMoreElements()) {
 
                 float limit = Float.parseFloat(command.nextToken());
-                server.campaign.SPlayer p = server.campaign.CampaignMain.cm.getPlayer(Username);
+                server.campaign.SPlayer p = CampaignMain.campaignMain.getPlayer(Username);
                 if (p != null) {
                     if (p.getDutyStatus() == server.campaign.SPlayer.STATUS_ACTIVE) {
-                        server.campaign.CampaignMain.cm.toUser("AM:You cannot change op force size while active.",
+                        CampaignMain.campaignMain.toUser("AM:You cannot change op force size while active.",
                               Username,
                               true);
                         return;
@@ -64,7 +65,7 @@ public class ArmyOpForceSizeCommand implements Command {
                     if (army != null) {
 
                         if (limit < Army.NO_LIMIT) {//-1 is NO_LIMIT
-                            server.campaign.CampaignMain.cm.toUser("AM:You may not set negative op force size.",
+                            CampaignMain.campaignMain.toUser("AM:You may not set negative op force size.",
                                   Username,
                                   true);
                             return;
@@ -74,18 +75,18 @@ public class ArmyOpForceSizeCommand implements Command {
                         army.setOpForceSize(limit);
 
                         if (limit == -1) {
-                            server.campaign.CampaignMain.cm.toUser("AM:Army #" + armyid + "'s op force size disabled.",
+                            CampaignMain.campaignMain.toUser("AM:Army #" + armyid + "'s op force size disabled.",
                                   Username,
                                   true);
                         } else {
-                            server.campaign.CampaignMain.cm.toUser("AM:Army #" +
-                                                                         armyid +
-                                                                         "'s op force size set to " +
-                                                                         limit +
-                                                                         ".", Username, true);
+                            CampaignMain.campaignMain.toUser("AM:Army #" +
+                                                                   armyid +
+                                                                   "'s op force size set to " +
+                                                                   limit +
+                                                                   ".", Username, true);
                         }
 
-                        server.campaign.CampaignMain.cm.toUser("PL|SAOFS|" + army.getID() + "#" + army.getOpForceSize(),
+                        CampaignMain.campaignMain.toUser("PL|SAOFS|" + army.getID() + "#" + army.getOpForceSize(),
                               Username,
                               false);
                     }

@@ -16,6 +16,7 @@
 
 package mekwars.server.campaign.commands.admin;
 
+import mekwars.server.campaign.CampaignMain;
 import server.campaign.pilot.SPilot;
 import server.campaign.pilot.SPilotSkills;
 import server.campaign.pilot.skills.SPilotSkill;
@@ -32,18 +33,18 @@ public class CreatePilotCommand implements server.campaign.commands.Command {
     public void process(java.util.StringTokenizer command, String Username) {
 
         //access level check
-        int userLevel = server.campaign.CampaignMain.cm.getServer().getUserLevel(Username);
+        int userLevel = CampaignMain.campaignMain.getServer().getUserLevel(Username);
         if (userLevel < getExecutionLevel()) {
-            server.campaign.CampaignMain.cm.toUser("AM:Insufficient access level for command. Level: " +
-                                                         userLevel +
-                                                         ". Required: " +
-                                                         accessLevel +
-                                                         ".", Username, true);
+            CampaignMain.campaignMain.toUser("AM:Insufficient access level for command. Level: " +
+                                                   userLevel +
+                                                   ". Required: " +
+                                                   accessLevel +
+                                                   ".", Username, true);
             return;
         }
 
 
-        server.campaign.SPlayer p = server.campaign.CampaignMain.cm.getPlayer(Username);
+        server.campaign.SPlayer p = CampaignMain.campaignMain.getPlayer(Username);
         server.campaign.SHouse h = p.getMyHouse();
 
         if (!h.getBooleanConfig("AllowPersonalPilotQueues")) {return;}
@@ -55,31 +56,31 @@ public class CreatePilotCommand implements server.campaign.commands.Command {
         int weight;
 
         try {
-            target = server.campaign.CampaignMain.cm.getPlayer(command.nextToken());
+            target = CampaignMain.campaignMain.getPlayer(command.nextToken());
             gunnery = command.nextToken();
             piloting = command.nextToken();
             type = server.campaign.SUnit.getTypeIDForName(command.nextToken());
             weight = server.campaign.SUnit.getWeightIDForName(command.nextToken());
         } catch (Exception ex) {
-            server.campaign.CampaignMain.cm.toUser(syntax, Username);
+            CampaignMain.campaignMain.toUser(syntax, Username);
             return;
         }
 
         if (target == null) {
-            server.campaign.CampaignMain.cm.toUser("Cannot find target player", Username);
+            CampaignMain.campaignMain.toUser("Cannot find target player", Username);
         }
 
 
         if (p.getPersonalPilotQueue().getPilotQueue(type, weight).size() > 0
                   && !h.getBooleanConfig("AllowPlayerToBuyPilotsFromHouseWhenPoolIsFull")) {
-            server.campaign.CampaignMain.cm.toUser("AM:" +
-                                                         target.getName() +
-                                                         " does not have enough room for a new pilot.", Username, true);
+            CampaignMain.campaignMain.toUser("AM:" +
+                                                   target.getName() +
+                                                   " does not have enough room for a new pilot.", Username, true);
             return;
         }
 
         SPilot pilot = null;
-        pilot = new SPilot(SPilot.getRandomPilotName(server.campaign.CampaignMain.cm.getR()),
+        pilot = new SPilot(SPilot.getRandomPilotName(CampaignMain.campaignMain.getR()),
               Integer.parseInt(gunnery),
               Integer.parseInt(piloting));
 
@@ -106,41 +107,41 @@ public class CreatePilotCommand implements server.campaign.commands.Command {
         }
 
         target.getPersonalPilotQueue().addPilot(pilot, type, weight);
-        server.campaign.CampaignMain.cm.toUser("PL|AP2PPQ|" + type + "|" + weight + "|" + pilot.toFileFormat("#", true),
+        CampaignMain.campaignMain.toUser("PL|AP2PPQ|" + type + "|" + weight + "|" + pilot.toFileFormat("#", true),
               target.getName(),
               false);
 
-        server.campaign.CampaignMain.cm.toUser("AM:" +
-                                                     server.campaign.SUnit.getWeightClassDesc(weight) +
-                                                     " " +
-                                                     server.campaign.SUnit.getTypeClassDesc(type) +
-                                                     " Pilot created: " +
-                                                     pilot.getName() +
-                                                     " for " +
-                                                     target.getName() +
-                                                     " (" +
-                                                     gunnery +
-                                                     "/" +
-                                                     piloting +
-                                                     ") [" +
-                                                     pilot.getSkillString(true) +
-                                                     "].", Username);
-        server.campaign.CampaignMain.cm.toUser("AM:" +
-                                                     Username +
-                                                     " has created a " +
-                                                     server.campaign.SUnit.getWeightClassDesc(weight) +
-                                                     " " +
-                                                     server.campaign.SUnit.getTypeClassDesc(type) +
-                                                     " pilot for you.  " +
-                                                     pilot.getName() +
-                                                     " (" +
-                                                     gunnery +
-                                                     "/" +
-                                                     piloting +
-                                                     ") [" +
-                                                     pilot.getSkillString(true) +
-                                                     "]", target.getName());
-        server.campaign.CampaignMain.cm.doSendModMail("NOTE",
+        CampaignMain.campaignMain.toUser("AM:" +
+                                               server.campaign.SUnit.getWeightClassDesc(weight) +
+                                               " " +
+                                               server.campaign.SUnit.getTypeClassDesc(type) +
+                                               " Pilot created: " +
+                                               pilot.getName() +
+                                               " for " +
+                                               target.getName() +
+                                               " (" +
+                                               gunnery +
+                                               "/" +
+                                               piloting +
+                                               ") [" +
+                                               pilot.getSkillString(true) +
+                                               "].", Username);
+        CampaignMain.campaignMain.toUser("AM:" +
+                                               Username +
+                                               " has created a " +
+                                               server.campaign.SUnit.getWeightClassDesc(weight) +
+                                               " " +
+                                               server.campaign.SUnit.getTypeClassDesc(type) +
+                                               " pilot for you.  " +
+                                               pilot.getName() +
+                                               " (" +
+                                               gunnery +
+                                               "/" +
+                                               piloting +
+                                               ") [" +
+                                               pilot.getSkillString(true) +
+                                               "]", target.getName());
+        CampaignMain.campaignMain.doSendModMail("NOTE",
               Username +
                     " created a " +
                     server.campaign.SUnit.getWeightClassDesc(weight) +

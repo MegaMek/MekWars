@@ -16,6 +16,8 @@
 
 package mekwars.server.campaign.operations;
 
+import mekwars.server.campaign.CampaignMain;
+
 /**
  * PayoutModifier takes the base payouts and modifies them by ELO, based on SO-configurable settings
  */
@@ -32,7 +34,7 @@ public class PayoutModifier {
         payout.put("earnedXP", earnedXP);
         payout.put("earnedFlu", earnedFlu);
         payout.put("earnedRP", earnedRP);
-        if (server.campaign.CampaignMain.cm.getBooleanConfig("ModifyOpPayoutByELO") &&
+        if (CampaignMain.campaignMain.getBooleanConfig("ModifyOpPayoutByELO") &&
                   so.getAllPlayerNames().size() <= 2) { // This will really only work for 2-player games
             Double myRating;
             Double hisRating;
@@ -44,17 +46,17 @@ public class PayoutModifier {
                 hisRating = so.getWinners().get(so.getWinners().keySet().iterator().next()).getRating();
             }
 
-            if (server.campaign.CampaignMain.cm.getBooleanConfig("ModifyOpPayoutByELO_Money")) {
+            if (CampaignMain.campaignMain.getBooleanConfig("ModifyOpPayoutByELO_Money")) {
                 earnedMoney = modifyMoney(earnedMoney, myRating, hisRating);
             }
 
-            if (server.campaign.CampaignMain.cm.getBooleanConfig("ModifyOpPayoutByELO_Exp")) {
+            if (CampaignMain.campaignMain.getBooleanConfig("ModifyOpPayoutByELO_Exp")) {
                 earnedXP = modifyExperience(earnedXP, myRating, hisRating);
             }
-            if (server.campaign.CampaignMain.cm.getBooleanConfig("ModifyOpPayoutByELO_Influence")) {
+            if (CampaignMain.campaignMain.getBooleanConfig("ModifyOpPayoutByELO_Influence")) {
                 earnedFlu = modifyInfluence(earnedFlu, myRating, hisRating);
             }
-            if (server.campaign.CampaignMain.cm.getBooleanConfig("ModifyOpPayoutByELO_RP")) {
+            if (CampaignMain.campaignMain.getBooleanConfig("ModifyOpPayoutByELO_RP")) {
                 earnedRP = modifyRP(earnedRP, myRating, hisRating);
             }
 
@@ -68,12 +70,12 @@ public class PayoutModifier {
     }
 
     private int modifyMoney(int earnedMoney, Double myRating, Double hisRating) {
-        boolean modifyHigher = server.campaign.CampaignMain.cm.getBooleanConfig("ModifyOpPayoutByELO_Money_Higher");
-        boolean modifyLower = server.campaign.CampaignMain.cm.getBooleanConfig("ModifyOpPayoutByELO_Money_Lower");
+        boolean modifyHigher = CampaignMain.campaignMain.getBooleanConfig("ModifyOpPayoutByELO_Money_Higher");
+        boolean modifyLower = CampaignMain.campaignMain.getBooleanConfig("ModifyOpPayoutByELO_Money_Lower");
 
         // Cut the ratings off at the min/max allowed for modification
-        Double maxELO = server.campaign.CampaignMain.cm.getDoubleConfig("ModifyOpPayoutByELO_Money_MaxELO");
-        Double minELO = server.campaign.CampaignMain.cm.getDoubleConfig("ModifyOpPayoutByELO_Money_MinELO");
+        Double maxELO = CampaignMain.campaignMain.getDoubleConfig("ModifyOpPayoutByELO_Money_MaxELO");
+        Double minELO = CampaignMain.campaignMain.getDoubleConfig("ModifyOpPayoutByELO_Money_MinELO");
         myRating = Math.max(myRating, minELO);
         myRating = Math.min(myRating, maxELO);
         hisRating = Math.max(hisRating, minELO);
@@ -88,19 +90,19 @@ public class PayoutModifier {
 
         earnedMoney = (int) Math.floor((earnedMoney *
                                               (Math.pow(ratingMultiplier,
-                                                    server.campaign.CampaignMain.cm.getDoubleConfig(
+                                                    CampaignMain.campaignMain.getDoubleConfig(
                                                           "ModifyOpPayoutByELO_Multiplier"))) + 0.5));
 
         return earnedMoney;
     }
 
     private int modifyExperience(int earnedXP, Double myRating, Double hisRating) {
-        boolean modifyHigher = server.campaign.CampaignMain.cm.getBooleanConfig("ModifyOpPayoutByELO_Exp_Higher");
-        boolean modifyLower = server.campaign.CampaignMain.cm.getBooleanConfig("ModifyOpPayoutByELO_Exp_Lower");
+        boolean modifyHigher = CampaignMain.campaignMain.getBooleanConfig("ModifyOpPayoutByELO_Exp_Higher");
+        boolean modifyLower = CampaignMain.campaignMain.getBooleanConfig("ModifyOpPayoutByELO_Exp_Lower");
 
         // Cut the ratings off at the min/max allowed for modification
-        Double maxELO = server.campaign.CampaignMain.cm.getDoubleConfig("ModifyOpPayoutByELO_Exp_MaxELO");
-        Double minELO = server.campaign.CampaignMain.cm.getDoubleConfig("ModifyOpPayoutByELO_Exp_MinELO");
+        Double maxELO = CampaignMain.campaignMain.getDoubleConfig("ModifyOpPayoutByELO_Exp_MaxELO");
+        Double minELO = CampaignMain.campaignMain.getDoubleConfig("ModifyOpPayoutByELO_Exp_MinELO");
         myRating = Math.max(myRating, minELO);
         myRating = Math.min(myRating, maxELO);
         hisRating = Math.max(hisRating, minELO);
@@ -115,19 +117,19 @@ public class PayoutModifier {
 
         earnedXP = (int) Math.floor((earnedXP *
                                            (Math.pow(ratingMultiplier,
-                                                 server.campaign.CampaignMain.cm.getDoubleConfig(
+                                                 CampaignMain.campaignMain.getDoubleConfig(
                                                        "ModifyOpPayoutByELO_Multiplier"))) + 0.5));
 
         return earnedXP;
     }
 
     private int modifyInfluence(int earnedFlu, Double myRating, Double hisRating) {
-        boolean modifyHigher = server.campaign.CampaignMain.cm.getBooleanConfig("ModifyOpPayoutByELO_Influence_Higher");
-        boolean modifyLower = server.campaign.CampaignMain.cm.getBooleanConfig("ModifyOpPayoutByELO_Influence_Lower");
+        boolean modifyHigher = CampaignMain.campaignMain.getBooleanConfig("ModifyOpPayoutByELO_Influence_Higher");
+        boolean modifyLower = CampaignMain.campaignMain.getBooleanConfig("ModifyOpPayoutByELO_Influence_Lower");
 
         // Cut the ratings off at the min/max allowed for modification
-        Double maxELO = server.campaign.CampaignMain.cm.getDoubleConfig("ModifyOpPayoutByELO_Influence_MaxELO");
-        Double minELO = server.campaign.CampaignMain.cm.getDoubleConfig("ModifyOpPayoutByELO_Influence_MinELO");
+        Double maxELO = CampaignMain.campaignMain.getDoubleConfig("ModifyOpPayoutByELO_Influence_MaxELO");
+        Double minELO = CampaignMain.campaignMain.getDoubleConfig("ModifyOpPayoutByELO_Influence_MinELO");
         myRating = Math.max(myRating, minELO);
         myRating = Math.min(myRating, maxELO);
         hisRating = Math.max(hisRating, minELO);
@@ -142,19 +144,19 @@ public class PayoutModifier {
 
         earnedFlu = (int) Math.floor((earnedFlu *
                                             (Math.pow(ratingMultiplier,
-                                                  server.campaign.CampaignMain.cm.getDoubleConfig(
+                                                  CampaignMain.campaignMain.getDoubleConfig(
                                                         "ModifyOpPayoutByELO_Multiplier"))) + 0.5));
 
         return earnedFlu;
     }
 
     private int modifyRP(int earnedRP, Double myRating, Double hisRating) {
-        boolean modifyHigher = server.campaign.CampaignMain.cm.getBooleanConfig("ModifyOpPayoutByELO_RP_Higher");
-        boolean modifyLower = server.campaign.CampaignMain.cm.getBooleanConfig("ModifyOpPayoutByELO_RP_Lower");
+        boolean modifyHigher = CampaignMain.campaignMain.getBooleanConfig("ModifyOpPayoutByELO_RP_Higher");
+        boolean modifyLower = CampaignMain.campaignMain.getBooleanConfig("ModifyOpPayoutByELO_RP_Lower");
 
         // Cut the ratings off at the min/max allowed for modification
-        Double maxELO = server.campaign.CampaignMain.cm.getDoubleConfig("ModifyOpPayoutByELO_RP_MaxELO");
-        Double minELO = server.campaign.CampaignMain.cm.getDoubleConfig("ModifyOpPayoutByELO_RP_MinELO");
+        Double maxELO = CampaignMain.campaignMain.getDoubleConfig("ModifyOpPayoutByELO_RP_MaxELO");
+        Double minELO = CampaignMain.campaignMain.getDoubleConfig("ModifyOpPayoutByELO_RP_MinELO");
         myRating = Math.max(myRating, minELO);
         myRating = Math.min(myRating, maxELO);
         hisRating = Math.max(hisRating, minELO);
@@ -169,7 +171,7 @@ public class PayoutModifier {
 
         earnedRP = (int) Math.floor((earnedRP *
                                            (Math.pow(ratingMultiplier,
-                                                 server.campaign.CampaignMain.cm.getDoubleConfig(
+                                                 CampaignMain.campaignMain.getDoubleConfig(
                                                        "ModifyOpPayoutByELO_Multiplier"))) + 0.5));
 
         return earnedRP;

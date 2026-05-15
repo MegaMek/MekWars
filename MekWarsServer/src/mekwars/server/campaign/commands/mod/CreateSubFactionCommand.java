@@ -17,6 +17,7 @@
 package mekwars.server.campaign.commands.mod;
 
 import common.SubFaction;
+import mekwars.server.campaign.CampaignMain;
 
 
 /**
@@ -33,13 +34,13 @@ public class CreateSubFactionCommand implements server.campaign.commands.Command
     public void process(java.util.StringTokenizer command, String Username) {
 
         if (accessLevel != 0) {
-            int userLevel = server.campaign.CampaignMain.cm.getServer().getUserLevel(Username);
+            int userLevel = CampaignMain.campaignMain.getServer().getUserLevel(Username);
             if (userLevel < getExecutionLevel()) {
-                server.campaign.CampaignMain.cm.toUser("AM:Insufficient access level for command. Level: " +
-                                                             userLevel +
-                                                             ". Required: " +
-                                                             accessLevel +
-                                                             ".", Username, true);
+                CampaignMain.campaignMain.toUser("AM:Insufficient access level for command. Level: " +
+                                                       userLevel +
+                                                       ". Required: " +
+                                                       accessLevel +
+                                                       ".", Username, true);
                 return;
             }
         }
@@ -47,22 +48,22 @@ public class CreateSubFactionCommand implements server.campaign.commands.Command
         String factionName = "";
         String subFactionName = "";
         int access = 0;
-        server.campaign.SPlayer player = server.campaign.CampaignMain.cm.getPlayer(Username);
+        server.campaign.SPlayer player = CampaignMain.campaignMain.getPlayer(Username);
 
         try {
             subFactionName = command.nextToken();
             access = Integer.parseInt(command.nextToken());
-            if (command.hasMoreTokens() && server.campaign.CampaignMain.cm.getServer().isModerator(Username)) {
+            if (command.hasMoreTokens() && CampaignMain.campaignMain.getServer().isModerator(Username)) {
                 factionName = command.nextToken();
             } else {factionName = player.getMyHouse().getName();}
         } catch (Exception ex) {
-            server.campaign.CampaignMain.cm.toUser(
+            CampaignMain.campaignMain.toUser(
                   "AM:Invalid syntax: /CreateSubFaction SubFactionName#SubFactionAccessLevel#[FactionName]",
                   Username);
             return;
         }
 
-        server.campaign.SHouse faction = server.campaign.CampaignMain.cm.getHouseFromPartialString(factionName,
+        server.campaign.SHouse faction = CampaignMain.campaignMain.getHouseFromPartialString(factionName,
               Username);
 
         if (faction == null) {return;}
@@ -75,12 +76,12 @@ public class CreateSubFactionCommand implements server.campaign.commands.Command
 
         faction.updated();
 
-        server.campaign.CampaignMain.cm.doSendModMail("NOTE",
+        CampaignMain.campaignMain.doSendModMail("NOTE",
               Username + " has created subfaction " + subFactionName + " for faction " + faction.getName());
-        server.campaign.CampaignMain.cm.toUser("AM:You have created subfaction " +
-                                                     subFactionName +
-                                                     " for faction " +
-                                                     faction.getName(), Username);
+        CampaignMain.campaignMain.toUser("AM:You have created subfaction " +
+                                               subFactionName +
+                                               " for faction " +
+                                               faction.getName(), Username);
     }
 
     public int getExecutionLevel() {return accessLevel;}

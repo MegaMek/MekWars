@@ -17,6 +17,8 @@
 package mekwars.server.campaign.commands.admin;
 
 
+import mekwars.server.campaign.CampaignMain;
+
 public class AdminViewLogCommand implements server.campaign.commands.Command {
 
     int accessLevel = server.MWChatServer.auth.IAuthenticator.ADMIN;
@@ -27,21 +29,21 @@ public class AdminViewLogCommand implements server.campaign.commands.Command {
     public void process(java.util.StringTokenizer command, String Username) {
 
         //access level check
-        int userLevel = server.campaign.CampaignMain.cm.getServer().getUserLevel(Username);
+        int userLevel = CampaignMain.campaignMain.getServer().getUserLevel(Username);
         if (userLevel < getExecutionLevel()) {
-            server.campaign.CampaignMain.cm.toUser("AM:Insufficient access level for command. Level: " +
-                                                         userLevel +
-                                                         ". Required: " +
-                                                         accessLevel +
-                                                         ".", Username, true);
+            CampaignMain.campaignMain.toUser("AM:Insufficient access level for command. Level: " +
+                                                   userLevel +
+                                                   ". Required: " +
+                                                   accessLevel +
+                                                   ".", Username, true);
             return;
         }
 
         String fileName = command.nextToken();
         if (fileName.startsWith("../")) {
-            server.campaign.CampaignMain.cm.doSendModMail("NOTE",
+            CampaignMain.campaignMain.doSendModMail("NOTE",
                   Username + " tried to viewed file " + fileName + " but was denied!");
-            server.campaign.CampaignMain.cm.toUser("Sorry but you are not allowed to backout of the root directory!",
+            CampaignMain.campaignMain.toUser("Sorry but you are not allowed to backout of the root directory!",
                   Username,
                   true);
             return;
@@ -49,7 +51,7 @@ public class AdminViewLogCommand implements server.campaign.commands.Command {
         try {
             java.io.File logFile = new java.io.File("./" + fileName);
             if (logFile.length() > 3072000) {
-                server.campaign.CampaignMain.cm.toUser(
+                CampaignMain.campaignMain.toUser(
                       "The file you are trying to open is over 3 megs that is not allowed!",
                       Username,
                       true);
@@ -58,13 +60,13 @@ public class AdminViewLogCommand implements server.campaign.commands.Command {
             java.io.FileInputStream fis = new java.io.FileInputStream(logFile);
             java.io.BufferedReader dis = new java.io.BufferedReader(new java.io.InputStreamReader(fis));
             while (dis.ready()) {
-                server.campaign.CampaignMain.cm.toUser("SM|" + dis.readLine(), Username, false);
+                CampaignMain.campaignMain.toUser("SM|" + dis.readLine(), Username, false);
             }
             fis.close();
             dis.close();
-            server.campaign.CampaignMain.cm.doSendModMail("NOTE", Username + " has viewed file" + logFile);
+            CampaignMain.campaignMain.doSendModMail("NOTE", Username + " has viewed file" + logFile);
         } catch (Exception ex) {
-            server.campaign.CampaignMain.cm.toUser("File Not found", Username, true);
+            CampaignMain.campaignMain.toUser("File Not found", Username, true);
             return;
         }
 

@@ -22,6 +22,7 @@ package mekwars.server.campaign.commands;
 
 import common.util.MWLogger;
 import common.util.TokenReader;
+import mekwars.server.campaign.CampaignMain;
 
 /**
  * @author Torren (Jason Tighe) Send a factions config to the player. Optional Faction Name variable for Staff to pull
@@ -36,19 +37,19 @@ public class GetFactionConfigsCommand implements Command {
 
         try {
             if (accessLevel != 0) {
-                int userLevel = server.campaign.CampaignMain.cm.getServer().getUserLevel(Username);
+                int userLevel = CampaignMain.campaignMain.getServer().getUserLevel(Username);
                 if (userLevel < getExecutionLevel()) {
-                    server.campaign.CampaignMain.cm.toUser("AM:Insufficient access level for command. Level: " +
-                                                                 userLevel +
-                                                                 ". Required: " +
-                                                                 accessLevel +
-                                                                 ".", Username, true);
-                    server.campaign.CampaignMain.cm.toUser("PL|FC|DONE#DONE", Username, false);
+                    CampaignMain.campaignMain.toUser("AM:Insufficient access level for command. Level: " +
+                                                           userLevel +
+                                                           ". Required: " +
+                                                           accessLevel +
+                                                           ".", Username, true);
+                    CampaignMain.campaignMain.toUser("PL|FC|DONE#DONE", Username, false);
                     return;
                 }
             }
 
-            server.campaign.SPlayer player = server.campaign.CampaignMain.cm.getPlayer(Username);
+            server.campaign.SPlayer player = CampaignMain.campaignMain.getPlayer(Username);
             String factionName = player.getMyHouse().getName();
             server.campaign.SHouse faction = null;
             long timeStamp = -1;
@@ -56,7 +57,7 @@ public class GetFactionConfigsCommand implements Command {
             try {
                 timeStamp = TokenReader.readLong(command);
             } catch (Exception ex) {
-                server.campaign.CampaignMain.cm.toUser("PL|FC|DONE#DONE", Username, false);
+                CampaignMain.campaignMain.toUser("PL|FC|DONE#DONE", Username, false);
                 return;
             }
 
@@ -64,10 +65,10 @@ public class GetFactionConfigsCommand implements Command {
                 factionName = TokenReader.readString(command);
             }
 
-            faction = server.campaign.CampaignMain.cm.getHouseFromPartialString(factionName);
+            faction = CampaignMain.campaignMain.getHouseFromPartialString(factionName);
 
             if (faction == null || faction.getConfig() == null) {
-                server.campaign.CampaignMain.cm.toUser("PL|FC|DONE#DONE", Username, false);
+                CampaignMain.campaignMain.toUser("PL|FC|DONE#DONE", Username, false);
                 return;
             }
 
@@ -76,7 +77,7 @@ public class GetFactionConfigsCommand implements Command {
              * AdminMenu causes it to fully update each time.
              */
             if (timeStamp >= faction.getLongConfig("TIMESTAMP")) {
-                server.campaign.CampaignMain.cm.toUser("PL|FC|DONE#DONE", Username, false);
+                CampaignMain.campaignMain.toUser("PL|FC|DONE#DONE", Username, false);
                 return;
             }
 
@@ -94,9 +95,9 @@ public class GetFactionConfigsCommand implements Command {
             }// End While
 
             result.append("DONE#DONE");
-            server.campaign.CampaignMain.cm.toUser(result.toString(), Username, false);
+            CampaignMain.campaignMain.toUser(result.toString(), Username, false);
         } catch (Exception ex) {
-            server.campaign.CampaignMain.cm.toUser("PL|FC|DONE#DONE", Username, false);
+            CampaignMain.campaignMain.toUser("PL|FC|DONE#DONE", Username, false);
             MWLogger.errLog(ex);
         }
     }

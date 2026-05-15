@@ -27,6 +27,7 @@ import megamek.common.Entity;
 import megamek.common.Mounted;
 import megamek.common.WeaponType;
 import megamek.common.battlevalue.BvMultiplier;
+import mekwars.server.campaign.CampaignMain;
 
 /**
  * NOTE: This is a unofficial rule. Pilot gets a -1 to-hit bonus on all missile weapons (LRM, SRM, MRM, RL and ATM).
@@ -59,10 +60,10 @@ public class GunneryMissileSkill extends SPilotSkill {
 
         String chance = "chancefor" + getAbbreviation() + "for" + Unit.getTypeClassDesc(unitType);
 
-        server.campaign.SHouse house = server.campaign.CampaignMain.cm.getHouseFromPartialString(pilot.getCurrentFaction());
+        server.campaign.SHouse house = CampaignMain.campaignMain.getHouseFromPartialString(pilot.getCurrentFaction());
 
         if (house == null) {
-            return server.campaign.CampaignMain.cm.getIntegerConfig(chance);
+            return CampaignMain.campaignMain.getIntegerConfig(chance);
         }
 
         return house.getIntegerConfig(chance);
@@ -70,7 +71,7 @@ public class GunneryMissileSkill extends SPilotSkill {
 
     @Override
     public int getBVMod(Entity unit) {
-        if (server.campaign.CampaignMain.cm.getBooleanConfig("USEFLATGUNNERYMISSILEMODIFIER")) {
+        if (CampaignMain.campaignMain.getBooleanConfig("USEFLATGUNNERYMISSILEMODIFIER")) {
             return getBVModFlat(unit);
         }
         //new bv cost for GunneryX and Weapon Specialist skills,
@@ -101,7 +102,7 @@ public class GunneryMissileSkill extends SPilotSkill {
 
     public int getBVModFlat(Entity unit) {
         int numberOfGuns = 0;
-        int gunneryMissileBVBaseMod = server.campaign.CampaignMain.cm.getIntegerConfig("GunneryMissileBaseBVMod");
+        int gunneryMissileBVBaseMod = CampaignMain.campaignMain.getIntegerConfig("GunneryMissileBaseBVMod");
 
         for (Mounted weapon : unit.getWeaponList()) {
             if (weapon.getType().hasFlag(WeaponType.F_MISSILE)) {

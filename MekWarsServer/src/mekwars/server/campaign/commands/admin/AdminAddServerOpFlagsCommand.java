@@ -17,6 +17,8 @@
 package mekwars.server.campaign.commands.admin;
 
 
+import mekwars.server.campaign.CampaignMain;
+
 public class AdminAddServerOpFlagsCommand implements server.campaign.commands.Command {
 
     int accessLevel = server.MWChatServer.auth.IAuthenticator.ADMIN;
@@ -27,18 +29,18 @@ public class AdminAddServerOpFlagsCommand implements server.campaign.commands.Co
     public void process(java.util.StringTokenizer command, String Username) {
 
         //access level check
-        int userLevel = server.campaign.CampaignMain.cm.getServer().getUserLevel(Username);
+        int userLevel = CampaignMain.campaignMain.getServer().getUserLevel(Username);
         if (userLevel < getExecutionLevel()) {
-            server.campaign.CampaignMain.cm.toUser("AM:Insufficient access level for command. Level: " +
-                                                         userLevel +
-                                                         ". Required: " +
-                                                         accessLevel +
-                                                         ".", Username, true);
+            CampaignMain.campaignMain.toUser("AM:Insufficient access level for command. Level: " +
+                                                   userLevel +
+                                                   ". Required: " +
+                                                   accessLevel +
+                                                   ".", Username, true);
             return;
         }
 
         if (!command.hasMoreTokens()) {
-            server.campaign.CampaignMain.cm.toUser(
+            CampaignMain.campaignMain.toUser(
                   "Syntax AdminAddServerOpFlags#FlagCode#FlagName#...<br>NOTE: you can repeat FlagCode and FlagName multiple times.",
                   Username);
             return;
@@ -48,16 +50,16 @@ public class AdminAddServerOpFlagsCommand implements server.campaign.commands.Co
             while (command.hasMoreTokens()) {
                 String key = command.nextToken();
                 String value = command.nextToken();
-                server.campaign.CampaignMain.cm.getData().getPlanetOpFlags().put(key, value);
-                server.campaign.CampaignMain.cm.toUser("Op flag " + key + "/" + value + " added to the server.",
+                CampaignMain.campaignMain.getData().getPlanetOpFlags().put(key, value);
+                CampaignMain.campaignMain.toUser("Op flag " + key + "/" + value + " added to the server.",
                       Username,
                       true);
                 //server.MWLogger.modLog(Username + " added op flag "+key+"/"+value+".");
-                server.campaign.CampaignMain.cm.doSendModMail("NOTE",
+                CampaignMain.campaignMain.doSendModMail("NOTE",
                       Username + " added op flag " + key + "/" + value + ".");
             }
         } catch (Exception ex) {
-            server.campaign.CampaignMain.cm.toUser(
+            CampaignMain.campaignMain.toUser(
                   "Syntax AdminAddServerOpFlags#FlagCode#FlagName#...<br>NOTE: you can repeat FlagCode and FlagName multiple times.",
                   Username);
             return;

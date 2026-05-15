@@ -16,6 +16,8 @@
 
 package mekwars.server.campaign.commands.mod;
 
+import mekwars.server.campaign.CampaignMain;
+
 /**
  * @author Jason Tighe
  */
@@ -32,20 +34,20 @@ public class MMOTDCommand implements server.campaign.commands.Command {
     public void process(java.util.StringTokenizer command, String Username) {
 
         if (accessLevel != 0) {
-            int userLevel = server.campaign.CampaignMain.cm.getServer().getUserLevel(Username);
+            int userLevel = CampaignMain.campaignMain.getServer().getUserLevel(Username);
             if (userLevel < getExecutionLevel()) {
-                server.campaign.CampaignMain.cm.toUser("AM:Insufficient access level for command. Level: " +
-                                                             userLevel +
-                                                             ". Required: " +
-                                                             accessLevel +
-                                                             ".", Username, true);
+                CampaignMain.campaignMain.toUser("AM:Insufficient access level for command. Level: " +
+                                                       userLevel +
+                                                       ". Required: " +
+                                                       accessLevel +
+                                                       ".", Username, true);
                 return;
             }
         }
 
         //CampaignMain.cm.doSendModMail(Username, CampaignMain.cm.getConfig("MMOTD"));
-        server.campaign.CampaignMain.cm.toUser("(Moderator Mail) Mod MOTD: " +
-                                                     server.campaign.CampaignMain.cm.getConfig("MMOTD"), Username);
+        CampaignMain.campaignMain.toUser("(Moderator Mail) Mod MOTD: " +
+                                               CampaignMain.campaignMain.getConfig("MMOTD"), Username);
 
     }//end process
 

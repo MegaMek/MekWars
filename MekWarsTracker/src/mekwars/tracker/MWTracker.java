@@ -31,8 +31,6 @@ import java.util.Date;
 import java.util.StringTokenizer;
 import java.util.Vector;
 
-import common.util.MWLogger;
-
 /**
  * Starts a server which listens for information from running MekWarsServers and periodically generates informational
  * webpages.
@@ -109,6 +107,17 @@ public final class MWTracker {
         lthread.start();
     }
 
+    //MAIN METHOD [Create the mwtracker]
+    public static void main(String[] args) {
+
+        try {
+            //MWTracker tracker =
+            new MWTracker();
+        } catch (Exception e) {
+            System.out.println(e.toString());
+        }
+    }
+
     public void addToLog(String s) {
         boolean loggingEnabled = true;//Turn on if testing.
         if (loggingEnabled) {
@@ -125,17 +134,6 @@ public final class MWTracker {
             }
         }
     }//end addToLog
-
-    //MAIN METHOD [Create the mwtracker]
-    public static void main(String[] args) {
-
-        try {
-            //MWTracker tracker =
-            new MWTracker();
-        } catch (Exception e) {
-            System.out.println(e.toString());
-        }
-    }
 
     //METHODS
     public boolean isProcessing() {

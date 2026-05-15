@@ -21,6 +21,7 @@ package mekwars.server.campaign.commands.admin;
 
 import common.Equipment;
 import common.util.MWLogger;
+import mekwars.server.campaign.CampaignMain;
 
 public class AdminSetBlackMarketSettingCommand implements server.campaign.commands.Command {
 
@@ -32,13 +33,13 @@ public class AdminSetBlackMarketSettingCommand implements server.campaign.comman
     public void process(java.util.StringTokenizer command, String Username) {
 
         //access level check
-        int userLevel = server.campaign.CampaignMain.cm.getServer().getUserLevel(Username);
+        int userLevel = CampaignMain.campaignMain.getServer().getUserLevel(Username);
         if (userLevel < getExecutionLevel()) {
-            server.campaign.CampaignMain.cm.toUser("AM:Insufficient access level for command. Level: " +
-                                                         userLevel +
-                                                         ". Required: " +
-                                                         accessLevel +
-                                                         ".", Username, true);
+            CampaignMain.campaignMain.toUser("AM:Insufficient access level for command. Level: " +
+                                                   userLevel +
+                                                   ". Required: " +
+                                                   accessLevel +
+                                                   ".", Username, true);
             return;
         }
 
@@ -57,7 +58,7 @@ public class AdminSetBlackMarketSettingCommand implements server.campaign.comman
             minProduction = command.nextToken();
             maxProduction = command.nextToken();
 
-            Equipment bme = server.campaign.CampaignMain.cm.getBlackMarketEquipmentTable().get(key);
+            Equipment bme = CampaignMain.campaignMain.getBlackMarketEquipmentTable().get(key);
 
             if (bme == null) {
                 bme = new Equipment();
@@ -69,7 +70,7 @@ public class AdminSetBlackMarketSettingCommand implements server.campaign.comman
             bme.setMinProduction(Integer.parseInt(minProduction));
             bme.setMaxProduction(Integer.parseInt(maxProduction));
 
-            server.campaign.CampaignMain.cm.getBlackMarketEquipmentTable().put(key, bme);
+            CampaignMain.campaignMain.getBlackMarketEquipmentTable().put(key, bme);
 
         } catch (Exception ex) {
             MWLogger.errLog(ex);

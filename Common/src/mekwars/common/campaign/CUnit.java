@@ -67,7 +67,6 @@ import mekwars.common.campaign.pilot.Pilot;
 import mekwars.common.campaign.pilot.skills.PilotSkill;
 import mekwars.common.campaign.targetsystems.TargetSystem;
 import mekwars.common.campaign.targetsystems.TargetTypeOutOfBoundsException;
-import mekwars.common.util.MWLogger;
 import mekwars.common.util.TokenReader;
 import mekwars.common.util.UnitUtils;
 
@@ -89,14 +88,6 @@ public class CUnit extends Unit {
     // CONSTRUCTORS
     public CUnit() {
         init();
-    }
-
-    // PRIVATE METHODS
-    private void init() {
-        unitEntity = null;
-        BV = 0;
-        setStatus(STATUS_OK);
-        setProducer("unknown origin");
     }
 
     public CUnit(IClient client) {
@@ -279,6 +270,14 @@ public class CUnit extends Unit {
 
         cost = Math.max(cost, 1);
         return cost;
+    }
+
+    // PRIVATE METHODS
+    private void init() {
+        unitEntity = null;
+        BV = 0;
+        setStatus(STATUS_OK);
+        setProducer("unknown origin");
     }
 
     public String getHtmlQuirkList() {

@@ -16,6 +16,8 @@
 
 package mekwars.server.campaign.commands.admin;
 
+import mekwars.server.campaign.CampaignMain;
+
 /**
  * AdminSpoof allows an admin to issue ANY command on a player's behalf. Unlike other commands, this cannot be delegated
  * to lower userlevels. Instead, Spoof is locked IAuthenticator.ADMIN.
@@ -32,13 +34,13 @@ public class AdminSpoofCommand implements server.campaign.commands.Command {
     public int getExecutionLevel() {return accessLevel;}
 
     public void setExecutionLevel(int i) {accessLevel = i;}//cannot be changed
- 
+
     public void process(java.util.StringTokenizer command, String Username) {
 
         //access level check
-        if (server.campaign.CampaignMain.cm.getServer().getUserLevel(Username) <
+        if (CampaignMain.campaignMain.getServer().getUserLevel(Username) <
                   server.MWChatServer.auth.IAuthenticator.ADMIN) {
-            server.campaign.CampaignMain.cm.toUser("Only admins may use the spoof command.", Username, true);
+            CampaignMain.campaignMain.toUser("Only admins may use the spoof command.", Username, true);
             return;
         }
 
@@ -48,7 +50,7 @@ public class AdminSpoofCommand implements server.campaign.commands.Command {
             targetPlayerName = command.nextToken();
             targetCommandName = command.nextToken();
         } catch (java.util.NoSuchElementException e) {
-            server.campaign.CampaignMain.cm.toUser(
+            CampaignMain.campaignMain.toUser(
                   "Improper format. Try: /c adminspoof#targetname#commandname#[command inputs]",
                   Username,
                   true);
@@ -56,27 +58,27 @@ public class AdminSpoofCommand implements server.campaign.commands.Command {
         }
 
         //ensure the player exixts
-        if (server.campaign.CampaignMain.cm.getPlayer(targetPlayerName) == null) {
-            server.campaign.CampaignMain.cm.toUser("Spoof failed. Could not find player: " + targetPlayerName,
+        if (CampaignMain.campaignMain.getPlayer(targetPlayerName) == null) {
+            CampaignMain.campaignMain.toUser("Spoof failed. Could not find player: " + targetPlayerName,
                   Username,
                   true);
             return;
         }
 
         //uppercase the command, and make sure it exists in CampaignMain tree.
-        if (server.campaign.CampaignMain.cm.getServerCommands().get(targetCommandName.toUpperCase()) == null) {
-            server.campaign.CampaignMain.cm.toUser("Spoof failed. Could not find command: " + targetCommandName,
+        if (CampaignMain.campaignMain.getServerCommands().get(targetCommandName.toUpperCase()) == null) {
+            CampaignMain.campaignMain.toUser("Spoof failed. Could not find command: " + targetCommandName,
                   Username,
                   true);
             return;
         }
 
-        if (server.campaign.CampaignMain.cm.getServerCommands()
+        if (CampaignMain.campaignMain.getServerCommands()
                   .get(targetCommandName.toUpperCase())
-                  .getExecutionLevel() > server.campaign.CampaignMain.cm.getServer().getUserLevel(targetPlayerName)) {
-            server.campaign.CampaignMain.cm.toUser(targetPlayerName +
-                                                         "'s access level is too low to use command " +
-                                                         targetCommandName, Username);
+                  .getExecutionLevel() > CampaignMain.campaignMain.getServer().getUserLevel(targetPlayerName)) {
+            CampaignMain.campaignMain.toUser(targetPlayerName +
+                                                   "'s access level is too low to use command " +
+                                                   targetCommandName, Username);
             return;
         }
 
@@ -89,7 +91,7 @@ public class AdminSpoofCommand implements server.campaign.commands.Command {
 
         //checks passed. we have a valid player and command name. tell everyone about the spoof ...
         //MWLogger.modLog(Username + " used spoof to send a command as if he were " + targetPlayerName + ": /c " + targetCommandName + "#" + issuedCommand);
-        server.campaign.CampaignMain.cm.doSendModMail("WARNING",
+        CampaignMain.campaignMain.doSendModMail("WARNING",
               Username +
                     " used spoof to send a command as if he were " +
                     targetPlayerName +
@@ -97,20 +99,20 @@ public class AdminSpoofCommand implements server.campaign.commands.Command {
                     targetCommandName +
                     "#" +
                     issuedCommand);
-        server.campaign.CampaignMain.cm.toUser(Username +
-                                                     " issued a command on your behalf: /c " +
-                                                     targetCommandName +
-                                                     "#" +
-                                                     issuedCommand, targetPlayerName, true);
-        server.campaign.CampaignMain.cm.toUser("You issued a command as if you were " +
-                                                     targetPlayerName +
-                                                     ": /c " +
-                                                     targetCommandName +
-                                                     "#" +
-                                                     issuedCommand, Username, true);
+        CampaignMain.campaignMain.toUser(Username +
+                                               " issued a command on your behalf: /c " +
+                                               targetCommandName +
+                                               "#" +
+                                               issuedCommand, targetPlayerName, true);
+        CampaignMain.campaignMain.toUser("You issued a command as if you were " +
+                                               targetPlayerName +
+                                               ": /c " +
+                                               targetCommandName +
+                                               "#" +
+                                               issuedCommand, Username, true);
 
         // ... then actually do it.
-        server.campaign.CampaignMain.cm.getServerCommands()
+        CampaignMain.campaignMain.getServerCommands()
               .get(targetCommandName.toUpperCase())
               .process(newCommand, targetPlayerName);
 

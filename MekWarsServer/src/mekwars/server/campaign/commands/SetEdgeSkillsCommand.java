@@ -18,6 +18,7 @@ package mekwars.server.campaign.commands;
 
 
 import common.campaign.pilot.skills.PilotSkill;
+import mekwars.server.campaign.CampaignMain;
 import server.campaign.pilot.SPilot;
 import server.campaign.pilot.skills.EdgeSkill;
 
@@ -29,18 +30,18 @@ public class SetEdgeSkillsCommand implements Command {
     public void process(java.util.StringTokenizer command, String Username) {
 
         if (accessLevel != 0) {
-            int userLevel = server.campaign.CampaignMain.cm.getServer().getUserLevel(Username);
+            int userLevel = CampaignMain.campaignMain.getServer().getUserLevel(Username);
             if (userLevel < getExecutionLevel()) {
-                server.campaign.CampaignMain.cm.toUser("AM:Insufficient access level for command. Level: " +
-                                                             userLevel +
-                                                             ". Required: " +
-                                                             accessLevel +
-                                                             ".", Username, true);
+                CampaignMain.campaignMain.toUser("AM:Insufficient access level for command. Level: " +
+                                                       userLevel +
+                                                       ". Required: " +
+                                                       accessLevel +
+                                                       ".", Username, true);
                 return;
             }
         }
 
-        server.campaign.SPlayer p = server.campaign.CampaignMain.cm.getPlayer(Username);
+        server.campaign.SPlayer p = CampaignMain.campaignMain.getPlayer(Username);
 
         int unitid = 0;//ID# of the mech which is to set autoeject;
         SPilot pilot = null;
@@ -53,7 +54,7 @@ public class SetEdgeSkillsCommand implements Command {
             unitid = Integer.parseInt(command.nextToken());
         }//end try
         catch (NumberFormatException ex) {
-            server.campaign.CampaignMain.cm.toUser(
+            CampaignMain.campaignMain.toUser(
                   "AM:SetEdgeSkills command failed. Check your input. It should be something like this: /c SetEdgeSkills#unitid#true/false#true/false#true/false#true/false",
                   Username,
                   true);
@@ -67,7 +68,7 @@ public class SetEdgeSkillsCommand implements Command {
             edge_when_explosion = Boolean.parseBoolean(command.nextToken());
         }//end try
         catch (Exception ex) {
-            server.campaign.CampaignMain.cm.toUser(
+            CampaignMain.campaignMain.toUser(
                   "AM:SetAutoEject Command failed. Check your input. It should be something like this: /c SetEdgeSkills#unitid#true/false#true/false#true/false#true/false",
                   Username,
                   true);
@@ -84,9 +85,9 @@ public class SetEdgeSkillsCommand implements Command {
         ((EdgeSkill) pilot.getSkills().getPilotSkill(PilotSkill.EdgeSkillID)).setHeadHit(edge_when_headhit);
         ((EdgeSkill) pilot.getSkills().getPilotSkill(PilotSkill.EdgeSkillID)).setExplosion(edge_when_explosion);
 
-        server.campaign.CampaignMain.cm.toUser("PL|UU|" + unit.getId() + "|" + unit.toString(true), Username, false);
+        CampaignMain.campaignMain.toUser("PL|UU|" + unit.getId() + "|" + unit.toString(true), Username, false);
 
-        server.campaign.CampaignMain.cm.toUser("AM:Edge set for " + unit.getModelName(), Username, true);
+        CampaignMain.campaignMain.toUser("AM:Edge set for " + unit.getModelName(), Username, true);
 
     }//end process()
 

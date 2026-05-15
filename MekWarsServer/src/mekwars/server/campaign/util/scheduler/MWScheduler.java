@@ -3,6 +3,7 @@ package mekwars.server.campaign.util.scheduler;
 import common.CampaignData;
 import common.House;
 import common.util.MWLogger;
+import mekwars.server.campaign.CampaignMain;
 import org.quartz.JobDetail;
 import org.quartz.JobExecutionContext;
 import org.quartz.Scheduler;
@@ -93,7 +94,7 @@ public class MWScheduler implements ScheduleHandler {
 
         } else {
             MWLogger.errLog("Unknown ScheduleType in changeFrequency: " + scheduleType);
-            server.campaign.CampaignMain.cm.doSendModMail("SERVER",
+            CampaignMain.campaignMain.doSendModMail("SERVER",
                   "Unknown ScheduleType in changeFrequency: " + scheduleType);
         }
     }
@@ -177,7 +178,7 @@ public class MWScheduler implements ScheduleHandler {
         try {
             scheduler.shutdown();
         } catch (SchedulerException e) {
-            server.campaign.CampaignMain.cm.doSendModMail("SERVER", e.getStackTrace().toString());
+            CampaignMain.campaignMain.doSendModMail("SERVER", e.getStackTrace().toString());
             MWLogger.errLog(e);
         }
     }
@@ -208,8 +209,8 @@ public class MWScheduler implements ScheduleHandler {
     public void rescheduleAllActivePlayers() {
         UserActivityComponentsJob cj = new UserActivityComponentsJob();
         UserActivityInfluenceJob ij = new UserActivityInfluenceJob();
-        int compsFrequency = server.campaign.CampaignMain.cm.getIntegerConfig("Scheduler_PlayerActivity_comps");
-        int fluFrequency = server.campaign.CampaignMain.cm.getIntegerConfig("Scheduler_PlayerActivity_flu");
+        int compsFrequency = CampaignMain.campaignMain.getIntegerConfig("Scheduler_PlayerActivity_comps");
+        int fluFrequency = CampaignMain.campaignMain.getIntegerConfig("Scheduler_PlayerActivity_flu");
 
         for (House h : CampaignData.cd.getAllHouses()) {
             server.campaign.SHouse s = (server.campaign.SHouse) h;

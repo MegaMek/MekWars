@@ -17,6 +17,8 @@
 package mekwars.server.campaign.commands;
 
 
+import mekwars.server.campaign.CampaignMain;
+
 public class ListCommandsCommand implements Command {
 
     int accessLevel = server.MWChatServer.auth.IAuthenticator.REGISTERED;
@@ -25,17 +27,17 @@ public class ListCommandsCommand implements Command {
     public void process(java.util.StringTokenizer command, String Username) {
 
         //access level check
-        int userLevel = server.campaign.CampaignMain.cm.getServer().getUserLevel(Username);
+        int userLevel = CampaignMain.campaignMain.getServer().getUserLevel(Username);
         if (userLevel < getExecutionLevel()) {
-            server.campaign.CampaignMain.cm.toUser("AM:Insufficient access level for command. Level: " +
-                                                         userLevel +
-                                                         ". Required: " +
-                                                         accessLevel +
-                                                         ".", Username, true);
+            CampaignMain.campaignMain.toUser("AM:Insufficient access level for command. Level: " +
+                                                   userLevel +
+                                                   ". Required: " +
+                                                   accessLevel +
+                                                   ".", Username, true);
             return;
         }
 
-        java.util.Hashtable<String, mekwars.server.campaign.commands.Command> commandTable = server.campaign.CampaignMain.cm.getServerCommands();
+        java.util.Hashtable<String, mekwars.server.campaign.commands.Command> commandTable = CampaignMain.campaignMain.getServerCommands();
         java.util.Enumeration<String> commands = commandTable.keys();
 
         String starter = "";
@@ -100,7 +102,7 @@ public class ListCommandsCommand implements Command {
                                 "</td></tr>");
         }
         result.append("</table>");
-        server.campaign.CampaignMain.cm.toUser(result.toString(), Username, false);
+        CampaignMain.campaignMain.toUser(result.toString(), Username, false);
     }
 
     public int getExecutionLevel() {return accessLevel;}

@@ -16,6 +16,8 @@
 
 package mekwars.server.campaign.commands;
 
+import mekwars.server.campaign.CampaignMain;
+
 /**
  * Moving the Color command from MWServ into the normal command structure.
  * <p>
@@ -29,13 +31,13 @@ public class ColorCommand implements Command {
     public void process(java.util.StringTokenizer command, String Username) {
 
         if (accessLevel != 0) {
-            int userLevel = server.campaign.CampaignMain.cm.getServer().getUserLevel(Username);
+            int userLevel = CampaignMain.campaignMain.getServer().getUserLevel(Username);
             if (userLevel < getExecutionLevel()) {
-                server.campaign.CampaignMain.cm.toUser("AM:Insufficient access level for command. Level: " +
-                                                             userLevel +
-                                                             ". Required: " +
-                                                             accessLevel +
-                                                             ".", Username, true);
+                CampaignMain.campaignMain.toUser("AM:Insufficient access level for command. Level: " +
+                                                       userLevel +
+                                                       ". Required: " +
+                                                       accessLevel +
+                                                       ".", Username, true);
                 return;
             }
         }
@@ -47,19 +49,19 @@ public class ColorCommand implements Command {
         } catch (Exception ex) {}
 
         if (text.trim().length() < 1) {
-            server.campaign.CampaignMain.cm.toUser("AM:You need to choose a color. /color blue", Username, true);
+            CampaignMain.campaignMain.toUser("AM:You need to choose a color. /color blue", Username, true);
         } else {
             //Hex numbers need a # in from of them. This is parsed out by the tokenizer
             try {
                 Integer.parseInt(text);
                 text = "#" + text;
             } catch (Exception ex) {}
-            server.campaign.CampaignMain.cm.getServer().getUser(Username).setColor(text);
-            server.campaign.CampaignMain.cm.getServer()
+            CampaignMain.campaignMain.getServer().getUser(Username).setColor(text);
+            CampaignMain.campaignMain.getServer()
                   .broadcastRaw("UC|" +
                                       Username +
                                       "|" +
-                                      server.campaign.CampaignMain.cm.getServer().getUser(Username).getColor());
+                                      CampaignMain.campaignMain.getServer().getUser(Username).getColor());
         }
     }
 

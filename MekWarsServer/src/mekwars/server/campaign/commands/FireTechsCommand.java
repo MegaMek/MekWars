@@ -19,6 +19,7 @@ package mekwars.server.campaign.commands;
 
 
 import common.util.UnitUtils;
+import mekwars.server.campaign.CampaignMain;
 
 public class FireTechsCommand implements Command {
 
@@ -28,23 +29,23 @@ public class FireTechsCommand implements Command {
     public void process(java.util.StringTokenizer command, String Username) {
 
         if (accessLevel != 0) {
-            int userLevel = server.campaign.CampaignMain.cm.getServer().getUserLevel(Username);
+            int userLevel = CampaignMain.campaignMain.getServer().getUserLevel(Username);
             if (userLevel < getExecutionLevel()) {
-                server.campaign.CampaignMain.cm.toUser("AM:Insufficient access level for command. Level: " +
-                                                             userLevel +
-                                                             ". Required: " +
-                                                             accessLevel +
-                                                             ".", Username, true);
+                CampaignMain.campaignMain.toUser("AM:Insufficient access level for command. Level: " +
+                                                       userLevel +
+                                                       ". Required: " +
+                                                       accessLevel +
+                                                       ".", Username, true);
                 return;
             }
         }
 
-        if (server.campaign.CampaignMain.cm.isUsingAdvanceRepair()) {
+        if (CampaignMain.campaignMain.isUsingAdvanceRepair()) {
             fireAdvanceTechs(command, Username);
             return;
         }
 
-        server.campaign.SPlayer p = server.campaign.CampaignMain.cm.getPlayer(Username);
+        server.campaign.SPlayer p = CampaignMain.campaignMain.getPlayer(Username);
 
         //use /c firetech#numbertofire
         int numtofire = 1;//default to 1
@@ -53,7 +54,7 @@ public class FireTechsCommand implements Command {
             numtofire = Integer.parseInt(command.nextToken());
         }//end try
         catch (NumberFormatException ex) {
-            server.campaign.CampaignMain.cm.toUser(
+            CampaignMain.campaignMain.toUser(
                   "AM:Couldn't tell how many techs to fire. Check your input. It should be something like this: /c firetechs#3",
                   Username,
                   true);
@@ -62,12 +63,12 @@ public class FireTechsCommand implements Command {
 
         //Check to see if the player is firing too many technicians
         if (p.getTechnicians() < numtofire) {
-            server.campaign.CampaignMain.cm.toUser("AM:You tried to fire " +
-                                                         numtofire +
-                                                         " technicians, but you only have " +
-                                                         p.getTechnicians() +
-                                                         " independent techs " +
-                                                         "on your payroll. The rest were assigned to your force by your faction and can't be dismissed.",
+            CampaignMain.campaignMain.toUser("AM:You tried to fire " +
+                                                   numtofire +
+                                                   " technicians, but you only have " +
+                                                   p.getTechnicians() +
+                                                   " independent techs " +
+                                                   "on your payroll. The rest were assigned to your force by your faction and can't be dismissed.",
                   Username,
                   true);
             return;
@@ -75,7 +76,7 @@ public class FireTechsCommand implements Command {
 
         //Check to see if the player is fighting. Engaged players can't fire techs.
         if (p.getDutyStatus() == server.campaign.SPlayer.STATUS_FIGHTING) {
-            server.campaign.CampaignMain.cm.toUser(
+            CampaignMain.campaignMain.toUser(
                   "AM:You may not fire technicians while you are engaged! Wait until your units are out of battle and fully repaired!",
                   Username,
                   true);
@@ -84,7 +85,7 @@ public class FireTechsCommand implements Command {
 
         //dont want a unit being marked unmaintained while its in an active army, so only let reserve players fire techs
         if (p.getDutyStatus() == server.campaign.SPlayer.STATUS_ACTIVE) {
-            server.campaign.CampaignMain.cm.toUser(
+            CampaignMain.campaignMain.toUser(
                   "AM:You may not fire technicians while you are active! Withdraw from the front lines " +
                         "before reducing your support levels!",
                   Username,
@@ -104,8 +105,8 @@ public class FireTechsCommand implements Command {
         p.addTechnicians(-numtofire);
 
         if (numtofire == 1) {
-            server.campaign.CampaignMain.cm.toUser("AM:You fire 1 technician.", Username, true);
-        } else {server.campaign.CampaignMain.cm.toUser("AM:You fired " + numtofire + " technicians.", Username, true);}
+            CampaignMain.campaignMain.toUser("AM:You fire 1 technician.", Username, true);
+        } else {CampaignMain.campaignMain.toUser("AM:You fired " + numtofire + " technicians.", Username, true);}
 
         if (p.getFreeBays() < 0) {
             int numUnmaintained = p.setRandomUnmaintained();
@@ -118,7 +119,7 @@ public class FireTechsCommand implements Command {
             }
             toSend += " now unmaintained! Check your status!)";
 
-            server.campaign.CampaignMain.cm.toUser(toSend, Username, true);
+            CampaignMain.campaignMain.toUser(toSend, Username, true);
         }//end if(firing creates negative support)
 
     }//end process()
@@ -132,18 +133,18 @@ public class FireTechsCommand implements Command {
     private void fireAdvanceTechs(java.util.StringTokenizer command, String Username) {
         int numberOfTechs = 0;
         int techType = 0;
-        server.campaign.SPlayer player = server.campaign.CampaignMain.cm.getPlayer(Username);
+        server.campaign.SPlayer player = CampaignMain.campaignMain.getPlayer(Username);
 
         if (command.hasMoreElements()) {
             numberOfTechs = Integer.parseInt(command.nextToken());
         } else {
-            server.campaign.CampaignMain.cm.toUser("AM: " + getSyntax(), Username, true);
+            CampaignMain.campaignMain.toUser("AM: " + getSyntax(), Username, true);
             return;
         }
         if (command.hasMoreElements()) {
             techType = UnitUtils.TECH_GREEN;
         } else {
-            server.campaign.CampaignMain.cm.toUser("AM: " + getSyntax(), Username, true);
+            CampaignMain.campaignMain.toUser("AM: " + getSyntax(), Username, true);
             return;
         }
 
@@ -153,16 +154,16 @@ public class FireTechsCommand implements Command {
         int availableTechsToFire = player.getAvailableTechs().elementAt(techType);
 
         if (totalTechsToFire < numberOfTechs) {
-            server.campaign.CampaignMain.cm.toUser("AM:You do not have enough " +
-                                                         UnitUtils.techDescription(techType) +
-                                                         " techs to fire! You only have " +
-                                                         totalTechsToFire +
-                                                         ".", Username, true);
+            CampaignMain.campaignMain.toUser("AM:You do not have enough " +
+                                                   UnitUtils.techDescription(techType) +
+                                                   " techs to fire! You only have " +
+                                                   totalTechsToFire +
+                                                   ".", Username, true);
             return;
         }
 
         if (availableTechsToFire < numberOfTechs) {
-            server.campaign.CampaignMain.cm.toUser(
+            CampaignMain.campaignMain.toUser(
                   "AM:While you do have enough techs to fire some of them are currently working and you must wait for them to finish before you can fire them.",
                   Username,
                   true);
@@ -173,15 +174,15 @@ public class FireTechsCommand implements Command {
         player.addTotalTechs(techType, -numberOfTechs);
 
         if (numberOfTechs == 1) {
-            server.campaign.CampaignMain.cm.toUser("AM:You have fired a " +
-                                                         UnitUtils.techDescription(techType) +
-                                                         " tech.", Username, true);
+            CampaignMain.campaignMain.toUser("AM:You have fired a " +
+                                                   UnitUtils.techDescription(techType) +
+                                                   " tech.", Username, true);
         } else {
-            server.campaign.CampaignMain.cm.toUser("AM:You have fired " +
-                                                         numberOfTechs +
-                                                         " " +
-                                                         UnitUtils.techDescription(techType) +
-                                                         " techs.", Username, true);
+            CampaignMain.campaignMain.toUser("AM:You have fired " +
+                                                   numberOfTechs +
+                                                   " " +
+                                                   UnitUtils.techDescription(techType) +
+                                                   " techs.", Username, true);
         }
 
     }//end fireAdvanceTechs

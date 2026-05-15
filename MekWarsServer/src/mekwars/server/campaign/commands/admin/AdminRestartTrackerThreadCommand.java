@@ -17,6 +17,8 @@
 package mekwars.server.campaign.commands.admin;
 
 
+import mekwars.server.campaign.CampaignMain;
+
 public class AdminRestartTrackerThreadCommand implements server.campaign.commands.Command {
 
     int accessLevel = server.MWChatServer.auth.IAuthenticator.ADMIN;
@@ -27,23 +29,23 @@ public class AdminRestartTrackerThreadCommand implements server.campaign.command
     public void process(java.util.StringTokenizer command, String Username) {
 
         if (accessLevel != 0) {
-            int userLevel = server.campaign.CampaignMain.cm.getServer().getUserLevel(Username);
+            int userLevel = CampaignMain.campaignMain.getServer().getUserLevel(Username);
             if (userLevel < getExecutionLevel()) {
-                server.campaign.CampaignMain.cm.toUser("AM:Insufficient access level for command. Level: " +
-                                                             userLevel +
-                                                             ". Required: " +
-                                                             accessLevel +
-                                                             ".", Username, true);
+                CampaignMain.campaignMain.toUser("AM:Insufficient access level for command. Level: " +
+                                                       userLevel +
+                                                       ". Required: " +
+                                                       accessLevel +
+                                                       ".", Username, true);
                 return;
             }
         }
 
-        if (!Boolean.parseBoolean(server.campaign.CampaignMain.cm.getConfig("UseTracker"))) {
-            server.campaign.CampaignMain.cm.toUser("AM: Server is configured not to use the tracker.", Username, true);
+        if (!Boolean.parseBoolean(CampaignMain.campaignMain.getConfig("UseTracker"))) {
+            CampaignMain.campaignMain.toUser("AM: Server is configured not to use the tracker.", Username, true);
             return;
         }
-        server.campaign.CampaignMain.cm.getServer().startTracker();
-        server.campaign.CampaignMain.cm.toUser("AM: Tracker Thread restarted.", Username, true);
+        CampaignMain.campaignMain.getServer().startTracker();
+        CampaignMain.campaignMain.toUser("AM: Tracker Thread restarted.", Username, true);
     }
 
     public int getExecutionLevel() {return accessLevel;}

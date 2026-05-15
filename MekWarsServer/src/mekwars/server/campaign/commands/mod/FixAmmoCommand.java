@@ -20,6 +20,7 @@ import common.util.StringUtils;
 import megamek.common.AmmoType;
 import megamek.common.Entity;
 import megamek.common.Mounted;
+import mekwars.server.campaign.CampaignMain;
 
 /**
  * @author Helge Richter
@@ -34,13 +35,13 @@ public class FixAmmoCommand implements server.campaign.commands.Command {
     public void process(java.util.StringTokenizer command, String Username) {
 
         //access level check
-        int userLevel = server.campaign.CampaignMain.cm.getServer().getUserLevel(Username);
+        int userLevel = CampaignMain.campaignMain.getServer().getUserLevel(Username);
         if (userLevel < getExecutionLevel()) {
-            server.campaign.CampaignMain.cm.toUser("AM:Insufficient access level for command. Level: " +
-                                                         userLevel +
-                                                         ". Required: " +
-                                                         accessLevel +
-                                                         ".", Username, true);
+            CampaignMain.campaignMain.toUser("AM:Insufficient access level for command. Level: " +
+                                                   userLevel +
+                                                   ". Required: " +
+                                                   accessLevel +
+                                                   ".", Username, true);
             return;
         }
 
@@ -52,14 +53,14 @@ public class FixAmmoCommand implements server.campaign.commands.Command {
             targetName = command.nextToken();
             unitID = Integer.parseInt(command.nextToken());
         } catch (Exception ex) {
-            server.campaign.CampaignMain.cm.toUser("AM:Invalid Syntax: /FixAmmo Player#UnitID", Username);
+            CampaignMain.campaignMain.toUser("AM:Invalid Syntax: /FixAmmo Player#UnitID", Username);
             return;
         }
 
-        target = server.campaign.CampaignMain.cm.getPlayer(targetName);
+        target = CampaignMain.campaignMain.getPlayer(targetName);
 
         if (target == null) {
-            server.campaign.CampaignMain.cm.toUser("AM:Target player could not be found. Try again.", Username, true);
+            CampaignMain.campaignMain.toUser("AM:Target player could not be found. Try again.", Username, true);
             return;
         }
 
@@ -68,7 +69,7 @@ public class FixAmmoCommand implements server.campaign.commands.Command {
 
         //break out if the player doesn't have a unit with that id
         if (m == null) {
-            server.campaign.CampaignMain.cm.toUser("AM:Target player doesn't have a unit with ID# " + unitID + ".",
+            CampaignMain.campaignMain.toUser("AM:Target player doesn't have a unit with ID# " + unitID + ".",
                   Username,
                   true);
             return;
@@ -76,16 +77,16 @@ public class FixAmmoCommand implements server.campaign.commands.Command {
 
         fixAmmo(m);
         //tell the player the unit has been fixed
-        server.campaign.CampaignMain.cm.toUser(targetName + "'s " + m.getModelName() + "'s ammo has been fixed.",
+        CampaignMain.campaignMain.toUser(targetName + "'s " + m.getModelName() + "'s ammo has been fixed.",
               Username,
               true);
-        server.campaign.CampaignMain.cm.toUser(Username +
-                                                     " has fixed the ammo on your " +
-                                                     m.getModelName() +
-                                                     " (ID#" +
-                                                     m.getId() +
-                                                     ")", targetName, true);
-        server.campaign.CampaignMain.cm.doSendModMail("NOTE",
+        CampaignMain.campaignMain.toUser(Username +
+                                               " has fixed the ammo on your " +
+                                               m.getModelName() +
+                                               " (ID#" +
+                                               m.getId() +
+                                               ")", targetName, true);
+        CampaignMain.campaignMain.doSendModMail("NOTE",
               Username +
                     " fixed the ammo on " +
                     StringUtils.aOrAn(m.getModelName(), true) +
@@ -93,7 +94,7 @@ public class FixAmmoCommand implements server.campaign.commands.Command {
                     targetName);
         target.setSave();
         target.checkAndUpdateArmies(m);
-        server.campaign.CampaignMain.cm.toUser("PL|UU|" + m.getId() + "|" + m.toString(true), targetName, false);
+        CampaignMain.campaignMain.toUser("PL|UU|" + m.getId() + "|" + m.toString(true), targetName, false);
     }
 
     public int getExecutionLevel() {return accessLevel;}

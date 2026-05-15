@@ -17,6 +17,7 @@
 package mekwars.server.campaign.commands.admin;
 
 import common.util.MWLogger;
+import mekwars.server.campaign.CampaignMain;
 
 public class AdminDestroyTerrainCommand implements server.campaign.commands.Command {
 
@@ -28,23 +29,23 @@ public class AdminDestroyTerrainCommand implements server.campaign.commands.Comm
     public void process(java.util.StringTokenizer command, String Username) {
 
         //access level check
-        int userLevel = server.campaign.CampaignMain.cm.getServer().getUserLevel(Username);
+        int userLevel = CampaignMain.campaignMain.getServer().getUserLevel(Username);
         if (userLevel < getExecutionLevel()) {
-            server.campaign.CampaignMain.cm.toUser("AM:Insufficient access level for command. Level: " +
-                                                         userLevel +
-                                                         ". Required: " +
-                                                         accessLevel +
-                                                         ".", Username, true);
+            CampaignMain.campaignMain.toUser("AM:Insufficient access level for command. Level: " +
+                                                   userLevel +
+                                                   ". Required: " +
+                                                   accessLevel +
+                                                   ".", Username, true);
             return;
         }
 
         try {
-            server.campaign.SPlanet p = server.campaign.CampaignMain.cm.getPlanetFromPartialString(command.nextToken(),
+            server.campaign.SPlanet p = CampaignMain.campaignMain.getPlanetFromPartialString(command.nextToken(),
                   Username);
             String terrain = command.nextToken();
 
             if (p == null) {
-                server.campaign.CampaignMain.cm.toUser("Planet not found:", Username, true);
+                CampaignMain.campaignMain.toUser("Planet not found:", Username, true);
                 return;
             }
 
@@ -52,7 +53,7 @@ public class AdminDestroyTerrainCommand implements server.campaign.commands.Comm
             p.updated();
 
             //server.MWLogger.modLog(Username + " removed terrain from " + p.getName() + "(#" + placeToDelete + ").");
-            server.campaign.CampaignMain.cm.doSendModMail("NOTE",
+            CampaignMain.campaignMain.doSendModMail("NOTE",
                   Username + " removed terrain from " + p.getName() + "(" + terrain + ").");
         } catch (Exception ex) {
             MWLogger.errLog(ex);

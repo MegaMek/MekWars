@@ -14,6 +14,8 @@
 
 package mekwars.server.campaign.commands.admin;
 
+import mekwars.server.campaign.CampaignMain;
+
 public class AdminUnlockCampaignCommand implements server.campaign.commands.Command {
 
     int accessLevel = server.MWChatServer.auth.IAuthenticator.ADMIN;
@@ -24,30 +26,30 @@ public class AdminUnlockCampaignCommand implements server.campaign.commands.Comm
     public void process(java.util.StringTokenizer command, String Username) {
 
         //access level check
-        int userLevel = server.campaign.CampaignMain.cm.getServer().getUserLevel(Username);
+        int userLevel = CampaignMain.campaignMain.getServer().getUserLevel(Username);
         if (userLevel < getExecutionLevel()) {
-            server.campaign.CampaignMain.cm.toUser("AM:Insufficient access level for command. Level: " +
-                                                         userLevel +
-                                                         ". Required: " +
-                                                         accessLevel +
-                                                         ".", Username, true);
+            CampaignMain.campaignMain.toUser("AM:Insufficient access level for command. Level: " +
+                                                   userLevel +
+                                                   ". Required: " +
+                                                   accessLevel +
+                                                   ".", Username, true);
             return;
         }
 
-        if (Boolean.parseBoolean(server.campaign.CampaignMain.cm.getConfig("CampaignLock")) != true) {
-            server.campaign.CampaignMain.cm.toUser("AM:Campaign is already unlocked.", Username, true);
+        if (Boolean.parseBoolean(CampaignMain.campaignMain.getConfig("CampaignLock")) != true) {
+            CampaignMain.campaignMain.toUser("AM:Campaign is already unlocked.", Username, true);
             return;
         }
 
         //reset the lock property so players can activate
-        server.campaign.CampaignMain.cm.getConfig().setProperty("CampaignLock", "false");
+        CampaignMain.campaignMain.getConfig().setProperty("CampaignLock", "false");
 
         //tell the admin he has unlocked the campaign
-        server.campaign.CampaignMain.cm.doSendToAllOnlinePlayers("AM:" + Username + " unlocked the campaign!", true);
-        server.campaign.CampaignMain.cm.toUser("AM:You unlocked the campaign. Players may now activate.",
+        CampaignMain.campaignMain.doSendToAllOnlinePlayers("AM:" + Username + " unlocked the campaign!", true);
+        CampaignMain.campaignMain.toUser("AM:You unlocked the campaign. Players may now activate.",
               Username,
               true);
-        server.campaign.CampaignMain.cm.doSendModMail("NOTE", Username + " unlocked the campaign");
+        CampaignMain.campaignMain.doSendModMail("NOTE", Username + " unlocked the campaign");
 
     }//end Process()
 

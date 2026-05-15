@@ -16,6 +16,8 @@
 
 package mekwars.server.campaign.commands.mod;
 
+import mekwars.server.campaign.CampaignMain;
+
 /**
  * Add Parts to a player
  */
@@ -29,36 +31,36 @@ public class AddPartsCommand implements server.campaign.commands.Command {
     public void process(java.util.StringTokenizer command, String Username) {
 
         if (accessLevel != 0) {
-            int userLevel = server.campaign.CampaignMain.cm.getServer().getUserLevel(Username);
+            int userLevel = CampaignMain.campaignMain.getServer().getUserLevel(Username);
             if (userLevel < getExecutionLevel()) {
-                server.campaign.CampaignMain.cm.toUser("AM:Insufficient access level for command. Level: " +
-                                                             userLevel +
-                                                             ". Required: " +
-                                                             accessLevel +
-                                                             ".", Username, true);
+                CampaignMain.campaignMain.toUser("AM:Insufficient access level for command. Level: " +
+                                                       userLevel +
+                                                       ". Required: " +
+                                                       accessLevel +
+                                                       ".", Username, true);
                 return;
             }
         }
 
-        if (!server.campaign.CampaignMain.cm.getBooleanConfig("UsePartsRepair")) {
-            server.campaign.CampaignMain.cm.toUser("AM:Parts repair not used on this server!", Username);
+        if (!CampaignMain.campaignMain.getBooleanConfig("UsePartsRepair")) {
+            CampaignMain.campaignMain.toUser("AM:Parts repair not used on this server!", Username);
             return;
         }
         server.campaign.SPlayer p;
         String part;
         int amount;
         try {
-            p = server.campaign.CampaignMain.cm.getPlayer(command.nextToken());
+            p = CampaignMain.campaignMain.getPlayer(command.nextToken());
             part = command.nextToken();
             amount = Integer.parseInt(command.nextToken());
         } catch (Exception ex) {
-            server.campaign.CampaignMain.cm.toUser("AM:Syntax: AddParts#Name#PartName#Amount", Username);
+            CampaignMain.campaignMain.toUser("AM:Syntax: AddParts#Name#PartName#Amount", Username);
             return;
         }
 
         p.updatePartsCache(part, amount);
 
-        server.campaign.CampaignMain.cm.doSendModMail("NOTE",
+        CampaignMain.campaignMain.doSendModMail("NOTE",
               Username + " has added " + amount + " " + part + " to " + p.getName() + ".");
     }
 

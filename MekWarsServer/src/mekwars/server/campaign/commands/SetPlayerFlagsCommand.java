@@ -1,5 +1,7 @@
 package mekwars.server.campaign.commands;
 
+import mekwars.server.campaign.CampaignMain;
+
 public class SetPlayerFlagsCommand implements Command {
 
     int accessLevel = server.MWChatServer.auth.IAuthenticator.MODERATOR;
@@ -8,25 +10,25 @@ public class SetPlayerFlagsCommand implements Command {
 
     public void process(java.util.StringTokenizer command, String Username) {
 
-        int userLevel = server.campaign.CampaignMain.cm.getServer().getUserLevel(Username);
+        int userLevel = CampaignMain.campaignMain.getServer().getUserLevel(Username);
         if (userLevel < getExecutionLevel()) {
-            server.campaign.CampaignMain.cm.toUser("AM:Insufficient access level for command. Level: " +
-                                                         userLevel +
-                                                         ". Required: " +
-                                                         accessLevel +
-                                                         ".", Username, true);
+            CampaignMain.campaignMain.toUser("AM:Insufficient access level for command. Level: " +
+                                                   userLevel +
+                                                   ". Required: " +
+                                                   accessLevel +
+                                                   ".", Username, true);
             return;
         }
 
         String pName = command.nextToken();
         if (pName == null) {
-            server.campaign.CampaignMain.cm.toUser("AM: missing user name, use syntax " + getSyntax(), Username, true);
+            CampaignMain.campaignMain.toUser("AM: missing user name, use syntax " + getSyntax(), Username, true);
             return;
         }
 
-        server.campaign.SPlayer p = server.campaign.CampaignMain.cm.getPlayer(pName);
+        server.campaign.SPlayer p = CampaignMain.campaignMain.getPlayer(pName);
         if (p == null) {
-            server.campaign.CampaignMain.cm.toUser("AM: unable to load player " + pName, Username, true);
+            CampaignMain.campaignMain.toUser("AM: unable to load player " + pName, Username, true);
             return;
         }
 
@@ -36,7 +38,7 @@ public class SetPlayerFlagsCommand implements Command {
             if (command.hasMoreTokens()) {
                 value = command.nextToken();
             } else {
-                server.campaign.CampaignMain.cm.toUser("AM: Missing value for flag " + fName, Username, true);
+                CampaignMain.campaignMain.toUser("AM: Missing value for flag " + fName, Username, true);
                 return;
             }
             if (value.equalsIgnoreCase("toggle")) {
@@ -44,9 +46,9 @@ public class SetPlayerFlagsCommand implements Command {
             }
             String userCommand = "PF|SF|" + fName + "|" + value + "|";
             p.setFlagStatus(fName, value);
-            server.campaign.CampaignMain.cm.toUser(userCommand, pName, false);
+            CampaignMain.campaignMain.toUser(userCommand, pName, false);
         }
-        server.campaign.CampaignMain.cm.toUser("AM: Flags set for " + pName, Username, true);
+        CampaignMain.campaignMain.toUser("AM: Flags set for " + pName, Username, true);
     }
 
     public int getExecutionLevel() {

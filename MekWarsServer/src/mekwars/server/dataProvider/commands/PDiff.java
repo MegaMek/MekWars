@@ -36,7 +36,7 @@ public class PDiff implements server.dataProvider.ServerCommand {
 
         boolean fullUpdate = false;
         // System.err.println("PDiff Timestamp: "+timestamp.toString());
-        if (timestamp == null || CampaignMain.cm.getHousePlanetUpdate().compareTo(timestamp) > 0) {
+        if (timestamp == null || CampaignMain.campaignMain.getHousePlanetUpdate().compareTo(timestamp) > 0) {
             // make a date far in the past to retrieve all..
             timestamp = new java.util.Date(-1);
             fullUpdate = true;

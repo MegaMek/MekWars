@@ -17,6 +17,7 @@
 package mekwars.server.campaign.commands.admin;
 
 import common.Unit;
+import mekwars.server.campaign.CampaignMain;
 
 public class AdminPurgeHouseBaysCommand implements server.campaign.commands.Command {
 
@@ -30,13 +31,13 @@ public class AdminPurgeHouseBaysCommand implements server.campaign.commands.Comm
     public void process(java.util.StringTokenizer command, String Username) {
 
         // access level check
-        int userLevel = server.campaign.CampaignMain.cm.getServer().getUserLevel(Username);
+        int userLevel = CampaignMain.campaignMain.getServer().getUserLevel(Username);
         if (userLevel < getExecutionLevel()) {
-            server.campaign.CampaignMain.cm.toUser("AM:Insufficient access level for command. Level: " +
-                                                         userLevel +
-                                                         ". Required: " +
-                                                         accessLevel +
-                                                         ".", Username, true);
+            CampaignMain.campaignMain.toUser("AM:Insufficient access level for command. Level: " +
+                                                   userLevel +
+                                                   ". Required: " +
+                                                   accessLevel +
+                                                   ".", Username, true);
             return;
         }
 
@@ -50,14 +51,14 @@ public class AdminPurgeHouseBaysCommand implements server.campaign.commands.Comm
             faction = command.nextToken();
             strType = command.nextToken();
         } catch (Exception ex) {
-            server.campaign.CampaignMain.cm.toUser(
+            CampaignMain.campaignMain.toUser(
                   "Invalid syntax. Try: AdminPurgeHouseBays#faction#[ALL]unittype#[ALL]unitsize",
                   Username,
                   true);
             return;
         }
 
-        server.campaign.SHouse h = server.campaign.CampaignMain.cm.getHouseFromPartialString(faction, Username);
+        server.campaign.SHouse h = CampaignMain.campaignMain.getHouseFromPartialString(faction, Username);
 
         if (h == null) {
             return;
@@ -87,7 +88,7 @@ public class AdminPurgeHouseBaysCommand implements server.campaign.commands.Comm
                 }
             }
         } catch (Exception ex) {
-            server.campaign.CampaignMain.cm.toUser(
+            CampaignMain.campaignMain.toUser(
                   "Invalid syntax. Try: AdminPurgeHouseBays#faction#[ALL]unittype#[ALL]unitsize",
                   Username,
                   true);
@@ -95,7 +96,7 @@ public class AdminPurgeHouseBaysCommand implements server.campaign.commands.Comm
         }
 
         h.updated();
-        server.campaign.CampaignMain.cm.doSendModMail("NOTE", Username + " has purged bays for " + h.getName());
+        CampaignMain.campaignMain.doSendModMail("NOTE", Username + " has purged bays for " + h.getName());
     }
 
     public int getExecutionLevel() {

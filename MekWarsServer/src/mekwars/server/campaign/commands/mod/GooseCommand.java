@@ -17,6 +17,8 @@
 package mekwars.server.campaign.commands.mod;
 
 
+import mekwars.server.campaign.CampaignMain;
+
 public class GooseCommand implements server.campaign.commands.Command {
 
     int accessLevel = server.MWChatServer.auth.IAuthenticator.MODERATOR;
@@ -27,44 +29,44 @@ public class GooseCommand implements server.campaign.commands.Command {
     public void process(java.util.StringTokenizer command, String Username) {
 
         //access level check
-        int userLevel = server.campaign.CampaignMain.cm.getServer().getUserLevel(Username);
+        int userLevel = CampaignMain.campaignMain.getServer().getUserLevel(Username);
         if (userLevel < getExecutionLevel()) {
-            server.campaign.CampaignMain.cm.toUser("AM:Insufficient access level for command. Level: " +
-                                                         userLevel +
-                                                         ". Required: " +
-                                                         accessLevel +
-                                                         ".", Username, true);
+            CampaignMain.campaignMain.toUser("AM:Insufficient access level for command. Level: " +
+                                                   userLevel +
+                                                   ". Required: " +
+                                                   accessLevel +
+                                                   ".", Username, true);
             return;
         }
 
         try {
             String player = command.nextToken();
-            server.campaign.SPlayer p = server.campaign.CampaignMain.cm.getPlayer(player);
+            server.campaign.SPlayer p = CampaignMain.campaignMain.getPlayer(player);
 
             if (p == null) {
-                server.campaign.CampaignMain.cm.toUser("AM:Sorry you cannot find " + player + " to goose!", Username);
+                CampaignMain.campaignMain.toUser("AM:Sorry you cannot find " + player + " to goose!", Username);
                 return;
             }
 
             if (p.getName().equalsIgnoreCase("torren") ||
                       p.getName().equalsIgnoreCase("spork") ||
-                      userLevel < server.campaign.CampaignMain.cm.getServer().getUserLevel(p.getName())) {
-                server.campaign.CampaignMain.cm.toUser(p.getName() +
-                                                             " grabs your hand and breaks it just before your able to goose 'em!",
+                      userLevel < CampaignMain.campaignMain.getServer().getUserLevel(p.getName())) {
+                CampaignMain.campaignMain.toUser(p.getName() +
+                                                       " grabs your hand and breaks it just before your able to goose 'em!",
                       Username);
-                server.campaign.CampaignMain.cm.toUser(Username + " tried to goose you but you deftly avoided it!",
+                CampaignMain.campaignMain.toUser(Username + " tried to goose you but you deftly avoided it!",
                       p.getName());
-                server.campaign.CampaignMain.cm.doSendModMail("NOTE",
+                CampaignMain.campaignMain.doSendModMail("NOTE",
                       Username + " tried to goose " + p.getName() + " and nearly lost their hand for it.");
                 return;
             }
 
 
-            server.campaign.CampaignMain.cm.toUser("AM:You goose " + p.getName() + ".", Username, true);
-            server.campaign.CampaignMain.cm.toUser("AM:" + Username + " goosed you!", p.getName());
-            server.campaign.CampaignMain.cm.doSendModMail("NOTE", Username + " goosed " + p.getName() + ".");
+            CampaignMain.campaignMain.toUser("AM:You goose " + p.getName() + ".", Username, true);
+            CampaignMain.campaignMain.toUser("AM:" + Username + " goosed you!", p.getName());
+            CampaignMain.campaignMain.doSendModMail("NOTE", Username + " goosed " + p.getName() + ".");
         } catch (Exception ex) {
-            server.campaign.CampaignMain.cm.toUser("AM:You really need to specify whom you would like to goose",
+            CampaignMain.campaignMain.toUser("AM:You really need to specify whom you would like to goose",
                   Username);
             return;
         }

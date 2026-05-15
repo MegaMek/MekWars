@@ -17,6 +17,7 @@
 package mekwars.server.campaign.commands.mod;
 
 import common.Unit;
+import mekwars.server.campaign.CampaignMain;
 
 //Syntax sethousebasepilotskills house#pilotType#Gunnery#Piloting
 public class SetHouseBasePilotSkillsCommand implements server.campaign.commands.Command {
@@ -29,13 +30,13 @@ public class SetHouseBasePilotSkillsCommand implements server.campaign.commands.
     public void process(java.util.StringTokenizer command, String Username) {
 
         //access level check
-        int userLevel = server.campaign.CampaignMain.cm.getServer().getUserLevel(Username);
+        int userLevel = CampaignMain.campaignMain.getServer().getUserLevel(Username);
         if (userLevel < getExecutionLevel()) {
-            server.campaign.CampaignMain.cm.toUser("AM:Insufficient access level for command. Level: " +
-                                                         userLevel +
-                                                         ". Required: " +
-                                                         accessLevel +
-                                                         ".", Username, true);
+            CampaignMain.campaignMain.toUser("AM:Insufficient access level for command. Level: " +
+                                                   userLevel +
+                                                   ". Required: " +
+                                                   accessLevel +
+                                                   ".", Username, true);
             return;
         }
 
@@ -45,12 +46,12 @@ public class SetHouseBasePilotSkillsCommand implements server.campaign.commands.
         int piloting;
 
         try {
-            house = server.campaign.CampaignMain.cm.getHouseFromPartialString(command.nextToken(), Username);
+            house = CampaignMain.campaignMain.getHouseFromPartialString(command.nextToken(), Username);
             pilotType = Integer.parseInt(command.nextToken());
             gunnery = Integer.parseInt(command.nextToken());
             piloting = Integer.parseInt(command.nextToken());
         } catch (Exception ex) {
-            server.campaign.CampaignMain.cm.toUser(
+            CampaignMain.campaignMain.toUser(
                   "Invalid Syntax: sethousebasepilotskills house#pilotType#Gunnery#Piloting",
                   Username);
             return;
@@ -59,18 +60,18 @@ public class SetHouseBasePilotSkillsCommand implements server.campaign.commands.
         if (house == null) {return;}
 
         if (pilotType >= Unit.MAXBUILD || pilotType < 0) {
-            server.campaign.CampaignMain.cm.toUser("Invalid unit type:<br>Mek " +
-                                                         Unit.MEK +
-                                                         "<br>Vehicle " +
-                                                         Unit.VEHICLE +
-                                                         "<br>Infantry " +
-                                                         Unit.INFANTRY +
-                                                         "<br>Battle Armor " +
-                                                         Unit.BATTLEARMOR +
-                                                         "<br>ProtoMek " +
-                                                         Unit.PROTOMEK +
-                                                         "<br>Aero " +
-                                                         Unit.AERO, Username);
+            CampaignMain.campaignMain.toUser("Invalid unit type:<br>Mek " +
+                                                   Unit.MEK +
+                                                   "<br>Vehicle " +
+                                                   Unit.VEHICLE +
+                                                   "<br>Infantry " +
+                                                   Unit.INFANTRY +
+                                                   "<br>Battle Armor " +
+                                                   Unit.BATTLEARMOR +
+                                                   "<br>ProtoMek " +
+                                                   Unit.PROTOMEK +
+                                                   "<br>Aero " +
+                                                   Unit.AERO, Username);
             return;
         }
 
@@ -78,15 +79,15 @@ public class SetHouseBasePilotSkillsCommand implements server.campaign.commands.
         house.getPilotQueues().setBasePiloting(piloting, pilotType);
 
         //log, and inform mods.
-        server.campaign.CampaignMain.cm.toUser("You set have set the gunnery and piloting for unit " +
-                                                     Unit.getTypeClassDesc(pilotType) +
-                                                     " for house " +
-                                                     house.getName() +
-                                                     " to " +
-                                                     gunnery +
-                                                     "/" +
-                                                     piloting, Username);
-        server.campaign.CampaignMain.cm.doSendModMail("NOTE",
+        CampaignMain.campaignMain.toUser("You set have set the gunnery and piloting for unit " +
+                                               Unit.getTypeClassDesc(pilotType) +
+                                               " for house " +
+                                               house.getName() +
+                                               " to " +
+                                               gunnery +
+                                               "/" +
+                                               piloting, Username);
+        CampaignMain.campaignMain.doSendModMail("NOTE",
               Username +
                     " has set the gunnery and piloting for unit " +
                     Unit.getTypeClassDesc(pilotType) +

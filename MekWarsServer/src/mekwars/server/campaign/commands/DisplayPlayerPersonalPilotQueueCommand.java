@@ -18,6 +18,7 @@ package mekwars.server.campaign.commands;
 
 import common.Unit;
 import common.campaign.pilot.Pilot;
+import mekwars.server.campaign.CampaignMain;
 
 /**
  * Return a human readable string that describes the pilots currently in a player's personal queues.
@@ -30,19 +31,19 @@ public class DisplayPlayerPersonalPilotQueueCommand implements Command {
     public void process(java.util.StringTokenizer command, String Username) {
 
         if (accessLevel != 0) {
-            int userLevel = server.campaign.CampaignMain.cm.getServer().getUserLevel(Username);
+            int userLevel = CampaignMain.campaignMain.getServer().getUserLevel(Username);
             if (userLevel < getExecutionLevel()) {
-                server.campaign.CampaignMain.cm.toUser("AM:Insufficient access level for command. Level: " +
-                                                             userLevel +
-                                                             ". Required: " +
-                                                             accessLevel +
-                                                             ".", Username, true);
+                CampaignMain.campaignMain.toUser("AM:Insufficient access level for command. Level: " +
+                                                       userLevel +
+                                                       ". Required: " +
+                                                       accessLevel +
+                                                       ".", Username, true);
                 return;
             }
         }
 
         //get the calling player
-        server.campaign.SPlayer p = server.campaign.CampaignMain.cm.getPlayer(Username);
+        server.campaign.SPlayer p = CampaignMain.campaignMain.getPlayer(Username);
 
         /*
          * @urgru 1/12/06 - factored string generation out of SPeronalPilotQueue
@@ -203,9 +204,9 @@ public class DisplayPlayerPersonalPilotQueueCommand implements Command {
         }
 
         if (toReturn.length() > 0) {
-            server.campaign.CampaignMain.cm.toUser("SM|" + toReturn.toString(), Username, false);
+            CampaignMain.campaignMain.toUser("SM|" + toReturn.toString(), Username, false);
         } else {
-            server.campaign.CampaignMain.cm.toUser("SM|You don't have any reserve pilots at the moment.",
+            CampaignMain.campaignMain.toUser("SM|You don't have any reserve pilots at the moment.",
                   Username,
                   false);
         }

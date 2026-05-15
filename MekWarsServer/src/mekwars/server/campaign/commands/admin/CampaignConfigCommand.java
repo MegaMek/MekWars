@@ -17,6 +17,7 @@
 package mekwars.server.campaign.commands.admin;
 
 import common.util.MWLogger;
+import mekwars.server.campaign.CampaignMain;
 
 public class CampaignConfigCommand implements server.campaign.commands.Command {
 
@@ -28,24 +29,24 @@ public class CampaignConfigCommand implements server.campaign.commands.Command {
     public void process(java.util.StringTokenizer command, String Username) {
 
         //access level check
-        int userLevel = server.campaign.CampaignMain.cm.getServer().getUserLevel(Username);
+        int userLevel = CampaignMain.campaignMain.getServer().getUserLevel(Username);
         if (userLevel < getExecutionLevel()) {
-            server.campaign.CampaignMain.cm.toUser("AM:Insufficient access level for command. Level: " +
-                                                         userLevel +
-                                                         ". Required: " +
-                                                         accessLevel +
-                                                         ".", Username, true);
+            CampaignMain.campaignMain.toUser("AM:Insufficient access level for command. Level: " +
+                                                   userLevel +
+                                                   ". Required: " +
+                                                   accessLevel +
+                                                   ".", Username, true);
             return;
         }
 
         try {//Try to read the config file
-            server.campaign.CampaignMain.cm.getConfig().load(new java.io.FileInputStream(
-                  server.campaign.CampaignMain.cm.getServer().getConfigParam("CAMPAIGNCONFIG")));
+            CampaignMain.campaignMain.getConfig().load(new java.io.FileInputStream(
+                  CampaignMain.campaignMain.getServer().getConfigParam("CAMPAIGNCONFIG")));
         } catch (Exception ex) {
             MWLogger.errLog(ex);
-            server.campaign.CampaignMain.cm.toUser("Failed to read campaign config.", Username, true);
+            CampaignMain.campaignMain.toUser("Failed to read campaign config.", Username, true);
         }
-        server.campaign.CampaignMain.cm.toUser("Campaign config reread!", Username, true);
+        CampaignMain.campaignMain.toUser("Campaign config reread!", Username, true);
 
     }
 

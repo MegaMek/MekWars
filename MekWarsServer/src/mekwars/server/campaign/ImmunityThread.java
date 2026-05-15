@@ -48,17 +48,19 @@ public final class ImmunityThread extends Thread {//no extension
 
         //get name and immunity duration
         String lowername = p.getName().toLowerCase();
-        int immunitySeconds = CampaignMain.cm.getIntegerConfig("ImmunityTime");
+        int immunitySeconds = CampaignMain.campaignMain.getIntegerConfig("ImmunityTime");
 
         //if immunity is disabled, just ignore and return.
         if (immunitySeconds < 1) {return;}
 
         //inform player. also, if newbie, tell him about potential unit resets
-        CampaignMain.cm.toUser("You are immune to attack for " +
-                                     immunitySeconds +
-                                     " seconds. [<a href=\"MEKWARS/c deactivate\">Deactivate</a>]", p.getName(), true);
+        CampaignMain.campaignMain.toUser("You are immune to attack for " +
+                                               immunitySeconds +
+                                               " seconds. [<a href=\"MEKWARS/c deactivate\">Deactivate</a>]",
+              p.getName(),
+              true);
         if (p.getMyHouse().isNewbieHouse()) {
-            int numResets = CampaignMain.cm.getIntegerConfig("NumResetsWhileImmune");
+            int numResets = CampaignMain.campaignMain.getIntegerConfig("NumResetsWhileImmune");
             if (numResets > 0) {
 
                 //set the resets
@@ -68,7 +70,7 @@ public final class ImmunityThread extends Thread {//no extension
                 //and inform the lucky player
                 String toSend = "You may reset your units ";
                 if (numResets == 1) {toSend += " once";} else {toSend += numResets + " times";}
-                CampaignMain.cm.toUser(toSend += " while immune by selecting \"Reset Units\" in the HQ. You may only reset while in reserve.",
+                CampaignMain.campaignMain.toUser(toSend += " while immune by selecting \"Reset Units\" in the HQ. You may only reset while in reserve.",
                       p.getName(),
                       true);
 
@@ -136,7 +138,7 @@ public final class ImmunityThread extends Thread {//no extension
                 for (String currName : toRemove) {
 
                     //load the player
-                    SPlayer p = CampaignMain.cm.getPlayer(currName);
+                    SPlayer p = CampaignMain.campaignMain.getPlayer(currName);
 
                     if (p == null) {
                         synchronized (immunePlayers) {
@@ -152,7 +154,7 @@ public final class ImmunityThread extends Thread {//no extension
                     if (p.getDutyStatus() == SPlayer.STATUS_ACTIVE) {
 
                         //tell the player
-                        CampaignMain.cm.toUser("[!] Your post-game immunity expired!", p.getName(), true);
+                        CampaignMain.campaignMain.toUser("[!] Your post-game immunity expired!", p.getName(), true);
 
                         //alert other players
                         OpponentListHelper olh = new OpponentListHelper(p, OpponentListHelper.MODE_ADD);
@@ -164,7 +166,9 @@ public final class ImmunityThread extends Thread {//no extension
 
                             NewbieHouse currH = (NewbieHouse) p.getMyHouse();
                             if (currH.getResetsRemaining(p) > 0) {
-                                CampaignMain.cm.toUser("[!] Your post-game reset time expired!", p.getName(), true);
+                                CampaignMain.campaignMain.toUser("[!] Your post-game reset time expired!",
+                                      p.getName(),
+                                      true);
                             }
 
                             currH.removeResetPlayer(p);

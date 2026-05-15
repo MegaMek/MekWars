@@ -16,6 +16,8 @@
 
 package mekwars.server.campaign.util;
 
+import mekwars.server.campaign.CampaignMain;
+
 /**
  * @author urgru
  *       <p>
@@ -45,8 +47,8 @@ public class ExclusionList {
     public ExclusionList() {
 
         //get a proper maxsize and the admin list impact
-        maxSize = server.campaign.CampaignMain.cm.getIntegerConfig("NoPlayListSize");
-        adminListCountsForCap = server.campaign.CampaignMain.cm.getBooleanConfig("NoPlaysFromAdminsCountForMax");
+        maxSize = CampaignMain.campaignMain.getIntegerConfig("NoPlayListSize");
+        adminListCountsForCap = CampaignMain.campaignMain.getBooleanConfig("NoPlaysFromAdminsCountForMax");
 
         //set blank owner name [used to send messages to player]
         owner = "";
@@ -174,7 +176,7 @@ public class ExclusionList {
 
             if (!playerExists) {
                 e.remove();
-                server.campaign.CampaignMain.cm.toUser(currName + " has left the campaign. No-Play list updated.",
+                CampaignMain.campaignMain.toUser(currName + " has left the campaign. No-Play list updated.",
                       owner,
                       true);
             }
@@ -189,7 +191,7 @@ public class ExclusionList {
 
             if (!playerExists) {
                 e.remove();
-                server.campaign.CampaignMain.cm.toUser(currName + " has left the campaign. No-Play list updated.",
+                CampaignMain.campaignMain.toUser(currName + " has left the campaign. No-Play list updated.",
                       owner,
                       true);
             }
@@ -208,7 +210,7 @@ public class ExclusionList {
             while (excludeSize > maxSize && playerExcludes.size() > 0) {
                 String currName = playerExcludes.get(playerExcludes.size() - 1);
                 playerExcludes.remove(currName);
-                server.campaign.CampaignMain.cm.toUser("Your No-Play list was too long. " + currName + " was removed.",
+                CampaignMain.campaignMain.toUser("Your No-Play list was too long. " + currName + " was removed.",
                       owner,
                       true);
                 excludeSize = excludeSize - 1;

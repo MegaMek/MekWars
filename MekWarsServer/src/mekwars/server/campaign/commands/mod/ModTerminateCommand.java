@@ -16,6 +16,8 @@
 
 package mekwars.server.campaign.commands.mod;
 
+import mekwars.server.campaign.CampaignMain;
+
 public class ModTerminateCommand implements server.campaign.commands.Command {
 
     int accessLevel = server.MWChatServer.auth.IAuthenticator.MODERATOR;
@@ -26,13 +28,13 @@ public class ModTerminateCommand implements server.campaign.commands.Command {
     public void process(java.util.StringTokenizer command, String Username) {
 
         //access level check
-        int userLevel = server.campaign.CampaignMain.cm.getServer().getUserLevel(Username);
+        int userLevel = CampaignMain.campaignMain.getServer().getUserLevel(Username);
         if (userLevel < getExecutionLevel()) {
-            server.campaign.CampaignMain.cm.toUser("AM:Insufficient access level for command. Level: " +
-                                                         userLevel +
-                                                         ". Required: " +
-                                                         accessLevel +
-                                                         ".", Username, true);
+            CampaignMain.campaignMain.toUser("AM:Insufficient access level for command. Level: " +
+                                                   userLevel +
+                                                   ". Required: " +
+                                                   accessLevel +
+                                                   ".", Username, true);
             return;
         }
 
@@ -42,23 +44,23 @@ public class ModTerminateCommand implements server.campaign.commands.Command {
         try {
             opID = Integer.parseInt(command.nextToken());
         } catch (Exception e) {
-            server.campaign.CampaignMain.cm.toUser("Improper format. Try: /c modterminate#game number", Username, true);
+            CampaignMain.campaignMain.toUser("Improper format. Try: /c modterminate#game number", Username, true);
             return;
         }
 
         //get the player
-        server.campaign.SPlayer tp = server.campaign.CampaignMain.cm.getPlayer(Username);
+        server.campaign.SPlayer tp = CampaignMain.campaignMain.getPlayer(Username);
         if (tp == null) {
-            server.campaign.CampaignMain.cm.toUser("Null player. Report this immediately!", Username, true);
+            CampaignMain.campaignMain.toUser("Null player. Report this immediately!", Username, true);
             return;
         }
 
         //check the attack
-        server.campaign.operations.ShortOperation so = server.campaign.CampaignMain.cm.getOpsManager()
+        server.campaign.operations.ShortOperation so = CampaignMain.campaignMain.getOpsManager()
                                                              .getRunningOps()
                                                              .get(opID);
         if (so == null) {
-            server.campaign.CampaignMain.cm.toUser("AM:Terminate failed. Attack #" + opID + " does not exist.",
+            CampaignMain.campaignMain.toUser("AM:Terminate failed. Attack #" + opID + " does not exist.",
                   Username,
                   true);
             return;
@@ -66,14 +68,14 @@ public class ModTerminateCommand implements server.campaign.commands.Command {
 
         //don't cancel finished or reporting games
         if (so.getStatus() == server.campaign.operations.ShortOperation.STATUS_FINISHED) {
-            server.campaign.CampaignMain.cm.toUser("AM:Terminate failed. You may not terminate a completed game.",
+            CampaignMain.campaignMain.toUser("AM:Terminate failed. You may not terminate a completed game.",
                   Username,
                   true);
             return;
         }
 
         //terminate
-        server.campaign.CampaignMain.cm.getOpsManager()
+        CampaignMain.campaignMain.getOpsManager()
               .terminateOperation(so, server.campaign.operations.OperationManager.TERM_TERMCOMMAND, tp);
 
         //Make a string which holds involved players names. Use
@@ -90,9 +92,9 @@ public class ModTerminateCommand implements server.campaign.commands.Command {
             } else {players += ", ";}
         }
 
-        server.campaign.CampaignMain.cm.toUser("AM:You terminated Attack #" + opID + ". " + players, Username, true);
+        CampaignMain.campaignMain.toUser("AM:You terminated Attack #" + opID + ". " + players, Username, true);
         //server.MWLogger.modLog(Username + " terminated Attack #" + opID + ". " + players);
-        server.campaign.CampaignMain.cm.doSendModMail("NOTE",
+        CampaignMain.campaignMain.doSendModMail("NOTE",
               Username + " terminated Attack #" + opID + ". " + players);
 
     }//end process()

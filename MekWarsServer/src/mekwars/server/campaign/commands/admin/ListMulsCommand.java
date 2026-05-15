@@ -17,6 +17,8 @@
 package mekwars.server.campaign.commands.admin;
 
 
+import mekwars.server.campaign.CampaignMain;
+
 public class ListMulsCommand implements server.campaign.commands.Command {
 
     /*
@@ -35,13 +37,13 @@ public class ListMulsCommand implements server.campaign.commands.Command {
     public void process(java.util.StringTokenizer command, String Username) {
 
         //access level check
-        int userLevel = server.campaign.CampaignMain.cm.getServer().getUserLevel(Username);
+        int userLevel = CampaignMain.campaignMain.getServer().getUserLevel(Username);
         if (userLevel < getExecutionLevel()) {
-            server.campaign.CampaignMain.cm.toUser("AM:Insufficient access level for command. Level: " +
-                                                         userLevel +
-                                                         ". Required: " +
-                                                         accessLevel +
-                                                         ".", Username, true);
+            CampaignMain.campaignMain.toUser("AM:Insufficient access level for command. Level: " +
+                                                   userLevel +
+                                                   ". Required: " +
+                                                   accessLevel +
+                                                   ".", Username, true);
             return;
         }
 
@@ -51,7 +53,7 @@ public class ListMulsCommand implements server.campaign.commands.Command {
         if (command.hasMoreTokens()) {clientCommand = command.nextToken();}
 
         if (!mulDir.exists()) {
-            server.campaign.CampaignMain.cm.toUser("AM:./data/armies/ folder not found.", Username);
+            CampaignMain.campaignMain.toUser("AM:./data/armies/ folder not found.", Username);
             return;
         }
 
@@ -77,7 +79,7 @@ public class ListMulsCommand implements server.campaign.commands.Command {
 
         }
 
-        server.campaign.CampaignMain.cm.toUser(fileNames.toString(), Username, false);
+        CampaignMain.campaignMain.toUser(fileNames.toString(), Username, false);
     }
 
     public int getExecutionLevel() {return accessLevel;}

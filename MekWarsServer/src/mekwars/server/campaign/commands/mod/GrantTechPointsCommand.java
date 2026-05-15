@@ -16,6 +16,8 @@
 
 package mekwars.server.campaign.commands.mod;
 
+import mekwars.server.campaign.CampaignMain;
+
 public class GrantTechPointsCommand implements server.campaign.commands.Command {
 
     int accessLevel = server.MWChatServer.auth.IAuthenticator.MODERATOR;
@@ -27,17 +29,17 @@ public class GrantTechPointsCommand implements server.campaign.commands.Command 
 
     public void process(java.util.StringTokenizer command, String Username) {
 
-        int userLevel = server.campaign.CampaignMain.cm.getServer().getUserLevel(Username);
+        int userLevel = CampaignMain.campaignMain.getServer().getUserLevel(Username);
         if (userLevel < getExecutionLevel()) {
-            server.campaign.CampaignMain.cm.toUser("AM:Insufficient access level for command. Level: " +
-                                                         userLevel +
-                                                         ". Required: " +
-                                                         accessLevel +
-                                                         ".", Username, true);
+            CampaignMain.campaignMain.toUser("AM:Insufficient access level for command. Level: " +
+                                                   userLevel +
+                                                   ". Required: " +
+                                                   accessLevel +
+                                                   ".", Username, true);
             return;
         }
 
-        server.campaign.SHouse faction = server.campaign.CampaignMain.cm.getHouseFromPartialString(command.nextToken(),
+        server.campaign.SHouse faction = CampaignMain.campaignMain.getHouseFromPartialString(command.nextToken(),
               Username);
         int amount = Integer.parseInt(command.nextToken());
         if (faction != null) {
@@ -45,19 +47,19 @@ public class GrantTechPointsCommand implements server.campaign.commands.Command 
 
             String toRecipient = "AM:" + Username + " granted you " + amount + " Tech Research Points";
 
-            server.campaign.CampaignMain.cm.doSendHouseMail(faction, "NOTE", toRecipient);
+            CampaignMain.campaignMain.doSendHouseMail(faction, "NOTE", toRecipient);
             if (faction.getTechResearchPoints() >=
-                      server.campaign.CampaignMain.cm.getIntegerConfig("TechPointsNeedToLevel")) {
+                      CampaignMain.campaignMain.getIntegerConfig("TechPointsNeedToLevel")) {
                 faction.updateHouseTechLevel();
-                server.campaign.CampaignMain.cm.doSendHouseMail(faction,
+                CampaignMain.campaignMain.doSendHouseMail(faction,
                       "NOTE",
                       Username + " has increased your factions Tech Level!");
             }
-            server.campaign.CampaignMain.cm.toUser("AM:You granted " +
-                                                         amount +
-                                                         " Tech Research Points to " +
-                                                         faction.getName(), Username, true);
-            server.campaign.CampaignMain.cm.doSendModMail("NOTE",
+            CampaignMain.campaignMain.toUser("AM:You granted " +
+                                                   amount +
+                                                   " Tech Research Points to " +
+                                                   faction.getName(), Username, true);
+            CampaignMain.campaignMain.doSendModMail("NOTE",
                   Username + " granted " + amount + " Tech Research Points to " + faction.getName());
         }
     }// end process()

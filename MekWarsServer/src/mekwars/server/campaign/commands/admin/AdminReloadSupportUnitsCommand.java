@@ -16,6 +16,8 @@
 
 package mekwars.server.campaign.commands.admin;
 
+import mekwars.server.campaign.CampaignMain;
+
 public class AdminReloadSupportUnitsCommand implements server.campaign.commands.Command {
 
     int accessLevel = server.MWChatServer.auth.IAuthenticator.ADMIN;
@@ -27,19 +29,19 @@ public class AdminReloadSupportUnitsCommand implements server.campaign.commands.
     public void process(java.util.StringTokenizer command, String Username) {
 
         //access level check
-        int userLevel = server.campaign.CampaignMain.cm.getServer().getUserLevel(Username);
+        int userLevel = CampaignMain.campaignMain.getServer().getUserLevel(Username);
         if (userLevel < getExecutionLevel()) {
-            server.campaign.CampaignMain.cm.toUser("AM:Insufficient access level for command. Level: " +
-                                                         userLevel +
-                                                         ". Required: " +
-                                                         accessLevel +
-                                                         ".", Username, true);
+            CampaignMain.campaignMain.toUser("AM:Insufficient access level for command. Level: " +
+                                                   userLevel +
+                                                   ". Required: " +
+                                                   accessLevel +
+                                                   ".", Username, true);
             return;
         }
 
-        server.campaign.CampaignMain.cm.loadSupportUnitDefinitions();
-        server.campaign.CampaignMain.cm.doSendModMail("NOTE", Username + " has reloaded the support unit definitions");
-        server.campaign.CampaignMain.cm.toUser("You have reloaded the support unit definitions", Username, true);
+        CampaignMain.campaignMain.loadSupportUnitDefinitions();
+        CampaignMain.campaignMain.doSendModMail("NOTE", Username + " has reloaded the support unit definitions");
+        CampaignMain.campaignMain.toUser("You have reloaded the support unit definitions", Username, true);
     }
 
     public int getExecutionLevel() {return accessLevel;}

@@ -16,6 +16,8 @@
 
 package mekwars.server.campaign.commands.admin;
 
+import mekwars.server.campaign.CampaignMain;
+
 // comand /c AdminSetHouseFluFile#House#message
 public class AdminSetHouseFluFileCommand implements server.campaign.commands.Command {
 
@@ -27,13 +29,13 @@ public class AdminSetHouseFluFileCommand implements server.campaign.commands.Com
     public void process(java.util.StringTokenizer command, String Username) {
 
         //access level check
-        int userLevel = server.campaign.CampaignMain.cm.getServer().getUserLevel(Username);
+        int userLevel = CampaignMain.campaignMain.getServer().getUserLevel(Username);
         if (userLevel < getExecutionLevel()) {
-            server.campaign.CampaignMain.cm.toUser("AM:Insufficient access level for command. Level: " +
-                                                         userLevel +
-                                                         ". Required: " +
-                                                         accessLevel +
-                                                         ".", Username, true);
+            CampaignMain.campaignMain.toUser("AM:Insufficient access level for command. Level: " +
+                                                   userLevel +
+                                                   ". Required: " +
+                                                   accessLevel +
+                                                   ".", Username, true);
             return;
         }
 
@@ -44,21 +46,21 @@ public class AdminSetHouseFluFileCommand implements server.campaign.commands.Com
             HouseName = command.nextToken();
             fluString = command.nextToken();
         } catch (Exception e) {
-            server.campaign.CampaignMain.cm.toUser("Improper command. Try: /c sethouseflufile#faction#flufile",
+            CampaignMain.campaignMain.toUser("Improper command. Try: /c sethouseflufile#faction#flufile",
                   Username,
                   true);
             return;
         }
 
-        server.campaign.SHouse faction = server.campaign.CampaignMain.cm.getHouseFromPartialString(HouseName, Username);
+        server.campaign.SHouse faction = CampaignMain.campaignMain.getHouseFromPartialString(HouseName, Username);
         if (faction == null) {
-            server.campaign.CampaignMain.cm.toUser("Couldn't find a faction with that name.", Username, true);
+            CampaignMain.campaignMain.toUser("Couldn't find a faction with that name.", Username, true);
             return;
         }
 
         faction.setHouseFluFile(fluString);
         //server.MWLogger.modLog(Username + " has changed the flu message file for " + HouseName);
-        server.campaign.CampaignMain.cm.doSendModMail("NOTE",
+        CampaignMain.campaignMain.doSendModMail("NOTE",
               Username + " has changed the flu message file for " + HouseName);
 
     }

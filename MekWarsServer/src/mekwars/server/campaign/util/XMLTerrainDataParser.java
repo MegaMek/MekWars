@@ -27,6 +27,7 @@ import common.util.MWLogger;
 import gd.xml.ParseException;
 import gd.xml.XMLParser;
 import gd.xml.XMLResponder;
+import mekwars.server.campaign.CampaignMain;
 
 /**
  * @author Helge Richter
@@ -322,7 +323,7 @@ public class XMLTerrainDataParser implements XMLResponder {
         }
         if (tagName.equals("TERRAIN")) {
             planetTerrain.setName(name);
-            server.campaign.CampaignMain.cm.getData().addTerrain(planetTerrain);
+            CampaignMain.campaignMain.getData().addTerrain(planetTerrain);
             planetTerrain = new Terrain();
             name = "";
         }

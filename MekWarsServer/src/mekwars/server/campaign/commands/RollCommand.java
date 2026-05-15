@@ -17,6 +17,8 @@
 package mekwars.server.campaign.commands;
 
 
+import mekwars.server.campaign.CampaignMain;
+
 /**
  * Moving the Roll command from MWServ into the normal command structure.
  * <p>
@@ -30,13 +32,13 @@ public class RollCommand implements Command {
     public void process(java.util.StringTokenizer command, String Username) {
 
         if (accessLevel != 0) {
-            int userLevel = server.campaign.CampaignMain.cm.getServer().getUserLevel(Username);
+            int userLevel = CampaignMain.campaignMain.getServer().getUserLevel(Username);
             if (userLevel < getExecutionLevel()) {
-                server.campaign.CampaignMain.cm.toUser("AM:Insufficient access level for command. Level: " +
-                                                             userLevel +
-                                                             ". Required: " +
-                                                             accessLevel +
-                                                             ".", Username, true);
+                CampaignMain.campaignMain.toUser("AM:Insufficient access level for command. Level: " +
+                                                       userLevel +
+                                                       ". Required: " +
+                                                       accessLevel +
+                                                       ".", Username, true);
                 return;
             }
         }
@@ -45,7 +47,7 @@ public class RollCommand implements Command {
 
         if (command.hasMoreTokens()) {rollString = command.nextToken();}
 
-        server.campaign.CampaignMain.cm.userRoll(rollString, Username);
+        CampaignMain.campaignMain.userRoll(rollString, Username);
     }
 
     public int getExecutionLevel() {return accessLevel;}

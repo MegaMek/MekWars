@@ -16,6 +16,8 @@
 
 package mekwars.server.campaign.commands.admin;
 
+import mekwars.server.campaign.CampaignMain;
+
 public class AdminDonateCommand implements server.campaign.commands.Command {
 
     int accessLevel = server.MWChatServer.auth.IAuthenticator.ADMIN;
@@ -26,13 +28,13 @@ public class AdminDonateCommand implements server.campaign.commands.Command {
     public void process(java.util.StringTokenizer command, String Username) {
 
         //access level check
-        int userLevel = server.campaign.CampaignMain.cm.getServer().getUserLevel(Username);
+        int userLevel = CampaignMain.campaignMain.getServer().getUserLevel(Username);
         if (userLevel < getExecutionLevel()) {
-            server.campaign.CampaignMain.cm.toUser("AM:Insufficient access level for command. Level: " +
-                                                         userLevel +
-                                                         ". Required: " +
-                                                         accessLevel +
-                                                         ".", Username, true);
+            CampaignMain.campaignMain.toUser("AM:Insufficient access level for command. Level: " +
+                                                   userLevel +
+                                                   ". Required: " +
+                                                   accessLevel +
+                                                   ".", Username, true);
             return;
         }
 
@@ -44,14 +46,14 @@ public class AdminDonateCommand implements server.campaign.commands.Command {
 
         try {
             targetName = (String) command.nextElement();
-            target = server.campaign.CampaignMain.cm.getPlayer(targetName);
+            target = CampaignMain.campaignMain.getPlayer(targetName);
         } catch (Exception e) {
-            server.campaign.CampaignMain.cm.toUser("Improper format. Try: /c admindonate#name#unitid", Username, true);
+            CampaignMain.campaignMain.toUser("Improper format. Try: /c admindonate#name#unitid", Username, true);
             return;
         }
 
         if (target == null) {
-            server.campaign.CampaignMain.cm.toUser("Target player could not be found. Try again.", Username, true);
+            CampaignMain.campaignMain.toUser("Target player could not be found. Try again.", Username, true);
             return;
         }
 
@@ -60,34 +62,34 @@ public class AdminDonateCommand implements server.campaign.commands.Command {
             unitID = Integer.parseInt((String) command.nextElement());
             m = target.getUnit(unitID);
         } catch (Exception e) {
-            server.campaign.CampaignMain.cm.toUser("Improper format. Try: /c admindonate#name#unitid", Username, true);
+            CampaignMain.campaignMain.toUser("Improper format. Try: /c admindonate#name#unitid", Username, true);
             return;
         }
 
         //break out if the player doesn't have a unit with that id
         if (m == null) {
-            server.campaign.CampaignMain.cm.toUser("Target player doesn't have a unit with ID# " + unitID + ".",
+            CampaignMain.campaignMain.toUser("Target player doesn't have a unit with ID# " + unitID + ".",
                   Username,
                   true);
             return;
         }
 
         //tell the user about the scrap
-        server.campaign.CampaignMain.cm.toUser("You forced " +
-                                                     targetName +
-                                                     " to donate his " +
-                                                     m.getModelName() +
-                                                     " (ID#" +
-                                                     m.getId() +
-                                                     ").", Username, true);
-        server.campaign.CampaignMain.cm.toUser(Username +
-                                                     " forced you to donate your " +
-                                                     m.getModelName() +
-                                                     " (ID#" +
-                                                     m.getId() +
-                                                     ")", targetName, true);
+        CampaignMain.campaignMain.toUser("You forced " +
+                                               targetName +
+                                               " to donate his " +
+                                               m.getModelName() +
+                                               " (ID#" +
+                                               m.getId() +
+                                               ").", Username, true);
+        CampaignMain.campaignMain.toUser(Username +
+                                               " forced you to donate your " +
+                                               m.getModelName() +
+                                               " (ID#" +
+                                               m.getId() +
+                                               ")", targetName, true);
         //server.MWLogger.modLog(Username + " forced + " + targetName + " to donate his " + m.getModelName() + " (ID#" + m.getId() + ").");
-        server.campaign.CampaignMain.cm.doSendModMail("NOTE",
+        CampaignMain.campaignMain.doSendModMail("NOTE",
               Username + " forced " + targetName + " to donate his " + m.getModelName() + " (ID#" + m.getId() + ").");
 
         //and then do it ...

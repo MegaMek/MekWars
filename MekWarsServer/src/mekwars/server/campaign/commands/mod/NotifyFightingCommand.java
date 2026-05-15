@@ -17,6 +17,7 @@
 package mekwars.server.campaign.commands.mod;
 
 import common.House;
+import mekwars.server.campaign.CampaignMain;
 
 public class NotifyFightingCommand implements server.campaign.commands.Command {
 
@@ -28,13 +29,13 @@ public class NotifyFightingCommand implements server.campaign.commands.Command {
     public void process(java.util.StringTokenizer command, String Username) {
 
         //access level check
-        int userLevel = server.campaign.CampaignMain.cm.getServer().getUserLevel(Username);
+        int userLevel = CampaignMain.campaignMain.getServer().getUserLevel(Username);
         if (userLevel < getExecutionLevel()) {
-            server.campaign.CampaignMain.cm.toUser("AM:Insufficient access level for command. Level: " +
-                                                         userLevel +
-                                                         ". Required: " +
-                                                         accessLevel +
-                                                         ".", Username, true);
+            CampaignMain.campaignMain.toUser("AM:Insufficient access level for command. Level: " +
+                                                   userLevel +
+                                                   ". Required: " +
+                                                   accessLevel +
+                                                   ".", Username, true);
             return;
         }
 
@@ -42,16 +43,16 @@ public class NotifyFightingCommand implements server.campaign.commands.Command {
         String Message = (String) command.nextElement();
 
         //send to all fighters from all houses
-        for (House h : server.campaign.CampaignMain.cm.getData().getAllHouses()) {
+        for (House h : CampaignMain.campaignMain.getData().getAllHouses()) {
             server.campaign.SHouse currH = (server.campaign.SHouse) h;
             for (String currName : currH.getFightingPlayers().keySet()) {
-                server.campaign.CampaignMain.cm.toUser("PM|SERVER|" + Message, currName, false);
+                CampaignMain.campaignMain.toUser("PM|SERVER|" + Message, currName, false);
             }
         }
 
-        server.campaign.CampaignMain.cm.doSendModMail("NOTE",
+        CampaignMain.campaignMain.doSendModMail("NOTE",
               Username + " sent a message to all fighting players: " + Message);
-        server.campaign.CampaignMain.cm.toUser("Message sent to all fighting players: " + Message, Username, true);
+        CampaignMain.campaignMain.toUser("Message sent to all fighting players: " + Message, Username, true);
 
     }//end process()
 

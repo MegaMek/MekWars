@@ -1,6 +1,7 @@
 package mekwars.server.campaign.commands;
 
 import mekwars.common.util.MWLogger;
+import mekwars.server.campaign.CampaignMain;
 
 /**
  * @author urgru
@@ -28,7 +29,7 @@ class CheckAttackThread extends Thread {
             // been forcedeactivated, attacked or joined a game).
             if (p.getDutyStatus() == server.campaign.SPlayer.STATUS_ACTIVE) {
                 CheckAttackCommand ca = new CheckAttackCommand();
-                server.campaign.CampaignMain.cm.toUser("<br>You have arrived on the front lines!", p.getName(), true);
+                CampaignMain.campaignMain.toUser("<br>You have arrived on the front lines!", p.getName(), true);
                 ca.process(new java.util.StringTokenizer(""), p.getName());
             }
             p.leechCount = 0;

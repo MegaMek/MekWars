@@ -17,6 +17,8 @@
 package mekwars.server.campaign.commands;
 
 
+import mekwars.server.campaign.CampaignMain;
+
 public class TickCommand implements Command {
 
     int accessLevel = 0;
@@ -25,27 +27,27 @@ public class TickCommand implements Command {
     public void process(java.util.StringTokenizer command, String Username) {
 
         if (accessLevel != 0) {
-            int userLevel = server.campaign.CampaignMain.cm.getServer().getUserLevel(Username);
+            int userLevel = CampaignMain.campaignMain.getServer().getUserLevel(Username);
             if (userLevel < getExecutionLevel()) {
-                server.campaign.CampaignMain.cm.toUser("AM:Insufficient access level for command. Level: " +
-                                                             userLevel +
-                                                             ". Required: " +
-                                                             accessLevel +
-                                                             ".", Username, true);
+                CampaignMain.campaignMain.toUser("AM:Insufficient access level for command. Level: " +
+                                                       userLevel +
+                                                       ". Required: " +
+                                                       accessLevel +
+                                                       ".", Username, true);
                 return;
             }
         }
 
-        long remaining = server.campaign.CampaignMain.cm.getTThread().getRemainingSleepTime() / 1000;
+        long remaining = CampaignMain.campaignMain.getTThread().getRemainingSleepTime() / 1000;
         long remainingMinutes = (remaining / 60);
         long remainingSeconds = (remaining % 60);
-        server.campaign.CampaignMain.cm.toUser("AM:The next Tick [" +
-                                                     (server.campaign.CampaignMain.cm.getTThread().getTickID() + 1) +
-                                                     "] will occur in " +
-                                                     remainingMinutes +
-                                                     " minutes and " +
-                                                     remainingSeconds +
-                                                     " seconds.", Username, true);
+        CampaignMain.campaignMain.toUser("AM:The next Tick [" +
+                                               (CampaignMain.campaignMain.getTThread().getTickID() + 1) +
+                                               "] will occur in " +
+                                               remainingMinutes +
+                                               " minutes and " +
+                                               remainingSeconds +
+                                               " seconds.", Username, true);
     }
 
     public int getExecutionLevel() {return accessLevel;}

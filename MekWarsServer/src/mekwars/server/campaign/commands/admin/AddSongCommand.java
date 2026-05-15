@@ -16,6 +16,8 @@
 
 package mekwars.server.campaign.commands.admin;
 
+import mekwars.server.campaign.CampaignMain;
+
 //Syntax addsong#songname#lyric1#lyric2....
 public class AddSongCommand implements server.campaign.commands.Command {
 
@@ -27,13 +29,13 @@ public class AddSongCommand implements server.campaign.commands.Command {
     public void process(java.util.StringTokenizer command, String Username) {
 
         //access level check
-        int userLevel = server.campaign.CampaignMain.cm.getServer().getUserLevel(Username);
+        int userLevel = CampaignMain.campaignMain.getServer().getUserLevel(Username);
         if (userLevel < getExecutionLevel()) {
-            server.campaign.CampaignMain.cm.toUser("AM:Insufficient access level for command. Level: " +
-                                                         userLevel +
-                                                         ". Required: " +
-                                                         accessLevel +
-                                                         ".", Username, true);
+            CampaignMain.campaignMain.toUser("AM:Insufficient access level for command. Level: " +
+                                                   userLevel +
+                                                   ". Required: " +
+                                                   accessLevel +
+                                                   ".", Username, true);
             return;
         }
 
@@ -67,11 +69,11 @@ public class AddSongCommand implements server.campaign.commands.Command {
             ps.close();
             fos.close();
         } catch (Exception ex) {
-            server.campaign.CampaignMain.cm.toUser("Unable to append to songs.txt", Username, true);
+            CampaignMain.campaignMain.toUser("Unable to append to songs.txt", Username, true);
             return;
         }
 
-        server.campaign.CampaignMain.cm.doSendModMail("NOTE",
+        CampaignMain.campaignMain.doSendModMail("NOTE",
               Username + " has added " + songName + " to the song list!");
     }
 

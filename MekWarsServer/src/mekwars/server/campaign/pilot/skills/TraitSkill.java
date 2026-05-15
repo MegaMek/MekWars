@@ -18,6 +18,7 @@ package mekwars.server.campaign.pilot.skills;
 import common.Unit;
 import common.campaign.pilot.Pilot;
 import megamek.common.Entity;
+import mekwars.server.campaign.CampaignMain;
 
 /**
  * Pilot traits for use with moding the gaining of other traits
@@ -43,10 +44,10 @@ public class TraitSkill extends SPilotSkill {
 
         String chance = "chancefor" + getAbbreviation() + "for" + Unit.getTypeClassDesc(unitType);
 
-        server.campaign.SHouse house = server.campaign.CampaignMain.cm.getHouseFromPartialString(pilot.getCurrentFaction());
+        server.campaign.SHouse house = CampaignMain.campaignMain.getHouseFromPartialString(pilot.getCurrentFaction());
 
         if (house == null) {
-            return server.campaign.CampaignMain.cm.getIntegerConfig(chance);
+            return CampaignMain.campaignMain.getIntegerConfig(chance);
         }
 
         return house.getIntegerConfig(chance);
@@ -63,7 +64,7 @@ public class TraitSkill extends SPilotSkill {
         String faction = p.getCurrentFaction();
 
         // MWLogger.errLog("Trait Skill Faction: "+faction);
-        java.util.Vector<String> traitNames = server.campaign.CampaignMain.cm.getFactionTraits(faction);
+        java.util.Vector<String> traitNames = CampaignMain.campaignMain.getFactionTraits(faction);
 
         size = traitNames.size();
 
@@ -76,7 +77,7 @@ public class TraitSkill extends SPilotSkill {
         if (size == 1) {
             Trait = traitNames.elementAt(0);
         } else {
-            Trait = traitNames.elementAt(server.campaign.CampaignMain.cm.getRandomNumber(size));
+            Trait = traitNames.elementAt(CampaignMain.campaignMain.getRandomNumber(size));
         }
         if (Trait.indexOf("*") > -1) {
             p.setTraitName(Trait.substring(0, Trait.indexOf("*")));

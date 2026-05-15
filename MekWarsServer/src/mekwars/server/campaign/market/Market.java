@@ -19,6 +19,7 @@ package mekwars.server.campaign.market;
 import common.Unit;
 import common.util.MWLogger;
 import common.util.UnitUtils;
+import mekwars.server.campaign.CampaignMain;
 import server.campaign.pilot.SPilot;
 
 
@@ -30,7 +31,7 @@ import server.campaign.pilot.SPilot;
  */
 public class Market {
 
-    boolean hiddenBM = server.campaign.CampaignMain.cm.getBooleanConfig("HiddenBMUnits");
+    boolean hiddenBM = CampaignMain.campaignMain.getBooleanConfig("HiddenBMUnits");
     // IVARS
     private IAuction auctionType;// set in constructor
     private java.util.TreeMap<Integer, MarketListing> currentAuctions;
@@ -49,9 +50,9 @@ public class Market {
          * are selected then defaults to vickery
          */
 
-        if (server.campaign.CampaignMain.cm.getBooleanConfig("UseVickeryAuctionType")) {
+        if (CampaignMain.campaignMain.getBooleanConfig("UseVickeryAuctionType")) {
             auctionType = new VickreyAuction();
-        } else if (server.campaign.CampaignMain.cm.getBooleanConfig("UseHighestSealedBidAuctionType")) {
+        } else if (CampaignMain.campaignMain.getBooleanConfig("UseHighestSealedBidAuctionType")) {
             auctionType = new HighestSealedBidAuction();
         } else {auctionType = new VickreyAuction();}
 
@@ -75,8 +76,8 @@ public class Market {
         server.campaign.SPlayer sellingPlayer = null;
 
         if (!sellername.toLowerCase().startsWith("faction_") &&
-                  server.campaign.CampaignMain.cm.getHouseFromPartialString(sellername, null) == null) {
-            sellingPlayer = server.campaign.CampaignMain.cm.getPlayer(sellername);
+                  CampaignMain.campaignMain.getHouseFromPartialString(sellername, null) == null) {
+            sellingPlayer = CampaignMain.campaignMain.getPlayer(sellername);
         }
 
         if (unit.getModelName().startsWith("Error") || unit.getModelName().startsWith("OMG")) {
@@ -87,11 +88,11 @@ public class Market {
         if ((!UnitUtils.canStartUp(unit.getEntity())
                    || UnitUtils.hasArmorDamage(unit.getEntity())
                    || UnitUtils.hasCriticalDamage(unit.getEntity()))
-                  && !server.campaign.CampaignMain.cm.getBooleanConfig("AllowDonatingOfDamagedUnits")) {
+                  && !CampaignMain.campaignMain.getBooleanConfig("AllowDonatingOfDamagedUnits")) {
             MWLogger.errLog("Damaged unit trying to be sold on the BM " + unit.getProducer());
 
             if (sellingPlayer != null) {
-                server.campaign.CampaignMain.cm.toUser("You cannot sell damaged units on the Black Market!",
+                CampaignMain.campaignMain.toUser("You cannot sell damaged units on the Black Market!",
                       sellername,
                       true);
             }
@@ -112,20 +113,20 @@ public class Market {
         // send a BM addition command to all online/logged in players
         if (tickListing) {
             newAuction.increaseSaleTicks();
-            server.campaign.CampaignMain.cm.doSendToAllOnlinePlayers("BM|AU|" + newAuction.toString(auctionID, null),
+            CampaignMain.campaignMain.doSendToAllOnlinePlayers("BM|AU|" + newAuction.toString(auctionID, null),
                   false);
             newAuction.decreaseSaleTicks();
         } else {
-            server.campaign.CampaignMain.cm.doSendToAllOnlinePlayers("BM|AU|" + newAuction.toString(auctionID, null),
+            CampaignMain.campaignMain.doSendToAllOnlinePlayers("BM|AU|" + newAuction.toString(auctionID, null),
                   false);
         }
         // send an accurate unit (with seller flag) to the listing player using BM|changeunit
         // also, send a PL|SUS| to change the unit in the player's HQ.
         if (sellingPlayer != null) {
-            server.campaign.CampaignMain.cm.toUser("BM|CU|" + newAuction.toString(auctionID, sellingPlayer),
+            CampaignMain.campaignMain.toUser("BM|CU|" + newAuction.toString(auctionID, sellingPlayer),
                   sellername,
                   false);
-            server.campaign.CampaignMain.cm.toUser("PL|SUS|" + unit.getId() + "#" + Unit.STATUS_FORSALE,
+            CampaignMain.campaignMain.toUser("PL|SUS|" + unit.getId() + "#" + Unit.STATUS_FORSALE,
                   sellername,
                   false);
         }
@@ -185,10 +186,10 @@ public class Market {
 
             // get the ISeller (house or player) listing the unit
             ISeller seller = null;
-            seller = server.campaign.CampaignMain.cm.getHouseFromPartialString(sellerName, null);
+            seller = CampaignMain.campaignMain.getHouseFromPartialString(sellerName, null);
 
             //Check the house first first to avoid annoying "no pfile" errors
-            if (seller == null) {seller = server.campaign.CampaignMain.cm.getPlayer(sellerName);}
+            if (seller == null) {seller = CampaignMain.campaignMain.getPlayer(sellerName);}
 
             // if neither a house nor a player is selling this, bail?
             if (seller == null) {return;}
@@ -200,7 +201,7 @@ public class Market {
             // something even worse happens!
             if (auctionU == null) {
                 currentAuctions.remove(auctionID);
-                server.campaign.CampaignMain.cm.doSendToAllOnlinePlayers("BM|RU|" + auctionID, false);
+                CampaignMain.campaignMain.doSendToAllOnlinePlayers("BM|RU|" + auctionID, false);
                 return;
             }
 
@@ -216,7 +217,7 @@ public class Market {
              */
             if (seller.isHuman()) {
                 server.campaign.SPlayer p = (server.campaign.SPlayer) seller;
-                server.campaign.CampaignMain.cm.toUser("PL|SUS|" + auctionU.getId() + "#" + Unit.STATUS_OK,
+                CampaignMain.campaignMain.toUser("PL|SUS|" + auctionU.getId() + "#" + Unit.STATUS_OK,
                       sellerName,
                       false);
                 p.setSave();
@@ -225,14 +226,14 @@ public class Market {
                 if (destroyFactionUnits) {
                     h.removeUnit(auctionU, false);
                 } else {
-                    server.campaign.CampaignMain.cm.doSendToAllOnlinePlayers(h,
+                    CampaignMain.campaignMain.doSendToAllOnlinePlayers(h,
                           "HS|" + h.getHSUnitAdditionString(auctionU),
                           false);
                 }
             }
         } else {
-            server.campaign.SHouse sellingFaction = server.campaign.CampaignMain.cm.getHouseFromPartialString(
-                  server.campaign.CampaignMain.cm.getConfig("NewbieHouseName"), null);
+            server.campaign.SHouse sellingFaction = CampaignMain.campaignMain.getHouseFromPartialString(
+                  CampaignMain.campaignMain.getConfig("NewbieHouseName"), null);
             server.campaign.SUnit auctionU = sellingFaction.getUnit(currAuction.getListedUnitID());
             if (auctionU != null) {
                 sellingFaction.removeUnit(auctionU, false);
@@ -243,7 +244,7 @@ public class Market {
         currentAuctions.remove(auctionID);
 
         // send a removal command to all online/logged in players
-        server.campaign.CampaignMain.cm.doSendToAllOnlinePlayers("BM|RU|" + auctionID, false);
+        CampaignMain.campaignMain.doSendToAllOnlinePlayers("BM|RU|" + auctionID, false);
     }
 
     /**
@@ -360,7 +361,7 @@ public class Market {
         for (Integer currListID : currentAuctions.keySet()) {
             MarketListing currList = currentAuctions.get(currListID);
             result += "#" + currListID + " " +
-                            (server.campaign.CampaignMain.cm.getBooleanConfig("HiddenBMUnits") ?
+                            (CampaignMain.campaignMain.getBooleanConfig("HiddenBMUnits") ?
                                    currList.getListedHiddenModelName() :
                                    currList.getListedModelName()) +
                             ". Minimum Bid: ";
@@ -413,18 +414,18 @@ public class Market {
 
                     // try all possible ISellers.
                     if (currList.getSellerName().toLowerCase().startsWith("faction_")) {
-                        sellingActor = server.campaign.CampaignMain.cm.getHouseFromPartialString(currList.getSellerName()
-                                                                                                       .substring(8),
+                        sellingActor = CampaignMain.campaignMain.getHouseFromPartialString(currList.getSellerName()
+                                                                                                 .substring(8),
                               null);
                     }
 
                     // check house first.
                     if (sellingActor == null) {
-                        sellingActor = server.campaign.CampaignMain.cm.getHouseFromPartialString(currList.getSellerName(),
+                        sellingActor = CampaignMain.campaignMain.getHouseFromPartialString(currList.getSellerName(),
                               null);
                     }
                     if (sellingActor == null) {
-                        sellingActor = server.campaign.CampaignMain.cm.getPlayer(currList.getSellerName());
+                        sellingActor = CampaignMain.campaignMain.getPlayer(currList.getSellerName());
                     }
 
                     server.campaign.SUnit unitForSale = sellingActor.getUnit(currList.getListedUnitID());
@@ -443,11 +444,11 @@ public class Market {
                      */
                     if (winningBid == null) {
                         if (sellingActor.isHuman()) {
-                            server.campaign.CampaignMain.cm.toUser("No one purchased your " +
-                                                                         currList.getListedModelName() +
-                                                                         ".", currList.getSellerName(), true);
+                            CampaignMain.campaignMain.toUser("No one purchased your " +
+                                                                   currList.getListedModelName() +
+                                                                   ".", currList.getSellerName(), true);
                             server.campaign.SPlayer p = (server.campaign.SPlayer) sellingActor;
-                            server.campaign.CampaignMain.cm.toUser("PL|SUS|" + currAuctionID + "#" + Unit.STATUS_OK,
+                            CampaignMain.campaignMain.toUser("PL|SUS|" + currAuctionID + "#" + Unit.STATUS_OK,
                                   p.getName(),
                                   false);
                             p.setSave();
@@ -463,9 +464,9 @@ public class Market {
                     else {
 
                         // load the winning IBuyer.
-                        IBuyer buyingActor = server.campaign.CampaignMain.cm.getPlayer(winningBid.getBidderName());
+                        IBuyer buyingActor = CampaignMain.campaignMain.getPlayer(winningBid.getBidderName());
                         if (buyingActor == null) {
-                            buyingActor = server.campaign.CampaignMain.cm.getHouseFromPartialString(winningBid.getBidderName(),
+                            buyingActor = CampaignMain.campaignMain.getHouseFromPartialString(winningBid.getBidderName(),
                                   null);
                         }
 
@@ -476,7 +477,7 @@ public class Market {
                          * remainder to the selling player.
                          */
                         int winningBidAmt = winningBid.getAmount();
-                        float auctionFee = server.campaign.CampaignMain.cm.getFloatConfig("AuctionFee");
+                        float auctionFee = CampaignMain.campaignMain.getFloatConfig("AuctionFee");
                         int auctionFeeAmt = Math.round(winningBidAmt * auctionFee);
                         int winnerMoneyGain = winningBidAmt - auctionFeeAmt;
                         buyingActor.addMoney(-winningBidAmt);
@@ -493,42 +494,42 @@ public class Market {
                          */
                         unitForSale.setStatus(Unit.STATUS_OK);
                         if (sellingActor.isHuman()) {
-                            server.campaign.CampaignMain.cm.toUser("The " +
-                                                                         currList.getListedModelName() +
-                                                                         " sold for "
-                                                                         +
-                                                                         server.campaign.CampaignMain.cm.moneyOrFluMessage(
-                                                                               true,
-                                                                               true,
-                                                                               winningBidAmt) +
-                                                                         ". Auction fees were "
-                                                                         +
-                                                                         server.campaign.CampaignMain.cm.moneyOrFluMessage(
-                                                                               true,
-                                                                               true,
-                                                                               auctionFeeAmt) +
-                                                                         ", leaving "
-                                                                         +
-                                                                         server.campaign.CampaignMain.cm.moneyOrFluMessage(
-                                                                               true,
-                                                                               true,
-                                                                               winnerMoneyGain) +
-                                                                         " as your take from "
-                                                                         +
-                                                                         "the sale.", currList.getSellerName(), true);
+                            CampaignMain.campaignMain.toUser("The " +
+                                                                   currList.getListedModelName() +
+                                                                   " sold for "
+                                                                   +
+                                                                   CampaignMain.campaignMain.moneyOrFluMessage(
+                                                                         true,
+                                                                         true,
+                                                                         winningBidAmt) +
+                                                                   ". Auction fees were "
+                                                                   +
+                                                                   CampaignMain.campaignMain.moneyOrFluMessage(
+                                                                         true,
+                                                                         true,
+                                                                         auctionFeeAmt) +
+                                                                   ", leaving "
+                                                                   +
+                                                                   CampaignMain.campaignMain.moneyOrFluMessage(
+                                                                         true,
+                                                                         true,
+                                                                         winnerMoneyGain) +
+                                                                   " as your take from "
+                                                                   +
+                                                                   "the sale.", currList.getSellerName(), true);
                         }
 
                         if (buyingActor.isHuman()) {
-                            server.campaign.CampaignMain.cm.toUser("PL|BMW|1", winningBid.getBidderName(), false);
-                            server.campaign.CampaignMain.cm.toUser("You purchased the " +
-                                                                         currList.getListedModelName() +
-                                                                         " for "
-                                                                         +
-                                                                         server.campaign.CampaignMain.cm.moneyOrFluMessage(
-                                                                               true,
-                                                                               true,
-                                                                               winningBidAmt) +
-                                                                         ".", winningBid.getBidderName(), true);
+                            CampaignMain.campaignMain.toUser("PL|BMW|1", winningBid.getBidderName(), false);
+                            CampaignMain.campaignMain.toUser("You purchased the " +
+                                                                   currList.getListedModelName() +
+                                                                   " for "
+                                                                   +
+                                                                   CampaignMain.campaignMain.moneyOrFluMessage(
+                                                                         true,
+                                                                         true,
+                                                                         winningBidAmt) +
+                                                                   ".", winningBid.getBidderName(), true);
                         }
 
                         /*
@@ -541,7 +542,7 @@ public class Market {
                          * the pilot to the faction queue and pull a random
                          * pilot from the faction stack.
                          */
-                        if (Boolean.parseBoolean(server.campaign.CampaignMain.cm.getConfig("AllowPersonalPilotQueues"))
+                        if (Boolean.parseBoolean(CampaignMain.campaignMain.getConfig("AllowPersonalPilotQueues"))
                                   && unitForSale.isSinglePilotUnit()) {
 
                             // If the old owner is human, he keeps the pilot and gets an updated PPQ. If a
@@ -550,14 +551,14 @@ public class Market {
                                 server.campaign.SPlayer p = (server.campaign.SPlayer) sellingActor;
                                 p.getPersonalPilotQueue()
                                       .addPilot(unitForSale.getPilot(), unitForSale.getWeightclass());
-                                server.campaign.CampaignMain.cm.toUser("PL|AP2PPQ|" +
-                                                                             unitForSale.getType() +
-                                                                             "|" +
-                                                                             unitForSale.getWeightclass() +
-                                                                             "|" +
-                                                                             ((SPilot) unitForSale.getPilot()).toFileFormat(
-                                                                                   "#",
-                                                                                   true), p.getName(), false);
+                                CampaignMain.campaignMain.toUser("PL|AP2PPQ|" +
+                                                                       unitForSale.getType() +
+                                                                       "|" +
+                                                                       unitForSale.getWeightclass() +
+                                                                       "|" +
+                                                                       ((SPilot) unitForSale.getPilot()).toFileFormat(
+                                                                             "#",
+                                                                             true), p.getName(), false);
                                 p.getPersonalPilotQueue()
                                       .checkQueueAndWarn(p.getName(),
                                             unitForSale.getType(),
@@ -624,18 +625,18 @@ public class Market {
          * if a new rare should be listed at this point. This gets us a nice 2
          * decimal double to compare to the config.
          */
-        double rareChance = (server.campaign.CampaignMain.cm.getRandomNumber(100001)) / 1000;// 0.000-100.000
-        if (rareChance < server.campaign.CampaignMain.cm.getDoubleConfig("RareChance")) {
+        double rareChance = (CampaignMain.campaignMain.getRandomNumber(100001)) / 1000;// 0.000-100.000
+        if (rareChance < CampaignMain.campaignMain.getDoubleConfig("RareChance")) {
 
             /*
              * We're going to be creating a RARE unit. Joyous day. First, lets
              * pick a weightclass ...
              */
             int weightClass = 0;
-            if (server.campaign.CampaignMain.cm.getBooleanConfig("UseBMWeightingTables")) {
+            if (CampaignMain.campaignMain.getBooleanConfig("UseBMWeightingTables")) {
                 weightClass = getSkewedWeightClass();
             } else {
-                weightClass = server.campaign.CampaignMain.cm.getRandomNumber(4);// 0-3
+                weightClass = CampaignMain.campaignMain.getRandomNumber(4);// 0-3
             }
 
             // get a filename from the static build table
@@ -662,15 +663,15 @@ public class Market {
                  *
                  * List it for the stock factory purchase price.
                  */
-                server.campaign.SHouse sellingFaction = server.campaign.CampaignMain.cm.getHouseFromPartialString(
-                      server.campaign.CampaignMain.cm.getConfig("NewbieHouseName"), null);
+                server.campaign.SHouse sellingFaction = CampaignMain.campaignMain.getHouseFromPartialString(
+                      CampaignMain.campaignMain.getConfig("NewbieHouseName"), null);
                 int priceForUnit = sellingFaction.getPriceForUnit(rareUnit.getWeightclass(), rareUnit.getType());
 
                 // Create the listing
                 //add 1 to the sale tick due to a quirk with the BM autoupdate.
                 //The the unit is sent to the player before the new tick counter so the clients
                 //are a tick ahead of the server.
-                int rareSalesTime = server.campaign.CampaignMain.cm.getIntegerConfig("RareMinSaleTime");
+                int rareSalesTime = CampaignMain.campaignMain.getIntegerConfig("RareMinSaleTime");
                 this.addListing("Faction_" + sellingFaction.getName(), rareUnit, priceForUnit, rareSalesTime, true);
                 sellingFaction.addUnit(rareUnit, true);
                 rareUnit.setStatus(Unit.STATUS_FORSALE);
@@ -679,12 +680,12 @@ public class Market {
     }
 
     private int getSkewedWeightClass() {
-        int lightEnd = server.campaign.CampaignMain.cm.getIntegerConfig("BMLightMekWeight");
-        int mediumEnd = lightEnd + server.campaign.CampaignMain.cm.getIntegerConfig("BMMediumMekWeight");
-        int heavyEnd = mediumEnd + server.campaign.CampaignMain.cm.getIntegerConfig("BMHeavyMekWeight");
-        int assaultEnd = heavyEnd + server.campaign.CampaignMain.cm.getIntegerConfig("BMAssaultMekWeight");
+        int lightEnd = CampaignMain.campaignMain.getIntegerConfig("BMLightMekWeight");
+        int mediumEnd = lightEnd + CampaignMain.campaignMain.getIntegerConfig("BMMediumMekWeight");
+        int heavyEnd = mediumEnd + CampaignMain.campaignMain.getIntegerConfig("BMHeavyMekWeight");
+        int assaultEnd = heavyEnd + CampaignMain.campaignMain.getIntegerConfig("BMAssaultMekWeight");
         int totalWeight = assaultEnd;
-        int roll = server.campaign.CampaignMain.cm.getRandomNumber(totalWeight);
+        int roll = CampaignMain.campaignMain.getRandomNumber(totalWeight);
 
         if (roll < lightEnd) {
             return 0;
@@ -719,6 +720,6 @@ public class Market {
 
         // return data to SHouse send data to player
         String result = marketData.toString();
-        if (result.trim().length() > 0) {server.campaign.CampaignMain.cm.toUser("BM|AD|" + result, p.getName(), false);}
+        if (result.trim().length() > 0) {CampaignMain.campaignMain.toUser("BM|AD|" + result, p.getName(), false);}
     }
 }// end Market.java

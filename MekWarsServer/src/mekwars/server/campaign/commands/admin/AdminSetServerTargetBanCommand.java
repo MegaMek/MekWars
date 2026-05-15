@@ -17,6 +17,8 @@
 package mekwars.server.campaign.commands.admin;
 
 
+import mekwars.server.campaign.CampaignMain;
+
 public class AdminSetServerTargetBanCommand implements server.campaign.commands.Command {
 
     int accessLevel = server.MWChatServer.auth.IAuthenticator.ADMIN;
@@ -27,22 +29,22 @@ public class AdminSetServerTargetBanCommand implements server.campaign.commands.
     public void process(java.util.StringTokenizer command, String Username) {
 
         //access level check
-        int userLevel = server.campaign.CampaignMain.cm.getServer().getUserLevel(Username);
+        int userLevel = CampaignMain.campaignMain.getServer().getUserLevel(Username);
         if (userLevel < getExecutionLevel()) {
-            server.campaign.CampaignMain.cm.toUser("AM:Insufficient access level for command. Level: " +
-                                                         userLevel +
-                                                         ". Required: " +
-                                                         accessLevel +
-                                                         ".", Username, true);
+            CampaignMain.campaignMain.toUser("AM:Insufficient access level for command. Level: " +
+                                                   userLevel +
+                                                   ". Required: " +
+                                                   accessLevel +
+                                                   ".", Username, true);
             return;
         }
 
-        server.campaign.CampaignMain.cm.getData().getBannedTargetingSystems().clear();
+        CampaignMain.campaignMain.getData().getBannedTargetingSystems().clear();
         java.util.Vector<Integer> bans = new java.util.Vector<Integer>(1, 1);
         while (command.hasMoreTokens()) {
             bans.add(Integer.parseInt(command.nextToken()));
         }
-        server.campaign.CampaignMain.cm.getData().setBannedTargetingSystems(bans);
+        CampaignMain.campaignMain.getData().setBannedTargetingSystems(bans);
 
         // Send updates to everyone
         StringBuilder sb = new StringBuilder();
@@ -51,9 +53,9 @@ public class AdminSetServerTargetBanCommand implements server.campaign.commands.
             sb.append(ban);
             sb.append("|");
         }
-        server.campaign.CampaignMain.cm.saveBannedTargetSystems();
-        server.campaign.CampaignMain.cm.doSendToAllOnlinePlayers(sb.toString(), false);
-        server.campaign.CampaignMain.cm.toUser("AM: Server Target Bans set", Username, true);
+        CampaignMain.campaignMain.saveBannedTargetSystems();
+        CampaignMain.campaignMain.doSendToAllOnlinePlayers(sb.toString(), false);
+        CampaignMain.campaignMain.toUser("AM: Server Target Bans set", Username, true);
     }
 
     public int getExecutionLevel() {return accessLevel;}

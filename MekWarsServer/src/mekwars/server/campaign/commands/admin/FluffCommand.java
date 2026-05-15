@@ -16,6 +16,8 @@
 
 package mekwars.server.campaign.commands.admin;
 
+import mekwars.server.campaign.CampaignMain;
+
 public class FluffCommand implements server.campaign.commands.Command {
 
     int accessLevel = server.MWChatServer.auth.IAuthenticator.ADMIN;
@@ -26,13 +28,13 @@ public class FluffCommand implements server.campaign.commands.Command {
     public void process(java.util.StringTokenizer command, String Username) {
 
         //access level check
-        int userLevel = server.campaign.CampaignMain.cm.getServer().getUserLevel(Username);
+        int userLevel = CampaignMain.campaignMain.getServer().getUserLevel(Username);
         if (userLevel < getExecutionLevel()) {
-            server.campaign.CampaignMain.cm.toUser("AM:Insufficient access level for command. Level: " +
-                                                         userLevel +
-                                                         ". Required: " +
-                                                         accessLevel +
-                                                         ".", Username, true);
+            CampaignMain.campaignMain.toUser("AM:Insufficient access level for command. Level: " +
+                                                   userLevel +
+                                                   ". Required: " +
+                                                   accessLevel +
+                                                   ".", Username, true);
             return;
         }
 
@@ -40,9 +42,9 @@ public class FluffCommand implements server.campaign.commands.Command {
         String fluff = "";
 
         try {
-            p = server.campaign.CampaignMain.cm.getPlayer(command.nextToken());
+            p = CampaignMain.campaignMain.getPlayer(command.nextToken());
         } catch (Exception e) {
-            server.campaign.CampaignMain.cm.toUser(
+            CampaignMain.campaignMain.toUser(
                   "AM:Improper command. Try: /c fluff#PlayerName#text to set text or /c fluff#PlayerName to clear",
                   Username,
                   true);
@@ -56,7 +58,7 @@ public class FluffCommand implements server.campaign.commands.Command {
         }
 
         if (p == null) {
-            server.campaign.CampaignMain.cm.toUser("AM:Couldn't find a player with that name.", Username, true);
+            CampaignMain.campaignMain.toUser("AM:Couldn't find a player with that name.", Username, true);
             return;
         }
 
@@ -66,7 +68,7 @@ public class FluffCommand implements server.campaign.commands.Command {
                       fluff.indexOf("$") > 0 ||
                       fluff.indexOf("#") > 0 ||
                       fluff.indexOf("|") > 0) {
-                server.campaign.CampaignMain.cm.toUser(
+                CampaignMain.campaignMain.toUser(
                       "AM:Illegal characters in the fluff text try again without '|','$','#', or '~' characters",
                       Username,
                       true);
@@ -74,27 +76,27 @@ public class FluffCommand implements server.campaign.commands.Command {
             }
 
             p.setFluffText(fluff);
-            server.campaign.CampaignMain.cm.toUser("AM:New fluff text for " + p.getName() + ": " + fluff,
+            CampaignMain.campaignMain.toUser("AM:New fluff text for " + p.getName() + ": " + fluff,
                   Username,
                   true);
-            server.campaign.CampaignMain.cm.toUser("AM:" + Username + " set your fluff to: " + fluff,
+            CampaignMain.campaignMain.toUser("AM:" + Username + " set your fluff to: " + fluff,
                   p.getName(),
                   true);
             //server.MWLogger.modLog(Username + " set " + p.getName() + "'s fluff to '" + fluff + "'.");
-            server.campaign.CampaignMain.cm.doSendModMail("NOTE",
+            CampaignMain.campaignMain.doSendModMail("NOTE",
                   Username + " set " + p.getName() + "'s fluff to '" + fluff + "'.");
         }
 
         //no text, so remove fluff
         else {
             p.setFluffText("");
-            server.campaign.CampaignMain.cm.toUser("AM:Removed fluff from " + p.getName() + ".", Username, true);
-            server.campaign.CampaignMain.cm.toUser("AM:" + Username + " removed your fluff text.", p.getName(), true);
+            CampaignMain.campaignMain.toUser("AM:Removed fluff from " + p.getName() + ".", Username, true);
+            CampaignMain.campaignMain.toUser("AM:" + Username + " removed your fluff text.", p.getName(), true);
             //server.MWLogger.modLog(Username + " removed " + p.getName() + "'s fluff.");
-            server.campaign.CampaignMain.cm.doSendModMail("NOTE", Username + " removed " + p.getName() + "'s fluff.");
+            CampaignMain.campaignMain.doSendModMail("NOTE", Username + " removed " + p.getName() + "'s fluff.");
         }
 
-        server.campaign.CampaignMain.cm.doSendToAllOnlinePlayers("PI|FT|" + p.getName() + "|" + p.getFluffText(),
+        CampaignMain.campaignMain.doSendToAllOnlinePlayers("PI|FT|" + p.getName() + "|" + p.getFluffText(),
               false);
     }
 

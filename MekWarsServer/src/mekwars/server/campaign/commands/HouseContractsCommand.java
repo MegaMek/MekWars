@@ -17,6 +17,8 @@
 
 package mekwars.server.campaign.commands;
 
+import mekwars.server.campaign.CampaignMain;
+
 public class HouseContractsCommand implements Command {
 
     int accessLevel = 0;
@@ -25,13 +27,13 @@ public class HouseContractsCommand implements Command {
     public void process(java.util.StringTokenizer command, String Username) {
 
         if (accessLevel != 0) {
-            int userLevel = server.campaign.CampaignMain.cm.getServer().getUserLevel(Username);
+            int userLevel = CampaignMain.campaignMain.getServer().getUserLevel(Username);
             if (userLevel < getExecutionLevel()) {
-                server.campaign.CampaignMain.cm.toUser("AM:Insufficient access level for command. Level: " +
-                                                             userLevel +
-                                                             ". Required: " +
-                                                             accessLevel +
-                                                             ".", Username, true);
+                CampaignMain.campaignMain.toUser("AM:Insufficient access level for command. Level: " +
+                                                       userLevel +
+                                                       ". Required: " +
+                                                       accessLevel +
+                                                       ".", Username, true);
                 return;
             }
         }
@@ -39,7 +41,7 @@ public class HouseContractsCommand implements Command {
         StringBuilder toSend = new StringBuilder();
         int count = 0;
 
-        server.campaign.SPlayer player = server.campaign.CampaignMain.cm.getPlayer(Username);
+        server.campaign.SPlayer player = CampaignMain.campaignMain.getPlayer(Username);
 
         //if a merc, show everyone's employers
         if (player.getMyHouse().isMercHouse()) {
@@ -73,7 +75,7 @@ public class HouseContractsCommand implements Command {
             if (count == 0) {toSend.append("- NONE<br>");}
 
             //send the string
-            server.campaign.CampaignMain.cm.toUser(toSend.toString(), Username, true);
+            CampaignMain.campaignMain.toUser(toSend.toString(), Username, true);
             return;
 
         }//end if(merc)
@@ -82,7 +84,7 @@ public class HouseContractsCommand implements Command {
         toSend.append("Mercenaries employed by your faction: <br>");
 
         //get merc factions, loop through
-        java.util.Vector<server.campaign.mercenaries.MercHouse> mh = server.campaign.CampaignMain.cm.getMercHouses();
+        java.util.Vector<server.campaign.mercenaries.MercHouse> mh = CampaignMain.campaignMain.getMercHouses();
         for (server.campaign.mercenaries.MercHouse searchHouse : mh) {
             for (server.campaign.SPlayer currP : searchHouse.getAllOnlinePlayers().values()) {
                 if (searchHouse.getHouseFightingFor(currP).equals(player.getMyHouse())) {
@@ -95,7 +97,7 @@ public class HouseContractsCommand implements Command {
         //if none unemployed, say so.
         if (count == 0) {toSend.append("- NONE<br>");}
 
-        server.campaign.CampaignMain.cm.toUser(toSend.toString(), Username, true);
+        CampaignMain.campaignMain.toUser(toSend.toString(), Username, true);
 
     }//end process()
 

@@ -24,6 +24,7 @@ package mekwars.server.campaign.commands;
 import common.Unit;
 import common.util.MWLogger;
 import common.util.UnitUtils;
+import mekwars.server.campaign.CampaignMain;
 
 /**
  * @author Helge Richter
@@ -37,19 +38,19 @@ public class SellCommand implements Command {
     public void process(java.util.StringTokenizer command, String Username) {
 
         if (accessLevel != 0) {
-            int userLevel = server.campaign.CampaignMain.cm.getServer().getUserLevel(Username);
+            int userLevel = CampaignMain.campaignMain.getServer().getUserLevel(Username);
             if (userLevel < getExecutionLevel()) {
-                server.campaign.CampaignMain.cm.toUser("AM:Insufficient access level for command. Level: " +
-                                                             userLevel +
-                                                             ". Required: " +
-                                                             accessLevel +
-                                                             ".", Username, true);
+                CampaignMain.campaignMain.toUser("AM:Insufficient access level for command. Level: " +
+                                                       userLevel +
+                                                       ". Required: " +
+                                                       accessLevel +
+                                                       ".", Username, true);
                 return;
             }
         }
 
         //load the player.
-        server.campaign.SPlayer p = server.campaign.CampaignMain.cm.getPlayer(Username);
+        server.campaign.SPlayer p = CampaignMain.campaignMain.getPlayer(Username);
         server.campaign.SHouse house = p.getMyHouse();
 
         /*
@@ -57,7 +58,7 @@ public class SellCommand implements Command {
          */
         //players in training houses may not sell units
         if (p.getMyHouse().isNewbieHouse()) {
-            server.campaign.CampaignMain.cm.toUser(
+            CampaignMain.campaignMain.toUser(
                   "AM:Players in training factions may not sell, scrap or donate their units.",
                   Username,
                   true);
@@ -66,7 +67,7 @@ public class SellCommand implements Command {
 
         //players whose factions don't have market selling access cannot sell units
         if (!p.getMyHouse().maySellOnBM()) {
-            server.campaign.CampaignMain.cm.toUser(
+            CampaignMain.campaignMain.toUser(
                   "AM:You are not allowed to sell units on the market. Your faction forbids it!",
                   Username,
                   true);
@@ -76,7 +77,7 @@ public class SellCommand implements Command {
         //players need XP to sell.
         int minBMEXP = Integer.parseInt(house.getConfig("MinEXPforBMSelling"));
         if (p.getExperience() < minBMEXP) {
-            server.campaign.CampaignMain.cm.toUser(
+            CampaignMain.campaignMain.toUser(
                   "AM:You are not allowed to sell units on the Market. Required Experience: " + minBMEXP + ".",
                   Username,
                   true);
@@ -85,7 +86,7 @@ public class SellCommand implements Command {
 
         //welfare recipients may not auction their units
         if (p.mayAcquireWelfareUnits()) {
-            server.campaign.CampaignMain.cm.toUser("AM:You may not auction any of your units while you are on welfare.",
+            CampaignMain.campaignMain.toUser("AM:You may not auction any of your units while you are on welfare.",
                   Username,
                   true);
             return;
@@ -104,14 +105,14 @@ public class SellCommand implements Command {
             salesTicks = Integer.parseInt((String) command.nextElement());
             minBid = Integer.parseInt((String) command.nextElement());
         } catch (Exception e) {
-            server.campaign.CampaignMain.cm.toUser("AM:Improper format. Try: /c sell#unitid#ticks#minbid",
+            CampaignMain.campaignMain.toUser("AM:Improper format. Try: /c sell#unitid#ticks#minbid",
                   Username,
                   true);
             return;
         }
         server.campaign.SUnit unitToSell = p.getUnit(unitID);
         if (unitToSell == null) {
-            server.campaign.CampaignMain.cm.toUser("AM:You do not have a unit with ID#" + unitToSell + ".",
+            CampaignMain.campaignMain.toUser("AM:You do not have a unit with ID#" + unitToSell + ".",
                   Username,
                   true);
             return;
@@ -119,7 +120,7 @@ public class SellCommand implements Command {
 
         //unmaintained units may not be sold.
         if (unitToSell.getStatus() == Unit.STATUS_UNMAINTAINED) {
-            server.campaign.CampaignMain.cm.toUser("AM:You may not sell unmaintained units on the Market.",
+            CampaignMain.campaignMain.toUser("AM:You may not sell unmaintained units on the Market.",
                   Username,
                   true);
             return;
@@ -127,7 +128,7 @@ public class SellCommand implements Command {
 
         //make sure the unit isn't already being sold ...
         if (unitToSell.getStatus() == Unit.STATUS_FORSALE) {
-            server.campaign.CampaignMain.cm.toUser("AM:The " + unitToSell.getModelName() + " is already for sale.",
+            CampaignMain.campaignMain.toUser("AM:The " + unitToSell.getModelName() + " is already for sale.",
                   Username,
                   true);
             return;
@@ -135,20 +136,20 @@ public class SellCommand implements Command {
 
         //some servers don't allow players to sell clan-tech units
         if (unitToSell.getEntity().isClan() && Boolean.parseBoolean(house.getConfig("BMNoClan"))) {
-            server.campaign.CampaignMain.cm.toUser("AM:Clan units may not be sold on the Market.", Username, true);
+            CampaignMain.campaignMain.toUser("AM:Clan units may not be sold on the Market.", Username, true);
             return;
         }
 
         //some types/weights of units may not be sold. ask the unit if it's eligible.
         if (!server.campaign.SUnit.mayBeSoldOnMarket(unitToSell)) {
-            server.campaign.CampaignMain.cm.toUser("AM:The " +
-                                                         unitToSell.getModelName() +
-                                                         " may not be sold on the Market.", Username, true);
+            CampaignMain.campaignMain.toUser("AM:The " +
+                                                   unitToSell.getModelName() +
+                                                   " may not be sold on the Market.", Username, true);
             return;
         }
 
-        if (unitToSell.isChristmasUnit() && !server.campaign.CampaignMain.cm.getBooleanConfig("Christmas_AllowBM")) {
-            server.campaign.CampaignMain.cm.toUser("AM:You are not allowed to sell Christmas units.", Username);
+        if (unitToSell.isChristmasUnit() && !CampaignMain.campaignMain.getBooleanConfig("Christmas_AllowBM")) {
+            CampaignMain.campaignMain.toUser("AM:You are not allowed to sell Christmas units.", Username);
             return;
         }
 
@@ -159,14 +160,14 @@ public class SellCommand implements Command {
         int sellFluCost = Integer.parseInt(house.getConfig("BMSellFlu"));
         sellFluCost = sellFluCost + (unitToSell.getWeightclass()) * house.getIntegerConfig("BMFluSizeCost");
         if (p.getInfluence() < sellFluCost) {
-            server.campaign.CampaignMain.cm.toUser("AM:You need " +
-                                                         server.campaign.CampaignMain.cm.moneyOrFluMessage(false,
-                                                               true,
-                                                               sellFluCost)
-                                                         +
-                                                         " to sell the " +
-                                                         unitToSell.getModelName() +
-                                                         ".", Username, true);
+            CampaignMain.campaignMain.toUser("AM:You need " +
+                                                   CampaignMain.campaignMain.moneyOrFluMessage(false,
+                                                         true,
+                                                         sellFluCost)
+                                                   +
+                                                   " to sell the " +
+                                                   unitToSell.getModelName() +
+                                                   ".", Username, true);
             return;
         }
 
@@ -176,18 +177,18 @@ public class SellCommand implements Command {
         int minticks = Integer.parseInt(house.getConfig("MinBMSalesTicks"));
         int minprice = Integer.parseInt(house.getConfig("MinBMSalesPrice"));
         if (salesTicks < minticks) {
-            server.campaign.CampaignMain.cm.toUser("AM:Units must be offered for at least " + minticks + " ticks.",
+            CampaignMain.campaignMain.toUser("AM:Units must be offered for at least " + minticks + " ticks.",
                   Username,
                   true);
             return;
         }
         if (minBid < minprice) {
-            server.campaign.CampaignMain.cm.toUser("AM:Units must have a minimum asking price of at least "
-                                                         +
-                                                         server.campaign.CampaignMain.cm.moneyOrFluMessage(true,
-                                                               false,
-                                                               minprice) +
-                                                         ".", Username, true);
+            CampaignMain.campaignMain.toUser("AM:Units must have a minimum asking price of at least "
+                                                   +
+                                                   CampaignMain.campaignMain.moneyOrFluMessage(true,
+                                                         false,
+                                                         minprice) +
+                                                   ".", Username, true);
             return;
         }
 
@@ -197,18 +198,18 @@ public class SellCommand implements Command {
         int maxticks = Integer.parseInt(house.getConfig("MaxBMSalesTicks"));
         int maxprice = Integer.parseInt(house.getConfig("MaxBMSalesPrice"));
         if (salesTicks > maxticks && maxticks > 0) {
-            server.campaign.CampaignMain.cm.toUser("AM:Units may not be offered for more than " + maxticks + " ticks.",
+            CampaignMain.campaignMain.toUser("AM:Units may not be offered for more than " + maxticks + " ticks.",
                   Username,
                   true);
             return;
         }
         if (minBid > maxprice && maxprice > 0) {
-            server.campaign.CampaignMain.cm.toUser("AM:Units may not have an asking price of more than  "
-                                                         +
-                                                         server.campaign.CampaignMain.cm.moneyOrFluMessage(true,
-                                                               false,
-                                                               maxprice) +
-                                                         ".", Username, true);
+            CampaignMain.campaignMain.toUser("AM:Units may not have an asking price of more than  "
+                                                   +
+                                                   CampaignMain.campaignMain.moneyOrFluMessage(true,
+                                                         false,
+                                                         maxprice) +
+                                                   ".", Username, true);
             return;
         }
 
@@ -220,9 +221,9 @@ public class SellCommand implements Command {
          * the unit isn't being used.
          */
         if (p.getAmountOfTimesUnitExistsInArmies(unitID) > 0) {
-            server.campaign.CampaignMain.cm.toUser("AM:The " +
-                                                         unitToSell.getModelName() +
-                                                         " must be removed from all armies before being added to the Market.",
+            CampaignMain.campaignMain.toUser("AM:The " +
+                                                   unitToSell.getModelName() +
+                                                   " must be removed from all armies before being added to the Market.",
                   Username,
                   true);
             return;
@@ -233,7 +234,7 @@ public class SellCommand implements Command {
                   &&
                   (UnitUtils.hasArmorDamage(unitToSell.getEntity()) ||
                          UnitUtils.hasCriticalDamage(unitToSell.getEntity()))) {
-            server.campaign.CampaignMain.cm.toUser("AM:You may not sell damaged units on the black market!",
+            CampaignMain.campaignMain.toUser("AM:You may not sell damaged units on the black market!",
                   Username,
                   true);
             return;
@@ -242,24 +243,24 @@ public class SellCommand implements Command {
         /*
          * Decrease the players influence and add the sale.
          */
-        server.campaign.CampaignMain.cm.getMarket().addListing(Username, unitToSell, minBid, salesTicks);
+        CampaignMain.campaignMain.getMarket().addListing(Username, unitToSell, minBid, salesTicks);
         p.addInfluence(-sellFluCost);//this sets the player save, as well.
 
         /*
          * Inform the player and his faction.
          */
-        server.campaign.CampaignMain.cm.toUser("AM:The " +
-                                                     unitToSell.getModelName() +
-                                                     " is now on the Market "
-                                                     +
-                                                     "(" +
-                                                     server.campaign.CampaignMain.cm.moneyOrFluMessage(false,
-                                                           false,
-                                                           -sellFluCost,
-                                                           true) +
-                                                     ").", Username, true);
-        if (!server.campaign.CampaignMain.cm.getBooleanConfig("HiddenBMUnits")) {
-            server.campaign.CampaignMain.cm.doSendHouseMail(p.getMyHouse(),
+        CampaignMain.campaignMain.toUser("AM:The " +
+                                               unitToSell.getModelName() +
+                                               " is now on the Market "
+                                               +
+                                               "(" +
+                                               CampaignMain.campaignMain.moneyOrFluMessage(false,
+                                                     false,
+                                                     -sellFluCost,
+                                                     true) +
+                                               ").", Username, true);
+        if (!CampaignMain.campaignMain.getBooleanConfig("HiddenBMUnits")) {
+            CampaignMain.campaignMain.doSendHouseMail(p.getMyHouse(),
                   "NOTE",
                   p.getName() + " added a unit to the market [" + unitToSell.getModelName() + "].");
         }

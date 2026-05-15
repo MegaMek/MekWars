@@ -17,6 +17,7 @@
 package mekwars.server.campaign.commands;
 
 import common.campaign.operations.Operation;
+import mekwars.server.campaign.CampaignMain;
 
 public class CheckAttackCommand implements Command {
 
@@ -27,23 +28,23 @@ public class CheckAttackCommand implements Command {
     public void process(java.util.StringTokenizer command, String Username) {
 
         if (accessLevel != 0) {
-            int userLevel = server.campaign.CampaignMain.cm.getServer().getUserLevel(Username);
+            int userLevel = CampaignMain.campaignMain.getServer().getUserLevel(Username);
             if (userLevel < getExecutionLevel()) {
-                server.campaign.CampaignMain.cm.toUser("AM:Insufficient access level for command. Level: " +
-                                                             userLevel +
-                                                             ". Required: " +
-                                                             accessLevel +
-                                                             ".", Username, true);
+                CampaignMain.campaignMain.toUser("AM:Insufficient access level for command. Level: " +
+                                                       userLevel +
+                                                       ". Required: " +
+                                                       accessLevel +
+                                                       ".", Username, true);
                 return;
             }
         }
 
-        server.campaign.SPlayer p = server.campaign.CampaignMain.cm.getPlayer(Username);
+        server.campaign.SPlayer p = CampaignMain.campaignMain.getPlayer(Username);
 
         //break if player isnt active
-        boolean canProbeFromReserve = server.campaign.CampaignMain.cm.getBooleanConfig("ProbeInReserve");
+        boolean canProbeFromReserve = CampaignMain.campaignMain.getBooleanConfig("ProbeInReserve");
         if (!canProbeFromReserve && p.getDutyStatus() < server.campaign.SPlayer.STATUS_ACTIVE) {
-            server.campaign.CampaignMain.cm.toUser(
+            CampaignMain.campaignMain.toUser(
                   "AM:You are not on the frontline. You can't probe enemy forces from reserve!",
                   Username,
                   true);
@@ -52,15 +53,15 @@ public class CheckAttackCommand implements Command {
 
         //don't allow fighting players to /c ca spot for their comrades
         if (p.getDutyStatus() == server.campaign.SPlayer.STATUS_FIGHTING) {
-            server.campaign.CampaignMain.cm.toUser("AM:You should focus on playing your game!", Username, true);
+            CampaignMain.campaignMain.toUser("AM:You should focus on playing your game!", Username, true);
             return;
         }
 
         //if not fighting, check to make sure minactivetime is met
         boolean minActiveMet = System.currentTimeMillis() - p.getActiveSince() >=
-                                     Long.parseLong(server.campaign.CampaignMain.cm.getConfig("MinActiveTime")) * 1000;
+                                     Long.parseLong(CampaignMain.campaignMain.getConfig("MinActiveTime")) * 1000;
         if (!canProbeFromReserve && !minActiveMet) {
-            server.campaign.CampaignMain.cm.toUser(
+            CampaignMain.campaignMain.toUser(
                   "AM:You're still on your way to the frontline. Contact an intelligence officer once you arrive at your post.",
                   Username,
                   true);
@@ -69,12 +70,12 @@ public class CheckAttackCommand implements Command {
 
         //don't allow uncontracted mercs to /c ca spot for their friends
         if (p.getMyHouse().isMercHouse() && p.getHouseFightingFor() == p.getMyHouse()) {
-            server.campaign.CampaignMain.cm.toUser("AM:You are not under contract!", Username, true);
+            CampaignMain.campaignMain.toUser("AM:You are not under contract!", Username, true);
             return;
         }
 
         //All the tosses are passed, so check to see if the return should use normal or Operations BVs.
-        boolean usingOpRules = server.campaign.CampaignMain.cm.getBooleanConfig("UseOperationsRule");
+        boolean usingOpRules = CampaignMain.campaignMain.getBooleanConfig("UseOperationsRule");
 
         String Desc = "<br>";//output
 
@@ -87,7 +88,7 @@ public class CheckAttackCommand implements Command {
             try {
                 armyID = Integer.parseInt(command.nextToken());
             } catch (Exception e) {
-                server.campaign.CampaignMain.cm.toUser(
+                CampaignMain.campaignMain.toUser(
                       "AM:Improper format. Try: /c checkattack or /c checkattack#armyid",
                       Username,
                       true);
@@ -96,12 +97,12 @@ public class CheckAttackCommand implements Command {
 
             server.campaign.SArmy arm = p.getArmy(armyID);
             if (arm == null) {
-                server.campaign.CampaignMain.cm.toUser("AM:Army #" + armyID + " doesn't exist.", Username, true);
+                CampaignMain.campaignMain.toUser("AM:Army #" + armyID + " doesn't exist.", Username, true);
                 return;
             }
 
             if (arm.isDisabled()) {
-                server.campaign.CampaignMain.cm.toUser("AM: Army #" + armyID + " is disabled.", Username, true);
+                CampaignMain.campaignMain.toUser("AM: Army #" + armyID + " is disabled.", Username, true);
                 return;
             }
 
@@ -111,7 +112,7 @@ public class CheckAttackCommand implements Command {
             java.util.Enumeration<server.campaign.SArmy> targets = arm.getOpponents().elements();
             while (targets.hasMoreElements()) {
                 server.campaign.SArmy currTarget = targets.nextElement();
-                server.campaign.SPlayer currTargetP = server.campaign.CampaignMain.cm.getPlayer(currTarget.getPlayerName());
+                server.campaign.SPlayer currTargetP = CampaignMain.campaignMain.getPlayer(currTarget.getPlayerName());
                 String coloredHouseName = currTargetP.getMyHouse().getHouseFightingFor(currTargetP).getColoredName();
                 String defendableOps = listDefendableOperations(arm, currTargetP, currTarget, p.getHouseFightingFor());
 
@@ -120,7 +121,7 @@ public class CheckAttackCommand implements Command {
                 Desc += "<tr><td>&nbsp;</td><td>";
 
                 //adjust return for infantry settings
-                if (server.campaign.CampaignMain.cm.getBooleanConfig("ShowInfInCheckAttack")) {
+                if (CampaignMain.campaignMain.getBooleanConfig("ShowInfInCheckAttack")) {
                     Desc += coloredHouseName + "(" + currTarget.getAmountOfUnits() + ")";
                 } else {Desc += coloredHouseName + "(" + currTarget.getAmountOfUnitsWithoutInfantry() + ")";}
 
@@ -150,7 +151,7 @@ public class CheckAttackCommand implements Command {
                     java.util.Enumeration<server.campaign.SArmy> targets = arm.getOpponents().elements();
                     while (targets.hasMoreElements()) {
                         server.campaign.SArmy currTarget = targets.nextElement();
-                        server.campaign.SPlayer currTargetP = server.campaign.CampaignMain.cm.getPlayer(currTarget.getPlayerName());
+                        server.campaign.SPlayer currTargetP = CampaignMain.campaignMain.getPlayer(currTarget.getPlayerName());
                         if (currTargetP == null) {continue;}
                         String defendableOps = listDefendableOperations(arm,
                               currTargetP,
@@ -162,7 +163,7 @@ public class CheckAttackCommand implements Command {
                                                         .getColoredName();
                         Desc += "<td>";
                         //adjust return for infantry settings
-                        if (server.campaign.CampaignMain.cm.getBooleanConfig("ShowInfInCheckAttack")) {
+                        if (CampaignMain.campaignMain.getBooleanConfig("ShowInfInCheckAttack")) {
                             Desc += coloredHouseName + "(" + currTarget.getAmountOfUnits() + ")";
                         } else {Desc += coloredHouseName + "(" + currTarget.getAmountOfUnitsWithoutInfantry() + ")";}
 
@@ -180,7 +181,7 @@ public class CheckAttackCommand implements Command {
             }
         }
 
-        server.campaign.CampaignMain.cm.toUser(Desc + "<br>", Username, true);
+        CampaignMain.campaignMain.toUser(Desc + "<br>", Username, true);
 
     }
 
@@ -193,7 +194,7 @@ public class CheckAttackCommand implements Command {
     private String listDefendableOperations(server.campaign.SArmy aa, server.campaign.SPlayer dp,
           server.campaign.SArmy da, server.campaign.SHouse ah) {
         StringBuffer report = new StringBuffer(" [");
-        server.campaign.operations.newopmanager.I_OperationManager manager = server.campaign.CampaignMain.cm.getOpsManager();
+        server.campaign.operations.newopmanager.I_OperationManager manager = CampaignMain.campaignMain.getOpsManager();
         for (String attack : aa.getLegalOperations().keySet()) {
             Operation o = manager.getOperation(attack);
             // Don't show AFR-only attacks

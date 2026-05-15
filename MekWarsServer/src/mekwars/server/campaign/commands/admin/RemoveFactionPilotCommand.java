@@ -1,6 +1,7 @@
 package mekwars.server.campaign.commands.admin;
 
 import common.Unit;
+import mekwars.server.campaign.CampaignMain;
 
 /**
  * @author Torren (Jason Tighe)
@@ -15,13 +16,13 @@ public class RemoveFactionPilotCommand implements server.campaign.commands.Comma
     public void process(java.util.StringTokenizer command, String Username) {
 
         if (accessLevel != 0) {
-            int userLevel = server.campaign.CampaignMain.cm.getServer().getUserLevel(Username);
+            int userLevel = CampaignMain.campaignMain.getServer().getUserLevel(Username);
             if (userLevel < getExecutionLevel()) {
-                server.campaign.CampaignMain.cm.toUser("AM:Insufficient access level for command. Level: " +
-                                                             userLevel +
-                                                             ". Required: " +
-                                                             accessLevel +
-                                                             ".", Username, true);
+                CampaignMain.campaignMain.toUser("AM:Insufficient access level for command. Level: " +
+                                                       userLevel +
+                                                       ". Required: " +
+                                                       accessLevel +
+                                                       ".", Username, true);
                 return;
             }
         }
@@ -35,10 +36,10 @@ public class RemoveFactionPilotCommand implements server.campaign.commands.Comma
             house = command.nextToken();
             type = command.nextToken();
         } catch (Exception ex) {
-            server.campaign.CampaignMain.cm.toUser(syntax, Username);
+            CampaignMain.campaignMain.toUser(syntax, Username);
             return;
         }
-        server.campaign.SHouse h = server.campaign.CampaignMain.cm.getHouseFromPartialString(house, Username);
+        server.campaign.SHouse h = CampaignMain.campaignMain.getHouseFromPartialString(house, Username);
 
         try {
             if (type.equalsIgnoreCase("all")) {
@@ -61,12 +62,12 @@ public class RemoveFactionPilotCommand implements server.campaign.commands.Comma
                 }
             }
         } catch (Exception ex) {
-            server.campaign.CampaignMain.cm.toUser(syntax, Username);
+            CampaignMain.campaignMain.toUser(syntax, Username);
             return;
         }
 
         h.updated();
-        server.campaign.CampaignMain.cm.doSendModMail("NOTE",
+        CampaignMain.campaignMain.doSendModMail("NOTE",
               Username + " has removed pilots from " + h.getName() + "'s pilot queue");
     }
 

@@ -17,6 +17,7 @@
 package mekwars.server.campaign.commands;
 
 import common.House;
+import mekwars.server.campaign.CampaignMain;
 
 
 /**
@@ -31,22 +32,22 @@ public class ListSubFactionCommand implements Command {
     public void process(java.util.StringTokenizer command, String Username) {
 
         if (accessLevel != 0) {
-            int userLevel = server.campaign.CampaignMain.cm.getServer().getUserLevel(Username);
+            int userLevel = CampaignMain.campaignMain.getServer().getUserLevel(Username);
             if (userLevel < getExecutionLevel()) {
-                server.campaign.CampaignMain.cm.toUser("AM:Insufficient access level for command. Level: " +
-                                                             userLevel +
-                                                             ". Required: " +
-                                                             accessLevel +
-                                                             ".", Username, true);
+                CampaignMain.campaignMain.toUser("AM:Insufficient access level for command. Level: " +
+                                                       userLevel +
+                                                       ". Required: " +
+                                                       accessLevel +
+                                                       ".", Username, true);
                 return;
             }
         }
 
         String factionName = "";
-        server.campaign.SPlayer player = server.campaign.CampaignMain.cm.getPlayer(Username);
+        server.campaign.SPlayer player = CampaignMain.campaignMain.getPlayer(Username);
 
         try {
-            if (command.hasMoreTokens() && server.campaign.CampaignMain.cm.getServer().isModerator(Username)) {
+            if (command.hasMoreTokens() && CampaignMain.campaignMain.getServer().isModerator(Username)) {
                 factionName = command.nextToken();
             } else {factionName = player.getMyHouse().getName();}
         } catch (Exception ex) {
@@ -55,7 +56,7 @@ public class ListSubFactionCommand implements Command {
 
         if (factionName.equalsIgnoreCase("all")) {
 
-            for (House faction : server.campaign.CampaignMain.cm.getData().getAllHouses()) {
+            for (House faction : CampaignMain.campaignMain.getData().getAllHouses()) {
                 StringBuffer result = new StringBuffer("SM|Subfaction list for faction ");
                 result.append(faction.getName());
                 for (String subFactionName : faction.getSubFactionList().keySet()) {
@@ -63,13 +64,13 @@ public class ListSubFactionCommand implements Command {
                     result.append(subFactionName);
                 }
 
-                server.campaign.CampaignMain.cm.toUser(result.toString(), Username, false);
+                CampaignMain.campaignMain.toUser(result.toString(), Username, false);
                 result.setLength(0);
             }
             return;
         }
 
-        server.campaign.SHouse faction = server.campaign.CampaignMain.cm.getHouseFromPartialString(factionName,
+        server.campaign.SHouse faction = CampaignMain.campaignMain.getHouseFromPartialString(factionName,
               Username);
 
         if (faction == null) {return;}
@@ -81,7 +82,7 @@ public class ListSubFactionCommand implements Command {
             result.append(subFactionName);
         }
 
-        server.campaign.CampaignMain.cm.toUser(result.toString(), Username, false);
+        CampaignMain.campaignMain.toUser(result.toString(), Username, false);
     }
 
     public int getExecutionLevel() {return accessLevel;}

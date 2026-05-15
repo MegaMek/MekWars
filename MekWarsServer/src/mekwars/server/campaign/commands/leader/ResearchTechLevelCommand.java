@@ -15,6 +15,8 @@
 
 package mekwars.server.campaign.commands.leader;
 
+import mekwars.server.campaign.CampaignMain;
+
 public class ResearchTechLevelCommand implements server.campaign.commands.Command {
 
     // Starting out at mod level this can be lowered as needed
@@ -28,67 +30,67 @@ public class ResearchTechLevelCommand implements server.campaign.commands.Comman
     public void process(java.util.StringTokenizer command, String Username) {
 
         if (accessLevel != 0) {
-            int userLevel = server.campaign.CampaignMain.cm.getServer().getUserLevel(Username);
+            int userLevel = CampaignMain.campaignMain.getServer().getUserLevel(Username);
             if (userLevel < getExecutionLevel()) {
-                server.campaign.CampaignMain.cm.toUser("AM:Insufficient access level for command. Level: " +
-                                                             userLevel +
-                                                             ". Required: " +
-                                                             accessLevel +
-                                                             ".", Username, true);
+                CampaignMain.campaignMain.toUser("AM:Insufficient access level for command. Level: " +
+                                                       userLevel +
+                                                       ". Required: " +
+                                                       accessLevel +
+                                                       ".", Username, true);
                 return;
             }
         }
 
-        server.campaign.SPlayer player = server.campaign.CampaignMain.cm.getPlayer(Username);
+        server.campaign.SPlayer player = CampaignMain.campaignMain.getPlayer(Username);
         server.campaign.SHouse house = player.getMyHouse();
         double cost = 0.0;
         double flu = 0.0;
 
         if (house.isNewbieHouse()) {
-            server.campaign.CampaignMain.cm.toUser("AM:" +
-                                                         server.campaign.CampaignMain.cm.getConfig("NewbieHouseName") +
-                                                         " cannot research technology!", Username);
+            CampaignMain.campaignMain.toUser("AM:" +
+                                                   CampaignMain.campaignMain.getConfig("NewbieHouseName") +
+                                                   " cannot research technology!", Username);
             return;
         }
 
         int currentTech = house.getTechResearchLevel();
 
         if (currentTech >= 6) {
-            server.campaign.CampaignMain.cm.toUser("AM:You Faction has researched all known technology!", Username);
+            CampaignMain.campaignMain.toUser("AM:You Faction has researched all known technology!", Username);
             return;
         }
 
 
-        cost = server.campaign.CampaignMain.cm.getDoubleConfig("TechPointCost");
+        cost = CampaignMain.campaignMain.getDoubleConfig("TechPointCost");
         if (currentTech > 1) {
-            cost *= server.campaign.CampaignMain.cm.getDoubleConfig("TechLevelTechPointCostModifier") *
+            cost *= CampaignMain.campaignMain.getDoubleConfig("TechLevelTechPointCostModifier") *
                           (currentTech - 1);
         }
 
         cost = Math.round(cost);
 
-        flu = server.campaign.CampaignMain.cm.getDoubleConfig("TechPointFlu");
+        flu = CampaignMain.campaignMain.getDoubleConfig("TechPointFlu");
         if (currentTech > 1) {
-            flu *= server.campaign.CampaignMain.cm.getDoubleConfig("TechLevelTechPointFluModifier") * (currentTech - 1);
+            flu *= CampaignMain.campaignMain.getDoubleConfig("TechLevelTechPointFluModifier") * (currentTech - 1);
         }
 
         flu = Math.round(flu);
 
         if (player.getMoney() < cost) {
-            server.campaign.CampaignMain.cm.toUser("AM:You need " +
-                                                         server.campaign.CampaignMain.cm.moneyOrFluMessage(true,
-                                                               true,
-                                                               (int) cost) +
-                                                         " to research technology.", Username);
+            CampaignMain.campaignMain.toUser("AM:You need " +
+                                                   CampaignMain.campaignMain.moneyOrFluMessage(true,
+                                                         true,
+                                                         (int) cost) +
+                                                   " to research technology.", Username);
             return;
         }
 
         if (player.getInfluence() < flu) {
-            server.campaign.CampaignMain.cm.toUser("AM:You need " +
-                                                         server.campaign.CampaignMain.cm.moneyOrFluMessage(false,
-                                                               true,
-                                                               (int) flu) +
-                                                         " to research technology.", Username);
+            CampaignMain.campaignMain.toUser("AM:You need " +
+                                                   CampaignMain.campaignMain.moneyOrFluMessage(false,
+                                                         true,
+                                                         (int) flu) +
+                                                   " to research technology.", Username);
             return;
         }
 
@@ -101,13 +103,13 @@ public class ResearchTechLevelCommand implements server.campaign.commands.Comman
         house.addTechResearchPoint(1);
 
         if (house.getTechResearchPoints() >=
-                  server.campaign.CampaignMain.cm.getIntegerConfig("TechPointsNeedToLevel")) {
+                  CampaignMain.campaignMain.getIntegerConfig("TechPointsNeedToLevel")) {
             house.updateHouseTechLevel();
-            server.campaign.CampaignMain.cm.doSendHouseMail(house,
+            CampaignMain.campaignMain.doSendHouseMail(house,
                   "NOTE",
                   Username + " has increased your factions Tech Level!");
         } else {
-            server.campaign.CampaignMain.cm.doSendHouseMail(house,
+            CampaignMain.campaignMain.doSendHouseMail(house,
                   "NOTE",
                   Username + " has taken your faction another step closer to the next technology level!");
         }

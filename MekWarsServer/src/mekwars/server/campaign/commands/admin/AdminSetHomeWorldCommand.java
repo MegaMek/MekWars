@@ -20,6 +20,8 @@
  */
 package mekwars.server.campaign.commands.admin;
 
+import mekwars.server.campaign.CampaignMain;
+
 public class AdminSetHomeWorldCommand implements server.campaign.commands.Command {
 
     int accessLevel = server.MWChatServer.auth.IAuthenticator.ADMIN;
@@ -30,13 +32,13 @@ public class AdminSetHomeWorldCommand implements server.campaign.commands.Comman
     public void process(java.util.StringTokenizer command, String Username) {
 
         //access level check
-        int userLevel = server.campaign.CampaignMain.cm.getServer().getUserLevel(Username);
+        int userLevel = CampaignMain.campaignMain.getServer().getUserLevel(Username);
         if (userLevel < getExecutionLevel()) {
-            server.campaign.CampaignMain.cm.toUser("AM:Insufficient access level for command. Level: " +
-                                                         userLevel +
-                                                         ". Required: " +
-                                                         accessLevel +
-                                                         ".", Username, true);
+            CampaignMain.campaignMain.toUser("AM:Insufficient access level for command. Level: " +
+                                                   userLevel +
+                                                   ". Required: " +
+                                                   accessLevel +
+                                                   ".", Username, true);
             return;
         }
 
@@ -44,12 +46,12 @@ public class AdminSetHomeWorldCommand implements server.campaign.commands.Comman
         server.campaign.SPlanet planet = null;
 
         try {
-            planet = server.campaign.CampaignMain.cm.getPlanetFromPartialString(command.nextToken(), Username);
+            planet = CampaignMain.campaignMain.getPlanetFromPartialString(command.nextToken(), Username);
             if (command.hasMoreTokens()) {homeworld = Boolean.parseBoolean(command.nextToken());} else {
                 homeworld = !planet.isHomeWorld();
             }
         } catch (Exception ex) {
-            server.campaign.CampaignMain.cm.toUser("Invalid syntax. Try: adminsethomeworld#Planet#[true/false]",
+            CampaignMain.campaignMain.toUser("Invalid syntax. Try: adminsethomeworld#Planet#[true/false]",
                   Username);
         }
 
@@ -57,10 +59,10 @@ public class AdminSetHomeWorldCommand implements server.campaign.commands.Comman
 
         planet.setHomeWorld(homeworld);
 
-        server.campaign.CampaignMain.cm.toUser(planet.getName() + "'s homeworld status set to: " + homeworld + ".",
+        CampaignMain.campaignMain.toUser(planet.getName() + "'s homeworld status set to: " + homeworld + ".",
               Username,
               true);
-        server.campaign.CampaignMain.cm.doSendModMail("NOTE",
+        CampaignMain.campaignMain.doSendModMail("NOTE",
               Username + " has set " + planet.getName() + "'s homeworld status to: " + homeworld + ".");
         planet.updated();
     }

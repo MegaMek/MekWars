@@ -21,6 +21,7 @@
 package mekwars.server.campaign.commands.admin;
 
 import common.House;
+import mekwars.server.campaign.CampaignMain;
 
 public class AdminRemovePlanetOwnershipCommand implements server.campaign.commands.Command {
 
@@ -32,13 +33,13 @@ public class AdminRemovePlanetOwnershipCommand implements server.campaign.comman
     public void process(java.util.StringTokenizer command, String Username) {
 
         //access level check
-        int userLevel = server.campaign.CampaignMain.cm.getServer().getUserLevel(Username);
+        int userLevel = CampaignMain.campaignMain.getServer().getUserLevel(Username);
         if (userLevel < getExecutionLevel()) {
-            server.campaign.CampaignMain.cm.toUser("AM:Insufficient access level for command. Level: " +
-                                                         userLevel +
-                                                         ". Required: " +
-                                                         accessLevel +
-                                                         ".", Username, true);
+            CampaignMain.campaignMain.toUser("AM:Insufficient access level for command. Level: " +
+                                                   userLevel +
+                                                   ". Required: " +
+                                                   accessLevel +
+                                                   ".", Username, true);
             return;
         }
 
@@ -47,30 +48,30 @@ public class AdminRemovePlanetOwnershipCommand implements server.campaign.comman
         House removingHouse = null;
 
         try {
-            planet = server.campaign.CampaignMain.cm.getPlanetFromPartialString(command.nextToken(), Username);
-            removingHouse = server.campaign.CampaignMain.cm.getHouseFromPartialString(command.nextToken(), Username);
+            planet = CampaignMain.campaignMain.getPlanetFromPartialString(command.nextToken(), Username);
+            removingHouse = CampaignMain.campaignMain.getHouseFromPartialString(command.nextToken(), Username);
 
         } catch (Exception e) {
-            server.campaign.CampaignMain.cm.toUser("Improper command. Try: /c adminremoveplanetownership#planet#faction",
+            CampaignMain.campaignMain.toUser("Improper command. Try: /c adminremoveplanetownership#planet#faction",
                   Username,
                   true);
             return;
         }
 
         if (planet == null) {
-            server.campaign.CampaignMain.cm.toUser("Could not find a matching planet.", Username, true);
+            CampaignMain.campaignMain.toUser("Could not find a matching planet.", Username, true);
             return;
         }
 
         if (removingHouse == null) {
-            server.campaign.CampaignMain.cm.toUser("Could not find a matching faction to remove.", Username, true);
+            CampaignMain.campaignMain.toUser("Could not find a matching faction to remove.", Username, true);
             return;
         }
 
         planet.getInfluence().removeHouse(removingHouse);
         planet.updated();
 
-        server.campaign.CampaignMain.cm.doSendModMail("NOTE",
+        CampaignMain.campaignMain.doSendModMail("NOTE",
               Username + " removed " + removingHouse.getName() + " as an owner of " + planet.getName() + ".");
     }
 

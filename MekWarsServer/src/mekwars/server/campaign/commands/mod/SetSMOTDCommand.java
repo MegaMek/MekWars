@@ -17,6 +17,8 @@
 package mekwars.server.campaign.commands.mod;
 
 
+import mekwars.server.campaign.CampaignMain;
+
 /**
  * Moving the SetSMOTD command from MWServ into the normal command structure.
  * <p>
@@ -32,19 +34,19 @@ public class SetSMOTDCommand implements server.campaign.commands.Command {
     public void process(java.util.StringTokenizer command, String Username) {
 
         if (accessLevel != 0) {
-            int userLevel = server.campaign.CampaignMain.cm.getServer().getUserLevel(Username);
+            int userLevel = CampaignMain.campaignMain.getServer().getUserLevel(Username);
             if (userLevel < getExecutionLevel()) {
-                server.campaign.CampaignMain.cm.toUser("AM:Insufficient access level for command. Level: " +
-                                                             userLevel +
-                                                             ". Required: " +
-                                                             accessLevel +
-                                                             ".", Username, true);
+                CampaignMain.campaignMain.toUser("AM:Insufficient access level for command. Level: " +
+                                                       userLevel +
+                                                       ". Required: " +
+                                                       accessLevel +
+                                                       ".", Username, true);
                 return;
             }
         }
         String motdText = command.nextToken();
-        server.campaign.CampaignMain.cm.getServer().setConfigParam("INFOMESSAGE", motdText);
-        server.campaign.CampaignMain.cm.toUser("You set a new Server MOTD. Have a nice day.", Username);
+        CampaignMain.campaignMain.getServer().setConfigParam("INFOMESSAGE", motdText);
+        CampaignMain.campaignMain.toUser("You set a new Server MOTD. Have a nice day.", Username);
     }
 
     public int getExecutionLevel() {return accessLevel;}

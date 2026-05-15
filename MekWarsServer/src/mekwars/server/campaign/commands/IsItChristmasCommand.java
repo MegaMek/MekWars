@@ -1,5 +1,6 @@
 package mekwars.server.campaign.commands;
 
+import mekwars.server.campaign.CampaignMain;
 import server.campaign.util.ChristmasHandler;
 
 public class IsItChristmasCommand implements Command {
@@ -10,13 +11,13 @@ public class IsItChristmasCommand implements Command {
     @Override
     public void process(java.util.StringTokenizer command, String Username) {
         //access level check
-        int userLevel = server.campaign.CampaignMain.cm.getServer().getUserLevel(Username);
+        int userLevel = CampaignMain.campaignMain.getServer().getUserLevel(Username);
         if (userLevel < getExecutionLevel()) {
-            server.campaign.CampaignMain.cm.toUser("AM:Insufficient access level for command. Level: " +
-                                                         userLevel +
-                                                         ". Required: " +
-                                                         accessLevel +
-                                                         ".", Username, true);
+            CampaignMain.campaignMain.toUser("AM:Insufficient access level for command. Level: " +
+                                                   userLevel +
+                                                   ". Required: " +
+                                                   accessLevel +
+                                                   ".", Username, true);
             return;
         }
         boolean isChristmas = ChristmasHandler.getInstance().isItChristmas();
@@ -25,17 +26,17 @@ public class IsItChristmasCommand implements Command {
         java.text.SimpleDateFormat sdf = new java.text.SimpleDateFormat("yyyy-MM-dd");
 
         if (isChristmas) {
-            server.campaign.CampaignMain.cm.toUser("AM:Tis the season! The Christmas season this year runs from " +
-                                                         sdf.format(start) +
-                                                         " to " +
-                                                         sdf.format(end) +
-                                                         ".", Username);
+            CampaignMain.campaignMain.toUser("AM:Tis the season! The Christmas season this year runs from " +
+                                                   sdf.format(start) +
+                                                   " to " +
+                                                   sdf.format(end) +
+                                                   ".", Username);
         } else {
-            server.campaign.CampaignMain.cm.toUser("AM:Anxious, aren't you? The Christmas season this year runs from " +
-                                                         sdf.format(start) +
-                                                         " to " +
-                                                         sdf.format(end) +
-                                                         ".", Username);
+            CampaignMain.campaignMain.toUser("AM:Anxious, aren't you? The Christmas season this year runs from " +
+                                                   sdf.format(start) +
+                                                   " to " +
+                                                   sdf.format(end) +
+                                                   ".", Username);
         }
     }
 

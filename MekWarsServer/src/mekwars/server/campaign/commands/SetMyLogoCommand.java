@@ -17,6 +17,7 @@
 package mekwars.server.campaign.commands;
 
 
+import mekwars.server.campaign.CampaignMain;
 import server.util.MWPasswd;
 
 public class SetMyLogoCommand implements Command {
@@ -27,25 +28,25 @@ public class SetMyLogoCommand implements Command {
     public void process(java.util.StringTokenizer command, String Username) {
 
         if (accessLevel != 0) {
-            int userLevel = server.campaign.CampaignMain.cm.getServer().getUserLevel(Username);
+            int userLevel = CampaignMain.campaignMain.getServer().getUserLevel(Username);
             if (userLevel < getExecutionLevel()) {
-                server.campaign.CampaignMain.cm.toUser("AM:Insufficient access level for command. Level: " +
-                                                             userLevel +
-                                                             ". Required: " +
-                                                             accessLevel +
-                                                             ".", Username, true);
+                CampaignMain.campaignMain.toUser("AM:Insufficient access level for command. Level: " +
+                                                       userLevel +
+                                                       ". Required: " +
+                                                       accessLevel +
+                                                       ".", Username, true);
                 return;
             }
         }
 
-        server.campaign.SPlayer player = server.campaign.CampaignMain.cm.getPlayer(Username);
+        server.campaign.SPlayer player = CampaignMain.campaignMain.getPlayer(Username);
 
         if (!command.hasMoreTokens()) {
             player.setMyLogo(player.getMyHouse().getLogo());
         } else {
             String newLogo = command.nextToken();
             if (MWPasswd.getRecord(Username) == null) {
-                server.campaign.CampaignMain.cm.toUser(
+                CampaignMain.campaignMain.toUser(
                       "AM:You cannot set a logo until you registered your Name. Please use the File Menu -> Register Nickname to do so!",
                       Username,
                       true);
@@ -56,11 +57,11 @@ public class SetMyLogoCommand implements Command {
                 player.setMyLogo(newLogo);
             }
         }
-        server.campaign.CampaignMain.cm.toUser("PL|SUL|" + player.getMyLogo(), Username, false);
-        server.campaign.CampaignMain.cm.toUser("AM:You've set your Logo to " + player.getMyLogo(), Username, true);
-        server.campaign.CampaignMain.cm.toUser("AM:It'll look like this: <img height=\"150\" width=\"150\" src =\"" +
-                                                     player.getMyLogo() +
-                                                     "\">", Username, true);
+        CampaignMain.campaignMain.toUser("PL|SUL|" + player.getMyLogo(), Username, false);
+        CampaignMain.campaignMain.toUser("AM:You've set your Logo to " + player.getMyLogo(), Username, true);
+        CampaignMain.campaignMain.toUser("AM:It'll look like this: <img height=\"150\" width=\"150\" src =\"" +
+                                               player.getMyLogo() +
+                                               "\">", Username, true);
     }
 
     public int getExecutionLevel() {return accessLevel;}

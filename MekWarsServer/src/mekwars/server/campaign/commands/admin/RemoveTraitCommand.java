@@ -17,6 +17,7 @@
 package mekwars.server.campaign.commands.admin;
 
 import common.util.MWLogger;
+import mekwars.server.campaign.CampaignMain;
 
 
 public class RemoveTraitCommand implements server.campaign.commands.Command {
@@ -29,13 +30,13 @@ public class RemoveTraitCommand implements server.campaign.commands.Command {
     public void process(java.util.StringTokenizer command, String Username) {
 
         if (accessLevel != 0) {
-            int userLevel = server.campaign.CampaignMain.cm.getServer().getUserLevel(Username);
+            int userLevel = CampaignMain.campaignMain.getServer().getUserLevel(Username);
             if (userLevel < getExecutionLevel()) {
-                server.campaign.CampaignMain.cm.toUser("AM:Insufficient access level for command. Level: " +
-                                                             userLevel +
-                                                             ". Required: " +
-                                                             accessLevel +
-                                                             ".", Username, true);
+                CampaignMain.campaignMain.toUser("AM:Insufficient access level for command. Level: " +
+                                                       userLevel +
+                                                       ". Required: " +
+                                                       accessLevel +
+                                                       ".", Username, true);
                 return;
             }
         }
@@ -57,16 +58,16 @@ public class RemoveTraitCommand implements server.campaign.commands.Command {
 
         if (!confirmString.equals("CONFIRM")) {return;}
 
-        java.util.Vector<String> traits = server.campaign.CampaignMain.cm.getFactionTraits(faction.toLowerCase());
+        java.util.Vector<String> traits = CampaignMain.campaignMain.getFactionTraits(faction.toLowerCase());
 
         for (int pos = 0; pos < traits.size(); pos++) {
             java.util.StringTokenizer traitToken = new java.util.StringTokenizer(traits.elementAt(pos), "*");
             if (traitName.equalsIgnoreCase(traitToken.nextToken())) {
                 traits.removeElementAt(pos);
-                server.campaign.CampaignMain.cm.toUser("Trait " + traitName + " has been removed.", Username, true);
-                server.campaign.CampaignMain.cm.doSendModMail("NOTE",
+                CampaignMain.campaignMain.toUser("Trait " + traitName + " has been removed.", Username, true);
+                CampaignMain.campaignMain.doSendModMail("NOTE",
                       Username + " has removed trait " + traitName + ".");
-                server.campaign.CampaignMain.cm.saveFactionTraits(faction, traits);
+                CampaignMain.campaignMain.saveFactionTraits(faction, traits);
                 return;
             }
         }

@@ -17,6 +17,7 @@
 package mekwars.server.campaign.commands.mod;
 
 import common.util.MWLogger;
+import mekwars.server.campaign.CampaignMain;
 
 public class GetModLogCommand implements server.campaign.commands.Command {
 
@@ -27,13 +28,13 @@ public class GetModLogCommand implements server.campaign.commands.Command {
 
     public void process(java.util.StringTokenizer command, String Username) {
 
-        int userLevel = server.campaign.CampaignMain.cm.getServer().getUserLevel(Username);
+        int userLevel = CampaignMain.campaignMain.getServer().getUserLevel(Username);
         if (userLevel < getExecutionLevel()) {
-            server.campaign.CampaignMain.cm.toUser("AM:Insufficient access level for command. Level: " +
-                                                         userLevel +
-                                                         ". Required: " +
-                                                         accessLevel +
-                                                         ".", Username, true);
+            CampaignMain.campaignMain.toUser("AM:Insufficient access level for command. Level: " +
+                                                   userLevel +
+                                                   ". Required: " +
+                                                   accessLevel +
+                                                   ".", Username, true);
             return;
         }
         java.io.BufferedReader dis = null;
@@ -46,8 +47,8 @@ public class GetModLogCommand implements server.campaign.commands.Command {
                 String line = dis.readLine();
                 total += line + "<br>";
             }
-            server.campaign.CampaignMain.cm.toUser("SM|" + total, Username, false);
-            server.campaign.CampaignMain.cm.doSendModMail("NOTE", Username + " read the modlog.");
+            CampaignMain.campaignMain.toUser("SM|" + total, Username, false);
+            CampaignMain.campaignMain.doSendModMail("NOTE", Username + " read the modlog.");
         } catch (Exception ex) {
             MWLogger.errLog(ex);
         } finally {

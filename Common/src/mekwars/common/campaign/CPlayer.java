@@ -40,6 +40,7 @@ import java.util.ArrayList;
 import java.util.StringTokenizer;
 import java.util.Vector;
 
+import jakarta.annotation.Nonnull;
 import megamek.common.CriticalSlot;
 import megamek.common.OffBoardDirection;
 import mekwars.common.House;
@@ -49,11 +50,9 @@ import mekwars.common.Unit;
 import mekwars.common.campaign.clientutils.protocol.IClient;
 import mekwars.common.util.CArmyComparator;
 import mekwars.common.util.CUnitComparator;
-import mekwars.common.util.MWLogger;
 import mekwars.common.util.TokenReader;
 import mekwars.common.util.UnitComponents;
 import mekwars.common.util.UnitUtils;
-import org.jspecify.annotations.NonNull;
 
 /**
  * Class for Player object used by client
@@ -725,7 +724,7 @@ public class CPlayer extends Player {
         }// end while(tokens)
     }// end setAutoArmy()
 
-    private @NonNull CUnit getCUnit(String filename, int distInHexes) {
+    private @Nonnull CUnit getCUnit(String filename, int distInHexes) {
         CUnit currUnit = new CUnit(client);
 
         /*

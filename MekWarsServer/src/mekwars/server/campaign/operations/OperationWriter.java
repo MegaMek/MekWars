@@ -29,6 +29,7 @@ package mekwars.server.campaign.operations;
 import common.House;
 import common.campaign.operations.Operation;
 import common.util.MWLogger;
+import mekwars.server.campaign.CampaignMain;
 
 //IMPORTS
 
@@ -102,7 +103,7 @@ public class OperationWriter {
                     while (illegalTokenizer.hasMoreTokens()) {illegals.add(illegalTokenizer.nextToken());}
 
                     //compare all houses to the treeset and look for matches
-                    for (House currH : server.campaign.CampaignMain.cm.getData().getAllHouses()) {
+                    for (House currH : CampaignMain.campaignMain.getData().getAllHouses()) {
                         if (!illegals.contains(currH.getName())) {legalDefenders.append(currH.getName() + "$");}
                     }
                     legalDefenders.append("*");

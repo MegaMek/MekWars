@@ -16,6 +16,8 @@
 
 package mekwars.server.campaign.commands.admin;
 
+import mekwars.server.campaign.CampaignMain;
+
 public class ChangeHouseColorCommand implements server.campaign.commands.Command {
 
     int accessLevel = server.MWChatServer.auth.IAuthenticator.ADMIN;
@@ -26,32 +28,32 @@ public class ChangeHouseColorCommand implements server.campaign.commands.Command
     public void process(java.util.StringTokenizer command, String Username) {
 
         //access level check
-        int userLevel = server.campaign.CampaignMain.cm.getServer().getUserLevel(Username);
+        int userLevel = CampaignMain.campaignMain.getServer().getUserLevel(Username);
         if (userLevel < getExecutionLevel()) {
-            server.campaign.CampaignMain.cm.toUser("AM:Insufficient access level for command. Level: " +
-                                                         userLevel +
-                                                         ". Required: " +
-                                                         accessLevel +
-                                                         ".", Username, true);
+            CampaignMain.campaignMain.toUser("AM:Insufficient access level for command. Level: " +
+                                                   userLevel +
+                                                   ". Required: " +
+                                                   accessLevel +
+                                                   ".", Username, true);
             return;
         }
 
         server.campaign.SHouse h = null;
         String newColor = "";
-        server.campaign.SPlayer player = server.campaign.CampaignMain.cm.getPlayer(Username);
+        server.campaign.SPlayer player = CampaignMain.campaignMain.getPlayer(Username);
 
         try {
-            h = server.campaign.CampaignMain.cm.getHouseFromPartialString(command.nextToken(), null);
+            h = CampaignMain.campaignMain.getHouseFromPartialString(command.nextToken(), null);
             newColor = command.nextToken();
         } catch (Exception e) {
-            server.campaign.CampaignMain.cm.toUser("AM:Improper command. Try: /c changehousecolor#faction#htmlhexcolor",
+            CampaignMain.campaignMain.toUser("AM:Improper command. Try: /c changehousecolor#faction#htmlhexcolor",
                   Username,
                   true);
             return;
         }
 
         if (h == null) {
-            server.campaign.CampaignMain.cm.toUser("AM:Couldn't find a faction with that name.", Username, true);
+            CampaignMain.campaignMain.toUser("AM:Couldn't find a faction with that name.", Username, true);
             return;
         }
 
@@ -61,7 +63,7 @@ public class ChangeHouseColorCommand implements server.campaign.commands.Command
         h.setHouseColor(newColor);
         h.updated();
 
-        server.campaign.CampaignMain.cm.toUser(h.getName() + " color changed!", Username, true);
+        CampaignMain.campaignMain.toUser(h.getName() + " color changed!", Username, true);
 
     }
 

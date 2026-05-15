@@ -17,6 +17,7 @@
 package mekwars.server.campaign.commands;
 
 import common.Planet;
+import mekwars.server.campaign.CampaignMain;
 
 public class AutoPlanetStatusCommand implements Command {
 
@@ -25,14 +26,14 @@ public class AutoPlanetStatusCommand implements Command {
     public void process(java.util.StringTokenizer command, String Username) {
 
         //Send all SPlanet Info to the user
-        java.util.Iterator<Planet> e = server.campaign.CampaignMain.cm.getData().getAllPlanets().iterator();
+        java.util.Iterator<Planet> e = CampaignMain.campaignMain.getData().getAllPlanets().iterator();
         String result = "PL|";
         while (e.hasNext()) {
             server.campaign.SPlanet p = (server.campaign.SPlanet) e.next();
             result += p.toString();
             result += "|";
         }
-        server.campaign.CampaignMain.cm.toUser(result, Username, false);
+        CampaignMain.campaignMain.toUser(result, Username, false);
 
     }
 

@@ -16,6 +16,8 @@
 
 package mekwars.server.campaign.commands.admin;
 
+import mekwars.server.campaign.CampaignMain;
+
 public class ChangeNameCommand implements server.campaign.commands.Command {
 
     int accessLevel = server.MWChatServer.auth.IAuthenticator.ADMIN;
@@ -26,13 +28,13 @@ public class ChangeNameCommand implements server.campaign.commands.Command {
     public void process(java.util.StringTokenizer command, String Username) {
 
         //access level check
-        int userLevel = server.campaign.CampaignMain.cm.getServer().getUserLevel(Username);
+        int userLevel = CampaignMain.campaignMain.getServer().getUserLevel(Username);
         if (userLevel < getExecutionLevel()) {
-            server.campaign.CampaignMain.cm.toUser("AM:Insufficient access level for command. Level: " +
-                                                         userLevel +
-                                                         ". Required: " +
-                                                         accessLevel +
-                                                         ".", Username, true);
+            CampaignMain.campaignMain.toUser("AM:Insufficient access level for command. Level: " +
+                                                   userLevel +
+                                                   ". Required: " +
+                                                   accessLevel +
+                                                   ".", Username, true);
             return;
         }
 
@@ -44,26 +46,26 @@ public class ChangeNameCommand implements server.campaign.commands.Command {
             oldName = command.nextToken();
             newName = command.nextToken();
         } catch (Exception e) {
-            server.campaign.CampaignMain.cm.toUser("Improper command. Try: /c changename#oldname#newname",
+            CampaignMain.campaignMain.toUser("Improper command. Try: /c changename#oldname#newname",
                   Username,
                   true);
             return;
         }
 
 
-        server.campaign.SPlayer p = server.campaign.CampaignMain.cm.getPlayer(oldName);
+        server.campaign.SPlayer p = CampaignMain.campaignMain.getPlayer(oldName);
         if (p == null) {
-            server.campaign.CampaignMain.cm.toUser("Couldn't find player with name " + oldName, Username, true);
+            CampaignMain.campaignMain.toUser("Couldn't find player with name " + oldName, Username, true);
             return;
         }
 
         if (p.getDutyStatus() != server.campaign.SPlayer.STATUS_RESERVE) {
-            server.campaign.CampaignMain.cm.toUser("You may only rename players who are in reserve.", Username, true);
+            CampaignMain.campaignMain.toUser("You may only rename players who are in reserve.", Username, true);
             return;
         }
 
         //old player exists. nuke him in the faction, then re-add with a new name.
-        server.campaign.CampaignMain.cm.doLogoutPlayer(oldName);//logout, for safety ...
+        CampaignMain.campaignMain.doLogoutPlayer(oldName);//logout, for safety ...
         p.getMyHouse().removePlayer(p, false);//delete account. dont dupe the units.
 
         //delete old pfile
@@ -72,20 +74,20 @@ public class ChangeNameCommand implements server.campaign.commands.Command {
 
         //change the name
         p.setName(newName);
-        server.campaign.CampaignMain.cm.forceSavePlayer(p);
+        CampaignMain.campaignMain.forceSavePlayer(p);
 
-        server.campaign.CampaignMain.cm.toUser("You changed " + oldName + "'s name to '" + newName + "'.",
+        CampaignMain.campaignMain.toUser("You changed " + oldName + "'s name to '" + newName + "'.",
               Username,
               true);
-        server.campaign.CampaignMain.cm.doSendModMail("NOTE",
+        CampaignMain.campaignMain.doSendModMail("NOTE",
               Username + " changed " + oldName + "'s name to '" + newName + "'.");
-        server.campaign.CampaignMain.cm.toUser(Username +
-                                                     " changed your name from '" +
-                                                     oldName +
-                                                     "' name to '" +
-                                                     newName +
-                                                     "'. Quit and re-join " +
-                                                     "for the change to take full effect.", oldName, true);
+        CampaignMain.campaignMain.toUser(Username +
+                                               " changed your name from '" +
+                                               oldName +
+                                               "' name to '" +
+                                               newName +
+                                               "'. Quit and re-join " +
+                                               "for the change to take full effect.", oldName, true);
 
     }//end process()
 

@@ -22,6 +22,8 @@
 
 package mekwars.server.campaign.commands;
 
+import mekwars.server.campaign.CampaignMain;
+
 public class DisplayUnitRepairJobsCommand implements Command {
 
     int accessLevel = 0;
@@ -30,29 +32,29 @@ public class DisplayUnitRepairJobsCommand implements Command {
     public void process(java.util.StringTokenizer command, String Username) {
 
         if (accessLevel != 0) {
-            int userLevel = server.campaign.CampaignMain.cm.getServer().getUserLevel(Username);
+            int userLevel = CampaignMain.campaignMain.getServer().getUserLevel(Username);
             if (userLevel < getExecutionLevel()) {
-                server.campaign.CampaignMain.cm.toUser("AM:Insufficient access level for command. Level: " +
-                                                             userLevel +
-                                                             ". Required: " +
-                                                             accessLevel +
-                                                             ".", Username, true);
+                CampaignMain.campaignMain.toUser("AM:Insufficient access level for command. Level: " +
+                                                       userLevel +
+                                                       ". Required: " +
+                                                       accessLevel +
+                                                       ".", Username, true);
                 return;
             }
         }
 
         try {
             int unitid = Integer.parseInt(command.nextToken());
-            String data = server.campaign.CampaignMain.cm.getRTT().unitRepairTimes(unitid);
-            if (data != null) {server.campaign.CampaignMain.cm.toUser("FSM|" + data, Username, false);} else {
-                server.campaign.SPlayer player = server.campaign.CampaignMain.cm.getPlayer(Username);
+            String data = CampaignMain.campaignMain.getRTT().unitRepairTimes(unitid);
+            if (data != null) {CampaignMain.campaignMain.toUser("FSM|" + data, Username, false);} else {
+                server.campaign.SPlayer player = CampaignMain.campaignMain.getPlayer(Username);
                 server.campaign.SUnit unit = player.getUnit(unitid);
 
-                server.campaign.CampaignMain.cm.toUser("FSM|#" +
-                                                             unitid +
-                                                             " " +
-                                                             unit.getEntity().getShortNameRaw() +
-                                                             " has the following repair jobs pending:<br><b>None.</b><br>",
+                CampaignMain.campaignMain.toUser("FSM|#" +
+                                                       unitid +
+                                                       " " +
+                                                       unit.getEntity().getShortNameRaw() +
+                                                       " has the following repair jobs pending:<br><b>None.</b><br>",
                       Username,
                       false);
             }

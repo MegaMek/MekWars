@@ -18,6 +18,7 @@ package mekwars.server.campaign.operations;
 
 import common.campaign.operations.Operation;
 import common.util.MWLogger;
+import mekwars.server.campaign.CampaignMain;
 import server.util.StringUtil;
 
 public class OpsDisconnectionThread extends Thread {
@@ -48,7 +49,7 @@ public class OpsDisconnectionThread extends Thread {
     @Override
     public synchronized void run() {
 
-        long timeToReport = Long.parseLong(server.campaign.CampaignMain.cm.getConfig("DisconnectionTimeToReport"));
+        long timeToReport = Long.parseLong(CampaignMain.campaignMain.getConfig("DisconnectionTimeToReport"));
 
         //make the seconds miliseconds
         timeToReport *= 1000;
@@ -59,10 +60,10 @@ public class OpsDisconnectionThread extends Thread {
 
         //inform the potential "winner" that the game will resolve
         String timeToReturn = StringUtil.readableTimeWithSeconds(timeToReport);
-        server.campaign.CampaignMain.cm.toUser(server.campaign.CampaignMain.cm.getPlayer(loserName).getColoredName() +
-                                                     " disconnected. You will win by forfeit if he does not return within " +
-                                                     timeToReturn +
-                                                     ".", winnerName, true);
+        CampaignMain.campaignMain.toUser(CampaignMain.campaignMain.getPlayer(loserName).getColoredName() +
+                                               " disconnected. You will win by forfeit if he does not return within " +
+                                               timeToReturn +
+                                               ".", winnerName, true);
 
         //add the start to the log
         MWLogger.gameLog("Disco Thread/Start:" + id + "/" + loserName + ". " + winnerName + " wins in " + timeToReturn);
@@ -77,21 +78,21 @@ public class OpsDisconnectionThread extends Thread {
         if (playerReturned) {return;}
 
         //check to see that the op hasnt been cancelled (is still in tree)
-        ShortOperation so = server.campaign.CampaignMain.cm.getOpsManager().getRunningOps().get(id);
+        ShortOperation so = CampaignMain.campaignMain.getOpsManager().getRunningOps().get(id);
         if (so == null) {return;}
 
-        Operation o = server.campaign.CampaignMain.cm.getOpsManager().getOperation(so.getName());
+        Operation o = CampaignMain.campaignMain.getOpsManager().getOperation(so.getName());
 
         //add to log and send to resolver
         MWLogger.gameLog("Autoreport: " + id + "/" + loserName + ". " + winnerName + " wins by forfeit");
-        server.campaign.CampaignMain.cm.getOpsManager().resolveShortAttack(o, so, winnerName, loserName);
+        CampaignMain.campaignMain.getOpsManager().resolveShortAttack(o, so, winnerName, loserName);
 
     }//end run()
 
     public void playerReturned(boolean tellOtherPlayer, long timeOffline) {
         if (tellOtherPlayer) {
-            server.campaign.CampaignMain.cm.toUser(
-                  server.campaign.CampaignMain.cm.getPlayer(loserName).getColoredName() +
+            CampaignMain.campaignMain.toUser(
+                  CampaignMain.campaignMain.getPlayer(loserName).getColoredName() +
                         " returned. He was offline for " +
                         StringUtil.readableTimeWithSeconds(timeOffline) +
                         ".", winnerName, true);

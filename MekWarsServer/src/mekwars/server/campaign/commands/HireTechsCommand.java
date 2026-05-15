@@ -20,6 +20,7 @@ package mekwars.server.campaign.commands;
 
 import common.util.StringUtils;
 import common.util.UnitUtils;
+import mekwars.server.campaign.CampaignMain;
 
 public class HireTechsCommand implements Command {
 
@@ -29,18 +30,18 @@ public class HireTechsCommand implements Command {
     public void process(java.util.StringTokenizer command, String Username) {
 
         if (accessLevel != 0) {
-            int userLevel = server.campaign.CampaignMain.cm.getServer().getUserLevel(Username);
+            int userLevel = CampaignMain.campaignMain.getServer().getUserLevel(Username);
             if (userLevel < getExecutionLevel()) {
-                server.campaign.CampaignMain.cm.toUser("AM:Insufficient access level for command. Level: " +
-                                                             userLevel +
-                                                             ". Required: " +
-                                                             accessLevel +
-                                                             ".", Username, true);
+                CampaignMain.campaignMain.toUser("AM:Insufficient access level for command. Level: " +
+                                                       userLevel +
+                                                       ". Required: " +
+                                                       accessLevel +
+                                                       ".", Username, true);
                 return;
             }
         }
 
-        if (server.campaign.CampaignMain.cm.isUsingAdvanceRepair()) {
+        if (CampaignMain.campaignMain.isUsingAdvanceRepair()) {
             hireAdvanceTechs(command, Username);
             return;
         }
@@ -48,13 +49,13 @@ public class HireTechsCommand implements Command {
 
         //use /c hiretech#numbertohire
         int numtohire = 1;//default to 1 if no number present
-        server.campaign.SPlayer p = server.campaign.CampaignMain.cm.getPlayer(Username);
+        server.campaign.SPlayer p = CampaignMain.campaignMain.getPlayer(Username);
 
         int techCost = 0;//default cost
 
         //don't let SOL players hire techs
         if (p.getMyHouse().isNewbieHouse()) {
-            server.campaign.CampaignMain.cm.toUser(
+            CampaignMain.campaignMain.toUser(
                   "AM:You are in a training faction, and may not hire techs until you join a normal faction.",
                   Username,
                   true);
@@ -64,7 +65,7 @@ public class HireTechsCommand implements Command {
         try {
             numtohire = Integer.parseInt(command.nextToken());
         } catch (NumberFormatException ex) {
-            server.campaign.CampaignMain.cm.toUser(
+            CampaignMain.campaignMain.toUser(
                   "AM:Hire command failed. Check your input. It should be something like this: /c hiretechs#3",
                   Username,
                   true);
@@ -79,28 +80,28 @@ public class HireTechsCommand implements Command {
 
         //send a message is the techs
         if (techCost > p.getMoney()) {
-            server.campaign.CampaignMain.cm.toUser("AM:Hiring " +
-                                                         numtohire +
-                                                         " techs will cost you " +
-                                                         server.campaign.CampaignMain.cm.moneyOrFluMessage(true,
-                                                               false,
-                                                               techCost) +
-                                                         ". You only have " +
-                                                         p.getMoney() +
-                                                         " " +
-                                                         server.campaign.CampaignMain.cm.moneyOrFluMessage(true,
-                                                               false,
-                                                               p.getMoney()) +
-                                                         ".", Username, true);
+            CampaignMain.campaignMain.toUser("AM:Hiring " +
+                                                   numtohire +
+                                                   " techs will cost you " +
+                                                   CampaignMain.campaignMain.moneyOrFluMessage(true,
+                                                         false,
+                                                         techCost) +
+                                                   ". You only have " +
+                                                   p.getMoney() +
+                                                   " " +
+                                                   CampaignMain.campaignMain.moneyOrFluMessage(true,
+                                                         false,
+                                                         p.getMoney()) +
+                                                   ".", Username, true);
             return;
         }//end if(player doenst have enough money)
 
 
         int maxTechs = Integer.parseInt(p.getMyHouse().getConfig("MaxTechsToHire"));
         if (maxTechs != -1 && (p.getTechnicians() + numtohire > maxTechs)) {
-            server.campaign.CampaignMain.cm.toUser("AM:Sorry but the max number of technicians you can hire is " +
-                                                         maxTechs +
-                                                         ".", Username, true);
+            CampaignMain.campaignMain.toUser("AM:Sorry but the max number of technicians you can hire is " +
+                                                   maxTechs +
+                                                   ".", Username, true);
             return;
         }
 
@@ -109,19 +110,19 @@ public class HireTechsCommand implements Command {
         p.addTechnicians(numtohire);
         // had to do it grammer bad! Torren
         if (numtohire == 1) {
-            server.campaign.CampaignMain.cm.toUser("AM:You've hired a technician! (-" +
-                                                         server.campaign.CampaignMain.cm.moneyOrFluMessage(true,
-                                                               false,
-                                                               techCost) +
-                                                         ")", Username, true);
+            CampaignMain.campaignMain.toUser("AM:You've hired a technician! (-" +
+                                                   CampaignMain.campaignMain.moneyOrFluMessage(true,
+                                                         false,
+                                                         techCost) +
+                                                   ")", Username, true);
         } else {
-            server.campaign.CampaignMain.cm.toUser("AM:You've hired " +
-                                                         numtohire +
-                                                         " technicians! (-" +
-                                                         server.campaign.CampaignMain.cm.moneyOrFluMessage(true,
-                                                               false,
-                                                               techCost) +
-                                                         ")", Username, true);
+            CampaignMain.campaignMain.toUser("AM:You've hired " +
+                                                   numtohire +
+                                                   " technicians! (-" +
+                                                   CampaignMain.campaignMain.moneyOrFluMessage(true,
+                                                         false,
+                                                         techCost) +
+                                                   ")", Username, true);
         }
         p.addMoney(-techCost); //Forgot to deduct the cost of Techs Torren.
     }//end process()
@@ -134,7 +135,7 @@ public class HireTechsCommand implements Command {
 
     private void hireAdvanceTechs(java.util.StringTokenizer command, String Username) {
 
-        server.campaign.SPlayer player = server.campaign.CampaignMain.cm.getPlayer(Username);
+        server.campaign.SPlayer player = CampaignMain.campaignMain.getPlayer(Username);
         server.campaign.SHouse house = player.getMyHouse();
 
         int numberToHire = Integer.parseInt(command.nextToken());
@@ -147,7 +148,7 @@ public class HireTechsCommand implements Command {
         if (command.hasMoreElements()) {techType = Integer.parseInt(command.nextToken());}
 
         if (techType > maxLevelTechHire) {
-            server.campaign.CampaignMain.cm.toUser("AM:Sorry there are no techs of that skill level on the market.",
+            CampaignMain.campaignMain.toUser("AM:Sorry there are no techs of that skill level on the market.",
                   Username,
                   true);
             return;
@@ -158,21 +159,21 @@ public class HireTechsCommand implements Command {
         hireCost *= numberToHire;
 
         if (player.getMoney() < hireCost) {
-            server.campaign.CampaignMain.cm.toUser("AM:Hiring " +
-                                                         numberToHire +
-                                                         " " +
-                                                         UnitUtils.techDescription(techType) +
-                                                         " techs will cost you " +
-                                                         server.campaign.CampaignMain.cm.moneyOrFluMessage(true,
-                                                               false,
-                                                               hireCost) +
-                                                         ". You only have " +
-                                                         player.getMoney() +
-                                                         " " +
-                                                         server.campaign.CampaignMain.cm.moneyOrFluMessage(true,
-                                                               false,
-                                                               player.getMoney()) +
-                                                         ".", Username, true);
+            CampaignMain.campaignMain.toUser("AM:Hiring " +
+                                                   numberToHire +
+                                                   " " +
+                                                   UnitUtils.techDescription(techType) +
+                                                   " techs will cost you " +
+                                                   CampaignMain.campaignMain.moneyOrFluMessage(true,
+                                                         false,
+                                                         hireCost) +
+                                                   ". You only have " +
+                                                   player.getMoney() +
+                                                   " " +
+                                                   CampaignMain.campaignMain.moneyOrFluMessage(true,
+                                                         false,
+                                                         player.getMoney()) +
+                                                   ".", Username, true);
             return;
         }
 
@@ -182,23 +183,23 @@ public class HireTechsCommand implements Command {
         player.addMoney(-hireCost);
 
         if (numberToHire == 1) {
-            server.campaign.CampaignMain.cm.toUser("AM:You've hired " +
-                                                         StringUtils.aOrAn(UnitUtils.techDescription(techType), true) +
-                                                         " technician! (-" +
-                                                         server.campaign.CampaignMain.cm.moneyOrFluMessage(true,
-                                                               false,
-                                                               hireCost) +
-                                                         ")", Username, true);
+            CampaignMain.campaignMain.toUser("AM:You've hired " +
+                                                   StringUtils.aOrAn(UnitUtils.techDescription(techType), true) +
+                                                   " technician! (-" +
+                                                   CampaignMain.campaignMain.moneyOrFluMessage(true,
+                                                         false,
+                                                         hireCost) +
+                                                   ")", Username, true);
         } else {
-            server.campaign.CampaignMain.cm.toUser("AM:You've hired " +
-                                                         numberToHire +
-                                                         " " +
-                                                         UnitUtils.techDescription(techType) +
-                                                         " technicians! (-" +
-                                                         server.campaign.CampaignMain.cm.moneyOrFluMessage(true,
-                                                               false,
-                                                               hireCost) +
-                                                         ")", Username, true);
+            CampaignMain.campaignMain.toUser("AM:You've hired " +
+                                                   numberToHire +
+                                                   " " +
+                                                   UnitUtils.techDescription(techType) +
+                                                   " technicians! (-" +
+                                                   CampaignMain.campaignMain.moneyOrFluMessage(true,
+                                                         false,
+                                                         hireCost) +
+                                                   ")", Username, true);
         }
 
 

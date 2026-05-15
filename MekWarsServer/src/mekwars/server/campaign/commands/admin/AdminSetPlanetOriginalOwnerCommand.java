@@ -20,6 +20,8 @@
  */
 package mekwars.server.campaign.commands.admin;
 
+import mekwars.server.campaign.CampaignMain;
+
 public class AdminSetPlanetOriginalOwnerCommand implements server.campaign.commands.Command {
 
     int accessLevel = server.MWChatServer.auth.IAuthenticator.ADMIN;
@@ -30,19 +32,19 @@ public class AdminSetPlanetOriginalOwnerCommand implements server.campaign.comma
     public void process(java.util.StringTokenizer command, String Username) {
 
         //access level check
-        int userLevel = server.campaign.CampaignMain.cm.getServer().getUserLevel(Username);
+        int userLevel = CampaignMain.campaignMain.getServer().getUserLevel(Username);
         if (userLevel < getExecutionLevel()) {
-            server.campaign.CampaignMain.cm.toUser("AM:Insufficient access level for command. Level: " +
-                                                         userLevel +
-                                                         ". Required: " +
-                                                         accessLevel +
-                                                         ".", Username, true);
+            CampaignMain.campaignMain.toUser("AM:Insufficient access level for command. Level: " +
+                                                   userLevel +
+                                                   ". Required: " +
+                                                   accessLevel +
+                                                   ".", Username, true);
             return;
         }
 
         String PlanetName = command.nextToken();
-        String originalOwner = server.campaign.CampaignMain.cm.getConfig("NewbieHouseName");
-        server.campaign.SPlanet planet = server.campaign.CampaignMain.cm.getPlanetFromPartialString(PlanetName,
+        String originalOwner = CampaignMain.campaignMain.getConfig("NewbieHouseName");
+        server.campaign.SPlanet planet = CampaignMain.campaignMain.getPlanetFromPartialString(PlanetName,
               Username);
 
         if (planet == null) {return;}
@@ -54,10 +56,10 @@ public class AdminSetPlanetOriginalOwnerCommand implements server.campaign.comma
 
         planet.setOriginalOwner(originalOwner);
 
-        server.campaign.CampaignMain.cm.toUser(planet.getName() + "'s original owner set to: " + originalOwner + ".",
+        CampaignMain.campaignMain.toUser(planet.getName() + "'s original owner set to: " + originalOwner + ".",
               Username,
               true);
-        server.campaign.CampaignMain.cm.doSendModMail("NOTE",
+        CampaignMain.campaignMain.doSendModMail("NOTE",
               Username + " changed " + PlanetName + " 's original owner to: " + originalOwner + ".");
         planet.updated();
     }

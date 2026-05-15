@@ -16,6 +16,8 @@
 
 package mekwars.server.campaign.commands.mod;
 
+import mekwars.server.campaign.CampaignMain;
+
 public class GrantRewardCommand implements server.campaign.commands.Command {
 
     int accessLevel = server.MWChatServer.auth.IAuthenticator.MODERATOR;
@@ -25,17 +27,17 @@ public class GrantRewardCommand implements server.campaign.commands.Command {
 
     public void process(java.util.StringTokenizer command, String Username) {
 
-        int userLevel = server.campaign.CampaignMain.cm.getServer().getUserLevel(Username);
+        int userLevel = CampaignMain.campaignMain.getServer().getUserLevel(Username);
         if (userLevel < getExecutionLevel()) {
-            server.campaign.CampaignMain.cm.toUser("AM:Insufficient access level for command. Level: " +
-                                                         userLevel +
-                                                         ". Required: " +
-                                                         accessLevel +
-                                                         ".", Username, true);
+            CampaignMain.campaignMain.toUser("AM:Insufficient access level for command. Level: " +
+                                                   userLevel +
+                                                   ". Required: " +
+                                                   accessLevel +
+                                                   ".", Username, true);
             return;
         }
 
-        server.campaign.SPlayer p = server.campaign.CampaignMain.cm.getPlayer(command.nextToken());
+        server.campaign.SPlayer p = CampaignMain.campaignMain.getPlayer(command.nextToken());
         int amount = Integer.parseInt(command.nextToken());
         if (p != null) {
             p.setReward(p.getReward() + amount);
@@ -45,27 +47,27 @@ public class GrantRewardCommand implements server.campaign.commands.Command {
                                        " granted you " +
                                        amount +
                                        " " +
-                                       server.campaign.CampaignMain.cm.getConfig("RPLongName");
+                                       CampaignMain.campaignMain.getConfig("RPLongName");
             if (amount > 0) {
                 toRecipient += " [<a href=\"MWUSERP\">Use " +
-                                     server.campaign.CampaignMain.cm.getConfig("RPShortName") +
+                                     CampaignMain.campaignMain.getConfig("RPShortName") +
                                      "</a>]";
             }
             toRecipient += ".";
-            server.campaign.CampaignMain.cm.toUser(toRecipient, p.getName(), true);
+            CampaignMain.campaignMain.toUser(toRecipient, p.getName(), true);
 
-            server.campaign.CampaignMain.cm.toUser("AM:You granted " +
-                                                         amount +
-                                                         " " +
-                                                         server.campaign.CampaignMain.cm.getConfig("RPLongName") +
-                                                         " to " +
-                                                         p.getName(), Username, true);
-            server.campaign.CampaignMain.cm.doSendModMail("NOTE",
+            CampaignMain.campaignMain.toUser("AM:You granted " +
+                                                   amount +
+                                                   " " +
+                                                   CampaignMain.campaignMain.getConfig("RPLongName") +
+                                                   " to " +
+                                                   p.getName(), Username, true);
+            CampaignMain.campaignMain.doSendModMail("NOTE",
                   Username +
                         " granted " +
                         amount +
                         " " +
-                        server.campaign.CampaignMain.cm.getConfig("RPLongName") +
+                        CampaignMain.campaignMain.getConfig("RPLongName") +
                         " to " +
                         p.getName());
         }

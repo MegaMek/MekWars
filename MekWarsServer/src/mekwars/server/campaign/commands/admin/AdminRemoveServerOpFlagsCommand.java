@@ -17,6 +17,8 @@
 package mekwars.server.campaign.commands.admin;
 
 
+import mekwars.server.campaign.CampaignMain;
+
 public class AdminRemoveServerOpFlagsCommand implements server.campaign.commands.Command {
 
     int accessLevel = server.MWChatServer.auth.IAuthenticator.ADMIN;
@@ -27,18 +29,18 @@ public class AdminRemoveServerOpFlagsCommand implements server.campaign.commands
     public void process(java.util.StringTokenizer command, String Username) {
 
         //access level check
-        int userLevel = server.campaign.CampaignMain.cm.getServer().getUserLevel(Username);
+        int userLevel = CampaignMain.campaignMain.getServer().getUserLevel(Username);
         if (userLevel < getExecutionLevel()) {
-            server.campaign.CampaignMain.cm.toUser("AM:Insufficient access level for command. Level: " +
-                                                         userLevel +
-                                                         ". Required: " +
-                                                         accessLevel +
-                                                         ".", Username, true);
+            CampaignMain.campaignMain.toUser("AM:Insufficient access level for command. Level: " +
+                                                   userLevel +
+                                                   ". Required: " +
+                                                   accessLevel +
+                                                   ".", Username, true);
             return;
         }
 
         if (!command.hasMoreTokens()) {
-            server.campaign.CampaignMain.cm.toUser(
+            CampaignMain.campaignMain.toUser(
                   "Syntax AdminRemoveServerOpFlags#FlagCode#FlagCode#...<br>NOTE: you can repeat FlagCode multiple times.",
                   Username);
             return;
@@ -47,16 +49,16 @@ public class AdminRemoveServerOpFlagsCommand implements server.campaign.commands
         try {
             while (command.hasMoreTokens()) {
                 String key = command.nextToken();
-                if (server.campaign.CampaignMain.cm.getData().getPlanetOpFlags().remove(key) != null) {
-                    server.campaign.CampaignMain.cm.toUser("Op flag " + key + " removed from the server.",
+                if (CampaignMain.campaignMain.getData().getPlanetOpFlags().remove(key) != null) {
+                    CampaignMain.campaignMain.toUser("Op flag " + key + " removed from the server.",
                           Username,
                           true);
                     //server.MWLogger.modLog(Username + " removed op flag "+key+".");
-                    server.campaign.CampaignMain.cm.doSendModMail("NOTE", Username + " removed op flag " + key + ".");
+                    CampaignMain.campaignMain.doSendModMail("NOTE", Username + " removed op flag " + key + ".");
                 }
             }
         } catch (Exception ex) {
-            server.campaign.CampaignMain.cm.toUser(
+            CampaignMain.campaignMain.toUser(
                   "Syntax AdminRemoveServerOpFlags#FlagCode#FlagCode#...<br>NOTE: you can repeat FlagCode multiple times.",
                   Username);
             return;

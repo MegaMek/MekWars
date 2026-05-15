@@ -16,6 +16,8 @@
 
 package mekwars.server.campaign.commands.admin;
 
+import mekwars.server.campaign.CampaignMain;
+
 public class AdminTerminateAllCommand implements server.campaign.commands.Command {
 
     int accessLevel = server.MWChatServer.auth.IAuthenticator.ADMIN;
@@ -26,26 +28,26 @@ public class AdminTerminateAllCommand implements server.campaign.commands.Comman
     public void process(java.util.StringTokenizer command, String Username) {
 
         //access level check
-        int userLevel = server.campaign.CampaignMain.cm.getServer().getUserLevel(Username);
+        int userLevel = CampaignMain.campaignMain.getServer().getUserLevel(Username);
         if (userLevel < getExecutionLevel()) {
-            server.campaign.CampaignMain.cm.toUser("AM:Insufficient access level for command. Level: " +
-                                                         userLevel +
-                                                         ". Required: " +
-                                                         accessLevel +
-                                                         ".", Username, true);
+            CampaignMain.campaignMain.toUser("AM:Insufficient access level for command. Level: " +
+                                                   userLevel +
+                                                   ". Required: " +
+                                                   accessLevel +
+                                                   ".", Username, true);
             return;
         }
 
         //get the player
-        server.campaign.SPlayer tp = server.campaign.CampaignMain.cm.getPlayer(Username);
+        server.campaign.SPlayer tp = CampaignMain.campaignMain.getPlayer(Username);
         if (tp == null) {
-            server.campaign.CampaignMain.cm.toUser("Null player. Report this immediately!", Username, true);
+            CampaignMain.campaignMain.toUser("Null player. Report this immediately!", Username, true);
             return;
         }
 
         //determine which should cancel
         java.util.ArrayList<server.campaign.operations.ShortOperation> opsToCancel = new java.util.ArrayList<server.campaign.operations.ShortOperation>();
-        for (server.campaign.operations.ShortOperation currO : server.campaign.CampaignMain.cm.getOpsManager()
+        for (server.campaign.operations.ShortOperation currO : CampaignMain.campaignMain.getOpsManager()
                                                                      .getRunningOps()
                                                                      .values()) {
             if (currO.getStatus() != server.campaign.operations.ShortOperation.STATUS_REPORTING &&
@@ -56,13 +58,13 @@ public class AdminTerminateAllCommand implements server.campaign.commands.Comman
 
         //do the cancelling
         for (server.campaign.operations.ShortOperation currO : opsToCancel) {
-            server.campaign.CampaignMain.cm.getOpsManager()
+            CampaignMain.campaignMain.getOpsManager()
                   .terminateOperation(currO, server.campaign.operations.OperationManager.TERM_TERMCOMMAND, tp);
         }
 
         //MWLogger.modLog(Username + " terminated all unfinished games.");
-        server.campaign.CampaignMain.cm.doSendToAllOnlinePlayers(Username + " terminated all unfinished games.", true);
-        server.campaign.CampaignMain.cm.doSendModMail("NOTE", Username + " terminated all unfinished games.");
+        CampaignMain.campaignMain.doSendToAllOnlinePlayers(Username + " terminated all unfinished games.", true);
+        CampaignMain.campaignMain.doSendModMail("NOTE", Username + " terminated all unfinished games.");
 
     }//end process()
 

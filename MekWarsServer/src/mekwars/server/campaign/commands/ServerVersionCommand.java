@@ -16,12 +16,14 @@
 
 package mekwars.server.campaign.commands;
 
+import mekwars.server.campaign.CampaignMain;
+
 public class ServerVersionCommand implements Command {
 
     String syntax = "";
 
     public void process(java.util.StringTokenizer command, String Username) {
-        server.campaign.CampaignMain.cm.toUser("AM:The current server version is " + server.MWServ.SERVER_VERSION,
+        CampaignMain.campaignMain.toUser("AM:The current server version is " + server.MWServ.SERVER_VERSION,
               Username,
               true);
     }

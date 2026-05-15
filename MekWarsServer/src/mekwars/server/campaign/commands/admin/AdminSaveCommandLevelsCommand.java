@@ -17,6 +17,7 @@
 package mekwars.server.campaign.commands.admin;
 
 import common.util.MWLogger;
+import mekwars.server.campaign.CampaignMain;
 
 
 public class AdminSaveCommandLevelsCommand implements server.campaign.commands.Command {
@@ -29,18 +30,18 @@ public class AdminSaveCommandLevelsCommand implements server.campaign.commands.C
     public void process(java.util.StringTokenizer command, String Username) {
 
         //access level check
-        int userLevel = server.campaign.CampaignMain.cm.getServer().getUserLevel(Username);
+        int userLevel = CampaignMain.campaignMain.getServer().getUserLevel(Username);
         if (userLevel < getExecutionLevel()) {
-            server.campaign.CampaignMain.cm.toUser("AM:Insufficient access level for command. Level: " +
-                                                         userLevel +
-                                                         ". Required: " +
-                                                         accessLevel +
-                                                         ".", Username, true);
+            CampaignMain.campaignMain.toUser("AM:Insufficient access level for command. Level: " +
+                                                   userLevel +
+                                                   ". Required: " +
+                                                   accessLevel +
+                                                   ".", Username, true);
             return;
         }
 
         java.util.TreeMap<String, server.campaign.commands.Command> commandTable = new java.util.TreeMap<String, server.campaign.commands.Command>(
-              server.campaign.CampaignMain.cm.getServerCommands());
+              CampaignMain.campaignMain.getServerCommands());
         java.io.PrintStream p = null;
         try {
 
@@ -54,7 +55,7 @@ public class AdminSaveCommandLevelsCommand implements server.campaign.commands.C
             for (java.util.Iterator<String> i = commandTable.keySet().iterator();
                   i.hasNext();
                   commandName = (String) i.next()) {
-                server.campaign.commands.Command commandMethod = server.campaign.CampaignMain.cm.getServerCommands()
+                server.campaign.commands.Command commandMethod = CampaignMain.campaignMain.getServerCommands()
                                                                        .get(commandName);
                 if (commandName == null || commandMethod == null) {continue;}
                 p.println(commandName.toUpperCase() + "#" + commandMethod.getExecutionLevel());
@@ -65,8 +66,8 @@ public class AdminSaveCommandLevelsCommand implements server.campaign.commands.C
         } finally {
             p.close();
         }
-        server.campaign.CampaignMain.cm.toUser("AM:Command levels saved!", Username, true);
-        server.campaign.CampaignMain.cm.doSendModMail("NOTE", Username + " has saved the command levels to file.");
+        CampaignMain.campaignMain.toUser("AM:Command levels saved!", Username, true);
+        CampaignMain.campaignMain.doSendModMail("NOTE", Username + " has saved the command levels to file.");
 
     }
 

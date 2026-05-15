@@ -16,6 +16,7 @@
 
 package mekwars.server.campaign.commands;
 
+import mekwars.server.campaign.CampaignMain;
 import server.util.discord.DiscordMessageHandler;
 
 public class CodeTestCommand implements Command {
@@ -27,13 +28,13 @@ public class CodeTestCommand implements Command {
 
     public void process(java.util.StringTokenizer command, String Username) {
         if (accessLevel != 0) {
-            int userLevel = server.campaign.CampaignMain.cm.getServer().getUserLevel(Username);
+            int userLevel = CampaignMain.campaignMain.getServer().getUserLevel(Username);
             if (userLevel < getExecutionLevel()) {
-                server.campaign.CampaignMain.cm.toUser("AM:Insufficient access level for command. Level: " +
-                                                             userLevel +
-                                                             ". Required: " +
-                                                             accessLevel +
-                                                             ".", Username, true);
+                CampaignMain.campaignMain.toUser("AM:Insufficient access level for command. Level: " +
+                                                       userLevel +
+                                                       ". Required: " +
+                                                       accessLevel +
+                                                       ".", Username, true);
                 return;
             }
         }
@@ -42,7 +43,7 @@ public class CodeTestCommand implements Command {
         int action;
 
         if (!command.hasMoreTokens()) {
-            server.campaign.CampaignMain.cm.toUser("AM: invalid syntax: try /codetest start or /codetest stop",
+            CampaignMain.campaignMain.toUser("AM: invalid syntax: try /codetest start or /codetest stop",
                   Username,
                   false);
             return;
@@ -55,7 +56,7 @@ public class CodeTestCommand implements Command {
         } else if (s.equalsIgnoreCase("stop")) {
             action = ACTION_STOP;
         } else {
-            server.campaign.CampaignMain.cm.toUser("AM: invalid syntax: try /codetest start or /codetest stop",
+            CampaignMain.campaignMain.toUser("AM: invalid syntax: try /codetest start or /codetest stop",
                   Username,
                   false);
             return;

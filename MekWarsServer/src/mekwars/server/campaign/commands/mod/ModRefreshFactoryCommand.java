@@ -16,6 +16,8 @@
 
 package mekwars.server.campaign.commands.mod;
 
+import mekwars.server.campaign.CampaignMain;
+
 //modrefreshfactory#planet#factory
 public class ModRefreshFactoryCommand implements server.campaign.commands.Command {
 
@@ -27,13 +29,13 @@ public class ModRefreshFactoryCommand implements server.campaign.commands.Comman
     public void process(java.util.StringTokenizer command, String Username) {
 
         //access level check
-        int userLevel = server.campaign.CampaignMain.cm.getServer().getUserLevel(Username);
+        int userLevel = CampaignMain.campaignMain.getServer().getUserLevel(Username);
         if (userLevel < getExecutionLevel()) {
-            server.campaign.CampaignMain.cm.toUser("AM:Insufficient access level for command. Level: " +
-                                                         userLevel +
-                                                         ". Required: " +
-                                                         accessLevel +
-                                                         ".", Username, true);
+            CampaignMain.campaignMain.toUser("AM:Insufficient access level for command. Level: " +
+                                                   userLevel +
+                                                   ". Required: " +
+                                                   accessLevel +
+                                                   ".", Username, true);
             return;
         }
 
@@ -43,23 +45,23 @@ public class ModRefreshFactoryCommand implements server.campaign.commands.Comman
             planetName = command.nextToken();
             factoryName = command.nextToken();
         } catch (Exception e) {
-            server.campaign.CampaignMain.cm.toUser("Improper format. Try: /c modrefreshfactory#planetname#factoryname",
+            CampaignMain.campaignMain.toUser("Improper format. Try: /c modrefreshfactory#planetname#factoryname",
                   Username,
                   true);
             return;
         }
 
-        server.campaign.SPlanet p = (server.campaign.SPlanet) server.campaign.CampaignMain.cm.getData()
+        server.campaign.SPlanet p = (server.campaign.SPlanet) CampaignMain.campaignMain.getData()
                                                                     .getPlanetByName(planetName);
         if (p == null) {
-            server.campaign.CampaignMain.cm.toUser("Could not find planet: " + planetName + ".", Username, true);
+            CampaignMain.campaignMain.toUser("Could not find planet: " + planetName + ".", Username, true);
             return;
         }
 
-        server.campaign.SUnitFactory uf = (server.campaign.SUnitFactory) server.campaign.CampaignMain.cm.getData()
+        server.campaign.SUnitFactory uf = (server.campaign.SUnitFactory) CampaignMain.campaignMain.getData()
                                                                                .getFactoryByName(p, factoryName);
         if (uf == null) {
-            server.campaign.CampaignMain.cm.toUser("Could not find factory: " + factoryName + ".", Username, true);
+            CampaignMain.campaignMain.toUser("Could not find factory: " + factoryName + ".", Username, true);
             return;
         }
 
@@ -69,10 +71,10 @@ public class ModRefreshFactoryCommand implements server.campaign.commands.Comman
 
         //send update to all players
         if (p.getOwner() != null) {
-            server.campaign.CampaignMain.cm.doSendToAllOnlinePlayers(p.getOwner(), "HS|" + refresh, false);
+            CampaignMain.campaignMain.doSendToAllOnlinePlayers(p.getOwner(), "HS|" + refresh, false);
         }
 
-        server.campaign.CampaignMain.cm.doSendModMail("NOTE",
+        CampaignMain.campaignMain.doSendModMail("NOTE",
               Username + " has refreshed factory " + uf.getName() + " on planet " + p.getName() + "!");
     }
 

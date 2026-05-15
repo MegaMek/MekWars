@@ -17,6 +17,8 @@
 package mekwars.server.campaign.commands.mod;
 
 
+import mekwars.server.campaign.CampaignMain;
+
 /**
  * Moving the Ban command from MWServ into the normal command structure.
  * <p>
@@ -32,13 +34,13 @@ public class BanCommand implements server.campaign.commands.Command {
     public void process(java.util.StringTokenizer command, String Username) {
 
         if (accessLevel != 0) {
-            int userLevel = server.campaign.CampaignMain.cm.getServer().getUserLevel(Username);
+            int userLevel = CampaignMain.campaignMain.getServer().getUserLevel(Username);
             if (userLevel < getExecutionLevel()) {
-                server.campaign.CampaignMain.cm.toUser("AM:Insufficient access level for command. Level: " +
-                                                             userLevel +
-                                                             ". Required: " +
-                                                             accessLevel +
-                                                             ".", Username, true);
+                CampaignMain.campaignMain.toUser("AM:Insufficient access level for command. Level: " +
+                                                       userLevel +
+                                                       ". Required: " +
+                                                       accessLevel +
+                                                       ".", Username, true);
                 return;
             }
         }
@@ -102,52 +104,52 @@ public class BanCommand implements server.campaign.commands.Command {
                 timeName = "year";
             }
 
-            if (server.campaign.CampaignMain.cm.getServer().isAdmin(toKill) && !Username.startsWith("[Dedicated]")) {
-                server.campaign.CampaignMain.cm.toUser("AM:You may not ban an admin.", Username);
+            if (CampaignMain.campaignMain.getServer().isAdmin(toKill) && !Username.startsWith("[Dedicated]")) {
+                CampaignMain.campaignMain.toUser("AM:You may not ban an admin.", Username);
                 return;
             }
 
             //howlong = Long.parseLong(str.nextToken());
-            java.net.InetAddress banip = server.campaign.CampaignMain.cm.getServer().getIP(toKill);
+            java.net.InetAddress banip = CampaignMain.campaignMain.getServer().getIP(toKill);
             if (banip.equals(java.net.InetAddress.getLocalHost())) {banip = null;}
 
             long until = System.currentTimeMillis() + howlong;
-            server.campaign.CampaignMain.cm.toUser("AM:You were banned by " + Username + " " + timeName + ".", toKill);
-            server.campaign.CampaignMain.cm.toUser("PL|GBB|Banned!", toKill, false);
+            CampaignMain.campaignMain.toUser("AM:You were banned by " + Username + " " + timeName + ".", toKill);
+            CampaignMain.campaignMain.toUser("PL|GBB|Banned!", toKill, false);
 
             try {
                 Thread.sleep(125);
             } catch (Exception ex) {}
 
-            if (banip != null) {server.campaign.CampaignMain.cm.getServer().getBanIps().put(banip, until);}
-            server.campaign.CampaignMain.cm.getServer()
+            if (banip != null) {CampaignMain.campaignMain.getServer().getBanIps().put(banip, until);}
+            CampaignMain.campaignMain.getServer()
                   .getBanAccounts()
                   .put(toKill.toLowerCase(), Long.toString(until));
 
             //CampaignMain.cm.getServer().ISPlog.put(CampaignMain.cm.getServer().myCommunicator.getMmClient(toKill).getClientVersion(),until);
             //retreiveISPS(until,toKill);
-            server.campaign.CampaignMain.cm.getServer().bansUpdate();
+            CampaignMain.campaignMain.getServer().bansUpdate();
             //MWLogger.modLog(Username + " banned " + toKill + " " +timeName+".");
-            server.campaign.CampaignMain.cm.getServer()
+            CampaignMain.campaignMain.getServer()
                   .sendChat("AM:" + Username + " banned " + toKill + " " + timeName + ".");
 
-            server.campaign.CampaignMain.cm.getOpsManager().doDisconnectCheckOnPlayer(toKill);
-            server.campaign.CampaignMain.cm.getServer().getCampaign().doLogoutPlayer(toKill);
+            CampaignMain.campaignMain.getOpsManager().doDisconnectCheckOnPlayer(toKill);
+            CampaignMain.campaignMain.getServer().getCampaign().doLogoutPlayer(toKill);
 
-            if (server.campaign.CampaignMain.cm.getServer().getClient(toKill) != null) {
-                server.campaign.CampaignMain.cm.getServer().killClient(toKill, Username);
+            if (CampaignMain.campaignMain.getServer().getClient(toKill) != null) {
+                CampaignMain.campaignMain.getServer().killClient(toKill, Username);
             }
         } catch (Exception ex) {
-            server.campaign.CampaignMain.cm.toUser("AM:Incorrect Syntax: Syntax is as follows<br>/ban playername#time" +
-                                                         "<br>Please note the time argument can be left off and will default to 1 year" +
-                                                         "<br>also note that the time argument can be made in different ways" +
-                                                         "<br>/ban playername#10 (player is banned for 10 mins)" +
-                                                         "<br>/ban playername#10h (player is banned for 10 hours)" +
-                                                         "<br>/ban playername#10d (player is banned for 10 days)" +
-                                                         "<br>/ban playername#10w (player is banned for 10 weeks)" +
-                                                         "<br>/ban playername#10m (player is banned for 10 months)" +
-                                                         "<br>/ban playername#10y (player is banned for 10 years)" +
-                                                         "<br>/ban playername#perm (player is banned for a very long time)",
+            CampaignMain.campaignMain.toUser("AM:Incorrect Syntax: Syntax is as follows<br>/ban playername#time" +
+                                                   "<br>Please note the time argument can be left off and will default to 1 year" +
+                                                   "<br>also note that the time argument can be made in different ways" +
+                                                   "<br>/ban playername#10 (player is banned for 10 mins)" +
+                                                   "<br>/ban playername#10h (player is banned for 10 hours)" +
+                                                   "<br>/ban playername#10d (player is banned for 10 days)" +
+                                                   "<br>/ban playername#10w (player is banned for 10 weeks)" +
+                                                   "<br>/ban playername#10m (player is banned for 10 months)" +
+                                                   "<br>/ban playername#10y (player is banned for 10 years)" +
+                                                   "<br>/ban playername#perm (player is banned for a very long time)",
                   Username);
         }
     }

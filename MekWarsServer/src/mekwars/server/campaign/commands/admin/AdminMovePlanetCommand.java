@@ -17,6 +17,7 @@
 package mekwars.server.campaign.commands.admin;
 
 import common.util.Position;
+import mekwars.server.campaign.CampaignMain;
 
 public class AdminMovePlanetCommand implements server.campaign.commands.Command {
 
@@ -28,17 +29,17 @@ public class AdminMovePlanetCommand implements server.campaign.commands.Command 
     public void process(java.util.StringTokenizer command, String Username) {
 
         //access level check
-        int userLevel = server.campaign.CampaignMain.cm.getServer().getUserLevel(Username);
+        int userLevel = CampaignMain.campaignMain.getServer().getUserLevel(Username);
         if (userLevel < getExecutionLevel()) {
-            server.campaign.CampaignMain.cm.toUser("AM:Insufficient access level for command. Level: " +
-                                                         userLevel +
-                                                         ". Required: " +
-                                                         accessLevel +
-                                                         ".", Username, true);
+            CampaignMain.campaignMain.toUser("AM:Insufficient access level for command. Level: " +
+                                                   userLevel +
+                                                   ". Required: " +
+                                                   accessLevel +
+                                                   ".", Username, true);
             return;
         }
 
-        server.campaign.SPlanet p = server.campaign.CampaignMain.cm.getPlanetFromPartialString(command.nextToken(),
+        server.campaign.SPlanet p = CampaignMain.campaignMain.getPlanetFromPartialString(command.nextToken(),
               Username);
 
         if (p == null) {return;}
@@ -49,16 +50,16 @@ public class AdminMovePlanetCommand implements server.campaign.commands.Command 
             x = Double.parseDouble(command.nextToken());
             y = Double.parseDouble(command.nextToken());
         } catch (Exception ex) {
-            server.campaign.CampaignMain.cm.toUser("Invalid Syntax: adminmoveplanet#name#x#y", Username);
+            CampaignMain.campaignMain.toUser("Invalid Syntax: adminmoveplanet#name#x#y", Username);
             return;
         }
 
         p.setPosition(new Position(x, y));
         p.updated();
 
-        server.campaign.CampaignMain.cm.doSendModMail("NOTE",
+        CampaignMain.campaignMain.doSendModMail("NOTE",
               Username + " has moved planet " + p.getName() + " to " + x + "," + y);
-        server.campaign.CampaignMain.cm.toUser("Planet Moved", Username);
+        CampaignMain.campaignMain.toUser("Planet Moved", Username);
     }
 
     public int getExecutionLevel() {return accessLevel;}

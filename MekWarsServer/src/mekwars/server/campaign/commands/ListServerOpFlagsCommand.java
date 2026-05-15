@@ -14,6 +14,8 @@
 
 package mekwars.server.campaign.commands;
 
+import mekwars.server.campaign.CampaignMain;
+
 public class ListServerOpFlagsCommand implements Command {
 
     int accessLevel = 0;
@@ -22,13 +24,13 @@ public class ListServerOpFlagsCommand implements Command {
     public void process(java.util.StringTokenizer command, String Username) {
 
         if (accessLevel != 0) {
-            int userLevel = server.campaign.CampaignMain.cm.getServer().getUserLevel(Username);
+            int userLevel = CampaignMain.campaignMain.getServer().getUserLevel(Username);
             if (userLevel < getExecutionLevel()) {
-                server.campaign.CampaignMain.cm.toUser("AM:Insufficient access level for command. Level: " +
-                                                             userLevel +
-                                                             ". Required: " +
-                                                             accessLevel +
-                                                             ".", Username, true);
+                CampaignMain.campaignMain.toUser("AM:Insufficient access level for command. Level: " +
+                                                       userLevel +
+                                                       ". Required: " +
+                                                       accessLevel +
+                                                       ".", Username, true);
                 return;
             }
         }
@@ -39,17 +41,17 @@ public class ListServerOpFlagsCommand implements Command {
         result.append("<table><tr><th>Key</th>");
         result.append("<th>Value</th>");
 
-        for (String key : server.campaign.CampaignMain.cm.getData().getPlanetOpFlags().keySet()) {
+        for (String key : CampaignMain.campaignMain.getData().getPlanetOpFlags().keySet()) {
             result.append("<tr>");
             result.append("<td>");
             result.append(key);
             result.append("</td><td>");
-            result.append(server.campaign.CampaignMain.cm.getData().getPlanetOpFlags().get(key));
+            result.append(CampaignMain.campaignMain.getData().getPlanetOpFlags().get(key));
             result.append("</td>");
             result.append("</tr>");
         }
         result.append("</table>");
-        server.campaign.CampaignMain.cm.toUser(result.toString(), Username);
+        CampaignMain.campaignMain.toUser(result.toString(), Username);
     }
 
     public int getExecutionLevel() {return accessLevel;}

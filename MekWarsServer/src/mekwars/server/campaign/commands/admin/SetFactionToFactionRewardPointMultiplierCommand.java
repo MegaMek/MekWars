@@ -15,6 +15,8 @@
 package mekwars.server.campaign.commands.admin;
 
 
+import mekwars.server.campaign.CampaignMain;
+
 public class SetFactionToFactionRewardPointMultiplierCommand implements server.campaign.commands.Command {
 
     int accessLevel = server.MWChatServer.auth.IAuthenticator.ADMIN;
@@ -25,13 +27,13 @@ public class SetFactionToFactionRewardPointMultiplierCommand implements server.c
     public void process(java.util.StringTokenizer command, String Username) {
 
         //access level check
-        int userLevel = server.campaign.CampaignMain.cm.getServer().getUserLevel(Username);
+        int userLevel = CampaignMain.campaignMain.getServer().getUserLevel(Username);
         if (userLevel < getExecutionLevel()) {
-            server.campaign.CampaignMain.cm.toUser("AM:Insufficient access level for command. Level: " +
-                                                         userLevel +
-                                                         ". Required: " +
-                                                         accessLevel +
-                                                         ".", Username, true);
+            CampaignMain.campaignMain.toUser("AM:Insufficient access level for command. Level: " +
+                                                   userLevel +
+                                                   ". Required: " +
+                                                   accessLevel +
+                                                   ".", Username, true);
             return;
         }
 
@@ -39,12 +41,12 @@ public class SetFactionToFactionRewardPointMultiplierCommand implements server.c
         server.campaign.SHouse faction2 = null;
         double multiplier = 0.0;
         try {
-            faction1 = server.campaign.CampaignMain.cm.getHouseFromPartialString(command.nextToken(), Username);
-            faction2 = server.campaign.CampaignMain.cm.getHouseFromPartialString(command.nextToken(), Username);
+            faction1 = CampaignMain.campaignMain.getHouseFromPartialString(command.nextToken(), Username);
+            faction2 = CampaignMain.campaignMain.getHouseFromPartialString(command.nextToken(), Username);
             multiplier = Double.parseDouble(command.nextToken());
         } catch (Exception e) {
-            server.campaign.CampaignMain.cm.toUser("Improper command. Try: /c SetFactionToFactionRewardPointMultiplier#" +
-                                                         syntax, Username, true);
+            CampaignMain.campaignMain.toUser("Improper command. Try: /c SetFactionToFactionRewardPointMultiplier#" +
+                                                   syntax, Username, true);
             return;
         }
 
@@ -54,20 +56,20 @@ public class SetFactionToFactionRewardPointMultiplierCommand implements server.c
 
         String rewardMultiplier = faction1.getName() + "To" + faction2.getName() + "RewardPointMultiplier";
 
-        server.campaign.CampaignMain.cm.getConfig().setProperty(rewardMultiplier, Double.toString(multiplier));
+        CampaignMain.campaignMain.getConfig().setProperty(rewardMultiplier, Double.toString(multiplier));
 
-        server.campaign.CampaignMain.cm.toUser("You set the " +
-                                                     server.campaign.CampaignMain.cm.getConfig("RPShortName") +
-                                                     " multipler for " +
-                                                     faction1.getName() +
-                                                     " to " +
-                                                     faction2.getName() +
-                                                     " to " +
-                                                     multiplier, Username, true);
-        server.campaign.CampaignMain.cm.doSendModMail("NOTE",
+        CampaignMain.campaignMain.toUser("You set the " +
+                                               CampaignMain.campaignMain.getConfig("RPShortName") +
+                                               " multipler for " +
+                                               faction1.getName() +
+                                               " to " +
+                                               faction2.getName() +
+                                               " to " +
+                                               multiplier, Username, true);
+        CampaignMain.campaignMain.doSendModMail("NOTE",
               Username +
                     " has set " +
-                    server.campaign.CampaignMain.cm.getConfig("RPShortName") +
+                    CampaignMain.campaignMain.getConfig("RPShortName") +
                     " multipler for " +
                     faction1.getName() +
                     " to " +

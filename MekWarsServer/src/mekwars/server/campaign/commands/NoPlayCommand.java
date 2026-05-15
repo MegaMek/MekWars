@@ -16,6 +16,7 @@
 
 package mekwars.server.campaign.commands;
 
+import mekwars.server.campaign.CampaignMain;
 import server.campaign.util.ExclusionList;
 
 public class NoPlayCommand implements Command {
@@ -26,25 +27,25 @@ public class NoPlayCommand implements Command {
     public void process(java.util.StringTokenizer command, String Username) {
 
         if (accessLevel != 0) {
-            int userLevel = server.campaign.CampaignMain.cm.getServer().getUserLevel(Username);
+            int userLevel = CampaignMain.campaignMain.getServer().getUserLevel(Username);
             if (userLevel < getExecutionLevel()) {
-                server.campaign.CampaignMain.cm.toUser("AM:Insufficient access level for command. Level: " +
-                                                             userLevel +
-                                                             ". Required: " +
-                                                             accessLevel +
-                                                             ".", Username, true);
+                CampaignMain.campaignMain.toUser("AM:Insufficient access level for command. Level: " +
+                                                       userLevel +
+                                                       ". Required: " +
+                                                       accessLevel +
+                                                       ".", Username, true);
                 return;
             }
         }
 
         // player who issued the command
-        server.campaign.SPlayer p = server.campaign.CampaignMain.cm.getPlayer(Username);
+        server.campaign.SPlayer p = CampaignMain.campaignMain.getPlayer(Username);
         if (p == null) {
             return;
         }
 
         if (p.getDutyStatus() >= server.campaign.SPlayer.STATUS_ACTIVE) {
-            server.campaign.CampaignMain.cm.toUser("AM:You may not use this command while active.", Username, true);
+            CampaignMain.campaignMain.toUser("AM:You may not use this command while active.", Username, true);
             return;
         }
 
@@ -54,7 +55,7 @@ public class NoPlayCommand implements Command {
             mode = command.nextToken().toLowerCase();
             excludeName = command.nextToken();
         } catch (Exception e) {
-            server.campaign.CampaignMain.cm.toUser(
+            CampaignMain.campaignMain.toUser(
                   "AM:Improper format. Try: /c noplay#add#name or /c noplay#remove#name.",
                   Username,
                   true);
@@ -66,7 +67,7 @@ public class NoPlayCommand implements Command {
             try {
                 commandConfirmed = command.nextToken().equals("CONFIRM");
             } catch (Exception e) {
-                server.campaign.CampaignMain.cm.toUser(
+                CampaignMain.campaignMain.toUser(
                       "AM:Improper format. Try: /c noplay#add#name#CONFIRM or /c noplay#remove#name#CONFIRM",
                       Username,
                       true);
@@ -77,7 +78,7 @@ public class NoPlayCommand implements Command {
         // load the exlusion list
         ExclusionList exList = p.getExclusionList();
         if (exList == null) {
-            server.campaign.CampaignMain.cm.toUser("AM:ERROR. Your no-play list was null. Report this to an admin.",
+            CampaignMain.campaignMain.toUser("AM:ERROR. Your no-play list was null. Report this to an admin.",
                   Username,
                   true);
             return;
@@ -87,11 +88,11 @@ public class NoPlayCommand implements Command {
         int exclusionStatus = exList.checkExclude(excludeName);
 
         // load relevant config variables
-        int maxSize = server.campaign.CampaignMain.cm.getIntegerConfig("NoPlayListSize");
-        int removeRPCost = server.campaign.CampaignMain.cm.getIntegerConfig("NoPlayRPCost");
-        int removeFluCost = server.campaign.CampaignMain.cm.getIntegerConfig("NoPlayInfluenceCost");
-        int removeMUCost = server.campaign.CampaignMain.cm.getIntegerConfig("NoPlayMUCost");
-        boolean adminListCountsForCap = Boolean.parseBoolean(server.campaign.CampaignMain.cm.getConfig(
+        int maxSize = CampaignMain.campaignMain.getIntegerConfig("NoPlayListSize");
+        int removeRPCost = CampaignMain.campaignMain.getIntegerConfig("NoPlayRPCost");
+        int removeFluCost = CampaignMain.campaignMain.getIntegerConfig("NoPlayInfluenceCost");
+        int removeMUCost = CampaignMain.campaignMain.getIntegerConfig("NoPlayMUCost");
+        boolean adminListCountsForCap = Boolean.parseBoolean(CampaignMain.campaignMain.getConfig(
               "NoPlaysFromAdminsCountForMax"));
 
         // check player's values
@@ -135,7 +136,7 @@ public class NoPlayCommand implements Command {
         costBlock += " cost ";
 
         if (removeRPCost > 0) {
-            shortCost += removeRPCost + " " + server.campaign.CampaignMain.cm.getConfig("RPShortName");
+            shortCost += removeRPCost + " " + CampaignMain.campaignMain.getConfig("RPShortName");
 
             if (totalVarsWithCost == 3) {
                 shortCost += ", ";
@@ -144,7 +145,7 @@ public class NoPlayCommand implements Command {
             }
         }
         if (removeMUCost > 0) {
-            shortCost += server.campaign.CampaignMain.cm.moneyOrFluMessage(true, true, removeMUCost) + "";
+            shortCost += CampaignMain.campaignMain.moneyOrFluMessage(true, true, removeMUCost) + "";
 
             if (totalVarsWithCost == 3) {
                 shortCost += " and ";
@@ -153,7 +154,7 @@ public class NoPlayCommand implements Command {
             }
         }
         if (removeFluCost > 0) {
-            shortCost += server.campaign.CampaignMain.cm.moneyOrFluMessage(false, true, removeFluCost) + "";
+            shortCost += CampaignMain.campaignMain.moneyOrFluMessage(false, true, removeFluCost) + "";
         }
 
         costBlock = costBlock + shortCost + ".";
@@ -166,8 +167,8 @@ public class NoPlayCommand implements Command {
             playerExists = new java.io.File("./campaign/players/" + excludeName.toLowerCase() + ".dat").exists();
 
             if (!playerExists) {
-                server.campaign.CampaignMain.cm.toUser(excludeName +
-                                                             " does not have a player file. cannot add to your no-play list.",
+                CampaignMain.campaignMain.toUser(excludeName +
+                                                       " does not have a player file. cannot add to your no-play list.",
                       Username,
                       true);
                 return;
@@ -175,7 +176,7 @@ public class NoPlayCommand implements Command {
 
             // check to see is the given player is already excluded
             if (exclusionStatus != ExclusionList.NO_EXCLUSION) {
-                server.campaign.CampaignMain.cm.toUser(excludeName + " is already on your no-play list.",
+                CampaignMain.campaignMain.toUser(excludeName + " is already on your no-play list.",
                       Username,
                       true);
                 return;
@@ -183,7 +184,7 @@ public class NoPlayCommand implements Command {
 
             // check to make sure the player isn't no-play'ing himself
             if (p.getName().toLowerCase().equals(excludeName)) {
-                server.campaign.CampaignMain.cm.toUser("AM:You can't put your own name on your no-play list. Jackass.",
+                CampaignMain.campaignMain.toUser("AM:You can't put your own name on your no-play list. Jackass.",
                       Username,
                       true);
                 return;
@@ -191,7 +192,7 @@ public class NoPlayCommand implements Command {
 
             // check the current list size [adminList only]
             if (adminListCountsForCap && (exList.getAdminExcludes().size() >= maxSize)) {
-                server.campaign.CampaignMain.cm.toUser(
+                CampaignMain.campaignMain.toUser(
                       "AM:Moderators/Admins have filled your no-play list. You may not add" +
                             " any players on your own at this time.",
                       Username,
@@ -225,7 +226,7 @@ public class NoPlayCommand implements Command {
                                         excludeName +
                                         "</a>.<br>";
                     }
-                    server.campaign.CampaignMain.cm.toUser(toUser, Username, true);
+                    CampaignMain.campaignMain.toUser(toUser, Username, true);
                     return;
                 }
 
@@ -236,7 +237,7 @@ public class NoPlayCommand implements Command {
                                       "afford a removal at this time. Removing costs " +
                                       shortCost +
                                       ".<br>";
-                server.campaign.CampaignMain.cm.toUser(toUser, Username, true);
+                CampaignMain.campaignMain.toUser(toUser, Username, true);
                 return;
             }
 
@@ -244,18 +245,18 @@ public class NoPlayCommand implements Command {
             if (commandConfirmed) {
                 try {
                     exList.addExclude(false, excludeName);
-                    server.campaign.CampaignMain.cm.toUser(excludeName + " was added to your no-play list.",
+                    CampaignMain.campaignMain.toUser(excludeName + " was added to your no-play list.",
                           Username,
                           true);
-                    server.campaign.CampaignMain.cm.toUser("PL|PEU|" + p.getExclusionList().playerExcludeToString("$"),
+                    CampaignMain.campaignMain.toUser("PL|PEU|" + p.getExclusionList().playerExcludeToString("$"),
                           Username,
                           false);
                     p.setSave();
                     return;
                 } catch (Exception e) {
-                    server.campaign.CampaignMain.cm.toUser("AM:Error while adding " +
-                                                                 excludeName +
-                                                                 " to your no-play list. Report this to an admin.",
+                    CampaignMain.campaignMain.toUser("AM:Error while adding " +
+                                                           excludeName +
+                                                           " to your no-play list. Report this to an admin.",
                           Username,
                           true);
                     return;
@@ -272,7 +273,7 @@ public class NoPlayCommand implements Command {
                                   "of " +
                                   excludeName +
                                   " to your no-play list</a>.<br>";
-            server.campaign.CampaignMain.cm.toUser(toUser, Username, true);
+            CampaignMain.campaignMain.toUser(toUser, Username, true);
             return;
 
         }// end if(mode == add)
@@ -280,15 +281,15 @@ public class NoPlayCommand implements Command {
         else if (mode.equals("remove")) {
 
             if (exclusionStatus == ExclusionList.NO_EXCLUSION) {
-                server.campaign.CampaignMain.cm.toUser(excludeName + " is not on your no-play list.", Username, true);
+                CampaignMain.campaignMain.toUser(excludeName + " is not on your no-play list.", Username, true);
                 return;
             }
 
             if (exclusionStatus == ExclusionList.ADMIN_EXCLUDED) {
-                server.campaign.CampaignMain.cm.toUser("AM:You cannot remove " +
-                                                             excludeName +
-                                                             " from your no-play list. He/she " +
-                                                             "was added to the list by a Mod or Admin.",
+                CampaignMain.campaignMain.toUser("AM:You cannot remove " +
+                                                       excludeName +
+                                                       " from your no-play list. He/she " +
+                                                       "was added to the list by a Mod or Admin.",
                       Username,
                       true);
                 return;
@@ -300,7 +301,7 @@ public class NoPlayCommand implements Command {
                                       excludeName +
                                       " from your no-play list. Removal " +
                                       costBlock;
-                server.campaign.CampaignMain.cm.toUser(toUser, Username, true);
+                CampaignMain.campaignMain.toUser(toUser, Username, true);
                 return;
             }
 
@@ -308,22 +309,22 @@ public class NoPlayCommand implements Command {
             if (commandConfirmed) {
                 try {
                     exList.removeExclude(false, excludeName);
-                    server.campaign.CampaignMain.cm.toUser(excludeName +
-                                                                 "was removed from your no-play list (-" +
-                                                                 shortCost +
-                                                                 ").", Username, true);
+                    CampaignMain.campaignMain.toUser(excludeName +
+                                                           "was removed from your no-play list (-" +
+                                                           shortCost +
+                                                           ").", Username, true);
                     p.addMoney(-removeMUCost);
                     p.addReward(-removeRPCost);
                     p.addInfluence(-removeFluCost);
-                    server.campaign.CampaignMain.cm.toUser("PL|PEU|" + p.getExclusionList().playerExcludeToString("$"),
+                    CampaignMain.campaignMain.toUser("PL|PEU|" + p.getExclusionList().playerExcludeToString("$"),
                           Username,
                           false);
                     p.setSave();
                     return;
                 } catch (Exception e) {
-                    server.campaign.CampaignMain.cm.toUser("AM:Error while removing " +
-                                                                 excludeName +
-                                                                 " from your no-play list. Report this to an admin.",
+                    CampaignMain.campaignMain.toUser("AM:Error while removing " +
+                                                           excludeName +
+                                                           " from your no-play list. Report this to an admin.",
                           Username,
                           true);
                     return;
@@ -339,13 +340,13 @@ public class NoPlayCommand implements Command {
                                   "href=\"MEKWARS/c noplay#remove#" +
                                   excludeName +
                                   "#CONFIRM\">Click here to confirm the removal</a>.<br>";
-            server.campaign.CampaignMain.cm.toUser(toUser, Username, true);
+            CampaignMain.campaignMain.toUser(toUser, Username, true);
             return;
 
         }// end (if mode == remove)
 
         else {// mode is gibberish. alert the user.
-            server.campaign.CampaignMain.cm.toUser(
+            CampaignMain.campaignMain.toUser(
                   "AM:Improper format. Try: /c noplay#add#name or /c noplay#remove#name.",
                   Username,
                   true);

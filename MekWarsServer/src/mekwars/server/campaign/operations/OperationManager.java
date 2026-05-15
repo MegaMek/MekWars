@@ -39,6 +39,7 @@ package mekwars.server.campaign.operations;
 import common.campaign.operations.ModifyingOperation;
 import common.campaign.operations.Operation;
 import common.util.MWLogger;
+import mekwars.server.campaign.CampaignMain;
 import server.campaign.operations.newopmanager.AbstractOperationManager;
 import server.campaign.operations.newopmanager.I_OperationManager;
 
@@ -159,7 +160,7 @@ public class OperationManager extends AbstractOperationManager implements I_Oper
     public void doDisconnectCheckOnPlayer(String name) {
 
         //see if the player is real
-        server.campaign.SPlayer p = server.campaign.CampaignMain.cm.getPlayer(name);
+        server.campaign.SPlayer p = CampaignMain.campaignMain.getPlayer(name);
         if (p == null) {return;}
 
         //see if the player is in a game
@@ -310,59 +311,59 @@ public class OperationManager extends AbstractOperationManager implements I_Oper
         int defrp = o.getIntValue("DefenderCostReward");
 
         for (String currName : so.getAttackers().keySet()) {
-            server.campaign.SPlayer currP = server.campaign.CampaignMain.cm.getPlayer(currName);
+            server.campaign.SPlayer currP = CampaignMain.campaignMain.getPlayer(currName);
             boolean didReturn = false;
             String toPlayer = message;
             if (attmoney > 0) {
                 didReturn = true;
                 currP.addMoney(attmoney);
-                toPlayer += " (+" + server.campaign.CampaignMain.cm.moneyOrFluMessage(true, true, attmoney);
+                toPlayer += " (+" + CampaignMain.campaignMain.moneyOrFluMessage(true, true, attmoney);
             }
             if (attflu > 0) {
                 currP.addInfluence(attflu);
                 if (!didReturn) {
-                    toPlayer += " (+" + server.campaign.CampaignMain.cm.moneyOrFluMessage(false, true, attflu);
-                } else {toPlayer += ", +" + server.campaign.CampaignMain.cm.moneyOrFluMessage(false, true, attflu);}
+                    toPlayer += " (+" + CampaignMain.campaignMain.moneyOrFluMessage(false, true, attflu);
+                } else {toPlayer += ", +" + CampaignMain.campaignMain.moneyOrFluMessage(false, true, attflu);}
                 didReturn = true;
             }
             if (attrp > 0) {
                 currP.addReward(attrp);
                 if (!didReturn) {
-                    toPlayer += " (+" + attrp + " " + server.campaign.CampaignMain.cm.getConfig("RPShortName");
-                } else {toPlayer += ", +" + attrp + " " + server.campaign.CampaignMain.cm.getConfig("RPShortName");}
+                    toPlayer += " (+" + attrp + " " + CampaignMain.campaignMain.getConfig("RPShortName");
+                } else {toPlayer += ", +" + attrp + " " + CampaignMain.campaignMain.getConfig("RPShortName");}
                 didReturn = true;
             }
             if (didReturn) {toPlayer += ").";} else {toPlayer += ".";}
 
-            server.campaign.CampaignMain.cm.toUser(toPlayer, currName, true);
-            server.campaign.CampaignMain.cm.toUser("PL|STN|" + -1, toPlayer, false);
+            CampaignMain.campaignMain.toUser(toPlayer, currName, true);
+            CampaignMain.campaignMain.toUser("PL|STN|" + -1, toPlayer, false);
         }
 
         for (String currName : so.getDefenders().keySet()) {
-            server.campaign.SPlayer currP = server.campaign.CampaignMain.cm.getPlayer(currName);
+            server.campaign.SPlayer currP = CampaignMain.campaignMain.getPlayer(currName);
             boolean didReturn = false;
             String toPlayer = message;
             if (defmoney > 0) {
                 didReturn = true;
                 currP.addMoney(defmoney);
-                toPlayer += "(+" + server.campaign.CampaignMain.cm.moneyOrFluMessage(true, true, defmoney);
+                toPlayer += "(+" + CampaignMain.campaignMain.moneyOrFluMessage(true, true, defmoney);
             }
             if (defflu > 0) {
                 currP.addInfluence(defflu);
                 if (!didReturn) {
-                    toPlayer += "(+" + server.campaign.CampaignMain.cm.moneyOrFluMessage(false, true, defflu);
+                    toPlayer += "(+" + CampaignMain.campaignMain.moneyOrFluMessage(false, true, defflu);
                 } else {
-                    toPlayer += ", +" + server.campaign.CampaignMain.cm.moneyOrFluMessage(false, true, defflu);
+                    toPlayer += ", +" + CampaignMain.campaignMain.moneyOrFluMessage(false, true, defflu);
                     didReturn = true;
                 }
             }
             if (defrp > 0) {
                 currP.addReward(defrp);
                 if (!didReturn) {
-                    toPlayer += "(+" + defrp + " " + server.campaign.CampaignMain.cm.getConfig("RPShortName");
+                    toPlayer += "(+" + defrp + " " + CampaignMain.campaignMain.getConfig("RPShortName");
                     didReturn = true;
                 } else {
-                    toPlayer += ", +" + defrp + " " + server.campaign.CampaignMain.cm.getConfig("RPShortName");
+                    toPlayer += ", +" + defrp + " " + CampaignMain.campaignMain.getConfig("RPShortName");
                     didReturn = true;
                 }
             }
@@ -370,8 +371,8 @@ public class OperationManager extends AbstractOperationManager implements I_Oper
 
             if (o.getBooleanValue("AttackerUnitsTakenBeforeFightStarts")) {
                 try {
-                    server.campaign.SHouse faction = server.campaign.CampaignMain.cm.getHouseForPlayer(so.getDefenders()
-                                                                                                             .firstKey());
+                    server.campaign.SHouse faction = CampaignMain.campaignMain.getHouseForPlayer(so.getDefenders()
+                                                                                                       .firstKey());
                     for (server.campaign.SUnit unit : so.preCapturedUnits) {faction.addUnit(unit, true);}
                 } catch (Exception ex) {
                     MWLogger.errLog(ex);
@@ -379,8 +380,8 @@ public class OperationManager extends AbstractOperationManager implements I_Oper
 
             }
 
-            server.campaign.CampaignMain.cm.toUser(toPlayer, currName, true);
-            server.campaign.CampaignMain.cm.toUser("PL|STN|" + -1, toPlayer, false);
+            CampaignMain.campaignMain.toUser(toPlayer, currName, true);
+            CampaignMain.campaignMain.toUser("PL|STN|" + -1, toPlayer, false);
         }
 
         /*
@@ -389,7 +390,7 @@ public class OperationManager extends AbstractOperationManager implements I_Oper
         java.util.TreeMap<String, Integer> allArmies = so.getAllPlayersAndArmies();
         for (String currN : allArmies.keySet()) {
             try {
-                server.campaign.CampaignMain.cm.getPlayer(currN).lockArmy(-1);
+                CampaignMain.campaignMain.getPlayer(currN).lockArmy(-1);
             } catch (Exception ex) {
                 MWLogger.errLog(currN + " had a null army while terminating. Continuing to next player.");
                 continue;
@@ -417,15 +418,15 @@ public class OperationManager extends AbstractOperationManager implements I_Oper
                     continue;
                 }
 
-                server.campaign.SPlayer currP = server.campaign.CampaignMain.cm.getPlayer(currN);
-                server.campaign.CampaignMain.cm.getIThread()
+                server.campaign.SPlayer currP = CampaignMain.campaignMain.getPlayer(currN);
+                CampaignMain.campaignMain.getIThread()
                       .removeImmunity(currP);//ensure player is not in immunity tree.
 
                 //If AFR, return to reserve. Else, standard switch to activated.
                 if (so.isFromReserve()) {currP.setFighting(false, true);} else {currP.setFighting(false);}
 
                 //all players should see a cancellation
-                server.campaign.CampaignMain.cm.sendPlayerStatusUpdate(currP, true);
+                CampaignMain.campaignMain.sendPlayerStatusUpdate(currP, true);
 
             }
         }
@@ -476,7 +477,7 @@ public class OperationManager extends AbstractOperationManager implements I_Oper
     public void doReconnectCheckOnPlayer(String name) {
 
         //see if the player is real
-        server.campaign.SPlayer p = server.campaign.CampaignMain.cm.getPlayer(name);
+        server.campaign.SPlayer p = CampaignMain.campaignMain.getPlayer(name);
         if (p == null) {return;}
 
         //check to see if the player has a pending disco
@@ -485,8 +486,8 @@ public class OperationManager extends AbstractOperationManager implements I_Oper
 
             //Matches with more then 2 players do not get disconnection threads
             //So check the player for those kinda ops.
-            if (server.campaign.CampaignMain.cm.getOpsManager().getShortOpForPlayer(p) != null) {
-                ShortOperation so = server.campaign.CampaignMain.cm.getOpsManager().getShortOpForPlayer(p);
+            if (CampaignMain.campaignMain.getOpsManager().getShortOpForPlayer(p) != null) {
+                ShortOperation so = CampaignMain.campaignMain.getOpsManager().getShortOpForPlayer(p);
                 if (so.getStatus() == ShortOperation.STATUS_REPORTING ||
                           so.getStatus() == ShortOperation.STATUS_FINISHED) {return;}
 
@@ -512,7 +513,7 @@ public class OperationManager extends AbstractOperationManager implements I_Oper
         }
 
         //adjust the duration by the grace period (expressed in seconds in config)
-        long gracePeriod = Long.parseLong(server.campaign.CampaignMain.cm.getConfig("DisconnectionGracePeriod")) * 1000;
+        long gracePeriod = Long.parseLong(CampaignMain.campaignMain.getConfig("DisconnectionGracePeriod")) * 1000;
         discoDuration -= gracePeriod;
         if (discoDuration < 0) {discoDuration = 0;}
 
@@ -620,20 +621,20 @@ public class OperationManager extends AbstractOperationManager implements I_Oper
         String toSend = "You are on your way to " + so.getTargetWorld().getName() + " (" + o.getName();
         if (money > 0) {
             ap.addMoney(-money);
-            toSend += ", " + server.campaign.CampaignMain.cm.moneyOrFluMessage(true, true, -money, true);
+            toSend += ", " + CampaignMain.campaignMain.moneyOrFluMessage(true, true, -money, true);
         }
         if (flu > 0) {
             ap.addInfluence(-flu);
-            toSend += ", " + server.campaign.CampaignMain.cm.moneyOrFluMessage(false, true, -flu, true);
+            toSend += ", " + CampaignMain.campaignMain.moneyOrFluMessage(false, true, -flu, true);
         }
         if (rp > 0) {
             ap.addReward(-rp);
-            toSend += ", -" + rp + " " + server.campaign.CampaignMain.cm.getConfig("RPShortName");
+            toSend += ", -" + rp + " " + CampaignMain.campaignMain.getConfig("RPShortName");
         }
         toSend += ").";
 
         //tell the attacker that his attack has begun
-        server.campaign.CampaignMain.cm.toUser(toSend, ap.getName(), true);
+        CampaignMain.campaignMain.toUser(toSend, ap.getName(), true);
     }
 
     /**
@@ -705,8 +706,8 @@ public class OperationManager extends AbstractOperationManager implements I_Oper
         java.util.Iterator<mekwars.server.campaign.operations.ShortOperation> i = runningOperations.values().iterator();
         while (i.hasNext()) {
             ShortOperation currS = i.next();
-            server.campaign.SPlayer anAttacker = server.campaign.CampaignMain.cm.getPlayer(currS.getAttackers()
-                                                                                                 .firstKey());
+            server.campaign.SPlayer anAttacker = CampaignMain.campaignMain.getPlayer(currS.getAttackers()
+                                                                                           .firstKey());
             server.campaign.SHouse attacker = anAttacker.getHouseFightingFor();
             server.campaign.SPlanet planet = currS.getTargetWorld();
             if (attacker.equals(h) && planet.equals(p)) {return true;}
@@ -773,10 +774,10 @@ public class OperationManager extends AbstractOperationManager implements I_Oper
                 currO.removeAttacker(p);
                 if (verbose) {
                     for (String currN : currO.getAllPlayerNames()) {
-                        server.campaign.CampaignMain.cm.toUser(p.getName() +
-                                                                     " left Attack #" +
-                                                                     currO.getShortID() +
-                                                                     " (deactivated or logged out).", currN, true);
+                        CampaignMain.campaignMain.toUser(p.getName() +
+                                                               " left Attack #" +
+                                                               currO.getShortID() +
+                                                               " (deactivated or logged out).", currN, true);
                     }
                 }
                 if (currO.getAttackers().size() == 0) {toTerminate.add(currO);}
@@ -791,10 +792,10 @@ public class OperationManager extends AbstractOperationManager implements I_Oper
                 currO.removeAttacker(p);
                 if (verbose) {
                     for (String currN : currO.getAllPlayerNames()) {
-                        server.campaign.CampaignMain.cm.toUser(p.getName() +
-                                                                     " left the game for Attack #" +
-                                                                     so.getShortID() +
-                                                                     ".", currN, true);
+                        CampaignMain.campaignMain.toUser(p.getName() +
+                                                               " left the game for Attack #" +
+                                                               so.getShortID() +
+                                                               ".", currN, true);
                     }
                 }
                 if (currO.getAttackers().size() == 0) {toTerminate.add(currO);}
@@ -832,10 +833,10 @@ public class OperationManager extends AbstractOperationManager implements I_Oper
                 currO.removeDefender(p);
                 if (verbose) {
                     for (String currN : currO.getAllPlayerNames()) {
-                        server.campaign.CampaignMain.cm.toUser(p.getName() +
-                                                                     " left Attack #" +
-                                                                     currO.getShortID() +
-                                                                     " (deactivated or logged out).", currN, true);
+                        CampaignMain.campaignMain.toUser(p.getName() +
+                                                               " left Attack #" +
+                                                               currO.getShortID() +
+                                                               " (deactivated or logged out).", currN, true);
                     }
                 }
             }
@@ -850,10 +851,10 @@ public class OperationManager extends AbstractOperationManager implements I_Oper
                 currO.removeDefender(p);
                 if (verbose) {
                     for (String currN : currO.getAllPlayerNames()) {
-                        server.campaign.CampaignMain.cm.toUser(p.getName() +
-                                                                     " left the game for Attack #" +
-                                                                     so.getShortID() +
-                                                                     ".", currN, true);
+                        CampaignMain.campaignMain.toUser(p.getName() +
+                                                               " left the game for Attack #" +
+                                                               so.getShortID() +
+                                                               ".", currN, true);
                     }
                 }
             }
@@ -889,7 +890,7 @@ public class OperationManager extends AbstractOperationManager implements I_Oper
         }
 
         //write info, in time order.
-        boolean completeInfo = server.campaign.CampaignMain.cm.getBooleanConfig("ShowCompleteGameInfoOnTick");
+        boolean completeInfo = CampaignMain.campaignMain.getBooleanConfig("ShowCompleteGameInfoOnTick");
         if (timeSort.size() == 0) {return "";}
 
         for (ShortOperation currO : timeSort.values()) {toReturn += currO.getInfo(completeInfo, false) + "<br>";}

@@ -21,6 +21,7 @@ import megamek.common.BattleArmor;
 import megamek.common.CriticalSlot;
 import megamek.common.Entity;
 import megamek.common.Mounted;
+import mekwars.server.campaign.CampaignMain;
 
 public class SetUnitAmmoByCritCommand implements Command {
 
@@ -30,18 +31,18 @@ public class SetUnitAmmoByCritCommand implements Command {
     public void process(java.util.StringTokenizer command, String Username) {
 
         if (accessLevel != 0) {
-            int userLevel = server.campaign.CampaignMain.cm.getServer().getUserLevel(Username);
+            int userLevel = CampaignMain.campaignMain.getServer().getUserLevel(Username);
             if (userLevel < getExecutionLevel()) {
-                server.campaign.CampaignMain.cm.toUser("AM:Insufficient access level for command. Level: " +
-                                                             userLevel +
-                                                             ". Required: " +
-                                                             accessLevel +
-                                                             ".", Username, true);
+                CampaignMain.campaignMain.toUser("AM:Insufficient access level for command. Level: " +
+                                                       userLevel +
+                                                       ". Required: " +
+                                                       accessLevel +
+                                                       ".", Username, true);
                 return;
             }
         }
 
-        server.campaign.SPlayer p = server.campaign.CampaignMain.cm.getPlayer(Username);
+        server.campaign.SPlayer p = CampaignMain.campaignMain.getPlayer(Username);
 
         int unitid = 0;// ID# of the mech which is to set ammo change
         int weaponType = 0;// Standard weapon
@@ -50,7 +51,7 @@ public class SetUnitAmmoByCritCommand implements Command {
         int weaponSlot = 0;
         int shots = 100; // more then 0 0 = dumpped ammo
         CriticalSlot cs = null;
-        boolean usingCrits = server.campaign.CampaignMain.cm.getBooleanConfig("UsePartsRepair");
+        boolean usingCrits = CampaignMain.campaignMain.getBooleanConfig("UsePartsRepair");
 
         try {
             unitid = Integer.parseInt(command.nextToken());
@@ -60,7 +61,7 @@ public class SetUnitAmmoByCritCommand implements Command {
             ammoName = command.nextToken();
             shots = Integer.parseInt(command.nextToken());
         } catch (NumberFormatException ex) {
-            server.campaign.CampaignMain.cm.toUser(
+            CampaignMain.campaignMain.toUser(
                   "AM:SetUnitAmmo command failed. Check your input. It should be something like this: /c setUnitAmmo#unitid#weaponlocation#weaponType#ammoname#rounds",
                   Username,
                   true);
@@ -91,22 +92,22 @@ public class SetUnitAmmoByCritCommand implements Command {
             p.checkAndUpdateArmies(unit);
             // Don't have to set BV to 0 and recalculate in this class -
             // unit.toString(true) does it for us.
-            server.campaign.CampaignMain.cm.toUser("PL|UU|" + unit.getId() + "|" + unit.toString(true),
+            CampaignMain.campaignMain.toUser("PL|UU|" + unit.getId() + "|" + unit.toString(true),
                   Username,
                   false);
-            server.campaign.CampaignMain.cm.toUser("AM:Ammo dumped. BV Recalculated", Username, true);
+            CampaignMain.campaignMain.toUser("AM:Ammo dumped. BV Recalculated", Username, true);
             return;
         }
 
         String munitionType = Long.toString(at.getMunitionType());
         // dont make players confirm the command on a server which doesnt charge
         // for ammo
-        double ammoCharge = server.campaign.CampaignMain.cm.getAmmoCost(currAmmo.getInternalName());
+        double ammoCharge = CampaignMain.campaignMain.getAmmoCost(currAmmo.getInternalName());
 
-        if ((server.campaign.CampaignMain.cm.getData().getServerBannedAmmo().get(munitionType) != null) ||
+        if ((CampaignMain.campaignMain.getData().getServerBannedAmmo().get(munitionType) != null) ||
                   (faction.getBannedAmmo().get(munitionType) != null) ||
                   ((ammoCharge < 0) && !usingCrits)) {
-            server.campaign.CampaignMain.cm.toUser(
+            CampaignMain.campaignMain.toUser(
                   "AM:<font color=green>Quartermaster Command regretfully informs you that " +
                         at.getName() +
                         " is out of stock.</font>",
@@ -172,7 +173,7 @@ public class SetUnitAmmoByCritCommand implements Command {
 
                 if (p.getAutoReorder() && (newAmmoAmount < refillShots)) {
                     String newCommand = at.getInternalName() + "#" + (refillShots - newAmmoAmount);
-                    server.campaign.CampaignMain.cm.getServerCommands()
+                    CampaignMain.campaignMain.getServerCommands()
                           .get("BUYPARTS")
                           .process(new java.util.StringTokenizer(newCommand, "#"), Username);
                     newAmmoAmount = p.getPartsAmount(at.getInternalName());
@@ -189,7 +190,7 @@ public class SetUnitAmmoByCritCommand implements Command {
                                           " your techs realize you do not have any " +
                                           at.getDesc() +
                                           " to reload with!";
-                    server.campaign.CampaignMain.cm.toUser(result, Username);
+                    CampaignMain.campaignMain.toUser(result, Username);
                 } else if (newAmmoAmount < fullMagazine) {
                     String result = "AM:After unloading " +
                                           currAmmo.getDesc() +
@@ -204,13 +205,13 @@ public class SetUnitAmmoByCritCommand implements Command {
                                           " rounds of " +
                                           at.getDesc() +
                                           " to reload with!";
-                    server.campaign.CampaignMain.cm.toUser(result, Username);
+                    CampaignMain.campaignMain.toUser(result, Username);
                 } else {
-                    server.campaign.CampaignMain.cm.toUser("AM:Ammo set for " +
-                                                                 unit.getModelName() +
-                                                                 " (#" +
-                                                                 unit.getId() +
-                                                                 ").", Username, true);
+                    CampaignMain.campaignMain.toUser("AM:Ammo set for " +
+                                                           unit.getModelName() +
+                                                           " (#" +
+                                                           unit.getId() +
+                                                           ").", Username, true);
                     newAmmoAmount = refillShots;
                 }
                 p.updatePartsCache(currAmmo.getInternalName(), mWeapon.getUsableShotsLeft());
@@ -219,15 +220,15 @@ public class SetUnitAmmoByCritCommand implements Command {
                 mWeapon.setShotsLeft(newAmmoAmount);
                 unit.setEntity(en);
                 p.checkAndUpdateArmies(unit);
-                server.campaign.CampaignMain.cm.toUser("PL|UU|" + unit.getId() + "|" + unit.toString(true),
+                CampaignMain.campaignMain.toUser("PL|UU|" + unit.getId() + "|" + unit.toString(true),
                       Username,
                       false);
 
-                server.campaign.CampaignMain.cm.toUser("AM:Ammo set for " +
-                                                             unit.getModelName() +
-                                                             " (#" +
-                                                             unit.getId() +
-                                                             ").", Username, true);
+                CampaignMain.campaignMain.toUser("AM:Ammo set for " +
+                                                       unit.getModelName() +
+                                                       " (#" +
+                                                       unit.getId() +
+                                                       ").", Username, true);
                 return;
             }
 
@@ -236,7 +237,7 @@ public class SetUnitAmmoByCritCommand implements Command {
             // check the confirmation
             if (!strConfirm.equals("CONFIRM")) {
                 String result = "AM:Quartermaster command will charge you " +
-                                      server.campaign.CampaignMain.cm.moneyOrFluMessage(true, false, cost) +
+                                      CampaignMain.campaignMain.moneyOrFluMessage(true, false, cost) +
                                       " to change the load out on #" +
                                       unit.getId() +
                                       " " +
@@ -270,19 +271,19 @@ public class SetUnitAmmoByCritCommand implements Command {
                                 fullMagazine +
                                 "#CONFIRM";
                 result += "AM:\">Click here to change the ammo.</a>";
-                server.campaign.CampaignMain.cm.toUser(result, Username, true);
+                CampaignMain.campaignMain.toUser(result, Username, true);
                 return;
             }
 
             if (p.getMoney() < cost) {
-                server.campaign.CampaignMain.cm.toUser("AM:Changing ammo costs " +
-                                                             server.campaign.CampaignMain.cm.moneyOrFluMessage(true,
-                                                                   false,
-                                                                   cost,
-                                                                   false) +
-                                                             ", but you only have " +
-                                                             p.getMoney() +
-                                                             ".", Username, true);
+                CampaignMain.campaignMain.toUser("AM:Changing ammo costs " +
+                                                       CampaignMain.campaignMain.moneyOrFluMessage(true,
+                                                             false,
+                                                             cost,
+                                                             false) +
+                                                       ", but you only have " +
+                                                       p.getMoney() +
+                                                       ".", Username, true);
                 return;
             }
 
@@ -292,9 +293,9 @@ public class SetUnitAmmoByCritCommand implements Command {
         mWeapon.changeAmmoType(at);
         unit.setEntity(en);
         p.checkAndUpdateArmies(unit);
-        server.campaign.CampaignMain.cm.toUser("PL|UU|" + unit.getId() + "|" + unit.toString(true), Username, false);
+        CampaignMain.campaignMain.toUser("PL|UU|" + unit.getId() + "|" + unit.toString(true), Username, false);
 
-        server.campaign.CampaignMain.cm.toUser("AM:Ammo set for " + unit.getModelName() + " (#" + unit.getId() + ").",
+        CampaignMain.campaignMain.toUser("AM:Ammo set for " + unit.getModelName() + " (#" + unit.getId() + ").",
               Username,
               true);
 

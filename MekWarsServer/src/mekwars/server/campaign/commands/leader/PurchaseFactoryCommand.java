@@ -17,6 +17,7 @@ package mekwars.server.campaign.commands.leader;
 
 import common.UnitFactory;
 import megamek.common.TechConstants;
+import mekwars.server.campaign.CampaignMain;
 
 public class PurchaseFactoryCommand implements server.campaign.commands.Command {
 
@@ -31,18 +32,18 @@ public class PurchaseFactoryCommand implements server.campaign.commands.Command 
     public void process(java.util.StringTokenizer command, String Username) {
 
         if (accessLevel != 0) {
-            int userLevel = server.campaign.CampaignMain.cm.getServer().getUserLevel(Username);
+            int userLevel = CampaignMain.campaignMain.getServer().getUserLevel(Username);
             if (userLevel < getExecutionLevel()) {
-                server.campaign.CampaignMain.cm.toUser("AM:Insufficient access level for command. Level: " +
-                                                             userLevel +
-                                                             ". Required: " +
-                                                             accessLevel +
-                                                             ".", Username, true);
+                CampaignMain.campaignMain.toUser("AM:Insufficient access level for command. Level: " +
+                                                       userLevel +
+                                                       ". Required: " +
+                                                       accessLevel +
+                                                       ".", Username, true);
                 return;
             }
         }
 
-        server.campaign.SPlayer player = server.campaign.CampaignMain.cm.getPlayer(Username);
+        server.campaign.SPlayer player = CampaignMain.campaignMain.getPlayer(Username);
         server.campaign.SPlanet planet;
         server.campaign.SHouse house;
         double cost = 0.0;
@@ -55,36 +56,36 @@ public class PurchaseFactoryCommand implements server.campaign.commands.Command 
         name = command.nextToken();
         type = Integer.parseInt(command.nextToken());
         weight = Integer.parseInt(command.nextToken());
-        planet = server.campaign.CampaignMain.cm.getPlanetFromPartialString(command.nextToken(), null);
+        planet = CampaignMain.campaignMain.getPlanetFromPartialString(command.nextToken(), null);
         house = player.getMyHouse();
 
         if (planet == null) {
-            server.campaign.CampaignMain.cm.toUser("Unable to find planet.", Username);
+            CampaignMain.campaignMain.toUser("Unable to find planet.", Username);
             return;
         }
 
         if (house.isNewbieHouse()) {
-            server.campaign.CampaignMain.cm.toUser(server.campaign.CampaignMain.cm.getConfig("NewbieHouseName") +
-                                                         " cannot purchase new factories!", Username);
+            CampaignMain.campaignMain.toUser(CampaignMain.campaignMain.getConfig("NewbieHouseName") +
+                                                   " cannot purchase new factories!", Username);
             return;
         }
 
         if (type == server.campaign.SUnit.BATTLEARMOR && house.getTechLevel() < TechConstants.T_IS_TW_ALL) {
-            server.campaign.CampaignMain.cm.toUser(
+            CampaignMain.campaignMain.toUser(
                   "Your factions tech level is not high enough to purchase Battle Armor factories",
                   Username);
             return;
         }
 
         if (type == server.campaign.SUnit.PROTOMEK && house.getTechLevel() < TechConstants.T_CLAN_TW) {
-            server.campaign.CampaignMain.cm.toUser(
+            CampaignMain.campaignMain.toUser(
                   "Your factions tech level is not high enough to purchase ProtoMek factories",
                   Username);
             return;
         }
 
         if (!planet.isOwner(house.getId())) {
-            server.campaign.CampaignMain.cm.toUser("You do not own " + planet.getName(), Username);
+            CampaignMain.campaignMain.toUser("You do not own " + planet.getName(), Username);
             return;
         }
 
@@ -94,7 +95,7 @@ public class PurchaseFactoryCommand implements server.campaign.commands.Command 
               type);
 
         if (!new java.io.File(buildTable).exists()) {
-            server.campaign.CampaignMain.cm.toUser("Sorry but That type of factory cannot be built.", Username);
+            CampaignMain.campaignMain.toUser("Sorry but That type of factory cannot be built.", Username);
             return;
         }
 
@@ -116,37 +117,37 @@ public class PurchaseFactoryCommand implements server.campaign.commands.Command 
                 break;
         }
 
-        cost = server.campaign.CampaignMain.cm.getDoubleConfig("NewFactoryBaseCost");
-        cost *= server.campaign.CampaignMain.cm.getDoubleConfig("NewFactoryCostModifier" +
-                                                                      server.campaign.SUnit.getWeightClassDesc(weight));
-        cost *= server.campaign.CampaignMain.cm.getDoubleConfig("NewFactoryCostModifier" +
-                                                                      server.campaign.SUnit.getTypeClassDesc(type));
+        cost = CampaignMain.campaignMain.getDoubleConfig("NewFactoryBaseCost");
+        cost *= CampaignMain.campaignMain.getDoubleConfig("NewFactoryCostModifier" +
+                                                                server.campaign.SUnit.getWeightClassDesc(weight));
+        cost *= CampaignMain.campaignMain.getDoubleConfig("NewFactoryCostModifier" +
+                                                                server.campaign.SUnit.getTypeClassDesc(type));
 
         cost = Math.round(cost);
 
-        flu = server.campaign.CampaignMain.cm.getDoubleConfig("NewFactoryBaseFlu");
-        flu *= server.campaign.CampaignMain.cm.getDoubleConfig("NewFactoryFluModifier" +
-                                                                     server.campaign.SUnit.getWeightClassDesc(weight));
-        flu *= server.campaign.CampaignMain.cm.getDoubleConfig("NewFactoryFluModifier" +
-                                                                     server.campaign.SUnit.getTypeClassDesc(type));
+        flu = CampaignMain.campaignMain.getDoubleConfig("NewFactoryBaseFlu");
+        flu *= CampaignMain.campaignMain.getDoubleConfig("NewFactoryFluModifier" +
+                                                               server.campaign.SUnit.getWeightClassDesc(weight));
+        flu *= CampaignMain.campaignMain.getDoubleConfig("NewFactoryFluModifier" +
+                                                               server.campaign.SUnit.getTypeClassDesc(type));
 
         flu = Math.round(flu);
 
         if (player.getMoney() < cost) {
-            server.campaign.CampaignMain.cm.toUser("AM:You need " +
-                                                         server.campaign.CampaignMain.cm.moneyOrFluMessage(true,
-                                                               true,
-                                                               (int) cost) +
-                                                         " to purchase a factory.", Username);
+            CampaignMain.campaignMain.toUser("AM:You need " +
+                                                   CampaignMain.campaignMain.moneyOrFluMessage(true,
+                                                         true,
+                                                         (int) cost) +
+                                                   " to purchase a factory.", Username);
             return;
         }
 
         if (player.getInfluence() < flu) {
-            server.campaign.CampaignMain.cm.toUser("AM:You need " +
-                                                         server.campaign.CampaignMain.cm.moneyOrFluMessage(false,
-                                                               true,
-                                                               (int) flu) +
-                                                         " to purchase a factory.", Username);
+            CampaignMain.campaignMain.toUser("AM:You need " +
+                                                   CampaignMain.campaignMain.moneyOrFluMessage(false,
+                                                         true,
+                                                         (int) flu) +
+                                                   " to purchase a factory.", Username);
             return;
         }
 
@@ -161,7 +162,7 @@ public class PurchaseFactoryCommand implements server.campaign.commands.Command 
               server.campaign.SUnit.getWeightClassDesc(weight),
               house.getName(),
               0,
-              server.campaign.CampaignMain.cm.getIntegerConfig("BaseFactoryRefreshRate"),
+              CampaignMain.campaignMain.getIntegerConfig("BaseFactoryRefreshRate"),
               buildType,
               server.campaign.BuildTable.STANDARD,
               0);
@@ -173,19 +174,19 @@ public class PurchaseFactoryCommand implements server.campaign.commands.Command 
         house.updated();
         planet.updated();
 
-        server.campaign.CampaignMain.cm.toUser("AM:You have purchased a factory, " +
-                                                     name +
-                                                     ", on planet " +
-                                                     planet.getName() +
-                                                     " for " +
-                                                     server.campaign.CampaignMain.cm.moneyOrFluMessage(true,
-                                                           true,
-                                                           (int) cost) +
-                                                     " and " +
-                                                     server.campaign.CampaignMain.cm.moneyOrFluMessage(false,
-                                                           true,
-                                                           (int) flu), Username, true);
-        server.campaign.CampaignMain.cm.doSendHouseMail(house,
+        CampaignMain.campaignMain.toUser("AM:You have purchased a factory, " +
+                                               name +
+                                               ", on planet " +
+                                               planet.getName() +
+                                               " for " +
+                                               CampaignMain.campaignMain.moneyOrFluMessage(true,
+                                                     true,
+                                                     (int) cost) +
+                                               " and " +
+                                               CampaignMain.campaignMain.moneyOrFluMessage(false,
+                                                     true,
+                                                     (int) flu), Username, true);
+        CampaignMain.campaignMain.doSendHouseMail(house,
               "NOTE",
               Username + " has purchased a factory, " + name + ", on planet " + planet.getName() + ".");
     }

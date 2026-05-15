@@ -16,31 +16,37 @@
 
 package mekwars.server.campaign.commands;
 
-import common.UnitFactory;
-import common.util.MWLogger;
+import java.io.File;
+import java.util.Enumeration;
+import java.util.StringTokenizer;
 
+import megamek.logging.MMLogger;
+import mekwars.common.UnitFactory;
+import mekwars.server.campaign.CampaignMain;
+import mekwars.server.campaign.SHouse;
+import mekwars.server.campaign.SPlanet;
+import mekwars.server.campaign.SPlayer;
 
 public class UnenrollCommand implements Command {
+    private final static MMLogger LOGGER = MMLogger.create(UnenrollCommand.class);
 
     int accessLevel = 0;
     String syntax = "";
 
-    public void process(java.util.StringTokenizer command, String Username) {
+    public void process(StringTokenizer command, String Username) {
 
         if (accessLevel != 0) {
-            int userLevel = server.campaign.CampaignMain.cm.getServer().getUserLevel(Username);
+            int userLevel = CampaignMain.campaignMain.getServer().getUserLevel(Username);
             if (userLevel < getExecutionLevel()) {
-                server.campaign.CampaignMain.cm.toUser("AM:Insufficient access level for command. Level: " +
-                                                             userLevel +
-                                                             ". Required: " +
-                                                             accessLevel +
-                                                             ".", Username, true);
+                CampaignMain.campaignMain.toUser(STR."AM:Insufficient access level for command. Level: \{userLevel}. Required: \{accessLevel}.",
+                      Username,
+                      true);
                 return;
             }
         }
 
         if (Username.startsWith("Nobody")) {
-            server.campaign.CampaignMain.cm.toUser(
+            CampaignMain.campaignMain.toUser(
                   "AM:Nobodies can't enroll, hence they can't unenroll. Nice try though.",
                   Username,
                   true);
@@ -48,9 +54,9 @@ public class UnenrollCommand implements Command {
         }
 
         //load the player
-        server.campaign.SPlayer p = server.campaign.CampaignMain.cm.getPlayer(Username);
-        if (p == null) {
-            server.campaign.CampaignMain.cm.toUser(
+        SPlayer player = CampaignMain.campaignMain.getPlayer(Username);
+        if (player == null) {
+            CampaignMain.campaignMain.toUser(
                   "AM:Couldn't find your player to unenroll. Contact an admin immediately.",
                   Username,
                   true);
@@ -59,7 +65,7 @@ public class UnenrollCommand implements Command {
 
         //check for confirmation
         if (!command.hasMoreTokens()) {
-            server.campaign.CampaignMain.cm.toUser(
+            CampaignMain.campaignMain.toUser(
                   "AM:You didn't confirm the Unenroll command. Enter /c unenroll#confirm if you're absolutely sure you want to quit.",
                   Username,
                   true);
@@ -68,85 +74,94 @@ public class UnenrollCommand implements Command {
 
         String confirmString = command.nextToken();
         if (!confirmString.equalsIgnoreCase("confirm")) {
-            server.campaign.CampaignMain.cm.toUser(
+            CampaignMain.campaignMain.toUser(
                   "AM:You didn't confirm the Unenroll Command. Enter /c unenroll#confirm if you're absolutely sure you want to quit.",
                   Username,
                   true);
             return;
         }
 
-        if (server.campaign.CampaignMain.cm.getOpsManager().getShortOpForPlayer(p) != null
-                  || p.getDutyStatus() == server.campaign.SPlayer.STATUS_FIGHTING) {
-            server.campaign.CampaignMain.cm.toUser("AM:You cannot unenroll while in a game.", Username, true);
+        if (CampaignMain.campaignMain.getOpsManager().getShortOpForPlayer(player) != null
+                  || player.getDutyStatus() == SPlayer.STATUS_FIGHTING) {
+            CampaignMain.campaignMain.toUser("AM:You cannot unenroll while in a game.", Username, true);
             return;
         }
 
-        if (p.getExperience() == 0) {
-            server.campaign.CampaignMain.cm.toUser(
+        if (player.getExperience() == 0) {
+            CampaignMain.campaignMain.toUser(
                   "AM:You cannot unenroll with 0 XP. Ask an admin or mod to remove your account.",
                   Username,
                   true);
             return;
         }
 
-        if (server.campaign.CampaignMain.cm.getMarket().hasActiveListings(p)) {
-            server.campaign.CampaignMain.cm.toUser(
+        if (CampaignMain.campaignMain.getMarket().hasActiveListings(player)) {
+            CampaignMain.campaignMain.toUser(
                   "AM:You cannot unenroll while you have units on the Market. Recall them and try again.",
                   Username,
                   true);
             return;
         }
 
-        if (p.hasRepairingUnits(false)) {
-            server.campaign.CampaignMain.cm.toUser(
+        if (player.hasRepairingUnits(false)) {
+            CampaignMain.campaignMain.toUser(
                   "AM:You cannot unenroll while repairing units. Cancel the repairs and try again.",
                   Username,
                   true);
             return;
         }
 
-        server.campaign.SHouse hisfaction = server.campaign.CampaignMain.cm.getHouseForPlayer(Username);
-        if (hisfaction == null) {
-            server.campaign.CampaignMain.cm.toUser("AM:Couldn't find faction to unenroll. Contact an admin immediately.",
+        SHouse playerFaction = CampaignMain.campaignMain.getHouseForPlayer(Username);
+        if (playerFaction == null) {
+            CampaignMain.campaignMain.toUser("AM:Couldn't find faction to unenroll. Contact an admin immediately.",
                   Username,
                   true);
             return;
         }
 
         //checks passed. do the actual removal.
-        hisfaction.removePlayer(p, server.campaign.CampaignMain.cm.getBooleanConfig("DonateUnitsUponUnenrollment"));
-
+        playerFaction.removePlayer(player, CampaignMain.campaignMain.getBooleanConfig("DonateUnitsUponUnenrollment"));
 
         //tell the user
-        server.campaign.CampaignMain.cm.toUser("AM:You've been unenrolled.", Username, true);
-        removeFaction(hisfaction);
+        CampaignMain.campaignMain.toUser("AM:You've been unenrolled.", Username, true);
+        removeFaction(playerFaction);
 
-        //delete the player's saved info, if a pfile exists
-        java.io.File fp = new java.io.File("./campaign/players/" + p.getName().toLowerCase() + ".dat");
-        if (fp.exists()) {fp.delete();}
+        //delete the player's saved info if a pfile exists
+        File fp = new File(STR."./campaign/players/\{player.getName().toLowerCase()}.dat");
+        if (fp.exists()) {
+            fp.delete();
+        }
 
         //tell the mods and add to iplog.0
-        java.net.InetAddress ip = server.campaign.CampaignMain.cm.getServer().getIP(Username);
+        java.net.InetAddress ip = CampaignMain.campaignMain.getServer().getIP(Username);
         //MWLogger.modLog(Username + " unenrolled from the campaign (IP: " + ip + ").");
-        MWLogger.ipLog("UNENROLL: " + Username + " IP: " + ip);
-        server.campaign.CampaignMain.cm.doSendModMail("NOTE",
-              Username + " unenrolled from the campaign (IP: " + ip + ").");
+        LOGGER.info(STR."UNENROLL: \{Username} IP: \{ip}");
+        CampaignMain.campaignMain.doSendModMail("NOTE",
+              STR."\{Username} unenrolled from the campaign (IP: \{ip}).");
     }//end process
 
-    public int getExecutionLevel() {return accessLevel;}
+    public int getExecutionLevel() {
+        return accessLevel;
+    }
 
-    public void setExecutionLevel(int i) {accessLevel = i;}
+    public void setExecutionLevel(int i) {
+        accessLevel = i;
+    }
 
-    public String getSyntax() {return syntax;}
+    public String getSyntax() {
+        return syntax;
+    }
 
-    private void removeFaction(server.campaign.SHouse faction) {
+    private void removeFaction(SHouse faction) {
 
-        if (!server.campaign.CampaignMain.cm.getBooleanConfig("AllowSinglePlayerFactions")) {return;}
+        if (!CampaignMain.campaignMain.getBooleanConfig("AllowSinglePlayerFactions")) {
+            return;
+        }
 
-        java.util.Enumeration<server.campaign.SPlanet> planets = faction.getPlanets().elements();
+        Enumeration<SPlanet> planets = faction.getPlanets().elements();
         while (planets.hasMoreElements()) {
-            server.campaign.SPlanet planet = planets.nextElement();
-            planet.doGainInfluence(server.campaign.CampaignMain.cm.getHouseById(-1), faction, Integer.MAX_VALUE, true);
+            SPlanet planet = planets.nextElement();
+            planet.doGainInfluence(CampaignMain.campaignMain.getHouseById(-1), faction, Integer.MAX_VALUE, true);
             java.util.Enumeration<UnitFactory> factories = planet.getUnitFactories().elements();
             while (factories.hasMoreElements()) {
                 UnitFactory factory = factories.nextElement();
@@ -158,9 +173,9 @@ public class UnenrollCommand implements Command {
             planet.updated();
             planet.updateInfluences();
         }
-        server.campaign.CampaignMain.cm.getData().removeHouse(faction.getId());
-        server.campaign.CampaignMain.cm.updateHousePlanetUpdate();
-        server.campaign.CampaignMain.cm.doSendToAllOnlinePlayers("PL|RPF|" + faction.getId(), false);
+        CampaignMain.campaignMain.getData().removeHouse(faction.getId());
+        CampaignMain.campaignMain.updateHousePlanetUpdate();
+        CampaignMain.campaignMain.doSendToAllOnlinePlayers("PL|RPF|" + faction.getId(), false);
 
     }
 }//end UnenrollCommand

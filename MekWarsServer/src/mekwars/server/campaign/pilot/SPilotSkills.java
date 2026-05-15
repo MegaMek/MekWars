@@ -53,7 +53,7 @@ public class SPilotSkills {
             if (trait.indexOf("*") > -1) {
                 trait = trait.substring(0, trait.indexOf("*"));
             }
-            java.util.Vector<String> traitsList = server.campaign.CampaignMain.cm.getFactionTraits(p.getCurrentFaction());
+            java.util.Vector<String> traitsList = CampaignMain.campaignMain.getFactionTraits(p.getCurrentFaction());
             traitsList.trimToSize();
             for (String traitNames : traitsList) {
                 java.util.StringTokenizer traitName = new java.util.StringTokenizer(traitNames, "*");
@@ -103,7 +103,7 @@ public class SPilotSkills {
                  */
             }
 
-            return skillBuilder.elementAt(server.campaign.CampaignMain.cm.getRandomNumber(skillBuilder.size()));
+            return skillBuilder.elementAt(CampaignMain.campaignMain.getRandomNumber(skillBuilder.size()));
         } catch (Exception ex) {
             MWLogger.errLog("Problems during skill earning! Skill Table Size = " +
                                   skillBuilder.size() +

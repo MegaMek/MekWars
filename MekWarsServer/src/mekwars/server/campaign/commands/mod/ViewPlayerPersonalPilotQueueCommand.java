@@ -18,6 +18,7 @@ package mekwars.server.campaign.commands.mod;
 
 import common.Unit;
 import common.campaign.pilot.Pilot;
+import mekwars.server.campaign.CampaignMain;
 
 /**
  * Return a human readable string that describes the pilots currently in a player's personal queues.
@@ -32,13 +33,13 @@ public class ViewPlayerPersonalPilotQueueCommand implements server.campaign.comm
     public void process(java.util.StringTokenizer command, String Username) {
 
         if (accessLevel != 0) {
-            int userLevel = server.campaign.CampaignMain.cm.getServer().getUserLevel(Username);
+            int userLevel = CampaignMain.campaignMain.getServer().getUserLevel(Username);
             if (userLevel < getExecutionLevel()) {
-                server.campaign.CampaignMain.cm.toUser("AM:Insufficient access level for command. Level: " +
-                                                             userLevel +
-                                                             ". Required: " +
-                                                             accessLevel +
-                                                             ".", Username, true);
+                CampaignMain.campaignMain.toUser("AM:Insufficient access level for command. Level: " +
+                                                       userLevel +
+                                                       ". Required: " +
+                                                       accessLevel +
+                                                       ".", Username, true);
                 return;
             }
         }
@@ -46,10 +47,10 @@ public class ViewPlayerPersonalPilotQueueCommand implements server.campaign.comm
         //get the player you wish to use
 
         if (!command.hasMoreTokens()) {
-            server.campaign.CampaignMain.cm.toUser("Syntax: ViewPlayerPersonalPilotQueue#Name#", Username);
+            CampaignMain.campaignMain.toUser("Syntax: ViewPlayerPersonalPilotQueue#Name#", Username);
             return;
         }
-        server.campaign.SPlayer p = server.campaign.CampaignMain.cm.getPlayer(command.nextToken());
+        server.campaign.SPlayer p = CampaignMain.campaignMain.getPlayer(command.nextToken());
 
         /*
          * @urgru 1/12/06 - factored string generation out of SPeronalPilotQueue
@@ -205,16 +206,16 @@ public class ViewPlayerPersonalPilotQueueCommand implements server.campaign.comm
         }
 
         if (hasQueuedPilots) {
-            server.campaign.CampaignMain.cm.toUser("SM|" + toReturn.toString(), Username, false);
+            CampaignMain.campaignMain.toUser("SM|" + toReturn.toString(), Username, false);
         } else {
-            server.campaign.CampaignMain.cm.toUser("SM|" +
-                                                         p.getName() +
-                                                         " doesn't have any reserve pilots at the moment.",
+            CampaignMain.campaignMain.toUser("SM|" +
+                                                   p.getName() +
+                                                   " doesn't have any reserve pilots at the moment.",
                   Username,
                   false);
         }
 
-        server.campaign.CampaignMain.cm.doSendModMail("NOTE",
+        CampaignMain.campaignMain.doSendModMail("NOTE",
               Username + " has viewed " + p.getName() + "'s pilot queue");
     }
 

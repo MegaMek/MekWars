@@ -1,6 +1,7 @@
 package mekwars.server.campaign.commands;
 
 import common.util.MWLogger;
+import mekwars.server.campaign.CampaignMain;
 
 //@salient a command to make sure hosts are using same quirk files
 public class QuirkCheckCommand implements Command {
@@ -40,9 +41,9 @@ public class QuirkCheckCommand implements Command {
     public String getSyntax() {return syntax;}
 
     private void initVars() {
-        enableQuirks = server.campaign.CampaignMain.cm.getBooleanConfig("EnableQuirks");
-        player = server.campaign.CampaignMain.cm.getPlayer(username);
-        userLevel = server.campaign.CampaignMain.cm.getServer().getUserLevel(username);
+        enableQuirks = CampaignMain.campaignMain.getBooleanConfig("EnableQuirks");
+        player = CampaignMain.campaignMain.getPlayer(username);
+        userLevel = CampaignMain.campaignMain.getServer().getUserLevel(username);
     }
 
     private boolean checkAccess() {
@@ -84,11 +85,11 @@ public class QuirkCheckCommand implements Command {
         long serverCustomQuirkLength = custom.length();
 
         if (serverCanonQuirkLength != clientCanonQuirkLength || serverCustomQuirkLength != clientCustomQuirkLength) {
-            server.campaign.CampaignMain.cm.doSendModMail(username,
+            CampaignMain.campaignMain.doSendModMail(username,
                   " is hosting with quirk files that do not match server!");
             MWLogger.errLog(username + " is hosting with quirk files that do not match server!");
-            server.campaign.CampaignMain.cm.doSendErrLog(username +
-                                                               " is hosting with quirk files that do not match server!");
+            CampaignMain.campaignMain.doSendErrLog(username +
+                                                         " is hosting with quirk files that do not match server!");
             player.toSelf("AM: Your files do not match the server, run autoupdate before hosting a match!");
         }
 

@@ -19,6 +19,7 @@ import common.Unit;
 import common.campaign.pilot.Pilot;
 import common.campaign.pilot.skills.PilotSkill;
 import megamek.common.Entity;
+import mekwars.server.campaign.CampaignMain;
 
 public class PainShunt extends SPilotSkill {
 
@@ -46,10 +47,10 @@ public class PainShunt extends SPilotSkill {
 
         String chance = "chancefor" + getAbbreviation() + "for" + Unit.getTypeClassDesc(unitType);
 
-        server.campaign.SHouse house = server.campaign.CampaignMain.cm.getHouseFromPartialString(p.getCurrentFaction());
+        server.campaign.SHouse house = CampaignMain.campaignMain.getHouseFromPartialString(p.getCurrentFaction());
 
         if (house == null) {
-            return server.campaign.CampaignMain.cm.getIntegerConfig(chance);
+            return CampaignMain.campaignMain.getIntegerConfig(chance);
         }
 
         return house.getIntegerConfig(chance);
@@ -57,12 +58,12 @@ public class PainShunt extends SPilotSkill {
 
     @Override
     public int getBVMod(Entity unit) {
-        return server.campaign.CampaignMain.cm.getIntegerConfig("PainShuntBaseBVMod");
+        return CampaignMain.campaignMain.getIntegerConfig("PainShuntBaseBVMod");
     }
 
     @Override
     public int getBVMod(Entity unit, server.campaign.pilot.SPilot p) {
-        server.campaign.SHouse house = server.campaign.CampaignMain.cm.getHouseFromPartialString(p.getCurrentFaction());
+        server.campaign.SHouse house = CampaignMain.campaignMain.getHouseFromPartialString(p.getCurrentFaction());
         return house.getIntegerConfig("PainShuntBaseBVMod");
     }
 

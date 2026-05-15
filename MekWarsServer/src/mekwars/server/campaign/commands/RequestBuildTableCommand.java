@@ -18,6 +18,7 @@
     package mekwars.server.campaign.commands;
 
     import common.util.MWLogger;
+    import mekwars.server.campaign.CampaignMain;
 
 
     public class RequestBuildTableCommand implements Command {
@@ -36,13 +37,13 @@
         public void process(java.util.StringTokenizer command, String Username) {
 
             //access level check
-            int userLevel = server.campaign.CampaignMain.cm.getServer().getUserLevel(Username);
+            int userLevel = CampaignMain.campaignMain.getServer().getUserLevel(Username);
             if (userLevel < getExecutionLevel()) {
-                server.campaign.CampaignMain.cm.toUser("AM:Insufficient access level for command. Level: " +
-                                                             userLevel +
-                                                             ". Required: " +
-                                                             accessLevel +
-                                                             ".", Username, true);
+                CampaignMain.campaignMain.toUser("AM:Insufficient access level for command. Level: " +
+                                                       userLevel +
+                                                       ". Required: " +
+                                                       accessLevel +
+                                                       ".", Username, true);
                 return;
             }
             String subcommand = command.nextToken();
@@ -72,7 +73,7 @@
                     }
                     toReturn.append(folderDelimiter);
                 }
-                server.campaign.CampaignMain.cm.toUser("BT|PLS|" + toReturn.toString() + "|" + viewer, Username, false);
+                CampaignMain.campaignMain.toUser("BT|PLS|" + toReturn.toString() + "|" + viewer, Username, false);
 
                 return;
             } else if (subcommand.equalsIgnoreCase("get")) {
@@ -89,19 +90,19 @@
                 }
 
                 if (folder.length() == 0 || table.length() == 0) {
-                    server.campaign.CampaignMain.cm.toUser("Bad Build Table Request: " +
-                                                                 (folder.length() == 0 ?
-                                                                        "Empty folder name" :
-                                                                        "Empty file name"), Username, true);
+                    CampaignMain.campaignMain.toUser("Bad Build Table Request: " +
+                                                           (folder.length() == 0 ?
+                                                                  "Empty folder name" :
+                                                                  "Empty file name"), Username, true);
                     return;
                 }
                 java.io.File file = new java.io.File("./data/buildtables/" + folder + "/" + table);
                 if (!file.exists()) {
-                    server.campaign.CampaignMain.cm.toUser("Bad Build Table Request: " +
-                                                                 folder +
-                                                                 "/" +
-                                                                 table +
-                                                                 " does not exist.", Username, true);
+                    CampaignMain.campaignMain.toUser("Bad Build Table Request: " +
+                                                           folder +
+                                                           "/" +
+                                                           table +
+                                                           " does not exist.", Username, true);
                     return;
                 }
 
@@ -126,12 +127,12 @@
                     // TODO Auto-generated catch block
                     MWLogger.errLog(e);
                 }
-                server.campaign.CampaignMain.cm.toUser("BT|BT|" + folder + "|" + table + toReturn.toString(),
+                CampaignMain.campaignMain.toUser("BT|BT|" + folder + "|" + table + toReturn.toString(),
                       Username,
                       false);
 
             } else if (subcommand.equalsIgnoreCase("view")) {
-                server.campaign.CampaignMain.cm.toUser("BT|VS|DONE#DONE", Username, false);
+                CampaignMain.campaignMain.toUser("BT|VS|DONE#DONE", Username, false);
             }
         }
 

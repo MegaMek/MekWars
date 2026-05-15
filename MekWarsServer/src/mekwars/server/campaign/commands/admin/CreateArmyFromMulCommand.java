@@ -16,6 +16,8 @@
 
 package mekwars.server.campaign.commands.admin;
 
+import mekwars.server.campaign.CampaignMain;
+
 public class CreateArmyFromMulCommand implements server.campaign.commands.Command {
 
     int accessLevel = server.MWChatServer.auth.IAuthenticator.ADMIN;
@@ -29,40 +31,40 @@ public class CreateArmyFromMulCommand implements server.campaign.commands.Comman
     public void process(java.util.StringTokenizer command, String Username) {
 
         // access level check
-        int userLevel = server.campaign.CampaignMain.cm.getServer().getUserLevel(Username);
+        int userLevel = CampaignMain.campaignMain.getServer().getUserLevel(Username);
         if (userLevel < getExecutionLevel()) {
-            server.campaign.CampaignMain.cm.toUser(
+            CampaignMain.campaignMain.toUser(
                   "AM:Insufficient access level for command. Level: "
                         + userLevel + ". Required: " + accessLevel + ".",
                   Username, true);
             return;
         }
 
-        server.campaign.SPlayer p = server.campaign.CampaignMain.cm.getPlayer(Username);
+        server.campaign.SPlayer p = CampaignMain.campaignMain.getPlayer(Username);
         String filename;
         String armyname;
 
         try {
             filename = command.nextToken();
             armyname = command.nextToken();
-            if (command.hasMoreTokens()) {p = server.campaign.CampaignMain.cm.getPlayer(command.nextToken());}
+            if (command.hasMoreTokens()) {p = CampaignMain.campaignMain.getPlayer(command.nextToken());}
         } catch (Exception ex) {
-            server.campaign.CampaignMain.cm.toUser("Syntax Error: /createarmyfrommul " + syntax, Username);
+            CampaignMain.campaignMain.toUser("Syntax Error: /createarmyfrommul " + syntax, Username);
             return;
         }
 
         if (p == null) {
-            server.campaign.CampaignMain.cm.toUser("Unable to find target player", Username);
+            CampaignMain.campaignMain.toUser("Unable to find target player", Username);
             return;
         }
 
-        if (p.getArmies().size() >= server.campaign.CampaignMain.cm.getIntegerConfig("MaxLancesPerPlayer")) {
-            server.campaign.CampaignMain.cm.toUser(p.getName() + " has too many armies already!", Username);
+        if (p.getArmies().size() >= CampaignMain.campaignMain.getIntegerConfig("MaxLancesPerPlayer")) {
+            CampaignMain.campaignMain.toUser(p.getName() + " has too many armies already!", Username);
             return;
         }
 
         if (!new java.io.File("./data/armies").exists()) {
-            server.campaign.CampaignMain.cm.toUser("directory ./data/armies does not exist", Username);
+            CampaignMain.campaignMain.toUser("directory ./data/armies does not exist", Username);
             new java.io.File("./data/armies").mkdir();
             return;
         }
@@ -83,9 +85,9 @@ public class CreateArmyFromMulCommand implements server.campaign.commands.Comman
         army.getBV();
         army.setOpForceSize(army.getAmountOfUnits());
 
-        server.campaign.CampaignMain.cm.toUser("PL|SAD|" + army.toString(true, "%"), p.getName(), false);
-        server.campaign.CampaignMain.cm.toUser("army created: " + armyname, p.getName(), true);
-        server.campaign.CampaignMain.cm.doSendModMail("NOTE", Username + " has created an army from file " + filename);
+        CampaignMain.campaignMain.toUser("PL|SAD|" + army.toString(true, "%"), p.getName(), false);
+        CampaignMain.campaignMain.toUser("army created: " + armyname, p.getName(), true);
+        CampaignMain.campaignMain.doSendModMail("NOTE", Username + " has created an army from file " + filename);
 
     }
 

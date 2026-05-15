@@ -21,6 +21,7 @@
 package mekwars.server.campaign.commands.admin;
 
 import common.Influences;
+import mekwars.server.campaign.CampaignMain;
 
 
 /**
@@ -37,25 +38,25 @@ public class AdminCreatePlanetCommand implements server.campaign.commands.Comman
     public void process(java.util.StringTokenizer command, String Username) {
 
         //access level check
-        int userLevel = server.campaign.CampaignMain.cm.getServer().getUserLevel(Username);
+        int userLevel = CampaignMain.campaignMain.getServer().getUserLevel(Username);
         if (userLevel < getExecutionLevel()) {
-            server.campaign.CampaignMain.cm.toUser("AM:Insufficient access level for command. Level: " +
-                                                         userLevel +
-                                                         ". Required: " +
-                                                         accessLevel +
-                                                         ".", Username, true);
+            CampaignMain.campaignMain.toUser("AM:Insufficient access level for command. Level: " +
+                                                   userLevel +
+                                                   ". Required: " +
+                                                   accessLevel +
+                                                   ".", Username, true);
             return;
         }
 
-        server.campaign.SHouse faction = server.campaign.CampaignMain.cm.getHouseFromPartialString(
-              server.campaign.CampaignMain.cm.getConfig("NewbieHouseName"), Username);
+        server.campaign.SHouse faction = CampaignMain.campaignMain.getHouseFromPartialString(
+              CampaignMain.campaignMain.getConfig("NewbieHouseName"), Username);
         String PlanetName = command.nextToken();
         double xcood = Double.parseDouble(command.nextToken());
         double ycood = Double.parseDouble(command.nextToken());
         if (faction == null || PlanetName == null) {return;}
         java.util.HashMap<Integer, Integer> flu = new java.util.HashMap<Integer, Integer>();
         flu.put(faction.getId(), 100);
-        server.campaign.SPlanet planet = new server.campaign.SPlanet(server.campaign.CampaignMain.cm.getData()
+        server.campaign.SPlanet planet = new server.campaign.SPlanet(CampaignMain.campaignMain.getData()
                                                                            .getUnusedPlanetID(),
               PlanetName,
               new Influences(flu),
@@ -63,13 +64,13 @@ public class AdminCreatePlanetCommand implements server.campaign.commands.Comman
               0,
               xcood,
               ycood);
-        server.campaign.CampaignMain.cm.addPlanet(planet);
+        CampaignMain.campaignMain.addPlanet(planet);
         planet.setOwner(null, faction, true);
         planet.setOriginalOwner(faction.getName());
         planet.updated();
 
-        server.campaign.CampaignMain.cm.toUser("Planet created!", Username, true);
-        server.campaign.CampaignMain.cm.doSendModMail("NOTE", Username + " has created planet " + PlanetName);
+        CampaignMain.campaignMain.toUser("Planet created!", Username, true);
+        CampaignMain.campaignMain.doSendModMail("NOTE", Username + " has created planet " + PlanetName);
 
     }
 

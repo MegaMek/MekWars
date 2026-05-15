@@ -22,6 +22,7 @@ package mekwars.server.campaign.pilot.skills;
 import common.Unit;
 import common.campaign.pilot.Pilot;
 import megamek.common.Entity;
+import mekwars.server.campaign.CampaignMain;
 
 /**
  * Pilots with the gifted Skill recive an extra 5% chance to gain a skill when they fail to level Piloting or Gunnery
@@ -54,10 +55,10 @@ public class GiftedSkill extends SPilotSkill {
 
         String chance = "chancefor" + getAbbreviation() + "for" + Unit.getTypeClassDesc(unitType);
 
-        server.campaign.SHouse house = server.campaign.CampaignMain.cm.getHouseFromPartialString(p.getCurrentFaction());
+        server.campaign.SHouse house = CampaignMain.campaignMain.getHouseFromPartialString(p.getCurrentFaction());
 
         if (house == null) {
-            return server.campaign.CampaignMain.cm.getIntegerConfig(chance);
+            return CampaignMain.campaignMain.getIntegerConfig(chance);
         }
 
         return house.getIntegerConfig(chance);

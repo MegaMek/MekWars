@@ -17,6 +17,7 @@
 package mekwars.server.campaign.commands.mod;
 
 
+import mekwars.server.campaign.CampaignMain;
 import server.campaign.util.ExclusionList;
 
 public class ModNoPlayCommand implements server.campaign.commands.Command {
@@ -29,13 +30,13 @@ public class ModNoPlayCommand implements server.campaign.commands.Command {
     public void process(java.util.StringTokenizer command, String Username) {
 
         //access level check
-        int userLevel = server.campaign.CampaignMain.cm.getServer().getUserLevel(Username);
+        int userLevel = CampaignMain.campaignMain.getServer().getUserLevel(Username);
         if (userLevel < getExecutionLevel()) {
-            server.campaign.CampaignMain.cm.toUser("AM:Insufficient access level for command. Level: " +
-                                                         userLevel +
-                                                         ". Required: " +
-                                                         accessLevel +
-                                                         ".", Username, true);
+            CampaignMain.campaignMain.toUser("AM:Insufficient access level for command. Level: " +
+                                                   userLevel +
+                                                   ". Required: " +
+                                                   accessLevel +
+                                                   ".", Username, true);
             return;
         }
 
@@ -43,7 +44,7 @@ public class ModNoPlayCommand implements server.campaign.commands.Command {
         try {
             mode = command.nextToken().toLowerCase();
         } catch (Exception e) {
-            server.campaign.CampaignMain.cm.toUser("Improper format. Try: /c noplay#mode#lister#excludee",
+            CampaignMain.campaignMain.toUser("Improper format. Try: /c noplay#mode#lister#excludee",
                   Username,
                   true);
             return;
@@ -53,7 +54,7 @@ public class ModNoPlayCommand implements server.campaign.commands.Command {
         try {
             listerName = command.nextToken().toLowerCase();
         } catch (Exception e) {
-            server.campaign.CampaignMain.cm.toUser("Improper format. Try: /c noplay#mode#lister#excludee",
+            CampaignMain.campaignMain.toUser("Improper format. Try: /c noplay#mode#lister#excludee",
                   Username,
                   true);
             return;
@@ -63,23 +64,23 @@ public class ModNoPlayCommand implements server.campaign.commands.Command {
         try {
             excludeName = command.nextToken().toLowerCase();
         } catch (Exception e) {
-            server.campaign.CampaignMain.cm.toUser("Improper format. Try: /c noplay#mode#lister#excludee",
+            CampaignMain.campaignMain.toUser("Improper format. Try: /c noplay#mode#lister#excludee",
                   Username,
                   true);
             return;
         }
 
         //get the listing SPlayer
-        server.campaign.SPlayer lister = server.campaign.CampaignMain.cm.getPlayer(listerName);
+        server.campaign.SPlayer lister = CampaignMain.campaignMain.getPlayer(listerName);
         if (lister == null) {
-            server.campaign.CampaignMain.cm.toUser("Couldn't find " + listerName, Username, true);
+            CampaignMain.campaignMain.toUser("Couldn't find " + listerName, Username, true);
             return;
         }
 
         //load the exlusion list
         ExclusionList exList = lister.getExclusionList();
         if (exList == null) {
-            server.campaign.CampaignMain.cm.toUser("ERROR. " + listerName + "'s no-play list was null.",
+            CampaignMain.campaignMain.toUser("ERROR. " + listerName + "'s no-play list was null.",
                   Username,
                   true);
             return;
@@ -95,8 +96,8 @@ public class ModNoPlayCommand implements server.campaign.commands.Command {
             playerExists = new java.io.File("./campaign/players/" + excludeName.toLowerCase() + ".dat").exists();
 
             if (!playerExists) {
-                server.campaign.CampaignMain.cm.toUser(excludeName +
-                                                             " does not have a player file. cannot add to your no-play list.",
+                CampaignMain.campaignMain.toUser(excludeName +
+                                                       " does not have a player file. cannot add to your no-play list.",
                       Username,
                       true);
                 return;
@@ -104,7 +105,7 @@ public class ModNoPlayCommand implements server.campaign.commands.Command {
 
             //check to make sure the player isn't no-play'ing himself
             if (listerName.toLowerCase().equals(excludeName)) {
-                server.campaign.CampaignMain.cm.toUser("You can't put someone on his own no-play list. Jackass.",
+                CampaignMain.campaignMain.toUser("You can't put someone on his own no-play list. Jackass.",
                       Username,
                       true);
                 return;
@@ -112,21 +113,21 @@ public class ModNoPlayCommand implements server.campaign.commands.Command {
 
             //if the name is already admin excluded, break out
             if (exclusionStatus == ExclusionList.ADMIN_EXCLUDED) {
-                server.campaign.CampaignMain.cm.toUser(excludeName +
-                                                             " is already on " +
-                                                             listerName +
-                                                             "'s mod/admin no-play list.", Username, true);
+                CampaignMain.campaignMain.toUser(excludeName +
+                                                       " is already on " +
+                                                       listerName +
+                                                       "'s mod/admin no-play list.", Username, true);
                 return;
             }
 
             //if the name is player excluded, erase it in prep for move to the admin list
             if (exclusionStatus == ExclusionList.PLAYER_EXCLUDED) {
                 exList.removeExclude(true, excludeName);//clear all priors
-                server.campaign.CampaignMain.cm.toUser(Username +
-                                                             " removed " +
-                                                             excludeName +
-                                                             " from your no-play list.", listerName, true);
-                server.campaign.CampaignMain.cm.toUser("PL|PEU|" + lister.getExclusionList().playerExcludeToString("$"),
+                CampaignMain.campaignMain.toUser(Username +
+                                                       " removed " +
+                                                       excludeName +
+                                                       " from your no-play list.", listerName, true);
+                CampaignMain.campaignMain.toUser("PL|PEU|" + lister.getExclusionList().playerExcludeToString("$"),
                       listerName,
                       false);
             }
@@ -134,48 +135,48 @@ public class ModNoPlayCommand implements server.campaign.commands.Command {
             //add the exclude and tell the player, then return
             try {
                 exList.addExclude(true, excludeName);
-                server.campaign.CampaignMain.cm.toUser(Username +
-                                                             " added " +
-                                                             excludeName +
-                                                             " to your mod/admin no-play list. You cannot alter this entry.",
+                CampaignMain.campaignMain.toUser(Username +
+                                                       " added " +
+                                                       excludeName +
+                                                       " to your mod/admin no-play list. You cannot alter this entry.",
                       listerName,
                       true);
-                server.campaign.CampaignMain.cm.toUser(Username +
-                                                             " added you to " +
-                                                             listerName +
-                                                             "'s mod/admin no-play list. He cannot alter this entry.",
+                CampaignMain.campaignMain.toUser(Username +
+                                                       " added you to " +
+                                                       listerName +
+                                                       "'s mod/admin no-play list. He cannot alter this entry.",
                       excludeName,
                       true);
-                server.campaign.CampaignMain.cm.toUser(excludeName +
-                                                             " added to " +
-                                                             listerName +
-                                                             "'s mod/admin no-play list.", Username, true);
-                server.campaign.CampaignMain.cm.toUser("PL|AEU|" + lister.getExclusionList().adminExcludeToString("$"),
+                CampaignMain.campaignMain.toUser(excludeName +
+                                                       " added to " +
+                                                       listerName +
+                                                       "'s mod/admin no-play list.", Username, true);
+                CampaignMain.campaignMain.toUser("PL|AEU|" + lister.getExclusionList().adminExcludeToString("$"),
                       listerName,
                       false);
                 lister.setSave();
 
                 //also inform mod channels
                 //server.MWLogger.modLog(Username + " added " + excludeName + " to " + listerName + "'s mod/admin no-play list.");
-                server.campaign.CampaignMain.cm.doSendModMail("NOTE",
+                CampaignMain.campaignMain.doSendModMail("NOTE",
                       Username + " added " + excludeName + " to " + listerName + "'s mod/admin no-play list.");
 
             } catch (Exception e) {
-                server.campaign.CampaignMain.cm.toUser("Error while adding " +
-                                                             excludeName +
-                                                             " to " +
-                                                             listerName +
-                                                             "'s no-play list.", Username, true);
+                CampaignMain.campaignMain.toUser("Error while adding " +
+                                                       excludeName +
+                                                       " to " +
+                                                       listerName +
+                                                       "'s no-play list.", Username, true);
             }
         }//end if(mode == add)
 
         else if (mode.equals("remove")) {
 
             if (exclusionStatus == ExclusionList.NO_EXCLUSION) {
-                server.campaign.CampaignMain.cm.toUser(excludeName +
-                                                             " is not on either of " +
-                                                             listerName +
-                                                             "'s no-play lists.", Username, true);
+                CampaignMain.campaignMain.toUser(excludeName +
+                                                       " is not on either of " +
+                                                       listerName +
+                                                       "'s no-play lists.", Username, true);
                 return;
             }
 
@@ -183,64 +184,64 @@ public class ModNoPlayCommand implements server.campaign.commands.Command {
             try {
                 exList.removeExclude(true, excludeName);
                 if (exclusionStatus == ExclusionList.ADMIN_EXCLUDED) {
-                    server.campaign.CampaignMain.cm.toUser(Username +
-                                                                 " removed " +
-                                                                 excludeName +
-                                                                 " from your Mod/Admin no-play list.",
+                    CampaignMain.campaignMain.toUser(Username +
+                                                           " removed " +
+                                                           excludeName +
+                                                           " from your Mod/Admin no-play list.",
                           listerName,
                           true);
-                    server.campaign.CampaignMain.cm.toUser(Username +
-                                                                 " removed you from " +
-                                                                 listerName +
-                                                                 "'s Mod/Admin no-play list.", excludeName, true);
-                    server.campaign.CampaignMain.cm.toUser("Your removed " +
-                                                                 excludeName +
-                                                                 " from " +
-                                                                 listerName +
-                                                                 "'s Mod/Admin no-play list.", Username, true);
-                    server.campaign.CampaignMain.cm.toUser("PL|AEU|" +
-                                                                 lister.getExclusionList().adminExcludeToString("$"),
+                    CampaignMain.campaignMain.toUser(Username +
+                                                           " removed you from " +
+                                                           listerName +
+                                                           "'s Mod/Admin no-play list.", excludeName, true);
+                    CampaignMain.campaignMain.toUser("Your removed " +
+                                                           excludeName +
+                                                           " from " +
+                                                           listerName +
+                                                           "'s Mod/Admin no-play list.", Username, true);
+                    CampaignMain.campaignMain.toUser("PL|AEU|" +
+                                                           lister.getExclusionList().adminExcludeToString("$"),
                           listerName,
                           false);
 
                     //also inform mod channels
                     //server.MWLogger.modLog(Username + " removed " + excludeName + " from " + listerName + "'s Mod/Admin no-play list.");
-                    server.campaign.CampaignMain.cm.doSendModMail("NOTE",
+                    CampaignMain.campaignMain.doSendModMail("NOTE",
                           Username + " removed " + excludeName + " from " + listerName + "'s Mod/Admin no-play list.");
                 } else {
-                    server.campaign.CampaignMain.cm.toUser(Username +
-                                                                 " removed " +
-                                                                 excludeName +
-                                                                 " from your no-play list.", listerName, true);
-                    server.campaign.CampaignMain.cm.toUser("You removed " +
-                                                                 excludeName +
-                                                                 " from " +
-                                                                 listerName +
-                                                                 "'s standard no-play list.", Username, true);
+                    CampaignMain.campaignMain.toUser(Username +
+                                                           " removed " +
+                                                           excludeName +
+                                                           " from your no-play list.", listerName, true);
+                    CampaignMain.campaignMain.toUser("You removed " +
+                                                           excludeName +
+                                                           " from " +
+                                                           listerName +
+                                                           "'s standard no-play list.", Username, true);
                     //NOTE: the player removed isn't informed, since this was a standard list entry and, thus, supposed to be anonymous.
-                    server.campaign.CampaignMain.cm.toUser("PL|PEU|" +
-                                                                 lister.getExclusionList().playerExcludeToString("$"),
+                    CampaignMain.campaignMain.toUser("PL|PEU|" +
+                                                           lister.getExclusionList().playerExcludeToString("$"),
                           listerName,
                           false);
 
                     //also inform mod channels
                     //server.MWLogger.modLog(Username + " removed " + excludeName + " from " + listerName + "'s standard no-play list.");
-                    server.campaign.CampaignMain.cm.doSendModMail("NOTE",
+                    CampaignMain.campaignMain.doSendModMail("NOTE",
                           Username + " removed " + excludeName + " from " + listerName + "'s standard no-play list.");
                 }
                 lister.setSave();
             } catch (Exception e) {
-                server.campaign.CampaignMain.cm.toUser("Error while removing " +
-                                                             excludeName +
-                                                             " from " +
-                                                             listerName +
-                                                             "'s no-play list.", Username, true);
+                CampaignMain.campaignMain.toUser("Error while removing " +
+                                                       excludeName +
+                                                       " from " +
+                                                       listerName +
+                                                       "'s no-play list.", Username, true);
                 return;
             }
         }//end (if mode == remove)
 
         else {//mode is gibberish. alert the user.
-            server.campaign.CampaignMain.cm.toUser("Improper format. Try: /c noplay#mode#lister#excludee",
+            CampaignMain.campaignMain.toUser("Improper format. Try: /c noplay#mode#lister#excludee",
                   Username,
                   true);
             return;

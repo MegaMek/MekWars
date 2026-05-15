@@ -17,6 +17,8 @@
 package mekwars.server.campaign.commands;
 
 
+import mekwars.server.campaign.CampaignMain;
+
 public class UnemployedMercsCommand implements Command {
 
     int accessLevel = 0;
@@ -25,19 +27,19 @@ public class UnemployedMercsCommand implements Command {
     public void process(java.util.StringTokenizer command, String Username) {
 
         if (accessLevel != 0) {
-            int userLevel = server.campaign.CampaignMain.cm.getServer().getUserLevel(Username);
+            int userLevel = CampaignMain.campaignMain.getServer().getUserLevel(Username);
             if (userLevel < getExecutionLevel()) {
-                server.campaign.CampaignMain.cm.toUser("AM:Insufficient access level for command. Level: " +
-                                                             userLevel +
-                                                             ". Required: " +
-                                                             accessLevel +
-                                                             ".", Username, true);
+                CampaignMain.campaignMain.toUser("AM:Insufficient access level for command. Level: " +
+                                                       userLevel +
+                                                       ". Required: " +
+                                                       accessLevel +
+                                                       ".", Username, true);
                 return;
             }
         }
 
         String s = "Unemployed Mercenaries: ";
-        java.util.Vector<server.campaign.mercenaries.MercHouse> mh = server.campaign.CampaignMain.cm.getMercHouses();
+        java.util.Vector<server.campaign.mercenaries.MercHouse> mh = CampaignMain.campaignMain.getMercHouses();
         for (int i = 0; i < mh.size(); i++) {
             server.campaign.mercenaries.MercHouse searchHouse = mh.get(i);
             java.util.Enumeration<server.campaign.SPlayer> e = searchHouse.getAllOnlinePlayers().elements();
@@ -54,7 +56,7 @@ public class UnemployedMercsCommand implements Command {
             }//end while
         }//end for(all merc factions)
 
-        server.campaign.CampaignMain.cm.toUser(s, Username, true);
+        CampaignMain.campaignMain.toUser(s, Username, true);
     }
 
     public int getExecutionLevel() {return accessLevel;}

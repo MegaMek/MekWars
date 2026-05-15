@@ -17,6 +17,7 @@
 package mekwars.server.campaign.commands;
 
 import common.util.StringUtils;
+import mekwars.server.campaign.CampaignMain;
 
 
 public class NameArmyCommand implements Command {
@@ -27,20 +28,20 @@ public class NameArmyCommand implements Command {
     public void process(java.util.StringTokenizer command, String Username) {
 
         if (accessLevel != 0) {
-            int userLevel = server.campaign.CampaignMain.cm.getServer().getUserLevel(Username);
+            int userLevel = CampaignMain.campaignMain.getServer().getUserLevel(Username);
             if (userLevel < getExecutionLevel()) {
-                server.campaign.CampaignMain.cm.toUser("AM:Insufficient access level for command. Level: " +
-                                                             userLevel +
-                                                             ". Required: " +
-                                                             accessLevel +
-                                                             ".", Username, true);
+                CampaignMain.campaignMain.toUser("AM:Insufficient access level for command. Level: " +
+                                                       userLevel +
+                                                       ". Required: " +
+                                                       accessLevel +
+                                                       ".", Username, true);
                 return;
             }
         }
 
-        server.campaign.SPlayer p = server.campaign.CampaignMain.cm.getPlayer(Username);
+        server.campaign.SPlayer p = CampaignMain.campaignMain.getPlayer(Username);
         if (p == null) {
-            server.campaign.CampaignMain.cm.toUser("AM:Null Player while renaming army. Report This!.", Username, true);
+            CampaignMain.campaignMain.toUser("AM:Null Player while renaming army. Report This!.", Username, true);
             return;
         }
 
@@ -50,20 +51,20 @@ public class NameArmyCommand implements Command {
             aid = Integer.parseInt((String) command.nextElement());
             name = (String) command.nextElement();
         } catch (Exception e) {
-            server.campaign.CampaignMain.cm.toUser("AM:Improper format. Try: /c namearmy#ID#Name", Username, true);
+            CampaignMain.campaignMain.toUser("AM:Improper format. Try: /c namearmy#ID#Name", Username, true);
             return;
         }
 
         server.campaign.SArmy army = p.getArmy(aid);
         if (army == null) {
-            server.campaign.CampaignMain.cm.toUser("AM:Could not find an Army #" + aid + ".", Username, true);
+            CampaignMain.campaignMain.toUser("AM:Could not find an Army #" + aid + ".", Username, true);
             return;
         }
 
         if (name.length() > 50) {name = name.substring(0, 50);}
 
         if (StringUtils.hasBadChars(name).trim().length() > 0) {
-            server.campaign.CampaignMain.cm.toUser(StringUtils.hasBadChars(name), Username);
+            CampaignMain.campaignMain.toUser(StringUtils.hasBadChars(name), Username);
             return;
         }
 
@@ -77,7 +78,7 @@ public class NameArmyCommand implements Command {
         if (command.hasMoreElements()) {
             String silent = (String) command.nextElement();
             if (!silent.equals("SILENT")) {
-                server.campaign.CampaignMain.cm.toUser("AM:Army " + army.getID() + " renamed.", Username, true);
+                CampaignMain.campaignMain.toUser("AM:Army " + army.getID() + " renamed.", Username, true);
             }
         }
 

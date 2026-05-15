@@ -45,14 +45,14 @@ public class SPlanet extends TimeUpdatePlanet implements java.io.Serializable, C
         // Position(0,0), null);
         super();
         setTimestamp(new java.util.Date(0));
-        setOriginalOwner(CampaignMain.cm.getConfig("NewbieHouseName"));
+        setOriginalOwner(CampaignMain.campaignMain.getConfig("NewbieHouseName"));
     }
 
     public SPlanet(int id, String name, Influences flu, int income, int CompProd, double xcood, double ycood) {
         super(id, name, new Position(xcood, ycood), flu);
         setCompProduction(CompProd);
         setTimestamp(new java.util.Date(0));
-        setOriginalOwner(CampaignMain.cm.getConfig("NewbieHouseName"));
+        setOriginalOwner(CampaignMain.campaignMain.getConfig("NewbieHouseName"));
     }
 
     /**
@@ -61,7 +61,7 @@ public class SPlanet extends TimeUpdatePlanet implements java.io.Serializable, C
     public String fromString(String s, java.util.Random r, CampaignData data) {
         // debug
 
-        boolean singleFaction = CampaignMain.cm.getBooleanConfig("AllowSinglePlayerFactions");
+        boolean singleFaction = CampaignMain.campaignMain.getBooleanConfig("AllowSinglePlayerFactions");
         MWLogger.mainLog(s);
         s = s.substring(3);
         java.util.StringTokenizer ST = new java.util.StringTokenizer(s, "#");
@@ -72,7 +72,9 @@ public class SPlanet extends TimeUpdatePlanet implements java.io.Serializable, C
         for (int i = 0; i < hasMF; i++) {
             SUnitFactory mft = new SUnitFactory();
             mft.fromString(TokenReader.readString(ST), this, r);
-            if (singleFaction && CampaignMain.cm.getHouseFromPartialString(mft.getFounder()) == null) {continue;}
+            if (singleFaction && CampaignMain.campaignMain.getHouseFromPartialString(mft.getFounder()) == null) {
+                continue;
+            }
             getUnitFactories().add(mft);
         }
 
@@ -169,8 +171,8 @@ public class SPlanet extends TimeUpdatePlanet implements java.io.Serializable, C
         java.util.TreeMap<String, String> map = new java.util.TreeMap<String, String>();
         while (str.hasMoreTokens()) {
             String key = TokenReader.readString(str);
-            if (CampaignMain.cm.getData().getPlanetOpFlags().containsKey(key)) {
-                map.put(key, CampaignMain.cm.getData().getPlanetOpFlags().get(key));
+            if (CampaignMain.campaignMain.getData().getPlanetOpFlags().containsKey(key)) {
+                map.put(key, CampaignMain.campaignMain.getData().getPlanetOpFlags().get(key));
             }
         }
         this.setPlanetFlags(map);
@@ -185,7 +187,7 @@ public class SPlanet extends TimeUpdatePlanet implements java.io.Serializable, C
                 this.setConquestPoints(100);
                 //this.setCompProduction(0);
                 this.setBaysProvided(0);
-                SHouse house = CampaignMain.cm.getHouseById(-1);
+                SHouse house = CampaignMain.campaignMain.getHouseById(-1);
                 this.getInfluence().moveInfluence(house, house, 100, 100);
             }
         }
@@ -227,7 +229,7 @@ public class SPlanet extends TimeUpdatePlanet implements java.io.Serializable, C
 
         if (houseID == null) {return null;}
 
-        h = (SHouse) CampaignMain.cm.getData().getHouse(houseID);
+        h = (SHouse) CampaignMain.campaignMain.getData().getHouse(houseID);
 
         if (this.getInfluence().getInfluence(houseID) < this.getMinPlanetOwnerShip()) {return null;}
 
@@ -280,10 +282,10 @@ public class SPlanet extends TimeUpdatePlanet implements java.io.Serializable, C
         // send updates to non-null houses, so long as update strings have
         // length > 0 (real updates)
         if (oldOwner != null && oldOwnerHSUpdates.length() > 0) {
-            CampaignMain.cm.doSendToAllOnlinePlayers(oldOwner, "HS|" + oldOwnerHSUpdates.toString(), false);
+            CampaignMain.campaignMain.doSendToAllOnlinePlayers(oldOwner, "HS|" + oldOwnerHSUpdates.toString(), false);
         }
         if (newOwner != null && newOwnerHSUpdates.length() > 0) {
-            CampaignMain.cm.doSendToAllOnlinePlayers(newOwner, "HS|" + newOwnerHSUpdates.toString(), false);
+            CampaignMain.campaignMain.doSendToAllOnlinePlayers(newOwner, "HS|" + newOwnerHSUpdates.toString(), false);
         }
 
     }
@@ -291,7 +293,7 @@ public class SPlanet extends TimeUpdatePlanet implements java.io.Serializable, C
     public SUnitFactory getRandomUnitFactory() {
         if (getUnitFactories().size() == 0) {return null;}
         // else
-        return (SUnitFactory) getUnitFactories().get(CampaignMain.cm.getRandomNumber(getUnitFactories().size()));
+        return (SUnitFactory) getUnitFactories().get(CampaignMain.campaignMain.getRandomNumber(getUnitFactories().size()));
     }
 
     public SUnitFactory getBestUnitFactory() {
@@ -386,7 +388,7 @@ public class SPlanet extends TimeUpdatePlanet implements java.io.Serializable, C
         // No Influences then set influence to NewbieHouse so the planet will
         // load.
         if (getInfluence().getHouses().size() < 1) {
-            houseString.append(CampaignMain.cm.getConfig("NewbieHouseName"));
+            houseString.append(CampaignMain.campaignMain.getConfig("NewbieHouseName"));
             houseString.append("$");
             houseString.append(this.getConquestPoints());
             houseString.append("$");
@@ -427,7 +429,7 @@ public class SPlanet extends TimeUpdatePlanet implements java.io.Serializable, C
     public int getMinPlanetOwnerShip() {
 
         int ownership = super.getMinPlanetOwnerShip();
-        if (ownership < 0) {ownership = CampaignMain.cm.getIntegerConfig("MinPlanetOwnerShip");}
+        if (ownership < 0) {ownership = CampaignMain.campaignMain.getIntegerConfig("MinPlanetOwnerShip");}
 
         return ownership;
     }
@@ -485,7 +487,7 @@ public class SPlanet extends TimeUpdatePlanet implements java.io.Serializable, C
 
         String colorString = "";
         if (owner == null) {
-            colorString = CampaignMain.cm.getConfig("DisputedPlanetColor");// malformed
+            colorString = CampaignMain.campaignMain.getConfig("DisputedPlanetColor");// malformed
             // gets
             // you
             // black?

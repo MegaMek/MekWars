@@ -19,18 +19,16 @@ package mekwars.server;
 //The MegaMek.NET Master Server Application
 //@Author: Helge Richter (McWizard@gmx.de)
 
-import common.MMGame;
-import common.comm.Command;
-import common.comm.ServerCommand;
-import common.util.MWLogger;
-import org.apache.logging.log4j.LogManager;
-import server.campaign.CampaignMain;
-import server.campaign.DefaultServerOptions;
-import server.campaign.SPlayer;
-import server.util.IpCountry;
-import server.util.TrackerThread;
-
 // import org.mekwars.libpk.logging.PKLogManager;
+
+import mekwars.common.MMGame;
+import mekwars.common.commands.Command;
+import mekwars.server.campaign.CampaignMain;
+import mekwars.server.campaign.DefaultServerOptions;
+import mekwars.server.campaign.SPlayer;
+import mekwars.server.util.IpCountry;
+import mekwars.server.util.TrackerThread;
+import org.apache.logging.log4j.LogManager;
 
 public class MWServ {
 
@@ -144,6 +142,14 @@ public class MWServ {
         //start server
         MWLogger.mainLog("Entering main loop cycle. Starting the server...");
         startServer(argv);
+    }
+
+    public static void main(String[] argv) {
+        new mekwars.server.MWServ(argv);
+    }
+
+    public static void stop() {
+        System.exit(0);
     }
 
     private void createLoggers() {
@@ -396,14 +402,6 @@ public class MWServ {
 
     public server.campaign.CampaignMain getCampaign() {
         return campaign;
-    }
-
-    public static void main(String[] argv) {
-        new mekwars.server.MWServ(argv);
-    }
-
-    public static void stop() {
-        System.exit(0);
     }
 
     /*** Once a user(lPID) logs in this function is kicked off ****/

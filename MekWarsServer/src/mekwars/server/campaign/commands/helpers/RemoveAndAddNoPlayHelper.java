@@ -26,6 +26,8 @@ package mekwars.server.campaign.commands.helpers;
 
 //imports
 
+import mekwars.server.campaign.CampaignMain;
+
 public class RemoveAndAddNoPlayHelper implements server.campaign.commands.Command {
 
     //process the command.
@@ -37,13 +39,13 @@ public class RemoveAndAddNoPlayHelper implements server.campaign.commands.Comman
     public void process(java.util.StringTokenizer command, String Username) {
 
         if (accessLevel != 0) {
-            int userLevel = server.campaign.CampaignMain.cm.getServer().getUserLevel(Username);
+            int userLevel = CampaignMain.campaignMain.getServer().getUserLevel(Username);
             if (userLevel < getExecutionLevel()) {
-                server.campaign.CampaignMain.cm.toUser("AM:Insufficient access level for command. Level: " +
-                                                             userLevel +
-                                                             ". Required: " +
-                                                             accessLevel +
-                                                             ".", Username, true);
+                CampaignMain.campaignMain.toUser("AM:Insufficient access level for command. Level: " +
+                                                       userLevel +
+                                                       ". Required: " +
+                                                       accessLevel +
+                                                       ".", Username, true);
                 return;
             }
         }

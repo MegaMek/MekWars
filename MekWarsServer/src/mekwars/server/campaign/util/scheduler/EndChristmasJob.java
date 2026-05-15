@@ -4,6 +4,7 @@ import static org.quartz.JobBuilder.newJob;
 import static org.quartz.TriggerBuilder.newTrigger;
 
 import common.util.MWLogger;
+import mekwars.server.campaign.CampaignMain;
 import org.quartz.Job;
 import org.quartz.JobDetail;
 import org.quartz.JobExecutionContext;
@@ -30,7 +31,7 @@ public class EndChristmasJob implements Job {
                               .withIdentity("EndChristmas", "ChristmasGroup")
                               .build();
 
-        String endDateString = server.campaign.CampaignMain.cm.getConfig("Christmas_EndDate") + " 23:59:59";
+        String endDateString = CampaignMain.campaignMain.getConfig("Christmas_EndDate") + " 23:59:59";
         java.text.SimpleDateFormat sdf = new java.text.SimpleDateFormat("yyyy-MM-dd hh:mm:ss");
 
         java.util.Date date = new java.util.Date();

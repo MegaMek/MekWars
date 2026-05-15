@@ -17,6 +17,8 @@
 package mekwars.server.campaign.commands.admin;
 
 
+import mekwars.server.campaign.CampaignMain;
+
 public class AdminSetHouseAmmoBanCommand implements server.campaign.commands.Command {
 
     int accessLevel = server.MWChatServer.auth.IAuthenticator.ADMIN;
@@ -27,13 +29,13 @@ public class AdminSetHouseAmmoBanCommand implements server.campaign.commands.Com
     public void process(java.util.StringTokenizer command, String Username) {
 
         //access level check
-        int userLevel = server.campaign.CampaignMain.cm.getServer().getUserLevel(Username);
+        int userLevel = CampaignMain.campaignMain.getServer().getUserLevel(Username);
         if (userLevel < getExecutionLevel()) {
-            server.campaign.CampaignMain.cm.toUser("AM:Insufficient access level for command. Level: " +
-                                                         userLevel +
-                                                         ". Required: " +
-                                                         accessLevel +
-                                                         ".", Username, true);
+            CampaignMain.campaignMain.toUser("AM:Insufficient access level for command. Level: " +
+                                                   userLevel +
+                                                   ". Required: " +
+                                                   accessLevel +
+                                                   ".", Username, true);
             return;
         }
 
@@ -43,12 +45,12 @@ public class AdminSetHouseAmmoBanCommand implements server.campaign.commands.Com
             faction = command.nextToken();
             ammoName = command.nextToken();
         } catch (Exception ex) {
-            server.campaign.CampaignMain.cm.toUser("Invalid syntax. Try: adminsethouseammoban#faction#munitionnumber",
+            CampaignMain.campaignMain.toUser("Invalid syntax. Try: adminsethouseammoban#faction#munitionnumber",
                   Username,
                   true);
         }
 
-        server.campaign.SHouse h = server.campaign.CampaignMain.cm.getHouseFromPartialString(faction, Username);
+        server.campaign.SHouse h = CampaignMain.campaignMain.getHouseFromPartialString(faction, Username);
 
         if (h == null) {return;}
 
@@ -56,22 +58,22 @@ public class AdminSetHouseAmmoBanCommand implements server.campaign.commands.Com
 
         if (h.getBannedAmmo().get(ammoName) != null) {
             h.getBannedAmmo().remove(ammoName);
-            ammoName = server.campaign.CampaignMain.cm.getData().getMunitionsByNumber().get(Long.parseLong(ammoName));
-            server.campaign.CampaignMain.cm.toUser("Ban on " + ammoName + " lifted for " + h.getName() + ".",
+            ammoName = CampaignMain.campaignMain.getData().getMunitionsByNumber().get(Long.parseLong(ammoName));
+            CampaignMain.campaignMain.toUser("Ban on " + ammoName + " lifted for " + h.getName() + ".",
                   Username,
                   true);
-            server.campaign.CampaignMain.cm.doSendModMail("NOTE",
+            CampaignMain.campaignMain.doSendModMail("NOTE",
                   Username + " lifted the ban on " + ammoName + " for " + h.getName() + ".");
         } else {
             h.getBannedAmmo().put(ammoName, "banned");
-            ammoName = server.campaign.CampaignMain.cm.getData().getMunitionsByNumber().get(Long.parseLong(ammoName));
-            server.campaign.CampaignMain.cm.toUser("Banned " + ammoName + " for " + h.getName() + ".", Username, true);
-            server.campaign.CampaignMain.cm.doSendModMail("NOTE",
+            ammoName = CampaignMain.campaignMain.getData().getMunitionsByNumber().get(Long.parseLong(ammoName));
+            CampaignMain.campaignMain.toUser("Banned " + ammoName + " for " + h.getName() + ".", Username, true);
+            CampaignMain.campaignMain.doSendModMail("NOTE",
                   Username + " banned " + ammoName + " for " + h.getName() + ".");
         }
 
         h.updated();
-        server.campaign.CampaignMain.cm.saveBannedAmmo();
+        CampaignMain.campaignMain.saveBannedAmmo();
     }
 
     public int getExecutionLevel() {return accessLevel;}

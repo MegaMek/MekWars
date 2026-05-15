@@ -33,6 +33,7 @@ import common.flags.PlayerFlags;
 import common.util.MWLogger;
 import megamek.common.BattleArmor;
 import megamek.common.Protomech;
+import mekwars.server.campaign.CampaignMain;
 import server.campaign.operations.validation.I_SpreadValidator;
 import server.campaign.operations.validation.PercentBVSpreadValidator;
 import server.campaign.operations.validation.StandardBVSpreadValidator;
@@ -471,7 +472,7 @@ public class ShortValidator {
     public void checkOperations(server.campaign.SArmy a, boolean display,
           java.util.TreeMap<String, Operation> operations) {
 
-        server.campaign.SPlayer p = server.campaign.CampaignMain.cm.getPlayer(a.getPlayerName());
+        server.campaign.SPlayer p = CampaignMain.campaignMain.getPlayer(a.getPlayerName());
         if (p == null) {return;}
 
         /*
@@ -512,7 +513,7 @@ public class ShortValidator {
             for (String currName : removeNames) {toSend += "r*" + currName + "*";}
 
             // send command
-            server.campaign.CampaignMain.cm.toUser(toSend, p.getName(), false);
+            CampaignMain.campaignMain.toUser(toSend, p.getName(), false);
 
             // if verbose, inform the players
             if (display) {
@@ -523,7 +524,7 @@ public class ShortValidator {
                 // add messages
                 if (addNames.size() == 1) {
                     addSend += " gained access to an attack: " + addNames.get(0) + ".";
-                    server.campaign.CampaignMain.cm.toUser(addSend, p.getName(), true);
+                    CampaignMain.campaignMain.toUser(addSend, p.getName(), true);
                 } else if (addNames.size() > 1) {
                     addSend += " gained access to the following attacks: ";
                     java.util.Iterator<String> i = addNames.iterator();
@@ -540,13 +541,13 @@ public class ShortValidator {
                         String back = addSend.substring(lastComma + 2, addSend.length());
                         addSend = front + " and " + back + ".";
                     }
-                    server.campaign.CampaignMain.cm.toUser(addSend, p.getName(), true);
+                    CampaignMain.campaignMain.toUser(addSend, p.getName(), true);
                 }
 
                 // remove messages
                 if (removeNames.size() == 1) {
                     removeSend += " lost access to an attack: " + removeNames.get(0) + ".";
-                    server.campaign.CampaignMain.cm.toUser(removeSend, p.getName(), true);
+                    CampaignMain.campaignMain.toUser(removeSend, p.getName(), true);
                 } else if (removeNames.size() > 1) {
                     removeSend += " lost access to the following attacks: ";
                     java.util.Iterator<String> i = removeNames.iterator();
@@ -563,7 +564,7 @@ public class ShortValidator {
                         String back = removeSend.substring(lastComma + 2, removeSend.length());
                         removeSend = front + " and " + back + ".";
                     }
-                    server.campaign.CampaignMain.cm.toUser(removeSend, p.getName(), true);
+                    CampaignMain.campaignMain.toUser(removeSend, p.getName(), true);
                 }
 
             }// end if(display)
@@ -664,7 +665,7 @@ public class ShortValidator {
 
                 // load the army/player/house
                 server.campaign.SArmy currArmy = i.next();
-                server.campaign.SPlayer currPlayer = server.campaign.CampaignMain.cm.getPlayer(currArmy.getPlayerName());
+                server.campaign.SPlayer currPlayer = CampaignMain.campaignMain.getPlayer(currArmy.getPlayerName());
                 // Weird ass bug with nameChange and unenroll some times it
                 // doesn't remove their
                 // Old armies.
@@ -702,7 +703,7 @@ public class ShortValidator {
 
                 totalConquest = newOp.getTargetWorld()
                                       .doGainInfluence(ap.getHouseFightingFor(),
-                                            server.campaign.CampaignMain.cm.getHouseById(-1),
+                                            CampaignMain.campaignMain.getHouseById(-1),
                                             totalConquest,
                                             false);
 
@@ -716,17 +717,17 @@ public class ShortValidator {
                                                     " of " +
                                                     newOp.getTargetWorld().getNameAsColoredLink();
                     newOp.checkMercContracts(ap, server.campaign.mercenaries.ContractInfo.CONTRACT_LAND, totalConquest);
-                    server.campaign.CampaignMain.cm.toUser("You've" + winnerMetaString, ap.getName());
+                    CampaignMain.campaignMain.toUser("You've" + winnerMetaString, ap.getName());
                     for (House house : newOp.getTargetWorld().getInfluence().getHouses()) {
                         server.campaign.SHouse h = (server.campaign.SHouse) house;
                         if (h.equals(ap.getHouseFightingFor())) {continue;}
-                        server.campaign.CampaignMain.cm.doSendToAllOnlinePlayers(h,
+                        CampaignMain.campaignMain.doSendToAllOnlinePlayers(h,
                               ap.getName() + winnerMetaString,
                               true);
                     }
                     String newsFeedTitle;
                     String newsFeedBody;
-                    if (!server.campaign.CampaignMain.cm.getBooleanConfig("ShowCompleteGameInfoInNews")) {
+                    if (!CampaignMain.campaignMain.getBooleanConfig("ShowCompleteGameInfoInNews")) {
                         newsFeedTitle = ap.getHouseFightingFor().getColoredNameAsLink() +
                                               " gained land on " +
                                               newOp.getTargetWorld().getName();
@@ -744,8 +745,8 @@ public class ShortValidator {
                                              newOp.getTargetWorld().getName();
                     }
                     if (o.getBooleanValue("ReportOpToNewsFeed")) {
-                        server.campaign.CampaignMain.cm.addToNewsFeed(newsFeedTitle, "Operations News", newsFeedBody);
-                        server.campaign.CampaignMain.cm.postToDiscord(newsFeedBody);
+                        CampaignMain.campaignMain.addToNewsFeed(newsFeedTitle, "Operations News", newsFeedBody);
+                        CampaignMain.campaignMain.postToDiscord(newsFeedBody);
                     }
                     newOp.setCompleteFinishedInfo(ap.getName() +
                                                         " gained " +
@@ -779,7 +780,7 @@ public class ShortValidator {
              */
             int maxELO = o.getIntValue("MaxELODifference");
             for (server.campaign.SArmy currArmy : planetMatches) {
-                server.campaign.SPlayer currPlayer = server.campaign.CampaignMain.cm.getPlayer(currArmy.getPlayerName());
+                server.campaign.SPlayer currPlayer = CampaignMain.campaignMain.getPlayer(currArmy.getPlayerName());
                 java.util.ArrayList<Integer> defenderFails = this.validateShortDefender(currPlayer,
                       currArmy,
                       o,
@@ -1290,7 +1291,7 @@ public class ShortValidator {
          * Check to see if this is a counterattack.
          */
         if (o.getBooleanValue("ForbidCounterAttacks") &&
-                  server.campaign.CampaignMain.cm.getOpsManager().playerHasActiveChickenThread(ap)) {
+                  CampaignMain.campaignMain.getOpsManager().playerHasActiveChickenThread(ap)) {
             failureReasons.add(SFAIL_ATTACK_NOCOUNTERS);
         }
 
@@ -1374,7 +1375,7 @@ public class ShortValidator {
         double opRange = o.getDoubleValue("OperationRange");
         double percToAttackOffWorld = o.getDoubleValue("PercentageToAttackOffWorld");
 
-        java.util.Iterator<Planet> e = server.campaign.CampaignMain.cm.getData().getAllPlanets().iterator();
+        java.util.Iterator<Planet> e = CampaignMain.campaignMain.getData().getAllPlanets().iterator();
         while (e.hasNext()) {
             server.campaign.SPlanet currP = (server.campaign.SPlanet) e.next();
             percentOwned = (double) 100 *
@@ -1569,12 +1570,12 @@ public class ShortValidator {
 
             case SFAIL_ATTACK_INFLUENCE:// "AttackerCostInfluence", cost prop
                 return " you do not have enough " +
-                             server.campaign.CampaignMain.cm.getConfig("FluLongName") +
+                             CampaignMain.campaignMain.getConfig("FluLongName") +
                              " for this type of attack";
 
             case SFAIL_ATTACK_REWARD:// "AttackerCostReward", cost prop
                 return " you do not have enough " +
-                             server.campaign.CampaignMain.cm.getConfig("RPShortName") +
+                             CampaignMain.campaignMain.getConfig("RPShortName") +
                              " for this type of attack";
 
             case SFAIL_ATTACK_MAXRATING:// "MaxAttackerRating", milestone prop
@@ -1817,7 +1818,7 @@ public class ShortValidator {
 
             case SFAIL_DEFEND_REWARD:// "AttackerCostReward", cost prop
                 return " you do not have enough " +
-                             server.campaign.CampaignMain.cm.getConfig("RPShortName") +
+                             CampaignMain.campaignMain.getConfig("RPShortName") +
                              " for this type of defense";
 
             case SFAIL_DEFEND_MAXRATING:// "MaxAttackerRating", milestone prop

@@ -17,6 +17,7 @@
 package mekwars.server.campaign.commands.admin;
 
 import common.util.MWLogger;
+import mekwars.server.campaign.CampaignMain;
 
 
 public class RetrieveMulCommand implements server.campaign.commands.Command {
@@ -37,13 +38,13 @@ public class RetrieveMulCommand implements server.campaign.commands.Command {
     public void process(java.util.StringTokenizer command, String Username) {
 
         //access level check
-        int userLevel = server.campaign.CampaignMain.cm.getServer().getUserLevel(Username);
+        int userLevel = CampaignMain.campaignMain.getServer().getUserLevel(Username);
         if (userLevel < getExecutionLevel()) {
-            server.campaign.CampaignMain.cm.toUser("AM:Insufficient access level for command. Level: " +
-                                                         userLevel +
-                                                         ". Required: " +
-                                                         accessLevel +
-                                                         ".", Username, true);
+            CampaignMain.campaignMain.toUser("AM:Insufficient access level for command. Level: " +
+                                                   userLevel +
+                                                   ". Required: " +
+                                                   accessLevel +
+                                                   ".", Username, true);
             return;
         }
         String fileName = "./data/armies/" + command.nextToken();
@@ -51,7 +52,7 @@ public class RetrieveMulCommand implements server.campaign.commands.Command {
         try {
             java.io.File mul = new java.io.File(fileName);
             if (!mul.exists()) {
-                server.campaign.CampaignMain.cm.toUser("Unable to find file " + fileName, Username);
+                CampaignMain.campaignMain.toUser("Unable to find file " + fileName, Username);
             }
             StringBuffer sendData = new StringBuffer("PL|RMF|");
             java.io.FileInputStream fis = new java.io.FileInputStream(mul);
@@ -65,10 +66,10 @@ public class RetrieveMulCommand implements server.campaign.commands.Command {
                 if (sendData.lastIndexOf("#") == sendData.length() - 1) {sendData.append(" ");}
                 sendData.append("#");
             }
-            server.campaign.CampaignMain.cm.toUser(sendData.toString(), Username, false);
+            CampaignMain.campaignMain.toUser(sendData.toString(), Username, false);
 
         } catch (Exception ex) {
-            server.campaign.CampaignMain.cm.toUser("File Not found", Username, true);
+            CampaignMain.campaignMain.toUser("File Not found", Username, true);
             if (br != null) {
                 try {
                     br.close();
@@ -85,7 +86,7 @@ public class RetrieveMulCommand implements server.campaign.commands.Command {
             }
         }
 
-        server.campaign.CampaignMain.cm.doSendModMail("NOTE", Username + " has retrived mul file " + fileName);
+        CampaignMain.campaignMain.doSendModMail("NOTE", Username + " has retrived mul file " + fileName);
 
     }
 

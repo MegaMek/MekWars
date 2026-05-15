@@ -21,6 +21,8 @@
 package mekwars.server.campaign.commands.admin;
 
 
+import mekwars.server.campaign.CampaignMain;
+
 /**
  * @author Helge Richter
  */
@@ -34,13 +36,13 @@ public class AdminCreateFactionCommand implements server.campaign.commands.Comma
     public void process(java.util.StringTokenizer command, String Username) {
 
         //access level check
-        int userLevel = server.campaign.CampaignMain.cm.getServer().getUserLevel(Username);
+        int userLevel = CampaignMain.campaignMain.getServer().getUserLevel(Username);
         if (userLevel < getExecutionLevel()) {
-            server.campaign.CampaignMain.cm.toUser("AM:Insufficient access level for command. Level: " +
-                                                         userLevel +
-                                                         ". Required: " +
-                                                         accessLevel +
-                                                         ".", Username, true);
+            CampaignMain.campaignMain.toUser("AM:Insufficient access level for command. Level: " +
+                                                   userLevel +
+                                                   ". Required: " +
+                                                   accessLevel +
+                                                   ".", Username, true);
             return;
         }
 
@@ -51,7 +53,7 @@ public class AdminCreateFactionCommand implements server.campaign.commands.Comma
             int basePilot = Integer.parseInt(command.nextToken());
             String Abb = command.nextToken();
 
-            server.campaign.SHouse newfaction = new server.campaign.SHouse(server.campaign.CampaignMain.cm.getData()
+            server.campaign.SHouse newfaction = new server.campaign.SHouse(CampaignMain.campaignMain.getData()
                                                                                  .getUnusedHouseID(),
                   name,
                   "#" + color,
@@ -60,13 +62,13 @@ public class AdminCreateFactionCommand implements server.campaign.commands.Comma
                   Abb);
             newfaction.updated();
 
-            server.campaign.CampaignMain.cm.addHouse(newfaction);
-            server.campaign.CampaignMain.cm.doSendToAllOnlinePlayers("PL|ANH|" + newfaction.addNewHouse(), false);
-            server.campaign.CampaignMain.cm.toUser("Faction created!", Username, true);
-            server.campaign.CampaignMain.cm.doSendModMail("NOTE",
+            CampaignMain.campaignMain.addHouse(newfaction);
+            CampaignMain.campaignMain.doSendToAllOnlinePlayers("PL|ANH|" + newfaction.addNewHouse(), false);
+            CampaignMain.campaignMain.toUser("Faction created!", Username, true);
+            CampaignMain.campaignMain.doSendModMail("NOTE",
                   Username + " has created faction " + newfaction.getName());
         } catch (Exception ex) {
-            server.campaign.CampaignMain.cm.toUser(
+            CampaignMain.campaignMain.toUser(
                   "Invalid Syntax: /AdminCreateFaction Name#Color(hex)#BaseGunner#BasePilot#Abberviation",
                   Username,
                   true);

@@ -17,6 +17,8 @@
 package mekwars.server.campaign.commands;
 
 
+import mekwars.server.campaign.CampaignMain;
+
 public class CheckArmyLinkCommand implements Command {
 
     int accessLevel = 0;
@@ -25,13 +27,13 @@ public class CheckArmyLinkCommand implements Command {
     public void process(java.util.StringTokenizer command, String Username) {
 
         if (accessLevel != 0) {
-            int userLevel = server.campaign.CampaignMain.cm.getServer().getUserLevel(Username);
+            int userLevel = CampaignMain.campaignMain.getServer().getUserLevel(Username);
             if (userLevel < getExecutionLevel()) {
-                server.campaign.CampaignMain.cm.toUser("AM:Insufficient access level for command. Level: " +
-                                                             userLevel +
-                                                             ". Required: " +
-                                                             accessLevel +
-                                                             ".", Username, true);
+                CampaignMain.campaignMain.toUser("AM:Insufficient access level for command. Level: " +
+                                                       userLevel +
+                                                       ". Required: " +
+                                                       accessLevel +
+                                                       ".", Username, true);
                 return;
             }
         }
@@ -41,20 +43,20 @@ public class CheckArmyLinkCommand implements Command {
         server.campaign.SArmy army = null;
 
         try {
-            p = server.campaign.CampaignMain.cm.getPlayer(command.nextToken());
+            p = CampaignMain.campaignMain.getPlayer(command.nextToken());
             armyid = Integer.parseInt(command.nextToken());
             army = p.getArmy(armyid);
         } catch (Exception e) {
-            server.campaign.CampaignMain.cm.toUser("AM:Improper format. Try: /c checkarmylink#name#armyid",
+            CampaignMain.campaignMain.toUser("AM:Improper format. Try: /c checkarmylink#name#armyid",
                   Username,
                   true);
             return;
         }
 
         if (p.getDutyStatus() != server.campaign.SPlayer.STATUS_FIGHTING &&
-                  server.campaign.CampaignMain.cm.getServer().getUserLevel(Username) <
+                  CampaignMain.campaignMain.getServer().getUserLevel(Username) <
                         server.MWChatServer.auth.IAuthenticator.ADMIN) {
-            server.campaign.CampaignMain.cm.toUser("AM:You may only check links in fighting players' amries.",
+            CampaignMain.campaignMain.toUser("AM:You may only check links in fighting players' amries.",
                   Username,
                   true);
             return;
@@ -63,7 +65,7 @@ public class CheckArmyLinkCommand implements Command {
         StringBuilder toSend = new StringBuilder("Link info for " + p.getName() + "'s Army #" + armyid + ":");
         if (army.getC3Network().size() < 1) {
             toSend.append(" No Linked C3.");
-            server.campaign.CampaignMain.cm.toUser(toSend.toString(), Username, true);
+            CampaignMain.campaignMain.toUser(toSend.toString(), Username, true);
         } else {
             java.util.Enumeration<Integer> c3Units = army.getC3Network().keys();
             while (c3Units.hasMoreElements()) {
@@ -71,7 +73,7 @@ public class CheckArmyLinkCommand implements Command {
                 Integer c3M = army.getC3Network().get(c3U);
                 toSend.append("<br>Unit " + c3U + " is linked to unit " + c3M + ".");
             }
-            server.campaign.CampaignMain.cm.toUser(toSend.toString(), Username, true);
+            CampaignMain.campaignMain.toUser(toSend.toString(), Username, true);
         }
     }
 

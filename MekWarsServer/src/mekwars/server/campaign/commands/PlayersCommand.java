@@ -17,6 +17,7 @@
 package mekwars.server.campaign.commands;
 
 import common.House;
+import mekwars.server.campaign.CampaignMain;
 
 public class PlayersCommand implements Command {
 
@@ -27,13 +28,13 @@ public class PlayersCommand implements Command {
     public void process(java.util.StringTokenizer command, String Username) {
 
         if (accessLevel != 0) {
-            int userLevel = server.campaign.CampaignMain.cm.getServer().getUserLevel(Username);
+            int userLevel = CampaignMain.campaignMain.getServer().getUserLevel(Username);
             if (userLevel < getExecutionLevel()) {
-                server.campaign.CampaignMain.cm.toUser("AM:Insufficient access level for command. Level: " +
-                                                             userLevel +
-                                                             ". Required: " +
-                                                             accessLevel +
-                                                             ".", Username, true);
+                CampaignMain.campaignMain.toUser("AM:Insufficient access level for command. Level: " +
+                                                       userLevel +
+                                                       ". Required: " +
+                                                       accessLevel +
+                                                       ".", Username, true);
                 return;
             }
         }
@@ -45,7 +46,7 @@ public class PlayersCommand implements Command {
          * separate grouping, so we'll do them first.
          */
         toSend += "<br><h2>Fighting Players:</h2><br>";
-        for (House vh : server.campaign.CampaignMain.cm.getData().getAllHouses()) {
+        for (House vh : CampaignMain.campaignMain.getData().getAllHouses()) {
 
             server.campaign.SHouse h = (server.campaign.SHouse) vh;
             if (h.getFightingPlayers().size() > 0) {
@@ -66,10 +67,10 @@ public class PlayersCommand implements Command {
          * Now, we care about whether or not activity status is
          * being hidden. If not, split reserve and active lists.
          */
-        if (!(Boolean.parseBoolean(server.campaign.CampaignMain.cm.getConfig("HideActiveStatus")))) {
+        if (!(Boolean.parseBoolean(CampaignMain.campaignMain.getConfig("HideActiveStatus")))) {
 
             toSend += ("<br><h2>Active Duty Players:</h2><br>");
-            for (House vh : server.campaign.CampaignMain.cm.getData().getAllHouses()) {
+            for (House vh : CampaignMain.campaignMain.getData().getAllHouses()) {
 
                 server.campaign.SHouse h = (server.campaign.SHouse) vh;
                 if (h.getActivePlayers().size() > 0) {
@@ -87,7 +88,7 @@ public class PlayersCommand implements Command {
             }
 
             toSend += ("<br><h2>Reserve Duty Players:</h2><br>");
-            for (House vh : server.campaign.CampaignMain.cm.getData().getAllHouses()) {
+            for (House vh : CampaignMain.campaignMain.getData().getAllHouses()) {
 
                 server.campaign.SHouse h = (server.campaign.SHouse) vh;
                 if (h.getReservePlayers().size() > 0) {
@@ -119,15 +120,15 @@ public class PlayersCommand implements Command {
             java.util.TreeMap<String, server.campaign.SPlayer> combinedTable;
 
             toSend += ("<br><h2>Online Players (Not Fighting):</h2><br>");
-            for (House vh : server.campaign.CampaignMain.cm.getData().getAllHouses()) {
+            for (House vh : CampaignMain.campaignMain.getData().getAllHouses()) {
 
                 server.campaign.SHouse h = (server.campaign.SHouse) vh;
                 combinedTable = new java.util.TreeMap<String, server.campaign.SPlayer>();
                 combinedTable.putAll(h.getReservePlayers());
                 combinedTable.putAll(h.getActivePlayers());
 
-                boolean playersFaction = h.equals(server.campaign.CampaignMain.cm.getPlayer(Username).getMyHouse());
-                boolean isAdmin = server.campaign.CampaignMain.cm.getServer().isAdmin(Username);
+                boolean playersFaction = h.equals(CampaignMain.campaignMain.getPlayer(Username).getMyHouse());
+                boolean isAdmin = CampaignMain.campaignMain.getServer().isAdmin(Username);
 
                 if (combinedTable.size() > 0) {
 
@@ -155,7 +156,7 @@ public class PlayersCommand implements Command {
         }
 
         //send to the requestor
-        server.campaign.CampaignMain.cm.toUser("SM|" + toSend, Username, false);
+        CampaignMain.campaignMain.toUser("SM|" + toSend, Username, false);
 
     }//end process()
 

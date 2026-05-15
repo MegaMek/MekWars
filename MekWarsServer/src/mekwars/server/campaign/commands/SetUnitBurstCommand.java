@@ -20,6 +20,7 @@ import megamek.common.CriticalSlot;
 import megamek.common.Entity;
 import megamek.common.Mounted;
 import megamek.common.WeaponType;
+import mekwars.server.campaign.CampaignMain;
 
 public class SetUnitBurstCommand implements Command {
 
@@ -29,18 +30,18 @@ public class SetUnitBurstCommand implements Command {
     public void process(java.util.StringTokenizer command, String Username) {
 
         if (accessLevel != 0) {
-            int userLevel = server.campaign.CampaignMain.cm.getServer().getUserLevel(Username);
+            int userLevel = CampaignMain.campaignMain.getServer().getUserLevel(Username);
             if (userLevel < getExecutionLevel()) {
-                server.campaign.CampaignMain.cm.toUser("AM:Insufficient access level for command. Level: " +
-                                                             userLevel +
-                                                             ". Required: " +
-                                                             accessLevel +
-                                                             ".", Username, true);
+                CampaignMain.campaignMain.toUser("AM:Insufficient access level for command. Level: " +
+                                                       userLevel +
+                                                       ". Required: " +
+                                                       accessLevel +
+                                                       ".", Username, true);
                 return;
             }
         }
 
-        server.campaign.SPlayer p = server.campaign.CampaignMain.cm.getPlayer(Username);
+        server.campaign.SPlayer p = CampaignMain.campaignMain.getPlayer(Username);
 
         int unitid = 0;// ID# of the mech which is to set ammo change
         int weaponLocation = 0; // starting position for weapon
@@ -51,7 +52,7 @@ public class SetUnitBurstCommand implements Command {
             unitid = Integer.parseInt(command.nextToken());
         }// end try
         catch (NumberFormatException ex) {
-            server.campaign.CampaignMain.cm.toUser(
+            CampaignMain.campaignMain.toUser(
                   "AM:SetBurstAmmo command failed. No Unit in your input. It should be something like this: /c SetunitBurst#unitid#weaponlocation#slot#true/false",
                   Username,
                   true);
@@ -62,7 +63,7 @@ public class SetUnitBurstCommand implements Command {
             weaponLocation = Integer.parseInt(command.nextToken());
         }// end try
         catch (Exception ex) {
-            server.campaign.CampaignMain.cm.toUser(
+            CampaignMain.campaignMain.toUser(
                   "AM:SetBurstAmmo command failed. Weapon Location invalid. It should be something like this: /c SetunitBurst#unitid#weaponlocation#slot#true/false",
                   Username,
                   true);
@@ -73,7 +74,7 @@ public class SetUnitBurstCommand implements Command {
             weaponSlot = Integer.parseInt(command.nextToken());
         }// end try
         catch (Exception ex) {
-            server.campaign.CampaignMain.cm.toUser(
+            CampaignMain.campaignMain.toUser(
                   "AM:SetBurstAmmo command failed. WeaponSlot invalid. It should be something like this: /c SetunitBurst#unitid#weaponlocation#slot#true/false",
                   Username,
                   true);
@@ -84,7 +85,7 @@ public class SetUnitBurstCommand implements Command {
             selection = Boolean.parseBoolean(command.nextToken());
         }// end try
         catch (Exception ex) {
-            server.campaign.CampaignMain.cm.toUser(
+            CampaignMain.campaignMain.toUser(
                   "AM:SetBurstAmmo command failed. Boolean not found. It should be something like this: /c SetunitBurst#unitid#weaponlocation#slot#true/false",
                   Username,
                   true);
@@ -94,7 +95,7 @@ public class SetUnitBurstCommand implements Command {
         server.campaign.SUnit unit = p.getUnit(unitid);
         Entity en = unit.getEntity();
         if (en == null) {
-            server.campaign.CampaignMain.cm.toUser("AM:SetBurstAmmo command failed. entity for unit is null",
+            CampaignMain.campaignMain.toUser("AM:SetBurstAmmo command failed. entity for unit is null",
                   Username,
                   true);
             return;
@@ -112,13 +113,13 @@ public class SetUnitBurstCommand implements Command {
         //Mounted mWeapon = en.getEquipment(en.getCritical(weaponLocation, weaponSlot).getIndex());
 
         if (mWeapon == null) {
-            server.campaign.CampaignMain.cm.toUser("AM:" + weaponLocation + "," + weaponSlot + " is not a gun!",
+            CampaignMain.campaignMain.toUser("AM:" + weaponLocation + "," + weaponSlot + " is not a gun!",
                   Username,
                   true);
             return;
         }
         if (!mWeapon.getType().hasFlag(WeaponType.F_MG)) {
-            server.campaign.CampaignMain.cm.toUser("AM:" + mWeapon.getName() + " cannot be set to rapid fire!",
+            CampaignMain.campaignMain.toUser("AM:" + mWeapon.getName() + " cannot be set to rapid fire!",
                   Username,
                   true);
             return;
@@ -133,20 +134,20 @@ public class SetUnitBurstCommand implements Command {
         //}
 
         unit.setEntity(en);
-        server.campaign.CampaignMain.cm.toUser("PL|UUMG|" +
-                                                     unit.getId() +
-                                                     "|" +
-                                                     weaponLocation +
-                                                     "|" +
-                                                     weaponSlot +
-                                                     "|" +
-                                                     selection, Username, false);
+        CampaignMain.campaignMain.toUser("PL|UUMG|" +
+                                               unit.getId() +
+                                               "|" +
+                                               weaponLocation +
+                                               "|" +
+                                               weaponSlot +
+                                               "|" +
+                                               selection, Username, false);
 
-        server.campaign.CampaignMain.cm.toUser("AM:Rapid fire set for " +
-                                                     unit.getModelName() +
-                                                     " (#" +
-                                                     unit.getId() +
-                                                     ").", Username, true);
+        CampaignMain.campaignMain.toUser("AM:Rapid fire set for " +
+                                               unit.getModelName() +
+                                               " (#" +
+                                               unit.getId() +
+                                               ").", Username, true);
 
     }// end process()
 

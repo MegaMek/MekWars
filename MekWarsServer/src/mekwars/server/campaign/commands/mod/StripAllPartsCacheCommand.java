@@ -16,6 +16,8 @@
 
 package mekwars.server.campaign.commands.mod;
 
+import mekwars.server.campaign.CampaignMain;
+
 /**
  * Strip the Players parts cache.
  */
@@ -29,45 +31,45 @@ public class StripAllPartsCacheCommand implements server.campaign.commands.Comma
     public void process(java.util.StringTokenizer command, String Username) {
 
         if (accessLevel != 0) {
-            int userLevel = server.campaign.CampaignMain.cm.getServer().getUserLevel(Username);
+            int userLevel = CampaignMain.campaignMain.getServer().getUserLevel(Username);
             if (userLevel < getExecutionLevel()) {
-                server.campaign.CampaignMain.cm.toUser("AM:Insufficient access level for command. Level: " +
-                                                             userLevel +
-                                                             ". Required: " +
-                                                             accessLevel +
-                                                             ".", Username, true);
+                CampaignMain.campaignMain.toUser("AM:Insufficient access level for command. Level: " +
+                                                       userLevel +
+                                                       ". Required: " +
+                                                       accessLevel +
+                                                       ".", Username, true);
                 return;
             }
         }
 
-        if (!server.campaign.CampaignMain.cm.getBooleanConfig("UsePartsRepair")) {
-            server.campaign.CampaignMain.cm.toUser("Parts repair not used on this server!", Username);
+        if (!CampaignMain.campaignMain.getBooleanConfig("UsePartsRepair")) {
+            CampaignMain.campaignMain.toUser("Parts repair not used on this server!", Username);
             return;
         }
         //get the player you wish to use
 
         if (!command.hasMoreTokens()) {
-            server.campaign.CampaignMain.cm.toUser("Syntax: StripAllPartsCache#Name#CONFIRM", Username);
+            CampaignMain.campaignMain.toUser("Syntax: StripAllPartsCache#Name#CONFIRM", Username);
             return;
         }
-        server.campaign.SPlayer p = server.campaign.CampaignMain.cm.getPlayer(command.nextToken());
+        server.campaign.SPlayer p = CampaignMain.campaignMain.getPlayer(command.nextToken());
 
         if (!command.hasMoreTokens()) {
-            server.campaign.CampaignMain.cm.toUser("Syntax: StripAllPartsCache#Name#CONFIRM", Username);
+            CampaignMain.campaignMain.toUser("Syntax: StripAllPartsCache#Name#CONFIRM", Username);
             return;
         }
 
         String confirm = command.nextToken();
 
         if (!confirm.equals("CONFIRM")) {
-            server.campaign.CampaignMain.cm.toUser("Syntax: StripAllPartsCache#Name#CONFIRM", Username);
+            CampaignMain.campaignMain.toUser("Syntax: StripAllPartsCache#Name#CONFIRM", Username);
             return;
         }
 
         p.getUnitParts().clear();
 
-        server.campaign.CampaignMain.cm.toUser("PL|CPPC", Username);
-        server.campaign.CampaignMain.cm.doSendModMail("NOTE",
+        CampaignMain.campaignMain.toUser("PL|CPPC", Username);
+        CampaignMain.campaignMain.doSendModMail("NOTE",
               Username + " has stripped all of " + p.getName() + "'s parts cache.");
     }
 

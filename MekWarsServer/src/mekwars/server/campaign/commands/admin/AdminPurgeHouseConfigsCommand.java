@@ -15,6 +15,8 @@
 package mekwars.server.campaign.commands.admin;
 
 
+import mekwars.server.campaign.CampaignMain;
+
 public class AdminPurgeHouseConfigsCommand implements server.campaign.commands.Command {
 
     int accessLevel = server.MWChatServer.auth.IAuthenticator.ADMIN;
@@ -25,13 +27,13 @@ public class AdminPurgeHouseConfigsCommand implements server.campaign.commands.C
     public void process(java.util.StringTokenizer command, String Username) {
 
         //access level check
-        int userLevel = server.campaign.CampaignMain.cm.getServer().getUserLevel(Username);
+        int userLevel = CampaignMain.campaignMain.getServer().getUserLevel(Username);
         if (userLevel < getExecutionLevel()) {
-            server.campaign.CampaignMain.cm.toUser("AM:Insufficient access level for command. Level: " +
-                                                         userLevel +
-                                                         ". Required: " +
-                                                         accessLevel +
-                                                         ".", Username, true);
+            CampaignMain.campaignMain.toUser("AM:Insufficient access level for command. Level: " +
+                                                   userLevel +
+                                                   ". Required: " +
+                                                   accessLevel +
+                                                   ".", Username, true);
             return;
         }
 
@@ -40,13 +42,13 @@ public class AdminPurgeHouseConfigsCommand implements server.campaign.commands.C
         try {
             faction = command.nextToken();
         } catch (Exception ex) {
-            server.campaign.CampaignMain.cm.toUser("Invalid syntax. Try: AdminPurgeHouseConfig#faction",
+            CampaignMain.campaignMain.toUser("Invalid syntax. Try: AdminPurgeHouseConfig#faction",
                   Username,
                   true);
             return;
         }
 
-        server.campaign.SHouse h = server.campaign.CampaignMain.cm.getHouseFromPartialString(faction, Username);
+        server.campaign.SHouse h = CampaignMain.campaignMain.getHouseFromPartialString(faction, Username);
 
         if (h == null) {return;}
 
@@ -58,7 +60,7 @@ public class AdminPurgeHouseConfigsCommand implements server.campaign.commands.C
         h.saveConfigFile();
 
         h.updated();
-        server.campaign.CampaignMain.cm.doSendModMail("NOTE",
+        CampaignMain.campaignMain.doSendModMail("NOTE",
               Username + " has purged campaign configs for " + h.getName());
     }
 

@@ -70,8 +70,8 @@ public class TickThread extends Thread {
                     this.myCampaign.addToNewsFeed("Faction Rankings",
                           "Server News",
                           Statistics.getReadableHouseRanking(false));
-                    if (CampaignMain.cm.getBooleanConfig("DiscordEnable")) {
-                        CampaignMain.cm.postToDiscord(Statistics.getReadableHouseRanking(false));
+                    if (CampaignMain.campaignMain.getBooleanConfig("DiscordEnable")) {
+                        CampaignMain.campaignMain.postToDiscord(Statistics.getReadableHouseRanking(false));
                     }
 
                     try {

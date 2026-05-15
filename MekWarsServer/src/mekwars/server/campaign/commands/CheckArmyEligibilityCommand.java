@@ -17,6 +17,7 @@
 package mekwars.server.campaign.commands;
 
 import common.campaign.operations.Operation;
+import mekwars.server.campaign.CampaignMain;
 
 public class CheckArmyEligibilityCommand implements Command {
 
@@ -27,18 +28,18 @@ public class CheckArmyEligibilityCommand implements Command {
     public void process(java.util.StringTokenizer command, String Username) {
 
         if (accessLevel != 0) {
-            int userLevel = server.campaign.CampaignMain.cm.getServer().getUserLevel(Username);
+            int userLevel = CampaignMain.campaignMain.getServer().getUserLevel(Username);
             if (userLevel < getExecutionLevel()) {
-                server.campaign.CampaignMain.cm.toUser("AM:Insufficient access level for command. Level: " +
-                                                             userLevel +
-                                                             ". Required: " +
-                                                             accessLevel +
-                                                             ".", Username, true);
+                CampaignMain.campaignMain.toUser("AM:Insufficient access level for command. Level: " +
+                                                       userLevel +
+                                                       ". Required: " +
+                                                       accessLevel +
+                                                       ".", Username, true);
                 return;
             }
         }
 
-        server.campaign.SPlayer p = server.campaign.CampaignMain.cm.getPlayer(Username);
+        server.campaign.SPlayer p = CampaignMain.campaignMain.getPlayer(Username);
 
         int armyid = -1;
         String opName = "";
@@ -46,7 +47,7 @@ public class CheckArmyEligibilityCommand implements Command {
             armyid = Integer.parseInt(command.nextToken());
             opName = command.nextToken();
         } catch (Exception e) {
-            server.campaign.CampaignMain.cm.toUser("AM:Improper command. Try: /c checkarmyeligibility#id#operation",
+            CampaignMain.campaignMain.toUser("AM:Improper command. Try: /c checkarmyeligibility#id#operation",
                   Username,
                   true);
             return;
@@ -54,28 +55,28 @@ public class CheckArmyEligibilityCommand implements Command {
 
         server.campaign.SArmy currA = p.getArmy(armyid);
         if (currA == null) {
-            server.campaign.CampaignMain.cm.toUser("AM:Could not find Army #" + armyid + ".", Username, true);
+            CampaignMain.campaignMain.toUser("AM:Could not find Army #" + armyid + ".", Username, true);
             return;
         }
 
-        Operation currO = server.campaign.CampaignMain.cm.getOpsManager().getOperation(opName);
+        Operation currO = CampaignMain.campaignMain.getOpsManager().getOperation(opName);
         if (currO == null) {
-            server.campaign.CampaignMain.cm.toUser("AM:Operation Type: " + opName + " does not exist.", Username, true);
+            CampaignMain.campaignMain.toUser("AM:Operation Type: " + opName + " does not exist.", Username, true);
             return;
         }
 
         //breaks passed. check the op.
-        String s = server.campaign.CampaignMain.cm.getOpsManager()
+        String s = CampaignMain.campaignMain.getOpsManager()
                          .validateShortAttack(p, currA, currO, null, -1, false);
         if (s != null && !s.trim().equals("")) {
-            server.campaign.CampaignMain.cm.toUser("AM:" + opName + " is illegal for Army #" + armyid + " " + s,
+            CampaignMain.campaignMain.toUser("AM:" + opName + " is illegal for Army #" + armyid + " " + s,
                   Username,
                   true);
             return;
         }
 
         //else
-        server.campaign.CampaignMain.cm.toUser("AM:" + opName + " is legal for Army #" + armyid + ".", Username, true);
+        CampaignMain.campaignMain.toUser("AM:" + opName + " is legal for Army #" + armyid + ".", Username, true);
 
     }//end process
 

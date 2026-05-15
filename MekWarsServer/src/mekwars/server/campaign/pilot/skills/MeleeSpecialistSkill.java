@@ -26,6 +26,7 @@ import common.campaign.pilot.Pilot;
 import megamek.common.BattleArmor;
 import megamek.common.Entity;
 import megamek.common.Mech;
+import mekwars.server.campaign.CampaignMain;
 
 /**
  * @author Helge Richter
@@ -60,10 +61,10 @@ public class MeleeSpecialistSkill extends SPilotSkill {
 
         String chance = "chancefor" + getAbbreviation() + "for" + Unit.getTypeClassDesc(unitType);
 
-        server.campaign.SHouse house = server.campaign.CampaignMain.cm.getHouseFromPartialString(p.getCurrentFaction());
+        server.campaign.SHouse house = CampaignMain.campaignMain.getHouseFromPartialString(p.getCurrentFaction());
 
         if (house == null) {
-            return server.campaign.CampaignMain.cm.getIntegerConfig(chance);
+            return CampaignMain.campaignMain.getIntegerConfig(chance);
         }
 
         return house.getIntegerConfig(chance);
@@ -78,10 +79,10 @@ public class MeleeSpecialistSkill extends SPilotSkill {
     public int getBVMod(Entity unit, server.campaign.pilot.SPilot p) {
         double tonnage = unit.getWeight();
         double numberOfHatchets = 0;
-        double hatchetMod = server.campaign.CampaignMain.cm.getDoubleConfig("HatchetRating");
-        double baseBV = server.campaign.CampaignMain.cm.getDoubleConfig("MeleeSpecialistBaseBVMod");
+        double hatchetMod = CampaignMain.campaignMain.getDoubleConfig("HatchetRating");
+        double baseBV = CampaignMain.campaignMain.getDoubleConfig("MeleeSpecialistBaseBVMod");
         double speedFactor;
-        if (server.campaign.CampaignMain.cm.getBooleanConfig("MeleeSpecialistUseSpeedFactor")) {
+        if (CampaignMain.campaignMain.getBooleanConfig("MeleeSpecialistUseSpeedFactor")) {
             // Adds a BV malus based on unit movement capability
             speedFactor = Math.pow(1 +
                                          ((((double) unit.getRunMP() +
@@ -91,11 +92,11 @@ public class MeleeSpecialistSkill extends SPilotSkill {
             speedFactor = 1.0;
         }
 
-        server.campaign.SHouse house = server.campaign.CampaignMain.cm.getHouseFromPartialString(p.getCurrentFaction());
+        server.campaign.SHouse house = CampaignMain.campaignMain.getHouseFromPartialString(p.getCurrentFaction());
 
         if (house == null) {
-            hatchetMod = server.campaign.CampaignMain.cm.getDoubleConfig("HatchetRating");
-            baseBV = server.campaign.CampaignMain.cm.getDoubleConfig("MeleeSpecialistBaseBVMod");
+            hatchetMod = CampaignMain.campaignMain.getDoubleConfig("HatchetRating");
+            baseBV = CampaignMain.campaignMain.getDoubleConfig("MeleeSpecialistBaseBVMod");
         } else {
             hatchetMod = house.getDoubleConfig("HatchetRating");
             baseBV = house.getDoubleConfig("MeleeSpecialistBaseBVMod");

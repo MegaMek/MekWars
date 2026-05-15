@@ -35,7 +35,6 @@ package mekwars.common.campaign.targetsystems;
 import java.util.Vector;
 
 import megamek.common.units.Entity;
-import mekwars.common.util.MWLogger;
 
 public class TargetSystem {
 

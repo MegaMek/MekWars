@@ -17,6 +17,7 @@
 package mekwars.server.campaign.commands;
 
 import common.Planet;
+import mekwars.server.campaign.CampaignMain;
 import server.campaign.util.PlanetNameComparator;
 
 //import server.campaign.operations.ShortOperation;
@@ -37,13 +38,13 @@ public class FindContestedPlanetsCommand implements Command {
         int PercentAmount = -1;
 
         if (accessLevel != 0) {
-            int userLevel = server.campaign.CampaignMain.cm.getServer().getUserLevel(Username);
+            int userLevel = CampaignMain.campaignMain.getServer().getUserLevel(Username);
             if (userLevel < getExecutionLevel()) {
-                server.campaign.CampaignMain.cm.toUser("AM:Insufficient access level for command. Level: " +
-                                                             userLevel +
-                                                             ". Required: " +
-                                                             accessLevel +
-                                                             ".", Username, true);
+                CampaignMain.campaignMain.toUser("AM:Insufficient access level for command. Level: " +
+                                                       userLevel +
+                                                       ". Required: " +
+                                                       accessLevel +
+                                                       ".", Username, true);
                 return;
             }
         }
@@ -51,22 +52,22 @@ public class FindContestedPlanetsCommand implements Command {
         try {
             sret = "AM:Could not find attacking faction.<br>...Try /FindCP#AttackingHouse#DefendingHouse#%Owned";
             Name1 = (String) command.nextToken();
-            h1 = (server.campaign.SHouse) server.campaign.CampaignMain.cm.getData().getHouseByName(Name1);
+            h1 = (server.campaign.SHouse) CampaignMain.campaignMain.getData().getHouseByName(Name1);
             if (h1 == null || h1.getId() < 0) {
-                server.campaign.CampaignMain.cm.toUser(sret, Username, true);
+                CampaignMain.campaignMain.toUser(sret, Username, true);
                 return;
             }
             sret = "AM:Could not find defending faction.<br>...Try /FindCP#AttackingHouse#DefendingHouse#%Owned";
             Name2 = (String) command.nextToken();
-            h2 = (server.campaign.SHouse) server.campaign.CampaignMain.cm.getData().getHouseByName(Name2);
+            h2 = (server.campaign.SHouse) CampaignMain.campaignMain.getData().getHouseByName(Name2);
             if (h2 == null || h2.getId() < 0) {
-                server.campaign.CampaignMain.cm.toUser(sret, Username, true);
+                CampaignMain.campaignMain.toUser(sret, Username, true);
                 return;
             }
             sret = "AM:Could not resolve %Owned to a postive integer.<br>...Try /FindCP#AttackingHouse#DefendingHouse#%Owned";
             PercentAmount = Integer.parseInt(command.nextToken());
             if (PercentAmount <= 0) {
-                server.campaign.CampaignMain.cm.toUser(sret, Username, true);
+                CampaignMain.campaignMain.toUser(sret, Username, true);
                 return;
             }
 
@@ -83,7 +84,7 @@ public class FindContestedPlanetsCommand implements Command {
             java.util.Vector<server.campaign.SPlanet> contestedWorlds = new java.util.Vector<server.campaign.SPlanet>(1,
                   1);
 
-            java.util.Iterator<Planet> it = server.campaign.CampaignMain.cm.getData().getAllPlanets().iterator();
+            java.util.Iterator<Planet> it = CampaignMain.campaignMain.getData().getAllPlanets().iterator();
             while (it.hasNext()) {
                 server.campaign.SPlanet p = (server.campaign.SPlanet) it.next();
                 if (p.getInfluence().getInfluence(h1.getId()) >= 0.01 * PercentAmount * p.getConquestPoints() &&
@@ -115,9 +116,9 @@ public class FindContestedPlanetsCommand implements Command {
                            "cp)";
                 s += "<br>";
             }
-            server.campaign.CampaignMain.cm.toUser("SM|" + s, Username, false);
+            CampaignMain.campaignMain.toUser("SM|" + s, Username, false);
         } catch (Exception e) {
-            server.campaign.CampaignMain.cm.toUser(sret, Username, true);
+            CampaignMain.campaignMain.toUser(sret, Username, true);
             return;
         }
     }

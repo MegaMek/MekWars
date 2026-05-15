@@ -17,6 +17,8 @@
 package mekwars.server.campaign.commands.mod;
 
 
+import mekwars.server.campaign.CampaignMain;
+
 /**
  * Moving the ServerAnnouncement command from MWServ into the normal command structure.
  * <p>
@@ -32,17 +34,17 @@ public class ServerAnnouncementCommand implements server.campaign.commands.Comma
     public void process(java.util.StringTokenizer command, String Username) {
 
         if (accessLevel != 0) {
-            int userLevel = server.campaign.CampaignMain.cm.getServer().getUserLevel(Username);
+            int userLevel = CampaignMain.campaignMain.getServer().getUserLevel(Username);
             if (userLevel < getExecutionLevel()) {
-                server.campaign.CampaignMain.cm.toUser("AM:Insufficient access level for command. Level: " +
-                                                             userLevel +
-                                                             ". Required: " +
-                                                             accessLevel +
-                                                             ".", Username, true);
+                CampaignMain.campaignMain.toUser("AM:Insufficient access level for command. Level: " +
+                                                       userLevel +
+                                                       ". Required: " +
+                                                       accessLevel +
+                                                       ".", Username, true);
                 return;
             }
         }
-        server.campaign.CampaignMain.cm.getServer().sendChat("AM:" + Username + ": " + command.nextToken());
+        CampaignMain.campaignMain.getServer().sendChat("AM:" + Username + ": " + command.nextToken());
     }
 
     public int getExecutionLevel() {return accessLevel;}

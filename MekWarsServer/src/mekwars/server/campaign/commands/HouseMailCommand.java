@@ -16,6 +16,8 @@
 
 package mekwars.server.campaign.commands;
 
+import mekwars.server.campaign.CampaignMain;
+
 public class HouseMailCommand implements Command {
 
     int accessLevel = 0;
@@ -24,13 +26,13 @@ public class HouseMailCommand implements Command {
     public void process(java.util.StringTokenizer command, String Username) {
 
         if (accessLevel != 0) {
-            int userLevel = server.campaign.CampaignMain.cm.getServer().getUserLevel(Username);
+            int userLevel = CampaignMain.campaignMain.getServer().getUserLevel(Username);
             if (userLevel < getExecutionLevel()) {
-                server.campaign.CampaignMain.cm.toUser("AM:Insufficient access level for command. Level: " +
-                                                             userLevel +
-                                                             ". Required: " +
-                                                             accessLevel +
-                                                             ".", Username, true);
+                CampaignMain.campaignMain.toUser("AM:Insufficient access level for command. Level: " +
+                                                       userLevel +
+                                                       ". Required: " +
+                                                       accessLevel +
+                                                       ".", Username, true);
                 return;
             }
         }
@@ -42,8 +44,8 @@ public class HouseMailCommand implements Command {
 
         if (toSend.trim().length() == 0) {return;}
 
-        server.campaign.CampaignMain.cm.doSendHouseMail(server.campaign.CampaignMain.cm.getPlayer(Username)
-                                                              .getMyHouse(), Username, toSend);
+        CampaignMain.campaignMain.doSendHouseMail(CampaignMain.campaignMain.getPlayer(Username)
+                                                        .getMyHouse(), Username, toSend);
 
     }
 

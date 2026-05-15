@@ -1,7 +1,5 @@
 package mekwars.server.util;
 
-import common.util.MWLogger;
-
 
 //@salient - util class saves SPlayer as simple json file
 //			 for use with discord bot

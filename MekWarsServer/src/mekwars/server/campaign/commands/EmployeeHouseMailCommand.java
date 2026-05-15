@@ -16,6 +16,8 @@
 
 package mekwars.server.campaign.commands;
 
+import mekwars.server.campaign.CampaignMain;
+
 public class EmployeeHouseMailCommand implements Command {
 
     int accessLevel = 0;
@@ -24,13 +26,13 @@ public class EmployeeHouseMailCommand implements Command {
     public void process(java.util.StringTokenizer command, String Username) {
 
         if (accessLevel != 0) {
-            int userLevel = server.campaign.CampaignMain.cm.getServer().getUserLevel(Username);
+            int userLevel = CampaignMain.campaignMain.getServer().getUserLevel(Username);
             if (userLevel < getExecutionLevel()) {
-                server.campaign.CampaignMain.cm.toUser("AM:Insufficient access level for command. Level: " +
-                                                             userLevel +
-                                                             ". Required: " +
-                                                             accessLevel +
-                                                             ".", Username, true);
+                CampaignMain.campaignMain.toUser("AM:Insufficient access level for command. Level: " +
+                                                       userLevel +
+                                                       ". Required: " +
+                                                       accessLevel +
+                                                       ".", Username, true);
                 return;
             }
         }
@@ -38,8 +40,8 @@ public class EmployeeHouseMailCommand implements Command {
         String toSend = "";
         while (command.hasMoreElements()) {toSend += command.nextToken();}
 
-        server.campaign.CampaignMain.cm.doSendHouseMail(server.campaign.CampaignMain.cm.getPlayer(Username)
-                                                              .getHouseFightingFor(), Username, toSend);
+        CampaignMain.campaignMain.doSendHouseMail(CampaignMain.campaignMain.getPlayer(Username)
+                                                        .getHouseFightingFor(), Username, toSend);
     }
 
     public int getExecutionLevel() {return accessLevel;}

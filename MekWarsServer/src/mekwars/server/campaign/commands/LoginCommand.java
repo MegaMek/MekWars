@@ -16,13 +16,15 @@
 
 package mekwars.server.campaign.commands;
 
+import mekwars.server.campaign.CampaignMain;
+
 public class LoginCommand implements Command {
 
     String syntax = "";
 
     public void process(java.util.StringTokenizer command, String Username) {
-        server.campaign.CampaignMain.cm.getPlayer(Username);
-        server.campaign.CampaignMain.cm.doLoginPlayer(Username);
+        CampaignMain.campaignMain.getPlayer(Username);
+        CampaignMain.campaignMain.doLoginPlayer(Username);
     }
 
     //conforming methods

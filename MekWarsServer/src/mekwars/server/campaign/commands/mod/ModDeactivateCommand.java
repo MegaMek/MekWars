@@ -16,6 +16,8 @@
 
 package mekwars.server.campaign.commands.mod;
 
+import mekwars.server.campaign.CampaignMain;
+
 public class ModDeactivateCommand implements server.campaign.commands.Command {
 
     int accessLevel = server.MWChatServer.auth.IAuthenticator.MODERATOR;
@@ -26,34 +28,34 @@ public class ModDeactivateCommand implements server.campaign.commands.Command {
     public void process(java.util.StringTokenizer command, String Username) {
 
         //access level check
-        int userLevel = server.campaign.CampaignMain.cm.getServer().getUserLevel(Username);
+        int userLevel = CampaignMain.campaignMain.getServer().getUserLevel(Username);
         if (userLevel < getExecutionLevel()) {
-            server.campaign.CampaignMain.cm.toUser("AM:Insufficient access level for command. Level: " +
-                                                         userLevel +
-                                                         ". Required: " +
-                                                         accessLevel +
-                                                         ".", Username, true);
+            CampaignMain.campaignMain.toUser("AM:Insufficient access level for command. Level: " +
+                                                   userLevel +
+                                                   ". Required: " +
+                                                   accessLevel +
+                                                   ".", Username, true);
             return;
         }
 
         String targetPlayerString = (String) command.nextElement();
-        server.campaign.SPlayer targetPlayer = server.campaign.CampaignMain.cm.getPlayer(targetPlayerString);
+        server.campaign.SPlayer targetPlayer = CampaignMain.campaignMain.getPlayer(targetPlayerString);
 
         if (targetPlayer == null) {
-            server.campaign.CampaignMain.cm.toUser(targetPlayerString + " cannot be found.", Username, true);
+            CampaignMain.campaignMain.toUser(targetPlayerString + " cannot be found.", Username, true);
             return;
         }
 
         if (targetPlayer.getDutyStatus() == server.campaign.SPlayer.STATUS_FIGHTING) {
-            server.campaign.CampaignMain.cm.toUser(targetPlayerString +
-                                                         " is fighting. Cancel his game before deactivating.",
+            CampaignMain.campaignMain.toUser(targetPlayerString +
+                                                   " is fighting. Cancel his game before deactivating.",
                   Username,
                   true);
             return;
         }
 
         if (targetPlayer.getDutyStatus() != server.campaign.SPlayer.STATUS_ACTIVE) {
-            server.campaign.CampaignMain.cm.toUser(
+            CampaignMain.campaignMain.toUser(
                   "Target player is logged out or is already in reserve state. Nice try though.",
                   Username,
                   true);
@@ -62,17 +64,17 @@ public class ModDeactivateCommand implements server.campaign.commands.Command {
 
         //the above caught all non-active players, so can continure assuming activity.
         targetPlayer.setActive(false);
-        server.campaign.CampaignMain.cm.toUser(Username + " forced you to return to reserve duty.",
+        CampaignMain.campaignMain.toUser(Username + " forced you to return to reserve duty.",
               targetPlayerString,
               true);
-        server.campaign.CampaignMain.cm.toUser("You forced " + targetPlayerString + " into reserve status.",
+        CampaignMain.campaignMain.toUser("You forced " + targetPlayerString + " into reserve status.",
               Username,
               true);
         //server.MWLogger.modLog(Username + " force-deactivated " + targetPlayerString + ".");
-        server.campaign.CampaignMain.cm.doSendModMail("NOTE",
+        CampaignMain.campaignMain.doSendModMail("NOTE",
               Username + " force-deactivated " + targetPlayerString + ".'");
-        server.campaign.CampaignMain.cm.sendPlayerStatusUpdate(targetPlayer, !Boolean.parseBoolean(
-              server.campaign.CampaignMain.cm.getConfig("HideActiveStatus")));
+        CampaignMain.campaignMain.sendPlayerStatusUpdate(targetPlayer, !Boolean.parseBoolean(
+              CampaignMain.campaignMain.getConfig("HideActiveStatus")));
 
     }//end process()
 

@@ -17,6 +17,7 @@
 package mekwars.server.campaign.commands;
 
 import common.util.MWLogger;
+import mekwars.server.campaign.CampaignMain;
 
 
 /**
@@ -31,7 +32,7 @@ public class SignOffCommand implements Command {
     public void process(java.util.StringTokenizer command, String Username) {
 
         MWLogger.errLog(Username + " has sent signoff command");
-        server.campaign.CampaignMain.cm.getServer().clientLogout(Username);
+        CampaignMain.campaignMain.getServer().clientLogout(Username);
     }
 
     public int getExecutionLevel() {return 0;}

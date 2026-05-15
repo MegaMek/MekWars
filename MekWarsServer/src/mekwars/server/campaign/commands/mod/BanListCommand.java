@@ -16,6 +16,8 @@
 
 package mekwars.server.campaign.commands.mod;
 
+import mekwars.server.campaign.CampaignMain;
+
 /**
  * Moving the BanList command from MWServ into the normal command structure.
  * <p>
@@ -31,9 +33,9 @@ public class BanListCommand implements server.campaign.commands.Command {
     public void process(java.util.StringTokenizer command, String Username) {
 
         if (accessLevel != 0) {
-            int userLevel = server.campaign.CampaignMain.cm.getServer().getUserLevel(Username);
+            int userLevel = CampaignMain.campaignMain.getServer().getUserLevel(Username);
             if (userLevel < getExecutionLevel()) {
-                server.campaign.CampaignMain.cm.toUser(
+                CampaignMain.campaignMain.toUser(
                       "AM:Insufficient access level for command. Level: "
                             + userLevel + ". Required: " + accessLevel
                             + ".", Username, true);
@@ -45,7 +47,7 @@ public class BanListCommand implements server.campaign.commands.Command {
         int i = 1;
 
         java.util.concurrent.ConcurrentHashMap<String, String> banHash = new java.util.concurrent.ConcurrentHashMap<String, String>(
-              server.campaign.CampaignMain.cm.getServer().getBanAccounts());
+              CampaignMain.campaignMain.getServer().getBanAccounts());
         for (String banName : banHash.keySet()) {
             String banTime = banHash.get(banName);
 
@@ -56,8 +58,8 @@ public class BanListCommand implements server.campaign.commands.Command {
             // display them
             if (until.longValue() < System.currentTimeMillis()
                       || until.longValue() == 0) {
-                server.campaign.CampaignMain.cm.getServer().getBanAccounts().remove(banName);
-                server.campaign.CampaignMain.cm.getServer().bansUpdate();
+                CampaignMain.campaignMain.getServer().getBanAccounts().remove(banName);
+                CampaignMain.campaignMain.getServer().bansUpdate();
                 continue;
             }
 
@@ -73,17 +75,17 @@ public class BanListCommand implements server.campaign.commands.Command {
         i = 1;
         result += "Banned IPs:<br>";
         java.util.concurrent.ConcurrentHashMap<java.net.InetAddress, Long> banIpHash = new java.util.concurrent.ConcurrentHashMap<java.net.InetAddress, Long>(
-              server.campaign.CampaignMain.cm.getServer().getBanIps());
+              CampaignMain.campaignMain.getServer().getBanIps());
 
         for (java.net.InetAddress currAddress : banIpHash.keySet()) {
-            Long until = server.campaign.CampaignMain.cm.getServer().getBanIps().get(currAddress);
+            Long until = CampaignMain.campaignMain.getServer().getBanIps().get(currAddress);
 
             // If they are no longer banned remove them from the list and don't
             // display them
             if (until.longValue() < System.currentTimeMillis()
                       || until.longValue() == 0) {
-                server.campaign.CampaignMain.cm.getServer().getBanIps().remove(currAddress);
-                server.campaign.CampaignMain.cm.getServer().bansUpdate();
+                CampaignMain.campaignMain.getServer().getBanIps().remove(currAddress);
+                CampaignMain.campaignMain.getServer().bansUpdate();
                 continue;
             }
 
@@ -91,9 +93,9 @@ public class BanListCommand implements server.campaign.commands.Command {
                             + new java.util.Date(until.longValue()).toString() + "]<br>";
         }
 
-        server.campaign.CampaignMain.cm.toUser(result, Username);
-        server.campaign.CampaignMain.cm.doSendModMail("NOTE", Username
-                                                                    + " checked the ban list.");
+        CampaignMain.campaignMain.toUser(result, Username);
+        CampaignMain.campaignMain.doSendModMail("NOTE", Username
+                                                              + " checked the ban list.");
         // MWLogger.modLog(Username + " checked the ban list.");
     }
 

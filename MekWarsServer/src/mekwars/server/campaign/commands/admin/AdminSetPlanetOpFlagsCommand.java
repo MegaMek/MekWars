@@ -17,6 +17,8 @@
 package mekwars.server.campaign.commands.admin;
 
 
+import mekwars.server.campaign.CampaignMain;
+
 public class AdminSetPlanetOpFlagsCommand implements server.campaign.commands.Command {
 
     int accessLevel = server.MWChatServer.auth.IAuthenticator.ADMIN;
@@ -27,27 +29,27 @@ public class AdminSetPlanetOpFlagsCommand implements server.campaign.commands.Co
     public void process(java.util.StringTokenizer command, String Username) {
 
         //access level check
-        int userLevel = server.campaign.CampaignMain.cm.getServer().getUserLevel(Username);
+        int userLevel = CampaignMain.campaignMain.getServer().getUserLevel(Username);
         if (userLevel < getExecutionLevel()) {
-            server.campaign.CampaignMain.cm.toUser("AM:Insufficient access level for command. Level: " +
-                                                         userLevel +
-                                                         ". Required: " +
-                                                         accessLevel +
-                                                         ".", Username, true);
+            CampaignMain.campaignMain.toUser("AM:Insufficient access level for command. Level: " +
+                                                   userLevel +
+                                                   ". Required: " +
+                                                   accessLevel +
+                                                   ".", Username, true);
             return;
         }
 
         if (!command.hasMoreTokens()) {
-            server.campaign.CampaignMain.cm.toUser(
+            CampaignMain.campaignMain.toUser(
                   "Syntax AdminSetPlanetOpFlags#Planet#FlagCode#FlagCode#...<br>NOTE: you can repeat FlagCode multiple times.<br>NOTE:This will reset all the flags for the planet to these flags!",
                   Username);
             return;
         }
 
-        server.campaign.SPlanet planet = (server.campaign.SPlanet) server.campaign.CampaignMain.cm.getData()
+        server.campaign.SPlanet planet = (server.campaign.SPlanet) CampaignMain.campaignMain.getData()
                                                                          .getPlanetByName(command.nextToken());
         if (planet == null) {
-            server.campaign.CampaignMain.cm.toUser("Unknown Planet", Username, true);
+            CampaignMain.campaignMain.toUser("Unknown Planet", Username, true);
             return;
         }
 
@@ -55,21 +57,21 @@ public class AdminSetPlanetOpFlagsCommand implements server.campaign.commands.Co
         try {
             while (command.hasMoreTokens()) {
                 String key = command.nextToken();
-                if (server.campaign.CampaignMain.cm.getData().getPlanetOpFlags().containsKey(key)) {
-                    map.put(key, server.campaign.CampaignMain.cm.getData().getPlanetOpFlags().get(key));
-                } else {server.campaign.CampaignMain.cm.toUser(key + " is not a valid plant ops flag!", Username);}
+                if (CampaignMain.campaignMain.getData().getPlanetOpFlags().containsKey(key)) {
+                    map.put(key, CampaignMain.campaignMain.getData().getPlanetOpFlags().get(key));
+                } else {CampaignMain.campaignMain.toUser(key + " is not a valid plant ops flag!", Username);}
             }
         } catch (Exception ex) {
-            server.campaign.CampaignMain.cm.toUser(
+            CampaignMain.campaignMain.toUser(
                   "Syntax AdminSetPlanetOpFlags#Planet#FlagCode#FlagCode#...<br>NOTE: you can repeat FlagCode multiple times.<br>NOTE:This will reset all the flags for the planet to these flags!",
                   Username);
             return;
         }
 
         planet.setPlanetFlags(map);
-        server.campaign.CampaignMain.cm.toUser("Op flags set for " + planet.getName(), Username, true);
+        CampaignMain.campaignMain.toUser("Op flags set for " + planet.getName(), Username, true);
         //server.MWLogger.modLog(Username + " set the op flags for "+planet.getName());
-        server.campaign.CampaignMain.cm.doSendModMail("NOTE",
+        CampaignMain.campaignMain.doSendModMail("NOTE",
               Username + " has set the op flags for " + planet.getName());
 
         planet.updated();

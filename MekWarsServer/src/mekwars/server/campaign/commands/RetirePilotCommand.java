@@ -16,6 +16,7 @@
 
 package mekwars.server.campaign.commands;
 
+import mekwars.server.campaign.CampaignMain;
 import server.campaign.pilot.SPilot;
 
 
@@ -27,13 +28,13 @@ public class RetirePilotCommand implements Command {
     public void process(java.util.StringTokenizer command, String Username) {
 
         if (accessLevel != 0) {
-            int userLevel = server.campaign.CampaignMain.cm.getServer().getUserLevel(Username);
+            int userLevel = CampaignMain.campaignMain.getServer().getUserLevel(Username);
             if (userLevel < getExecutionLevel()) {
-                server.campaign.CampaignMain.cm.toUser("AM:Insufficient access level for command. Level: " +
-                                                             userLevel +
-                                                             ". Required: " +
-                                                             accessLevel +
-                                                             ".", Username, true);
+                CampaignMain.campaignMain.toUser("AM:Insufficient access level for command. Level: " +
+                                                       userLevel +
+                                                       ". Required: " +
+                                                       accessLevel +
+                                                       ".", Username, true);
                 return;
             }
         }
@@ -41,14 +42,14 @@ public class RetirePilotCommand implements Command {
         if (command.hasMoreElements()) {
 
             //load the player issuing the command
-            server.campaign.SPlayer p = server.campaign.CampaignMain.cm.getPlayer(Username);
+            server.campaign.SPlayer p = CampaignMain.campaignMain.getPlayer(Username);
 
             //try to load the mech whose pilot is being retired
             int mechid = -1;
             try {
                 mechid = Integer.parseInt((String) command.nextElement());
             } catch (Exception e) {
-                server.campaign.CampaignMain.cm.toUser("AM:Improper format. Try: /c retirepilot#UnitID",
+                CampaignMain.campaignMain.toUser("AM:Improper format. Try: /c retirepilot#UnitID",
                       Username,
                       true);
                 return;
@@ -57,18 +58,18 @@ public class RetirePilotCommand implements Command {
             //get the actual unit, and check for a null
             server.campaign.SUnit m = p.getUnit(mechid);
             if (m == null) {
-                server.campaign.CampaignMain.cm.toUser("AM:You do not have unit #" + mechid + ".", Username, true);
+                CampaignMain.campaignMain.toUser("AM:You do not have unit #" + mechid + ".", Username, true);
                 return;
             }
 
             //see if its even possible to retire pilots
-            if (Boolean.parseBoolean(server.campaign.CampaignMain.cm.getConfig("PilotRetirementAllowed")) == false) {
-                server.campaign.CampaignMain.cm.toUser("AM:Pilot retirement is not allowed.", Username, true);
+            if (Boolean.parseBoolean(CampaignMain.campaignMain.getConfig("PilotRetirementAllowed")) == false) {
+                CampaignMain.campaignMain.toUser("AM:Pilot retirement is not allowed.", Username, true);
                 return;
             }
 
             if (m.hasVacantPilot()) {
-                server.campaign.CampaignMain.cm.toUser("AM:This unit does not currently have pilot in it.", Username);
+                CampaignMain.campaignMain.toUser("AM:This unit does not currently have pilot in it.", Username);
                 return;
             }
 
@@ -80,7 +81,7 @@ public class RetirePilotCommand implements Command {
                 while (f.hasMoreElements()) {
                     server.campaign.SArmy currArmy = f.nextElement();
                     if (currArmy.getUnit(m.getId()) != null) {
-                        server.campaign.CampaignMain.cm.toUser(
+                        CampaignMain.campaignMain.toUser(
                               "AM:You may not dismiss/retire a pilot while his unit is part of an active army.",
                               Username,
                               true);
@@ -109,7 +110,7 @@ public class RetirePilotCommand implements Command {
              */
 
             int totalSkill = m.getPilot().getGunnery() + m.getPilot().getPiloting();
-            int skillForFree = server.campaign.CampaignMain.cm.getIntegerConfig("TotalSkillForFreeRetirement");
+            int skillForFree = CampaignMain.campaignMain.getIntegerConfig("TotalSkillForFreeRetirement");
             int retirementCost = -1;//used later
             if (totalSkill <= skillForFree) {
 
@@ -120,7 +121,7 @@ public class RetirePilotCommand implements Command {
                                             "?<br><a href=\"MEKWARS/c retirepilot#" +
                                             mechid +
                                             "#CONFIRM\">Click here to confirm the retirment order.</a>";
-                    server.campaign.CampaignMain.cm.toUser(toReturn, Username, true);
+                    CampaignMain.campaignMain.toUser(toReturn, Username, true);
                     return;
                 }
 
@@ -128,29 +129,29 @@ public class RetirePilotCommand implements Command {
 
                 //determine costs
                 int numLevelsNeeded = totalSkill - skillForFree;
-                int costPerLevelNeeded = server.campaign.CampaignMain.cm.getIntegerConfig("CostPerLevelToRetireEarly");
+                int costPerLevelNeeded = CampaignMain.campaignMain.getIntegerConfig("CostPerLevelToRetireEarly");
                 retirementCost = costPerLevelNeeded * numLevelsNeeded;
 
                 //check to see if early is allowed. if not, break out.
-                boolean earlyAllowed = Boolean.parseBoolean(server.campaign.CampaignMain.cm.getConfig(
+                boolean earlyAllowed = Boolean.parseBoolean(CampaignMain.campaignMain.getConfig(
                       "EarlyRetirementAllowed"));
                 if (!earlyAllowed) {
                     String toReturn = m.getPilot().getName() + " may not retire yet. He needs to " +
                                             "level up " + numLevelsNeeded + " more time";
                     if (numLevelsNeeded > 1) {toReturn += "s";}
                     toReturn += " before he can call it quits.";
-                    server.campaign.CampaignMain.cm.toUser(toReturn, Username, true);
+                    CampaignMain.campaignMain.toUser(toReturn, Username, true);
                     return;
                 }
 
                 if (p.getMoney() < retirementCost) {
-                    server.campaign.CampaignMain.cm.toUser("AM:You don't have enough money to dismiss " +
-                                                                 m.getPilot().getName() +
-                                                                 ". Bribing HQ to reassign him would cost " +
-                                                                 server.campaign.CampaignMain.cm.moneyOrFluMessage(true,
-                                                                       true,
-                                                                       retirementCost) +
-                                                                 ".", Username, true);
+                    CampaignMain.campaignMain.toUser("AM:You don't have enough money to dismiss " +
+                                                           m.getPilot().getName() +
+                                                           ". Bribing HQ to reassign him would cost " +
+                                                           CampaignMain.campaignMain.moneyOrFluMessage(true,
+                                                                 true,
+                                                                 retirementCost) +
+                                                           ".", Username, true);
                     return;
                 }
 
@@ -161,18 +162,18 @@ public class RetirePilotCommand implements Command {
                                             m.getPilot().getName() +
                                             " transfered out of your unit, but you'll have " +
                                             "to bribe someone at HQ. Are you willing to spend " +
-                                            server.campaign.CampaignMain.cm.moneyOrFluMessage(true,
+                                            CampaignMain.campaignMain.moneyOrFluMessage(true,
                                                   true,
                                                   retirementCost) +
                                             " to make an \"accident\" happen?<br>" +
                                             "<a href=\"MEKWARS/c retirepilot#" +
                                             mechid +
                                             "#CONFIRM\">Click here to pay the " +
-                                            server.campaign.CampaignMain.cm.moneyOrFluMessage(true,
+                                            CampaignMain.campaignMain.moneyOrFluMessage(true,
                                                   true,
                                                   retirementCost) +
                                             ".</a>";
-                    server.campaign.CampaignMain.cm.toUser(toReturn, Username, true);
+                    CampaignMain.campaignMain.toUser(toReturn, Username, true);
                     return;
                 }
 
@@ -186,10 +187,10 @@ public class RetirePilotCommand implements Command {
             // Figure out if the pilot is going to take his unit with him
             Boolean retireMechToo = false;
             String unitName = m.getModelName();
-            if (!server.campaign.CampaignMain.cm.getBooleanConfig("AllowPersonalPilotQueues") && (
-                  server.campaign.CampaignMain.cm.getIntegerConfig("RetiredPilotTakesMechChance") > 0)) {
-                if (server.campaign.CampaignMain.cm.getRandomNumber(100) <=
-                          server.campaign.CampaignMain.cm.getIntegerConfig("RetiredPilotTakesMechChance")) {
+            if (!CampaignMain.campaignMain.getBooleanConfig("AllowPersonalPilotQueues") && (
+                  CampaignMain.campaignMain.getIntegerConfig("RetiredPilotTakesMechChance") > 0)) {
+                if (CampaignMain.campaignMain.getRandomNumber(100) <=
+                          CampaignMain.campaignMain.getIntegerConfig("RetiredPilotTakesMechChance")) {
                     retireMechToo = true;
                 }
             }
@@ -207,7 +208,7 @@ public class RetirePilotCommand implements Command {
                 toReturn = "AM:You dismissed " +
                                  m.getPilot().getName() +
                                  " (-" +
-                                 server.campaign.CampaignMain.cm.moneyOrFluMessage(true, true, retirementCost) +
+                                 CampaignMain.campaignMain.moneyOrFluMessage(true, true, retirementCost) +
                                  ")." +
                                  (retireMechToo ?
                                         (" Unfortunately, he took his family's " + unitName + " with him.") :
@@ -218,11 +219,11 @@ public class RetirePilotCommand implements Command {
             if (retirementCost > 0) {p.addMoney(-retirementCost);}
 
             //tell the user about the retirement
-            server.campaign.CampaignMain.cm.toUser(toReturn, Username, true);
+            CampaignMain.campaignMain.toUser(toReturn, Username, true);
 
             //now, handle the pilot. if PPQs are in use leave the unit vacant,
             //otherwise add a new pilot from the faction queue.
-            boolean allowPPQs = Boolean.parseBoolean(server.campaign.CampaignMain.cm.getConfig(
+            boolean allowPPQs = Boolean.parseBoolean(CampaignMain.campaignMain.getConfig(
                   "AllowPersonalPilotQueues"));
             if (allowPPQs && m.isSinglePilotUnit()) {
                 SPilot pilot = new SPilot("Vacant", 99, 99);
@@ -233,15 +234,15 @@ public class RetirePilotCommand implements Command {
             }
 
             //continue normally. update unit and its armies, etc.
-            server.campaign.CampaignMain.cm.toUser("PL|UU|" + m.getId() + "|" + m.toString(true), Username, false);
+            CampaignMain.campaignMain.toUser("PL|UU|" + m.getId() + "|" + m.toString(true), Username, false);
 
             java.util.Enumeration<server.campaign.SArmy> f = p.getArmies().elements();
             while (f.hasMoreElements()) {
                 server.campaign.SArmy currArmy = f.nextElement();
                 if (currArmy.getUnit(m.getId()) != null) {
                     currArmy.setBV(0);//not null so recalc BV of the army
-                    server.campaign.CampaignMain.cm.toUser("PL|SAD|" + currArmy.toString(true, "%"), Username, false);
-                    server.campaign.CampaignMain.cm.getOpsManager()
+                    CampaignMain.campaignMain.toUser("PL|SAD|" + currArmy.toString(true, "%"), Username, false);
+                    CampaignMain.campaignMain.getOpsManager()
                           .checkOperations(currArmy, true);//update legal operations
                 }//end if(army contains the )
             }//end while(more armies to check)

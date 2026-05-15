@@ -17,6 +17,7 @@ package mekwars.server.campaign.commands.leader;
 
 import common.util.StringUtils;
 import megamek.common.Entity;
+import mekwars.server.campaign.CampaignMain;
 
 public class ResearchUnitCommand implements server.campaign.commands.Command {
 
@@ -31,18 +32,18 @@ public class ResearchUnitCommand implements server.campaign.commands.Command {
     public void process(java.util.StringTokenizer command, String Username) {
 
         if (accessLevel != 0) {
-            int userLevel = server.campaign.CampaignMain.cm.getServer().getUserLevel(Username);
+            int userLevel = CampaignMain.campaignMain.getServer().getUserLevel(Username);
             if (userLevel < getExecutionLevel()) {
-                server.campaign.CampaignMain.cm.toUser("AM:Insufficient access level for command. Level: " +
-                                                             userLevel +
-                                                             ". Required: " +
-                                                             accessLevel +
-                                                             ".", Username, true);
+                CampaignMain.campaignMain.toUser("AM:Insufficient access level for command. Level: " +
+                                                       userLevel +
+                                                       ". Required: " +
+                                                       accessLevel +
+                                                       ".", Username, true);
                 return;
             }
         }
 
-        server.campaign.SPlayer player = server.campaign.CampaignMain.cm.getPlayer(Username);
+        server.campaign.SPlayer player = CampaignMain.campaignMain.getPlayer(Username);
         server.campaign.SHouse house = player.getMyHouse();
         double cost = 0.0;
         double flu = 0.0;
@@ -51,23 +52,23 @@ public class ResearchUnitCommand implements server.campaign.commands.Command {
         String buildTableFile;
 
         if (house.isNewbieHouse()) {
-            server.campaign.CampaignMain.cm.toUser("AM:" +
-                                                         server.campaign.CampaignMain.cm.getConfig("NewbieHouseName") +
-                                                         " cannot research technology!", Username);
+            CampaignMain.campaignMain.toUser("AM:" +
+                                                   CampaignMain.campaignMain.getConfig("NewbieHouseName") +
+                                                   " cannot research technology!", Username);
             return;
         }
 
         if (ent.getModel().equals("OMG-UR-FD")) {
-            server.campaign.CampaignMain.cm.toUser("AM:Unknown Unit " + unitFileName, Username);
+            CampaignMain.campaignMain.toUser("AM:Unknown Unit " + unitFileName, Username);
             return;
         }
 
         int unitTechLevel = house.getTechResearchLevel(ent.getTechLevel());
 
         if (unitTechLevel > house.getTechResearchLevel()) {
-            server.campaign.CampaignMain.cm.toUser("AM:Your faction is unable to research " +
-                                                         StringUtils.aOrAn(ent.getShortNameRaw(), true, true) +
-                                                         " at this time, as your factions technology level is to low!",
+            CampaignMain.campaignMain.toUser("AM:Your faction is unable to research " +
+                                                   StringUtils.aOrAn(ent.getShortNameRaw(), true, true) +
+                                                   " at this time, as your factions technology level is to low!",
                   Username);
             return;
         }
@@ -84,57 +85,57 @@ public class ResearchUnitCommand implements server.campaign.commands.Command {
 
         if (unitList.containsKey(unitFileName) &&
                   unitList.get(unitFileName) >=
-                        server.campaign.CampaignMain.cm.getIntegerConfig("MaxUnitResearchPoints")) {
-            server.campaign.CampaignMain.cm.toUser("AM:Sorry you've researched this unit as much as possible.",
+                        CampaignMain.campaignMain.getIntegerConfig("MaxUnitResearchPoints")) {
+            CampaignMain.campaignMain.toUser("AM:Sorry you've researched this unit as much as possible.",
                   Username);
             return;
         }
 
-        cost = server.campaign.CampaignMain.cm.getDoubleConfig("BaseResearchCost");
+        cost = CampaignMain.campaignMain.getDoubleConfig("BaseResearchCost");
         if (unitTechLevel > 1) {
-            cost *= server.campaign.CampaignMain.cm.getDoubleConfig("ResearchTechLevelCostModifer") * unitTechLevel;
+            cost *= CampaignMain.campaignMain.getDoubleConfig("ResearchTechLevelCostModifer") * unitTechLevel;
         }
-        cost *= server.campaign.CampaignMain.cm.getDoubleConfig("ResearchCostModifier" +
-                                                                      server.campaign.SUnit.getTypeClassDesc(
-                                                                            server.campaign.SUnit.getEntityType(ent)));
-        cost *= server.campaign.CampaignMain.cm.getDoubleConfig("ResearchCostModifier" +
-                                                                      server.campaign.SUnit.getWeightClassDesc(
-                                                                            server.campaign.SUnit.getEntityWeight(ent)));
+        cost *= CampaignMain.campaignMain.getDoubleConfig("ResearchCostModifier" +
+                                                                server.campaign.SUnit.getTypeClassDesc(
+                                                                      server.campaign.SUnit.getEntityType(ent)));
+        cost *= CampaignMain.campaignMain.getDoubleConfig("ResearchCostModifier" +
+                                                                server.campaign.SUnit.getWeightClassDesc(
+                                                                      server.campaign.SUnit.getEntityWeight(ent)));
 
         cost = Math.round(cost);
 
-        flu = server.campaign.CampaignMain.cm.getDoubleConfig("BaseResearchFlu");
+        flu = CampaignMain.campaignMain.getDoubleConfig("BaseResearchFlu");
         if (unitTechLevel > 1) {
-            flu *= server.campaign.CampaignMain.cm.getDoubleConfig("ResearchTechLevelFluModifer") * unitTechLevel;
+            flu *= CampaignMain.campaignMain.getDoubleConfig("ResearchTechLevelFluModifer") * unitTechLevel;
         }
-        flu *= server.campaign.CampaignMain.cm.getDoubleConfig("ResearchFluModifier" +
-                                                                     server.campaign.SUnit.getTypeClassDesc(
-                                                                           server.campaign.SUnit.getEntityType(ent)));
-        flu *= server.campaign.CampaignMain.cm.getDoubleConfig("ResearchFluModifier" +
-                                                                     server.campaign.SUnit.getWeightClassDesc(
-                                                                           server.campaign.SUnit.getEntityWeight(ent)));
+        flu *= CampaignMain.campaignMain.getDoubleConfig("ResearchFluModifier" +
+                                                               server.campaign.SUnit.getTypeClassDesc(
+                                                                     server.campaign.SUnit.getEntityType(ent)));
+        flu *= CampaignMain.campaignMain.getDoubleConfig("ResearchFluModifier" +
+                                                               server.campaign.SUnit.getWeightClassDesc(
+                                                                     server.campaign.SUnit.getEntityWeight(ent)));
 
         flu = Math.round(flu);
 
         if (player.getMoney() < cost) {
-            server.campaign.CampaignMain.cm.toUser("AM:You need " +
-                                                         server.campaign.CampaignMain.cm.moneyOrFluMessage(true,
-                                                               true,
-                                                               (int) cost) +
-                                                         " to research " +
-                                                         StringUtils.aOrAn(ent.getShortNameRaw(), true, true) +
-                                                         ".", Username);
+            CampaignMain.campaignMain.toUser("AM:You need " +
+                                                   CampaignMain.campaignMain.moneyOrFluMessage(true,
+                                                         true,
+                                                         (int) cost) +
+                                                   " to research " +
+                                                   StringUtils.aOrAn(ent.getShortNameRaw(), true, true) +
+                                                   ".", Username);
             return;
         }
 
         if (player.getInfluence() < flu) {
-            server.campaign.CampaignMain.cm.toUser("AM:You need " +
-                                                         server.campaign.CampaignMain.cm.moneyOrFluMessage(false,
-                                                               true,
-                                                               (int) flu) +
-                                                         " to research " +
-                                                         StringUtils.aOrAn(ent.getShortNameRaw(), true, true) +
-                                                         ".", Username);
+            CampaignMain.campaignMain.toUser("AM:You need " +
+                                                   CampaignMain.campaignMain.moneyOrFluMessage(false,
+                                                         true,
+                                                         (int) flu) +
+                                                   " to research " +
+                                                   StringUtils.aOrAn(ent.getShortNameRaw(), true, true) +
+                                                   ".", Username);
             return;
         }
 
@@ -153,17 +154,17 @@ public class ResearchUnitCommand implements server.campaign.commands.Command {
               server.campaign.BuildTable.REWARD);
         server.campaign.BuildTable.saveBuildTableFile(new java.io.File(buildTableFile), unitList);
 
-        server.campaign.CampaignMain.cm.toUser("AM:You research " +
-                                                     StringUtils.aOrAn(ent.getShortNameRaw(), true, true) +
-                                                     " for " +
-                                                     server.campaign.CampaignMain.cm.moneyOrFluMessage(true,
-                                                           true,
-                                                           (int) cost) +
-                                                     " and " +
-                                                     server.campaign.CampaignMain.cm.moneyOrFluMessage(false,
-                                                           true,
-                                                           (int) flu), Username);
-        server.campaign.CampaignMain.cm.doSendHouseMail(house,
+        CampaignMain.campaignMain.toUser("AM:You research " +
+                                               StringUtils.aOrAn(ent.getShortNameRaw(), true, true) +
+                                               " for " +
+                                               CampaignMain.campaignMain.moneyOrFluMessage(true,
+                                                     true,
+                                                     (int) cost) +
+                                               " and " +
+                                               CampaignMain.campaignMain.moneyOrFluMessage(false,
+                                                     true,
+                                                     (int) flu), Username);
+        CampaignMain.campaignMain.doSendHouseMail(house,
               "NOTE",
               Username + " has researched " + StringUtils.aOrAn(ent.getShortNameRaw(), true, true) + ".");
     }

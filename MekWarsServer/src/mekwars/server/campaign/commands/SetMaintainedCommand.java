@@ -18,6 +18,7 @@ package mekwars.server.campaign.commands;
 
 
 import common.Unit;
+import mekwars.server.campaign.CampaignMain;
 
 public class SetMaintainedCommand implements Command {
 
@@ -27,27 +28,27 @@ public class SetMaintainedCommand implements Command {
     public void process(java.util.StringTokenizer command, String Username) {
 
         if (accessLevel != 0) {
-            int userLevel = server.campaign.CampaignMain.cm.getServer().getUserLevel(Username);
+            int userLevel = CampaignMain.campaignMain.getServer().getUserLevel(Username);
             if (userLevel < getExecutionLevel()) {
-                server.campaign.CampaignMain.cm.toUser("AM:Insufficient access level for command. Level: " +
-                                                             userLevel +
-                                                             ". Required: " +
-                                                             accessLevel +
-                                                             ".", Username, true);
+                CampaignMain.campaignMain.toUser("AM:Insufficient access level for command. Level: " +
+                                                       userLevel +
+                                                       ". Required: " +
+                                                       accessLevel +
+                                                       ".", Username, true);
                 return;
             }
         }
 
-        if (server.campaign.CampaignMain.cm.isUsingAdvanceRepair()) {return;}
+        if (CampaignMain.campaignMain.isUsingAdvanceRepair()) {return;}
 
-        server.campaign.SPlayer p = server.campaign.CampaignMain.cm.getPlayer(Username);
+        server.campaign.SPlayer p = CampaignMain.campaignMain.getPlayer(Username);
         int numtoset = 0;//ID# of the mech which is to get set as maintained
 
         try {
             numtoset = Integer.parseInt(command.nextToken());
         }//end try
         catch (NumberFormatException ex) {
-            server.campaign.CampaignMain.cm.toUser(
+            CampaignMain.campaignMain.toUser(
                   "AM:SetMaintained command failed. Check your input. It should be something like this: /c setmaintained#12",
                   Username,
                   true);
@@ -56,19 +57,19 @@ public class SetMaintainedCommand implements Command {
 
         server.campaign.SUnit unitToSet = p.getUnit(numtoset);
         if (unitToSet == null) {
-            server.campaign.CampaignMain.cm.toUser("AM:Invalid id number. Make sure you're using the right unit number.",
+            CampaignMain.campaignMain.toUser("AM:Invalid id number. Make sure you're using the right unit number.",
                   Username,
                   true);
             return;
         }
 
         if (unitToSet.getStatus() == Unit.STATUS_OK) {
-            server.campaign.CampaignMain.cm.toUser("AM:This unit is already maintained.", Username, true);
+            CampaignMain.campaignMain.toUser("AM:This unit is already maintained.", Username, true);
             return;
         }
 
         if (unitToSet.getStatus() == Unit.STATUS_FORSALE) {
-            server.campaign.CampaignMain.cm.toUser(
+            CampaignMain.campaignMain.toUser(
                   "AM:You may not change the maintenance status of a unit which is being sold.",
                   Username,
                   true);
@@ -92,46 +93,46 @@ public class SetMaintainedCommand implements Command {
                 String plural = "";
                 if (numTechs == 1) {plural = "s";}
 
-                server.campaign.CampaignMain.cm.toUser("AM:You need to hire " +
-                                                             numTechs +
-                                                             " more technician" +
-                                                             plural +
-                                                             " in order to maintain this unit. Doing so would " +
-                                                             " cost " +
-                                                             server.campaign.CampaignMain.cm.moneyOrFluMessage(true,
-                                                                   false,
-                                                                   techCost) +
-                                                             ", and you only have " +
-                                                             server.campaign.CampaignMain.cm.moneyOrFluMessage(true,
-                                                                   true,
-                                                                   p.getMoney()) +
-                                                             ".", Username, true);
+                CampaignMain.campaignMain.toUser("AM:You need to hire " +
+                                                       numTechs +
+                                                       " more technician" +
+                                                       plural +
+                                                       " in order to maintain this unit. Doing so would " +
+                                                       " cost " +
+                                                       CampaignMain.campaignMain.moneyOrFluMessage(true,
+                                                             false,
+                                                             techCost) +
+                                                       ", and you only have " +
+                                                       CampaignMain.campaignMain.moneyOrFluMessage(true,
+                                                             true,
+                                                             p.getMoney()) +
+                                                       ".", Username, true);
                 return;
             }
 
             String toReturn = "AM:You must hire " +
                                     numTechs +
                                     " more technicians in order to maintain this unit. Doing so will cost " +
-                                    server.campaign.CampaignMain.cm.moneyOrFluMessage(true, true, techCost) +
+                                    CampaignMain.campaignMain.moneyOrFluMessage(true, true, techCost) +
                                     ".<br>";
             toReturn += "AM:<a href=\"MEKWARS/c hireandmaintain#" +
                               numTechs +
                               "#" +
                               numtoset +
                               "\">Click here to hire the technicians and maintain the unit.</a>";
-            server.campaign.CampaignMain.cm.toUser(toReturn, Username, true);
+            CampaignMain.campaignMain.toUser(toReturn, Username, true);
             return;
         }//end if(not enough techs to maintain)
 
         //passes checks. now actually make the unit maintained.
         unitToSet.setStatus(Unit.STATUS_OK);
-        server.campaign.CampaignMain.cm.toUser("PL|SB|" + p.getTotalMekBays(), Username, false);
-        server.campaign.CampaignMain.cm.toUser("PL|SF|" + p.getFreeBays(), Username, false);
-        server.campaign.CampaignMain.cm.toUser("PL|SUS|" + unitToSet.getId() + "#" + Unit.STATUS_OK, Username, false);
-        server.campaign.CampaignMain.cm.toUser(unitToSet.getPilot().getName() +
-                                                     "'s " +
-                                                     unitToSet.getModelName() +
-                                                     " is now being maintained.", Username, true);
+        CampaignMain.campaignMain.toUser("PL|SB|" + p.getTotalMekBays(), Username, false);
+        CampaignMain.campaignMain.toUser("PL|SF|" + p.getFreeBays(), Username, false);
+        CampaignMain.campaignMain.toUser("PL|SUS|" + unitToSet.getId() + "#" + Unit.STATUS_OK, Username, false);
+        CampaignMain.campaignMain.toUser(unitToSet.getPilot().getName() +
+                                               "'s " +
+                                               unitToSet.getModelName() +
+                                               " is now being maintained.", Username, true);
         p.setSave();
 
     }//end process()

@@ -17,6 +17,8 @@
 package mekwars.server.campaign.commands;
 
 
+import mekwars.server.campaign.CampaignMain;
+
 /*
  * A command which is used to pase lane or army information
  * into a factionchat stream. Convenience command used by links
@@ -30,22 +32,22 @@ public class ShowToHouseCommand implements Command {
     public void process(java.util.StringTokenizer command, String Username) {
 
         if (accessLevel != 0) {
-            int userLevel = server.campaign.CampaignMain.cm.getServer().getUserLevel(Username);
+            int userLevel = CampaignMain.campaignMain.getServer().getUserLevel(Username);
             if (userLevel < getExecutionLevel()) {
-                server.campaign.CampaignMain.cm.toUser("AM:Insufficient access level for command. Level: " +
-                                                             userLevel +
-                                                             ". Required: " +
-                                                             accessLevel +
-                                                             ".", Username, true);
+                CampaignMain.campaignMain.toUser("AM:Insufficient access level for command. Level: " +
+                                                       userLevel +
+                                                       ". Required: " +
+                                                       accessLevel +
+                                                       ".", Username, true);
                 return;
             }
         }
 
         //get the player
-        server.campaign.SPlayer p = server.campaign.CampaignMain.cm.getPlayer(Username);
+        server.campaign.SPlayer p = CampaignMain.campaignMain.getPlayer(Username);
 
         if (p == null) {
-            server.campaign.CampaignMain.cm.toUser("AM:Null player. Report this to an admin. Show fails.",
+            CampaignMain.campaignMain.toUser("AM:Null player. Report this to an admin. Show fails.",
                   Username,
                   true);
             return;
@@ -55,7 +57,7 @@ public class ShowToHouseCommand implements Command {
         try {
             showType = command.nextToken();
         } catch (Exception e) {
-            server.campaign.CampaignMain.cm.toUser("AM:Improper usage. Try: /c showtofaction#type#id", Username, true);
+            CampaignMain.campaignMain.toUser("AM:Improper usage. Try: /c showtofaction#type#id", Username, true);
             return;
         }
 
@@ -64,25 +66,25 @@ public class ShowToHouseCommand implements Command {
         try {
             id = Integer.parseInt(command.nextToken());
         } catch (Exception e) {
-            server.campaign.CampaignMain.cm.toUser("AM:Improper usage. Try: /c showtofaction#type#id", Username, true);
+            CampaignMain.campaignMain.toUser("AM:Improper usage. Try: /c showtofaction#type#id", Username, true);
             return;
         }
 
         //determine type and generate a return
         try {
             if (showType.toLowerCase().startsWith("a")) {
-                server.campaign.CampaignMain.cm.doSendHouseMail(p.getMyHouse(),
+                CampaignMain.campaignMain.doSendHouseMail(p.getMyHouse(),
                       Username,
                       "My army: " + p.getArmy(id).getDescription(true, false, false));
             }
             if (showType.toLowerCase().startsWith("u")) {
-                server.campaign.CampaignMain.cm.doSendHouseMail(p.getMyHouse(),
+                CampaignMain.campaignMain.doSendHouseMail(p.getMyHouse(),
                       Username,
                       "My unit: " + p.getUnit(id).getDescription(false));
             }
             return;
         } catch (Exception e) {
-            server.campaign.CampaignMain.cm.toUser("AM:Error while attempting to Show. Incorrect ID?", Username, true);
+            CampaignMain.campaignMain.toUser("AM:Error while attempting to Show. Incorrect ID?", Username, true);
             return;
         }
 

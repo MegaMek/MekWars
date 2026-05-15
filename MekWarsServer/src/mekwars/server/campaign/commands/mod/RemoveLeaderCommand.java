@@ -16,6 +16,8 @@
 
 package mekwars.server.campaign.commands.mod;
 
+import mekwars.server.campaign.CampaignMain;
+
 /**
  * Remove a part from a player.
  */
@@ -29,13 +31,13 @@ public class RemoveLeaderCommand implements server.campaign.commands.Command {
     public void process(java.util.StringTokenizer command, String Username) {
 
         if (accessLevel != 0) {
-            int userLevel = server.campaign.CampaignMain.cm.getServer().getUserLevel(Username);
+            int userLevel = CampaignMain.campaignMain.getServer().getUserLevel(Username);
             if (userLevel < getExecutionLevel()) {
-                server.campaign.CampaignMain.cm.toUser("AM:Insufficient access level for command. Level: " +
-                                                             userLevel +
-                                                             ". Required: " +
-                                                             accessLevel +
-                                                             ".", Username, true);
+                CampaignMain.campaignMain.toUser("AM:Insufficient access level for command. Level: " +
+                                                       userLevel +
+                                                       ". Required: " +
+                                                       accessLevel +
+                                                       ".", Username, true);
                 return;
             }
         }
@@ -43,25 +45,25 @@ public class RemoveLeaderCommand implements server.campaign.commands.Command {
 
         try {
             String target = command.nextToken();
-            player = server.campaign.CampaignMain.cm.getPlayer(target);
+            player = CampaignMain.campaignMain.getPlayer(target);
             player.getMyHouse().removeLeader(player.getName());
-            int level = server.campaign.CampaignMain.cm.getIntegerConfig("factionLeaderLevel");
+            int level = CampaignMain.campaignMain.getIntegerConfig("factionLeaderLevel");
             //if they where just a normal leader then send them back to level 2
             //if they where giving higher then normal access because of mods or admin
             //status or even a admin lacky then let them keep their level.
             if (player.getPassword().getAccess() <= level) {
                 level = 2;
-                server.campaign.CampaignMain.cm.updatePlayersAccessLevel(target, level);
+                CampaignMain.campaignMain.updatePlayersAccessLevel(target, level);
             }
-            server.campaign.CampaignMain.cm.toUser("AM:You have been demoted as a faction leader by " + Username + ".",
+            CampaignMain.campaignMain.toUser("AM:You have been demoted as a faction leader by " + Username + ".",
                   target);
-            server.campaign.CampaignMain.cm.doSendHouseMail(player.getMyHouse(),
+            CampaignMain.campaignMain.doSendHouseMail(player.getMyHouse(),
                   "Note",
                   player.getName() + " has been demoted from the faction leadership.");
-            server.campaign.CampaignMain.cm.doSendModMail("NOTE",
+            CampaignMain.campaignMain.doSendModMail("NOTE",
                   Username + " has removed " + player.getName() + " as a faction leader.");
         } catch (Exception ex) {
-            server.campaign.CampaignMain.cm.toUser("Invalid syntax: /addleader UserName", Username);
+            CampaignMain.campaignMain.toUser("Invalid syntax: /addleader UserName", Username);
         }
 
     }

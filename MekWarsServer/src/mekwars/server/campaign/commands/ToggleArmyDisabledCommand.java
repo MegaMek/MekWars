@@ -17,6 +17,8 @@
 
     package mekwars.server.campaign.commands;
 
+    import mekwars.server.campaign.CampaignMain;
+
     public class ToggleArmyDisabledCommand implements Command {
         int accessLevel = 0;
         String syntax = "";
@@ -24,20 +26,20 @@
         public void process(java.util.StringTokenizer command, String Username) {
 
             if (accessLevel != 0) {
-                int userLevel = server.campaign.CampaignMain.cm.getServer().getUserLevel(Username);
+                int userLevel = CampaignMain.campaignMain.getServer().getUserLevel(Username);
                 if (userLevel < getExecutionLevel()) {
-                    server.campaign.CampaignMain.cm.toUser("AM:Insufficient access level for command. Level: " +
-                                                                 userLevel +
-                                                                 ". Required: " +
-                                                                 accessLevel +
-                                                                 ".", Username, true);
+                    CampaignMain.campaignMain.toUser("AM:Insufficient access level for command. Level: " +
+                                                           userLevel +
+                                                           ". Required: " +
+                                                           accessLevel +
+                                                           ".", Username, true);
                     return;
                 }
             }
 
-            server.campaign.SPlayer p = server.campaign.CampaignMain.cm.getPlayer(Username);
+            server.campaign.SPlayer p = CampaignMain.campaignMain.getPlayer(Username);
             if (p == null) {
-                server.campaign.CampaignMain.cm.toUser("AM:Null Player while Disabling/Enabling army. Report This!.",
+                CampaignMain.campaignMain.toUser("AM:Null Player while Disabling/Enabling army. Report This!.",
                       Username,
                       true);
                 return;
@@ -46,34 +48,34 @@
             try {
                 aid = Integer.parseInt((String) command.nextElement());
             } catch (Exception e) {
-                server.campaign.CampaignMain.cm.toUser("AM:Improper format. Try: /c togglearmydisabled#ID",
+                CampaignMain.campaignMain.toUser("AM:Improper format. Try: /c togglearmydisabled#ID",
                       Username,
                       true);
                 return;
             }
             server.campaign.SArmy army = p.getArmy(aid);
             if (army == null) {
-                server.campaign.CampaignMain.cm.toUser("AM:Could not find an Army #" + aid + ".", Username, true);
+                CampaignMain.campaignMain.toUser("AM:Could not find an Army #" + aid + ".", Username, true);
                 return;
             }
 
-            if (server.campaign.CampaignMain.cm.getOpsManager().getShortOpForPlayer(p) != null) {
-                server.campaign.CampaignMain.cm.toUser("AM:You may not modify your armies while in a game.",
+            if (CampaignMain.campaignMain.getOpsManager().getShortOpForPlayer(p) != null) {
+                CampaignMain.campaignMain.toUser("AM:You may not modify your armies while in a game.",
                       Username,
                       true);
                 return;
             }
 
             if (p.getDutyStatus() == server.campaign.SPlayer.STATUS_ACTIVE) {
-                server.campaign.CampaignMain.cm.toUser("AM:You may not modify armies while active.", Username, true);
+                CampaignMain.campaignMain.toUser("AM:You may not modify armies while active.", Username, true);
                 return;
             }
 
             army.toggleArmyDisabled();
             p.resetWeightedArmyNumber();
-            server.campaign.CampaignMain.cm.toUser("AM:Army " +
-                                                         army.getID() +
-                                                         (army.isDisabled() ? " disabled." : " enabled."),
+            CampaignMain.campaignMain.toUser("AM:Army " +
+                                                   army.getID() +
+                                                   (army.isDisabled() ? " disabled." : " enabled."),
                   Username,
                   true);
         }

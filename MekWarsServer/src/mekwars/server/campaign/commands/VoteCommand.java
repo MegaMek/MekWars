@@ -17,6 +17,7 @@
 
 package mekwars.server.campaign.commands;
 
+import mekwars.server.campaign.CampaignMain;
 import server.campaign.votes.Vote;
 import server.campaign.votes.VoteManager;
 
@@ -29,18 +30,18 @@ public class VoteCommand implements Command {
     public void process(java.util.StringTokenizer command, String Username) {
 
         if (accessLevel != 0) {
-            int userLevel = server.campaign.CampaignMain.cm.getServer().getUserLevel(Username);
+            int userLevel = CampaignMain.campaignMain.getServer().getUserLevel(Username);
             if (userLevel < getExecutionLevel()) {
-                server.campaign.CampaignMain.cm.toUser("AM:Insufficient access level for command. Level: " +
-                                                             userLevel +
-                                                             ". Required: " +
-                                                             accessLevel +
-                                                             ".", Username, true);
+                CampaignMain.campaignMain.toUser("AM:Insufficient access level for command. Level: " +
+                                                       userLevel +
+                                                       ". Required: " +
+                                                       accessLevel +
+                                                       ".", Username, true);
                 return;
             }
         }
 
-        server.campaign.SPlayer castingPlayer = server.campaign.CampaignMain.cm.getPlayer(Username);
+        server.campaign.SPlayer castingPlayer = CampaignMain.campaignMain.getPlayer(Username);
 
         String recipientName = "";//blank string
         int type = Vote.ABSTAIN_VOTE;//null vote type
@@ -50,7 +51,7 @@ public class VoteCommand implements Command {
             type = Integer.parseInt(command.nextToken());
         }//end try
         catch (NumberFormatException ex) {
-            server.campaign.CampaignMain.cm.toUser(
+            CampaignMain.campaignMain.toUser(
                   "AM:Vote command failed. Check your input. It should be something like this: /c vote#Name#2",
                   Username,
                   true);
@@ -58,41 +59,41 @@ public class VoteCommand implements Command {
         }//end catch
 
         //break out if voting isnt enabled on the server
-        boolean canVote = Boolean.parseBoolean(server.campaign.CampaignMain.cm.getConfig("VotingEnabled"));
+        boolean canVote = Boolean.parseBoolean(CampaignMain.campaignMain.getConfig("VotingEnabled"));
         if (!canVote) {
-            server.campaign.CampaignMain.cm.toUser("AM:Voting is disabled on this server.", Username, true);
+            CampaignMain.campaignMain.toUser("AM:Voting is disabled on this server.", Username, true);
             return;
         }
 
         //break out if a player is trying to vote for himself
         if (castingPlayer.getName().equals(recipientName)) {
-            server.campaign.CampaignMain.cm.toUser("AM:You may not vote for youself.", Username, true);
+            CampaignMain.campaignMain.toUser("AM:You may not vote for youself.", Username, true);
             return;
         }
 
         //break out on unknown vote type
         if (type < Vote.ABSTAIN_VOTE || type > Vote.NEGATIVE_VOTE) {
-            server.campaign.CampaignMain.cm.toUser("AM:You tried to use an illegal vote type. Types are:" +
-                                                         "<br> Positive: " + Vote.POSITIVE_VOTE +
-                                                         "<br> Negative: " + Vote.NEGATIVE_VOTE +
-                                                         "<br> Abstain: " + Vote.ABSTAIN_VOTE, Username, true);
+            CampaignMain.campaignMain.toUser("AM:You tried to use an illegal vote type. Types are:" +
+                                                   "<br> Positive: " + Vote.POSITIVE_VOTE +
+                                                   "<br> Negative: " + Vote.NEGATIVE_VOTE +
+                                                   "<br> Abstain: " + Vote.ABSTAIN_VOTE, Username, true);
             return;
         }
 
         //break out if the player doesnt have enough votes to cast again
-        int votesCast = server.campaign.CampaignMain.cm.getVoteManager().getAllVotesBy(castingPlayer).size();
+        int votesCast = CampaignMain.campaignMain.getVoteManager().getAllVotesBy(castingPlayer).size();
         if (votesCast > castingPlayer.getNumberOfVotesAllowed()) {
-            server.campaign.CampaignMain.cm.toUser("AM:You have no votes left to cast. Retract one of your current" +
-                                                         "votes and try again.", Username, true);
+            CampaignMain.campaignMain.toUser("AM:You have no votes left to cast. Retract one of your current" +
+                                                   "votes and try again.", Username, true);
             return;
         }
 
         //get the SPlayer who is receiving for the next couple of checks
-        server.campaign.SPlayer recipientPlayer = server.campaign.CampaignMain.cm.getPlayer(recipientName);
+        server.campaign.SPlayer recipientPlayer = CampaignMain.campaignMain.getPlayer(recipientName);
 
         //break out if the recieving player isnt known
         if (recipientPlayer == null) {
-            server.campaign.CampaignMain.cm.toUser("AM:The player you tried to vote for doesn't exist.",
+            CampaignMain.campaignMain.toUser("AM:The player you tried to vote for doesn't exist.",
                   Username,
                   true);
             return;
@@ -100,7 +101,7 @@ public class VoteCommand implements Command {
 
         //break out if receiving player isnt in the same faction as the caster
         if (!castingPlayer.getMyHouse().equals(recipientPlayer.getMyHouse())) {
-            server.campaign.CampaignMain.cm.toUser("AM:You may only vote for players in your own faction.",
+            CampaignMain.campaignMain.toUser("AM:You may only vote for players in your own faction.",
                   Username,
                   true);
             return;
@@ -111,11 +112,11 @@ public class VoteCommand implements Command {
 
         //Grab the VoteManager in order to run a duplication check.
         //Make sure a matching vote isnt already being stored.
-        VoteManager voteManager = server.campaign.CampaignMain.cm.getVoteManager();
+        VoteManager voteManager = CampaignMain.campaignMain.getVoteManager();
 
         //break out if the caster has already voted for this player
         if (voteManager.checkForDuplicate(toCast)) {
-            server.campaign.CampaignMain.cm.toUser("AM:You have already cast a vote for this player.", Username, true);
+            CampaignMain.campaignMain.toUser("AM:You have already cast a vote for this player.", Username, true);
             return;
         }
 
@@ -123,7 +124,7 @@ public class VoteCommand implements Command {
         boolean voteAdded = voteManager.addVote(toCast);
 
         if (!voteAdded) {
-            server.campaign.CampaignMain.cm.toUser(
+            CampaignMain.campaignMain.toUser(
                   "AM:Your vote was not counted. This is a catchall error -- please contact your server " +
                         "admin and ask them to investigate, or file a bug report.",
                   Username,
@@ -132,7 +133,7 @@ public class VoteCommand implements Command {
         }
 
         //vote was added properly
-        server.campaign.CampaignMain.cm.toUser("AM:You have cast a vote for " + recipientName, Username, true);
+        CampaignMain.campaignMain.toUser("AM:You have cast a vote for " + recipientName, Username, true);
         return;
 
     }

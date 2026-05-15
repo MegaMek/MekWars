@@ -20,6 +20,7 @@ import common.Unit;
 import common.util.MWLogger;
 import megamek.common.IEntityRemovalConditions;
 import megamek.common.Mech;
+import mekwars.server.campaign.CampaignMain;
 
 
 public class OperationEntity {
@@ -93,11 +94,11 @@ public class OperationEntity {
                 RAint = Integer.parseInt(ST.nextToken());
                 gyrohits = Integer.parseInt(ST.nextToken());
                 cockpitType = Integer.parseInt(ST.nextToken());
-                if (server.campaign.CampaignMain.cm.isUsingAdvanceRepair() && ST.hasMoreElements()) {
+                if (CampaignMain.campaignMain.isUsingAdvanceRepair() && ST.hasMoreElements()) {
                     unitDamage = ST.nextToken();
                 }
                 unitFileName = ST.nextToken();
-                server.campaign.SPlayer player = server.campaign.CampaignMain.cm.getPlayer(ownerName);
+                server.campaign.SPlayer player = CampaignMain.campaignMain.getPlayer(ownerName);
                 if (player != null) {
                     server.campaign.SUnit currUnit = player.getUnit(ID);
                     if (currUnit != null) {currUnit.setLastCombatPilot(currUnit.getPilot().getPilotId());}
@@ -110,8 +111,8 @@ public class OperationEntity {
                 isSalvage = Boolean.parseBoolean(ST.nextToken());
                 isImmobile = Boolean.parseBoolean(ST.nextToken());
                 crewDead = Boolean.parseBoolean(ST.nextToken());
-                server.campaign.SPlayer player = server.campaign.CampaignMain.cm.getPlayer(ownerName);
-                if (server.campaign.CampaignMain.cm.isUsingAdvanceRepair() && ST.hasMoreElements()) {
+                server.campaign.SPlayer player = CampaignMain.campaignMain.getPlayer(ownerName);
+                if (CampaignMain.campaignMain.isUsingAdvanceRepair() && ST.hasMoreElements()) {
                     unitDamage = ST.nextToken();
                 }
                 if (player != null && ID != -1) {
@@ -124,7 +125,7 @@ public class OperationEntity {
                 isSalvage = Boolean.parseBoolean(ST.nextToken());
                 isImmobile = Boolean.parseBoolean(ST.nextToken());
                 crewDead = Boolean.parseBoolean(ST.nextToken());
-                server.campaign.SPlayer player = server.campaign.CampaignMain.cm.getPlayer(ownerName);
+                server.campaign.SPlayer player = CampaignMain.campaignMain.getPlayer(ownerName);
                 if (player != null && ID != -1) {
                     server.campaign.SUnit currUnit = player.getUnit(ID);
                     if (currUnit != null && currUnit.getPilot() != null) //auto-assigned artillery throwing NPEs
@@ -160,7 +161,7 @@ public class OperationEntity {
         ownerName = playername;
 
         try {
-            MMUnitType = server.campaign.CampaignMain.cm.getPlayer(ownerName).getUnit(ID).getType();
+            MMUnitType = CampaignMain.campaignMain.getPlayer(ownerName).getUnit(ID).getType();
         } catch (Exception ex) {}//unit is not owned by the player. most likely auto artillary or gun emplacements.
 
     }//end Secondary Constructor
@@ -195,7 +196,7 @@ public class OperationEntity {
     }
 
     public server.campaign.SPlayer getOwner() {
-        return server.campaign.CampaignMain.cm.getPlayer(ownerName);
+        return CampaignMain.campaignMain.getPlayer(ownerName);
     }
 
     /**
@@ -217,7 +218,7 @@ public class OperationEntity {
 
         if (this.getRemovalReason() == IEntityRemovalConditions.REMOVE_DEVASTATED) {return false;}
 
-        if (server.campaign.CampaignMain.cm.getBooleanConfig("UsePartsRepair") &&
+        if (CampaignMain.campaignMain.getBooleanConfig("UsePartsRepair") &&
                   (MMUnitType == Unit.MEK || MMUnitType == Unit.QUAD || MMUnitType == Unit.VEHICLE)) {return true;}
 
         if (MMUnitType == Unit.MEK || MMUnitType == Unit.QUAD) {return (this.getCTint() > 0);} else if (MMUnitType ==
@@ -234,6 +235,10 @@ public class OperationEntity {
         return RemovalReason;
     }
 
+    public void setRemovalReason(int reason) {
+        RemovalReason = reason;
+    }
+
     /**
      * @return the entity's CT internals
      */
@@ -246,10 +251,6 @@ public class OperationEntity {
      */
     public void setCTint(int newInternals) {
         CTint = newInternals;
-    }
-
-    public void setRemovalReason(int reason) {
-        RemovalReason = reason;
     }
 
     public boolean isLiving() {
@@ -279,7 +280,7 @@ public class OperationEntity {
          * with no leg or a destroyed gyro is presumed salvageable. Vehicles which
          * are immobile are also returned as potential salvage.
          */
-        if (server.campaign.CampaignMain.cm.getBooleanConfig("ForceSalvage")) {
+        if (CampaignMain.campaignMain.getBooleanConfig("ForceSalvage")) {
             if (MMUnitType == Unit.MEK) {
                 if (this.getLLint() <= 0 || this.getRLint() <= 0 || this.getGyrohits() >= 2) {return false;}
             } else if (MMUnitType == Unit.QUAD) {

@@ -17,6 +17,7 @@
 package mekwars.server.campaign.commands;
 
 import common.Unit;
+import mekwars.server.campaign.CampaignMain;
 import server.campaign.market2.MarketListing;
 
 public class BidCommand implements Command {
@@ -28,21 +29,21 @@ public class BidCommand implements Command {
 
         //access check
         if (accessLevel != 0) {
-            int userLevel = server.campaign.CampaignMain.cm.getServer().getUserLevel(Username);
+            int userLevel = CampaignMain.campaignMain.getServer().getUserLevel(Username);
             if (userLevel < getExecutionLevel()) {
-                server.campaign.CampaignMain.cm.toUser("AM:Insufficient access level for command. Level: " +
-                                                             userLevel +
-                                                             ". Required: " +
-                                                             accessLevel +
-                                                             ".", Username, true);
+                CampaignMain.campaignMain.toUser("AM:Insufficient access level for command. Level: " +
+                                                       userLevel +
+                                                       ". Required: " +
+                                                       accessLevel +
+                                                       ".", Username, true);
                 return;
             }
         }
 
         //load the SPlayer
-        server.campaign.SPlayer p = server.campaign.CampaignMain.cm.getPlayer(Username);
+        server.campaign.SPlayer p = CampaignMain.campaignMain.getPlayer(Username);
         if (p == null) {
-            server.campaign.CampaignMain.cm.toUser("AM:Null SPlayer while bidding. Report immediately!",
+            CampaignMain.campaignMain.toUser("AM:Null SPlayer while bidding. Report immediately!",
                   Username,
                   true);
             return;
@@ -55,13 +56,13 @@ public class BidCommand implements Command {
             auctionID = Integer.parseInt(command.nextToken());
             bidAmount = Integer.parseInt(command.nextToken());
         } catch (Exception e) {
-            server.campaign.CampaignMain.cm.toUser("AM:Improper format. Try: /c bid#AuctionID#Amount", Username, true);
+            CampaignMain.campaignMain.toUser("AM:Improper format. Try: /c bid#AuctionID#Amount", Username, true);
             return;
         }
 
         //players whose factions don't have market buying access cannot bid
         if (!p.getMyHouse().mayBuyFromBM()) {
-            server.campaign.CampaignMain.cm.toUser(
+            CampaignMain.campaignMain.toUser(
                   "AM:You are not allowed to buy units from the market. Your faction forbids it!",
                   Username,
                   true);
@@ -69,9 +70,9 @@ public class BidCommand implements Command {
         }
 
         // check xp
-        int minBMEXP = server.campaign.CampaignMain.cm.getIntegerConfig("MinEXPforBMBuying");
+        int minBMEXP = CampaignMain.campaignMain.getIntegerConfig("MinEXPforBMBuying");
         if (p.getExperience() < minBMEXP) {
-            server.campaign.CampaignMain.cm.toUser(
+            CampaignMain.campaignMain.toUser(
                   "AM:You are not allowed to buy units from the Market. Required Experience: " + minBMEXP + ".",
                   Username,
                   true);
@@ -79,57 +80,57 @@ public class BidCommand implements Command {
         }
 
         //check the auction ID
-        MarketListing auction = server.campaign.CampaignMain.cm.getMarket().getListingByID(auctionID);
+        MarketListing auction = CampaignMain.campaignMain.getMarket().getListingByID(auctionID);
         if (auction == null) {
-            server.campaign.CampaignMain.cm.toUser("AM:There is no auction with ID#" + auctionID + ".", Username, true);
+            CampaignMain.campaignMain.toUser("AM:There is no auction with ID#" + auctionID + ".", Username, true);
             return;
         }
 
         //make sure the bid meets the minimum requirement
         int minBid = auction.getMinBid();
         if (bidAmount < minBid) {
-            if (!server.campaign.CampaignMain.cm.getBooleanConfig("HiddenBMUnits")) {
-                server.campaign.CampaignMain.cm.toUser("AM:Minimum bid for the " +
-                                                             auction.getListedModelName()
-                                                             +
-                                                             " is " +
-                                                             server.campaign.CampaignMain.cm.moneyOrFluMessage(true,
-                                                                   false,
-                                                                   minBid) +
-                                                             ". Nice try.", Username, true);
+            if (!CampaignMain.campaignMain.getBooleanConfig("HiddenBMUnits")) {
+                CampaignMain.campaignMain.toUser("AM:Minimum bid for the " +
+                                                       auction.getListedModelName()
+                                                       +
+                                                       " is " +
+                                                       CampaignMain.campaignMain.moneyOrFluMessage(true,
+                                                             false,
+                                                             minBid) +
+                                                       ". Nice try.", Username, true);
             } else {
-                server.campaign.CampaignMain.cm.toUser("AM:Minimum bid for the " +
-                                                             auction.getListedHiddenModelName()
-                                                             +
-                                                             " is " +
-                                                             server.campaign.CampaignMain.cm.moneyOrFluMessage(true,
-                                                                   false,
-                                                                   minBid) +
-                                                             ". Nice try.", Username, true);
+                CampaignMain.campaignMain.toUser("AM:Minimum bid for the " +
+                                                       auction.getListedHiddenModelName()
+                                                       +
+                                                       " is " +
+                                                       CampaignMain.campaignMain.moneyOrFluMessage(true,
+                                                             false,
+                                                             minBid) +
+                                                       ". Nice try.", Username, true);
             }
             return;
         }
 
         //check the player's flu
-        int bidFluCost = server.campaign.CampaignMain.cm.getIntegerConfig("BMBidFlu");
+        int bidFluCost = CampaignMain.campaignMain.getIntegerConfig("BMBidFlu");
         if (p.getInfluence() < bidFluCost) {
-            server.campaign.CampaignMain.cm.toUser("AM:You need " +
-                                                         server.campaign.CampaignMain.cm.moneyOrFluMessage(false,
-                                                               true,
-                                                               bidFluCost) +
-                                                         " to place a bid.", Username, true);
+            CampaignMain.campaignMain.toUser("AM:You need " +
+                                                   CampaignMain.campaignMain.moneyOrFluMessage(false,
+                                                         true,
+                                                         bidFluCost) +
+                                                   " to place a bid.", Username, true);
             return;
         }
 
         // Check that the house is allowed to bid on this type of unit
         int uType = auction.getUnitType();
         int uWeight = auction.getUnitWeight();
-        boolean canBuy = server.campaign.CampaignMain.cm.getHouseForPlayer(p.getName()).canBuyFromBM(uType, uWeight);
+        boolean canBuy = CampaignMain.campaignMain.getHouseForPlayer(p.getName()).canBuyFromBM(uType, uWeight);
         //		boolean canBuy = p.getMyHouse().canBuyFromBM(uType, uWeight);
         if (!canBuy) {
-            server.campaign.CampaignMain.cm.toUser("AM:Your faction is not allowed to purchase " +
-                                                         Unit.getWeightClassDesc(uWeight) + " " +
-                                                         Unit.getTypeClassDesc(uType) + " from the Black Market.",
+            CampaignMain.campaignMain.toUser("AM:Your faction is not allowed to purchase " +
+                                                   Unit.getWeightClassDesc(uWeight) + " " +
+                                                   Unit.getTypeClassDesc(uType) + " from the Black Market.",
                   Username,
                   true);
             return;
@@ -141,25 +142,25 @@ public class BidCommand implements Command {
         auction.placeBid(Username, bidAmount);
         p.addInfluence(-bidFluCost);
 
-        server.campaign.CampaignMain.cm.toUser("AM:You bid " +
-                                                     server.campaign.CampaignMain.cm.moneyOrFluMessage(true,
-                                                           false,
-                                                           bidAmount) +
-                                                     " for the "
-                                                     +
-                                                     (server.campaign.CampaignMain.cm.getBooleanConfig("HiddenBMUnits") ?
-                                                            auction.getListedHiddenModelName() :
-                                                            auction.getListedModelName())
-                                                     +
-                                                     " (-" +
-                                                     server.campaign.CampaignMain.cm.moneyOrFluMessage(false,
-                                                           true,
-                                                           bidFluCost)
-                                                     +
-                                                     ").", Username, true);
+        CampaignMain.campaignMain.toUser("AM:You bid " +
+                                               CampaignMain.campaignMain.moneyOrFluMessage(true,
+                                                     false,
+                                                     bidAmount) +
+                                               " for the "
+                                               +
+                                               (CampaignMain.campaignMain.getBooleanConfig("HiddenBMUnits") ?
+                                                      auction.getListedHiddenModelName() :
+                                                      auction.getListedModelName())
+                                               +
+                                               " (-" +
+                                               CampaignMain.campaignMain.moneyOrFluMessage(false,
+                                                     true,
+                                                     bidFluCost)
+                                               +
+                                               ").", Username, true);
 
         //send BM|CU to bidder
-        server.campaign.CampaignMain.cm.toUser("BM|CU|" + auction.toString(auctionID, p), Username, false);
+        CampaignMain.campaignMain.toUser("BM|CU|" + auction.toString(auctionID, p), Username, false);
 
     }//end process(string)
 

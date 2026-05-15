@@ -17,6 +17,7 @@
 
 package mekwars.server.campaign.commands;
 
+import mekwars.server.campaign.CampaignMain;
 import server.util.StringUtil;
 
 /**
@@ -32,30 +33,30 @@ public class SetMOTDCommand implements Command {
     public void process(java.util.StringTokenizer command, String Username) {
 
         if (accessLevel != 0) {
-            int userLevel = server.campaign.CampaignMain.cm.getServer().getUserLevel(Username);
+            int userLevel = CampaignMain.campaignMain.getServer().getUserLevel(Username);
             if (userLevel < getExecutionLevel()) {
-                server.campaign.CampaignMain.cm.toUser("AM:Insufficient access level for command. Level: " +
-                                                             userLevel +
-                                                             ". Required: " +
-                                                             accessLevel +
-                                                             ".", Username, true);
+                CampaignMain.campaignMain.toUser("AM:Insufficient access level for command. Level: " +
+                                                       userLevel +
+                                                       ". Required: " +
+                                                       accessLevel +
+                                                       ".", Username, true);
                 return;
             }
         }
 
-        server.campaign.SPlayer p = server.campaign.CampaignMain.cm.getPlayer(Username);
-        int minExp = server.campaign.CampaignMain.cm.getIntegerConfig("MinMOTDExp");
+        server.campaign.SPlayer p = CampaignMain.campaignMain.getPlayer(Username);
+        int minExp = CampaignMain.campaignMain.getIntegerConfig("MinMOTDExp");
 
         //unregistered players can't set MOTD.
         if (p == null) {
-            server.campaign.CampaignMain.cm.toUser("AM:Unregistered players cannot set an MOTD.", Username, true);
+            CampaignMain.campaignMain.toUser("AM:Unregistered players cannot set an MOTD.", Username, true);
             return;
         }
 
         if (p.getExperience() < minExp) {
-            server.campaign.CampaignMain.cm.toUser("AM:Your exp is too low you must have " +
-                                                         minExp +
-                                                         " XP in order to use setmotd.", Username, true);
+            CampaignMain.campaignMain.toUser("AM:Your exp is too low you must have " +
+                                                   minExp +
+                                                   " XP in order to use setmotd.", Username, true);
             return;
         }
 
@@ -67,7 +68,7 @@ public class SetMOTDCommand implements Command {
             while (command.hasMoreTokens()) {motd += "#" + command.nextToken();}
 
         } catch (Exception e) {
-            server.campaign.CampaignMain.cm.toUser("AM:Improper syntax. Try: /setmotd text or /setmotd clear",
+            CampaignMain.campaignMain.toUser("AM:Improper syntax. Try: /setmotd text or /setmotd clear",
                   Username,
                   true);
             return;
@@ -75,28 +76,28 @@ public class SetMOTDCommand implements Command {
 
         if (motd.trim().equals("") || motd.trim().equalsIgnoreCase("clear")) {
             p.getMyHouse().setMotd("");
-            server.campaign.CampaignMain.cm.toUser("AM:MOTD cleared.", Username, true);
+            CampaignMain.campaignMain.toUser("AM:MOTD cleared.", Username, true);
             return;
         }
 
         int size = motd.length();
-        int maxSize = server.campaign.CampaignMain.cm.getIntegerConfig("MaxMOTDLength");
+        int maxSize = CampaignMain.campaignMain.getIntegerConfig("MaxMOTDLength");
         if (size > maxSize) {
-            server.campaign.CampaignMain.cm.toUser("AM:MOTD's may contain up to " +
-                                                         maxSize +
-                                                         " characters. Your message was " +
-                                                         size +
-                                                         "chars long. Reduce its length and try again.",
+            CampaignMain.campaignMain.toUser("AM:MOTD's may contain up to " +
+                                                   maxSize +
+                                                   " characters. Your message was " +
+                                                   size +
+                                                   "chars long. Reduce its length and try again.",
                   Username,
                   true);
             return;
         }
 
-        boolean allowPlanets = server.campaign.CampaignMain.cm.getBooleanConfig("AllowPlanetsInMOTD");
+        boolean allowPlanets = CampaignMain.campaignMain.getBooleanConfig("AllowPlanetsInMOTD");
         motd = StringUtil.sanitize(motd);
 
         p.getMyHouse().setMotd(motd + "<p> -- Set by " + p.getName());
-        server.campaign.CampaignMain.cm.toUser("AM:MOTD set. Use /c motd to review.", Username, true);
+        CampaignMain.campaignMain.toUser("AM:MOTD set. Use /c motd to review.", Username, true);
 
 
     }//end process()

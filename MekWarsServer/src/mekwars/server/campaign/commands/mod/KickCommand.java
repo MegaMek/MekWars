@@ -17,6 +17,7 @@
 package mekwars.server.campaign.commands.mod;
 
 import common.util.MWLogger;
+import mekwars.server.campaign.CampaignMain;
 
 
 /**
@@ -34,13 +35,13 @@ public class KickCommand implements server.campaign.commands.Command {
     public void process(java.util.StringTokenizer command, String Username) {
 
         if (accessLevel != 0) {
-            int userLevel = server.campaign.CampaignMain.cm.getServer().getUserLevel(Username);
+            int userLevel = CampaignMain.campaignMain.getServer().getUserLevel(Username);
             if (userLevel < getExecutionLevel()) {
-                server.campaign.CampaignMain.cm.toUser("AM:Insufficient access level for command. Level: " +
-                                                             userLevel +
-                                                             ". Required: " +
-                                                             accessLevel +
-                                                             ".", Username, true);
+                CampaignMain.campaignMain.toUser("AM:Insufficient access level for command. Level: " +
+                                                       userLevel +
+                                                       ". Required: " +
+                                                       accessLevel +
+                                                       ".", Username, true);
                 return;
             }
         }
@@ -49,21 +50,21 @@ public class KickCommand implements server.campaign.commands.Command {
         try {
             toKick = command.nextToken();
         } catch (Exception e) {
-            server.campaign.CampaignMain.cm.toUser("Improper format. Try: /c kick#NAME", Username);
+            CampaignMain.campaignMain.toUser("Improper format. Try: /c kick#NAME", Username);
             return;
         }
 
-        if (server.campaign.CampaignMain.cm.getServer().isAdmin(toKick) && !Username.startsWith("[Dedicated]")) {
-            server.campaign.CampaignMain.cm.toUser("AM:You may not kick an admin.", Username);
+        if (CampaignMain.campaignMain.getServer().isAdmin(toKick) && !Username.startsWith("[Dedicated]")) {
+            CampaignMain.campaignMain.toUser("AM:You may not kick an admin.", Username);
             return;
         }
 
-        server.campaign.CampaignMain.cm.toUser("AM:You were kicked by " + Username, toKick, true);
-        server.campaign.CampaignMain.cm.toUser("PL|GBB|Bye Bye", toKick, false);
+        CampaignMain.campaignMain.toUser("AM:You were kicked by " + Username, toKick, true);
+        CampaignMain.campaignMain.toUser("PL|GBB|Bye Bye", toKick, false);
 
         //Use this to kick ghost players from the clients.
-        server.campaign.CampaignMain.cm.getServer().sendRemoveUserToAll(toKick, false);
-        server.campaign.CampaignMain.cm.getServer().sendChat("AM:" + Username + " kicked " + toKick);
+        CampaignMain.campaignMain.getServer().sendRemoveUserToAll(toKick, false);
+        CampaignMain.campaignMain.getServer().sendChat("AM:" + Username + " kicked " + toKick);
         MWLogger.modLog(Username + " kicked " + toKick);
 
 		/*try {
@@ -74,11 +75,11 @@ public class KickCommand implements server.campaign.commands.Command {
 
         try {
 
-            server.campaign.CampaignMain.cm.getOpsManager().doDisconnectCheckOnPlayer(toKick);
-            server.campaign.CampaignMain.cm.doLogoutPlayer(toKick);
-            if (server.campaign.CampaignMain.cm.getServer()
+            CampaignMain.campaignMain.getOpsManager().doDisconnectCheckOnPlayer(toKick);
+            CampaignMain.campaignMain.doLogoutPlayer(toKick);
+            if (CampaignMain.campaignMain.getServer()
                       .getClient(server.MWChatServer.MWChatServer.clientKey(toKick)) != null) {
-                server.campaign.CampaignMain.cm.getServer().killClient(toKick, Username);
+                CampaignMain.campaignMain.getServer().killClient(toKick, Username);
             }
 
         } catch (Exception ex) {

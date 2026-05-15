@@ -16,6 +16,8 @@
 
 package mekwars.server.campaign.commands.admin;
 
+import mekwars.server.campaign.CampaignMain;
+
 public class CreateMercFactionCommand implements server.campaign.commands.Command {
 
     int accessLevel = server.MWChatServer.auth.IAuthenticator.ADMIN;
@@ -26,13 +28,13 @@ public class CreateMercFactionCommand implements server.campaign.commands.Comman
     public void process(java.util.StringTokenizer command, String Username) {
 
         //access level check
-        int userLevel = server.campaign.CampaignMain.cm.getServer().getUserLevel(Username);
+        int userLevel = CampaignMain.campaignMain.getServer().getUserLevel(Username);
         if (userLevel < getExecutionLevel()) {
-            server.campaign.CampaignMain.cm.toUser("AM:Insufficient access level for command. Level: " +
-                                                         userLevel +
-                                                         ". Required: " +
-                                                         accessLevel +
-                                                         ".", Username, true);
+            CampaignMain.campaignMain.toUser("AM:Insufficient access level for command. Level: " +
+                                                   userLevel +
+                                                   ". Required: " +
+                                                   accessLevel +
+                                                   ".", Username, true);
             return;
         }
 
@@ -46,7 +48,7 @@ public class CreateMercFactionCommand implements server.campaign.commands.Comman
             color = "#" + command.nextToken();
             abb = command.nextToken();
         } catch (Exception e) {
-            server.campaign.CampaignMain.cm.toUser(
+            CampaignMain.campaignMain.toUser(
                   "Improper command. Try: /c creatmercfactioon#name#htmlhexcolor#abbreviation",
                   Username,
                   true);
@@ -55,9 +57,9 @@ public class CreateMercFactionCommand implements server.campaign.commands.Comman
 
         //hope the strings are right and make the faction
         server.campaign.mercenaries.MercHouse m = new server.campaign.mercenaries.MercHouse(
-              server.campaign.CampaignMain.cm.getData().getUnusedHouseID(), name, color, 4, 5, abb);
-        server.campaign.CampaignMain.cm.addHouse(m);
-        server.campaign.CampaignMain.cm.toUser("You created a new mercenary faction [" + name + "]", Username, true);
+              CampaignMain.campaignMain.getData().getUnusedHouseID(), name, color, 4, 5, abb);
+        CampaignMain.campaignMain.addHouse(m);
+        CampaignMain.campaignMain.toUser("You created a new mercenary faction [" + name + "]", Username, true);
 
         //trigger a data refresh for logging in players.
         m.updated();

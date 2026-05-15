@@ -27,9 +27,9 @@
 
 package mekwars.server.MWChatServer;
 
-import common.util.MWLogger;
-import server.MWChatServer.commands.ICommands;
-import server.campaign.CampaignMain;
+
+import mekwars.server.MWChatServer.commands.ICommands;
+import mekwars.server.campaign.CampaignMain;
 
 /**
  * Constantly reads from the BufferedReader. Notifies the MWChatServerLocal via the incomingMessage() method

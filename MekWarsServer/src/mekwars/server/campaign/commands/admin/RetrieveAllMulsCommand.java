@@ -17,6 +17,7 @@
 package mekwars.server.campaign.commands.admin;
 
 import common.util.MWLogger;
+import mekwars.server.campaign.CampaignMain;
 
 
 public class RetrieveAllMulsCommand implements server.campaign.commands.Command {
@@ -37,13 +38,13 @@ public class RetrieveAllMulsCommand implements server.campaign.commands.Command 
     public void process(java.util.StringTokenizer command, String Username) {
 
         //access level check
-        int userLevel = server.campaign.CampaignMain.cm.getServer().getUserLevel(Username);
+        int userLevel = CampaignMain.campaignMain.getServer().getUserLevel(Username);
         if (userLevel < getExecutionLevel()) {
-            server.campaign.CampaignMain.cm.toUser("AM:Insufficient access level for command. Level: " +
-                                                         userLevel +
-                                                         ". Required: " +
-                                                         accessLevel +
-                                                         ".", Username, true);
+            CampaignMain.campaignMain.toUser("AM:Insufficient access level for command. Level: " +
+                                                   userLevel +
+                                                   ". Required: " +
+                                                   accessLevel +
+                                                   ".", Username, true);
             return;
         }
         String fileName = "./data/armies/";
@@ -53,7 +54,7 @@ public class RetrieveAllMulsCommand implements server.campaign.commands.Command 
 
             java.io.File mulFolder = new java.io.File(fileName);
             if (!mulFolder.exists()) {
-                server.campaign.CampaignMain.cm.toUser("Unable to find file " + fileName, Username);
+                CampaignMain.campaignMain.toUser("Unable to find file " + fileName, Username);
             }
             for (java.io.File mul : mulFolder.listFiles()) {
                 StringBuffer sendData = new StringBuffer("PL|RMF|");
@@ -69,11 +70,11 @@ public class RetrieveAllMulsCommand implements server.campaign.commands.Command 
                     sendData.append("#");
                 }
 
-                server.campaign.CampaignMain.cm.toUser(sendData.toString(), Username, false);
+                CampaignMain.campaignMain.toUser(sendData.toString(), Username, false);
             }
-            server.campaign.CampaignMain.cm.doSendModMail("NOTE", Username + " has retrived all mul files");
+            CampaignMain.campaignMain.doSendModMail("NOTE", Username + " has retrived all mul files");
         } catch (Exception ex) {
-            server.campaign.CampaignMain.cm.toUser("File Not found", Username, true);
+            CampaignMain.campaignMain.toUser("File Not found", Username, true);
         } finally {
             try {
                 br.close();

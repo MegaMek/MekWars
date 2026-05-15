@@ -11,54 +11,55 @@
 
 package mekwars.server.campaign;
 
-import common.CampaignData;
-import common.Equipment;
-import common.House;
-import common.Influences;
-import common.Planet;
-import common.campaign.operations.Operation;
-import common.flags.PlayerFlags;
-import common.util.MWLogger;
-import common.util.MekwarsFileReader;
-import common.util.UnitUtils;
+import java.io.Serial;
+import java.util.Hashtable;
+import java.util.Properties;
+
 import megamek.client.Client;
 import megamek.common.CriticalSlot;
-import megamek.common.Entity;
-import megamek.common.Mech;
-import megamek.common.Mounted;
-import megamek.common.WeaponType;
+import megamek.common.equipment.Mounted;
+import megamek.common.equipment.WeaponType;
 import megamek.common.options.IOption;
-import server.campaign.commands.*;
-import server.campaign.commands.admin.*;
-import server.campaign.commands.helpers.HireAndMaintainHelper;
-import server.campaign.commands.helpers.HireAndRequestNewHelper;
-import server.campaign.commands.helpers.HireAndRequestUsedHelper;
-import server.campaign.commands.helpers.RemoveAndAddNoPlayHelper;
-import server.campaign.commands.leader.*;
-import server.campaign.commands.mod.*;
-import server.campaign.market2.Market2;
-import server.campaign.market2.PartsMarket;
-import server.campaign.mercenaries.ContractInfo;
-import server.campaign.mercenaries.MercHouse;
-import server.campaign.operations.OperationManager;
-import server.campaign.operations.ShortOperation;
-import server.campaign.operations.newopmanager.I_OperationManager;
-import server.campaign.operations.newopmanager.NewOperationManager;
-import server.campaign.pilot.SPilotSkills;
-import server.campaign.util.*;
-import server.campaign.util.scheduler.MWScheduler;
-import server.campaign.votes.VoteManager;
-import server.util.AutomaticBackup;
-import server.util.MWPasswd;
-import server.util.QuirkHandler;
-import server.util.RepairTrackingThread;
-import server.util.StringUtil;
-import server.util.discord.DiscordMessageHandler;
-import server.util.rss.Feed;
-import server.util.rss.FeedMessage;
+import mekwars.common.CampaignData;
+import mekwars.common.Equipment;
+import mekwars.common.House;
+import mekwars.common.Influences;
+import mekwars.common.Planet;
+import mekwars.common.flags.PlayerFlags;
+import mekwars.common.util.UnitUtils;
+import mekwars.server.MWServ;
+import mekwars.server.campaign.commands.*;
+import mekwars.server.campaign.commands.admin.*;
+import mekwars.server.campaign.commands.helpers.HireAndMaintainHelper;
+import mekwars.server.campaign.commands.helpers.HireAndRequestNewHelper;
+import mekwars.server.campaign.commands.helpers.HireAndRequestUsedHelper;
+import mekwars.server.campaign.commands.helpers.RemoveAndAddNoPlayHelper;
+import mekwars.server.campaign.commands.leader.*;
+import mekwars.server.campaign.commands.mod.*;
+import mekwars.server.campaign.market.PartsMarket;
+import mekwars.server.campaign.mercenaries.ContractInfo;
+import mekwars.server.campaign.mercenaries.MercHouse;
+import mekwars.server.campaign.operations.OperationManager;
+import mekwars.server.campaign.operations.ShortOperation;
+import mekwars.server.campaign.operations.newopmanager.I_OperationManager;
+import mekwars.server.campaign.operations.newopmanager.NewOperationManager;
+import mekwars.server.campaign.pilot.SPilotSkills;
+import mekwars.server.campaign.util.*;
+import mekwars.server.campaign.util.scheduler.MWScheduler;
+import mekwars.server.campaign.votes.VoteManager;
+import mekwars.server.dataProvider.Server;
+import mekwars.server.util.AutomaticBackup;
+import mekwars.server.util.MWPasswd;
+import mekwars.server.util.QuirkHandler;
+import mekwars.server.util.RepairTrackingThread;
+import mekwars.server.util.StringUtil;
+import mekwars.server.util.discord.DiscordMessageHandler;
+import mekwars.server.util.rss.Feed;
+import mekwars.server.util.rss.FeedMessage;
 
 public final class CampaignMain implements java.io.Serializable {
 
+    @Serial
     private static final long serialVersionUID = -8671163467590633378L;
 
     /**
@@ -68,28 +69,17 @@ public final class CampaignMain implements java.io.Serializable {
      * still a HACK! Java wasn't invented to step back to the old days of global variables. Object oriented coding
      * should try to minimize cross references.. But someday you gotta do what you gotta do..... Imi.
      */
-    public static mekwars.server.campaign.CampaignMain cm;
+    public static CampaignMain campaignMain;
 
-    public static DefaultServerOptions dso;
+    public static DefaultServerOptions defaultServerOptions;
 
-    private server.MWServ myServer;
-
+    private final MWServ serv;
+    private final Properties config = new Properties();
+    private final Hashtable<String, Command> commands = new Hashtable<>();
+    private final Hashtable<String, MekStatistics> mekStats = new Hashtable<>();
     private Client megaMekClient = new Client("MWServer", "None", 0);
-
-    private server.dataProvider.Server dataProviderServer;
-
     private CampaignData data = new CampaignData();
-
-    private java.util.Properties config = new java.util.Properties();
-
-    // private ConcurrentHashMap<String, SPlayer> savePlayers = new
-    // ConcurrentHashMap<String, SPlayer>();
-
-    private java.util.Hashtable<String, Command> Commands = new java.util.Hashtable<String, Command>();
-
-    private java.util.Hashtable<String, MechStatistics> MechStats = new java.util.Hashtable<String, MechStatistics>();
-
-    private java.util.Hashtable<String, String> omniVariantMods = new java.util.Hashtable<String, String>();
+    private java.util.Hashtable<String, String> omniVariantMods = new java.util.Hashtable<>();
 
     private java.util.Hashtable<String, Equipment> blackMarketEquipmentCostTable = new java.util.Hashtable<String, Equipment>();
 
@@ -152,10 +142,10 @@ public final class CampaignMain implements java.io.Serializable {
     // CONSTRUCTOR
     public CampaignMain(server.MWServ serv) {
 
-        cm = this;
-        myServer = serv;
-        dso = new DefaultServerOptions();
-        dso.createDefaults();
+        campaignMain = this;
+        this.serv = serv;
+        defaultServerOptions = new DefaultServerOptions();
+        defaultServerOptions.createDefaults();
 
         // make sure vital folders exist
         java.io.File f = new java.io.File("./campaign/");
@@ -179,12 +169,12 @@ public final class CampaignMain implements java.io.Serializable {
 
         // Try to read the config file
         try {
-            config.putAll(dso.getServerDefaults());// load all of the defaults
+            config.putAll(defaultServerOptions.getServerDefaults());// load all of the defaults
             // into the config file
             // before you load in the
             // campaign stuff
             // if(!isUsingMySQL())
-            config.load(new java.io.FileInputStream(myServer.getConfigParam("CAMPAIGNCONFIG")));
+            config.load(new java.io.FileInputStream(this.serv.getConfigParam("CAMPAIGNCONFIG")));
             /*
              * else { if(cm.MySQL.configIsSaved()) cm.MySQL.loadConfig(config);
              * else config.load(new
@@ -198,7 +188,7 @@ public final class CampaignMain implements java.io.Serializable {
             // MMNet, and probably other servers are, as well.
             java.util.Vector<String> keysToRemove = new java.util.Vector<String>();
             for (Object key : config.keySet()) {
-                if (!dso.getServerDefaults().keySet().contains(key) &&
+                if (!defaultServerOptions.getServerDefaults().keySet().contains(key) &&
                           !((String) key).endsWith("RewardPointMultiplier")) {
                     MWLogger.errLog("Key " +
                                           (String) key +
@@ -211,16 +201,16 @@ public final class CampaignMain implements java.io.Serializable {
                 config.remove(key);
             }
 
-            mekwars.server.campaign.CampaignMain.cm.saveConfigureFile(config,
-                  mekwars.server.campaign.CampaignMain.cm.getServer().getConfigParam("CAMPAIGNCONFIG"));
+            mekwars.server.campaign.CampaignMain.campaignMain.saveConfigureFile(config,
+                  mekwars.server.campaign.CampaignMain.campaignMain.getServer().getConfigParam("CAMPAIGNCONFIG"));
             // Now, in theory, there is no cruft for next boot.  Let's test.
 
         } catch (Exception ex) {
             MWLogger.errLog("Problems with loading campaign config");
             MWLogger.errLog(ex);
-            dso.createConfig();
+            defaultServerOptions.createConfig();
             try {
-                config.load(new java.io.FileInputStream(myServer.getConfigParam("CAMPAIGNCONFIG")));
+                config.load(new java.io.FileInputStream(this.serv.getConfigParam("CAMPAIGNCONFIG")));
             } catch (Exception ex1) {
                 MWLogger.errLog("Problems with loading campaing config from defaults");
                 MWLogger.errLog(ex1);
@@ -232,7 +222,7 @@ public final class CampaignMain implements java.io.Serializable {
             getConfig().setProperty("AllowedMegaMekVersion", megamek.SuiteConstants.VERSION.toString());
         }
 
-        dso.createConfig(); // save the cofig file so any missed defaults are
+        defaultServerOptions.createConfig(); // save the cofig file so any missed defaults are
         // added
 
         /*
@@ -252,7 +242,7 @@ public final class CampaignMain implements java.io.Serializable {
 
         // load megamek gameoptions;
         MWLogger.infoLog("Loading MegaMek Game Options");
-        cm.megaMekClient.getGame().getOptions().loadOptions();
+        campaignMain.megaMekClient.getGame().getOptions().loadOptions();
 
         // Parse Terrain
         // XMLTerrainDataParser tParse =
@@ -265,7 +255,7 @@ public final class CampaignMain implements java.io.Serializable {
         new XMLAdvancedTerrainDataParser("./data/advterr.xml");
 
 
-        cm.loadTopUnitID();
+        campaignMain.loadTopUnitID();
         gamesCompleted = 0;
 
         // Read the data from the SHouse Data File
@@ -286,16 +276,16 @@ public final class CampaignMain implements java.io.Serializable {
         }
 
         // misc loads.
-        cm.loadOmniVariantMods();
-        cm.loadBlackMarketSettings();
+        campaignMain.loadOmniVariantMods();
+        campaignMain.loadBlackMarketSettings();
 
-        cm.loadBannedTargetSystems();
-        cm.loadSupportUnitDefinitions();
+        campaignMain.loadBannedTargetSystems();
+        campaignMain.loadSupportUnitDefinitions();
 
         // create command hashs
         init();
 
-        if (Boolean.parseBoolean(cm.getConfig("UseCalculatedCosts"))) {
+        if (Boolean.parseBoolean(campaignMain.getConfig("UseCalculatedCosts"))) {
             unitCostLists = new UnitCosts();
             unitCostLists.loadUnitCosts();
             // MWLogger.errLog(unitCostLists.displayUnitCostsLists());
@@ -306,8 +296,8 @@ public final class CampaignMain implements java.io.Serializable {
             MekwarsFileReader dis = new MekwarsFileReader("./campaign/mechstat.dat");
             while (dis.ready()) {
                 String line = dis.readLine();
-                MechStatistics m = new MechStatistics(line);
-                MechStats.put(m.getMechFileName(), m);
+                MekStatistics m = new MekStatistics(line);
+                mekStats.put(m.getMekFileName(), m);
             }
             dis.close();
         } catch (Exception ex) {
@@ -351,13 +341,15 @@ public final class CampaignMain implements java.io.Serializable {
         // create & start a data provider
         int dataport = -1;
         try {
-            dataport = Integer.parseInt(myServer.getConfigParam("DATAPORT"));
+            dataport = Integer.parseInt(this.serv.getConfigParam("DATAPORT"));
         } catch (NumberFormatException e) {
             MWLogger.errLog("Non-number given as dataport. Defaulting to 4867.");
             MWLogger.errLog(e);
             dataport = 4867;
         } finally {
-            dataProviderServer = new server.dataProvider.Server(data, dataport, myServer.getConfigParam("SERVERIP"));
+            Server dataProviderServer = new Server(data,
+                  dataport,
+                  this.serv.getConfigParam("SERVERIP"));
             Thread t = new Thread(dataProviderServer);
             t.start();
         }
@@ -403,7 +395,7 @@ public final class CampaignMain implements java.io.Serializable {
         } catch (java.io.IOException e) {
             e.printStackTrace();
         } finally {
-            mekwars.server.campaign.CampaignMain.cm.setSupportUnits(units);
+            mekwars.server.campaign.CampaignMain.campaignMain.setSupportUnits(units);
         }
     }
 
@@ -424,7 +416,7 @@ public final class CampaignMain implements java.io.Serializable {
         try {
 
             // wait for the backup to finsh before you start saving files.
-            while (cm.isArchiving()) {
+            while (campaignMain.isArchiving()) {
                 Thread.sleep(125);
             }
 
@@ -432,12 +424,12 @@ public final class CampaignMain implements java.io.Serializable {
             savePlanetData();
 
             // Save omni variant mods
-            cm.saveOmniVariantMods();
+            campaignMain.saveOmniVariantMods();
 
             // Save Mech-Stats
             java.io.FileOutputStream out = new java.io.FileOutputStream("./campaign/mechstat.dat");
             java.io.PrintStream p = new java.io.PrintStream(out);
-            for (MechStatistics currStats : MechStats.values()) {
+            for (MekStatistics currStats : mekStats.values()) {
                 p.println(currStats.toString());
             }
             p.close();
@@ -471,7 +463,7 @@ public final class CampaignMain implements java.io.Serializable {
 
     public double getDoubleConfig(String key) {
         try {
-            return Double.parseDouble(cm.getConfig(key));
+            return Double.parseDouble(campaignMain.getConfig(key));
         } catch (Exception ex) {
             return -1;
         }
@@ -480,27 +472,27 @@ public final class CampaignMain implements java.io.Serializable {
     public String getConfig(String key) {
 
         if (config.getProperty(key) == null) {
-            if (dso.getServerDefaults().getProperty(key) == null) {
+            if (defaultServerOptions.getServerDefaults().getProperty(key) == null) {
                 MWLogger.mainLog("You're missing the config variable: " + key + " in campaignconfig!");
                 MWLogger.errLog("You're missing the config variable: " + key + " in campaignconfig! returning -1");
                 return "-1";
             }
             // else
-            return dso.getServerDefaults().getProperty(key).trim();
+            return defaultServerOptions.getServerDefaults().getProperty(key).trim();
         }
         return config.getProperty(key).trim();
     }
 
     public float getFloatConfig(String key) {
         try {
-            return Float.parseFloat(cm.getConfig(key));
+            return Float.parseFloat(campaignMain.getConfig(key));
         } catch (Exception ex) {
             return -1;
         }
     }
 
     public void createNewOpsManager() {
-        if (mekwars.server.campaign.CampaignMain.cm.getBooleanConfig("UseNewOpManager")) {
+        if (mekwars.server.campaign.CampaignMain.campaignMain.getBooleanConfig("UseNewOpManager")) {
             opsManager = new NewOperationManager();
         } else {
             opsManager = new OperationManager();
@@ -511,7 +503,7 @@ public final class CampaignMain implements java.io.Serializable {
 
         // if you don't have a client signon to the server then you do not get
         // to send commands
-        if (mekwars.server.campaign.CampaignMain.cm.getServer().getClient(Username) == null) {
+        if (mekwars.server.campaign.CampaignMain.campaignMain.getServer().getClient(Username) == null) {
             return;
         }
 
@@ -558,7 +550,7 @@ public final class CampaignMain implements java.io.Serializable {
             }
 
             // New Method (much cleaner)
-            if (Commands.get(task) != null) {
+            if (commands.get(task) != null) {
 
                 // log non-chat commands
                 if (task.equals("MAIL") ||
@@ -573,12 +565,15 @@ public final class CampaignMain implements java.io.Serializable {
                     MWLogger.cmdLog(Username + ": " + text);
                 }
 
-                Command c = Commands.get(task);
+                Command c = commands.get(task);
                 try {
                     c.process(ST, Username);
                 } catch (Exception ex) {
                     MWLogger.errLog(ex);
-                    mekwars.server.campaign.CampaignMain.cm.toUser("AM:Invalid Syntax: /" + task + " " + c.getSyntax(),
+                    mekwars.server.campaign.CampaignMain.campaignMain.toUser("AM:Invalid Syntax: /" +
+                                                                                   task +
+                                                                                   " " +
+                                                                                   c.getSyntax(),
                           Username);
                 }
                 return;
@@ -588,7 +583,7 @@ public final class CampaignMain implements java.io.Serializable {
     }// end fromUser
 
     public server.MWServ getServer() {
-        return myServer;
+        return serv;
     }
 
     public boolean isLoggedIn(String Username) {
@@ -623,9 +618,9 @@ public final class CampaignMain implements java.io.Serializable {
 
     public void toUser(String txt, String Username, boolean isChat) {
         if (isChat) {
-            myServer.fromCampaignMod("CH|" + txt, Username);
+            serv.fromCampaignMod("CH|" + txt, Username);
         } else {
-            myServer.fromCampaignMod(txt, Username);
+            serv.fromCampaignMod(txt, Username);
         }
     }
 
@@ -832,13 +827,15 @@ public final class CampaignMain implements java.io.Serializable {
     public void doSendModMail(String Username, String text) {
 
         int sendCommandLevel = 0;
-        int commandLevel = mekwars.server.campaign.CampaignMain.cm.getServerCommands().get("MM").getExecutionLevel();
+        int commandLevel = mekwars.server.campaign.CampaignMain.campaignMain.getServerCommands()
+                                 .get("MM")
+                                 .getExecutionLevel();
         int userLevel = 0;
         try {
             if (Username.equalsIgnoreCase("NOTE")) {
-                if (!mekwars.server.campaign.CampaignMain.cm.getBooleanConfig(
+                if (!mekwars.server.campaign.CampaignMain.campaignMain.getBooleanConfig(
                       "AllowLowerLevelUsersToSeeUpperLevelUsersDoings")) {
-                    sendCommandLevel = mekwars.server.campaign.CampaignMain.cm.getServer()
+                    sendCommandLevel = mekwars.server.campaign.CampaignMain.campaignMain.getServer()
                                              .getUserLevel(text.substring(0, text.indexOf(" ")).trim());
                 } else {
                     sendCommandLevel = 100;
@@ -855,19 +852,19 @@ public final class CampaignMain implements java.io.Serializable {
             SHouse h = (SHouse) vh;
 
             for (String currName : h.getReservePlayers().keySet()) {
-                userLevel = mekwars.server.campaign.CampaignMain.cm.getServer().getUserLevel(currName);
+                userLevel = mekwars.server.campaign.CampaignMain.campaignMain.getServer().getUserLevel(currName);
                 if (userLevel >= commandLevel && userLevel >= sendCommandLevel) {
                     this.toUser(text, currName, true);
                 }
             }
             for (String currName : h.getActivePlayers().keySet()) {
-                userLevel = mekwars.server.campaign.CampaignMain.cm.getServer().getUserLevel(currName);
+                userLevel = mekwars.server.campaign.CampaignMain.campaignMain.getServer().getUserLevel(currName);
                 if (userLevel >= commandLevel && userLevel >= sendCommandLevel) {
                     this.toUser(text, currName, true);
                 }
             }
             for (String currName : h.getFightingPlayers().keySet()) {
-                userLevel = mekwars.server.campaign.CampaignMain.cm.getServer().getUserLevel(currName);
+                userLevel = mekwars.server.campaign.CampaignMain.campaignMain.getServer().getUserLevel(currName);
                 if (userLevel >= commandLevel && userLevel >= sendCommandLevel) {
                     this.toUser(text, currName, true);
                 }
@@ -884,22 +881,22 @@ public final class CampaignMain implements java.io.Serializable {
             SHouse h = (SHouse) vh;
 
             for (String currName : h.getReservePlayers().keySet()) {
-                Command command = mekwars.server.campaign.CampaignMain.cm.getServerCommands().get("MM");
-                if (mekwars.server.campaign.CampaignMain.cm.getServer().getUserLevel(currName) >=
+                Command command = mekwars.server.campaign.CampaignMain.campaignMain.getServerCommands().get("MM");
+                if (mekwars.server.campaign.CampaignMain.campaignMain.getServer().getUserLevel(currName) >=
                           command.getExecutionLevel()) {
                     this.toUser(text, currName, true);
                 }
             }
             for (String currName : h.getActivePlayers().keySet()) {
-                Command command = mekwars.server.campaign.CampaignMain.cm.getServerCommands().get("MM");
-                if (mekwars.server.campaign.CampaignMain.cm.getServer().getUserLevel(currName) >=
+                Command command = mekwars.server.campaign.CampaignMain.campaignMain.getServerCommands().get("MM");
+                if (mekwars.server.campaign.CampaignMain.campaignMain.getServer().getUserLevel(currName) >=
                           command.getExecutionLevel()) {
                     this.toUser(text, currName, true);
                 }
             }
             for (String currName : h.getFightingPlayers().keySet()) {
-                Command command = mekwars.server.campaign.CampaignMain.cm.getServerCommands().get("MM");
-                if (mekwars.server.campaign.CampaignMain.cm.getServer().getUserLevel(currName) >=
+                Command command = mekwars.server.campaign.CampaignMain.campaignMain.getServerCommands().get("MM");
+                if (mekwars.server.campaign.CampaignMain.campaignMain.getServer().getUserLevel(currName) >=
                           command.getExecutionLevel()) {
                     this.toUser(text, currName, true);
                 }
@@ -909,14 +906,14 @@ public final class CampaignMain implements java.io.Serializable {
     }
 
     public java.util.Hashtable<String, Command> getServerCommands() {
-        return Commands;
+        return commands;
     }
 
     /**
      * @return Returns the mechStats.
      */
-    public java.util.Hashtable<String, MechStatistics> getMechStats() {
-        return MechStats;
+    public java.util.Hashtable<String, MekStatistics> getMekStats() {
+        return mekStats;
     }
 
     public void doProcessAutomaticReport(String s, String Username) {
@@ -1090,12 +1087,12 @@ public final class CampaignMain implements java.io.Serializable {
         SHouse loginHouse = toLogin.getMyHouse();
         if (loginHouse == null) {
             toUser("    . Major problem. Report ASAP.", Username, true);
-            mekwars.server.campaign.CampaignMain.cm.doSendModMail("NOTE",
+            mekwars.server.campaign.CampaignMain.campaignMain.doSendModMail("NOTE",
                   toLogin.getName() +
                         " has a null login faction! Moving to " +
-                        mekwars.server.campaign.CampaignMain.cm.getConfig("NewbieHouseName"));
-            loginHouse = mekwars.server.campaign.CampaignMain.cm.getHouseFromPartialString(
-                  mekwars.server.campaign.CampaignMain.cm.getConfig("NewbieHouseName"));
+                        mekwars.server.campaign.CampaignMain.campaignMain.getConfig("NewbieHouseName"));
+            loginHouse = mekwars.server.campaign.CampaignMain.campaignMain.getHouseFromPartialString(
+                  mekwars.server.campaign.CampaignMain.campaignMain.getConfig("NewbieHouseName"));
             toLogin.setMyHouse(loginHouse);
         }
         String s = loginHouse.doLogin(toLogin);
@@ -1112,22 +1109,23 @@ public final class CampaignMain implements java.io.Serializable {
             toUser(s, Username, true);
 
             // Send the player his basic info (units, techs, etc)
-            mekwars.server.campaign.CampaignMain.cm.toUser("PS|" + toLogin.toString(true), Username, false);
+            mekwars.server.campaign.CampaignMain.campaignMain.toUser("PS|" + toLogin.toString(true), Username, false);
 
             if (isUsingAdvanceRepair()) {
 
                 if (!toLogin.hasRepairingUnits()) {
-                    mekwars.server.campaign.CampaignMain.cm.toUser("PL|UTT|" + toLogin.totalTechsToString(),
+                    mekwars.server.campaign.CampaignMain.campaignMain.toUser("PL|UTT|" + toLogin.totalTechsToString(),
                           Username,
                           false);
-                    mekwars.server.campaign.CampaignMain.cm.toUser("PL|UAT|" + toLogin.totalTechsToString(),
+                    mekwars.server.campaign.CampaignMain.campaignMain.toUser("PL|UAT|" + toLogin.totalTechsToString(),
                           Username,
                           false);
                 } else {
-                    mekwars.server.campaign.CampaignMain.cm.toUser("PL|UTT|" + toLogin.totalTechsToString(),
+                    mekwars.server.campaign.CampaignMain.campaignMain.toUser("PL|UTT|" + toLogin.totalTechsToString(),
                           Username,
                           false);
-                    mekwars.server.campaign.CampaignMain.cm.toUser("PL|UAT|" + toLogin.availableTechsToString(),
+                    mekwars.server.campaign.CampaignMain.campaignMain.toUser("PL|UAT|" +
+                                                                                   toLogin.availableTechsToString(),
                           Username,
                           false);
                 }
@@ -1139,7 +1137,7 @@ public final class CampaignMain implements java.io.Serializable {
              */
             for (SArmy currA : toLogin.getArmies()) {
                 currA.getLegalOperations().clear();
-                mekwars.server.campaign.CampaignMain.cm.getOpsManager().checkOperations(currA, false);
+                mekwars.server.campaign.CampaignMain.campaignMain.getOpsManager().checkOperations(currA, false);
             }
 
             // send all currently online players to the one logging in
@@ -1175,10 +1173,10 @@ public final class CampaignMain implements java.io.Serializable {
             /*
              * Check if Staff Member and send MMOTD if so.
              */
-            if (mekwars.server.campaign.CampaignMain.cm.getServer().isModerator(Username)) {
-                mekwars.server.campaign.CampaignMain.cm.toUser("(Moderator Mail) Mod MOTD: " +
-                                                                     mekwars.server.campaign.CampaignMain.cm.getConfig(
-                                                                           "MMOTD"), Username);
+            if (mekwars.server.campaign.CampaignMain.campaignMain.getServer().isModerator(Username)) {
+                mekwars.server.campaign.CampaignMain.campaignMain.toUser("(Moderator Mail) Mod MOTD: " +
+                                                                               mekwars.server.campaign.CampaignMain.campaignMain.getConfig(
+                                                                                     "MMOTD"), Username);
             }
 
             /*
@@ -1192,14 +1190,17 @@ public final class CampaignMain implements java.io.Serializable {
             MWLogger.ipLog("Name: " +
                                  Username +
                                  " IP: " +
-                                 mekwars.server.campaign.CampaignMain.cm.getServer().getIP(Username));
-            mekwars.server.campaign.CampaignMain.cm.toUser("PL|SUD|1", Username, false);
-            mekwars.server.campaign.CampaignMain.cm.toUser("PL|SHP|" + toLogin.buildHangarPenaltyString(),
+                                 mekwars.server.campaign.CampaignMain.campaignMain.getServer().getIP(Username));
+            mekwars.server.campaign.CampaignMain.campaignMain.toUser("PL|SUD|1", Username, false);
+            mekwars.server.campaign.CampaignMain.campaignMain.toUser("PL|SHP|" + toLogin.buildHangarPenaltyString(),
                   Username,
                   false);
 
             // Send him the Tick Counter
-            mekwars.server.campaign.CampaignMain.cm.toUser("CC|NT|" + TThread.getRemainingSleepTime() + "|" + false,
+            mekwars.server.campaign.CampaignMain.campaignMain.toUser("CC|NT|" +
+                                                                           TThread.getRemainingSleepTime() +
+                                                                           "|" +
+                                                                           false,
                   Username,
                   false);
 
@@ -1311,404 +1312,404 @@ public final class CampaignMain implements java.io.Serializable {
         MWLogger.modLog("SERVER STARTED");
 
         // Fill the commands Table
-        Commands.put("ACCEPTATTACKFROMRESERVE", new AcceptAttackFromReserveCommand());
-        Commands.put("ACCEPTCONTRACT", new AcceptContractCommand());
-        Commands.put("ACTIVATE", new ActivateCommand());
-        Commands.put("ADDLEADER", new AddLeaderCommand());
-        Commands.put("ADDOMNIVARIANTMOD", new AddOmniVariantModCommand());
-        Commands.put("ADDPARTS", new AddPartsCommand());
-        Commands.put("ADDSONG", new AddSongCommand());
-        Commands.put("ADDTRAIT", new AddTraitCommand());
-        Commands.put("ADMINADDSERVEROPFLAGS", new AdminAddServerOpFlagsCommand());
-        Commands.put("ADMINALLOWHOUSEDEFECTION", new AdminAllowHouseDefectionCommand());
-        Commands.put("ADMINCALCULATEHOUSERANKINGS", new AdminCalculateHouseRankingsCommand());
-        Commands.put("ADMINCHANGEFACTIONCONFIG", new AdminChangeFactionConfigCommand());
-        Commands.put("ADMINCHANGEPLANETOWNER", new AdminChangePlanetOwnerCommand());
-        Commands.put("ADMINCHANGESERVERCONFIG", new AdminChangeServerConfigCommand());
-        Commands.put("ADMINCREATEFACTION", new AdminCreateFactionCommand());
-        Commands.put("ADMINCREATEPLANET", new AdminCreatePlanetCommand());
-        Commands.put("ADMINCREATEFACTORY", new AdminCreateFactoryCommand());
-        Commands.put("ADMINCREATESOLARIS", new AdminCreateSolarisCommand());
-        Commands.put("ADMINCREATETERRAIN", new AdminCreateTerrainCommand());
-        Commands.put("ADMINDESTROYFACTION", new AdminDestroyFactionCommand());
-        Commands.put("ADMINDESTROYFACTORY", new AdminDestroyFactoryCommand());
-        Commands.put("ADMINDESTROYPLANET", new AdminDestroyPlanetCommand());
-        Commands.put("ADMINDESTROYTERRAIN", new AdminDestroyTerrainCommand());
-        Commands.put("ADMINDONATE", new AdminDonateCommand());
-        Commands.put("ADMINEXCHANGEPLANETOWNERSHIP", new AdminExchangePlanetOwnershipCommand());
-        Commands.put("ADMINGETUNITCOMPONENTS", new AdminGetUnitComponentsCommand());
-        Commands.put("ADMINGRANTCOMPONENTS", new AdminGrantComponentsCommand());
-        Commands.put("ADMINHOUSEPILOTS", new AdminHousePilotsCommand());
-        Commands.put("ADMINHOUSESTATUS", new AdminHouseStatusCommand());
-        Commands.put("ADMINLOCKCAMPAIGN", new AdminLockCampaignCommand());
-        Commands.put("ADMINLOCKFACTORY", new AdminLockFactoryCommand());
-        Commands.put("ADMINLISTANDREMOVEOMG", new AdminListAndRemoveOMGCommand());
-        Commands.put("ADMINLISTHOUSEBANNEDAMMO", new AdminListHouseBannedAmmoCommand());
-        Commands.put("ADMINLISTSERVERBANNEDAMMO", new AdminListServerBannedAmmoCommand());
-        Commands.put("ADMINMOVEPLANET", new AdminMovePlanetCommand());
-        Commands.put("ADMINPASSWORD", new AdminPasswordCommand());
-        Commands.put("ADMINPLAYERSTATUS", new AdminPlayerStatusCommand());
-        Commands.put("ADMINPURGEHOUSEBAYS", new AdminPurgeHouseBaysCommand());
-        Commands.put("ADMINPURGEHOUSECONFIGS", new AdminPurgeHouseConfigsCommand());
-        Commands.put("ADMINRANDOMLYSETPLANETPRODUCTION", new AdminRandomlySetPlanetProductionCommand());
-        Commands.put("ADMINRECALCHANGARBVMC", new AdminRecalcHangarBvCommandMC());  //@salient
-        Commands.put("ADMINRELOADHOUSECONFIGS", new AdminReloadHouseConfigsCommand());
-        Commands.put("ADMINRELOADHTMLSANITIZERCONFIGS", new AdminReloadHTMLSanitizerConfigsCommand());
-        Commands.put("ADMINRELOADSUPPORTUNITS", new AdminReloadSupportUnitsCommand());
-        Commands.put("ADMINREMOVEALLFACTORIES", new AdminRemoveAllFactoriesCommand());
-        Commands.put("ADMINREMOVEALLTERRAIN", new AdminRemoveAllTerrainCommand());
-        Commands.put("ADMINREMOVEPLANETOWNERSHIP", new AdminRemovePlanetOwnershipCommand());
-        Commands.put("ADMINREMOVESERVEROPFLAGS", new AdminRemoveServerOpFlagsCommand());
-        Commands.put("ADMINREMOVEUNITSONMARKET", new AdminRemoveUnitsOnMarketCommand());
-        Commands.put("ADMINRENAMEPLANET", new AdminRenamePlanetCommand());
-        Commands.put("ADMINREQUESTBUILDTABLE", new AdminRequestBuildTableCommand());
-        Commands.put("ADMINRESETFACTIONCOMPONENTS", new AdminResetFactionComponentsCommand());
-        Commands.put("ADMINRESETHOUSERANKINGS", new AdminResetHouseRankingsCommand());
-        Commands.put("ADMINRESETPLAYER", new AdminResetPlayerCommand());
-        Commands.put("ADMINRESTARTTRACKERTHREAD", new AdminRestartTrackerThreadCommand());
-        Commands.put("ADMINRETURNPLANETSTOORIGINALOWNERS", new AdminReturnPlanetsToOriginalOwnersCommand());
-        Commands.put("ADMINSAVE", new AdminSaveCommand());
-        Commands.put("ADMINSAVEBLACKMARKETCONFIGS", new AdminSaveBlackMarketConfigsCommand());
-        Commands.put("ADMINSAVECOMMANDLEVELS", new AdminSaveCommandLevelsCommand());
-        Commands.put("ADMINSAVEFACTIONCONFIGS", new AdminSaveFactionConfigsCommand());
-        Commands.put("ADMINSAVEPLANETSTOXML", new AdminSavePlanetsToXMLCommand());
-        Commands.put("ADMINSAVESERVERCONFIGS", new AdminSaveServerConfigsCommand());
-        Commands.put("ADMINSETBLACKMARKETSETTING", new AdminSetBlackMarketSettingCommand());
-        Commands.put("ADMINSETCOMMANDLEVEL", new AdminSetCommandLevelCommand());
-        Commands.put("ADMINSETHOMEWORLD", new AdminSetHomeWorldCommand());
-        Commands.put("ADMINSETHOUSEABBREVIATION", new AdminSetHouseAbbreviationCommand());
-        Commands.put("ADMINSETHOUSEFLUFILE", new AdminSetHouseFluFileCommand());
-        Commands.put("ADMINSETHOUSEPLAYERCOLOR", new AdminSetHousePlayerColorCommand());
-        Commands.put("ADMINSETHOUSETECHLEVEL", new AdminSetHouseTechLevelCommand());
-        Commands.put("ADMINSETPLANETBOARDSIZE", new AdminSetPlanetBoardSizeCommand());
-        Commands.put("ADMINSETPLANETGRAVITY", new AdminSetPlanetGravityCommand());
-        Commands.put("ADMINSETPLANETOPFLAGS", new AdminSetPlanetOpFlagsCommand());
-        Commands.put("ADMINSETPLANETORIGINALOWNER", new AdminSetPlanetOriginalOwnerCommand());
-        Commands.put("ADMINSETPLANETMAPSIZE", new AdminSetPlanetMapSizeCommand());
-        Commands.put("ADMINSETPLANETTEMPERATURE", new AdminSetPlanetTemperatureCommand());
-        Commands.put("ADMINSETPLANETVACUUM", new AdminSetPlanetVacuumCommand());
-        Commands.put("ADMINSETHOUSEAMMOBAN", new AdminSetHouseAmmoBanCommand());
-        Commands.put("ADMINSETSERVERAMMOBAN", new AdminSetServerAmmoBanCommand());
-        Commands.put("ADMINSETSERVERTARGETBAN", new AdminSetServerTargetBanCommand());
-        Commands.put("ADMINSCRAP", new AdminScrapCommand());
-        Commands.put("ADMINSPOOF", new AdminSpoofCommand());
-        Commands.put("ADMINTERMINATEALL", new AdminTerminateAllCommand());
-        Commands.put("ADMINTRANSFER", new AdminTransferCommand());
-        Commands.put("ADMINUNLOCKCAMPAIGN", new AdminUnlockCampaignCommand());
-        Commands.put("ADMINUNLOCKUNITSMC", new AdminUnlockUnitsCommandMC());
-        Commands.put("ADMINUPDATECLIENTPARAM", new AdminUpdateClientParamCommand());
-        Commands.put("ADMINUPDATEPLANETOWNERSHIP", new AdminUpdatePlanetOwnershipCommand());
-        Commands.put("ADMINUPDATEDEFAULTPLAYERFLAGS", new AdminUpdateDefaultPlayerFlagsCommand());
-        Commands.put("ADMINUPLOADBUILDTABLE", new AdminUploadBuildTableCommand());
-        Commands.put("ADMINVIEWLOG", new AdminViewLogCommand());
-        Commands.put("ALL", new ArmyLowerLimiterCommand());
-        Commands.put("ANNOUNCE", new AnnounceCommand());
-        Commands.put("AOFS", new ArmyOpForceSizeCommand());
-        Commands.put("AUL", new ArmyUpperLimiterCommand());
-        Commands.put("ATTACK", new AttackCommand());
-        Commands.put("ATTACKFROMRESERVE", new AttackFromReserveCommand());
-        Commands.put("AUTOFILLBLACKMARKETSETTING", new AutoFillBlackMarketSettingCommand());
-        Commands.put("AUTOPLANETSTATUS", new AutoPlanetStatusCommand());
-        Commands.put("BID", new BidCommand());
-        Commands.put("BMSTATUS", new BMStatusCommand());
-        Commands.put("BUILDTABLELIST", new BuildTableListCommand());
-        Commands.put("BUILDTABLEVALIDATOR", new BuildTableValidatorCommand());
-        Commands.put("BUYBAYS", new BuyBaysCommand());
-        Commands.put("BUYPARTS", new BuyPartsCommand());
-        Commands.put("BUYPILOTSFROMHOUSE", new BuyPilotsFromHouseCommand());
-        Commands.put("CALCDIST", new CalcDistCommand());
-        Commands.put("CAMPAIGNCONFIG", new CampaignConfigCommand());
-        Commands.put("CANCELOFFER", new CancelOfferCommand());
-        Commands.put("CHANGEHOUSECOLOR", new ChangeHouseColorCommand());
-        Commands.put("CHANGENAME", new ChangeNameCommand());
+        commands.put("ACCEPTATTACKFROMRESERVE", new AcceptAttackFromReserveCommand());
+        commands.put("ACCEPTCONTRACT", new AcceptContractCommand());
+        commands.put("ACTIVATE", new ActivateCommand());
+        commands.put("ADDLEADER", new AddLeaderCommand());
+        commands.put("ADDOMNIVARIANTMOD", new AddOmniVariantModCommand());
+        commands.put("ADDPARTS", new AddPartsCommand());
+        commands.put("ADDSONG", new AddSongCommand());
+        commands.put("ADDTRAIT", new AddTraitCommand());
+        commands.put("ADMINADDSERVEROPFLAGS", new AdminAddServerOpFlagsCommand());
+        commands.put("ADMINALLOWHOUSEDEFECTION", new AdminAllowHouseDefectionCommand());
+        commands.put("ADMINCALCULATEHOUSERANKINGS", new AdminCalculateHouseRankingsCommand());
+        commands.put("ADMINCHANGEFACTIONCONFIG", new AdminChangeFactionConfigCommand());
+        commands.put("ADMINCHANGEPLANETOWNER", new AdminChangePlanetOwnerCommand());
+        commands.put("ADMINCHANGESERVERCONFIG", new AdminChangeServerConfigCommand());
+        commands.put("ADMINCREATEFACTION", new AdminCreateFactionCommand());
+        commands.put("ADMINCREATEPLANET", new AdminCreatePlanetCommand());
+        commands.put("ADMINCREATEFACTORY", new AdminCreateFactoryCommand());
+        commands.put("ADMINCREATESOLARIS", new AdminCreateSolarisCommand());
+        commands.put("ADMINCREATETERRAIN", new AdminCreateTerrainCommand());
+        commands.put("ADMINDESTROYFACTION", new AdminDestroyFactionCommand());
+        commands.put("ADMINDESTROYFACTORY", new AdminDestroyFactoryCommand());
+        commands.put("ADMINDESTROYPLANET", new AdminDestroyPlanetCommand());
+        commands.put("ADMINDESTROYTERRAIN", new AdminDestroyTerrainCommand());
+        commands.put("ADMINDONATE", new AdminDonateCommand());
+        commands.put("ADMINEXCHANGEPLANETOWNERSHIP", new AdminExchangePlanetOwnershipCommand());
+        commands.put("ADMINGETUNITCOMPONENTS", new AdminGetUnitComponentsCommand());
+        commands.put("ADMINGRANTCOMPONENTS", new AdminGrantComponentsCommand());
+        commands.put("ADMINHOUSEPILOTS", new AdminHousePilotsCommand());
+        commands.put("ADMINHOUSESTATUS", new AdminHouseStatusCommand());
+        commands.put("ADMINLOCKCAMPAIGN", new AdminLockCampaignCommand());
+        commands.put("ADMINLOCKFACTORY", new AdminLockFactoryCommand());
+        commands.put("ADMINLISTANDREMOVEOMG", new AdminListAndRemoveOMGCommand());
+        commands.put("ADMINLISTHOUSEBANNEDAMMO", new AdminListHouseBannedAmmoCommand());
+        commands.put("ADMINLISTSERVERBANNEDAMMO", new AdminListServerBannedAmmoCommand());
+        commands.put("ADMINMOVEPLANET", new AdminMovePlanetCommand());
+        commands.put("ADMINPASSWORD", new AdminPasswordCommand());
+        commands.put("ADMINPLAYERSTATUS", new AdminPlayerStatusCommand());
+        commands.put("ADMINPURGEHOUSEBAYS", new AdminPurgeHouseBaysCommand());
+        commands.put("ADMINPURGEHOUSECONFIGS", new AdminPurgeHouseConfigsCommand());
+        commands.put("ADMINRANDOMLYSETPLANETPRODUCTION", new AdminRandomlySetPlanetProductionCommand());
+        commands.put("ADMINRECALCHANGARBVMC", new AdminRecalcHangarBvCommandMC());  //@salient
+        commands.put("ADMINRELOADHOUSECONFIGS", new AdminReloadHouseConfigsCommand());
+        commands.put("ADMINRELOADHTMLSANITIZERCONFIGS", new AdminReloadHTMLSanitizerConfigsCommand());
+        commands.put("ADMINRELOADSUPPORTUNITS", new AdminReloadSupportUnitsCommand());
+        commands.put("ADMINREMOVEALLFACTORIES", new AdminRemoveAllFactoriesCommand());
+        commands.put("ADMINREMOVEALLTERRAIN", new AdminRemoveAllTerrainCommand());
+        commands.put("ADMINREMOVEPLANETOWNERSHIP", new AdminRemovePlanetOwnershipCommand());
+        commands.put("ADMINREMOVESERVEROPFLAGS", new AdminRemoveServerOpFlagsCommand());
+        commands.put("ADMINREMOVEUNITSONMARKET", new AdminRemoveUnitsOnMarketCommand());
+        commands.put("ADMINRENAMEPLANET", new AdminRenamePlanetCommand());
+        commands.put("ADMINREQUESTBUILDTABLE", new AdminRequestBuildTableCommand());
+        commands.put("ADMINRESETFACTIONCOMPONENTS", new AdminResetFactionComponentsCommand());
+        commands.put("ADMINRESETHOUSERANKINGS", new AdminResetHouseRankingsCommand());
+        commands.put("ADMINRESETPLAYER", new AdminResetPlayerCommand());
+        commands.put("ADMINRESTARTTRACKERTHREAD", new AdminRestartTrackerThreadCommand());
+        commands.put("ADMINRETURNPLANETSTOORIGINALOWNERS", new AdminReturnPlanetsToOriginalOwnersCommand());
+        commands.put("ADMINSAVE", new AdminSaveCommand());
+        commands.put("ADMINSAVEBLACKMARKETCONFIGS", new AdminSaveBlackMarketConfigsCommand());
+        commands.put("ADMINSAVECOMMANDLEVELS", new AdminSaveCommandLevelsCommand());
+        commands.put("ADMINSAVEFACTIONCONFIGS", new AdminSaveFactionConfigsCommand());
+        commands.put("ADMINSAVEPLANETSTOXML", new AdminSavePlanetsToXMLCommand());
+        commands.put("ADMINSAVESERVERCONFIGS", new AdminSaveServerConfigsCommand());
+        commands.put("ADMINSETBLACKMARKETSETTING", new AdminSetBlackMarketSettingCommand());
+        commands.put("ADMINSETCOMMANDLEVEL", new AdminSetCommandLevelCommand());
+        commands.put("ADMINSETHOMEWORLD", new AdminSetHomeWorldCommand());
+        commands.put("ADMINSETHOUSEABBREVIATION", new AdminSetHouseAbbreviationCommand());
+        commands.put("ADMINSETHOUSEFLUFILE", new AdminSetHouseFluFileCommand());
+        commands.put("ADMINSETHOUSEPLAYERCOLOR", new AdminSetHousePlayerColorCommand());
+        commands.put("ADMINSETHOUSETECHLEVEL", new AdminSetHouseTechLevelCommand());
+        commands.put("ADMINSETPLANETBOARDSIZE", new AdminSetPlanetBoardSizeCommand());
+        commands.put("ADMINSETPLANETGRAVITY", new AdminSetPlanetGravityCommand());
+        commands.put("ADMINSETPLANETOPFLAGS", new AdminSetPlanetOpFlagsCommand());
+        commands.put("ADMINSETPLANETORIGINALOWNER", new AdminSetPlanetOriginalOwnerCommand());
+        commands.put("ADMINSETPLANETMAPSIZE", new AdminSetPlanetMapSizeCommand());
+        commands.put("ADMINSETPLANETTEMPERATURE", new AdminSetPlanetTemperatureCommand());
+        commands.put("ADMINSETPLANETVACUUM", new AdminSetPlanetVacuumCommand());
+        commands.put("ADMINSETHOUSEAMMOBAN", new AdminSetHouseAmmoBanCommand());
+        commands.put("ADMINSETSERVERAMMOBAN", new AdminSetServerAmmoBanCommand());
+        commands.put("ADMINSETSERVERTARGETBAN", new AdminSetServerTargetBanCommand());
+        commands.put("ADMINSCRAP", new AdminScrapCommand());
+        commands.put("ADMINSPOOF", new AdminSpoofCommand());
+        commands.put("ADMINTERMINATEALL", new AdminTerminateAllCommand());
+        commands.put("ADMINTRANSFER", new AdminTransferCommand());
+        commands.put("ADMINUNLOCKCAMPAIGN", new AdminUnlockCampaignCommand());
+        commands.put("ADMINUNLOCKUNITSMC", new AdminUnlockUnitsCommandMC());
+        commands.put("ADMINUPDATECLIENTPARAM", new AdminUpdateClientParamCommand());
+        commands.put("ADMINUPDATEPLANETOWNERSHIP", new AdminUpdatePlanetOwnershipCommand());
+        commands.put("ADMINUPDATEDEFAULTPLAYERFLAGS", new AdminUpdateDefaultPlayerFlagsCommand());
+        commands.put("ADMINUPLOADBUILDTABLE", new AdminUploadBuildTableCommand());
+        commands.put("ADMINVIEWLOG", new AdminViewLogCommand());
+        commands.put("ALL", new ArmyLowerLimiterCommand());
+        commands.put("ANNOUNCE", new AnnounceCommand());
+        commands.put("AOFS", new ArmyOpForceSizeCommand());
+        commands.put("AUL", new ArmyUpperLimiterCommand());
+        commands.put("ATTACK", new AttackCommand());
+        commands.put("ATTACKFROMRESERVE", new AttackFromReserveCommand());
+        commands.put("AUTOFILLBLACKMARKETSETTING", new AutoFillBlackMarketSettingCommand());
+        commands.put("AUTOPLANETSTATUS", new AutoPlanetStatusCommand());
+        commands.put("BID", new BidCommand());
+        commands.put("BMSTATUS", new BMStatusCommand());
+        commands.put("BUILDTABLELIST", new BuildTableListCommand());
+        commands.put("BUILDTABLEVALIDATOR", new BuildTableValidatorCommand());
+        commands.put("BUYBAYS", new BuyBaysCommand());
+        commands.put("BUYPARTS", new BuyPartsCommand());
+        commands.put("BUYPILOTSFROMHOUSE", new BuyPilotsFromHouseCommand());
+        commands.put("CALCDIST", new CalcDistCommand());
+        commands.put("CAMPAIGNCONFIG", new CampaignConfigCommand());
+        commands.put("CANCELOFFER", new CancelOfferCommand());
+        commands.put("CHANGEHOUSECOLOR", new ChangeHouseColorCommand());
+        commands.put("CHANGENAME", new ChangeNameCommand());
         // Double CA
-        Commands.put("CHECKATTACK", new CheckAttackCommand());
-        Commands.put("CA", new CheckAttackCommand());
+        commands.put("CHECKATTACK", new CheckAttackCommand());
+        commands.put("CA", new CheckAttackCommand());
         //@Salient - used for discord bot
-        Commands.put("CHATBOT", new ChatBotHelperCommand());
+        commands.put("CHATBOT", new ChatBotHelperCommand());
         //
-        Commands.put("CHECK", new CheckCommand());
-        Commands.put("CHECKARMYELIGIBILITY", new CheckArmyEligibilityCommand());
-        Commands.put("CHECKARMYLINK", new CheckArmyLinkCommand());
-        Commands.put("CHECKDIST", new CheckDistCommand());
-        Commands.put("COMMENCEOPERATION", new CommenceOperationCommand());
+        commands.put("CHECK", new CheckCommand());
+        commands.put("CHECKARMYELIGIBILITY", new CheckArmyEligibilityCommand());
+        commands.put("CHECKARMYLINK", new CheckArmyLinkCommand());
+        commands.put("CHECKDIST", new CheckDistCommand());
+        commands.put("COMMENCEOPERATION", new CommenceOperationCommand());
         // Double CRL
-        Commands.put("CREATEARMY", new CreateArmyCommand());
-        Commands.put("CRA", new CreateArmyCommand());
+        commands.put("CREATEARMY", new CreateArmyCommand());
+        commands.put("CRA", new CreateArmyCommand());
         //
-        Commands.put("CREATEARMYFROMMUL", new CreateArmyFromMulCommand());
-        Commands.put("CREATECHATROOM", new CreateChatRoomCommand());
-        Commands.put("CREATEMERCFACTION", new CreateMercFactionCommand());
-        Commands.put("CREATESUBFACTION", new CreateSubFactionCommand());
-        Commands.put("CREATEPILOT", new CreatePilotCommand());
-        Commands.put("CREATEUNIT", new CreateUnitCommand());
-        Commands.put("DEACTIVATE", new DeactivateCommand());
-        Commands.put("DECLINEATTACKFROMRESERVE", new DeclineAttackFromReserveCommand());
-        Commands.put("DEFECT", new DefectCommand());
-        Commands.put("DEFEND", new DefendCommand());
-        Commands.put("DELETEACCOUNT", new DeleteAccountCommand());
-        Commands.put("DEMOTEPILOT", new DemotePilotCommand());
-        Commands.put("DEMOTEPLAYER", new DemotePlayerCommand());
-        Commands.put("DIRECTSELLUNIT", new DirectSellUnitCommand());
-        Commands.put("DISPLAYPLAYERPERSONALPILOTQUEUE", new DisplayPlayerPersonalPilotQueueCommand());
-        Commands.put("DISPLAYUNITREPAIRJOBS", new DisplayUnitRepairJobsCommand());
-        Commands.put("DONATE", new DonateCommand());
-        Commands.put("DONATEPILOT", new DonatePilotCommand());
-        Commands.put("EC", new EmojiCommand()); //@salient
+        commands.put("CREATEARMYFROMMUL", new CreateArmyFromMulCommand());
+        commands.put("CREATECHATROOM", new CreateChatRoomCommand());
+        commands.put("CREATEMERCFACTION", new CreateMercFactionCommand());
+        commands.put("CREATESUBFACTION", new CreateSubFactionCommand());
+        commands.put("CREATEPILOT", new CreatePilotCommand());
+        commands.put("CREATEUNIT", new CreateUnitCommand());
+        commands.put("DEACTIVATE", new DeactivateCommand());
+        commands.put("DECLINEATTACKFROMRESERVE", new DeclineAttackFromReserveCommand());
+        commands.put("DEFECT", new DefectCommand());
+        commands.put("DEFEND", new DefendCommand());
+        commands.put("DELETEACCOUNT", new DeleteAccountCommand());
+        commands.put("DEMOTEPILOT", new DemotePilotCommand());
+        commands.put("DEMOTEPLAYER", new DemotePlayerCommand());
+        commands.put("DIRECTSELLUNIT", new DirectSellUnitCommand());
+        commands.put("DISPLAYPLAYERPERSONALPILOTQUEUE", new DisplayPlayerPersonalPilotQueueCommand());
+        commands.put("DISPLAYUNITREPAIRJOBS", new DisplayUnitRepairJobsCommand());
+        commands.put("DONATE", new DonateCommand());
+        commands.put("DONATEPILOT", new DonatePilotCommand());
+        commands.put("EC", new EmojiCommand()); //@salient
         // Double EHM
-        Commands.put("EHM", new EmployeeHouseMailCommand());
-        Commands.put("EMPLOYEEHOUSEMAIL", new EmployeeHouseMailCommand());
+        commands.put("EHM", new EmployeeHouseMailCommand());
+        commands.put("EMPLOYEEHOUSEMAIL", new EmployeeHouseMailCommand());
         //
-        Commands.put("ENDCHRISTMAS", new EndChristmasCommand());
-        Commands.put("ENROLL", new EnrollCommand());
+        commands.put("ENDCHRISTMAS", new EndChristmasCommand());
+        commands.put("ENROLL", new EnrollCommand());
         // Double EXU
-        Commands.put("EXCHANGEUNIT", new ExchangeUnitCommand());
-        Commands.put("EXU", new ExchangeUnitCommand());
-        Commands.put("EXM", new ExchangeUnitCommand());
+        commands.put("EXCHANGEUNIT", new ExchangeUnitCommand());
+        commands.put("EXU", new ExchangeUnitCommand());
+        commands.put("EXM", new ExchangeUnitCommand());
         // Exchange Pilots
-        Commands.put("EXCHANGEPILOTINUNIT", new ExchangePilotInUnitCommand());
-        Commands.put("EXP", new ExchangePilotInUnitCommand());
-        Commands.put("FACTION", new HouseCommand());// alias for house command
-        Commands.put("FACTIONLEADERFLUFF", new FactionLeaderFluffCommand());
-        Commands.put("FLF", new FactionLeaderFluffCommand());
-        Commands.put("FACTIONLEADERMUTE", new FactionLeaderMuteCommand());
-        Commands.put("FLM", new FactionLeaderMuteCommand());
-        Commands.put("FINDCP", new FindContestedPlanetsCommand()); //BarukKahzad 20151129
-        Commands.put("FIRETECHS", new FireTechsCommand());
-        Commands.put("FIXAMMO", new FixAmmoCommand());
-        Commands.put("FLUFF", new FluffCommand());
-        Commands.put("FORCEDDEFECT", new ForcedDefectCommand());
-        Commands.put("FORCEUPDATE", new ForceUpdateCommand());
-        Commands.put("GAMES", new GamesCommand());
-        Commands.put("GETCOMPONENTCONVERSION", new GetComponentConversionCommand());
-        Commands.put("GETFACTIONCONFIGS", new GetFactionConfigsCommand());
-        Commands.put("GETMODLOG", new GetModLogCommand());
-        Commands.put("GETOPS", new GetOpsCommand());
-        Commands.put("GETPLAYERUNITS", new GetPlayerUnitsCommand());
-        Commands.put("GETSERVERMEGAMEKGAMEOPTIONS", new GetServerMegaMekGameOptionsCommand());
-        Commands.put("GETSERVEROPFLAGS", new GetServerOpFlagsCommand());
-        Commands.put("GOOSE", new GooseCommand());
-        Commands.put("GRANTEXP", new GrantEXPCommand());
-        Commands.put("GRANTINFLUENCE", new GrantInfluenceCommand());
-        Commands.put("GRANTMONEY", new GrantMoneyCommand());
-        Commands.put("GRANTREWARD", new GrantRewardCommand());
-        Commands.put("GRANTTECHPOINTS", new GrantTechPointsCommand());
-        Commands.put("GRANTTECHS", new GrantTechsCommand());
-        Commands.put("HARDTERMINATE", new HardTerminateCommand());
-        Commands.put("HIREANDMAINTAIN", new HireAndMaintainHelper());
-        Commands.put("HIREANDREQUESTNEW", new HireAndRequestNewHelper());
-        Commands.put("HIREANDREQUESTUSED", new HireAndRequestUsedHelper());
-        Commands.put("HIRETECHS", new HireTechsCommand());
-        Commands.put("HOUSE", new HouseCommand());
-        Commands.put("HOUSECONTRACTS", new HouseContractsCommand());
+        commands.put("EXCHANGEPILOTINUNIT", new ExchangePilotInUnitCommand());
+        commands.put("EXP", new ExchangePilotInUnitCommand());
+        commands.put("FACTION", new HouseCommand());// alias for house command
+        commands.put("FACTIONLEADERFLUFF", new FactionLeaderFluffCommand());
+        commands.put("FLF", new FactionLeaderFluffCommand());
+        commands.put("FACTIONLEADERMUTE", new FactionLeaderMuteCommand());
+        commands.put("FLM", new FactionLeaderMuteCommand());
+        commands.put("FINDCP", new FindContestedPlanetsCommand()); //BarukKahzad 20151129
+        commands.put("FIRETECHS", new FireTechsCommand());
+        commands.put("FIXAMMO", new FixAmmoCommand());
+        commands.put("FLUFF", new FluffCommand());
+        commands.put("FORCEDDEFECT", new ForcedDefectCommand());
+        commands.put("FORCEUPDATE", new ForceUpdateCommand());
+        commands.put("GAMES", new GamesCommand());
+        commands.put("GETCOMPONENTCONVERSION", new GetComponentConversionCommand());
+        commands.put("GETFACTIONCONFIGS", new GetFactionConfigsCommand());
+        commands.put("GETMODLOG", new GetModLogCommand());
+        commands.put("GETOPS", new GetOpsCommand());
+        commands.put("GETPLAYERUNITS", new GetPlayerUnitsCommand());
+        commands.put("GETSERVERMEGAMEKGAMEOPTIONS", new GetServerMegaMekGameOptionsCommand());
+        commands.put("GETSERVEROPFLAGS", new GetServerOpFlagsCommand());
+        commands.put("GOOSE", new GooseCommand());
+        commands.put("GRANTEXP", new GrantEXPCommand());
+        commands.put("GRANTINFLUENCE", new GrantInfluenceCommand());
+        commands.put("GRANTMONEY", new GrantMoneyCommand());
+        commands.put("GRANTREWARD", new GrantRewardCommand());
+        commands.put("GRANTTECHPOINTS", new GrantTechPointsCommand());
+        commands.put("GRANTTECHS", new GrantTechsCommand());
+        commands.put("HARDTERMINATE", new HardTerminateCommand());
+        commands.put("HIREANDMAINTAIN", new HireAndMaintainHelper());
+        commands.put("HIREANDREQUESTNEW", new HireAndRequestNewHelper());
+        commands.put("HIREANDREQUESTUSED", new HireAndRequestUsedHelper());
+        commands.put("HIRETECHS", new HireTechsCommand());
+        commands.put("HOUSE", new HouseCommand());
+        commands.put("HOUSECONTRACTS", new HouseContractsCommand());
         // Double HM
-        Commands.put("HOUSEMAIL", new HouseMailCommand());
-        Commands.put("HM", new HouseMailCommand());
+        commands.put("HOUSEMAIL", new HouseMailCommand());
+        commands.put("HM", new HouseMailCommand());
         //
-        Commands.put("HOUSERANKING", new HouseRankingCommand());
-        Commands.put("HOUSESTATUS", new HouseStatusCommand());
+        commands.put("HOUSERANKING", new HouseRankingCommand());
+        commands.put("HOUSESTATUS", new HouseStatusCommand());
         // Double IC
-        Commands.put("INCHARACTER", new InCharacterCommand());
-        Commands.put("IC", new InCharacterCommand());
-        Commands.put("INVIS", new InvisCommand());
-        Commands.put("ISITCHRISTMAS", new IsItChristmasCommand());
+        commands.put("INCHARACTER", new InCharacterCommand());
+        commands.put("IC", new InCharacterCommand());
+        commands.put("INVIS", new InvisCommand());
+        commands.put("ISITCHRISTMAS", new IsItChristmasCommand());
         // ISS
-        Commands.put("ISSTATUS", new ISStatusCommand());// legace commands for
+        commands.put("ISSTATUS", new ISStatusCommand());// legace commands for
         // the client
-        Commands.put("ISS", new ISStatusCommand());
-        Commands.put("UsersCommand", new ISStatusCommand());
-        Commands.put("UNIVERSESTATUS", new ISStatusCommand());
+        commands.put("ISS", new ISStatusCommand());
+        commands.put("UsersCommand", new ISStatusCommand());
+        commands.put("UNIVERSESTATUS", new ISStatusCommand());
         //
-        Commands.put("JOINATTACK", new JoinAttackCommand());
-        Commands.put("LASTONLINE", new LastOnlineCommand());
-        Commands.put("LINKUNIT", new LinkUnitCommand());
-        Commands.put("LISTCOMMANDS", new ListCommandsCommand());
-        Commands.put("LISTMULS", new ListMulsCommand());
-        Commands.put("LISTMULTIPLAYERGROUPS", new ListMultiPlayerGroupsCommand());
-        Commands.put("LISTSERVEROPFLAGS", new ListServerOpFlagsCommand());
-        Commands.put("LISTSUBFACTIONS", new ListSubFactionCommand());
-        Commands.put("LOGIN", new LoginCommand());
-        Commands.put("LOGOUT", new LogoutCommand());
+        commands.put("JOINATTACK", new JoinAttackCommand());
+        commands.put("LASTONLINE", new LastOnlineCommand());
+        commands.put("LINKUNIT", new LinkUnitCommand());
+        commands.put("LISTCOMMANDS", new ListCommandsCommand());
+        commands.put("LISTMULS", new ListMulsCommand());
+        commands.put("LISTMULTIPLAYERGROUPS", new ListMultiPlayerGroupsCommand());
+        commands.put("LISTSERVEROPFLAGS", new ListServerOpFlagsCommand());
+        commands.put("LISTSUBFACTIONS", new ListSubFactionCommand());
+        commands.put("LOGIN", new LoginCommand());
+        commands.put("LOGOUT", new LogoutCommand());
         // Double MStatus
-        Commands.put("MERCSTATUS", new MercStatusCommand());
-        Commands.put("MSTATUS", new MercStatusCommand());
-        Commands.put("MMOTD", new MMOTDCommand());
+        commands.put("MERCSTATUS", new MercStatusCommand());
+        commands.put("MSTATUS", new MercStatusCommand());
+        commands.put("MMOTD", new MMOTDCommand());
         //
         // Double MM
-        Commands.put("MODERATORMAIL", new ModeratorMailCommand());
-        Commands.put("MM", new ModeratorMailCommand());
+        commands.put("MODERATORMAIL", new ModeratorMailCommand());
+        commands.put("MM", new ModeratorMailCommand());
         //
-        Commands.put("MODDEACTIVATE", new ModDeactivateCommand());
-        Commands.put("MODGAMES", new ModGamesCommand());
-        Commands.put("MODFULLREPAIR", new ModFullRepairCommand());
-        Commands.put("MODLOG", new ModLogCommand());
-        Commands.put("MODNOPLAY", new ModNoPlayCommand());
-        Commands.put("MODREFRESHFACTORY", new ModRefreshFactoryCommand());
-        Commands.put("MODTERMINATE", new ModTerminateCommand());
-        Commands.put("MOTD", new MOTDCommand());
-        Commands.put("MYBIDS", new MyBidsCommand());
-        Commands.put("MYSTATUS", new MyStatusCommand());
-        Commands.put("MYVOTES", new MyVotesCommand());
-        Commands.put("NAMEARMY", new NameArmyCommand());
-        Commands.put("NAMEPILOT", new NamePilotCommand());
-        Commands.put("NOPLAY", new NoPlayCommand());
-        Commands.put("NOTIFYFIGHTING", new NotifyFightingCommand());
-        Commands.put("OFFERCONTRACT", new OfferContractCommand());
-        Commands.put("PLANET", new PlanetCommand());
-        Commands.put("PLAYERLOCKARMY", new PlayerLockArmyCommand());
-        Commands.put("PLAYERS", new PlayersCommand());
-        Commands.put("PLAYERUNLOCKARMY", new PlayerUnlockArmyCommand());
-        Commands.put("PROMOTEPLAYER", new PromotePlayerCommand());
-        Commands.put("PROMOTEPILOT", new PromotePilotCommand());
-        Commands.put("PURCHASEFACTORY", new PurchaseFactoryCommand());
-        Commands.put("QUIRKCHECK", new QuirkCheckCommand()); //@salient
-        Commands.put("RANGE", new RangeCommand());
-        Commands.put("RECALL", new RecallCommand());
-        Commands.put("RECALLBID", new RecallBidCommand());
-        Commands.put("REPOD", new RepodCommand());
-        Commands.put("REPORTSTATUSMC", new ReportStatusMC()); //@salient
-        Commands.put("REFRESHFACTORY", new RefreshFactoryCommand());
-        Commands.put("REFUSECONTRACT", new RefuseContractCommand());
-        Commands.put("RELOADALLAMMO", new ReloadAllAmmoCommand());
-        Commands.put("REMOVEANDADDNOPLAY", new RemoveAndAddNoPlayHelper());
+        commands.put("MODDEACTIVATE", new ModDeactivateCommand());
+        commands.put("MODGAMES", new ModGamesCommand());
+        commands.put("MODFULLREPAIR", new ModFullRepairCommand());
+        commands.put("MODLOG", new ModLogCommand());
+        commands.put("MODNOPLAY", new ModNoPlayCommand());
+        commands.put("MODREFRESHFACTORY", new ModRefreshFactoryCommand());
+        commands.put("MODTERMINATE", new ModTerminateCommand());
+        commands.put("MOTD", new MOTDCommand());
+        commands.put("MYBIDS", new MyBidsCommand());
+        commands.put("MYSTATUS", new MyStatusCommand());
+        commands.put("MYVOTES", new MyVotesCommand());
+        commands.put("NAMEARMY", new NameArmyCommand());
+        commands.put("NAMEPILOT", new NamePilotCommand());
+        commands.put("NOPLAY", new NoPlayCommand());
+        commands.put("NOTIFYFIGHTING", new NotifyFightingCommand());
+        commands.put("OFFERCONTRACT", new OfferContractCommand());
+        commands.put("PLANET", new PlanetCommand());
+        commands.put("PLAYERLOCKARMY", new PlayerLockArmyCommand());
+        commands.put("PLAYERS", new PlayersCommand());
+        commands.put("PLAYERUNLOCKARMY", new PlayerUnlockArmyCommand());
+        commands.put("PROMOTEPLAYER", new PromotePlayerCommand());
+        commands.put("PROMOTEPILOT", new PromotePilotCommand());
+        commands.put("PURCHASEFACTORY", new PurchaseFactoryCommand());
+        commands.put("QUIRKCHECK", new QuirkCheckCommand()); //@salient
+        commands.put("RANGE", new RangeCommand());
+        commands.put("RECALL", new RecallCommand());
+        commands.put("RECALLBID", new RecallBidCommand());
+        commands.put("REPOD", new RepodCommand());
+        commands.put("REPORTSTATUSMC", new ReportStatusMC()); //@salient
+        commands.put("REFRESHFACTORY", new RefreshFactoryCommand());
+        commands.put("REFUSECONTRACT", new RefuseContractCommand());
+        commands.put("RELOADALLAMMO", new ReloadAllAmmoCommand());
+        commands.put("REMOVEANDADDNOPLAY", new RemoveAndAddNoPlayHelper());
         // Double RML
-        Commands.put("REMOVEARMY", new RemoveArmyCommand());
-        Commands.put("RMA", new RemoveArmyCommand());
+        commands.put("REMOVEARMY", new RemoveArmyCommand());
+        commands.put("RMA", new RemoveArmyCommand());
         //
-        Commands.put("REMOVEFACTIONPILOT", new RemoveFactionPilotCommand());
-        Commands.put("REMOVELEADER", new RemoveLeaderCommand());
-        Commands.put("REMOVEPARTS", new RemovePartsCommand());
-        Commands.put("REMOVEPILOT", new RemovePilotCommand());
-        Commands.put("REMOVESONG", new RemoveSongCommand());
-        Commands.put("REMOVESUBFACTION", new RemoveSubFactionCommand());
-        Commands.put("REMOVETRAIT", new RemoveTraitCommand());
-        Commands.put("REMOVEVOTE", new RemoveVoteCommand());
-        Commands.put("REPAIRUNIT", new RepairUnitCommand());
-        Commands.put("REQUEST", new RequestCommand());
-        Commands.put("REQUESTBUILDTABLE", new RequestBuildTableCommand());
-        Commands.put("REQUESTDONATED", new RequestDonatedCommand());
-        Commands.put("REQUESTOPERATIONSETTINGS", new RequestOperationSettingsCommand());
-        Commands.put("REQUESTSERVERMAIL", new RequestServerMailCommand());
-        Commands.put("REQUESTSUBFACTIONPROMOTION", new RequestSubFactionPromotionCommand());
-        Commands.put("RESEARCHTECHLEVEL", new ResearchTechLevelCommand());
-        Commands.put("RESEARCHUNIT", new ResearchUnitCommand());
-        Commands.put("RESETFREEMEKS", new AdminResetFreeMeksCommand()); //@Salient added for free build
-        Commands.put("RESTARTREPAIRTHREAD", new RestartRepairThreadCommand());
-        Commands.put("RETRIEVEALLOPERATIONS", new RetrieveAllOperationsCommand());
-        Commands.put("RETRIEVEOPERATION", new RetrieveOperationCommand());
-        Commands.put("RETRIEVEMUL", new RetrieveMulCommand());
-        Commands.put("RETRIEVEALLMULS", new RetrieveAllMulsCommand());
-        Commands.put("RETIREPILOT", new RetirePilotCommand());
-        Commands.put("SALVAGEUNIT", new SalvageUnitCommand());
-        Commands.put("SAVETOJSON", new SPlayerToJsonCommand()); //@salient - for discord bot
-        Commands.put("SCRAP", new ScrapCommand());
-        Commands.put("SENDCLIENTDATA", new SendClientDataCommand());
-        Commands.put("SELFPROMOTE", new SelfPromoteCommand()); //@salient - for subfactions
-        Commands.put("SELL", new SellCommand());
-        Commands.put("SELLBAYS", new SellBaysCommand());
-        Commands.put("SENDTOMISC", new SendToMiscCommand());
-        Commands.put("SERVERVERSION", new ServerVersionCommand());
-        Commands.put("SERVERGAMEOPTIONS", new ServerGameOptionsCommand());
-        Commands.put("SETADVANCEDPLANETTERRAIN", new SetAdvancedPlanetTerrainCommand());
-        Commands.put("SETAUTOEJECT", new SetAutoEjectCommand());
-        Commands.put("SETAUTOREORDER", new SetAutoReorderCommand());
-        Commands.put("SETCLIENTVERSION", new SetClientVersionCommand());
-        Commands.put("SETCOMPONENTCONVERSION", new SetComponentConversionCommand());
-        Commands.put("SETEDGESKILLS", new SetEdgeSkillsCommand());
-        Commands.put("SETELO", new SetEloCommand());
-        Commands.put("SETFACTIONTOFACTIONREWARDPOINTMULTIPLIER", new SetFactionToFactionRewardPointMultiplierCommand());
-        Commands.put("SETHOUSEBASEPILOTSKILLS", new SetHouseBasePilotSkillsCommand());
-        Commands.put("SETHOUSEBASEPILOTINGSKILLS", new SetHouseBasePilotingSkillsCommand());
-        Commands.put("SETHOUSELOGO", new SetHouseLogoCommand());
-        Commands.put("SETHOUSECONQUER", new SetHouseConquerCommand());
-        Commands.put("SETHOUSEINHOUSEATTACKS", new SetHouseInHouseAttacksCommand());
-        Commands.put("SETOPERATION", new SetOperationCommand());
-        Commands.put("SETMAINTAINED", new SetMaintainedCommand());
-        Commands.put("SETMMOTD", new SetMMOTDCommand());
-        Commands.put("SETMOTD", new SetMOTDCommand());
-        Commands.put("SETMULTIPLAYERGROUP", new SetMultiPlayerGroupCommand());
-        Commands.put("SETMYLOGO", new SetMyLogoCommand());
-        Commands.put("SETPLANETCONQUER", new SetPlanetConquerCommand());
-        Commands.put("SETPLANETCONQUERPOINTS", new SetPlanetConquerPointsCommand());
-        Commands.put("SETPLANETMINOWNERSHIP", new SetPlanetMinOwnerShipCommand());
-        Commands.put("SETPLANETWAREHOUSE", new SetPlanetWareHouseCommand());
-        Commands.put("SETPLANETCOMPPRODUCTION", new SetPlanetCompProductionCommand());
-        Commands.put("SETPLAYERFLAGS", new SetPlayerFlagsCommand());
-        Commands.put("SETSUBFACTIONCONFIG", new SetSubFactionConfigCommand());
-        Commands.put("SETTARGETSYSTEM", new SetTargetSystemCommand());
-        Commands.put("SETUNITAMMO", new SetUnitAmmoCommand());
-        Commands.put("SETUNITAMMOBYCRIT", new SetUnitAmmoByCritCommand());
-        Commands.put("SETUNITBURST", new SetUnitBurstCommand());
-        Commands.put("SETUNITCOMMANDER", new SetUnitCommanderCommand());
-        Commands.put("SETUNMAINTAINED", new SetUnmaintainedCommand());
+        commands.put("REMOVEFACTIONPILOT", new RemoveFactionPilotCommand());
+        commands.put("REMOVELEADER", new RemoveLeaderCommand());
+        commands.put("REMOVEPARTS", new RemovePartsCommand());
+        commands.put("REMOVEPILOT", new RemovePilotCommand());
+        commands.put("REMOVESONG", new RemoveSongCommand());
+        commands.put("REMOVESUBFACTION", new RemoveSubFactionCommand());
+        commands.put("REMOVETRAIT", new RemoveTraitCommand());
+        commands.put("REMOVEVOTE", new RemoveVoteCommand());
+        commands.put("REPAIRUNIT", new RepairUnitCommand());
+        commands.put("REQUEST", new RequestCommand());
+        commands.put("REQUESTBUILDTABLE", new RequestBuildTableCommand());
+        commands.put("REQUESTDONATED", new RequestDonatedCommand());
+        commands.put("REQUESTOPERATIONSETTINGS", new RequestOperationSettingsCommand());
+        commands.put("REQUESTSERVERMAIL", new RequestServerMailCommand());
+        commands.put("REQUESTSUBFACTIONPROMOTION", new RequestSubFactionPromotionCommand());
+        commands.put("RESEARCHTECHLEVEL", new ResearchTechLevelCommand());
+        commands.put("RESEARCHUNIT", new ResearchUnitCommand());
+        commands.put("RESETFREEMEKS", new AdminResetFreeMeksCommand()); //@Salient added for free build
+        commands.put("RESTARTREPAIRTHREAD", new RestartRepairThreadCommand());
+        commands.put("RETRIEVEALLOPERATIONS", new RetrieveAllOperationsCommand());
+        commands.put("RETRIEVEOPERATION", new RetrieveOperationCommand());
+        commands.put("RETRIEVEMUL", new RetrieveMulCommand());
+        commands.put("RETRIEVEALLMULS", new RetrieveAllMulsCommand());
+        commands.put("RETIREPILOT", new RetirePilotCommand());
+        commands.put("SALVAGEUNIT", new SalvageUnitCommand());
+        commands.put("SAVETOJSON", new SPlayerToJsonCommand()); //@salient - for discord bot
+        commands.put("SCRAP", new ScrapCommand());
+        commands.put("SENDCLIENTDATA", new SendClientDataCommand());
+        commands.put("SELFPROMOTE", new SelfPromoteCommand()); //@salient - for subfactions
+        commands.put("SELL", new SellCommand());
+        commands.put("SELLBAYS", new SellBaysCommand());
+        commands.put("SENDTOMISC", new SendToMiscCommand());
+        commands.put("SERVERVERSION", new ServerVersionCommand());
+        commands.put("SERVERGAMEOPTIONS", new ServerGameOptionsCommand());
+        commands.put("SETADVANCEDPLANETTERRAIN", new SetAdvancedPlanetTerrainCommand());
+        commands.put("SETAUTOEJECT", new SetAutoEjectCommand());
+        commands.put("SETAUTOREORDER", new SetAutoReorderCommand());
+        commands.put("SETCLIENTVERSION", new SetClientVersionCommand());
+        commands.put("SETCOMPONENTCONVERSION", new SetComponentConversionCommand());
+        commands.put("SETEDGESKILLS", new SetEdgeSkillsCommand());
+        commands.put("SETELO", new SetEloCommand());
+        commands.put("SETFACTIONTOFACTIONREWARDPOINTMULTIPLIER", new SetFactionToFactionRewardPointMultiplierCommand());
+        commands.put("SETHOUSEBASEPILOTSKILLS", new SetHouseBasePilotSkillsCommand());
+        commands.put("SETHOUSEBASEPILOTINGSKILLS", new SetHouseBasePilotingSkillsCommand());
+        commands.put("SETHOUSELOGO", new SetHouseLogoCommand());
+        commands.put("SETHOUSECONQUER", new SetHouseConquerCommand());
+        commands.put("SETHOUSEINHOUSEATTACKS", new SetHouseInHouseAttacksCommand());
+        commands.put("SETOPERATION", new SetOperationCommand());
+        commands.put("SETMAINTAINED", new SetMaintainedCommand());
+        commands.put("SETMMOTD", new SetMMOTDCommand());
+        commands.put("SETMOTD", new SetMOTDCommand());
+        commands.put("SETMULTIPLAYERGROUP", new SetMultiPlayerGroupCommand());
+        commands.put("SETMYLOGO", new SetMyLogoCommand());
+        commands.put("SETPLANETCONQUER", new SetPlanetConquerCommand());
+        commands.put("SETPLANETCONQUERPOINTS", new SetPlanetConquerPointsCommand());
+        commands.put("SETPLANETMINOWNERSHIP", new SetPlanetMinOwnerShipCommand());
+        commands.put("SETPLANETWAREHOUSE", new SetPlanetWareHouseCommand());
+        commands.put("SETPLANETCOMPPRODUCTION", new SetPlanetCompProductionCommand());
+        commands.put("SETPLAYERFLAGS", new SetPlayerFlagsCommand());
+        commands.put("SETSUBFACTIONCONFIG", new SetSubFactionConfigCommand());
+        commands.put("SETTARGETSYSTEM", new SetTargetSystemCommand());
+        commands.put("SETUNITAMMO", new SetUnitAmmoCommand());
+        commands.put("SETUNITAMMOBYCRIT", new SetUnitAmmoByCritCommand());
+        commands.put("SETUNITBURST", new SetUnitBurstCommand());
+        commands.put("SETUNITCOMMANDER", new SetUnitCommanderCommand());
+        commands.put("SETUNMAINTAINED", new SetUnmaintainedCommand());
         // Double ShowToHouse
-        Commands.put("SHOWTOHOUSE", new ShowToHouseCommand());
-        Commands.put("STH", new ShowToHouseCommand());
-        Commands.put("SIMPLEREPAIR", new SimpleRepairCommand());
+        commands.put("SHOWTOHOUSE", new ShowToHouseCommand());
+        commands.put("STH", new ShowToHouseCommand());
+        commands.put("SIMPLEREPAIR", new SimpleRepairCommand());
         // Double SingASong
-        Commands.put("SINGASONG", new SingASongCommand());
-        Commands.put("SAS", new SingASongCommand());
+        commands.put("SINGASONG", new SingASongCommand());
+        commands.put("SAS", new SingASongCommand());
         //@Salient for sol free build option
-        Commands.put("SOLCREATEUNIT", new FreeBuildCreateUnitCommand());
-        Commands.put("SOLDELETEUNIT", new SolDeleteUnitCommand());
-        Commands.put("STARTCHRISTMAS", new StartChristmasCommand());
-        Commands.put("STOPREPAIRJOB", new StopRepairJobCommand());
-        Commands.put("STRIPALLPARTSCACHE", new StripAllPartsCacheCommand());
-        Commands.put("STRIPUNITS", new StripUnitsCommand());
-        Commands.put("TERMINATE", new TerminateCommand());
-        Commands.put("TERMINATECONTRACT", new TerminateContractCommand());
-        Commands.put("TICK", new TickCommand());
-        Commands.put("TOGGLEARMYDISABLED", new ToggleArmyDisabledCommand());
-        Commands.put("TOUCH", new TouchCommand());
-        Commands.put("TRANSFERMONEY", new TransferMoneyCommand());
-        Commands.put("TRANSFERPILOT", new TransferPilotCommand());
-        Commands.put("TRANSFERUNIT", new TransferUnitCommand());
-        Commands.put("TRANSFERINFLUENCE", new TransferInfluenceCommand()); //@salient
-        Commands.put("TRANSFERREWARDPOINTS", new TransferRewardPointsCommand());
-        Commands.put("UPDATEDISCORDINFO", new UpdateDiscordInfoCommand());
-        Commands.put("UPDATEOPERATIONS", new UpdateOperationsCommand());
-        Commands.put("UPDATESERVERUNITSCACHE", new UpdateServerUnitsCacheCommand());
-        Commands.put("UPLOADMUL", new UploadMulCommand());
-        Commands.put("UNEMPLOYEDMERCS", new UnemployedMercsCommand());
-        Commands.put("UNENROLL", new UnenrollCommand());
-        Commands.put("UNITPOSITION", new UnitPositionCommand());
-        Commands.put("UNLOCKLANCES", new UnlockLancesCommand());
-        Commands.put("USEREWARDPOINTS", new UseRewardPointsCommand());
-        Commands.put("USEINFLUENCE", new UseInfluenceCommand());
-        Commands.put("VIEWFACTIONPARTSCACHE", new ViewFactionPartsCacheCommand());
-        Commands.put("VIEWPLAYERPARTS", new ViewPlayerPartsCommand());
-        Commands.put("VIEWPLAYERPERSONALPILOTQUEUE", new ViewPlayerPersonalPilotQueueCommand());
-        Commands.put("VIEWPLAYERUNIT", new ViewPlayerUnitCommand());
-        Commands.put("VOTE", new VoteCommand());
+        commands.put("SOLCREATEUNIT", new FreeBuildCreateUnitCommand());
+        commands.put("SOLDELETEUNIT", new SolDeleteUnitCommand());
+        commands.put("STARTCHRISTMAS", new StartChristmasCommand());
+        commands.put("STOPREPAIRJOB", new StopRepairJobCommand());
+        commands.put("STRIPALLPARTSCACHE", new StripAllPartsCacheCommand());
+        commands.put("STRIPUNITS", new StripUnitsCommand());
+        commands.put("TERMINATE", new TerminateCommand());
+        commands.put("TERMINATECONTRACT", new TerminateContractCommand());
+        commands.put("TICK", new TickCommand());
+        commands.put("TOGGLEARMYDISABLED", new ToggleArmyDisabledCommand());
+        commands.put("TOUCH", new TouchCommand());
+        commands.put("TRANSFERMONEY", new TransferMoneyCommand());
+        commands.put("TRANSFERPILOT", new TransferPilotCommand());
+        commands.put("TRANSFERUNIT", new TransferUnitCommand());
+        commands.put("TRANSFERINFLUENCE", new TransferInfluenceCommand()); //@salient
+        commands.put("TRANSFERREWARDPOINTS", new TransferRewardPointsCommand());
+        commands.put("UPDATEDISCORDINFO", new UpdateDiscordInfoCommand());
+        commands.put("UPDATEOPERATIONS", new UpdateOperationsCommand());
+        commands.put("UPDATESERVERUNITSCACHE", new UpdateServerUnitsCacheCommand());
+        commands.put("UPLOADMUL", new UploadMulCommand());
+        commands.put("UNEMPLOYEDMERCS", new UnemployedMercsCommand());
+        commands.put("UNENROLL", new UnenrollCommand());
+        commands.put("UNITPOSITION", new UnitPositionCommand());
+        commands.put("UNLOCKLANCES", new UnlockLancesCommand());
+        commands.put("USEREWARDPOINTS", new UseRewardPointsCommand());
+        commands.put("USEINFLUENCE", new UseInfluenceCommand());
+        commands.put("VIEWFACTIONPARTSCACHE", new ViewFactionPartsCacheCommand());
+        commands.put("VIEWPLAYERPARTS", new ViewPlayerPartsCommand());
+        commands.put("VIEWPLAYERPERSONALPILOTQUEUE", new ViewPlayerPersonalPilotQueueCommand());
+        commands.put("VIEWPLAYERUNIT", new ViewPlayerUnitCommand());
+        commands.put("VOTE", new VoteCommand());
 
         // Old / comamds move to be usable by /c or /
-        Commands.put("AM", new ServerAnnouncementCommand());
-        Commands.put("SA", new ServerAnnouncementCommand());
-        Commands.put("SERVERANNOUNCEMENT", new ServerAnnouncementCommand());
-        Commands.put("BAN", new BanCommand());
-        Commands.put("BANIP", new BanIPCommand());
-        Commands.put("BANLIST", new BanListCommand());
-        Commands.put("COLOR", new ColorCommand());
-        Commands.put("COLOUR", new ColorCommand());
-        Commands.put("CONFIG", new ConfigCommand());
-        Commands.put("GETSAVEDMAIL", new GetSavedMailCommand());
-        Commands.put("IGNORE", new IgnoreCommand());
-        Commands.put("IGNORELIST", new IgnoreListCommand());
-        Commands.put("IPLIST", new IPListCommand());
-        Commands.put("KICK", new KickCommand());
-        Commands.put("MAIL", new MailCommand());
-        Commands.put("ME", new MeCommand());
-        Commands.put("ROLL", new RollCommand());
-        Commands.put("REGISTER", new RegisterCommand());
-        Commands.put("SHUTDOWN", new ShutdownCommand());
-        Commands.put("SETSMOTD", new SetSMOTDCommand());
-        Commands.put("SIGNOFF", new SignOffCommand());
-        Commands.put("SMOTD", new SMOTDCommand());
-        Commands.put("UNBAN", new UnBanCommand());
-        Commands.put("UNBANIP", new UnBanIPCommand());
+        commands.put("AM", new ServerAnnouncementCommand());
+        commands.put("SA", new ServerAnnouncementCommand());
+        commands.put("SERVERANNOUNCEMENT", new ServerAnnouncementCommand());
+        commands.put("BAN", new BanCommand());
+        commands.put("BANIP", new BanIPCommand());
+        commands.put("BANLIST", new BanListCommand());
+        commands.put("COLOR", new ColorCommand());
+        commands.put("COLOUR", new ColorCommand());
+        commands.put("CONFIG", new ConfigCommand());
+        commands.put("GETSAVEDMAIL", new GetSavedMailCommand());
+        commands.put("IGNORE", new IgnoreCommand());
+        commands.put("IGNORELIST", new IgnoreListCommand());
+        commands.put("IPLIST", new IPListCommand());
+        commands.put("KICK", new KickCommand());
+        commands.put("MAIL", new MailCommand());
+        commands.put("ME", new MeCommand());
+        commands.put("ROLL", new RollCommand());
+        commands.put("REGISTER", new RegisterCommand());
+        commands.put("SHUTDOWN", new ShutdownCommand());
+        commands.put("SETSMOTD", new SetSMOTDCommand());
+        commands.put("SIGNOFF", new SignOffCommand());
+        commands.put("SMOTD", new SMOTDCommand());
+        commands.put("UNBAN", new UnBanCommand());
+        commands.put("UNBANIP", new UnBanIPCommand());
 
         // command for testing
-        Commands.put("CODETEST", new CodeTestCommand());
+        commands.put("CODETEST", new CodeTestCommand());
         // ok we've put all the commands in the command hash now lets set the
         // levels
         try {
@@ -1716,14 +1717,14 @@ public final class CampaignMain implements java.io.Serializable {
             while (dis.ready()) {
                 java.util.StringTokenizer command = new java.util.StringTokenizer(dis.readLine(), "#");
                 String commandName = command.nextToken();
-                if (Commands.containsKey(commandName)) {
-                    (Commands.get(commandName)).setExecutionLevel(Integer.parseInt(command.nextToken()));
+                if (commands.containsKey(commandName)) {
+                    (commands.get(commandName)).setExecutionLevel(Integer.parseInt(command.nextToken()));
                 }
             }
             dis.close();
         } catch (Exception ex) {
             MWLogger.errLog("Unable to find commands.dat. Continuing with defaults in place");
-            java.util.TreeMap<String, Command> commandTable = new java.util.TreeMap<String, Command>(cm.getServerCommands());
+            java.util.TreeMap<String, Command> commandTable = new java.util.TreeMap<String, Command>(campaignMain.getServerCommands());
             java.io.PrintStream p = null;
             try {
 
@@ -1737,7 +1738,7 @@ public final class CampaignMain implements java.io.Serializable {
 
                 for (String commandName : commandTable.keySet()) {
 
-                    Command commandMethod = mekwars.server.campaign.CampaignMain.cm.getServerCommands()
+                    Command commandMethod = mekwars.server.campaign.CampaignMain.campaignMain.getServerCommands()
                                                   .get(commandName);
                     if (commandMethod == null) {
                         continue;
@@ -1775,7 +1776,7 @@ public final class CampaignMain implements java.io.Serializable {
 
             // Add the Newbie-SHouse
             SHouse solaris = new NewbieHouse(data.getUnusedHouseID(),
-                  mekwars.server.campaign.CampaignMain.cm.getConfig("NewbieHouseName"),
+                  mekwars.server.campaign.CampaignMain.campaignMain.getConfig("NewbieHouseName"),
                   "#33CCCC",
                   4,
                   5,
@@ -1830,12 +1831,12 @@ public final class CampaignMain implements java.io.Serializable {
 
             java.util.HashMap<Integer, Integer> solFlu = new java.util.HashMap<Integer, Integer>();
             solFlu.put(
-                  mekwars.server.campaign.CampaignMain.cm.getHouseFromPartialString(mekwars.server.campaign.CampaignMain.cm.getConfig(
+                  mekwars.server.campaign.CampaignMain.campaignMain.getHouseFromPartialString(mekwars.server.campaign.CampaignMain.campaignMain.getConfig(
                         "NewbieHouseName"), null).getId(), 100);
             SPlanet newbieP = new SPlanet(0, "Solaris VII", new Influences(solFlu), 0, 0, -3, -2);
             if (data.getPlanetByName("Solaris VII") == null) {
                 addPlanet(newbieP);
-                mekwars.server.campaign.CampaignMain.cm.getHouseFromPartialString(mekwars.server.campaign.CampaignMain.cm.getConfig(
+                mekwars.server.campaign.CampaignMain.campaignMain.getHouseFromPartialString(mekwars.server.campaign.CampaignMain.campaignMain.getConfig(
                       "NewbieHouseName"), null).addPlanet(newbieP);
             }
         }
@@ -1852,7 +1853,7 @@ public final class CampaignMain implements java.io.Serializable {
 
         if (p.getOriginalOwner().trim().equals("")) {
             if (p.getOwner() == null) {
-                p.setOriginalOwner(cm.getConfig("NewbieHouseName"));
+                p.setOriginalOwner(campaignMain.getConfig("NewbieHouseName"));
             }
             p.setOriginalOwner(p.getOwner().getName());
         }
@@ -1911,7 +1912,7 @@ public final class CampaignMain implements java.io.Serializable {
 
         for (int i = 0; i < dice; i++) {
             // roll = random.nextInt(sides) + 1;
-            roll = cm.getRandomNumber(sides) + 1;
+            roll = campaignMain.getRandomNumber(sides) + 1;
             total += roll;
 
             // for one die, we're all set
@@ -1966,18 +1967,18 @@ public final class CampaignMain implements java.io.Serializable {
     }
 
     public void addMechStat(String Filename, int mechsize, int gameplayed, int gamewon, int scrapped, int destroyed) {
-        MechStatistics m = null;
-        if (MechStats.get(Filename) == null) {
-            m = new MechStatistics(Filename, mechsize);
+        MekStatistics m = null;
+        if (mekStats.get(Filename) == null) {
+            m = new MekStatistics(Filename, mechsize);
         } else {
-            m = MechStats.get(Filename);
+            m = mekStats.get(Filename);
         }
         m.setOriginalBV(SUnit.loadMech(Filename).calculateBattleValue());
 
         m.addStats(gameplayed, gamewon, m.getOriginalBV());
         m.setTimesScrapped(m.getTimesScrapped() + scrapped);
         m.setTimesDestroyed(m.getTimesDestroyed() + destroyed);
-        MechStats.put(Filename, m);
+        mekStats.put(Filename, m);
     }
 
     /**
@@ -1994,7 +1995,7 @@ public final class CampaignMain implements java.io.Serializable {
         // if he's already logged out, who cares?
         // Well, it turns out that some people do care - see RFE 2126734
         if (p.getDutyStatus() <= SPlayer.STATUS_LOGGEDOUT &&
-                  !mekwars.server.campaign.CampaignMain.cm.getBooleanConfig("DisconnectIdleUsers")) {
+                  !mekwars.server.campaign.CampaignMain.campaignMain.getBooleanConfig("DisconnectIdleUsers")) {
             return;
         }
 
@@ -2006,13 +2007,14 @@ public final class CampaignMain implements java.io.Serializable {
         // reserve or active player. check his times.
         // NOTE: KI| command is actualy campaign logout. GBB| a disco/kill.
         if (System.currentTimeMillis() - p.getLastTimeCommandSent() > maxIdleTime) {
-            mekwars.server.campaign.CampaignMain.cm.toUser("You were logged out by the server (excessive idle time).",
+            mekwars.server.campaign.CampaignMain.campaignMain.toUser(
+                  "You were logged out by the server (excessive idle time).",
                   p.getName(),
                   true);
-            if (!mekwars.server.campaign.CampaignMain.cm.getBooleanConfig("DisconnectIdleUsers")) {
-                mekwars.server.campaign.CampaignMain.cm.toUser("KI|idler", p.getName(), false);
+            if (!mekwars.server.campaign.CampaignMain.campaignMain.getBooleanConfig("DisconnectIdleUsers")) {
+                mekwars.server.campaign.CampaignMain.campaignMain.toUser("KI|idler", p.getName(), false);
             } else {
-                mekwars.server.campaign.CampaignMain.cm.toUser("PL|GBB|idler", p.getName(), false);
+                mekwars.server.campaign.CampaignMain.campaignMain.toUser("PL|GBB|idler", p.getName(), false);
             }
         }
     }
@@ -2030,7 +2032,7 @@ public final class CampaignMain implements java.io.Serializable {
         MWLogger.cmdLog("Slice #" + sliceID + " Started");
         MWLogger.infoLog("Slice #" + sliceID + " Started: " + System.currentTimeMillis());
 
-        WhoToHTML who = new WhoToHTML(mekwars.server.campaign.CampaignMain.cm.getConfig("HTMLWhoPath"));
+        WhoToHTML who = new WhoToHTML(mekwars.server.campaign.CampaignMain.campaignMain.getConfig("HTMLWhoPath"));
 
         // loop through all houses
         for (House vh : data.getAllHouses()) {
@@ -2039,7 +2041,8 @@ public final class CampaignMain implements java.io.Serializable {
             MWLogger.infoLog("Slice #" + sliceID + " house: " + currH.getName());
 
             // load max idle time, converted to ms
-            long maxIdleTime = Long.parseLong(mekwars.server.campaign.CampaignMain.cm.getConfig("MaxIdleTime")) * 60000;
+            long maxIdleTime = Long.parseLong(mekwars.server.campaign.CampaignMain.campaignMain.getConfig("MaxIdleTime")) *
+                                     60000;
 
             MWLogger.infoLog("Slice #" + sliceID + " house: " + currH.getName() + " reservePlayers");
             for (SPlayer currP : currH.getReservePlayers().values()) {
@@ -2110,13 +2113,13 @@ public final class CampaignMain implements java.io.Serializable {
             }
         }// end all houses
 
-        if (mekwars.server.campaign.CampaignMain.cm.getBooleanConfig("HTMLOUTPUT")) {
+        if (mekwars.server.campaign.CampaignMain.campaignMain.getBooleanConfig("HTMLOUTPUT")) {
             who.outputHTML();
         }
         who = null;
 
         // check to see if we should save on this slice
-        int saveOnSlice = mekwars.server.campaign.CampaignMain.cm.getIntegerConfig("SaveEverySlice");
+        int saveOnSlice = mekwars.server.campaign.CampaignMain.campaignMain.getIntegerConfig("SaveEverySlice");
         if (saveOnSlice < 1) {
             saveOnSlice = 1;
         }
@@ -2193,7 +2196,7 @@ public final class CampaignMain implements java.io.Serializable {
 
                 String houseTickInfo = "";
 
-                if (!mekwars.server.campaign.CampaignMain.cm.getBooleanConfig("ProcessHouseTicksAtSlice")) {
+                if (!mekwars.server.campaign.CampaignMain.campaignMain.getBooleanConfig("ProcessHouseTicksAtSlice")) {
                     try {
                         MWLogger.debugLog("Starting Faction Tick");
                         houseTickInfo = currH.tick(real, tickid);
@@ -2356,21 +2359,21 @@ public final class CampaignMain implements java.io.Serializable {
             for (SPlayer currPlayer : h.getReservePlayers().values()) {
                 for (SArmy a : currPlayer.getArmies()) {
                     a.getLegalOperations().clear();
-                    mekwars.server.campaign.CampaignMain.cm.getOpsManager().checkOperations(a, true);
+                    mekwars.server.campaign.CampaignMain.campaignMain.getOpsManager().checkOperations(a, true);
                 }
             }
 
             for (SPlayer currPlayer : h.getActivePlayers().values()) {
                 for (SArmy a : currPlayer.getArmies()) {
                     a.getLegalOperations().clear();
-                    mekwars.server.campaign.CampaignMain.cm.getOpsManager().checkOperations(a, true);
+                    mekwars.server.campaign.CampaignMain.campaignMain.getOpsManager().checkOperations(a, true);
                 }
             }
 
             for (SPlayer currPlayer : h.getFightingPlayers().values()) {
                 for (SArmy a : currPlayer.getArmies()) {
                     a.getLegalOperations().clear();
-                    mekwars.server.campaign.CampaignMain.cm.getOpsManager().checkOperations(a, true);
+                    mekwars.server.campaign.CampaignMain.campaignMain.getOpsManager().checkOperations(a, true);
                 }
             }
         }
@@ -2399,8 +2402,8 @@ public final class CampaignMain implements java.io.Serializable {
 
     public boolean isUsingIncreasedTechs() {
         return (
-              mekwars.server.campaign.CampaignMain.cm.getBooleanConfig("UseNonFactionUnitsIncreasedTechs") &&
-                    !mekwars.server.campaign.CampaignMain.cm.isUsingAdvanceRepair());
+              mekwars.server.campaign.CampaignMain.campaignMain.getBooleanConfig("UseNonFactionUnitsIncreasedTechs") &&
+                    !mekwars.server.campaign.CampaignMain.campaignMain.isUsingAdvanceRepair());
     }
 
     /*
@@ -2408,9 +2411,10 @@ public final class CampaignMain implements java.io.Serializable {
      * thread if it is null
      */
     public boolean isUsingAdvanceRepair() {
-        boolean isUsing = cm.getBooleanConfig("UseAdvanceRepair") || cm.getBooleanConfig("UseSimpleRepair");
+        boolean isUsing = campaignMain.getBooleanConfig("UseAdvanceRepair") ||
+                                campaignMain.getBooleanConfig("UseSimpleRepair");
         if (isUsing && RTT == null) {
-            RTT = new RepairTrackingThread(cm.getLongConfig("TimeForEachRepairPoint") * 1000);
+            RTT = new RepairTrackingThread(campaignMain.getLongConfig("TimeForEachRepairPoint") * 1000);
             RTT.start();
         } else if (!isUsing && RTT != null) {
             RTT.interrupt();
@@ -2421,17 +2425,18 @@ public final class CampaignMain implements java.io.Serializable {
     }
 
     public void restartRTT() {
-        boolean isUsing = cm.getBooleanConfig("UseAdvanceRepair") || cm.getBooleanConfig("UseSimpleRepair");
+        boolean isUsing = campaignMain.getBooleanConfig("UseAdvanceRepair") ||
+                                campaignMain.getBooleanConfig("UseSimpleRepair");
         if (isUsing) {
             RTT = null;
-            RTT = new RepairTrackingThread(cm.getLongConfig("TimeForEachRepairPoint") * 1000);
+            RTT = new RepairTrackingThread(campaignMain.getLongConfig("TimeForEachRepairPoint") * 1000);
             RTT.start();
         }
     }
 
     public boolean getBooleanConfig(String key) {
         try {
-            return Boolean.parseBoolean(cm.getConfig(key));
+            return Boolean.parseBoolean(campaignMain.getConfig(key));
         } catch (Exception ex) {
             return false;
         }
@@ -2439,7 +2444,7 @@ public final class CampaignMain implements java.io.Serializable {
 
     public long getLongConfig(String key) {
         try {
-            return Long.parseLong(cm.getConfig(key));
+            return Long.parseLong(campaignMain.getConfig(key));
         } catch (Exception ex) {
             return -1;
         }
@@ -2631,7 +2636,7 @@ public final class CampaignMain implements java.io.Serializable {
         // add log header
         java.util.Date d = new java.util.Date(System.currentTimeMillis());
         MWLogger.infoLog(d + ": Starting Player Saving cycle");
-        for (House vh : mekwars.server.campaign.CampaignMain.cm.getData().getAllHouses()) {
+        for (House vh : mekwars.server.campaign.CampaignMain.campaignMain.getData().getAllHouses()) {
             SHouse currH = (SHouse) vh;
             for (SPlayer currP : currH.getAllOnlinePlayers().values()) {
                 savePlayerFile(currP);
@@ -2664,12 +2669,14 @@ public final class CampaignMain implements java.io.Serializable {
     public void forceSavePlayers(String Username) {
 
         // first, save everyone online
-        for (House vh : mekwars.server.campaign.CampaignMain.cm.getData().getAllHouses()) {
+        for (House vh : mekwars.server.campaign.CampaignMain.campaignMain.getData().getAllHouses()) {
             SHouse currH = (SHouse) vh;
             for (SPlayer currP : currH.getAllOnlinePlayers().values()) {
                 savePlayerFile(currP);
                 if (Username != null) {
-                    mekwars.server.campaign.CampaignMain.cm.toUser("AM:" + currP.getName() + " saved", Username, true);
+                    mekwars.server.campaign.CampaignMain.campaignMain.toUser("AM:" + currP.getName() + " saved",
+                          Username,
+                          true);
                 }
             }
         }
@@ -2721,13 +2728,14 @@ public final class CampaignMain implements java.io.Serializable {
             String HouseName = (String) st.nextElement();
             SHouse faction = null;
             if (!HouseName.equalsIgnoreCase("server")) {
-                faction = mekwars.server.campaign.CampaignMain.cm.getHouseFromPartialString(HouseName, null);
+                faction = mekwars.server.campaign.CampaignMain.campaignMain.getHouseFromPartialString(HouseName, null);
                 while (st.hasMoreTokens()) {
                     faction.getBannedAmmo().put(st.nextToken(), "Banned");
                 }
             } else {
                 while (st.hasMoreElements()) {
-                    mekwars.server.campaign.CampaignMain.cm.getServerBannedAmmo().put(st.nextToken(), "Banned");
+                    mekwars.server.campaign.CampaignMain.campaignMain.getServerBannedAmmo()
+                          .put(st.nextToken(), "Banned");
                 }
             }
         } catch (Exception ex) {
@@ -2784,7 +2792,7 @@ public final class CampaignMain implements java.io.Serializable {
                 bme.setMinProduction(Integer.parseInt(data.nextToken()));
                 bme.setMaxProduction(Integer.parseInt(data.nextToken()));
 
-                cm.getBlackMarketEquipmentTable().put(bme.getEquipmentInternalName(), bme);
+                campaignMain.getBlackMarketEquipmentTable().put(bme.getEquipmentInternalName(), bme);
             }
             dis.close();
         } catch (Exception ex) {
@@ -2794,13 +2802,13 @@ public final class CampaignMain implements java.io.Serializable {
 
     public void saveTopUnitID() {
 
-        int topID = cm.getCurrentUnitID();
+        int topID = campaignMain.getCurrentUnitID();
 
         try {
             java.io.FileOutputStream pout = new java.io.FileOutputStream("./campaign/topserverid.dat");
             java.io.PrintStream unitIDFile = new java.io.PrintStream(pout);
             unitIDFile.println(topID);
-            unitIDFile.println(cm.getCurrentPilotID());
+            unitIDFile.println(campaignMain.getCurrentPilotID());
             unitIDFile.close();
             pout.close();
         } catch (Exception ex) {
@@ -2811,8 +2819,8 @@ public final class CampaignMain implements java.io.Serializable {
     public void loadTopUnitID() {
         try {
             MekwarsFileReader dis = new MekwarsFileReader("./campaign/topserverid.dat");
-            cm.setCurrentUnitID(Integer.parseInt(dis.readLine()));
-            cm.setCurrentPilotID(Integer.parseInt(dis.readLine()));
+            campaignMain.setCurrentUnitID(Integer.parseInt(dis.readLine()));
+            campaignMain.setCurrentPilotID(Integer.parseInt(dis.readLine()));
             dis.close();
         } catch (java.io.FileNotFoundException FNFE) {
             // Do nothing.
@@ -2926,8 +2934,8 @@ public final class CampaignMain implements java.io.Serializable {
             java.io.FileOutputStream out = new java.io.FileOutputStream("./campaign/omnivariantmods.dat");
             java.io.PrintStream p = new java.io.PrintStream(out);
 
-            for (String currKey : cm.getOmniVariantMods().keySet()) {
-                String currMod = cm.getOmniVariantMods().get(currKey);
+            for (String currKey : campaignMain.getOmniVariantMods().keySet()) {
+                String currMod = campaignMain.getOmniVariantMods().get(currKey);
                 p.println(currKey + "#" + currMod);
             }
 
@@ -2945,7 +2953,7 @@ public final class CampaignMain implements java.io.Serializable {
      *       <code>days</code> idle.
      */
     public void purgePlayerFiles() {
-        long days = Long.parseLong(mekwars.server.campaign.CampaignMain.cm.getConfig("PurgePlayerFilesDays"));
+        long days = Long.parseLong(mekwars.server.campaign.CampaignMain.campaignMain.getConfig("PurgePlayerFilesDays"));
         // Turn purging off by setting it to 0 or less days
         if (days <= 0) {
             return;
@@ -2967,7 +2975,7 @@ public final class CampaignMain implements java.io.Serializable {
                 String playerName = player.getName().substring(0, player.getName().indexOf(".dat"));
                 SPlayer p = this.getPlayer(playerName, false, true);
                 p.addExperience(100, true);
-                Command c = mekwars.server.campaign.CampaignMain.cm.getServerCommands().get("UNENROLL");
+                Command c = mekwars.server.campaign.CampaignMain.campaignMain.getServerCommands().get("UNENROLL");
                 c.process(new java.util.StringTokenizer("CONFIRM", "#"), playerName);
                 MWLogger.infoLog(playerName + " purged.");
             }
@@ -2989,10 +2997,10 @@ public final class CampaignMain implements java.io.Serializable {
 
     public String moneyOrFluMessage(boolean money, boolean shortname, int amount, boolean showSign) {
         String result = java.text.NumberFormat.getInstance().format(amount);
-        String moneyShort = cm.getConfig("MoneyShortName").toLowerCase();
-        String moneyLong = cm.getConfig("MoneyLongName");
-        String fluShort = cm.getConfig("FluShortName").toLowerCase();
-        String fluLong = cm.getConfig("FluLongName");
+        String moneyShort = campaignMain.getConfig("MoneyShortName").toLowerCase();
+        String moneyLong = campaignMain.getConfig("MoneyLongName");
+        String fluShort = campaignMain.getConfig("FluShortName").toLowerCase();
+        String fluLong = campaignMain.getConfig("FluLongName");
         //        String RPShort = cm.getConfig("RPShortName");
         //        String RPLong = cm.getConfig("RPLongName");
 
@@ -3051,16 +3059,20 @@ public final class CampaignMain implements java.io.Serializable {
         switch (cType.toLowerCase().trim()) {
             case "money":
             case "cb":
-                if (shortDescription) {return cm.getConfig("MoneyShortName");} else {
-                    return cm.getConfig("MoneyLongName");
+                if (shortDescription) {return campaignMain.getConfig("MoneyShortName");} else {
+                    return campaignMain.getConfig("MoneyLongName");
                 }
             case "rewards":
             case "reward":
             case "rp":
-                if (shortDescription) {return cm.getConfig("RPShortName");} else {return cm.getConfig("RPLongName");}
+                if (shortDescription) {return campaignMain.getConfig("RPShortName");} else {
+                    return campaignMain.getConfig("RPLongName");
+                }
             case "influence":
             case "flu":
-                if (shortDescription) {return cm.getConfig("FluShortName");} else {return cm.getConfig("FluLongName");}
+                if (shortDescription) {return campaignMain.getConfig("FluShortName");} else {
+                    return campaignMain.getConfig("FluLongName");
+                }
             default:
                 MWLogger.errLog(cType + "is not a valid currency");
                 return null;
@@ -3127,7 +3139,7 @@ public final class CampaignMain implements java.io.Serializable {
             MekwarsFileReader dis = new MekwarsFileReader("./campaign/omnivariantmods.dat");
             while (dis.ready()) {
                 java.util.StringTokenizer line = new java.util.StringTokenizer(dis.readLine(), "#");
-                cm.getOmniVariantMods().put(line.nextToken(), line.nextToken());
+                campaignMain.getOmniVariantMods().put(line.nextToken(), line.nextToken());
             }
             dis.close();
         } catch (Exception ex) {
@@ -3161,7 +3173,7 @@ public final class CampaignMain implements java.io.Serializable {
     }// end saveConfigureFile
 
     public UnitCosts getUnitCostLists() {
-        return cm.unitCostLists;
+        return campaignMain.unitCostLists;
     }
 
     public RepairTrackingThread getRTT() {
@@ -3187,7 +3199,7 @@ public final class CampaignMain implements java.io.Serializable {
         double techWorkMod = 0;
 
         if (techType != UnitUtils.TECH_PILOT) {
-            techCost = Integer.parseInt(cm.getConfig(UnitUtils.techDescription(techType) + "TechRepairCost"));
+            techCost = Integer.parseInt(campaignMain.getConfig(UnitUtils.techDescription(techType) + "TechRepairCost"));
             techWorkMod = UnitUtils.getTechRoll(unit,
                   0,
                   UnitUtils.LOC_FRONT_ARMOR,
@@ -3232,7 +3244,7 @@ public final class CampaignMain implements java.io.Serializable {
         techWorkMod = 0;
 
         if (techType != UnitUtils.TECH_PILOT) {
-            techCost = Integer.parseInt(cm.getConfig(UnitUtils.techDescription(techType) + "TechRepairCost"));
+            techCost = Integer.parseInt(campaignMain.getConfig(UnitUtils.techDescription(techType) + "TechRepairCost"));
         }
 
         for (int location = 0; location < unit.locations(); location++) {
@@ -3268,7 +3280,7 @@ public final class CampaignMain implements java.io.Serializable {
         techWorkMod = 0;
 
         if (techType != UnitUtils.TECH_PILOT) {
-            techCost = Integer.parseInt(cm.getConfig(UnitUtils.techDescription(techType) + "TechRepairCost"));
+            techCost = Integer.parseInt(campaignMain.getConfig(UnitUtils.techDescription(techType) + "TechRepairCost"));
         }
 
         for (int location = 0; location < unit.locations(); location++) {
@@ -3318,7 +3330,7 @@ public final class CampaignMain implements java.io.Serializable {
         techWorkMod = 0;
 
         if (techType != UnitUtils.TECH_PILOT) {
-            techCost = Integer.parseInt(cm.getConfig(UnitUtils.techDescription(techType) + "TechRepairCost"));
+            techCost = Integer.parseInt(campaignMain.getConfig(UnitUtils.techDescription(techType) + "TechRepairCost"));
         }
 
         for (int location = 0; location < unit.locations(); location++) {
@@ -3373,7 +3385,7 @@ public final class CampaignMain implements java.io.Serializable {
         techWorkMod = 0;
 
         if (techType != UnitUtils.TECH_PILOT) {
-            techCost = Integer.parseInt(cm.getConfig(UnitUtils.techDescription(techType) + "TechRepairCost"));
+            techCost = Integer.parseInt(campaignMain.getConfig(UnitUtils.techDescription(techType) + "TechRepairCost"));
         }
 
         for (int location = 0; location < unit.locations(); location++) {
@@ -3431,7 +3443,7 @@ public final class CampaignMain implements java.io.Serializable {
         CriticalSlot cs = null;
 
         if (techType != UnitUtils.TECH_PILOT) {
-            techCost = Integer.parseInt(cm.getConfig(UnitUtils.techDescription(techType) + "TechRepairCost"));
+            techCost = Integer.parseInt(campaignMain.getConfig(UnitUtils.techDescription(techType) + "TechRepairCost"));
         }
 
         for (int x = UnitUtils.LOC_CT; x <= UnitUtils.LOC_LT; x++) {
@@ -3511,17 +3523,18 @@ public final class CampaignMain implements java.io.Serializable {
         int year = getIntegerConfig("CampaignYear");
 
         if (techType < UnitUtils.TECH_PILOT) {
-            techCost = mekwars.server.campaign.CampaignMain.cm.getIntegerConfig(UnitUtils.techDescription(techType) +
-                                                                                      "TechRepairCost");
+            techCost = mekwars.server.campaign.CampaignMain.campaignMain.getIntegerConfig(UnitUtils.techDescription(
+                  techType) +
+                                                                                                "TechRepairCost");
         }
 
-        if (Boolean.parseBoolean(cm.getConfig("UseRealRepairCosts"))) {
+        if (Boolean.parseBoolean(campaignMain.getConfig("UseRealRepairCosts"))) {
             double realCost = UnitUtils.getPartCost(unit, critLocation, critSlot, armor, year);
-            if (Boolean.parseBoolean(cm.getConfig("UsePartsRepair"))) {
+            if (Boolean.parseBoolean(campaignMain.getConfig("UsePartsRepair"))) {
                 realCost = 0;
             }
 
-            double costMod = Double.parseDouble(cm.getConfig("RealRepairCostMod"));
+            double costMod = Double.parseDouble(campaignMain.getConfig("RealRepairCostMod"));
             // modify the cost
             if (costMod > 0) {
                 realCost *= costMod;
@@ -3603,9 +3616,9 @@ public final class CampaignMain implements java.io.Serializable {
             }// end critslot else
         }
 
-        if (Boolean.parseBoolean(cm.getConfig("AllowCritRepairsForRewards")) &&
+        if (Boolean.parseBoolean(campaignMain.getConfig("AllowCritRepairsForRewards")) &&
                   techType == UnitUtils.TECH_REWARD_POINTS) {
-            cost = totalCrits * Double.parseDouble(cm.getConfig("RewardPointsForCritRepair"));
+            cost = totalCrits * Double.parseDouble(campaignMain.getConfig("RewardPointsForCritRepair"));
             cost = Math.max(Math.ceil(cost), 1);
         }
 
@@ -3614,7 +3627,7 @@ public final class CampaignMain implements java.io.Serializable {
 
     public int getIntegerConfig(String key) {
         try {
-            return Integer.parseInt(cm.getConfig(key));
+            return Integer.parseInt(campaignMain.getConfig(key));
         } catch (Exception ex) {
             return -1;
         }
@@ -3630,7 +3643,7 @@ public final class CampaignMain implements java.io.Serializable {
             // server banned ammo
             p.println(System.currentTimeMillis());
             p.print("server#");
-            for (String ammo : mekwars.server.campaign.CampaignMain.cm.getServerBannedAmmo().keySet()) {
+            for (String ammo : mekwars.server.campaign.CampaignMain.campaignMain.getServerBannedAmmo().keySet()) {
                 p.print(ammo);
                 p.print("#");
             }
@@ -3662,7 +3675,7 @@ public final class CampaignMain implements java.io.Serializable {
     }
 
     public java.util.Hashtable<String, String> getServerBannedAmmo() {
-        return cm.getData().getServerBannedAmmo();
+        return campaignMain.getData().getServerBannedAmmo();
     }
 
     public void saveBannedTargetSystems() {
@@ -3721,10 +3734,10 @@ public final class CampaignMain implements java.io.Serializable {
             java.io.FileOutputStream out = new java.io.FileOutputStream("./campaign/planetOpFlags.dat");
             java.io.PrintStream p = new java.io.PrintStream(out);
             p.println(System.currentTimeMillis());
-            for (String key : mekwars.server.campaign.CampaignMain.cm.getData().getPlanetOpFlags().keySet()) {
+            for (String key : mekwars.server.campaign.CampaignMain.campaignMain.getData().getPlanetOpFlags().keySet()) {
                 p.print(key);
                 p.print("#");
-                p.print(mekwars.server.campaign.CampaignMain.cm.getData().getPlanetOpFlags().get(key));
+                p.print(mekwars.server.campaign.CampaignMain.campaignMain.getData().getPlanetOpFlags().get(key));
                 p.print("#");
             }
             p.close();
@@ -3963,18 +3976,18 @@ public final class CampaignMain implements java.io.Serializable {
     }
 
     public void updatePlayersAccessLevel(String playerName, int accessLevel) {
-        SPlayer player = cm.getPlayer(playerName);
+        SPlayer player = campaignMain.getPlayer(playerName);
 
         if (player == null) {
             return;
         }
         try {
-            cm.getServer().getClient(playerName).setAccessLevel(accessLevel);
-            cm.getServer().getUser(playerName).setLevel(accessLevel);
-            cm.getServer().sendRemoveUserToAll(playerName, false);
-            cm.getServer().sendNewUserToAll(playerName, false);
+            campaignMain.getServer().getClient(playerName).setAccessLevel(accessLevel);
+            campaignMain.getServer().getUser(playerName).setLevel(accessLevel);
+            campaignMain.getServer().sendRemoveUserToAll(playerName, false);
+            campaignMain.getServer().sendNewUserToAll(playerName, false);
             MWPasswd.writeRecord(player.getPassword(), playerName);
-            cm.doSendToAllOnlinePlayers("PI|DA|" + cm.getPlayerUpdateString(player), false);
+            campaignMain.doSendToAllOnlinePlayers("PI|DA|" + campaignMain.getPlayerUpdateString(player), false);
         } catch (Exception ex) {
         }
         forceSavePlayer(player);
@@ -4111,7 +4124,7 @@ public final class CampaignMain implements java.io.Serializable {
     public String getMegaMekOptionsToString() {
         StringBuffer result = new StringBuffer();
 
-        java.util.Enumeration<IOption> options = cm.getMegaMekClient().getGame().getOptions().getOptions();
+        java.util.Enumeration<IOption> options = campaignMain.getMegaMekClient().getGame().getOptions().getOptions();
 
         while (options.hasMoreElements()) {
             IOption option = options.nextElement();
@@ -4126,7 +4139,7 @@ public final class CampaignMain implements java.io.Serializable {
     }
 
     public void setMegaMekClient(Client mmClient) {
-        cm.megaMekClient = mmClient;
+        campaignMain.megaMekClient = mmClient;
     }
 
     /**
@@ -4170,7 +4183,7 @@ public final class CampaignMain implements java.io.Serializable {
      * @param message the message to send
      */
     public void postToDiscord(String message) {
-        if (!mekwars.server.campaign.CampaignMain.cm.getBooleanConfig("DiscordEnable")) {
+        if (!mekwars.server.campaign.CampaignMain.campaignMain.getBooleanConfig("DiscordEnable")) {
             return;
         }
         DiscordMessageHandler handler = new DiscordMessageHandler();

@@ -6,6 +6,7 @@ package mekwars.server.campaign.util;
 import megamek.common.planetaryConditions.EMI;
 import mekwars.common.AdvancedTerrain;
 import mekwars.common.util.MWLogger;
+import mekwars.server.campaign.CampaignMain;
 
 /**
  * @author mike
@@ -190,7 +191,7 @@ public class XMLAdvancedTerrainDataParser implements XMLResponder {
             planetTerrain.setName(name);
             planetTerrain.setDisplayName(name);
             MWLogger.mainLog("ADVTERRAIN: adding " + planetTerrain.getName());
-            server.campaign.CampaignMain.cm.getData().addAdvancedTerrain(planetTerrain);
+            CampaignMain.campaignMain.getData().addAdvancedTerrain(planetTerrain);
             name = "reset";
         }
         if (tagName.equals("ADVTERRAIN")) {

@@ -17,10 +17,11 @@
 package mekwars.server.campaign.commands.leader;
 
 import common.util.MWLogger;
+import mekwars.server.campaign.CampaignMain;
 
 public class FactionLeaderMuteCommand implements server.campaign.commands.Command {
 
-    int accessLevel = server.campaign.CampaignMain.cm.getIntegerConfig("factionLeaderLevel");
+    int accessLevel = CampaignMain.campaignMain.getIntegerConfig("factionLeaderLevel");
     String syntax = "";
 
     public String getSyntax() {return syntax;}
@@ -28,56 +29,56 @@ public class FactionLeaderMuteCommand implements server.campaign.commands.Comman
     public void process(java.util.StringTokenizer command, String Username) {
 
         //access level check
-        int userLevel = server.campaign.CampaignMain.cm.getServer().getUserLevel(Username);
+        int userLevel = CampaignMain.campaignMain.getServer().getUserLevel(Username);
         if (userLevel < getExecutionLevel()) {
-            server.campaign.CampaignMain.cm.toUser("AM:Insufficient access level for command. Level: " +
-                                                         userLevel +
-                                                         ". Required: " +
-                                                         accessLevel +
-                                                         ".", Username, true);
+            CampaignMain.campaignMain.toUser("AM:Insufficient access level for command. Level: " +
+                                                   userLevel +
+                                                   ". Required: " +
+                                                   accessLevel +
+                                                   ".", Username, true);
             return;
         }
 
-        server.campaign.SPlayer leader = server.campaign.CampaignMain.cm.getPlayer(Username);
+        server.campaign.SPlayer leader = CampaignMain.campaignMain.getPlayer(Username);
         server.campaign.SPlayer p = null;
 
         try {
-            p = server.campaign.CampaignMain.cm.getPlayer(command.nextToken());
+            p = CampaignMain.campaignMain.getPlayer(command.nextToken());
         } catch (Exception e) {
-            server.campaign.CampaignMain.cm.toUser("AM:Improper command. Try: /c factionleadermute#PlayerName",
+            CampaignMain.campaignMain.toUser("AM:Improper command. Try: /c factionleadermute#PlayerName",
                   Username,
                   true);
             return;
         }
 
         if (p == null) {
-            server.campaign.CampaignMain.cm.toUser("AM:Couldn't find a player with that name.", Username, true);
+            CampaignMain.campaignMain.toUser("AM:Couldn't find a player with that name.", Username, true);
             return;
         }
 
         if (!leader.getMyHouse().getName().equalsIgnoreCase(p.getMyHouse().getName())) {
-            server.campaign.CampaignMain.cm.toUser("AM:You are not in the same faction as " +
-                                                         p.getName() +
-                                                         ". You may not mute them!", Username, true);
+            CampaignMain.campaignMain.toUser("AM:You are not in the same faction as " +
+                                                   p.getName() +
+                                                   ". You may not mute them!", Username, true);
             return;
         }
 
 
-        java.util.Vector<String> factionIgnores = server.campaign.CampaignMain.cm.getServer()
+        java.util.Vector<String> factionIgnores = CampaignMain.campaignMain.getServer()
                                                         .getFactionLeaderIgnoreList();
 
         //do the actual mute
         if (factionIgnores.indexOf(p.getName()) == -1) {
             factionIgnores.add(p.getName());
             //server.MWLogger.modLog(Username + " faction muted " + p.getName());
-            server.campaign.CampaignMain.cm.doSendModMail("NOTE", Username + " faction muted " + p.getName());
-            server.campaign.CampaignMain.cm.getServer()
+            CampaignMain.campaignMain.doSendModMail("NOTE", Username + " faction muted " + p.getName());
+            CampaignMain.campaignMain.getServer()
                   .sendChat(Username + " muted " + p.getName() + " (faction mute).");
         } else { //unmute
             factionIgnores.remove(p.getName());
             MWLogger.modLog(Username + " faction unmuted " + p.getName());
-            server.campaign.CampaignMain.cm.doSendModMail("NOTE", Username + " faction unmuted " + p.getName());
-            server.campaign.CampaignMain.cm.getServer()
+            CampaignMain.campaignMain.doSendModMail("NOTE", Username + " faction unmuted " + p.getName());
+            CampaignMain.campaignMain.getServer()
                   .sendChat(Username + " unmuted " + p.getName() + " (faction mute).");
         }
 

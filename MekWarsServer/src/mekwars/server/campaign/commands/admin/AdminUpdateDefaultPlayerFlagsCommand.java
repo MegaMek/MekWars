@@ -1,6 +1,7 @@
 package mekwars.server.campaign.commands.admin;
 
 import common.flags.PlayerFlags;
+import mekwars.server.campaign.CampaignMain;
 
 
 public class AdminUpdateDefaultPlayerFlagsCommand implements server.campaign.commands.Command {
@@ -12,17 +13,17 @@ public class AdminUpdateDefaultPlayerFlagsCommand implements server.campaign.com
 
     public void process(java.util.StringTokenizer command, String Username) {
         if (accessLevel != 0) {
-            int userLevel = server.campaign.CampaignMain.cm.getServer().getUserLevel(Username);
+            int userLevel = CampaignMain.campaignMain.getServer().getUserLevel(Username);
             if (userLevel < getExecutionLevel()) {
-                server.campaign.CampaignMain.cm.toUser("AM:Insufficient access level for command. Level: " +
-                                                             userLevel +
-                                                             ". Required: " +
-                                                             accessLevel +
-                                                             ".", Username, true);
+                CampaignMain.campaignMain.toUser("AM:Insufficient access level for command. Level: " +
+                                                       userLevel +
+                                                       ". Required: " +
+                                                       accessLevel +
+                                                       ".", Username, true);
                 return;
             }
         }
-        PlayerFlags flags = server.campaign.CampaignMain.cm.getDefaultPlayerFlags();
+        PlayerFlags flags = CampaignMain.campaignMain.getDefaultPlayerFlags();
         String action;
         String flagName;
         boolean value = false;
@@ -36,36 +37,36 @@ public class AdminUpdateDefaultPlayerFlagsCommand implements server.campaign.com
                 if (!flags.getFlagNames().contains(flagName)) {
                     int id = flags.getAvailableID();
                     flags.addFlag(flagName, id, value);
-                    server.campaign.CampaignMain.cm.doSendToAllOnlinePlayers("PF|AF|" +
-                                                                                   flagName +
-                                                                                   "|" +
-                                                                                   Integer.toString(id) +
-                                                                                   "|" +
-                                                                                   Boolean.toString(value) +
-                                                                                   "|", false);
-                    server.campaign.CampaignMain.cm.toUser("Added DefaultPlayerFlag " +
-                                                                 flagName +
-                                                                 " with a value of " +
-                                                                 Boolean.toString(value), Username, true);
+                    CampaignMain.campaignMain.doSendToAllOnlinePlayers("PF|AF|" +
+                                                                             flagName +
+                                                                             "|" +
+                                                                             Integer.toString(id) +
+                                                                             "|" +
+                                                                             Boolean.toString(value) +
+                                                                             "|", false);
+                    CampaignMain.campaignMain.toUser("Added DefaultPlayerFlag " +
+                                                           flagName +
+                                                           " with a value of " +
+                                                           Boolean.toString(value), Username, true);
                 } else {
                     flags.setFlag(flagName, value);
-                    server.campaign.CampaignMain.cm.doSendToAllOnlinePlayers("PF|SSDF|" +
-                                                                                   flagName +
-                                                                                   "|" +
-                                                                                   Boolean.toString(value) +
-                                                                                   "|", false);
-                    server.campaign.CampaignMain.cm.toUser("Setting DefaultPlayerFlag " +
-                                                                 flagName +
-                                                                 " to a value of " +
-                                                                 Boolean.toString(value), Username, true);
+                    CampaignMain.campaignMain.doSendToAllOnlinePlayers("PF|SSDF|" +
+                                                                             flagName +
+                                                                             "|" +
+                                                                             Boolean.toString(value) +
+                                                                             "|", false);
+                    CampaignMain.campaignMain.toUser("Setting DefaultPlayerFlag " +
+                                                           flagName +
+                                                           " to a value of " +
+                                                           Boolean.toString(value), Username, true);
                 }
             } else if (action.equalsIgnoreCase("D")) {
                 flags.clearFlag(flagName);
-                server.campaign.CampaignMain.cm.doSendToAllOnlinePlayers("PF|DF|" + flagName + "|", false);
-                server.campaign.CampaignMain.cm.toUser("Removed DefaultPlayerFlag " + flagName, Username, true);
+                CampaignMain.campaignMain.doSendToAllOnlinePlayers("PF|DF|" + flagName + "|", false);
+                CampaignMain.campaignMain.toUser("Removed DefaultPlayerFlag " + flagName, Username, true);
             }
         }
-        server.campaign.CampaignMain.cm.getDefaultPlayerFlags().save();
+        CampaignMain.campaignMain.getDefaultPlayerFlags().save();
     }
 
     public int getExecutionLevel() {return accessLevel;}

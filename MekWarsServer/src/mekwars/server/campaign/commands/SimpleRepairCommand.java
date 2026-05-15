@@ -29,6 +29,7 @@ import megamek.common.Entity;
 import megamek.common.Mech;
 import megamek.common.Mounted;
 import megamek.common.WeaponType;
+import mekwars.server.campaign.CampaignMain;
 import server.util.RepairTrackingThread;
 
 /**
@@ -43,13 +44,13 @@ public class SimpleRepairCommand implements Command {
     public void process(java.util.StringTokenizer command, String Username) {
 
         if (accessLevel != 0) {
-            int userLevel = server.campaign.CampaignMain.cm.getServer().getUserLevel(Username);
+            int userLevel = CampaignMain.campaignMain.getServer().getUserLevel(Username);
             if (userLevel < getExecutionLevel()) {
-                server.campaign.CampaignMain.cm.toUser("AM:Insufficient access level for command. Level: " +
-                                                             userLevel +
-                                                             ". Required: " +
-                                                             accessLevel +
-                                                             ".", Username, true);
+                CampaignMain.campaignMain.toUser("AM:Insufficient access level for command. Level: " +
+                                                       userLevel +
+                                                       ". Required: " +
+                                                       accessLevel +
+                                                       ".", Username, true);
                 return;
             }
         }
@@ -68,7 +69,7 @@ public class SimpleRepairCommand implements Command {
                 rolls.add(Integer.parseInt(command.nextToken()));
             }
 
-            server.campaign.SPlayer player = server.campaign.CampaignMain.cm.getPlayer(Username);
+            server.campaign.SPlayer player = CampaignMain.campaignMain.getPlayer(Username);
             server.campaign.SUnit unit = player.getUnit(unitID);
             Pilot pilot = unit.getPilot();
             int ATLevel = 0;
@@ -77,7 +78,7 @@ public class SimpleRepairCommand implements Command {
                 ATLevel = pilot.getSkills().getPilotSkill(PilotSkill.AstechSkillID).getLevel();
             }
 
-            int cost = server.campaign.CampaignMain.cm.getTotalRepairCosts(unit.getEntity(),
+            int cost = CampaignMain.campaignMain.getTotalRepairCosts(unit.getEntity(),
                   techs,
                   rolls,
                   ATLevel,
@@ -85,7 +86,7 @@ public class SimpleRepairCommand implements Command {
             int time = 0;
 
             if (player.isUnitInLockedArmy(unitID)) {
-                server.campaign.CampaignMain.cm.toUser(
+                CampaignMain.campaignMain.toUser(
                       "FSM|Sorry but that unit is currently in combat and may not be repaired.",
                       Username,
                       false);
@@ -93,17 +94,17 @@ public class SimpleRepairCommand implements Command {
             }
 
             if (cost > player.getMoney()) {
-                server.campaign.CampaignMain.cm.toUser("FSM|You do not have enough " +
-                                                             server.campaign.CampaignMain.cm.moneyOrFluMessage(true,
-                                                                   false,
-                                                                   -cost) +
-                                                             " to repair this location.", Username, false);
+                CampaignMain.campaignMain.toUser("FSM|You do not have enough " +
+                                                       CampaignMain.campaignMain.moneyOrFluMessage(true,
+                                                             false,
+                                                             -cost) +
+                                                       " to repair this location.", Username, false);
                 return;
             }
 
             if (player.getDutyStatus() == server.campaign.SPlayer.STATUS_ACTIVE &&
                       player.getAmountOfTimesUnitExistsInArmies(unitID) > 0) {
-                server.campaign.CampaignMain.cm.toUser("FSM|You man not repair that unit while it is in an active army.",
+                CampaignMain.campaignMain.toUser("FSM|You man not repair that unit while it is in an active army.",
                       Username,
                       false);
                 return;
@@ -120,9 +121,9 @@ public class SimpleRepairCommand implements Command {
 
                 if (techType == UnitUtils.TECH_PILOT && unit.getPilot() != null
                           && unit.getLastCombatPilot() != unit.getPilot().getPilotId()) {
-                    server.campaign.CampaignMain.cm.toUser("FSM|" +
-                                                                 unit.getPilot().getName() +
-                                                                 " refuses to repair a unit he does not remember damaging himself!",
+                    CampaignMain.campaignMain.toUser("FSM|" +
+                                                           unit.getPilot().getName() +
+                                                           " refuses to repair a unit he does not remember damaging himself!",
                           Username,
                           false);
                     return;
@@ -131,15 +132,15 @@ public class SimpleRepairCommand implements Command {
                 if (techType == UnitUtils.TECH_PILOT) {unit.setPilotIsRepairing(true);}
 
                 if (numberOfTechs <= 0) {
-                    server.campaign.CampaignMain.cm.toUser("FSM|You do not have any " +
-                                                                 UnitUtils.techDescription(techType) +
-                                                                 " techs to do this repair!", Username, false);
+                    CampaignMain.campaignMain.toUser("FSM|You do not have any " +
+                                                           UnitUtils.techDescription(techType) +
+                                                           " techs to do this repair!", Username, false);
                     return;
                 }
             }
 
-            if (server.campaign.CampaignMain.cm.getRTT().getState() == java.lang.Thread.State.TERMINATED) {
-                server.campaign.CampaignMain.cm.toUser(
+            if (CampaignMain.campaignMain.getRTT().getState() == java.lang.Thread.State.TERMINATED) {
+                CampaignMain.campaignMain.toUser(
                       "FSM|Sorry your repair order could not be processed the repair thread has been terminated. Staff has been notified.",
                       Username,
                       false);
@@ -156,16 +157,16 @@ public class SimpleRepairCommand implements Command {
             player.setSave();
             time = setWorkHours(rolls, techs, unit.getEntity(), player.getMyHouse());
             MWLogger.errLog("Repair Time: " + time);
-            server.campaign.CampaignMain.cm.getRTT().getRepairList().add(
+            CampaignMain.campaignMain.getRTT().getRepairList().add(
                   RepairTrackingThread.Repair(player, unitID, techs, time, false));
-            server.campaign.CampaignMain.cm.toUser("FSM|Repairs have begone on your " +
-                                                         unit.getModelName() +
-                                                         " <b>At a Cost of " +
-                                                         server.campaign.CampaignMain.cm.moneyOrFluMessage(true,
-                                                               true,
-                                                               cost) +
-                                                         "</b>", Username, false);
-            server.campaign.CampaignMain.cm.toUser("PL|UU|" + unitID + "|" + unit.toString(true), Username, false);
+            CampaignMain.campaignMain.toUser("FSM|Repairs have begone on your " +
+                                                   unit.getModelName() +
+                                                   " <b>At a Cost of " +
+                                                   CampaignMain.campaignMain.moneyOrFluMessage(true,
+                                                         true,
+                                                         cost) +
+                                                   "</b>", Username, false);
+            CampaignMain.campaignMain.toUser("PL|UU|" + unitID + "|" + unit.toString(true), Username, false);
 
         } catch (Exception ex) {
             MWLogger.errLog("Unable to Process Repair Unit Command!");
@@ -254,7 +255,7 @@ public class SimpleRepairCommand implements Command {
     private int calculateTime(Entity unit, int location, int slot, int tech, int baseRoll, boolean armor,
           server.campaign.SHouse house) {
         int roll = 0;
-        int repairTime = server.campaign.CampaignMain.cm.getIntegerConfig("TimeForEachRepairPoint");
+        int repairTime = CampaignMain.campaignMain.getIntegerConfig("TimeForEachRepairPoint");
 
         roll = UnitUtils.getTechRoll(unit, location, slot,
               tech, armor, house.getTechLevel()) - baseRoll;

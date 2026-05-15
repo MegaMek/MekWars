@@ -15,6 +15,8 @@
  */
 package mekwars.server.util.rss;
 
+import mekwars.server.campaign.CampaignMain;
+
 /**
  * A self-contained RSS message to be added to a feed
  *
@@ -47,7 +49,7 @@ public class FeedMessage {
             this.description = msgBody.toString();
         }
         guid = java.util.UUID.randomUUID().toString();
-        link = server.campaign.CampaignMain.cm.getConfig("NewsURL");
+        link = CampaignMain.campaignMain.getConfig("NewsURL");
         pubDate = new java.text.SimpleDateFormat("EEE, dd MMM yyyy HH:mm:ss Z").format(new java.util.Date());
     }
 

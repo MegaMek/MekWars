@@ -16,6 +16,8 @@
 
 package mekwars.server.campaign.commands;
 
+import mekwars.server.campaign.CampaignMain;
+
 public class MyStatusCommand implements Command {
 
     int accessLevel = 0;
@@ -24,24 +26,24 @@ public class MyStatusCommand implements Command {
     public void process(java.util.StringTokenizer command, String Username) {
 
         if (accessLevel != 0) {
-            int userLevel = server.campaign.CampaignMain.cm.getServer().getUserLevel(Username);
+            int userLevel = CampaignMain.campaignMain.getServer().getUserLevel(Username);
             if (userLevel < getExecutionLevel()) {
-                server.campaign.CampaignMain.cm.toUser("AM:Insufficient access level for command. Level: " +
-                                                             userLevel +
-                                                             ". Required: " +
-                                                             accessLevel +
-                                                             ".", Username, true);
+                CampaignMain.campaignMain.toUser("AM:Insufficient access level for command. Level: " +
+                                                       userLevel +
+                                                       ". Required: " +
+                                                       accessLevel +
+                                                       ".", Username, true);
                 return;
             }
         }
 
         //Send status to player (SM means Send to Miscellaneous Tab)
-        if (server.campaign.CampaignMain.cm.getPlayer(Username) != null) {
-            server.campaign.CampaignMain.cm.toUser("SM|" +
-                                                         server.campaign.CampaignMain.cm.getPlayer(Username)
-                                                               .getReadableStatus(false), Username, false);
+        if (CampaignMain.campaignMain.getPlayer(Username) != null) {
+            CampaignMain.campaignMain.toUser("SM|" +
+                                                   CampaignMain.campaignMain.getPlayer(Username)
+                                                         .getReadableStatus(false), Username, false);
         } else {
-            server.campaign.CampaignMain.cm.toUser("AM:You are not participating in the campaign!", Username, true);
+            CampaignMain.campaignMain.toUser("AM:You are not participating in the campaign!", Username, true);
         }
     }//end process()
 

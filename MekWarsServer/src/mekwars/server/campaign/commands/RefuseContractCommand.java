@@ -16,6 +16,8 @@
 
 package mekwars.server.campaign.commands;
 
+import mekwars.server.campaign.CampaignMain;
+
 public class RefuseContractCommand implements Command {
 
     int accessLevel = 0;
@@ -24,13 +26,13 @@ public class RefuseContractCommand implements Command {
     public void process(java.util.StringTokenizer command, String Username) {
 
         if (accessLevel != 0) {
-            int userLevel = server.campaign.CampaignMain.cm.getServer().getUserLevel(Username);
+            int userLevel = CampaignMain.campaignMain.getServer().getUserLevel(Username);
             if (userLevel < getExecutionLevel()) {
-                server.campaign.CampaignMain.cm.toUser("AM:Insufficient access level for command. Level: " +
-                                                             userLevel +
-                                                             ". Required: " +
-                                                             accessLevel +
-                                                             ".", Username, true);
+                CampaignMain.campaignMain.toUser("AM:Insufficient access level for command. Level: " +
+                                                       userLevel +
+                                                       ". Required: " +
+                                                       accessLevel +
+                                                       ".", Username, true);
                 return;
             }
         }
@@ -40,33 +42,33 @@ public class RefuseContractCommand implements Command {
         boolean offeringPlayerFound = false;
         String offeringPlayerName = command.nextToken();
 
-        for (int i = 0; i < server.campaign.CampaignMain.cm.getUnresolvedContracts().size(); i++) {
-            server.campaign.mercenaries.ContractInfo info = server.campaign.CampaignMain.cm.getUnresolvedContracts()
+        for (int i = 0; i < CampaignMain.campaignMain.getUnresolvedContracts().size(); i++) {
+            server.campaign.mercenaries.ContractInfo info = CampaignMain.campaignMain.getUnresolvedContracts()
                                                                   .get(i);
             if (info.getOfferingPlayerName().equalsIgnoreCase(offeringPlayerName)) {
                 offeringPlayerFound = true;
                 //MWLogger.mainLog("CANCEL: Offering player found set to true");
                 //if contract belong to offering player, check to see if it is for this player.
                 receivingPlayerName = info.getPlayerName();
-                if (server.campaign.CampaignMain.cm.getPlayer(receivingPlayerName) ==
-                          server.campaign.CampaignMain.cm.getPlayer(Username)) {//player can kill contract offer
-                    server.campaign.CampaignMain.cm.getUnresolvedContracts().remove(i);
+                if (CampaignMain.campaignMain.getPlayer(receivingPlayerName) ==
+                          CampaignMain.campaignMain.getPlayer(Username)) {//player can kill contract offer
+                    CampaignMain.campaignMain.getUnresolvedContracts().remove(i);
                     contractCancelled = true;
-                    server.campaign.CampaignMain.cm.toUser("AM:You refused the contract offered by " +
-                                                                 offeringPlayerName, Username, true);
-                    server.campaign.CampaignMain.cm.toUser(Username + " refused your contract offer",
+                    CampaignMain.campaignMain.toUser("AM:You refused the contract offered by " +
+                                                           offeringPlayerName, Username, true);
+                    CampaignMain.campaignMain.toUser(Username + " refused your contract offer",
                           offeringPlayerName,
                           true);
-                    server.campaign.CampaignMain.cm.getUnresolvedContracts().trimToSize();
+                    CampaignMain.campaignMain.getUnresolvedContracts().trimToSize();
                     break;
                 }//end if (contract is offered to player attempting to cancel)
             }//end if(contract offered by proper player)
         }//end for loop
         if (contractCancelled == false) {
             if (offeringPlayerFound == false) {//not found
-                server.campaign.CampaignMain.cm.toUser("AM:This player has no outstanding contracts", Username, true);
+                CampaignMain.campaignMain.toUser("AM:This player has no outstanding contracts", Username, true);
             } else {//contract is for someone else
-                server.campaign.CampaignMain.cm.toUser("AM:This player has not offered you a contract.",
+                CampaignMain.campaignMain.toUser("AM:This player has not offered you a contract.",
                       Username,
                       true);
             }

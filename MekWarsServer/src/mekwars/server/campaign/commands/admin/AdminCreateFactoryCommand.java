@@ -21,6 +21,7 @@
 package mekwars.server.campaign.commands.admin;
 
 import common.UnitFactory;
+import mekwars.server.campaign.CampaignMain;
 
 
 /**
@@ -38,16 +39,16 @@ public class AdminCreateFactoryCommand implements server.campaign.commands.Comma
     public void process(java.util.StringTokenizer command, String Username) {
 
         //access level check
-        int userLevel = server.campaign.CampaignMain.cm.getServer().getUserLevel(Username);
+        int userLevel = CampaignMain.campaignMain.getServer().getUserLevel(Username);
         if (userLevel < getExecutionLevel()) {
-            server.campaign.CampaignMain.cm.toUser("AM:Insufficient access level for command. Level: " +
-                                                         userLevel +
-                                                         ". Required: " +
-                                                         accessLevel +
-                                                         ".", Username, true);
+            CampaignMain.campaignMain.toUser("AM:Insufficient access level for command. Level: " +
+                                                   userLevel +
+                                                   ". Required: " +
+                                                   accessLevel +
+                                                   ".", Username, true);
             return;
         }
-        server.campaign.SPlanet planet = server.campaign.CampaignMain.cm.getPlanetFromPartialString(command.nextToken(),
+        server.campaign.SPlanet planet = CampaignMain.campaignMain.getPlanetFromPartialString(command.nextToken(),
               Username);
         String name = command.nextToken();
         String size = command.nextToken();
@@ -81,9 +82,9 @@ public class AdminCreateFactoryCommand implements server.campaign.commands.Comma
         }
         planet.updated();
 
-        server.campaign.CampaignMain.cm.toUser("Factory created!", Username, true);
+        CampaignMain.campaignMain.toUser("Factory created!", Username, true);
 
-        server.campaign.CampaignMain.cm.doSendModMail("NOTE",
+        CampaignMain.campaignMain.doSendModMail("NOTE",
               Username + " has created factory " + fac.getName() + " on planet " + planet.getName());
 
     }

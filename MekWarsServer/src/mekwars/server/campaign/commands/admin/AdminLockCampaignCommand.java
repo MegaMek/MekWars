@@ -15,6 +15,7 @@
 package mekwars.server.campaign.commands.admin;
 
 import common.House;
+import mekwars.server.campaign.CampaignMain;
 
 public class AdminLockCampaignCommand implements server.campaign.commands.Command {
 
@@ -28,45 +29,45 @@ public class AdminLockCampaignCommand implements server.campaign.commands.Comman
     public void process(java.util.StringTokenizer command, String Username) {
 
         // access level check
-        int userLevel = server.campaign.CampaignMain.cm.getServer().getUserLevel(Username);
+        int userLevel = CampaignMain.campaignMain.getServer().getUserLevel(Username);
         if (userLevel < getExecutionLevel()) {
-            server.campaign.CampaignMain.cm.toUser("AM:Insufficient access level for command. Level: " +
-                                                         userLevel +
-                                                         ". Required: " +
-                                                         accessLevel +
-                                                         ".", Username, true);
+            CampaignMain.campaignMain.toUser("AM:Insufficient access level for command. Level: " +
+                                                   userLevel +
+                                                   ". Required: " +
+                                                   accessLevel +
+                                                   ".", Username, true);
             return;
         }
 
-        if (Boolean.parseBoolean(server.campaign.CampaignMain.cm.getConfig("CampaignLock")) == true) {
-            server.campaign.CampaignMain.cm.toUser("Campaign is already locked.", Username, true);
+        if (Boolean.parseBoolean(CampaignMain.campaignMain.getConfig("CampaignLock")) == true) {
+            CampaignMain.campaignMain.toUser("Campaign is already locked.", Username, true);
             return;
         }
 
         // deactivate all active players, and tell them why.
-        for (House house : server.campaign.CampaignMain.cm.getData().getAllHouses()) {
+        for (House house : CampaignMain.campaignMain.getData().getAllHouses()) {
             server.campaign.SHouse h = (server.campaign.SHouse) house;
             for (server.campaign.SPlayer p : h.getActivePlayers().values()) {
                 p.setActive(false);
-                server.campaign.CampaignMain.cm.toUser("AM:" + Username + " locked the campaign. You were deactivated.",
+                CampaignMain.campaignMain.toUser("AM:" + Username + " locked the campaign. You were deactivated.",
                       p.getName(),
                       true);
-                server.campaign.CampaignMain.cm.sendPlayerStatusUpdate(p, !Boolean.parseBoolean(
-                      server.campaign.CampaignMain.cm.getConfig("HideActiveStatus")));
+                CampaignMain.campaignMain.sendPlayerStatusUpdate(p, !Boolean.parseBoolean(
+                      CampaignMain.campaignMain.getConfig("HideActiveStatus")));
             }// end while (act members remain)
 
         }// end while(factions remain)
 
         // set the lock property, so no new players can activate
-        server.campaign.CampaignMain.cm.getConfig().setProperty("CampaignLock", "true");
+        CampaignMain.campaignMain.getConfig().setProperty("CampaignLock", "true");
 
         // tell the admin he has locked the campaign
-        server.campaign.CampaignMain.cm.doSendToAllOnlinePlayers("AM:" + Username + " locked the campaign!", true);
-        server.campaign.CampaignMain.cm.toUser(
+        CampaignMain.campaignMain.doSendToAllOnlinePlayers("AM:" + Username + " locked the campaign!", true);
+        CampaignMain.campaignMain.toUser(
               "AM:You locked the campaign. Players can no longer activate, and all active players were deactivated. Use 'adminunlockcampaign' to release the activity lock.",
               Username,
               true);
-        server.campaign.CampaignMain.cm.doSendModMail("NOTE", Username + " locked the campaign.");
+        CampaignMain.campaignMain.doSendModMail("NOTE", Username + " locked the campaign.");
 
     }// end Process()
 

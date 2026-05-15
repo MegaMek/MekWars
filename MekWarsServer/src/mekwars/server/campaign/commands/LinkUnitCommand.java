@@ -17,6 +17,7 @@
 package mekwars.server.campaign.commands;
 
 import common.Unit;
+import mekwars.server.campaign.CampaignMain;
 
 
 public class LinkUnitCommand implements Command {
@@ -27,20 +28,20 @@ public class LinkUnitCommand implements Command {
     public void process(java.util.StringTokenizer command, String Username) {
 
         if (accessLevel != 0) {
-            int userLevel = server.campaign.CampaignMain.cm.getServer().getUserLevel(Username);
+            int userLevel = CampaignMain.campaignMain.getServer().getUserLevel(Username);
             if (userLevel < getExecutionLevel()) {
-                server.campaign.CampaignMain.cm.toUser("AM:Insufficient access level for command. Level: " +
-                                                             userLevel +
-                                                             ". Required: " +
-                                                             accessLevel +
-                                                             ".", Username, true);
+                CampaignMain.campaignMain.toUser("AM:Insufficient access level for command. Level: " +
+                                                       userLevel +
+                                                       ". Required: " +
+                                                       accessLevel +
+                                                       ".", Username, true);
                 return;
             }
         }
 
         //syntax /c linkunit#army#slave#master enter -1 in master to release
         if (command.hasMoreElements()) {
-            server.campaign.SPlayer p = server.campaign.CampaignMain.cm.getPlayer(Username);
+            server.campaign.SPlayer p = CampaignMain.campaignMain.getPlayer(Username);
             int armyid = Integer.parseInt(command.nextToken());
             int slaveid = Integer.parseInt(command.nextToken());
             int masterid = -1;
@@ -49,20 +50,20 @@ public class LinkUnitCommand implements Command {
 
             server.campaign.SArmy a = p.getArmy(armyid);
             if (a == null) {
-                server.campaign.CampaignMain.cm.toUser("AM:Army #" + armyid + " does not exist.", Username, true);
+                CampaignMain.campaignMain.toUser("AM:Army #" + armyid + " does not exist.", Username, true);
                 return;
             }
 
             //Is the army in a fight atm?
             if (a.isLocked()) {
-                server.campaign.CampaignMain.cm.toUser("AM:You may not change C3 networks while an Army is in combat.",
+                CampaignMain.campaignMain.toUser("AM:You may not change C3 networks while an Army is in combat.",
                       Username,
                       true);
                 return;
             }
 
             if (p.getDutyStatus() == server.campaign.SPlayer.STATUS_ACTIVE) {
-                server.campaign.CampaignMain.cm.toUser("AM:You may not change C3 networks while on active duty.",
+                CampaignMain.campaignMain.toUser("AM:You may not change C3 networks while on active duty.",
                       Username,
                       true);
                 return;
@@ -71,11 +72,11 @@ public class LinkUnitCommand implements Command {
             //throw out if the target slave doesnt exist
             Unit slaveUnit = a.getUnit(slaveid);
             if (slaveUnit == null) {
-                server.campaign.CampaignMain.cm.toUser("AM:Could not find unit #" +
-                                                             slaveid +
-                                                             " in army #" +
-                                                             armyid +
-                                                             ".", Username, true);
+                CampaignMain.campaignMain.toUser("AM:Could not find unit #" +
+                                                       slaveid +
+                                                       " in army #" +
+                                                       armyid +
+                                                       ".", Username, true);
                 return;
             }
 
@@ -93,9 +94,9 @@ public class LinkUnitCommand implements Command {
                 a.setBV(0);
                 String toReturn = "AM:Unit #" + slaveid + " was removed from its C3 network. New BV: " + a.getBV();
 
-                server.campaign.CampaignMain.cm.toUser(toReturn, Username, true);
-                server.campaign.CampaignMain.cm.toUser("PL|SAD|" + a.toString(true, "%"), Username, false);
-                server.campaign.CampaignMain.cm.getOpsManager().checkOperations(a, true);//update legal ops
+                CampaignMain.campaignMain.toUser(toReturn, Username, true);
+                CampaignMain.campaignMain.toUser("PL|SAD|" + a.toString(true, "%"), Username, false);
+                CampaignMain.campaignMain.getOpsManager().checkOperations(a, true);//update legal ops
                 return;
             } else if (masterid == -1) {
                 a.getC3Network().remove(slaveid);
@@ -104,20 +105,20 @@ public class LinkUnitCommand implements Command {
 
                 String toReturn = "AM:Unit #" + slaveid + " was removed from its C3 network. New BV: " + a.getBV();
 
-                server.campaign.CampaignMain.cm.toUser(toReturn, Username, true);
-                server.campaign.CampaignMain.cm.toUser("PL|SAD|" + a.toString(true, "%"), Username, false);
-                server.campaign.CampaignMain.cm.getOpsManager().checkOperations(a, true);//update legal ops
+                CampaignMain.campaignMain.toUser(toReturn, Username, true);
+                CampaignMain.campaignMain.toUser("PL|SAD|" + a.toString(true, "%"), Username, false);
+                CampaignMain.campaignMain.getOpsManager().checkOperations(a, true);//update legal ops
                 return;
             }
 
             //throw out if the master unit doesnt exist.
             Unit masterUnit = a.getUnit(masterid);
             if (masterUnit == null) {
-                server.campaign.CampaignMain.cm.toUser("AM:Unable to find master unit (#" +
-                                                             masterid +
-                                                             ") in Army #" +
-                                                             armyid +
-                                                             ".", Username, true);
+                CampaignMain.campaignMain.toUser("AM:Unable to find master unit (#" +
+                                                       masterid +
+                                                       ") in Army #" +
+                                                       armyid +
+                                                       ".", Username, true);
                 return;
             }
 
@@ -133,15 +134,15 @@ public class LinkUnitCommand implements Command {
                                         ". New BV: " +
                                         a.getBV();
 
-                server.campaign.CampaignMain.cm.toUser(toReturn, Username, true);
-                server.campaign.CampaignMain.cm.toUser("PL|SAD|" + a.toString(true, "%"), Username, false);
-                server.campaign.CampaignMain.cm.getOpsManager().checkOperations(a, true);//update legal ops
+                CampaignMain.campaignMain.toUser(toReturn, Username, true);
+                CampaignMain.campaignMain.toUser("PL|SAD|" + a.toString(true, "%"), Username, false);
+                CampaignMain.campaignMain.getOpsManager().checkOperations(a, true);//update legal ops
             } else {
-                server.campaign.CampaignMain.cm.toUser("AM:Unabled to Link Unit #" +
-                                                             slaveUnit.getId() +
-                                                             " to unit #" +
-                                                             masterUnit.getId() +
-                                                             ".", Username, true);
+                CampaignMain.campaignMain.toUser("AM:Unabled to Link Unit #" +
+                                                       slaveUnit.getId() +
+                                                       " to unit #" +
+                                                       masterUnit.getId() +
+                                                       ".", Username, true);
             }
         }//end if(command has more elements)
 

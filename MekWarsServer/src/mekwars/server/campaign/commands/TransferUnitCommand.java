@@ -18,6 +18,7 @@ package mekwars.server.campaign.commands;
 
 import common.Unit;
 import common.util.StringUtils;
+import mekwars.server.campaign.CampaignMain;
 
 public class TransferUnitCommand implements Command {
 
@@ -27,13 +28,13 @@ public class TransferUnitCommand implements Command {
     public void process(java.util.StringTokenizer command, String Username) {
 
         if (accessLevel != 0) {
-            int userLevel = server.campaign.CampaignMain.cm.getServer().getUserLevel(Username);
+            int userLevel = CampaignMain.campaignMain.getServer().getUserLevel(Username);
             if (userLevel < getExecutionLevel()) {
-                server.campaign.CampaignMain.cm.toUser("AM:Insufficient access level for command. Level: " +
-                                                             userLevel +
-                                                             ". Required: " +
-                                                             accessLevel +
-                                                             ".", Username, true);
+                CampaignMain.campaignMain.toUser("AM:Insufficient access level for command. Level: " +
+                                                       userLevel +
+                                                       ". Required: " +
+                                                       accessLevel +
+                                                       ".", Username, true);
                 return;
             }
         }
@@ -45,47 +46,47 @@ public class TransferUnitCommand implements Command {
             targetPlayer = (String) command.nextElement();
             unitid = Integer.parseInt((String) command.nextElement());
         } catch (Exception e) {
-            server.campaign.CampaignMain.cm.toUser("AM:Improper format. Try: /c transferunit#TargetPlayer#UnitID",
+            CampaignMain.campaignMain.toUser("AM:Improper format. Try: /c transferunit#TargetPlayer#UnitID",
                   Username,
                   true);
             return;
         }
 
-        server.campaign.SPlayer targetplayer = server.campaign.CampaignMain.cm.getPlayer(targetPlayer);
-        server.campaign.SPlayer player = server.campaign.CampaignMain.cm.getPlayer(Username);
+        server.campaign.SPlayer targetplayer = CampaignMain.campaignMain.getPlayer(targetPlayer);
+        server.campaign.SPlayer player = CampaignMain.campaignMain.getPlayer(Username);
         server.campaign.SHouse house = player.getMyHouse();
-        boolean usesTechs = server.campaign.CampaignMain.cm.getBooleanConfig("UseTechnicians") &&
-                                  !server.campaign.CampaignMain.cm.isUsingAdvanceRepair();
+        boolean usesTechs = CampaignMain.campaignMain.getBooleanConfig("UseTechnicians") &&
+                                  !CampaignMain.campaignMain.isUsingAdvanceRepair();
 
         //Newbie House may not send units!
         if (house.isNewbieHouse()) {
-            server.campaign.CampaignMain.cm.toUser("AM:Players in SOL may not transfer units.", Username, true);
+            CampaignMain.campaignMain.toUser("AM:Players in SOL may not transfer units.", Username, true);
             return;
         }
 
         if (player.mayAcquireWelfareUnits()) {
-            server.campaign.CampaignMain.cm.toUser("AM:You may not transfer any of your units while you are on welfare.",
+            CampaignMain.campaignMain.toUser("AM:You may not transfer any of your units while you are on welfare.",
                   Username,
                   true);
             return;
         }
 
         if (targetplayer == null) {
-            server.campaign.CampaignMain.cm.toUser("AM:Could not find target player.", Username, true);
+            CampaignMain.campaignMain.toUser("AM:Could not find target player.", Username, true);
             return;
         }
 
         //No unit?
         server.campaign.SUnit m = player.getUnit(unitid);
         if (m == null) {
-            server.campaign.CampaignMain.cm.toUser("AM:You do not own Unit #" + unitid + ".", Username, true);
+            CampaignMain.campaignMain.toUser("AM:You do not own Unit #" + unitid + ".", Username, true);
             return;
         }
 
         //unit is in armies, and player is active/fighting
         if (player.getAmountOfTimesUnitExistsInArmies(unitid) > 0 &&
                   player.getDutyStatus() >= server.campaign.SPlayer.STATUS_ACTIVE) {
-            server.campaign.CampaignMain.cm.toUser("AM:You may not tranfer units which are in active armies.",
+            CampaignMain.campaignMain.toUser("AM:You may not tranfer units which are in active armies.",
                   Username,
                   true);
             return;
@@ -101,9 +102,9 @@ public class TransferUnitCommand implements Command {
         //Not the same faction?
         if (!targetplayer.getMyHouse().equals(player.getMyHouse()) &&
                   !targetplayer.getMyHouse().getHouseFightingFor(targetplayer).equals(player.getMyHouse())) {
-            server.campaign.CampaignMain.cm.toUser("AM:" +
-                                                         targetplayer.getName() +
-                                                         " is not in your faction. You cannot send him units.",
+            CampaignMain.campaignMain.toUser("AM:" +
+                                                   targetplayer.getName() +
+                                                   " is not in your faction. You cannot send him units.",
                   Username,
                   true);
             return;
@@ -111,25 +112,25 @@ public class TransferUnitCommand implements Command {
         } else if (targetplayer.getFreeBays() <
                          server.campaign.SUnit.getHangarSpaceRequired(m, targetplayer.getMyHouse()) && !usesTechs) {
             //on a tech server, can accept units past limit. theyre just marked unmaintained
-            server.campaign.CampaignMain.cm.toUser("AM:" + targetplayer.getName() + " has no room for that unit.",
+            CampaignMain.campaignMain.toUser("AM:" + targetplayer.getName() + " has no room for that unit.",
                   Username,
                   true);
             return;
             //Target is not logged in?
         } else if (!targetplayer.getMyHouse().isLoggedIntoFaction(targetplayer.getName())) {
-            server.campaign.CampaignMain.cm.toUser("AM:" +
-                                                         targetplayer.getName() +
-                                                         " is not logged in. You may only transfer to players who are online.",
+            CampaignMain.campaignMain.toUser("AM:" +
+                                                   targetplayer.getName() +
+                                                   " is not logged in. You may only transfer to players who are online.",
                   Username,
                   true);
             return;
             //Same IP address?
         } else if (Boolean.parseBoolean(house.getConfig("IPCheck"))) {
-            if (server.campaign.CampaignMain.cm.getServer().getIP(player.getName()).toString().equals(
-                  server.campaign.CampaignMain.cm.getServer().getIP(targetplayer.getName()).toString())) {
-                server.campaign.CampaignMain.cm.toUser("AM:" +
-                                                             targetplayer.getName() +
-                                                             " has the same IP as you do. You can't send him units.",
+            if (CampaignMain.campaignMain.getServer().getIP(player.getName()).toString().equals(
+                  CampaignMain.campaignMain.getServer().getIP(targetplayer.getName()).toString())) {
+                CampaignMain.campaignMain.toUser("AM:" +
+                                                       targetplayer.getName() +
+                                                       " has the same IP as you do. You can't send him units.",
                       Username,
                       true);
                 return;
@@ -137,18 +138,18 @@ public class TransferUnitCommand implements Command {
         }
 
         if (!targetplayer.hasRoomForUnit(m.getType(), m.getWeightclass())) {
-            server.campaign.CampaignMain.cm.toUser("AM:Sorry, " +
-                                                         targetplayer.getName() +
-                                                         " already has the maximum number of " +
-                                                         Unit.getWeightClassDesc(m.getWeightclass()) +
-                                                         " " +
-                                                         Unit.getTypeClassDesc(m.getType()) +
-                                                         "s", Username);
+            CampaignMain.campaignMain.toUser("AM:Sorry, " +
+                                                   targetplayer.getName() +
+                                                   " already has the maximum number of " +
+                                                   Unit.getWeightClassDesc(m.getWeightclass()) +
+                                                   " " +
+                                                   Unit.getTypeClassDesc(m.getType()) +
+                                                   "s", Username);
             return;
         }
 
-        if (m.isChristmasUnit() && !server.campaign.CampaignMain.cm.getBooleanConfig("Christmas_AllowTransfer")) {
-            server.campaign.CampaignMain.cm.toUser("AM:No re-gifting!", Username);
+        if (m.isChristmasUnit() && !CampaignMain.campaignMain.getBooleanConfig("Christmas_AllowTransfer")) {
+            CampaignMain.campaignMain.toUser("AM:No re-gifting!", Username);
             return;
         }
 
@@ -162,37 +163,37 @@ public class TransferUnitCommand implements Command {
         //if the sender pays, make sure he can afford the transfer without technicians quitting.
         if (!Boolean.parseBoolean(house.getConfig("SenderPaysOnTransfer"))) {senderCost = 0;}
         if (senderCost > player.getMoney()) {
-            server.campaign.CampaignMain.cm.toUser("AM:You tried to send " +
-                                                         StringUtils.aOrAn(modName, true) +
-                                                         " to " +
-                                                         targetPlayer +
-                                                         ", but you cannot afford the transfer payment (" +
-                                                         server.campaign.CampaignMain.cm.moneyOrFluMessage(true,
-                                                               true,
-                                                               senderCost) +
-                                                         ").", Username, true);
+            CampaignMain.campaignMain.toUser("AM:You tried to send " +
+                                                   StringUtils.aOrAn(modName, true) +
+                                                   " to " +
+                                                   targetPlayer +
+                                                   ", but you cannot afford the transfer payment (" +
+                                                   CampaignMain.campaignMain.moneyOrFluMessage(true,
+                                                         true,
+                                                         senderCost) +
+                                                   ").", Username, true);
             return;
         }
 
         //if the receiver pays, make sure he can afford the transfer without technicians quitting.
         if (!Boolean.parseBoolean(house.getConfig("ReceiverPaysOnTransfer"))) {receiverCost = 0;}
         if (receiverCost > targetplayer.getMoney()) {
-            server.campaign.CampaignMain.cm.toUser("AM:You tried to send " +
-                                                         StringUtils.aOrAn(modName, true) +
-                                                         " to " +
-                                                         targetPlayer +
-                                                         ", but he cannot afford the transfer payment. Transfer aborted.",
+            CampaignMain.campaignMain.toUser("AM:You tried to send " +
+                                                   StringUtils.aOrAn(modName, true) +
+                                                   " to " +
+                                                   targetPlayer +
+                                                   ", but he cannot afford the transfer payment. Transfer aborted.",
                   Username,
                   true);
-            server.campaign.CampaignMain.cm.toUser("AM:" +
-                                                         Username +
-                                                         " tried to send you " +
-                                                         StringUtils.aOrAn(modName, true) +
-                                                         "; however, you cannot afford the tech payment the transfer would trigger (" +
-                                                         server.campaign.CampaignMain.cm.moneyOrFluMessage(true,
-                                                               true,
-                                                               receiverCost) +
-                                                         ").", targetPlayer, true);
+            CampaignMain.campaignMain.toUser("AM:" +
+                                                   Username +
+                                                   " tried to send you " +
+                                                   StringUtils.aOrAn(modName, true) +
+                                                   "; however, you cannot afford the tech payment the transfer would trigger (" +
+                                                   CampaignMain.campaignMain.moneyOrFluMessage(true,
+                                                         true,
+                                                         receiverCost) +
+                                                   ").", targetPlayer, true);
             return;
         }
 
@@ -204,19 +205,19 @@ public class TransferUnitCommand implements Command {
         int scrapLevel = Integer.parseInt(house.getConfig("TransferScrapLevel"));
 
         if (m.getMaintainanceLevel() <= scrapLevel && !confirmedSend) {
-            server.campaign.CampaignMain.cm.toUser("AM:The unit you are trying to tranfer is not well maintained." +
-                                                         " Equipment which is already in a poor state of repair may be" +
-                                                         " irreparably damaged in transit.<br>" +
-                                                         " <a href=\"MEKWARS/c transferunit#" +
-                                                         targetplayer.getName() +
-                                                         "#" +
-                                                         unitid +
-                                                         "#CONFIRM\">Click here to send the unit anyway</a>",
+            CampaignMain.campaignMain.toUser("AM:The unit you are trying to tranfer is not well maintained." +
+                                                   " Equipment which is already in a poor state of repair may be" +
+                                                   " irreparably damaged in transit.<br>" +
+                                                   " <a href=\"MEKWARS/c transferunit#" +
+                                                   targetplayer.getName() +
+                                                   "#" +
+                                                   unitid +
+                                                   "#CONFIRM\">Click here to send the unit anyway</a>",
                   Username,
                   true);
             return;
         } else if (m.getMaintainanceLevel() <= scrapLevel && confirmedSend) {
-            int rnd = server.campaign.CampaignMain.cm.getRandomNumber(100) + 1;
+            int rnd = CampaignMain.campaignMain.getRandomNumber(100) + 1;
             if (rnd > m.getMaintainanceLevel()) {
 
                 //if scrapping costs bills, subtract the appropriate amount.
@@ -234,17 +235,17 @@ public class TransferUnitCommand implements Command {
 
                 String toSend = "AM:The " + modName + " didn't survive transit intact. HQ is displeased (";
                 if (mechscrapprice > 0) {
-                    toSend += server.campaign.CampaignMain.cm.moneyOrFluMessage(true, false, -mechscrapprice, true) +
+                    toSend += CampaignMain.campaignMain.moneyOrFluMessage(true, false, -mechscrapprice, true) +
                                     ", ";
                 }
-                toSend += server.campaign.CampaignMain.cm.moneyOrFluMessage(false, false, -flutolose, true) + ").";
-                server.campaign.CampaignMain.cm.toUser(toSend, player.getName(), true);
+                toSend += CampaignMain.campaignMain.moneyOrFluMessage(false, false, -flutolose, true) + ").";
+                CampaignMain.campaignMain.toUser(toSend, player.getName(), true);
 
-                server.campaign.CampaignMain.cm.toUser("AM:" +
-                                                             player.getName() +
-                                                             " tried to send you a " +
-                                                             modName +
-                                                             ", but it didn't survive the trip.",
+                CampaignMain.campaignMain.toUser("AM:" +
+                                                       player.getName() +
+                                                       " tried to send you a " +
+                                                       modName +
+                                                       ", but it didn't survive the trip.",
                       targetplayer.getName(),
                       true);
                 player.removeUnit(m.getId(), true);
@@ -256,7 +257,7 @@ public class TransferUnitCommand implements Command {
         String toSender = "AM:You transferred the " + modName + " to " + targetplayer.getName() + ".";
         if (senderCost > 0) {
             toSender += " Paid " +
-                              server.campaign.CampaignMain.cm.moneyOrFluMessage(true, false, senderCost) +
+                              CampaignMain.campaignMain.moneyOrFluMessage(true, false, senderCost) +
                               " to your technicians.";
             player.addMoney(-senderCost);
         }
@@ -264,13 +265,13 @@ public class TransferUnitCommand implements Command {
         String toReceiver = "AM:" + Username + " sent you " + StringUtils.aOrAn(modName, true) + ".";
         if (receiverCost > 0) {
             toReceiver += "Paid " +
-                                server.campaign.CampaignMain.cm.moneyOrFluMessage(true, false, receiverCost) +
+                                CampaignMain.campaignMain.moneyOrFluMessage(true, false, receiverCost) +
                                 " to your technicians.";
             targetplayer.addMoney(-receiverCost);
         }
 
-        server.campaign.CampaignMain.cm.toUser(toSender, Username, true);
-        server.campaign.CampaignMain.cm.toUser(toReceiver, targetPlayer, true);
+        CampaignMain.campaignMain.toUser(toSender, Username, true);
+        CampaignMain.campaignMain.toUser(toReceiver, targetPlayer, true);
 
         //actual unit transfer
         player.removeUnit(m.getId(), true);
@@ -278,7 +279,7 @@ public class TransferUnitCommand implements Command {
 
         //check to see if this put the player into welfare
         if (player.mayAcquireWelfareUnits()) {
-            server.campaign.CampaignMain.cm.doSendModMail("NOTE",
+            CampaignMain.campaignMain.doSendModMail("NOTE",
                   Username + " has used the Transfer Unit Command to send himself into welfare.");
         }
 

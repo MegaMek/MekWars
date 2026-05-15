@@ -18,6 +18,7 @@ package mekwars.server.campaign.commands;
 
 import common.House;
 import common.util.MWLogger;
+import mekwars.server.campaign.CampaignMain;
 import server.campaign.pilot.SPilot;
 
 
@@ -78,7 +79,7 @@ public class FreeBuildCreateUnitCommand implements Command {
 
         calcRemainingFreeMeks(); // if there is no limit set, this will do nothing.
 
-        server.campaign.CampaignMain.cm.toUser("Unit created: " + unit.getSmallDescription() + "  ID #" + unit.getId(),
+        CampaignMain.campaignMain.toUser("Unit created: " + unit.getSmallDescription() + "  ID #" + unit.getId(),
               Username,
               true);
 
@@ -92,16 +93,16 @@ public class FreeBuildCreateUnitCommand implements Command {
 
     private void initVars(String Username) {
         username = Username;
-        userlvl = server.campaign.CampaignMain.cm.getServer().getUserLevel(username);
-        player = server.campaign.CampaignMain.cm.getPlayer(username);
+        userlvl = CampaignMain.campaignMain.getServer().getUserLevel(username);
+        player = CampaignMain.campaignMain.getPlayer(username);
         house = player.getMyHouse();
-        solFreeBuild = Boolean.parseBoolean(server.campaign.CampaignMain.cm.getConfig("Sol_FreeBuild"));
-        postDefectionFreeBuild = Boolean.parseBoolean(server.campaign.CampaignMain.cm.getConfig(
+        solFreeBuild = Boolean.parseBoolean(CampaignMain.campaignMain.getConfig("Sol_FreeBuild"));
+        postDefectionFreeBuild = Boolean.parseBoolean(CampaignMain.campaignMain.getConfig(
               "FreeBuild_PostDefection"));
-        newbieHouseName = server.campaign.CampaignMain.cm.getConfig("NewbieHouseName");
-        useAllBuildTables = Boolean.parseBoolean(server.campaign.CampaignMain.cm.getConfig("Sol_FreeBuild_UseAll"));
-        buildTableForFreeBuild = server.campaign.CampaignMain.cm.getConfig("Sol_FreeBuild_BuildTable");
-        limitOnlyPostDefection = Boolean.parseBoolean(server.campaign.CampaignMain.cm.getConfig(
+        newbieHouseName = CampaignMain.campaignMain.getConfig("NewbieHouseName");
+        useAllBuildTables = Boolean.parseBoolean(CampaignMain.campaignMain.getConfig("Sol_FreeBuild_UseAll"));
+        buildTableForFreeBuild = CampaignMain.campaignMain.getConfig("Sol_FreeBuild_BuildTable");
+        limitOnlyPostDefection = Boolean.parseBoolean(CampaignMain.campaignMain.getConfig(
               "FreeBuild_LimitPostDefOnly"));
         freeBuildLimit = Integer.parseInt(house.getConfig("FreeBuild_Limit"));
         allowDupes = Boolean.parseBoolean(house.getConfig("FreeBuild_AllowDuplicates"));
@@ -119,23 +120,23 @@ public class FreeBuildCreateUnitCommand implements Command {
      */
     private Boolean accessChecks() {
         if (userlvl < getExecutionLevel()) {
-            server.campaign.CampaignMain.cm.toUser("AM:Insufficient access level for command. Level: " +
-                                                         userlvl +
-                                                         ". Required: " +
-                                                         accessLevel +
-                                                         ".", username, true);
+            CampaignMain.campaignMain.toUser("AM:Insufficient access level for command. Level: " +
+                                                   userlvl +
+                                                   ". Required: " +
+                                                   accessLevel +
+                                                   ".", username, true);
             return false;
         }
 
         // if Sol_FreeBuild and post defection are set to false, return
         if (!solFreeBuild && !postDefectionFreeBuild) {
-            server.campaign.CampaignMain.cm.toUser("AM:This command is disabled on this server.", username, true);
+            CampaignMain.campaignMain.toUser("AM:This command is disabled on this server.", username, true);
             return false;
         }
 
         // if build limit set to 0, return
         if (freeBuildLimit == 0) {
-            server.campaign.CampaignMain.cm.toUser(
+            CampaignMain.campaignMain.toUser(
                   "AM:Build limit set to 0, was this intentional? If so, uncheck Sol Free Build instead.",
                   username,
                   true);
@@ -144,7 +145,7 @@ public class FreeBuildCreateUnitCommand implements Command {
 
         // if the player isn't in SOL and FreeBuild_PostDefection is false, return
         if (!house.getName().equalsIgnoreCase(newbieHouseName) && !postDefectionFreeBuild) {
-            server.campaign.CampaignMain.cm.toUser("AM: Only players in " + newbieHouseName + " can use this command.",
+            CampaignMain.campaignMain.toUser("AM: Only players in " + newbieHouseName + " can use this command.",
                   username,
                   true);
             return false;
@@ -152,7 +153,7 @@ public class FreeBuildCreateUnitCommand implements Command {
 
         // if a limit has been set, check to make sure player has not exceeded limit
         if (freeBuildLimit > 0 && player.getMekToken() == freeBuildLimit) {
-            server.campaign.CampaignMain.cm.toUser("AM:You have reached the server limit of free units.",
+            CampaignMain.campaignMain.toUser("AM:You have reached the server limit of free units.",
                   username,
                   true);
             return false;
@@ -170,7 +171,7 @@ public class FreeBuildCreateUnitCommand implements Command {
         try {
             filename = command.nextToken();
         } catch (Exception ex) {
-            server.campaign.CampaignMain.cm.toUser(syntax, username);
+            CampaignMain.campaignMain.toUser(syntax, username);
             return null;
         }
 
@@ -194,7 +195,7 @@ public class FreeBuildCreateUnitCommand implements Command {
 
     private Boolean playerUnitLimitChecks() {
         if (!player.hasRoomForUnit(unit.getType(), unit.getWeightclass())) {
-            server.campaign.CampaignMain.cm.toUser(
+            CampaignMain.campaignMain.toUser(
                   "AM:You have reached the limit for this type of unit at this weight class.",
                   username,
                   true);
@@ -203,12 +204,12 @@ public class FreeBuildCreateUnitCommand implements Command {
 
         if (server.campaign.SUnit.getHangarSpaceRequired(unit, house) > player.getFreeBays()) {
             if (!house.getName().equalsIgnoreCase(newbieHouseName)) {
-                server.campaign.CampaignMain.cm.toUser("AM:You do not have enough free bays to create this unit.",
+                CampaignMain.campaignMain.toUser("AM:You do not have enough free bays to create this unit.",
                       username,
                       true);
                 return false;
             } else {
-                server.campaign.CampaignMain.cm.toUser(
+                CampaignMain.campaignMain.toUser(
                       "AM:You do not have enough free bays to create this unit. You can delete an existing unit by right clicking on it and choosing transactions -> delete to make some room.",
                       username,
                       true);
@@ -221,7 +222,7 @@ public class FreeBuildCreateUnitCommand implements Command {
 
             for (server.campaign.SUnit aUnit : playersUnits) {
                 if (aUnit.getVerboseModelName().equalsIgnoreCase(unit.getVerboseModelName())) {
-                    server.campaign.CampaignMain.cm.toUser(
+                    CampaignMain.campaignMain.toUser(
                           "AM:Freebuild duplicates are not allowed on this server! Please choose a different variant or unit.",
                           username,
                           true);
@@ -301,7 +302,7 @@ public class FreeBuildCreateUnitCommand implements Command {
      */
     private void initHouseList() {
         houseList.clear();
-        java.util.Iterator<House> i = server.campaign.CampaignMain.cm.getData().getAllHouses().iterator();
+        java.util.Iterator<House> i = CampaignMain.campaignMain.getData().getAllHouses().iterator();
 
         //debug
         //CampaignMain.cm.toUser("-------------------------------------------------------------------------", player.getName() ,true);
@@ -327,7 +328,7 @@ public class FreeBuildCreateUnitCommand implements Command {
         try {
             if (useAllBuildTables && house.getName().equalsIgnoreCase(newbieHouseName)) {
                 if (!CheckIfLegal(houseTable, unit)) {
-                    server.campaign.CampaignMain.cm.toUser("AM:This is not a legal unit!", username, true);
+                    CampaignMain.campaignMain.toUser("AM:This is not a legal unit!", username, true);
                     //add some logging here, mod mail possible cheating attempt or BT error
                     MWLogger.errLog("User: " +
                                           username +
@@ -343,7 +344,7 @@ public class FreeBuildCreateUnitCommand implements Command {
                 }
             } else if (postDefectionFreeBuild && !house.getName().equalsIgnoreCase(newbieHouseName)) {
                 if (!CheckIfLegal(house.getName().trim(), unit)) {
-                    server.campaign.CampaignMain.cm.toUser("AM:This is not a legal unit!", username, true);
+                    CampaignMain.campaignMain.toUser("AM:This is not a legal unit!", username, true);
                     //add some logging here, mod mail possible cheating attempt or BT error
                     MWLogger.errLog("User: " +
                                           username +
@@ -359,7 +360,7 @@ public class FreeBuildCreateUnitCommand implements Command {
                 }
             } else {
                 if (!CheckIfLegal(buildTableForFreeBuild, unit)) {
-                    server.campaign.CampaignMain.cm.toUser("AM:This is not a legal unit!", username, true);
+                    CampaignMain.campaignMain.toUser("AM:This is not a legal unit!", username, true);
                     //add some logging here, mod mail possible cheating attempt or BT error
                     MWLogger.errLog("User: " +
                                           username +
@@ -438,7 +439,7 @@ public class FreeBuildCreateUnitCommand implements Command {
 
         //make sure this build table file exists
         if (java.nio.file.Files.notExists(path)) {
-            server.campaign.CampaignMain.cm.toUser("Error Build Table file " + buildTableName + " does not exist",
+            CampaignMain.campaignMain.toUser("Error Build Table file " + buildTableName + " does not exist",
                   username,
                   true);
             return false;
@@ -544,14 +545,14 @@ public class FreeBuildCreateUnitCommand implements Command {
         if (limitOnlyPostDefection && !house.getName().equalsIgnoreCase(newbieHouseName) && freeBuildLimit > 0) {
             player.addMekToken(1);
             int remaining = freeBuildLimit - player.getMekToken();
-            server.campaign.CampaignMain.cm.toUser(remaining + " free units remain.", username, true);
+            CampaignMain.campaignMain.toUser(remaining + " free units remain.", username, true);
         }
 
         //user is in newbie faction, a limit is set and it applies to newbie faction only
         if (!limitOnlyPostDefection && house.getName().equalsIgnoreCase(newbieHouseName) && freeBuildLimit > 0) {
             player.addMekToken(1);
             int remaining = freeBuildLimit - player.getMekToken();
-            server.campaign.CampaignMain.cm.toUser(remaining + " free units remain.", username, true);
+            CampaignMain.campaignMain.toUser(remaining + " free units remain.", username, true);
         }
     }
 }

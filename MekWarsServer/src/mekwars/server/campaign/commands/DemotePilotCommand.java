@@ -14,6 +14,7 @@ package mekwars.server.campaign.commands;
 
 import common.Unit;
 import common.campaign.pilot.skills.PilotSkill;
+import mekwars.server.campaign.CampaignMain;
 import server.campaign.pilot.SPilot;
 import server.campaign.pilot.SPilotSkills;
 import server.campaign.pilot.skills.AstechSkill;
@@ -28,19 +29,19 @@ public class DemotePilotCommand implements Command {
     public void process(java.util.StringTokenizer command, String Username) {
 
         if (accessLevel != 0) {
-            int userLevel = server.campaign.CampaignMain.cm.getServer().getUserLevel(Username);
+            int userLevel = CampaignMain.campaignMain.getServer().getUserLevel(Username);
             if (userLevel < getExecutionLevel()) {
-                server.campaign.CampaignMain.cm.toUser("AM:Insufficient access level for command. Level: " +
-                                                             userLevel +
-                                                             ". Required: " +
-                                                             accessLevel +
-                                                             ".", Username, true);
+                CampaignMain.campaignMain.toUser("AM:Insufficient access level for command. Level: " +
+                                                       userLevel +
+                                                       ". Required: " +
+                                                       accessLevel +
+                                                       ".", Username, true);
                 return;
             }
         }
 
         server.campaign.SUnit unit;
-        server.campaign.SPlayer player = server.campaign.CampaignMain.cm.getPlayer(Username);
+        server.campaign.SPlayer player = CampaignMain.campaignMain.getPlayer(Username);
         String skill;
         double cost = 0;
         SPilot pilot;
@@ -58,17 +59,17 @@ public class DemotePilotCommand implements Command {
             unit = player.getUnit(Integer.parseInt(command.nextToken()));
             skill = command.nextToken();
         } catch (Exception ex) {
-            server.campaign.CampaignMain.cm.toUser("AM:Improper format. Try: /c " + syntax, Username);
+            CampaignMain.campaignMain.toUser("AM:Improper format. Try: /c " + syntax, Username);
             return;
         }
 
         if (unit == null) {
-            server.campaign.CampaignMain.cm.toUser("AM:Cannot find that unit!", Username);
+            CampaignMain.campaignMain.toUser("AM:Cannot find that unit!", Username);
             return;
         }
 
         if (unit.hasVacantPilot()) {
-            server.campaign.CampaignMain.cm.toUser("AM:Unit " + unit.getModelName() + " has no pilot to promote!",
+            CampaignMain.campaignMain.toUser("AM:Unit " + unit.getModelName() + " has no pilot to promote!",
                   Username);
             return;
         }
@@ -76,14 +77,14 @@ public class DemotePilotCommand implements Command {
         pilot = (SPilot) unit.getPilot();
 
         if (skill.trim().length() < 1) {
-            server.campaign.CampaignMain.cm.toUser("AM:A skill needs to be provided", Username, true);
+            CampaignMain.campaignMain.toUser("AM:A skill needs to be provided", Username, true);
             return;
         }
 
         ps = SPilotSkills.getPilotSkill(skill);
 
         if (!pilot.getSkills().has(ps)) {
-            server.campaign.CampaignMain.cm.toUser("AM:" + pilot.getName() + " does not have " + ps.getName() + ".",
+            CampaignMain.campaignMain.toUser("AM:" + pilot.getName() + " does not have " + ps.getName() + ".",
                   Username,
                   true);
             return;
@@ -109,7 +110,7 @@ public class DemotePilotCommand implements Command {
                                                      Unit.getTypeClassDesc(unit.getType()));
                 cost *= ps.getLevel();
             } else {
-                server.campaign.CampaignMain.cm.toUser("AM:Your pilot already has that skill!", Username);
+                CampaignMain.campaignMain.toUser("AM:Your pilot already has that skill!", Username);
                 return;
             }
         } else {
@@ -144,14 +145,14 @@ public class DemotePilotCommand implements Command {
 
         unit.setPilot(pilot);
 
-        server.campaign.CampaignMain.cm.toUser("AM:Skill " +
-                                                     skill +
-                                                     " removed from pilot " +
-                                                     pilot.getName() +
-                                                     " for " +
-                                                     (int) cost +
-                                                     " exp.", Username);
-        server.campaign.CampaignMain.cm.toUser("PL|UU|" + unit.getId() + "|" + unit.toString(true), Username, false);
+        CampaignMain.campaignMain.toUser("AM:Skill " +
+                                               skill +
+                                               " removed from pilot " +
+                                               pilot.getName() +
+                                               " for " +
+                                               (int) cost +
+                                               " exp.", Username);
+        CampaignMain.campaignMain.toUser("PL|UU|" + unit.getId() + "|" + unit.toString(true), Username, false);
 
     }// end process()
 

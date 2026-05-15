@@ -17,6 +17,8 @@
 package mekwars.server.campaign.commands;
 
 
+import mekwars.server.campaign.CampaignMain;
+
 public class SendToMiscCommand implements Command {
 
     int accessLevel = 200;
@@ -34,7 +36,7 @@ public class SendToMiscCommand implements Command {
                 result.append(command.nextToken());
                 result.append(" ");
             }
-            server.campaign.CampaignMain.cm.toUser("DMML|" + Username + "|" + result.toString(), endUser, false);
+            CampaignMain.campaignMain.toUser("DMML|" + Username + "|" + result.toString(), endUser, false);
         }
     }
 

@@ -17,6 +17,8 @@
 package mekwars.server.campaign.commands.admin;
 
 
+import mekwars.server.campaign.CampaignMain;
+
 public class AdminSetPlanetTemperatureCommand implements server.campaign.commands.Command {
 
     int accessLevel = server.MWChatServer.auth.IAuthenticator.ADMIN;
@@ -25,12 +27,12 @@ public class AdminSetPlanetTemperatureCommand implements server.campaign.command
     public int getExecutionLevel() {return accessLevel;}
 
     public void setExecutionLevel(int i) {accessLevel = i;}
- 
+
     public String getSyntax() {return syntax;}
 
     public void process(java.util.StringTokenizer command, String Username) {
 
-        server.campaign.CampaignMain.cm.toUser("AM: This command is deprecated, please use SetPlanetAdvancedTerrain",
+        CampaignMain.campaignMain.toUser("AM: This command is deprecated, please use SetPlanetAdvancedTerrain",
               Username,
               true);
         return;

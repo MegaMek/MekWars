@@ -1,5 +1,6 @@
 package mekwars.server.campaign.commands.admin;
 
+import mekwars.server.campaign.CampaignMain;
 import server.campaign.util.ChristmasHandler;
 
 /**
@@ -16,22 +17,22 @@ public class StartChristmasCommand implements server.campaign.commands.Command {
     @Override
     public void process(java.util.StringTokenizer command, String Username) {
         //access level check
-        int userLevel = server.campaign.CampaignMain.cm.getServer().getUserLevel(Username);
+        int userLevel = CampaignMain.campaignMain.getServer().getUserLevel(Username);
         if (userLevel < getExecutionLevel()) {
-            server.campaign.CampaignMain.cm.toUser("AM:Insufficient access level for command. Level: " +
-                                                         userLevel +
-                                                         ". Required: " +
-                                                         accessLevel +
-                                                         ".", Username, true);
+            CampaignMain.campaignMain.toUser("AM:Insufficient access level for command. Level: " +
+                                                   userLevel +
+                                                   ". Required: " +
+                                                   accessLevel +
+                                                   ".", Username, true);
             return;
         }
 
         ChristmasHandler.getInstance().startChristmas();
-        server.campaign.CampaignMain.cm.getConfig().setProperty("Christmas_ManuallyStarted", "true");
+        CampaignMain.campaignMain.getConfig().setProperty("Christmas_ManuallyStarted", "true");
 
-        server.campaign.CampaignMain.cm.doSendModMail("SERVER",
+        CampaignMain.campaignMain.doSendModMail("SERVER",
               "Happy Holidays! " + Username + " started the Christmas season.");
-        server.campaign.CampaignMain.cm.doSendToAllOnlinePlayers("AM: The Christmas season is upon us.  Happy Holidays!",
+        CampaignMain.campaignMain.doSendToAllOnlinePlayers("AM: The Christmas season is upon us.  Happy Holidays!",
               true);
     }
 

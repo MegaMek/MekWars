@@ -27,6 +27,7 @@ import megamek.common.Entity;
 import megamek.common.Mounted;
 import megamek.common.WeaponType;
 import megamek.common.battlevalue.BvMultiplier;
+import mekwars.server.campaign.CampaignMain;
 
 /**
  * NOTE: This is a unofficial rule. Pilot gets a -1 to-hit bonus on all energy-based weapons (Laser, PPC, and Flamer).
@@ -59,10 +60,10 @@ public class GunneryLaserSkill extends SPilotSkill {
 
         String chance = "chancefor" + getAbbreviation() + "for" + Unit.getTypeClassDesc(unitType);
 
-        server.campaign.SHouse house = server.campaign.CampaignMain.cm.getHouseFromPartialString(pilot.getCurrentFaction());
+        server.campaign.SHouse house = CampaignMain.campaignMain.getHouseFromPartialString(pilot.getCurrentFaction());
 
         if (house == null) {
-            return server.campaign.CampaignMain.cm.getIntegerConfig(chance);
+            return CampaignMain.campaignMain.getIntegerConfig(chance);
         }
 
         return house.getIntegerConfig(chance);
@@ -70,7 +71,7 @@ public class GunneryLaserSkill extends SPilotSkill {
 
     @Override
     public int getBVMod(Entity unit) {
-        if (server.campaign.CampaignMain.cm.getBooleanConfig("USEFLATGUNNERYLASERMODIFIER")) {
+        if (CampaignMain.campaignMain.getBooleanConfig("USEFLATGUNNERYLASERMODIFIER")) {
             return getBVModFlat(unit);
         }
         //new bv cost for GunneryX and Weapon Specialist skills,
@@ -100,7 +101,7 @@ public class GunneryLaserSkill extends SPilotSkill {
 
     public int getBVModFlat(Entity unit) {
         int numberOfLasers = 0;
-        int gunneryLaserBVBaseMod = server.campaign.CampaignMain.cm.getIntegerConfig("GunneryLaserBaseBVMod");
+        int gunneryLaserBVBaseMod = CampaignMain.campaignMain.getIntegerConfig("GunneryLaserBaseBVMod");
 
         for (Mounted weapon : unit.getWeaponList()) {
             if (weapon.getType().hasFlag(WeaponType.F_ENERGY)) {

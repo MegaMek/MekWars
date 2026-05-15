@@ -17,6 +17,8 @@
 package mekwars.server.campaign.commands;
 
 
+import mekwars.server.campaign.CampaignMain;
+
 public class EmojiCommand implements Command {
 
     int accessLevel = 0;
@@ -34,7 +36,7 @@ public class EmojiCommand implements Command {
         if (!checkAccess()) {return;}
 
         if (!command.hasMoreTokens()) {
-            server.campaign.CampaignMain.cm.toUser("AM:You forgot to specify an emoji to display!. ", username, true);
+            CampaignMain.campaignMain.toUser("AM:You forgot to specify an emoji to display!. ", username, true);
             return;
         } else {emoji = command.nextToken();}
 
@@ -48,25 +50,25 @@ public class EmojiCommand implements Command {
     public String getSyntax() {return syntax;}
 
     private void initVars() {
-        allowEmoji = server.campaign.CampaignMain.cm.getBooleanConfig("AllowEmoji");
-        coloredName = server.campaign.CampaignMain.cm.getPlayer(username).getColoredNameBold();
+        allowEmoji = CampaignMain.campaignMain.getBooleanConfig("AllowEmoji");
+        coloredName = CampaignMain.campaignMain.getPlayer(username).getColoredNameBold();
     }
 
     private boolean checkAccess() {
         if (accessLevel != 0) {
-            int userLevel = server.campaign.CampaignMain.cm.getServer().getUserLevel(username);
+            int userLevel = CampaignMain.campaignMain.getServer().getUserLevel(username);
             if (userLevel < getExecutionLevel()) {
-                server.campaign.CampaignMain.cm.toUser("AM:Insufficient access level for command. Level: " +
-                                                             userLevel +
-                                                             ". Required: " +
-                                                             accessLevel +
-                                                             ".", username, true);
+                CampaignMain.campaignMain.toUser("AM:Insufficient access level for command. Level: " +
+                                                       userLevel +
+                                                       ". Required: " +
+                                                       accessLevel +
+                                                       ".", username, true);
                 return false;
             }
         }
 
         if (!allowEmoji) {
-            server.campaign.CampaignMain.cm.toUser("AM:Emojis have been disabled, the SO does NOT like fun.",
+            CampaignMain.campaignMain.toUser("AM:Emojis have been disabled, the SO does NOT like fun.",
                   username,
                   true);
             return false;
@@ -77,22 +79,22 @@ public class EmojiCommand implements Command {
 
     private void processEmoji() {
         if (emoji.equalsIgnoreCase("fl") || emoji.equalsIgnoreCase("flip")) {
-            server.campaign.CampaignMain.cm.doSendToAllOnlinePlayers(coloredName + ": (╯°□°)╯︵ ┻━┻", true);
+            CampaignMain.campaignMain.doSendToAllOnlinePlayers(coloredName + ": (╯°□°)╯︵ ┻━┻", true);
         }
         //		else if(emoji.equalsIgnoreCase("be") || emoji.equalsIgnoreCase("bear"))
         //			CampaignMain.cm.doSendToAllOnlinePlayers(coloredName + ": ʕ •ᴥ•ʔ" ,true);
         else if (emoji.equalsIgnoreCase("sh") || emoji.equalsIgnoreCase("shrug")) {
-            server.campaign.CampaignMain.cm.doSendToAllOnlinePlayers(coloredName + ": ¯\\_(ツ)_/¯", true);
+            CampaignMain.campaignMain.doSendToAllOnlinePlayers(coloredName + ": ¯\\_(ツ)_/¯", true);
         } else if (emoji.equalsIgnoreCase("fi") || emoji.equalsIgnoreCase("fingers")) {
-            server.campaign.CampaignMain.cm.doSendToAllOnlinePlayers(coloredName + ": t(-.-t)", true);
+            CampaignMain.campaignMain.doSendToAllOnlinePlayers(coloredName + ": t(-.-t)", true);
         } else if (emoji.equalsIgnoreCase("ki") || emoji.equalsIgnoreCase("kiss")) {
-            server.campaign.CampaignMain.cm.doSendToAllOnlinePlayers(coloredName + ": ( ˘ ³˘)♥", true);
+            CampaignMain.campaignMain.doSendToAllOnlinePlayers(coloredName + ": ( ˘ ³˘)♥", true);
         } else if (emoji.equalsIgnoreCase("sm") || emoji.equalsIgnoreCase("smile")) {
-            server.campaign.CampaignMain.cm.doSendToAllOnlinePlayers(coloredName + ": ◉‿◉", true);
+            CampaignMain.campaignMain.doSendToAllOnlinePlayers(coloredName + ": ◉‿◉", true);
         } else if (emoji.equalsIgnoreCase("de") || emoji.equalsIgnoreCase("deal")) {
-            server.campaign.CampaignMain.cm.doSendToAllOnlinePlayers(coloredName + ": (•_•) ( •_•)>⌐■-■ (⌐■_■)", true);
+            CampaignMain.campaignMain.doSendToAllOnlinePlayers(coloredName + ": (•_•) ( •_•)>⌐■-■ (⌐■_■)", true);
         } else if (emoji.equalsIgnoreCase("li") || emoji.equalsIgnoreCase("list")) {showList();} else {
-            server.campaign.CampaignMain.cm.toUser("AM:That emoji does not exist! Check the list by typing /ec#list ",
+            CampaignMain.campaignMain.toUser("AM:That emoji does not exist! Check the list by typing /ec#list ",
                   username,
                   true);
         }
@@ -107,6 +109,6 @@ public class EmojiCommand implements Command {
                             "/ec#ki or /ec#kiss outputs: ( ˘ ³˘)♥" + br +
                             "/ec#sm or /ec#smile outputs: ◉‿◉" + br +
                             "/ec#de or /ec#deal outputs: (•_•) ( •_•)>⌐■-■ (⌐■_■)" + br;
-        server.campaign.CampaignMain.cm.toUser(list, username, true);
+        CampaignMain.campaignMain.toUser(list, username, true);
     }
 }

@@ -18,6 +18,7 @@ package mekwars.server.campaign.commands;
 
 
 import common.Unit;
+import mekwars.server.campaign.CampaignMain;
 
 public class SetUnmaintainedCommand implements Command {
 
@@ -27,25 +28,25 @@ public class SetUnmaintainedCommand implements Command {
     public void process(java.util.StringTokenizer command, String Username) {
 
         if (accessLevel != 0) {
-            int userLevel = server.campaign.CampaignMain.cm.getServer().getUserLevel(Username);
+            int userLevel = CampaignMain.campaignMain.getServer().getUserLevel(Username);
             if (userLevel < getExecutionLevel()) {
-                server.campaign.CampaignMain.cm.toUser("AM:Insufficient access level for command. Level: " +
-                                                             userLevel +
-                                                             ". Required: " +
-                                                             accessLevel +
-                                                             ".", Username, true);
+                CampaignMain.campaignMain.toUser("AM:Insufficient access level for command. Level: " +
+                                                       userLevel +
+                                                       ". Required: " +
+                                                       accessLevel +
+                                                       ".", Username, true);
                 return;
             }
         }
 
-        server.campaign.SPlayer p = server.campaign.CampaignMain.cm.getPlayer(Username);
+        server.campaign.SPlayer p = CampaignMain.campaignMain.getPlayer(Username);
         int numtoset = 0;//ID# of the mech which is to get set as unmaintained
 
         try {
             numtoset = Integer.parseInt(command.nextToken());
         }//end try
         catch (NumberFormatException ex) {
-            server.campaign.CampaignMain.cm.toUser(
+            CampaignMain.campaignMain.toUser(
                   "AM:SetUnmaintained command failed. Check your input. It should be something like this: /c setunmaintained#12",
                   Username,
                   true);
@@ -54,19 +55,19 @@ public class SetUnmaintainedCommand implements Command {
 
         server.campaign.SUnit unitToSet = p.getUnit(numtoset);
         if (unitToSet == null) {
-            server.campaign.CampaignMain.cm.toUser("AM:Invalid id number. Make sure you're using the right unit number.",
+            CampaignMain.campaignMain.toUser("AM:Invalid id number. Make sure you're using the right unit number.",
                   Username,
                   true);
             return;
         }
 
         if (unitToSet.getStatus() == Unit.STATUS_UNMAINTAINED) {
-            server.campaign.CampaignMain.cm.toUser("AM:This unit is already unmaintained.", Username, true);
+            CampaignMain.campaignMain.toUser("AM:This unit is already unmaintained.", Username, true);
             return;
         }
 
         if (unitToSet.getStatus() == Unit.STATUS_FORSALE) {
-            server.campaign.CampaignMain.cm.toUser(
+            CampaignMain.campaignMain.toUser(
                   "AM:You may not change the maintenance status of a unit which is being sold.",
                   Username,
                   true);
@@ -74,26 +75,26 @@ public class SetUnmaintainedCommand implements Command {
         }
 
         if (p.getDutyStatus() == server.campaign.SPlayer.STATUS_ACTIVE) {
-            server.campaign.CampaignMain.cm.toUser("AM:You may not unmaintain a unit while active.", Username, true);
+            CampaignMain.campaignMain.toUser("AM:You may not unmaintain a unit while active.", Username, true);
             return;
         }
 
         if (p.getDutyStatus() == server.campaign.SPlayer.STATUS_FIGHTING) {
-            server.campaign.CampaignMain.cm.toUser("AM:You may not unmaintain a unit while engaged!.", Username, true);
+            CampaignMain.campaignMain.toUser("AM:You may not unmaintain a unit while engaged!.", Username, true);
             return;
         }
 
         //passes checks. now actually make the unit unmaintained.
         unitToSet.setUnmaintainedStatus();
-        server.campaign.CampaignMain.cm.toUser("PL|SUS|" + unitToSet.getId() + "#" + Unit.STATUS_UNMAINTAINED,
+        CampaignMain.campaignMain.toUser("PL|SUS|" + unitToSet.getId() + "#" + Unit.STATUS_UNMAINTAINED,
               Username,
               false);
-        server.campaign.CampaignMain.cm.toUser("PL|SB|" + p.getTotalMekBays(), Username, false);
-        server.campaign.CampaignMain.cm.toUser("PL|SF|" + p.getFreeBays(), Username, false);
-        server.campaign.CampaignMain.cm.toUser(unitToSet.getPilot().getName() +
-                                                     "'s " +
-                                                     unitToSet.getModelName() +
-                                                     " is no longer being maintained.", Username, true);
+        CampaignMain.campaignMain.toUser("PL|SB|" + p.getTotalMekBays(), Username, false);
+        CampaignMain.campaignMain.toUser("PL|SF|" + p.getFreeBays(), Username, false);
+        CampaignMain.campaignMain.toUser(unitToSet.getPilot().getName() +
+                                               "'s " +
+                                               unitToSet.getModelName() +
+                                               " is no longer being maintained.", Username, true);
         p.setSave();
 
     }//end process()

@@ -16,6 +16,7 @@
 package mekwars.server.campaign.commands.admin;
 
 import common.util.MWLogger;
+import mekwars.server.campaign.CampaignMain;
 
 public class AdminRemoveAllFactoriesCommand implements server.campaign.commands.Command {
 
@@ -27,18 +28,18 @@ public class AdminRemoveAllFactoriesCommand implements server.campaign.commands.
     public void process(java.util.StringTokenizer command, String Username) {
 
         //access level check
-        int userLevel = server.campaign.CampaignMain.cm.getServer().getUserLevel(Username);
+        int userLevel = CampaignMain.campaignMain.getServer().getUserLevel(Username);
         if (userLevel < getExecutionLevel()) {
-            server.campaign.CampaignMain.cm.toUser("AM:Insufficient access level for command. Level: " +
-                                                         userLevel +
-                                                         ". Required: " +
-                                                         accessLevel +
-                                                         ".", Username, true);
+            CampaignMain.campaignMain.toUser("AM:Insufficient access level for command. Level: " +
+                                                   userLevel +
+                                                   ". Required: " +
+                                                   accessLevel +
+                                                   ".", Username, true);
             return;
         }
 
         try {
-            server.campaign.SPlanet p = server.campaign.CampaignMain.cm.getPlanetFromPartialString(command.nextToken(),
+            server.campaign.SPlanet p = CampaignMain.campaignMain.getPlanetFromPartialString(command.nextToken(),
                   Username);
 
             if (p == null) {return;}
@@ -47,7 +48,7 @@ public class AdminRemoveAllFactoriesCommand implements server.campaign.commands.
             p.updated();
 
             //server.MWLogger.modLog(Username + "  removed " + factoryname + " from " + p.getName() + ".");
-            server.campaign.CampaignMain.cm.doSendModMail("NOTE",
+            CampaignMain.campaignMain.doSendModMail("NOTE",
                   Username + "  removed all factories  from " + p.getName() + ".");
         } catch (Exception ex) {
             MWLogger.errLog(ex);

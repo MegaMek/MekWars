@@ -20,6 +20,7 @@ import common.House;
 import common.campaign.operations.Operation;
 import common.util.MWLogger;
 import common.util.StringUtils;
+import mekwars.server.campaign.CampaignMain;
 
 /**
  *
@@ -67,7 +68,7 @@ public class OpponentListHelper {
          */
         server.campaign.SHouse searchHouse = searchPlayer.getHouseFightingFor();
 
-        for (House h : server.campaign.CampaignMain.cm.getData().getAllHouses()) {
+        for (House h : CampaignMain.campaignMain.getData().getAllHouses()) {
 
             server.campaign.SHouse currHouse = (server.campaign.SHouse) h;
 
@@ -79,7 +80,7 @@ public class OpponentListHelper {
                 if (searchPlayer.equals(currPlayer)) {continue playersLoop;}
 
                 //if the player is immune, skip him
-                if (server.campaign.CampaignMain.cm.getIThread().isImmune(currPlayer)) {continue playersLoop;}
+                if (CampaignMain.campaignMain.getIThread().isImmune(currPlayer)) {continue playersLoop;}
 
                 //if player has no armies, skip him
                 if (currPlayer.getArmies().size() == 0) {continue playersLoop;}
@@ -95,12 +96,12 @@ public class OpponentListHelper {
                 }
 
                 //check for same IP if account involvement is barred
-                if (server.campaign.CampaignMain.cm.getBooleanConfig("IPCheck")) {
+                if (CampaignMain.campaignMain.getBooleanConfig("IPCheck")) {
                     try {
-                        String p1 = server.campaign.CampaignMain.cm.getServer()
+                        String p1 = CampaignMain.campaignMain.getServer()
                                           .getIP(searchPlayer.getName())
                                           .toString();
-                        String p2 = server.campaign.CampaignMain.cm.getServer().getIP(currPlayer.getName()).toString();
+                        String p2 = CampaignMain.campaignMain.getServer().getIP(currPlayer.getName()).toString();
                         if (p1.equals(p2)) {continue playersLoop;}
                     } catch (Exception e) {
                         MWLogger.errLog("Exception while checking players' IPs in OLH.");
@@ -115,7 +116,7 @@ public class OpponentListHelper {
                  * as opponents in each others' lists.
                  */
                 java.util.ArrayList<server.campaign.SArmy> possDefendArmies = new java.util.ArrayList<server.campaign.SArmy>();
-                server.campaign.operations.newopmanager.I_OperationManager manager = server.campaign.CampaignMain.cm.getOpsManager();
+                server.campaign.operations.newopmanager.I_OperationManager manager = CampaignMain.campaignMain.getOpsManager();
 
                 for (server.campaign.SArmy searchArmy : searchPlayer.getArmies()) {
                     for (server.campaign.SArmy enemyArmy : currPlayer.getArmies()) {
@@ -233,12 +234,12 @@ public class OpponentListHelper {
         for (String currOppName : potentialOpponents.keySet()) {
 
             StringBuilder output = new StringBuilder("ED:[!] ");
-            server.campaign.SPlayer currOpp = server.campaign.CampaignMain.cm.getPlayer(currOppName);
+            server.campaign.SPlayer currOpp = CampaignMain.campaignMain.getPlayer(currOppName);
 
             if (currOpp == null) {continue;}
 
             //if opponent doesn't meet min active time, don't send.
-            long minActiveTime = Long.parseLong(server.campaign.CampaignMain.cm.getConfig("MinActiveTime")) * 1000;
+            long minActiveTime = Long.parseLong(CampaignMain.campaignMain.getConfig("MinActiveTime")) * 1000;
             if (System.currentTimeMillis() - currOpp.getActiveSince() <= minActiveTime) {continue;}
 
             //get the colored faction name
@@ -280,7 +281,7 @@ public class OpponentListHelper {
              * to issue a checkattack command and see the matchups.
              */
             output.append(". [<a href=\"MEKWARS/c checkattack\">Report</a>]");
-            server.campaign.CampaignMain.cm.toUser(output.toString(), currOppName, true);
+            CampaignMain.campaignMain.toUser(output.toString(), currOppName, true);
 
         }//end while(more opponents to inform)
     }//end sendInfoToOpponents()

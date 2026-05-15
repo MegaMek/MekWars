@@ -17,6 +17,7 @@
 package mekwars.server.campaign.commands.mod;
 
 import common.util.UnitUtils;
+import mekwars.server.campaign.CampaignMain;
 
 /**
  * Sends a Players Unit data to a Mod/Admin
@@ -31,13 +32,13 @@ public class ViewPlayerUnitCommand implements server.campaign.commands.Command {
     public void process(java.util.StringTokenizer command, String Username) {
 
         if (accessLevel != 0) {
-            int userLevel = server.campaign.CampaignMain.cm.getServer().getUserLevel(Username);
+            int userLevel = CampaignMain.campaignMain.getServer().getUserLevel(Username);
             if (userLevel < getExecutionLevel()) {
-                server.campaign.CampaignMain.cm.toUser("AM:Insufficient access level for command. Level: " +
-                                                             userLevel +
-                                                             ". Required: " +
-                                                             accessLevel +
-                                                             ".", Username, true);
+                CampaignMain.campaignMain.toUser("AM:Insufficient access level for command. Level: " +
+                                                       userLevel +
+                                                       ". Required: " +
+                                                       accessLevel +
+                                                       ".", Username, true);
                 return;
             }
         }
@@ -48,51 +49,51 @@ public class ViewPlayerUnitCommand implements server.campaign.commands.Command {
         int unitId;
         boolean damage = false;
         try {
-            p = server.campaign.CampaignMain.cm.getPlayer(command.nextToken());
+            p = CampaignMain.campaignMain.getPlayer(command.nextToken());
             unitId = Integer.parseInt(command.nextToken());
             damage = Boolean.parseBoolean(command.nextToken());
         } catch (Exception ex) {
-            server.campaign.CampaignMain.cm.toUser("Syntax: ViewPlayerUnit#Name#UnitID#ShowDamage[true/false]",
+            CampaignMain.campaignMain.toUser("Syntax: ViewPlayerUnit#Name#UnitID#ShowDamage[true/false]",
                   Username);
             return;
         }
 
         if (p == null) {
-            server.campaign.CampaignMain.cm.toUser("Player does not exist!", Username);
+            CampaignMain.campaignMain.toUser("Player does not exist!", Username);
             return;
         }
         unit = p.getUnit(unitId);
 
         if (unit == null) {
-            server.campaign.CampaignMain.cm.toUser(p.getName() + " does not have unit #" + unitId, Username);
+            CampaignMain.campaignMain.toUser(p.getName() + " does not have unit #" + unitId, Username);
             return;
         }
 
         String fileName = unit.getEntity().getChassis() + " " + unit.getEntity().getModel();
         if (!damage) {
-            server.campaign.CampaignMain.cm.toUser("PL|VUI|" +
-                                                         fileName +
-                                                         "#" +
-                                                         unit.getBVForMatch() +
-                                                         "#" +
-                                                         unit.getPilot().getGunnery() +
-                                                         "#" +
-                                                         unit.getPilot().getPiloting() +
-                                                         "#" +
-                                                         UnitUtils.unitBattleDamage(unit.getEntity(), true),
+            CampaignMain.campaignMain.toUser("PL|VUI|" +
+                                                   fileName +
+                                                   "#" +
+                                                   unit.getBVForMatch() +
+                                                   "#" +
+                                                   unit.getPilot().getGunnery() +
+                                                   "#" +
+                                                   unit.getPilot().getPiloting() +
+                                                   "#" +
+                                                   UnitUtils.unitBattleDamage(unit.getEntity(), true),
                   Username,
                   false);
         } else {
-            server.campaign.CampaignMain.cm.toUser("PL|VURD|" +
-                                                         fileName +
-                                                         "#" +
-                                                         UnitUtils.unitBattleDamage(unit.getEntity(), true),
+            CampaignMain.campaignMain.toUser("PL|VURD|" +
+                                                   fileName +
+                                                   "#" +
+                                                   UnitUtils.unitBattleDamage(unit.getEntity(), true),
                   Username,
                   false);
         }
-        server.campaign.CampaignMain.cm.doSendModMail("NOTE",
+        CampaignMain.campaignMain.doSendModMail("NOTE",
               Username + " has viewed " + p.getName() + "'s " + unit.getModelName());
-        server.campaign.CampaignMain.cm.toUser(Username + " has viewed your " + unit.getModelName() + ".", p.getName());
+        CampaignMain.campaignMain.toUser(Username + " has viewed your " + unit.getModelName() + ".", p.getName());
 
     }
 

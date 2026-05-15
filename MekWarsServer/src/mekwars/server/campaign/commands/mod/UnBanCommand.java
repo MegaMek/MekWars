@@ -17,6 +17,8 @@
 package mekwars.server.campaign.commands.mod;
 
 
+import mekwars.server.campaign.CampaignMain;
+
 /**
  * Moving the unban command from MWServ into the normal command structure.
  * <p>
@@ -32,37 +34,37 @@ public class UnBanCommand implements server.campaign.commands.Command {
     public void process(java.util.StringTokenizer command, String Username) {
 
         if (accessLevel != 0) {
-            int userLevel = server.campaign.CampaignMain.cm.getServer().getUserLevel(Username);
+            int userLevel = CampaignMain.campaignMain.getServer().getUserLevel(Username);
             if (userLevel < getExecutionLevel()) {
-                server.campaign.CampaignMain.cm.toUser("AM:Insufficient access level for command. Level: " +
-                                                             userLevel +
-                                                             ". Required: " +
-                                                             accessLevel +
-                                                             ".", Username, true);
+                CampaignMain.campaignMain.toUser("AM:Insufficient access level for command. Level: " +
+                                                       userLevel +
+                                                       ". Required: " +
+                                                       accessLevel +
+                                                       ".", Username, true);
                 return;
             }
         }
 
         try {
             String account = command.nextToken().toLowerCase();
-            if (server.campaign.CampaignMain.cm.getServer().getBanAccounts().get(account) != null) {
-                server.campaign.CampaignMain.cm.getServer().getBanAccounts().remove(account);
-                server.campaign.CampaignMain.cm.getServer().bansUpdate();
-                server.campaign.CampaignMain.cm.doSendModMail("NOTE", Username + " unbanned " + account);
+            if (CampaignMain.campaignMain.getServer().getBanAccounts().get(account) != null) {
+                CampaignMain.campaignMain.getServer().getBanAccounts().remove(account);
+                CampaignMain.campaignMain.getServer().bansUpdate();
+                CampaignMain.campaignMain.doSendModMail("NOTE", Username + " unbanned " + account);
                 //MWLogger.modLog(Username + " unbanned " + account);
 
-                server.campaign.CampaignMain.cm.toUser("AM:You unbanned " + account, Username);
-                server.campaign.CampaignMain.cm.toUser(
+                CampaignMain.campaignMain.toUser("AM:You unbanned " + account, Username);
+                CampaignMain.campaignMain.toUser(
                       "AM:Don't forget to unban any assotiated IP's as well with the unbanip command",
                       Username);
             } else {
-                server.campaign.CampaignMain.cm.toUser("AM:Unban failed for " + account, Username);
-                server.campaign.CampaignMain.cm.doSendModMail("NOTE",
+                CampaignMain.campaignMain.toUser("AM:Unban failed for " + account, Username);
+                CampaignMain.campaignMain.doSendModMail("NOTE",
                       Username + " tried to uban " + account + ", but failed.");
                 //MWLogger.modLog(Username + " tried to uban " + account + ", but failed.");
             }
         } catch (Exception ex) {
-            server.campaign.CampaignMain.cm.toUser(
+            CampaignMain.campaignMain.toUser(
                   "AM:Syntax: unban (Username)<br>Don't forget to unban any assotiated IP's as well with the unbanip command",
                   Username);
         }

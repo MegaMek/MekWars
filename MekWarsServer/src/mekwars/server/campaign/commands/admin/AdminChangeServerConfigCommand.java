@@ -20,6 +20,7 @@
  */
 package mekwars.server.campaign.commands.admin;
 
+import mekwars.server.campaign.CampaignMain;
 import server.campaign.util.ChristmasHandler;
 import server.campaign.util.scheduler.MWScheduler;
 
@@ -41,13 +42,13 @@ public class AdminChangeServerConfigCommand implements server.campaign.commands.
     public void process(java.util.StringTokenizer command, String Username) {
 
         //access level check
-        int userLevel = server.campaign.CampaignMain.cm.getServer().getUserLevel(Username);
+        int userLevel = CampaignMain.campaignMain.getServer().getUserLevel(Username);
         if (userLevel < getExecutionLevel()) {
-            server.campaign.CampaignMain.cm.toUser("AM:Insufficient access level for command. Level: " +
-                                                         userLevel +
-                                                         ". Required: " +
-                                                         accessLevel +
-                                                         ".", Username, true);
+            CampaignMain.campaignMain.toUser("AM:Insufficient access level for command. Level: " +
+                                                   userLevel +
+                                                   ". Required: " +
+                                                   accessLevel +
+                                                   ".", Username, true);
             return;
         }
 
@@ -56,7 +57,7 @@ public class AdminChangeServerConfigCommand implements server.campaign.commands.
         String arg = command.nextToken();
 
         //make setting change
-        server.campaign.CampaignMain.cm.getConfig().setProperty(config, arg);
+        CampaignMain.campaignMain.getConfig().setProperty(config, arg);
 
         // Check for Schedule changes here
         if (config.equalsIgnoreCase("Christmas_StartDate")) {
@@ -86,9 +87,9 @@ public class AdminChangeServerConfigCommand implements server.campaign.commands.
         } else if (config.equalsIgnoreCase("Celebrate_Christmas")) {
             ChristmasHandler.getInstance().setCelebrateChristmas(Boolean.parseBoolean(arg));
         } else if (config.equalsIgnoreCase("TrackerResetUUID")) {
-            server.campaign.CampaignMain.cm.getConfig()
+            CampaignMain.campaignMain.getConfig()
                   .setProperty("TrackerUUID", java.util.UUID.randomUUID().toString());
-            server.campaign.CampaignMain.cm.getConfig().setProperty("TrackerResetUUID", "false");
+            CampaignMain.campaignMain.getConfig().setProperty("TrackerResetUUID", "false");
         }
 
         //NOTE:

@@ -58,21 +58,21 @@ public class AutoArmy {
         if (i <= 0) {return autoUnits;}
 
         //max of each type
-        int maxLight = CampaignMain.cm.getIntegerConfig("MaxLightGunEmplacement");
-        int maxMedium = CampaignMain.cm.getIntegerConfig("MaxMediumGunEmplacement");
-        int maxHeavy = CampaignMain.cm.getIntegerConfig("MaxHeavyGunEmplacement");
-        int maxAssault = CampaignMain.cm.getIntegerConfig("MaxAssaultGunEmplacement");
+        int maxLight = CampaignMain.campaignMain.getIntegerConfig("MaxLightGunEmplacement");
+        int maxMedium = CampaignMain.campaignMain.getIntegerConfig("MaxMediumGunEmplacement");
+        int maxHeavy = CampaignMain.campaignMain.getIntegerConfig("MaxHeavyGunEmplacement");
+        int maxAssault = CampaignMain.campaignMain.getIntegerConfig("MaxAssaultGunEmplacement");
         int maxNumOfEachWeight[] = { maxLight, maxMedium, maxHeavy, maxAssault };
 
         //amount of BV to get each type.
-        int bvForLight = CampaignMain.cm.getIntegerConfig("BVForLightGunEmplacement");
-        int bvForMedium = CampaignMain.cm.getIntegerConfig("BVForMediumGunEmplacement");
-        int bvForHeavy = CampaignMain.cm.getIntegerConfig("BVForHeavyGunEmplacement");
-        int bvForAssault = CampaignMain.cm.getIntegerConfig("BVForAssaultGunEmplacement");
+        int bvForLight = CampaignMain.campaignMain.getIntegerConfig("BVForLightGunEmplacement");
+        int bvForMedium = CampaignMain.campaignMain.getIntegerConfig("BVForMediumGunEmplacement");
+        int bvForHeavy = CampaignMain.campaignMain.getIntegerConfig("BVForHeavyGunEmplacement");
+        int bvForAssault = CampaignMain.campaignMain.getIntegerConfig("BVForAssaultGunEmplacement");
         int bvForEachWeight[] = { bvForLight, bvForMedium, bvForHeavy, bvForAssault };
 
         //server's preferred load order.
-        boolean topToBottom = CampaignMain.cm.getBooleanConfig("HeaviestGunEmplacementFirst");
+        boolean topToBottom = CampaignMain.campaignMain.getBooleanConfig("HeaviestGunEmplacementFirst");
 
         //get the PLAYER's preferences.
         /*
@@ -171,21 +171,21 @@ public class AutoArmy {
         if (i <= 0) {return autoUnits;}
 
         //max of each type
-        int maxLight = CampaignMain.cm.getIntegerConfig("MaxLightArtillery");
-        int maxMedium = CampaignMain.cm.getIntegerConfig("MaxMediumArtillery");
-        int maxHeavy = CampaignMain.cm.getIntegerConfig("MaxHeavyArtillery");
-        int maxAssault = CampaignMain.cm.getIntegerConfig("MaxAssaultArtillery");
+        int maxLight = CampaignMain.campaignMain.getIntegerConfig("MaxLightArtillery");
+        int maxMedium = CampaignMain.campaignMain.getIntegerConfig("MaxMediumArtillery");
+        int maxHeavy = CampaignMain.campaignMain.getIntegerConfig("MaxHeavyArtillery");
+        int maxAssault = CampaignMain.campaignMain.getIntegerConfig("MaxAssaultArtillery");
         int maxNumOfEachWeight[] = { maxLight, maxMedium, maxHeavy, maxAssault };
 
         //amount of BV to get each type.
-        int bvForLight = CampaignMain.cm.getIntegerConfig("BVForLightArtillery");
-        int bvForMedium = CampaignMain.cm.getIntegerConfig("BVForMediumArtillery");
-        int bvForHeavy = CampaignMain.cm.getIntegerConfig("BVForHeavyArtillery");
-        int bvForAssault = CampaignMain.cm.getIntegerConfig("BVForAssaultArtillery");
+        int bvForLight = CampaignMain.campaignMain.getIntegerConfig("BVForLightArtillery");
+        int bvForMedium = CampaignMain.campaignMain.getIntegerConfig("BVForMediumArtillery");
+        int bvForHeavy = CampaignMain.campaignMain.getIntegerConfig("BVForHeavyArtillery");
+        int bvForAssault = CampaignMain.campaignMain.getIntegerConfig("BVForAssaultArtillery");
         int bvForEachWeight[] = { bvForLight, bvForMedium, bvForHeavy, bvForAssault };
 
         //server's preferred load order.
-        boolean topToBottom = CampaignMain.cm.getBooleanConfig("HeaviestArtilleryFirst");
+        boolean topToBottom = CampaignMain.campaignMain.getBooleanConfig("HeaviestArtilleryFirst");
 
         //get the PLAYER's preferences.
         /*
@@ -286,46 +286,46 @@ public class AutoArmy {
               1);
 
         if (Unit.LIGHT == i) {
-            java.util.StringTokenizer list = new java.util.StringTokenizer(CampaignMain.cm.getConfig(
+            java.util.StringTokenizer list = new java.util.StringTokenizer(CampaignMain.campaignMain.getConfig(
                   "LightGunEmplacementFile"), "$");
 
             size = list.countTokens();
 
             if (size == 1) {filename = list.nextToken();} else {
-                position = CampaignMain.cm.getRandomNumber(size) + 1;
+                position = CampaignMain.campaignMain.getRandomNumber(size) + 1;
 
                 for (int count = 0; count < position; count++) {filename = list.nextToken();}
             }
         } else if (Unit.MEDIUM == i) {
-            java.util.StringTokenizer list = new java.util.StringTokenizer(CampaignMain.cm.getConfig(
+            java.util.StringTokenizer list = new java.util.StringTokenizer(CampaignMain.campaignMain.getConfig(
                   "MediumGunEmplacementFile"), "$");
 
             size = list.countTokens();
 
             if (size == 1) {filename = list.nextToken();} else {
-                position = CampaignMain.cm.getRandomNumber(size) + 1;
+                position = CampaignMain.campaignMain.getRandomNumber(size) + 1;
 
                 for (int count = 0; count < position; count++) {filename = list.nextToken();}
             }
         } else if (Unit.HEAVY == i) {
-            java.util.StringTokenizer list = new java.util.StringTokenizer(CampaignMain.cm.getConfig(
+            java.util.StringTokenizer list = new java.util.StringTokenizer(CampaignMain.campaignMain.getConfig(
                   "HeavyGunEmplacementFile"), "$");
 
             size = list.countTokens();
 
             if (size == 1) {filename = list.nextToken();} else {
-                position = CampaignMain.cm.getRandomNumber(size) + 1;
+                position = CampaignMain.campaignMain.getRandomNumber(size) + 1;
 
                 for (int count = 0; count < position; count++) {filename = list.nextToken();}
             }
         } else {
-            java.util.StringTokenizer list = new java.util.StringTokenizer(CampaignMain.cm.getConfig(
+            java.util.StringTokenizer list = new java.util.StringTokenizer(CampaignMain.campaignMain.getConfig(
                   "AssaultGunEmplacementFile"), "$");
 
             size = list.countTokens();
 
             if (size == 1) {filename = list.nextToken();} else {
-                position = CampaignMain.cm.getRandomNumber(size) + 1;
+                position = CampaignMain.campaignMain.getRandomNumber(size) + 1;
 
                 for (int count = 0; count < position; count++) {filename = list.nextToken();}
             }
@@ -353,46 +353,46 @@ public class AutoArmy {
         int position = 0;
 
         if (Unit.LIGHT == i) {
-            java.util.StringTokenizer list = new java.util.StringTokenizer(CampaignMain.cm.getConfig(
+            java.util.StringTokenizer list = new java.util.StringTokenizer(CampaignMain.campaignMain.getConfig(
                   "LightArtilleryFile"), "$");
 
             size = list.countTokens();
 
             if (size == 1) {filename = list.nextToken();} else {
-                position = CampaignMain.cm.getRandomNumber(size) + 1;
+                position = CampaignMain.campaignMain.getRandomNumber(size) + 1;
 
                 for (int count = 0; count < position; count++) {filename = list.nextToken();}
             }
         } else if (Unit.MEDIUM == i) {
-            java.util.StringTokenizer list = new java.util.StringTokenizer(CampaignMain.cm.getConfig(
+            java.util.StringTokenizer list = new java.util.StringTokenizer(CampaignMain.campaignMain.getConfig(
                   "MediumArtilleryFile"), "$");
 
             size = list.countTokens();
 
             if (size == 1) {filename = list.nextToken();} else {
-                position = CampaignMain.cm.getRandomNumber(size) + 1;
+                position = CampaignMain.campaignMain.getRandomNumber(size) + 1;
 
                 for (int count = 0; count < position; count++) {filename = list.nextToken();}
             }
         } else if (Unit.HEAVY == i) {
-            java.util.StringTokenizer list = new java.util.StringTokenizer(CampaignMain.cm.getConfig(
+            java.util.StringTokenizer list = new java.util.StringTokenizer(CampaignMain.campaignMain.getConfig(
                   "HeavyArtilleryFile"), "$");
 
             size = list.countTokens();
 
             if (size == 1) {filename = list.nextToken();} else {
-                position = CampaignMain.cm.getRandomNumber(size) + 1;
+                position = CampaignMain.campaignMain.getRandomNumber(size) + 1;
 
                 for (int count = 0; count < position; count++) {filename = list.nextToken();}
             }
         } else {
-            java.util.StringTokenizer list = new java.util.StringTokenizer(CampaignMain.cm.getConfig(
+            java.util.StringTokenizer list = new java.util.StringTokenizer(CampaignMain.campaignMain.getConfig(
                   "AssaultArtilleryFile"), "$");
 
             size = list.countTokens();
 
             if (size == 1) {filename = list.nextToken();} else {
-                position = CampaignMain.cm.getRandomNumber(size) + 1;
+                position = CampaignMain.campaignMain.getRandomNumber(size) + 1;
 
                 for (int count = 0; count < position; count++) {filename = list.nextToken();}
             }

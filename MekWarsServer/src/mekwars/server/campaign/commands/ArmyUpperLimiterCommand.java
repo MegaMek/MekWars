@@ -17,6 +17,7 @@
 package mekwars.server.campaign.commands;
 
 import common.Army;
+import mekwars.server.campaign.CampaignMain;
 
 public class ArmyUpperLimiterCommand implements Command {
 
@@ -27,13 +28,13 @@ public class ArmyUpperLimiterCommand implements Command {
 
         //access check
         if (accessLevel != 0) {
-            int userLevel = server.campaign.CampaignMain.cm.getServer().getUserLevel(Username);
+            int userLevel = CampaignMain.campaignMain.getServer().getUserLevel(Username);
             if (userLevel < getExecutionLevel()) {
-                server.campaign.CampaignMain.cm.toUser("AM:Insufficient access level for command. Level: " +
-                                                             userLevel +
-                                                             ". Required: " +
-                                                             accessLevel +
-                                                             ".", Username, true);
+                CampaignMain.campaignMain.toUser("AM:Insufficient access level for command. Level: " +
+                                                       userLevel +
+                                                       ". Required: " +
+                                                       accessLevel +
+                                                       ".", Username, true);
                 return;
             }
         }
@@ -41,9 +42,9 @@ public class ArmyUpperLimiterCommand implements Command {
         if (command.hasMoreElements()) {
 
             //first, make sure limiters are allowed ...
-            boolean limitsAllowed = Boolean.parseBoolean(server.campaign.CampaignMain.cm.getConfig("AllowLimiters"));
+            boolean limitsAllowed = Boolean.parseBoolean(CampaignMain.campaignMain.getConfig("AllowLimiters"));
             if (!limitsAllowed) {
-                server.campaign.CampaignMain.cm.toUser("AM:Limits are disabled.", Username, true);
+                CampaignMain.campaignMain.toUser("AM:Limits are disabled.", Username, true);
                 return;
             }
 
@@ -52,10 +53,10 @@ public class ArmyUpperLimiterCommand implements Command {
             if (command.hasMoreElements()) {
 
                 int limit = Integer.parseInt(command.nextToken());
-                server.campaign.SPlayer p = server.campaign.CampaignMain.cm.getPlayer(Username);
+                server.campaign.SPlayer p = CampaignMain.campaignMain.getPlayer(Username);
                 if (p != null) {
                     if (p.getDutyStatus() == server.campaign.SPlayer.STATUS_ACTIVE) {
-                        server.campaign.CampaignMain.cm.toUser("AM:You cannot change limits while active.",
+                        CampaignMain.campaignMain.toUser("AM:You cannot change limits while active.",
                               Username,
                               true);
                         return;
@@ -64,41 +65,41 @@ public class ArmyUpperLimiterCommand implements Command {
                     if (army != null) {
 
                         if (limit < Army.NO_LIMIT) {//-1 is NO_LIMIT
-                            server.campaign.CampaignMain.cm.toUser("AM:You may not set negative limits.",
+                            CampaignMain.campaignMain.toUser("AM:You may not set negative limits.",
                                   Username,
                                   true);
                             return;
                         }
 
                         //check to make sure that the proposed limit doesnt hit the buffer
-                        int bufferAmt = server.campaign.CampaignMain.cm.getIntegerConfig("UpperLimitBuffer");
+                        int bufferAmt = CampaignMain.campaignMain.getIntegerConfig("UpperLimitBuffer");
                         if (limit < bufferAmt && limit != Army.NO_LIMIT) {
-                            server.campaign.CampaignMain.cm.toUser("AM:You must set an upper limit of " +
-                                                                         bufferAmt +
-                                                                         "or more.", Username, true);
+                            CampaignMain.campaignMain.toUser("AM:You must set an upper limit of " +
+                                                                   bufferAmt +
+                                                                   "or more.", Username, true);
                             return;
                         }
 
                         army.setUpperLimiter(limit);
 
                         if (limit == -1) {
-                            server.campaign.CampaignMain.cm.toUser("AM:Army #" + armyid + "'s upper limit disabled.",
+                            CampaignMain.campaignMain.toUser("AM:Army #" + armyid + "'s upper limit disabled.",
                                   Username,
                                   true);
                         } else {
-                            server.campaign.CampaignMain.cm.toUser("AM:Army #" +
-                                                                         armyid +
-                                                                         "'s upper limit set to " +
-                                                                         limit +
-                                                                         ".", Username, true);
+                            CampaignMain.campaignMain.toUser("AM:Army #" +
+                                                                   armyid +
+                                                                   "'s upper limit set to " +
+                                                                   limit +
+                                                                   ".", Username, true);
                         }
 
-                        server.campaign.CampaignMain.cm.toUser("PL|SAB|" +
-                                                                     army.getID() +
-                                                                     "#" +
-                                                                     army.getLowerLimiter() +
-                                                                     "#" +
-                                                                     army.getUpperLimiter(), Username, false);
+                        CampaignMain.campaignMain.toUser("PL|SAB|" +
+                                                               army.getID() +
+                                                               "#" +
+                                                               army.getLowerLimiter() +
+                                                               "#" +
+                                                               army.getUpperLimiter(), Username, false);
                     }
                 }
             }

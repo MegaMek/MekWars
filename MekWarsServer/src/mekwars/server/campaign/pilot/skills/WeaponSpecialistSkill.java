@@ -26,6 +26,7 @@ import common.campaign.pilot.Pilot;
 import megamek.common.Entity;
 import megamek.common.Mounted;
 import megamek.common.battlevalue.BvMultiplier;
+import mekwars.server.campaign.CampaignMain;
 
 
 /**
@@ -60,10 +61,10 @@ public class WeaponSpecialistSkill extends SPilotSkill {
 
         String chance = "chancefor" + getAbbreviation() + "for" + Unit.getTypeClassDesc(unitType);
 
-        server.campaign.SHouse house = server.campaign.CampaignMain.cm.getHouseFromPartialString(pilot.getCurrentFaction());
+        server.campaign.SHouse house = CampaignMain.campaignMain.getHouseFromPartialString(pilot.getCurrentFaction());
 
         if (house == null) {
-            return server.campaign.CampaignMain.cm.getIntegerConfig(chance);
+            return CampaignMain.campaignMain.getIntegerConfig(chance);
         }
 
         return house.getIntegerConfig(chance);
@@ -99,7 +100,7 @@ public class WeaponSpecialistSkill extends SPilotSkill {
 
     public void assignWeapon(Entity entity, Pilot pilot) {
         java.util.Hashtable<String, Boolean> uniqueWeapons = new java.util.Hashtable<String, Boolean>();
-        String bannedWeapons = server.campaign.CampaignMain.cm.getConfig("BannedWSWeapons");
+        String bannedWeapons = CampaignMain.campaignMain.getConfig("BannedWSWeapons");
         for (Mounted m : entity.getWeaponList()) {
             if (bannedWeapons.indexOf(m.getDesc()) >= 0) {
                 continue;
@@ -114,7 +115,7 @@ public class WeaponSpecialistSkill extends SPilotSkill {
         }
 
         if (uniqueWeapons.size() > 1) {
-            selectedWeapon = server.campaign.CampaignMain.cm.getRandomNumber(uniqueWeapons.size());
+            selectedWeapon = CampaignMain.campaignMain.getRandomNumber(uniqueWeapons.size());
         }
 
 

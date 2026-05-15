@@ -18,6 +18,8 @@
 package mekwars.server.campaign.commands;
 
 
+import mekwars.server.campaign.CampaignMain;
+
 public class BuyBaysCommand implements Command {
 
     int accessLevel = 0;
@@ -26,24 +28,24 @@ public class BuyBaysCommand implements Command {
     public void process(java.util.StringTokenizer command, String Username) {
 
         if (accessLevel != 0) {
-            int userLevel = server.campaign.CampaignMain.cm.getServer().getUserLevel(Username);
+            int userLevel = CampaignMain.campaignMain.getServer().getUserLevel(Username);
             if (userLevel < getExecutionLevel()) {
-                server.campaign.CampaignMain.cm.toUser("AM:Insufficient access level for command. Level: " +
-                                                             userLevel +
-                                                             ". Required: " +
-                                                             accessLevel +
-                                                             ".", Username, true);
+                CampaignMain.campaignMain.toUser("AM:Insufficient access level for command. Level: " +
+                                                       userLevel +
+                                                       ". Required: " +
+                                                       accessLevel +
+                                                       ".", Username, true);
                 return;
             }
         }
 
-        if (!server.campaign.CampaignMain.cm.isUsingAdvanceRepair()) {
+        if (!CampaignMain.campaignMain.isUsingAdvanceRepair()) {
             return;
         }
 
         //use /c buybays#numbertobuy
         int numtobuy = 1;//default to 1 if no number present
-        server.campaign.SPlayer p = server.campaign.CampaignMain.cm.getPlayer(Username);
+        server.campaign.SPlayer p = CampaignMain.campaignMain.getPlayer(Username);
         server.campaign.SHouse house = p.getMyHouse();
 
         int bayCost = 0;//default cost
@@ -52,7 +54,7 @@ public class BuyBaysCommand implements Command {
             numtobuy = Integer.parseInt(command.nextToken());
         }//end try
         catch (NumberFormatException ex) {
-            server.campaign.CampaignMain.cm.toUser(
+            CampaignMain.campaignMain.toUser(
                   "AM:Lease Bays command failed. Check your input. It should be something like this: /c buybays#3",
                   Username,
                   true);
@@ -63,7 +65,7 @@ public class BuyBaysCommand implements Command {
         bayCost = Integer.parseInt(house.getConfig("CostToBuyNewBay"));
 
         if (bayCost == -1) {
-            server.campaign.CampaignMain.cm.toUser(
+            CampaignMain.campaignMain.toUser(
                   "AM:Sorry but their are no bays available for leasing at this moment in time.",
                   Username,
                   true);
@@ -72,9 +74,9 @@ public class BuyBaysCommand implements Command {
 
         //-1 maxbays allows for unlimited bays
         if (maxBays != -1 && p.getBaysOwned() + numtobuy > maxBays) {
-            server.campaign.CampaignMain.cm.toUser("AM:Sorry but the max number of bays you can lease is " +
-                                                         maxBays +
-                                                         ".", Username, true);
+            CampaignMain.campaignMain.toUser("AM:Sorry but the max number of bays you can lease is " +
+                                                   maxBays +
+                                                   ".", Username, true);
             return;
         }
 
@@ -83,17 +85,17 @@ public class BuyBaysCommand implements Command {
 
         //send a message is the bays
         if (bayCost > p.getMoney()) {
-            server.campaign.CampaignMain.cm.toUser("AM:Leasing " +
-                                                         numtobuy +
-                                                         " bays will cost you " +
-                                                         server.campaign.CampaignMain.cm.moneyOrFluMessage(true,
-                                                               false,
-                                                               bayCost) +
-                                                         " for a security deposit. You only have " +
-                                                         server.campaign.CampaignMain.cm.moneyOrFluMessage(true,
-                                                               false,
-                                                               p.getMoney()) +
-                                                         ".", Username, true);
+            CampaignMain.campaignMain.toUser("AM:Leasing " +
+                                                   numtobuy +
+                                                   " bays will cost you " +
+                                                   CampaignMain.campaignMain.moneyOrFluMessage(true,
+                                                         false,
+                                                         bayCost) +
+                                                   " for a security deposit. You only have " +
+                                                   CampaignMain.campaignMain.moneyOrFluMessage(true,
+                                                         false,
+                                                         p.getMoney()) +
+                                                   ".", Username, true);
             return;
         }//end if(player doenst have enough money)
 
@@ -103,22 +105,22 @@ public class BuyBaysCommand implements Command {
         p.addMoney(-bayCost);
 
         if (numtobuy == 1) {
-            server.campaign.CampaignMain.cm.toUser("AM:You've leased a bay! After paying the security deposit of " +
-                                                         server.campaign.CampaignMain.cm.moneyOrFluMessage(true,
-                                                               false,
-                                                               bayCost), Username, true);
+            CampaignMain.campaignMain.toUser("AM:You've leased a bay! After paying the security deposit of " +
+                                                   CampaignMain.campaignMain.moneyOrFluMessage(true,
+                                                         false,
+                                                         bayCost), Username, true);
         } else {
-            server.campaign.CampaignMain.cm.toUser("AM:You've leased " +
-                                                         numtobuy +
-                                                         " bays! After paying the security deposit of " +
-                                                         server.campaign.CampaignMain.cm.moneyOrFluMessage(true,
-                                                               false,
-                                                               bayCost), Username, true);
+            CampaignMain.campaignMain.toUser("AM:You've leased " +
+                                                   numtobuy +
+                                                   " bays! After paying the security deposit of " +
+                                                   CampaignMain.campaignMain.moneyOrFluMessage(true,
+                                                         false,
+                                                         bayCost), Username, true);
         }
 
-        server.campaign.CampaignMain.cm.toUser("PL|SF|" + p.getFreeBays(), Username, false);
-        server.campaign.CampaignMain.cm.toUser("PL|SB|" + p.getTotalMekBays(), Username, false);
-        server.campaign.CampaignMain.cm.toUser("PL|ST|" + p.getBaysOwned(), Username, false);
+        CampaignMain.campaignMain.toUser("PL|SF|" + p.getFreeBays(), Username, false);
+        CampaignMain.campaignMain.toUser("PL|SB|" + p.getTotalMekBays(), Username, false);
+        CampaignMain.campaignMain.toUser("PL|ST|" + p.getBaysOwned(), Username, false);
     }//end process()
 
     public int getExecutionLevel() {return accessLevel;}

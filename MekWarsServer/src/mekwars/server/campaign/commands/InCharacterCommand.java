@@ -16,6 +16,8 @@
 
 package mekwars.server.campaign.commands;
 
+import mekwars.server.campaign.CampaignMain;
+
 public class InCharacterCommand implements Command {
 
     int accessLevel = 0;
@@ -24,13 +26,13 @@ public class InCharacterCommand implements Command {
     public void process(java.util.StringTokenizer command, String Username) {
 
         if (accessLevel != 0) {
-            int userLevel = server.campaign.CampaignMain.cm.getServer().getUserLevel(Username);
+            int userLevel = CampaignMain.campaignMain.getServer().getUserLevel(Username);
             if (userLevel < getExecutionLevel()) {
-                server.campaign.CampaignMain.cm.toUser("AM:Insufficient access level for command. Level: " +
-                                                             userLevel +
-                                                             ". Required: " +
-                                                             accessLevel +
-                                                             ".", Username, true);
+                CampaignMain.campaignMain.toUser("AM:Insufficient access level for command. Level: " +
+                                                       userLevel +
+                                                       ". Required: " +
+                                                       accessLevel +
+                                                       ".", Username, true);
                 return;
             }
         }
@@ -45,20 +47,20 @@ public class InCharacterCommand implements Command {
         toSend = "(In Character)" + Username + ":" + toSend;
 
         //if client is somehow null, just send the message
-        server.MWClientInfo client = server.campaign.CampaignMain.cm.getServer().getUser(Username);
+        server.MWClientInfo client = CampaignMain.campaignMain.getServer().getUser(Username);
         if (client == null) {return;}
 
-        boolean generalMute = server.campaign.CampaignMain.cm.getServer().getIgnoreList().indexOf(client.getName()) >
+        boolean generalMute = CampaignMain.campaignMain.getServer().getIgnoreList().indexOf(client.getName()) >
                                     -1;
-        boolean factionMute = server.campaign.CampaignMain.cm.getServer()
+        boolean factionMute = CampaignMain.campaignMain.getServer()
                                     .getFactionLeaderIgnoreList()
                                     .indexOf(client.getName()) > -1;
 
         if (generalMute || factionMute) {
-            server.campaign.CampaignMain.cm.toUser("AM:You've been set to ignore mode and cannot participate in chat.",
+            CampaignMain.campaignMain.toUser("AM:You've been set to ignore mode and cannot participate in chat.",
                   Username,
                   true);
-        } else {server.campaign.CampaignMain.cm.doSendToAllOnlinePlayers(toSend, true);}
+        } else {CampaignMain.campaignMain.doSendToAllOnlinePlayers(toSend, true);}
 
     }
 

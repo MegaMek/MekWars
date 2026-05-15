@@ -5,9 +5,9 @@ import megamek.common.equipment.AmmoType;
 import megamek.common.equipment.Mounted;
 import mekwars.common.campaign.pilot.Pilot;
 import mekwars.common.campaign.pilot.skills.PilotSkill;
-import mekwars.common.util.MWLogger;
 import mekwars.common.util.StringUtils;
 import mekwars.common.util.UnitUtils;
+import mekwars.server.campaign.CampaignMain;
 
 class Repair {
 
@@ -51,9 +51,29 @@ class Repair {
         }
     }
 
+    public Repair(server.campaign.SPlayer player, int unitID, java.util.Vector<Integer> techs, int repairTime,
+          boolean simpleRepair, boolean salvage) {
+
+        this.simpleRepair = simpleRepair;
+        this.repairTime = repairTime;
+        this.techs = techs;
+        this.unitID = unitID;
+        unit = player.getUnit(unitID).getEntity();
+        Username = player.getName();
+        location = UnitUtils.LOC_CT;
+        slot = UnitUtils.LOC_FRONT_ARMOR;
+        armor = true;
+        unit.setArmor(0, UnitUtils.LOC_CT);
+        UnitUtils.setArmorRepair(unit, UnitUtils.LOC_FRONT_ARMOR, UnitUtils.LOC_CT);
+        startTime = System.currentTimeMillis();
+        endTime = startTime + (repairTime * 1000);
+        this.salvage = salvage;
+        //CampaignMain.cm.toUser("PL|UU|"+unitID+"|"+unit.toString(true),Username,false);
+    }
+
     public void setRepairTime() {
         //repair time in MS
-        repairTime = Long.parseLong(server.campaign.CampaignMain.cm.getConfig("TimeForEachRepairPoint")) * 1000;
+        repairTime = Long.parseLong(CampaignMain.campaignMain.getConfig("TimeForEachRepairPoint")) * 1000;
         if (!armor) {
             CriticalSlot cs = unit.getCritical(location, slot);
             UnitUtils.setRepairing(unit, cs);
@@ -94,32 +114,12 @@ class Repair {
         //MWLogger.errLog("Start Time: "+startTime+" End Time: "+endTime);
     }
 
-    public Repair(server.campaign.SPlayer player, int unitID, java.util.Vector<Integer> techs, int repairTime,
-          boolean simpleRepair, boolean salvage) {
-
-        this.simpleRepair = simpleRepair;
-        this.repairTime = repairTime;
-        this.techs = techs;
-        this.unitID = unitID;
-        unit = player.getUnit(unitID).getEntity();
-        Username = player.getName();
-        location = UnitUtils.LOC_CT;
-        slot = UnitUtils.LOC_FRONT_ARMOR;
-        armor = true;
-        unit.setArmor(0, UnitUtils.LOC_CT);
-        UnitUtils.setArmorRepair(unit, UnitUtils.LOC_FRONT_ARMOR, UnitUtils.LOC_CT);
-        startTime = System.currentTimeMillis();
-        endTime = startTime + (repairTime * 1000);
-        this.salvage = salvage;
-        //CampaignMain.cm.toUser("PL|UU|"+unitID+"|"+unit.toString(true),Username,false);
-    }
-
     public boolean finishRepair() {
 
         CriticalSlot cs = null;
         Pilot pilot = null;
 
-        server.campaign.SPlayer player = server.campaign.CampaignMain.cm.getPlayer(Username);
+        server.campaign.SPlayer player = CampaignMain.campaignMain.getPlayer(Username);
         if (player == null) {
             MWLogger.errLog("Could not find player " + Username + " removing repair job from queue.");
             return true;
@@ -139,8 +139,8 @@ class Repair {
         try {
             int roll = 12;
 
-            int die1 = server.campaign.CampaignMain.cm.getRandomNumber(6) + 1;
-            int die2 = server.campaign.CampaignMain.cm.getRandomNumber(6) + 1;
+            int die1 = CampaignMain.campaignMain.getRandomNumber(6) + 1;
+            int die2 = CampaignMain.campaignMain.getRandomNumber(6) + 1;
 
             boolean levelTech = false;
             boolean pilotIsRepairing = false;
@@ -148,10 +148,10 @@ class Repair {
             boolean retireTech = false;
             boolean techDeath = false;
             boolean repairTech = techType == UnitUtils.TECH_REWARD_POINTS;
-            boolean useCrits = server.campaign.CampaignMain.cm.getBooleanConfig("UsePartsRepair");
+            boolean useCrits = CampaignMain.campaignMain.getBooleanConfig("UsePartsRepair");
             String critName = "";
             int damagedCrits = 0;
-            boolean disableTechAdvancement = server.campaign.CampaignMain.cm.getBooleanConfig("DisableTechAdvancement");
+            boolean disableTechAdvancement = CampaignMain.campaignMain.getBooleanConfig("DisableTechAdvancement");
 
 
             if (useCrits) {
@@ -228,8 +228,8 @@ class Repair {
 
                     techType = techs.elementAt(type);
                     // Tech made it so he can try and level
-                    die1 = server.campaign.CampaignMain.cm.getRandomNumber(6) + 1;
-                    die2 = server.campaign.CampaignMain.cm.getRandomNumber(6) + 1;
+                    die1 = CampaignMain.campaignMain.getRandomNumber(6) + 1;
+                    die2 = CampaignMain.campaignMain.getRandomNumber(6) + 1;
 
                     // MWLogger.errLog("tech level roll: "+(die1+die2)+"
                     // base: "+(10+techType));
@@ -243,8 +243,8 @@ class Repair {
                     }
 
                     // Roll to see if the Tech Retires.
-                    die1 = server.campaign.CampaignMain.cm.getRandomNumber(6) + 1;
-                    die2 = server.campaign.CampaignMain.cm.getRandomNumber(6) + 1;
+                    die1 = CampaignMain.campaignMain.getRandomNumber(6) + 1;
+                    die2 = CampaignMain.campaignMain.getRandomNumber(6) + 1;
 
                     if ((techType > UnitUtils.TECH_GREEN)
                               && ((die1 + die2) <= ((9 + techType) / 4// Regs & Vets retire on 2. Elites on 3.
@@ -264,37 +264,37 @@ class Repair {
                             pilot.getSkills()
                                   .getPilotSkill(PilotSkill.AstechSkillID)
                                   .setLevel(pilot.getSkills().getPilotSkill(PilotSkill.AstechSkillID).getLevel() + 1);
-                            server.campaign.CampaignMain.cm.toUser("FSM|"
-                                                                         +
-                                                                         pilot.getName()
-                                                                         +
-                                                                         " has graduated to "
-                                                                         +
-                                                                         StringUtils.aOrAn(UnitUtils.techDescription(
-                                                                               techType + 1), true)
-                                                                         +
-                                                                         " tech.", Username, false);
+                            CampaignMain.campaignMain.toUser("FSM|"
+                                                                   +
+                                                                   pilot.getName()
+                                                                   +
+                                                                   " has graduated to "
+                                                                   +
+                                                                   StringUtils.aOrAn(UnitUtils.techDescription(
+                                                                         techType + 1), true)
+                                                                   +
+                                                                   " tech.", Username, false);
                         } else if (player.getTotalTechs().elementAt(techType) > 0) {
                             // AvailableTech was already removed so just move the tech to the next level
                             player.addAvailableTechs(techType + 1, 1);
                             // Now remove the tech from its old class and move it to its new class
                             player.addTotalTechs(techType, -1);
                             player.addTotalTechs(techType + 1, 1);
-                            server.campaign.CampaignMain.cm.toUser("FSM|One of your "
-                                                                         +
-                                                                         UnitUtils.techDescription(techType)
-                                                                         +
-                                                                         " techs has graduated to "
-                                                                         +
-                                                                         StringUtils.aOrAn(UnitUtils.techDescription(
-                                                                               techType + 1), true)
-                                                                         +
-                                                                         " tech.", Username, false);
+                            CampaignMain.campaignMain.toUser("FSM|One of your "
+                                                                   +
+                                                                   UnitUtils.techDescription(techType)
+                                                                   +
+                                                                   " techs has graduated to "
+                                                                   +
+                                                                   StringUtils.aOrAn(UnitUtils.techDescription(
+                                                                         techType + 1), true)
+                                                                   +
+                                                                   " tech.", Username, false);
                         }
                     }
 
                     if (retireTech && (player.getTotalTechs().elementAt(techType) > 0)) {
-                        server.campaign.CampaignMain.cm.toUser(
+                        CampaignMain.campaignMain.toUser(
                               "FSM|<font color=#ff80ff>One of your "
                                     + UnitUtils.techDescription(techType)
                                     + " techs retired.</font>", Username,
@@ -303,12 +303,12 @@ class Repair {
                         player.addTotalTechs(techType, -1);
                     }
 
-                    server.campaign.CampaignMain.cm.toUser("PL|UU|" + unitID + "|"
-                                                                 + mek.toString(true), Username, false);
+                    CampaignMain.campaignMain.toUser("PL|UU|" + unitID + "|"
+                                                           + mek.toString(true), Username, false);
                     player.checkAndUpdateArmies(mek);
                 }
-                server.campaign.CampaignMain.cm.toUser("FSM|Your " + unit.getShortNameRaw()
-                                                             + " is now fully operational and combat ready again!",
+                CampaignMain.campaignMain.toUser("FSM|Your " + unit.getShortNameRaw()
+                                                       + " is now fully operational and combat ready again!",
                       Username,
                       false);
                 player.setSave();
@@ -356,14 +356,14 @@ class Repair {
 
             //Check to see if the pilot died while failing the repair.
             if (((die1 + die2) == 2) && !pilotIsRepairing) {
-                int chance = server.campaign.CampaignMain.cm.getIntegerConfig("ChanceTechDiesOnFailedRepair");
-                if (chance > server.campaign.CampaignMain.cm.getRandomNumber(100)) {
+                int chance = CampaignMain.campaignMain.getIntegerConfig("ChanceTechDiesOnFailedRepair");
+                if (chance > CampaignMain.campaignMain.getRandomNumber(100)) {
                     techDeath = true;
                     retries = 0;
                 }
             }
 
-            server.campaign.CampaignMain.cm.toUser("FSM|Tech Roll Base: " + roll + " Roll: " + (die1 + die2),
+            CampaignMain.campaignMain.toUser("FSM|Tech Roll Base: " + roll + " Roll: " + (die1 + die2),
                   Username,
                   false);
             //failed the tech roll
@@ -405,7 +405,7 @@ class Repair {
                             if (armorToRepair <= 3) {
                                 armorRepaired = 1;
                             } else {
-                                armorRepaired = server.campaign.CampaignMain.cm.getRandomNumber(armorToRepair - 2) + 1;
+                                armorRepaired = CampaignMain.campaignMain.getRandomNumber(armorToRepair - 2) + 1;
                             }
 
                             //the more they miss the roll by the less armor is repaired.
@@ -424,7 +424,7 @@ class Repair {
                                 points = " point ";
                             }
                             if (rear) {
-                                server.campaign.CampaignMain.cm.toUser(
+                                CampaignMain.campaignMain.toUser(
                                       "FSM|The salvage job was not completely successful only " +
                                             armorRepaired +
                                             points +
@@ -436,7 +436,7 @@ class Repair {
                                       Username,
                                       false);
                             } else {
-                                server.campaign.CampaignMain.cm.toUser(
+                                CampaignMain.campaignMain.toUser(
                                       "FSM|The salvage job was not completely successful only " +
                                             armorRepaired +
                                             points +
@@ -456,7 +456,7 @@ class Repair {
                             if (armorToRepair <= 3) {
                                 armorRepaired = 1;
                             } else {
-                                armorRepaired = server.campaign.CampaignMain.cm.getRandomNumber(armorToRepair - 2) + 1;
+                                armorRepaired = CampaignMain.campaignMain.getRandomNumber(armorToRepair - 2) + 1;
                             }
 
                             //the more they miss the roll by the less armor is repaired.
@@ -473,7 +473,7 @@ class Repair {
                                 points = " point ";
                             }
                             if (rear) {
-                                server.campaign.CampaignMain.cm.toUser(
+                                CampaignMain.campaignMain.toUser(
                                       "FSM|The repair job was not completely successful only " +
                                             armorRepaired +
                                             points +
@@ -485,7 +485,7 @@ class Repair {
                                       Username,
                                       false);
                             } else {
-                                server.campaign.CampaignMain.cm.toUser(
+                                CampaignMain.campaignMain.toUser(
                                       "FSM|The repair job was not completely successful only " +
                                             armorRepaired +
                                             points +
@@ -500,15 +500,15 @@ class Repair {
 
                             if (unit.getArmor(location, rear) == unit.getOArmor(location, rear)) {
                                 if (rear) {
-                                    server.campaign.CampaignMain.cm.toUser("FSM|However the external armor(" +
-                                                                                 unit.getLocationAbbr(location) +
-                                                                                 "r) is now fully repaired.",
+                                    CampaignMain.campaignMain.toUser("FSM|However the external armor(" +
+                                                                           unit.getLocationAbbr(location) +
+                                                                           "r) is now fully repaired.",
                                           Username,
                                           false);
                                 } else {
-                                    server.campaign.CampaignMain.cm.toUser("FSM|However the external armor(" +
-                                                                                 unit.getLocationAbbr(location) +
-                                                                                 ") is now fully repaired.",
+                                    CampaignMain.campaignMain.toUser("FSM|However the external armor(" +
+                                                                           unit.getLocationAbbr(location) +
+                                                                           ") is now fully repaired.",
                                           Username,
                                           false);
                                 }
@@ -531,7 +531,7 @@ class Repair {
                             if (armorToRepair <= 3) {
                                 armorRepaired = 1;
                             } else {
-                                armorRepaired = server.campaign.CampaignMain.cm.getRandomNumber(armorToRepair - 2) + 1;
+                                armorRepaired = CampaignMain.campaignMain.getRandomNumber(armorToRepair - 2) + 1;
                             }
 
                             //MWLogger.errLog("IS Amount2: "+armorRepaired);
@@ -552,7 +552,7 @@ class Repair {
                             if (armorRepaired == 1) {
                                 points = " point ";
                             }
-                            server.campaign.CampaignMain.cm.toUser(
+                            CampaignMain.campaignMain.toUser(
                                   "FSM|The repair job was not completely successful only " +
                                         armorRepaired +
                                         points +
@@ -575,7 +575,7 @@ class Repair {
                             if (armorToRepair <= 3) {
                                 armorRepaired = 1;
                             } else {
-                                armorRepaired = server.campaign.CampaignMain.cm.getRandomNumber(armorToRepair - 2) + 1;
+                                armorRepaired = CampaignMain.campaignMain.getRandomNumber(armorToRepair - 2) + 1;
                             }
 
                             //the more they miss the roll by the less armor is repaired.
@@ -592,7 +592,7 @@ class Repair {
                             if (armorRepaired == 1) {
                                 points = " point ";
                             }
-                            server.campaign.CampaignMain.cm.toUser(
+                            CampaignMain.campaignMain.toUser(
                                   "FSM|The repair job was not completely successful only " +
                                         armorRepaired +
                                         points +
@@ -606,9 +606,9 @@ class Repair {
 
 
                             if (unit.getOInternal(location) == unit.getInternal(location)) {
-                                server.campaign.CampaignMain.cm.toUser("FSM|However the internal structure(" +
-                                                                             unit.getLocationAbbr(location) +
-                                                                             ") is now fully repaired.",
+                                CampaignMain.campaignMain.toUser("FSM|However the internal structure(" +
+                                                                       unit.getLocationAbbr(location) +
+                                                                       ") is now fully repaired.",
                                       Username,
                                       false);
                                 //set the armor and set them free.
@@ -655,7 +655,7 @@ class Repair {
                             }
                         }//end CS type else
 
-                        server.campaign.CampaignMain.cm.toUser("FSM|" + repairMessage, Username, false);
+                        CampaignMain.campaignMain.toUser("FSM|" + repairMessage, Username, false);
                     } else {
                         if (cs.getType() == CriticalSlot.TYPE_EQUIPMENT) {
                             Mounted mounted = cs.getMount();
@@ -685,7 +685,7 @@ class Repair {
                             }
                         }//end CS type else
 
-                        server.campaign.CampaignMain.cm.toUser("FSM|" + repairMessage, Username, false);
+                        CampaignMain.campaignMain.toUser("FSM|" + repairMessage, Username, false);
                     }
                 }//end of failed roll
                 if ((retries > 0) && (roll < 13)) {
@@ -694,7 +694,7 @@ class Repair {
                         techType = UnitUtils.TECH_PILOT;
                     }
 
-                    int cost = server.campaign.CampaignMain.cm.getRepairCost(unit,
+                    int cost = CampaignMain.campaignMain.getRepairCost(unit,
                           location,
                           slot,
                           techType,
@@ -703,7 +703,7 @@ class Repair {
                           salvage);
                     if (player.getAutoReorder() && (player.getPartsAmount(critName) < damagedCrits)) {
                         String newCommand = critName + "#" + damagedCrits;
-                        server.campaign.CampaignMain.cm.getServerCommands()
+                        CampaignMain.campaignMain.getServerCommands()
                               .get("BUYPARTS")
                               .process(new java.util.StringTokenizer(newCommand, "#"), Username);
                     }
@@ -712,7 +712,7 @@ class Repair {
 
                         retries--;
                         setRepairTime();
-                        server.campaign.CampaignMain.cm.toUser(
+                        CampaignMain.campaignMain.toUser(
                               "FSM|The tech responsible rededicates himself to the task.",
                               Username,
                               false);
@@ -729,7 +729,7 @@ class Repair {
                             location += 7;
                         }
                         mek.setEntity(unit);
-                        server.campaign.CampaignMain.cm.toUser("PL|UU|" + unitID + "|" + mek.toString(true),
+                        CampaignMain.campaignMain.toUser("PL|UU|" + unitID + "|" + mek.toString(true),
                               Username,
                               false);
                         player.checkAndUpdateArmies(mek);
@@ -752,7 +752,7 @@ class Repair {
                 }
 
                 mek.setEntity(unit);
-                server.campaign.CampaignMain.cm.toUser("PL|UU|" + unitID + "|" + mek.toString(true), Username, false);
+                CampaignMain.campaignMain.toUser("PL|UU|" + unitID + "|" + mek.toString(true), Username, false);
                 player.checkAndUpdateArmies(mek);
                 //end Failure
             } else {
@@ -796,23 +796,23 @@ class Repair {
                                 points = " point ";
                             }
                             if (rear) {
-                                server.campaign.CampaignMain.cm.toUser("FSM|" +
-                                                                             armorRepaired +
-                                                                             points +
-                                                                             "of external armor(" +
-                                                                             unit.getLocationAbbr(location) +
-                                                                             "r) were salvaged from your " +
-                                                                             unit.getShortNameRaw() +
-                                                                             ".", Username, false);
+                                CampaignMain.campaignMain.toUser("FSM|" +
+                                                                       armorRepaired +
+                                                                       points +
+                                                                       "of external armor(" +
+                                                                       unit.getLocationAbbr(location) +
+                                                                       "r) were salvaged from your " +
+                                                                       unit.getShortNameRaw() +
+                                                                       ".", Username, false);
                             } else {
-                                server.campaign.CampaignMain.cm.toUser("FSM|" +
-                                                                             armorRepaired +
-                                                                             points +
-                                                                             "of external armor(" +
-                                                                             unit.getLocationAbbr(location) +
-                                                                             ") were salvaged from your " +
-                                                                             unit.getShortNameRaw() +
-                                                                             ".", Username, false);
+                                CampaignMain.campaignMain.toUser("FSM|" +
+                                                                       armorRepaired +
+                                                                       points +
+                                                                       "of external armor(" +
+                                                                       unit.getLocationAbbr(location) +
+                                                                       ") were salvaged from your " +
+                                                                       unit.getShortNameRaw() +
+                                                                       ".", Username, false);
                             }
                         } else {
                             armorRepaired = unit.getOArmor(location, rear) - unit.getArmor(location, rear);
@@ -823,23 +823,23 @@ class Repair {
                                 points = " point ";
                             }
                             if (rear) {
-                                server.campaign.CampaignMain.cm.toUser("FSM|" +
-                                                                             armorRepaired +
-                                                                             points +
-                                                                             "of external armor(" +
-                                                                             unit.getLocationAbbr(location) +
-                                                                             "r) were repaired on your " +
-                                                                             unit.getShortNameRaw() +
-                                                                             ".", Username, false);
+                                CampaignMain.campaignMain.toUser("FSM|" +
+                                                                       armorRepaired +
+                                                                       points +
+                                                                       "of external armor(" +
+                                                                       unit.getLocationAbbr(location) +
+                                                                       "r) were repaired on your " +
+                                                                       unit.getShortNameRaw() +
+                                                                       ".", Username, false);
                             } else {
-                                server.campaign.CampaignMain.cm.toUser("FSM|" +
-                                                                             armorRepaired +
-                                                                             points +
-                                                                             "of external armor(" +
-                                                                             unit.getLocationAbbr(location) +
-                                                                             ") were repaired on your " +
-                                                                             unit.getShortNameRaw() +
-                                                                             ".", Username, false);
+                                CampaignMain.campaignMain.toUser("FSM|" +
+                                                                       armorRepaired +
+                                                                       points +
+                                                                       "of external armor(" +
+                                                                       unit.getLocationAbbr(location) +
+                                                                       ") were repaired on your " +
+                                                                       unit.getShortNameRaw() +
+                                                                       ".", Username, false);
                             }
                         }
                     }//Internal armor
@@ -857,14 +857,14 @@ class Repair {
                             if (armorRepaired == 1) {
                                 points = " point ";
                             }
-                            server.campaign.CampaignMain.cm.toUser("FSM|" +
-                                                                         armorRepaired +
-                                                                         points +
-                                                                         "of internal structure(" +
-                                                                         unit.getLocationAbbr(location) +
-                                                                         ") were salvaged from your " +
-                                                                         unit.getShortNameRaw() +
-                                                                         ".", Username, false);
+                            CampaignMain.campaignMain.toUser("FSM|" +
+                                                                   armorRepaired +
+                                                                   points +
+                                                                   "of internal structure(" +
+                                                                   unit.getLocationAbbr(location) +
+                                                                   ") were salvaged from your " +
+                                                                   unit.getShortNameRaw() +
+                                                                   ".", Username, false);
 
                         } else {
                             armorRepaired = unit.getOInternal(location) - unit.getInternal(location);
@@ -874,14 +874,14 @@ class Repair {
                             if (armorRepaired == 1) {
                                 points = " point ";
                             }
-                            server.campaign.CampaignMain.cm.toUser("FSM|" +
-                                                                         armorRepaired +
-                                                                         points +
-                                                                         "of internal structure(" +
-                                                                         unit.getLocationAbbr(location) +
-                                                                         ") were repaired on your " +
-                                                                         unit.getShortNameRaw() +
-                                                                         ".", Username, false);
+                            CampaignMain.campaignMain.toUser("FSM|" +
+                                                                   armorRepaired +
+                                                                   points +
+                                                                   "of internal structure(" +
+                                                                   unit.getLocationAbbr(location) +
+                                                                   ") were repaired on your " +
+                                                                   unit.getShortNameRaw() +
+                                                                   ".", Username, false);
                         }
                     }
                     //end of armor repair
@@ -941,7 +941,7 @@ class Repair {
 
                         player.updatePartsCache(critName, damagedCrits);
 
-                        server.campaign.CampaignMain.cm.toUser("FSM|" + repairMessage, Username, false);
+                        CampaignMain.campaignMain.toUser("FSM|" + repairMessage, Username, false);
                     } else {
                         if (cs.getType() == CriticalSlot.TYPE_EQUIPMENT) {
                             Mounted mounted = cs.getMount();
@@ -979,12 +979,12 @@ class Repair {
                             }
                         }//end CS type else
 
-                        server.campaign.CampaignMain.cm.toUser("FSM|" + repairMessage, Username, false);
+                        CampaignMain.campaignMain.toUser("FSM|" + repairMessage, Username, false);
                     }
                 }//end of crit repair
                 //Tech made it so he can try and level
-                die1 = server.campaign.CampaignMain.cm.getRandomNumber(6) + 1;
-                die2 = server.campaign.CampaignMain.cm.getRandomNumber(6) + 1;
+                die1 = CampaignMain.campaignMain.getRandomNumber(6) + 1;
+                die2 = CampaignMain.campaignMain.getRandomNumber(6) + 1;
 
                 //MWLogger.errLog("tech level roll: "+(die1+die2)+" base: "+(10+techType));
 
@@ -996,8 +996,8 @@ class Repair {
                     }
                 }
                 //Roll to see if the Tech Retires.
-                die1 = server.campaign.CampaignMain.cm.getRandomNumber(6) + 1;
-                die2 = server.campaign.CampaignMain.cm.getRandomNumber(6) + 1;
+                die1 = CampaignMain.campaignMain.getRandomNumber(6) + 1;
+                die2 = CampaignMain.campaignMain.getRandomNumber(6) + 1;
 
                 if ((techType > UnitUtils.TECH_GREEN)
                           && ((die1 + die2) <= ((9 + techType) / 4//Regs and Vets retire on 2 Elites on 3
@@ -1019,12 +1019,12 @@ class Repair {
 
             if (!UnitUtils.hasArmorDamage(unit) && !UnitUtils.hasCriticalDamage(unit) && !UnitUtils.isRepairing(unit)) {
                 server.campaign.SUnit su = player.getUnit(unitID);
-                server.campaign.CampaignMain.cm.toUser("FSM|Your " +
-                                                             unit.getShortNameRaw() +
-                                                             " is now fully operational and combat ready again!<br>Total Cost was " +
-                                                             server.campaign.CampaignMain.cm.moneyOrFluMessage(true,
-                                                                   true,
-                                                                   su.getCurrentRepairCost()), Username, false);
+                CampaignMain.campaignMain.toUser("FSM|Your " +
+                                                       unit.getShortNameRaw() +
+                                                       " is now fully operational and combat ready again!<br>Total Cost was " +
+                                                       CampaignMain.campaignMain.moneyOrFluMessage(true,
+                                                             true,
+                                                             su.getCurrentRepairCost()), Username, false);
                 su.addRepairCost(-1);
             }
 
@@ -1033,50 +1033,50 @@ class Repair {
                     pilot.getSkills()
                           .getPilotSkill(PilotSkill.AstechSkillID)
                           .setLevel(pilot.getSkills().getPilotSkill(PilotSkill.AstechSkillID).getLevel() + 1);
-                    server.campaign.CampaignMain.cm.toUser("FSM|<font color=#C11B17>" +
-                                                                 pilot.getName() +
-                                                                 " advanced in skill and is now " +
-                                                                 StringUtils.aOrAn(UnitUtils.techDescription(techType +
-                                                                                                                   1),
-                                                                       true) +
-                                                                 " tech.</font>", Username, false);
+                    CampaignMain.campaignMain.toUser("FSM|<font color=#C11B17>" +
+                                                           pilot.getName() +
+                                                           " advanced in skill and is now " +
+                                                           StringUtils.aOrAn(UnitUtils.techDescription(techType +
+                                                                                                             1),
+                                                                 true) +
+                                                           " tech.</font>", Username, false);
                 } else {
                     //AvailableTech was already removed so just move the tech to the next level
                     player.addAvailableTechs(techType + 1, 1);
                     //Now remove the tech from its old class and move it to its new class
                     player.addTotalTechs(techType, -1);
                     player.addTotalTechs(techType + 1, 1);
-                    server.campaign.CampaignMain.cm.toUser("FSM|<font color=#C11B17>One of your " +
-                                                                 UnitUtils.techDescription(techType) +
-                                                                 " techs advanced in skill and is now " +
-                                                                 StringUtils.aOrAn(UnitUtils.techDescription(techType +
-                                                                                                                   1),
-                                                                       true) +
-                                                                 " tech.</font>", Username, false);
+                    CampaignMain.campaignMain.toUser("FSM|<font color=#C11B17>One of your " +
+                                                           UnitUtils.techDescription(techType) +
+                                                           " techs advanced in skill and is now " +
+                                                           StringUtils.aOrAn(UnitUtils.techDescription(techType +
+                                                                                                             1),
+                                                                 true) +
+                                                           " tech.</font>", Username, false);
                 }
             } else if (!pilotIsRepairing && !repairTech) {
                 player.addAvailableTechs(techType, 1);
             }
 
             if (retireTech) {
-                server.campaign.CampaignMain.cm.toUser("FSM|<font color=#ff80ff>One of your " +
-                                                             UnitUtils.techDescription(techType) +
-                                                             " techs retired.</font>", Username, false);
+                CampaignMain.campaignMain.toUser("FSM|<font color=#ff80ff>One of your " +
+                                                       UnitUtils.techDescription(techType) +
+                                                       " techs retired.</font>", Username, false);
                 player.addAvailableTechs(techType, -1);
                 player.addTotalTechs(techType, -1);
             }
 
             if (techDeath) {
-                server.campaign.CampaignMain.cm.toUser("FSM|<font color=#302226>One of your " +
-                                                             UnitUtils.techDescription(techType) +
-                                                             " techs was killed in an accident while repairing " +
-                                                             unit.getShortNameRaw() +
-                                                             ".</font>", Username, false);
+                CampaignMain.campaignMain.toUser("FSM|<font color=#302226>One of your " +
+                                                       UnitUtils.techDescription(techType) +
+                                                       " techs was killed in an accident while repairing " +
+                                                       unit.getShortNameRaw() +
+                                                       ".</font>", Username, false);
                 player.addAvailableTechs(techType, -1);
                 player.addTotalTechs(techType, -1);
             }
             mek.setEntity(unit);
-            server.campaign.CampaignMain.cm.toUser("PL|UU|" + unitID + "|" + mek.toString(true), Username, false);
+            CampaignMain.campaignMain.toUser("PL|UU|" + unitID + "|" + mek.toString(true), Username, false);
             player.setSave();
             player.checkAndUpdateArmies(mek);
             return true;
@@ -1085,7 +1085,7 @@ class Repair {
             MWLogger.errLog(ex);
             if ((mek != null) && (player != null)) {
                 mek.setEntity(unit);
-                server.campaign.CampaignMain.cm.toUser("PL|UU|" + unitID + "|" + mek.toString(true), Username, false);
+                CampaignMain.campaignMain.toUser("PL|UU|" + unitID + "|" + mek.toString(true), Username, false);
                 player.setSave();
                 player.checkAndUpdateArmies(mek);
             }

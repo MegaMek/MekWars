@@ -16,6 +16,8 @@
 
 package mekwars.server.campaign.commands.admin;
 
+import mekwars.server.campaign.CampaignMain;
+
 public class AdminPlayerStatusCommand implements server.campaign.commands.Command {
 
     int accessLevel = server.MWChatServer.auth.IAuthenticator.ADMIN;
@@ -26,13 +28,13 @@ public class AdminPlayerStatusCommand implements server.campaign.commands.Comman
     public void process(java.util.StringTokenizer command, String Username) {
 
         //access level check
-        int userLevel = server.campaign.CampaignMain.cm.getServer().getUserLevel(Username);
+        int userLevel = CampaignMain.campaignMain.getServer().getUserLevel(Username);
         if (userLevel < getExecutionLevel()) {
-            server.campaign.CampaignMain.cm.toUser("AM:Insufficient access level for command. Level: " +
-                                                         userLevel +
-                                                         ". Required: " +
-                                                         accessLevel +
-                                                         ".", Username, true);
+            CampaignMain.campaignMain.toUser("AM:Insufficient access level for command. Level: " +
+                                                   userLevel +
+                                                   ". Required: " +
+                                                   accessLevel +
+                                                   ".", Username, true);
             return;
         }
 
@@ -40,22 +42,22 @@ public class AdminPlayerStatusCommand implements server.campaign.commands.Comman
         server.campaign.SPlayer p = null;
 
         try {
-            p = server.campaign.CampaignMain.cm.getPlayer(command.nextToken());
+            p = CampaignMain.campaignMain.getPlayer(command.nextToken());
         } catch (Exception e) {
-            server.campaign.CampaignMain.cm.toUser("Improper command. Try: /c adminplayerstatus#name", Username, true);
+            CampaignMain.campaignMain.toUser("Improper command. Try: /c adminplayerstatus#name", Username, true);
             return;
         }
 
         if (p == null) {
-            server.campaign.CampaignMain.cm.toUser("Couldn't find a player with that name.", Username, true);
+            CampaignMain.campaignMain.toUser("Couldn't find a player with that name.", Username, true);
             return;
         }
 
         //get the status
-        server.campaign.CampaignMain.cm.toUser("SM|" + p.getReadableStatus(true), Username, false);
+        CampaignMain.campaignMain.toUser("SM|" + p.getReadableStatus(true), Username, false);
 
         //server.MWLogger.modLog(Username + " examined " + p.getName() + "'s account.");
-        server.campaign.CampaignMain.cm.doSendModMail("NOTE", Username + " examined " + p.getName() + "'s account.");
+        CampaignMain.campaignMain.doSendModMail("NOTE", Username + " examined " + p.getName() + "'s account.");
 
     }
 

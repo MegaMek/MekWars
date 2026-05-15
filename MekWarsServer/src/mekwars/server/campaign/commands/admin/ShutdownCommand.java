@@ -17,6 +17,7 @@
 package mekwars.server.campaign.commands.admin;
 
 import common.util.MWLogger;
+import mekwars.server.campaign.CampaignMain;
 import server.campaign.util.scheduler.MWScheduler;
 import server.util.MWPasswd;
 
@@ -36,27 +37,27 @@ public class ShutdownCommand implements server.campaign.commands.Command {
     public void process(java.util.StringTokenizer command, String Username) {
 
         if (accessLevel != 0) {
-            int userLevel = server.campaign.CampaignMain.cm.getServer().getUserLevel(Username);
+            int userLevel = CampaignMain.campaignMain.getServer().getUserLevel(Username);
             if (userLevel < getExecutionLevel()) {
-                server.campaign.CampaignMain.cm.toUser("AM:Insufficient access level for command. Level: " +
-                                                             userLevel +
-                                                             ". Required: " +
-                                                             accessLevel +
-                                                             ".", Username, true);
+                CampaignMain.campaignMain.toUser("AM:Insufficient access level for command. Level: " +
+                                                       userLevel +
+                                                       ". Required: " +
+                                                       accessLevel +
+                                                       ".", Username, true);
                 return;
             }
         }
         MWScheduler.getInstance().shutdown();
 
-        server.campaign.CampaignMain.cm.getMarket().removeAllListings();
-        server.campaign.CampaignMain.cm.toFile();
-        server.campaign.CampaignMain.cm.forceSavePlayers(Username);
-        server.campaign.CampaignMain.cm.saveBannedAmmo();
-        server.campaign.CampaignMain.cm.getDefaultPlayerFlags().save();
-        server.campaign.CampaignMain.cm.toUser("AM:You halted the server. Have a nice day.", Username, true);
+        CampaignMain.campaignMain.getMarket().removeAllListings();
+        CampaignMain.campaignMain.toFile();
+        CampaignMain.campaignMain.forceSavePlayers(Username);
+        CampaignMain.campaignMain.saveBannedAmmo();
+        CampaignMain.campaignMain.getDefaultPlayerFlags().save();
+        CampaignMain.campaignMain.toUser("AM:You halted the server. Have a nice day.", Username, true);
         MWLogger.infoLog(Username + " halted the server. Have a nice day!");
-        server.campaign.CampaignMain.cm.addToNewsFeed("Server halted!", "Server News", "");
-        server.campaign.CampaignMain.cm.postToDiscord("Server halted!");
+        CampaignMain.campaignMain.addToNewsFeed("Server halted!", "Server News", "");
+        CampaignMain.campaignMain.postToDiscord("Server halted!");
         try {
             MWPasswd.save();
         } catch (Exception ex) {

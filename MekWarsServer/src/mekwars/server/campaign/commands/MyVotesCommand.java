@@ -17,6 +17,7 @@
 
 package mekwars.server.campaign.commands;
 
+import mekwars.server.campaign.CampaignMain;
 import server.campaign.votes.Vote;
 import server.campaign.votes.VoteManager;
 
@@ -29,27 +30,27 @@ public class MyVotesCommand implements Command {
     public void process(java.util.StringTokenizer command, String Username) {
 
         if (accessLevel != 0) {
-            int userLevel = server.campaign.CampaignMain.cm.getServer().getUserLevel(Username);
+            int userLevel = CampaignMain.campaignMain.getServer().getUserLevel(Username);
             if (userLevel < getExecutionLevel()) {
-                server.campaign.CampaignMain.cm.toUser("AM:Insufficient access level for command. Level: " +
-                                                             userLevel +
-                                                             ". Required: " +
-                                                             accessLevel +
-                                                             ".", Username, true);
+                CampaignMain.campaignMain.toUser("AM:Insufficient access level for command. Level: " +
+                                                       userLevel +
+                                                       ". Required: " +
+                                                       accessLevel +
+                                                       ".", Username, true);
                 return;
             }
         }
 
         //break out if voting isnt enabled on the server
-        boolean canVote = Boolean.parseBoolean(server.campaign.CampaignMain.cm.getConfig("VotingEnabled"));
+        boolean canVote = Boolean.parseBoolean(CampaignMain.campaignMain.getConfig("VotingEnabled"));
         if (!canVote) {
-            server.campaign.CampaignMain.cm.toUser("AM:Voting is disabled on this server.", Username, true);
+            CampaignMain.campaignMain.toUser("AM:Voting is disabled on this server.", Username, true);
             return;
         }
 
         //set up the player and get the vote manager
-        server.campaign.SPlayer p = server.campaign.CampaignMain.cm.getPlayer(Username);
-        VoteManager vm = server.campaign.CampaignMain.cm.getVoteManager();
+        server.campaign.SPlayer p = CampaignMain.campaignMain.getPlayer(Username);
+        VoteManager vm = CampaignMain.campaignMain.getVoteManager();
 
         //get all of p's positive votes
         java.util.Vector<Vote> posVotes = vm.getAllVotesBy(p, Vote.POSITIVE_VOTE);
@@ -97,7 +98,7 @@ public class MyVotesCommand implements Command {
         }//end if(has abtaining votes)
 
         //give vote total info
-        int votesCast = server.campaign.CampaignMain.cm.getVoteManager().getAllVotesBy(p).size();
+        int votesCast = CampaignMain.campaignMain.getVoteManager().getAllVotesBy(p).size();
         int votesAllowed = p.getNumberOfVotesAllowed();
         if (votesAllowed == votesCast) {
             toPlayer += "<br><br>NOTE: You have cast all of your votes (" + votesCast + "/" + votesAllowed + ").";
@@ -114,7 +115,7 @@ public class MyVotesCommand implements Command {
         }
 
         //now, give this info to the player
-        server.campaign.CampaignMain.cm.toUser(toPlayer, Username, true);
+        CampaignMain.campaignMain.toUser(toPlayer, Username, true);
 
         return;
     }

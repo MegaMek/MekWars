@@ -16,6 +16,8 @@
 
 package mekwars.server.campaign.commands.mod;
 
+import mekwars.server.campaign.CampaignMain;
+
 public class ModLogCommand implements server.campaign.commands.Command {
 
     int accessLevel = server.MWChatServer.auth.IAuthenticator.MODERATOR;
@@ -26,21 +28,21 @@ public class ModLogCommand implements server.campaign.commands.Command {
     public void process(java.util.StringTokenizer command, String Username) {
 
         //access level check
-        int userLevel = server.campaign.CampaignMain.cm.getServer().getUserLevel(Username);
+        int userLevel = CampaignMain.campaignMain.getServer().getUserLevel(Username);
         if (userLevel < getExecutionLevel()) {
-            server.campaign.CampaignMain.cm.toUser("AM:Insufficient access level for command. Level: " +
-                                                         userLevel +
-                                                         ". Required: " +
-                                                         accessLevel +
-                                                         ".", Username, true);
+            CampaignMain.campaignMain.toUser("AM:Insufficient access level for command. Level: " +
+                                                   userLevel +
+                                                   ". Required: " +
+                                                   accessLevel +
+                                                   ".", Username, true);
             return;
         }
 
         String toLog = command.nextToken();
 
         //server.MWLogger.modLog("From " + Username + ":" + toLog);
-        server.campaign.CampaignMain.cm.doSendModMail("NOTE", Username + " made a modlog entry: " + toLog);
-        server.campaign.CampaignMain.cm.toUser("Comment added to modlog: " + toLog, Username, true);
+        CampaignMain.campaignMain.doSendModMail("NOTE", Username + " made a modlog entry: " + toLog);
+        CampaignMain.campaignMain.toUser("Comment added to modlog: " + toLog, Username, true);
     }
 
     public int getExecutionLevel() {return accessLevel;}

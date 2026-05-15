@@ -20,6 +20,8 @@
  */
 package mekwars.server.campaign.commands.admin;
 
+import mekwars.server.campaign.CampaignMain;
+
 public class AdminChangeFactionConfigCommand implements server.campaign.commands.Command {
 
     int accessLevel = server.MWChatServer.auth.IAuthenticator.ADMIN;
@@ -30,13 +32,13 @@ public class AdminChangeFactionConfigCommand implements server.campaign.commands
     public void process(java.util.StringTokenizer command, String Username) {
 
         //access level check
-        int userLevel = server.campaign.CampaignMain.cm.getServer().getUserLevel(Username);
+        int userLevel = CampaignMain.campaignMain.getServer().getUserLevel(Username);
         if (userLevel < getExecutionLevel()) {
-            server.campaign.CampaignMain.cm.toUser("AM:Insufficient access level for command. Level: " +
-                                                         userLevel +
-                                                         ". Required: " +
-                                                         accessLevel +
-                                                         ".", Username, true);
+            CampaignMain.campaignMain.toUser("AM:Insufficient access level for command. Level: " +
+                                                   userLevel +
+                                                   ". Required: " +
+                                                   accessLevel +
+                                                   ".", Username, true);
             return;
         }
 
@@ -45,7 +47,7 @@ public class AdminChangeFactionConfigCommand implements server.campaign.commands
         String config = command.nextToken();
         String arg = command.nextToken();
 
-        server.campaign.SHouse h = server.campaign.CampaignMain.cm.getHouseFromPartialString(house);
+        server.campaign.SHouse h = CampaignMain.campaignMain.getHouseFromPartialString(house);
         //make setting change
         h.getConfig().setProperty(config, arg);
 

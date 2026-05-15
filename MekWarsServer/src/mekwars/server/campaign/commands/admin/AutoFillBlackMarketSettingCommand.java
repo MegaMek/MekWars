@@ -27,6 +27,7 @@ import megamek.common.EquipmentType;
 import megamek.common.Mech;
 import megamek.common.MiscType;
 import megamek.common.TechConstants;
+import mekwars.server.campaign.CampaignMain;
 
 public class AutoFillBlackMarketSettingCommand implements server.campaign.commands.Command {
 
@@ -40,13 +41,13 @@ public class AutoFillBlackMarketSettingCommand implements server.campaign.comman
     public void process(java.util.StringTokenizer command, String Username) {
 
         // access level check
-        int userLevel = server.campaign.CampaignMain.cm.getServer().getUserLevel(Username);
+        int userLevel = CampaignMain.campaignMain.getServer().getUserLevel(Username);
         if (userLevel < getExecutionLevel()) {
-            server.campaign.CampaignMain.cm.toUser("AM:Insufficient access level for command. Level: " +
-                                                         userLevel +
-                                                         ". Required: " +
-                                                         accessLevel +
-                                                         ".", Username, true);
+            CampaignMain.campaignMain.toUser("AM:Insufficient access level for command. Level: " +
+                                                   userLevel +
+                                                   ". Required: " +
+                                                   accessLevel +
+                                                   ".", Username, true);
             return;
         }
 
@@ -57,7 +58,7 @@ public class AutoFillBlackMarketSettingCommand implements server.campaign.comman
         double minCostMod = 1.0;
         double baseCost = 1.0;
 
-        int year = server.campaign.CampaignMain.cm.getIntegerConfig("CampaignYear");
+        int year = CampaignMain.campaignMain.getIntegerConfig("CampaignYear");
 
         Entity ent = UnitUtils.createOMG();
 
@@ -131,7 +132,7 @@ public class AutoFillBlackMarketSettingCommand implements server.campaign.comman
             minCost = baseCost * minCostMod;
             maxCost = baseCost * maxCostMod;
 
-            Equipment bme = server.campaign.CampaignMain.cm.getBlackMarketEquipmentTable().get(key);
+            Equipment bme = CampaignMain.campaignMain.getBlackMarketEquipmentTable().get(key);
 
             if (bme == null) {
                 bme = new Equipment();
@@ -147,7 +148,7 @@ public class AutoFillBlackMarketSettingCommand implements server.campaign.comman
                 bme.setMinProduction(minProduction);
                 bme.setMaxProduction(maxProduction);
             }
-            server.campaign.CampaignMain.cm.getBlackMarketEquipmentTable().put(key, bme);
+            CampaignMain.campaignMain.getBlackMarketEquipmentTable().put(key, bme);
         }
 
         Equipment bme = new Equipment();
@@ -160,7 +161,7 @@ public class AutoFillBlackMarketSettingCommand implements server.campaign.comman
         bme.setMaxCost(maxCost);
         bme.setMinProduction(minProduction);
         bme.setMaxProduction(maxProduction);
-        server.campaign.CampaignMain.cm.getBlackMarketEquipmentTable().put(bme.getEquipmentInternalName(), bme);
+        CampaignMain.campaignMain.getBlackMarketEquipmentTable().put(bme.getEquipmentInternalName(), bme);
 
         bme = new Equipment();
         bme.setEquipmentInternalName("IS (STD)");
@@ -172,7 +173,7 @@ public class AutoFillBlackMarketSettingCommand implements server.campaign.comman
         bme.setMaxCost(maxCost);
         bme.setMinProduction(minProduction);
         bme.setMaxProduction(maxProduction);
-        server.campaign.CampaignMain.cm.getBlackMarketEquipmentTable().put(bme.getEquipmentInternalName(), bme);
+        CampaignMain.campaignMain.getBlackMarketEquipmentTable().put(bme.getEquipmentInternalName(), bme);
 
         bme = new Equipment();
         bme.setEquipmentInternalName(Mech.systemNames[Mech.SYSTEM_LIFE_SUPPORT]);
@@ -183,7 +184,7 @@ public class AutoFillBlackMarketSettingCommand implements server.campaign.comman
         bme.setMaxCost(maxCost);
         bme.setMinProduction(minProduction);
         bme.setMaxProduction(maxProduction);
-        server.campaign.CampaignMain.cm.getBlackMarketEquipmentTable().put(bme.getEquipmentInternalName(), bme);
+        CampaignMain.campaignMain.getBlackMarketEquipmentTable().put(bme.getEquipmentInternalName(), bme);
 
         bme = new Equipment();
         bme.setEquipmentInternalName(Mech.systemNames[Mech.SYSTEM_SENSORS]);
@@ -194,7 +195,7 @@ public class AutoFillBlackMarketSettingCommand implements server.campaign.comman
         bme.setMaxCost(maxCost);
         bme.setMinProduction(minProduction);
         bme.setMaxProduction(maxProduction);
-        server.campaign.CampaignMain.cm.getBlackMarketEquipmentTable().put(bme.getEquipmentInternalName(), bme);
+        CampaignMain.campaignMain.getBlackMarketEquipmentTable().put(bme.getEquipmentInternalName(), bme);
 
         bme = new Equipment();
         bme.setEquipmentInternalName(Mech.getCockpitTypeString(Mech.COCKPIT_TORSO_MOUNTED));
@@ -205,7 +206,7 @@ public class AutoFillBlackMarketSettingCommand implements server.campaign.comman
         bme.setMaxCost(maxCost);
         bme.setMinProduction(minProduction);
         bme.setMaxProduction(maxProduction);
-        server.campaign.CampaignMain.cm.getBlackMarketEquipmentTable().put(bme.getEquipmentInternalName(), bme);
+        CampaignMain.campaignMain.getBlackMarketEquipmentTable().put(bme.getEquipmentInternalName(), bme);
 
         bme = new Equipment();
         bme.setEquipmentInternalName(Mech.getCockpitTypeString(Mech.COCKPIT_COMMAND_CONSOLE));
@@ -216,7 +217,7 @@ public class AutoFillBlackMarketSettingCommand implements server.campaign.comman
         bme.setMaxCost(maxCost);
         bme.setMinProduction(minProduction);
         bme.setMaxProduction(maxProduction);
-        server.campaign.CampaignMain.cm.getBlackMarketEquipmentTable().put(bme.getEquipmentInternalName(), bme);
+        CampaignMain.campaignMain.getBlackMarketEquipmentTable().put(bme.getEquipmentInternalName(), bme);
 
         bme = new Equipment();
         bme.setEquipmentInternalName(Mech.getCockpitTypeString(Mech.COCKPIT_DUAL));
@@ -227,7 +228,7 @@ public class AutoFillBlackMarketSettingCommand implements server.campaign.comman
         bme.setMaxCost(maxCost);
         bme.setMinProduction(minProduction);
         bme.setMaxProduction(maxProduction);
-        server.campaign.CampaignMain.cm.getBlackMarketEquipmentTable().put(bme.getEquipmentInternalName(), bme);
+        CampaignMain.campaignMain.getBlackMarketEquipmentTable().put(bme.getEquipmentInternalName(), bme);
 
         bme = new Equipment();
         bme.setEquipmentInternalName(Mech.getCockpitTypeString(Mech.COCKPIT_STANDARD));
@@ -238,7 +239,7 @@ public class AutoFillBlackMarketSettingCommand implements server.campaign.comman
         bme.setMaxCost(maxCost);
         bme.setMinProduction(minProduction);
         bme.setMaxProduction(maxProduction);
-        server.campaign.CampaignMain.cm.getBlackMarketEquipmentTable().put(bme.getEquipmentInternalName(), bme);
+        CampaignMain.campaignMain.getBlackMarketEquipmentTable().put(bme.getEquipmentInternalName(), bme);
 
         bme = new Equipment();
         bme.setEquipmentInternalName(Mech.getCockpitTypeString(Mech.COCKPIT_SMALL));
@@ -249,7 +250,7 @@ public class AutoFillBlackMarketSettingCommand implements server.campaign.comman
         bme.setMaxCost(maxCost);
         bme.setMinProduction(minProduction);
         bme.setMaxProduction(maxProduction);
-        server.campaign.CampaignMain.cm.getBlackMarketEquipmentTable().put(bme.getEquipmentInternalName(), bme);
+        CampaignMain.campaignMain.getBlackMarketEquipmentTable().put(bme.getEquipmentInternalName(), bme);
 
         bme = new Equipment();
         bme.setEquipmentInternalName(Mech.getCockpitTypeString(Mech.COCKPIT_SMALL));
@@ -260,7 +261,7 @@ public class AutoFillBlackMarketSettingCommand implements server.campaign.comman
         bme.setMaxCost(maxCost);
         bme.setMinProduction(minProduction);
         bme.setMaxProduction(maxProduction);
-        server.campaign.CampaignMain.cm.getBlackMarketEquipmentTable().put(bme.getEquipmentInternalName(), bme);
+        CampaignMain.campaignMain.getBlackMarketEquipmentTable().put(bme.getEquipmentInternalName(), bme);
 
         bme = new Equipment();
         bme.setEquipmentInternalName("Actuator");
@@ -271,7 +272,7 @@ public class AutoFillBlackMarketSettingCommand implements server.campaign.comman
         bme.setMaxCost(maxCost);
         bme.setMinProduction(minProduction);
         bme.setMaxProduction(maxProduction);
-        server.campaign.CampaignMain.cm.getBlackMarketEquipmentTable().put(bme.getEquipmentInternalName(), bme);
+        CampaignMain.campaignMain.getBlackMarketEquipmentTable().put(bme.getEquipmentInternalName(), bme);
 
         bme = new Equipment();
         bme.setEquipmentInternalName(Mech.getGyroTypeString(Mech.GYRO_STANDARD));
@@ -282,7 +283,7 @@ public class AutoFillBlackMarketSettingCommand implements server.campaign.comman
         bme.setMaxCost(maxCost);
         bme.setMinProduction(minProduction);
         bme.setMaxProduction(maxProduction);
-        server.campaign.CampaignMain.cm.getBlackMarketEquipmentTable().put(bme.getEquipmentInternalName(), bme);
+        CampaignMain.campaignMain.getBlackMarketEquipmentTable().put(bme.getEquipmentInternalName(), bme);
 
         bme = new Equipment();
         bme.setEquipmentInternalName(Mech.getGyroTypeString(Mech.GYRO_HEAVY_DUTY));
@@ -293,7 +294,7 @@ public class AutoFillBlackMarketSettingCommand implements server.campaign.comman
         bme.setMaxCost(maxCost);
         bme.setMinProduction(minProduction);
         bme.setMaxProduction(maxProduction);
-        server.campaign.CampaignMain.cm.getBlackMarketEquipmentTable().put(bme.getEquipmentInternalName(), bme);
+        CampaignMain.campaignMain.getBlackMarketEquipmentTable().put(bme.getEquipmentInternalName(), bme);
 
         bme = new Equipment();
         bme.setEquipmentInternalName(Mech.getGyroTypeString(Mech.GYRO_XL));
@@ -304,7 +305,7 @@ public class AutoFillBlackMarketSettingCommand implements server.campaign.comman
         bme.setMaxCost(maxCost);
         bme.setMinProduction(minProduction);
         bme.setMaxProduction(maxProduction);
-        server.campaign.CampaignMain.cm.getBlackMarketEquipmentTable().put(bme.getEquipmentInternalName(), bme);
+        CampaignMain.campaignMain.getBlackMarketEquipmentTable().put(bme.getEquipmentInternalName(), bme);
 
         bme = new Equipment();
         bme.setEquipmentInternalName(Mech.getGyroTypeString(Mech.GYRO_COMPACT));
@@ -315,7 +316,7 @@ public class AutoFillBlackMarketSettingCommand implements server.campaign.comman
         bme.setMaxCost(maxCost);
         bme.setMinProduction(minProduction);
         bme.setMaxProduction(maxProduction);
-        server.campaign.CampaignMain.cm.getBlackMarketEquipmentTable().put(bme.getEquipmentInternalName(), bme);
+        CampaignMain.campaignMain.getBlackMarketEquipmentTable().put(bme.getEquipmentInternalName(), bme);
 
         bme = new Equipment();
         bme.setEquipmentInternalName(UnitUtils.ENGINE_TECH_STRING[UnitUtils.STANDARD_ENGINE]);
@@ -326,7 +327,7 @@ public class AutoFillBlackMarketSettingCommand implements server.campaign.comman
         bme.setMaxCost(maxCost);
         bme.setMinProduction(minProduction);
         bme.setMaxProduction(maxProduction);
-        server.campaign.CampaignMain.cm.getBlackMarketEquipmentTable().put(bme.getEquipmentInternalName(), bme);
+        CampaignMain.campaignMain.getBlackMarketEquipmentTable().put(bme.getEquipmentInternalName(), bme);
 
         bme = new Equipment();
         bme.setEquipmentInternalName(UnitUtils.ENGINE_TECH_STRING[UnitUtils.IS_LIGHT_ENGINE]);
@@ -337,7 +338,7 @@ public class AutoFillBlackMarketSettingCommand implements server.campaign.comman
         bme.setMaxCost(maxCost);
         bme.setMinProduction(minProduction);
         bme.setMaxProduction(maxProduction);
-        server.campaign.CampaignMain.cm.getBlackMarketEquipmentTable().put(bme.getEquipmentInternalName(), bme);
+        CampaignMain.campaignMain.getBlackMarketEquipmentTable().put(bme.getEquipmentInternalName(), bme);
 
         bme = new Equipment();
         bme.setEquipmentInternalName(UnitUtils.ENGINE_TECH_STRING[UnitUtils.IS_XL_ENGINE]);
@@ -348,7 +349,7 @@ public class AutoFillBlackMarketSettingCommand implements server.campaign.comman
         bme.setMaxCost(maxCost);
         bme.setMinProduction(minProduction);
         bme.setMaxProduction(maxProduction);
-        server.campaign.CampaignMain.cm.getBlackMarketEquipmentTable().put(bme.getEquipmentInternalName(), bme);
+        CampaignMain.campaignMain.getBlackMarketEquipmentTable().put(bme.getEquipmentInternalName(), bme);
 
         bme = new Equipment();
         bme.setEquipmentInternalName(UnitUtils.ENGINE_TECH_STRING[UnitUtils.IS_XXL_ENGINE]);
@@ -359,7 +360,7 @@ public class AutoFillBlackMarketSettingCommand implements server.campaign.comman
         bme.setMaxCost(maxCost);
         bme.setMinProduction(minProduction);
         bme.setMaxProduction(maxProduction);
-        server.campaign.CampaignMain.cm.getBlackMarketEquipmentTable().put(bme.getEquipmentInternalName(), bme);
+        CampaignMain.campaignMain.getBlackMarketEquipmentTable().put(bme.getEquipmentInternalName(), bme);
 
         bme = new Equipment();
         bme.setEquipmentInternalName(UnitUtils.ENGINE_TECH_STRING[UnitUtils.CLAN_XL_ENGINE]);
@@ -370,7 +371,7 @@ public class AutoFillBlackMarketSettingCommand implements server.campaign.comman
         bme.setMaxCost(maxCost);
         bme.setMinProduction(minProduction);
         bme.setMaxProduction(maxProduction);
-        server.campaign.CampaignMain.cm.getBlackMarketEquipmentTable().put(bme.getEquipmentInternalName(), bme);
+        CampaignMain.campaignMain.getBlackMarketEquipmentTable().put(bme.getEquipmentInternalName(), bme);
 
         bme = new Equipment();
         bme.setEquipmentInternalName(UnitUtils.ENGINE_TECH_STRING[UnitUtils.CLAN_XXL_ENGINE]);
@@ -381,7 +382,7 @@ public class AutoFillBlackMarketSettingCommand implements server.campaign.comman
         bme.setMaxCost(maxCost);
         bme.setMinProduction(minProduction);
         bme.setMaxProduction(maxProduction);
-        server.campaign.CampaignMain.cm.getBlackMarketEquipmentTable().put(bme.getEquipmentInternalName(), bme);
+        CampaignMain.campaignMain.getBlackMarketEquipmentTable().put(bme.getEquipmentInternalName(), bme);
 
         bme = new Equipment();
         bme.setEquipmentInternalName("ISTargeting Computer");
@@ -392,7 +393,7 @@ public class AutoFillBlackMarketSettingCommand implements server.campaign.comman
         bme.setMaxCost(maxCost);
         bme.setMinProduction(minProduction);
         bme.setMaxProduction(maxProduction);
-        server.campaign.CampaignMain.cm.getBlackMarketEquipmentTable().put(bme.getEquipmentInternalName(), bme);
+        CampaignMain.campaignMain.getBlackMarketEquipmentTable().put(bme.getEquipmentInternalName(), bme);
 
         bme = new Equipment();
         bme.setEquipmentInternalName("CLTargeting Computer");
@@ -403,9 +404,9 @@ public class AutoFillBlackMarketSettingCommand implements server.campaign.comman
         bme.setMaxCost(maxCost);
         bme.setMinProduction(minProduction);
         bme.setMaxProduction(maxProduction);
-        server.campaign.CampaignMain.cm.getBlackMarketEquipmentTable().put(bme.getEquipmentInternalName(), bme);
+        CampaignMain.campaignMain.getBlackMarketEquipmentTable().put(bme.getEquipmentInternalName(), bme);
 
-        server.campaign.CampaignMain.cm.toUser("AM:Done setting equipment costs for the black market.", Username);
+        CampaignMain.campaignMain.toUser("AM:Done setting equipment costs for the black market.", Username);
     }// end process
 
     public int getExecutionLevel() {

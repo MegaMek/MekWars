@@ -25,6 +25,7 @@ import common.Unit;
 import common.campaign.pilot.Pilot;
 import common.campaign.pilot.skills.PilotSkill;
 import megamek.common.Entity;
+import mekwars.server.campaign.CampaignMain;
 
 //import common.Unit;
 
@@ -69,16 +70,16 @@ public class EdgeSkill extends SPilotSkill {
 
         if (p.getSkills().has(PilotSkill.EdgeSkillID) &&
                   (p.getSkills().getPilotSkill(PilotSkill.EdgeSkillID).getLevel() >
-                         server.campaign.CampaignMain.cm.getIntegerConfig("MaxEdgeChanges"))) {
+                         CampaignMain.campaignMain.getIntegerConfig("MaxEdgeChanges"))) {
             return 0;
         }
 
         String chance = "chancefor" + getAbbreviation() + "for" + Unit.getTypeClassDesc(unitType);
 
-        server.campaign.SHouse house = server.campaign.CampaignMain.cm.getHouseFromPartialString(p.getCurrentFaction());
+        server.campaign.SHouse house = CampaignMain.campaignMain.getHouseFromPartialString(p.getCurrentFaction());
 
         if (house == null) {
-            return server.campaign.CampaignMain.cm.getIntegerConfig(chance);
+            return CampaignMain.campaignMain.getIntegerConfig(chance);
         }
 
         return house.getIntegerConfig(chance);
@@ -86,17 +87,17 @@ public class EdgeSkill extends SPilotSkill {
 
     @Override
     public int getBVMod(Entity unit) {
-        return server.campaign.CampaignMain.cm.getIntegerConfig("EdgeBaseBVMod");
+        return CampaignMain.campaignMain.getIntegerConfig("EdgeBaseBVMod");
     }
 
     @Override
     public int getBVMod(Entity unit, server.campaign.pilot.SPilot p) {
-        server.campaign.SHouse house = server.campaign.CampaignMain.cm.getHouseFromPartialString(p.getCurrentFaction());
+        server.campaign.SHouse house = CampaignMain.campaignMain.getHouseFromPartialString(p.getCurrentFaction());
 
         if (house != null) {
             return house.getIntegerConfig("EdgeBaseBVMod");
         }
-        return server.campaign.CampaignMain.cm.getIntegerConfig("EdgeBaseBVMod");
+        return CampaignMain.campaignMain.getIntegerConfig("EdgeBaseBVMod");
     }
 
     /**

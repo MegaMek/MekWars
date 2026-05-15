@@ -2,6 +2,7 @@ package mekwars.server.campaign.commands.mod;
 
 import common.CampaignData;
 import common.House;
+import mekwars.server.campaign.CampaignMain;
 
 
 public class AnnounceCommand implements server.campaign.commands.Command {
@@ -11,9 +12,9 @@ public class AnnounceCommand implements server.campaign.commands.Command {
     @Override
     public void process(java.util.StringTokenizer command, String Username) {
         if (accessLevel != 0) {
-            int userLevel = server.campaign.CampaignMain.cm.getServer().getUserLevel(Username);
+            int userLevel = CampaignMain.campaignMain.getServer().getUserLevel(Username);
             if (userLevel < getExecutionLevel()) {
-                server.campaign.CampaignMain.cm.toUser(
+                CampaignMain.campaignMain.toUser(
                       "AM:Insufficient access level for command. Level: "
                             + userLevel + ". Required: " + accessLevel
                             + ".", Username, true);
@@ -21,7 +22,7 @@ public class AnnounceCommand implements server.campaign.commands.Command {
             }
         }
         if (!command.hasMoreTokens()) {
-            server.campaign.CampaignMain.cm.toUser("Invalid Sytax: <br>" + getSyntax(), Username, true);
+            CampaignMain.campaignMain.toUser("Invalid Sytax: <br>" + getSyntax(), Username, true);
             return;
         }
 
@@ -34,10 +35,10 @@ public class AnnounceCommand implements server.campaign.commands.Command {
                 announcement = command.nextToken();
                 while (command.hasMoreTokens()) {announcement += "#" + command.nextToken();}
             } catch (Exception e) {
-                server.campaign.CampaignMain.cm.toUser("AM:nvalid Syntax: <br> " + getSyntax(), Username, true);
+                CampaignMain.campaignMain.toUser("AM:nvalid Syntax: <br> " + getSyntax(), Username, true);
                 return;
             }
-            server.campaign.SPlayer p = server.campaign.CampaignMain.cm.getPlayer(Username);
+            server.campaign.SPlayer p = CampaignMain.campaignMain.getPlayer(Username);
             if (announcement.trim().equals("") || announcement.trim().equalsIgnoreCase("clear")) {
                 announcement = "";
             }
@@ -45,14 +46,14 @@ public class AnnounceCommand implements server.campaign.commands.Command {
                 server.campaign.SHouse house = (server.campaign.SHouse) h;
                 house.setAnnouncement(announcement);
             }
-            server.campaign.CampaignMain.cm.toUser("Announcement set for all factions.", Username, true);
+            CampaignMain.campaignMain.toUser("Announcement set for all factions.", Username, true);
 
         } else {
             // Set for a single faction
-            server.campaign.SHouse h = (server.campaign.SHouse) server.campaign.CampaignMain.cm.getData()
+            server.campaign.SHouse h = (server.campaign.SHouse) CampaignMain.campaignMain.getData()
                                                                       .getHouseByName(scope);
             if (h == null) {
-                server.campaign.CampaignMain.cm.toUser("Invalid Syntax: <br> " + getSyntax(), Username, true);
+                CampaignMain.campaignMain.toUser("Invalid Syntax: <br> " + getSyntax(), Username, true);
             }
             String announcement = "";
             try {
@@ -60,17 +61,17 @@ public class AnnounceCommand implements server.campaign.commands.Command {
                 announcement = command.nextToken();
                 while (command.hasMoreTokens()) {announcement += "#" + command.nextToken();}
             } catch (Exception e) {
-                server.campaign.CampaignMain.cm.toUser("AM:nvalid Syntax: <br> " + getSyntax(), Username, true);
+                CampaignMain.campaignMain.toUser("AM:nvalid Syntax: <br> " + getSyntax(), Username, true);
                 return;
             }
-            server.campaign.SPlayer p = server.campaign.CampaignMain.cm.getPlayer(Username);
+            server.campaign.SPlayer p = CampaignMain.campaignMain.getPlayer(Username);
             if (announcement.trim().equals("") || announcement.trim().equalsIgnoreCase("clear")) {
                 p.getMyHouse().setAnnouncement("");
-                server.campaign.CampaignMain.cm.toUser("AM:" + scope + " announcement cleared.", Username, true);
+                CampaignMain.campaignMain.toUser("AM:" + scope + " announcement cleared.", Username, true);
                 return;
             }
             p.getMyHouse().setAnnouncement(announcement + "<p> -- Set by " + p.getName());
-            server.campaign.CampaignMain.cm.toUser("AM:MOTD set. Use /c motd to review.", Username, true);
+            CampaignMain.campaignMain.toUser("AM:MOTD set. Use /c motd to review.", Username, true);
         }
     }
 

@@ -51,7 +51,7 @@ import mekwars.common.campaign.pilot.skills.PilotSkills;
 
 public class Pilot {
 
-    private final LinkedList<MegaMekPilotOption> megamekOptions = new LinkedList<>();
+    private final LinkedList<MegaMekPilotOption> megaMekOptions = new LinkedList<>();
     /**
      * List of skills this pilot has obtained.
      */
@@ -224,7 +224,7 @@ public class Pilot {
     }
 
     public void addMegaMekOption(MegaMekPilotOption op) {
-        megamekOptions.add(op);
+        megaMekOptions.add(op);
     }
 
     /**
@@ -259,7 +259,7 @@ public class Pilot {
      * @return Returns the megamekOptions.
      */
     public LinkedList<MegaMekPilotOption> getMegaMekOptions() {
-        return megamekOptions;
+        return megaMekOptions;
     }
 
     public void addKill(int kill) {

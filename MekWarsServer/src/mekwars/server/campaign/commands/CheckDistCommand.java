@@ -16,6 +16,8 @@
 
 package mekwars.server.campaign.commands;
 
+import mekwars.server.campaign.CampaignMain;
+
 public class CheckDistCommand implements Command {
 
     int accessLevel = 0;
@@ -24,29 +26,29 @@ public class CheckDistCommand implements Command {
     public void process(java.util.StringTokenizer command, String Username) {
 
         if (accessLevel != 0) {
-            int userLevel = server.campaign.CampaignMain.cm.getServer().getUserLevel(Username);
+            int userLevel = CampaignMain.campaignMain.getServer().getUserLevel(Username);
             if (userLevel < getExecutionLevel()) {
-                server.campaign.CampaignMain.cm.toUser("AM:Insufficient access level for command. Level: " +
-                                                             userLevel +
-                                                             ". Required: " +
-                                                             accessLevel +
-                                                             ".", Username, true);
+                CampaignMain.campaignMain.toUser("AM:Insufficient access level for command. Level: " +
+                                                       userLevel +
+                                                       ". Required: " +
+                                                       accessLevel +
+                                                       ".", Username, true);
                 return;
             }
         }
 
         if (command.hasMoreElements()) {
-            server.campaign.SPlayer player = server.campaign.CampaignMain.cm.getPlayer(Username);
-            server.campaign.SPlanet p = (server.campaign.SPlanet) server.campaign.CampaignMain.cm.getData()
+            server.campaign.SPlayer player = CampaignMain.campaignMain.getPlayer(Username);
+            server.campaign.SPlanet p = (server.campaign.SPlanet) CampaignMain.campaignMain.getData()
                                                                         .getPlanetByName(command.nextToken());
             if (p != null) {
-                server.campaign.CampaignMain.cm.toUser("SM|Distance to " +
-                                                             p.getName() +
-                                                             " is " +
-                                                             player.getMyHouse()
-                                                                   .getDistanceTo(p,
-                                                                         server.campaign.CampaignMain.cm.getPlayer(
-                                                                               Username)), Username, false);
+                CampaignMain.campaignMain.toUser("SM|Distance to " +
+                                                       p.getName() +
+                                                       " is " +
+                                                       player.getMyHouse()
+                                                             .getDistanceTo(p,
+                                                                   CampaignMain.campaignMain.getPlayer(
+                                                                         Username)), Username, false);
             }
         }
     }//end process()

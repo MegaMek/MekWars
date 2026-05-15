@@ -25,6 +25,7 @@ import common.util.MWLogger;
 import gd.xml.ParseException;
 import gd.xml.XMLParser;
 import gd.xml.XMLResponder;
+import mekwars.server.campaign.CampaignMain;
 
 public class XMLPlanetDataParser implements XMLResponder {
     public java.util.TreeMap<Integer, AdvancedTerrain> AdvTerrTreeMap = new java.util.TreeMap<Integer, AdvancedTerrain>();
@@ -78,11 +79,11 @@ public class XMLPlanetDataParser implements XMLResponder {
     int terrainProb = 0;
     String terrainName = "";
     String advTerrainName = "";
-    String OriginalOwner = server.campaign.CampaignMain.cm.getConfig("NewbieHouseName");
+    String OriginalOwner = CampaignMain.campaignMain.getConfig("NewbieHouseName");
     String OpFlag = "";
     String OpName = "";
     boolean isHomeWorld = false;
-    boolean singlePlayerFactions = server.campaign.CampaignMain.cm.getBooleanConfig("AllowSinglePlayerFactions");
+    boolean singlePlayerFactions = CampaignMain.campaignMain.getBooleanConfig("AllowSinglePlayerFactions");
     private String filename;
     private String prefix;
     private String Description = "";
@@ -242,20 +243,20 @@ public class XMLPlanetDataParser implements XMLResponder {
                                    "% " +
                                    terrainName +
                                    "[" +
-                                   server.campaign.CampaignMain.cm.getData().getTerrainByName(terrainName).getId() +
+                                   CampaignMain.campaignMain.getData().getTerrainByName(terrainName).getId() +
                                    "]"
                                    +
                                    "(" +
                                    advTerrainName +
                                    "[" +
-                                   server.campaign.CampaignMain.cm.getData()
+                                   CampaignMain.campaignMain.getData()
                                          .getAdvancedTerrainByName(advTerrainName)
                                          .getId() +
                                    "])");
 
             Continent cont = new Continent(terrainProb,
-                  server.campaign.CampaignMain.cm.getData().getTerrainByName(terrainName),
-                  server.campaign.CampaignMain.cm.getData().getAdvancedTerrainByName(advTerrainName));
+                  CampaignMain.campaignMain.getData().getTerrainByName(terrainName),
+                  CampaignMain.campaignMain.getData().getAdvancedTerrainByName(advTerrainName));
             PlanEnv.add(cont);
             terrainProb = 0;
             terrainName = "";
@@ -299,7 +300,7 @@ public class XMLPlanetDataParser implements XMLResponder {
              * p.getAdvancedTerrain().put(id,AdvTerrTreeMap.get(id)); }
              */
             if (singlePlayerFactions &&
-                      !OriginalOwner.equalsIgnoreCase(server.campaign.CampaignMain.cm.getConfig("NewbieHouseName"))) {
+                      !OriginalOwner.equalsIgnoreCase(CampaignMain.campaignMain.getConfig("NewbieHouseName"))) {
                 p.setOriginalOwner("None");
             } else {
                 p.setOriginalOwner(OriginalOwner);
@@ -348,7 +349,7 @@ public class XMLPlanetDataParser implements XMLResponder {
             moderateWindsChance = 0;
             highWindsChance = 0;
 
-            OriginalOwner = server.campaign.CampaignMain.cm.getConfig("NewbieHouseName");
+            OriginalOwner = CampaignMain.campaignMain.getConfig("NewbieHouseName");
             AdvTerr = null;
             AdvTerrTreeMap.clear();
 
@@ -384,11 +385,11 @@ public class XMLPlanetDataParser implements XMLResponder {
         } else if (lastElement.equalsIgnoreCase("FACTION")) {
             lastInfFaction = charData;
             if (singlePlayerFactions &&
-                      !lastInfFaction.equalsIgnoreCase(server.campaign.CampaignMain.cm.getConfig("NewbieHouseName"))) {
+                      !lastInfFaction.equalsIgnoreCase(CampaignMain.campaignMain.getConfig("NewbieHouseName"))) {
                 lastInfFaction = "None";
             }
         } else if (lastElement.equalsIgnoreCase("AMOUNT")) {
-            server.campaign.SHouse h = server.campaign.CampaignMain.cm.getHouseFromPartialString(lastInfFaction, null);
+            server.campaign.SHouse h = CampaignMain.campaignMain.getHouseFromPartialString(lastInfFaction, null);
             if (h != null) {
                 Influence.put(h.getId(), Integer.parseInt(charData));
                 MWLogger.mainLog("Parsed: " + h.toString() + " - " + charData);

@@ -16,6 +16,8 @@
 
 package mekwars.server.campaign.commands.admin;
 
+import mekwars.server.campaign.CampaignMain;
+
 /**
  * A command to create a unit
  * <p>
@@ -33,17 +35,17 @@ public class CreateUnitCommand implements server.campaign.commands.Command {
     public void process(java.util.StringTokenizer command, String Username) {
 
         //access level check
-        int userLevel = server.campaign.CampaignMain.cm.getServer().getUserLevel(Username);
+        int userLevel = CampaignMain.campaignMain.getServer().getUserLevel(Username);
         if (userLevel < getExecutionLevel()) {
-            server.campaign.CampaignMain.cm.toUser("AM:Insufficient access level for command. Level: " +
-                                                         userLevel +
-                                                         ". Required: " +
-                                                         accessLevel +
-                                                         ".", Username, true);
+            CampaignMain.campaignMain.toUser("AM:Insufficient access level for command. Level: " +
+                                                   userLevel +
+                                                   ". Required: " +
+                                                   accessLevel +
+                                                   ".", Username, true);
             return;
         }
 
-        server.campaign.SPlayer p = server.campaign.CampaignMain.cm.getPlayer(Username);
+        server.campaign.SPlayer p = CampaignMain.campaignMain.getPlayer(Username);
         String filename;
         String FlavorText;
         String gunnery;
@@ -56,7 +58,7 @@ public class CreateUnitCommand implements server.campaign.commands.Command {
             gunnery = command.nextToken();
             piloting = command.nextToken();
         } catch (Exception ex) {
-            server.campaign.CampaignMain.cm.toUser(syntax, Username);
+            CampaignMain.campaignMain.toUser(syntax, Username);
             return;
         }
 
@@ -75,20 +77,20 @@ public class CreateUnitCommand implements server.campaign.commands.Command {
               weight,
               skillTokens);
         p.addUnit(cm, true);
-        server.campaign.CampaignMain.cm.toUser("Unit created: " +
-                                                     filename +
-                                                     " " +
-                                                     FlavorText +
-                                                     " " +
-                                                     gunnery +
-                                                     " " +
-                                                     piloting +
-                                                     " " +
-                                                     cm.getPilot().getSkillString(true) +
-                                                     ". ID #" +
-                                                     cm.getId(), Username, true);
+        CampaignMain.campaignMain.toUser("Unit created: " +
+                                               filename +
+                                               " " +
+                                               FlavorText +
+                                               " " +
+                                               gunnery +
+                                               " " +
+                                               piloting +
+                                               " " +
+                                               cm.getPilot().getSkillString(true) +
+                                               ". ID #" +
+                                               cm.getId(), Username, true);
         //server.MWLogger.modLog(Username + " created a unit: " + filename + " " + FlavorText + " " + gunnery + " " + piloting+" "+pilot.getSkillString(true));
-        server.campaign.CampaignMain.cm.doSendModMail("NOTE",
+        CampaignMain.campaignMain.doSendModMail("NOTE",
               Username +
                     " created a unit: " +
                     filename +

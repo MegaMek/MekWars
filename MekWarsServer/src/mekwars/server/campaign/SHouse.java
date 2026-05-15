@@ -16,27 +16,32 @@
 
 package mekwars.server.campaign;
 
-import common.BMEquipment;
-import common.Planet;
-import common.SubFaction;
-import common.Unit;
-import common.util.ComponentToCritsConverter;
-import common.util.MWLogger;
-import common.util.StringUtils;
-import common.util.TokenReader;
-import common.util.UnitComponents;
-import common.util.UnitUtils;
-import megamek.common.Entity;
+import java.io.Serial;
+import java.io.Serializable;
+import java.util.Hashtable;
+import java.util.Properties;
+import java.util.Vector;
+import java.util.concurrent.ConcurrentHashMap;
+
 import megamek.common.TechConstants;
-import org.mekwars.libpk.logging.PKLogManager;
-import server.campaign.commands.Command;
-import server.campaign.data.TimeUpdateHouse;
-import server.campaign.market2.IBuyer;
-import server.campaign.market2.ISeller;
-import server.campaign.mercenaries.ContractInfo;
-import server.campaign.mercenaries.MercHouse;
-import server.campaign.pilot.SPilot;
-import server.campaign.util.SerializedMessage;
+import megamek.common.units.Entity;
+import mekwars.common.BMEquipment;
+import mekwars.common.Planet;
+import mekwars.common.SubFaction;
+import mekwars.common.Unit;
+import mekwars.common.util.ComponentToCritsConverter;
+import mekwars.common.util.StringUtils;
+import mekwars.common.util.TokenReader;
+import mekwars.common.util.UnitComponents;
+import mekwars.common.util.UnitUtils;
+import mekwars.server.campaign.commands.Command;
+import mekwars.server.campaign.data.TimeUpdateHouse;
+import mekwars.server.campaign.market.IBuyer;
+import mekwars.server.campaign.market.ISeller;
+import mekwars.server.campaign.mercenaries.ContractInfo;
+import mekwars.server.campaign.mercenaries.MercHouse;
+import mekwars.server.campaign.pilot.SPilot;
+import mekwars.server.campaign.util.SerializedMessage;
 
 /**
  * A class holding a server-side representation of a House
@@ -51,43 +56,36 @@ import server.campaign.util.SerializedMessage;
  *       a Quartz task
  *
  */
-public class SHouse extends TimeUpdateHouse implements Comparable<Object>, ISeller, IBuyer, java.io.Serializable {
+public class SHouse extends TimeUpdateHouse implements Comparable<SHouse>, ISeller, IBuyer, Serializable {
 
+    @Serial
     private static final long serialVersionUID = -1558672678021355218L;
+    private final ConcurrentHashMap<String, SPlanet> Planets = new ConcurrentHashMap<>();
+    private final ConcurrentHashMap<Integer, Vector<Vector<SUnit>>> Hangar = new ConcurrentHashMap<>();
+    private final Hashtable<Integer, Vector<Integer>> Components = new Hashtable<>();
+    private final Hashtable<Integer, Integer> unitComponents = new Hashtable<>();
+    private final Vector<String> leaders = new java.util.Vector<>(1, 1);
+    private final UnitComponents unitParts = new UnitComponents();
+    private final Hashtable<String, ComponentToCritsConverter> componentConverter = new Hashtable<>();
+    private final int[][] unitLimits = new int[6][4];
+    private final boolean[][] bmLimits = new boolean[6][4];
+
     // store all online players in *THREE* hashes, one for each primary status
-    private java.util.concurrent.ConcurrentHashMap<String, SPlayer> reservePlayers = new java.util.concurrent.ConcurrentHashMap<String, SPlayer>();
-    private java.util.concurrent.ConcurrentHashMap<String, SPlayer> activePlayers = new java.util.concurrent.ConcurrentHashMap<String, SPlayer>();
-    private java.util.concurrent.ConcurrentHashMap<String, SPlayer> fightingPlayers = new java.util.concurrent.ConcurrentHashMap<String, SPlayer>();
-
-    private java.util.concurrent.ConcurrentHashMap<String, SPlanet> Planets = new java.util.concurrent.ConcurrentHashMap<String, SPlanet>();
-    private java.util.concurrent.ConcurrentHashMap<Integer, java.util.Vector<java.util.Vector<mekwars.server.campaign.SUnit>>> Hangar = new java.util.concurrent.ConcurrentHashMap<Integer, java.util.Vector<java.util.Vector<mekwars.server.campaign.SUnit>>>();
-
-    private java.util.Hashtable<String, SmallPlayer> SmallPlayers = new java.util.Hashtable<String, SmallPlayer>();
-    private java.util.Hashtable<Integer, java.util.Vector<Integer>> Components = new java.util.Hashtable<Integer, java.util.Vector<Integer>>();
-    private java.util.Hashtable<Integer, Integer> unitComponents = new java.util.Hashtable<Integer, Integer>();
-
+    private ConcurrentHashMap<String, SPlayer> reservePlayers = new ConcurrentHashMap<>();
+    private ConcurrentHashMap<String, SPlayer> activePlayers = new ConcurrentHashMap<>();
+    private ConcurrentHashMap<String, SPlayer> fightingPlayers = new ConcurrentHashMap<>();
+    private Hashtable<String, SmallPlayer> SmallPlayers = new Hashtable<>();
     private int Money;
     private int BaysProvided = 0;
     private int ComponentProduction = 0;
     private int showProductionCountNext = 0;
     private int initialHouseRanking = 0;
-
-    private String motd = "";
+    private String messageOfTheDay = "";
     private String announcement = "";
-
     private PilotQueues pilotQueues = new PilotQueues(getBaseGunnerVect(), getBasePilotVect(), getBasePilotSkillVect());
-
     private boolean inHouseAttacks = false;
-    private java.util.Properties config = new java.util.Properties();
-
-    private java.util.Vector<String> leaders = new java.util.Vector<String>(1, 1);
+    private Properties config = new Properties();
     private int techResearchPoints = 0;
-    private UnitComponents unitParts = new UnitComponents();
-    private java.util.Hashtable<String, ComponentToCritsConverter> componentConverter = new java.util.Hashtable<String, ComponentToCritsConverter>();
-
-    private int[][] unitLimits = new int[6][4];
-    private boolean[][] bmLimits = new boolean[6][4];
-
     private double activityPP = 0.0;
 
     public SHouse(int id) {
@@ -99,11 +97,11 @@ public class SHouse extends TimeUpdateHouse implements Comparable<Object>, ISell
      * Constructor used for serialization
      */
     public SHouse() {
-        reservePlayers = new java.util.concurrent.ConcurrentHashMap<String, SPlayer>();
-        activePlayers = new java.util.concurrent.ConcurrentHashMap<String, SPlayer>();
-        fightingPlayers = new java.util.concurrent.ConcurrentHashMap<String, SPlayer>();
-        SmallPlayers = new java.util.Hashtable<String, SmallPlayer>();
-        for (int pos = 0; pos < Unit.MAXBUILD; pos++) {
+        reservePlayers = new ConcurrentHashMap<>();
+        activePlayers = new ConcurrentHashMap<>();
+        fightingPlayers = new ConcurrentHashMap<>();
+        SmallPlayers = new Hashtable<>();
+        for (int pos = 0; pos < Unit.MAX_BUILD; pos++) {
             setBaseGunner(4, pos);
             setBasePilot(5, pos);
         }
@@ -212,7 +210,8 @@ public class SHouse extends TimeUpdateHouse implements Comparable<Object>, ISell
                     if (newbieHouse) {
                         int priceForUnit = getPriceForUnit(m.getWeightclass(), m.getType());
                         int rareSalesTime = Integer.parseInt(this.getConfig("RareMinSaleTime"));
-                        CampaignMain.cm.getMarket().addListing("Faction_" + getName(), m, priceForUnit, rareSalesTime);
+                        CampaignMain.campaignMain.getMarket()
+                              .addListing("Faction_" + getName(), m, priceForUnit, rareSalesTime);
                         m.setStatus(Unit.STATUS_FORSALE);
                     }
                     addUnit(m, false);
@@ -232,7 +231,8 @@ public class SHouse extends TimeUpdateHouse implements Comparable<Object>, ISell
                     if (newbieHouse) {
                         int priceForUnit = getPriceForUnit(m.getWeightclass(), m.getType());
                         int rareSalesTime = Integer.parseInt(this.getConfig("RareMinSaleTime"));
-                        CampaignMain.cm.getMarket().addListing("Faction_" + getName(), m, priceForUnit, rareSalesTime);
+                        CampaignMain.campaignMain.getMarket()
+                              .addListing("Faction_" + getName(), m, priceForUnit, rareSalesTime);
                         m.setStatus(Unit.STATUS_FORSALE);
                     }
                     addUnit(m, false);
@@ -252,7 +252,7 @@ public class SHouse extends TimeUpdateHouse implements Comparable<Object>, ISell
                         if (newbieHouse) {
                             int priceForUnit = getPriceForUnit(m.getWeightclass(), m.getType());
                             int rareSalesTime = Integer.parseInt(this.getConfig("RareMinSaleTime"));
-                            CampaignMain.cm.getMarket()
+                            CampaignMain.campaignMain.getMarket()
                                   .addListing("Faction_" + getName(), m, priceForUnit, rareSalesTime);
                             m.setStatus(Unit.STATUS_FORSALE);
                         }
@@ -373,7 +373,8 @@ public class SHouse extends TimeUpdateHouse implements Comparable<Object>, ISell
                     if (newbieHouse) {
                         int priceForUnit = getPriceForUnit(m.getWeightclass(), m.getType());
                         int rareSalesTime = Integer.parseInt(this.getConfig("RareMinSaleTime"));
-                        CampaignMain.cm.getMarket().addListing("Faction_" + getName(), m, priceForUnit, rareSalesTime);
+                        CampaignMain.campaignMain.getMarket()
+                              .addListing("Faction_" + getName(), m, priceForUnit, rareSalesTime);
                         m.setStatus(Unit.STATUS_FORSALE);
                     }
                     addUnit(m, false);
@@ -393,7 +394,8 @@ public class SHouse extends TimeUpdateHouse implements Comparable<Object>, ISell
                     if (newbieHouse) {
                         int priceForUnit = getPriceForUnit(m.getWeightclass(), m.getType());
                         int rareSalesTime = Integer.parseInt(this.getConfig("RareMinSaleTime"));
-                        CampaignMain.cm.getMarket().addListing("Faction_" + getName(), m, priceForUnit, rareSalesTime);
+                        CampaignMain.campaignMain.getMarket()
+                              .addListing("Faction_" + getName(), m, priceForUnit, rareSalesTime);
                         m.setStatus(Unit.STATUS_FORSALE);
                     }
                     addUnit(m, false);
@@ -417,7 +419,7 @@ public class SHouse extends TimeUpdateHouse implements Comparable<Object>, ISell
                 getPilotQueues().loadPilot(Unit.PROTOMEK, p);
             }
 
-            setMotd(TokenReader.readString(ST));
+            setMessageOfTheDay(TokenReader.readString(ST));
 
             setHouseDefectionTo(TokenReader.readBoolean(ST));
 
@@ -464,7 +466,7 @@ public class SHouse extends TimeUpdateHouse implements Comparable<Object>, ISell
 
             techResearchPoints = TokenReader.readInt(ST);
 
-            if (CampaignMain.cm.getBooleanConfig("UsePartsRepair")) {
+            if (CampaignMain.campaignMain.getBooleanConfig("UsePartsRepair")) {
                 unitParts.fromString(TokenReader.readString(ST), "#");
             } else {
                 TokenReader.readString(ST);
@@ -491,7 +493,8 @@ public class SHouse extends TimeUpdateHouse implements Comparable<Object>, ISell
                     if (newbieHouse) {
                         int priceForUnit = getPriceForUnit(m.getWeightclass(), m.getType());
                         int rareSalesTime = Integer.parseInt(this.getConfig("RareMinSaleTime"));
-                        CampaignMain.cm.getMarket().addListing("Faction_" + getName(), m, priceForUnit, rareSalesTime);
+                        CampaignMain.campaignMain.getMarket()
+                              .addListing("Faction_" + getName(), m, priceForUnit, rareSalesTime);
                         m.setStatus(Unit.STATUS_FORSALE);
                     }
                     addUnit(m, false);
@@ -507,7 +510,7 @@ public class SHouse extends TimeUpdateHouse implements Comparable<Object>, ISell
                 getPilotQueues().loadPilot(Unit.AERO, p);
             }
 
-            if (getComponentConverter().size() < 1 && CampaignMain.cm.getBooleanConfig("UsePartsRepair")) {
+            if (getComponentConverter().size() < 1 && CampaignMain.campaignMain.getBooleanConfig("UsePartsRepair")) {
                 ComponentToCritsConverter converter = new ComponentToCritsConverter();
                 converter.setComponentUsedType(SUnit.MEK);
                 converter.setComponentUsedWeight(SUnit.LIGHT);
@@ -575,13 +578,13 @@ public class SHouse extends TimeUpdateHouse implements Comparable<Object>, ISell
         if (Boolean.parseBoolean(this.getConfig("UseCalculatedCosts"))) {
             double cost = 0;
             if (type_id == Unit.MEK) {
-                cost = CampaignMain.cm.getUnitCostLists().getMinCostValue(weightclass, type_id);
+                cost = CampaignMain.campaignMain.getUnitCostLists().getMinCostValue(weightclass, type_id);
                 cost = Math.max(cost, getDoubleConfig(Unit.getWeightClassDesc(weightclass) + "Price"));
             } else if (type_id == Unit.VEHICLE) {
-                cost = CampaignMain.cm.getUnitCostLists().getMinCostValue(weightclass, type_id);
+                cost = CampaignMain.campaignMain.getUnitCostLists().getMinCostValue(weightclass, type_id);
                 cost = Math.max(cost, getDoubleConfig(classtype));
             } else {
-                cost = CampaignMain.cm.getUnitCostLists().getMinCostValue(Unit.LIGHT, type_id);
+                cost = CampaignMain.campaignMain.getUnitCostLists().getMinCostValue(Unit.LIGHT, type_id);
                 cost = Math.max(cost, getDoubleConfig(classtype));
             }
             result = (int) (cost * Double.valueOf(this.getConfig("CostModifier")));
@@ -630,8 +633,10 @@ public class SHouse extends TimeUpdateHouse implements Comparable<Object>, ISell
         weightClass.add(unit);
 
         String hsUpdate = this.getHSUnitAdditionString(unit);
-        if (sendUpdate && !(this.isNewbieHouse() && Boolean.parseBoolean(CampaignMain.cm.getConfig("HiddenBMUnits")))) {
-            CampaignMain.cm.doSendToAllOnlinePlayers(this, "HS|" + hsUpdate, false);
+        if (sendUpdate &&
+                  !(this.isNewbieHouse() &&
+                          Boolean.parseBoolean(CampaignMain.campaignMain.getConfig("HiddenBMUnits")))) {
+            CampaignMain.campaignMain.doSendToAllOnlinePlayers(this, "HS|" + hsUpdate, false);
         }
 
         return hsUpdate;
@@ -698,7 +703,7 @@ public class SHouse extends TimeUpdateHouse implements Comparable<Object>, ISell
             result.append(getBasePilot(u.getType()));
         }
         // if using AR, send damage information
-        if (CampaignMain.cm.isUsingAdvanceRepair()) {
+        if (CampaignMain.campaignMain.isUsingAdvanceRepair()) {
             result.append(UnitUtils.unitBattleDamage(currE, true));
         }
 
@@ -966,7 +971,7 @@ public class SHouse extends TimeUpdateHouse implements Comparable<Object>, ISell
                     // first, get that one, if not, get a random one.
                     SUnit randUnit;
 
-                    if (CampaignMain.cm.getBooleanConfig("ScrapOldestUnitsFirst")) {
+                    if (CampaignMain.campaignMain.getBooleanConfig("ScrapOldestUnitsFirst")) {
                         java.util.Collections.sort(v);
                         // Crap.  This could loop, if every unit is on the BM already.
                         // So, find the first unit thatis not already for sale
@@ -982,7 +987,7 @@ public class SHouse extends TimeUpdateHouse implements Comparable<Object>, ISell
                         }
                         randUnit = v.elementAt(unitToGet);
                     } else {
-                        randUnit = v.elementAt(CampaignMain.cm.getRandomNumber(v.size()));
+                        randUnit = v.elementAt(CampaignMain.campaignMain.getRandomNumber(v.size()));
                     }
 
                     if (randUnit.getStatus() == Unit.STATUS_FORSALE) {
@@ -991,7 +996,7 @@ public class SHouse extends TimeUpdateHouse implements Comparable<Object>, ISell
 
                     int bmPercent = Integer.parseInt(this.getConfig("ChanceToSendUnitToBM"));
                     if (maySellOnBM() &&
-                              CampaignMain.cm.getRandomNumber(101) < bmPercent &&
+                              CampaignMain.campaignMain.getRandomNumber(101) < bmPercent &&
                               SUnit.mayBeSoldOnMarket(randUnit)) {
 
                         // Use standard factory pricing for the unit, and
@@ -1007,8 +1012,8 @@ public class SHouse extends TimeUpdateHouse implements Comparable<Object>, ISell
                         int saleTicks = Integer.parseInt(this.getConfig(saleTicksString)) + 1;
 
                         // Add the unit to the market, and tell the faction
-                        CampaignMain.cm.getMarket().addListing(getName(), randUnit, minPrice, saleTicks);
-                        if (!Boolean.parseBoolean(CampaignMain.cm.getConfig("HiddenBMUnits"))) {
+                        CampaignMain.campaignMain.getMarket().addListing(getName(), randUnit, minPrice, saleTicks);
+                        if (!Boolean.parseBoolean(CampaignMain.campaignMain.getConfig("HiddenBMUnits"))) {
                             marketAdditions.append(StringUtils.aOrAn(randUnit.getModelName(), false) +
                                                          " was added to the black market.<br>");
                         }
@@ -1052,13 +1057,13 @@ public class SHouse extends TimeUpdateHouse implements Comparable<Object>, ISell
 
                 while (getPP(weight, type_id) > getMaxAllowedPP(weight, type_id)) {
 
-                    int randomLossFactor = CampaignMain.cm.getRandomNumber(getPPCost(weight, type_id)) + 1;
+                    int randomLossFactor = CampaignMain.campaignMain.getRandomNumber(getPPCost(weight, type_id)) + 1;
 
                     // see if we should have an accident
                     boolean accident = false;
                     SUnitFactory m = getNativeFactoryForProduction(type_id,
                           weight,
-                          CampaignMain.cm.getBooleanConfig("OnlyUseOriginalFactoriesForAutoprod"));
+                          CampaignMain.campaignMain.getBooleanConfig("OnlyUseOriginalFactoriesForAutoprod"));
                     int failureRateToUse;
                     if (Boolean.parseBoolean(this.getConfig("UseAutoProdClassic"))) {
                         failureRateToUse = Integer.parseInt(this.getConfig("AutoProductionFailureRate"));
@@ -1067,7 +1072,7 @@ public class SHouse extends TimeUpdateHouse implements Comparable<Object>, ISell
                                                                                  Unit.getWeightClassDesc(weight) +
                                                                                  Unit.getTypeClassDesc(type_id)));
                     }
-                    if (CampaignMain.cm.getRandomNumber(100) + 1 <= failureRateToUse) {
+                    if (CampaignMain.campaignMain.getRandomNumber(100) + 1 <= failureRateToUse) {
                         accident = true;
                     }
 
@@ -1266,7 +1271,7 @@ public class SHouse extends TimeUpdateHouse implements Comparable<Object>, ISell
         MWLogger.debugLog("     -> " + hsUpdates.toString());
         // send house updates, if not empty
         if (hsUpdates.length() > 0) {
-            CampaignMain.cm.doSendToAllOnlinePlayers(this, "HS|" + hsUpdates.toString(), false);
+            CampaignMain.campaignMain.doSendToAllOnlinePlayers(this, "HS|" + hsUpdates.toString(), false);
         }
         MWLogger.debugLog("returning from tick: " + getName());
         return result;
@@ -1313,7 +1318,7 @@ public class SHouse extends TimeUpdateHouse implements Comparable<Object>, ISell
 
             // pick random message, given count from line 1
             int messages = Integer.parseInt(dis.readLine());
-            int id = CampaignMain.cm.getRandomNumber(messages);
+            int id = CampaignMain.campaignMain.getRandomNumber(messages);
 
             // read lines until counter reaches randomly selected message
             String scrapMessage = "";
@@ -1367,7 +1372,7 @@ public class SHouse extends TimeUpdateHouse implements Comparable<Object>, ISell
         }
 
         // select a random factory to return
-        int rand = CampaignMain.cm.getRandomNumber(factionPossible.size());
+        int rand = CampaignMain.campaignMain.getRandomNumber(factionPossible.size());
         return (factionPossible.elementAt(rand));
     }
 
@@ -1416,7 +1421,7 @@ public class SHouse extends TimeUpdateHouse implements Comparable<Object>, ISell
         }
 
         // select a random factory to return
-        int rand = CampaignMain.cm.getRandomNumber(accessPossible.size());
+        int rand = CampaignMain.campaignMain.getRandomNumber(accessPossible.size());
         return (accessPossible.elementAt(rand));
     }
 
@@ -1451,7 +1456,7 @@ public class SHouse extends TimeUpdateHouse implements Comparable<Object>, ISell
 
     public int getMaxAllowedPP(int weight, int type_id) {
         String unitAPMax = "";
-        if (CampaignMain.cm.getBooleanConfig("UseAutoProdNew")) {
+        if (CampaignMain.campaignMain.getBooleanConfig("UseAutoProdNew")) {
             unitAPMax = "APAtMax" + Unit.getWeightClassDesc(weight) + Unit.getTypeClassDesc(type_id);
         } else {
             unitAPMax = "APAtMax" + Unit.getWeightClassDesc(weight) + "Units";
@@ -1547,7 +1552,7 @@ public class SHouse extends TimeUpdateHouse implements Comparable<Object>, ISell
         }
         // send house updates, if not empty
         if (hsUpdates.length() > 0) {
-            CampaignMain.cm.doSendToAllOnlinePlayers(this, "HS|" + hsUpdates.toString(), false);
+            CampaignMain.campaignMain.doSendToAllOnlinePlayers(this, "HS|" + hsUpdates.toString(), false);
         }
     }
 
@@ -1597,7 +1602,7 @@ public class SHouse extends TimeUpdateHouse implements Comparable<Object>, ISell
         // else, PP changed and we need to make an update string
         String hsUpdate = getHSPPChangeString(weight, type_id);
         if (sendUpdate) {
-            CampaignMain.cm.doSendToAllOnlinePlayers(this, "HS|" + hsUpdate, false);
+            CampaignMain.campaignMain.doSendToAllOnlinePlayers(this, "HS|" + hsUpdate, false);
         }
 
         return hsUpdate;
@@ -1639,7 +1644,7 @@ public class SHouse extends TimeUpdateHouse implements Comparable<Object>, ISell
                 }
             }
             unitsToBuy.trimToSize();
-            int ran = CampaignMain.cm.getRandomNumber(unitsToBuy.size());
+            int ran = CampaignMain.campaignMain.getRandomNumber(unitsToBuy.size());
             m = unitsToBuy.elementAt(ran);
             s.removeElement(m);
             unitsToBuy.clear();
@@ -1794,9 +1799,9 @@ public class SHouse extends TimeUpdateHouse implements Comparable<Object>, ISell
 
     private int getBMPriceForUnit(int weight, int type) {
         int price = getPriceForUnit(weight, type);
-        double multiplier = CampaignMain.cm.getDoubleConfig("BMPriceMultiplier_" +
-                                                                  Unit.getWeightClassDesc(weight) +
-                                                                  Unit.getTypeClassDesc(type));
+        double multiplier = CampaignMain.campaignMain.getDoubleConfig("BMPriceMultiplier_" +
+                                                                            Unit.getWeightClassDesc(weight) +
+                                                                            Unit.getTypeClassDesc(type));
         int finalPrice = (int) (price * multiplier);
         return finalPrice;
     }
@@ -1808,7 +1813,7 @@ public class SHouse extends TimeUpdateHouse implements Comparable<Object>, ISell
             setComponentProduction(getComponentProduction() + p.getCompProduction());
 
             // Add unit production here
-            if (CampaignMain.cm.isUsingIncreasedTechs() && p.getFactoryCount() > 0) {
+            if (CampaignMain.campaignMain.isUsingIncreasedTechs() && p.getFactoryCount() > 0) {
                 modifyUnitSupport(p, true);
             }
         }
@@ -1820,6 +1825,13 @@ public class SHouse extends TimeUpdateHouse implements Comparable<Object>, ISell
 
     public int getBaysProvided() {
         return BaysProvided;
+    }
+
+    /**
+     * @param baysProvided - The baysProvided to set.
+     */
+    public void setBaysProvided(int baysProvided) {
+        BaysProvided = baysProvided;
     }
 
     public int getComponentProduction() {
@@ -1903,8 +1915,10 @@ public class SHouse extends TimeUpdateHouse implements Comparable<Object>, ISell
         if (toReturn.length() == 0) {
             return;
         }
-        CampaignMain.cm.doSendToAllOnlinePlayers(this, "PL|USU|" + "|true|" + fileName, false);
-        CampaignMain.cm.doSendHouseMail(this, "NOTE", "The faction is now able to support the " + toReturn.toString());
+        CampaignMain.campaignMain.doSendToAllOnlinePlayers(this, "PL|USU|" + "|true|" + fileName, false);
+        CampaignMain.campaignMain.doSendHouseMail(this,
+              "NOTE",
+              "The faction is now able to support the " + toReturn.toString());
     }
 
     public void removeUnitSupported(String fileName, boolean sendMail) {
@@ -1930,17 +1944,10 @@ public class SHouse extends TimeUpdateHouse implements Comparable<Object>, ISell
         if (toReturn.length() == 0) {
             return;
         }
-        CampaignMain.cm.doSendToAllOnlinePlayers(this, "PL|USU|" + "|false|" + fileName, false);
-        CampaignMain.cm.doSendHouseMail(this,
+        CampaignMain.campaignMain.doSendToAllOnlinePlayers(this, "PL|USU|" + "|false|" + fileName, false);
+        CampaignMain.campaignMain.doSendHouseMail(this,
               "NOTE",
               "The faction has lost the ability to support the following units: " + toReturn.toString());
-    }
-
-    /**
-     * @param baysProvided - The baysProvided to set.
-     */
-    public void setBaysProvided(int baysProvided) {
-        BaysProvided = baysProvided;
     }
 
     public void removePlanet(SPlanet p) {
@@ -1950,7 +1957,7 @@ public class SHouse extends TimeUpdateHouse implements Comparable<Object>, ISell
             setComponentProduction(getComponentProduction() - p.getCompProduction());
 
             // Remove unit production here
-            if (CampaignMain.cm.isUsingIncreasedTechs() && p.getFactoryCount() > 0) {
+            if (CampaignMain.campaignMain.isUsingIncreasedTechs() && p.getFactoryCount() > 0) {
                 modifyUnitSupport(p, false);
             }
         }
@@ -1971,7 +1978,7 @@ public class SHouse extends TimeUpdateHouse implements Comparable<Object>, ISell
 
         String hsUpdate = getHSUnitRemovalString(unitToRemove);
         if (sendUpdate) {
-            CampaignMain.cm.doSendToAllOnlinePlayers(this, "HS|" + hsUpdate, false);
+            CampaignMain.campaignMain.doSendToAllOnlinePlayers(this, "HS|" + hsUpdate, false);
         }
 
         return hsUpdate;
@@ -2000,11 +2007,11 @@ public class SHouse extends TimeUpdateHouse implements Comparable<Object>, ISell
          * Player has logged into their house we no longer have to worry about
          * them.
          */
-        CampaignMain.cm.releaseLostSoul(p.getName());
+        CampaignMain.campaignMain.releaseLostSoul(p.getName());
 
         // test to see if the player is already in the hashes
         if (isLoggedIntoFaction(lowerName)) {
-            CampaignMain.cm.toUser("CS|" + SPlayer.STATUS_RESERVE, realName, false);
+            CampaignMain.campaignMain.toUser("CS|" + SPlayer.STATUS_RESERVE, realName, false);
             return null;
         }
 
@@ -2014,25 +2021,28 @@ public class SHouse extends TimeUpdateHouse implements Comparable<Object>, ISell
             }
         } else {
             if (isLeader(p.getName()) &&
-                      p.getPassword().getAccess() < CampaignMain.cm.getIntegerConfig("factionLeaderLevel")) {
-                CampaignMain.cm.updatePlayersAccessLevel(p.getName(),
-                      CampaignMain.cm.getIntegerConfig("factionLeaderLevel"));
-            } else if (p.getPassword().getAccess() == CampaignMain.cm.getIntegerConfig("factionLeaderLevel") &&
+                      p.getPassword().getAccess() < CampaignMain.campaignMain.getIntegerConfig("factionLeaderLevel")) {
+                CampaignMain.campaignMain.updatePlayersAccessLevel(p.getName(),
+                      CampaignMain.campaignMain.getIntegerConfig("factionLeaderLevel"));
+            } else if (p.getPassword().getAccess() ==
+                             CampaignMain.campaignMain.getIntegerConfig("factionLeaderLevel") &&
                              !isLeader(p.getName())) {
-                CampaignMain.cm.updatePlayersAccessLevel(p.getName(), 2);
+                CampaignMain.campaignMain.updatePlayersAccessLevel(p.getName(), 2);
             }
         }
 
         // update the player's myHouse
-        CampaignMain.cm.toUser("PL|SH|" + getName(), realName, false);
+        CampaignMain.campaignMain.toUser("PL|SH|" + getName(), realName, false);
 
-        CampaignMain.cm.toUser("PL|SSN|" + p.getSubFactionName(), realName, false);
+        CampaignMain.campaignMain.toUser("PL|SSN|" + p.getSubFactionName(), realName, false);
 
         java.util.Date d = new java.util.Date(System.currentTimeMillis());
         MWLogger.mainLog(d + ":" + "User Logged into House: " + realName);
 
         // Send the current servers MegaMek game Options
-        CampaignMain.cm.toUser("GO|" + CampaignMain.cm.getMegaMekOptionsToString(), realName, false);
+        CampaignMain.campaignMain.toUser("GO|" + CampaignMain.campaignMain.getMegaMekOptionsToString(),
+              realName,
+              false);
 
         /*
          * Remove from all status hashes and place in reserve, in case the
@@ -2047,12 +2057,12 @@ public class SHouse extends TimeUpdateHouse implements Comparable<Object>, ISell
         getReservePlayers().put(lowerName, p);
         p.setLastSentStatus("");
 
-        CampaignMain.cm.toUser("CS|" + SPlayer.STATUS_RESERVE, realName, false);
+        CampaignMain.campaignMain.toUser("CS|" + SPlayer.STATUS_RESERVE, realName, false);
 
         // send player his pilot lists and exclude lists
-        CampaignMain.cm.toUser("PL|PPQ|" + p.getPersonalPilotQueue().toString(true), realName, false);
-        CampaignMain.cm.toUser("PL|AEU|" + p.getExclusionList().adminExcludeToString("$"), realName, false);
-        CampaignMain.cm.toUser("PL|PEU|" + p.getExclusionList().playerExcludeToString("$"), realName, false);
+        CampaignMain.campaignMain.toUser("PL|PPQ|" + p.getPersonalPilotQueue().toString(true), realName, false);
+        CampaignMain.campaignMain.toUser("PL|AEU|" + p.getExclusionList().adminExcludeToString("$"), realName, false);
+        CampaignMain.campaignMain.toUser("PL|PEU|" + p.getExclusionList().playerExcludeToString("$"), realName, false);
 
         /*
          * Old code used to look for a running task here, and send auto armies
@@ -2068,19 +2078,19 @@ public class SHouse extends TimeUpdateHouse implements Comparable<Object>, ISell
          * In sum, we can put all players in the Reserve hash at this point, and
          * they will be properly moved afterwards when setBusyNoOpList() is run.
          */
-        CampaignMain.cm.getIThread().removeImmunity(p);// logging in player
+        CampaignMain.campaignMain.getIThread().removeImmunity(p);// logging in player
         // should NEVER be
         // immune
 
         // send player the MOTD
-        Command c = CampaignMain.cm.getServerCommands().get("MOTD");
+        Command c = CampaignMain.campaignMain.getServerCommands().get("MOTD");
         c.process(new java.util.StringTokenizer("", ""), realName);
 
         // send the current BM and HS to the player
-        CampaignMain.cm.getMarket().sendCompleteMarketStatus(p);
-        CampaignMain.cm.toUser("HS|CA|0", realName, false);// clear old data
-        CampaignMain.cm.toUser(getCompleteStatus(), realName, false);
-        CampaignMain.cm.getPartsMarket().updatePartsBlackMarketPlayer(p);
+        CampaignMain.campaignMain.getMarket().sendCompleteMarketStatus(p);
+        CampaignMain.campaignMain.toUser("HS|CA|0", realName, false);// clear old data
+        CampaignMain.campaignMain.toUser(getCompleteStatus(), realName, false);
+        CampaignMain.campaignMain.getPartsMarket().updatePartsBlackMarketPlayer(p);
 
         /*
          * Now that the player is loaded and has a fresh timestamp look for a
@@ -2107,8 +2117,8 @@ public class SHouse extends TimeUpdateHouse implements Comparable<Object>, ISell
         }
 
         // Send supported units updates
-        if (CampaignMain.cm.isUsingIncreasedTechs()) {
-            CampaignMain.cm.toUser("PL|CSU|0", realName, false);
+        if (CampaignMain.campaignMain.isUsingIncreasedTechs()) {
+            CampaignMain.campaignMain.toUser("PL|CSU|0", realName, false);
             StringBuilder toSend = new StringBuilder();
             toSend.append("PL|USU|");
             int num = 0;
@@ -2119,11 +2129,11 @@ public class SHouse extends TimeUpdateHouse implements Comparable<Object>, ISell
                     toSend.append(unitName + "|");
                 }
             }
-            CampaignMain.cm.toUser(toSend.toString(), realName, false);
+            CampaignMain.campaignMain.toUser(toSend.toString(), realName, false);
         }
 
-        if (isLeader(p.getName()) && CampaignMain.cm.getBooleanConfig("UsePartsRepair")) {
-            Command cmd = CampaignMain.cm.getServerCommands().get("GETCOMPONENTCONVERSION");
+        if (isLeader(p.getName()) && CampaignMain.campaignMain.getBooleanConfig("UsePartsRepair")) {
+            Command cmd = CampaignMain.campaignMain.getServerCommands().get("GETCOMPONENTCONVERSION");
             cmd.process(new java.util.StringTokenizer("", "#"), p.getName());
         }
 
@@ -2135,24 +2145,25 @@ public class SHouse extends TimeUpdateHouse implements Comparable<Object>, ISell
         StringBuilder tsBans = new StringBuilder();
         tsBans.append("SBT|");
 
-        for (int ban : CampaignMain.cm.getData().getBannedTargetingSystems()) {
+        for (int ban : CampaignMain.campaignMain.getData().getBannedTargetingSystems()) {
             tsBans.append(ban);
             tsBans.append("|");
         }
         tsBans.append("|");
-        CampaignMain.cm.toUser(tsBans.toString(), realName, false);
+        CampaignMain.campaignMain.toUser(tsBans.toString(), realName, false);
 
         // Send default player flags if it's an admin or mod
-        if (CampaignMain.cm.getServer().isModerator(p.getName()) || CampaignMain.cm.getServer().isAdmin(p.getName())) {
-            if (!CampaignMain.cm.getDefaultPlayerFlags().isEmpty()) {
-                CampaignMain.cm.toUser("PF|SDF|" + CampaignMain.cm.getDefaultPlayerFlags().export(),
+        if (CampaignMain.campaignMain.getServer().isModerator(p.getName()) ||
+                  CampaignMain.campaignMain.getServer().isAdmin(p.getName())) {
+            if (!CampaignMain.campaignMain.getDefaultPlayerFlags().isEmpty()) {
+                CampaignMain.campaignMain.toUser("PF|SDF|" + CampaignMain.campaignMain.getDefaultPlayerFlags().export(),
                       p.getName(),
                       false);
             }
         }
 
 
-        CampaignMain.cm.toUser("PF|S", p.getName(), false);
+        CampaignMain.campaignMain.toUser("PF|S", p.getName(), false);
         return ("<b>[*] Logged into " + getColoredNameAsLink() + ".</b>");
     }
 
@@ -2245,7 +2256,7 @@ public class SHouse extends TimeUpdateHouse implements Comparable<Object>, ISell
          * Fourth, and final, block - units in faction bays.
          */
 
-        if (!(this.isNewbieHouse() && Boolean.parseBoolean(CampaignMain.cm.getConfig("HiddenBMUnits")))) {
+        if (!(this.isNewbieHouse() && Boolean.parseBoolean(CampaignMain.campaignMain.getConfig("HiddenBMUnits")))) {
             for (int type_id = 0; type_id < Unit.TOTALTYPES; type_id++) {
 
                 for (int weight = Unit.LIGHT; weight <= Unit.ASSAULT; weight++) {
@@ -2442,10 +2453,10 @@ public class SHouse extends TimeUpdateHouse implements Comparable<Object>, ISell
         }
 
         // Save faction MOTD
-        if (getMotd().equals("")) {
+        if (getMessageOfTheDay().equals("")) {
             result.append(" ");
         } else {
-            result.append(stripReturns(getMotd()));
+            result.append(stripReturns(getMessageOfTheDay()));
         }
 
 
@@ -2512,6 +2523,10 @@ public class SHouse extends TimeUpdateHouse implements Comparable<Object>, ISell
         return Money;
     }
 
+    public void setMoney(int newMoney) {
+        Money = newMoney;
+    }
+
     public java.util.Vector<java.util.Vector<SUnit>> getHangar(int Type_id) {
         if (Hangar == null || Hangar.size() < Type_id) {
             return null;
@@ -2522,13 +2537,17 @@ public class SHouse extends TimeUpdateHouse implements Comparable<Object>, ISell
     public String getConfig(String key) {
 
         if (config == null || config.getProperty(key) == null) {
-            return CampaignMain.cm.getConfig(key);
+            return CampaignMain.campaignMain.getConfig(key);
         }
         return config.getProperty(key).trim();
     }
 
     public String getAnnouncement() {
         return announcement;
+    }
+
+    public void setAnnouncement(String announcement) {
+        this.announcement = announcement;
     }
 
     /**
@@ -2567,6 +2586,13 @@ public class SHouse extends TimeUpdateHouse implements Comparable<Object>, ISell
         return inHouseAttacks;
     }
 
+    /**
+     * @param inHouseAttacks The inHouseAttacks to set.
+     */
+    public void setInHouseAttacks(boolean inHouseAttacks) {
+        this.inHouseAttacks = inHouseAttacks;
+    }
+
     public PilotQueues getPilotQueues() {
         return pilotQueues;
     }
@@ -2578,30 +2604,15 @@ public class SHouse extends TimeUpdateHouse implements Comparable<Object>, ISell
     /**
      * @return Returns the MOTD.
      */
-    public String getMotd() {
-        return motd;
+    public String getMessageOfTheDay() {
+        return messageOfTheDay;
     }
 
     /**
-     * @param motd - the MOTD to set.
+     * @param messageOfTheDay - the MOTD to set.
      */
-    public void setMotd(String motd) {
-        this.motd = motd;
-    }
-
-    /**
-     * @param inHouseAttacks The inHouseAttacks to set.
-     */
-    public void setInHouseAttacks(boolean inHouseAttacks) {
-        this.inHouseAttacks = inHouseAttacks;
-    }
-
-    public void setAnnouncement(String announcement) {
-        this.announcement = announcement;
-    }
-
-    public void setMoney(int newMoney) {
-        Money = newMoney;
+    public void setMessageOfTheDay(String messageOfTheDay) {
+        this.messageOfTheDay = messageOfTheDay;
     }
 
     /**
@@ -2674,7 +2685,7 @@ public class SHouse extends TimeUpdateHouse implements Comparable<Object>, ISell
         // if we're donating all units, do so
         if (donateMechs) {
             StringBuilder hsUpdates = new StringBuilder();
-            boolean allowDamagedUnits = CampaignMain.cm.isUsingAdvanceRepair() &&
+            boolean allowDamagedUnits = CampaignMain.campaignMain.isUsingAdvanceRepair() &&
                                               Boolean.parseBoolean(this.getConfig("AllowDonatingOfDamagedUnits"));
             for (SUnit currUnit : p.getUnits()) {
 
@@ -2689,7 +2700,7 @@ public class SHouse extends TimeUpdateHouse implements Comparable<Object>, ISell
 
             // if units were donated, send updates to factionmates
             if (hsUpdates.length() > 0) {
-                CampaignMain.cm.doSendToAllOnlinePlayers(this, "HS|" + hsUpdates.toString(), false);
+                CampaignMain.campaignMain.doSendToAllOnlinePlayers(this, "HS|" + hsUpdates.toString(), false);
             }
         }
 
@@ -2697,8 +2708,8 @@ public class SHouse extends TimeUpdateHouse implements Comparable<Object>, ISell
          * The player is moving to a new faction (or quitting). Rather than
          * letting all of his votes remain and count, strip them.
          */
-        CampaignMain.cm.getVoteManager().removeAllVotesByPlayer(p);
-        CampaignMain.cm.getVoteManager().removeAllVotesForPlayer(p);
+        CampaignMain.campaignMain.getVoteManager().removeAllVotesByPlayer(p);
+        CampaignMain.campaignMain.getVoteManager().removeAllVotesForPlayer(p);
 
         // remove small player. don't delete the pfile.
         p.getMyHouse().getSmallPlayers().remove(p.getName().toLowerCase());
@@ -2731,11 +2742,11 @@ public class SHouse extends TimeUpdateHouse implements Comparable<Object>, ISell
         activePlayers.remove(lowerName);
         fightingPlayers.remove(lowerName);
 
-        CampaignMain.cm.forceSavePlayer(p);
+        CampaignMain.campaignMain.forceSavePlayer(p);
         // add info to logs
         java.util.Date d = new java.util.Date(System.currentTimeMillis());
         MWLogger.mainLog(d + ":" + "User Logged out: " + realName);
-        CampaignMain.cm.toUser("CS|" + SPlayer.STATUS_LOGGEDOUT, realName, false);
+        CampaignMain.campaignMain.toUser("CS|" + SPlayer.STATUS_LOGGEDOUT, realName, false);
     }
 
     /**
@@ -2759,7 +2770,7 @@ public class SHouse extends TimeUpdateHouse implements Comparable<Object>, ISell
         double distSq = Integer.MAX_VALUE;
         double tdist;
 
-        java.util.Iterator<Planet> e = CampaignMain.cm.getData().getAllPlanets().iterator();
+        java.util.Iterator<Planet> e = CampaignMain.campaignMain.getData().getAllPlanets().iterator();
         while (e.hasNext()) {
             SPlanet pl = (SPlanet) e.next();
             // Only consider planet if we control at least 25%
@@ -2969,7 +2980,7 @@ public class SHouse extends TimeUpdateHouse implements Comparable<Object>, ISell
         }
 
         for (String name : leaders) {
-            CampaignMain.cm.toUser(msg, name);
+            CampaignMain.campaignMain.toUser(msg, name);
         }
     }
 
@@ -3008,8 +3019,8 @@ public class SHouse extends TimeUpdateHouse implements Comparable<Object>, ISell
         setHouseDefectionTo(false);
         setHouseDefectionFrom(false);
         setAbbreviation("None");
-        setHouseColor(CampaignMain.cm.getConfig("DisputedPlanetColor"));
-        setHousePlayerColors(CampaignMain.cm.getConfig("DisputedPlanetColor"));
+        setHouseColor(CampaignMain.campaignMain.getConfig("DisputedPlanetColor"));
+        setHousePlayerColors(CampaignMain.campaignMain.getConfig("DisputedPlanetColor"));
 
         PKLogManager.getInstance().addLog(getName());
         // Vehicles = new Vector();
@@ -3177,23 +3188,23 @@ public class SHouse extends TimeUpdateHouse implements Comparable<Object>, ISell
 
     private void produceCrits() {
 
-        if (!CampaignMain.cm.getBooleanConfig("UsePartsRepair")) {
+        if (!CampaignMain.campaignMain.getBooleanConfig("UsePartsRepair")) {
             return;
         }
-        int year = CampaignMain.cm.getIntegerConfig("CampaignYear");
+        int year = CampaignMain.campaignMain.getIntegerConfig("CampaignYear");
         boolean cacheUpdate = false;
 
-        double baseCost = CampaignMain.cm.getDoubleConfig("BaseComponentToMoneyRatio");
+        double baseCost = CampaignMain.campaignMain.getDoubleConfig("BaseComponentToMoneyRatio");
 
         if (getComponentConverter().containsKey("All")) {
             ComponentToCritsConverter converter = getComponentConverter().get("All");
             int minCrits = converter.getMinCritLevel();
-            baseCost *= CampaignMain.cm.getDoubleConfig("ComponentToPartsModifier" +
-                                                              SUnit.getTypeClassDesc(converter.getComponentUsedType()));
-            baseCost *= CampaignMain.cm.getDoubleConfig("ComponentToPartsModifier" +
-                                                              SUnit.getWeightClassDesc(converter.getComponentUsedWeight()));
+            baseCost *= CampaignMain.campaignMain.getDoubleConfig("ComponentToPartsModifier" +
+                                                                        SUnit.getTypeClassDesc(converter.getComponentUsedType()));
+            baseCost *= CampaignMain.campaignMain.getDoubleConfig("ComponentToPartsModifier" +
+                                                                        SUnit.getWeightClassDesc(converter.getComponentUsedWeight()));
 
-            for (BMEquipment eq : CampaignMain.cm.getPartsMarket().getEquipmentList().values()) {
+            for (BMEquipment eq : CampaignMain.campaignMain.getPartsMarket().getEquipmentList().values()) {
 
                 // do not produce something that the is allowed in the BM
                 if (eq.getCost() <= 0) {
@@ -3201,7 +3212,7 @@ public class SHouse extends TimeUpdateHouse implements Comparable<Object>, ISell
                 }
 
                 // do bother producing what you cannot use.
-                if (!CampaignMain.cm.getBooleanConfig("AllowCrossOverTech")) {
+                if (!CampaignMain.campaignMain.getBooleanConfig("AllowCrossOverTech")) {
                     eq.getTech(year);
                     if (eq.getTechLevel() != TechConstants.T_ALL && eq.getTechLevel() > getTechLevel()) {
                         continue;
@@ -3236,13 +3247,15 @@ public class SHouse extends TimeUpdateHouse implements Comparable<Object>, ISell
             for (ComponentToCritsConverter converter : getComponentConverter().values()) {
 
                 int minCrits = converter.getMinCritLevel();
-                baseCost = CampaignMain.cm.getDoubleConfig("BaseComponentToMoneyRatio");
-                baseCost *= CampaignMain.cm.getDoubleConfig("ComponentToPartsModifier" +
-                                                                  SUnit.getTypeClassDesc(converter.getComponentUsedType()));
-                baseCost *= CampaignMain.cm.getDoubleConfig("ComponentToPartsModifier" +
-                                                                  SUnit.getWeightClassDesc(converter.getComponentUsedWeight()));
+                baseCost = CampaignMain.campaignMain.getDoubleConfig("BaseComponentToMoneyRatio");
+                baseCost *= CampaignMain.campaignMain.getDoubleConfig("ComponentToPartsModifier" +
+                                                                            SUnit.getTypeClassDesc(converter.getComponentUsedType()));
+                baseCost *= CampaignMain.campaignMain.getDoubleConfig("ComponentToPartsModifier" +
+                                                                            SUnit.getWeightClassDesc(converter.getComponentUsedWeight()));
 
-                BMEquipment eq = CampaignMain.cm.getPartsMarket().getEquipmentList().get(converter.getCritName());
+                BMEquipment eq = CampaignMain.campaignMain.getPartsMarket()
+                                       .getEquipmentList()
+                                       .get(converter.getCritName());
 
                 if (eq == null) {
                     continue;
@@ -3253,7 +3266,7 @@ public class SHouse extends TimeUpdateHouse implements Comparable<Object>, ISell
                     continue;
                 }
                 // do bother producing what you cannot use.
-                if (!CampaignMain.cm.getBooleanConfig("AllowCrossOverTech")) {
+                if (!CampaignMain.campaignMain.getBooleanConfig("AllowCrossOverTech")) {
                     eq.getTech(year);
                     if (eq.getTechLevel() != TechConstants.T_ALL && eq.getTechLevel() > getTechLevel()) {
                         continue;
@@ -3285,8 +3298,8 @@ public class SHouse extends TimeUpdateHouse implements Comparable<Object>, ISell
             }
         }
         if (cacheUpdate) {
-            CampaignMain.cm.doSendHouseMail(this, "NOTE", "The house crits have been updated");
-            CampaignMain.cm.doSendToAllOnlinePlayers(this, getCompleteStatus(), false);
+            CampaignMain.campaignMain.doSendHouseMail(this, "NOTE", "The house crits have been updated");
+            CampaignMain.campaignMain.doSendToAllOnlinePlayers(this, getCompleteStatus(), false);
         }
 
     }

@@ -16,6 +16,8 @@
 
 package mekwars.server.campaign.commands.admin;
 
+import mekwars.server.campaign.CampaignMain;
+
 /**
  * AdminUpdateClientParam allows an admin to set a client param for a single player or all players online. Unlike other
  * commands, this cannot be delegated to lower userlevels. Instead, it is locked IAuthenticator.ADMIN.
@@ -36,9 +38,9 @@ public class AdminUpdateClientParamCommand implements server.campaign.commands.C
     public void process(java.util.StringTokenizer command, String Username) {
 
         //access level check. hard check'ed to admin.
-        if (server.campaign.CampaignMain.cm.getServer().getUserLevel(Username) <
+        if (CampaignMain.campaignMain.getServer().getUserLevel(Username) <
                   server.MWChatServer.auth.IAuthenticator.ADMIN) {
-            server.campaign.CampaignMain.cm.toUser("Only admins may use the update client param command.",
+            CampaignMain.campaignMain.toUser("Only admins may use the update client param command.",
                   Username,
                   true);
             return;
@@ -52,7 +54,7 @@ public class AdminUpdateClientParamCommand implements server.campaign.commands.C
             param = command.nextToken();
             paramValue = command.nextToken();
         } catch (java.util.NoSuchElementException e) {
-            server.campaign.CampaignMain.cm.toUser(
+            CampaignMain.campaignMain.toUser(
                   "Improper format. Try: /adminupdateclientparam player Name[ALL]#param#param value",
                   Username,
                   true);
@@ -60,24 +62,24 @@ public class AdminUpdateClientParamCommand implements server.campaign.commands.C
         }
 
         //ensure the player exits
-        if (!playerName.equalsIgnoreCase("all") && server.campaign.CampaignMain.cm.getPlayer(playerName) == null) {
-            server.campaign.CampaignMain.cm.toUser("update client param failed. Could not find player: " + playerName,
+        if (!playerName.equalsIgnoreCase("all") && CampaignMain.campaignMain.getPlayer(playerName) == null) {
+            CampaignMain.campaignMain.toUser("update client param failed. Could not find player: " + playerName,
                   Username,
                   true);
             return;
         }
 
         if (!playerName.equalsIgnoreCase("all")) {
-            server.campaign.CampaignMain.cm.toUser("PL|UCP|" + param + "|" + paramValue, playerName, false);
+            CampaignMain.campaignMain.toUser("PL|UCP|" + param + "|" + paramValue, playerName, false);
         } else {
-            server.campaign.CampaignMain.cm.doSendToAllOnlinePlayers("PL|UCP|" + param + "|" + paramValue, false);
+            CampaignMain.campaignMain.doSendToAllOnlinePlayers("PL|UCP|" + param + "|" + paramValue, false);
         }
 
         //checks passed. we have a valid player and command name. tell everyone about the spoof ...
         //MWLogger.modLog(Username + " used update client param to update " + playerName + "'s " + param + " to " + paramValue);
-        server.campaign.CampaignMain.cm.doSendModMail("WARNING",
+        CampaignMain.campaignMain.doSendModMail("WARNING",
               Username + " used update client param to update " + playerName + "'s " + param + " to " + paramValue);
-        server.campaign.CampaignMain.cm.toUser("you updated " + playerName + "'s " + param + " to " + paramValue,
+        CampaignMain.campaignMain.toUser("you updated " + playerName + "'s " + param + " to " + paramValue,
               Username,
               true);
 

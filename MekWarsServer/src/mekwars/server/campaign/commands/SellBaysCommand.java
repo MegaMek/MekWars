@@ -18,6 +18,8 @@
 package mekwars.server.campaign.commands;
 
 
+import mekwars.server.campaign.CampaignMain;
+
 public class SellBaysCommand implements Command {
 
     int accessLevel = 0;
@@ -26,22 +28,22 @@ public class SellBaysCommand implements Command {
     public void process(java.util.StringTokenizer command, String Username) {
 
         if (accessLevel != 0) {
-            int userLevel = server.campaign.CampaignMain.cm.getServer().getUserLevel(Username);
+            int userLevel = CampaignMain.campaignMain.getServer().getUserLevel(Username);
             if (userLevel < getExecutionLevel()) {
-                server.campaign.CampaignMain.cm.toUser("AM:Insufficient access level for command. Level: " +
-                                                             userLevel +
-                                                             ". Required: " +
-                                                             accessLevel +
-                                                             ".", Username, true);
+                CampaignMain.campaignMain.toUser("AM:Insufficient access level for command. Level: " +
+                                                       userLevel +
+                                                       ". Required: " +
+                                                       accessLevel +
+                                                       ".", Username, true);
                 return;
             }
         }
 
-        if (!server.campaign.CampaignMain.cm.isUsingAdvanceRepair()) {
+        if (!CampaignMain.campaignMain.isUsingAdvanceRepair()) {
             return;
         }
 
-        server.campaign.SPlayer p = server.campaign.CampaignMain.cm.getPlayer(Username);
+        server.campaign.SPlayer p = CampaignMain.campaignMain.getPlayer(Username);
         server.campaign.SHouse house = p.getMyHouse();
 
         //use /c firetech#numbertofire
@@ -51,7 +53,7 @@ public class SellBaysCommand implements Command {
             numtosell = Integer.parseInt(command.nextToken());
         }//end try
         catch (NumberFormatException ex) {
-            server.campaign.CampaignMain.cm.toUser(
+            CampaignMain.campaignMain.toUser(
                   "AM:Couldn't tell how many bays to sell. Check your input. It should be something like this: /c sellbays#3",
                   Username,
                   true);
@@ -60,12 +62,12 @@ public class SellBaysCommand implements Command {
 
         //Check to see if the player is selling too many bays
         if (p.getBaysOwned() < numtosell) {
-            server.campaign.CampaignMain.cm.toUser("AM:You tried to return " +
-                                                         numtosell +
-                                                         " bays, but you only have " +
-                                                         p.getBaysOwned() +
-                                                         " bays " +
-                                                         ". The rest were assigned to your force by your faction and can't be returned.",
+            CampaignMain.campaignMain.toUser("AM:You tried to return " +
+                                                   numtosell +
+                                                   " bays, but you only have " +
+                                                   p.getBaysOwned() +
+                                                   " bays " +
+                                                   ". The rest were assigned to your force by your faction and can't be returned.",
                   Username,
                   true);
             return;
@@ -73,7 +75,7 @@ public class SellBaysCommand implements Command {
 
         //Check to see if the player is fighting. Engaged players can't fire techs.
         if (p.getDutyStatus() == server.campaign.SPlayer.STATUS_FIGHTING) {
-            server.campaign.CampaignMain.cm.toUser(
+            CampaignMain.campaignMain.toUser(
                   "AM:You may not return bays while you are engaged! Wait until your units are out of battle and fully repaired.",
                   Username,
                   true);
@@ -82,7 +84,7 @@ public class SellBaysCommand implements Command {
 
         //dont want a unit being marked unmaintained while its in an active army, so only let reserve players fire techs
         if (p.getDutyStatus() == server.campaign.SPlayer.STATUS_ACTIVE) {
-            server.campaign.CampaignMain.cm.toUser(
+            CampaignMain.campaignMain.toUser(
                   "AM:You may not return bays while you are active. Withdraw from the front lines " +
                         "before reducing your support levels.",
                   Username,
@@ -91,7 +93,7 @@ public class SellBaysCommand implements Command {
         }//end if(active)
 
         if (p.getFreeBays() < numtosell) {
-            server.campaign.CampaignMain.cm.toUser(
+            CampaignMain.campaignMain.toUser(
                   "AM:You need to free up some bay space before you can return anymore!",
                   Username,
                   true);
@@ -104,23 +106,23 @@ public class SellBaysCommand implements Command {
         p.addMoney(sellbackprice);
 
         if (numtosell == 1) {
-            server.campaign.CampaignMain.cm.toUser("AM:You return a bay.  Your faction returns " +
-                                                         server.campaign.CampaignMain.cm.moneyOrFluMessage(true,
-                                                               true,
-                                                               sellbackprice) +
-                                                         " of your security deposit.", Username, true);
+            CampaignMain.campaignMain.toUser("AM:You return a bay.  Your faction returns " +
+                                                   CampaignMain.campaignMain.moneyOrFluMessage(true,
+                                                         true,
+                                                         sellbackprice) +
+                                                   " of your security deposit.", Username, true);
         } else {
-            server.campaign.CampaignMain.cm.toUser("AM:You return " +
-                                                         numtosell +
-                                                         " bays.  Your faction returns " +
-                                                         server.campaign.CampaignMain.cm.moneyOrFluMessage(true,
-                                                               true,
-                                                               sellbackprice) +
-                                                         " of your security deposit.", Username, true);
+            CampaignMain.campaignMain.toUser("AM:You return " +
+                                                   numtosell +
+                                                   " bays.  Your faction returns " +
+                                                   CampaignMain.campaignMain.moneyOrFluMessage(true,
+                                                         true,
+                                                         sellbackprice) +
+                                                   " of your security deposit.", Username, true);
         }
-        server.campaign.CampaignMain.cm.toUser("PL|SF|" + p.getFreeBays(), Username, false);
-        server.campaign.CampaignMain.cm.toUser("PL|SB|" + p.getTotalMekBays(), Username, false);
-        server.campaign.CampaignMain.cm.toUser("PL|ST|" + p.getBaysOwned(), Username, false);
+        CampaignMain.campaignMain.toUser("PL|SF|" + p.getFreeBays(), Username, false);
+        CampaignMain.campaignMain.toUser("PL|SB|" + p.getTotalMekBays(), Username, false);
+        CampaignMain.campaignMain.toUser("PL|ST|" + p.getBaysOwned(), Username, false);
 
     }//end process()
 

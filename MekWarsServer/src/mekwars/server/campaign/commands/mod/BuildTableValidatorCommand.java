@@ -18,6 +18,7 @@ package mekwars.server.campaign.commands.mod;
 
 import common.util.MWLogger;
 import megamek.common.Entity;
+import mekwars.server.campaign.CampaignMain;
 
 
 /**
@@ -38,13 +39,13 @@ public class BuildTableValidatorCommand implements server.campaign.commands.Comm
     public void process(java.util.StringTokenizer command, String Username) {
 
         if (accessLevel != 0) {
-            int userLevel = server.campaign.CampaignMain.cm.getServer().getUserLevel(Username);
+            int userLevel = CampaignMain.campaignMain.getServer().getUserLevel(Username);
             if (userLevel < getExecutionLevel()) {
-                server.campaign.CampaignMain.cm.toUser("AM:Insufficient access level for command. Level: " +
-                                                             userLevel +
-                                                             ". Required: " +
-                                                             accessLevel +
-                                                             ".", Username, true);
+                CampaignMain.campaignMain.toUser("AM:Insufficient access level for command. Level: " +
+                                                       userLevel +
+                                                       ". Required: " +
+                                                       accessLevel +
+                                                       ".", Username, true);
                 return;
             }
         }
@@ -73,7 +74,7 @@ public class BuildTableValidatorCommand implements server.campaign.commands.Comm
             results.append(this.validate(era, Username));
         }
 
-        server.campaign.CampaignMain.cm.toUser("SM|" + results.toString(), Username, false);
+        CampaignMain.campaignMain.toUser("SM|" + results.toString(), Username, false);
     }
 
     public int getExecutionLevel() {return accessLevel;}
@@ -114,7 +115,7 @@ public class BuildTableValidatorCommand implements server.campaign.commands.Comm
 
                     //filter out named factions, but this will still show false positives
                     if (line.indexOf(".") == -1 &&
-                              server.campaign.CampaignMain.cm.getHouseFromPartialString(line, null) != null) {
+                              CampaignMain.campaignMain.getHouseFromPartialString(line, null) != null) {
                         toReturn.append("Missing file extension? " +
                                               line +
                                               "[Table: " +

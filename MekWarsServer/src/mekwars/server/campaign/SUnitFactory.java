@@ -168,8 +168,8 @@ public class SUnitFactory extends UnitFactory implements java.io.Serializable {
         if (this.getPlanet().getName() != null) {producer += " on " + this.getPlanet().getName();}
 
         String unitSize = getSize();
-        if (CampaignMain.cm.getBooleanConfig("UseOnlyOneVehicleSize") && type_id == Unit.VEHICLE) {
-            unitSize = Unit.getWeightClassDesc(CampaignMain.cm.getRandomNumber(4));
+        if (CampaignMain.campaignMain.getBooleanConfig("UseOnlyOneVehicleSize") && type_id == Unit.VEHICLE) {
+            unitSize = Unit.getWeightClassDesc(CampaignMain.campaignMain.getRandomNumber(4));
         }
 
         Filename = BuildTable.getUnitFilename(this.getFounder(), unitSize, type_id, getBuildTableFolder());
@@ -257,7 +257,7 @@ public class SUnitFactory extends UnitFactory implements java.io.Serializable {
 
         if (sendHSUpdate) {
             SHouse owner = getPlanet().getOwner();
-            if (owner != null) {CampaignMain.cm.doSendToAllOnlinePlayers(owner, "HS|" + hsUpdate, false);}
+            if (owner != null) {CampaignMain.campaignMain.doSendToAllOnlinePlayers(owner, "HS|" + hsUpdate, false);}
         }
 
         return hsUpdate;
@@ -268,7 +268,7 @@ public class SUnitFactory extends UnitFactory implements java.io.Serializable {
      * Hacky. Ugly.
      */
     public int getPriceForUnit(int weightclass, int typeid) {
-        SHouse originalHouse = (SHouse) CampaignMain.cm.getData().getHouseByName(this.getFounder());
+        SHouse originalHouse = (SHouse) CampaignMain.campaignMain.getData().getHouseByName(this.getFounder());
         return originalHouse.getPriceForUnit(weightclass, typeid);
     }
 
@@ -277,7 +277,7 @@ public class SUnitFactory extends UnitFactory implements java.io.Serializable {
      * Hacky. Ugly.
      */
     public int getInfluenceForUnit(int weightclass, int typeid) {
-        SHouse originalHouse = (SHouse) CampaignMain.cm.getData().getHouseByName(this.getFounder());
+        SHouse originalHouse = (SHouse) CampaignMain.campaignMain.getData().getHouseByName(this.getFounder());
         return originalHouse.getInfluenceForUnit(weightclass, typeid);
     }
 
@@ -286,7 +286,7 @@ public class SUnitFactory extends UnitFactory implements java.io.Serializable {
      * Ugly.
      */
     public int getPPCost(int weightclass, int typeid) {
-        SHouse originalHouse = (SHouse) CampaignMain.cm.getData().getHouseByName(this.getFounder());
+        SHouse originalHouse = (SHouse) CampaignMain.campaignMain.getData().getHouseByName(this.getFounder());
         return originalHouse.getPPCost(weightclass, typeid);
     }
 
@@ -303,8 +303,8 @@ public class SUnitFactory extends UnitFactory implements java.io.Serializable {
         String Filename = "";
 
         String unitSize = getSize();
-        if (CampaignMain.cm.getBooleanConfig("UseOnlyOneVehicleSize") && type_id == Unit.VEHICLE) {
-            unitSize = Unit.getWeightClassDesc(CampaignMain.cm.getRandomNumber(4));
+        if (CampaignMain.campaignMain.getBooleanConfig("UseOnlyOneVehicleSize") && type_id == Unit.VEHICLE) {
+            unitSize = Unit.getWeightClassDesc(CampaignMain.campaignMain.getRandomNumber(4));
         }
 
         Filename = BuildTable.getUnitFilename(this.getFounder(), unitSize, type_id, getBuildTableFolder());

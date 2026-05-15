@@ -16,6 +16,8 @@
 
 package mekwars.server.campaign.commands.admin;
 
+import mekwars.server.campaign.CampaignMain;
+
 public class StripUnitsCommand implements server.campaign.commands.Command {
 
     int accessLevel = server.MWChatServer.auth.IAuthenticator.ADMIN;
@@ -26,35 +28,35 @@ public class StripUnitsCommand implements server.campaign.commands.Command {
     public void process(java.util.StringTokenizer command, String Username) {
 
         //access level check
-        int userLevel = server.campaign.CampaignMain.cm.getServer().getUserLevel(Username);
+        int userLevel = CampaignMain.campaignMain.getServer().getUserLevel(Username);
         if (userLevel < getExecutionLevel()) {
-            server.campaign.CampaignMain.cm.toUser("AM:Insufficient access level for command. Level: " +
-                                                         userLevel +
-                                                         ". Required: " +
-                                                         accessLevel +
-                                                         ".", Username, true);
+            CampaignMain.campaignMain.toUser("AM:Insufficient access level for command. Level: " +
+                                                   userLevel +
+                                                   ". Required: " +
+                                                   accessLevel +
+                                                   ".", Username, true);
             return;
         }
 
         server.campaign.SPlayer p = null;
 
         try {
-            p = server.campaign.CampaignMain.cm.getPlayer(command.nextToken());
+            p = CampaignMain.campaignMain.getPlayer(command.nextToken());
         } catch (Exception e) {
-            server.campaign.CampaignMain.cm.toUser("Improper command. Try: /c stripunits#name", Username, true);
+            CampaignMain.campaignMain.toUser("Improper command. Try: /c stripunits#name", Username, true);
             return;
         }
 
         if (p == null) {
-            server.campaign.CampaignMain.cm.toUser("Couldn't find a player with that name.", Username, true);
+            CampaignMain.campaignMain.toUser("Couldn't find a player with that name.", Username, true);
             return;
         }
 
         //strip the units
         p.stripOfAllUnits(true);//data resent from SPlayer.java
-        server.campaign.CampaignMain.cm.toUser("You stripped all units from " + p.getName() + ".", Username, true);
-        server.campaign.CampaignMain.cm.toUser(Username + " removed all of your units.", p.getName(), true);
-        server.campaign.CampaignMain.cm.doSendModMail("NOTE",
+        CampaignMain.campaignMain.toUser("You stripped all units from " + p.getName() + ".", Username, true);
+        CampaignMain.campaignMain.toUser(Username + " removed all of your units.", p.getName(), true);
+        CampaignMain.campaignMain.doSendModMail("NOTE",
               Username + " stripped all units from " + p.getName() + ".");
         //server.MWLogger.modLog(Username + " stripped all units from " + p.getName());
 

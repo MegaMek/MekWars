@@ -24,7 +24,7 @@
 
 package mekwars.server.util;
 
-import common.util.MWLogger;
+import mekwars.server.campaign.CampaignMain;
 
 public class AutomaticBackup extends Thread {
 
@@ -49,14 +49,14 @@ public class AutomaticBackup extends Thread {
 
         if (this.time < 1) {return;}
 
-        long backupHours = Long.parseLong(server.campaign.CampaignMain.cm.getConfig("AutomaticBackupHours")) *
+        long backupHours = Long.parseLong(CampaignMain.campaignMain.getConfig("AutomaticBackupHours")) *
                                  3600000; //hour in ms
-        long lastBackup = Long.parseLong(server.campaign.CampaignMain.cm.getConfig("LastAutomatedBackup"));
+        long lastBackup = Long.parseLong(CampaignMain.campaignMain.getConfig("LastAutomatedBackup"));
 
         if (lastBackup > time - backupHours) {return;}
 
         MWLogger.mainLog("Archiving Started at " + time);
-        server.campaign.CampaignMain.cm.setArchiving(true);
+        CampaignMain.campaignMain.setArchiving(true);
 
         java.text.SimpleDateFormat sDF = new java.text.SimpleDateFormat(dateTimeFormat);
         java.util.Date date = new java.util.Date(time);
@@ -110,9 +110,9 @@ public class AutomaticBackup extends Thread {
             MWLogger.errLog("Unable to create data zip file");
             MWLogger.errLog(ex);
         }
-        server.campaign.CampaignMain.cm.getConfig().setProperty("LastAutomatedBackup", Long.toString(time));
+        CampaignMain.campaignMain.getConfig().setProperty("LastAutomatedBackup", Long.toString(time));
         server.campaign.CampaignMain.dso.createConfig();
-        server.campaign.CampaignMain.cm.setArchiving(false);
+        CampaignMain.campaignMain.setArchiving(false);
         MWLogger.mainLog("Archiving Ended.");
     }
 

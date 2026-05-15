@@ -20,6 +20,8 @@ package mekwars.server.campaign.commands;
 
 //import common.campaign.pilot.Pilot;
 
+import mekwars.server.campaign.CampaignMain;
+
 /**
  * @author Salient for the SolFreeBuild option. This will allow SOL players to remove units they created from their
  *       inventory
@@ -32,28 +34,28 @@ public class SolDeleteUnitCommand implements Command {
     public void process(java.util.StringTokenizer command, String Username) {
 
         //access level checks
-        int userLevel = server.campaign.CampaignMain.cm.getServer().getUserLevel(Username);
-        server.campaign.SPlayer p = server.campaign.CampaignMain.cm.getPlayer(Username);
+        int userLevel = CampaignMain.campaignMain.getServer().getUserLevel(Username);
+        server.campaign.SPlayer p = CampaignMain.campaignMain.getPlayer(Username);
         server.campaign.SHouse h = p.getMyHouse();
 
         if (userLevel < getExecutionLevel()) {
-            server.campaign.CampaignMain.cm.toUser("AM:Insufficient access level for command. Level: " +
-                                                         userLevel +
-                                                         ". Required: " +
-                                                         accessLevel +
-                                                         ".", Username, true);
+            CampaignMain.campaignMain.toUser("AM:Insufficient access level for command. Level: " +
+                                                   userLevel +
+                                                   ". Required: " +
+                                                   accessLevel +
+                                                   ".", Username, true);
             return;
         }
 
-        if (!Boolean.parseBoolean(server.campaign.CampaignMain.cm.getConfig("Sol_FreeBuild"))) {
-            server.campaign.CampaignMain.cm.toUser("AM:This command is disabled on this server.", Username, true);
+        if (!Boolean.parseBoolean(CampaignMain.campaignMain.getConfig("Sol_FreeBuild"))) {
+            CampaignMain.campaignMain.toUser("AM:This command is disabled on this server.", Username, true);
             return;
         }
 
-        if (!h.getName().equalsIgnoreCase(server.campaign.CampaignMain.cm.getConfig("NewbieHouseName"))) {
-            server.campaign.CampaignMain.cm.toUser("AM: Only players in " +
-                                                         server.campaign.CampaignMain.cm.getConfig("NewbieHouseName") +
-                                                         " can use this command.", Username, true);
+        if (!h.getName().equalsIgnoreCase(CampaignMain.campaignMain.getConfig("NewbieHouseName"))) {
+            CampaignMain.campaignMain.toUser("AM: Only players in " +
+                                                   CampaignMain.campaignMain.getConfig("NewbieHouseName") +
+                                                   " can use this command.", Username, true);
             return;
         }
 
@@ -64,14 +66,14 @@ public class SolDeleteUnitCommand implements Command {
 
         //break out if the player doesn't have a unit with that id
         if (u == null) {
-            server.campaign.CampaignMain.cm.toUser("Target player doesn't have a unit with ID# " + unitID + ".",
+            CampaignMain.campaignMain.toUser("Target player doesn't have a unit with ID# " + unitID + ".",
                   Username,
                   true);
             return;
         }
 
         //tell the player
-        server.campaign.CampaignMain.cm.toUser("AM:" + Username + "'s " + u.getModelName() + " was removed.",
+        CampaignMain.campaignMain.toUser("AM:" + Username + "'s " + u.getModelName() + " was removed.",
               Username,
               true);
 
@@ -80,8 +82,8 @@ public class SolDeleteUnitCommand implements Command {
         //if the limit is on for SOL players, they have the ability to use this command to delete units
         //So, when they do, we need to subtract one from their free mek counter.
         //though.. i think this may be dead code, pretty sure if there is a limit the del option wont show
-        if (server.campaign.CampaignMain.cm.getConfig("FreeBuild_LimitPostDefOnly").equalsIgnoreCase("false") &&
-                  h.getName().equalsIgnoreCase(server.campaign.CampaignMain.cm.getConfig("NewbieHouseName")) &&
+        if (CampaignMain.campaignMain.getConfig("FreeBuild_LimitPostDefOnly").equalsIgnoreCase("false") &&
+                  h.getName().equalsIgnoreCase(CampaignMain.campaignMain.getConfig("NewbieHouseName")) &&
                   Integer.parseInt((h.getConfig("FreeBuild_Limit"))) > 0) {
             p.addMekToken(-1);
         }

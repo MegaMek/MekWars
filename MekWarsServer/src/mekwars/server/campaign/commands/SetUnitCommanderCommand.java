@@ -22,6 +22,7 @@ package mekwars.server.campaign.commands;
 
 import common.Unit;
 import megamek.common.VTOL;
+import mekwars.server.campaign.CampaignMain;
 
 /**
  * @author Jason Tighe
@@ -35,18 +36,18 @@ public class SetUnitCommanderCommand implements Command {
     public void process(java.util.StringTokenizer command, String Username) {
 
         if (accessLevel != 0) {
-            int userLevel = server.campaign.CampaignMain.cm.getServer().getUserLevel(Username);
+            int userLevel = CampaignMain.campaignMain.getServer().getUserLevel(Username);
             if (userLevel < getExecutionLevel()) {
-                server.campaign.CampaignMain.cm.toUser("AM:Insufficient access level for command. Level: " +
-                                                             userLevel +
-                                                             ". Required: " +
-                                                             accessLevel +
-                                                             ".", Username, true);
+                CampaignMain.campaignMain.toUser("AM:Insufficient access level for command. Level: " +
+                                                       userLevel +
+                                                       ". Required: " +
+                                                       accessLevel +
+                                                       ".", Username, true);
                 return;
             }
         }
 
-        server.campaign.SPlayer p = server.campaign.CampaignMain.cm.getPlayer(Username);
+        server.campaign.SPlayer p = CampaignMain.campaignMain.getPlayer(Username);
         server.campaign.SHouse house = p.getMyHouse();
         int mechid = -1;
         int armyid = -1;
@@ -58,7 +59,7 @@ public class SetUnitCommanderCommand implements Command {
             commander = Boolean.parseBoolean(command.nextToken());
 
         } catch (Exception e) {
-            server.campaign.CampaignMain.cm.toUser(
+            CampaignMain.campaignMain.toUser(
                   "AM:Incorrect syntax. Try: /setUnitCommander unit ID#army ID#true/false",
                   Username,
                   true);
@@ -69,49 +70,49 @@ public class SetUnitCommanderCommand implements Command {
         server.campaign.SArmy army = p.getArmy(armyid);
 
         if (m == null) {
-            server.campaign.CampaignMain.cm.toUser("AM:Could not find a unit with the given ID.", Username, true);
+            CampaignMain.campaignMain.toUser("AM:Could not find a unit with the given ID.", Username, true);
             return;
         }
 
         if (m.getStatus() == Unit.STATUS_FORSALE) {
-            server.campaign.CampaignMain.cm.toUser("AM:Units that are for sale on the Market.", Username, true);
+            CampaignMain.campaignMain.toUser("AM:Units that are for sale on the Market.", Username, true);
             return;
         }
 
         if (m.getPilot() == null || m.getPilot().getName().equalsIgnoreCase("vacant")) {
-            server.campaign.CampaignMain.cm.toUser("AM:This unit does not have a pilot to be a commander for!",
+            CampaignMain.campaignMain.toUser("AM:This unit does not have a pilot to be a commander for!",
                   Username);
             return;
         }
 
         if (!house.getBooleanConfig("allowUnitCommander" + Unit.getTypeClassDesc(m.getType()))) {
-            server.campaign.CampaignMain.cm.toUser(Unit.getTypeClassDesc(m.getType()) +
-                                                         " units are not allowed to be set as unit commanders!",
+            CampaignMain.campaignMain.toUser(Unit.getTypeClassDesc(m.getType()) +
+                                                   " units are not allowed to be set as unit commanders!",
                   Username);
             return;
         }
 
         if (!house.getBooleanConfig("allowUnitCommanderVTOL") && m.getEntity() instanceof VTOL) {
-            server.campaign.CampaignMain.cm.toUser("AM:VTOL units are not allowed to be set as unit commanders!",
+            CampaignMain.campaignMain.toUser("AM:VTOL units are not allowed to be set as unit commanders!",
                   Username);
             return;
         }
 
         if (m.getEntity().isOffBoard()) {
-            server.campaign.CampaignMain.cm.toUser("AM:Off board units are not allowed to be set as unit commanders!",
+            CampaignMain.campaignMain.toUser("AM:Off board units are not allowed to be set as unit commanders!",
                   Username);
             return;
         }
 
         if (p.getAmountOfTimesUnitExistsInArmies(m.getId()) < 1) {
-            server.campaign.CampaignMain.cm.toUser("AM:the " + m.getModelName() + " is not in any armies!", Username);
+            CampaignMain.campaignMain.toUser("AM:the " + m.getModelName() + " is not in any armies!", Username);
             return;
         }
 
         if (army.isCommander(m.getId()) && commander) {
-            server.campaign.CampaignMain.cm.toUser("AM:" +
-                                                         m.getModelName() +
-                                                         " is already a unit commander for this army!", Username);
+            CampaignMain.campaignMain.toUser("AM:" +
+                                                   m.getModelName() +
+                                                   " is already a unit commander for this army!", Username);
             return;
         }
         //start Baruk Khazad!  20151108b
@@ -123,7 +124,7 @@ public class SetUnitCommanderCommand implements Command {
             }
         }
         if (isInArmy && p.getDutyStatus() != server.campaign.SPlayer.STATUS_RESERVE) {
-            server.campaign.CampaignMain.cm.toUser(
+            CampaignMain.campaignMain.toUser(
                   "AM:Your army is on patrol or fighting and needs to return to base first.",
                   Username,
                   true);
@@ -136,15 +137,15 @@ public class SetUnitCommanderCommand implements Command {
 
         if (commander) {
             army.addCommander(m.getId());
-            server.campaign.CampaignMain.cm.toUser("AM:Unit #" + m.getId() + " has been set as unit commander",
+            CampaignMain.campaignMain.toUser("AM:Unit #" + m.getId() + " has been set as unit commander",
                   Username);
         } else {
-            server.campaign.CampaignMain.cm.toUser("AM:Unit #" + m.getId() + " has been removed as unit commander",
+            CampaignMain.campaignMain.toUser("AM:Unit #" + m.getId() + " has been removed as unit commander",
                   Username);
             army.removeCommander(m.getId());
         }
-        server.campaign.CampaignMain.cm.toUser("PL|SAD|" + army.toString(true, "%"), Username, false);
-        server.campaign.CampaignMain.cm.getOpsManager().checkOperations(army, true);
+        CampaignMain.campaignMain.toUser("PL|SAD|" + army.toString(true, "%"), Username, false);
+        CampaignMain.campaignMain.getOpsManager().checkOperations(army, true);
 
     }// end process()
 

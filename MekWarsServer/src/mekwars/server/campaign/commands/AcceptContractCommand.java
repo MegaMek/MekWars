@@ -16,6 +16,8 @@
 
 package mekwars.server.campaign.commands;
 
+import mekwars.server.campaign.CampaignMain;
+
 public class AcceptContractCommand implements Command {
 
     int accessLevel = 0;
@@ -24,27 +26,27 @@ public class AcceptContractCommand implements Command {
     public void process(java.util.StringTokenizer command, String Username) {
 
         if (accessLevel != 0) {
-            int userLevel = server.campaign.CampaignMain.cm.getServer().getUserLevel(Username);
+            int userLevel = CampaignMain.campaignMain.getServer().getUserLevel(Username);
             if (userLevel < getExecutionLevel()) {
-                server.campaign.CampaignMain.cm.toUser("AM:Insufficient access level for command. Level: " +
-                                                             userLevel +
-                                                             ". Required: " +
-                                                             accessLevel +
-                                                             ".", Username, true);
+                CampaignMain.campaignMain.toUser("AM:Insufficient access level for command. Level: " +
+                                                       userLevel +
+                                                       ". Required: " +
+                                                       accessLevel +
+                                                       ".", Username, true);
                 return;
             }
         }
 
         String offeringPlayerName = (String) command.nextElement();
-        server.campaign.SPlayer offeringPlayer = server.campaign.CampaignMain.cm.getPlayer(offeringPlayerName);
-        server.campaign.SPlayer claimingPlayer = server.campaign.CampaignMain.cm.getPlayer(Username);
+        server.campaign.SPlayer offeringPlayer = CampaignMain.campaignMain.getPlayer(offeringPlayerName);
+        server.campaign.SPlayer claimingPlayer = CampaignMain.campaignMain.getPlayer(Username);
         String claimingPlayerName = claimingPlayer.getName();
         server.campaign.mercenaries.ContractInfo info = null;
         boolean contractAccepted = false;
-        for (int i = 0; i < server.campaign.CampaignMain.cm.getUnresolvedContracts().size(); i++) {
-            info = server.campaign.CampaignMain.cm.getUnresolvedContracts().get(i);
+        for (int i = 0; i < CampaignMain.campaignMain.getUnresolvedContracts().size(); i++) {
+            info = CampaignMain.campaignMain.getUnresolvedContracts().get(i);
             String receivingPlayerName = info.getPlayerName();
-            if (server.campaign.CampaignMain.cm.getPlayer(receivingPlayerName) ==
+            if (CampaignMain.campaignMain.getPlayer(receivingPlayerName) ==
                       claimingPlayer) {//player can attempt to take offer
                 //check to see if offer is from player merc wants to accept from
                 if (info.getOfferingPlayerName().equalsIgnoreCase(offeringPlayerName)) {
@@ -52,8 +54,8 @@ public class AcceptContractCommand implements Command {
                     server.campaign.mercenaries.MercHouse factionToSaveContract = (server.campaign.mercenaries.MercHouse) (claimingPlayer.getMyHouse());
                     factionToSaveContract.setContract(info, claimingPlayer);
                     contractAccepted = true;
-                    server.campaign.CampaignMain.cm.getUnresolvedContracts().remove(i);
-                    server.campaign.CampaignMain.cm.getUnresolvedContracts().trimToSize();
+                    CampaignMain.campaignMain.getUnresolvedContracts().remove(i);
+                    CampaignMain.campaignMain.getUnresolvedContracts().trimToSize();
                     break;
                 }
             }//end if(reciev = user)
@@ -65,11 +67,11 @@ public class AcceptContractCommand implements Command {
         }
 
         if (contractAccepted) {
-            server.campaign.CampaignMain.cm.toUser("AM:You have accepted the contract offered by " +
-                                                         offeringPlayerName +
-                                                         " and are now in the employment of " +
-                                                         (offeringPlayer.getMyHouse()).getName(), Username, true);
-            server.campaign.CampaignMain.cm.toUser(claimingPlayerName + "has accepted your contract offer.",
+            CampaignMain.campaignMain.toUser("AM:You have accepted the contract offered by " +
+                                                   offeringPlayerName +
+                                                   " and are now in the employment of " +
+                                                   (offeringPlayer.getMyHouse()).getName(), Username, true);
+            CampaignMain.campaignMain.toUser(claimingPlayerName + "has accepted your contract offer.",
                   offeringPlayerName,
                   true);
             //do finances.
@@ -77,28 +79,28 @@ public class AcceptContractCommand implements Command {
             //code to pay player
             int immediatePay = (contractPay / 2);
             claimingPlayer.addMoney(immediatePay);
-            server.campaign.CampaignMain.cm.toUser("AM:Received " +
-                                                         server.campaign.CampaignMain.cm.moneyOrFluMessage(true,
-                                                               true,
-                                                               immediatePay) +
-                                                         ". The remainder of your pay will be delivered upon contract completion.",
+            CampaignMain.campaignMain.toUser("AM:Received " +
+                                                   CampaignMain.campaignMain.moneyOrFluMessage(true,
+                                                         true,
+                                                         immediatePay) +
+                                                   ". The remainder of your pay will be delivered upon contract completion.",
                   Username,
                   true);
             //code to decrease money of offering player.
             offeringPlayer.addMoney(0 - contractPay);
-            server.campaign.CampaignMain.cm.toUser("AM:You have spent " +
-                                                         server.campaign.CampaignMain.cm.moneyOrFluMessage(true,
-                                                               true,
-                                                               contractPay) +
-                                                         " to hire " +
-                                                         claimingPlayerName, offeringPlayerName, true);
-            server.campaign.CampaignMain.cm.toUser("PL|SHFF|" + claimingPlayer.getHouseFightingFor().getName(),
+            CampaignMain.campaignMain.toUser("AM:You have spent " +
+                                                   CampaignMain.campaignMain.moneyOrFluMessage(true,
+                                                         true,
+                                                         contractPay) +
+                                                   " to hire " +
+                                                   claimingPlayerName, offeringPlayerName, true);
+            CampaignMain.campaignMain.toUser("PL|SHFF|" + claimingPlayer.getHouseFightingFor().getName(),
                   claimingPlayer.getName(),
                   false);
 
         }//end if(contractAccepted)
         else {//contract not set
-            server.campaign.CampaignMain.cm.toUser("AM:You have no contract to accept from a player of the given name",
+            CampaignMain.campaignMain.toUser("AM:You have no contract to accept from a player of the given name",
                   Username,
                   true);
         }//end else(no contract)

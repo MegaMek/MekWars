@@ -1,10 +1,9 @@
 package mekwars.server.util;
 
-import common.util.MWLogger;
-import org.jsoup.Jsoup;
-import org.jsoup.nodes.Document;
-import org.jsoup.safety.Cleaner;
-import org.jsoup.safety.Whitelist;
+
+import mekwars.server.campaign.CampaignMain;
+
+import java.lang.ref.Cleaner;
 
 public class StringUtil {
 
@@ -23,7 +22,7 @@ public class StringUtil {
         Document doc = Jsoup.parse(unclean);
         doc = HTMLCleaner.clean(doc);
         String toReturn = doc.body().toString().replace("<body>", "").replace("</body>", "");
-        boolean allowPlanets = server.campaign.CampaignMain.cm.getBooleanConfig("AllowPlanetsInMOTD");
+        boolean allowPlanets = CampaignMain.campaignMain.getBooleanConfig("AllowPlanetsInMOTD");
         if (allowPlanets) {
             toReturn = mekwars.server.util.StringUtil.replacePlanetTags(toReturn);
         }
@@ -46,7 +45,7 @@ public class StringUtil {
 
     public static void loadSanitizer() {
         Whitelist whitelist = Whitelist.relaxed();
-        if (!server.campaign.CampaignMain.cm.getBooleanConfig("AllowLinksInMOTD")) {
+        if (!CampaignMain.campaignMain.getBooleanConfig("AllowLinksInMOTD")) {
             whitelist.addEnforcedAttribute("a", "rel", "nofollow");
         }
 

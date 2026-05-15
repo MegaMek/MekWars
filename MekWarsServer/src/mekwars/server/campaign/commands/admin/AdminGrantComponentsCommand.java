@@ -17,6 +17,7 @@
 package mekwars.server.campaign.commands.admin;
 
 import common.Unit;
+import mekwars.server.campaign.CampaignMain;
 
 // AdminGrantComponents#Faction#Type#WeightClass#Components
 public class AdminGrantComponentsCommand implements server.campaign.commands.Command {
@@ -29,13 +30,13 @@ public class AdminGrantComponentsCommand implements server.campaign.commands.Com
     public void process(java.util.StringTokenizer command, String Username) {
 
         //access level check
-        int userLevel = server.campaign.CampaignMain.cm.getServer().getUserLevel(Username);
+        int userLevel = CampaignMain.campaignMain.getServer().getUserLevel(Username);
         if (userLevel < getExecutionLevel()) {
-            server.campaign.CampaignMain.cm.toUser("AM:Insufficient access level for command. Level: " +
-                                                         userLevel +
-                                                         ". Required: " +
-                                                         accessLevel +
-                                                         ".", Username, true);
+            CampaignMain.campaignMain.toUser("AM:Insufficient access level for command. Level: " +
+                                                   userLevel +
+                                                   ". Required: " +
+                                                   accessLevel +
+                                                   ".", Username, true);
             return;
         }
 
@@ -48,12 +49,12 @@ public class AdminGrantComponentsCommand implements server.campaign.commands.Com
         int unitWeight = Unit.LIGHT;
 
         try {
-            h = (server.campaign.SHouse) server.campaign.CampaignMain.cm.getData().getHouseByName(command.nextToken());
+            h = (server.campaign.SHouse) CampaignMain.campaignMain.getData().getHouseByName(command.nextToken());
             typestring = command.nextToken();
             weightstring = command.nextToken();
             comps = Integer.parseInt(command.nextToken());
         } catch (Exception e) {
-            server.campaign.CampaignMain.cm.toUser(
+            CampaignMain.campaignMain.toUser(
                   "Improper command. Try: /c admingrancomponents#faction#type#weight#numcomponents",
                   Username,
                   true);
@@ -61,7 +62,7 @@ public class AdminGrantComponentsCommand implements server.campaign.commands.Com
         }
 
         if (h == null) {
-            server.campaign.CampaignMain.cm.toUser("Couldn't find a faction with that name.", Username, true);
+            CampaignMain.campaignMain.toUser("Couldn't find a faction with that name.", Username, true);
             return;
         }
 
@@ -78,9 +79,9 @@ public class AdminGrantComponentsCommand implements server.campaign.commands.Com
         }
 
         h.addPP(unitWeight, unitType, comps, true);
-        server.campaign.CampaignMain.cm.toUser("You granted " + comps + " Comps to " + h.getName(), Username, true);
+        CampaignMain.campaignMain.toUser("You granted " + comps + " Comps to " + h.getName(), Username, true);
         //server.MWLogger.modLog(Username + " granted " + comps+ " Comps to " + h.getName());
-        server.campaign.CampaignMain.cm.doSendModMail("NOTE",
+        CampaignMain.campaignMain.doSendModMail("NOTE",
               Username + " granted " + comps + " Comps to " + h.getName());
 
     }

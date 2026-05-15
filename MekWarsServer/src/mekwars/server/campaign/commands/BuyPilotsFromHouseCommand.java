@@ -17,6 +17,7 @@
 package mekwars.server.campaign.commands;
 
 import common.Unit;
+import mekwars.server.campaign.CampaignMain;
 import server.campaign.pilot.SPilot;
 
 public class BuyPilotsFromHouseCommand implements Command {
@@ -26,20 +27,20 @@ public class BuyPilotsFromHouseCommand implements Command {
 
     public void process(java.util.StringTokenizer command, String Username) {
 
-        server.campaign.SPlayer p = server.campaign.CampaignMain.cm.getPlayer(Username);
+        server.campaign.SPlayer p = CampaignMain.campaignMain.getPlayer(Username);
         server.campaign.SHouse h = p.getMyHouse();
 
         if (!Boolean.parseBoolean(h.getConfig("AllowPersonalPilotQueues"))) {return;}
 
         //access check
         if (accessLevel != 0) {
-            int userLevel = server.campaign.CampaignMain.cm.getServer().getUserLevel(Username);
+            int userLevel = CampaignMain.campaignMain.getServer().getUserLevel(Username);
             if (userLevel < getExecutionLevel()) {
-                server.campaign.CampaignMain.cm.toUser("AM:Insufficient access level for command. Level: " +
-                                                             userLevel +
-                                                             ". Required: " +
-                                                             accessLevel +
-                                                             ".", Username, true);
+                CampaignMain.campaignMain.toUser("AM:Insufficient access level for command. Level: " +
+                                                       userLevel +
+                                                       ". Required: " +
+                                                       accessLevel +
+                                                       ".", Username, true);
                 return;
             }
         }
@@ -54,7 +55,7 @@ public class BuyPilotsFromHouseCommand implements Command {
 
             if (p.getPersonalPilotQueue().getPilotQueue(unitType, weightClass).size() > 0
                       && !h.getBooleanConfig("AllowPlayerToBuyPilotsFromHouseWhenPoolIsFull")) {
-                server.campaign.CampaignMain.cm.toUser(
+                CampaignMain.campaignMain.toUser(
                       "AM:You faction will not let you plunder their pilot reserves while you have perfectly able pilots in your barracks!",
                       Username,
                       true);
@@ -64,7 +65,7 @@ public class BuyPilotsFromHouseCommand implements Command {
             //ok the faction will allow them to buy pilots even with them in the queue but how many?
             if (p.getPersonalPilotQueue().getPilotQueue(unitType, weightClass).size() + numberOfPilots >
                       Integer.parseInt(h.getConfig("MaxAllowedPilotsInQueueToBuyFromHouse"))) {
-                server.campaign.CampaignMain.cm.toUser(
+                CampaignMain.campaignMain.toUser(
                       "AM:Your Faction will only allow you to buy pilots from their reserve when you have " +
                             h.getIntegerConfig("MaxAllowedPilotsInQueueToBuyFromHouse") +
                             ", or less, pilots in your barracks.",
@@ -81,9 +82,9 @@ public class BuyPilotsFromHouseCommand implements Command {
             }
 
             if (p.getMoney() < money * numberOfPilots) {
-                server.campaign.CampaignMain.cm.toUser(
+                CampaignMain.campaignMain.toUser(
                       "AM:You do not have enough money to procure a new pilot from your faction.(" +
-                            server.campaign.CampaignMain.cm.moneyOrFluMessage(true, true, money) +
+                            CampaignMain.campaignMain.moneyOrFluMessage(true, true, money) +
                             ") needed.",
                       Username,
                       true);
@@ -109,37 +110,37 @@ public class BuyPilotsFromHouseCommand implements Command {
                                    pilot.getPiloting();
                     if (skills == null || skills.equals("")) {
                         toUser += ") from your faction for " +
-                                        server.campaign.CampaignMain.cm.moneyOrFluMessage(true, true, money) +
+                                        CampaignMain.campaignMain.moneyOrFluMessage(true, true, money) +
                                         ".";
                     } else {
                         toUser += " " +
                                         skills +
                                         ") from your faction for " +
-                                        server.campaign.CampaignMain.cm.moneyOrFluMessage(true, true, money) +
+                                        CampaignMain.campaignMain.moneyOrFluMessage(true, true, money) +
                                         ".";
                     }
                 } else {
                     toUser = "AM:You have purchased " + pilot.getName() + " (" + pilot.getGunnery();
                     if (skills == null || skills.equals("")) {
                         toUser += ") from your faction for " +
-                                        server.campaign.CampaignMain.cm.moneyOrFluMessage(true, true, money) +
+                                        CampaignMain.campaignMain.moneyOrFluMessage(true, true, money) +
                                         ".";
                     } else {
                         toUser += " " +
                                         skills +
                                         ") from your faction for " +
-                                        server.campaign.CampaignMain.cm.moneyOrFluMessage(true, true, money) +
+                                        CampaignMain.campaignMain.moneyOrFluMessage(true, true, money) +
                                         ".";
                     }
                 }
-                server.campaign.CampaignMain.cm.toUser(toUser, Username, true);
+                CampaignMain.campaignMain.toUser(toUser, Username, true);
                 //CampaignMain.cm.toUser("PL|PPQ|"+p.getPersonalPilotQueue().toString(true),Username,false);
-                server.campaign.CampaignMain.cm.toUser("PL|AP2PPQ|" +
-                                                             unitType +
-                                                             "|" +
-                                                             weightClass +
-                                                             "|" +
-                                                             pilot.toFileFormat("#", true), Username, false);
+                CampaignMain.campaignMain.toUser("PL|AP2PPQ|" +
+                                                       unitType +
+                                                       "|" +
+                                                       weightClass +
+                                                       "|" +
+                                                       pilot.toFileFormat("#", true), Username, false);
             }
         }//end hasMoreElements
     }//end process

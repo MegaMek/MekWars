@@ -57,7 +57,7 @@ public class BuildTable {
 
             if (table.size() < 1) {return "Error OMG URFD.mtf";}
 
-            int ran = CampaignMain.cm.getRandomNumber(table.size());
+            int ran = CampaignMain.campaignMain.getRandomNumber(table.size());
 
             Filename = table.elementAt(ran);
             if (Filename.indexOf(".") == -1) {unitProducer = Filename;} else {fileFound = true;}
@@ -184,7 +184,7 @@ public class BuildTable {
                 return "Error OMG URFD.mtf";
             }
 
-            int ran = CampaignMain.cm.getRandomNumber(table.size());
+            int ran = CampaignMain.campaignMain.getRandomNumber(table.size());
             Filename = table.elementAt(ran);
             if (Filename.indexOf(".") == -1) {unitFileName = Filename;} else {fileFound = true;}
         }

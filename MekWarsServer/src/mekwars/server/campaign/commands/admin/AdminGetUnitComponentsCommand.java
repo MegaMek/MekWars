@@ -21,6 +21,7 @@ import megamek.common.CriticalSlot;
 import megamek.common.Entity;
 import megamek.common.EquipmentType;
 import megamek.common.Mech;
+import mekwars.server.campaign.CampaignMain;
 
 /**
  * @author Jason Tighe
@@ -37,26 +38,26 @@ public class AdminGetUnitComponentsCommand implements server.campaign.commands.C
     public void process(java.util.StringTokenizer command, String Username) {
 
         // access level check
-        int userLevel = server.campaign.CampaignMain.cm.getServer().getUserLevel(Username);
+        int userLevel = CampaignMain.campaignMain.getServer().getUserLevel(Username);
         if (userLevel < getExecutionLevel()) {
-            server.campaign.CampaignMain.cm.toUser(
+            CampaignMain.campaignMain.toUser(
                   "AM:Insufficient access level for command. Level: "
                         + userLevel + ". Required: " + accessLevel + ".",
                   Username, true);
             return;
         }
 
-        int year = server.campaign.CampaignMain.cm.getIntegerConfig("CampaignYear");
+        int year = CampaignMain.campaignMain.getIntegerConfig("CampaignYear");
 
         try {
             String targetName = command.nextToken();
             String option = command.nextToken();
             StringBuffer result = new StringBuffer();
 
-            server.campaign.SPlayer target = server.campaign.CampaignMain.cm.getPlayer(targetName);
+            server.campaign.SPlayer target = CampaignMain.campaignMain.getPlayer(targetName);
 
             if (target == null) {
-                server.campaign.CampaignMain.cm.toUser(
+                CampaignMain.campaignMain.toUser(
                       "Target player could not be found. Try again.",
                       Username, true);
                 return;
@@ -66,7 +67,7 @@ public class AdminGetUnitComponentsCommand implements server.campaign.commands.C
                 result.append("You have the current parts stockpiled<br>");
                 result.append(target.getUnitParts().tableizeComponents(year));
 
-                server.campaign.CampaignMain.cm.toUser(result.toString(), Username);
+                CampaignMain.campaignMain.toUser(result.toString(), Username);
             } else if (option.equalsIgnoreCase("addParts")) {
                 // non null target, so attempt the scrap
                 int unitID = Integer.parseInt(command.nextToken());
@@ -74,11 +75,11 @@ public class AdminGetUnitComponentsCommand implements server.campaign.commands.C
 
                 target.getUnitParts().add(getUnitComponents(m.getEntity()));
 
-                server.campaign.CampaignMain.cm.toUser(
+                CampaignMain.campaignMain.toUser(
                       "All useable parts from " + m.getModelName()
                             + " where added to " + target.getName()
                             + "'s parts stockpile", Username);
-                server.campaign.CampaignMain.cm.toUser(
+                CampaignMain.campaignMain.toUser(
                       "All useable parts from " + m.getModelName()
                             + " where added to your parts stockpile",
                       target.getName());
@@ -90,7 +91,7 @@ public class AdminGetUnitComponentsCommand implements server.campaign.commands.C
 
                 // break out if the player doesn't have a unit with that id
                 if (m == null) {
-                    server.campaign.CampaignMain.cm.toUser(
+                    CampaignMain.campaignMain.toUser(
                           "Target player doesn't have a unit with ID# "
                                 + unitID + ".", Username, true);
                     return;
@@ -112,11 +113,11 @@ public class AdminGetUnitComponentsCommand implements server.campaign.commands.C
                 }
                 result.append("</table>");
 
-                server.campaign.CampaignMain.cm.toUser(result.toString(), Username);
+                CampaignMain.campaignMain.toUser(result.toString(), Username);
 
             }
         } catch (Exception ex) {
-            server.campaign.CampaignMain.cm
+            CampaignMain.campaignMain
                   .toUser(
                         "Invalid Syntax: /admingetunitcomponents TargetPlayer#Option[BreakDownUnit,DisplayParts,AddParts]#Unit[ID,FileName]",
                         Username);

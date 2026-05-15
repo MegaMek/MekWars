@@ -21,6 +21,7 @@
 package mekwars.server.campaign.commands;
 
 import common.util.MWLogger;
+import mekwars.server.campaign.CampaignMain;
 
 /**
  * @author Torren (Jason Tighe) this parses out what the User wants reparied on thier unit and sends that data to the
@@ -34,13 +35,13 @@ public class StopRepairJobCommand implements Command {
     public void process(java.util.StringTokenizer command, String Username) {
 
         if (accessLevel != 0) {
-            int userLevel = server.campaign.CampaignMain.cm.getServer().getUserLevel(Username);
+            int userLevel = CampaignMain.campaignMain.getServer().getUserLevel(Username);
             if (userLevel < getExecutionLevel()) {
-                server.campaign.CampaignMain.cm.toUser("AM:Insufficient access level for command. Level: " +
-                                                             userLevel +
-                                                             ". Required: " +
-                                                             accessLevel +
-                                                             ".", Username, true);
+                CampaignMain.campaignMain.toUser("AM:Insufficient access level for command. Level: " +
+                                                       userLevel +
+                                                       ". Required: " +
+                                                       accessLevel +
+                                                       ".", Username, true);
                 return;
             }
         }
@@ -52,18 +53,18 @@ public class StopRepairJobCommand implements Command {
             int slot = Integer.parseInt(command.nextToken());
             boolean armor = Boolean.parseBoolean(command.nextToken());
 
-            server.campaign.SPlayer player = server.campaign.CampaignMain.cm.getPlayer(Username);
+            server.campaign.SPlayer player = CampaignMain.campaignMain.getPlayer(Username);
             server.campaign.SUnit unit = player.getUnit(unitID);
 
-            if (!server.campaign.CampaignMain.cm.getRTT().isBeingRepaired(unitID, location, slot, armor)) {
-                server.campaign.CampaignMain.cm.toUser("FSM|There is no repair order for this section at the present.",
+            if (!CampaignMain.campaignMain.getRTT().isBeingRepaired(unitID, location, slot, armor)) {
+                CampaignMain.campaignMain.toUser("FSM|There is no repair order for this section at the present.",
                       Username,
                       false);
                 return;
             }
 
-            if (server.campaign.CampaignMain.cm.getRTT().getState() == java.lang.Thread.State.TERMINATED) {
-                server.campaign.CampaignMain.cm.toUser(
+            if (CampaignMain.campaignMain.getRTT().getState() == java.lang.Thread.State.TERMINATED) {
+                CampaignMain.campaignMain.toUser(
                       "FSM|Sorry your repair order could not be processed - the repair thread terminated. Staff was notified.",
                       Username,
                       false);
@@ -72,9 +73,9 @@ public class StopRepairJobCommand implements Command {
                 return;
             }
 
-            server.campaign.CampaignMain.cm.getRTT().stopRepair(unitID, location, slot, armor);
+            CampaignMain.campaignMain.getRTT().stopRepair(unitID, location, slot, armor);
 
-            server.campaign.CampaignMain.cm.toUser("PL|UU|" + unitID + "|" + unit.toString(true), Username, false);
+            CampaignMain.campaignMain.toUser("PL|UU|" + unitID + "|" + unit.toString(true), Username, false);
 
         } catch (Exception ex) {
             MWLogger.errLog("AM:Unable to Process Repair Unit Command!");

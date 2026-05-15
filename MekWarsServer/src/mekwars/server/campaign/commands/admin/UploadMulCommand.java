@@ -17,6 +17,8 @@
 package mekwars.server.campaign.commands.admin;
 
 
+import mekwars.server.campaign.CampaignMain;
+
 public class UploadMulCommand implements server.campaign.commands.Command {
 
     /*
@@ -35,13 +37,13 @@ public class UploadMulCommand implements server.campaign.commands.Command {
     public void process(java.util.StringTokenizer command, String Username) {
 
         //access level check
-        int userLevel = server.campaign.CampaignMain.cm.getServer().getUserLevel(Username);
+        int userLevel = CampaignMain.campaignMain.getServer().getUserLevel(Username);
         if (userLevel < getExecutionLevel()) {
-            server.campaign.CampaignMain.cm.toUser("AM:Insufficient access level for command. Level: " +
-                                                         userLevel +
-                                                         ". Required: " +
-                                                         accessLevel +
-                                                         ".", Username, true);
+            CampaignMain.campaignMain.toUser("AM:Insufficient access level for command. Level: " +
+                                                   userLevel +
+                                                   ". Required: " +
+                                                   accessLevel +
+                                                   ".", Username, true);
             return;
         }
         String fileName = "./data/armies/" + command.nextToken();
@@ -59,9 +61,9 @@ public class UploadMulCommand implements server.campaign.commands.Command {
             p.close();
             out.close();
 
-            server.campaign.CampaignMain.cm.toUser(newMul.getPath() + " Saved", Username, true);
+            CampaignMain.campaignMain.toUser(newMul.getPath() + " Saved", Username, true);
         } catch (Exception ex) {
-            server.campaign.CampaignMain.cm.toUser("File Not found", Username, true);
+            CampaignMain.campaignMain.toUser("File Not found", Username, true);
             return;
         }
 

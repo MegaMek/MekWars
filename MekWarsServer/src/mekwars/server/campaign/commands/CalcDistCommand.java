@@ -16,6 +16,8 @@
 
 package mekwars.server.campaign.commands;
 
+import mekwars.server.campaign.CampaignMain;
+
 public class CalcDistCommand implements Command {
 
     int accessLevel = 0;
@@ -24,42 +26,42 @@ public class CalcDistCommand implements Command {
     public void process(java.util.StringTokenizer command, String Username) {
 
         if (accessLevel != 0) {
-            int userLevel = server.campaign.CampaignMain.cm.getServer().getUserLevel(Username);
+            int userLevel = CampaignMain.campaignMain.getServer().getUserLevel(Username);
             if (userLevel < getExecutionLevel()) {
-                server.campaign.CampaignMain.cm.toUser("AM:Insufficient access level for command. Level: " +
-                                                             userLevel +
-                                                             ". Required: " +
-                                                             accessLevel +
-                                                             ".", Username, true);
+                CampaignMain.campaignMain.toUser("AM:Insufficient access level for command. Level: " +
+                                                       userLevel +
+                                                       ". Required: " +
+                                                       accessLevel +
+                                                       ".", Username, true);
                 return;
             }
         }
 
         if (!command.hasMoreElements()) {
-            server.campaign.CampaignMain.cm.toUser("SM|You need to enter 2 Planet Names!", Username, false);
+            CampaignMain.campaignMain.toUser("SM|You need to enter 2 Planet Names!", Username, false);
             return;
         }
 
-        server.campaign.SPlanet p1 = server.campaign.CampaignMain.cm.getPlanetFromPartialString(command.nextToken(),
+        server.campaign.SPlanet p1 = CampaignMain.campaignMain.getPlanetFromPartialString(command.nextToken(),
               Username);
         if (!command.hasMoreElements()) {
-            server.campaign.CampaignMain.cm.toUser("SM|You need to enter 2 Planet Names!", Username, false);
+            CampaignMain.campaignMain.toUser("SM|You need to enter 2 Planet Names!", Username, false);
             return;
         }
 
-        server.campaign.SPlanet p2 = server.campaign.CampaignMain.cm.getPlanetFromPartialString(command.nextToken(),
+        server.campaign.SPlanet p2 = CampaignMain.campaignMain.getPlanetFromPartialString(command.nextToken(),
               Username);
         if (p1 != null && p2 != null) {
             int xdiff = (int) (Math.pow(p1.getPosition().getX() - p2.getPosition().getX(), 2));
             int ydiff = (int) (Math.pow(p1.getPosition().getY() - p2.getPosition().getY(), 2));
             int newdist = (int) Math.sqrt(xdiff + ydiff);
-            server.campaign.CampaignMain.cm.toUser("SM|The distance between " +
-                                                         p1.getName() +
-                                                         " and " +
-                                                         p2.getName() +
-                                                         " is " +
-                                                         newdist +
-                                                         " LY", Username, false);
+            CampaignMain.campaignMain.toUser("SM|The distance between " +
+                                                   p1.getName() +
+                                                   " and " +
+                                                   p2.getName() +
+                                                   " is " +
+                                                   newdist +
+                                                   " LY", Username, false);
         }
 
     }//end process()

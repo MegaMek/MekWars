@@ -17,6 +17,8 @@
 package mekwars.server.campaign.commands;
 
 
+import mekwars.server.campaign.CampaignMain;
+
 public class CreateArmyCommand implements Command {
 
     int accessLevel = 0;
@@ -25,31 +27,31 @@ public class CreateArmyCommand implements Command {
     public void process(java.util.StringTokenizer command, String Username) {
 
         if (accessLevel != 0) {
-            int userLevel = server.campaign.CampaignMain.cm.getServer().getUserLevel(Username);
+            int userLevel = CampaignMain.campaignMain.getServer().getUserLevel(Username);
             if (userLevel < getExecutionLevel()) {
-                server.campaign.CampaignMain.cm.toUser("AM:Insufficient access level for command. Level: " +
-                                                             userLevel +
-                                                             ". Required: " +
-                                                             accessLevel +
-                                                             ".", Username, true);
+                CampaignMain.campaignMain.toUser("AM:Insufficient access level for command. Level: " +
+                                                       userLevel +
+                                                       ". Required: " +
+                                                       accessLevel +
+                                                       ".", Username, true);
                 return;
             }
         }
 
-        server.campaign.SPlayer p = server.campaign.CampaignMain.cm.getPlayer(Username);
-        int maxlances = server.campaign.CampaignMain.cm.getIntegerConfig("MaxLancesPerPlayer");
+        server.campaign.SPlayer p = CampaignMain.campaignMain.getPlayer(Username);
+        int maxlances = CampaignMain.campaignMain.getIntegerConfig("MaxLancesPerPlayer");
 
         if (p.getDutyStatus() == server.campaign.SPlayer.STATUS_ACTIVE) {
-            server.campaign.CampaignMain.cm.toUser("AM:You may not create new armies while on active duty.",
+            CampaignMain.campaignMain.toUser("AM:You may not create new armies while on active duty.",
                   Username,
                   true);
             return;
         }
 
         if (p.getArmies().size() >= maxlances) {
-            server.campaign.CampaignMain.cm.toUser("AM:You have reached the max number of allowable armies (" +
-                                                         maxlances +
-                                                         ").", Username, true);
+            CampaignMain.campaignMain.toUser("AM:You have reached the max number of allowable armies (" +
+                                                   maxlances +
+                                                   ").", Username, true);
             return;
         }
 
@@ -83,46 +85,46 @@ public class CreateArmyCommand implements Command {
             if (name.length() > 50) {name = name.substring(0, 50);}
 
             if (name.indexOf("%") != -1) {
-                server.campaign.CampaignMain.cm.toUser("AM:Illegal army name (% forbidden).", Username, true);
+                CampaignMain.campaignMain.toUser("AM:Illegal army name (% forbidden).", Username, true);
                 illegalName = true;
             } else if (name.indexOf("~") != -1) {
-                server.campaign.CampaignMain.cm.toUser("AM:Illegal army name (~ forbidden).", Username, true);
+                CampaignMain.campaignMain.toUser("AM:Illegal army name (~ forbidden).", Username, true);
                 illegalName = true;
             } else if (name.indexOf("$") != -1) {
-                server.campaign.CampaignMain.cm.toUser("AM:Illegal army name ($ forbidden).", Username, true);
+                CampaignMain.campaignMain.toUser("AM:Illegal army name ($ forbidden).", Username, true);
                 illegalName = true;
             } else if (name.indexOf("|") != -1) {
-                server.campaign.CampaignMain.cm.toUser("AM:Illegal army name (| forbidden).", Username, true);
+                CampaignMain.campaignMain.toUser("AM:Illegal army name (| forbidden).", Username, true);
                 illegalName = true;
             } else if (name.indexOf("!") != -1) {
-                server.campaign.CampaignMain.cm.toUser("AM:Illegal army name (! forbidden).", Username, true);
+                CampaignMain.campaignMain.toUser("AM:Illegal army name (! forbidden).", Username, true);
                 illegalName = true;
             } else if (name.indexOf("*") != -1) {
-                server.campaign.CampaignMain.cm.toUser("AM:Illegal army name (* forbidden).", Username, true);
+                CampaignMain.campaignMain.toUser("AM:Illegal army name (* forbidden).", Username, true);
                 illegalName = true;
             } else if (name.indexOf("#") != -1) {
-                server.campaign.CampaignMain.cm.toUser("AM:Illegal army name (# forbidden).", Username, true);
+                CampaignMain.campaignMain.toUser("AM:Illegal army name (# forbidden).", Username, true);
                 illegalName = true;
             } else if (name.indexOf(">") != -1) {
-                server.campaign.CampaignMain.cm.toUser("AM:Illegal army name (> forbidden).", Username, true);
+                CampaignMain.campaignMain.toUser("AM:Illegal army name (> forbidden).", Username, true);
                 illegalName = true;
             } else if (name.indexOf("<") != -1) {
-                server.campaign.CampaignMain.cm.toUser("AM:Illegal army name (< forbidden).", Username, true);
+                CampaignMain.campaignMain.toUser("AM:Illegal army name (< forbidden).", Username, true);
                 illegalName = true;
             } else if (name.indexOf("@") != -1) {
-                server.campaign.CampaignMain.cm.toUser("AM:Illegal army name (@ forbidden).", Username, true);
+                CampaignMain.campaignMain.toUser("AM:Illegal army name (@ forbidden).", Username, true);
                 illegalName = true;
             } else if (name.indexOf("&") != -1) {
-                server.campaign.CampaignMain.cm.toUser("AM:Illegal army name (& forbidden).", Username, true);
+                CampaignMain.campaignMain.toUser("AM:Illegal army name (& forbidden).", Username, true);
                 illegalName = true;
             } else if (name.indexOf("^") != -1) {
-                server.campaign.CampaignMain.cm.toUser("AM:Illegal army name (^ forbidden).", Username, true);
+                CampaignMain.campaignMain.toUser("AM:Illegal army name (^ forbidden).", Username, true);
                 illegalName = true;
             } else if (name.indexOf("+") != -1) {
-                server.campaign.CampaignMain.cm.toUser("AM:Illegal army name (+ forbidden).", Username, true);
+                CampaignMain.campaignMain.toUser("AM:Illegal army name (+ forbidden).", Username, true);
                 illegalName = true;
             } else if (name.indexOf("=") != -1) {
-                server.campaign.CampaignMain.cm.toUser("AM:Illegal army name (= forbidden).", Username, true);
+                CampaignMain.campaignMain.toUser("AM:Illegal army name (= forbidden).", Username, true);
                 illegalName = true;
             }
 
@@ -130,8 +132,8 @@ public class CreateArmyCommand implements Command {
         }
 
         //player is making a new army. set the default limiters.
-        newArmy.setUpperLimiter(server.campaign.CampaignMain.cm.getIntegerConfig("DefaultUpperLimit"));
-        newArmy.setLowerLimiter(server.campaign.CampaignMain.cm.getIntegerConfig("DefaultLowerLimit"));
+        newArmy.setUpperLimiter(CampaignMain.campaignMain.getIntegerConfig("DefaultUpperLimit"));
+        newArmy.setLowerLimiter(CampaignMain.campaignMain.getIntegerConfig("DefaultLowerLimit"));
 
         //add the army to the player's list
         if (p.getArmies().size() < newArmy.getID()) {p.getArmies().add(newArmy);} else {
@@ -140,8 +142,8 @@ public class CreateArmyCommand implements Command {
 
 
         //send relevant data to client
-        server.campaign.CampaignMain.cm.toUser("PL|SAD|" + p.getArmy(i).toString(true, "%"), Username, false);
-        server.campaign.CampaignMain.cm.toUser("AM:Created a new Army (#" + p.getArmy(i).getID() + ").",
+        CampaignMain.campaignMain.toUser("PL|SAD|" + p.getArmy(i).toString(true, "%"), Username, false);
+        CampaignMain.campaignMain.toUser("AM:Created a new Army (#" + p.getArmy(i).getID() + ").",
               Username,
               true);
 

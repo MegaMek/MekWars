@@ -21,6 +21,7 @@ package mekwars.server.campaign.commands.admin;
 import common.AdvancedTerrain;
 import common.Continent;
 import common.PlanetEnvironments;
+import mekwars.server.campaign.CampaignMain;
 
 //import common.Terrain;
 //import common.PlanetEnvironment;
@@ -35,20 +36,20 @@ public class SetAdvancedPlanetTerrainCommand implements server.campaign.commands
     public void process(java.util.StringTokenizer command, String Username) {
 
         //access level check
-        int userLevel = server.campaign.CampaignMain.cm.getServer().getUserLevel(Username);
+        int userLevel = CampaignMain.campaignMain.getServer().getUserLevel(Username);
         if (userLevel < getExecutionLevel()) {
-            server.campaign.CampaignMain.cm.toUser("AM:Insufficient access level for command. Level: " +
-                                                         userLevel +
-                                                         ". Required: " +
-                                                         accessLevel +
-                                                         ".", Username, true);
+            CampaignMain.campaignMain.toUser("AM:Insufficient access level for command. Level: " +
+                                                   userLevel +
+                                                   ". Required: " +
+                                                   accessLevel +
+                                                   ".", Username, true);
             return;
         }
 
-        server.campaign.SPlanet planet = (server.campaign.SPlanet) server.campaign.CampaignMain.cm.getData()
+        server.campaign.SPlanet planet = (server.campaign.SPlanet) CampaignMain.campaignMain.getData()
                                                                          .getPlanetByName(command.nextToken());
         if (planet == null) {
-            server.campaign.CampaignMain.cm.toUser("Unknown Planet", Username, true);
+            CampaignMain.campaignMain.toUser("Unknown Planet", Username, true);
             return;
         }
 
@@ -56,7 +57,7 @@ public class SetAdvancedPlanetTerrainCommand implements server.campaign.commands
         int aid = Integer.parseInt(command.nextToken());
         //		int conid = 0;
 
-        AdvancedTerrain AT = server.campaign.CampaignMain.cm.getData().getAdvancedTerrain(aid);
+        AdvancedTerrain AT = CampaignMain.campaignMain.getData().getAdvancedTerrain(aid);
         PlanetEnvironments originalPe = planet.getEnvironments();
         PlanetEnvironments changedPe = new PlanetEnvironments();
         Continent[] Cont = originalPe.toArray();
@@ -72,19 +73,19 @@ public class SetAdvancedPlanetTerrainCommand implements server.campaign.commands
         planet.setEnvironments(changedPe);
         planet.updated();
 
-        server.campaign.CampaignMain.cm.toUser("Advanced Terrain set for terrain: " +
-                                                     server.campaign.CampaignMain.cm.getData()
-                                                           .getTerrain(id)
-                                                           .getName() +
-                                                     "(" +
-                                                     AT.getName() +
-                                                     ") on planet " +
-                                                     planet.getName(), Username, true);
+        CampaignMain.campaignMain.toUser("Advanced Terrain set for terrain: " +
+                                               CampaignMain.campaignMain.getData()
+                                                     .getTerrain(id)
+                                                     .getName() +
+                                               "(" +
+                                               AT.getName() +
+                                               ") on planet " +
+                                               planet.getName(), Username, true);
         //server.MWLogger.modLog(Username + " set Advanced Terrain for terrain: "+aTerrain.getDisplayName()+" on planet "+planet.getName());
-        server.campaign.CampaignMain.cm.doSendModMail("NOTE",
+        CampaignMain.campaignMain.doSendModMail("NOTE",
               Username +
                     " has set Advanced Terrain for terrain: " +
-                    server.campaign.CampaignMain.cm.getData().getTerrain(id).getName() +
+                    CampaignMain.campaignMain.getData().getTerrain(id).getName() +
                     "(" +
                     AT.getName() +
                     ") on planet " +

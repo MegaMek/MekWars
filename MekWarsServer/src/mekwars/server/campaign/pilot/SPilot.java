@@ -25,6 +25,7 @@ import common.campaign.pilot.skills.PilotSkill;
 import common.util.MWLogger;
 import common.util.TokenReader;
 import megamek.common.Infantry;
+import mekwars.server.campaign.CampaignMain;
 import server.campaign.pilot.skills.AstechSkill;
 import server.campaign.pilot.skills.EdgeSkill;
 import server.campaign.pilot.skills.SPilotSkill;
@@ -110,7 +111,7 @@ public class SPilot extends Pilot {
      */
     public String checkForPilotSkillImprovement(server.campaign.SUnit unit, server.campaign.SPlayer owner) {
 
-        if (server.campaign.CampaignMain.cm.getBooleanConfig("PlayersCanBuyPilotUpgrades")) {
+        if (CampaignMain.campaignMain.getBooleanConfig("PlayersCanBuyPilotUpgrades")) {
             return "";
         }
 
@@ -223,7 +224,7 @@ public class SPilot extends Pilot {
 
             if (!useRandomLevels && getExperience() >= dieSize) {
                 shouldLevelUp = true;
-            } else if (getExperience() >= server.campaign.CampaignMain.cm.getRandomNumber(dieSize)) {
+            } else if (getExperience() >= CampaignMain.campaignMain.getRandomNumber(dieSize)) {
                 shouldLevelUp = true;
             }
 
@@ -231,7 +232,7 @@ public class SPilot extends Pilot {
 
             if (!useRandomLevels && getExperience() >= dieSize) {
                 shouldLevelDown = true;
-            } else if (getExperience() >= server.campaign.CampaignMain.cm.getRandomNumber(dieSize)) {
+            } else if (getExperience() >= CampaignMain.campaignMain.getRandomNumber(dieSize)) {
                 shouldLevelDown = true;
             }
 
@@ -256,7 +257,7 @@ public class SPilot extends Pilot {
                 chanceToGainSkill += house.getIntegerConfig("GiftedPercent");
             }
 
-            int dieRoll = server.campaign.CampaignMain.cm.getRandomNumber(100) + 1;
+            int dieRoll = CampaignMain.campaignMain.getRandomNumber(100) + 1;
             if (dieRoll < chanceToGainSkill) {
                 skillToAdd = SPilotSkills.getRandomSkill(this, unit.getType());
             }
@@ -274,11 +275,11 @@ public class SPilot extends Pilot {
          */
         if (shouldLevelUp) {
 
-            int random = server.campaign.CampaignMain.cm.getRandomNumber(10);
+            int random = CampaignMain.campaignMain.getRandomNumber(10);
             boolean levelGunnery = false;
             boolean levelPiloting = false;
 
-            if (server.campaign.CampaignMain.cm.getBooleanConfig("AllowAsymmetricPilotLevels")) {
+            if (CampaignMain.campaignMain.getBooleanConfig("AllowAsymmetricPilotLevels")) {
                 // Have the differential modify it.  The further away from x/x+1 they are, the more likely
                 // to level up in a manner that pushes it toward x/x+1, but can still get quite varied levelups
 
@@ -440,8 +441,8 @@ public class SPilot extends Pilot {
 
             int newBV = unit.getBVForMatch();
 
-            if (skillToAdd instanceof AstechSkill && !server.campaign.CampaignMain.cm.isUsingAdvanceRepair()) {
-                server.campaign.CampaignMain.cm.toUser("PL|SF|" + owner.getFreeBays(), owner.getName(), false);
+            if (skillToAdd instanceof AstechSkill && !CampaignMain.campaignMain.isUsingAdvanceRepair()) {
+                CampaignMain.campaignMain.toUser("PL|SF|" + owner.getFreeBays(), owner.getName(), false);
             }
 
             String toSend = ". " + getName() + " gained the " + skillToAdd.getName() + " skill";
@@ -505,11 +506,11 @@ public class SPilot extends Pilot {
             if (getCurrentFaction().trim().length() > 0) {
                 result.append(getCurrentFaction());
             } else {
-                result.append(server.campaign.CampaignMain.cm.getConfig("NewbieHouseName"));
+                result.append(CampaignMain.campaignMain.getConfig("NewbieHouseName"));
             }
             result.append(getPilotId());
         }
-        if (server.campaign.CampaignMain.cm.getBooleanConfig("AllowPilotDamageToTransfer")) {
+        if (CampaignMain.campaignMain.getBooleanConfig("AllowPilotDamageToTransfer")) {
             if (toPlayer) {
 
                 // recalculate the number of hits a pilot has for CBT standards
@@ -519,7 +520,7 @@ public class SPilot extends Pilot {
                 int hits = 0;
                 if (getHits() != 0) {
                     hits = Math.max(1,
-                          getHits() / server.campaign.CampaignMain.cm.getIntegerConfig("AmountOfDamagePerPilotHit"));
+                          getHits() / CampaignMain.campaignMain.getIntegerConfig("AmountOfDamagePerPilotHit"));
                 }
                 result.append(hits);
             } else {
@@ -605,7 +606,7 @@ public class SPilot extends Pilot {
             }
 
             if (getPilotId() == -1) {
-                setPilotId(server.campaign.CampaignMain.cm.getAndUpdateCurrentPilotID());
+                setPilotId(CampaignMain.campaignMain.getAndUpdateCurrentPilotID());
             }
         } catch (Exception ex) {
             MWLogger.errLog("Error loading Pilot " + getName());

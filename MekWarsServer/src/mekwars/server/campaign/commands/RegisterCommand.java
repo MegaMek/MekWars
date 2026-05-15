@@ -17,6 +17,7 @@
 package mekwars.server.campaign.commands;
 
 import common.util.MWLogger;
+import mekwars.server.campaign.CampaignMain;
 import server.util.MWPasswd;
 
 
@@ -36,8 +37,8 @@ public class RegisterCommand implements Command {
          * Never check access level for register, but DO check
          * to ensure that a player is enrolled in the campaign.
          */
-        if (server.campaign.CampaignMain.cm.getPlayer(Username) == null) {
-            server.campaign.CampaignMain.cm.toUser(
+        if (CampaignMain.campaignMain.getPlayer(Username) == null) {
+            CampaignMain.campaignMain.toUser(
                   "<font color=\"navy\"><br>---<br>You must have a campaign account in order to register a nickname. [<a href=\"MEKWARS/c enroll\">Click to get started</a>]<br>---<br></font>",
                   Username,
                   true);
@@ -63,7 +64,7 @@ public class RegisterCommand implements Command {
             boolean regged = false;
             try {
                 //MWPasswd.getRecord(regname, null);
-                player = server.campaign.CampaignMain.cm.getPlayer(regname);
+                player = CampaignMain.campaignMain.getPlayer(regname);
                 if (player.getPassword() != null && player.getPassword().access >= 2) {regged = true;}
             } catch (Exception ex) {
                 //Username already registered, ignore error.
@@ -71,24 +72,24 @@ public class RegisterCommand implements Command {
                 regged = true;
             }
 
-            if (regged && !server.campaign.CampaignMain.cm.getServer().isAdmin(Username)) {
-                server.campaign.CampaignMain.cm.toUser("AM:Nickname \"" + regname + "\" is already registered!",
+            if (regged && !CampaignMain.campaignMain.getServer().isAdmin(Username)) {
+                CampaignMain.campaignMain.toUser("AM:Nickname \"" + regname + "\" is already registered!",
                       Username);
                 //MWLogger.modLog(Username + " tried to register the nickname \"" + regname + "\", which was already registered.");
-                server.campaign.CampaignMain.cm.doSendModMail("NOTE",
+                CampaignMain.campaignMain.doSendModMail("NOTE",
                       Username + " tried to register the nickname \"" + regname + "\", which was already registered.");
                 return;
             }
 
             //check passwd length
             if (pw.length() < 3 && pw.length() > 11) {
-                server.campaign.CampaignMain.cm.toUser("AM:Passwords must be between 4 and 10 characters!", Username);
+                CampaignMain.campaignMain.toUser("AM:Passwords must be between 4 and 10 characters!", Username);
                 return;
             }
 
             //change userlevel
             int level = -1;
-            if (server.campaign.CampaignMain.cm.getServer().isAdmin(Username)) {
+            if (CampaignMain.campaignMain.getServer().isAdmin(Username)) {
                 MWPasswd.writeRecord(regname, server.MWChatServer.auth.IAuthenticator.ADMIN, pw);
                 level = server.MWChatServer.auth.IAuthenticator.ADMIN;
             } else {
@@ -97,21 +98,21 @@ public class RegisterCommand implements Command {
             }
 
             //send the userlevel change to all players
-            server.campaign.CampaignMain.cm.getServer().getClient(regname).setAccessLevel(level);
-            server.campaign.CampaignMain.cm.getServer().getUser(regname).setLevel(level);
-            server.campaign.CampaignMain.cm.getServer().sendRemoveUserToAll(regname, false);
-            server.campaign.CampaignMain.cm.getServer().sendNewUserToAll(regname, false);
+            CampaignMain.campaignMain.getServer().getClient(regname).setAccessLevel(level);
+            CampaignMain.campaignMain.getServer().getUser(regname).setLevel(level);
+            CampaignMain.campaignMain.getServer().sendRemoveUserToAll(regname, false);
+            CampaignMain.campaignMain.getServer().sendNewUserToAll(regname, false);
 
             if (player != null) {
-                server.campaign.CampaignMain.cm.doSendToAllOnlinePlayers("PI|DA|" +
-                                                                               server.campaign.CampaignMain.cm.getPlayerUpdateString(
-                                                                                     player), false);
+                CampaignMain.campaignMain.doSendToAllOnlinePlayers("PI|DA|" +
+                                                                         CampaignMain.campaignMain.getPlayerUpdateString(
+                                                                               player), false);
             }
 
             //acknowledge registration
-            server.campaign.CampaignMain.cm.toUser("AM:\"" + regname + "\" successfully registered.", Username);
+            CampaignMain.campaignMain.toUser("AM:\"" + regname + "\" successfully registered.", Username);
             MWLogger.modLog("New nickname registered: " + regname);
-            server.campaign.CampaignMain.cm.doSendModMail("NOTE",
+            CampaignMain.campaignMain.doSendModMail("NOTE",
                   "New nickname registered: " + regname + " by: " + Username);
 
         } catch (Exception e) {

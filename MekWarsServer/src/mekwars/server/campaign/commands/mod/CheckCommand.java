@@ -16,6 +16,8 @@
 
 package mekwars.server.campaign.commands.mod;
 
+import mekwars.server.campaign.CampaignMain;
+
 public class CheckCommand implements server.campaign.commands.Command {
 
     int accessLevel = server.MWChatServer.auth.IAuthenticator.MODERATOR;
@@ -26,26 +28,26 @@ public class CheckCommand implements server.campaign.commands.Command {
     public void process(java.util.StringTokenizer command, String Username) {
 
         //access level check
-        int userLevel = server.campaign.CampaignMain.cm.getServer().getUserLevel(Username);
+        int userLevel = CampaignMain.campaignMain.getServer().getUserLevel(Username);
         if (userLevel < getExecutionLevel()) {
-            server.campaign.CampaignMain.cm.toUser("AM:Insufficient access level for command. Level: " +
-                                                         userLevel +
-                                                         ". Required: " +
-                                                         accessLevel +
-                                                         ".", Username, true);
+            CampaignMain.campaignMain.toUser("AM:Insufficient access level for command. Level: " +
+                                                   userLevel +
+                                                   ". Required: " +
+                                                   accessLevel +
+                                                   ".", Username, true);
             return;
         }
 
         server.campaign.SPlayer p = null;
         try {
-            p = server.campaign.CampaignMain.cm.getPlayer(command.nextToken());
+            p = CampaignMain.campaignMain.getPlayer(command.nextToken());
         } catch (Exception e) {
-            server.campaign.CampaignMain.cm.toUser("AM:Improper format. Try: /c check#name", Username, true);
+            CampaignMain.campaignMain.toUser("AM:Improper format. Try: /c check#name", Username, true);
             return;
         }
 
         if (p == null) {
-            server.campaign.CampaignMain.cm.toUser("AM:Couldn't find a user with that name.", Username, true);
+            CampaignMain.campaignMain.toUser("AM:Couldn't find a user with that name.", Username, true);
             return;
         }
 
@@ -60,19 +62,19 @@ public class CheckCommand implements server.campaign.commands.Command {
         } else {toMod += "inactive. ";}
 
         //player's resources and levels
-        toMod += "He has " + server.campaign.CampaignMain.cm.moneyOrFluMessage(true, true, p.getMoney()) + ", ";
+        toMod += "He has " + CampaignMain.campaignMain.moneyOrFluMessage(true, true, p.getMoney()) + ", ";
         toMod += p.getExperience() + " EXP, ";
-        toMod += server.campaign.CampaignMain.cm.moneyOrFluMessage(false, true, p.getInfluence()) + " and ";
-        toMod += p.getReward() + " " + server.campaign.CampaignMain.cm.getConfig("RPShortName") + "s.<br>";
+        toMod += CampaignMain.campaignMain.moneyOrFluMessage(false, true, p.getInfluence()) + " and ";
+        toMod += p.getReward() + " " + CampaignMain.campaignMain.getConfig("RPShortName") + "s.<br>";
         toMod += " - client version is " + p.getPlayerClientVersion() + ".<br>";
-        toMod += " - IP addess is " + server.campaign.CampaignMain.cm.getServer().getIP(p.getName()) + ".<br>";
-        toMod += " - Userlevel is " + server.campaign.CampaignMain.cm.getServer().getUserLevel(p.getName()) + ".";
+        toMod += " - IP addess is " + CampaignMain.campaignMain.getServer().getIP(p.getName()) + ".<br>";
+        toMod += " - Userlevel is " + CampaignMain.campaignMain.getServer().getUserLevel(p.getName()) + ".";
         toMod += " - Multiplayer group is " + p.getGroupAllowance() + " (0 == no group).";
 
         //send messages and log use
-        server.campaign.CampaignMain.cm.toUser(toMod, Username, true);
+        CampaignMain.campaignMain.toUser(toMod, Username, true);
         //server.MWLogger.modLog(Username + " checked " + p.getName());
-        server.campaign.CampaignMain.cm.doSendModMail("NOTE", Username + " checked " + p.getName());
+        CampaignMain.campaignMain.doSendModMail("NOTE", Username + " checked " + p.getName());
 
     }
 

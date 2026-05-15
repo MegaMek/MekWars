@@ -16,13 +16,15 @@
 
 package mekwars.server.campaign.commands;
 
+import mekwars.server.campaign.CampaignMain;
+
 public class SetClientVersionCommand implements Command {
 
     String syntax = "";
 
     public void process(java.util.StringTokenizer command, String Username) {
 
-        server.campaign.SPlayer p = server.campaign.CampaignMain.cm.getPlayer(command.nextToken());
+        server.campaign.SPlayer p = CampaignMain.campaignMain.getPlayer(command.nextToken());
         if (p != null) {
             String version = command.nextToken();
             p.setPlayerClientVersion(version);

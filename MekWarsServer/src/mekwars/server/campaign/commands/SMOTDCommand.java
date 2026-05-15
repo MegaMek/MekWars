@@ -16,6 +16,8 @@
 
 package mekwars.server.campaign.commands;
 
+import mekwars.server.campaign.CampaignMain;
+
 /**
  * Moving the SMOTD command from MWServ into the normal command structure.
  * <p>
@@ -29,18 +31,18 @@ public class SMOTDCommand implements Command {
     public void process(java.util.StringTokenizer command, String Username) {
 
         if (accessLevel != 0) {
-            int userLevel = server.campaign.CampaignMain.cm.getServer().getUserLevel(Username);
+            int userLevel = CampaignMain.campaignMain.getServer().getUserLevel(Username);
             if (userLevel < getExecutionLevel()) {
-                server.campaign.CampaignMain.cm.toUser("AM:Insufficient access level for command. Level: " +
-                                                             userLevel +
-                                                             ". Required: " +
-                                                             accessLevel +
-                                                             ".", Username, true);
+                CampaignMain.campaignMain.toUser("AM:Insufficient access level for command. Level: " +
+                                                       userLevel +
+                                                       ". Required: " +
+                                                       accessLevel +
+                                                       ".", Username, true);
                 return;
             }
         }
-        server.campaign.CampaignMain.cm.toUser(server.campaign.CampaignMain.cm.getServer()
-                                                     .getConfigParam("INFOMESSAGE"), Username, true);
+        CampaignMain.campaignMain.toUser(CampaignMain.campaignMain.getServer()
+                                               .getConfigParam("INFOMESSAGE"), Username, true);
     }
 
     public int getExecutionLevel() {return accessLevel;}

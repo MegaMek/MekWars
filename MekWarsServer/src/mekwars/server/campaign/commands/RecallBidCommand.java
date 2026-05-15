@@ -16,6 +16,7 @@
 
 package mekwars.server.campaign.commands;
 
+import mekwars.server.campaign.CampaignMain;
 import server.campaign.market2.MarketListing;
 
 public class RecallBidCommand implements Command {
@@ -26,21 +27,21 @@ public class RecallBidCommand implements Command {
     public void process(java.util.StringTokenizer command, String Username) {
 
         if (accessLevel != 0) {
-            int userLevel = server.campaign.CampaignMain.cm.getServer().getUserLevel(Username);
+            int userLevel = CampaignMain.campaignMain.getServer().getUserLevel(Username);
             if (userLevel < getExecutionLevel()) {
-                server.campaign.CampaignMain.cm.toUser("AM:Insufficient access level for command. Level: " +
-                                                             userLevel +
-                                                             ". Required: " +
-                                                             accessLevel +
-                                                             ".", Username, true);
+                CampaignMain.campaignMain.toUser("AM:Insufficient access level for command. Level: " +
+                                                       userLevel +
+                                                       ". Required: " +
+                                                       accessLevel +
+                                                       ".", Username, true);
                 return;
             }
         }
 
         //load the SPlayer
-        server.campaign.SPlayer p = server.campaign.CampaignMain.cm.getPlayer(Username);
+        server.campaign.SPlayer p = CampaignMain.campaignMain.getPlayer(Username);
         if (p == null) {
-            server.campaign.CampaignMain.cm.toUser("AM:Null SPlayer while recalling bid. Report immediately!",
+            CampaignMain.campaignMain.toUser("AM:Null SPlayer while recalling bid. Report immediately!",
                   Username,
                   true);
             return;
@@ -51,20 +52,20 @@ public class RecallBidCommand implements Command {
         try {
             auctionID = Integer.parseInt(command.nextToken());
         } catch (Exception e) {
-            server.campaign.CampaignMain.cm.toUser("AM:Improper format. Try: /c recallbid#AuctionID", Username, true);
+            CampaignMain.campaignMain.toUser("AM:Improper format. Try: /c recallbid#AuctionID", Username, true);
             return;
         }
 
         //check the auction ID
-        MarketListing auction = server.campaign.CampaignMain.cm.getMarket().getListingByID(auctionID);
+        MarketListing auction = CampaignMain.campaignMain.getMarket().getListingByID(auctionID);
         if (auction == null) {
-            server.campaign.CampaignMain.cm.toUser("AM:There is no auction with ID#" + auctionID + ".", Username, true);
+            CampaignMain.campaignMain.toUser("AM:There is no auction with ID#" + auctionID + ".", Username, true);
             return;
         }
 
         //make sure the requestor is the seller
         if (auction.getBidForPlayer(p) < 1) {
-            server.campaign.CampaignMain.cm.toUser("AM:You have no bid on this unit.", Username, true);
+            CampaignMain.campaignMain.toUser("AM:You have no bid on this unit.", Username, true);
             return;
         }
 
@@ -73,18 +74,18 @@ public class RecallBidCommand implements Command {
          * the FOR_SALE, send PL|SUS to the player, or set save. All
          * are handled by .removeListing().
          */
-        MarketListing bidList = server.campaign.CampaignMain.cm.getMarket().getListingByID(auctionID);
+        MarketListing bidList = CampaignMain.campaignMain.getMarket().getListingByID(auctionID);
         bidList.placeBid(Username, -1);//placing a negative bid actually removes from the Hash. See MarketListing.
 
         //let the player know the bid was recalled
-        server.campaign.CampaignMain.cm.toUser("AM:You've rescinded your bid for the " +
-                                                     (server.campaign.CampaignMain.cm.getBooleanConfig("HiddenBMUnits") ?
-                                                            auction.getListedHiddenModelName() :
-                                                            auction.getListedModelName()) +
-                                                     ".", Username, true);
+        CampaignMain.campaignMain.toUser("AM:You've rescinded your bid for the " +
+                                               (CampaignMain.campaignMain.getBooleanConfig("HiddenBMUnits") ?
+                                                      auction.getListedHiddenModelName() :
+                                                      auction.getListedModelName()) +
+                                               ".", Username, true);
 
         //send BM|CU to bidder
-        server.campaign.CampaignMain.cm.toUser("BM|CU|" + auction.toString(auctionID, p), Username, false);
+        CampaignMain.campaignMain.toUser("BM|CU|" + auction.toString(auctionID, p), Username, false);
 
     }//end process()
 

@@ -18,6 +18,7 @@ package mekwars.server.campaign.commands.admin;
 
 import common.House;
 import common.Planet;
+import mekwars.server.campaign.CampaignMain;
 import server.campaign.util.HouseRankingHelpContainer;
 import server.campaign.util.Statistics;
 
@@ -32,26 +33,26 @@ public class AdminCalculateHouseRankingsCommand implements server.campaign.comma
     public void process(java.util.StringTokenizer command, String Username) {
 
         //access level check
-        int userLevel = server.campaign.CampaignMain.cm.getServer().getUserLevel(Username);
+        int userLevel = CampaignMain.campaignMain.getServer().getUserLevel(Username);
         if (userLevel < getExecutionLevel()) {
-            server.campaign.CampaignMain.cm.toUser("AM:Insufficient access level for command. Level: " +
-                                                         userLevel +
-                                                         ". Required: " +
-                                                         accessLevel +
-                                                         ".", Username, true);
+            CampaignMain.campaignMain.toUser("AM:Insufficient access level for command. Level: " +
+                                                   userLevel +
+                                                   ". Required: " +
+                                                   accessLevel +
+                                                   ".", Username, true);
             return;
         }
 
         //do the calculations...
         java.util.HashMap<Integer, Integer> original = new java.util.HashMap<Integer, Integer>();
         java.util.HashMap<Integer, Integer> current = new java.util.HashMap<Integer, Integer>();
-        for (House h : server.campaign.CampaignMain.cm.getData().getAllHouses()) {
+        for (House h : CampaignMain.campaignMain.getData().getAllHouses()) {
             original.put(h.getId(), 0);
             current.put(h.getId(), 0);
         }
-        java.util.Collection<Planet> planets = server.campaign.CampaignMain.cm.getData().getAllPlanets();
+        java.util.Collection<Planet> planets = CampaignMain.campaignMain.getData().getAllPlanets();
         for (Planet planet : planets) {
-            int originalHouseId = server.campaign.CampaignMain.cm.getData()
+            int originalHouseId = CampaignMain.campaignMain.getData()
                                         .getHouseByName(planet.getOriginalOwner())
                                         .getId();
             original.put(originalHouseId, original.get(originalHouseId) + 100);
@@ -60,17 +61,17 @@ public class AdminCalculateHouseRankingsCommand implements server.campaign.comma
             }
         }
 
-        java.util.TreeSet<HouseRankingHelpContainer> s = server.campaign.CampaignMain.cm.getHouseRanking();
+        java.util.TreeSet<HouseRankingHelpContainer> s = CampaignMain.campaignMain.getHouseRanking();
         for (HouseRankingHelpContainer h : s) {
             h.getHouse().setInitialHouseRanking(original.get(h.getHouse().getId()));
             h.setAmount(current.get(h.getHouse().getId()));
         }
 
-        server.campaign.CampaignMain.cm.doSendModMail("NOTE", Username + " has recalculated the faction rankings");
-        server.campaign.CampaignMain.cm.toUser("You have recalculated the faction rankings", Username, true);
+        CampaignMain.campaignMain.doSendModMail("NOTE", Username + " has recalculated the faction rankings");
+        CampaignMain.campaignMain.toUser("You have recalculated the faction rankings", Username, true);
 
         String result = "SM|" + Statistics.getReadableHouseRanking(true);
-        server.campaign.CampaignMain.cm.toUser(result, Username, false);
+        CampaignMain.campaignMain.toUser(result, Username, false);
     }
 
     public int getExecutionLevel() {return accessLevel;}

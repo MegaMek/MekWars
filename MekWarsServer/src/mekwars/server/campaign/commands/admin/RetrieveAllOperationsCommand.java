@@ -16,6 +16,8 @@
 
 package mekwars.server.campaign.commands.admin;
 
+import mekwars.server.campaign.CampaignMain;
+
 //Syntax retrievealloperations#optype
 public class RetrieveAllOperationsCommand implements server.campaign.commands.Command {
 
@@ -27,13 +29,13 @@ public class RetrieveAllOperationsCommand implements server.campaign.commands.Co
     public void process(java.util.StringTokenizer command, String Username) {
 
         //access level check
-        int userLevel = server.campaign.CampaignMain.cm.getServer().getUserLevel(Username);
+        int userLevel = CampaignMain.campaignMain.getServer().getUserLevel(Username);
         if (userLevel < getExecutionLevel()) {
-            server.campaign.CampaignMain.cm.toUser("AM:Insufficient access level for command. Level: " +
-                                                         userLevel +
-                                                         ". Required: " +
-                                                         accessLevel +
-                                                         ".", Username, true);
+            CampaignMain.campaignMain.toUser("AM:Insufficient access level for command. Level: " +
+                                                   userLevel +
+                                                   ". Required: " +
+                                                   accessLevel +
+                                                   ".", Username, true);
             return;
         }
 
@@ -42,7 +44,7 @@ public class RetrieveAllOperationsCommand implements server.campaign.commands.Co
         try {
             opType = command.nextToken();
         } catch (Exception ex) {
-            server.campaign.CampaignMain.cm.toUser("Syntax retrievealloperations#optype", Username, true);
+            CampaignMain.campaignMain.toUser("Syntax retrievealloperations#optype", Username, true);
             return;
         }
 
@@ -50,7 +52,7 @@ public class RetrieveAllOperationsCommand implements server.campaign.commands.Co
 
 
         if (!opFiles.exists()) {
-            server.campaign.CampaignMain.cm.toUser("No files found for Op type " + opType, Username, true);
+            CampaignMain.campaignMain.toUser("No files found for Op type " + opType, Username, true);
             return;
         }
 
@@ -66,13 +68,13 @@ public class RetrieveAllOperationsCommand implements server.campaign.commands.Co
                 }
                 dis.close();
                 fis.close();
-                server.campaign.CampaignMain.cm.doSendModMail("NOTE", Username + " has retrieved " + opFile.getName());
+                CampaignMain.campaignMain.doSendModMail("NOTE", Username + " has retrieved " + opFile.getName());
 
-                server.campaign.CampaignMain.cm.toUser("PL|RSOD|" + opData.toString(), Username, false);
+                CampaignMain.campaignMain.toUser("PL|RSOD|" + opData.toString(), Username, false);
                 //Clean it out for use again.
                 opData.setLength(0);
             } catch (Exception ex) {
-                server.campaign.CampaignMain.cm.toUser("Unable to read " + opFile.getName(), Username, true);
+                CampaignMain.campaignMain.toUser("Unable to read " + opFile.getName(), Username, true);
                 return;
             }
         }

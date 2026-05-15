@@ -17,6 +17,8 @@
 package mekwars.server.campaign.commands.mod;
 
 
+import mekwars.server.campaign.CampaignMain;
+
 /**
  * Moving the Ignore command from MWServ into the normal command structure.
  * <p>
@@ -32,41 +34,41 @@ public class IgnoreCommand implements server.campaign.commands.Command {
     public void process(java.util.StringTokenizer command, String Username) {
 
         if (accessLevel != 0) {
-            int userLevel = server.campaign.CampaignMain.cm.getServer().getUserLevel(Username);
+            int userLevel = CampaignMain.campaignMain.getServer().getUserLevel(Username);
             if (userLevel < getExecutionLevel()) {
-                server.campaign.CampaignMain.cm.toUser("AM:Insufficient access level for command. Level: " +
-                                                             userLevel +
-                                                             ". Required: " +
-                                                             accessLevel +
-                                                             ".", Username, true);
+                CampaignMain.campaignMain.toUser("AM:Insufficient access level for command. Level: " +
+                                                       userLevel +
+                                                       ". Required: " +
+                                                       accessLevel +
+                                                       ".", Username, true);
                 return;
             }
         }
 
         String user = command.nextToken();
-        server.MWClientInfo client = server.campaign.CampaignMain.cm.getServer().getUser(user);
+        server.MWClientInfo client = CampaignMain.campaignMain.getServer().getUser(user);
 
         //Offline users may only be de-listed.
         if (client.getName().equals("Nobody")) {
-            server.campaign.CampaignMain.cm.getServer().getIgnoreList().remove(user);
-            server.campaign.CampaignMain.cm.getServer().getFactionLeaderIgnoreList().remove(client.getName());
+            CampaignMain.campaignMain.getServer().getIgnoreList().remove(user);
+            CampaignMain.campaignMain.getServer().getFactionLeaderIgnoreList().remove(client.getName());
             //MWLogger.modLog(Username + " unmuted " + client.getName());
-            server.campaign.CampaignMain.cm.toUser("AM:You set " +
-                                                         user +
-                                                         " to be ignored to: false. He/She is currently not in the channel.",
+            CampaignMain.campaignMain.toUser("AM:You set " +
+                                                   user +
+                                                   " to be ignored to: false. He/She is currently not in the channel.",
                   Username);
             return;
         }
 
         //standard mute/unmute
-        if (server.campaign.CampaignMain.cm.getServer().getIgnoreList().indexOf(client.getName()) == -1) {
-            server.campaign.CampaignMain.cm.getServer().getIgnoreList().add(client.getName());
+        if (CampaignMain.campaignMain.getServer().getIgnoreList().indexOf(client.getName()) == -1) {
+            CampaignMain.campaignMain.getServer().getIgnoreList().add(client.getName());
             //MWLogger.modLog(Username + " muted " + client.getName());
-            server.campaign.CampaignMain.cm.getServer().sendChat("AM:" + Username + " muted " + client.getName());
+            CampaignMain.campaignMain.getServer().sendChat("AM:" + Username + " muted " + client.getName());
         } else {
-            server.campaign.CampaignMain.cm.getServer().getIgnoreList().remove(client.getName());
-            server.campaign.CampaignMain.cm.getServer().getFactionLeaderIgnoreList().remove(client.getName());
-            server.campaign.CampaignMain.cm.getServer().sendChat("AM:" + Username + " unmuted " + client.getName());
+            CampaignMain.campaignMain.getServer().getIgnoreList().remove(client.getName());
+            CampaignMain.campaignMain.getServer().getFactionLeaderIgnoreList().remove(client.getName());
+            CampaignMain.campaignMain.getServer().sendChat("AM:" + Username + " unmuted " + client.getName());
             //MWLogger.modLog(Username + " unmuted " + client.getName());
         }
 

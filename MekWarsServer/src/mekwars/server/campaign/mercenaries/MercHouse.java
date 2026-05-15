@@ -16,6 +16,8 @@
 
 package mekwars.server.campaign.mercenaries;
 
+import mekwars.server.campaign.CampaignMain;
+
 public class MercHouse extends server.campaign.SHouse {
 
 
@@ -150,7 +152,7 @@ public class MercHouse extends server.campaign.SHouse {
      */
     @Override
     public int getBaysProvided() {
-        int mercBays = server.campaign.CampaignMain.cm.getIntegerConfig("MercHouseBays");
+        int mercBays = CampaignMain.campaignMain.getIntegerConfig("MercHouseBays");
         return mercBays;
     }
 

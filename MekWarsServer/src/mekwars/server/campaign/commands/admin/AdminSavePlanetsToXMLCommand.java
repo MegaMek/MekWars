@@ -22,6 +22,7 @@ import common.Planet;
 import common.Unit;
 import common.UnitFactory;
 import common.util.MWLogger;
+import mekwars.server.campaign.CampaignMain;
 
 public class AdminSavePlanetsToXMLCommand implements server.campaign.commands.Command {
     int accessLevel = server.MWChatServer.auth.IAuthenticator.ADMIN;
@@ -34,13 +35,13 @@ public class AdminSavePlanetsToXMLCommand implements server.campaign.commands.Co
     public void process(java.util.StringTokenizer command, String Username) {
 
         // access level check
-        int userLevel = server.campaign.CampaignMain.cm.getServer().getUserLevel(Username);
+        int userLevel = CampaignMain.campaignMain.getServer().getUserLevel(Username);
         if (userLevel < getExecutionLevel()) {
-            server.campaign.CampaignMain.cm.toUser("AM:Insufficient access level for command. Level: " +
-                                                         userLevel +
-                                                         ". Required: " +
-                                                         accessLevel +
-                                                         ".", Username, true);
+            CampaignMain.campaignMain.toUser("AM:Insufficient access level for command. Level: " +
+                                                   userLevel +
+                                                   ". Required: " +
+                                                   accessLevel +
+                                                   ".", Username, true);
             return;
         }
 
@@ -51,7 +52,7 @@ public class AdminSavePlanetsToXMLCommand implements server.campaign.commands.Co
             p.println("<DOCUMENT>");
             p.println("<MEGAMEKNETPLANETDATA>");
 
-            for (Planet planets : server.campaign.CampaignMain.cm.getData().getAllPlanets()) {
+            for (Planet planets : CampaignMain.campaignMain.getData().getAllPlanets()) {
                 server.campaign.SPlanet planet = (server.campaign.SPlanet) planets;
                 p.println("	<PLANET>");
                 p.println("		<NAME>" + planet.getName() + "</NAME>");
@@ -127,8 +128,8 @@ public class AdminSavePlanetsToXMLCommand implements server.campaign.commands.Co
         } catch (Exception ex) {
             MWLogger.errLog(ex);
         }
-        server.campaign.CampaignMain.cm.toUser("XML saved!", Username, true);
-        server.campaign.CampaignMain.cm.doSendModMail("NOTE", Username + " has saved the universe to XML");
+        CampaignMain.campaignMain.toUser("XML saved!", Username, true);
+        CampaignMain.campaignMain.doSendModMail("NOTE", Username + " has saved the universe to XML");
 
     }
 

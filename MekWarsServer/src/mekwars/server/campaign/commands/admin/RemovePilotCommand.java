@@ -1,6 +1,7 @@
 package mekwars.server.campaign.commands.admin;
 
 import common.Unit;
+import mekwars.server.campaign.CampaignMain;
 
 /**
  * @author Torren (Jason Tighe)
@@ -15,13 +16,13 @@ public class RemovePilotCommand implements server.campaign.commands.Command {
     public void process(java.util.StringTokenizer command, String Username) {
 
         if (accessLevel != 0) {
-            int userLevel = server.campaign.CampaignMain.cm.getServer().getUserLevel(Username);
+            int userLevel = CampaignMain.campaignMain.getServer().getUserLevel(Username);
             if (userLevel < getExecutionLevel()) {
-                server.campaign.CampaignMain.cm.toUser("AM:Insufficient access level for command. Level: " +
-                                                             userLevel +
-                                                             ". Required: " +
-                                                             accessLevel +
-                                                             ".", Username, true);
+                CampaignMain.campaignMain.toUser("AM:Insufficient access level for command. Level: " +
+                                                       userLevel +
+                                                       ". Required: " +
+                                                       accessLevel +
+                                                       ".", Username, true);
                 return;
             }
         }
@@ -37,12 +38,12 @@ public class RemovePilotCommand implements server.campaign.commands.Command {
             weight = command.nextToken();
             position = command.nextToken();
         } catch (Exception ex) {
-            server.campaign.CampaignMain.cm.toUser(
+            CampaignMain.campaignMain.toUser(
                   "Syntanx RemovePilot#Player#Type/ALL#weight/ALL#Position[Not used if ALL is selected].",
                   Username);
             return;
         }
-        server.campaign.SPlayer p = server.campaign.CampaignMain.cm.getPlayer(player);
+        server.campaign.SPlayer p = CampaignMain.campaignMain.getPlayer(player);
 
         if (type.equalsIgnoreCase("all")) {
             if (weight.equalsIgnoreCase("all")) {
@@ -78,10 +79,10 @@ public class RemovePilotCommand implements server.campaign.commands.Command {
             }
         }
 
-        server.campaign.CampaignMain.cm.toUser("PL|PPQ|" + p.getPersonalPilotQueue().toString(true), player, false);
-        server.campaign.CampaignMain.cm.doSendModMail("NOTE",
+        CampaignMain.campaignMain.toUser("PL|PPQ|" + p.getPersonalPilotQueue().toString(true), player, false);
+        CampaignMain.campaignMain.doSendModMail("NOTE",
               Username + " has removed pilots from " + player + "'s PPQ");
-        server.campaign.CampaignMain.cm.toUser(Username + " has removed pilots from your PPQ", player);
+        CampaignMain.campaignMain.toUser(Username + " has removed pilots from your PPQ", player);
 
 
     }

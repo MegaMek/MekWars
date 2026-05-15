@@ -17,6 +17,7 @@
 package mekwars.server.campaign.commands.mod;
 
 import common.House;
+import mekwars.server.campaign.CampaignMain;
 
 
 public class ListMultiPlayerGroupsCommand implements server.campaign.commands.Command {
@@ -29,13 +30,13 @@ public class ListMultiPlayerGroupsCommand implements server.campaign.commands.Co
     public void process(java.util.StringTokenizer command, String Username) {
 
         //access level check
-        int userLevel = server.campaign.CampaignMain.cm.getServer().getUserLevel(Username);
+        int userLevel = CampaignMain.campaignMain.getServer().getUserLevel(Username);
         if (userLevel < getExecutionLevel()) {
-            server.campaign.CampaignMain.cm.toUser("AM:Insufficient access level for command. Level: " +
-                                                         userLevel +
-                                                         ". Required: " +
-                                                         accessLevel +
-                                                         ".", Username, true);
+            CampaignMain.campaignMain.toUser("AM:Insufficient access level for command. Level: " +
+                                                   userLevel +
+                                                   ". Required: " +
+                                                   accessLevel +
+                                                   ".", Username, true);
             return;
         }
 
@@ -46,7 +47,7 @@ public class ListMultiPlayerGroupsCommand implements server.campaign.commands.Co
          * INCREDIBLY EVIL!
          */
         java.util.Hashtable<String, server.campaign.SPlayer> allPlayers = new java.util.Hashtable<String, server.campaign.SPlayer>();
-        for (House vh : server.campaign.CampaignMain.cm.getData().getAllHouses()) {
+        for (House vh : CampaignMain.campaignMain.getData().getAllHouses()) {
             server.campaign.SHouse h = (server.campaign.SHouse) vh;
             allPlayers.putAll(h.getAllOnlinePlayers());
         }
@@ -81,7 +82,7 @@ public class ListMultiPlayerGroupsCommand implements server.campaign.commands.Co
             toSend = toSend.substring(0, toSend.lastIndexOf("+") - 1);
 
         }
-        server.campaign.CampaignMain.cm.toUser(toSend, Username, true);
+        CampaignMain.campaignMain.toUser(toSend, Username, true);
 
     }
 

@@ -59,12 +59,14 @@ package mekwars.common.campaign.operations;
 import java.util.Properties;
 import java.util.TreeMap;
 
+import megamek.codeUtilities.MathUtility;
+import megamek.logging.MMLogger;
 import mekwars.common.MWXMLWriter;
 import mekwars.common.MWXmlSerializable;
 import mekwars.common.util.MMNetXStream;
-import mekwars.common.util.MWLogger;
 
 public class Operation implements MWXmlSerializable {
+    private static final MMLogger LOGGER = MMLogger.create(Operation.class);
 
     //IVARS
 
@@ -132,21 +134,17 @@ public class Operation implements MWXmlSerializable {
      * unavailable, for any reason (typo, intentionally unset), a default value is checked and returned.
      */
     public String getValue(String valToGet, boolean log) {
-
-        //look in the short list every time
+        //look at the short list every time
         String toReturn = (String) opValues.get(valToGet);
 
         //if not present, load a default
-        if (toReturn == null) {toReturn = opsDefaults.getDefault(valToGet);}
+        if (toReturn == null) {
+            toReturn = opsDefaults.getDefault(valToGet);
+        }
 
         //catastrophic failure. sysexit.
         if (toReturn == null && log) {
-            MWLogger.errLog(STR."Failed getting value \"\{valToGet}\" from \{this.getName()} and DefaultOp. Returning null.");
-            try {
-                throw new Exception();
-            } catch (Exception ex) {
-                MWLogger.errLog(ex);
-            }
+            LOGGER.error(STR."Failed getting value \"\{valToGet}\" from \{this.getName()} and DefaultOp. Returning null.");
         }
 
         return toReturn;
@@ -160,27 +158,15 @@ public class Operation implements MWXmlSerializable {
     }
 
     public int getIntValue(String valToGet) {
-        try {
-            return Integer.parseInt(getValue(valToGet));
-        } catch (Exception ex) {
-            return -1;
-        }
+        return MathUtility.parseInt(getValue(valToGet), -1);
     }
 
     public double getDoubleValue(String valToGet) {
-        try {
-            return Double.parseDouble(getValue(valToGet));
-        } catch (Exception ex) {
-            return -1;
-        }
+        return MathUtility.parseDouble(getValue(valToGet), -1.0);
     }
 
     public float getFloatValue(String valToGet) {
-        try {
-            return Float.parseFloat(getValue(valToGet));
-        } catch (Exception ex) {
-            return -1;
-        }
+        return MathUtility.parseFloat(getValue(valToGet), 1.0f);
     }
 
     /**

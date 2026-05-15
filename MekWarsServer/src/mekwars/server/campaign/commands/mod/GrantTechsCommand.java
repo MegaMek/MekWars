@@ -17,6 +17,7 @@
 package mekwars.server.campaign.commands.mod;
 
 import common.util.UnitUtils;
+import mekwars.server.campaign.CampaignMain;
 
 public class GrantTechsCommand implements server.campaign.commands.Command {
 
@@ -27,17 +28,17 @@ public class GrantTechsCommand implements server.campaign.commands.Command {
 
     public void process(java.util.StringTokenizer command, String Username) {
 
-        int userLevel = server.campaign.CampaignMain.cm.getServer().getUserLevel(Username);
+        int userLevel = CampaignMain.campaignMain.getServer().getUserLevel(Username);
         if (userLevel < getExecutionLevel()) {
-            server.campaign.CampaignMain.cm.toUser("AM:Insufficient access level for command. Level: " +
-                                                         userLevel +
-                                                         ". Required: " +
-                                                         accessLevel +
-                                                         ".", Username, true);
+            CampaignMain.campaignMain.toUser("AM:Insufficient access level for command. Level: " +
+                                                   userLevel +
+                                                   ". Required: " +
+                                                   accessLevel +
+                                                   ".", Username, true);
             return;
         }
 
-        server.campaign.SPlayer p = server.campaign.CampaignMain.cm.getPlayer(command.nextToken());
+        server.campaign.SPlayer p = CampaignMain.campaignMain.getPlayer(command.nextToken());
         int techType = Integer.parseInt(command.nextToken());
         int amount = Integer.parseInt(command.nextToken());
 
@@ -47,14 +48,14 @@ public class GrantTechsCommand implements server.campaign.commands.Command {
 
         p.addTotalTechs(techType, amount);
         p.addAvailableTechs(techType, amount);
-        server.campaign.CampaignMain.cm.toUser("AM:" +
-                                                     Username +
-                                                     " has granted you " +
-                                                     amount +
-                                                     " " +
-                                                     UnitUtils.techDescription(techType) +
-                                                     " techs.", p.getName());
-        server.campaign.CampaignMain.cm.doSendModMail("NOTE",
+        CampaignMain.campaignMain.toUser("AM:" +
+                                               Username +
+                                               " has granted you " +
+                                               amount +
+                                               " " +
+                                               UnitUtils.techDescription(techType) +
+                                               " techs.", p.getName());
+        CampaignMain.campaignMain.doSendModMail("NOTE",
               Username +
                     " has granted " +
                     p.getName() +

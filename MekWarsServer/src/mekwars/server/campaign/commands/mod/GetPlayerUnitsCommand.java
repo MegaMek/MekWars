@@ -18,6 +18,7 @@ package mekwars.server.campaign.commands.mod;
 
 import common.Unit;
 import megamek.common.Infantry;
+import mekwars.server.campaign.CampaignMain;
 
 public class GetPlayerUnitsCommand implements server.campaign.commands.Command {
 
@@ -39,13 +40,13 @@ public class GetPlayerUnitsCommand implements server.campaign.commands.Command {
 
         try {
             //access level check
-            int userLevel = server.campaign.CampaignMain.cm.getServer().getUserLevel(Username);
+            int userLevel = CampaignMain.campaignMain.getServer().getUserLevel(Username);
             if (userLevel < getExecutionLevel()) {
-                server.campaign.CampaignMain.cm.toUser("AM:Insufficient access level for command. Level: " +
-                                                             userLevel +
-                                                             ". Required: " +
-                                                             accessLevel +
-                                                             ".", Username, true);
+                CampaignMain.campaignMain.toUser("AM:Insufficient access level for command. Level: " +
+                                                       userLevel +
+                                                       ". Required: " +
+                                                       accessLevel +
+                                                       ".", Username, true);
                 return;
             }
             String username = command.nextToken();
@@ -54,27 +55,27 @@ public class GetPlayerUnitsCommand implements server.campaign.commands.Command {
 
             if (command.hasMoreTokens()) {extraCommands = command.nextToken();}
 
-            server.campaign.commands.Command commandMethod = server.campaign.CampaignMain.cm.getServerCommands()
+            server.campaign.commands.Command commandMethod = CampaignMain.campaignMain.getServerCommands()
                                                                    .get(commandName.toUpperCase());
 
             if (commandMethod == null) {
-                server.campaign.CampaignMain.cm.toUser("AM:Unknown command " + commandName + ".", Username, true);
+                CampaignMain.campaignMain.toUser("AM:Unknown command " + commandName + ".", Username, true);
                 return;
             }
 
             if (commandMethod.getExecutionLevel() > userLevel) {
-                server.campaign.CampaignMain.cm.toUser("AM:Insufficient access level for command. Level: " +
-                                                             userLevel +
-                                                             ". Required: " +
-                                                             commandMethod.getExecutionLevel() +
-                                                             ".", Username, true);
+                CampaignMain.campaignMain.toUser("AM:Insufficient access level for command. Level: " +
+                                                       userLevel +
+                                                       ". Required: " +
+                                                       commandMethod.getExecutionLevel() +
+                                                       ".", Username, true);
                 return;
             }
 
-            server.campaign.SPlayer target = server.campaign.CampaignMain.cm.getPlayer(username);
+            server.campaign.SPlayer target = CampaignMain.campaignMain.getPlayer(username);
 
             if (target == null) {
-                server.campaign.CampaignMain.cm.toUser("AM:Unknown user " + username + ".", Username, true);
+                CampaignMain.campaignMain.toUser("AM:Unknown user " + username + ".", Username, true);
                 return;
             }
 
@@ -110,7 +111,7 @@ public class GetPlayerUnitsCommand implements server.campaign.commands.Command {
 
             if (extraCommands != null) {result += "|" + extraCommands;}
 
-            server.campaign.CampaignMain.cm.toUser("LPU|" + result, Username, false);
+            CampaignMain.campaignMain.toUser("LPU|" + result, Username, false);
         } catch (Exception ex) {
 
         }

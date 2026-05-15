@@ -18,6 +18,7 @@ package mekwars.server.campaign.pilot.skills;
 import common.Unit;
 import common.campaign.pilot.Pilot;
 import megamek.common.Entity;
+import mekwars.server.campaign.CampaignMain;
 
 /**
  * If a pilot has this skill, it levels as if it had one level less of the ability
@@ -47,10 +48,10 @@ public class MedTechSkill extends SPilotSkill {
 
         String chance = "chancefor" + getAbbreviation() + "for" + Unit.getTypeClassDesc(unitType);
 
-        server.campaign.SHouse house = server.campaign.CampaignMain.cm.getHouseFromPartialString(p.getCurrentFaction());
+        server.campaign.SHouse house = CampaignMain.campaignMain.getHouseFromPartialString(p.getCurrentFaction());
 
         if (house == null) {
-            return server.campaign.CampaignMain.cm.getIntegerConfig(chance);
+            return CampaignMain.campaignMain.getIntegerConfig(chance);
         }
 
         return house.getIntegerConfig(chance);

@@ -27,6 +27,8 @@ package mekwars.server.campaign.commands;
 //import common.CampaignData;
 
 
+import mekwars.server.campaign.CampaignMain;
+
 /**
  * Moving the Me command from MWServ into the normal command structure.
  * <p>
@@ -40,13 +42,13 @@ public class MeCommand implements Command {
     public void process(java.util.StringTokenizer command, String Username) {
 
         if (accessLevel != 0) {
-            int userLevel = server.campaign.CampaignMain.cm.getServer().getUserLevel(Username);
+            int userLevel = CampaignMain.campaignMain.getServer().getUserLevel(Username);
             if (userLevel < getExecutionLevel()) {
-                server.campaign.CampaignMain.cm.toUser("AM:Insufficient access level for command. Level: " +
-                                                             userLevel +
-                                                             ". Required: " +
-                                                             accessLevel +
-                                                             ".", Username, true);
+                CampaignMain.campaignMain.toUser("AM:Insufficient access level for command. Level: " +
+                                                       userLevel +
+                                                       ". Required: " +
+                                                       accessLevel +
+                                                       ".", Username, true);
                 return;
             }
         }
@@ -73,36 +75,36 @@ public class MeCommand implements Command {
         if (channels.hasMoreTokens()) {channel = channels.nextToken();}
 
         //if client is somehow null, just send the message
-        server.MWClientInfo client = server.campaign.CampaignMain.cm.getServer().getUser(Username);
+        server.MWClientInfo client = CampaignMain.campaignMain.getServer().getUser(Username);
         if (client == null) {
-            server.campaign.CampaignMain.cm.doSendToAllOnlinePlayers(Username + "|#me " + toSend, true);
+            CampaignMain.campaignMain.doSendToAllOnlinePlayers(Username + "|#me " + toSend, true);
             return;
         }
 
         //check to see if the player is muted
-        boolean generalMute = server.campaign.CampaignMain.cm.getServer().getIgnoreList().indexOf(client.getName()) >
+        boolean generalMute = CampaignMain.campaignMain.getServer().getIgnoreList().indexOf(client.getName()) >
                                     -1;
-        boolean factionMute = server.campaign.CampaignMain.cm.getServer()
+        boolean factionMute = CampaignMain.campaignMain.getServer()
                                     .getFactionLeaderIgnoreList()
                                     .indexOf(client.getName()) > -1;
 
         if (generalMute || factionMute) {
-            server.campaign.CampaignMain.cm.toUser("AM:You've been set to ignore mode and cannot participate in chat.",
+            CampaignMain.campaignMain.toUser("AM:You've been set to ignore mode and cannot participate in chat.",
                   Username,
                   true);
         } else if (channel.equalsIgnoreCase("hm")) {
-            server.campaign.SPlayer player = server.campaign.CampaignMain.cm.getPlayer(Username);
-            server.campaign.CampaignMain.cm.doSendHouseMail(player.getHouseFightingFor(), Username, "#me " + toSend);
+            server.campaign.SPlayer player = CampaignMain.campaignMain.getPlayer(Username);
+            CampaignMain.campaignMain.doSendHouseMail(player.getHouseFightingFor(), Username, "#me " + toSend);
         } else if (channel.equalsIgnoreCase("mm")) {
-            server.campaign.CampaignMain.cm.doSendModMail(Username, "#me " + toSend);
+            CampaignMain.campaignMain.doSendModMail(Username, "#me " + toSend);
         } else if (channel.equalsIgnoreCase("ic")) {
-            server.campaign.CampaignMain.cm.doSendToAllOnlinePlayers("(In Character)" + Username + ":#me " + toSend,
+            CampaignMain.campaignMain.doSendToAllOnlinePlayers("(In Character)" + Username + ":#me " + toSend,
                   true);
         } else if (channel.equalsIgnoreCase("mail")) {
             String reciever = channels.nextToken();
-            server.campaign.CampaignMain.cm.getServer().doStoreMail(reciever + ",#me " + toSend, Username);
+            CampaignMain.campaignMain.getServer().doStoreMail(reciever + ",#me " + toSend, Username);
         } else {
-            server.campaign.CampaignMain.cm.doSendToAllOnlinePlayers(Username + "|#me " + toSend, true);
+            CampaignMain.campaignMain.doSendToAllOnlinePlayers(Username + "|#me " + toSend, true);
             //captureAllChatForBot(Username, toSend);
         }
     }

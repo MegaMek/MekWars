@@ -1,16 +1,16 @@
 package mekwars.server.util;
 
-import common.util.MWLogger;
-import megamek.common.QuirksHandler;
+
 import megamek.common.options.IOption;
 import megamek.common.options.IOptionGroup;
+import mekwars.server.campaign.CampaignMain;
 
 //@Salient this is a wrapper class for MM's QuirksHandler
 public class QuirkHandler {
     private static mekwars.server.util.QuirkHandler handler;
 
     protected QuirkHandler() throws Exception {
-        if (server.campaign.CampaignMain.cm.getBooleanConfig("EnableQuirks")) {
+        if (CampaignMain.campaignMain.getBooleanConfig("EnableQuirks")) {
             QuirksHandler.initQuirksList();
         }
 
@@ -28,7 +28,7 @@ public class QuirkHandler {
     }
 
     public void setQuirks(server.campaign.SUnit unit) {
-        if (server.campaign.CampaignMain.cm.getBooleanConfig("EnableQuirks")) {
+        if (CampaignMain.campaignMain.getBooleanConfig("EnableQuirks")) {
             unit.getEntity().loadDefaultQuirks();
             MWLogger.debugLog(unit.getModelName() + " " + unit.getId() + " Quirks: " + returnQuirkList(unit));
         }
@@ -68,7 +68,7 @@ public class QuirkHandler {
      * @return quirksList
      */
     public String returnQuirkSave(server.campaign.SUnit unit) {
-        if (server.campaign.CampaignMain.cm.getBooleanConfig("EnableQuirks")) {
+        if (CampaignMain.campaignMain.getBooleanConfig("EnableQuirks")) {
             java.util.StringJoiner quirksList = new java.util.StringJoiner("!");
             quirksList.add(returnHtmlQuirkList(unit));
             quirksList.add(returnQuirkList(unit));

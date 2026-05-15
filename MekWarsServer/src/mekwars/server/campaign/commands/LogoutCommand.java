@@ -17,30 +17,32 @@
 package mekwars.server.campaign.commands;
 
 
+import mekwars.server.campaign.CampaignMain;
+
 public class LogoutCommand implements Command {
 
     String syntax = "";
 
     public void process(java.util.StringTokenizer command, String Username) {
 
-        server.campaign.SPlayer p = server.campaign.CampaignMain.cm.getPlayer(Username);
+        server.campaign.SPlayer p = CampaignMain.campaignMain.getPlayer(Username);
 
         if (p.getDutyStatus() == server.campaign.SPlayer.STATUS_ACTIVE
                   &&
                   System.currentTimeMillis() - p.getActiveSince() <
-                        Long.parseLong(server.campaign.CampaignMain.cm.getConfig("MinActiveTime")) * 1000) {
-            server.campaign.CampaignMain.cm.toUser("AM:You can't log out yet (must meet minimum activity time).",
+                        Long.parseLong(CampaignMain.campaignMain.getConfig("MinActiveTime")) * 1000) {
+            CampaignMain.campaignMain.toUser("AM:You can't log out yet (must meet minimum activity time).",
                   Username,
                   true);
             return;
         }
 
         if (p.getDutyStatus() == server.campaign.SPlayer.STATUS_FIGHTING) {
-            server.campaign.CampaignMain.cm.toUser("AM:You cannot log out until your game is over.", Username, true);
+            CampaignMain.campaignMain.toUser("AM:You cannot log out until your game is over.", Username, true);
             return;
         }
 
-        server.campaign.CampaignMain.cm.doLogoutPlayer(Username);
+        CampaignMain.campaignMain.doLogoutPlayer(Username);
     }
 
     //conforming methods

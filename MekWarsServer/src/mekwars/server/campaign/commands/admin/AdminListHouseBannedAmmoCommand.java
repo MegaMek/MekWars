@@ -17,6 +17,8 @@
 package mekwars.server.campaign.commands.admin;
 
 
+import mekwars.server.campaign.CampaignMain;
+
 public class AdminListHouseBannedAmmoCommand implements server.campaign.commands.Command {
 
     int accessLevel = server.MWChatServer.auth.IAuthenticator.ADMIN;
@@ -27,36 +29,36 @@ public class AdminListHouseBannedAmmoCommand implements server.campaign.commands
     public void process(java.util.StringTokenizer command, String Username) {
 
         //access level check
-        int userLevel = server.campaign.CampaignMain.cm.getServer().getUserLevel(Username);
+        int userLevel = CampaignMain.campaignMain.getServer().getUserLevel(Username);
         if (userLevel < getExecutionLevel()) {
-            server.campaign.CampaignMain.cm.toUser("AM:Insufficient access level for command. Level: " +
-                                                         userLevel +
-                                                         ". Required: " +
-                                                         accessLevel +
-                                                         ".", Username, true);
+            CampaignMain.campaignMain.toUser("AM:Insufficient access level for command. Level: " +
+                                                   userLevel +
+                                                   ". Required: " +
+                                                   accessLevel +
+                                                   ".", Username, true);
             return;
         }
 
         String faction = null;
         if (command.hasMoreTokens()) {faction = command.nextToken();} else {
-            server.campaign.CampaignMain.cm.toUser("Unkown House. Syntax: /c AdminListHouseBannedAmmo#HouseName",
+            CampaignMain.campaignMain.toUser("Unkown House. Syntax: /c AdminListHouseBannedAmmo#HouseName",
                   Username,
                   true);
             return;
         }
 
-        server.campaign.SHouse h = server.campaign.CampaignMain.cm.getHouseFromPartialString(faction, Username);
+        server.campaign.SHouse h = CampaignMain.campaignMain.getHouseFromPartialString(faction, Username);
 
         if (h == null || h.getBannedAmmo().size() <= 0) {
-            server.campaign.CampaignMain.cm.toUser("That faction is not currently banning any ammo.", Username, true);
+            CampaignMain.campaignMain.toUser("That faction is not currently banning any ammo.", Username, true);
         } else {
-            server.campaign.CampaignMain.cm.toUser("Banned ammo for Faction " + h.getName(), Username, true);
+            CampaignMain.campaignMain.toUser("Banned ammo for Faction " + h.getName(), Username, true);
             java.util.Enumeration<String> ammoBan = h.getBannedAmmo().keys();
-            java.util.Hashtable<Long, String> munitions = server.campaign.CampaignMain.cm.getData()
+            java.util.Hashtable<Long, String> munitions = CampaignMain.campaignMain.getData()
                                                                 .getMunitionsByNumber();
             while (ammoBan.hasMoreElements()) {
                 String ammoName = ammoBan.nextElement();
-                server.campaign.CampaignMain.cm.toUser(munitions.get(Long.parseLong(ammoName)), Username, true);
+                CampaignMain.campaignMain.toUser(munitions.get(Long.parseLong(ammoName)), Username, true);
             }
         }
 

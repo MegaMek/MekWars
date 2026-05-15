@@ -16,6 +16,8 @@
 
 package mekwars.server.campaign.commands.mod;
 
+import mekwars.server.campaign.CampaignMain;
+
 public class GrantInfluenceCommand implements server.campaign.commands.Command {
 
     int accessLevel = server.MWChatServer.auth.IAuthenticator.MODERATOR;
@@ -25,39 +27,39 @@ public class GrantInfluenceCommand implements server.campaign.commands.Command {
 
     public void process(java.util.StringTokenizer command, String Username) {
 
-        int userLevel = server.campaign.CampaignMain.cm.getServer().getUserLevel(Username);
+        int userLevel = CampaignMain.campaignMain.getServer().getUserLevel(Username);
         if (userLevel < getExecutionLevel()) {
-            server.campaign.CampaignMain.cm.toUser("AM:Insufficient access level for command. Level: " +
-                                                         userLevel +
-                                                         ". Required: " +
-                                                         accessLevel +
-                                                         ".", Username, true);
+            CampaignMain.campaignMain.toUser("AM:Insufficient access level for command. Level: " +
+                                                   userLevel +
+                                                   ". Required: " +
+                                                   accessLevel +
+                                                   ".", Username, true);
             return;
         }
 
-        server.campaign.SPlayer p = server.campaign.CampaignMain.cm.getPlayer(command.nextToken());
+        server.campaign.SPlayer p = CampaignMain.campaignMain.getPlayer(command.nextToken());
         int amount = Integer.parseInt(command.nextToken());
         if (p != null) {
             p.addInfluence(amount);
-            server.campaign.CampaignMain.cm.toUser("AM:You've been granted " +
-                                                         server.campaign.CampaignMain.cm.moneyOrFluMessage(false,
-                                                               true,
-                                                               amount,
-                                                               true) +
-                                                         " from " +
-                                                         Username, p.getName(), true);
-            server.campaign.CampaignMain.cm.toUser("AM:You granted " +
-                                                         server.campaign.CampaignMain.cm.moneyOrFluMessage(false,
-                                                               true,
-                                                               amount,
-                                                               true) +
-                                                         " to " +
-                                                         p.getName(), Username, true);
+            CampaignMain.campaignMain.toUser("AM:You've been granted " +
+                                                   CampaignMain.campaignMain.moneyOrFluMessage(false,
+                                                         true,
+                                                         amount,
+                                                         true) +
+                                                   " from " +
+                                                   Username, p.getName(), true);
+            CampaignMain.campaignMain.toUser("AM:You granted " +
+                                                   CampaignMain.campaignMain.moneyOrFluMessage(false,
+                                                         true,
+                                                         amount,
+                                                         true) +
+                                                   " to " +
+                                                   p.getName(), Username, true);
             //server.MWLogger.modLog(Username + " granted " +CampaignMain.cm.moneyOrFluMessage(false,true,amount,true)+" to " + p.getName());
-            server.campaign.CampaignMain.cm.doSendModMail("NOTE",
+            CampaignMain.campaignMain.doSendModMail("NOTE",
                   Username +
                         " granted " +
-                        server.campaign.CampaignMain.cm.moneyOrFluMessage(false, true, amount, true) +
+                        CampaignMain.campaignMain.moneyOrFluMessage(false, true, amount, true) +
                         " to " +
                         p.getName());
         }

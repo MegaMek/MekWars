@@ -16,6 +16,8 @@
 package mekwars.server.campaign.commands;
 
 
+import mekwars.server.campaign.CampaignMain;
+
 public class RequestOperationSettingsCommand implements Command {
 
     int accessLevel = 0;
@@ -24,25 +26,25 @@ public class RequestOperationSettingsCommand implements Command {
     public void process(java.util.StringTokenizer command, String Username) {
 
         if (accessLevel != 0) {
-            int userLevel = server.campaign.CampaignMain.cm.getServer().getUserLevel(Username);
+            int userLevel = CampaignMain.campaignMain.getServer().getUserLevel(Username);
             if (userLevel < getExecutionLevel()) {
-                server.campaign.CampaignMain.cm.toUser("AM:Insufficient access level for command. Level: " +
-                                                             userLevel +
-                                                             ". Required: " +
-                                                             accessLevel +
-                                                             ".", Username, true);
+                CampaignMain.campaignMain.toUser("AM:Insufficient access level for command. Level: " +
+                                                       userLevel +
+                                                       ". Required: " +
+                                                       accessLevel +
+                                                       ".", Username, true);
                 return;
             }
         }
 
-        server.campaign.SPlayer p = server.campaign.CampaignMain.cm.getPlayer(Username);
-        server.campaign.operations.ShortOperation so = server.campaign.CampaignMain.cm.getOpsManager()
+        server.campaign.SPlayer p = CampaignMain.campaignMain.getPlayer(Username);
+        server.campaign.operations.ShortOperation so = CampaignMain.campaignMain.getOpsManager()
                                                              .getShortOpForPlayer(p);
 
         if (so != null) {
             so.sendReconnectInfoToPlayer(p);
         } else {
-            server.campaign.CampaignMain.cm.toUser("GO|DONE|DONE", Username, false);
+            CampaignMain.campaignMain.toUser("GO|DONE|DONE", Username, false);
         }
     }//end process()
 

@@ -85,7 +85,7 @@ public final class SUnit extends Unit implements Comparable<SUnit> {
         int gunnery = 4;
         int piloting = 5;
 
-        SHouse house = CampaignMain.cm.getHouseFromPartialString(p, null);
+        SHouse house = CampaignMain.campaignMain.getHouseFromPartialString(p, null);
 
         setUnitFilename(Filename);
         init();
@@ -93,13 +93,13 @@ public final class SUnit extends Unit implements Comparable<SUnit> {
         if (house != null) {
             setPilot(house.getNewPilot(getType()));
         } else {
-            setPilot(new SPilot(SPilot.getRandomPilotName(CampaignMain.cm.getR()), gunnery, piloting));
+            setPilot(new SPilot(SPilot.getRandomPilotName(CampaignMain.campaignMain.getR()), gunnery, piloting));
         }
 
         setWeightclass(weightclass); // default weight class.
 
         setProducer(p);
-        setId(CampaignMain.cm.getAndUpdateCurrentUnitID());
+        setId(CampaignMain.campaignMain.getAndUpdateCurrentUnitID());
 
     }
 
@@ -139,7 +139,7 @@ public final class SUnit extends Unit implements Comparable<SUnit> {
     public static void checkAmmoForUnit(mekwars.server.campaign.SUnit u, SHouse h) {
 
         Entity en = u.getEntity();
-        int year = CampaignMain.cm.getIntegerConfig("CampaignYear");
+        int year = CampaignMain.campaignMain.getIntegerConfig("CampaignYear");
 
         boolean wasChanged = false;
 
@@ -168,7 +168,7 @@ public final class SUnit extends Unit implements Comparable<SUnit> {
                 continue;
             }
 
-            if (CampaignMain.cm.getData().getServerBannedAmmo().containsKey(munition) ||
+            if (CampaignMain.campaignMain.getData().getServerBannedAmmo().containsKey(munition) ||
                       h.getBannedAmmo().containsKey(munition)) {
 
                 java.util.Vector<AmmoType> types = AmmoType.getMunitionsFor(at.getAmmoType());
@@ -197,25 +197,6 @@ public final class SUnit extends Unit implements Comparable<SUnit> {
         if (wasChanged) {
             u.setEntity(en);
         }
-    }
-
-    /**
-     * @return the megamek.common.entity this Unit represents
-     */
-    public Entity getEntity() {
-
-        // alreayd loaded. return.
-        if (unitEntity != null) {
-            return unitEntity;
-        }
-
-        // need to load. do so.
-        unitEntity = mekwars.server.campaign.SUnit.loadMech(getUnitFilename());
-        return unitEntity;
-    }
-
-    public void setEntity(Entity unitEntity) {
-        this.unitEntity = unitEntity;
     }
 
     public static Entity loadMech(String Filename) {
@@ -309,18 +290,20 @@ public final class SUnit extends Unit implements Comparable<SUnit> {
      */
     public static boolean mayBeSoldOnMarket(mekwars.server.campaign.SUnit u) {
 
-        if ((u.getType() == Unit.BATTLEARMOR) && !CampaignMain.cm.getBooleanConfig("BAMayBeSoldOnBM")) {
+        if ((u.getType() == Unit.BATTLEARMOR) && !CampaignMain.campaignMain.getBooleanConfig("BAMayBeSoldOnBM")) {
             return false;
-        } else if ((u.getType() == Unit.PROTOMEK) && !CampaignMain.cm.getBooleanConfig("ProtosMayBeSoldOnBM")) {
+        } else if ((u.getType() == Unit.PROTOMEK) &&
+                         !CampaignMain.campaignMain.getBooleanConfig("ProtosMayBeSoldOnBM")) {
             return false;
-        } else if ((u.getType() == Unit.AERO) && !CampaignMain.cm.getBooleanConfig("AerosMayBeSoldOnBM")) {
+        } else if ((u.getType() == Unit.AERO) && !CampaignMain.campaignMain.getBooleanConfig("AerosMayBeSoldOnBM")) {
             return false;
-        } else if ((u.getType() == Unit.INFANTRY) && !CampaignMain.cm.getBooleanConfig("InfantryMayBeSoldOnBM")) {
+        } else if ((u.getType() == Unit.INFANTRY) &&
+                         !CampaignMain.campaignMain.getBooleanConfig("InfantryMayBeSoldOnBM")) {
             return false;
-        } else if ((u.getType() == Unit.VEHICLE) && !CampaignMain.cm.getBooleanConfig("VehsMayBeSoldOnBM")) {
+        } else if ((u.getType() == Unit.VEHICLE) && !CampaignMain.campaignMain.getBooleanConfig("VehsMayBeSoldOnBM")) {
             return false;
         } else if (((u.getType() == Unit.MEK) || (u.getType() == Unit.QUAD)) &&
-                         !CampaignMain.cm.getBooleanConfig("MeksMayBeSoldOnBM")) {
+                         !CampaignMain.campaignMain.getBooleanConfig("MeksMayBeSoldOnBM")) {
             return false;
         }
 
@@ -336,7 +319,7 @@ public final class SUnit extends Unit implements Comparable<SUnit> {
             return 0;
         }
 
-        if ((typeid == Unit.INFANTRY) && CampaignMain.cm.getBooleanConfig("FootInfTakeNoBays")) {
+        if ((typeid == Unit.INFANTRY) && CampaignMain.campaignMain.getBooleanConfig("FootInfTakeNoBays")) {
 
             // check types
             boolean isFoot = model.startsWith("Foot");
@@ -352,10 +335,10 @@ public final class SUnit extends Unit implements Comparable<SUnit> {
         if (faction != null) {
             result = faction.getIntegerConfig(techAmount);
         } else {
-            result = CampaignMain.cm.getIntegerConfig(techAmount);
+            result = CampaignMain.campaignMain.getIntegerConfig(techAmount);
         }
 
-        if (!CampaignMain.cm.isUsingAdvanceRepair()) {
+        if (!CampaignMain.campaignMain.isUsingAdvanceRepair()) {
             // skill)
             result += baymod;
         }
@@ -377,7 +360,7 @@ public final class SUnit extends Unit implements Comparable<SUnit> {
               weightclass,
               baymod,
               model,
-              faction) * CampaignMain.cm.getFloatConfig("NonFactionUnitsIncreasedTechs"));
+              faction) * CampaignMain.campaignMain.getFloatConfig("NonFactionUnitsIncreasedTechs"));
     }
 
     /**
@@ -416,27 +399,25 @@ public final class SUnit extends Unit implements Comparable<SUnit> {
      */
     public static int getMapSizeModification(mekwars.server.campaign.SUnit u) {
         if (u.getType() == Unit.VEHICLE) {
-            return CampaignMain.cm.getIntegerConfig("VehicleMapSizeFactor");
+            return CampaignMain.campaignMain.getIntegerConfig("VehicleMapSizeFactor");
         }
         if (u.getType() == Unit.INFANTRY) {
-            return CampaignMain.cm.getIntegerConfig("InfantryMapSizeFactor");
+            return CampaignMain.campaignMain.getIntegerConfig("InfantryMapSizeFactor");
         }
         if (u.getType() == Unit.MEK) {
-            return CampaignMain.cm.getIntegerConfig("MekMapSizeFactor");
+            return CampaignMain.campaignMain.getIntegerConfig("MekMapSizeFactor");
         }
         if (u.getType() == Unit.BATTLEARMOR) {
-            return CampaignMain.cm.getIntegerConfig("BattleArmorMapSizeFactor");
+            return CampaignMain.campaignMain.getIntegerConfig("BattleArmorMapSizeFactor");
         }
         if (u.getType() == Unit.AERO) {
-            return CampaignMain.cm.getIntegerConfig("AeroMapSizeFactor");
+            return CampaignMain.campaignMain.getIntegerConfig("AeroMapSizeFactor");
         }
         if (u.getType() == Unit.PROTOMEK) {
-            return CampaignMain.cm.getIntegerConfig("ProtoMekMapSizeFactor");
+            return CampaignMain.campaignMain.getIntegerConfig("ProtoMekMapSizeFactor");
         }
         return 0;// no known type? return 0.
     }
-
-    // METHODS
 
     /*
      * AR-related statics.
@@ -444,12 +425,12 @@ public final class SUnit extends Unit implements Comparable<SUnit> {
     public static double getArmorCost(Entity unit, int location) {
         double cost = 0.0;
 
-        if (CampaignMain.cm.getBooleanConfig("UsePartsRepair")) {
+        if (CampaignMain.campaignMain.getBooleanConfig("UsePartsRepair")) {
             return 0;
         }
 
         String armorCost = "CostPoint" + UnitUtils.getArmorShortName(unit, location);
-        cost = CampaignMain.cm.getDoubleConfig(armorCost);
+        cost = CampaignMain.campaignMain.getDoubleConfig(armorCost);
 
         return cost;
     }
@@ -457,20 +438,22 @@ public final class SUnit extends Unit implements Comparable<SUnit> {
     public static double getStructureCost(Entity unit) {
         double cost = 0.0;
 
-        if (CampaignMain.cm.getBooleanConfig("UsePartsRepair")) {
+        if (CampaignMain.campaignMain.getBooleanConfig("UsePartsRepair")) {
             return 0;
         }
 
         String armorCost = "CostPoint" + UnitUtils.getInternalShortName(unit) + "IS";
-        cost = CampaignMain.cm.getDoubleConfig(armorCost);
+        cost = CampaignMain.campaignMain.getDoubleConfig(armorCost);
 
         return cost;
     }
 
+    // METHODS
+
     public static double getCritCost(Entity unit, CriticalSlot crit) {
 
         double cost = 0.0;
-        if (CampaignMain.cm.getBooleanConfig("UsePartsRepair")) {
+        if (CampaignMain.campaignMain.getBooleanConfig("UsePartsRepair")) {
             return 0;
         }
 
@@ -484,12 +467,12 @@ public final class SUnit extends Unit implements Comparable<SUnit> {
 
         // else
         if (UnitUtils.isEngineCrit(crit)) {
-            cost = CampaignMain.cm.getDoubleConfig("EngineCritRepairCost");
+            cost = CampaignMain.campaignMain.getDoubleConfig("EngineCritRepairCost");
         } else if (crit.getType() == CriticalSlot.TYPE_SYSTEM) {
             if (crit.isMissing()) {
-                cost = CampaignMain.cm.getDoubleConfig("SystemCritReplaceCost");
+                cost = CampaignMain.campaignMain.getDoubleConfig("SystemCritReplaceCost");
             } else {
-                cost = CampaignMain.cm.getDoubleConfig("SystemCritRepairCost");
+                cost = CampaignMain.campaignMain.getDoubleConfig("SystemCritRepairCost");
             }
         } else {
             Mounted mounted = crit.getMount();
@@ -498,33 +481,33 @@ public final class SUnit extends Unit implements Comparable<SUnit> {
                 WeaponType weapon = (WeaponType) mounted.getType();
                 if (weapon.hasFlag(WeaponType.F_ENERGY)) {
                     if (crit.isMissing()) {
-                        cost = CampaignMain.cm.getDoubleConfig("EnergyWeaponCritReplaceCost");
+                        cost = CampaignMain.campaignMain.getDoubleConfig("EnergyWeaponCritReplaceCost");
                     } else {
-                        cost = CampaignMain.cm.getDoubleConfig("EnergyWeaponCritRepairCost");
+                        cost = CampaignMain.campaignMain.getDoubleConfig("EnergyWeaponCritRepairCost");
                     }
                 } else if (weapon.hasFlag(WeaponType.F_BALLISTIC)) {
                     if (crit.isMissing()) {
-                        cost = CampaignMain.cm.getDoubleConfig("BallisticCritReplaceCost");
+                        cost = CampaignMain.campaignMain.getDoubleConfig("BallisticCritReplaceCost");
                     } else {
-                        cost = CampaignMain.cm.getDoubleConfig("BallisticCritRepairCost");
+                        cost = CampaignMain.campaignMain.getDoubleConfig("BallisticCritRepairCost");
                     }
                 } else if (weapon.hasFlag(WeaponType.F_MISSILE)) {
                     if (crit.isMissing()) {
-                        cost = CampaignMain.cm.getDoubleConfig("MissileCritReplaceCost");
+                        cost = CampaignMain.campaignMain.getDoubleConfig("MissileCritReplaceCost");
                     } else {
-                        cost = CampaignMain.cm.getDoubleConfig("MissileCritRepairCost");
+                        cost = CampaignMain.campaignMain.getDoubleConfig("MissileCritRepairCost");
                     }
                 } else // use the misc eq costs.
                     if (crit.isMissing()) {
-                        cost = CampaignMain.cm.getDoubleConfig("EquipmentCritReplaceCost");
+                        cost = CampaignMain.campaignMain.getDoubleConfig("EquipmentCritReplaceCost");
                     } else {
-                        cost = CampaignMain.cm.getDoubleConfig("EquipmentCritRepairCost");
+                        cost = CampaignMain.campaignMain.getDoubleConfig("EquipmentCritRepairCost");
                     }
             } else // use the misc eq costs.
                 if (crit.isMissing()) {
-                    cost = CampaignMain.cm.getDoubleConfig("EquipmentCritReplaceCost");
+                    cost = CampaignMain.campaignMain.getDoubleConfig("EquipmentCritReplaceCost");
                 } else {
-                    cost = CampaignMain.cm.getDoubleConfig("EquipmentCritRepairCost");
+                    cost = CampaignMain.campaignMain.getDoubleConfig("EquipmentCritRepairCost");
                 }
         }
 
@@ -557,7 +540,7 @@ public final class SUnit extends Unit implements Comparable<SUnit> {
 
             cm.setEntity(en);
             cm.setUnitFilename(UnitUtils.getEntityFileName(en));
-            cm.setId(CampaignMain.cm.getAndUpdateCurrentUnitID());
+            cm.setId(CampaignMain.campaignMain.getAndUpdateCurrentUnitID());
             cm.init();
             cm.setProducer(fluff);
 
@@ -565,7 +548,7 @@ public final class SUnit extends Unit implements Comparable<SUnit> {
             pilot = new SPilot(en.getCrew().getName(), en.getCrew().getGunnery(), en.getCrew().getPiloting());
 
             if (pilot.getName().equalsIgnoreCase("Unnamed") || pilot.getName().equalsIgnoreCase("vacant")) {
-                pilot.setName(SPilot.getRandomPilotName(CampaignMain.cm.getR()));
+                pilot.setName(SPilot.getRandomPilotName(CampaignMain.campaignMain.getR()));
             }
 
             pilot.setCurrentFaction("Common");
@@ -660,7 +643,7 @@ public final class SUnit extends Unit implements Comparable<SUnit> {
 
         SPilot pilot = null;
         if (gunnery == 99 || piloting == 99) {pilot = new SPilot("Vacant", 99, 99);} else {
-            pilot = new SPilot(SPilot.getRandomPilotName(CampaignMain.cm.getR()), gunnery, piloting);
+            pilot = new SPilot(SPilot.getRandomPilotName(CampaignMain.campaignMain.getR()), gunnery, piloting);
         }
 
         pilot.setCurrentFaction("Common");
@@ -686,6 +669,25 @@ public final class SUnit extends Unit implements Comparable<SUnit> {
 
         cm.setPilot(pilot);
         return cm;
+    }
+
+    /**
+     * @return the megamek.common.entity this Unit represents
+     */
+    public Entity getEntity() {
+
+        // alreayd loaded. return.
+        if (unitEntity != null) {
+            return unitEntity;
+        }
+
+        // need to load. do so.
+        unitEntity = mekwars.server.campaign.SUnit.loadMech(getUnitFilename());
+        return unitEntity;
+    }
+
+    public void setEntity(Entity unitEntity) {
+        this.unitEntity = unitEntity;
     }
 
     /**
@@ -736,7 +738,7 @@ public final class SUnit extends Unit implements Comparable<SUnit> {
         for (Mounted mAmmo : en_Ammo) {
 
             boolean hotloaded = mAmmo.isHotLoaded();
-            if (!CampaignMain.cm.getMegaMekClient().getGame().getOptions().booleanOption("tacops_hotload")) {
+            if (!CampaignMain.campaignMain.getMegaMekClient().getGame().getOptions().booleanOption("tacops_hotload")) {
                 hotloaded = false;
             }
 
@@ -748,7 +750,7 @@ public final class SUnit extends Unit implements Comparable<SUnit> {
         }
 
         if ((unitEntity instanceof Mech) || (unitEntity instanceof Tank)) {
-            int mgCount = CampaignMain.cm.getMachineGunCount(unitEntity.getWeaponList());
+            int mgCount = CampaignMain.campaignMain.getMachineGunCount(unitEntity.getWeaponList());
             msg.append(mgCount);
 
             if (mgCount > 0) {
@@ -787,7 +789,7 @@ public final class SUnit extends Unit implements Comparable<SUnit> {
         msg.append(targetSystem.getCurrentType());
         msg.append(isSupportUnit() ? "1" : "0");
         msg.append(getScrappableFor());
-        if (CampaignMain.cm.isUsingAdvanceRepair()) {
+        if (CampaignMain.campaignMain.isUsingAdvanceRepair()) {
             // do not need to save ammo twice so set sendAmmo to False
             msg.append(UnitUtils.unitBattleDamage(getEntity(), false));
         } else {
@@ -834,12 +836,12 @@ public final class SUnit extends Unit implements Comparable<SUnit> {
             setWeightclass(TokenReader.readInt(ST));
 
             setId(TokenReader.readInt(ST));
-            if (CampaignMain.cm.getCurrentUnitID() <= getId()) {
-                CampaignMain.cm.setCurrentUnitID(getId() + 1);
+            if (CampaignMain.campaignMain.getCurrentUnitID() <= getId()) {
+                CampaignMain.campaignMain.setCurrentUnitID(getId() + 1);
             }
 
             if (getId() == 0) {
-                setId(CampaignMain.cm.getAndUpdateCurrentUnitID());
+                setId(CampaignMain.campaignMain.getAndUpdateCurrentUnitID());
             }
             /*
              * Handle unit status. FOR_SALE and AdvanceRepair both require
@@ -847,9 +849,10 @@ public final class SUnit extends Unit implements Comparable<SUnit> {
              * still exists. If not, the server probably crashed and the unit
              * should be returned to normal.
              */
-            if ((newstate == STATUS_FORSALE) && (CampaignMain.cm.getMarket().getListingForUnit(getId()) == null)) {
+            if ((newstate == STATUS_FORSALE) &&
+                      (CampaignMain.campaignMain.getMarket().getListingForUnit(getId()) == null)) {
                 setStatus(STATUS_OK);
-            } else if (CampaignMain.cm.isUsingAdvanceRepair()) {
+            } else if (CampaignMain.campaignMain.isUsingAdvanceRepair()) {
                 setStatus(STATUS_OK);
             } else {
                 setStatus(newstate);
@@ -888,7 +891,10 @@ public final class SUnit extends Unit implements Comparable<SUnit> {
                         hotloaded = false;
                     }
 
-                    if (!CampaignMain.cm.getMegaMekClient().getGame().getOptions().booleanOption("tacops_hotload")) {
+                    if (!CampaignMain.campaignMain.getMegaMekClient()
+                               .getGame()
+                               .getOptions()
+                               .booleanOption("tacops_hotload")) {
                         hotloaded = false;
                     }
 
@@ -902,7 +908,7 @@ public final class SUnit extends Unit implements Comparable<SUnit> {
                     String munition = Long.toString(at.getMunitionType());
 
                     // check banned ammo
-                    if (CampaignMain.cm.getData().getServerBannedAmmo().get(munition) != null) {
+                    if (CampaignMain.campaignMain.getData().getServerBannedAmmo().get(munition) != null) {
                         continue;
                     }
 
@@ -938,7 +944,7 @@ public final class SUnit extends Unit implements Comparable<SUnit> {
             // Now we need to override this.  Needs to be set in the string,
             // so we don't need to keep a list of all support units client-side
             // but should be dynamic server-side.
-            if (CampaignMain.cm.getSupportUnits().contains(getUnitFilename().trim().toLowerCase())) {
+            if (CampaignMain.campaignMain.getSupportUnits().contains(getUnitFilename().trim().toLowerCase())) {
                 setSupportUnit(true);
             } else {
                 setSupportUnit(false);
@@ -947,12 +953,12 @@ public final class SUnit extends Unit implements Comparable<SUnit> {
 
             setScrappableFor(TokenReader.readInt(ST));
 
-            if (CampaignMain.cm.isUsingAdvanceRepair() &&
+            if (CampaignMain.campaignMain.isUsingAdvanceRepair() &&
                       ((unitEntity instanceof Mech) || (unitEntity instanceof Tank))) {
                 UnitUtils.applyBattleDamage(unitEntity,
                       TokenReader.readString(ST),
-                      ((CampaignMain.cm.getRTT() != null) &&
-                             (CampaignMain.cm.getRTT().unitRepairTimes(getId()) != null)));
+                      ((CampaignMain.campaignMain.getRTT() != null) &&
+                             (CampaignMain.campaignMain.getRTT().unitRepairTimes(getId()) != null)));
             } else {
                 TokenReader.readString(ST);
             }
@@ -981,7 +987,7 @@ public final class SUnit extends Unit implements Comparable<SUnit> {
     public String getDescription(boolean showLink) {
         String status = "";
 
-        if (CampaignMain.cm.isUsingAdvanceRepair()) {
+        if (CampaignMain.campaignMain.isUsingAdvanceRepair()) {
             if (UnitUtils.hasCriticalDamage(getEntity())) {
                 status = "Is Critically Damaged";
             } else if (UnitUtils.hasArmorDamage(getEntity())) {
@@ -1158,7 +1164,7 @@ public final class SUnit extends Unit implements Comparable<SUnit> {
             // Boost BV of super-fast tanks if the "FastHoverBVMod" is a
             // positive
             // number.
-            int FastHoverBVMod = CampaignMain.cm.getIntegerConfig("FastHoverBVMod");
+            int FastHoverBVMod = CampaignMain.campaignMain.getIntegerConfig("FastHoverBVMod");
             if ((FastHoverBVMod > 0) &&
                       (getType() == Unit.VEHICLE) &&
                       (getEntity().getMovementMode() == megamek.common.EntityMovementMode.HOVER)) {
@@ -1168,7 +1174,7 @@ public final class SUnit extends Unit implements Comparable<SUnit> {
             }
 
             // Increase elite BV's by 5% if the "ElitePilotsBVMod" is enabled.
-            if (CampaignMain.cm.getBooleanConfig("ElitePilotsBVMod")) {
+            if (CampaignMain.campaignMain.getBooleanConfig("ElitePilotsBVMod")) {
                 if (getPilot().getGunnery() < 3) {
                     calcedBV = (int) Math.round(calcedBV * 1.05);
                 } else if (getPilot().getPiloting() < 3) {
@@ -1303,14 +1309,14 @@ public final class SUnit extends Unit implements Comparable<SUnit> {
      */
     public void setUnmaintainedStatus() {
 
-        if (CampaignMain.cm.isUsingAdvanceRepair()) {
+        if (CampaignMain.campaignMain.isUsingAdvanceRepair()) {
             setStatus(STATUS_OK);
             return;
         }
 
         // load configurables
-        int baseUnmaintained = CampaignMain.cm.getIntegerConfig("BaseUnmaintainedLevel");
-        int unmaintPenalty = CampaignMain.cm.getIntegerConfig("UnmaintainedPenalty");
+        int baseUnmaintained = CampaignMain.campaignMain.getIntegerConfig("BaseUnmaintainedLevel");
+        int unmaintPenalty = CampaignMain.campaignMain.getIntegerConfig("UnmaintainedPenalty");
 
         // set the actual status
         setStatus(STATUS_UNMAINTAINED);
@@ -1328,7 +1334,7 @@ public final class SUnit extends Unit implements Comparable<SUnit> {
     }// end setUnmaintainedStatus()
 
     public int getBVForMatch() {
-        if (CampaignMain.cm.getBooleanConfig("UseBaseBVForMatching")) {
+        if (CampaignMain.campaignMain.getBooleanConfig("UseBaseBVForMatching")) {
             return getBaseBV();
         }
         return getBV();
@@ -1514,11 +1520,11 @@ public final class SUnit extends Unit implements Comparable<SUnit> {
 
     @Override
     public boolean isSupportUnit() {
-        return CampaignMain.cm.getSupportUnits().contains(getUnitFilename().toLowerCase());
+        return CampaignMain.campaignMain.getSupportUnits().contains(getUnitFilename().toLowerCase());
     }
 
     public void reportStateToPlayer(SPlayer player) {
-        CampaignMain.cm.toUser("PL|UU|" + getId() + "|" + toString(true), player.getName(), false);
+        CampaignMain.campaignMain.toUser("PL|UU|" + getId() + "|" + toString(true), player.getName(), false);
     }
 
     public boolean isOMGUnit() {

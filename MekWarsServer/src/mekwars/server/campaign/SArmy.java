@@ -25,6 +25,7 @@ import megamek.common.battlevalue.BvMultiplier;
 import megamek.common.equipment.AmmoType;
 import megamek.common.equipment.Mounted;
 import megamek.common.units.Aero;
+import megamek.common.units.Entity;
 import megamek.common.units.Infantry;
 import megamek.common.units.Tank;
 import megamek.common.units.VTOL;
@@ -102,18 +103,18 @@ public class SArmy extends Army {
         // no break, generate a raw force size
         for (Unit u : getUnits()) {
             if (u.getType() == Unit.INFANTRY) {
-                rawForceSize += CampaignMain.cm.getFloatConfig("InfantryOperationsBVMod");
+                rawForceSize += CampaignMain.campaignMain.getFloatConfig("InfantryOperationsBVMod");
             } else if (u.getType() == Unit.VEHICLE) {
-                rawForceSize += CampaignMain.cm.getFloatConfig("VehicleOperationsBVMod");
+                rawForceSize += CampaignMain.campaignMain.getFloatConfig("VehicleOperationsBVMod");
             } else if (u.getType() == Unit.BATTLEARMOR) {
-                rawForceSize += CampaignMain.cm.getFloatConfig("BAOperationsBVMod");
+                rawForceSize += CampaignMain.campaignMain.getFloatConfig("BAOperationsBVMod");
             } else if (u.getType() == Unit.PROTOMEK) {
-                rawForceSize += CampaignMain.cm.getFloatConfig("ProtoOperationsBVMod");
+                rawForceSize += CampaignMain.campaignMain.getFloatConfig("ProtoOperationsBVMod");
             } else if (u.getType() == Unit.AERO) {
-                rawForceSize += CampaignMain.cm.getFloatConfig("AeroOperationsBVMod");
+                rawForceSize += CampaignMain.campaignMain.getFloatConfig("AeroOperationsBVMod");
             } else {
                 // all other allowed types have a 1.0 weight
-                rawForceSize += CampaignMain.cm.getFloatConfig("MekOperationsBVMod");
+                rawForceSize += CampaignMain.campaignMain.getFloatConfig("MekOperationsBVMod");
             }
         }
 
@@ -134,7 +135,7 @@ public class SArmy extends Army {
     public int getOperationsBV(mekwars.server.campaign.SArmy OpposingForce) {
 
         // if not using the operations rules, return a normal BV.
-        boolean usingOpRules = CampaignMain.cm.getBooleanConfig("UseOperationsRule");
+        boolean usingOpRules = CampaignMain.campaignMain.getBooleanConfig("UseOperationsRule");
         if (!usingOpRules) {
             return getBV();
         }
@@ -410,11 +411,11 @@ public class SArmy extends Army {
     }
 
     public String getInaccurateDescription() {
-        if (CampaignMain.cm.getBooleanConfig("ShowUnitTypeCounts")) {
+        if (CampaignMain.campaignMain.getBooleanConfig("ShowUnitTypeCounts")) {
             StringBuilder toReturn = new StringBuilder("(Units: ");
             int numMechs = 0, numVees = 0, numVTOLs = 0, numInf = 0, numProtos = 0, numBA = 0, numAero = 0;
             for (Unit unit : getUnits()) {
-                Entity e = CampaignMain.cm.getPlayer(playerName).getUnit(unit.getId()).getEntity();
+                Entity e = CampaignMain.campaignMain.getPlayer(playerName).getUnit(unit.getId()).getEntity();
                 if (e instanceof Mech) {
                     numMechs++;
                 } else if (e instanceof VTOL) {
@@ -616,18 +617,20 @@ public class SArmy extends Army {
         super.setName(name);
 
         if (name.trim().length() >= 0) {
-            CampaignMain.cm.toUser("PL|RNA|" + getID() + "#" + name, getPlayerName(), false);
+            CampaignMain.campaignMain.toUser("PL|RNA|" + getID() + "#" + name, getPlayerName(), false);
         }
     }
 
     @Override
     public void setLowerLimiter(int lowerLimit) {
 
-        int buffer = CampaignMain.cm.getIntegerConfig("LowerLimitBuffer");
+        int buffer = CampaignMain.campaignMain.getIntegerConfig("LowerLimitBuffer");
         if (lowerLimit < buffer && lowerLimit != Army.NO_LIMIT) {
             lowerLimit = buffer;
-            CampaignMain.cm.toUser("Army " + getID() + "'s lower limit set to " + buffer + ".", getPlayerName(), true);
-            CampaignMain.cm.toUser("PL|SAB|" + getID() + "#" + getLowerLimiter() + "#" + getUpperLimiter(),
+            CampaignMain.campaignMain.toUser("Army " + getID() + "'s lower limit set to " + buffer + ".",
+                  getPlayerName(),
+                  true);
+            CampaignMain.campaignMain.toUser("PL|SAB|" + getID() + "#" + getLowerLimiter() + "#" + getUpperLimiter(),
                   getPlayerName(),
                   false);
         }
@@ -638,11 +641,13 @@ public class SArmy extends Army {
     @Override
     public void setUpperLimiter(int upperLimit) {
 
-        int buffer = CampaignMain.cm.getIntegerConfig("UpperLimitBuffer");
+        int buffer = CampaignMain.campaignMain.getIntegerConfig("UpperLimitBuffer");
         if (upperLimit < buffer && upperLimit != Army.NO_LIMIT) {
             upperLimit = buffer;
-            CampaignMain.cm.toUser("Army " + getID() + "'s upper limit set to " + buffer + ".", getPlayerName(), true);
-            CampaignMain.cm.toUser("PL|SAB|" + getID() + "#" + getLowerLimiter() + "#" + getUpperLimiter(),
+            CampaignMain.campaignMain.toUser("Army " + getID() + "'s upper limit set to " + buffer + ".",
+                  getPlayerName(),
+                  true);
+            CampaignMain.campaignMain.toUser("PL|SAB|" + getID() + "#" + getLowerLimiter() + "#" + getUpperLimiter(),
                   getPlayerName(),
                   false);
 
@@ -725,17 +730,17 @@ public class SArmy extends Army {
     public void setPlayerLock(int aid, boolean lock) {
         if (lock) {
             super.playerLockArmy();
-            CampaignMain.cm.toUser("PL|LA|" + getID(), getPlayerName(), false);
+            CampaignMain.campaignMain.toUser("PL|LA|" + getID(), getPlayerName(), false);
         } else {
             super.playerUnlockArmy();
-            CampaignMain.cm.toUser("PL|ULA|" + getID(), getPlayerName(), false);
+            CampaignMain.campaignMain.toUser("PL|ULA|" + getID(), getPlayerName(), false);
         }
     }
 
     @Override
     public void toggleArmyDisabled() {
         super.toggleArmyDisabled();
-        CampaignMain.cm.toUser("PL|TAD|" + getID(), getPlayerName(), false);
+        CampaignMain.campaignMain.toUser("PL|TAD|" + getID(), getPlayerName(), false);
     }
 
     /**
@@ -769,19 +774,19 @@ public class SArmy extends Army {
 
     public void checkLegalRatio(String Username) {
 
-        if (CampaignMain.cm.getBooleanConfig("AllowRatios")) {
+        if (CampaignMain.campaignMain.getBooleanConfig("AllowRatios")) {
             if (!isLegalMekToInfantryRatio()) {
-                CampaignMain.cm.toUser(
+                CampaignMain.campaignMain.toUser(
                       "This army has an Illegal Mek to Infantry ratio and will not be allowed to participate in games.",
                       Username,
                       true);
             } else if (!isLegalMekToVehicleRatio()) {
-                CampaignMain.cm.toUser(
+                CampaignMain.campaignMain.toUser(
                       "This army has an Illegal Mek to Vehicle ratio and will not be allowed to participate in games.",
                       Username,
                       true);
             } else {
-                CampaignMain.cm.toUser("Army Ratio Checks", Username, true);
+                CampaignMain.campaignMain.toUser("Army Ratio Checks", Username, true);
             }
         }
     }
@@ -807,7 +812,7 @@ public class SArmy extends Army {
 
         int ratio = (infcount * 100) / mekcount;
 
-        if (ratio > CampaignMain.cm.getIntegerConfig("MekToInfantryRatio")) {
+        if (ratio > CampaignMain.campaignMain.getIntegerConfig("MekToInfantryRatio")) {
             return false;
         }
         return true;
@@ -834,7 +839,7 @@ public class SArmy extends Army {
 
         int ratio = (veecount * 100) / mekcount;
 
-        if (ratio > CampaignMain.cm.getIntegerConfig("MekToVehicleRatio")) {
+        if (ratio > CampaignMain.campaignMain.getIntegerConfig("MekToVehicleRatio")) {
             return false;
         }
         return true;
@@ -873,10 +878,10 @@ public class SArmy extends Army {
 
     public boolean hasPilotWithTooManySkills() {
 
-        if (!CampaignMain.cm.getBooleanConfig("PlayersCanBuyPilotUpgrades")) {
+        if (!CampaignMain.campaignMain.getBooleanConfig("PlayersCanBuyPilotUpgrades")) {
             return false;
         }
-        int maxPilotSkills = CampaignMain.cm.getIntegerConfig("MaxPilotUpgrades");
+        int maxPilotSkills = CampaignMain.campaignMain.getIntegerConfig("MaxPilotUpgrades");
 
         if (maxPilotSkills == -1) {
             return false;

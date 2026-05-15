@@ -17,6 +17,7 @@
 package mekwars.server.campaign.commands;
 
 import common.Planet;
+import mekwars.server.campaign.CampaignMain;
 
 
 public class RangeCommand implements Command {
@@ -27,13 +28,13 @@ public class RangeCommand implements Command {
     public void process(java.util.StringTokenizer command, String Username) {
 
         if (accessLevel != 0) {
-            int userLevel = server.campaign.CampaignMain.cm.getServer().getUserLevel(Username);
+            int userLevel = CampaignMain.campaignMain.getServer().getUserLevel(Username);
             if (userLevel < getExecutionLevel()) {
-                server.campaign.CampaignMain.cm.toUser("AM:Insufficient access level for command. Level: " +
-                                                             userLevel +
-                                                             ". Required: " +
-                                                             accessLevel +
-                                                             ".", Username, true);
+                CampaignMain.campaignMain.toUser("AM:Insufficient access level for command. Level: " +
+                                                       userLevel +
+                                                       ". Required: " +
+                                                       accessLevel +
+                                                       ".", Username, true);
                 return;
             }
         }
@@ -44,11 +45,11 @@ public class RangeCommand implements Command {
             server.campaign.SHouse targetfaction = null;
             if (command.hasMoreElements()) {
                 String target = command.nextToken();
-                targetfaction = server.campaign.CampaignMain.cm.getHouseFromPartialString(target, Username);
+                targetfaction = CampaignMain.campaignMain.getHouseFromPartialString(target, Username);
 
                 //RFE 1121663 - Range Calculator and Couldn't find Name @urgru 6.5.05
                 if (targetfaction == null) {
-                    server.campaign.CampaignMain.cm.toUser("AM:Could not find faction " + target + ". Try again?",
+                    CampaignMain.campaignMain.toUser("AM:Could not find faction " + target + ". Try again?",
                           Username,
                           true);
                     return;
@@ -62,7 +63,7 @@ public class RangeCommand implements Command {
                 try {
                     facWorldsOnly = Boolean.parseBoolean(command.nextToken());
                 } catch (Exception e) {
-                    server.campaign.CampaignMain.cm.toUser(
+                    CampaignMain.campaignMain.toUser(
                           "AM:Improper format. Try: /c range#Distance#Faction#true to return only production worlds.",
                           Username,
                           true);
@@ -70,7 +71,7 @@ public class RangeCommand implements Command {
                 }
             }
 
-            server.campaign.SPlayer player = server.campaign.CampaignMain.cm.getPlayer(Username);
+            server.campaign.SPlayer player = CampaignMain.campaignMain.getPlayer(Username);
             server.campaign.SHouse h = player.getMyHouse();
             String result = "These planets are within " + range + " light-years ";
             if (targetfaction != null) {
@@ -80,10 +81,10 @@ public class RangeCommand implements Command {
             }
 
             result += ":<br>";
-            java.util.Iterator<Planet> e = server.campaign.CampaignMain.cm.getData().getAllPlanets().iterator();
+            java.util.Iterator<Planet> e = CampaignMain.campaignMain.getData().getAllPlanets().iterator();
             while (e.hasNext()) {
                 server.campaign.SPlanet p = (server.campaign.SPlanet) e.next();
-                if (h.getDistanceTo(p, server.campaign.CampaignMain.cm.getPlayer(Username)) <= range) {
+                if (h.getDistanceTo(p, CampaignMain.campaignMain.getPlayer(Username)) <= range) {
                     if (targetfaction == null) {
 
                         server.campaign.SHouse owner = p.getOwner();
@@ -121,7 +122,7 @@ public class RangeCommand implements Command {
                 }
             }
             result = result.substring(0, result.length() - 2);
-            server.campaign.CampaignMain.cm.toUser("SM|" + result, Username, false);
+            CampaignMain.campaignMain.toUser("SM|" + result, Username, false);
         }
     }
 

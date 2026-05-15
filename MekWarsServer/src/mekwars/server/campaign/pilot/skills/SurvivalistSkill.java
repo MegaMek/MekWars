@@ -18,6 +18,7 @@ package mekwars.server.campaign.pilot.skills;
 import common.Unit;
 import common.campaign.pilot.Pilot;
 import megamek.common.Entity;
+import mekwars.server.campaign.CampaignMain;
 
 /**
  * If a pilot has this skill they will have a +20% of returning home if ejected and left on the field.
@@ -48,10 +49,10 @@ public class SurvivalistSkill extends SPilotSkill {
 
         String chance = "chancefor" + getAbbreviation() + "for" + Unit.getTypeClassDesc(unitType);
 
-        server.campaign.SHouse house = server.campaign.CampaignMain.cm.getHouseFromPartialString(p.getCurrentFaction());
+        server.campaign.SHouse house = CampaignMain.campaignMain.getHouseFromPartialString(p.getCurrentFaction());
 
         if (house == null) {
-            return server.campaign.CampaignMain.cm.getIntegerConfig(chance);
+            return CampaignMain.campaignMain.getIntegerConfig(chance);
         }
 
         return house.getIntegerConfig(chance);

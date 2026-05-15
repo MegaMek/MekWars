@@ -17,6 +17,7 @@
 package mekwars.server.campaign.commands.admin;
 
 import common.util.MWLogger;
+import mekwars.server.campaign.CampaignMain;
 
 // AdminLockPlanet#Planet#factory#true/false
 public class AdminLockFactoryCommand implements server.campaign.commands.Command {
@@ -29,29 +30,29 @@ public class AdminLockFactoryCommand implements server.campaign.commands.Command
     public void process(java.util.StringTokenizer command, String Username) {
 
         //access level check
-        int userLevel = server.campaign.CampaignMain.cm.getServer().getUserLevel(Username);
+        int userLevel = CampaignMain.campaignMain.getServer().getUserLevel(Username);
         if (userLevel < getExecutionLevel()) {
-            server.campaign.CampaignMain.cm.toUser("AM:Insufficient access level for command. Level: " +
-                                                         userLevel +
-                                                         ". Required: " +
-                                                         accessLevel +
-                                                         ".", Username, true);
+            CampaignMain.campaignMain.toUser("AM:Insufficient access level for command. Level: " +
+                                                   userLevel +
+                                                   ". Required: " +
+                                                   accessLevel +
+                                                   ".", Username, true);
             return;
         }
 
         try {
-            server.campaign.SPlanet p = (server.campaign.SPlanet) server.campaign.CampaignMain.cm.getData()
+            server.campaign.SPlanet p = (server.campaign.SPlanet) CampaignMain.campaignMain.getData()
                                                                         .getPlanetByName(command.nextToken());
             if (p == null) {
-                server.campaign.CampaignMain.cm.toUser("Unknown planet!", Username, true);
+                CampaignMain.campaignMain.toUser("Unknown planet!", Username, true);
                 return;
             }
 
-            server.campaign.SUnitFactory uf = (server.campaign.SUnitFactory) server.campaign.CampaignMain.cm.getData()
+            server.campaign.SUnitFactory uf = (server.campaign.SUnitFactory) CampaignMain.campaignMain.getData()
                                                                                    .getFactoryByName(p,
                                                                                          command.nextToken());
             if (uf == null) {
-                server.campaign.CampaignMain.cm.toUser("Unknown factory!", Username, true);
+                CampaignMain.campaignMain.toUser("Unknown factory!", Username, true);
                 return;
             }
 
@@ -68,11 +69,11 @@ public class AdminLockFactoryCommand implements server.campaign.commands.Command
                 uf.addRefresh(9999 - currMiniTicks, true);
 
                 //send messages
-                server.campaign.CampaignMain.cm.toUser("You locked " + uf.getName() + " on planet " + p.getName(),
+                CampaignMain.campaignMain.toUser("You locked " + uf.getName() + " on planet " + p.getName(),
                       Username,
                       true);
                 //server.MWLogger.modLog(Username + " has locked "+ uf.getName()+" on planet "+p.getName());
-                server.campaign.CampaignMain.cm.doSendModMail("NOTE",
+                CampaignMain.campaignMain.doSendModMail("NOTE",
                       Username + " has locked " + uf.getName() + " on planet " + p.getName());
 
             } else {
@@ -82,16 +83,16 @@ public class AdminLockFactoryCommand implements server.campaign.commands.Command
                 uf.addRefresh(-miniTicksToRemove, true);
 
                 //send messages
-                server.campaign.CampaignMain.cm.toUser("You unlocked " + uf.getName() + " on planet " + p.getName(),
+                CampaignMain.campaignMain.toUser("You unlocked " + uf.getName() + " on planet " + p.getName(),
                       Username,
                       true);
                 //server.MWLogger.modLog(Username + " has unlocked "+ uf.getName()+" on planet "+p.getName());
-                server.campaign.CampaignMain.cm.doSendModMail("NOTE",
+                CampaignMain.campaignMain.doSendModMail("NOTE",
                       Username + " has unlocked " + uf.getName() + " on planet " + p.getName());
             }
 
         } catch (Exception ex) {
-            server.campaign.CampaignMain.cm.toUser(
+            CampaignMain.campaignMain.toUser(
                   "Command failed. Make sure format was: /c adminlockfactory#planetname#factoryname",
                   Username,
                   true);

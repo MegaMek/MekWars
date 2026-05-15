@@ -12,8 +12,6 @@
 
 package mekwars.server.util;
 
-import common.util.MWLogger;
-
 /*
  * Modified 2/26/2003 by Jonathan Ellis
  * - rereading file into memory is nice b/c it allows
@@ -24,6 +22,8 @@ import common.util.MWLogger;
  * - removed some unnecessary synchronization.  Remember
  * Hashtable synchronizes automatically.
  */
+
+import mekwars.server.campaign.CampaignMain;
 
 /**
  * Represents a unix-style passwd file with three colon-delimited fields:
@@ -42,7 +42,7 @@ public class MWPasswd implements server.MWChatServer.commands.ICommands {
     }
 
     public static String getUserId(String target) {
-        server.campaign.SPlayer player = server.campaign.CampaignMain.cm.getPlayer(target);
+        server.campaign.SPlayer player = CampaignMain.campaignMain.getPlayer(target);
 
         if (player == null) {return null;}
 
@@ -93,7 +93,7 @@ public class MWPasswd implements server.MWChatServer.commands.ICommands {
     }
 
     public static final MWPasswdRecord getRecord(String userId) {
-        server.campaign.SPlayer player = server.campaign.CampaignMain.cm.getPlayer(userId);
+        server.campaign.SPlayer player = CampaignMain.campaignMain.getPlayer(userId);
 
         if (player == null) {
             //MWLogger.errLog("Player is null");
@@ -116,7 +116,7 @@ public class MWPasswd implements server.MWChatServer.commands.ICommands {
      * @param r the record to write
      */
     public static final void writeRecord(MWPasswdRecord r, String userId) throws java.io.IOException {
-        server.campaign.SPlayer player = server.campaign.CampaignMain.cm.getPlayer(userId);
+        server.campaign.SPlayer player = CampaignMain.campaignMain.getPlayer(userId);
 
         if (player == null) {return;}
 
@@ -124,7 +124,7 @@ public class MWPasswd implements server.MWChatServer.commands.ICommands {
     }
 
     public static final void removeRecord(String userid) {
-        server.campaign.SPlayer player = server.campaign.CampaignMain.cm.getPlayer(userid);
+        server.campaign.SPlayer player = CampaignMain.campaignMain.getPlayer(userid);
 
         if (player == null) {return;}
 
@@ -204,7 +204,7 @@ public class MWPasswd implements server.MWChatServer.commands.ICommands {
      */
     public static final void writeRecord(String userId, int access, String passwd)
           throws java.io.IOException {
-        server.campaign.SPlayer player = server.campaign.CampaignMain.cm.getPlayer(userId);
+        server.campaign.SPlayer player = CampaignMain.campaignMain.getPlayer(userId);
 
         if (player == null) {
             MWLogger.errLog("writeRecord::Player is null");

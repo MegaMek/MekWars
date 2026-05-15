@@ -18,6 +18,7 @@ package mekwars.server.campaign.commands.admin;
 
 import common.House;
 import common.util.MWLogger;
+import mekwars.server.campaign.CampaignMain;
 
 public class SingASongCommand implements server.campaign.commands.Command {
 
@@ -29,13 +30,13 @@ public class SingASongCommand implements server.campaign.commands.Command {
     public void process(java.util.StringTokenizer command, String Username) {
 
         //access level check
-        int userLevel = server.campaign.CampaignMain.cm.getServer().getUserLevel(Username);
+        int userLevel = CampaignMain.campaignMain.getServer().getUserLevel(Username);
         if (userLevel < getExecutionLevel()) {
-            server.campaign.CampaignMain.cm.toUser("AM:Insufficient access level for command. Level: " +
-                                                         userLevel +
-                                                         ". Required: " +
-                                                         accessLevel +
-                                                         ".", Username, true);
+            CampaignMain.campaignMain.toUser("AM:Insufficient access level for command. Level: " +
+                                                   userLevel +
+                                                   ". Required: " +
+                                                   accessLevel +
+                                                   ".", Username, true);
             return;
         }
 
@@ -60,13 +61,13 @@ public class SingASongCommand implements server.campaign.commands.Command {
         }
 
         if (!startHouse.equals("")) {
-            faction = server.campaign.CampaignMain.cm.getHouseFromPartialString(startHouse, null);
+            faction = CampaignMain.campaignMain.getHouseFromPartialString(startHouse, null);
         }
 
-        server.campaign.CampaignMain.cm.doSendToAllOnlinePlayers("AM:" +
-                                                                       Username +
-                                                                       " forces you all to sing " +
-                                                                       request, true);
+        CampaignMain.campaignMain.doSendToAllOnlinePlayers("AM:" +
+                                                                 Username +
+                                                                 " forces you all to sing " +
+                                                                 request, true);
         java.util.StringTokenizer songLyrics = new java.util.StringTokenizer(song, "#");
 
         try {
@@ -76,25 +77,25 @@ public class SingASongCommand implements server.campaign.commands.Command {
                 if (faction != null) {
                     for (server.campaign.SPlayer player : faction.getAllOnlinePlayers().values()) {
                         if (player.getDutyStatus() < server.campaign.SPlayer.STATUS_RESERVE) {continue;}
-                        if (server.campaign.CampaignMain.cm.getServer().isAdmin(player.getName())) {continue;}
+                        if (CampaignMain.campaignMain.getServer().isAdmin(player.getName())) {continue;}
                         if (player.getName().equalsIgnoreCase("Spork")) {continue;}
                         songLine = songLyrics.nextToken();
-                        server.campaign.CampaignMain.cm.doSendToAllOnlinePlayers(player.getName() + "|" + songLine,
+                        CampaignMain.campaignMain.doSendToAllOnlinePlayers(player.getName() + "|" + songLine,
                               true);
                         Thread.sleep(1000);
                     }
                 }
-                java.util.Iterator<House> factions = server.campaign.CampaignMain.cm.getData()
+                java.util.Iterator<House> factions = CampaignMain.campaignMain.getData()
                                                            .getAllHouses()
                                                            .iterator();
                 while (factions.hasNext()) {
                     faction = (server.campaign.SHouse) factions.next();
                     for (server.campaign.SPlayer player : faction.getAllOnlinePlayers().values()) {
                         if (player.getDutyStatus() < server.campaign.SPlayer.STATUS_RESERVE) {continue;}
-                        if (server.campaign.CampaignMain.cm.getServer().isAdmin(player.getName())) {continue;}
+                        if (CampaignMain.campaignMain.getServer().isAdmin(player.getName())) {continue;}
                         if (player.getName().equalsIgnoreCase("Spork")) {continue;}
                         songLine = songLyrics.nextToken();
-                        server.campaign.CampaignMain.cm.doSendToAllOnlinePlayers(player.getName() + "|" + songLine,
+                        CampaignMain.campaignMain.doSendToAllOnlinePlayers(player.getName() + "|" + songLine,
                               true);
                         Thread.sleep(1000);
                     }
@@ -113,15 +114,15 @@ public class SingASongCommand implements server.campaign.commands.Command {
 
     public void listSongs(String user) {
         java.io.File songList = new java.io.File("./data/songs.txt");
-        server.campaign.CampaignMain.cm.toUser("SM|Current song List", user, false);
-        server.campaign.CampaignMain.cm.toUser("SM|teapot", user, false);
+        CampaignMain.campaignMain.toUser("SM|Current song List", user, false);
+        CampaignMain.campaignMain.toUser("SM|teapot", user, false);
         java.io.BufferedReader dis = null;
         try {
             java.io.FileInputStream fis = new java.io.FileInputStream(songList);
             dis = new java.io.BufferedReader(new java.io.InputStreamReader(fis));
             while (dis.ready()) {
                 java.util.StringTokenizer song = new java.util.StringTokenizer(dis.readLine(), "|");
-                server.campaign.CampaignMain.cm.toUser("SM|" + song.nextToken(), user, false);
+                CampaignMain.campaignMain.toUser("SM|" + song.nextToken(), user, false);
             }
         } catch (Exception ex) {
             //No song list found;

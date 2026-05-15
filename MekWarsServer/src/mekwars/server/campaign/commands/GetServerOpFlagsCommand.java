@@ -14,6 +14,8 @@
 
 package mekwars.server.campaign.commands;
 
+import mekwars.server.campaign.CampaignMain;
+
 public class GetServerOpFlagsCommand implements Command {
 
     int accessLevel = 0;
@@ -22,27 +24,27 @@ public class GetServerOpFlagsCommand implements Command {
     public void process(java.util.StringTokenizer command, String Username) {
 
         if (accessLevel != 0) {
-            int userLevel = server.campaign.CampaignMain.cm.getServer().getUserLevel(Username);
+            int userLevel = CampaignMain.campaignMain.getServer().getUserLevel(Username);
             if (userLevel < getExecutionLevel()) {
-                server.campaign.CampaignMain.cm.toUser("AM:Insufficient access level for command. Level: " +
-                                                             userLevel +
-                                                             ". Required: " +
-                                                             accessLevel +
-                                                             ".", Username, true);
+                CampaignMain.campaignMain.toUser("AM:Insufficient access level for command. Level: " +
+                                                       userLevel +
+                                                       ". Required: " +
+                                                       accessLevel +
+                                                       ".", Username, true);
                 return;
             }
         }
 
         StringBuilder result = new StringBuilder();
 
-        for (String key : server.campaign.CampaignMain.cm.getData().getPlanetOpFlags().keySet()) {
+        for (String key : CampaignMain.campaignMain.getData().getPlanetOpFlags().keySet()) {
             result.append(key);
             result.append("|");
-            result.append(server.campaign.CampaignMain.cm.getData().getPlanetOpFlags().get(key));
+            result.append(CampaignMain.campaignMain.getData().getPlanetOpFlags().get(key));
             result.append("|");
         }
 
-        server.campaign.CampaignMain.cm.toUser("PL|SOFL|" + result.toString(), Username, false);
+        CampaignMain.campaignMain.toUser("PL|SOFL|" + result.toString(), Username, false);
     }
 
     public int getExecutionLevel() {return accessLevel;}

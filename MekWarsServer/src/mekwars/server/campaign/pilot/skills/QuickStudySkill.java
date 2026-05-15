@@ -23,6 +23,7 @@ package mekwars.server.campaign.pilot.skills;
 import common.Unit;
 import common.campaign.pilot.Pilot;
 import megamek.common.Entity;
+import mekwars.server.campaign.CampaignMain;
 
 /**
  * Pilots with the Quick Study skill gain a 5% bonus to all XP earned.
@@ -47,9 +48,9 @@ public class QuickStudySkill extends SPilotSkill {
 
         String chance = "chancefor" + this.getAbbreviation() + "for" + Unit.getTypeClassDesc(unitType);
 
-        server.campaign.SHouse house = server.campaign.CampaignMain.cm.getHouseFromPartialString(p.getCurrentFaction());
+        server.campaign.SHouse house = CampaignMain.campaignMain.getHouseFromPartialString(p.getCurrentFaction());
 
-        if (house == null) {return server.campaign.CampaignMain.cm.getIntegerConfig(chance);}
+        if (house == null) {return CampaignMain.campaignMain.getIntegerConfig(chance);}
 
         return house.getIntegerConfig(chance);
     }

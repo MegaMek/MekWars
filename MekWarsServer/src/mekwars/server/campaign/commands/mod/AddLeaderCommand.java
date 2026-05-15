@@ -16,6 +16,7 @@
 
 package mekwars.server.campaign.commands.mod;
 
+import mekwars.server.campaign.CampaignMain;
 import server.util.MWPasswd;
 
 /**
@@ -31,13 +32,13 @@ public class AddLeaderCommand implements server.campaign.commands.Command {
     public void process(java.util.StringTokenizer command, String Username) {
 
         if (accessLevel != 0) {
-            int userLevel = server.campaign.CampaignMain.cm.getServer().getUserLevel(Username);
+            int userLevel = CampaignMain.campaignMain.getServer().getUserLevel(Username);
             if (userLevel < getExecutionLevel()) {
-                server.campaign.CampaignMain.cm.toUser("AM:Insufficient access level for command. Level: " +
-                                                             userLevel +
-                                                             ". Required: " +
-                                                             accessLevel +
-                                                             ".", Username, true);
+                CampaignMain.campaignMain.toUser("AM:Insufficient access level for command. Level: " +
+                                                       userLevel +
+                                                       ". Required: " +
+                                                       accessLevel +
+                                                       ".", Username, true);
                 return;
             }
         }
@@ -46,34 +47,34 @@ public class AddLeaderCommand implements server.campaign.commands.Command {
 
         try {
             String target = command.nextToken();
-            player = server.campaign.CampaignMain.cm.getPlayer(target);
+            player = CampaignMain.campaignMain.getPlayer(target);
             player.getMyHouse().addLeader(player.getName());
-            int level = server.campaign.CampaignMain.cm.getIntegerConfig("factionLeaderLevel");
+            int level = CampaignMain.campaignMain.getIntegerConfig("factionLeaderLevel");
             if (player.getPassword().getAccess() < level) {
                 //CampaignMain.cm.updatePlayersAccessLevel(target,level);
                 MWPasswd.getRecord(target).setAccess(level);
-                server.campaign.CampaignMain.cm.getServer().getClient(target).setAccessLevel(level);
-                server.campaign.CampaignMain.cm.getServer().getUser(target).setLevel(level);
-                server.campaign.CampaignMain.cm.getServer().sendRemoveUserToAll(target, false);
-                server.campaign.CampaignMain.cm.getServer().sendNewUserToAll(target, false);
+                CampaignMain.campaignMain.getServer().getClient(target).setAccessLevel(level);
+                CampaignMain.campaignMain.getServer().getUser(target).setLevel(level);
+                CampaignMain.campaignMain.getServer().sendRemoveUserToAll(target, false);
+                CampaignMain.campaignMain.getServer().sendNewUserToAll(target, false);
                 MWPasswd.writeRecord(player.getPassword(), target);
                 if (player != null) {
-                    server.campaign.CampaignMain.cm.doSendToAllOnlinePlayers("PI|DA|" +
-                                                                                   server.campaign.CampaignMain.cm.getPlayerUpdateString(
-                                                                                         player), false);
+                    CampaignMain.campaignMain.doSendToAllOnlinePlayers("PI|DA|" +
+                                                                             CampaignMain.campaignMain.getPlayerUpdateString(
+                                                                                   player), false);
                 }
             }
-            server.campaign.CampaignMain.cm.toUser("AM:You have been promoted to the faction leadership by " +
-                                                         Username +
-                                                         ".", target);
-            server.campaign.CampaignMain.cm.doSendHouseMail(player.getMyHouse(),
+            CampaignMain.campaignMain.toUser("AM:You have been promoted to the faction leadership by " +
+                                                   Username +
+                                                   ".", target);
+            CampaignMain.campaignMain.doSendHouseMail(player.getMyHouse(),
                   "NOTE",
                   player.getName() + " has been promoted to the faction leadership.");
-            server.campaign.CampaignMain.cm.doSendModMail("NOTE",
+            CampaignMain.campaignMain.doSendModMail("NOTE",
                   Username + " has added promoted " + target + " to faction leader.");
 
         } catch (Exception ex) {
-            server.campaign.CampaignMain.cm.toUser("AM:Invalid syntax: /addleader UserName", Username);
+            CampaignMain.campaignMain.toUser("AM:Invalid syntax: /addleader UserName", Username);
         }
     }
 

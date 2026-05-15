@@ -22,11 +22,10 @@
 
 package mekwars.server.util;
 
-import common.util.MWLogger;
-import common.util.UnitUtils;
 import megamek.common.CriticalSlot;
-import megamek.common.Mech;
-import megamek.common.Mounted;
+import megamek.common.equipment.Mounted;
+import mekwars.common.util.UnitUtils;
+import mekwars.server.campaign.CampaignMain;
 
 /**
  *
@@ -96,10 +95,10 @@ public class RepairTrackingThread extends Thread {
                     }
                     if (repairOrder.getEndTime() <= System.currentTimeMillis()) {
                         try {
-                            if ((server.campaign.CampaignMain.cm.getPlayer(repairOrder.getUsername()) == null)
+                            if ((CampaignMain.campaignMain.getPlayer(repairOrder.getUsername()) == null)
                                       || repairOrder.finishRepair()) {
                                 repairList.removeElement(repairOrder);
-                                server.campaign.SPlayer player = server.campaign.CampaignMain.cm.getPlayer(repairOrder.getUsername());
+                                server.campaign.SPlayer player = CampaignMain.campaignMain.getPlayer(repairOrder.getUsername());
                                 player.checkAndUpdateArmies(player.getUnit(repairOrder.getUnitID()));
                             }
                         } catch (Exception ex) {
@@ -139,7 +138,7 @@ public class RepairTrackingThread extends Thread {
                     long mills = (repairOrder.getEndTime() - System.currentTimeMillis());///60000;
 
                     if (mills < 0) {
-                        mills += server.campaign.CampaignMain.cm.getDoubleConfig("TimeForEachRepairPoint") * 1000;
+                        mills += CampaignMain.campaignMain.getDoubleConfig("TimeForEachRepairPoint") * 1000;
                     }
                     java.util.Calendar time = java.util.Calendar.getInstance();
                     time.setTimeInMillis(mills);
@@ -301,9 +300,9 @@ public class RepairTrackingThread extends Thread {
         synchronized (tempRepairList) {
             for (mekwars.server.util.Repair repairOrder : tempRepairList) {
                 if (repairOrder.matches(unitID, location, slot, armor)) {
-                    server.campaign.SPlayer player = server.campaign.CampaignMain.cm.getPlayer(repairOrder.getUsername());
+                    server.campaign.SPlayer player = CampaignMain.campaignMain.getPlayer(repairOrder.getUsername());
                     server.campaign.SUnit unit = player.getUnit(unitID);
-                    server.campaign.CampaignMain.cm.toUser("FSM|Repair order cancelled.",
+                    CampaignMain.campaignMain.toUser("FSM|Repair order cancelled.",
                           repairOrder.getUsername(),
                           false);
                     if (repairOrder.getTechType() == UnitUtils.TECH_PILOT) {
@@ -314,7 +313,7 @@ public class RepairTrackingThread extends Thread {
                     repairOrder.stopRepair();
                     getRepairList().removeElement(repairOrder);
                     unit.setEntity(repairOrder.getUnit());
-                    server.campaign.CampaignMain.cm.toUser("PL|UU|" + unitID + "|" + unit.toString(true),
+                    CampaignMain.campaignMain.toUser("PL|UU|" + unitID + "|" + unit.toString(true),
                           player.getName(),
                           false);
                     return;
@@ -345,7 +344,7 @@ public class RepairTrackingThread extends Thread {
         }
         try {
             server.campaign.SUnit unit = player.getUnit(unitID);
-            server.campaign.CampaignMain.cm.toUser("PL|UU|" + unitID + "|" + unit.toString(true),
+            CampaignMain.campaignMain.toUser("PL|UU|" + unitID + "|" + unit.toString(true),
                   player.getName(),
                   false);
         } catch (Exception ex) {}

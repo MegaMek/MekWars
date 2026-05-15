@@ -17,6 +17,7 @@
 package mekwars.server.campaign.commands.mod;
 
 import common.SubFaction;
+import mekwars.server.campaign.CampaignMain;
 
 
 /**
@@ -33,45 +34,45 @@ public class SetSubFactionConfigCommand implements server.campaign.commands.Comm
     public void process(java.util.StringTokenizer command, String Username) {
 
         if (accessLevel != 0) {
-            int userLevel = server.campaign.CampaignMain.cm.getServer().getUserLevel(Username);
+            int userLevel = CampaignMain.campaignMain.getServer().getUserLevel(Username);
             if (userLevel < getExecutionLevel()) {
-                server.campaign.CampaignMain.cm.toUser("AM:Insufficient access level for command. Level: " +
-                                                             userLevel +
-                                                             ". Required: " +
-                                                             accessLevel +
-                                                             ".", Username, true);
+                CampaignMain.campaignMain.toUser("AM:Insufficient access level for command. Level: " +
+                                                       userLevel +
+                                                       ". Required: " +
+                                                       accessLevel +
+                                                       ".", Username, true);
                 return;
             }
         }
 
         String factionName = "";
         String subFactionName = "";
-        server.campaign.SPlayer player = server.campaign.CampaignMain.cm.getPlayer(Username);
+        server.campaign.SPlayer player = CampaignMain.campaignMain.getPlayer(Username);
 
         try {
             subFactionName = command.nextToken();
-            if (server.campaign.CampaignMain.cm.getServer().isModerator(Username)) {
+            if (CampaignMain.campaignMain.getServer().isModerator(Username)) {
                 factionName = command.nextToken();
             } else {
                 command.nextElement();
                 factionName = player.getMyHouse().getName();
             }
         } catch (Exception ex) {
-            server.campaign.CampaignMain.cm.toUser(
+            CampaignMain.campaignMain.toUser(
                   "Invalid syntax: /SetSubFactionConfig SubFactionName#FactionName#Config#Value#Config#Value....",
                   Username);
             return;
         }
 
-        server.campaign.SHouse faction = server.campaign.CampaignMain.cm.getHouseFromPartialString(factionName,
+        server.campaign.SHouse faction = CampaignMain.campaignMain.getHouseFromPartialString(factionName,
               Username);
 
         if (faction == null) {return;}
 
         if (!faction.getSubFactionList().containsKey(subFactionName)) {
-            server.campaign.CampaignMain.cm.toUser(faction.getName() +
-                                                         " does not have a subfaction by the name of " +
-                                                         subFactionName, Username);
+            CampaignMain.campaignMain.toUser(faction.getName() +
+                                                   " does not have a subfaction by the name of " +
+                                                   subFactionName, Username);
             return;
         }
 
@@ -83,7 +84,7 @@ public class SetSubFactionConfigCommand implements server.campaign.commands.Comm
                 subFaction.setConfig(command.nextToken(), command.nextToken());
             }
         } catch (Exception ex) {
-            server.campaign.CampaignMain.cm.toUser(
+            CampaignMain.campaignMain.toUser(
                   "Invalid syntax: /SetSubFactionConfig SubFactionName#FactionName#Config#Value#Config#Value....",
                   Username);
             return;
@@ -92,12 +93,12 @@ public class SetSubFactionConfigCommand implements server.campaign.commands.Comm
         faction.getSubFactionList().put(subFactionName, subFaction);
         faction.updated();
 
-        server.campaign.CampaignMain.cm.doSendModMail("NOTE",
+        CampaignMain.campaignMain.doSendModMail("NOTE",
               Username + " has updated configs for subfaction " + subFactionName + " for faction " + faction.getName());
-        server.campaign.CampaignMain.cm.toUser("You have updateded configs for subfaction " +
-                                                     subFactionName +
-                                                     " for faction " +
-                                                     faction.getName(), Username);
+        CampaignMain.campaignMain.toUser("You have updateded configs for subfaction " +
+                                               subFactionName +
+                                               " for faction " +
+                                               faction.getName(), Username);
     }
 
     public int getExecutionLevel() {return accessLevel;}

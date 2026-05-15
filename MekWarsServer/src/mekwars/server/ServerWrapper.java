@@ -24,14 +24,13 @@ package mekwars.server;
 
 import java.rmi.AccessException;
 
-import common.util.MWLogger;
-import common.util.StringUtils;
 import mekwars.common.campaign.clientutils.protocol.CConnector;
-import server.MWChatServer.MWChatClient;
-import server.MWChatServer.MWChatServer;
-import server.MWChatServer.auth.Auth;
-import server.MWChatServer.auth.IAuthenticator;
-import server.MWChatServer.commands.ICommands;
+import mekwars.common.util.StringUtils;
+import mekwars.server.MWChatServer.MWChatClient;
+import mekwars.server.MWChatServer.MWChatServer;
+import mekwars.server.MWChatServer.auth.Auth;
+import mekwars.server.MWChatServer.auth.IAuthenticator;
+import mekwars.server.MWChatServer.commands.ICommands;
 
 
 public class ServerWrapper extends MWChatServer {

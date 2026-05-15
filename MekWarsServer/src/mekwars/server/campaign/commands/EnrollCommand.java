@@ -19,6 +19,7 @@ package mekwars.server.campaign.commands;
 
 import common.House;
 import common.util.MWLogger;
+import mekwars.server.campaign.CampaignMain;
 
 public class EnrollCommand implements Command {
 
@@ -33,7 +34,7 @@ public class EnrollCommand implements Command {
 
         //don't let stock names enroll
         if (Username.startsWith("Nobody")) {
-            server.campaign.CampaignMain.cm.toUser(
+            CampaignMain.campaignMain.toUser(
                   "AM:Nobodies are not allowed to enroll. If you're signing on for the " +
                         "first time and were labelled a Nobody, you're probably using a name someone else " +
                         "has already registered. If you've registered this name previously, you're either not " +
@@ -45,7 +46,7 @@ public class EnrollCommand implements Command {
         }
 
         if (Username.equalsIgnoreCase("DRAW")) {
-            server.campaign.CampaignMain.cm.toUser("AM:The name DRAW is reserved for system use. Try another name.",
+            CampaignMain.campaignMain.toUser("AM:The name DRAW is reserved for system use. Try another name.",
                   Username,
                   true);
             return;
@@ -53,7 +54,7 @@ public class EnrollCommand implements Command {
         }
 
         if (Username.startsWith("[Dedicated]")) {
-            server.campaign.CampaignMain.cm.toUser("AM:Dedicated hosts may not enroll in the campaign.",
+            CampaignMain.campaignMain.toUser("AM:Dedicated hosts may not enroll in the campaign.",
                   Username,
                   true);
             return;
@@ -63,9 +64,9 @@ public class EnrollCommand implements Command {
          * Do not allow players to enroll with campaign faction  names. This would cause
          * problems with the Market and with various admin commands (scrap, transfer, etc).
          */
-        for (House currFaction : server.campaign.CampaignMain.cm.getData().getAllHouses()) {
+        for (House currFaction : CampaignMain.campaignMain.getData().getAllHouses()) {
             if (Username.equalsIgnoreCase(currFaction.getName())) {
-                server.campaign.CampaignMain.cm.toUser(
+                CampaignMain.campaignMain.toUser(
                       "AM:You may not enroll in the campaign using the name of an existing faction.",
                       Username,
                       true);
@@ -75,7 +76,7 @@ public class EnrollCommand implements Command {
 
         //reserve "SERVER" as a PM and BM name
         if (Username.trim().equalsIgnoreCase("SERVER")) {
-            server.campaign.CampaignMain.cm.toUser("AM:The name SERVER is reserved for system use. Try another name.",
+            CampaignMain.campaignMain.toUser("AM:The name SERVER is reserved for system use. Try another name.",
                   Username,
                   true);
             return;
@@ -102,29 +103,29 @@ public class EnrollCommand implements Command {
                   Username.indexOf("+") > -1 ||
                   Username.indexOf("=") > -1 ||
                   Username.indexOf("|") > -1) {
-            server.campaign.CampaignMain.cm.toUser("AM:Your name contains one or more illegal charachters. These are "
-                                                         +
-                                                         " reserved for system use or high-level players (mods, admins). Remove any of "
-                                                         +
-                                                         " the following and try enrolling again: ~ @ # $ % ^ + = & < > * . , ! |",
+            CampaignMain.campaignMain.toUser("AM:Your name contains one or more illegal charachters. These are "
+                                                   +
+                                                   " reserved for system use or high-level players (mods, admins). Remove any of "
+                                                   +
+                                                   " the following and try enrolling again: ~ @ # $ % ^ + = & < > * . , ! |",
                   Username,
                   true);
             return;
         }
 
         //make sure the player isn't alread enrolled
-        if (server.campaign.CampaignMain.cm.getHouseForPlayer(Username) != null) {
-            server.campaign.CampaignMain.cm.toUser("AM:You are already enrolled in the campaign. Nice try though.",
+        if (CampaignMain.campaignMain.getHouseForPlayer(Username) != null) {
+            CampaignMain.campaignMain.toUser("AM:You are already enrolled in the campaign. Nice try though.",
                   Username,
                   true);
             return;
         }
 
         //this shouldn't ever happen, but still needs to be checked ...
-        server.campaign.SHouse h = server.campaign.CampaignMain.cm.getHouseFromPartialString(
-              server.campaign.CampaignMain.cm.getConfig("NewbieHouseName"), null);
+        server.campaign.SHouse h = CampaignMain.campaignMain.getHouseFromPartialString(
+              CampaignMain.campaignMain.getConfig("NewbieHouseName"), null);
         if (h == null) {
-            server.campaign.CampaignMain.cm.toUser("AM:Training faction is null. Contact an admin immediately.",
+            CampaignMain.campaignMain.toUser("AM:Training faction is null. Contact an admin immediately.",
                   Username,
                   true);
             return;
@@ -135,7 +136,7 @@ public class EnrollCommand implements Command {
         if (h instanceof server.campaign.NewbieHouse) {nh = (server.campaign.NewbieHouse) h;}
 
         if (nh == null) {
-            server.campaign.CampaignMain.cm.toUser(
+            CampaignMain.campaignMain.toUser(
                   "AM:Named training faction is not a NewbieHouse. Contact an admin immediately.",
                   Username,
                   true);
@@ -152,9 +153,9 @@ public class EnrollCommand implements Command {
         newPlayer.setMyHouse(nh);
 
         String unitInfo = nh.getNewSOLUnits(newPlayer, null);
-        newPlayer.addMoney(server.campaign.CampaignMain.cm.getIntegerConfig("PlayerBaseMoney"));
-        newPlayer.addReward(server.campaign.CampaignMain.cm.getIntegerConfig("PlayerBaseRP"));  //@Salient adding option to give new player RP
-        newPlayer.addInfluence(server.campaign.CampaignMain.cm.getIntegerConfig("PlayerBaseFlu")); //@Salient adding option to give new player Flu
+        newPlayer.addMoney(CampaignMain.campaignMain.getIntegerConfig("PlayerBaseMoney"));
+        newPlayer.addReward(CampaignMain.campaignMain.getIntegerConfig("PlayerBaseRP"));  //@Salient adding option to give new player RP
+        newPlayer.addInfluence(CampaignMain.campaignMain.getIntegerConfig("PlayerBaseFlu")); //@Salient adding option to give new player Flu
 
         String result = new String("AM:<font color=\"navy\">WELCOME TO MEKWARS!</font>"
                                          +
@@ -177,23 +178,23 @@ public class EnrollCommand implements Command {
                                          ".<br><br>Have fun!"
                                          +
                                          "</font><br>");
-        server.campaign.CampaignMain.cm.toUser(result, Username, true);
+        CampaignMain.campaignMain.toUser(result, Username, true);
 
-        if (server.campaign.CampaignMain.cm.getServer().getUserLevel(Username) <
+        if (CampaignMain.campaignMain.getServer().getUserLevel(Username) <
                   server.MWChatServer.auth.IAuthenticator.REGISTERED) {
-            server.campaign.CampaignMain.cm.toUser(
+            CampaignMain.campaignMain.toUser(
                   "AM:<font color=\"navy\"><br>---<br>NOTE: Your account will not be password protected until you [<a href=\"MWREG\">register</a>] your nickname.<br>---<br></font>",
                   Username,
                   true);
         }
 
-        server.campaign.CampaignMain.cm.doLoginPlayer(Username);
+        CampaignMain.campaignMain.doLoginPlayer(Username);
 
         //tell the mods and add to the IP log
-        java.net.InetAddress ip = server.campaign.CampaignMain.cm.getServer().getIP(Username);
+        java.net.InetAddress ip = CampaignMain.campaignMain.getServer().getIP(Username);
         //MWLogger.modLog(Username + " enrolled in the campaign (IP: " + ip + ").");
         MWLogger.ipLog("ENROLL: " + Username + " IP: " + ip);
-        server.campaign.CampaignMain.cm.doSendModMail("NOTE", Username + " enrolled in the campaign (IP: " + ip + ").");
+        CampaignMain.campaignMain.doSendModMail("NOTE", Username + " enrolled in the campaign (IP: " + ip + ").");
 
     }//end process()
 

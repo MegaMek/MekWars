@@ -18,6 +18,7 @@ package mekwars.server.campaign.commands;
 
 import common.campaign.operations.Operation;
 import common.util.MWLogger;
+import mekwars.server.campaign.CampaignMain;
 
 public class GetOpsCommand implements Command {
 
@@ -27,13 +28,13 @@ public class GetOpsCommand implements Command {
     @Override
     public void process(java.util.StringTokenizer command, String Username) {
         if (accessLevel != 0) {
-            int userLevel = server.campaign.CampaignMain.cm.getServer().getUserLevel(Username);
+            int userLevel = CampaignMain.campaignMain.getServer().getUserLevel(Username);
             if (userLevel < getExecutionLevel()) {
-                server.campaign.CampaignMain.cm.toUser("AM:Insufficient access level for command. Level: " +
-                                                             userLevel +
-                                                             ". Required: " +
-                                                             accessLevel +
-                                                             ".", Username, true);
+                CampaignMain.campaignMain.toUser("AM:Insufficient access level for command. Level: " +
+                                                       userLevel +
+                                                       ". Required: " +
+                                                       accessLevel +
+                                                       ".", Username, true);
                 return;
             }
         }
@@ -42,26 +43,26 @@ public class GetOpsCommand implements Command {
             String cmd = command.nextToken();
             switch (cmd.toLowerCase()) {
                 case "getall":
-                    for (Operation o : server.campaign.CampaignMain.cm.getOpsManager().getOperations().values()) {
-                        server.campaign.CampaignMain.cm.toUser("OP|add|" + o.getName() + "|" + o.getXmlString(),
+                    for (Operation o : CampaignMain.campaignMain.getOpsManager().getOperations().values()) {
+                        CampaignMain.campaignMain.toUser("OP|add|" + o.getName() + "|" + o.getXmlString(),
                               Username,
                               false);
                     }
-                    server.campaign.CampaignMain.cm.toUser("OP|view", Username, false);
+                    CampaignMain.campaignMain.toUser("OP|view", Username, false);
                     break;
 
                 case "getsome":
                     java.util.Vector<Operation> opsToSend = new java.util.Vector<Operation>();
                     while (command.hasMoreTokens()) {
-                        opsToSend.add(server.campaign.CampaignMain.cm.getOpsManager()
+                        opsToSend.add(CampaignMain.campaignMain.getOpsManager()
                                             .getOperation(command.nextToken()));
                     }
                     for (Operation o : opsToSend) {
-                        server.campaign.CampaignMain.cm.toUser("OP|add|" + o.getName() + "|" + o.getXmlString(),
+                        CampaignMain.campaignMain.toUser("OP|add|" + o.getName() + "|" + o.getXmlString(),
                               Username,
                               false);
                     }
-                    server.campaign.CampaignMain.cm.toUser("OP|view", Username, false);
+                    CampaignMain.campaignMain.toUser("OP|view", Username, false);
                     break;
 
                 case "md5":
@@ -71,7 +72,7 @@ public class GetOpsCommand implements Command {
                         java.io.FileWriter fw = null;
                         try {
                             fw = new java.io.FileWriter(md5File);
-                            for (Operation o : server.campaign.CampaignMain.cm.getOpsManager()
+                            for (Operation o : CampaignMain.campaignMain.getOpsManager()
                                                      .getOperations()
                                                      .values()) {
                                 java.security.MessageDigest md = null;
@@ -118,16 +119,16 @@ public class GetOpsCommand implements Command {
                         // TODO Auto-generated catch block
                         MWLogger.errLog(e);
                     }
-                    server.campaign.CampaignMain.cm.toUser("OP|md5|" + toReturn.toString(), Username, false);
+                    CampaignMain.campaignMain.toUser("OP|md5|" + toReturn.toString(), Username, false);
 
                     break;
 
                 default:
-                    server.campaign.CampaignMain.cm.toUser("AM: invalid syntax, use: " + getSyntax(), Username, true);
+                    CampaignMain.campaignMain.toUser("AM: invalid syntax, use: " + getSyntax(), Username, true);
                     break;
             }
         } else {
-            server.campaign.CampaignMain.cm.toUser("AM: invalid syntax, use: " + getSyntax(), Username, true);
+            CampaignMain.campaignMain.toUser("AM: invalid syntax, use: " + getSyntax(), Username, true);
         }
     }
 

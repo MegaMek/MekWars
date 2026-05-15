@@ -16,6 +16,8 @@
 
 package mekwars.server.campaign.commands.admin;
 
+import mekwars.server.campaign.CampaignMain;
+
 public class AdminChangePlanetOwnerCommand implements server.campaign.commands.Command {
 
     int accessLevel = server.MWChatServer.auth.IAuthenticator.ADMIN;
@@ -26,13 +28,13 @@ public class AdminChangePlanetOwnerCommand implements server.campaign.commands.C
     public void process(java.util.StringTokenizer command, String Username) {
 
         //access level check
-        int userLevel = server.campaign.CampaignMain.cm.getServer().getUserLevel(Username);
+        int userLevel = CampaignMain.campaignMain.getServer().getUserLevel(Username);
         if (userLevel < getExecutionLevel()) {
-            server.campaign.CampaignMain.cm.toUser("AM:Insufficient access level for command. Level: " +
-                                                         userLevel +
-                                                         ". Required: " +
-                                                         accessLevel +
-                                                         ".", Username, true);
+            CampaignMain.campaignMain.toUser("AM:Insufficient access level for command. Level: " +
+                                                   userLevel +
+                                                   ". Required: " +
+                                                   accessLevel +
+                                                   ".", Username, true);
             return;
         }
 
@@ -41,22 +43,22 @@ public class AdminChangePlanetOwnerCommand implements server.campaign.commands.C
         server.campaign.SHouse h = null;
 
         try {
-            p = server.campaign.CampaignMain.cm.getPlanetFromPartialString(command.nextToken(), Username);
-            h = server.campaign.CampaignMain.cm.getHouseFromPartialString(command.nextToken(), Username);
+            p = CampaignMain.campaignMain.getPlanetFromPartialString(command.nextToken(), Username);
+            h = CampaignMain.campaignMain.getHouseFromPartialString(command.nextToken(), Username);
         } catch (Exception e) {
-            server.campaign.CampaignMain.cm.toUser("Improper command. Try: /c adminchangeplanetowner#planet#newfaction",
+            CampaignMain.campaignMain.toUser("Improper command. Try: /c adminchangeplanetowner#planet#newfaction",
                   Username,
                   true);
             return;
         }
 
         if (p == null) {
-            server.campaign.CampaignMain.cm.toUser("Could not find a matching planet.", Username, true);
+            CampaignMain.campaignMain.toUser("Could not find a matching planet.", Username, true);
             return;
         }
 
         if (h == null) {
-            server.campaign.CampaignMain.cm.toUser("Could not find a matching faction.", Username, true);
+            CampaignMain.campaignMain.toUser("Could not find a matching faction.", Username, true);
             return;
         }
 
@@ -69,10 +71,10 @@ public class AdminChangePlanetOwnerCommand implements server.campaign.commands.C
         p.updated();
 
         //server.MWLogger.modLog(Username + " gave ownership of " + p.getName() + " to " + h.getName() + ".");
-        server.campaign.CampaignMain.cm.toUser("You gave ownership of " + p.getName() + " to " + h.getName() + ".",
+        CampaignMain.campaignMain.toUser("You gave ownership of " + p.getName() + " to " + h.getName() + ".",
               Username,
               true);
-        server.campaign.CampaignMain.cm.doSendModMail("NOTE",
+        CampaignMain.campaignMain.doSendModMail("NOTE",
               Username + " gave ownership of " + p.getName() + " to " + h.getName() + ".");
 
     }

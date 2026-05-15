@@ -23,6 +23,7 @@ package mekwars.server.campaign.operations;
 //IMPORTS
 
 import common.campaign.operations.Operation;
+import mekwars.server.campaign.CampaignMain;
 import server.campaign.operations.newopmanager.I_OperationManager;
 
 //TODO: remove "unused" once longs are running
@@ -166,7 +167,7 @@ public class LongValidator {
             case LFAILS_PLAYERMONEY:
                 return "your funds are insufficient";
             case LFAILS_PLAYERREWARD:
-                return "you do not have enough " + server.campaign.CampaignMain.cm.getConfig("RPShortName");
+                return "you do not have enough " + CampaignMain.campaignMain.getConfig("RPShortName");
             case LFAILS_RANGE:
                 return "the target planet is out of range";
             case LFAILS_UNAUTHORIZED:

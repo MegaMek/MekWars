@@ -15,6 +15,8 @@
 package mekwars.server.campaign.commands.admin;
 
 
+import mekwars.server.campaign.CampaignMain;
+
 public class AdminReloadHouseConfigsCommand implements server.campaign.commands.Command {
 
     int accessLevel = server.MWChatServer.auth.IAuthenticator.ADMIN;
@@ -25,13 +27,13 @@ public class AdminReloadHouseConfigsCommand implements server.campaign.commands.
     public void process(java.util.StringTokenizer command, String Username) {
 
         //access level check
-        int userLevel = server.campaign.CampaignMain.cm.getServer().getUserLevel(Username);
+        int userLevel = CampaignMain.campaignMain.getServer().getUserLevel(Username);
         if (userLevel < getExecutionLevel()) {
-            server.campaign.CampaignMain.cm.toUser("AM:Insufficient access level for command. Level: " +
-                                                         userLevel +
-                                                         ". Required: " +
-                                                         accessLevel +
-                                                         ".", Username, true);
+            CampaignMain.campaignMain.toUser("AM:Insufficient access level for command. Level: " +
+                                                   userLevel +
+                                                   ". Required: " +
+                                                   accessLevel +
+                                                   ".", Username, true);
             return;
         }
 
@@ -40,20 +42,20 @@ public class AdminReloadHouseConfigsCommand implements server.campaign.commands.
         try {
             faction = command.nextToken();
         } catch (Exception ex) {
-            server.campaign.CampaignMain.cm.toUser("Invalid syntax. Try: AdminReloadHouseConfig#faction",
+            CampaignMain.campaignMain.toUser("Invalid syntax. Try: AdminReloadHouseConfig#faction",
                   Username,
                   true);
             return;
         }
 
-        server.campaign.SHouse h = server.campaign.CampaignMain.cm.getHouseFromPartialString(faction, Username);
+        server.campaign.SHouse h = CampaignMain.campaignMain.getHouseFromPartialString(faction, Username);
 
         if (h == null) {return;}
 
         h.getConfig().clear();
         h.loadConfigFile();
         h.updated();
-        server.campaign.CampaignMain.cm.doSendModMail("NOTE",
+        CampaignMain.campaignMain.doSendModMail("NOTE",
               Username + " has reloaded campaign configs for " + h.getName());
     }
 

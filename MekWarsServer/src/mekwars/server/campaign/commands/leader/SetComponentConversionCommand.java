@@ -16,10 +16,11 @@
 package mekwars.server.campaign.commands.leader;
 
 import common.util.ComponentToCritsConverter;
+import mekwars.server.campaign.CampaignMain;
 
 public class SetComponentConversionCommand implements server.campaign.commands.Command {
 
-    int accessLevel = server.campaign.CampaignMain.cm.getIntegerConfig("factionLeaderLevel");
+    int accessLevel = CampaignMain.campaignMain.getIntegerConfig("factionLeaderLevel");
     String syntax = "Crit Name#Weight#Type#Max Production#House[Optional Staff Only]";
 
     public String getSyntax() {
@@ -29,26 +30,26 @@ public class SetComponentConversionCommand implements server.campaign.commands.C
     public void process(java.util.StringTokenizer command, String Username) {
 
         if (accessLevel != 0) {
-            int userLevel = server.campaign.CampaignMain.cm.getServer().getUserLevel(Username);
+            int userLevel = CampaignMain.campaignMain.getServer().getUserLevel(Username);
             if (userLevel < getExecutionLevel()) {
-                server.campaign.CampaignMain.cm.toUser("AM:Insufficient access level for command. Level: " +
-                                                             userLevel +
-                                                             ". Required: " +
-                                                             accessLevel +
-                                                             ".", Username, true);
+                CampaignMain.campaignMain.toUser("AM:Insufficient access level for command. Level: " +
+                                                       userLevel +
+                                                       ". Required: " +
+                                                       accessLevel +
+                                                       ".", Username, true);
                 return;
             }
         }
 
-        server.campaign.SPlayer player = server.campaign.CampaignMain.cm.getPlayer(Username);
+        server.campaign.SPlayer player = CampaignMain.campaignMain.getPlayer(Username);
         server.campaign.SHouse house = player.getMyHouse();
         String crit = command.nextToken();
         int weight = Integer.parseInt(command.nextToken());
         int type = Integer.parseInt(command.nextToken());
         int maxProduction = Integer.parseInt(command.nextToken());
 
-        if (server.campaign.CampaignMain.cm.getServer().isModerator(Username) && command.hasMoreElements()) {
-            house = server.campaign.CampaignMain.cm.getHouseFromPartialString(command.nextToken(), Username);
+        if (CampaignMain.campaignMain.getServer().isModerator(Username) && command.hasMoreElements()) {
+            house = CampaignMain.campaignMain.getHouseFromPartialString(command.nextToken(), Username);
         }
 
         if (crit.equalsIgnoreCase("all")) {
@@ -68,7 +69,7 @@ public class SetComponentConversionCommand implements server.campaign.commands.C
             house.getComponentConverter().put(converter.getCritName(), converter);
         }
 
-        server.campaign.CampaignMain.cm.doSendHouseMail(house,
+        CampaignMain.campaignMain.doSendHouseMail(house,
               "NOTE",
               player.getName() +
                     " has set components to crit conversion for " +

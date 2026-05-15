@@ -16,6 +16,8 @@
 
 package mekwars.server.campaign.commands.admin;
 
+import mekwars.server.campaign.CampaignMain;
+
 public class SetMultiPlayerGroupCommand implements server.campaign.commands.Command {
 
     int accessLevel = server.MWChatServer.auth.IAuthenticator.ADMIN;
@@ -26,13 +28,13 @@ public class SetMultiPlayerGroupCommand implements server.campaign.commands.Comm
     public void process(java.util.StringTokenizer command, String Username) {
 
         //access level check
-        int userLevel = server.campaign.CampaignMain.cm.getServer().getUserLevel(Username);
+        int userLevel = CampaignMain.campaignMain.getServer().getUserLevel(Username);
         if (userLevel < getExecutionLevel()) {
-            server.campaign.CampaignMain.cm.toUser("AM:Insufficient access level for command. Level: " +
-                                                         userLevel +
-                                                         ". Required: " +
-                                                         accessLevel +
-                                                         ".", Username, true);
+            CampaignMain.campaignMain.toUser("AM:Insufficient access level for command. Level: " +
+                                                   userLevel +
+                                                   ". Required: " +
+                                                   accessLevel +
+                                                   ".", Username, true);
             return;
         }
 
@@ -40,24 +42,24 @@ public class SetMultiPlayerGroupCommand implements server.campaign.commands.Comm
         int groupNum = -1;
 
         try {
-            p = server.campaign.CampaignMain.cm.getPlayer(command.nextToken());
+            p = CampaignMain.campaignMain.getPlayer(command.nextToken());
             groupNum = Integer.parseInt(command.nextToken());
         } catch (Exception e) {
-            server.campaign.CampaignMain.cm.toUser("Improper command. Try: /c setmultiplayergroup#player#groupnumber",
+            CampaignMain.campaignMain.toUser("Improper command. Try: /c setmultiplayergroup#player#groupnumber",
                   Username,
                   true);
             return;
         }
 
         if (p == null) {
-            server.campaign.CampaignMain.cm.toUser("Couldn't find a player with that name.", Username, true);
+            CampaignMain.campaignMain.toUser("Couldn't find a player with that name.", Username, true);
             return;
         }
 
         //continue
         p.setGroupAllowance(groupNum);
-        server.campaign.CampaignMain.cm.toUser("Group " + groupNum + " set for " + p.getName() + ".", Username, true);
-        server.campaign.CampaignMain.cm.doSendModMail("NOTE",
+        CampaignMain.campaignMain.toUser("Group " + groupNum + " set for " + p.getName() + ".", Username, true);
+        CampaignMain.campaignMain.doSendModMail("NOTE",
               Username + " added " + p.getName() + " to MultiPlayGroup #" + groupNum + ".");
 
     }

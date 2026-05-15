@@ -16,6 +16,8 @@
 
 package mekwars.server.campaign.commands;
 
+import mekwars.server.campaign.CampaignMain;
+
 /**
  * @author Salient for miniCampaigns, will report to user status of their campaign
  */
@@ -26,20 +28,20 @@ public class ReportStatusMC implements Command {
 
     public void process(java.util.StringTokenizer command, String Username) {
         //access level checks
-        int userLevel = server.campaign.CampaignMain.cm.getServer().getUserLevel(Username);
-        server.campaign.SPlayer p = server.campaign.CampaignMain.cm.getPlayer(Username);
+        int userLevel = CampaignMain.campaignMain.getServer().getUserLevel(Username);
+        server.campaign.SPlayer p = CampaignMain.campaignMain.getPlayer(Username);
 
         if (userLevel < getExecutionLevel()) {
-            server.campaign.CampaignMain.cm.toUser("AM:Insufficient access level for command. Level: " +
-                                                         userLevel +
-                                                         ". Required: " +
-                                                         accessLevel +
-                                                         ".", Username, true);
+            CampaignMain.campaignMain.toUser("AM:Insufficient access level for command. Level: " +
+                                                   userLevel +
+                                                   ". Required: " +
+                                                   accessLevel +
+                                                   ".", Username, true);
             return;
         }
 
-        if (!Boolean.parseBoolean(server.campaign.CampaignMain.cm.getConfig("Enable_MiniCampaign"))) {
-            server.campaign.CampaignMain.cm.toUser("AM:This command is disabled on this server.", Username, true);
+        if (!Boolean.parseBoolean(CampaignMain.campaignMain.getConfig("Enable_MiniCampaign"))) {
+            CampaignMain.campaignMain.toUser("AM:This command is disabled on this server.", Username, true);
             return;
         }
 

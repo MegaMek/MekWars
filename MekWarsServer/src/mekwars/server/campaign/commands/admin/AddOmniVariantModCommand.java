@@ -16,6 +16,8 @@
 
 package mekwars.server.campaign.commands.admin;
 
+import mekwars.server.campaign.CampaignMain;
+
 public class AddOmniVariantModCommand implements server.campaign.commands.Command {
 
     int accessLevel = server.MWChatServer.auth.IAuthenticator.ADMIN;
@@ -28,13 +30,13 @@ public class AddOmniVariantModCommand implements server.campaign.commands.Comman
     public void process(java.util.StringTokenizer command, String Username) {
 
         if (accessLevel != 0) {
-            int userLevel = server.campaign.CampaignMain.cm.getServer().getUserLevel(Username);
+            int userLevel = CampaignMain.campaignMain.getServer().getUserLevel(Username);
             if (userLevel < getExecutionLevel()) {
-                server.campaign.CampaignMain.cm.toUser("AM:Insufficient access level for command. Level: " +
-                                                             userLevel +
-                                                             ". Required: " +
-                                                             accessLevel +
-                                                             ".", Username, true);
+                CampaignMain.campaignMain.toUser("AM:Insufficient access level for command. Level: " +
+                                                       userLevel +
+                                                       ". Required: " +
+                                                       accessLevel +
+                                                       ".", Username, true);
                 return;
             }
         }
@@ -44,36 +46,36 @@ public class AddOmniVariantModCommand implements server.campaign.commands.Comman
 
         String variant = command.nextToken();
         String mods = command.nextToken();
-        server.campaign.CampaignMain.cm.getOmniVariantMods().put(variant, mods);
+        CampaignMain.campaignMain.getOmniVariantMods().put(variant, mods);
 
         java.util.StringTokenizer modlist = new java.util.StringTokenizer(mods, "$");
         String money = modlist.nextToken();
         String comp = modlist.nextToken();
         String flu = modlist.nextToken();
 
-        server.campaign.CampaignMain.cm.toUser("AM:Variant " +
-                                                     variant +
-                                                     " has been given the following repod mods " +
-                                                     server.campaign.CampaignMain.cm.moneyOrFluMessage(true,
-                                                           true,
-                                                           Integer.parseInt(money)) +
-                                                     " " +
-                                                     comp +
-                                                     " components " +
-                                                     server.campaign.CampaignMain.cm.moneyOrFluMessage(false,
-                                                           true,
-                                                           Integer.parseInt(flu)) +
-                                                     ".", Username, true);
-        server.campaign.CampaignMain.cm.doSendModMail("NOTE",
+        CampaignMain.campaignMain.toUser("AM:Variant " +
+                                               variant +
+                                               " has been given the following repod mods " +
+                                               CampaignMain.campaignMain.moneyOrFluMessage(true,
+                                                     true,
+                                                     Integer.parseInt(money)) +
+                                               " " +
+                                               comp +
+                                               " components " +
+                                               CampaignMain.campaignMain.moneyOrFluMessage(false,
+                                                     true,
+                                                     Integer.parseInt(flu)) +
+                                               ".", Username, true);
+        CampaignMain.campaignMain.doSendModMail("NOTE",
               Username +
                     " has given variant " +
                     variant +
                     " the following repod mods " +
-                    server.campaign.CampaignMain.cm.moneyOrFluMessage(true, true, Integer.parseInt(money)) +
+                    CampaignMain.campaignMain.moneyOrFluMessage(true, true, Integer.parseInt(money)) +
                     " " +
                     comp +
                     " components " +
-                    server.campaign.CampaignMain.cm.moneyOrFluMessage(false, true, Integer.parseInt(flu)) +
+                    CampaignMain.campaignMain.moneyOrFluMessage(false, true, Integer.parseInt(flu)) +
                     ".");
     }
 

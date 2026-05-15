@@ -17,6 +17,8 @@
 package mekwars.server.campaign.commands.mod;
 
 
+import mekwars.server.campaign.CampaignMain;
+
 public class TouchCommand implements server.campaign.commands.Command {
 
     int accessLevel = server.MWChatServer.auth.IAuthenticator.MODERATOR;
@@ -27,20 +29,20 @@ public class TouchCommand implements server.campaign.commands.Command {
     public void process(java.util.StringTokenizer command, String Username) {
 
         //access level check
-        int userLevel = server.campaign.CampaignMain.cm.getServer().getUserLevel(Username);
+        int userLevel = CampaignMain.campaignMain.getServer().getUserLevel(Username);
         if (userLevel < getExecutionLevel()) {
-            server.campaign.CampaignMain.cm.toUser("AM:Insufficient access level for command. Level: " +
-                                                         userLevel +
-                                                         ". Required: " +
-                                                         accessLevel +
-                                                         ".", Username, true);
+            CampaignMain.campaignMain.toUser("AM:Insufficient access level for command. Level: " +
+                                                   userLevel +
+                                                   ". Required: " +
+                                                   accessLevel +
+                                                   ".", Username, true);
             return;
         }
 
         String player = command.nextToken();
-        server.campaign.SPlayer p = server.campaign.CampaignMain.cm.getPlayer(player);
+        server.campaign.SPlayer p = CampaignMain.campaignMain.getPlayer(player);
         if (p.getDutyStatus() != server.campaign.SPlayer.STATUS_LOGGEDOUT) {
-            server.campaign.CampaignMain.cm.toUser(p.getName() + " is already on-line and doesn't need a pfile update.",
+            CampaignMain.campaignMain.toUser(p.getName() + " is already on-line and doesn't need a pfile update.",
                   Username);
             return;
         }
@@ -48,9 +50,9 @@ public class TouchCommand implements server.campaign.commands.Command {
         p.setLastOnline(System.currentTimeMillis());
         p.setSave();
 
-        server.campaign.CampaignMain.cm.toUser("AM:You touched " + p.getName() + ".", Username, true);
+        CampaignMain.campaignMain.toUser("AM:You touched " + p.getName() + ".", Username, true);
         //server.MWLogger.modLog(Username + " touched " + p.getName() + ".");
-        server.campaign.CampaignMain.cm.doSendModMail("NOTE", Username + " touched " + p.getName() + ".");
+        CampaignMain.campaignMain.doSendModMail("NOTE", Username + " touched " + p.getName() + ".");
 
     }
 

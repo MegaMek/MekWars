@@ -18,6 +18,7 @@ package mekwars.server.campaign.market;
 
 import common.Unit;
 import common.util.MWLogger;
+import mekwars.server.campaign.CampaignMain;
 
 /**
  * Classic MMNET-style sealed bid auction.
@@ -48,14 +49,14 @@ public final class HighestSealedBidAuction implements IAuction {
         int unitWeightClass;
         server.campaign.SUnit u;
         if (listing.getSellerName().toLowerCase().startsWith("faction_") ||
-                  (server.campaign.CampaignMain.cm.getHouseFromPartialString(listing.getSellerName()) != null)) {
+                  (CampaignMain.campaignMain.getHouseFromPartialString(listing.getSellerName()) != null)) {
             // It's coming from a house
             String sellingFaction = listing.getSellerName().replace("Faction_", "");
-            u = server.campaign.CampaignMain.cm.getHouseFromPartialString(sellingFaction)
+            u = CampaignMain.campaignMain.getHouseFromPartialString(sellingFaction)
                       .getUnit(listing.getListedUnitID());
         } else {
             // It's coming from a player
-            u = server.campaign.CampaignMain.cm.getPlayer(listing.getSellerName()).getUnit(listing.getListedUnitID());
+            u = CampaignMain.campaignMain.getPlayer(listing.getSellerName()).getUnit(listing.getListedUnitID());
         }
         unitType = u.getType();
         unitWeightClass = u.getWeightclass();
@@ -69,9 +70,9 @@ public final class HighestSealedBidAuction implements IAuction {
 
         while (i.hasNext()) {
             MarketBid currBid = i.next();
-            IBuyer potentialWinner = server.campaign.CampaignMain.cm.getPlayer(currBid.getBidderName());
+            IBuyer potentialWinner = CampaignMain.campaignMain.getPlayer(currBid.getBidderName());
             if (potentialWinner == null) {
-                potentialWinner = server.campaign.CampaignMain.cm.getHouseFromPartialString(currBid.getBidderName(),
+                potentialWinner = CampaignMain.campaignMain.getHouseFromPartialString(currBid.getBidderName(),
                       null);
             }
 
@@ -81,41 +82,41 @@ public final class HighestSealedBidAuction implements IAuction {
             //if the buyer can no longer afford his bid, move on
             if (potentialWinner.getMoney() < currBid.getAmount()) {
                 if (potentialWinner.isHuman() && !hiddenBM) {//let a human know ...
-                    server.campaign.CampaignMain.cm.toUser("The " +
-                                                                 listing.getListedModelName()
-                                                                 +
-                                                                 " from the BM could have been yours! Unfortunately, you don't have the "
-                                                                 +
-                                                                 server.campaign.CampaignMain.cm.moneyOrFluMessage(true,
-                                                                       true,
-                                                                       currBid.getAmount()) +
-                                                                 " you "
-                                                                 +
-                                                                 "offered.", currBid.getBidderName(), true);
+                    CampaignMain.campaignMain.toUser("The " +
+                                                           listing.getListedModelName()
+                                                           +
+                                                           " from the BM could have been yours! Unfortunately, you don't have the "
+                                                           +
+                                                           CampaignMain.campaignMain.moneyOrFluMessage(true,
+                                                                 true,
+                                                                 currBid.getAmount()) +
+                                                           " you "
+                                                           +
+                                                           "offered.", currBid.getBidderName(), true);
                 }
                 continue;
             }
 
             // Check to see if the SOs are allowing users to go into negative bays
-            if (potentialWinner.isHuman() && server.campaign.CampaignMain.cm.isUsingAdvanceRepair() && (
-                  server.campaign.CampaignMain.cm.getIntegerConfig("MaximumNegativeBaysFromBM") != -1)) {
+            if (potentialWinner.isHuman() && CampaignMain.campaignMain.isUsingAdvanceRepair() && (
+                  CampaignMain.campaignMain.getIntegerConfig("MaximumNegativeBaysFromBM") != -1)) {
                 server.campaign.SPlayer p = (server.campaign.SPlayer) potentialWinner;
                 int baysAvailable = p.getFreeBays() +
-                                          server.campaign.CampaignMain.cm.getIntegerConfig("MaximumNegativeBaysFromBM");
+                                          CampaignMain.campaignMain.getIntegerConfig("MaximumNegativeBaysFromBM");
                 int baysNeeded;
                 server.campaign.SHouse sellingFaction;
                 //SUnit u;
                 String sellerName = listing.getSellerName();
                 if (sellerName.toLowerCase().startsWith("faction_") ||
-                          (server.campaign.CampaignMain.cm.getHouseFromPartialString(sellerName) != null)) {
+                          (CampaignMain.campaignMain.getHouseFromPartialString(sellerName) != null)) {
                     // Coming from a house bay
-                    sellingFaction = server.campaign.CampaignMain.cm.getHouseFromPartialString(sellerName.replace(
+                    sellingFaction = CampaignMain.campaignMain.getHouseFromPartialString(sellerName.replace(
                           "Faction_",
                           ""));
                     u = sellingFaction.getUnit(listing.getListedUnitID());
                 } else {
                     // Coming from a player
-                    server.campaign.SPlayer s = server.campaign.CampaignMain.cm.getPlayer(sellerName);
+                    server.campaign.SPlayer s = CampaignMain.campaignMain.getPlayer(sellerName);
                     sellingFaction = s.getMyHouse();
                     u = s.getUnit(listing.getListedUnitID());
                 }
@@ -125,20 +126,20 @@ public final class HighestSealedBidAuction implements IAuction {
                 } else {
                     MWLogger.errLog(
                           "Spork effed something up.  Unable to find unit in HighestSealedBidAuction.getWinner()");
-                    server.campaign.CampaignMain.cm.doSendModMail("NOTE",
+                    CampaignMain.campaignMain.doSendModMail("NOTE",
                           "Spork effed something up.  Unable to find unit in HighestSealedBidAuction.getWinner()");
                     baysNeeded = 0;
                 }
                 if (baysNeeded > baysAvailable) {
                     // No can do
                     if (potentialWinner.isHuman() && !hiddenBM) {//let a human know ...
-                        server.campaign.CampaignMain.cm.toUser("The " +
-                                                                     listing.getListedModelName()
-                                                                     +
-                                                                     " from the BM could have been yours! Unfortunately, you don't have the "
-                                                                     +
-                                                                     baysNeeded +
-                                                                     " bays you need to store this unit.",
+                        CampaignMain.campaignMain.toUser("The " +
+                                                               listing.getListedModelName()
+                                                               +
+                                                               " from the BM could have been yours! Unfortunately, you don't have the "
+                                                               +
+                                                               baysNeeded +
+                                                               " bays you need to store this unit.",
                               currBid.getBidderName(),
                               true);
                     }
@@ -158,16 +159,16 @@ public final class HighestSealedBidAuction implements IAuction {
                                       " " +
                                       Unit.getTypeClassDesc(unitType) +
                                       " from the BM");
-                server.campaign.CampaignMain.cm.toUser("The " +
-                                                             listing.getListedModelName()
-                                                             +
-                                                             " from the BM could have been yours! Unfortunately, you don't have room for another "
-                                                             +
-                                                             Unit.getWeightClassDesc(unitWeightClass) +
-                                                             " "
-                                                             +
-                                                             Unit.getTypeClassDesc(unitType) +
-                                                             ".", currBid.getBidderName(), true);
+                CampaignMain.campaignMain.toUser("The " +
+                                                       listing.getListedModelName()
+                                                       +
+                                                       " from the BM could have been yours! Unfortunately, you don't have room for another "
+                                                       +
+                                                       Unit.getWeightClassDesc(unitWeightClass) +
+                                                       " "
+                                                       +
+                                                       Unit.getTypeClassDesc(unitType) +
+                                                       ".", currBid.getBidderName(), true);
                 continue;
             }
 
@@ -187,26 +188,26 @@ public final class HighestSealedBidAuction implements IAuction {
          */
         while (i.hasNext()) {
             MarketBid losingBid = i.next();
-            IBuyer loser = server.campaign.CampaignMain.cm.getPlayer(losingBid.getBidderName());
+            IBuyer loser = CampaignMain.campaignMain.getPlayer(losingBid.getBidderName());
             if (loser == null) {
-                loser = server.campaign.CampaignMain.cm.getHouseFromPartialString(losingBid.getBidderName(), null);
+                loser = CampaignMain.campaignMain.getHouseFromPartialString(losingBid.getBidderName(), null);
             }
             if (loser != null && loser.isHuman() && !hiddenBM) {
-                server.campaign.CampaignMain.cm.toUser("You didn't get the  " +
-                                                             listing.getListedModelName()
-                                                             +
-                                                             " for " +
-                                                             server.campaign.CampaignMain.cm.moneyOrFluMessage(true,
-                                                                   true,
-                                                                   losingBid.getAmount()) +
-                                                             ". The "
-                                                             +
-                                                             "winner paid " +
-                                                             server.campaign.CampaignMain.cm.moneyOrFluMessage(true,
-                                                                   true,
-                                                                   winningBid.getAmount())
-                                                             +
-                                                             ".", losingBid.getBidderName(), true);
+                CampaignMain.campaignMain.toUser("You didn't get the  " +
+                                                       listing.getListedModelName()
+                                                       +
+                                                       " for " +
+                                                       CampaignMain.campaignMain.moneyOrFluMessage(true,
+                                                             true,
+                                                             losingBid.getAmount()) +
+                                                       ". The "
+                                                       +
+                                                       "winner paid " +
+                                                       CampaignMain.campaignMain.moneyOrFluMessage(true,
+                                                             true,
+                                                             winningBid.getAmount())
+                                                       +
+                                                       ".", losingBid.getBidderName(), true);
             }
         }//end while(losers remain)
 

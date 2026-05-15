@@ -17,6 +17,8 @@
 package mekwars.server.campaign.commands.admin;
 
 
+import mekwars.server.campaign.CampaignMain;
+
 public class InvisCommand implements server.campaign.commands.Command {
 
     int accessLevel = server.MWChatServer.auth.IAuthenticator.ADMIN;
@@ -27,38 +29,38 @@ public class InvisCommand implements server.campaign.commands.Command {
     public void process(java.util.StringTokenizer command, String Username) {
 
         //access level check
-        int userLevel = server.campaign.CampaignMain.cm.getServer().getUserLevel(Username);
+        int userLevel = CampaignMain.campaignMain.getServer().getUserLevel(Username);
         if (userLevel < getExecutionLevel()) {
-            server.campaign.CampaignMain.cm.toUser("AM:Insufficient access level for command. Level: " +
-                                                         userLevel +
-                                                         ". Required: " +
-                                                         accessLevel +
-                                                         ".", Username, true);
+            CampaignMain.campaignMain.toUser("AM:Insufficient access level for command. Level: " +
+                                                   userLevel +
+                                                   ". Required: " +
+                                                   accessLevel +
+                                                   ".", Username, true);
             return;
         }
 
-        server.campaign.SPlayer player = server.campaign.CampaignMain.cm.getPlayer(Username);
+        server.campaign.SPlayer player = CampaignMain.campaignMain.getPlayer(Username);
         if (player == null) {return;}
 
         if (player.getDutyStatus() != server.campaign.SPlayer.STATUS_RESERVE) {
-            server.campaign.CampaignMain.cm.toUser("AM:You must be in reserve to change visibility.", Username, true);
+            CampaignMain.campaignMain.toUser("AM:You must be in reserve to change visibility.", Username, true);
             return;
         }
 
         player.setInvisible(!player.isInvisible());
 
-        server.campaign.CampaignMain.cm.getServer().sendRemoveUserToAll(Username, false);
+        CampaignMain.campaignMain.getServer().sendRemoveUserToAll(Username, false);
 
-        server.campaign.CampaignMain.cm.getServer().getUser(Username).setInvis(player.isInvisible());
-        server.campaign.CampaignMain.cm.getServer().sendNewUserToAll(Username, false);
+        CampaignMain.campaignMain.getServer().getUser(Username).setInvis(player.isInvisible());
+        CampaignMain.campaignMain.getServer().sendNewUserToAll(Username, false);
 
         //Fix for BUG 1491951: post-invisibility status
-        server.campaign.CampaignMain.cm.sendPlayerStatusUpdate(player, true);
+        CampaignMain.campaignMain.sendPlayerStatusUpdate(player, true);
 
-        server.campaign.CampaignMain.cm.toUser("AM:You have become " + (player.isInvisible() ? "invisible" : "visible"),
+        CampaignMain.campaignMain.toUser("AM:You have become " + (player.isInvisible() ? "invisible" : "visible"),
               Username,
               true);
-        server.campaign.CampaignMain.cm.doSendModMail("NOTE",
+        CampaignMain.campaignMain.doSendModMail("NOTE",
               Username + " has become " + (player.isInvisible() ? "invisible" : "visible"));
     }
 

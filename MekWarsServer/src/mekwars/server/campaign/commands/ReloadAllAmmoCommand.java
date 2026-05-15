@@ -20,6 +20,7 @@ package mekwars.server.campaign.commands;
 import megamek.common.AmmoType;
 import megamek.common.Entity;
 import megamek.common.Mounted;
+import mekwars.server.campaign.CampaignMain;
 
 public class ReloadAllAmmoCommand implements Command {
 
@@ -29,25 +30,25 @@ public class ReloadAllAmmoCommand implements Command {
     public void process(java.util.StringTokenizer command, String Username) {
 
         if (accessLevel != 0) {
-            int userLevel = server.campaign.CampaignMain.cm.getServer().getUserLevel(Username);
+            int userLevel = CampaignMain.campaignMain.getServer().getUserLevel(Username);
             if (userLevel < getExecutionLevel()) {
-                server.campaign.CampaignMain.cm.toUser("AM:Insufficient access level for command. Level: " +
-                                                             userLevel +
-                                                             ". Required: " +
-                                                             accessLevel +
-                                                             ".", Username, true);
+                CampaignMain.campaignMain.toUser("AM:Insufficient access level for command. Level: " +
+                                                       userLevel +
+                                                       ". Required: " +
+                                                       accessLevel +
+                                                       ".", Username, true);
                 return;
             }
         }
 
-        server.campaign.SPlayer p = server.campaign.CampaignMain.cm.getPlayer(Username);
+        server.campaign.SPlayer p = CampaignMain.campaignMain.getPlayer(Username);
 
         int unitid = 0;//ID# of the mech which is to set ammo change
 
         try {
             unitid = Integer.parseInt(command.nextToken());
         } catch (NumberFormatException ex) {
-            server.campaign.CampaignMain.cm.toUser(
+            CampaignMain.campaignMain.toUser(
                   "AM:ReloadAllAmmo command failed. Check your input. It should be something like this: /c reloadAllAmmo#unitid",
                   Username,
                   true);
@@ -60,7 +61,7 @@ public class ReloadAllAmmoCommand implements Command {
         int refillShots = 0;
         double ammoCharge = 0;
 
-        if (!server.campaign.CampaignMain.cm.getBooleanConfig("UsePartsRepair")) {
+        if (!CampaignMain.campaignMain.getBooleanConfig("UsePartsRepair")) {
 
             for (Mounted ammo : en.getAmmo()) {
 
@@ -71,7 +72,7 @@ public class ReloadAllAmmoCommand implements Command {
                     // Capital Weapon
                     refillShots = ammo.getOriginalShots();
                 }
-                ammoCharge = server.campaign.CampaignMain.cm.getAmmoCost(baseAmmo.getInternalName());
+                ammoCharge = CampaignMain.campaignMain.getAmmoCost(baseAmmo.getInternalName());
                 if (ammoCharge < 0) {
                     continue;
                 }
@@ -90,12 +91,12 @@ public class ReloadAllAmmoCommand implements Command {
             }
 
             if (cost > p.getMoney()) {
-                server.campaign.CampaignMain.cm.toUser("AM:You do not have enough to fully reload Unit #" +
-                                                             unit.getId() +
-                                                             ". It would cost " +
-                                                             server.campaign.CampaignMain.cm.moneyOrFluMessage(true,
-                                                                   false,
-                                                                   cost), Username);
+                CampaignMain.campaignMain.toUser("AM:You do not have enough to fully reload Unit #" +
+                                                       unit.getId() +
+                                                       ". It would cost " +
+                                                       CampaignMain.campaignMain.moneyOrFluMessage(true,
+                                                             false,
+                                                             cost), Username);
                 return;
             }
 
@@ -104,7 +105,7 @@ public class ReloadAllAmmoCommand implements Command {
                 AmmoType baseAmmo = (AmmoType) ammo.getType();
 
                 //Do not refill banned ammo
-                ammoCharge = server.campaign.CampaignMain.cm.getAmmoCost(baseAmmo.getInternalName());
+                ammoCharge = CampaignMain.campaignMain.getAmmoCost(baseAmmo.getInternalName());
                 if (ammoCharge < 0) {
                     continue;
                 }
@@ -143,7 +144,7 @@ public class ReloadAllAmmoCommand implements Command {
 
                         if (p.getAutoReorder()) {
                             String newCommand = baseAmmo.getInternalName() + "#" + ammoAmount;
-                            server.campaign.CampaignMain.cm.getServerCommands()
+                            CampaignMain.campaignMain.getServerCommands()
                                   .get("BUYPARTS")
                                   .process(new java.util.StringTokenizer(newCommand, "#"), Username);
                         }
@@ -160,17 +161,17 @@ public class ReloadAllAmmoCommand implements Command {
 
         }
         //unit.toString() sent's BV to zero and recalculates, so we don't need to do it in this Command class.
-        server.campaign.CampaignMain.cm.toUser("PL|UU|" + unit.getId() + "|" + unit.toString(true), Username, false);
+        CampaignMain.campaignMain.toUser("PL|UU|" + unit.getId() + "|" + unit.toString(true), Username, false);
 
         p.addMoney(-cost);
-        server.campaign.CampaignMain.cm.toUser("AM:Ammo set for " +
-                                                     unit.getModelName() +
-                                                     " (#" +
-                                                     unit.getId() +
-                                                     ") at a cost of " +
-                                                     server.campaign.CampaignMain.cm.moneyOrFluMessage(true,
-                                                           false,
-                                                           cost), Username, true);
+        CampaignMain.campaignMain.toUser("AM:Ammo set for " +
+                                               unit.getModelName() +
+                                               " (#" +
+                                               unit.getId() +
+                                               ") at a cost of " +
+                                               CampaignMain.campaignMain.moneyOrFluMessage(true,
+                                                     false,
+                                                     cost), Username, true);
 
     }//end process()
 

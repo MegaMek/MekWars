@@ -20,6 +20,7 @@ import static org.quartz.SimpleScheduleBuilder.simpleSchedule;
 import static org.quartz.TriggerBuilder.newTrigger;
 
 import common.util.MWLogger;
+import mekwars.server.campaign.CampaignMain;
 import org.quartz.Job;
 import org.quartz.JobDataMap;
 import org.quartz.JobDetail;
@@ -52,7 +53,7 @@ public class UserActivityInfluenceJob implements Job, MWRepeatingJob, JobIdentif
      * @param factionName       the faction the player fights for
      */
     public static void submit(String userName, Double weightedArmyValue, String factionName) {
-        int frequency = server.campaign.CampaignMain.cm.getIntegerConfig("Scheduler_PlayerActivity_flu");
+        int frequency = CampaignMain.campaignMain.getIntegerConfig("Scheduler_PlayerActivity_flu");
 
         submit(userName, weightedArmyValue, factionName, frequency);
     }
@@ -92,6 +93,16 @@ public class UserActivityInfluenceJob implements Job, MWRepeatingJob, JobIdentif
     }
 
     /**
+     * A method to stop execution of this job and remove it from the scheduler.  Called when the player deactivates.
+     *
+     * @param userName
+     */
+    public static void stop(String userName) {
+        TriggerKey key = new TriggerKey(userName + "_fluTrigger", "ActivityGroup");
+        MWScheduler.getInstance().unscheduleJob(key);
+    }
+
+    /**
      * This method is called every X seconds, where X is defined by the server config variable
      * "Scheduler_PlayerActivity_flu."
      *
@@ -106,7 +117,7 @@ public class UserActivityInfluenceJob implements Job, MWRepeatingJob, JobIdentif
         //String factionName = data.getString(FACTION_NAME);
         //Double armyWeight = data.getDoubleFromString(ARMY_WEIGHT);
 
-        server.campaign.SPlayer p = server.campaign.CampaignMain.cm.getPlayer(playerName);
+        server.campaign.SPlayer p = CampaignMain.campaignMain.getPlayer(playerName);
         if (p == null) {
             MWLogger.errLog("Null player " + playerName + " in UserActivityInfluenceJob.");
             mekwars.server.campaign.util.scheduler.UserActivityInfluenceJob.stop(playerName);
@@ -116,18 +127,8 @@ public class UserActivityInfluenceJob implements Job, MWRepeatingJob, JobIdentif
             int flu = calculateInfluence(p);
             p.addInfluence(flu);
             String fluMessage = getInfluenceMessage(p, flu);
-            server.campaign.CampaignMain.cm.toUser(fluMessage, playerName);
+            CampaignMain.campaignMain.toUser(fluMessage, playerName);
         }
-    }
-
-    /**
-     * A method to stop execution of this job and remove it from the scheduler.  Called when the player deactivates.
-     *
-     * @param userName
-     */
-    public static void stop(String userName) {
-        TriggerKey key = new TriggerKey(userName + "_fluTrigger", "ActivityGroup");
-        MWScheduler.getInstance().unscheduleJob(key);
     }
 
     /**
@@ -285,7 +286,7 @@ public class UserActivityInfluenceJob implements Job, MWRepeatingJob, JobIdentif
         String fluMessageWithPlayerName = fluMessageWithModelName.replaceAll("PLAYER", p.getName());
 
         fluMessageWithPlayerName += " (" +
-                                          server.campaign.CampaignMain.cm.moneyOrFluMessage(false, false, flu, true) +
+                                          CampaignMain.campaignMain.moneyOrFluMessage(false, false, flu, true) +
                                           ")";
         return fluMessageWithPlayerName;
     }

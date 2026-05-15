@@ -16,10 +16,11 @@
 package mekwars.server.campaign.commands.leader;
 
 import common.SubFaction;
+import mekwars.server.campaign.CampaignMain;
 
 public class DemotePlayerCommand implements server.campaign.commands.Command {
 
-    int accessLevel = server.campaign.CampaignMain.cm.getIntegerConfig("factionLeaderLevel");
+    int accessLevel = CampaignMain.campaignMain.getIntegerConfig("factionLeaderLevel");
     String syntax = "";
 
     public String getSyntax() {
@@ -29,41 +30,41 @@ public class DemotePlayerCommand implements server.campaign.commands.Command {
     public void process(java.util.StringTokenizer command, String Username) {
 
         if (accessLevel != 0) {
-            int userLevel = server.campaign.CampaignMain.cm.getServer().getUserLevel(Username);
+            int userLevel = CampaignMain.campaignMain.getServer().getUserLevel(Username);
             if (userLevel < getExecutionLevel()) {
-                server.campaign.CampaignMain.cm.toUser("AM:Insufficient access level for command. Level: " +
-                                                             userLevel +
-                                                             ". Required: " +
-                                                             accessLevel +
-                                                             ".", Username, true);
+                CampaignMain.campaignMain.toUser("AM:Insufficient access level for command. Level: " +
+                                                       userLevel +
+                                                       ". Required: " +
+                                                       accessLevel +
+                                                       ".", Username, true);
                 return;
             }
         }
 
         // person doing the demoting
-        server.campaign.SPlayer leader = server.campaign.CampaignMain.cm.getPlayer(Username);
+        server.campaign.SPlayer leader = CampaignMain.campaignMain.getPlayer(Username);
         // Person being demoted
         server.campaign.SPlayer grunt = null;
         String subFactionName;
         SubFaction subFaction = null;
 
         try {
-            grunt = server.campaign.CampaignMain.cm.getPlayer(command.nextToken());
+            grunt = CampaignMain.campaignMain.getPlayer(command.nextToken());
             subFactionName = command.nextToken();
         } catch (Exception ex) {
-            server.campaign.CampaignMain.cm.toUser("AM:Invalid Syntax: /demoteplayer Player#NewSubFactionName[none]",
+            CampaignMain.campaignMain.toUser("AM:Invalid Syntax: /demoteplayer Player#NewSubFactionName[none]",
                   Username);
             return;
         }
 
         if (grunt == null) {
-            server.campaign.CampaignMain.cm.toUser("AM:Unknown Player", Username);
+            CampaignMain.campaignMain.toUser("AM:Unknown Player", Username);
             return;
         }
 
         if (!grunt.getMyHouse().getName().equalsIgnoreCase(leader.getMyHouse().getName()) &&
-                  !server.campaign.CampaignMain.cm.getServer().isModerator(Username)) {
-            server.campaign.CampaignMain.cm.toUser("AM:You can only demote players that within your same faction!",
+                  !CampaignMain.campaignMain.getServer().isModerator(Username)) {
+            CampaignMain.campaignMain.toUser("AM:You can only demote players that within your same faction!",
                   Username);
             return;
         }
@@ -73,9 +74,9 @@ public class DemotePlayerCommand implements server.campaign.commands.Command {
         }
 
         if (subFaction == null) {
-            server.campaign.CampaignMain.cm.toUser("AM:That SubFaction does not exist for faction " +
-                                                         grunt.getMyHouse().getName() +
-                                                         ".", Username);
+            CampaignMain.campaignMain.toUser("AM:That SubFaction does not exist for faction " +
+                                                   grunt.getMyHouse().getName() +
+                                                   ".", Username);
             return;
         }
 
@@ -83,44 +84,44 @@ public class DemotePlayerCommand implements server.campaign.commands.Command {
         int minEXP = Integer.parseInt(subFaction.getConfig("MinExp"));
 
         if (grunt.getSubFactionAccess() < Integer.parseInt(subFaction.getConfig("AccessLevel"))) {
-            server.campaign.CampaignMain.cm.toUser("AM:You cannot demote " +
-                                                         grunt.getName() +
-                                                         " to a subfaction with a higher access level", Username);
+            CampaignMain.campaignMain.toUser("AM:You cannot demote " +
+                                                   grunt.getName() +
+                                                   " to a subfaction with a higher access level", Username);
             return;
         }
 
         if (grunt.getExperience() < minEXP || grunt.getRating() < minELO) {
-            server.campaign.CampaignMain.cm.toUser("AM:Sorry but " +
-                                                         grunt.getName() +
-                                                         " is not skilled enough to join that SubFaction.", Username);
+            CampaignMain.campaignMain.toUser("AM:Sorry but " +
+                                                   grunt.getName() +
+                                                   " is not skilled enough to join that SubFaction.", Username);
             return;
         }
 
         grunt.setSubFaction(subFactionName);
-        server.campaign.CampaignMain.cm.toUser("PL|SSN|" + subFactionName, grunt.getName(), false);
-        server.campaign.CampaignMain.cm.doSendToAllOnlinePlayers("PI|FT|" +
-                                                                       grunt.getName() +
-                                                                       "|" +
-                                                                       grunt.getFluffText(), false);
-        server.campaign.CampaignMain.cm.toUser("HS|CA|0", grunt.getName(), false);// clear old data
-        server.campaign.CampaignMain.cm.toUser(grunt.getMyHouse().getCompleteStatus(), grunt.getName(), false);
+        CampaignMain.campaignMain.toUser("PL|SSN|" + subFactionName, grunt.getName(), false);
+        CampaignMain.campaignMain.doSendToAllOnlinePlayers("PI|FT|" +
+                                                                 grunt.getName() +
+                                                                 "|" +
+                                                                 grunt.getFluffText(), false);
+        CampaignMain.campaignMain.toUser("HS|CA|0", grunt.getName(), false);// clear old data
+        CampaignMain.campaignMain.toUser(grunt.getMyHouse().getCompleteStatus(), grunt.getName(), false);
         for (server.campaign.SArmy army : grunt.getArmies()) {
-            server.campaign.CampaignMain.cm.getOpsManager().checkOperations(army, true);
+            CampaignMain.campaignMain.getOpsManager().checkOperations(army, true);
         }
 
-        server.campaign.CampaignMain.cm.toUser("AM:You have been demoted to SubFaction " + subFactionName + ".",
+        CampaignMain.campaignMain.toUser("AM:You have been demoted to SubFaction " + subFactionName + ".",
               grunt.getName());
-        server.campaign.CampaignMain.cm.doSendHouseMail(grunt.getMyHouse(),
+        CampaignMain.campaignMain.doSendHouseMail(grunt.getMyHouse(),
               "NOTE",
               grunt.getName() + " has been demoted to subfaction " + subFactionName + " by " + leader.getName() + "!");
-        server.campaign.CampaignMain.cm.toUser("AM:You demoted " +
-                                                     grunt.getName() +
-                                                     " to SubFaction " +
-                                                     subFactionName +
-                                                     ".", Username);
+        CampaignMain.campaignMain.toUser("AM:You demoted " +
+                                               grunt.getName() +
+                                               " to SubFaction " +
+                                               subFactionName +
+                                               ".", Username);
 
-        if (server.campaign.CampaignMain.cm.getServer().isModerator(Username)) {
-            server.campaign.CampaignMain.cm.doSendModMail("NOTE",
+        if (CampaignMain.campaignMain.getServer().isModerator(Username)) {
+            CampaignMain.campaignMain.doSendModMail("NOTE",
                   Username + " demoted " + grunt.getName() + " to SubFaction " + subFactionName + ".");
         }
     }

@@ -16,15 +16,28 @@
 
 package mekwars.server.campaign.market;
 
-import common.BMEquipment;
-import common.Equipment;
-import common.util.MWLogger;
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.InputStreamReader;
+import java.io.PrintStream;
+import java.util.HashMap;
+import java.util.StringTokenizer;
+
+import megamek.logging.MMLogger;
+import mekwars.common.BMEquipment;
+import mekwars.common.Equipment;
+import mekwars.server.campaign.CampaignMain;
+import mekwars.server.campaign.SPlayer;
 
 public class PartsMarket {
+    private final static MMLogger LOGGER = MMLogger.create(PartsMarket.class);
 
     // IVARS
-    private java.util.HashMap<String, BMEquipment> equipmentList = new java.util.HashMap<String, BMEquipment>();
-    private java.util.HashMap<String, BMEquipment> lastTickList = new java.util.HashMap<String, BMEquipment>();
+    private final HashMap<String, BMEquipment> equipmentList = new HashMap<>();
+    private final HashMap<String, BMEquipment> lastTickList = new HashMap<>();
 
     // CONSTRUCTOR
 
@@ -39,22 +52,23 @@ public class PartsMarket {
     // METHODS
 
     private void loadParts() {
-        int year = server.campaign.CampaignMain.cm.getIntegerConfig("CampaignYear");
-        java.io.BufferedReader dis = null;
+        int year = CampaignMain.campaignMain.getIntegerConfig("CampaignYear");
+        BufferedReader dis = null;
         try {
-            java.io.File bmFile = new java.io.File("./data/partsblackmarket.dat");
+            File bmFile = new File("./data/partsblackmarket.dat");
 
-            if (!bmFile.exists()) {return;}
+            if (!bmFile.exists()) {
+                return;
+            }
 
-            java.io.FileInputStream fis = new java.io.FileInputStream(bmFile);
-            dis = new java.io.BufferedReader(new java.io.InputStreamReader(fis));
+            FileInputStream fis = new FileInputStream(bmFile);
+            dis = new BufferedReader(new InputStreamReader(fis));
 
             if (dis.ready()) {
                 String line = dis.readLine();
-                java.util.StringTokenizer data = new java.util.StringTokenizer(line, "#");
+                StringTokenizer data = new StringTokenizer(line, "#");
 
                 while (data.hasMoreElements()) {
-
                     BMEquipment bme = new BMEquipment();
                     bme.setEquipmentInternalName(data.nextToken());
                     bme.setCost(Double.parseDouble(data.nextToken()));
@@ -67,12 +81,14 @@ public class PartsMarket {
             }
 
         } catch (Exception ex) {
-            MWLogger.errLog(ex);
+            LOGGER.error(ex, "Error loading parts");
         } finally {
             try {
-                if (dis != null) {dis.close();}
+                if (dis != null) {
+                    dis.close();
+                }
             } catch (java.io.IOException e) {
-                MWLogger.errLog(e);
+                LOGGER.error(e, "Unable to close the stream.");
             }
         }
     }
@@ -81,87 +97,89 @@ public class PartsMarket {
      *
      */
     public synchronized void tick() {
+        int year = CampaignMain.campaignMain.getIntegerConfig("CampaignYear");
 
-        int year = server.campaign.CampaignMain.cm.getIntegerConfig("CampaignYear");
-        for (String key : server.campaign.CampaignMain.cm.getBlackMarketEquipmentTable().keySet()) {
-            BMEquipment eq = this.equipmentList.get(key);
+        for (String key : CampaignMain.campaignMain.getBlackMarketEquipmentTable().keySet()) {
+            BMEquipment bmEquipment = this.equipmentList.get(key);
             BMEquipment tickList = this.lastTickList.get(key);
-            Equipment masterEq = server.campaign.CampaignMain.cm.getBlackMarketEquipmentTable().get(key);
+            Equipment masterEq = CampaignMain.campaignMain.getBlackMarketEquipmentTable().get(key);
 
 
-            try {
-                Thread.sleep(10);
-                //Remove from the list since its no longer being produced.
-                if (masterEq.getMaxProduction() == 0) {
-                    this.equipmentList.remove(key);
-                    this.lastTickList.remove(key);
-                    continue;
-                }
+            if ((bmEquipment == null || tickList == null) && masterEq.getMaxProduction() > 0) {
+                bmEquipment = new BMEquipment();
+                bmEquipment.setEquipmentInternalName(key);
+                bmEquipment.setAmount(Math.max(masterEq.getMinProduction(),
+                      CampaignMain.campaignMain.getRandomNumber(masterEq.getMaxProduction()) + 1));
+                bmEquipment.setCost(Math.max(masterEq.getMinCost(),
+                      CampaignMain.campaignMain.getR().nextDouble() * masterEq.getMaxCost()));
+                bmEquipment.setCostUp(false);
+                bmEquipment.getEquipmentName();
+                bmEquipment.getTech(year);
 
-                if ((eq == null || tickList == null) && masterEq.getMaxProduction() > 0) {
-
-                    eq = new BMEquipment();
-
-                    eq.setEquipmentInternalName(key);
-                    eq.setAmount(Math.max(masterEq.getMinProduction(),
-                          server.campaign.CampaignMain.cm.getRandomNumber(masterEq.getMaxProduction()) + 1));
-                    eq.setCost(Math.max(masterEq.getMinCost(),
-                          server.campaign.CampaignMain.cm.getR().nextDouble() * masterEq.getMaxCost()));
-                    eq.setCostUp(false);
-                    eq.getEquipmentName();
-                    eq.getTech(year);
-
-                    this.lastTickList.put(key, eq.clone(year));
-                    this.equipmentList.put(key, eq);
-                    continue;
-                }
-                //Stuff got bought lets raise the price
-                if (eq.getAmount() < tickList.getAmount()) {
-                    eq.setCostUp(true);
-                    double costIncrease = ((double) (masterEq.getMaxProduction() - eq.getAmount()) /
-                                                 (double) masterEq.getMaxProduction()) + 1;
-
-                    eq.setCost(Math.min(masterEq.getMaxCost(),
-                          Math.max(masterEq.getMinCost(), eq.getCost() * costIncrease)));
-
-                    if (eq.getAmount() < masterEq.getMaxProduction()) {
-                        int difference = masterEq.getMaxProduction() - eq.getAmount();
-                        int amountIncrease = Math.min(1,
-                              Math.min(difference / 2,
-                                    server.campaign.CampaignMain.cm.getRandomNumber(difference + 1)));
-                        eq.setAmount(eq.getAmount() + amountIncrease);
-                    }
-
-                }//Ok no one bought anything so lets lower the price and add to the amount
-                else {
-                    eq.setCostUp(false);
-                    if (eq.getAmount() < masterEq.getMaxProduction()) {
-                        int difference = masterEq.getMaxProduction() - eq.getAmount();
-                        int amountIncrease = Math.min(1,
-                              Math.min(difference / 2,
-                                    server.campaign.CampaignMain.cm.getRandomNumber(difference) + 1));
-                        eq.setAmount(eq.getAmount() + amountIncrease);
-                    }
-
-                    //Only want the price to go down 10% max.
-                    double newCost = Math.max(masterEq.getMinCost(),
-                          Math.max(eq.getCost() * 0.9,
-                                server.campaign.CampaignMain.cm.getR().nextDouble() * eq.getCost()));
-                    eq.setCost(newCost);
-                }
-            } catch (IllegalArgumentException iae) {
-                eq.setCost(Math.abs(eq.getCost()));
-                eq.setAmount(Math.abs(eq.getAmount()));
-            } catch (Exception ex) {
-
-                MWLogger.errLog(ex);
+                this.lastTickList.put(key, bmEquipment.clone(year));
+                this.equipmentList.put(key, bmEquipment);
+                continue;
             }
-            eq.setAmount(Math.max(eq.getAmount(), masterEq.getMinProduction()));
-            eq.getEquipmentName();
-            eq.getTech(year);
-            this.lastTickList.put(key, eq.clone(year));
-            this.equipmentList.put(key, eq);
 
+            if (bmEquipment != null && tickList != null) {
+                try {
+                    Thread.sleep(10);
+                    //Remove from the list since it's no longer being produced.
+                    if (masterEq.getMaxProduction() == 0) {
+                        this.equipmentList.remove(key);
+                        this.lastTickList.remove(key);
+                        continue;
+                    }
+
+                    //Stuff got bought let's raise the price
+                    if (bmEquipment.getAmount() < tickList.getAmount()) {
+                        bmEquipment.setCostUp(true);
+                        double costIncrease = ((double) (masterEq.getMaxProduction() - bmEquipment.getAmount()) /
+                                                     (double) masterEq.getMaxProduction()) + 1;
+
+                        bmEquipment.setCost(Math.clamp(bmEquipment.getCost() * costIncrease,
+                              masterEq.getMinCost(),
+                              masterEq.getMaxCost()));
+
+                        if (bmEquipment.getAmount() < masterEq.getMaxProduction()) {
+                            int difference = masterEq.getMaxProduction() - bmEquipment.getAmount();
+                            int amountIncrease = Math.min(1,
+                                  Math.min(difference / 2,
+                                        CampaignMain.campaignMain.getRandomNumber(difference + 1)));
+                            bmEquipment.setAmount(bmEquipment.getAmount() + amountIncrease);
+                        }
+
+                    }//Ok, no one bought anything, so lets lower the price and add to the amount
+                    else {
+                        bmEquipment.setCostUp(false);
+                        if (bmEquipment.getAmount() < masterEq.getMaxProduction()) {
+                            int difference = masterEq.getMaxProduction() - bmEquipment.getAmount();
+                            int amountIncrease = Math.min(1,
+                                  Math.min(difference / 2,
+                                        CampaignMain.campaignMain.getRandomNumber(difference) + 1));
+                            bmEquipment.setAmount(bmEquipment.getAmount() + amountIncrease);
+                        }
+
+                        //Only want the price to go down 10% max.
+                        double newCost = Math.max(masterEq.getMinCost(),
+                              Math.max(bmEquipment.getCost() * 0.9,
+                                    CampaignMain.campaignMain.getR().nextDouble() * bmEquipment.getCost()));
+                        bmEquipment.setCost(newCost);
+                    }
+                } catch (IllegalArgumentException iae) {
+                    bmEquipment.setCost(Math.abs(bmEquipment.getCost()));
+                    bmEquipment.setAmount(Math.abs(bmEquipment.getAmount()));
+                } catch (Exception ex) {
+
+                    MWLogger.errLog(ex);
+                }
+
+                bmEquipment.setAmount(Math.max(bmEquipment.getAmount(), masterEq.getMinProduction()));
+                bmEquipment.getEquipmentName();
+                bmEquipment.getTech(year);
+                this.lastTickList.put(key, bmEquipment.clone(year));
+                this.equipmentList.put(key, bmEquipment);
+            }
         }
 
         updatePartsBlackMarketAllPlayers();
@@ -171,22 +189,22 @@ public class PartsMarket {
     }
 
     public synchronized void updatePartsBlackMarketAllPlayers() {
-
         String result = this.getPartsUpdateString();
-        server.campaign.CampaignMain.cm.doSendToAllOnlinePlayers(result, false);
+        CampaignMain.campaignMain.doSendToAllOnlinePlayers(result, false);
     }
 
     private void saveParts() {
         try {
-            java.io.PrintStream ps = new java.io.PrintStream(new java.io.FileOutputStream("./data/partsblackmarket.dat"));
+            PrintStream ps = new PrintStream(new FileOutputStream("./data/partsblackmarket.dat"));
 
             for (String key : this.equipmentList.keySet()) {
-
                 BMEquipment bme = this.equipmentList.get(key);
 
-                if (server.campaign.CampaignMain.cm.getBlackMarketEquipmentTable().get(key) == null ||
-                          server.campaign.CampaignMain.cm.getBlackMarketEquipmentTable().get(key).getMaxProduction() ==
-                                0) {continue;}
+                if (CampaignMain.campaignMain.getBlackMarketEquipmentTable().get(key) == null ||
+                          CampaignMain.campaignMain.getBlackMarketEquipmentTable().get(key).getMaxProduction() ==
+                                0) {
+                    continue;
+                }
 
                 ps.print(bme.getEquipmentInternalName());
                 ps.print("#");
@@ -196,12 +214,11 @@ public class PartsMarket {
                 ps.print("#");
             }
             ps.close();
-        } catch (java.io.FileNotFoundException fe) {
-            MWLogger.errLog("partsblackmarket.dat not found");
+        } catch (FileNotFoundException fe) {
+            LOGGER.error(fe, "partsblackmarket.dat not found");
         } catch (Exception ex) {
-            MWLogger.errLog(ex);
+            LOGGER.error(ex, "Unable to save parts.");
         }
-
     }
 
     public String getPartsUpdateString() {
@@ -228,17 +245,17 @@ public class PartsMarket {
 
             }
         } catch (Exception ex) {
-            MWLogger.errLog(ex);
+            LOGGER.error(ex, "Unable to updated String");
         }
 
         return result.toString();
     }
 
-    public synchronized void updatePartsBlackMarketPlayer(server.campaign.SPlayer player) {
-        server.campaign.CampaignMain.cm.toUser(this.getPartsUpdateString(), player.getName(), false);
+    public synchronized void updatePartsBlackMarketPlayer(SPlayer player) {
+        CampaignMain.campaignMain.toUser(this.getPartsUpdateString(), player.getName(), false);
     }
 
-    public java.util.HashMap<String, BMEquipment> getEquipmentList() {
+    public HashMap<String, BMEquipment> getEquipmentList() {
         return this.equipmentList;
     }
 

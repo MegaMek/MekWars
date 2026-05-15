@@ -16,6 +16,8 @@
 
 package mekwars.server.campaign.commands.admin;
 
+import mekwars.server.campaign.CampaignMain;
+
 //Syntax updateoperations
 public class UpdateOperationsCommand implements server.campaign.commands.Command {
 
@@ -27,29 +29,29 @@ public class UpdateOperationsCommand implements server.campaign.commands.Command
     public void process(java.util.StringTokenizer command, String Username) {
 
         //access level check
-        int userLevel = server.campaign.CampaignMain.cm.getServer().getUserLevel(Username);
+        int userLevel = CampaignMain.campaignMain.getServer().getUserLevel(Username);
         if (userLevel < getExecutionLevel()) {
-            server.campaign.CampaignMain.cm.toUser("AM:Insufficient access level for command. Level: " +
-                                                         userLevel +
-                                                         ". Required: " +
-                                                         accessLevel +
-                                                         ".", Username, true);
+            CampaignMain.campaignMain.toUser("AM:Insufficient access level for command. Level: " +
+                                                   userLevel +
+                                                   ". Required: " +
+                                                   accessLevel +
+                                                   ".", Username, true);
             return;
         }
 
-        if (!server.campaign.CampaignMain.cm.getBooleanConfig("CampaignLock")) {
-            server.campaign.CampaignMain.cm.toUser("The campaign must be locked before you can update the operations.",
+        if (!CampaignMain.campaignMain.getBooleanConfig("CampaignLock")) {
+            CampaignMain.campaignMain.toUser("The campaign must be locked before you can update the operations.",
                   Username,
                   true);
             return;
         }
 
-        server.campaign.CampaignMain.cm.getOpsManager().loadOperations();
+        CampaignMain.campaignMain.getOpsManager().loadOperations();
 
-        server.campaign.CampaignMain.cm.doSendModMail("NOTE", Username + " ops manager updated.");
+        CampaignMain.campaignMain.doSendModMail("NOTE", Username + " ops manager updated.");
 
-        server.campaign.CampaignMain.cm.updateAllOnlinePlayerArmies();
-        server.campaign.CampaignMain.cm.doSendToAllOnlinePlayers("PL|UDAO|1", false);
+        CampaignMain.campaignMain.updateAllOnlinePlayerArmies();
+        CampaignMain.campaignMain.doSendToAllOnlinePlayers("PL|UDAO|1", false);
     }
 
     public int getExecutionLevel() {return accessLevel;}

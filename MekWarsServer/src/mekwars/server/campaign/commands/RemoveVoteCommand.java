@@ -16,6 +16,7 @@
 
 package mekwars.server.campaign.commands;
 
+import mekwars.server.campaign.CampaignMain;
 import server.campaign.votes.Vote;
 
 
@@ -27,25 +28,25 @@ public class RemoveVoteCommand implements Command {
     public void process(java.util.StringTokenizer command, String Username) {
 
         if (accessLevel != 0) {
-            int userLevel = server.campaign.CampaignMain.cm.getServer().getUserLevel(Username);
+            int userLevel = CampaignMain.campaignMain.getServer().getUserLevel(Username);
             if (userLevel < getExecutionLevel()) {
-                server.campaign.CampaignMain.cm.toUser("AM:Insufficient access level for command. Level: " +
-                                                             userLevel +
-                                                             ". Required: " +
-                                                             accessLevel +
-                                                             ".", Username, true);
+                CampaignMain.campaignMain.toUser("AM:Insufficient access level for command. Level: " +
+                                                       userLevel +
+                                                       ". Required: " +
+                                                       accessLevel +
+                                                       ".", Username, true);
                 return;
             }
         }
 
-        server.campaign.SPlayer castingPlayer = server.campaign.CampaignMain.cm.getPlayer(Username);
+        server.campaign.SPlayer castingPlayer = CampaignMain.campaignMain.getPlayer(Username);
         String recipientName = "";//blank string
 
         try {
             recipientName = new String(command.nextToken()).toString();
         }//end try
         catch (NumberFormatException ex) {
-            server.campaign.CampaignMain.cm.toUser(
+            CampaignMain.campaignMain.toUser(
                   "AM:RemoveVote command failed. Check your input. It should be something like this: /c removevote#name",
                   Username,
                   true);
@@ -54,35 +55,35 @@ public class RemoveVoteCommand implements Command {
 
         //break out if a player is trying to vote for himself
         if (Username.equals(recipientName)) {
-            server.campaign.CampaignMain.cm.toUser("AM:You may not vote for youself.", Username, true);
+            CampaignMain.campaignMain.toUser("AM:You may not vote for youself.", Username, true);
             return;
         }
 
         //break out if voting isnt enabled on the server
-        boolean canVote = Boolean.parseBoolean(server.campaign.CampaignMain.cm.getConfig("VotingEnabled"));
+        boolean canVote = Boolean.parseBoolean(CampaignMain.campaignMain.getConfig("VotingEnabled"));
         if (!canVote) {
-            server.campaign.CampaignMain.cm.toUser("AM:Voting is disabled on this server.", Username, true);
+            CampaignMain.campaignMain.toUser("AM:Voting is disabled on this server.", Username, true);
             return;
         }
 
         //get all votes cast by the player issuing the command
-        java.util.Vector<Vote> castersVotes = server.campaign.CampaignMain.cm.getVoteManager()
+        java.util.Vector<Vote> castersVotes = CampaignMain.campaignMain.getVoteManager()
                                                     .getAllVotesBy(castingPlayer);
 
         //break out if the player has no outstanding votes to remove
         if (castersVotes.isEmpty()) {
-            server.campaign.CampaignMain.cm.toUser("AM:You have not cast any votes. Removal is impossible.",
+            CampaignMain.campaignMain.toUser("AM:You have not cast any votes. Removal is impossible.",
                   Username,
                   true);
             return;
         }
 
         //get the SPlayer who is receiving for the next couple of checks
-        server.campaign.SPlayer recipientPlayer = server.campaign.CampaignMain.cm.getPlayer(recipientName);
+        server.campaign.SPlayer recipientPlayer = CampaignMain.campaignMain.getPlayer(recipientName);
 
         //break out if the recieving player isnt known
         if (recipientPlayer == null) {
-            server.campaign.CampaignMain.cm.toUser("AM:You can't remove a vote for a player who doesn't exist.",
+            CampaignMain.campaignMain.toUser("AM:You can't remove a vote for a player who doesn't exist.",
                   Username,
                   true);
             return;
@@ -107,20 +108,20 @@ public class RemoveVoteCommand implements Command {
          */
 
         if (!hasVoteForRecipient) {
-            server.campaign.CampaignMain.cm.toUser("AM:You have not voted for this player.", Username, true);
+            CampaignMain.campaignMain.toUser("AM:You have not voted for this player.", Username, true);
             return;
         }
 
         //else if
-        boolean voteRemoved = server.campaign.CampaignMain.cm.getVoteManager().removeVote(v);
+        boolean voteRemoved = CampaignMain.campaignMain.getVoteManager().removeVote(v);
         if (!voteRemoved) {
-            server.campaign.CampaignMain.cm.toUser("AM:There was an error removing the vote. Please contact your " +
-                                                         "server admin or file a bug report.", Username, true);
+            CampaignMain.campaignMain.toUser("AM:There was an error removing the vote. Please contact your " +
+                                                   "server admin or file a bug report.", Username, true);
             return;
         }
 
         //else
-        server.campaign.CampaignMain.cm.toUser("AM:Your vote for " + recipientName + " has been removed.",
+        CampaignMain.campaignMain.toUser("AM:Your vote for " + recipientName + " has been removed.",
               Username,
               true);
     }

@@ -26,6 +26,7 @@ import common.campaign.pilot.Pilot;
 import common.campaign.pilot.skills.PilotSkill;
 import megamek.common.Entity;
 import megamek.common.Mech;
+import mekwars.server.campaign.CampaignMain;
 
 /**
  * NOTE: This is a unofficial rule. A pilot with this skill receives only 1 pilot hit from ammunition explosions.
@@ -62,10 +63,10 @@ public class IronManSkill extends SPilotSkill {
 
         String chance = "chancefor" + getAbbreviation() + "for" + Unit.getTypeClassDesc(unitType);
 
-        server.campaign.SHouse house = server.campaign.CampaignMain.cm.getHouseFromPartialString(pilot.getCurrentFaction());
+        server.campaign.SHouse house = CampaignMain.campaignMain.getHouseFromPartialString(pilot.getCurrentFaction());
 
         if (house == null) {
-            return server.campaign.CampaignMain.cm.getIntegerConfig(chance);
+            return CampaignMain.campaignMain.getIntegerConfig(chance);
         }
 
         return house.getIntegerConfig(chance);
@@ -78,7 +79,7 @@ public class IronManSkill extends SPilotSkill {
 
     @Override
     public int getBVMod(Entity unit, server.campaign.pilot.SPilot pilot) {
-        int IronManBVBaseMod = server.campaign.CampaignMain.cm.getIntegerConfig("IronManBaseBVMod");
+        int IronManBVBaseMod = CampaignMain.campaignMain.getIntegerConfig("IronManBaseBVMod");
 
         if (pilot.getSkills().has(PilotSkill.PainResistanceSkillID)) {
             return 0;

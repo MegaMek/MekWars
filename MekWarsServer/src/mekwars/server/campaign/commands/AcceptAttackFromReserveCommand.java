@@ -17,6 +17,7 @@ package mekwars.server.campaign.commands;
 import common.Unit;
 import common.campaign.operations.Operation;
 import common.util.MWLogger;
+import mekwars.server.campaign.CampaignMain;
 
 /**
  * DefendCommand is analagous to the Task system's "join" command - it allows a player to register himself as the
@@ -30,28 +31,28 @@ public class AcceptAttackFromReserveCommand implements Command {
     public void process(java.util.StringTokenizer command, String Username) {
 
         if (accessLevel != 0) {
-            int userLevel = server.campaign.CampaignMain.cm.getServer().getUserLevel(Username);
+            int userLevel = CampaignMain.campaignMain.getServer().getUserLevel(Username);
             if (userLevel < getExecutionLevel()) {
-                server.campaign.CampaignMain.cm.toUser("AM:Insufficient access level for command. Level: " +
-                                                             userLevel +
-                                                             ". Required: " +
-                                                             accessLevel +
-                                                             ".", Username, true);
+                CampaignMain.campaignMain.toUser("AM:Insufficient access level for command. Level: " +
+                                                       userLevel +
+                                                       ". Required: " +
+                                                       accessLevel +
+                                                       ".", Username, true);
                 return;
             }
         }
 
         //Issuer of command will be defending player
-        server.campaign.SPlayer dp = server.campaign.CampaignMain.cm.getPlayer(Username);
+        server.campaign.SPlayer dp = CampaignMain.campaignMain.getPlayer(Username);
         if (dp == null) {
-            server.campaign.CampaignMain.cm.toUser("AM:Null player in AcceptAttackFromReserve. Report this immediately!",
+            CampaignMain.campaignMain.toUser("AM:Null player in AcceptAttackFromReserve. Report this immediately!",
                   Username,
                   true);
             return;
         }
 
         //Get the attacker's name, the op id, army id, and so on
-        server.campaign.operations.newopmanager.I_OperationManager manager = server.campaign.CampaignMain.cm.getOpsManager();
+        server.campaign.operations.newopmanager.I_OperationManager manager = CampaignMain.campaignMain.getOpsManager();
         int armyID = -1;
         int attackingArmyID = -1;
         server.campaign.SPlayer ap = null;
@@ -59,13 +60,13 @@ public class AcceptAttackFromReserveCommand implements Command {
         server.campaign.SPlanet target = null;
 
         try {
-            ap = server.campaign.CampaignMain.cm.getPlayer(command.nextToken());
+            ap = CampaignMain.campaignMain.getPlayer(command.nextToken());
             attackingArmyID = Integer.parseInt(command.nextToken());
             armyID = Integer.parseInt(command.nextToken());
             opName = command.nextToken();
-            target = server.campaign.CampaignMain.cm.getPlanetFromPartialString(command.nextToken(), null);
+            target = CampaignMain.campaignMain.getPlanetFromPartialString(command.nextToken(), null);
         } catch (Exception e) {
-            server.campaign.CampaignMain.cm.toUser(
+            CampaignMain.campaignMain.toUser(
                   "AM:Improper format. Should be /c acceptattackfromreserve#attacker name#attack army#your army#opname#world",
                   Username,
                   true);
@@ -78,9 +79,9 @@ public class AcceptAttackFromReserveCommand implements Command {
 
         aa = ap.getArmy(attackingArmyID);
         if (aa == null) {
-            server.campaign.CampaignMain.cm.toUser("AM:Defend failed. Attacker does not have an army with ID #" +
-                                                         armyID +
-                                                         ".",
+            CampaignMain.campaignMain.toUser("AM:Defend failed. Attacker does not have an army with ID #" +
+                                                   armyID +
+                                                   ".",
                   Username,
                   true);
             return;
@@ -88,28 +89,28 @@ public class AcceptAttackFromReserveCommand implements Command {
 
         da = dp.getArmy(armyID);
         if (da == null) {
-            server.campaign.CampaignMain.cm.toUser("AM:Defend failed. Army #" + armyID + " does not exist.",
+            CampaignMain.campaignMain.toUser("AM:Defend failed. Army #" + armyID + " does not exist.",
                   Username,
                   true);
             return;
         }
 
         if (da.isDisabled()) {
-            server.campaign.CampaignMain.cm.toUser("AM:Defend failed. Army #" +
-                                                         armyID +
-                                                         " is disabled and cannot be used to defend.",
+            CampaignMain.campaignMain.toUser("AM:Defend failed. Army #" +
+                                                   armyID +
+                                                   " is disabled and cannot be used to defend.",
                   Username,
                   true);
             return;
         }
 
-        if ((server.campaign.CampaignMain.cm.getIntegerConfig("MaxNegativeBaysForAFR") > -1) &&
-                  ((dp.getFreeBays() + server.campaign.CampaignMain.cm.getIntegerConfig("MaxNegativeBaysForAFR")) <
+        if ((CampaignMain.campaignMain.getIntegerConfig("MaxNegativeBaysForAFR") > -1) &&
+                  ((dp.getFreeBays() + CampaignMain.campaignMain.getIntegerConfig("MaxNegativeBaysForAFR")) <
                          0)) {
-            server.campaign.CampaignMain.cm.toUser("AM:Defend failed. " + dp.getName() + " has too many negative bays.",
+            CampaignMain.campaignMain.toUser("AM:Defend failed. " + dp.getName() + " has too many negative bays.",
                   ap.getName(),
                   true);
-            server.campaign.CampaignMain.cm.toUser("AM:Defend failed.  You have too many negative bays.",
+            CampaignMain.campaignMain.toUser("AM:Defend failed.  You have too many negative bays.",
                   Username,
                   true);
             return;
@@ -118,22 +119,22 @@ public class AcceptAttackFromReserveCommand implements Command {
         //Ensure offer is still valid
         Long launchTime = ap.getLastAttackFromReserve();
         if (launchTime +
-                  (Long.parseLong(server.campaign.CampaignMain.cm.getConfig("AttackFromReserveResponseTime")) * 60000) <
+                  (Long.parseLong(CampaignMain.campaignMain.getConfig("AttackFromReserveResponseTime")) * 60000) <
                   System.currentTimeMillis()) {
-            server.campaign.CampaignMain.cm.toUser("AM:Sorry - this offer has expired.", Username, true);
+            CampaignMain.campaignMain.toUser("AM:Sorry - this offer has expired.", Username, true);
             return;
         }
 
         //Don't let players defend multiple games
         if (dp.getDutyStatus() == server.campaign.SPlayer.STATUS_FIGHTING) {
-            server.campaign.CampaignMain.cm.toUser("AM:You are already fighting!", Username, true);
+            CampaignMain.campaignMain.toUser("AM:You are already fighting!", Username, true);
             return;
         }
 
         // Check if the SOs have disabled AFR while over unit limits
-        if (server.campaign.CampaignMain.cm.getBooleanConfig("DisableAFRIfOverHangarLimits") &&
+        if (CampaignMain.campaignMain.getBooleanConfig("DisableAFRIfOverHangarLimits") &&
                   dp.isOverAnyUnitLimits()) {
-            server.campaign.CampaignMain.cm.toUser(
+            CampaignMain.campaignMain.toUser(
                   "AM: Defend failed. You have exceeded one or more hangar limits.  AFR is disabled until you get under those limits.",
                   Username,
                   true);
@@ -153,11 +154,11 @@ public class AcceptAttackFromReserveCommand implements Command {
         if (defensiveFailures.size() == 0) {
             fullMatches.add(da);
         } else {
-            server.campaign.CampaignMain.cm.toUser("AM:Army #" +
-                                                         da.getID() +
-                                                         "could not defend " +
-                                                         manager.getShortValidator()
-                                                               .failuresToString(defensiveFailures),
+            CampaignMain.campaignMain.toUser("AM:Army #" +
+                                                   da.getID() +
+                                                   "could not defend " +
+                                                   manager.getShortValidator()
+                                                         .failuresToString(defensiveFailures),
                   Username,
                   true);
             return;
@@ -170,7 +171,7 @@ public class AcceptAttackFromReserveCommand implements Command {
          */
         for (Unit currU : da.getUnits()) {
             if (currU.hasVacantPilot()) {
-                server.campaign.CampaignMain.cm.toUser("AM:You may not defend using an army with pilotless units.",
+                CampaignMain.campaignMain.toUser("AM:You may not defend using an army with pilotless units.",
                       Username,
                       true);
                 return;
@@ -204,8 +205,8 @@ public class AcceptAttackFromReserveCommand implements Command {
          *   he is involved in. This stops any running chicken
          *   threads and may cancel cancel other attacks.
          */
-        server.campaign.CampaignMain.cm.getOpsManager().removePlayerFromAllAttackerLists(dp, so, true);
-        server.campaign.CampaignMain.cm.getOpsManager().removePlayerFromAllDefenderLists(dp, so, true);
+        CampaignMain.campaignMain.getOpsManager().removePlayerFromAllAttackerLists(dp, so, true);
+        CampaignMain.campaignMain.getOpsManager().removePlayerFromAllDefenderLists(dp, so, true);
         so.addDefender(dp, da, "");//add defender
 
         /*
@@ -231,19 +232,19 @@ public class AcceptAttackFromReserveCommand implements Command {
 
         if (money > 0) {
             dp.addMoney(-money);
-            toSend += "(" + server.campaign.CampaignMain.cm.moneyOrFluMessage(true, true, money);
+            toSend += "(" + CampaignMain.campaignMain.moneyOrFluMessage(true, true, money);
             hasCost = true;
         }
         if (flu > 0) {
             dp.addInfluence(-flu);
             if (hasCost) {toSend += ", ";} else {toSend += "(";}
-            toSend += server.campaign.CampaignMain.cm.moneyOrFluMessage(false, true, flu);
+            toSend += CampaignMain.campaignMain.moneyOrFluMessage(false, true, flu);
             hasCost = true;
         }
         if (rp > 0) {
             dp.addReward(-rp);
             if (hasCost) {toSend += ", ";} else {toSend += "(";}
-            toSend += "-" + rp + " " + server.campaign.CampaignMain.cm.getConfig("RPShortName");
+            toSend += "-" + rp + " " + CampaignMain.campaignMain.getConfig("RPShortName");
             hasCost = true;
         }
 
@@ -256,7 +257,7 @@ public class AcceptAttackFromReserveCommand implements Command {
                                dp.getName() +
                                " w. Army #" +
                                da.getID());
-        server.campaign.CampaignMain.cm.toUser(toSend, Username, true);
+        CampaignMain.campaignMain.toUser(toSend, Username, true);
 
     }//end process
 

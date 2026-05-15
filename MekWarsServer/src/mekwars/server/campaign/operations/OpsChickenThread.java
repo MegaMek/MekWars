@@ -21,6 +21,7 @@ import common.UnitFactory;
 import common.campaign.operations.Operation;
 import common.util.MWLogger;
 import common.util.StringUtils;
+import mekwars.server.campaign.CampaignMain;
 
 public class OpsChickenThread extends Thread {
 
@@ -46,7 +47,7 @@ public class OpsChickenThread extends Thread {
         opName = name;
 
         // determine the wait period
-        Operation o = server.campaign.CampaignMain.cm.getOpsManager().getOperation(opName);
+        Operation o = CampaignMain.campaignMain.getOpsManager().getOperation(opName);
         waittime = o.getIntValue("TimeToNondefensePenalty");
     }
 
@@ -73,10 +74,10 @@ public class OpsChickenThread extends Thread {
     @Override
     public synchronized void run() {
 
-        server.campaign.CampaignMain.cm.toUser(generateAttackLinks(), pdefender.getName(), true);
+        CampaignMain.campaignMain.toUser(generateAttackLinks(), pdefender.getName(), true);
 
         // Send Attack Event so client can play a sound
-        server.campaign.CampaignMain.cm.toUser(generateAttackDialogCall(), pdefender.getName(), false);
+        CampaignMain.campaignMain.toUser(generateAttackDialogCall(), pdefender.getName(), false);
 
         // message is extraneous now. null it.
         message = null;
@@ -106,7 +107,7 @@ public class OpsChickenThread extends Thread {
             if (!shouldContinue) {return;}
 
             if (pdefender.leechCount >
-                      server.campaign.CampaignMain.cm.getOpsManager()
+                      CampaignMain.campaignMain.getOpsManager()
                             .getOperation(opName)
                             .getIntValue("LeechesToDeactivate")) {
                 // Some other thing pushed this over the edge.  Don't do anything but return.
@@ -114,13 +115,13 @@ public class OpsChickenThread extends Thread {
             }
 
             // FFA ops start once the leech is done.
-            if (server.campaign.CampaignMain.cm.getOpsManager()
+            if (CampaignMain.campaignMain.getOpsManager()
                       .getOperation(opName)
                       .getBooleanValue("FreeForAllOperation")) {
 
-                ShortOperation parentOp = server.campaign.CampaignMain.cm.getOpsManager().getRunningOps().get(opID);
+                ShortOperation parentOp = CampaignMain.campaignMain.getOpsManager().getRunningOps().get(opID);
                 // get the latest copy of the operation
-                Operation o = server.campaign.CampaignMain.cm.getOpsManager().getOperation(opName);
+                Operation o = CampaignMain.campaignMain.getOpsManager().getOperation(opName);
 
                 int minPlayers = 3;
                 try {
@@ -131,7 +132,7 @@ public class OpsChickenThread extends Thread {
                 if (parentOp.getDefenders().size() + parentOp.getAttackers().size() > minPlayers) {
                     parentOp.changeStatus(ShortOperation.STATUS_INPROGRESS);
                 } else {
-                    server.campaign.CampaignMain.cm.getOpsManager()
+                    CampaignMain.campaignMain.getOpsManager()
                           .terminateOperation(parentOp, OperationManager.TERM_NOPOSSIBLEDEFENDERS, null);
                 }
                 return;
@@ -150,16 +151,16 @@ public class OpsChickenThread extends Thread {
              * rejoined, creating a new SPlayer instance.
              */
             if (pdefender.leechCount >
-                      server.campaign.CampaignMain.cm.getOpsManager()
+                      CampaignMain.campaignMain.getOpsManager()
                             .getOperation(opName)
                             .getIntValue("LeechesToDeactivate")) {
                 shouldContinue = false;
-                server.campaign.SPlayer currP = server.campaign.CampaignMain.cm.getPlayer(pdefender.getName());
+                server.campaign.SPlayer currP = CampaignMain.campaignMain.getPlayer(pdefender.getName());
                 currP.setActive(false);
                 currP.leechCount = 0;
-                server.campaign.CampaignMain.cm.sendPlayerStatusUpdate(currP, !Boolean.parseBoolean(
-                      server.campaign.CampaignMain.cm.getConfig("HideActiveStatus")));
-                server.campaign.CampaignMain.cm.toUser("You've been deactivated!", currP.getName(), true);
+                CampaignMain.campaignMain.sendPlayerStatusUpdate(currP, !Boolean.parseBoolean(
+                      CampaignMain.campaignMain.getConfig("HideActiveStatus")));
+                CampaignMain.campaignMain.toUser("You've been deactivated!", currP.getName(), true);
                 return;
             }
 
@@ -173,7 +174,7 @@ public class OpsChickenThread extends Thread {
          * Setup. Inform the player of the outstanding attack and send him links
          * to join for defense.
          */
-        Operation o = server.campaign.CampaignMain.cm.getOpsManager().getOperation(opName);
+        Operation o = CampaignMain.campaignMain.getOpsManager().getOperation(opName);
         boolean hasAnArmy = false;// used to set up string for armies past the
         // first
         StringBuilder toSend = new StringBuilder(message + "<br>You may defend with: ");
@@ -233,7 +234,7 @@ public class OpsChickenThread extends Thread {
     public String generateAttackDialogCall() {
         String opString = "CC|AT|" + opID;
         StringBuilder defendingArmyList = new StringBuilder();
-        Operation o = server.campaign.CampaignMain.cm.getOpsManager().getOperation(opName);
+        Operation o = CampaignMain.campaignMain.getOpsManager().getOperation(opName);
         int numberOfTeams = -1;
         if (o.getBooleanValue("TeamOperation")) {
             numberOfTeams = Math.max(2, Math.min(8, o.getIntValue("NumberOfTeams")));
@@ -264,22 +265,22 @@ public class OpsChickenThread extends Thread {
                                     ". You've not been punished because " +
                                     "you are in the training faction; however, if you leave an attack undefended in a normal " +
                                     "faction you may lose money, units, experience, influence, rewards, or some combination thereof.";
-            server.campaign.CampaignMain.cm.toUser(toPlayer, pdefender.getName(), true);
+            CampaignMain.campaignMain.toUser(toPlayer, pdefender.getName(), true);
             return;
         }
 
-        if (server.campaign.CampaignMain.cm.getIThread().isImmune(pdefender)) {
+        if (CampaignMain.campaignMain.getIThread().isImmune(pdefender)) {
             String toPlayer = "You did not defend Attack #" +
                                     opID +
                                     ". You've not been punished because " +
                                     "you are still immune; however, if your immunity wears off and you're still under attack you may " +
                                     "lose money, units, experience, influence, rewards, or some combination thereof.";
-            server.campaign.CampaignMain.cm.toUser(toPlayer, pdefender.getName(), true);
+            CampaignMain.campaignMain.toUser(toPlayer, pdefender.getName(), true);
             return;
         }
 
         // get the latest copy of the operation
-        Operation o = server.campaign.CampaignMain.cm.getOpsManager().getOperation(opName);
+        Operation o = CampaignMain.campaignMain.getOpsManager().getOperation(opName);
 
         // load the percent hits.
         double rpPercent = o.getDoubleValue("PercentRPChickenPenalty");
@@ -327,8 +328,8 @@ public class OpsChickenThread extends Thread {
 
         if (totalRPLoss > 0) {
             if (!hasLoss) {
-                toPlayer += " (-" + totalRPLoss + " " + server.campaign.CampaignMain.cm.getConfig("RPShortName");
-            } else {toPlayer += ", -" + totalRPLoss + " " + server.campaign.CampaignMain.cm.getConfig("RPShortName");}
+                toPlayer += " (-" + totalRPLoss + " " + CampaignMain.campaignMain.getConfig("RPShortName");
+            } else {toPlayer += ", -" + totalRPLoss + " " + CampaignMain.campaignMain.getConfig("RPShortName");}
             pdefender.addReward(-totalRPLoss);
             hasLoss = true;
         }
@@ -339,22 +340,22 @@ public class OpsChickenThread extends Thread {
         }
         if (totalFluLoss > 0) {
             if (!hasLoss) {
-                toPlayer += " (-" + server.campaign.CampaignMain.cm.moneyOrFluMessage(false, true, totalFluLoss);
-            } else {toPlayer += ", -" + server.campaign.CampaignMain.cm.moneyOrFluMessage(false, true, totalFluLoss);}
+                toPlayer += " (-" + CampaignMain.campaignMain.moneyOrFluMessage(false, true, totalFluLoss);
+            } else {toPlayer += ", -" + CampaignMain.campaignMain.moneyOrFluMessage(false, true, totalFluLoss);}
             pdefender.addInfluence(-totalFluLoss);
             hasLoss = true;
         }
         if (totalMoneyLoss > 0) {
             if (!hasLoss) {
-                toPlayer += " (-" + server.campaign.CampaignMain.cm.moneyOrFluMessage(true, true, totalMoneyLoss);
-            } else {toPlayer += ", -" + server.campaign.CampaignMain.cm.moneyOrFluMessage(true, true, totalMoneyLoss);}
+                toPlayer += " (-" + CampaignMain.campaignMain.moneyOrFluMessage(true, true, totalMoneyLoss);
+            } else {toPlayer += ", -" + CampaignMain.campaignMain.moneyOrFluMessage(true, true, totalMoneyLoss);}
             pdefender.addMoney(-totalMoneyLoss);
             hasLoss = true;
         }
 
         if (hasLoss) {toPlayer += ")";}
 
-        server.campaign.CampaignMain.cm.toUser(toPlayer, pdefender.getName(), true);
+        CampaignMain.campaignMain.toUser(toPlayer, pdefender.getName(), true);
 
         /*
          * Player has been aprised of his troubles ... now let the whole world
@@ -364,7 +365,7 @@ public class OpsChickenThread extends Thread {
          */
 
         // get the actual ShortOperation. Catch any nulls.
-        ShortOperation parentOp = server.campaign.CampaignMain.cm.getOpsManager().getRunningOps().get(opID);
+        ShortOperation parentOp = CampaignMain.campaignMain.getOpsManager().getRunningOps().get(opID);
         if (parentOp == null) {
             MWLogger.errLog("Tried to do a leech with a null ShortOperation!");
             return;
@@ -379,7 +380,7 @@ public class OpsChickenThread extends Thread {
 
         // get the attacking house (first player from attacker tree)
         String firstKey = parentOp.getAttackers().firstKey();
-        server.campaign.SHouse attackH = server.campaign.CampaignMain.cm.getPlayer(firstKey).getHouseFightingFor();
+        server.campaign.SHouse attackH = CampaignMain.campaignMain.getPlayer(firstKey).getHouseFightingFor();
 
         // get the defending house (actual defender in this thread)
         server.campaign.SHouse defendH = pdefender.getHouseFightingFor();
@@ -538,16 +539,16 @@ public class OpsChickenThread extends Thread {
         }// end prodPenalty
 
         // send the announcement to everyone, if there was actual loss.
-        if (hasLoss) {server.campaign.CampaignMain.cm.doSendToAllOnlinePlayers(toMain, true);}
+        if (hasLoss) {CampaignMain.campaignMain.doSendToAllOnlinePlayers(toMain, true);}
 
         // check to see if updates should be transmitted
         if (winnerHSUpdates.length() > 0) {
-            server.campaign.CampaignMain.cm.doSendToAllOnlinePlayers(attackH,
+            CampaignMain.campaignMain.doSendToAllOnlinePlayers(attackH,
                   "HS|" + winnerHSUpdates.toString(),
                   false);
         }
         if (loserHSUpdates.length() > 0) {
-            server.campaign.CampaignMain.cm.doSendToAllOnlinePlayers(defendH, "HS|" + loserHSUpdates.toString(), false);
+            CampaignMain.campaignMain.doSendToAllOnlinePlayers(defendH, "HS|" + loserHSUpdates.toString(), false);
         }
 
         // and add the info to the log

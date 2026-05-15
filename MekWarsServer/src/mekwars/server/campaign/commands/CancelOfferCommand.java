@@ -16,6 +16,8 @@
 
 package mekwars.server.campaign.commands;
 
+import mekwars.server.campaign.CampaignMain;
+
 public class CancelOfferCommand implements Command {
     int accessLevel = 0;
     String syntax = "";
@@ -23,41 +25,41 @@ public class CancelOfferCommand implements Command {
     public void process(java.util.StringTokenizer command, String Username) {
 
         if (accessLevel != 0) {
-            int userLevel = server.campaign.CampaignMain.cm.getServer().getUserLevel(Username);
+            int userLevel = CampaignMain.campaignMain.getServer().getUserLevel(Username);
             if (userLevel < getExecutionLevel()) {
-                server.campaign.CampaignMain.cm.toUser("AM:Insufficient access level for command. Level: " +
-                                                             userLevel +
-                                                             ". Required: " +
-                                                             accessLevel +
-                                                             ".", Username, true);
+                CampaignMain.campaignMain.toUser("AM:Insufficient access level for command. Level: " +
+                                                       userLevel +
+                                                       ". Required: " +
+                                                       accessLevel +
+                                                       ".", Username, true);
                 return;
             }
         }
 
         boolean contractRemoved = false;
         String receivingPlayerName = "";
-        for (int i = 0; i < server.campaign.CampaignMain.cm.getUnresolvedContracts().size(); i++) {
-            server.campaign.mercenaries.ContractInfo info = server.campaign.CampaignMain.cm.getUnresolvedContracts()
+        for (int i = 0; i < CampaignMain.campaignMain.getUnresolvedContracts().size(); i++) {
+            server.campaign.mercenaries.ContractInfo info = CampaignMain.campaignMain.getUnresolvedContracts()
                                                                   .get(i);
             if (info.getOfferingPlayerName().equalsIgnoreCase(Username)) {
                 //if contract belong to offering player, remove the contract and set boolean to true
                 receivingPlayerName = info.getPlayerName();
-                server.campaign.CampaignMain.cm.getUnresolvedContracts().remove(i);
+                CampaignMain.campaignMain.getUnresolvedContracts().remove(i);
                 contractRemoved = true;
-                server.campaign.CampaignMain.cm.getUnresolvedContracts().trimToSize();
+                CampaignMain.campaignMain.getUnresolvedContracts().trimToSize();
                 break;
             }//end if(offering player has contract outstanding)
         }//end for(length of vector)
         if (contractRemoved == true) {
-            server.campaign.CampaignMain.cm.toUser("AM:You have cancelled your offer to " + receivingPlayerName,
+            CampaignMain.campaignMain.toUser("AM:You have cancelled your offer to " + receivingPlayerName,
                   Username,
                   true);
-            server.campaign.CampaignMain.cm.toUser(Username + " has rescinded his contract offer",
+            CampaignMain.campaignMain.toUser(Username + " has rescinded his contract offer",
                   receivingPlayerName,
                   true);
         }//end if(a contract was removed)
         else if (contractRemoved == false) {
-            server.campaign.CampaignMain.cm.toUser("AM:There was no outstanding contract to cancel!", Username, true);
+            CampaignMain.campaignMain.toUser("AM:There was no outstanding contract to cancel!", Username, true);
         }//end elseif(no contract was removed)
     }//end process
 

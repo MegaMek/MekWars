@@ -16,6 +16,7 @@
 
 package mekwars.server.campaign.commands;
 
+import mekwars.server.campaign.CampaignMain;
 import server.campaign.util.scheduler.MWScheduler;
 
 /**
@@ -31,20 +32,20 @@ public class DeactivateCommand implements Command {
     public void process(java.util.StringTokenizer command, String Username) {
 
         if (accessLevel != 0) {
-            int userLevel = server.campaign.CampaignMain.cm.getServer().getUserLevel(Username);
+            int userLevel = CampaignMain.campaignMain.getServer().getUserLevel(Username);
             if (userLevel < getExecutionLevel()) {
-                server.campaign.CampaignMain.cm.toUser("AM:Insufficient access level for command. Level: " +
-                                                             userLevel +
-                                                             ". Required: " +
-                                                             accessLevel +
-                                                             ".", Username, true);
+                CampaignMain.campaignMain.toUser("AM:Insufficient access level for command. Level: " +
+                                                       userLevel +
+                                                       ". Required: " +
+                                                       accessLevel +
+                                                       ".", Username, true);
                 return;
             }
         }
 
-        server.campaign.SPlayer p = server.campaign.CampaignMain.cm.getPlayer(Username);
+        server.campaign.SPlayer p = CampaignMain.campaignMain.getPlayer(Username);
         if (p == null) {
-            server.campaign.CampaignMain.cm.toUser("AM:Null player. Big Failure. Report to admin immediately.",
+            CampaignMain.campaignMain.toUser("AM:Null player. Big Failure. Report to admin immediately.",
                   Username,
                   true);
             return;
@@ -52,20 +53,20 @@ public class DeactivateCommand implements Command {
 
         int currentStatus = p.getDutyStatus();
         if (currentStatus == server.campaign.SPlayer.STATUS_RESERVE) {
-            server.campaign.CampaignMain.cm.toUser("AM:You're already on reserve duty.", Username, true);
+            CampaignMain.campaignMain.toUser("AM:You're already on reserve duty.", Username, true);
             return;
         }
 
         if (currentStatus == server.campaign.SPlayer.STATUS_FIGHTING) {
-            server.campaign.CampaignMain.cm.toUser("AM:You're currently fighting! You cannot go into the reserve!",
+            CampaignMain.campaignMain.toUser("AM:You're currently fighting! You cannot go into the reserve!",
                   Username,
                   true);
             return;
         }
 
         if (System.currentTimeMillis() - p.getActiveSince() <
-                  Long.parseLong(server.campaign.CampaignMain.cm.getConfig("MinActiveTime")) * 1000) {
-            server.campaign.CampaignMain.cm.toUser(
+                  Long.parseLong(CampaignMain.campaignMain.getConfig("MinActiveTime")) * 1000) {
+            CampaignMain.campaignMain.toUser(
                   "AM:You haven't even reached the front yet! (Must meet minimum activity requirement before deactivating)",
                   Username,
                   true);
@@ -77,7 +78,7 @@ public class DeactivateCommand implements Command {
 
         p.setActive(false);
         p.leechCount = 0;
-        server.campaign.CampaignMain.cm.toUser("AM:[*] You've left active duty and are now in reserve.",
+        CampaignMain.campaignMain.toUser("AM:[*] You've left active duty and are now in reserve.",
               Username,
               true);
 
@@ -86,8 +87,8 @@ public class DeactivateCommand implements Command {
          * elsewhere now (in SHouse.doLogout and SPlayer.setActive).
          */
 
-        server.campaign.CampaignMain.cm.sendPlayerStatusUpdate(p,
-              !Boolean.parseBoolean(server.campaign.CampaignMain.cm.getConfig("HideActiveStatus")));
+        CampaignMain.campaignMain.sendPlayerStatusUpdate(p,
+              !Boolean.parseBoolean(CampaignMain.campaignMain.getConfig("HideActiveStatus")));
     }//end process()
 
     public int getExecutionLevel() {return accessLevel;}

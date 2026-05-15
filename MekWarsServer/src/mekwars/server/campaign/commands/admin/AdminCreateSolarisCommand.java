@@ -17,6 +17,7 @@
 package mekwars.server.campaign.commands.admin;
 
 import common.Influences;
+import mekwars.server.campaign.CampaignMain;
 
 public class AdminCreateSolarisCommand implements server.campaign.commands.Command {
 
@@ -30,28 +31,28 @@ public class AdminCreateSolarisCommand implements server.campaign.commands.Comma
     public void process(java.util.StringTokenizer command, String Username) {
 
         // access level check
-        int userLevel = server.campaign.CampaignMain.cm.getServer().getUserLevel(Username);
+        int userLevel = CampaignMain.campaignMain.getServer().getUserLevel(Username);
         if (userLevel < getExecutionLevel()) {
-            server.campaign.CampaignMain.cm.toUser("AM:Insufficient access level for command. Level: " +
-                                                         userLevel +
-                                                         ". Required: " +
-                                                         accessLevel +
-                                                         ".", Username, true);
+            CampaignMain.campaignMain.toUser("AM:Insufficient access level for command. Level: " +
+                                                   userLevel +
+                                                   ". Required: " +
+                                                   accessLevel +
+                                                   ".", Username, true);
             return;
         }
 
         // Add the Newbie-SHouse
-        server.campaign.SHouse solaris = new server.campaign.NewbieHouse(server.campaign.CampaignMain.cm.getData()
+        server.campaign.SHouse solaris = new server.campaign.NewbieHouse(CampaignMain.campaignMain.getData()
                                                                                .getUnusedHouseID(),
-              server.campaign.CampaignMain.cm.getConfig("NewbieHouseName"),
+              CampaignMain.campaignMain.getConfig("NewbieHouseName"),
               "#33CCCC",
               4,
               5,
               "SOL");
 
-        server.campaign.CampaignMain.cm.addHouse(solaris);
+        CampaignMain.campaignMain.addHouse(solaris);
         java.util.HashMap<Integer, Integer> solFlu = new java.util.HashMap<Integer, Integer>();
-        solFlu.put(server.campaign.CampaignMain.cm.getHouseFromPartialString(server.campaign.CampaignMain.cm.getConfig(
+        solFlu.put(CampaignMain.campaignMain.getHouseFromPartialString(CampaignMain.campaignMain.getConfig(
               "NewbieHouseName"), null).getId(), 100);
         server.campaign.SPlanet newbieP = new server.campaign.SPlanet(0,
               "Solaris VII",
@@ -60,14 +61,14 @@ public class AdminCreateSolarisCommand implements server.campaign.commands.Comma
               0,
               -3,
               -2);
-        server.campaign.CampaignMain.cm.addPlanet(newbieP);
+        CampaignMain.campaignMain.addPlanet(newbieP);
 
         solaris.addPlanet(newbieP);
-        server.campaign.CampaignMain.cm.toUser(server.campaign.CampaignMain.cm.getConfig("NewbieHouseName"),
+        CampaignMain.campaignMain.toUser(CampaignMain.campaignMain.getConfig("NewbieHouseName"),
               Username,
               true);
-        server.campaign.CampaignMain.cm.doSendModMail("NOTE",
-              Username + " has created " + server.campaign.CampaignMain.cm.getConfig("NewbieHouseName"));
+        CampaignMain.campaignMain.doSendModMail("NOTE",
+              Username + " has created " + CampaignMain.campaignMain.getConfig("NewbieHouseName"));
 
     }
 

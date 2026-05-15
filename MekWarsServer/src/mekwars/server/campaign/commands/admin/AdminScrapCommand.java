@@ -17,6 +17,7 @@
 package mekwars.server.campaign.commands.admin;
 
 import common.campaign.pilot.Pilot;
+import mekwars.server.campaign.CampaignMain;
 
 /**
  * @author Helge Richter
@@ -31,22 +32,22 @@ public class AdminScrapCommand implements server.campaign.commands.Command {
     public void process(java.util.StringTokenizer command, String Username) {
 
         //access level check
-        int userLevel = server.campaign.CampaignMain.cm.getServer().getUserLevel(Username);
+        int userLevel = CampaignMain.campaignMain.getServer().getUserLevel(Username);
         if (userLevel < getExecutionLevel()) {
-            server.campaign.CampaignMain.cm.toUser("AM:Insufficient access level for command. Level: " +
-                                                         userLevel +
-                                                         ". Required: " +
-                                                         accessLevel +
-                                                         ".", Username, true);
+            CampaignMain.campaignMain.toUser("AM:Insufficient access level for command. Level: " +
+                                                   userLevel +
+                                                   ". Required: " +
+                                                   accessLevel +
+                                                   ".", Username, true);
             return;
         }
 
         //SPlayer admin =  CampaignMain.cm.getPlayer(Username);
         String targetName = (String) command.nextElement();
-        server.campaign.SPlayer target = server.campaign.CampaignMain.cm.getPlayer(targetName);
+        server.campaign.SPlayer target = CampaignMain.campaignMain.getPlayer(targetName);
 
         if (target == null) {
-            server.campaign.CampaignMain.cm.toUser("Target player could not be found. Try again.", Username, true);
+            CampaignMain.campaignMain.toUser("Target player could not be found. Try again.", Username, true);
             return;
         }
 
@@ -56,7 +57,7 @@ public class AdminScrapCommand implements server.campaign.commands.Command {
 
         //break out if the player doesn't have a unit with that id
         if (m == null) {
-            server.campaign.CampaignMain.cm.toUser("Target player doesn't have a unit with ID# " + unitID + ".",
+            CampaignMain.campaignMain.toUser("Target player doesn't have a unit with ID# " + unitID + ".",
                   Username,
                   true);
             return;
@@ -73,18 +74,18 @@ public class AdminScrapCommand implements server.campaign.commands.Command {
         currPilot.setPiloting(target.getMyHouse().getPilotQueues().getBasePiloting(m.getType()));
 
         //tell the player you're going to scrap the unit ...
-        server.campaign.CampaignMain.cm.toUser("AM:" + targetName + "'s " + m.getModelName() + " was scrapped.",
+        CampaignMain.campaignMain.toUser("AM:" + targetName + "'s " + m.getModelName() + " was scrapped.",
               Username,
               true);
-        server.campaign.CampaignMain.cm.toUser("AM:" +
-                                                     Username +
-                                                     " scrapped your " +
-                                                     m.getModelName() +
-                                                     " (ID#" +
-                                                     m.getId() +
-                                                     ")", targetName, true);
+        CampaignMain.campaignMain.toUser("AM:" +
+                                               Username +
+                                               " scrapped your " +
+                                               m.getModelName() +
+                                               " (ID#" +
+                                               m.getId() +
+                                               ")", targetName, true);
         //server.MWLogger.modLog(Username + " scrapped a "+ m.getModelName() + " belonging to " + targetName);
-        server.campaign.CampaignMain.cm.doSendModMail("NOTE",
+        CampaignMain.campaignMain.doSendModMail("NOTE",
               Username + " scrapped a " + m.getModelName() + " belonging to " + targetName);
 
         //then do it

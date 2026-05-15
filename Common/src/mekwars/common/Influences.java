@@ -20,9 +20,9 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.*;
 
+import megamek.logging.MMLogger;
 import mekwars.common.persistence.BinReader;
 import mekwars.common.persistence.BinWriter;
-import mekwars.common.util.MWLogger;
 
 /**
  * Represents the influences of different Houses of a planet. This may be used as total influences as well as influence
@@ -32,7 +32,7 @@ import mekwars.common.util.MWLogger;
  */
 
 public class Influences implements MutableSerializable {
-
+    private final static MMLogger LOGGER = MMLogger.create(Influences.class);
     /**
      * A hash table with key=House and value=Integer of the influences of the different factions. Only factions greater
      * than 0% are listed.
@@ -45,15 +45,6 @@ public class Influences implements MutableSerializable {
      */
     public Influences(HashMap<Integer, Integer> influences) {
         setInfluence(influences);
-    }
-
-    /**
-     * Sets the whole influences.
-     *
-     * @param influences The new influences. Key=TimeUpdateHouse, Value=Integer.
-     */
-    public void setInfluence(HashMap<Integer, Integer> influences) {
-        this.influences = influences;
     }
 
     /**
@@ -70,22 +61,31 @@ public class Influences implements MutableSerializable {
     }
 
     /**
+     * Sets the whole influences.
+     *
+     * @param influences The new influences. Key=TimeUpdateHouse, Value=Integer.
+     */
+    public void setInfluence(HashMap<Integer, Integer> influences) {
+        this.influences = influences;
+    }
+
+    /**
      * Return the faction with the most influence.
      */
     public Integer getOwner() {
 
         try {
-            TreeSet<House> houseTreeSet = new TreeSet<>((Comparator<Object>) (o1, o2) -> {
+            TreeSet<House> houseTreeSet = new TreeSet<>((o1, o2) -> {
                 try {
                     int i1 = -1;
                     int i2 = -1;
 
                     if (o1 != null) {
-                        i1 = ((House) o1).getId();
+                        i1 = o1.getId();
                     }
 
                     if (o2 != null) {
-                        i2 = ((House) o2).getId();
+                        i2 = o2.getId();
                     }
 
                     return Integer.compare(i1, i2);
@@ -93,18 +93,19 @@ public class Influences implements MutableSerializable {
                     return 0;
                 }
             });
+
             houseTreeSet.addAll(this.getHouses());
             House[] factions = new House[houseTreeSet.size()];
 
             int i = 0;
             for (House house : houseTreeSet) {factions[i++] = house;}
-            Arrays.sort(factions, (Comparator<Object>) (o1, o2) -> {
+            Arrays.sort(factions, (o1, o2) -> {
                 int h1Id = -1;
                 int h2Id = -2;
 
-                if (o1 != null) {h1Id = ((House) o1).getId();}
+                if (o1 != null) {h1Id = o1.getId();}
 
-                if (o2 != null) {h2Id = ((House) o2).getId();}
+                if (o2 != null) {h2Id = o2.getId();}
 
                 int i1 = getInfluence(h1Id);
                 int i2 = getInfluence(h2Id);
@@ -120,7 +121,7 @@ public class Influences implements MutableSerializable {
                 return null;
             }
 
-            // only one owner don't need to see whoes the boss.
+            // only one owner don't need to see who's the boss.
             if (factions.length == 1) {
                 return faction.getId();
             }
@@ -201,25 +202,25 @@ public class Influences implements MutableSerializable {
         int winnerId = winner.getId();
         int loserId = -1;
 
-        int oldwinnerinfluence;
-        int oldloserinfluence;
+        int oldWinnerInfluence;
+        int oldLoserInfluence;
 
-        oldwinnerinfluence = getInfluence(winnerId);
-        oldloserinfluence = getInfluence(loserId);
+        oldWinnerInfluence = getInfluence(winnerId);
+        oldLoserInfluence = getInfluence(loserId);
 
-        if (oldwinnerinfluence + amount >= maxInfluence) {amount = maxInfluence - oldwinnerinfluence;}
+        if (oldWinnerInfluence + amount >= maxInfluence) {amount = maxInfluence - oldWinnerInfluence;}
 
-        if (amount > oldloserinfluence) {
+        if (amount > oldLoserInfluence) {
             influences.remove(loserId);
             loserId = loser.getId();
-            influences.put(loserId, getInfluence(loserId) + oldloserinfluence);
-            oldloserinfluence = getInfluence(loserId);
+            influences.put(loserId, getInfluence(loserId) + oldLoserInfluence);
+            oldLoserInfluence = getInfluence(loserId);
         }
 
-        if (oldloserinfluence < amount) {amount = oldloserinfluence;}
+        if (oldLoserInfluence < amount) {amount = oldLoserInfluence;}
 
-        int winnerInfluence = oldwinnerinfluence + amount;
-        int loserInfluence = oldloserinfluence - amount;
+        int winnerInfluence = oldWinnerInfluence + amount;
+        int loserInfluence = oldLoserInfluence - amount;
 
         if (winnerInfluence == 0) {influences.remove(winnerId);} else {influences.put(winnerId, (winnerInfluence));}
 
@@ -275,8 +276,8 @@ public class Influences implements MutableSerializable {
         while (inf.hasNext()) {
             House h = inf.next();
             out.println("\t\t<inf>");
-            out.println("\t\t<faction>" + h.getName() + "</faction>");
-            out.println("\t\t<amount>" + getInfluence(h.getId()) + "</amount>");
+            out.println(STR."\t\t<faction>\{h.getName()}</faction>");
+            out.println(STR."\t\t<amount>\{getInfluence(h.getId())}</amount>");
             out.println("\t\t</inf>");
         }
         out.println("\t</influence>");
@@ -290,13 +291,13 @@ public class Influences implements MutableSerializable {
     public Influences difference(Influences infNew) {
         HashMap<Integer, Integer> diff = new HashMap<>();
         Collection<House> other = infNew.getHouses();
-        Collection<House> thisone = getHouses();
-        for (House house : thisone) {
+        Collection<House> thisHouse = getHouses();
+        for (House house : thisHouse) {
             int d = getInfluence(house.getId()) - infNew.getInfluence(house.getId());
             if (d != 0) {diff.put(house.getId(), d);}
         }
         for (House house : other) {
-            if (!thisone.contains(house)) {diff.put(house.getId(), (-infNew.getInfluence(house.getId())));}
+            if (!thisHouse.contains(house)) {diff.put(house.getId(), (-infNew.getInfluence(house.getId())));}
         }
         return new Influences(diff);
     }
@@ -320,16 +321,13 @@ public class Influences implements MutableSerializable {
      * Write itself into the stream.
      */
     public void binOut(BinWriter out) {
-        Object[] h = influences.keySet().toArray();
-        Arrays.sort(h, (o1, o2) -> {
-            int i1 = (Integer) o1;
-            int i2 = (Integer) o2;
-            return Integer.compare(i1, i2);
-        });
-        out.println(h.length, "influence.size");
-        for (Object o : h) {
-            out.println((Integer) o, "faction");
-            out.println(getInfluence((Integer) o), "amount");
+        ArrayList<Integer> influencesIntegers = new ArrayList<>(influences.keySet());
+        influencesIntegers.sort(null);
+        out.println(influencesIntegers.size(), "influence.size");
+
+        for (Integer factionID : influencesIntegers) {
+            out.println(factionID, "faction");
+            out.println(getInfluence(factionID), "amount");
         }
     }
 
@@ -337,6 +335,10 @@ public class Influences implements MutableSerializable {
      * Read from a binary stream
      */
     public void binIn(BinReader in, Map<Integer, House> factions) throws IOException {
+        readInfluences(in);
+    }
+
+    private void readInfluences(BinReader in) {
         influences = new HashMap<>();
         int size = in.readInt("influence.size");
         for (int i = 0; i < size; i++) {
@@ -347,13 +349,7 @@ public class Influences implements MutableSerializable {
     }
 
     public void binIn(BinReader in) throws IOException {
-        influences = new HashMap<>();
-        int size = in.readInt("influence.size");
-        for (int i = 0; i < size; i++) {
-            int hid = in.readInt("faction");
-            int flu = in.readInt("amount");
-            influences.put(hid, flu);
-        }
+        readInfluences(in);
     }
 
     public void removeHouse(House house) {

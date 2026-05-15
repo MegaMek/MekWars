@@ -15,13 +15,9 @@
  */
 package mekwars.server.util.discord;
 
-import common.util.MWLogger;
-import org.apache.http.NameValuePair;
-import org.apache.http.client.HttpClient;
-import org.apache.http.client.entity.UrlEncodedFormEntity;
-import org.apache.http.client.methods.HttpPost;
-import org.apache.http.impl.client.HttpClients;
-import org.apache.http.message.BasicNameValuePair;
+import mekwars.server.campaign.CampaignMain;
+
+import java.net.http.HttpClient;
 
 /**
  * Provides integration with a Discord webhook.  Status messages and Operation outcome can be sent to the webhook.
@@ -33,10 +29,10 @@ public class DiscordMessageHandler {
     private String webhookAddress = "";
 
     public DiscordMessageHandler() {
-        if (!server.campaign.CampaignMain.cm.getBooleanConfig("DiscordEnable")) {
+        if (!CampaignMain.campaignMain.getBooleanConfig("DiscordEnable")) {
             return;
         }
-        webhookAddress = server.campaign.CampaignMain.cm.getConfig("DiscordWebHookAddress");
+        webhookAddress = CampaignMain.campaignMain.getConfig("DiscordWebHookAddress");
     }
 
     /**

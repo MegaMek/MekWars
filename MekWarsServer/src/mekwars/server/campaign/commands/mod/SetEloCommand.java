@@ -16,6 +16,8 @@
 
 package mekwars.server.campaign.commands.mod;
 
+import mekwars.server.campaign.CampaignMain;
+
 public class SetEloCommand implements server.campaign.commands.Command {
 
     int accessLevel = server.MWChatServer.auth.IAuthenticator.MODERATOR;
@@ -26,28 +28,28 @@ public class SetEloCommand implements server.campaign.commands.Command {
     public void process(java.util.StringTokenizer command, String Username) {
 
         //access level check
-        int userLevel = server.campaign.CampaignMain.cm.getServer().getUserLevel(Username);
+        int userLevel = CampaignMain.campaignMain.getServer().getUserLevel(Username);
         if (userLevel < getExecutionLevel()) {
-            server.campaign.CampaignMain.cm.toUser("AM:Insufficient access level for command. Level: " +
-                                                         userLevel +
-                                                         ". Required: " +
-                                                         accessLevel +
-                                                         ".", Username, true);
+            CampaignMain.campaignMain.toUser("AM:Insufficient access level for command. Level: " +
+                                                   userLevel +
+                                                   ". Required: " +
+                                                   accessLevel +
+                                                   ".", Username, true);
             return;
         }
 
-        server.campaign.SPlayer p = server.campaign.CampaignMain.cm.getPlayer(command.nextToken());
+        server.campaign.SPlayer p = CampaignMain.campaignMain.getPlayer(command.nextToken());
         double amount = Double.parseDouble(command.nextToken());
         if (p != null) {
             p.setRating(amount);
-            server.campaign.CampaignMain.cm.toUser("AM:" + Username + " set your ELO to: " + amount + ".",
+            CampaignMain.campaignMain.toUser("AM:" + Username + " set your ELO to: " + amount + ".",
                   p.getName(),
                   true);
-            server.campaign.CampaignMain.cm.toUser("AM:You set " + p.getName() + "'s ELO to " + amount + ".",
+            CampaignMain.campaignMain.toUser("AM:You set " + p.getName() + "'s ELO to " + amount + ".",
                   Username,
                   true);
             //server.MWLogger.modLog(Username + " set " + p.getName() + "'s ELO to " + amount + ".");
-            server.campaign.CampaignMain.cm.doSendModMail("NOTE",
+            CampaignMain.campaignMain.doSendModMail("NOTE",
                   Username + " set " + p.getName() + "'s ELO to " + amount + ".");
         }
 

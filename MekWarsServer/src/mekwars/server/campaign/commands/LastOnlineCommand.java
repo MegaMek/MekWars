@@ -17,6 +17,7 @@
 package mekwars.server.campaign.commands;
 
 import common.House;
+import mekwars.server.campaign.CampaignMain;
 
 public class LastOnlineCommand implements Command {
 
@@ -26,13 +27,13 @@ public class LastOnlineCommand implements Command {
     public void process(java.util.StringTokenizer command, String Username) {
 
         if (accessLevel != 0) {
-            int userLevel = server.campaign.CampaignMain.cm.getServer().getUserLevel(Username);
+            int userLevel = CampaignMain.campaignMain.getServer().getUserLevel(Username);
             if (userLevel < getExecutionLevel()) {
-                server.campaign.CampaignMain.cm.toUser("AM:Insufficient access level for command. Level: " +
-                                                             userLevel +
-                                                             ". Required: " +
-                                                             accessLevel +
-                                                             ".", Username, true);
+                CampaignMain.campaignMain.toUser("AM:Insufficient access level for command. Level: " +
+                                                       userLevel +
+                                                       ". Required: " +
+                                                       accessLevel +
+                                                       ".", Username, true);
                 return;
             }
         }
@@ -40,7 +41,7 @@ public class LastOnlineCommand implements Command {
         String name = command.nextToken().toLowerCase();
 
         server.campaign.SmallPlayer smallp = null;
-        java.util.Iterator<House> i = server.campaign.CampaignMain.cm.getData().getAllHouses().iterator();
+        java.util.Iterator<House> i = CampaignMain.campaignMain.getData().getAllHouses().iterator();
         boolean playerFound = false;
         while (i.hasNext() && !playerFound) {
             server.campaign.SHouse h = (server.campaign.SHouse) i.next();
@@ -49,8 +50,8 @@ public class LastOnlineCommand implements Command {
         }//end while(more elements && haven't found target yet)
 
         if (smallp == null || smallp.getLastOnline() == 0) {
-            server.campaign.CampaignMain.cm.toUser("AM:Target player doesn't exist, or has not been"
-                                                         + " online since the last server restart.", Username, true);
+            CampaignMain.campaignMain.toUser("AM:Target player doesn't exist, or has not been"
+                                                   + " online since the last server restart.", Username, true);
             return;
         }
 
@@ -64,7 +65,7 @@ public class LastOnlineCommand implements Command {
                               ". ";
         result += "That's " + ((System.currentTimeMillis() - smallp.getLastOnline()) / 86400000) + " days";
         result += ", " + ((System.currentTimeMillis() - smallp.getLastOnline()) % 86400000) / 3600000 + " hours";
-        server.campaign.CampaignMain.cm.toUser(result, Username, true);
+        CampaignMain.campaignMain.toUser(result, Username, true);
 
     }
 

@@ -17,6 +17,7 @@
 package mekwars.server.campaign.commands;
 
 import common.util.MWLogger;
+import mekwars.server.campaign.CampaignMain;
 
 //import java.nio.charset.Charset;
 //import java.nio.file.Files;
@@ -54,19 +55,19 @@ public class ChatBotHelperCommand implements Command {
     public String getSyntax() {return syntax;}
 
     private Boolean accessChecks(String Username) {
-        int userLevel = server.campaign.CampaignMain.cm.getServer().getUserLevel(Username);
+        int userLevel = CampaignMain.campaignMain.getServer().getUserLevel(Username);
 
         if (userLevel < getExecutionLevel()) {
-            server.campaign.CampaignMain.cm.toUser("AM:Insufficient access level for command. Level: " +
-                                                         userLevel +
-                                                         ". Required: " +
-                                                         accessLevel +
-                                                         ".", Username, true);
+            CampaignMain.campaignMain.toUser("AM:Insufficient access level for command. Level: " +
+                                                   userLevel +
+                                                   ". Required: " +
+                                                   accessLevel +
+                                                   ".", Username, true);
             return false;
         }
 
-        if (!Boolean.parseBoolean(server.campaign.CampaignMain.cm.getConfig("Enable_Bot_Chat"))) {
-            server.campaign.CampaignMain.cm.toUser("AM:This command is disabled on this server.", Username, true);
+        if (!Boolean.parseBoolean(CampaignMain.campaignMain.getConfig("Enable_Bot_Chat"))) {
+            CampaignMain.campaignMain.toUser("AM:This command is disabled on this server.", Username, true);
             return false;
         }
 
@@ -74,12 +75,12 @@ public class ChatBotHelperCommand implements Command {
     }
 
     private void captureAllChatForBot(String Username, String chatMsg) {
-        if (!Boolean.parseBoolean(server.campaign.CampaignMain.cm.getConfig("Enable_Bot_Chat"))) {return;}
+        if (!Boolean.parseBoolean(CampaignMain.campaignMain.getConfig("Enable_Bot_Chat"))) {return;}
 
-        java.io.File file = new java.io.File(server.campaign.CampaignMain.cm.getConfig("Bot_Buffer_Location"));
+        java.io.File file = new java.io.File(CampaignMain.campaignMain.getConfig("Bot_Buffer_Location"));
 
 
-        try (java.io.FileWriter fw = new java.io.FileWriter(server.campaign.CampaignMain.cm.getConfig(
+        try (java.io.FileWriter fw = new java.io.FileWriter(CampaignMain.campaignMain.getConfig(
               "Bot_Buffer_Location"), true);
               java.io.BufferedWriter bw = new java.io.BufferedWriter(fw);
               java.io.PrintWriter out = new java.io.PrintWriter(bw)) {

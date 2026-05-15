@@ -17,6 +17,8 @@
 package mekwars.server.campaign.commands.mod;
 
 
+import mekwars.server.campaign.CampaignMain;
+
 /**
  * Moving the UnBanIP command from MWServ into the normal command structure.
  * <p>
@@ -32,13 +34,13 @@ public class UnBanIPCommand implements server.campaign.commands.Command {
     public void process(java.util.StringTokenizer command, String Username) {
 
         if (accessLevel != 0) {
-            int userLevel = server.campaign.CampaignMain.cm.getServer().getUserLevel(Username);
+            int userLevel = CampaignMain.campaignMain.getServer().getUserLevel(Username);
             if (userLevel < getExecutionLevel()) {
-                server.campaign.CampaignMain.cm.toUser("AM:Insufficient access level for command. Level: " +
-                                                             userLevel +
-                                                             ". Required: " +
-                                                             accessLevel +
-                                                             ".", Username, true);
+                CampaignMain.campaignMain.toUser("AM:Insufficient access level for command. Level: " +
+                                                       userLevel +
+                                                       ". Required: " +
+                                                       accessLevel +
+                                                       ".", Username, true);
                 return;
             }
         }
@@ -48,16 +50,16 @@ public class UnBanIPCommand implements server.campaign.commands.Command {
             java.net.InetAddress ip = null;
             String toUnBan = command.nextToken().trim();//ip to unban
             ip = java.net.InetAddress.getByName(toUnBan);
-            if (!server.campaign.CampaignMain.cm.getServer().getBanIps().containsKey(ip)) {
-                server.campaign.CampaignMain.cm.toUser("AM:Value (" + ip + ") not found in banlist.", Username);
+            if (!CampaignMain.campaignMain.getServer().getBanIps().containsKey(ip)) {
+                CampaignMain.campaignMain.toUser("AM:Value (" + ip + ") not found in banlist.", Username);
                 return;
             }
-            server.campaign.CampaignMain.cm.getServer().getBanIps().remove(ip);
-            server.campaign.CampaignMain.cm.getServer().bansUpdate();
-            server.campaign.CampaignMain.cm.toUser("AM:You unbanned: " + ip.toString(), Username);
-            server.campaign.CampaignMain.cm.doSendModMail("NOTE", Username + " unbanned " + ip.toString());
+            CampaignMain.campaignMain.getServer().getBanIps().remove(ip);
+            CampaignMain.campaignMain.getServer().bansUpdate();
+            CampaignMain.campaignMain.toUser("AM:You unbanned: " + ip.toString(), Username);
+            CampaignMain.campaignMain.doSendModMail("NOTE", Username + " unbanned " + ip.toString());
         } catch (Exception ex) {
-            server.campaign.CampaignMain.cm.toUser(
+            CampaignMain.campaignMain.toUser(
                   "AM:Syntax: unbanip (IPAddress)<br>Where IPAddress corresponds to the IPAddress in the ipban list like 12.12.12.12.",
                   Username);
         }

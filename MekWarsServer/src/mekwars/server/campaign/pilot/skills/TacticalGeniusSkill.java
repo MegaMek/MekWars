@@ -24,6 +24,7 @@ import common.MegaMekPilotOption;
 import common.Unit;
 import common.campaign.pilot.Pilot;
 import megamek.common.Entity;
+import mekwars.server.campaign.CampaignMain;
 
 /**
  * A pilot who has a Tactical Genius may reroll their initiative once per turn. The second roll must be
@@ -58,10 +59,10 @@ public class TacticalGeniusSkill extends SPilotSkill {
 
         String chance = "chancefor" + getAbbreviation() + "for" + Unit.getTypeClassDesc(unitType);
 
-        server.campaign.SHouse house = server.campaign.CampaignMain.cm.getHouseFromPartialString(pilot.getCurrentFaction());
+        server.campaign.SHouse house = CampaignMain.campaignMain.getHouseFromPartialString(pilot.getCurrentFaction());
 
         if (house == null) {
-            return server.campaign.CampaignMain.cm.getIntegerConfig(chance);
+            return CampaignMain.campaignMain.getIntegerConfig(chance);
         }
 
         return house.getIntegerConfig(chance);
@@ -69,12 +70,12 @@ public class TacticalGeniusSkill extends SPilotSkill {
 
     @Override
     public int getBVMod(Entity unit) {
-        return server.campaign.CampaignMain.cm.getIntegerConfig("TacticalGeniusBVMod");
+        return CampaignMain.campaignMain.getIntegerConfig("TacticalGeniusBVMod");
     }
 
     @Override
     public int getBVMod(Entity unitl, server.campaign.pilot.SPilot p) {
-        server.campaign.SHouse house = server.campaign.CampaignMain.cm.getHouseFromPartialString(p.getCurrentFaction());
+        server.campaign.SHouse house = CampaignMain.campaignMain.getHouseFromPartialString(p.getCurrentFaction());
         return house.getIntegerConfig("TacticalGeniusBVMod");
     }
 }

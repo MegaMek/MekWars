@@ -26,6 +26,8 @@ package mekwars.server.campaign.commands.helpers;
 
 //imports
 
+import mekwars.server.campaign.CampaignMain;
+
 public class HireAndRequestNewHelper implements server.campaign.commands.Command {
 
     int accessLevel = 0;
@@ -36,19 +38,19 @@ public class HireAndRequestNewHelper implements server.campaign.commands.Command
     public void process(java.util.StringTokenizer command, String Username) {
 
         if (accessLevel != 0) {
-            int userLevel = server.campaign.CampaignMain.cm.getServer().getUserLevel(Username);
+            int userLevel = CampaignMain.campaignMain.getServer().getUserLevel(Username);
             if (userLevel < getExecutionLevel()) {
-                server.campaign.CampaignMain.cm.toUser("AM:Insufficient access level for command. Level: " +
-                                                             userLevel +
-                                                             ". Required: " +
-                                                             accessLevel +
-                                                             ".", Username, true);
+                CampaignMain.campaignMain.toUser("AM:Insufficient access level for command. Level: " +
+                                                       userLevel +
+                                                       ". Required: " +
+                                                       accessLevel +
+                                                       ".", Username, true);
                 return;
             }
         }
 
         //find out if your are using advanced repair if so buy bays instead of hiring techs.
-        boolean useBays = server.campaign.CampaignMain.cm.isUsingAdvanceRepair();
+        boolean useBays = CampaignMain.campaignMain.isUsingAdvanceRepair();
 
         //get number of techs to hire from the command
         String numtohire = command.nextToken();

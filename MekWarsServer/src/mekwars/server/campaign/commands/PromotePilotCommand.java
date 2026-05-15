@@ -14,6 +14,7 @@ package mekwars.server.campaign.commands;
 
 import common.Unit;
 import common.campaign.pilot.skills.PilotSkill;
+import mekwars.server.campaign.CampaignMain;
 import server.campaign.pilot.SPilot;
 import server.campaign.pilot.SPilotSkills;
 import server.campaign.pilot.skills.AstechSkill;
@@ -30,19 +31,19 @@ public class PromotePilotCommand implements Command {
     public void process(java.util.StringTokenizer command, String Username) {
 
         if (accessLevel != 0) {
-            int userLevel = server.campaign.CampaignMain.cm.getServer().getUserLevel(Username);
+            int userLevel = CampaignMain.campaignMain.getServer().getUserLevel(Username);
             if (userLevel < getExecutionLevel()) {
-                server.campaign.CampaignMain.cm.toUser("AM:Insufficient access level for command. Level: " +
-                                                             userLevel +
-                                                             ". Required: " +
-                                                             accessLevel +
-                                                             ".", Username, true);
+                CampaignMain.campaignMain.toUser("AM:Insufficient access level for command. Level: " +
+                                                       userLevel +
+                                                       ". Required: " +
+                                                       accessLevel +
+                                                       ".", Username, true);
                 return;
             }
         }
 
         server.campaign.SUnit unit;
-        server.campaign.SPlayer player = server.campaign.CampaignMain.cm.getPlayer(Username);
+        server.campaign.SPlayer player = CampaignMain.campaignMain.getPlayer(Username);
         String skill;
         int cost = 0;
         SPilot pilot;
@@ -56,17 +57,17 @@ public class PromotePilotCommand implements Command {
             unit = player.getUnit(Integer.parseInt(command.nextToken()));
             skill = command.nextToken();
         } catch (Exception ex) {
-            server.campaign.CampaignMain.cm.toUser("AM:Improper format. Try: /c " + syntax, Username);
+            CampaignMain.campaignMain.toUser("AM:Improper format. Try: /c " + syntax, Username);
             return;
         }
 
         if (unit == null) {
-            server.campaign.CampaignMain.cm.toUser("AM:Cannot find that unit!", Username);
+            CampaignMain.campaignMain.toUser("AM:Cannot find that unit!", Username);
             return;
         }
 
         if (unit.hasVacantPilot()) {
-            server.campaign.CampaignMain.cm.toUser("AM:Unit " + unit.getModelName() + " has no pilot to promote!",
+            CampaignMain.campaignMain.toUser("AM:Unit " + unit.getModelName() + " has no pilot to promote!",
                   Username);
             return;
         }
@@ -75,14 +76,14 @@ public class PromotePilotCommand implements Command {
 
         if (player.getMyHouse().getIntegerConfig("MaxPilotUpgrades") >= 0 &&
                   pilot.getSkills().size() >= player.getMyHouse().getIntegerConfig("MaxPilotUpgrades")) {
-            server.campaign.CampaignMain.cm.toUser("AM:" + pilot.getName() + " already has the maximum allowed skills",
+            CampaignMain.campaignMain.toUser("AM:" + pilot.getName() + " already has the maximum allowed skills",
                   Username,
                   true);
             return;
         }
 
         if (skill.trim().length() < 1) {
-            server.campaign.CampaignMain.cm.toUser("AM:A skill needs to be provided", Username, true);
+            CampaignMain.campaignMain.toUser("AM:A skill needs to be provided", Username, true);
             return;
         }
 
@@ -97,7 +98,7 @@ public class PromotePilotCommand implements Command {
             }
         }
         if (isInArmy && player.getDutyStatus() != server.campaign.SPlayer.STATUS_RESERVE) {
-            server.campaign.CampaignMain.cm.toUser(
+            CampaignMain.campaignMain.toUser(
                   "AM:Your pilot is on patrol or fighting and needs to return to base for this training.",
                   Username,
                   true);
@@ -118,7 +119,7 @@ public class PromotePilotCommand implements Command {
             }
 
             if (piloting - (gun - 1) > 1 && player.getMyHouse().getBooleanConfig("PilotsMustLevelEvenly")) {
-                server.campaign.CampaignMain.cm.toUser(
+                CampaignMain.campaignMain.toUser(
                       "AM:You must evenly level your pilots skills. Try leveling piloting first.",
                       Username);
                 return;
@@ -145,7 +146,7 @@ public class PromotePilotCommand implements Command {
             }
 
             if (gun - (piloting - 1) > 1 && player.getMyHouse().getBooleanConfig("PilotsMustLevelEvenly")) {
-                server.campaign.CampaignMain.cm.toUser(
+                CampaignMain.campaignMain.toUser(
                       "AM:You must evenly level your pilots skills. Try leveling gunnery first.",
                       Username);
                 return;
@@ -166,7 +167,7 @@ public class PromotePilotCommand implements Command {
 
                     ps = (SPilotSkill) pilot.getSkills().getPilotSkill(PilotSkill.AstechSkillID);
                     if (ps.getLevel() >= 2) {
-                        server.campaign.CampaignMain.cm.toUser("AM:You cannot raise your pilots AstechSkill any higher!",
+                        CampaignMain.campaignMain.toUser("AM:You cannot raise your pilots AstechSkill any higher!",
                               Username);
                         return;
                     }
@@ -180,7 +181,7 @@ public class PromotePilotCommand implements Command {
                 } else if (ps.getId() == PilotSkill.EdgeSkillID) {
                     ps = (SPilotSkill) pilot.getSkills().getPilotSkill(PilotSkill.EdgeSkillID);
                     if (ps.getLevel() >= player.getMyHouse().getIntegerConfig("MaxEdgeChanges")) {
-                        server.campaign.CampaignMain.cm.toUser("AM:You cannot raise your pilots Edge any higher!",
+                        CampaignMain.campaignMain.toUser("AM:You cannot raise your pilots Edge any higher!",
                               Username);
                         return;
                     }
@@ -191,7 +192,7 @@ public class PromotePilotCommand implements Command {
                                                          Unit.getTypeClassDesc(unit.getType()));
                     cost *= ps.getLevel() + 1;
                 } else {
-                    server.campaign.CampaignMain.cm.toUser("AM:Your pilot already has that skill!", Username);
+                    CampaignMain.campaignMain.toUser("AM:Your pilot already has that skill!", Username);
                     return;
                 }
             } else {
@@ -209,14 +210,14 @@ public class PromotePilotCommand implements Command {
         }
 
         if (cost <= 0) {
-            server.campaign.CampaignMain.cm.toUser("AM:" + pilot.getName() + " can not purchase that skill", Username);
+            CampaignMain.campaignMain.toUser("AM:" + pilot.getName() + " can not purchase that skill", Username);
             return;
         }
 
         if (pilot.getExperience() < cost) {
-            server.campaign.CampaignMain.cm.toUser("AM:" +
-                                                         pilot.getName() +
-                                                         " does not have enough experience to purchase that skill",
+            CampaignMain.campaignMain.toUser("AM:" +
+                                                   pilot.getName() +
+                                                   " does not have enough experience to purchase that skill",
                   Username);
             return;
         }
@@ -249,21 +250,21 @@ public class PromotePilotCommand implements Command {
 
         unit.setPilot(pilot);
 
-        server.campaign.CampaignMain.cm.toUser("AM:Skill " +
-                                                     skill +
-                                                     " purchased for pilot " +
-                                                     pilot.getName() +
-                                                     " for " +
-                                                     cost +
-                                                     " exp.", Username);
-        server.campaign.CampaignMain.cm.toUser("PL|UU|" + unit.getId() + "|" + unit.toString(true), Username, false);
+        CampaignMain.campaignMain.toUser("AM:Skill " +
+                                               skill +
+                                               " purchased for pilot " +
+                                               pilot.getName() +
+                                               " for " +
+                                               cost +
+                                               " exp.", Username);
+        CampaignMain.campaignMain.toUser("PL|UU|" + unit.getId() + "|" + unit.toString(true), Username, false);
         //start code section 2 of 2 - Baruk Khazad! 20150929
         // correct the BV of any army which contains the unit
         for (server.campaign.SArmy currA : player.getArmies()) {
             if (currA.isUnitInArmy(unit)) {
                 currA.setBV(0);
-                server.campaign.CampaignMain.cm.toUser("PL|SAD|" + currA.toString(true, "%"), player.getName(), false);
-                server.campaign.CampaignMain.cm.getOpsManager().checkOperations(currA, true);
+                CampaignMain.campaignMain.toUser("PL|SAD|" + currA.toString(true, "%"), player.getName(), false);
+                CampaignMain.campaignMain.getOpsManager().checkOperations(currA, true);
             }
         }
         //end code section 2 of 2 - Baruk Khazad! 20150929

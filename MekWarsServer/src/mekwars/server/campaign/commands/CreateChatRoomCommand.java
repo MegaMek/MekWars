@@ -14,6 +14,7 @@
 
 package mekwars.server.campaign.commands;
 
+import mekwars.server.campaign.CampaignMain;
 import server.campaign.util.ChatRoom;
 
 public class CreateChatRoomCommand implements Command {
@@ -24,23 +25,23 @@ public class CreateChatRoomCommand implements Command {
     public void process(java.util.StringTokenizer command, String Username) {
 
         if (accessLevel != 0) {
-            int userLevel = server.campaign.CampaignMain.cm.getServer().getUserLevel(Username);
+            int userLevel = CampaignMain.campaignMain.getServer().getUserLevel(Username);
             if (userLevel < getExecutionLevel()) {
-                server.campaign.CampaignMain.cm.toUser("AM:Insufficient access level for command. Level: " +
-                                                             userLevel +
-                                                             ". Required: " +
-                                                             accessLevel +
-                                                             ".", Username, true);
+                CampaignMain.campaignMain.toUser("AM:Insufficient access level for command. Level: " +
+                                                       userLevel +
+                                                       ". Required: " +
+                                                       accessLevel +
+                                                       ".", Username, true);
                 return;
             }
         }
 
         // check if they player already owns a ChatRoom 1 per player.
-        for (ChatRoom room : server.campaign.CampaignMain.cm.getChatRoomList()) {
+        for (ChatRoom room : CampaignMain.campaignMain.getChatRoomList()) {
             if (room.isOwner(Username)) {
-                server.campaign.CampaignMain.cm.toUser("AM:You already own a chat room " +
-                                                             room.getRoomName() +
-                                                             " and cannot own another.", Username, true);
+                CampaignMain.campaignMain.toUser("AM:You already own a chat room " +
+                                                       room.getRoomName() +
+                                                       " and cannot own another.", Username, true);
                 return;
             }
         }
@@ -49,9 +50,9 @@ public class CreateChatRoomCommand implements Command {
             String chatRoomName = command.nextToken();
             boolean isPrivate = Boolean.parseBoolean(command.nextToken());
             ChatRoom chatroom = new ChatRoom(chatRoomName, Username, isPrivate);
-            server.campaign.CampaignMain.cm.addChatRoom(chatRoomName, chatroom);
+            CampaignMain.campaignMain.addChatRoom(chatRoomName, chatroom);
         } catch (Exception ex) {
-            server.campaign.CampaignMain.cm.toUser("AM:Invalid Syntax: " + syntax, Username, true);
+            CampaignMain.campaignMain.toUser("AM:Invalid Syntax: " + syntax, Username, true);
             return;
         }
     }

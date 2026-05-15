@@ -19,6 +19,7 @@ package mekwars.server.campaign.commands;
 
 import megamek.common.Entity;
 import megamek.common.Mech;
+import mekwars.server.campaign.CampaignMain;
 
 public class SetAutoEjectCommand implements Command {
 
@@ -28,18 +29,18 @@ public class SetAutoEjectCommand implements Command {
     public void process(java.util.StringTokenizer command, String Username) {
 
         if (accessLevel != 0) {
-            int userLevel = server.campaign.CampaignMain.cm.getServer().getUserLevel(Username);
+            int userLevel = CampaignMain.campaignMain.getServer().getUserLevel(Username);
             if (userLevel < getExecutionLevel()) {
-                server.campaign.CampaignMain.cm.toUser("AM:Insufficient access level for command. Level: " +
-                                                             userLevel +
-                                                             ". Required: " +
-                                                             accessLevel +
-                                                             ".", Username, true);
+                CampaignMain.campaignMain.toUser("AM:Insufficient access level for command. Level: " +
+                                                       userLevel +
+                                                       ". Required: " +
+                                                       accessLevel +
+                                                       ".", Username, true);
                 return;
             }
         }
 
-        server.campaign.SPlayer p = server.campaign.CampaignMain.cm.getPlayer(Username);
+        server.campaign.SPlayer p = CampaignMain.campaignMain.getPlayer(Username);
 
         int unitid = 0;//ID# of the mech which is to set autoeject;
         boolean autoEject = false;
@@ -48,7 +49,7 @@ public class SetAutoEjectCommand implements Command {
             unitid = Integer.parseInt(command.nextToken());
         }//end try
         catch (NumberFormatException ex) {
-            server.campaign.CampaignMain.cm.toUser(
+            CampaignMain.campaignMain.toUser(
                   "AM:SetAutoEject command failed. Check your input. It should be something like this: /c setAutoEject#unitid#true/false",
                   Username,
                   true);
@@ -59,7 +60,7 @@ public class SetAutoEjectCommand implements Command {
             autoEject = Boolean.parseBoolean(command.nextToken());
         }//end try
         catch (Exception ex) {
-            server.campaign.CampaignMain.cm.toUser(
+            CampaignMain.campaignMain.toUser(
                   "AM:SetAutoEject Command failed. Check your input. It should be something like this: /c setAutoEject#unitid#true/false",
                   Username,
                   true);
@@ -70,7 +71,7 @@ public class SetAutoEjectCommand implements Command {
         Entity en = unit.getEntity();
         ((Mech) en).setAutoEject(autoEject);
         unit.setEntity(en);
-        server.campaign.CampaignMain.cm.toUser("AM:AutoEject set for " + unit.getModelName(), Username, true);
+        CampaignMain.campaignMain.toUser("AM:AutoEject set for " + unit.getModelName(), Username, true);
 
     }//end process()
 

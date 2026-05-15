@@ -16,6 +16,8 @@
 
 package mekwars.server.campaign.commands.admin;
 
+import mekwars.server.campaign.CampaignMain;
+
 public class AdminDestroyPlanetCommand implements server.campaign.commands.Command {
 
     int accessLevel = server.MWChatServer.auth.IAuthenticator.ADMIN;
@@ -26,17 +28,17 @@ public class AdminDestroyPlanetCommand implements server.campaign.commands.Comma
     public void process(java.util.StringTokenizer command, String Username) {
 
         //access level check
-        int userLevel = server.campaign.CampaignMain.cm.getServer().getUserLevel(Username);
+        int userLevel = CampaignMain.campaignMain.getServer().getUserLevel(Username);
         if (userLevel < getExecutionLevel()) {
-            server.campaign.CampaignMain.cm.toUser("AM:Insufficient access level for command. Level: " +
-                                                         userLevel +
-                                                         ". Required: " +
-                                                         accessLevel +
-                                                         ".", Username, true);
+            CampaignMain.campaignMain.toUser("AM:Insufficient access level for command. Level: " +
+                                                   userLevel +
+                                                   ". Required: " +
+                                                   accessLevel +
+                                                   ".", Username, true);
             return;
         }
 
-        server.campaign.SPlanet p = server.campaign.CampaignMain.cm.getPlanetFromPartialString(command.nextToken(),
+        server.campaign.SPlanet p = CampaignMain.campaignMain.getPlanetFromPartialString(command.nextToken(),
               Username);
 
         //remove the world from its owner
@@ -44,15 +46,15 @@ public class AdminDestroyPlanetCommand implements server.campaign.commands.Comma
         if (h != null) {h.removePlanet(p);}
 
         //remove the world from the data in memory
-        server.campaign.CampaignMain.cm.getData().removePlanet(p.getId());
+        CampaignMain.campaignMain.getData().removePlanet(p.getId());
 
         //finally, remove the world's flat file
         java.io.File fp = new java.io.File("./campaign/planets/" + p.getName().toLowerCase().trim() + ".dat");
         if (fp.exists()) {fp.delete();}
 
-        server.campaign.CampaignMain.cm.updateHousePlanetUpdate();
+        CampaignMain.campaignMain.updateHousePlanetUpdate();
         //server.MWLogger.modLog(Username + " unleashed the Death Star on " + p.getName() + ". Planet destroyed!");
-        server.campaign.CampaignMain.cm.doSendModMail("NOTE",
+        CampaignMain.campaignMain.doSendModMail("NOTE",
               Username + " unleashed the Death Star on " + p.getName() + ". Planet destroyed!");
 
     }

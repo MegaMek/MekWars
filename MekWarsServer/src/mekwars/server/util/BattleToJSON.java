@@ -1,6 +1,7 @@
 package mekwars.server.util;
 
-import common.util.MWLogger;
+
+import mekwars.server.campaign.CampaignMain;
 
 //@salient - so for now this will be basic, it wont handle salvage or draw games.
 public class BattleToJSON {
@@ -38,7 +39,7 @@ public class BattleToJSON {
         for (server.campaign.operations.OperationEntity currOpEnt : livingUnitsMap.values()) {
             // load the player and unit
             String ownerName = currOpEnt.getOwnerName().toLowerCase();
-            server.campaign.SPlayer owner = server.campaign.CampaignMain.cm.getPlayer(ownerName);
+            server.campaign.SPlayer owner = CampaignMain.campaignMain.getPlayer(ownerName);
             /*
              * There is a note in short resolver that some sort of bug would cause null owners.
              * Not sure if it was ever resolved. Leaving the check here just in case.
@@ -78,7 +79,7 @@ public class BattleToJSON {
         for (server.campaign.operations.OperationEntity currOpEnt : deadUnitsMap.values()) {
             // load the player and unit
             String ownerName = currOpEnt.getOwnerName().toLowerCase();
-            server.campaign.SPlayer owner = server.campaign.CampaignMain.cm.getPlayer(ownerName);
+            server.campaign.SPlayer owner = CampaignMain.campaignMain.getPlayer(ownerName);
             /*
              * There is a note in short resolver that some sort of bug would cause null owners.
              * Not sure if it was ever resolved. Leaving the check here just in case.

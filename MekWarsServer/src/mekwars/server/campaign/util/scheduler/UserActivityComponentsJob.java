@@ -20,6 +20,7 @@ import static org.quartz.SimpleScheduleBuilder.simpleSchedule;
 import static org.quartz.TriggerBuilder.newTrigger;
 
 import common.campaign.operations.Operation;
+import mekwars.server.campaign.CampaignMain;
 import org.quartz.Job;
 import org.quartz.JobDataMap;
 import org.quartz.JobDetail;
@@ -53,7 +54,7 @@ public class UserActivityComponentsJob implements Job, MWRepeatingJob, JobIdenti
      * @param factionName       the faction the player fights for
      */
     public static void submit(String userName, Double weightedArmyValue, String factionName) {
-        int frequency = server.campaign.CampaignMain.cm.getIntegerConfig("Scheduler_PlayerActivity_comps");
+        int frequency = CampaignMain.campaignMain.getIntegerConfig("Scheduler_PlayerActivity_comps");
         submit(userName, weightedArmyValue, factionName, frequency);
     }
 
@@ -119,7 +120,7 @@ public class UserActivityComponentsJob implements Job, MWRepeatingJob, JobIdenti
         //String factionName = data.getString(FACTION_NAME);
         //Double armyWeight = data.getDoubleFromString(ARMY_WEIGHT);
 
-        server.campaign.SPlayer p = server.campaign.CampaignMain.cm.getPlayer(playerName);
+        server.campaign.SPlayer p = CampaignMain.campaignMain.getPlayer(playerName);
         server.campaign.SHouse house = p.getMyHouse();
 
         if (playerCountsForProduction(p)) {
@@ -127,7 +128,7 @@ public class UserActivityComponentsJob implements Job, MWRepeatingJob, JobIdenti
             java.text.DecimalFormat myFormatter = new java.text.DecimalFormat("###.##");
             String output = myFormatter.format(value);
             String toShow = "AM:You counted towards production (" + output + " points worth)";
-            server.campaign.CampaignMain.cm.toUser(toShow + ".", p.getName(), true);
+            CampaignMain.campaignMain.toUser(toShow + ".", p.getName(), true);
             house.addActivityPP(value);
         }
 
@@ -171,13 +172,13 @@ public class UserActivityComponentsJob implements Job, MWRepeatingJob, JobIdenti
         }
 
         if (p.getDutyStatus() == server.campaign.SPlayer.STATUS_FIGHTING) {
-            server.campaign.operations.ShortOperation so = server.campaign.CampaignMain.cm.getOpsManager()
+            server.campaign.operations.ShortOperation so = CampaignMain.campaignMain.getOpsManager()
                                                                  .getShortOpForPlayer(p);
             if (so == null) {
                 return 0.0;
             }
 
-            Operation o = server.campaign.CampaignMain.cm.getOpsManager().getOperation(so.getName());
+            Operation o = CampaignMain.campaignMain.getOpsManager().getOperation(so.getName());
             double value = o.getDoubleValue("CountGameForProduction");
             if (value < 0) {
                 value = 0.0;

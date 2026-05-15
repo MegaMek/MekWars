@@ -19,6 +19,8 @@
  */
 package mekwars.server.campaign.commands;
 
+import mekwars.server.campaign.CampaignMain;
+
 // refreshfactory#planet#factory
 public class RequestServerMailCommand implements Command {
 
@@ -28,25 +30,25 @@ public class RequestServerMailCommand implements Command {
     public void process(java.util.StringTokenizer command, String Username) {
 
         //access level check
-        int userLevel = server.campaign.CampaignMain.cm.getServer().getUserLevel(Username);
+        int userLevel = CampaignMain.campaignMain.getServer().getUserLevel(Username);
         if (userLevel < getExecutionLevel()) {
-            server.campaign.CampaignMain.cm.toUser("AM:Insufficient access level for command. Level: " +
-                                                         userLevel +
-                                                         ". Required: " +
-                                                         accessLevel +
-                                                         ".", Username, true);
+            CampaignMain.campaignMain.toUser("AM:Insufficient access level for command. Level: " +
+                                                   userLevel +
+                                                   ". Required: " +
+                                                   accessLevel +
+                                                   ".", Username, true);
             return;
         }
 
-        if (server.campaign.CampaignMain.cm.getServer().getServerMail().get(Username.toLowerCase()) != null) {
-            server.campaign.CampaignMain.cm.toUser("PM|SERVER|" +
-                                                         (server.campaign.CampaignMain.cm.getServer()
-                                                                .getServerMail()
-                                                                .get(Username.toLowerCase())), Username, false);
-            server.campaign.CampaignMain.cm.getServer().getServerMail().remove(Username.toLowerCase());
-            server.campaign.CampaignMain.cm.getServer().doWriteMailFile();
+        if (CampaignMain.campaignMain.getServer().getServerMail().get(Username.toLowerCase()) != null) {
+            CampaignMain.campaignMain.toUser("PM|SERVER|" +
+                                                   (CampaignMain.campaignMain.getServer()
+                                                          .getServerMail()
+                                                          .get(Username.toLowerCase())), Username, false);
+            CampaignMain.campaignMain.getServer().getServerMail().remove(Username.toLowerCase());
+            CampaignMain.campaignMain.getServer().doWriteMailFile();
         } else {
-            server.campaign.CampaignMain.cm.toUser("AM:Sorry but you do not have any mail waiting for you.",
+            CampaignMain.campaignMain.toUser("AM:Sorry but you do not have any mail waiting for you.",
                   Username,
                   true);
         }

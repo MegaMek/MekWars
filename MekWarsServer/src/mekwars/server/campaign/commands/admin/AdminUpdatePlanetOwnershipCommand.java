@@ -21,6 +21,7 @@
 package mekwars.server.campaign.commands.admin;
 
 import common.House;
+import mekwars.server.campaign.CampaignMain;
 
 public class AdminUpdatePlanetOwnershipCommand implements server.campaign.commands.Command {
 
@@ -32,13 +33,13 @@ public class AdminUpdatePlanetOwnershipCommand implements server.campaign.comman
     public void process(java.util.StringTokenizer command, String Username) {
 
         //access level check
-        int userLevel = server.campaign.CampaignMain.cm.getServer().getUserLevel(Username);
+        int userLevel = CampaignMain.campaignMain.getServer().getUserLevel(Username);
         if (userLevel < getExecutionLevel()) {
-            server.campaign.CampaignMain.cm.toUser("AM:Insufficient access level for command. Level: " +
-                                                         userLevel +
-                                                         ". Required: " +
-                                                         accessLevel +
-                                                         ".", Username, true);
+            CampaignMain.campaignMain.toUser("AM:Insufficient access level for command. Level: " +
+                                                   userLevel +
+                                                   ". Required: " +
+                                                   accessLevel +
+                                                   ".", Username, true);
             return;
         }
 
@@ -50,13 +51,13 @@ public class AdminUpdatePlanetOwnershipCommand implements server.campaign.comman
         int id = -1;
 
         try {
-            planet = server.campaign.CampaignMain.cm.getPlanetFromPartialString(command.nextToken(), Username);
+            planet = CampaignMain.campaignMain.getPlanetFromPartialString(command.nextToken(), Username);
             houseName = command.nextToken();
-            house = server.campaign.CampaignMain.cm.getHouseFromPartialString(houseName, null);
+            house = CampaignMain.campaignMain.getHouseFromPartialString(houseName, null);
             ownerShip = Integer.parseInt(command.nextToken());
 
         } catch (Exception e) {
-            server.campaign.CampaignMain.cm.toUser(
+            CampaignMain.campaignMain.toUser(
                   "Improper command. Try: /c adminupdateplanetownership#planet#faction#amount",
                   Username,
                   true);
@@ -64,17 +65,17 @@ public class AdminUpdatePlanetOwnershipCommand implements server.campaign.comman
         }
 
         if (planet == null) {
-            server.campaign.CampaignMain.cm.toUser("Could not find a matching planet.", Username, true);
+            CampaignMain.campaignMain.toUser("Could not find a matching planet.", Username, true);
             return;
         }
 
         if (house == null && !houseName.equalsIgnoreCase("none")) {
-            server.campaign.CampaignMain.cm.toUser("Could not find a matching faction to remove.", Username, true);
+            CampaignMain.campaignMain.toUser("Could not find a matching faction to remove.", Username, true);
             return;
         }
 
         if (ownerShip <= 0) {
-            server.campaign.CampaignMain.cm.toUser("Ownership cannot be less then or equal to 0", Username, true);
+            CampaignMain.campaignMain.toUser("Ownership cannot be less then or equal to 0", Username, true);
             return;
         }
 
@@ -85,7 +86,7 @@ public class AdminUpdatePlanetOwnershipCommand implements server.campaign.comman
         planet.getInfluence().updateHouse(id, ownerShip);
         planet.updated();
 
-        server.campaign.CampaignMain.cm.doSendModMail("NOTE",
+        CampaignMain.campaignMain.doSendModMail("NOTE",
               Username + " updated " + houseName + " ownership of " + planet.getName() + " to " + ownerShip + ".");
     }
 

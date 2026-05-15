@@ -85,12 +85,12 @@ public class SPersonalPilotQueues implements java.io.Serializable {
      */
     public void checkQueueAndWarn(String playerName, int unitType, int weightClass) {
         int size = this.getPilotQueue(unitType, weightClass).size();
-        if (size > CampaignMain.cm.getIntegerConfig("MaxAllowedPilotsInQueueToBuyFromHouse")) {
-            CampaignMain.cm.toUser("WARNING: You have more " +
-                                         Unit.getWeightClassDesc(weightClass) +
-                                         " " +
-                                         Unit.getTypeClassDesc(unitType) +
-                                         " pilots than allowed. HQ will randomly reassign some of them, if you do not.",
+        if (size > CampaignMain.campaignMain.getIntegerConfig("MaxAllowedPilotsInQueueToBuyFromHouse")) {
+            CampaignMain.campaignMain.toUser("WARNING: You have more " +
+                                                   Unit.getWeightClassDesc(weightClass) +
+                                                   " " +
+                                                   Unit.getTypeClassDesc(unitType) +
+                                                   " pilots than allowed. HQ will randomly reassign some of them, if you do not.",
                   playerName);
         }
     }
@@ -179,7 +179,7 @@ public class SPersonalPilotQueues implements java.io.Serializable {
     public void fromString(String buffer, String delimiter) {
 
         java.util.StringTokenizer mainTokenizer = new java.util.StringTokenizer(buffer, delimiter);
-        int capSize = CampaignMain.cm.getIntegerConfig("MaxAllowedPilotsInQueueToBuyFromHouse");
+        int capSize = CampaignMain.campaignMain.getIntegerConfig("MaxAllowedPilotsInQueueToBuyFromHouse");
 
         // loop once to read in meks (light -> assault lists)
         for (int weightClass = Unit.LIGHT; weightClass <= Unit.ASSAULT; weightClass++) {
@@ -192,7 +192,7 @@ public class SPersonalPilotQueues implements java.io.Serializable {
             while (this.getPilotQueue(Unit.MEK, weightClass).size() > capSize) {
                 this.getPilot(Unit.MEK,
                       weightClass,
-                      CampaignMain.cm.getRandomNumber(this.getPilotQueue(Unit.MEK, weightClass).size()));
+                      CampaignMain.campaignMain.getRandomNumber(this.getPilotQueue(Unit.MEK, weightClass).size()));
             }
         }
 
@@ -207,7 +207,7 @@ public class SPersonalPilotQueues implements java.io.Serializable {
             while (this.getPilotQueue(Unit.PROTOMEK, weightClass).size() > capSize) {
                 this.getPilot(Unit.PROTOMEK,
                       weightClass,
-                      CampaignMain.cm.getRandomNumber(this.getPilotQueue(Unit.PROTOMEK, weightClass).size()));
+                      CampaignMain.campaignMain.getRandomNumber(this.getPilotQueue(Unit.PROTOMEK, weightClass).size()));
             }
         }
 
@@ -222,7 +222,7 @@ public class SPersonalPilotQueues implements java.io.Serializable {
             while (this.getPilotQueue(Unit.AERO, weightClass).size() > capSize) {
                 this.getPilot(Unit.AERO,
                       weightClass,
-                      CampaignMain.cm.getRandomNumber(this.getPilotQueue(Unit.AERO, weightClass).size()));
+                      CampaignMain.campaignMain.getRandomNumber(this.getPilotQueue(Unit.AERO, weightClass).size()));
             }
         }
         /*

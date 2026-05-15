@@ -42,10 +42,9 @@ import java.util.TreeMap;
 
 import mekwars.common.BMEquipment;
 import mekwars.common.campaign.clientutils.protocol.IClient;
-import mekwars.common.gui.panels.CCommPanel;
 import mekwars.common.gui.dialogs.ArmyViewerDialog;
+import mekwars.common.gui.panels.CCommPanel;
 import mekwars.common.util.ComponentToCritsConverter;
-import mekwars.common.util.MWLogger;
 import mekwars.common.util.TokenReader;
 
 /**

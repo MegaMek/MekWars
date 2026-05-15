@@ -17,6 +17,7 @@
 package mekwars.server.campaign.operations;
 
 import common.util.MWLogger;
+import mekwars.server.campaign.CampaignMain;
 import server.util.StringUtil;
 
 public class OpsScrapThread extends Thread {
@@ -33,7 +34,7 @@ public class OpsScrapThread extends Thread {
     public OpsScrapThread(String playerName) {
         super(playerName + " Scrap Thread");
         this.playerName = playerName;
-        waitTime = Long.parseLong(server.campaign.CampaignMain.cm.getConfig("TimeToSelectSalvage"));
+        waitTime = Long.parseLong(CampaignMain.campaignMain.getConfig("TimeToSelectSalvage"));
 
         maxTotalPayment = 0;
         paymentsToDate = 0;
@@ -73,7 +74,7 @@ public class OpsScrapThread extends Thread {
 
     public void stopScrap() {
 
-        server.campaign.SPlayer currPlayer = server.campaign.CampaignMain.cm.getPlayer(playerName);
+        server.campaign.SPlayer currPlayer = CampaignMain.campaignMain.getPlayer(playerName);
         if (currPlayer == null) {
             return;
         }
@@ -88,13 +89,13 @@ public class OpsScrapThread extends Thread {
             }
 
             currU.setScrappableFor(-1);
-            server.campaign.CampaignMain.cm.toUser("PL|UU|" + currU.getId() + "|" + currU.toString(true),
+            CampaignMain.campaignMain.toUser("PL|UU|" + currU.getId() + "|" + currU.toString(true),
                   playerName,
                   false);
         }
 
         if (currPlayer.getDutyStatus() >= server.campaign.SPlayer.STATUS_RESERVE) {
-            server.campaign.CampaignMain.cm.toUser("You may only scrap units salvaged in your most recent game.",
+            CampaignMain.campaignMain.toUser("You may only scrap units salvaged in your most recent game.",
                   playerName);
         }
 
@@ -112,7 +113,7 @@ public class OpsScrapThread extends Thread {
 
         // get the player. he should never be null, but check and return just in
         // case.
-        server.campaign.SPlayer p = server.campaign.CampaignMain.cm.getPlayer(playerName);
+        server.campaign.SPlayer p = CampaignMain.campaignMain.getPlayer(playerName);
         if (p == null) {
             return;
         }
@@ -150,7 +151,7 @@ public class OpsScrapThread extends Thread {
             }
             currU.setScrappableFor(maxScrapValue);
             salvagedUnits.put(currID, toReplace.get(currID));
-            server.campaign.CampaignMain.cm.toUser("PL|UU|" + currU.getId() + "|" + currU.toString(true),
+            CampaignMain.campaignMain.toUser("PL|UU|" + currU.getId() + "|" + currU.toString(true),
                   playerName,
                   false);
         }
@@ -165,13 +166,13 @@ public class OpsScrapThread extends Thread {
          * disconnected. He doesn't need any PL|UU's or the opportunity to scrap
          * for cash.
          */
-        server.campaign.SPlayer currPlayer = server.campaign.CampaignMain.cm.getPlayer(playerName);
+        server.campaign.SPlayer currPlayer = CampaignMain.campaignMain.getPlayer(playerName);
         if (currPlayer == null) {
             return;
         } else if (currPlayer.getDutyStatus() < server.campaign.SPlayer.STATUS_RESERVE) {
             return;
         }
-        if (!server.campaign.CampaignMain.cm.getBooleanConfig("SelectableSalvage")) {
+        if (!CampaignMain.campaignMain.getBooleanConfig("SelectableSalvage")) {
             return;
         }
 
@@ -186,15 +187,15 @@ public class OpsScrapThread extends Thread {
             }
 
             currU.setScrappableFor(salvagedUnits.get(currID));
-            server.campaign.CampaignMain.cm.toUser("PL|UU|" + currU.getId() + "|" + currU.toString(true),
+            CampaignMain.campaignMain.toUser("PL|UU|" + currU.getId() + "|" + currU.toString(true),
                   playerName,
                   false);
         }
 
         // inform the potential scrapper that he can get some cash.
-        server.campaign.CampaignMain.cm.toUser("You have " +
-                                                     StringUtil.readableTimeWithSeconds(waitTime) +
-                                                     " to scrap salvaged units and recover repair costs.",
+        CampaignMain.campaignMain.toUser("You have " +
+                                               StringUtil.readableTimeWithSeconds(waitTime) +
+                                               " to scrap salvaged units and recover repair costs.",
               playerName,
               true);
 
@@ -215,7 +216,7 @@ public class OpsScrapThread extends Thread {
         }
 
         // only report if player is still missing
-        currPlayer = server.campaign.CampaignMain.cm.getPlayer(playerName);
+        currPlayer = CampaignMain.campaignMain.getPlayer(playerName);
         if (currPlayer == null) {
             return;
         }
@@ -235,7 +236,7 @@ public class OpsScrapThread extends Thread {
             currU.setScrappableFor(-1);
 
             if (shouldGetText) {
-                server.campaign.CampaignMain.cm.toUser("PL|UU|" + currU.getId() + "|" + currU.toString(true),
+                CampaignMain.campaignMain.toUser("PL|UU|" + currU.getId() + "|" + currU.toString(true),
                       playerName,
                       false);
                 scrappablesRemaining = true;
@@ -243,7 +244,7 @@ public class OpsScrapThread extends Thread {
         }
 
         if (scrappablesRemaining && shouldGetText) {
-            server.campaign.CampaignMain.cm.toUser("[!] Time to scrap salvaged has expired.", playerName, true);
+            CampaignMain.campaignMain.toUser("[!] Time to scrap salvaged has expired.", playerName, true);
         }
 
         // clean up.

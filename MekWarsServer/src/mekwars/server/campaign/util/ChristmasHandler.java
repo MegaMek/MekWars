@@ -17,6 +17,7 @@
 package mekwars.server.campaign.util;
 
 import common.util.MWLogger;
+import mekwars.server.campaign.CampaignMain;
 import server.campaign.util.scheduler.EndChristmasJob;
 import server.campaign.util.scheduler.StartChristmasJob;
 
@@ -79,15 +80,15 @@ public class ChristmasHandler {
      * @return
      */
     protected ChristmasHandler() {
-        celebrateChristmas = server.campaign.CampaignMain.cm.getBooleanConfig("Celebrate_Christmas");
+        celebrateChristmas = CampaignMain.campaignMain.getBooleanConfig("Celebrate_Christmas");
         if (!celebrateChristmas) {
             return;
         }
         gifts = new java.util.concurrent.ConcurrentHashMap<String, Boolean>();
         java.text.SimpleDateFormat sdf = new java.text.SimpleDateFormat("yyyy-MM-dd");
         try {
-            startDate = sdf.parse(server.campaign.CampaignMain.cm.getConfig("Christmas_StartDate"));
-            endDate = sdf.parse(server.campaign.CampaignMain.cm.getConfig("Christmas_EndDate"));
+            startDate = sdf.parse(CampaignMain.campaignMain.getConfig("Christmas_StartDate"));
+            endDate = sdf.parse(CampaignMain.campaignMain.getConfig("Christmas_EndDate"));
         } catch (java.text.ParseException e) {
             MWLogger.errLog(e);
         }
@@ -99,22 +100,34 @@ public class ChristmasHandler {
         }
 
         // Maybe it was manually started?
-        if (server.campaign.CampaignMain.cm.getBooleanConfig("Christmas_ManuallyStarted")) {
+        if (CampaignMain.campaignMain.getBooleanConfig("Christmas_ManuallyStarted")) {
             isChristmasSeason = true;
         }
 
         // Populate the Christmas List
-        populateChristmasList(server.campaign.CampaignMain.cm.getConfig("Christmas_List"));
+        populateChristmasList(CampaignMain.campaignMain.getConfig("Christmas_List"));
 
-        if (server.campaign.CampaignMain.cm.getBooleanConfig("Christmas_Units_Method_OneOfEach")) {
+        if (CampaignMain.campaignMain.getBooleanConfig("Christmas_Units_Method_OneOfEach")) {
             unitMethod = UNIT_METHOD_ONEOFEACH;
-        } else if (server.campaign.CampaignMain.cm.getBooleanConfig("Christmas_Units_Method_XOfEach")) {
+        } else if (CampaignMain.campaignMain.getBooleanConfig("Christmas_Units_Method_XOfEach")) {
             unitMethod = UNIT_METHOD_XOFEACH;
-        } else if (server.campaign.CampaignMain.cm.getBooleanConfig("Christmas_Units_Method_XTotal")) {
+        } else if (CampaignMain.campaignMain.getBooleanConfig("Christmas_Units_Method_XTotal")) {
             unitMethod = UNIT_METHOD_XTOTAL;
         }
-        numberOfUnits = server.campaign.CampaignMain.cm.getIntegerConfig("Christmas_Units_X");
+        numberOfUnits = CampaignMain.campaignMain.getIntegerConfig("Christmas_Units_X");
         loadGiftList();
+    }
+
+    /**
+     * Instantiates the ChristmasHandler if it is not yet instantiated.  Returns the ChristmasHandler if it is
+     *
+     * @return the ChristmasHandler
+     */
+    public static mekwars.server.campaign.util.ChristmasHandler getInstance() {
+        if (handler == null) {
+            handler = new mekwars.server.campaign.util.ChristmasHandler();
+        }
+        return handler;
     }
 
     /**
@@ -149,18 +162,6 @@ public class ChristmasHandler {
                 scanner.close();
             }
         }
-    }
-
-    /**
-     * Instantiates the ChristmasHandler if it is not yet instantiated.  Returns the ChristmasHandler if it is
-     *
-     * @return the ChristmasHandler
-     */
-    public static mekwars.server.campaign.util.ChristmasHandler getInstance() {
-        if (handler == null) {
-            handler = new mekwars.server.campaign.util.ChristmasHandler();
-        }
-        return handler;
     }
 
     /**
@@ -221,9 +222,9 @@ public class ChristmasHandler {
         java.util.Date start = new java.util.Date();
         java.util.Date end = new java.util.Date();
         try {
-            start = sdf.parse(server.campaign.CampaignMain.cm.getConfig("Christmas_StartDate"));
+            start = sdf.parse(CampaignMain.campaignMain.getConfig("Christmas_StartDate"));
 
-            end = sdf.parse(server.campaign.CampaignMain.cm.getConfig("Christmas_EndDate"));
+            end = sdf.parse(CampaignMain.campaignMain.getConfig("Christmas_EndDate"));
         } catch (java.text.ParseException e) {
             MWLogger.errLog(e);
         }
@@ -260,7 +261,7 @@ public class ChristmasHandler {
             return;
         }
         isChristmasSeason = true;
-        server.campaign.CampaignMain.cm.getConfig().setProperty("Christmas_ManuallyStarted", "true");
+        CampaignMain.campaignMain.getConfig().setProperty("Christmas_ManuallyStarted", "true");
     }
 
     /**
@@ -268,7 +269,7 @@ public class ChristmasHandler {
      */
     public void endChristmas() {
         isChristmasSeason = false;
-        server.campaign.CampaignMain.cm.getConfig().setProperty("Christmas_ManuallyStarted", "false");
+        CampaignMain.campaignMain.getConfig().setProperty("Christmas_ManuallyStarted", "false");
 
         // Clear the gift recipients so they are not penalized next Christmas season
         java.io.File file = new java.io.File(giftRecipientsFile);
@@ -286,7 +287,7 @@ public class ChristmasHandler {
         if (!doWeCelebrateChristmas()) {
             return true;
         }
-        if (server.campaign.CampaignMain.cm.getPlayer(userName).getMyHouse().isNewbieHouse()) {
+        if (CampaignMain.campaignMain.getPlayer(userName).getMyHouse().isNewbieHouse()) {
             // I suspect that Christmas Units will mess up a defection from Solaris
             return true;
         }
@@ -329,7 +330,7 @@ public class ChristmasHandler {
             }
         }
         for (String s : unitList) {
-            server.campaign.CampaignMain.cm.toUser("AM:Under the tree, you find a " + s, p.getName(), true);
+            CampaignMain.campaignMain.toUser("AM:Under the tree, you find a " + s, p.getName(), true);
             server.campaign.SUnit u = getUnit(s);
             p.addUnit(u, true);
         }
@@ -343,7 +344,7 @@ public class ChristmasHandler {
      */
     private String getRandomUnitFileName() {
         int size = christmasList.size();
-        return christmasList.get(server.campaign.CampaignMain.cm.getR().nextInt(size));
+        return christmasList.get(CampaignMain.campaignMain.getR().nextInt(size));
     }
 
     /**

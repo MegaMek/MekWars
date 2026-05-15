@@ -21,6 +21,7 @@ import common.Unit;
 import common.campaign.pilot.Pilot;
 import megamek.common.Entity;
 import megamek.common.Mech;
+import mekwars.server.campaign.CampaignMain;
 
 /**
  * @author Helge Richter
@@ -56,10 +57,10 @@ public class PainResistanceSkill extends SPilotSkill {
 
         String chance = "chancefor" + getAbbreviation() + "for" + Unit.getTypeClassDesc(unitType);
 
-        server.campaign.SHouse house = server.campaign.CampaignMain.cm.getHouseFromPartialString(p.getCurrentFaction());
+        server.campaign.SHouse house = CampaignMain.campaignMain.getHouseFromPartialString(p.getCurrentFaction());
 
         if (house == null) {
-            return server.campaign.CampaignMain.cm.getIntegerConfig(chance);
+            return CampaignMain.campaignMain.getIntegerConfig(chance);
         }
 
         return house.getIntegerConfig(chance);
@@ -71,7 +72,7 @@ public class PainResistanceSkill extends SPilotSkill {
         //this is because in Megamek, PR gives +1 on any KO roll (hidden modifier) and reduces pilot hits from 2 to 1 for any ammo explosion
         //The previous PR costs were 30 or 40 per ammo bin which is silly if you have no
         //CASE (mek gets gutted anyways) and silly if you have nothing to explode (free +1 on KO rolls)
-        int PainResistanceBVBaseMod = server.campaign.CampaignMain.cm.getIntegerConfig("PainResistanceBaseBVMod");
+        int PainResistanceBVBaseMod = CampaignMain.campaignMain.getIntegerConfig("PainResistanceBaseBVMod");
         boolean b = false;
         if (unit instanceof Mech) { //BK - this section of code is tested! ty STK9A
             Mech m = (Mech) unit;
@@ -87,7 +88,7 @@ public class PainResistanceSkill extends SPilotSkill {
     @Override
     public int getBVMod(Entity unit, server.campaign.pilot.SPilot p) {
         //BK repeat of comments in getBVMod(Entity unit)
-        server.campaign.SHouse house = server.campaign.CampaignMain.cm.getHouseFromPartialString(p.getCurrentFaction());
+        server.campaign.SHouse house = CampaignMain.campaignMain.getHouseFromPartialString(p.getCurrentFaction());
         int PainResistanceBVBaseMod = house.getIntegerConfig("PainResistanceBaseBVMod");
         boolean b = false;
         if (unit instanceof Mech) {

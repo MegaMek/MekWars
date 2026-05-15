@@ -17,6 +17,7 @@
 package mekwars.server.campaign.commands.mod;
 
 import megamek.common.MechSummaryCache;
+import mekwars.server.campaign.CampaignMain;
 
 /**
  * Remove a part from a player.
@@ -33,13 +34,13 @@ public class UpdateServerUnitsCacheCommand implements server.campaign.commands.C
     public void process(java.util.StringTokenizer command, String Username) {
 
         if (accessLevel != 0) {
-            int userLevel = server.campaign.CampaignMain.cm.getServer().getUserLevel(Username);
+            int userLevel = CampaignMain.campaignMain.getServer().getUserLevel(Username);
             if (userLevel < getExecutionLevel()) {
-                server.campaign.CampaignMain.cm.toUser("AM:Insufficient access level for command. Level: " +
-                                                             userLevel +
-                                                             ". Required: " +
-                                                             accessLevel +
-                                                             ".", Username, true);
+                CampaignMain.campaignMain.toUser("AM:Insufficient access level for command. Level: " +
+                                                       userLevel +
+                                                       ". Required: " +
+                                                       accessLevel +
+                                                       ".", Username, true);
                 return;
             }
         }
@@ -54,7 +55,7 @@ public class UpdateServerUnitsCacheCommand implements server.campaign.commands.C
 
         MechSummaryCache.getInstance();
 
-        server.campaign.CampaignMain.cm.doSendModMail("NOTE", Username + " has updated the servers unit cache.");
+        CampaignMain.campaignMain.doSendModMail("NOTE", Username + " has updated the servers unit cache.");
 
     }
 

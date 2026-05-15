@@ -22,6 +22,8 @@
 package mekwars.server.campaign.commands.admin;
 
 
+import mekwars.server.campaign.CampaignMain;
+
 public class ServerGameOptionsCommand implements server.campaign.commands.Command {
 
     int accessLevel = server.MWChatServer.auth.IAuthenticator.ADMIN;
@@ -32,30 +34,30 @@ public class ServerGameOptionsCommand implements server.campaign.commands.Comman
     public void process(java.util.StringTokenizer command, String Username) {
 
         //access level check
-        int userLevel = server.campaign.CampaignMain.cm.getServer().getUserLevel(Username);
+        int userLevel = CampaignMain.campaignMain.getServer().getUserLevel(Username);
         if (userLevel < getExecutionLevel()) {
-            server.campaign.CampaignMain.cm.toUser("AM:Insufficient access level for command. Level: " +
-                                                         userLevel +
-                                                         ". Required: " +
-                                                         accessLevel +
-                                                         ".", Username, true);
+            CampaignMain.campaignMain.toUser("AM:Insufficient access level for command. Level: " +
+                                                   userLevel +
+                                                   ". Required: " +
+                                                   accessLevel +
+                                                   ".", Username, true);
             return;
         }
 
         if (!command.hasMoreElements()) {
-            server.campaign.CampaignMain.cm.toUser(
+            CampaignMain.campaignMain.toUser(
                   "No file data found. This may be due to the fact that the command line was used intead of the GUI.",
                   Username,
                   true);
             return;
         }
 
-        server.campaign.CampaignMain.cm.saveMegaMekGameOptions(command);
+        CampaignMain.campaignMain.saveMegaMekGameOptions(command);
 
-        server.campaign.CampaignMain.cm.getMegaMekClient().getGame().getOptions().loadOptions();
+        CampaignMain.campaignMain.getMegaMekClient().getGame().getOptions().loadOptions();
 
-        server.campaign.CampaignMain.cm.toUser("You have set the MegaMek Game Options", Username, true);
-        server.campaign.CampaignMain.cm.doSendModMail("NOTE",
+        CampaignMain.campaignMain.toUser("You have set the MegaMek Game Options", Username, true);
+        CampaignMain.campaignMain.doSendModMail("NOTE",
               Username + " has set the MegaMek game options for the server.");
     }
 

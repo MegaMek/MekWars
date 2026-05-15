@@ -18,6 +18,7 @@ package mekwars.server.campaign.commands;
 
 import common.House;
 import megamek.common.TechConstants;
+import mekwars.server.campaign.CampaignMain;
 
 public class HouseStatusCommand implements Command {
 
@@ -27,19 +28,19 @@ public class HouseStatusCommand implements Command {
     public void process(java.util.StringTokenizer command, String Username) {
 
         if (accessLevel != 0) {
-            int userLevel = server.campaign.CampaignMain.cm.getServer().getUserLevel(Username);
+            int userLevel = CampaignMain.campaignMain.getServer().getUserLevel(Username);
             if (userLevel < getExecutionLevel()) {
-                server.campaign.CampaignMain.cm.toUser("AM:Insufficient access level for command. Level: " +
-                                                             userLevel +
-                                                             ". Required: " +
-                                                             accessLevel +
-                                                             ".", Username, true);
+                CampaignMain.campaignMain.toUser("AM:Insufficient access level for command. Level: " +
+                                                       userLevel +
+                                                       ". Required: " +
+                                                       accessLevel +
+                                                       ".", Username, true);
                 return;
             }
         }
 
         String result = "<h2>Faction Status: </h2>";
-        java.util.Iterator<House> e = server.campaign.CampaignMain.cm.getData().getAllHouses().iterator();
+        java.util.Iterator<House> e = CampaignMain.campaignMain.getData().getAllHouses().iterator();
         while (e.hasNext()) {
             server.campaign.SHouse h = (server.campaign.SHouse) e.next();
             if (h.getId() < 0) {continue;}
@@ -59,7 +60,7 @@ public class HouseStatusCommand implements Command {
         }
         result += "Note: Member numbers are based on members that have logged in since the last reboot of the server!";
 
-        server.campaign.CampaignMain.cm.toUser("SM|" + result, Username, false);
+        CampaignMain.campaignMain.toUser("SM|" + result, Username, false);
     }
 
     public int getExecutionLevel() {return accessLevel;}

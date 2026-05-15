@@ -18,6 +18,7 @@ package mekwars.server.campaign.commands;
 
 import common.util.MWLogger;
 import megamek.common.Entity;
+import mekwars.server.campaign.CampaignMain;
 
 
 public class BuildTableListCommand implements Command {
@@ -28,13 +29,13 @@ public class BuildTableListCommand implements Command {
     public void process(java.util.StringTokenizer command, String Username) {
 
         if (accessLevel != 0) {
-            int userLevel = server.campaign.CampaignMain.cm.getServer().getUserLevel(Username);
+            int userLevel = CampaignMain.campaignMain.getServer().getUserLevel(Username);
             if (userLevel < getExecutionLevel()) {
-                server.campaign.CampaignMain.cm.toUser("AM:Insufficient access level for command. Level: " +
-                                                             userLevel +
-                                                             ". Required: " +
-                                                             accessLevel +
-                                                             ".", Username, true);
+                CampaignMain.campaignMain.toUser("AM:Insufficient access level for command. Level: " +
+                                                       userLevel +
+                                                       ". Required: " +
+                                                       accessLevel +
+                                                       ".", Username, true);
                 return;
             }
         }
@@ -104,9 +105,9 @@ public class BuildTableListCommand implements Command {
 
                 }
             }
-            server.campaign.CampaignMain.cm.toUser("SM|" + results, Username, false);
+            CampaignMain.campaignMain.toUser("SM|" + results, Username, false);
         } catch (Exception ex) {
-            server.campaign.CampaignMain.cm.toUser("AM:Unknown path try again!", Username, true);
+            CampaignMain.campaignMain.toUser("AM:Unknown path try again!", Username, true);
             MWLogger.errLog("Error with build table list");
             MWLogger.errLog(ex);
             return;

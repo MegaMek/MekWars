@@ -66,7 +66,7 @@ public class NewbieHouse extends NonConqHouse {
      */
     @Override
     public int getBaysProvided() {
-        int newbBays = CampaignMain.cm.getIntegerConfig("NewbieHouseBays");
+        int newbBays = CampaignMain.campaignMain.getIntegerConfig("NewbieHouseBays");
         return newbBays;
     }
 
@@ -92,7 +92,7 @@ public class NewbieHouse extends NonConqHouse {
           String houseName) {
 
         String factionName;
-        if (houseName == null) {factionName = CampaignMain.cm.getConfig("NewbieHouseName");} else {
+        if (houseName == null) {factionName = CampaignMain.campaignMain.getConfig("NewbieHouseName");} else {
             factionName = houseName;
         }
 
@@ -180,7 +180,7 @@ public class NewbieHouse extends NonConqHouse {
          * player is immune and has resets remaining, ignore the number of units in
          * his hangar and generate a new set.
          */
-        int replace = CampaignMain.cm.getIntegerConfig("NumUnitsToQualifyForNew");
+        int replace = CampaignMain.campaignMain.getIntegerConfig("NumUnitsToQualifyForNew");
         if (forceReset) {replace = 999999;}
 
         if (resetPlayers.containsKey(lowerName) && resetPlayers.get(lowerName) > 0) {
@@ -199,9 +199,9 @@ public class NewbieHouse extends NonConqHouse {
 
         //get new units, replace PPQ, then resend the player's data
         p.stripOfAllUnits(false);
-        if (CampaignMain.cm.getBooleanConfig("AllowPersonalPilotQueues")) {
+        if (CampaignMain.campaignMain.getBooleanConfig("AllowPersonalPilotQueues")) {
             p.getPersonalPilotQueue().flushQueue();
-            CampaignMain.cm.toUser("PL|PPQ|" + p.getPersonalPilotQueue().toString(true), p.getName(), false);
+            CampaignMain.campaignMain.toUser("PL|PPQ|" + p.getPersonalPilotQueue().toString(true), p.getName(), false);
         }
 
         getNewSOLUnits(p, houseName);
@@ -211,7 +211,7 @@ public class NewbieHouse extends NonConqHouse {
          * refrain if this is a defection (forceReset), in which case the status
          * will be completely reset during login to newHouse.
          */
-        if (!forceReset) {CampaignMain.cm.toUser("PS|" + p.toString(true), p.getName(), false);}
+        if (!forceReset) {CampaignMain.campaignMain.toUser("PS|" + p.toString(true), p.getName(), false);}
 
         //inform him of the positive outcome
         return toSend;
@@ -234,40 +234,40 @@ public class NewbieHouse extends NonConqHouse {
               1);
 
         //meks
-        int numLMeks = CampaignMain.cm.getIntegerConfig("SOLLightMeks");
-        int numMMeks = CampaignMain.cm.getIntegerConfig("SOLMediumMeks");
-        int numHMeks = CampaignMain.cm.getIntegerConfig("SOLHeavyMeks");
-        int numAMeks = CampaignMain.cm.getIntegerConfig("SOLAssaultMeks");
+        int numLMeks = CampaignMain.campaignMain.getIntegerConfig("SOLLightMeks");
+        int numMMeks = CampaignMain.campaignMain.getIntegerConfig("SOLMediumMeks");
+        int numHMeks = CampaignMain.campaignMain.getIntegerConfig("SOLHeavyMeks");
+        int numAMeks = CampaignMain.campaignMain.getIntegerConfig("SOLAssaultMeks");
 
         //vehicles
-        int numLVehs = CampaignMain.cm.getIntegerConfig("SOLLightVehs");
-        int numMVehs = CampaignMain.cm.getIntegerConfig("SOLMediumVehs");
-        int numHVehs = CampaignMain.cm.getIntegerConfig("SOLHeavyVehs");
-        int numAVehs = CampaignMain.cm.getIntegerConfig("SOLAssaultVehs");
+        int numLVehs = CampaignMain.campaignMain.getIntegerConfig("SOLLightVehs");
+        int numMVehs = CampaignMain.campaignMain.getIntegerConfig("SOLMediumVehs");
+        int numHVehs = CampaignMain.campaignMain.getIntegerConfig("SOLHeavyVehs");
+        int numAVehs = CampaignMain.campaignMain.getIntegerConfig("SOLAssaultVehs");
 
         //infantry
-        int numLInf = CampaignMain.cm.getIntegerConfig("SOLLightInf");
-        int numMInf = CampaignMain.cm.getIntegerConfig("SOLMediumInf");
-        int numHInf = CampaignMain.cm.getIntegerConfig("SOLHeavyInf");
-        int numAInf = CampaignMain.cm.getIntegerConfig("SOLAssaultInf");
+        int numLInf = CampaignMain.campaignMain.getIntegerConfig("SOLLightInf");
+        int numMInf = CampaignMain.campaignMain.getIntegerConfig("SOLMediumInf");
+        int numHInf = CampaignMain.campaignMain.getIntegerConfig("SOLHeavyInf");
+        int numAInf = CampaignMain.campaignMain.getIntegerConfig("SOLAssaultInf");
 
         //protomechs
-        int numLPM = CampaignMain.cm.getIntegerConfig("SOLLightProtoMek");
-        int numMPM = CampaignMain.cm.getIntegerConfig("SOLMediumProtoMek");
-        int numHPM = CampaignMain.cm.getIntegerConfig("SOLHeavyProtoMek");
-        int numAPM = CampaignMain.cm.getIntegerConfig("SOLAssaultProtoMek");
+        int numLPM = CampaignMain.campaignMain.getIntegerConfig("SOLLightProtoMek");
+        int numMPM = CampaignMain.campaignMain.getIntegerConfig("SOLMediumProtoMek");
+        int numHPM = CampaignMain.campaignMain.getIntegerConfig("SOLHeavyProtoMek");
+        int numAPM = CampaignMain.campaignMain.getIntegerConfig("SOLAssaultProtoMek");
 
         //BattleArmor
-        int numLBA = CampaignMain.cm.getIntegerConfig("SOLLightBattleArmor");
-        int numMBA = CampaignMain.cm.getIntegerConfig("SOLMediumBattleArmor");
-        int numHBA = CampaignMain.cm.getIntegerConfig("SOLHeavyBattleArmor");
-        int numABA = CampaignMain.cm.getIntegerConfig("SOLAssaultBattleArmor");
+        int numLBA = CampaignMain.campaignMain.getIntegerConfig("SOLLightBattleArmor");
+        int numMBA = CampaignMain.campaignMain.getIntegerConfig("SOLMediumBattleArmor");
+        int numHBA = CampaignMain.campaignMain.getIntegerConfig("SOLHeavyBattleArmor");
+        int numABA = CampaignMain.campaignMain.getIntegerConfig("SOLAssaultBattleArmor");
 
         //Aero
-        int numLAero = CampaignMain.cm.getIntegerConfig("SOLLightAero");
-        int numMAero = CampaignMain.cm.getIntegerConfig("SOLMediumAero");
-        int numHAero = CampaignMain.cm.getIntegerConfig("SOLHeavyAero");
-        int numAAero = CampaignMain.cm.getIntegerConfig("SOLAssaultAero");
+        int numLAero = CampaignMain.campaignMain.getIntegerConfig("SOLLightAero");
+        int numMAero = CampaignMain.campaignMain.getIntegerConfig("SOLMediumAero");
+        int numHAero = CampaignMain.campaignMain.getIntegerConfig("SOLHeavyAero");
+        int numAAero = CampaignMain.campaignMain.getIntegerConfig("SOLAssaultAero");
 
         //for loops.
         for (int i = 0; i < numLMeks; i++) {

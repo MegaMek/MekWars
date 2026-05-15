@@ -18,6 +18,7 @@ package mekwars.server.campaign.market;
 
 import common.Unit;
 import common.util.MWLogger;
+import mekwars.server.campaign.CampaignMain;
 
 /**
  * MarketListing keeps track of all infomation related to a sale and necessary for resolution. Bids and duration are
@@ -81,7 +82,7 @@ public final class MarketListing {
         //data everyone gets - names, times, etc.
         toReturn.append(id + "*");
         toReturn.append(this.getListedUnitID() + "*");
-        if (server.campaign.CampaignMain.cm.getBooleanConfig("HiddenBMUnits")) {
+        if (CampaignMain.campaignMain.getBooleanConfig("HiddenBMUnits")) {
             toReturn.append(this.getListedHiddenModelName() + "*");
         } else {
             if (this.getListedModelName().length() > 0) {
@@ -90,7 +91,7 @@ public final class MarketListing {
                 toReturn.append(" *");//no blank model names!
             }
         }
-        if (server.campaign.CampaignMain.cm.getBooleanConfig("HiddenBMUnits")) {
+        if (CampaignMain.campaignMain.getBooleanConfig("HiddenBMUnits")) {
             toReturn.append(" *");
         } else {
             toReturn.append(this.getListedFileName() + "*");

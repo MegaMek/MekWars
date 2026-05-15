@@ -15,6 +15,7 @@ import megamek.common.util.BoardUtilities;
 import megamek.common.weapons.Weapon;
 import megamek.server.GameManager;
 import megamek.server.Server;
+import mekwars.server.campaign.CampaignMain;
 import server.campaign.SArmy;
 import server.campaign.SUnit;
 import server.campaign.autoresolve.VirtualUnit.MovementMode;
@@ -81,21 +82,21 @@ public class BattleResolver {
         }
 
         if (endingBVAttacker > endingBVDefender) {
-            server.campaign.SPlayer winner = server.campaign.CampaignMain.cm.getPlayer(so.getAttackers().firstKey());
+            server.campaign.SPlayer winner = CampaignMain.campaignMain.getPlayer(so.getAttackers().firstKey());
             so.getWinners().put(winner.getName().toLowerCase(), winner);
             bf.addWinner(winner.getName());
-            server.campaign.SPlayer loser = server.campaign.CampaignMain.cm.getPlayer(so.getDefenders().firstKey());
+            server.campaign.SPlayer loser = CampaignMain.campaignMain.getPlayer(so.getDefenders().firstKey());
             so.getLosers().put(loser.getName().toLowerCase(), loser);
         } else {
-            server.campaign.SPlayer winner = server.campaign.CampaignMain.cm.getPlayer(so.getDefenders().firstKey());
+            server.campaign.SPlayer winner = CampaignMain.campaignMain.getPlayer(so.getDefenders().firstKey());
             so.getWinners().put(winner.getName().toLowerCase(), winner);
             bf.addWinner(winner.getName());
-            server.campaign.SPlayer loser = server.campaign.CampaignMain.cm.getPlayer(so.getAttackers().firstKey());
+            server.campaign.SPlayer loser = CampaignMain.campaignMain.getPlayer(so.getAttackers().firstKey());
             so.getLosers().put(loser.getName().toLowerCase(), loser);
         }
 
         //Report to Players and Campaign
-        Operation o = server.campaign.CampaignMain.cm.getOpsManager().getOperation(so.getName());
+        Operation o = CampaignMain.campaignMain.getOpsManager().getOperation(so.getName());
 
         // set to reporting status
         //        so.changeStatus(ShortOperation.STATUS_REPORTING);
@@ -105,7 +106,7 @@ public class BattleResolver {
         String report = buildReportString(bf);
 
 
-        server.campaign.CampaignMain.cm.getOpsManager().resolveShortAttack(o, so, report);
+        CampaignMain.campaignMain.getOpsManager().resolveShortAttack(o, so, report);
 
 
         for (VirtualUnit unit : bf.getAllUnits()) {
@@ -114,14 +115,14 @@ public class BattleResolver {
 
         //TODO: Better reporting
         for (String player : so.getAllPlayerNames()) {
-            server.campaign.CampaignMain.cm.toUser(bf.getBattleReport().getReport().toString(), player, true);
+            CampaignMain.campaignMain.toUser(bf.getBattleReport().getReport().toString(), player, true);
         }
     }
 
     private java.util.List<mekwars.server.campaign.autoresolve.VirtualUnit> prepareAttackers(ShortOperation so) {
         java.util.ArrayList<mekwars.server.campaign.autoresolve.VirtualUnit> result = new java.util.ArrayList<mekwars.server.campaign.autoresolve.VirtualUnit>();
         for (String attacker : so.getAttackers().keySet()) {
-            server.campaign.SPlayer player = server.campaign.CampaignMain.cm.getPlayer(attacker);
+            server.campaign.SPlayer player = CampaignMain.campaignMain.getPlayer(attacker);
             if (player != null) {
                 SArmy army = player.getArmy(so.getAttackers().get(attacker));
                 for (Unit unit : army.getUnits()) {
@@ -143,7 +144,7 @@ public class BattleResolver {
     private java.util.List<mekwars.server.campaign.autoresolve.VirtualUnit> prepareDefenders(ShortOperation so) {
         java.util.ArrayList<mekwars.server.campaign.autoresolve.VirtualUnit> result = new java.util.ArrayList<mekwars.server.campaign.autoresolve.VirtualUnit>();
         for (String defender : so.getDefenders().keySet()) {
-            server.campaign.SPlayer player = server.campaign.CampaignMain.cm.getPlayer(defender);
+            server.campaign.SPlayer player = CampaignMain.campaignMain.getPlayer(defender);
             if (player != null) {
                 SArmy army = player.getArmy(so.getDefenders().get(defender));
                 for (Unit unit : army.getUnits()) {
@@ -221,9 +222,9 @@ public class BattleResolver {
 
                 //Shall he fire?
                 if (toHit <= 12) {
-                    int roll = server.campaign.CampaignMain.cm.getR().nextInt(5) +
+                    int roll = CampaignMain.campaignMain.getR().nextInt(5) +
                                      1 +
-                                     server.campaign.CampaignMain.cm.getR().nextInt(5) +
+                                     CampaignMain.campaignMain.getR().nextInt(5) +
                                      1;
                     if (roll >= toHit) {
                         damageEntity(target, weapon.getDamage(), target.getPlayer().getName(), bf);
@@ -253,9 +254,9 @@ public class BattleResolver {
     private VirtualUnit findRandomEnemy(VirtualUnit unit, Battlefield bf) {
         VirtualUnit target;
         if (unit.isAttacker()) {
-            target = bf.getDefenders().get(server.campaign.CampaignMain.cm.getR().nextInt(bf.getDefenders().size()));
+            target = bf.getDefenders().get(CampaignMain.campaignMain.getR().nextInt(bf.getDefenders().size()));
         } else {
-            target = bf.getAttackers().get(server.campaign.CampaignMain.cm.getR().nextInt(bf.getAttackers().size()));
+            target = bf.getAttackers().get(CampaignMain.campaignMain.getR().nextInt(bf.getAttackers().size()));
         }
         return target;
     }

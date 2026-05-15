@@ -17,6 +17,8 @@
 package mekwars.server.campaign.commands;
 
 
+import mekwars.server.campaign.CampaignMain;
+
 public class MercStatusCommand implements Command {
 
     int accessLevel = 0;
@@ -25,13 +27,13 @@ public class MercStatusCommand implements Command {
     public void process(java.util.StringTokenizer command, String Username) {
 
         if (accessLevel != 0) {
-            int userLevel = server.campaign.CampaignMain.cm.getServer().getUserLevel(Username);
+            int userLevel = CampaignMain.campaignMain.getServer().getUserLevel(Username);
             if (userLevel < getExecutionLevel()) {
-                server.campaign.CampaignMain.cm.toUser("AM:Insufficient access level for command. Level: " +
-                                                             userLevel +
-                                                             ". Required: " +
-                                                             accessLevel +
-                                                             ".", Username, true);
+                CampaignMain.campaignMain.toUser("AM:Insufficient access level for command. Level: " +
+                                                       userLevel +
+                                                       ". Required: " +
+                                                       accessLevel +
+                                                       ".", Username, true);
                 return;
             }
         }
@@ -40,17 +42,17 @@ public class MercStatusCommand implements Command {
         try {
             targetPlayer = command.nextToken();
         } catch (Exception e) {
-            server.campaign.CampaignMain.cm.toUser("AM:Improper format. Try: /c mercstatus#name", Username, true);
+            CampaignMain.campaignMain.toUser("AM:Improper format. Try: /c mercstatus#name", Username, true);
             return;
         }
 
-        server.campaign.SPlayer merc = server.campaign.CampaignMain.cm.getPlayer(targetPlayer);
+        server.campaign.SPlayer merc = CampaignMain.campaignMain.getPlayer(targetPlayer);
         if (merc == null) {
-            server.campaign.CampaignMain.cm.toUser("AM:No player named " + targetPlayer + "!", Username, true);
+            CampaignMain.campaignMain.toUser("AM:No player named " + targetPlayer + "!", Username, true);
         } else if ((merc.getMyHouse()).isMercHouse()) {
             String s = merc.getReadableMercStatus();
-            server.campaign.CampaignMain.cm.toUser(s, Username, true);
-        } else {server.campaign.CampaignMain.cm.toUser("AM:Target player is not a mercenary", Username, true);}
+            CampaignMain.campaignMain.toUser(s, Username, true);
+        } else {CampaignMain.campaignMain.toUser("AM:Target player is not a mercenary", Username, true);}
 
     }
 

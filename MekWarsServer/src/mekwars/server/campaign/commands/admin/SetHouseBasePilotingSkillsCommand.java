@@ -17,6 +17,7 @@
 package mekwars.server.campaign.commands.admin;
 
 import common.Unit;
+import mekwars.server.campaign.CampaignMain;
 
 //Syntax sethousebasepilotingskills house#pilotType#Skill$Skill
 public class SetHouseBasePilotingSkillsCommand implements server.campaign.commands.Command {
@@ -29,13 +30,13 @@ public class SetHouseBasePilotingSkillsCommand implements server.campaign.comman
     public void process(java.util.StringTokenizer command, String Username) {
 
         //access level check
-        int userLevel = server.campaign.CampaignMain.cm.getServer().getUserLevel(Username);
+        int userLevel = CampaignMain.campaignMain.getServer().getUserLevel(Username);
         if (userLevel < getExecutionLevel()) {
-            server.campaign.CampaignMain.cm.toUser("AM:Insufficient access level for command. Level: " +
-                                                         userLevel +
-                                                         ". Required: " +
-                                                         accessLevel +
-                                                         ".", Username, true);
+            CampaignMain.campaignMain.toUser("AM:Insufficient access level for command. Level: " +
+                                                   userLevel +
+                                                   ". Required: " +
+                                                   accessLevel +
+                                                   ".", Username, true);
             return;
         }
 
@@ -44,18 +45,18 @@ public class SetHouseBasePilotingSkillsCommand implements server.campaign.comman
         String skills = "";
 
         try {
-            house = server.campaign.CampaignMain.cm.getHouseFromPartialString(command.nextToken(), Username);
+            house = CampaignMain.campaignMain.getHouseFromPartialString(command.nextToken(), Username);
             pilotType = Unit.getTypeIDForName(command.nextToken());
             skills = command.nextToken() + "$";
         } catch (Exception ex) {
-            server.campaign.CampaignMain.cm.toUser(syntax, Username);
+            CampaignMain.campaignMain.toUser(syntax, Username);
             return;
         }
 
         if (house == null) {return;}
 
         if (pilotType >= Unit.MAXBUILD || pilotType < 0) {
-            server.campaign.CampaignMain.cm.toUser(syntax, Username);
+            CampaignMain.campaignMain.toUser(syntax, Username);
             return;
         }
 
@@ -63,13 +64,13 @@ public class SetHouseBasePilotingSkillsCommand implements server.campaign.comman
 
         house.updated();
         //log, and inform mods.
-        server.campaign.CampaignMain.cm.toUser("You added a piloting skill for unit " +
-                                                     Unit.getTypeClassDesc(pilotType) +
-                                                     " for house " +
-                                                     house.getName() +
-                                                     " to " +
-                                                     skills, Username);
-        server.campaign.CampaignMain.cm.doSendModMail("NOTE",
+        CampaignMain.campaignMain.toUser("You added a piloting skill for unit " +
+                                               Unit.getTypeClassDesc(pilotType) +
+                                               " for house " +
+                                               house.getName() +
+                                               " to " +
+                                               skills, Username);
+        CampaignMain.campaignMain.doSendModMail("NOTE",
               Username +
                     " has added a piloting skill for unit " +
                     Unit.getTypeClassDesc(pilotType) +

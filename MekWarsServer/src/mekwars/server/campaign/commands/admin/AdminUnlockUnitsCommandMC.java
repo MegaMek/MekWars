@@ -16,6 +16,8 @@
 
 package mekwars.server.campaign.commands.admin;
 
+import mekwars.server.campaign.CampaignMain;
+
 //@salient - unlocks all units - used with mini campaign
 public class AdminUnlockUnitsCommandMC implements server.campaign.commands.Command {
 
@@ -26,36 +28,36 @@ public class AdminUnlockUnitsCommandMC implements server.campaign.commands.Comma
 
     public void process(java.util.StringTokenizer command, String Username) {
         //access level check
-        int userLevel = server.campaign.CampaignMain.cm.getServer().getUserLevel(Username);
+        int userLevel = CampaignMain.campaignMain.getServer().getUserLevel(Username);
         if (userLevel < getExecutionLevel()) {
-            server.campaign.CampaignMain.cm.toUser("AM:Insufficient access level for command. Level: " +
-                                                         userLevel +
-                                                         ". Required: " +
-                                                         accessLevel +
-                                                         ".", Username, true);
+            CampaignMain.campaignMain.toUser("AM:Insufficient access level for command. Level: " +
+                                                   userLevel +
+                                                   ". Required: " +
+                                                   accessLevel +
+                                                   ".", Username, true);
             return;
         }
 
         server.campaign.SPlayer p = null;
 
         try {
-            p = server.campaign.CampaignMain.cm.getPlayer(command.nextToken());
+            p = CampaignMain.campaignMain.getPlayer(command.nextToken());
         } catch (Exception e) {
-            server.campaign.CampaignMain.cm.toUser("Improper command. Try: /c adminunlockunitsmc#name", Username, true);
+            CampaignMain.campaignMain.toUser("Improper command. Try: /c adminunlockunitsmc#name", Username, true);
             return;
         }
 
         if (p == null) {
-            server.campaign.CampaignMain.cm.toUser("Couldn't find a player with that name.", Username, true);
+            CampaignMain.campaignMain.toUser("Couldn't find a player with that name.", Username, true);
             return;
         }
 
 
         p.unlockAllUnitsMC();
 
-        server.campaign.CampaignMain.cm.toUser("You unlocked" + p.getName() + "'s units.", Username, true);
-        server.campaign.CampaignMain.cm.toUser(Username + " unlocked your units.", p.getName(), true);
-        server.campaign.CampaignMain.cm.doSendModMail("NOTE", Username + " unlocked " + p.getName() + "'s units.");
+        CampaignMain.campaignMain.toUser("You unlocked" + p.getName() + "'s units.", Username, true);
+        CampaignMain.campaignMain.toUser(Username + " unlocked your units.", p.getName(), true);
+        CampaignMain.campaignMain.doSendModMail("NOTE", Username + " unlocked " + p.getName() + "'s units.");
     }
 
     public int getExecutionLevel() {return accessLevel;}

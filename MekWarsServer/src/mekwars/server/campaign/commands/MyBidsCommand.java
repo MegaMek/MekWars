@@ -16,6 +16,8 @@
 
 package mekwars.server.campaign.commands;
 
+import mekwars.server.campaign.CampaignMain;
+
 public class MyBidsCommand implements Command {
 
     int accessLevel = 0;
@@ -24,19 +26,19 @@ public class MyBidsCommand implements Command {
     public void process(java.util.StringTokenizer command, String Username) {
 
         if (accessLevel != 0) {
-            int userLevel = server.campaign.CampaignMain.cm.getServer().getUserLevel(Username);
+            int userLevel = CampaignMain.campaignMain.getServer().getUserLevel(Username);
             if (userLevel < getExecutionLevel()) {
-                server.campaign.CampaignMain.cm.toUser("AM:Insufficient access level for command. Level: " +
-                                                             userLevel +
-                                                             ". Required: " +
-                                                             accessLevel +
-                                                             ".", Username, true);
+                CampaignMain.campaignMain.toUser("AM:Insufficient access level for command. Level: " +
+                                                       userLevel +
+                                                       ". Required: " +
+                                                       accessLevel +
+                                                       ".", Username, true);
                 return;
             }
         }
-        server.campaign.CampaignMain.cm.toUser("SM|" +
-                                                     server.campaign.CampaignMain.cm.getMarket()
-                                                           .getPlayerBidsString(Username), Username, false);
+        CampaignMain.campaignMain.toUser("SM|" +
+                                               CampaignMain.campaignMain.getMarket()
+                                                     .getPlayerBidsString(Username), Username, false);
     }
 
     public int getExecutionLevel() {return accessLevel;}

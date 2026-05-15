@@ -17,6 +17,8 @@
 package mekwars.server.campaign.commands.mod;
 
 
+import mekwars.server.campaign.CampaignMain;
+
 public class TerminateContractCommand implements server.campaign.commands.Command {
 
     int accessLevel = server.MWChatServer.auth.IAuthenticator.MODERATOR;
@@ -27,22 +29,22 @@ public class TerminateContractCommand implements server.campaign.commands.Comman
     public void process(java.util.StringTokenizer command, String Username) {
 
         //access level check
-        int userLevel = server.campaign.CampaignMain.cm.getServer().getUserLevel(Username);
+        int userLevel = CampaignMain.campaignMain.getServer().getUserLevel(Username);
         if (userLevel < getExecutionLevel()) {
-            server.campaign.CampaignMain.cm.toUser("AM:Insufficient access level for command. Level: " +
-                                                         userLevel +
-                                                         ". Required: " +
-                                                         accessLevel +
-                                                         ".", Username, true);
+            CampaignMain.campaignMain.toUser("AM:Insufficient access level for command. Level: " +
+                                                   userLevel +
+                                                   ". Required: " +
+                                                   accessLevel +
+                                                   ".", Username, true);
             return;
         }
 
         //forcibly cancel a mercenary contract, returning escrow funds to hiring faction.
-        server.campaign.SPlayer p = server.campaign.CampaignMain.cm.getPlayer(command.nextToken());
+        server.campaign.SPlayer p = CampaignMain.campaignMain.getPlayer(command.nextToken());
         server.campaign.SHouse faction = p.getMyHouse();
 
         if (!faction.isMercHouse()) {
-            server.campaign.CampaignMain.cm.toUser("Only mercenary players have contracts. Nice try, though.",
+            CampaignMain.campaignMain.toUser("Only mercenary players have contracts. Nice try, though.",
                   Username,
                   true);
             return;
@@ -53,7 +55,7 @@ public class TerminateContractCommand implements server.campaign.commands.Comman
         server.campaign.mercenaries.ContractInfo contract = mercFaction.getContractInfo(p);
 
         if (contract == null) {
-            server.campaign.CampaignMain.cm.toUser(p.getName() + " has no contract to cancel", Username, true);
+            CampaignMain.campaignMain.toUser(p.getName() + " has no contract to cancel", Username, true);
             return;
         }
 
@@ -65,29 +67,29 @@ public class TerminateContractCommand implements server.campaign.commands.Comman
         server.campaign.SPlayer contractingPlayer = contract.getOfferingPlayer();
         if (contractingPlayer != null) {
             contractingPlayer.addMoney(refund);
-            server.campaign.CampaignMain.cm.toUser(Username +
-                                                         " abrogated your contract with"
-                                                         +
-                                                         contract.getEmployingHouse().getName() +
-                                                         ". Funds returned from escrow ("
-                                                         +
-                                                         server.campaign.CampaignMain.cm.moneyOrFluMessage(true,
-                                                               true,
-                                                               refund,
-                                                               true) +
-                                                         ").", p.getName(), true);
+            CampaignMain.campaignMain.toUser(Username +
+                                                   " abrogated your contract with"
+                                                   +
+                                                   contract.getEmployingHouse().getName() +
+                                                   ". Funds returned from escrow ("
+                                                   +
+                                                   CampaignMain.campaignMain.moneyOrFluMessage(true,
+                                                         true,
+                                                         refund,
+                                                         true) +
+                                                   ").", p.getName(), true);
         } else {contract.getEmployingHouse().setMoney(employer.getMoney() + refund);}
 
         mercFaction.endContract(p);
-        server.campaign.CampaignMain.cm.toUser(Username +
-                                                     " abrogated your contract with" +
-                                                     contract.getEmployingHouse().getName() +
-                                                     ".", p.getName(), true);
-        server.campaign.CampaignMain.cm.toUser("You revoked " +
-                                                     p.getName() +
-                                                     "'s contract with" +
-                                                     contract.getEmployingHouse().getName() +
-                                                     ".", Username, true);
+        CampaignMain.campaignMain.toUser(Username +
+                                               " abrogated your contract with" +
+                                               contract.getEmployingHouse().getName() +
+                                               ".", p.getName(), true);
+        CampaignMain.campaignMain.toUser("You revoked " +
+                                               p.getName() +
+                                               "'s contract with" +
+                                               contract.getEmployingHouse().getName() +
+                                               ".", Username, true);
 
     }//end process()
 

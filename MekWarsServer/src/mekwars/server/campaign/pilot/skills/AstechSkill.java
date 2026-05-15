@@ -23,6 +23,7 @@ import common.Unit;
 import common.campaign.pilot.Pilot;
 import common.campaign.pilot.skills.PilotSkill;
 import megamek.common.Entity;
+import mekwars.server.campaign.CampaignMain;
 
 //import common.Unit;
 
@@ -44,7 +45,7 @@ public class AstechSkill extends SPilotSkill {
 
     @Override
     public void modifyPilot(Pilot p) {
-        if (!server.campaign.CampaignMain.cm.isUsingAdvanceRepair()) {p.setBayModifier(p.getBayModifier() - 1);}
+        if (!CampaignMain.campaignMain.isUsingAdvanceRepair()) {p.setBayModifier(p.getBayModifier() - 1);}
     }
 
     @Override
@@ -59,9 +60,9 @@ public class AstechSkill extends SPilotSkill {
 
         String chance = "chancefor" + this.getAbbreviation() + "for" + Unit.getTypeClassDesc(unitType);
 
-        server.campaign.SHouse house = server.campaign.CampaignMain.cm.getHouseFromPartialString(p.getCurrentFaction());
+        server.campaign.SHouse house = CampaignMain.campaignMain.getHouseFromPartialString(p.getCurrentFaction());
 
-        if (house == null) {return server.campaign.CampaignMain.cm.getIntegerConfig(chance);}
+        if (house == null) {return CampaignMain.campaignMain.getIntegerConfig(chance);}
 
         return house.getIntegerConfig(chance);
     }
@@ -77,7 +78,7 @@ public class AstechSkill extends SPilotSkill {
     @Override
     public void setLevel(int level) {
 
-        if (server.campaign.CampaignMain.cm.isUsingAdvanceRepair()) {
+        if (CampaignMain.campaignMain.isUsingAdvanceRepair()) {
             if (level == -1) {super.setLevel(0);}
             //if ( level > super.getLevel() )
             else {super.setLevel(level);}

@@ -25,6 +25,7 @@ import common.util.StringUtils;
 import common.util.UnitUtils;
 import megamek.common.Entity;
 import megamek.common.Mech;
+import mekwars.server.campaign.CampaignMain;
 import server.campaign.pilot.SPilot;
 
 /*
@@ -44,13 +45,13 @@ public class RepodCommand implements Command {
     public void process(java.util.StringTokenizer command, String Username) {
 
         if (accessLevel != 0) {
-            int userLevel = server.campaign.CampaignMain.cm.getServer().getUserLevel(Username);
+            int userLevel = CampaignMain.campaignMain.getServer().getUserLevel(Username);
             if (userLevel < getExecutionLevel()) {
-                server.campaign.CampaignMain.cm.toUser("AM:Insufficient access level for command. Level: " +
-                                                             userLevel +
-                                                             ". Required: " +
-                                                             accessLevel +
-                                                             ".", Username, true);
+                CampaignMain.campaignMain.toUser("AM:Insufficient access level for command. Level: " +
+                                                       userLevel +
+                                                       ". Required: " +
+                                                       accessLevel +
+                                                       ".", Username, true);
                 return;
             }
         }
@@ -59,7 +60,7 @@ public class RepodCommand implements Command {
         if (command.hasMoreElements()) {
 
             // vars to use during processing
-            server.campaign.SPlayer p = server.campaign.CampaignMain.cm.getPlayer(Username);
+            server.campaign.SPlayer p = CampaignMain.campaignMain.getPlayer(Username);
             int unitid = Integer.parseInt(command.nextToken());
             server.campaign.SUnit m = p.getUnit(unitid);
             server.campaign.SHouse h = p.getHouseFightingFor();
@@ -67,21 +68,21 @@ public class RepodCommand implements Command {
 
             // blow out if player has a null unit
             if (m == null) {
-                server.campaign.CampaignMain.cm.toUser("AM:You do not have a unit with ID# " + unitid + ".",
+                CampaignMain.campaignMain.toUser("AM:You do not have a unit with ID# " + unitid + ".",
                       Username,
                       true);
                 return;
             }
 
             if (p.mayAcquireWelfareUnits()) {
-                server.campaign.CampaignMain.cm.toUser("AM:You may not repod your units while you are on welfare!",
+                CampaignMain.campaignMain.toUser("AM:You may not repod your units while you are on welfare!",
                       Username,
                       true);
                 return;
             }
 
             if (UnitUtils.hasArmorDamage(m.getEntity()) || UnitUtils.hasCriticalDamage(m.getEntity())) {
-                server.campaign.CampaignMain.cm.toUser(
+                CampaignMain.campaignMain.toUser(
                       "AM:This unit is currently damaged and cannot be repodded until you repair it.",
                       Username,
                       true);
@@ -105,7 +106,7 @@ public class RepodCommand implements Command {
 
             // return if the unit which is targetted is not an omni
             if (!m.isOmni()) {
-                server.campaign.CampaignMain.cm.toUser("AM:Your " + m.getVerboseModelName() + " is not an Omni.",
+                CampaignMain.campaignMain.toUser("AM:Your " + m.getVerboseModelName() + " is not an Omni.",
                       Username,
                       true);
                 return;
@@ -116,7 +117,7 @@ public class RepodCommand implements Command {
             // .checkOperations() circumstances (add, then remove, need to know
             // which armies are impacted, etc).
             if (p.getAmountOfTimesUnitExistsInArmies(m.getId()) > 0) {
-                server.campaign.CampaignMain.cm.toUser("AM:You may not repod a unit while it is in an army.",
+                CampaignMain.campaignMain.toUser("AM:You may not repod a unit while it is in an army.",
                       Username,
                       true);
                 return;
@@ -134,7 +135,7 @@ public class RepodCommand implements Command {
             // now, to find the build tables, let's make a vector of them...
             java.util.Vector<String> tables = new java.util.Vector<String>(1, 1);
             if (global) {
-                java.util.Iterator<House> Houses = server.campaign.CampaignMain.cm.getData().getAllHouses().iterator();
+                java.util.Iterator<House> Houses = CampaignMain.campaignMain.getData().getAllHouses().iterator();
                 String fileName = "";
                 String timeZone = h.getConfig("RewardsRepodFolder");
                 while (Houses.hasNext()) {
@@ -212,7 +213,7 @@ public class RepodCommand implements Command {
                 // do nothing
             } else if (target.equals("RANDOM")) {
                 if (!Boolean.parseBoolean(h.getConfig("RandomRepodAllowed"))) {
-                    server.campaign.CampaignMain.cm.toUser("Random repodding is not allowed.", Username, true);
+                    CampaignMain.campaignMain.toUser("Random repodding is not allowed.", Username, true);
                     return;
                 }
             } else if (Boolean.parseBoolean(h.getConfig("RandomRepodOnly"))) {// there
@@ -220,7 +221,7 @@ public class RepodCommand implements Command {
                 // a
                 // real
                 // target
-                server.campaign.CampaignMain.cm.toUser("Only random repods are allowed.", Username, true);
+                CampaignMain.campaignMain.toUser("Only random repods are allowed.", Username, true);
                 return;
             }
 
@@ -232,7 +233,7 @@ public class RepodCommand implements Command {
 
             // MWLogger.errLog("table size is "+i);
             if (i < 1) {
-                server.campaign.CampaignMain.cm.toUser("AM:Repod Failed: No acceptable factory currently available",
+                CampaignMain.campaignMain.toUser("AM:Repod Failed: No acceptable factory currently available",
                       Username,
                       true);
                 return;
@@ -300,9 +301,9 @@ public class RepodCommand implements Command {
                                             int repodFluMod = Integer.parseInt(h.getConfig(repodInfluCfg));
                                             int repodCompMod = Integer.parseInt(h.getConfig(repodCompCfg));
 
-                                            if (server.campaign.CampaignMain.cm.getOmniVariantMods().get(Filename) !=
+                                            if (CampaignMain.campaignMain.getOmniVariantMods().get(Filename) !=
                                                       null) {
-                                                String mods = server.campaign.CampaignMain.cm.getOmniVariantMods()
+                                                String mods = CampaignMain.campaignMain.getOmniVariantMods()
                                                                     .get(Filename);
                                                 java.util.StringTokenizer modlist = new java.util.StringTokenizer(mods,
                                                       "$");
@@ -353,9 +354,9 @@ public class RepodCommand implements Command {
 
                 int size = variants.size();
                 if (size <= 0) {
-                    server.campaign.CampaignMain.cm.toUser("AM:No random targets available for " +
-                                                                 m.getModelName() +
-                                                                 ".", Username, true);
+                    CampaignMain.campaignMain.toUser("AM:No random targets available for " +
+                                                           m.getModelName() +
+                                                           ".", Username, true);
                     return;
                 }
                 if (size == 1) {
@@ -364,7 +365,7 @@ public class RepodCommand implements Command {
                     return;
                 }
 
-                int number = server.campaign.CampaignMain.cm.getRandomNumber(size);
+                int number = CampaignMain.campaignMain.getRandomNumber(size);
                 String Filename = variants.elementAt(number);
                 createOmni(m, Filename, m.getId(), p, possible, true);
                 return;
@@ -374,7 +375,7 @@ public class RepodCommand implements Command {
             if (global) {
                 result += "#GLOBAL";
             }
-            server.campaign.CampaignMain.cm.toUser("RUD|" + unitid + "|" + result, Username, false);
+            CampaignMain.campaignMain.toUser("RUD|" + unitid + "|" + result, Username, false);
         }
 
         // CampaignMain.cm.toUser("Usage: <CODE>/c repod#{unitid}#{New Variant}</CODE>",
@@ -421,20 +422,20 @@ public class RepodCommand implements Command {
         // make sure a vaild unit is select for the repod first.
         server.campaign.SUnit cm = new server.campaign.SUnit(unitid, m.getProducer(), Filename);
         if (cm.getModelName().equals("OMG-UR-FD")) {
-            server.campaign.CampaignMain.cm.toUser("AM:Invalid repod format try again!", Username, true);
+            CampaignMain.campaignMain.toUser("AM:Invalid repod format try again!", Username, true);
             return;
         }
 
         if (!global) {
 
             String needPartsList = p.getUnitParts().canRepodUnit(m.getEntity(), cm.getEntity()).trim();
-            if (server.campaign.CampaignMain.cm.getBooleanConfig("UsePartsRepair") && (needPartsList.length() > 0)) {
-                server.campaign.CampaignMain.cm.toUser("You do not have enough parts to repod your " +
-                                                             m.getModelName() +
-                                                             " to " +
-                                                             cm.getModelName() +
-                                                             "<br> you need the following parts:<br>" +
-                                                             needPartsList, Username);
+            if (CampaignMain.campaignMain.getBooleanConfig("UsePartsRepair") && (needPartsList.length() > 0)) {
+                CampaignMain.campaignMain.toUser("You do not have enough parts to repod your " +
+                                                       m.getModelName() +
+                                                       " to " +
+                                                       cm.getModelName() +
+                                                       "<br> you need the following parts:<br>" +
+                                                       needPartsList, Username);
                 return;
             }
 
@@ -444,8 +445,8 @@ public class RepodCommand implements Command {
             String repodRefreshCfg = "RepodRefreshTime" + Unit.getWeightClassDesc(m.getWeightclass());
             int repodMoneyMod = 0, repodCompMod = 0, repodFluMod = 0;
 
-            if (server.campaign.CampaignMain.cm.getOmniVariantMods().get(cm.getModelName()) != null) {
-                String mods = server.campaign.CampaignMain.cm.getOmniVariantMods().get(cm.getModelName());
+            if (CampaignMain.campaignMain.getOmniVariantMods().get(cm.getModelName()) != null) {
+                String mods = CampaignMain.campaignMain.getOmniVariantMods().get(cm.getModelName());
                 java.util.StringTokenizer modList = new java.util.StringTokenizer(mods, "$");
                 repodMoneyMod = Integer.parseInt(modList.nextToken());
                 repodCompMod = Integer.parseInt(modList.nextToken());
@@ -462,9 +463,9 @@ public class RepodCommand implements Command {
                 }
 
                 if (p.getMoney() < moneyCost) {
-                    server.campaign.CampaignMain.cm.toUser(
+                    CampaignMain.campaignMain.toUser(
                           "AM:You do not have enough money to repod this unit! It will cost " +
-                                server.campaign.CampaignMain.cm.moneyOrFluMessage(true, false, moneyCost) +
+                                CampaignMain.campaignMain.moneyOrFluMessage(true, false, moneyCost) +
                                 " to repod this unit",
                           Username,
                           true);
@@ -478,9 +479,9 @@ public class RepodCommand implements Command {
                 }
 
                 if (p.getInfluence() < influenceCost) {
-                    server.campaign.CampaignMain.cm.toUser(
+                    CampaignMain.campaignMain.toUser(
                           "AM:You do not have enough influence to repod this unit! It will cost " +
-                                server.campaign.CampaignMain.cm.moneyOrFluMessage(false, false, influenceCost) +
+                                CampaignMain.campaignMain.moneyOrFluMessage(false, false, influenceCost) +
                                 " to repod this unit!",
                           Username,
                           true);
@@ -494,7 +495,7 @@ public class RepodCommand implements Command {
                     }
 
                     if (h.getPP(m.getWeightclass(), m.getType()) < compCost) {
-                        server.campaign.CampaignMain.cm.toUser(
+                        CampaignMain.campaignMain.toUser(
                               "AM:Your faction doesn't have enough components to repod this unit. You need " +
                                     compCost +
                                     " components to repod.",
@@ -516,7 +517,7 @@ public class RepodCommand implements Command {
 
                 hsUpdates.append(h.addPP(m.getWeightclass(), m.getType(), -compCost, false));
                 if (hsUpdates.length() > 0) {
-                    server.campaign.CampaignMain.cm.doSendToAllOnlinePlayers(h, "HS|" + hsUpdates.toString(), false);
+                    CampaignMain.campaignMain.doSendToAllOnlinePlayers(h, "HS|" + hsUpdates.toString(), false);
                 }
 
                 p.addMoney(-moneyCost);
@@ -525,9 +526,9 @@ public class RepodCommand implements Command {
             }// - end Repod costing
         } else {
             if (p.getReward() < rpCost) {
-                server.campaign.CampaignMain.cm.toUser("AM:You do not have enough " +
-                                                             server.campaign.CampaignMain.cm.getConfig("RPLongName") +
-                                                             " to repod this unit!", Username, true);
+                CampaignMain.campaignMain.toUser("AM:You do not have enough " +
+                                                       CampaignMain.campaignMain.getConfig("RPLongName") +
+                                                       " to repod this unit!", Username, true);
                 return;
             }
             p.addReward(-rpCost);
@@ -539,9 +540,9 @@ public class RepodCommand implements Command {
         Entity entity = p.getUnit(unitid).getEntity();
 
         // Take the parts for it.
-        if (server.campaign.CampaignMain.cm.getBooleanConfig("UsePartsRepair")) {
+        if (CampaignMain.campaignMain.getBooleanConfig("UsePartsRepair")) {
             p.getUnitParts().repodUnit(entity, cm.getEntity());
-            server.campaign.CampaignMain.cm.toUser("PL|RPPC|" + p.getUnitParts().toString(), Username, false);
+            CampaignMain.campaignMain.toUser("PL|RPPC|" + p.getUnitParts().toString(), Username, false);
         }
 
         // remove the old unit *before* adding the new one, since they share a
@@ -559,41 +560,41 @@ public class RepodCommand implements Command {
 
         // and the unit and send informational messages to player.
         p.addUnit(cm, true);
-        server.campaign.CampaignMain.cm.toUser("AM:Your " +
-                                                     m.getVerboseModelName() +
-                                                     " is now " +
-                                                     StringUtils.aOrAn(cm.getVerboseModelName(), true) +
-                                                     ".", Username, true);
+        CampaignMain.campaignMain.toUser("AM:Your " +
+                                               m.getVerboseModelName() +
+                                               " is now " +
+                                               StringUtils.aOrAn(cm.getVerboseModelName(), true) +
+                                               ".", Username, true);
         if (!global) {
             if (Boolean.parseBoolean(h.getConfig("RepodUsesComp"))) {
-                server.campaign.CampaignMain.cm.toUser("AM:Repodding cost " +
-                                                             server.campaign.CampaignMain.cm.moneyOrFluMessage(true,
-                                                                   false,
-                                                                   moneyCost) +
-                                                             " and " +
-                                                             server.campaign.CampaignMain.cm.moneyOrFluMessage(false,
-                                                                   true,
-                                                                   influenceCost) +
-                                                             " " +
-                                                             compCost +
-                                                             " Components.", Username, true);
+                CampaignMain.campaignMain.toUser("AM:Repodding cost " +
+                                                       CampaignMain.campaignMain.moneyOrFluMessage(true,
+                                                             false,
+                                                             moneyCost) +
+                                                       " and " +
+                                                       CampaignMain.campaignMain.moneyOrFluMessage(false,
+                                                             true,
+                                                             influenceCost) +
+                                                       " " +
+                                                       compCost +
+                                                       " Components.", Username, true);
             } else {
-                server.campaign.CampaignMain.cm.toUser("AM:Repodding cost " +
-                                                             server.campaign.CampaignMain.cm.moneyOrFluMessage(true,
-                                                                   false,
-                                                                   moneyCost) +
-                                                             " and " +
-                                                             server.campaign.CampaignMain.cm.moneyOrFluMessage(false,
-                                                                   true,
-                                                                   influenceCost) +
-                                                             ".", Username, true);
+                CampaignMain.campaignMain.toUser("AM:Repodding cost " +
+                                                       CampaignMain.campaignMain.moneyOrFluMessage(true,
+                                                             false,
+                                                             moneyCost) +
+                                                       " and " +
+                                                       CampaignMain.campaignMain.moneyOrFluMessage(false,
+                                                             true,
+                                                             influenceCost) +
+                                                       ".", Username, true);
             }
         } else {
-            server.campaign.CampaignMain.cm.toUser("AM:Repodding cost " +
-                                                         rpCost +
-                                                         " " +
-                                                         server.campaign.CampaignMain.cm.getConfig("RPLongName") +
-                                                         ".", Username, true);
+            CampaignMain.campaignMain.toUser("AM:Repodding cost " +
+                                                   rpCost +
+                                                   " " +
+                                                   CampaignMain.campaignMain.getConfig("RPLongName") +
+                                                   ".", Username, true);
         }
 
         return;// break out of it all

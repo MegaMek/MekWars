@@ -19,6 +19,7 @@ package mekwars.server.campaign.commands.admin;
 import common.CampaignData;
 import common.House;
 import common.Unit;
+import mekwars.server.campaign.CampaignMain;
 
 // AdminGrantComponents#Faction#Type#WeightClass#Components
 public class AdminResetFactionComponentsCommand implements server.campaign.commands.Command {
@@ -38,13 +39,13 @@ public class AdminResetFactionComponentsCommand implements server.campaign.comma
     public void process(java.util.StringTokenizer command, String Username) {
 
         //access level check
-        int userLevel = server.campaign.CampaignMain.cm.getServer().getUserLevel(Username);
+        int userLevel = CampaignMain.campaignMain.getServer().getUserLevel(Username);
         if (userLevel < getExecutionLevel()) {
-            server.campaign.CampaignMain.cm.toUser("AM:Insufficient access level for command. Level: " +
-                                                         userLevel +
-                                                         ". Required: " +
-                                                         accessLevel +
-                                                         ".", Username, true);
+            CampaignMain.campaignMain.toUser("AM:Insufficient access level for command. Level: " +
+                                                   userLevel +
+                                                   ". Required: " +
+                                                   accessLevel +
+                                                   ".", Username, true);
             return;
         }
 
@@ -56,14 +57,14 @@ public class AdminResetFactionComponentsCommand implements server.campaign.comma
         String requestedAmount = "";
 
         if (!command.hasMoreTokens()) {
-            server.campaign.CampaignMain.cm.toUser("Improper command.  Try /adminResetFactionComponents " + syntax,
+            CampaignMain.campaignMain.toUser("Improper command.  Try /adminResetFactionComponents " + syntax,
                   Username);
             return;
         }
         fname = command.nextToken();
 
         if (!command.hasMoreTokens()) {
-            server.campaign.CampaignMain.cm.toUser("Improper command.  Try /adminResetFactionComponents " + syntax,
+            CampaignMain.campaignMain.toUser("Improper command.  Try /adminResetFactionComponents " + syntax,
                   Username);
             return;
         }
@@ -74,9 +75,9 @@ public class AdminResetFactionComponentsCommand implements server.campaign.comma
             try {
                 amountToFillTo = Integer.parseInt(requestedAmount);
             } catch (Exception e) {
-                server.campaign.CampaignMain.cm.toUser("Improper amount.  Could not parse " +
-                                                             requestedAmount +
-                                                             " into Integer.", Username);
+                CampaignMain.campaignMain.toUser("Improper amount.  Could not parse " +
+                                                       requestedAmount +
+                                                       " into Integer.", Username);
                 return;
             }
             if (amountToFillTo == 0) {
@@ -94,24 +95,24 @@ public class AdminResetFactionComponentsCommand implements server.campaign.comma
                     continue;
                 }
                 reset((server.campaign.SHouse) faction, action, amountToFillTo);
-                server.campaign.CampaignMain.cm.toUser("You reset components for " + faction.getName(), Username, true);
-                server.campaign.CampaignMain.cm.doSendModMail("NOTE",
+                CampaignMain.campaignMain.toUser("You reset components for " + faction.getName(), Username, true);
+                CampaignMain.campaignMain.doSendModMail("NOTE",
                       Username + " reset components for " + faction.getName());
             }
         } else {
             try {
-                h = (server.campaign.SHouse) server.campaign.CampaignMain.cm.getData().getHouseByName(fname);
+                h = (server.campaign.SHouse) CampaignMain.campaignMain.getData().getHouseByName(fname);
                 if (h == null) {
-                    server.campaign.CampaignMain.cm.toUser("Unable to find faction " + fname, Username);
+                    CampaignMain.campaignMain.toUser("Unable to find faction " + fname, Username);
                     return;
                 }
             } catch (Exception e) {
-                server.campaign.CampaignMain.cm.toUser("Unable to find faction " + fname, Username);
+                CampaignMain.campaignMain.toUser("Unable to find faction " + fname, Username);
                 return;
             }
             reset(h, action, amountToFillTo);
-            server.campaign.CampaignMain.cm.toUser("You reset components for " + h.getName(), Username, true);
-            server.campaign.CampaignMain.cm.doSendModMail("NOTE", Username + " reset components for " + h.getName());
+            CampaignMain.campaignMain.toUser("You reset components for " + h.getName(), Username, true);
+            CampaignMain.campaignMain.doSendModMail("NOTE", Username + " reset components for " + h.getName());
 
         }
     }

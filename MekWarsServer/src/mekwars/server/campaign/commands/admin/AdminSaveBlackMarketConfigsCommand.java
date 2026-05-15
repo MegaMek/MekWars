@@ -22,6 +22,7 @@ package mekwars.server.campaign.commands.admin;
 
 import common.Equipment;
 import common.util.MWLogger;
+import mekwars.server.campaign.CampaignMain;
 
 public class AdminSaveBlackMarketConfigsCommand implements server.campaign.commands.Command {
 
@@ -33,13 +34,13 @@ public class AdminSaveBlackMarketConfigsCommand implements server.campaign.comma
     public void process(java.util.StringTokenizer command, String Username) {
 
         //access level check
-        int userLevel = server.campaign.CampaignMain.cm.getServer().getUserLevel(Username);
+        int userLevel = CampaignMain.campaignMain.getServer().getUserLevel(Username);
         if (userLevel < getExecutionLevel()) {
-            server.campaign.CampaignMain.cm.toUser("AM:Insufficient access level for command. Level: " +
-                                                         userLevel +
-                                                         ". Required: " +
-                                                         accessLevel +
-                                                         ".", Username, true);
+            CampaignMain.campaignMain.toUser("AM:Insufficient access level for command. Level: " +
+                                                   userLevel +
+                                                   ". Required: " +
+                                                   accessLevel +
+                                                   ".", Username, true);
             return;
         }
 
@@ -49,8 +50,8 @@ public class AdminSaveBlackMarketConfigsCommand implements server.campaign.comma
                   "./data/blackmarketsettings.dat"));
             ps.println("#Timestamp=" + System.currentTimeMillis());
 
-            for (String key : server.campaign.CampaignMain.cm.getBlackMarketEquipmentTable().keySet()) {
-                Equipment bme = server.campaign.CampaignMain.cm.getBlackMarketEquipmentTable().get(key);
+            for (String key : CampaignMain.campaignMain.getBlackMarketEquipmentTable().keySet()) {
+                Equipment bme = CampaignMain.campaignMain.getBlackMarketEquipmentTable().get(key);
                 if (bme.getMaxProduction() <= 0) {continue;}
                 ps.print(bme.getEquipmentInternalName());
                 ps.print("#");//if the maxCost is less then mincost set min cost to the same as max
@@ -70,8 +71,8 @@ public class AdminSaveBlackMarketConfigsCommand implements server.campaign.comma
             MWLogger.errLog(ex);
         }
 
-        server.campaign.CampaignMain.cm.toUser("AM:Black Market Settings saved!", Username, true);
-        server.campaign.CampaignMain.cm.doSendModMail("NOTE", Username + " has saved the Black Market Settings");
+        CampaignMain.campaignMain.toUser("AM:Black Market Settings saved!", Username, true);
+        CampaignMain.campaignMain.doSendModMail("NOTE", Username + " has saved the Black Market Settings");
 
     }//end process
 
