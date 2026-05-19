@@ -149,11 +149,11 @@ public class SerializeEntity {
                     result.append(entity.getCrew().isDead()).append("*");
                     result.append(UnitUtils.getEntityFileName(entity));
                 }
-                case MekWarrior mw -> {
+                case MekWarrior mekWarrior -> {
                     result.append("MW*");
-                    result.append(mw.getOriginalRideExternalId()).append("*");
-                    result.append(mw.getPickedUpByExternalId()).append("*");
-                    result.append(mw.isDestroyed()).append("*");
+                    result.append(mekWarrior.getOriginalRideExternalId()).append("*");
+                    result.append(mekWarrior.getPickedUpByExternalId()).append("*");
+                    result.append(mekWarrior.isDestroyed()).append("*");
                 }
                 default -> {
                 }

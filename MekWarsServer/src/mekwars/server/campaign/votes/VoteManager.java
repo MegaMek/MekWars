@@ -1,5 +1,45 @@
+/*
+ * Copyright (C) 2026 The MegaMek Team. All Rights Reserved.
+ *
+ * This file is part of MekWars.
+ *
+ * MekWars is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License (GPL),
+ * version 3 or (at your option) any later version,
+ * as published by the Free Software Foundation.
+ *
+ * MekWars is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty
+ * of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU General Public License for more details.
+ *
+ * A copy of the GPL should have been included with this project;
+ * if not, see <https://www.gnu.org/licenses/>.
+ *
+ * NOTICE: The MegaMek organization is a non-profit group of volunteers
+ * creating free software for the BattleTech community.
+ *
+ * MechWarrior, BattleMech, `Mech and AeroTech are registered trademarks
+ * of The Topps Company, Inc. All Rights Reserved.
+ *
+ * Catalyst Game Labs and the Catalyst Game Labs logo are trademarks of
+ * InMediaRes Productions, LLC.
+ *
+ * MechWarrior Copyright Microsoft Corporation. MekWars was created under
+ * Microsoft's "Game Content Usage Rules"
+ * <https://www.xbox.com/en-US/developers/rules> and it is not endorsed by or
+ * affiliated with Microsoft.
+ */
+
 package mekwars.server.campaign.votes;
 
+import java.util.Enumeration;
+import java.util.Iterator;
+import java.util.Vector;
+
+import mekwars.server.campaign.CampaignMain;
+import mekwars.server.campaign.SHouse;
+import mekwars.server.campaign.SPlayer;
 
 /**
  *
@@ -16,14 +56,13 @@ package mekwars.server.campaign.votes;
  */
 public class VoteManager {
 
-    //ivars
-    java.util.Vector<mekwars.server.campaign.votes.Vote> voteVector;
-    server.campaign.CampaignMain cm;
+    Vector<Vote> voteVector;
+    CampaignMain campaignMain;
 
     //constructor
-    public VoteManager(server.campaign.CampaignMain campmain) {
-        voteVector = new java.util.Vector<mekwars.server.campaign.votes.Vote>(1, 1);
-        cm = campmain;
+    public VoteManager(CampaignMain campaign) {
+        voteVector = new Vector<>(1, 1);
+        campaignMain = campaign;
     }
 
     /**
@@ -40,7 +79,7 @@ public class VoteManager {
         boolean isDuplicate = this.checkForDuplicate(v);
         boolean playersInSameHouse = this.checkForHouseMatch(v);
 
-        //This check shouldnt ever fail, since its run in the VoteCommand
+        //This check shouldn't ever fail, since its run in the VoteCommand
         //as well. If it does, something is very very wrong.
         if (isDuplicate || !playersInSameHouse) {
             return false;
@@ -61,16 +100,15 @@ public class VoteManager {
      *          or otherwise. So no need to check the type.
      */
     public boolean checkForDuplicate(Vote v) {
-
-        java.util.Enumeration<mekwars.server.campaign.votes.Vote> e = voteVector.elements();
-        Vote nextVote = null;
+        Enumeration<Vote> elements = voteVector.elements();
+        Vote nextVote;
         boolean dupeFound = false;//has a duplicate been found?
 
         //loop through all the elements; however if a
         //dupe has already been found, no need to continue
-        while (e.hasMoreElements() && !dupeFound) {
+        while (elements.hasMoreElements() && !dupeFound) {
             //get next element and reset booleans
-            nextVote = e.nextElement();
+            nextVote = elements.nextElement();
 
             if (nextVote.isEqualTo(v, false)) {
                 dupeFound = true;
@@ -91,16 +129,10 @@ public class VoteManager {
      *       quick check to make sure player casting vote and player receiving vote are in the same faction.
      */
     public boolean checkForHouseMatch(Vote v) {
-        boolean toReturn = false;
+        SHouse casterHouse = campaignMain.getHouseForPlayer(v.getCaster());
+        SHouse recipientHouse = campaignMain.getHouseForPlayer(v.getRecipient());
 
-        server.campaign.SHouse casterHouse = cm.getHouseForPlayer(v.getCaster());
-        server.campaign.SHouse recipientHouse = cm.getHouseForPlayer(v.getRecipient());
-
-        if (casterHouse.equals(recipientHouse)) {
-            toReturn = true;
-        }
-
-        return toReturn;
+        return casterHouse != null && casterHouse.equals(recipientHouse);
     }//end checkForHouseMatch()
 
     /**
@@ -112,14 +144,13 @@ public class VoteManager {
      *       <p>
      *       Takes results of getAllVotesFor(Player) and filters by vote type.
      */
-    public java.util.Vector<mekwars.server.campaign.votes.Vote> getAllVotesFor(server.campaign.SPlayer p, int type) {
-        java.util.Vector<mekwars.server.campaign.votes.Vote> votesForPlayer = this.getAllVotesFor(p);
-        java.util.Vector<mekwars.server.campaign.votes.Vote> toReturn = new java.util.Vector<mekwars.server.campaign.votes.Vote>(
-              1,
-              1);
-        java.util.Enumeration<mekwars.server.campaign.votes.Vote> e = votesForPlayer.elements();
-        while (e.hasMoreElements()) {
-            Vote currVote = e.nextElement();
+    public Vector<Vote> getAllVotesFor(SPlayer p, int type) {
+        Vector<Vote> votesForPlayer = this.getAllVotesFor(p);
+        Vector<Vote> toReturn = new Vector<>(1, 1);
+        Enumeration<Vote> elements = votesForPlayer.elements();
+        while (elements.hasMoreElements()) {
+            Vote currVote = elements.nextElement();
+
             if (currVote.getType() == type) {
                 toReturn.add(currVote);
             }//end if(types match)
@@ -131,20 +162,18 @@ public class VoteManager {
      *
      * Loop through and grab all votes for a given player (eg - all votes for "urgru")
      *
-     * @param p player
+     * @param player player
      *
      * @return a vector of votes
      */
-    public java.util.Vector<mekwars.server.campaign.votes.Vote> getAllVotesFor(server.campaign.SPlayer p) {
-        java.util.Vector<mekwars.server.campaign.votes.Vote> toReturn = new java.util.Vector<mekwars.server.campaign.votes.Vote>(
-              1,
-              1);
+    public Vector<Vote> getAllVotesFor(SPlayer player) {
+        Vector<Vote> toReturn = new Vector<>(1, 1);
 
         //loop and get the votes
-        java.util.Enumeration<mekwars.server.campaign.votes.Vote> e = voteVector.elements();
+        Enumeration<Vote> e = voteVector.elements();
         while (e.hasMoreElements()) {
             Vote v = e.nextElement();
-            if (p.getName().equals(v.getRecipient())) {
+            if (player.getName().equals(v.getRecipient())) {
                 toReturn.add(v);
             }
         }///end while(more elements)
@@ -153,21 +182,19 @@ public class VoteManager {
 
     /**
      *
-     * @param p    player
-     * @param type vote type to look for
+     * @param player player
+     * @param type   vote type to look for
      *
      * @return Vector of votes
-     *       <p>
+     *       <player>
      *       Takes results of getAllVotesBy(Player) and filters by vote type.
      */
-    public java.util.Vector<mekwars.server.campaign.votes.Vote> getAllVotesBy(server.campaign.SPlayer p, int type) {
-        java.util.Vector<mekwars.server.campaign.votes.Vote> votesByPlayer = this.getAllVotesBy(p);
-        java.util.Vector<mekwars.server.campaign.votes.Vote> toReturn = new java.util.Vector<mekwars.server.campaign.votes.Vote>(
-              1,
-              1);
-        java.util.Enumeration<mekwars.server.campaign.votes.Vote> e = votesByPlayer.elements();
-        while (e.hasMoreElements()) {
-            Vote currVote = e.nextElement();
+    public Vector<Vote> getAllVotesBy(SPlayer player, int type) {
+        Vector<Vote> votesByPlayer = this.getAllVotesBy(player);
+        Vector<Vote> toReturn = new Vector<>(1, 1);
+        Enumeration<Vote> elements = votesByPlayer.elements();
+        while (elements.hasMoreElements()) {
+            Vote currVote = elements.nextElement();
             if (currVote.getType() == type) {
                 toReturn.add(currVote);
             }//end if(types match)
@@ -179,20 +206,18 @@ public class VoteManager {
      *
      * Loop through and grab all votes of cast by a given player (eg - all votes cast by "McWizard")
      *
-     * @param p player
+     * @param player player
      *
      * @return a vector of votes
      */
-    public java.util.Vector<mekwars.server.campaign.votes.Vote> getAllVotesBy(server.campaign.SPlayer p) {
-        java.util.Vector<mekwars.server.campaign.votes.Vote> toReturn = new java.util.Vector<mekwars.server.campaign.votes.Vote>(
-              1,
-              1);
+    public Vector<Vote> getAllVotesBy(SPlayer player) {
+        Vector<Vote> toReturn = new Vector<>(1, 1);
 
         //loop and get the votes
-        java.util.Enumeration<mekwars.server.campaign.votes.Vote> e = voteVector.elements();
-        while (e.hasMoreElements()) {
-            Vote v = e.nextElement();
-            if (p.getName().equals(v.getCaster())) {
+        Enumeration<Vote> elements = voteVector.elements();
+        while (elements.hasMoreElements()) {
+            Vote v = elements.nextElement();
+            if (player.getName().equals(v.getCaster())) {
                 toReturn.add(v);
             }
         }///end while(more elements)
@@ -201,38 +226,38 @@ public class VoteManager {
 
     /**
      *
-     * @param p player for whom votes should be removed
-     *          <p>
-     *          Removes all votes for a player. alled by Sfaction when a player is removed.
+     * @param player player for whom votes should be removed
+     *               <player>
+     *               Removes all votes for a player. alled by Sfaction when a player is removed.
      */
-    public void removeAllVotesForPlayer(server.campaign.SPlayer p) {
-        java.util.Vector<mekwars.server.campaign.votes.Vote> votesForPlayer = this.getAllVotesFor(p);
-        java.util.Enumeration<mekwars.server.campaign.votes.Vote> e = votesForPlayer.elements();
-        while (e.hasMoreElements()) {
+    public void removeAllVotesForPlayer(SPlayer player) {
+        Vector<Vote> votesForPlayer = this.getAllVotesFor(player);
+        Enumeration<Vote> elements = votesForPlayer.elements();
+        while (elements.hasMoreElements()) {
             //make a dummy vote with the
-            Vote currVote = e.nextElement();
+            Vote currVote = elements.nextElement();
             this.removeVote(currVote);
-        }//end while(votes remain to be removed)
+        }//end while (votes remain to be removed)
     }//end removeAllVotesForPlayer()
 
     /**
      *
-     * @param v vote to try and remove
+     * @param vote vote to try and remove
      *
      * @return boolean true if vote was removed
      *       <p>
      *       Run through an iterator, comparing a newly generated vote to the Managed votes. If A vote like the new vote
      *       exists, remove it from the vote vector.
      */
-    public boolean removeVote(Vote v) {
-        java.util.Iterator<mekwars.server.campaign.votes.Vote> i = voteVector.iterator();
+    public boolean removeVote(Vote vote) {
+        Iterator<Vote> i = voteVector.iterator();
         boolean voteRemoved = false;
 
         //look while elements remain, but stop once there
         //has been a removal.
         while (i.hasNext() && !voteRemoved) {
             Vote nextVote = i.next();
-            if (nextVote.isEqualTo(v, true)) {
+            if (nextVote.isEqualTo(vote, true)) {
                 i.remove();//remove the vote from the voteVector
                 voteRemoved = true;//change the return value
             }
@@ -243,34 +268,32 @@ public class VoteManager {
 
     /**
      *
-     * @param p player whose votes should be removed
-     *          <p>
-     *          Removes all votes cast by a player. Called by Sfaction when a player is removed.
+     * @param player player whose votes should be removed
+     *               <player>
+     *               Removes all votes cast by a player. Called by Sfaction when a player is removed.
      */
-    public void removeAllVotesByPlayer(server.campaign.SPlayer p) {
-        java.util.Vector<mekwars.server.campaign.votes.Vote> votesByPlayer = this.getAllVotesBy(p);
-        java.util.Enumeration<mekwars.server.campaign.votes.Vote> e = votesByPlayer.elements();
-        while (e.hasMoreElements()) {
-            Vote currVote = e.nextElement();
+    public void removeAllVotesByPlayer(SPlayer player) {
+        Vector<Vote> votesByPlayer = this.getAllVotesBy(player);
+        Enumeration<Vote> elements = votesByPlayer.elements();
+        while (elements.hasMoreElements()) {
+            Vote currVote = elements.nextElement();
             this.removeVote(currVote);
         }//end while(votes remain to be removed)
     }//end removeAllVotesByPlayer()
 
     /**
      *
-     * @param h    House to search
-     * @param type Type of vote to isolate
+     * @param house House to search
+     * @param type  Type of vote to isolate
      *
      * @return Vector of votes
      */
-    public java.util.Vector<mekwars.server.campaign.votes.Vote> getAllHouseVotes(server.campaign.SHouse h, int type) {
-        java.util.Vector<mekwars.server.campaign.votes.Vote> factionVotes = this.getAllHouseVotes(h);
-        java.util.Vector<mekwars.server.campaign.votes.Vote> toReturn = new java.util.Vector<mekwars.server.campaign.votes.Vote>(
-              1,
-              1);
-        java.util.Enumeration<mekwars.server.campaign.votes.Vote> e = factionVotes.elements();
-        while (e.hasMoreElements()) {
-            Vote currVote = e.nextElement();
+    public Vector<Vote> getAllHouseVotes(SHouse house, int type) {
+        Vector<Vote> factionVotes = this.getAllHouseVotes(house);
+        Vector<Vote> toReturn = new Vector<>(1, 1);
+        Enumeration<Vote> elements = factionVotes.elements();
+        while (elements.hasMoreElements()) {
+            Vote currVote = elements.nextElement();
             if (currVote.getType() == type) {
                 toReturn.add(currVote);
             }//end if(types match)
@@ -280,23 +303,21 @@ public class VoteManager {
 
     /**
      *
-     * @param h House to search
+     * @param house House to search
      *
-     * @return Vector of votes cast by players of House h
+     * @return Vector of votes cast by players of House house
      *       <p>
      *       Queries all votes, collects votes cast by players of the given faction, and returns a vector.
      */
-    public java.util.Vector<mekwars.server.campaign.votes.Vote> getAllHouseVotes(server.campaign.SHouse h) {
-        java.util.Vector<mekwars.server.campaign.votes.Vote> toReturn = new java.util.Vector<mekwars.server.campaign.votes.Vote>(
-              1,
-              1);
-        java.util.Enumeration<mekwars.server.campaign.votes.Vote> e = voteVector.elements();
-        while (e.hasMoreElements()) {
+    public Vector<Vote> getAllHouseVotes(SHouse house) {
+        Vector<Vote> toReturn = new Vector<>(1, 1);
+        Enumeration<Vote> elements = voteVector.elements();
+        while (elements.hasMoreElements()) {
             //can assume votes are all for people in the same faction,
             //or they would not have passed add
-            Vote v = e.nextElement();
-            server.campaign.SHouse casterHouse = cm.getHouseForPlayer(v.getCaster());
-            if (h.equals(casterHouse)) {
+            Vote v = elements.nextElement();
+            SHouse casterHouse = campaignMain.getHouseForPlayer(v.getCaster());
+            if (house.equals(casterHouse)) {
                 toReturn.add(v);
             }//end if(matching faction)
         }//end while(more elements)

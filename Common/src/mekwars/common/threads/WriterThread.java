@@ -35,17 +35,19 @@ package mekwars.common.threads;
 import java.io.PrintStream;
 import java.util.Vector;
 
-import mekwars.common.util.MWLogger;
+import megamek.logging.MMLogger;
 
 /**
  * Write the messages in the queue to the socket's output stream
  */
 public class WriterThread extends Thread {
+    private final static MMLogger LOGGER = MMLogger.create(WriterThread.class);
+
     private final Vector<String> outgoingMessages;
     private final PrintStream _out;
     private boolean keepGoing = true;
 
-    WriterThread(PrintStream out) {
+    public WriterThread(PrintStream out) {
         super("ConnectionHandler$WriterThread");
         _out = out;
         outgoingMessages = new Vector<>(1, 1);
@@ -59,31 +61,30 @@ public class WriterThread extends Thread {
                 // wait until there are more messages
                 wait(1000);
             }
-            MWLogger.errLog("WriterThread: stopping gracefully.");
+            LOGGER.debug("WriterThread: stopping gracefully.");
         } catch (InterruptedException e) {
-            MWLogger.errLog("ConnectionHandlerLocal$WriterThread.run(): Interrupted!");
+            LOGGER.error(e, "ConnectionHandlerLocal$WriterThread.run(): Interrupted!");
         }
     }
 
-    void flushOutputQueue() {
+    public void flushOutputQueue() {
         while (!outgoingMessages.isEmpty()) {
             String message = outgoingMessages.elementAt(0);
             outgoingMessages.removeElementAt(0);
-            mekwars.common.campaign.clientutils.protocol.ConnectionHandlerLocal.DEBUG(STR."> \{message}");
             _out.println(message);
         }
+
         _out.flush();
     }
 
 
-    synchronized void queueMessage(String s) {
+    synchronized public void queueMessage(String s) {
         outgoingMessages.addElement(s);
         // notify the writer thread that there is at least one new message
         notify();
     }
 
-    void pleaseStop() {
+    public void pleaseStop() {
         keepGoing = false;
     }
-
 }

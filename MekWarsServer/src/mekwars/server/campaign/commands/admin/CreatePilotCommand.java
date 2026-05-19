@@ -80,7 +80,7 @@ public class CreatePilotCommand implements server.campaign.commands.Command {
         }
 
         SPilot pilot = null;
-        pilot = new SPilot(SPilot.getRandomPilotName(CampaignMain.campaignMain.getR()),
+        pilot = new SPilot(SPilot.getRandomPilotName(CampaignMain.campaignMain.getRandom()),
               Integer.parseInt(gunnery),
               Integer.parseInt(piloting));
 

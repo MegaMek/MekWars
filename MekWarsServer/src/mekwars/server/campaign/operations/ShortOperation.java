@@ -188,7 +188,7 @@ public class ShortOperation implements Comparable<Object> {
         losers = new java.util.TreeMap<String, server.campaign.SPlayer>();
 
         // fetch an environment to play in
-        playContinent = targetWorld.getEnvironments().getRandomEnvironment(CampaignMain.campaignMain.getR());
+        playContinent = targetWorld.getEnvironments().getRandomEnvironment(CampaignMain.campaignMain.getRandom());
         playEnvironment = playContinent.getEnvironment().getEnvironments().firstElement();
 
 
@@ -449,7 +449,7 @@ public class ShortOperation implements Comparable<Object> {
      */
     public void changeStatus(int newStatus) {
 
-        java.util.Random r = CampaignMain.campaignMain.getR();
+        java.util.Random r = CampaignMain.campaignMain.getRandom();
 
         /*
          * Never change to waiting mode. First actual switch is to INPROGRESS.
@@ -3195,7 +3195,7 @@ public class ShortOperation implements Comparable<Object> {
 
             if (unit.hasVacantPilot()) {
                 server.campaign.SHouse attackingHouse = initiator.getHouseFightingFor();
-                SPilot pilot = new SPilot(SPilot.getRandomPilotName(CampaignMain.campaignMain.getR()),
+                SPilot pilot = new SPilot(SPilot.getRandomPilotName(CampaignMain.campaignMain.getRandom()),
                       attackingHouse.getBaseGunner(Unit.MEK),
                       attackingHouse.getBasePilot(Unit.MEK));
                 unit.setPilot(pilot);

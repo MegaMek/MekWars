@@ -32,44 +32,32 @@
  * affiliated with Microsoft.
  */
 
-
-/*
- * ModifyingOperaions are much more closely related to Operations
- * proper than the functional ops (Long and Small). Modifiers are
- * like the basic Op in several ways:
- *
- *  - generally only a single instance created per server
- *  - store campaign related entry requirements (XP, etc)
- *  - read configs from disk instead of another class
- *
- * What exactly is a modifying operation? In practice, it should
- * have more restrictive entry requirements than an operation, and
- * modify an Operation's variables.
- *
- * Example: There is a "Planetary Assault" operation which is generally
- * available. The ModifyingOperation "Fast Mover" has Planetary Assault
- * set as a legal target. A player who meets the Fast Mover requirements
- * can choose to use is modifiers.
- *
- * Modifiers should be used to:
- * 1) create high risk games. require pay-ins or disincentives (salvage
- *    reductions, CBill costs) for higher payouts, or
- * 2) Encourage diversity of play. Use modifier requirements and advantages
- *    to get players to use unusual or otherwise undesirable forces, offer
- *    incentives for games w/ no assault units, etc.
- *
- * ModOp params SUPERCEDE those set in an Operation. Some things are 0-checked;
- * however, many paramaters will accept potentially damaging negative settings or
- * params which strongly conflict with the underlying Operation. This is an
- * Operator request (maximum flexibility), but will require strenuous testing
- * of ModOp settings.
- */
-
 package mekwars.common.campaign.operations;
 
 import java.util.Properties;
 
-//IMPORTS
+/**
+ * ModifyingOperations are much more closely related to Operations properer than the functional ops (Long and Small).
+ * Modifiers are like the basic Op in several ways:
+ * <p>
+ * - generally only a single instance created per server - store campaign related entry requirements (XP, etc) - read
+ * configs from disk instead of another class
+ * <p>
+ * What exactly is a modifying operation? In practice, it should have more restrictive entry requirements than an
+ * operation, and modify an Operation's variables.
+ * <p>
+ * Example: There is a "Planetary Assault" operation which is generally available. The ModifyingOperation "Fast Mover"
+ * has Planetary Assault set as a legal target. A player who meets the Fast Mover requirements can choose to use is
+ * modifiers.
+ * <p>
+ * Modifiers should be used to: 1) create high risk games. require pay-ins or disincentives (salvage reductions, CBill
+ * costs) for higher payouts, or 2) Encourage diversity of play. Use modifier requirements and advantages to get players
+ * to use unusual or otherwise undesirable forces, offer incentives for games w/ no assault units, etc.
+ * <p>
+ * ModOp params SUPERSEDE those set in an Operation. Some things are 0-checked; however, many parameters will accept
+ * potentially damaging negative settings or params which strongly conflict with the underlying Operation. This is an
+ * Operator request (maximum flexibility), but will require strenuous testing of ModOp settings.
+ */
 
 public class ModifyingOperation {
 

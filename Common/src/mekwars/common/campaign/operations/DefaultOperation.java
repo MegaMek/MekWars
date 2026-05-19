@@ -33,24 +33,26 @@
  */
 
 
-/*
- * A set of default values for an Operation. If an Operation does not have a value specified for a parameter, the default is used.
- *
- * DefaultOperation is useful in several ways:
- *
- * First, it makes Ops fault-tolerant. Typos may very well break results, but at least they won't crash a server.
- *
- * Second, makes adding new parameters much simpler. So long as new params are added such that they have no impact on Operations (eg- default to disuse),
- * running servers can load new versions without updating/expanding their Operations datasets.
- *
- * NOTE: Defaults stored in a TreeMap, -not- a hash.
- */
 package mekwars.common.campaign.operations;
 
 // IMPORTS
 
 import java.util.TreeMap;
 
+/**
+ * A set of default values for an Operation. If an Operation does not have a value specified for a parameter, the
+ * default is used.
+ * <p>
+ * DefaultOperation is useful in several ways:
+ * <p>
+ * First, it makes Ops fault-tolerant. Typos may very well break results, but at least they won't crash a server.
+ * <p>
+ * Second, it makes adding new parameters much simpler. So long as new params are added such that they have no impact on
+ * Operations (eg- default to disuse), running servers can load new versions without updating/expanding their Operations
+ * datasets.
+ * <p>
+ * NOTE: Defaults stored in a TreeMap, -not- a hash.
+ */
 public class DefaultOperation {
 
     // IVARS
@@ -67,34 +69,29 @@ public class DefaultOperation {
         // ADD DEFAULTS
 
         /*
-         * Note: The following values MUST BE SET for each operation
-         * and have no recourse to default. EVERY long operation MUST
-         * have a matching short operation with the same name.
+         * Note: The following values MUST BE SET for each operation and have no recourse to default. EVERY long
+         * operation MUST have a matching short operation with the same name.
          *
-         * 1) OperationName 	- name (eg - "Assault" or "Conquer"). SET BY FILENAME!
-         * 2) OperationType		- long, short, special. SET BY DIRECTORY STRUCTURE!
-         * 3) OperationLength	- *long only,* number of games to play before closing
+         * 1) OperationName	- name (e.g. - "Assault" or "Conquer"). SET BY FILENAME!
+         * 2) OperationType	- long, short, special. SET BY DIRECTORY STRUCTURE!
+         * 3) OperationLength - *long only,* number of games to play before closing
          * 4) LongVictoryThresh	- *long only,* number of wins needed, out of Length, to "win."
-         * 5) LinkedOperations	- *special only,* names of short ops that a special can
-         *                        be applied to, ; delimited. any number.
-         */
-
-        /*
-         * DebugOp - This is used to send debug message to error logs so the
-         *           SO's can debug issues with their ops. Currently it only
-         *           debugs failed defender messages
+         * 5) LinkedOperations - *special only,* names of short ops that a special can be applied to, delimited.
+         * any number.
+         *
+         * DebugOp - This is used to send a debug message to error logs so the SO's can debug issues with their ops.
+         * Currently, it only debugs failed defender messages
          */
         operationsDefaults.put("DebugOp", "false");
 
         /*
-         * MISC. VARIABLES. These are params necessary for either a long
-         * operation or stand alone shorts ... or simply don't belong
-         * anywhere else in the set (eg - OnlyAgainstFactoryWorlds).
+         * MISC. VARIABLES. These are params necessary for either a long operation or stand-alone shorts ... or
+         * simply don't belong anywhere else in the set (eg - OnlyAgainstFactoryWorlds).
          *
          * COLOUR AND RANGE SET HERE!
          *
-         * Unlike most values, these range/reach variable are non-overlapping
-         * and are ALWAYS USED. The defaults do NOT mimic the previous task-ranging.
+         * Unlike most values, these range/reach variable are non-overlapping and are ALWAYS USED. The defaults do
+         * NOT mimic the previous task-ranging.
          *
          * Variables are:
          * -------------
@@ -116,28 +113,27 @@ public class DefaultOperation {
          * ReportOpToNewsFeed          - default to false. Set true if you want the op reported to the server's News Feed.
          * DoesNotCountForPP           - Armies built just for this OP will not count towards production.
          * AllowPlanetFlags            - Flags the planet must have to allow this op.
-         * DisallowPlanetFlags         - Flags the planet cannont have for this op to be allowed.
+         * DisallowPlanetFlags         - Flags the planet cannot have for this op to be allowed.
          * ForbidCounterAttacks        - Stop players from using this attack if under attack themselves.
          * OnlyAllowedFromReserve      - Stop players from using this attack if they are on active duty.
          * OnlyAllowedFromActive       - Stop players from using this attack if they are on reserve duty.
          * IndividualInit              - Allow Individual Init to be set in MM for this game.
          * MaxELODifference            - Max Difference in ELO between attacker and defender.
-         * MinSubFactionAccessLevel    - Your SubFactionAcessLevel must be this high to ride. Default 0
+         * MinSubFactionAccessLevel    - Your SubFactionAccessLevel must be this high to ride. Default 0
          * MaxBVDifference			   - Max BV difference between attacker and defender. Default 150
-         * MaxBVPercent				   - Max % BV diffence between Attacker and defneder. default 0%
+         * MaxBVPercent				   - Max % BV difference between Attacker and defender. default 0%
          * NightChance				   - Chance that operation will take place at night.
          * DuskChance				   - Chance that operation will take place at dusk.
          * AttackerBriefing            - Message attacking player receives when launching
          * DefenderBriefing            - Message defending player receives when launching
-         * AutoresolveBattle           - Determines if the battle is played with megamek or autoresolved
+         * AutoResolveBattle           - Determines if the battle is played with megamek or auto resolved
          *
-         * NOTE: Colours are HTML hexidecimal. Keywords cannot be used. # must
-         *       lead the string or massive fuck-ups will ensue.
+         * NOTE: Colours are HTML hexadecimal. Keywords cannot be used. # must lead the string or massive fuck-ups
+         * will ensue.
          *
-         * [NOTE: Min/Max planet ownership is distinct from the launch percents. Launch is used
-         *        to determine ranges and general ability to "reach" a planet. Min/Max ownership
-         *        is intended to allow segretation of games based on the current state of the
-         *        world.
+         * [NOTE: Min/Max planet ownership is distinct from the launch percents. Launch is used to determine ranges
+         * and general ability to "reach" a planet. Min/Max ownership is intended to allow segregation of games based
+         *  on the current state of the  world.
          *
          *        Example segregated attacks:
          *        "Initial Assault" - MaxPlanetOwnership of "0"
@@ -175,17 +171,15 @@ public class DefaultOperation {
         operationsDefaults.put("DuskChance", "0");
         operationsDefaults.put("AttackerBriefing", "");
         operationsDefaults.put("DefenderBriefing", "");
-        operationsDefaults.put("AutoresolveBattle", "false");
+        operationsDefaults.put("AutoResolveBattle", "false");
 
         /*
-         * SHORT VARIABLES. These are params which are necessary for
-         * all operations. Note: Short and long variables will often
-         * overlap.
+         * SHORT VARIABLES. These are params which are necessary for all operations. Note: Short and long variables
+         * will often overlap.
          *
-         * NOTE: Fail Codes are appended for convenience. These are the
-         *       codes assigned in ShortValidator when a paramater check
-         *       isn't passed. Codes and paramaters are not necessarily
-         *       in the same order, as they're added at different times.
+         * NOTE: Fail Codes are appended for convenience. These are the codes assigned in ShortValidator when a
+         * paramater check isn't passed. Codes and paramaters are not necessarily in the same order, as they're added
+         *  at different times.
          *
          * Variable are:
          * ------------
@@ -229,9 +223,8 @@ public class DefaultOperation {
          * MinAttackerNonInfantry  - self evident - AFC= 251
          * MinDefenderNonInfantry  - self evident - DFC= 451
          *
-         * [CAUTION: Setting these too far apart can create situations
-         *  where players can see each other with check tools but are
-         *  unable to launch attacks, and vice versa]
+         * [CAUTION: Setting these too far apart can create situations where players can see each other with check
+         * tools but are unable to launch attacks, and vice versa]
          *
          * MinAttackerWalk - self evident - AFC=204, shared with MinAttackerJump
          * MinDefenderWalk - self evident - DFC=404, shared with MinDefenderJump
@@ -240,16 +233,14 @@ public class DefaultOperation {
          * MinDefenderJump - self evident - DFC=404, shared with MinDefenderWalk
          *
 
-         * [NOTE: A unit can qualify for speed through walk OR jump. Set
-         *  either walk or jump extremely high in order to make this a
-         *  single element check.
+         * [NOTE: A unit can qualify for speed through walk OR jump. Set either walk or jump extremely high in order
+         * to make this a single element check.
          *
          *  Examples:
          *  - set jump to 90 and walk to 7 to ensure a ground MP of 7.
-         *  - set jump to 7 and walk to 9 to allow only units which can
-         *    EITHER jump 7 (Wraith) or cruise/walk 9 (Hermes).
-         *  - set walk to 90 and jump to 5 to ensure that all units in a
-         *    force can jump at least 5 hexes.]
+         *  - set jump to 7 and walk to 9 to allow only units which can EITHER jump 7 (Wraith) or cruise/walk 9
+         * (Hermes).
+         *  - set walk to 90 and jump to 5 to ensure that all units in a force can jump at least 5 hexes.]
          *
          * MaxAttackerUnitTonnage - highest weight for a single unit - AFC=205
          * MaxDefenderUnitTonnage - highest weight for a single unit - DFC=405
@@ -311,14 +302,13 @@ public class DefaultOperation {
          * CountInfForSpread    - self evident
          * CountAerosForSpread    - self evident
          *
-         * [NOTE: Spreads are a very dangerous feature. They're GREAT for stopping high/low
-         *  unit pairs and "init sinks." However, they also make it virtually impossible to
-         *  use infantry and protomeks, or small vehicles like the Vedette. Options exist to
-         *  stop spread checks on these unit types (Meks will always be checked), but these
-         *  may be unbalancing in and of themselves. The recommended solution for servers which
-         *  want to use spreads AND combined arms is to set a very wide spread ... something in
-         *  the range of 1000 BV ... not count protos/BV for spread, and enforce Infantry moves
-         *  with mechs (MM option) and ProtosMustBeGroups (Operations option).]
+         * [NOTE: Spreads are a very dangerous feature. They're GREAT for stopping high/low unit pairs and "init
+         * sinks." However, they also make it virtually impossible to use infantry and protomeks, or small vehicles
+         * like the Vedette. Options exist to stop spread checks on these unit types (Meks will always be checked),
+         * but these may be unbalancing in and of themselves. The recommended solution for servers which want to use
+         * spreads AND combined arms is to set a very wide spread ... something in the range of 1000 BV ... not count
+         * protos/BV for spread, and enforce Infantry moves with mechs (MM option) and ProtosMustBeGroups
+         * (Operations option).]
          *
          * MaxTotalAttackerTonnage - max total tonnage for attacking force - AFC=211
          * MaxTotalDefenderTonnage - max total tonnage for defending force - DFC=411

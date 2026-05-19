@@ -1,22 +1,40 @@
 /*
- * MekWars - Copyright (C) 2004
+ * Copyright (C) 2004 MekWars
+ * Copyright (C) 2026 The MegaMek Team. All Rights Reserved.
  *
- * Derived from MegaMekNET (http://www.sourceforge.net/projects/megameknet)
+ * This file is part of MekWars.
  *
- * This program is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License as published by the Free
- * Software Foundation; either version 2 of the License, or (at your option)
- * any later version.
+ * MekWars is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License (GPL),
+ * version 3 or (at your option) any later version,
+ * as published by the Free Software Foundation.
  *
- * This program is distributed in the hope that it will be useful, but
- * WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
- * or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License
- * for more details.
+ * MekWars is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty
+ * of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU General Public License for more details.
+ *
+ * A copy of the GPL should have been included with this project;
+ * if not, see <https://www.gnu.org/licenses/>.
+ *
+ * NOTICE: The MegaMek organization is a non-profit group of volunteers
+ * creating free software for the BattleTech community.
+ *
+ * MechWarrior, BattleMech, `Mech and AeroTech are registered trademarks
+ * of The Topps Company, Inc. All Rights Reserved.
+ *
+ * Catalyst Game Labs and the Catalyst Game Labs logo are trademarks of
+ * InMediaRes Productions, LLC.
+ *
+ * MechWarrior Copyright Microsoft Corporation. MekWars was created under
+ * Microsoft's "Game Content Usage Rules"
+ * <https://www.xbox.com/en-US/developers/rules> and it is not endorsed by or
+ * affiliated with Microsoft.
  */
 
 package mekwars.server.campaign;
 
-import common.util.MWLogger;
+import megamek.logging.MMLogger;
 
 /**
  * @author urgru A barebones timing thread which calls slices in CampaignMain.
@@ -26,15 +44,17 @@ import common.util.MWLogger;
  */
 
 public class SliceThread extends Thread {
-    server.campaign.CampaignMain myCampaign;
+    private final static MMLogger LOGGER = MMLogger.create(SliceThread.class);
+
+    CampaignMain myCampaign;
     long until;
-    int Duration;
-    int sliceid = 0;
+    int duration;
+    int sliceID = 0;
     int lastHouseId = 0;
 
-    public SliceThread(server.campaign.CampaignMain main, int Duration) {
-        super("slicethread");
-        this.Duration = Duration; // set length when thread is spun
+    public SliceThread(CampaignMain main, int Duration) {
+        super("sliceThread");
+        this.duration = Duration; // set length when thread is spun
         myCampaign = main;
     }
 
@@ -45,40 +65,41 @@ public class SliceThread extends Thread {
     @Override
     public synchronized void run() {
         try {
-            int sleepTime = Duration;
-            long startTime = 0;
+            int sleepTime = duration;
+            long startTime;
+
             while (true) {
                 this.extendedWait(sleepTime);
                 startTime = System.currentTimeMillis();
-                sliceid++;
+                sliceID++;
                 try {
                     myCampaign.slice(getSliceID());
 
                     if (CampaignMain.campaignMain.getBooleanConfig("ProcessHouseTicksAtSlice")) {
-                        long endTime = startTime + Duration / 2;
+                        long endTime = startTime + duration / 2;
                         while (endTime > System.currentTimeMillis()) {
                             if (lastHouseId > CampaignMain.campaignMain.getData().getAllHouses().size()) {
                                 lastHouseId = 0;
                             }
                             SHouse house = CampaignMain.campaignMain.getHouseById(lastHouseId);
-                            if (house != null && house.getAllOnlinePlayers().size() > 0) {
-                                CampaignMain.campaignMain.getHouseById(lastHouseId).tick(true, sliceid);
-                                lastHouseId++;
-                            } else {
-                                lastHouseId++;
+
+                            if (house != null && !house.getAllOnlinePlayers().isEmpty()) {
+                                CampaignMain.campaignMain.getHouseById(lastHouseId).tick(true, sliceID);
                             }
+
+                            lastHouseId++;
                         }
                     }
                 } catch (Exception ex) {
-                    MWLogger.errLog(ex);
-                    myCampaign.doSendToAllOnlinePlayers("Slice skipped. Errors occured", true);
+                    LOGGER.error(ex, "Process Ticks at Slice: {}", ex.getLocalizedMessage());
+                    myCampaign.doSendToAllOnlinePlayers("Slice skipped. Errors occurred", true);
                 }
-                sleepTime = (int) (Duration - (System.currentTimeMillis() - startTime));
+                sleepTime = (int) (duration - (System.currentTimeMillis() - startTime));
                 sleepTime = Math.max(100, sleepTime);
 
             }
         } catch (Exception ex) {
-            MWLogger.errLog(ex);
+            LOGGER.error(ex, "Error during run: {}", ex.getLocalizedMessage());
         }
     }
 
@@ -87,11 +108,11 @@ public class SliceThread extends Thread {
         try {
             this.wait(time);
         } catch (Exception ex) {
-            MWLogger.errLog(ex);
+            LOGGER.error(ex, "Extended Wait: {}", ex.getLocalizedMessage());
         }
     }// end ExtendedWait(time)
 
     public int getSliceID() {
-        return sliceid;
+        return sliceID;
     }
 }

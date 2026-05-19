@@ -1,33 +1,60 @@
 /*
- * MekWars - Copyright (C) 2004
+ * Copyright (C) 2004 MekWars
+ * Copyright (C) 2026 The MegaMek Team. All Rights Reserved.
  *
- * Derived from MegaMekNET (http://www.sourceforge.net/projects/megameknet)
+ * This file is part of MekWars.
  *
- * This program is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License as published by the Free
- * Software Foundation; either version 2 of the License, or (at your option)
- * any later version.
+ * MekWars is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License (GPL),
+ * version 3 or (at your option) any later version,
+ * as published by the Free Software Foundation.
  *
- * This program is distributed in the hope that it will be useful, but
- * WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
- * or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License
- * for more details.
+ * MekWars is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty
+ * of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU General Public License for more details.
+ *
+ * A copy of the GPL should have been included with this project;
+ * if not, see <https://www.gnu.org/licenses/>.
+ *
+ * NOTICE: The MegaMek organization is a non-profit group of volunteers
+ * creating free software for the BattleTech community.
+ *
+ * MechWarrior, BattleMech, `Mech and AeroTech are registered trademarks
+ * of The Topps Company, Inc. All Rights Reserved.
+ *
+ * Catalyst Game Labs and the Catalyst Game Labs logo are trademarks of
+ * InMediaRes Productions, LLC.
+ *
+ * MechWarrior Copyright Microsoft Corporation. MekWars was created under
+ * Microsoft's "Game Content Usage Rules"
+ * <https://www.xbox.com/en-US/developers/rules> and it is not endorsed by or
+ * affiliated with Microsoft.
  */
-
 package mekwars.server.campaign;
+
+import java.io.File;
+import java.util.EnumSet;
+import java.util.Enumeration;
+import java.util.Vector;
 
 import megamek.common.CriticalSlot;
 import megamek.common.battleArmor.BattleArmor;
+import megamek.common.equipment.AmmoMounted;
 import megamek.common.equipment.AmmoType;
 import megamek.common.equipment.Mounted;
 import megamek.common.equipment.WeaponType;
 import megamek.common.loaders.MULParser;
+import megamek.common.loaders.MekFileParser;
+import megamek.common.loaders.MekSummary;
+import megamek.common.loaders.MekSummaryCache;
 import megamek.common.options.PilotOptions;
 import megamek.common.units.Crew;
 import megamek.common.units.CrewType;
 import megamek.common.units.Entity;
 import megamek.common.units.Infantry;
 import megamek.common.units.Tank;
+import megamek.logging.MMLogger;
 import mekwars.common.CampaignData;
 import mekwars.common.MegaMekPilotOption;
 import mekwars.common.Unit;
@@ -35,7 +62,6 @@ import mekwars.common.campaign.pilot.skills.PilotSkill;
 import mekwars.common.campaign.targetsystems.TargetSystem;
 import mekwars.common.campaign.targetsystems.TargetTypeNotImplementedException;
 import mekwars.common.campaign.targetsystems.TargetTypeOutOfBoundsException;
-import mekwars.common.util.MWLogger;
 import mekwars.common.util.TokenReader;
 import mekwars.common.util.UnitUtils;
 import mekwars.server.campaign.pilot.SPilot;
@@ -54,6 +80,7 @@ import mekwars.server.util.QuirkHandler;
  */
 
 public final class SUnit extends Unit implements Comparable<SUnit> {
+    private final static MMLogger LOGGER = MMLogger.create(SUnit.class);
 
     // VARIABLES
     private Integer BV = 0;
@@ -77,15 +104,15 @@ public final class SUnit extends Unit implements Comparable<SUnit> {
     /**
      * Construct a new unit.
      *
-     * @param p        flavour string (es: Built by Kurita on An-Ting)
-     * @param Filename to read this entity from
+     * @param partialHouseName flavour string (es: Built by Kurita on An-Ting)
+     * @param Filename         to read this entity from
      */
-    public SUnit(String p, String Filename, int weightclass) {
+    public SUnit(String partialHouseName, String Filename, int weightClass) {
         super();
         int gunnery = 4;
         int piloting = 5;
 
-        SHouse house = CampaignMain.campaignMain.getHouseFromPartialString(p, null);
+        SHouse house = CampaignMain.campaignMain.getHouseFromPartialString(partialHouseName, null);
 
         setUnitFilename(Filename);
         init();
@@ -93,12 +120,12 @@ public final class SUnit extends Unit implements Comparable<SUnit> {
         if (house != null) {
             setPilot(house.getNewPilot(getType()));
         } else {
-            setPilot(new SPilot(SPilot.getRandomPilotName(CampaignMain.campaignMain.getR()), gunnery, piloting));
+            setPilot(new SPilot(SPilot.getRandomPilotName(CampaignMain.campaignMain.getRandom()), gunnery, piloting));
         }
 
-        setWeightclass(weightclass); // default weight class.
+        setWeightclass(weightClass); // default weight class.
 
-        setProducer(p);
+        setProducer(partialHouseName);
         setId(CampaignMain.campaignMain.getAndUpdateCurrentUnitID());
 
     }
@@ -106,10 +133,9 @@ public final class SUnit extends Unit implements Comparable<SUnit> {
     /**
      * Constructs a new Unit with the id for an existing unit (repod)
      *
-     * @param p           - flavour string (es: Built by Kurita on An-Ting)
-     * @param Filename    - filename to read this entity from
-     * @param weightclass - int defining weightclass
-     * @param replaceId   - unitID to assign a new SUnit
+     * @param p         - flavour string (es: Built by Kurita on An-Ting)
+     * @param Filename  - filename to read this entity from
+     * @param replaceId - unitID to assign a new SUnit
      */
     public SUnit(int replaceId, String p, String Filename) {
         super();
@@ -143,50 +169,47 @@ public final class SUnit extends Unit implements Comparable<SUnit> {
 
         boolean wasChanged = false;
 
-        for (Mounted mAmmo : en.getAmmo()) {
+        for (AmmoMounted mAmmo : en.getAmmo()) {
 
-            AmmoType at = (AmmoType) mAmmo.getType();
-            String munition = Long.toString(at.getMunitionType());
+            AmmoType ammoType = mAmmo.getType();
+            EnumSet<AmmoType.Munitions> munition = ammoType.getMunitionType();
 
-            if (at.getAmmoType() == AmmoType.T_ATM) {
+            if (ammoType.getAmmoType() == AmmoType.AmmoTypeEnum.ATM) {
                 continue;
             }
 
-            if (at.getAmmoType() == AmmoType.T_AC_LBX) {
+            if (ammoType.getAmmoType() == AmmoType.AmmoTypeEnum.AC_LBX) {
                 continue;
             }
 
-            if (at.getAmmoType() == AmmoType.T_SRM_STREAK) {
+            if (ammoType.getAmmoType() == AmmoType.AmmoTypeEnum.SRM_STREAK) {
                 continue;
             }
 
-            if (at.getAmmoType() == AmmoType.T_LRM_STREAK) {
+            if (ammoType.getAmmoType() == AmmoType.AmmoTypeEnum.LRM_STREAK) {
                 continue;
             }
 
-            if (at.getAmmoType() == AmmoType.M_STANDARD) {
-                continue;
-            }
+            if (CampaignMain.campaignMain.getData().getServerBannedAmmo().containsAll(munition) ||
+                      h.getBannedAmmo().containsAll(munition)) {
 
-            if (CampaignMain.campaignMain.getData().getServerBannedAmmo().containsKey(munition) ||
-                      h.getBannedAmmo().containsKey(munition)) {
-
-                java.util.Vector<AmmoType> types = AmmoType.getMunitionsFor(at.getAmmoType());
-                java.util.Enumeration<AmmoType> allTypes = types.elements();
+                Vector<AmmoType> types = AmmoType.getMunitionsFor(ammoType.getAmmoType());
+                Enumeration<AmmoType> allTypes = types.elements();
 
                 boolean defaultFound = false;
                 while (allTypes.hasMoreElements() && !defaultFound) {
                     AmmoType currType = allTypes.nextElement();
 
                     if ((currType.getTechLevel(year) <= en.getTechLevel()) &&
-                              (currType.getMunitionType() == AmmoType.M_STANDARD) &&
-                              (currType.getRackSize() == at.getRackSize())) {
+                              (currType.getRackSize() == ammoType.getRackSize())) {
                         mAmmo.changeAmmoType(currType);
+
                         if (mAmmo.byShot()) {
                             mAmmo.setShotsLeft(mAmmo.getOriginalShots());
                         } else {
-                            mAmmo.setShotsLeft(at.getShots());
+                            mAmmo.setShotsLeft(ammoType.getShots());
                         }
+
                         defaultFound = true;
                         wasChanged = true;
                     }
@@ -207,20 +230,12 @@ public final class SUnit extends Unit implements Comparable<SUnit> {
 
         Entity ent = null;
 
-        if (new java.io.File("./data/mechfiles").exists()) {
-
+        if (new File("./data/mekfiles").exists()) {
             try {
-                MechSummary ms = MechSummaryCache.getInstance().getMech(Filename.trim());
+                MekSummary ms = MekSummaryCache.getInstance().getMek(Filename.trim());
                 if (ms == null) {
-                    MechSummary[] units = MechSummaryCache.getInstance().getAllMechs();
-                    // System.err.println("unit: "+getUnitFilename());
-                    for (MechSummary unit : units) {
-                        // System.err.println("Source file:
-                        // "+unit.getSourceFile().getName());
-                        // System.err.println("Model: "+unit.getModel());
-                        // System.err.println("Chassis:
-                        // "+unit.getChassis());
-                        // System.err.flush();
+                    MekSummary[] units = MekSummaryCache.getInstance().getAllMeks();
+                    for (MekSummary unit : units) {
                         if (unit.getEntryName().equalsIgnoreCase(Filename) ||
                                   unit.getModel().trim().equalsIgnoreCase(Filename.trim()) ||
                                   unit.getChassis().trim().equalsIgnoreCase(Filename.trim())) {
@@ -231,7 +246,7 @@ public final class SUnit extends Unit implements Comparable<SUnit> {
                 }
 
                 if (ms != null) {
-                    ent = new MechFileParser(ms.getSourceFile(), ms.getEntryName()).getEntity();
+                    ent = new MekFileParser(ms.getSourceFile(), ms.getEntryName()).getEntity();
                 }
             } catch (Exception exep) {
                 ent = null;
@@ -245,17 +260,17 @@ public final class SUnit extends Unit implements Comparable<SUnit> {
 
         // look for a mek first
         try {
-            ent = new MechFileParser(new java.io.File("./data/mechfiles/Meks.zip"), Filename).getEntity();
+            ent = new MekFileParser(new File("./data/mechfiles/Meks.zip"), Filename).getEntity();
         } catch (Exception ex) {
 
             // not a mek, see if file is a vehicle...
             try {
-                ent = new MechFileParser(new java.io.File("./data/mechfiles/Vehicles.zip"), Filename).getEntity();
+                ent = new MekFileParser(new File("./data/mechfiles/Vehicles.zip"), Filename).getEntity();
             } catch (Exception exe) {
 
                 // neither mek nor veh. look for infantry.
                 try {
-                    ent = new MechFileParser(new java.io.File("./data/mechfiles/Infantry.zip"), Filename).getEntity();
+                    ent = new MekFileParser(new File("./data/mechfiles/Infantry.zip"), Filename).getEntity();
                 } catch (Exception exei) {
 
                     /*
@@ -267,7 +282,7 @@ public final class SUnit extends Unit implements Comparable<SUnit> {
                     MWLogger.errLog("Error loading: " + Filename);
 
                     try {
-                        ent = UnitUtils.createOMG();// new MechFileParser(new
+                        ent = UnitUtils.createOMG();// new MekFileParser(new
                     } catch (Exception exep) {
 
                         /*
@@ -548,7 +563,7 @@ public final class SUnit extends Unit implements Comparable<SUnit> {
             pilot = new SPilot(en.getCrew().getName(), en.getCrew().getGunnery(), en.getCrew().getPiloting());
 
             if (pilot.getName().equalsIgnoreCase("Unnamed") || pilot.getName().equalsIgnoreCase("vacant")) {
-                pilot.setName(SPilot.getRandomPilotName(CampaignMain.campaignMain.getR()));
+                pilot.setName(SPilot.getRandomPilotName(CampaignMain.campaignMain.getRandom()));
             }
 
             pilot.setCurrentFaction("Common");
@@ -643,7 +658,7 @@ public final class SUnit extends Unit implements Comparable<SUnit> {
 
         SPilot pilot = null;
         if (gunnery == 99 || piloting == 99) {pilot = new SPilot("Vacant", 99, 99);} else {
-            pilot = new SPilot(SPilot.getRandomPilotName(CampaignMain.campaignMain.getR()), gunnery, piloting);
+            pilot = new SPilot(SPilot.getRandomPilotName(CampaignMain.campaignMain.getRandom()), gunnery, piloting);
         }
 
         pilot.setCurrentFaction("Common");

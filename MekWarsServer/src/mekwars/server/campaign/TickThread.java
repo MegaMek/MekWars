@@ -1,40 +1,60 @@
 /*
- * MekWars - Copyright (C) 2004
+ * Copyright (C) 2004 MekWars
+ * Copyright (C) 2026 The MegaMek Team. All Rights Reserved.
  *
- * Derived from MegaMekNET (http://www.sourceforge.net/projects/megameknet)
+ * This file is part of MekWars.
  *
- * This program is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License as published by the Free
- * Software Foundation; either version 2 of the License, or (at your option)
- * any later version.
+ * MekWars is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License (GPL),
+ * version 3 or (at your option) any later version,
+ * as published by the Free Software Foundation.
  *
- * This program is distributed in the hope that it will be useful, but
- * WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
- * or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License
- * for more details.
+ * MekWars is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty
+ * of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU General Public License for more details.
+ *
+ * A copy of the GPL should have been included with this project;
+ * if not, see <https://www.gnu.org/licenses/>.
+ *
+ * NOTICE: The MegaMek organization is a non-profit group of volunteers
+ * creating free software for the BattleTech community.
+ *
+ * MechWarrior, BattleMech, `Mech and AeroTech are registered trademarks
+ * of The Topps Company, Inc. All Rights Reserved.
+ *
+ * Catalyst Game Labs and the Catalyst Game Labs logo are trademarks of
+ * InMediaRes Productions, LLC.
+ *
+ * MechWarrior Copyright Microsoft Corporation. MekWars was created under
+ * Microsoft's "Game Content Usage Rules"
+ * <https://www.xbox.com/en-US/developers/rules> and it is not endorsed by or
+ * affiliated with Microsoft.
  */
 
 package mekwars.server.campaign;
 
+import java.io.FileWriter;
+import java.io.IOException;
 
-import common.util.MWLogger;
-import server.campaign.util.Statistics;
+import megamek.logging.MMLogger;
+import mekwars.server.campaign.util.Statistics;
 
 public class TickThread extends Thread {
-
-    server.campaign.CampaignMain myCampaign;
+    private final static MMLogger LOGGER = MMLogger.create(TickThread.class);
+    private final int duration;
+    CampaignMain myCampaign;
     private long until;
-    private int Duration = 900000;
-    private int tickid = 0;
+    private int tickID = 0;
 
-    public TickThread(server.campaign.CampaignMain main, int Duration) {
+    public TickThread(CampaignMain main, int Duration) {
         super("Tick Thread");
-        this.Duration = Duration;
+        this.duration = Duration;
         myCampaign = main;
     }
 
     public int getTickID() {
-        return tickid;
+        return tickID;
     }
 
     public long getRemainingSleepTime() {
@@ -45,28 +65,25 @@ public class TickThread extends Thread {
     public synchronized void run() {
         try {
             while (true) {
+                this.extendedWait(duration);  //15 mins by default
 
-                this.extendedWait(Duration);  //15 mins by default
-
-                tickid++;
-                MWLogger.tickLog("Tick (" + tickid + ") Started");
+                tickID++;
+                LOGGER.info(STR."Tick (\{tickID}) Started");
 
                 try {
-                    myCampaign.tick(true, tickid);
+                    myCampaign.tick(true, tickID);
                 } catch (Exception ex) {
-                    MWLogger.errLog(ex);
-                    myCampaign.doSendToAllOnlinePlayers("Tick skipped. Errors occured", true);
+                    LOGGER.error(ex, "Error during Tick on Campaign: {}", ex.getLocalizedMessage());
+                    myCampaign.doSendToAllOnlinePlayers("Tick skipped. Errors occurred", true);
                 }
 
-                if (true) {
-                    try {
-                        myCampaign.toFile();
-                    } catch (Exception ex) {
-                        myCampaign.doSendToAllOnlinePlayers("Warning! AutoSave failed!", true);
-                    }
+                try {
+                    myCampaign.toFile();
+                } catch (Exception ex) {
+                    myCampaign.doSendToAllOnlinePlayers("Warning! AutoSave failed!", true);
                 }
 
-                if (this.tickid % 8 == 0) {
+                if (this.tickID % 8 == 0) {
                     this.myCampaign.addToNewsFeed("Faction Rankings",
                           "Server News",
                           Statistics.getReadableHouseRanking(false));
@@ -75,30 +92,31 @@ public class TickThread extends Thread {
                     }
 
                     try {
-                        java.io.FileWriter out = new java.io.FileWriter(myCampaign.getConfig("HouseRankPath"),
+                        FileWriter out = new FileWriter(myCampaign.getConfig("HouseRankPath"),
                               true); // opened in APPEND mode; will be controlled by config setting
                         out.write(Statistics.getReadableHouseRanking(false)); // dump actual SHouse Ranking data to a permanent file
                         out.write("\n");
                         out.close();
-                    } catch (java.io.IOException e) {
-                        MWLogger.errLog(e);
+                    } catch (IOException e) {
+                        LOGGER.error(e, "Unable to write to HouseRankFile. {}", e.getLocalizedMessage());
                     }
                 }
 
-                MWLogger.tickLog("Tick (" + tickid + ") Finished");
-                myCampaign.doSendToAllOnlinePlayers("CC|NT|" + this.Duration + "|" + true, false);
+                LOGGER.info(STR."Tick (\{tickID}) Finished");
+                myCampaign.doSendToAllOnlinePlayers(STR."CC|NT|\{this.duration}|true", false);
             }
         } catch (Exception ex) {
-            MWLogger.errLog(ex);
+            LOGGER.error(ex, "Error during run: {}", ex.getLocalizedMessage());
         }
     }
 
     public void extendedWait(int time) {
         until = System.currentTimeMillis() + time;
+
         try {
             this.wait(time);
         } catch (Exception ex) {
-            MWLogger.errLog(ex);
+            LOGGER.error(ex, "Error during extended wait: {}", ex.getLocalizedMessage());
         }
 
     }

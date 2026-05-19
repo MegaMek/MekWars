@@ -92,7 +92,7 @@ public class ConnectionHandlerLocal implements IConnectionHandler {
 
     /**
      * Try to stop the threads gracefully, close the socket, then call connectionLost() on the ChatServerLocal. This
-     * method is typically called by the ReaderThread when it has detected the the connection died.
+     * method is typically called by the ReaderThread when it has detected the connection died.
      */
     public void shutdown(boolean notify) {
         _reader.pleaseStop();

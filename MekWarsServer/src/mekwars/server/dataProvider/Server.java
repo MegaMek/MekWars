@@ -1,26 +1,46 @@
 /*
- * MekWars - Copyright (C) 2004
+ * Copyright (C) 2004 MekWars
+ * Copyright (C) 2026 The MegaMek Team. All Rights Reserved.
  *
- * Derived from MegaMekNET (http://www.sourceforge.net/projects/megameknet)
+ * This file is part of MekWars.
  *
- * This program is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License as published by the Free
- * Software Foundation; either version 2 of the License, or (at your option)
- * any later version.
+ * MekWars is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License (GPL),
+ * version 3 or (at your option) any later version,
+ * as published by the Free Software Foundation.
  *
- * This program is distributed in the hope that it will be useful, but
- * WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
- * or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License
- * for more details.
+ * MekWars is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty
+ * of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU General Public License for more details.
+ *
+ * A copy of the GPL should have been included with this project;
+ * if not, see <https://www.gnu.org/licenses/>.
+ *
+ * NOTICE: The MegaMek organization is a non-profit group of volunteers
+ * creating free software for the BattleTech community.
+ *
+ * MechWarrior, BattleMech, `Mech and AeroTech are registered trademarks
+ * of The Topps Company, Inc. All Rights Reserved.
+ *
+ * Catalyst Game Labs and the Catalyst Game Labs logo are trademarks of
+ * InMediaRes Productions, LLC.
+ *
+ * MechWarrior Copyright Microsoft Corporation. MekWars was created under
+ * Microsoft's "Game Content Usage Rules"
+ * <https://www.xbox.com/en-US/developers/rules> and it is not endorsed by or
+ * affiliated with Microsoft.
  */
 
 package mekwars.server.dataProvider;
 
 import java.io.IOException;
+import java.net.InetAddress;
+import java.net.ServerSocket;
+import java.net.Socket;
 
-import common.CampaignData;
-import common.util.MWLogger;
-
+import megamek.logging.MMLogger;
+import mekwars.common.CampaignData;
 
 /**
  * Starts a server which provides diffs to data files for the clients.
@@ -28,10 +48,11 @@ import common.util.MWLogger;
  * @author Imi (immanuel.scholz@gmx.de)
  */
 public class Server extends Thread {
+    private final static MMLogger LOGGER = MMLogger.create(Server.class);
 
-    private CampaignData data;
-    private int dataPort;
-    private String IpAddress;
+    private final CampaignData data;
+    private final int dataPort;
+    private final String IpAddress;
 
     public Server(CampaignData data, int dataPort, String IpAddress) {
         super("Server");
@@ -43,71 +64,57 @@ public class Server extends Thread {
     /**
      * Starts the server. It blocks forever, so make sure to run this in an extra thread.
      *
-     * @throws IOException
      */
     public void run() {
-        MWLogger.mainLog("DataProvider: startup...");
+        LOGGER.info("DataProvider: startup...");
 
         //open and bind a socket and wait for incoming calls
         //If bindip is "-1", we want to bind to all available interfaces.
-        java.net.ServerSocket server = null;
+        ServerSocket server;
 
         try {
-
-            if (IpAddress.equals("-1")) {server = new java.net.ServerSocket(dataPort, 0, null);} else {
-                server = new java.net.ServerSocket(dataPort, 0, java.net.InetAddress.getByName(IpAddress));
+            if (IpAddress.equals("-1")) {
+                server = new ServerSocket(dataPort, 0, null);
+            } else {
+                server = new ServerSocket(dataPort, 0, InetAddress.getByName(IpAddress));
             }
 
-        } catch (java.io.IOException e) {
-            MWLogger.errLog("Shutting down because:");
-            MWLogger.errLog(e);
-            MWLogger.mainLog("DataProvider: Could not create server socket. Shutting down.");
-            MWLogger.infoLog("DataProvider: Could not create server socket. Shutting down.");
+        } catch (IOException e) {
+            LOGGER.error(e, "Shutting down during initial server creation because: {}", e.getLocalizedMessage());
             return;
         }
 
-        MWLogger.mainLog("DataProvider: server created at port " +
-                               dataPort +
-                               ". Address " +
-                               IpAddress +
-                               ". Waiting for calls...");
+        LOGGER.info(STR."DataProvider: server created at port \{dataPort}. Address \{IpAddress}. Waiting for calls...");
 
         //listen for new data requests until an error occurs, or forever.
         while (true) {
-
             try {
-
-                java.net.Socket client = server.accept();
+                Socket client = server.accept();
                 new CommandTaskThread(client, data).start();
-
             } catch (OutOfMemoryError OOM) {
-
-                MWLogger.errLog("Out of Memory while opening dataprovider socket:");
-                MWLogger.errLog(OOM.toString());
+                LOGGER.error(OOM, "Out of Memory while opening data provider socket:");
 
                 /*
-                 * Ok so too many socket connections lets try a reset
+                 * Ok, so too many socket connections, let's try a reset
                  * --Torren.
                  */
                 try {
                     server.close();
                     server = null;
                     System.gc();
-                    if (IpAddress.equals("-1")) {server = new java.net.ServerSocket(dataPort, 0, null);} else {
-                        server = new java.net.ServerSocket(dataPort, 0, java.net.InetAddress.getByName(IpAddress));
+                    if (IpAddress.equals("-1")) {
+                        server = new ServerSocket(dataPort, 0, null);
+                    } else {
+                        server = new ServerSocket(dataPort, 0, InetAddress.getByName(IpAddress));
                     }
                 } catch (Exception ex) {
-                    MWLogger.errLog("Shutting down because:");
-                    MWLogger.errLog(ex);
-                    MWLogger.mainLog("DataProvider: Could not create server socket. Shutting down.");
-                    MWLogger.infoLog("DataProvider: Could not create server socket. Shutting down.");
+                    LOGGER.error(ex, "Shutting down on OOM Server connections because: {}", ex.getLocalizedMessage());
                     return;
                 }
-            } catch (java.io.IOException e) {
-                MWLogger.errLog("Dataprovider IO Exception:");
-                MWLogger.errLog(e);
+            } catch (IOException e) {
+                LOGGER.error(e, "DataProvider IO Exception:");
             } catch (Exception ex) {
-                MWLogger.errLog(ex);
+                LOGGER.error(ex, "Unknown Exception: {}", ex.getLocalizedMessage());
             }
         }
 

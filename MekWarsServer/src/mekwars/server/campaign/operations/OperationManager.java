@@ -1,82 +1,94 @@
 /*
- * MekWars - Copyright (C) 2005
+ * Copyright (C) 2005 - nmorris (urgru@users.sourceforge.net)
+ * Copyright (C) 2026 The MegaMek Team. All Rights Reserved.
  *
- * Original author - nmorris (urgru@users.sourceforge.net)
+ * This file is part of MekWars.
  *
- * This program is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License as published by the Free
- * Software Foundation; either version 2 of the License, or (at your option)
- * any later version.
+ * MekWars is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License (GPL),
+ * version 3 or (at your option) any later version,
+ * as published by the Free Software Foundation.
  *
- * This program is distributed in the hope that it will be useful, but
- * WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
- * or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License
- * for more details.
+ * MekWars is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty
+ * of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU General Public License for more details.
+ *
+ * A copy of the GPL should have been included with this project;
+ * if not, see <https://www.gnu.org/licenses/>.
+ *
+ * NOTICE: The MegaMek organization is a non-profit group of volunteers
+ * creating free software for the BattleTech community.
+ *
+ * MechWarrior, BattleMech, `Mech and AeroTech are registered trademarks
+ * of The Topps Company, Inc. All Rights Reserved.
+ *
+ * Catalyst Game Labs and the Catalyst Game Labs logo are trademarks of
+ * InMediaRes Productions, LLC.
+ *
+ * MechWarrior Copyright Microsoft Corporation. MekWars was created under
+ * Microsoft's "Game Content Usage Rules"
+ * <https://www.xbox.com/en-US/developers/rules> and it is not endorsed by or
+ * affiliated with Microsoft.
  */
-
-/*
- * OperationManager stores all of a server's running Operations. A
- * single manager instance is created in CampaignMain on startup.
- *
- * The Manager keeps track of Long and Short operations in seperate
- * lists. On ticks, the Manager iterates thorugh long Ops and stores
- * necessary persistance variables. Short ops are NOT saved.
- *
- * Additionally, the Manager maintains a list of outstanding/unreported
- * games (disconnects). Although the manager doesn't time these directly,
- * there is a lookback to this list in the threads which track disconnect
- * times and triger resolves.
- *
- * Upon creation, the Manager attempts to read the /data/operations/ sub-
- * directories (long, short, modifiers), via an OperationLoader. Once maps
- * of operations and map of modifying operations have been created, they are
- * used as for lookup and given to Validators and Resolvers as params, along
- * with specific instances of ShortOperations and LongOperations.
- */
-
 package mekwars.server.campaign.operations;
 
-import common.campaign.operations.ModifyingOperation;
-import common.campaign.operations.Operation;
-import common.util.MWLogger;
+import java.io.File;
+import java.util.StringTokenizer;
+import java.util.TreeMap;
+
+import megamek.logging.MMLogger;
+import mekwars.common.campaign.operations.ModifyingOperation;
+import mekwars.common.campaign.operations.Operation;
 import mekwars.server.campaign.CampaignMain;
-import server.campaign.operations.newopmanager.AbstractOperationManager;
-import server.campaign.operations.newopmanager.I_OperationManager;
+import mekwars.server.campaign.operations.newopmanager.AbstractOperationManager;
+import mekwars.server.campaign.operations.newopmanager.I_OperationManager;
 
-
+/**
+ * OperationManager stores all of a server's running Operations. A single manager instance is created in CampaignMain on
+ * startup.
+ * <p>
+ * The Manager keeps track of Long and Short operations in separate lists. On ticks, the Manager iterates thorugh long
+ * Ops and stores necessary persistence variables. Short ops are NOT saved.
+ * <p>
+ * Additionally, the Manager maintains a list of outstanding/unreported games (disconnects). Although the manager
+ * doesn't time these directly, there is a look back to this list in the threads which track disconnect times and
+ * trigger resolves.
+ * <p>
+ * Upon creation, the Manager attempts to read the /data/operations/ subdirectories (long, short, modifiers), via an
+ * OperationLoader. Once maps of operations and map of modifying operations have been created, they are used as for
+ * lookup and given to Validators and Resolvers as params, along with specific instances of ShortOperations and
+ * LongOperations.
+ */
 public class OperationManager extends AbstractOperationManager implements I_OperationManager {
-
+    private final static MMLogger LOGGER = MMLogger.create(OperationManager.class);
 
     /**
-     * Construction of the Manager is keystone event for Operations system. Construction triggers attempts to load Ops
-     * and ModOps.
+     * Construction of the Manager is a keystone event for an Operations system. Construction triggers attempts to load
+     * Ops and ModOps.
      */
     public OperationManager() {
-
         //construct utils
         opLoader = new OperationLoader();
         opWriter = new OperationWriter();
         shortResolver = new ShortResolver();
-        //longResolver   = new LongResolver();
         shortValidator = new ShortValidator(this);
-        //longValidator  = new LongValidator(this);
 
         //construct local maps
-        ops = new java.util.TreeMap<String, Operation>();
-        mods = new java.util.TreeMap<String, ModifyingOperation>();
+        ops = new TreeMap<>();
+        mods = new TreeMap<>();
 
         //maps for running/pending ops
-        runningOperations = new java.util.TreeMap<Integer, mekwars.server.campaign.operations.ShortOperation>();
-        activeLongOps = new java.util.TreeMap<Integer, mekwars.server.campaign.operations.LongOperation>();
+        runningOperations = new TreeMap<>();
+        activeLongOps = new TreeMap<>();
 
         //disconnection handling maps
-        disconnectionThreads = new java.util.TreeMap<String, OpsDisconnectionThread>();
-        scrapThreads = new java.util.TreeMap<String, mekwars.server.campaign.operations.OpsScrapThread>();
-        disconnectionTimestamps = new java.util.TreeMap<String, Long>();
-        disconnectionDurations = new java.util.TreeMap<String, Long>();
+        disconnectionThreads = new TreeMap<>();
+        scrapThreads = new TreeMap<>();
+        disconnectionTimestamps = new TreeMap<>();
+        disconnectionDurations = new TreeMap<>();
 
         loadOperations();
-
     }//end constructor
 
     //METHODS
@@ -84,17 +96,26 @@ public class OperationManager extends AbstractOperationManager implements I_Oper
     public void loadOperations() {
         /*
          * Check for the operations directories.
-         * If they're missing create them.
+         * If they're missing, create them.
          */
-        java.io.File shortDir = new java.io.File("./data/operations/short/");
-        java.io.File longDir = new java.io.File("./data/operations/long/");
-        java.io.File modDir = new java.io.File("./data/operations/modifiers/");
+        File shortDir = new File("./data/operations/short/");
+        File longDir = new File("./data/operations/long/");
+        File modDir = new File("./data/operations/modifiers/");
+
         try {
-            if (!shortDir.exists()) {shortDir.mkdirs();}
-            if (!longDir.exists()) {longDir.mkdir();}
-            if (!modDir.exists()) {modDir.mkdir();}
+            if (!shortDir.exists() && shortDir.mkdirs()) {
+                LOGGER.info("Short Operations Directory Created..");
+            }
+
+            if (!longDir.exists() && longDir.mkdirs()) {
+                LOGGER.info("Long Operations Directory Created..");
+            }
+
+            if (!modDir.exists() && modDir.mkdirs()) {
+                LOGGER.info("Modifiers Opertaions Directory Created..");
+            }
         } catch (Exception e) {
-            MWLogger.errLog("Error while creating operations directories.");
+            LOGGER.error(e, "Error while creating operations directories.");
         }
 
         ops.clear();
@@ -102,47 +123,48 @@ public class OperationManager extends AbstractOperationManager implements I_Oper
         MULOnlyArmiesOpsLoad = false;
 
         /*
-         * read the shortoperation's subdir and do loads. since every
+         * read the short operation's sub dir and do loads. since every
          * long has a corresponding short, its possible to do loads
          * via the short names only (loader handles this properly)
          */
         String[] shortNames = shortDir.list();
-        for (int i = 0; i < shortNames.length; i++) {
-            Operation currOp = opLoader.loadOpValues(shortNames[i]);
-            ops.put(currOp.getName(), currOp);
-            if (currOp.getBooleanValue("MULArmiesOnly")) {
-                MULOnlyArmiesOpsLoad = true;
+        if (shortNames != null) {
+            for (String shortName : shortNames) {
+                Operation currOp = opLoader.loadOpValues(shortName);
+                ops.put(currOp.getName(), currOp);
+                MULOnlyArmiesOpsLoad = currOp.getBooleanValue("MULArmiesOnly");
             }
         }
 
         /*
-         * read the mod operations subdir and do loads. add the mods to
-         * target ops' modmaps as the loads occur. Throw error if, for some
+         * read the mod operations sub dir and do loads. add the mods to
+         * target ops' mod maps as the loads occur. Throw error if, for some
          * reason, a given target cannot be found.
          */
         String[] modNames = modDir.list();
-        for (int i = 0; i < modNames.length; i++) {
-            ModifyingOperation currMod = opLoader.loadModOpValues(modNames[i]);
-            mods.put(currMod.getName(), currMod);
+        if (modNames != null) {
+            for (String modName : modNames) {
+                ModifyingOperation currMod = opLoader.loadModOpValues(modName);
+                mods.put(currMod.getName(), currMod);
 
-            /*
-             * mod loaded. now, try to put it into standard op's trees.
-             * targets are a string w/ ; as deliminter. trim to remove leading
-             * and trailing spaces.
-             */
-            String targets = currMod.getValueAsString("LinkedOperations");
-            java.util.StringTokenizer st = new java.util.StringTokenizer(targets, ";");
-            while (st.hasMoreTokens()) {
-                String currTarget = st.nextToken().trim();
-                Operation currOp = ops.get(currTarget);
-                if (currOp == null) {
-                    MWLogger.errLog("Error assigning modop target. Mod: " +
-                                          currMod.getName() +
-                                          " Target: " +
-                                          currTarget);
-                } else {currOp.addModifyingOperation(currMod);}
-            }//end while(more targets)
-        }//end modOp loading
+                /*
+                 * mod loaded. now, try to put it into standard op's trees.
+                 * targets are a string w/; as delimiter. trim to remove leading
+                 * and trailing spaces.
+                 */
+                String targets = currMod.getValueAsString("LinkedOperations");
+                StringTokenizer stringTokenizer = new StringTokenizer(targets, ";");
+                while (stringTokenizer.hasMoreTokens()) {
+                    String currTarget = stringTokenizer.nextToken().trim();
+                    Operation currOp = ops.get(currTarget);
+                    if (currOp == null) {
+                        LOGGER.error("Error assigning modop target. Mod: {} Target: {}", currMod.getName(), currTarget);
+                    } else {
+                        currOp.addModifyingOperation(currMod);
+                    }
+                }//end while(more targets)
+            }//end modOp loading
+        }
 
         /*
          * Now that all Ops are loaded, write out the crib sheet for clients.
@@ -419,7 +441,7 @@ public class OperationManager extends AbstractOperationManager implements I_Oper
                 }
 
                 server.campaign.SPlayer currP = CampaignMain.campaignMain.getPlayer(currN);
-                CampaignMain.campaignMain.getIThread()
+                CampaignMain.campaignMain.getImmunityThread()
                       .removeImmunity(currP);//ensure player is not in immunity tree.
 
                 //If AFR, return to reserve. Else, standard switch to activated.

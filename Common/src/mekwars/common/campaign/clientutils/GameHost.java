@@ -113,6 +113,7 @@ public abstract class GameHost implements GameListener, IGameHost {
     @Override
     public void gameTurnChange(GameTurnChangeEvent e) {
         if (myServer != null) {
+
             if (turn == 0) {
                 serverSend(STR."SHS|\{getUsername()}|Running");
             } else if ((myServer.getGame().getPhase() != currentPhase) &&
@@ -120,6 +121,7 @@ public abstract class GameHost implements GameListener, IGameHost {
                 sendServerGameUpdate();
                 currentPhase = myServer.getGame().getPhase();
             }
+
             turn += 1;
 
         }
@@ -312,6 +314,7 @@ public abstract class GameHost implements GameListener, IGameHost {
             gameOptions.close();
             gameOptionsFile.close();
         } catch (Exception ex) {
+            LOGGER.error(ex, "Error sending game options to the server: {}", ex.getLocalizedMessage());
         }
 
         sendChat(STR."\{IClient.CAMPAIGN_PREFIX}c servergameoptions#\{packet}");

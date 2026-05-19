@@ -1,8 +1,4 @@
 /*
- * Based on code by Lyrisoft Solutions, Inc.
- *
- */
-/*
  * Copyright (C) 2005 - Torren (torren@users.sourceforge.net)
  * Copyright (C) 2026 The MegaMek Team. All Rights Reserved.
  *
@@ -96,7 +92,7 @@ public class CConnector implements IConnectionListener {
     }
 
     /**
-     * This method is called by ConnectionHandlerLocal when the connect to the server is lost. connectionLost() is
+     * This method is called by ConnectionHandlerLocal when the connection to the server is lost. connectionLost() is
      * called on the client to inform it that the connection is lost.
      */
     public void socketClosed() {

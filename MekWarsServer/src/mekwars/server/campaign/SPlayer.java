@@ -933,7 +933,7 @@ public final class SPlayer extends Player implements Comparable<Object>, IBuyer,
 
                 // immediately after a game, only decrement. don't scrap.
                 long currTime = System.currentTimeMillis();
-                if (CampaignMain.campaignMain.getIThread().isImmune(this) ||
+                if (CampaignMain.campaignMain.getImmunityThread().isImmune(this) ||
                           (currUnit.getPassesMaintenanceUntil() > currTime)) {
                     currUnit.addToMaintainanceLevel(-decrease);
                 } else if (rnd <= currUnit.getMaintainanceLevel()) {
@@ -1080,7 +1080,7 @@ public final class SPlayer extends Player implements Comparable<Object>, IBuyer,
 
             // activating. set current timestamp and clear immunity.
             activeSince = System.currentTimeMillis();
-            CampaignMain.campaignMain.getIThread().removeImmunity(this);
+            CampaignMain.campaignMain.getImmunityThread().removeImmunity(this);
 
             /*
              * Player is activating. His armies are all acceptable, and his
@@ -1223,7 +1223,7 @@ public final class SPlayer extends Player implements Comparable<Object>, IBuyer,
              * will not be any immunity and updates should be sent to all
              * players immediately.
              */
-            if (!CampaignMain.campaignMain.getIThread().isImmune(this)) {
+            if (!CampaignMain.campaignMain.getImmunityThread().isImmune(this)) {
                 OpponentListHelper olh = new OpponentListHelper(this, OpponentListHelper.MODE_ADD);
                 olh.sendInfoToOpponents(" halted combat operations and returned to its post. You may attack it with ");
             }
@@ -1241,7 +1241,7 @@ public final class SPlayer extends Player implements Comparable<Object>, IBuyer,
     public void setFightingNoOppList() {
 
         // no immunity from immediate activation
-        CampaignMain.campaignMain.getIThread().removeImmunity(this);
+        CampaignMain.campaignMain.getImmunityThread().removeImmunity(this);
 
         // mark this as the time-of-activation
         activeSince = System.currentTimeMillis();

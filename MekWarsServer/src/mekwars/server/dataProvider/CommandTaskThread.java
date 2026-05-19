@@ -1,48 +1,72 @@
 /*
- * MekWars - Copyright (C) 2004
+ * Copyright (C) 2004 MekWars
+ * Copyright (C) 2026 The MegaMek Team. All Rights Reserved.
  *
- * Derived from MegaMekNET (http://www.sourceforge.net/projects/megameknet)
+ * This file is part of MekWars.
  *
- * This program is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License as published by the Free
- * Software Foundation; either version 2 of the License, or (at your option)
- * any later version.
+ * MekWars is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License (GPL),
+ * version 3 or (at your option) any later version,
+ * as published by the Free Software Foundation.
  *
- * This program is distributed in the hope that it will be useful, but
- * WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
- * or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License
- * for more details.
+ * MekWars is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty
+ * of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU General Public License for more details.
+ *
+ * A copy of the GPL should have been included with this project;
+ * if not, see <https://www.gnu.org/licenses/>.
+ *
+ * NOTICE: The MegaMek organization is a non-profit group of volunteers
+ * creating free software for the BattleTech community.
+ *
+ * MechWarrior, BattleMech, `Mech and AeroTech are registered trademarks
+ * of The Topps Company, Inc. All Rights Reserved.
+ *
+ * Catalyst Game Labs and the Catalyst Game Labs logo are trademarks of
+ * InMediaRes Productions, LLC.
+ *
+ * MechWarrior Copyright Microsoft Corporation. MekWars was created under
+ * Microsoft's "Game Content Usage Rules"
+ * <https://www.xbox.com/en-US/developers/rules> and it is not endorsed by or
+ * affiliated with Microsoft.
  */
 
 package mekwars.server.dataProvider;
 
-import common.CampaignData;
-import common.util.BinWriter;
-import common.util.MWLogger;
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
+import java.io.PrintWriter;
+import java.net.Socket;
+import java.net.SocketException;
+import java.nio.charset.StandardCharsets;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 
-//import common.util.BinReader;
-
+import megamek.logging.MMLogger;
+import mekwars.common.CampaignData;
+import mekwars.common.persistence.BinWriter;
 
 /**
  *
  * @author Imi (immanuel.scholz@gmx.de)
  */
 public class CommandTaskThread extends Thread {
+    private final static MMLogger LOGGER = MMLogger.create(CommandTaskThread.class);
 
-    private java.net.Socket client;
+    private Socket client;
     private CampaignData data;
 
     /**
      * Create a new thread to handle an incoming call
      */
-    public CommandTaskThread(java.net.Socket client, CampaignData data) {
+    public CommandTaskThread(Socket client, CampaignData data) {
         super("Command Task Thread");
         try {
             this.client = client;
             this.data = data;
-            //this.client.setSoTimeout(12000);
         } catch (Exception ex) {
-
+            LOGGER.error(ex, "Error created a CommandTaskThread: {}", ex.getLocalizedMessage());
         }
     }
 
@@ -51,39 +75,33 @@ public class CommandTaskThread extends Thread {
      */
     @Override
     public void run() {
+        // timestamp is bufferedReader this format
+        SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyyMMddHHmmss");
 
-        // timestamp is in this format
-        java.text.SimpleDateFormat sdf = new java.text.SimpleDateFormat("yyyyMMddHHmmss");
-
-        MWLogger.infoLog("DataProvider call accepted from " + client.getInetAddress());
+        LOGGER.info("DataProvider call accepted from {}", client.getInetAddress());
         BinWriter out = null;
-        java.io.BufferedReader in = null;
-        String cmdStr = "";
-        String timeStr = "";
+        BufferedReader bufferedReader;
+        String cmdStr;
+        String timeStr;
 
         try {
-            in = new java.io.BufferedReader(new java.io.InputStreamReader(client.getInputStream(), "UTF8"));
-            while ((cmdStr = in.readLine()) != null) {
+            bufferedReader = new BufferedReader(new InputStreamReader(client.getInputStream(), StandardCharsets.UTF_8));
+            while ((cmdStr = bufferedReader.readLine()) != null) {
                 //read the command name
                 try {
-                    //cmdStr = in.readLine("cmd");
-                    timeStr = in.readLine();
-                    //System.err.println("timeStr: "+timeStr);
+                    timeStr = bufferedReader.readLine();
                 } catch (Exception e) {
-                    in.close();
-                    MWLogger.errLog("Error getting data provider command or timestamp from client.");
-                    MWLogger.errLog(e);
+                    bufferedReader.close();
+                    LOGGER.error(e, "Error getting data provider command or timestamp from client.");
                     return;
                 }//end command name try/catch
 
                 if (out == null) {
-                    //set up output stream
                     try {
-                        out = new BinWriter(new java.io.PrintWriter(client.getOutputStream()));
+                        out = new BinWriter(new PrintWriter(client.getOutputStream()));
                     } catch (Exception e) {
-                        in.close();
-                        MWLogger.errLog("Error in data provider while creating output stream.");
-                        MWLogger.errLog(e);
+                        bufferedReader.close();
+                        LOGGER.error(e, "Error bufferedReader data provider while creating output stream.");
                         return;
                     }
                 }//end output stream if
@@ -92,61 +110,59 @@ public class CommandTaskThread extends Thread {
                 Class<?> cmdClass;
                 ServerCommand cmd;
                 try {
-                    cmdClass = Class.forName("server.dataProvider.commands." + cmdStr);
-                    cmd = (ServerCommand) cmdClass.newInstance();
+                    cmdClass = Class.forName(STR."server.dataProvider.commands.\{cmdStr}");
+                    cmd = (ServerCommand) cmdClass.getDeclaredConstructor().newInstance();
                 } catch (Exception e) {
-                    in.close();
+                    bufferedReader.close();
                     out.close();
-                    MWLogger.errLog("Error creating dataprovider command: " + cmdStr);
-                    MWLogger.errLog(e);
+                    LOGGER.error(e, "Error creating DataProvider command: {}", cmdStr);
                     return;
                 }//end command class try/catch
 
                 //writing timestamp
-                out.println(sdf.format(new java.util.Date()), "lasttimestamp");
+                out.println(simpleDateFormat.format(new Date()), "lastTimestamp");
 
                 //execute command
                 try {
-                    cmd.execute(timeStr.equals("") ? null : sdf.parse(timeStr), out, data);
+                    cmd.execute(timeStr.isEmpty() ? null : simpleDateFormat.parse(timeStr), out, data);
                 } catch (Exception e) {
-                    in.close();
+                    bufferedReader.close();
                     out.close();
-                    MWLogger.errLog("Error executing dataprovider command: " + cmdStr);
-                    MWLogger.errLog(e);
+                    LOGGER.error(e, "Error executing DataProvider command: {}", cmdStr);
                     return;
                 }//end execute try/catch
                 out.flush();
             }//end While
             try {
-                MWLogger.infoLog("Closing DataProvider call from " + client.getInetAddress());
-                in.close();
-                if (out != null) {out.close();}
+                LOGGER.info("Closing DataProvider call from {}", client.getInetAddress());
+                bufferedReader.close();
+
+                if (out != null) {
+                    out.close();
+                }
+
                 client.close();
                 client = null;
-            } catch (java.net.SocketException se) {
+            } catch (SocketException se) {
                 //no reason to report closed sockets.
                 client = null;
-                return;
             } catch (Exception e) {
-                MWLogger.errLog(e);
-                return;
+                LOGGER.error(e, "Not a socket exception: {}", e.getLocalizedMessage());
             }//end client.close() try
-        } catch (java.net.SocketException se) {
-            //no reason to report closed sockets.
-            return;
+        } catch (java.net.SocketException ignored) {
         } catch (java.net.SocketTimeoutException ste) {
             try {
-                //in.close(); // This can only be null at this point - guaranteed NPE
-                if (out != null) {out.close();}
+                if (out != null) {
+                    out.close();
+                }
                 client.close();
-                MWLogger.infoLog("TimeOut DataProvider call from " + client.getInetAddress());
-            } catch (Exception ex) {}
-            client = null;
-            return;
-        } catch (Exception ex) {
-            MWLogger.errLog(ex);
-            return;
-        }//end first try
+                LOGGER.info("TimeOut DataProvider call from {}", client.getInetAddress());
+            } catch (Exception ignored) {
 
+            }
+            client = null;
+        } catch (Exception ex) {
+            LOGGER.error(ex);
+        }//end first try
     }//end run()
 }

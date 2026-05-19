@@ -344,7 +344,7 @@ public class ChristmasHandler {
      */
     private String getRandomUnitFileName() {
         int size = christmasList.size();
-        return christmasList.get(CampaignMain.campaignMain.getR().nextInt(size));
+        return christmasList.get(CampaignMain.campaignMain.getRandom().nextInt(size));
     }
 
     /**

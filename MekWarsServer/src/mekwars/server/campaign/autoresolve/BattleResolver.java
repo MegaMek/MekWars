@@ -222,9 +222,9 @@ public class BattleResolver {
 
                 //Shall he fire?
                 if (toHit <= 12) {
-                    int roll = CampaignMain.campaignMain.getR().nextInt(5) +
+                    int roll = CampaignMain.campaignMain.getRandom().nextInt(5) +
                                      1 +
-                                     CampaignMain.campaignMain.getR().nextInt(5) +
+                                     CampaignMain.campaignMain.getRandom().nextInt(5) +
                                      1;
                     if (roll >= toHit) {
                         damageEntity(target, weapon.getDamage(), target.getPlayer().getName(), bf);
@@ -254,9 +254,9 @@ public class BattleResolver {
     private VirtualUnit findRandomEnemy(VirtualUnit unit, Battlefield bf) {
         VirtualUnit target;
         if (unit.isAttacker()) {
-            target = bf.getDefenders().get(CampaignMain.campaignMain.getR().nextInt(bf.getDefenders().size()));
+            target = bf.getDefenders().get(CampaignMain.campaignMain.getRandom().nextInt(bf.getDefenders().size()));
         } else {
-            target = bf.getAttackers().get(CampaignMain.campaignMain.getR().nextInt(bf.getAttackers().size()));
+            target = bf.getAttackers().get(CampaignMain.campaignMain.getRandom().nextInt(bf.getAttackers().size()));
         }
         return target;
     }

@@ -80,7 +80,7 @@ public class OpponentListHelper {
                 if (searchPlayer.equals(currPlayer)) {continue playersLoop;}
 
                 //if the player is immune, skip him
-                if (CampaignMain.campaignMain.getIThread().isImmune(currPlayer)) {continue playersLoop;}
+                if (CampaignMain.campaignMain.getImmunityThread().isImmune(currPlayer)) {continue playersLoop;}
 
                 //if player has no armies, skip him
                 if (currPlayer.getArmies().size() == 0) {continue playersLoop;}

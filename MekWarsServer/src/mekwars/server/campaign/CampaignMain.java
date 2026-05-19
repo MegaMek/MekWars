@@ -1,31 +1,66 @@
 /*
+ * Copyright (C) 2026 The MegaMek Team. All Rights Reserved.
  *
- * Derived from MegaMekNET (http://www.sourceforge.net/projects/megameknet)
+ * This file is part of MekWars.
  *
- * This program is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software
- * Foundation; either version 2 of the License, or (at your option) any later version.
+ * MekWars is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License (GPL),
+ * version 3 or (at your option) any later version,
+ * as published by the Free Software Foundation.
  *
- * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
- * A PARTICULAR PURPOSE. See the GNU General Public License for more details.
+ * MekWars is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty
+ * of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU General Public License for more details.
+ *
+ * A copy of the GPL should have been included with this project;
+ * if not, see <https://www.gnu.org/licenses/>.
+ *
+ * NOTICE: The MegaMek organization is a non-profit group of volunteers
+ * creating free software for the BattleTech community.
+ *
+ * MechWarrior, BattleMech, `Mech and AeroTech are registered trademarks
+ * of The Topps Company, Inc. All Rights Reserved.
+ *
+ * Catalyst Game Labs and the Catalyst Game Labs logo are trademarks of
+ * InMediaRes Productions, LLC.
+ *
+ * MechWarrior Copyright Microsoft Corporation. MekWars was created under
+ * Microsoft's "Game Content Usage Rules"
+ * <https://www.xbox.com/en-US/developers/rules> and it is not endorsed by or
+ * affiliated with Microsoft.
  */
 
 package mekwars.server.campaign;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.PrintStream;
 import java.io.Serial;
+import java.util.Date;
+import java.util.HashMap;
 import java.util.Hashtable;
 import java.util.Properties;
+import java.util.Random;
+import java.util.StringTokenizer;
+import java.util.Vector;
 
 import megamek.client.Client;
+import megamek.codeUtilities.MathUtility;
 import megamek.common.CriticalSlot;
 import megamek.common.equipment.Mounted;
 import megamek.common.equipment.WeaponType;
 import megamek.common.options.IOption;
+import megamek.logging.MMLogger;
 import mekwars.common.CampaignData;
 import mekwars.common.Equipment;
 import mekwars.common.House;
 import mekwars.common.Influences;
 import mekwars.common.Planet;
 import mekwars.common.flags.PlayerFlags;
+import mekwars.common.util.MekWarsFileReader;
 import mekwars.common.util.UnitUtils;
 import mekwars.server.MWServ;
 import mekwars.server.campaign.commands.*;
@@ -36,6 +71,7 @@ import mekwars.server.campaign.commands.helpers.HireAndRequestUsedHelper;
 import mekwars.server.campaign.commands.helpers.RemoveAndAddNoPlayHelper;
 import mekwars.server.campaign.commands.leader.*;
 import mekwars.server.campaign.commands.mod.*;
+import mekwars.server.campaign.market.Market;
 import mekwars.server.campaign.market.PartsMarket;
 import mekwars.server.campaign.mercenaries.ContractInfo;
 import mekwars.server.campaign.mercenaries.MercHouse;
@@ -58,6 +94,7 @@ import mekwars.server.util.rss.Feed;
 import mekwars.server.util.rss.FeedMessage;
 
 public final class CampaignMain implements java.io.Serializable {
+    private static final MMLogger LOGGER = MMLogger.create(CampaignMain.class);
 
     @Serial
     private static final long serialVersionUID = -8671163467590633378L;
@@ -77,70 +114,39 @@ public final class CampaignMain implements java.io.Serializable {
     private final Properties config = new Properties();
     private final Hashtable<String, Command> commands = new Hashtable<>();
     private final Hashtable<String, MekStatistics> mekStats = new Hashtable<>();
-    private Client megaMekClient = new Client("MWServer", "None", 0);
-    private CampaignData data = new CampaignData();
-    private java.util.Hashtable<String, String> omniVariantMods = new java.util.Hashtable<>();
-
-    private java.util.Hashtable<String, Equipment> blackMarketEquipmentCostTable = new java.util.Hashtable<String, Equipment>();
-
-    private int gamesCompleted;// used by Tracker
-
-    private int currentUnitID = 1;
-
-    private int currentPilotID = 1;
-
-    private TickThread TThread;
-
-    private SliceThread SThread;
-
-    private ImmunityThread IThread;
-
-    private RepairTrackingThread RTT;
-
-    private AutomaticBackup aub = new AutomaticBackup(System.currentTimeMillis());
-
-    private Market2 market;
-
-    private PartsMarket partsmarket;
-
-    private VoteManager voteManager;
-
-    private I_OperationManager opsManager;
-
-    private java.util.Vector<ContractInfo> unresolvedContracts = new java.util.Vector<ContractInfo>(1, 1);
-
-    private UnitCosts unitCostLists = null;
-
-    //private TreeMap<String, String> NewsFeed = new TreeMap<String, String>();
-    private Feed newsFeed = new Feed();
-
-    private boolean isArchiving = false;
-
-    private java.util.Random r = new java.util.Random(System.currentTimeMillis());
-
-    private java.util.Date housePlanetDate = new java.util.Date();
-
-    private java.util.HashMap<String, ChatRoom> chatRooms = new java.util.HashMap<String, ChatRoom>();
-
+    private final Hashtable<String, Equipment> blackMarketEquipmentCostTable = new Hashtable<>();
+    private final TickThread tickThread;
+    private final ImmunityThread immunityThread;
+    private final Market market;
+    private final PartsMarket partsMarket;
+    private final VoteManager voteManager;
+    private final Vector<ContractInfo> unresolvedContracts = new Vector<>(1, 1);
+    private final Feed newsFeed = new Feed();
+    private final Random random = new Random(System.currentTimeMillis());
+    private final HashMap<String, ChatRoom> chatRooms = new HashMap<>();
     /**
      * This is a hash collection of all the players that have yet to log into their houses This catch all is to keep
      * from having to load the player file over and over again. Once the player has been logged in they are removed from
      * this hash and added to the houses memory.
      */
-    private java.util.Hashtable<String, mekwars.server.campaign.SPlayer> lostSouls = new java.util.Hashtable<String, mekwars.server.campaign.SPlayer>();
-
-    private java.util.Vector<String> supportUnits = new java.util.Vector<String>();
-
-    private PlayerFlags defaultPlayerFlags = new PlayerFlags();
-
+    private final Hashtable<String, SPlayer> lostSouls = new Hashtable<>();
+    private final PlayerFlags defaultPlayerFlags = new PlayerFlags();
+    private Client megaMekClient = new Client("MWServer", "None", 0);
+    private CampaignData data = new CampaignData();
+    private Hashtable<String, String> omniVariantMods = new Hashtable<>();
+    private int gamesCompleted;// used by Tracker
+    private int currentUnitID = 1;
+    private int currentPilotID = 1;
+    private RepairTrackingThread RTT;
+    private I_OperationManager opsManager;
+    private UnitCosts unitCostLists = null;
+    private boolean isArchiving = false;
+    private Date housePlanetDate = new Date();
+    private Vector<String> supportUnits = new Vector<>();
     private MWScheduler scheduler;
 
-    private ChristmasHandler christmas;
-
-    private QuirkHandler quirkHandler;
-
     // CONSTRUCTOR
-    public CampaignMain(server.MWServ serv) {
+    public CampaignMain(MWServ serv) {
 
         campaignMain = this;
         this.serv = serv;
@@ -148,51 +154,33 @@ public final class CampaignMain implements java.io.Serializable {
         defaultServerOptions.createDefaults();
 
         // make sure vital folders exist
-        java.io.File f = new java.io.File("./campaign/");
-        if (!f.exists()) {
-            f.mkdir();
-        }
-        f = new java.io.File("./campaign/players/");
-        if (!f.exists()) {
-            f.mkdir();
+        File file = new File("./campaign/");
+        if (!file.exists() && file.mkdir()) {
+            LOGGER.info("Created Campaign Folder..");
         }
 
-        /*
-         * clear any cache'd unit files. these will be rebuilt later in the
-         * start process. clearing @ each start ensures that updates take hold
-         * properly.
-         */
-        java.io.File cache = new java.io.File("./data/mechfiles/units.cache");
-        if (cache.exists()) {
-            cache.delete();
+        file = new File("./campaign/players/");
+        if (!file.exists() && file.mkdir()) {
+            LOGGER.info("Created Players Folder");
         }
 
         // Try to read the config file
         try {
-            config.putAll(defaultServerOptions.getServerDefaults());// load all of the defaults
+            config.putAll(defaultServerOptions.getServerDefaults());// load all the defaults
             // into the config file
             // before you load in the
             // campaign stuff
-            // if(!isUsingMySQL())
-            config.load(new java.io.FileInputStream(this.serv.getConfigParam("CAMPAIGNCONFIG")));
-            /*
-             * else { if(cm.MySQL.configIsSaved()) cm.MySQL.loadConfig(config);
-             * else config.load(new
-             * FileInputStream(this.myServer.getConfigParam("CAMPAIGNCONFIG")));
-             * }
-             */
+            config.load(new FileInputStream(this.serv.getConfigParam("CAMPAIGN_CONFIG")));
 
-            // Right here, we're going to try to prune old cruft from the configs
-            // Over the course of many years, as config options change, crap never
-            // gets removed from campaignconfig.txt.  We're seeing this very badly on
+
+            // Right here, we're going to try to prune old cruft from the configs Over the course of many years, as
+            // config options change, crap never gets removed from campaignconfig.txt.  We're seeing this very badly on
             // MMNet, and probably other servers are, as well.
-            java.util.Vector<String> keysToRemove = new java.util.Vector<String>();
+            Vector<String> keysToRemove = new Vector<>();
             for (Object key : config.keySet()) {
-                if (!defaultServerOptions.getServerDefaults().keySet().contains(key) &&
+                if (!defaultServerOptions.getServerDefaults().containsKey(key) &&
                           !((String) key).endsWith("RewardPointMultiplier")) {
-                    MWLogger.errLog("Key " +
-                                          (String) key +
-                                          " does not exist in DefaultServerConfig.  Pruning from configs.");
+                    LOGGER.debug(STR."Key \{(String) key} does not exist in DefaultServerConfig.  Pruning from configs.");
                     keysToRemove.add((String) key);
                 }
             }
@@ -201,19 +189,17 @@ public final class CampaignMain implements java.io.Serializable {
                 config.remove(key);
             }
 
-            mekwars.server.campaign.CampaignMain.campaignMain.saveConfigureFile(config,
-                  mekwars.server.campaign.CampaignMain.campaignMain.getServer().getConfigParam("CAMPAIGNCONFIG"));
-            // Now, in theory, there is no cruft for next boot.  Let's test.
+            CampaignMain.campaignMain.saveConfigureFile(config,
+                  CampaignMain.campaignMain.getServer().getConfigParam("CAMPAIGN_CONFIG"));
+            // Now, in theory, there is no cruft for the next boot.  Let's test.
 
         } catch (Exception ex) {
-            MWLogger.errLog("Problems with loading campaign config");
-            MWLogger.errLog(ex);
+            LOGGER.error(ex, "Problems with loading campaign config");
             defaultServerOptions.createConfig();
             try {
-                config.load(new java.io.FileInputStream(this.serv.getConfigParam("CAMPAIGNCONFIG")));
+                config.load(new java.io.FileInputStream(this.serv.getConfigParam("CAMPAIGN_CONFIG")));
             } catch (Exception ex1) {
-                MWLogger.errLog("Problems with loading campaing config from defaults");
-                MWLogger.errLog(ex1);
+                LOGGER.error(ex1, "Problems with loading camping config from defaults");
                 System.exit(1);
             }
         }
@@ -222,7 +208,7 @@ public final class CampaignMain implements java.io.Serializable {
             getConfig().setProperty("AllowedMegaMekVersion", megamek.SuiteConstants.VERSION.toString());
         }
 
-        defaultServerOptions.createConfig(); // save the cofig file so any missed defaults are
+        defaultServerOptions.createConfig(); // save the config file so any missed defaults are
         // added
 
         /*
@@ -231,29 +217,26 @@ public final class CampaignMain implements java.io.Serializable {
          * a nice idea, it was creating dupes and NPEs after crashes.
          */
 
-        market = new Market2();
-        partsmarket = new PartsMarket();
+        market = new Market();
+        partsMarket = new PartsMarket();
 
         SPilotSkills.initializePilotSkills();
-        // data.clearHouses();
 
         // Load & Init Data
         data = new CampaignData();
 
-        // load megamek gameoptions;
-        MWLogger.infoLog("Loading MegaMek Game Options");
+        // load megamek game options;
+        LOGGER.info("Loading MegaMek Game Options");
         campaignMain.megaMekClient.getGame().getOptions().loadOptions();
 
         // Parse Terrain
-        // XMLTerrainDataParser tParse =
         new XMLTerrainDataParser("./data/terrain.xml");
 
-        if (new java.io.File("./data/advancedTerrain.xml").exists()) {
+        if (new File("./data/advancedTerrain.xml").exists()) {
             new XMLAdvancedTerrainDataParser("./data/advancedTerrain.xml");
         }
 
         new XMLAdvancedTerrainDataParser("./data/advterr.xml");
-
 
         campaignMain.loadTopUnitID();
         gamesCompleted = 0;
@@ -263,16 +246,18 @@ public final class CampaignMain implements java.io.Serializable {
         loadPlanetData();
 
         try {
-            MekwarsFileReader dis = new MekwarsFileReader("./campaign/banammo.dat");
+            MekWarsFileReader dis = new MekWarsFileReader("./campaign/banammo.dat");
+
             while (dis.ready()) {
                 String line = dis.readLine();
                 loadBanAmmo(line);
             }
+
             dis.close();
-        } catch (java.io.FileNotFoundException fne) {
-            MWLogger.mainLog("No banned ammo data found.");
+        } catch (FileNotFoundException fne) {
+            LOGGER.info("No banned ammo data found.");
         } catch (Exception ex) {
-            MWLogger.errLog("Problems reading banned ammo data.");
+            LOGGER.error(ex, "Problems reading banned ammo data.");
         }
 
         // misc loads.
@@ -282,31 +267,31 @@ public final class CampaignMain implements java.io.Serializable {
         campaignMain.loadBannedTargetSystems();
         campaignMain.loadSupportUnitDefinitions();
 
-        // create command hashs
+        // create command hashes
         init();
 
         if (Boolean.parseBoolean(campaignMain.getConfig("UseCalculatedCosts"))) {
             unitCostLists = new UnitCosts();
             unitCostLists.loadUnitCosts();
-            // MWLogger.errLog(unitCostLists.displayUnitCostsLists());
         }
 
         // Load the Mech-Statistics
         try {
-            MekwarsFileReader dis = new MekwarsFileReader("./campaign/mechstat.dat");
+            MekWarsFileReader dis = new MekWarsFileReader("./campaign/mechstat.dat");
+
             while (dis.ready()) {
                 String line = dis.readLine();
-                MekStatistics m = new MekStatistics(line);
-                mekStats.put(m.getMekFileName(), m);
+                MekStatistics mekStatistics = new MekStatistics(line);
+                mekStats.put(mekStatistics.getMekFileName(), mekStatistics);
             }
+
             dis.close();
         } catch (Exception ex) {
-            MWLogger.errLog("Problems reading unit statistics data");
-            MWLogger.errLog(ex);
-            MWLogger.mainLog("No Mech Statistic Data found");
+            LOGGER.error(ex, "Problems reading unit statistics data");
+            LOGGER.info("No Mech Statistic Data found");
         }
 
-        if (Boolean.parseBoolean(getConfig("HTMLOUTPUT"))) {
+        if (Boolean.parseBoolean(getConfig("HTML_OUTPUT"))) {
             Statistics.doRanking();
         }
 
@@ -332,35 +317,25 @@ public final class CampaignMain implements java.io.Serializable {
         scheduler.start();
 
         // Load the Christmas Handler and set the start and end dates
-        christmas = ChristmasHandler.getInstance();
+        ChristmasHandler christmas = ChristmasHandler.getInstance();
         christmas.schedule();
 
         //@Salient for quirks
-        quirkHandler = QuirkHandler.getInstance();
+        QuirkHandler.getInstance();
 
         // create & start a data provider
-        int dataport = -1;
-        try {
-            dataport = Integer.parseInt(this.serv.getConfigParam("DATAPORT"));
-        } catch (NumberFormatException e) {
-            MWLogger.errLog("Non-number given as dataport. Defaulting to 4867.");
-            MWLogger.errLog(e);
-            dataport = 4867;
-        } finally {
-            Server dataProviderServer = new Server(data,
-                  dataport,
-                  this.serv.getConfigParam("SERVERIP"));
-            Thread t = new Thread(dataProviderServer);
-            t.start();
-        }
+        int dataPort = MathUtility.parseInt(this.serv.getConfigParam("DATA_PORT"), 4867);
+        Server dataProviderServer = new Server(data, dataPort, this.serv.getConfigParam("SERVER_IP"));
+        Thread thread = new Thread(dataProviderServer);
+        thread.start();
 
         // start tick, slice and immunity threads
-        TThread = new TickThread(this, Integer.parseInt(getConfig("TickTime")));
-        TThread.start();
-        SThread = new SliceThread(this, Integer.parseInt(getConfig("SliceTime")));
+        tickThread = new TickThread(this, Integer.parseInt(getConfig("TickTime")));
+        tickThread.start();
+        SliceThread SThread = new SliceThread(this, Integer.parseInt(getConfig("SliceTime")));
         SThread.start();// it slices, it dices, it chops!
-        IThread = new ImmunityThread();
-        IThread.start();
+        immunityThread = new ImmunityThread();
+        immunityThread.start();
 
         // start Advanced Repair, if enabled
         isUsingAdvanceRepair();
@@ -370,52 +345,44 @@ public final class CampaignMain implements java.io.Serializable {
     }
 
     public void loadSupportUnitDefinitions() {
-        MWLogger.mainLog("Entering loadSupportUnitDefinitions");
+        LOGGER.info("Entering loadSupportUnitDefinitions");
 
-        java.io.File tsFile = new java.io.File("./data/supportunits.txt");
+        File tsFile = new File("./data/supportunits.txt");
         if (!tsFile.exists()) {
             return;
         }
 
-        java.util.Vector<String> units = new java.util.Vector<String>();
+        Vector<String> units = new Vector<>();
         try {
-            MekwarsFileReader dis = new MekwarsFileReader(tsFile);
+            MekWarsFileReader dis = new MekWarsFileReader(tsFile);
             while (dis.ready()) {
                 String line = dis.readLine();
                 line = line.trim().toLowerCase();
+
                 if (line.startsWith("#") || line.length() < 5) {
                     continue;
                 }
+
                 if (!units.contains(line)) {
                     units.add(line);
-                    MWLogger.mainLog("Adding Support Unit: " + line);
+                    LOGGER.info("Adding Support Unit: {}", line);
                 }
             }
             dis.close();
         } catch (java.io.IOException e) {
-            e.printStackTrace();
+            LOGGER.error(e, "IO Exception: {}", e.getLocalizedMessage());
         } finally {
-            mekwars.server.campaign.CampaignMain.campaignMain.setSupportUnits(units);
+            CampaignMain.campaignMain.setSupportUnits(units);
         }
     }
-
-    /*
-     * public void saveData() { try { data.saveData(new File("campaign")); /
-     * MMNetXStream xml = new MMNetXStream(new DomDriver()); for (Iterator i =
-     * data.getAllHouses().iterator(); i.hasNext();) { SHouse h = (SHouse)
-     * i.next(); xml.toXML(h.getMembers(), new
-     * FileWriter("./campaign/members"+h.getName()+".xml")); } } catch
-     * (IOException e) { MWLogger.errLog(e); } }
-     */
 
     /**
      * Saves the current campaign state to a file system.
      */
     public void toFile() {
-
         try {
 
-            // wait for the backup to finsh before you start saving files.
+            // wait for the backup to finish before you start saving files.
             while (campaignMain.isArchiving()) {
                 Thread.sleep(125);
             }
@@ -427,54 +394,51 @@ public final class CampaignMain implements java.io.Serializable {
             campaignMain.saveOmniVariantMods();
 
             // Save Mech-Stats
-            java.io.FileOutputStream out = new java.io.FileOutputStream("./campaign/mechstat.dat");
-            java.io.PrintStream p = new java.io.PrintStream(out);
+            FileOutputStream out = new FileOutputStream("./campaign/mekstat.dat");
+            PrintStream printStream = new PrintStream(out);
+
             for (MekStatistics currStats : mekStats.values()) {
-                p.println(currStats.toString());
+                printStream.println(currStats.toString());
             }
-            p.close();
+
+            printStream.close();
             out.close();
 
             try {
                 // Save the Readable Mechstats
 
-                out = new java.io.FileOutputStream(getConfig("MechstatPath"));
-                p = new java.io.PrintStream(out);
-                p.println(
+                out = new FileOutputStream(getConfig("MekStatPath"));
+                printStream = new PrintStream(out);
+                printStream.println(
                       "<html><head><link rel=\"stylesheet\" type=\"text/css\" href=\"format.css\"><style type=\"text/css\"></style></head><body><font face=\"Verdana, Arial, Helvetica, sans-serif\">");
+
                 for (int i = 0; i <= 3; i++) {
-                    p.println(Statistics.doGetMechStats(i));
-                    p.println("<br>");
+                    printStream.println(Statistics.doGetMechStats(i));
+                    printStream.println("<br>");
                 }
-                p.println("</font></body></style></html>");
-                p.close();
+
+                printStream.println("</font></body></style></html>");
+                printStream.close();
                 out.close();
-            } catch (java.io.FileNotFoundException efnf) {
-                // ignore
+            } catch (FileNotFoundException ignored) {
+                LOGGER.debug("File not found.. moving on");
             }
 
-            MWLogger.mainLog("STATUS SAVED");
+            LOGGER.info("STATUS SAVED");
 
         } catch (Exception ex) {
-            MWLogger.errLog("Problems saving configuration to file");
-            MWLogger.errLog(ex);
+            LOGGER.error(ex, "Problems saving configuration to file");
         }
     }
 
     public double getDoubleConfig(String key) {
-        try {
-            return Double.parseDouble(campaignMain.getConfig(key));
-        } catch (Exception ex) {
-            return -1;
-        }
+        return MathUtility.parseDouble(campaignMain.getConfig(key), -1);
     }
 
     public String getConfig(String key) {
-
         if (config.getProperty(key) == null) {
             if (defaultServerOptions.getServerDefaults().getProperty(key) == null) {
-                MWLogger.mainLog("You're missing the config variable: " + key + " in campaignconfig!");
-                MWLogger.errLog("You're missing the config variable: " + key + " in campaignconfig! returning -1");
+                LOGGER.info("You're missing the config variable: {} in campaign config!", key);
                 return "-1";
             }
             // else
@@ -484,11 +448,7 @@ public final class CampaignMain implements java.io.Serializable {
     }
 
     public float getFloatConfig(String key) {
-        try {
-            return Float.parseFloat(campaignMain.getConfig(key));
-        } catch (Exception ex) {
-            return -1;
-        }
+        return MathUtility.parseFloat(campaignMain.getConfig(key), -1);
     }
 
     public void createNewOpsManager() {
@@ -500,8 +460,7 @@ public final class CampaignMain implements java.io.Serializable {
     }
 
     public void fromUser(String text, String Username) {
-
-        // if you don't have a client signon to the server then you do not get
+        // if you don't have a client sign on to the server then you do not get
         // to send commands
         if (mekwars.server.campaign.CampaignMain.campaignMain.getServer().getClient(Username) == null) {
             return;
@@ -509,33 +468,26 @@ public final class CampaignMain implements java.io.Serializable {
 
         /*
          * Only a few commands should be accepted from a logged out player.
-         * Unless the command is enroll, login, or register, return without
+         * Unless the command is enrolled, login, or register, return without
          * further processing. Register won't succeed unless player has a
          * campaign account.
          */
         if (!isLoggedIn(Username) &&
-                  (text.toUpperCase().indexOf("ENROLL") == -1) &&
-                  (text.toUpperCase().indexOf("LOGIN") == -1) &&
-                  (text.toUpperCase().indexOf("REGISTER") == -1) &&
-                  (text.toUpperCase().indexOf("GETSERVERCONFIGS") == -1) &&
-                  (text.toUpperCase().indexOf("SETCLIENTVERSION") == -1) &&
-                  (text.toUpperCase().indexOf("GETSAVEDMAIL") == -1)) {
+                  (!text.toUpperCase().contains("ENROLL")) &&
+                  (!text.toUpperCase().contains("LOGIN")) &&
+                  (!text.toUpperCase().contains("REGISTER")) &&
+                  (!text.toUpperCase().contains("GET_SERVER_CONFIGS")) &&
+                  (!text.toUpperCase().contains("SET_CLIENT_VERSION")) &&
+                  (!text.toUpperCase().contains("GET_SAVED_MAIL"))) {
             toUser("You are not logged in!", Username, true);
             return;
         }
 
         text = text.substring(2);
-        // Date d = new Date(System.currentTimeMillis());
-        // MWLogger.mainLog(d + ":" + "Command from User " + Username
-        // + ": "
-        // + text);
-        // MWLogger.cmdLog(Username + ": " + text);
-
-        java.util.StringTokenizer ST = new java.util.StringTokenizer(text, "#");
-        if (ST.hasMoreElements()) {
-
+        StringTokenizer stringTokenizer = new StringTokenizer(text, "#");
+        if (stringTokenizer.hasMoreElements()) {
             // check command type
-            String task = ((String) ST.nextElement()).toUpperCase();
+            String task = ((String) stringTokenizer.nextElement()).toUpperCase();
 
             // idle checker omit pong command
             if (!task.equals("PONG")) {
@@ -544,7 +496,7 @@ public final class CampaignMain implements java.io.Serializable {
                 } catch (Exception ex) {
                     if (!Username.startsWith("[Dedicated]")) {
                         // commands
-                        MWLogger.errLog("Command received from a null player (" + Username + ")?");
+                        LOGGER.error("Command received from a null player ({})?", Username);
                     }
                 }
             }
@@ -553,27 +505,22 @@ public final class CampaignMain implements java.io.Serializable {
             if (commands.get(task) != null) {
 
                 // log non-chat commands
-                if (task.equals("MAIL") ||
-                          task.equals("HOUSEMAIL") ||
-                          task.equals("HM") ||
-                          task.equals("MODERATORMAIL") ||
-                          task.equals("MM") ||
-                          task.equals("INCHARACTER") ||
-                          task.equals("IC")) {
-                    // do nothing
-                } else {
-                    MWLogger.cmdLog(Username + ": " + text);
+                if (!(task.equals("MAIL") ||
+                            task.equals("HOUSE_MAIL") ||
+                            task.equals("HM") ||
+                            task.equals("MODERATOR_MAIL") ||
+                            task.equals("MM") ||
+                            task.equals("IN_CHARACTER") ||
+                            task.equals("IC"))) {
+                    LOGGER.info("{}: {}", Username, text);
                 }
 
-                Command c = commands.get(task);
+                Command command = commands.get(task);
                 try {
-                    c.process(ST, Username);
+                    command.process(stringTokenizer, Username);
                 } catch (Exception ex) {
-                    MWLogger.errLog(ex);
-                    mekwars.server.campaign.CampaignMain.campaignMain.toUser("AM:Invalid Syntax: /" +
-                                                                                   task +
-                                                                                   " " +
-                                                                                   c.getSyntax(),
+                    LOGGER.error(ex, "Invalid Syntax: {}", ex.getLocalizedMessage());
+                    CampaignMain.campaignMain.toUser(STR."AM:Invalid Syntax: /\{task} \{command.getSyntax()}",
                           Username);
                 }
                 return;
@@ -582,13 +529,12 @@ public final class CampaignMain implements java.io.Serializable {
         }// end while(more elements)
     }// end fromUser
 
-    public server.MWServ getServer() {
+    public MWServ getServer() {
         return serv;
     }
 
     public boolean isLoggedIn(String Username) {
-
-        // always treat deds as logged in
+        // always treat dedicateds as logged in
         if (Username.startsWith("[Dedicated]")) {
             return true;
         }
@@ -599,16 +545,17 @@ public final class CampaignMain implements java.io.Serializable {
          * old MMNET way, which was to try a .equals() on every player's name.
          */
         String lowerName = Username.toLowerCase();
-        for (House vh : data.getAllHouses()) {
-            SHouse h = (SHouse) vh;
-            if (h.getReservePlayers().containsKey(lowerName)) {
-                return true;
-            }
-            if (h.getActivePlayers().containsKey(lowerName)) {
-                return true;
-            }
-            if (h.getFightingPlayers().containsKey(lowerName)) {
-                return true;
+        for (House house : data.getAllHouses()) {
+            if (house instanceof SHouse serverHouse) {
+                if (serverHouse.getReservePlayers().containsKey(lowerName)) {
+                    return true;
+                }
+                if (serverHouse.getActivePlayers().containsKey(lowerName)) {
+                    return true;
+                }
+                if (serverHouse.getFightingPlayers().containsKey(lowerName)) {
+                    return true;
+                }
             }
         }
 
@@ -618,19 +565,19 @@ public final class CampaignMain implements java.io.Serializable {
 
     public void toUser(String txt, String Username, boolean isChat) {
         if (isChat) {
-            serv.fromCampaignMod("CH|" + txt, Username);
+            serv.fromCampaignMod(STR."CH|\{txt}", Username);
         } else {
             serv.fromCampaignMod(txt, Username);
         }
     }
 
     /**
-     * Get an SPlayer, by name. This searches the reserve, active and fighting hashes of all factions until the player
+     * Get an SPlayer, by name. This searches the reserve, active, and fighting hashes of all factions until the player
      * is found or factions are exhausted. If a player is not in a faction, check the to-save hash. Its entirely
      * possible that the player is already in memory, but logged out and is awaiting a purge. If no matching player is
      * found online, the server will attempt to read one in from a text file. If even this fails, a null is returned.
      * NOTE: A player brought into memory using getPlayer is not automatically logged into his house. Temporary loads
-     * (ex: commands targetted at offline players) will put the player directly into the save queue, as if he was logged
+     * (ex: commands targeted at offline players) will put the player directly into the save queue, as if he was logged
      * out. This is why the save queue is/must be searched prior to* reading the text file.
      */
     public SPlayer getPlayer(String pName) {
@@ -1198,7 +1145,7 @@ public final class CampaignMain implements java.io.Serializable {
 
             // Send him the Tick Counter
             mekwars.server.campaign.CampaignMain.campaignMain.toUser("CC|NT|" +
-                                                                           TThread.getRemainingSleepTime() +
+                                                                           tickThread.getRemainingSleepTime() +
                                                                            "|" +
                                                                            false,
                   Username,
@@ -1957,7 +1904,7 @@ public final class CampaignMain implements java.io.Serializable {
             return seed;
         }
 
-        float answer = r.nextFloat() * (float) seed;
+        float answer = random.nextFloat() * (float) seed;
 
         return (int) Math.floor(answer);
     }
@@ -2278,7 +2225,7 @@ public final class CampaignMain implements java.io.Serializable {
 
         MWLogger.tickLog("Parts Market Tick Started");
         try {
-            partsmarket.tick();
+            partsMarket.tick();
         } catch (Exception ex) {
             MWLogger.errLog(ex);
         }
@@ -2300,7 +2247,7 @@ public final class CampaignMain implements java.io.Serializable {
          * die immediately if it is not time to back up (last was written within
          * offset).
          */
-        aub = new AutomaticBackup(System.currentTimeMillis());
+        AutomaticBackup aub = new AutomaticBackup(System.currentTimeMillis());
         // new Thread(aub).start();
         aub.run();
 
@@ -2450,8 +2397,8 @@ public final class CampaignMain implements java.io.Serializable {
         }
     }
 
-    public java.util.Random getR() {
-        return r;
+    public java.util.Random getRandom() {
+        return random;
     }
 
     synchronized public void addToNewsFeed(String s) {
@@ -2467,7 +2414,7 @@ public final class CampaignMain implements java.io.Serializable {
     }
 
     public PartsMarket getPartsMarket() {
-        return partsmarket;
+        return partsMarket;
     }
 
     public java.util.Properties getConfig() {
@@ -2513,12 +2460,12 @@ public final class CampaignMain implements java.io.Serializable {
         return blackMarketEquipmentCostTable;
     }
 
-    public TickThread getTThread() {
-        return TThread;
+    public TickThread getTickThread() {
+        return tickThread;
     }
 
-    public ImmunityThread getIThread() {
-        return IThread;
+    public ImmunityThread getImmunityThread() {
+        return immunityThread;
     }
 
     public java.util.Vector<ContractInfo> getUnresolvedContracts() {
@@ -3780,7 +3727,7 @@ public final class CampaignMain implements java.io.Serializable {
                 } else {
                     h = new SHouse(data.getUnusedHouseID());
                 }
-                h.fromString(line, r);
+                h.fromString(line, random);
                 if (isUsingIncreasedTechs()) {
                     h.addCommonUnitSupport();
                 }
@@ -3965,7 +3912,7 @@ public final class CampaignMain implements java.io.Serializable {
                     line = line.substring(3);
                 }
                 p = new SPlanet();
-                p.fromString(line, r, data);
+                p.fromString(line, random, data);
                 addPlanet(p);
                 dis.close();
             } catch (Exception ex) {

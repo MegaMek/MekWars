@@ -269,7 +269,7 @@ public class OpsChickenThread extends Thread {
             return;
         }
 
-        if (CampaignMain.campaignMain.getIThread().isImmune(pdefender)) {
+        if (CampaignMain.campaignMain.getImmunityThread().isImmune(pdefender)) {
             String toPlayer = "You did not defend Attack #" +
                                     opID +
                                     ". You've not been punished because " +

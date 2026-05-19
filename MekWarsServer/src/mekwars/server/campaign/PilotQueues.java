@@ -291,7 +291,7 @@ public class PilotQueues {
 
         String result = "Noelle";//something we hope never returns
         if (CampaignMain.campaignMain.getBooleanConfig("UseCommonPilotNameFileOnly")) {
-            return SPilot.getRandomPilotName(CampaignMain.campaignMain.getR());
+            return SPilot.getRandomPilotName(CampaignMain.campaignMain.getRandom());
         }
 
         try {
@@ -314,7 +314,7 @@ public class PilotQueues {
             MWLogger.errLog("A problem occured while retreiving a name from the " +
                                   factionString +
                                   " Pilotnames File! Tried using Pilotnames.txt instead.");
-            result = SPilot.getRandomPilotName(CampaignMain.campaignMain.getR());
+            result = SPilot.getRandomPilotName(CampaignMain.campaignMain.getRandom());
         } finally {
 
         }

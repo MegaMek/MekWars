@@ -38,11 +38,11 @@ public class TickCommand implements Command {
             }
         }
 
-        long remaining = CampaignMain.campaignMain.getTThread().getRemainingSleepTime() / 1000;
+        long remaining = CampaignMain.campaignMain.getTickThread().getRemainingSleepTime() / 1000;
         long remainingMinutes = (remaining / 60);
         long remainingSeconds = (remaining % 60);
         CampaignMain.campaignMain.toUser("AM:The next Tick [" +
-                                               (CampaignMain.campaignMain.getTThread().getTickID() + 1) +
+                                               (CampaignMain.campaignMain.getTickThread().getTickID() + 1) +
                                                "] will occur in " +
                                                remainingMinutes +
                                                " minutes and " +

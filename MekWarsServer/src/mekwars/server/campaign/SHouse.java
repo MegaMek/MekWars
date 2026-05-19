@@ -1,17 +1,35 @@
 /*
- * MekWars - Copyright (C) 2004
+ * Copyright (C) 2004 MekWars
+ * Copyright (C) 2026 The MegaMek Team. All Rights Reserved.
  *
- * Derived from MegaMekNET (http://www.sourceforge.net/projects/megameknet)
+ * This file is part of MekWars.
  *
- * This program is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License as published by the Free
- * Software Foundation; either version 2 of the License, or (at your option)
- * any later version.
+ * MekWars is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License (GPL),
+ * version 3 or (at your option) any later version,
+ * as published by the Free Software Foundation.
  *
- * This program is distributed in the hope that it will be useful, but
- * WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
- * or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License
- * for more details.
+ * MekWars is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty
+ * of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU General Public License for more details.
+ *
+ * A copy of the GPL should have been included with this project;
+ * if not, see <https://www.gnu.org/licenses/>.
+ *
+ * NOTICE: The MegaMek organization is a non-profit group of volunteers
+ * creating free software for the BattleTech community.
+ *
+ * MechWarrior, BattleMech, `Mech and AeroTech are registered trademarks
+ * of The Topps Company, Inc. All Rights Reserved.
+ *
+ * Catalyst Game Labs and the Catalyst Game Labs logo are trademarks of
+ * InMediaRes Productions, LLC.
+ *
+ * MechWarrior Copyright Microsoft Corporation. MekWars was created under
+ * Microsoft's "Game Content Usage Rules"
+ * <https://www.xbox.com/en-US/developers/rules> and it is not endorsed by or
+ * affiliated with Microsoft.
  */
 
 package mekwars.server.campaign;
@@ -20,6 +38,8 @@ import java.io.Serial;
 import java.io.Serializable;
 import java.util.Hashtable;
 import java.util.Properties;
+import java.util.Random;
+import java.util.StringTokenizer;
 import java.util.Vector;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -101,11 +121,11 @@ public class SHouse extends TimeUpdateHouse implements Comparable<SHouse>, ISell
         activePlayers = new ConcurrentHashMap<>();
         fightingPlayers = new ConcurrentHashMap<>();
         SmallPlayers = new Hashtable<>();
+
         for (int pos = 0; pos < Unit.MAX_BUILD; pos++) {
             setBaseGunner(4, pos);
             setBasePilot(5, pos);
         }
-
     }
 
     public SHouse(int id, String name, String HouseColor, int BaseGunner, int BasePilot, String abbreviation) {
@@ -114,43 +134,42 @@ public class SHouse extends TimeUpdateHouse implements Comparable<SHouse>, ISell
         setHouseColor(HouseColor);
         setName(name);
 
-        PKLogManager.getInstance().addLog(getName());
-        // Vehicles = new Vector();
-
         for (int j = 0; j < 5; j++) // Type
         {
-            java.util.Vector<Integer> v = new java.util.Vector<Integer>();
-            for (int i = 0; i < 4; i++) // Weight
-            {
-                v.add(0);
+            Vector<Integer> integers = new Vector<>();
+
+            for (int i = 0; i < 4; i++) {
+                integers.add(0);
             }
-            v.trimToSize();
-            getComponents().put(j, v);
+
+            integers.trimToSize();
+            getComponents().put(j, integers);
         }
         // currentPP = new Vector();
         setMoney(0);
-        getHangar().put(Unit.MEK, new java.util.Vector<java.util.Vector<SUnit>>(1, 1));
-        getHangar().put(Unit.VEHICLE, new java.util.Vector<java.util.Vector<SUnit>>(1, 1));
-        getHangar().put(Unit.INFANTRY, new java.util.Vector<java.util.Vector<SUnit>>(1, 1));
-        getHangar().put(Unit.PROTOMEK, new java.util.Vector<java.util.Vector<SUnit>>(1, 1));
-        getHangar().put(Unit.BATTLEARMOR, new java.util.Vector<java.util.Vector<SUnit>>(1, 1));
-        getHangar().put(Unit.AERO, new java.util.Vector<java.util.Vector<SUnit>>(1, 1));
+        getHangar().put(Unit.MEK, new Vector<>(1, 1));
+        getHangar().put(Unit.VEHICLE, new Vector<>(1, 1));
+        getHangar().put(Unit.INFANTRY, new Vector<>(1, 1));
+        getHangar().put(Unit.PROTOMEK, new Vector<>(1, 1));
+        getHangar().put(Unit.BATTLEARMOR, new Vector<>(1, 1));
+        getHangar().put(Unit.AERO, new Vector<>(1, 1));
+
         for (int i = 0; i < 4; i++) {
-            getHangar(Unit.MEK).add(new java.util.Vector<mekwars.server.campaign.SUnit>(1, 1));
-            getHangar(Unit.VEHICLE).add(new java.util.Vector<mekwars.server.campaign.SUnit>(1, 1));
-            getHangar(Unit.INFANTRY).add(new java.util.Vector<mekwars.server.campaign.SUnit>(1, 1));
-            getHangar(Unit.PROTOMEK).add(new java.util.Vector<mekwars.server.campaign.SUnit>(1, 1));
-            getHangar(Unit.BATTLEARMOR).add(new java.util.Vector<mekwars.server.campaign.SUnit>(1, 1));
-            getHangar(Unit.AERO).add(new java.util.Vector<mekwars.server.campaign.SUnit>(1, 1));
+            getHangar(Unit.MEK).add(new Vector<>(1, 1));
+            getHangar(Unit.VEHICLE).add(new Vector<>(1, 1));
+            getHangar(Unit.INFANTRY).add(new Vector<>(1, 1));
+            getHangar(Unit.PROTOMEK).add(new Vector<>(1, 1));
+            getHangar(Unit.BATTLEARMOR).add(new Vector<>(1, 1));
+            getHangar(Unit.AERO).add(new Vector<>(1, 1));
         }
 
-        // init the componet array(vectors)
-        getComponents().put(Unit.MEK, new java.util.Vector<Integer>(4, 1));
-        getComponents().put(Unit.VEHICLE, new java.util.Vector<Integer>(4, 1));
-        getComponents().put(Unit.INFANTRY, new java.util.Vector<Integer>(4, 1));
-        getComponents().put(Unit.BATTLEARMOR, new java.util.Vector<Integer>(4, 1));
-        getComponents().put(Unit.AERO, new java.util.Vector<Integer>(4, 1));
-        getComponents().put(Unit.PROTOMEK, new java.util.Vector<Integer>(4, 1));
+        // init the component array(vectors)
+        getComponents().put(Unit.MEK, new Vector<>(4, 1));
+        getComponents().put(Unit.VEHICLE, new Vector<>(4, 1));
+        getComponents().put(Unit.INFANTRY, new Vector<>(4, 1));
+        getComponents().put(Unit.BATTLEARMOR, new Vector<>(4, 1));
+        getComponents().put(Unit.AERO, new Vector<>(4, 1));
+        getComponents().put(Unit.PROTOMEK, new Vector<>(4, 1));
 
         for (int i = 0; i < 4; i++) {
             getComponents().get(Unit.MEK).add(0);
@@ -163,58 +182,51 @@ public class SHouse extends TimeUpdateHouse implements Comparable<SHouse>, ISell
 
     }
 
-    public String fromString(String s, java.util.Random r) {
+    public String fromString(String string, Random random) {
         try {
+            StringTokenizer stringTokenizer = new StringTokenizer(string, "|");
+            setName(TokenReader.readString(stringTokenizer));
+            setMoney(TokenReader.readInt(stringTokenizer));
+            setHouseColor(TokenReader.readString(stringTokenizer));
+            setBaseGunner(TokenReader.readInt(stringTokenizer));
+            setBasePilot(TokenReader.readInt(stringTokenizer));
+            setAbbreviation(TokenReader.readString(stringTokenizer));
 
-            java.util.StringTokenizer ST = new java.util.StringTokenizer(s, "|");
-            setName(TokenReader.readString(ST));
+            getHangar().put(Unit.MEK, new Vector<>(5, 1));
+            getHangar().put(Unit.VEHICLE, new Vector<>(5, 1));
+            getHangar().put(Unit.INFANTRY, new Vector<>(5, 1));
+            getHangar().put(Unit.PROTOMEK, new Vector<>(5, 1));
+            getHangar().put(Unit.BATTLEARMOR, new Vector<>(5, 1));
+            getHangar().put(Unit.AERO, new Vector<>(5, 1));
 
-            // start the chat logging.
-            PKLogManager.getInstance().addLog(getName());
-
-            setMoney(TokenReader.readInt(ST));
-            setHouseColor(TokenReader.readString(ST));
-            setBaseGunner(TokenReader.readInt(ST));
-            setBasePilot(TokenReader.readInt(ST));
-
-            setAbbreviation(TokenReader.readString(ST));
-
-            getHangar().put(Unit.MEK, new java.util.Vector<java.util.Vector<SUnit>>(5, 1));
-            getHangar().put(Unit.VEHICLE, new java.util.Vector<java.util.Vector<SUnit>>(5, 1));
-            getHangar().put(Unit.INFANTRY, new java.util.Vector<java.util.Vector<SUnit>>(5, 1));
-            getHangar().put(Unit.PROTOMEK, new java.util.Vector<java.util.Vector<SUnit>>(5, 1));
-            getHangar().put(Unit.BATTLEARMOR, new java.util.Vector<java.util.Vector<SUnit>>(5, 1));
-            getHangar().put(Unit.AERO, new java.util.Vector<java.util.Vector<SUnit>>(5, 1));
-            // Init all of the hangars
+            // Init all the hangars
             for (int i = 0; i < 4; i++) {
-
-                getHangar(Unit.MEK).add(new java.util.Vector<mekwars.server.campaign.SUnit>(1, 1));
-                getHangar(Unit.VEHICLE).add(new java.util.Vector<mekwars.server.campaign.SUnit>(1, 1));
-                getHangar(Unit.INFANTRY).add(new java.util.Vector<mekwars.server.campaign.SUnit>(1, 1));
-                getHangar(Unit.BATTLEARMOR).add(new java.util.Vector<mekwars.server.campaign.SUnit>(1, 1));
-                getHangar(Unit.PROTOMEK).add(new java.util.Vector<mekwars.server.campaign.SUnit>(1, 1));
-                getHangar(Unit.AERO).add(new java.util.Vector<mekwars.server.campaign.SUnit>(1, 1));
+                getHangar(Unit.MEK).add(new Vector<>(1, 1));
+                getHangar(Unit.VEHICLE).add(new Vector<>(1, 1));
+                getHangar(Unit.INFANTRY).add(new Vector<>(1, 1));
+                getHangar(Unit.BATTLEARMOR).add(new Vector<>(1, 1));
+                getHangar(Unit.PROTOMEK).add(new Vector<>(1, 1));
+                getHangar(Unit.AERO).add(new Vector<>(1, 1));
             }
 
             boolean newbieHouse = isNewbieHouse();
 
             // READ THE MEKS
             for (int i = 0; i < 4; i++) {
-                // Vector v = new Vector();
-                int numofmechs = (TokenReader.readInt(ST));
-                SUnit m = null;
-                for (int j = 0; j < numofmechs; j++) {
-                    m = new SUnit();
-                    m.fromString(TokenReader.readString(ST));
+                int numberOfMeks = (TokenReader.readInt(stringTokenizer));
+                SUnit sUnit;
+                for (int j = 0; j < numberOfMeks; j++) {
+                    sUnit = new SUnit();
+                    sUnit.fromString(TokenReader.readString(stringTokenizer));
 
                     if (newbieHouse) {
-                        int priceForUnit = getPriceForUnit(m.getWeightclass(), m.getType());
+                        int priceForUnit = getPriceForUnit(sUnit.getWeightclass(), sUnit.getType());
                         int rareSalesTime = Integer.parseInt(this.getConfig("RareMinSaleTime"));
                         CampaignMain.campaignMain.getMarket()
-                              .addListing("Faction_" + getName(), m, priceForUnit, rareSalesTime);
-                        m.setStatus(Unit.STATUS_FORSALE);
+                              .addListing("Faction_" + getName(), sUnit, priceForUnit, rareSalesTime);
+                        sUnit.setStatus(Unit.STATUS_FORSALE);
                     }
-                    addUnit(m, false);
+                    addUnit(sUnit, false);
 
                 }
             }
@@ -222,11 +234,11 @@ public class SHouse extends TimeUpdateHouse implements Comparable<SHouse>, ISell
             // READ THE VEHICLES
             for (int i = 0; i < 4; i++) {
                 // Vector v = new Vector();
-                int numofvehicles = (TokenReader.readInt(ST));
+                int numofvehicles = (TokenReader.readInt(stringTokenizer));
                 SUnit m;
                 for (int j = 0; j < numofvehicles; j++) {
                     m = new SUnit();
-                    m.fromString(TokenReader.readString(ST));
+                    m.fromString(TokenReader.readString(stringTokenizer));
 
                     if (newbieHouse) {
                         int priceForUnit = getPriceForUnit(m.getWeightclass(), m.getType());
@@ -243,11 +255,11 @@ public class SHouse extends TimeUpdateHouse implements Comparable<SHouse>, ISell
             // READ THE INFANTRY
             if (Boolean.parseBoolean(this.getConfig("UseInfantry"))) {
                 for (int i = 0; i < 4; i++) {
-                    int numofinfantry = (TokenReader.readInt(ST));
+                    int numofinfantry = (TokenReader.readInt(stringTokenizer));
                     SUnit m;
                     for (int j = 0; j < numofinfantry; j++) {
                         m = new SUnit();
-                        m.fromString(TokenReader.readString(ST));
+                        m.fromString(TokenReader.readString(stringTokenizer));
 
                         if (newbieHouse) {
                             int priceForUnit = getPriceForUnit(m.getWeightclass(), m.getType());
@@ -262,16 +274,16 @@ public class SHouse extends TimeUpdateHouse implements Comparable<SHouse>, ISell
                 }// end for(4 weight classes)
             }// end if("Use Infantry")
 
-            setAnnouncement(TokenReader.readString(ST));
+            setAnnouncement(TokenReader.readString(stringTokenizer));
 
             /*
              * Another bad-old-code feature. "Components" will be the next token
              * on any modern server. Loop remains in case someone tries to use
              * old MMNET data with players saved in-line.
              */
-            String next = TokenReader.readString(ST);
+            String next = TokenReader.readString(stringTokenizer);
             while (!next.equals("Components")) {
-                next = TokenReader.readString(ST);
+                next = TokenReader.readString(stringTokenizer);
             }
 
             // init the componet array(vectors)
@@ -293,13 +305,13 @@ public class SHouse extends TimeUpdateHouse implements Comparable<SHouse>, ISell
 
             boolean finished = false;
             while (!finished) {
-                next = TokenReader.readString(ST);
+                next = TokenReader.readString(stringTokenizer);
                 if (!next.equals("EndComponents")) {
                     Integer id = Integer.parseInt(next);
-                    int count = TokenReader.readInt(ST);
+                    int count = TokenReader.readInt(stringTokenizer);
                     for (int i = 0; i < count; i++) {
                         java.util.Vector<Integer> v = getComponents().get(id);
-                        int val = TokenReader.readInt(ST);
+                        int val = TokenReader.readInt(stringTokenizer);
                         v.setElementAt(val, i);
                     }
                     // getComponents().put(id,v);
@@ -308,23 +320,23 @@ public class SHouse extends TimeUpdateHouse implements Comparable<SHouse>, ISell
                 }
             }
 
-            setInitialHouseRanking(TokenReader.readInt(ST));
+            setInitialHouseRanking(TokenReader.readInt(stringTokenizer));
 
-            setConquerable(TokenReader.readBoolean(ST));
+            setConquerable(TokenReader.readBoolean(stringTokenizer));
 
-            setInHouseAttacks(TokenReader.readBoolean(ST));
+            setInHouseAttacks(TokenReader.readBoolean(stringTokenizer));
             // Used to read the house id here but if you have to recreate a
             // house from
             // Pfiles this could cause issues. now we just set the ID to -1
             // and let the server pick an id. --Torren
 
-            TokenReader.readString(ST);
+            TokenReader.readString(stringTokenizer);
             setId(-1);
-            String housePlayerColor = TokenReader.readString(ST);
+            String housePlayerColor = TokenReader.readString(stringTokenizer);
             try {
                 int redColor = Integer.parseInt(housePlayerColor);
-                int greenColor = TokenReader.readInt(ST);
-                int blueColor = TokenReader.readInt(ST);
+                int greenColor = TokenReader.readInt(stringTokenizer);
+                int blueColor = TokenReader.readInt(stringTokenizer);
 
                 setHousePlayerColors(Integer.toHexString(redColor) +
                                            Integer.toHexString(greenColor) +
@@ -333,42 +345,42 @@ public class SHouse extends TimeUpdateHouse implements Comparable<SHouse>, ISell
                 setHousePlayerColors(housePlayerColor);
             }
 
-            setHouseDefectionFrom(TokenReader.readBoolean(ST));
+            setHouseDefectionFrom(TokenReader.readBoolean(stringTokenizer));
 
             // meks
-            int pilotCount = TokenReader.readInt(ST);
+            int pilotCount = TokenReader.readInt(stringTokenizer);
             for (; pilotCount > 0; pilotCount--) {
                 SPilot p = new SPilot();
-                p.fromFileFormat(TokenReader.readString(ST), "#");
+                p.fromFileFormat(TokenReader.readString(stringTokenizer), "#");
                 getPilotQueues().loadPilot(Unit.MEK, p);
             }
 
             // vees
-            pilotCount = TokenReader.readInt(ST);
+            pilotCount = TokenReader.readInt(stringTokenizer);
             for (; pilotCount > 0; pilotCount--) {
                 SPilot p = new SPilot();
-                p.fromFileFormat(TokenReader.readString(ST), "#");
+                p.fromFileFormat(TokenReader.readString(stringTokenizer), "#");
                 getPilotQueues().loadPilot(Unit.VEHICLE, p);
             }
 
             // inf
-            pilotCount = TokenReader.readInt(ST);
+            pilotCount = TokenReader.readInt(stringTokenizer);
             for (; pilotCount > 0; pilotCount--) {
                 SPilot p = new SPilot();
-                p.fromFileFormat(TokenReader.readString(ST), "#");
+                p.fromFileFormat(TokenReader.readString(stringTokenizer), "#");
                 getPilotQueues().loadPilot(Unit.INFANTRY, p);
             }
 
-            setHouseFluFile(TokenReader.readString(ST));
+            setHouseFluFile(TokenReader.readString(stringTokenizer));
 
             // READ THE BattleArmor
 
             for (int i = 0; i < 4; i++) {
-                int numofmechs = TokenReader.readInt(ST);
+                int numofmechs = TokenReader.readInt(stringTokenizer);
                 SUnit m = null;
                 for (int j = 0; j < numofmechs; j++) {
                     m = new SUnit();
-                    m.fromString(TokenReader.readString(ST));
+                    m.fromString(TokenReader.readString(stringTokenizer));
 
                     if (newbieHouse) {
                         int priceForUnit = getPriceForUnit(m.getWeightclass(), m.getType());
@@ -385,11 +397,11 @@ public class SHouse extends TimeUpdateHouse implements Comparable<SHouse>, ISell
             // READ THE Protos
 
             for (int i = 0; i < 4; i++) {
-                int numofmechs = TokenReader.readInt(ST);
+                int numofmechs = TokenReader.readInt(stringTokenizer);
                 SUnit m = null;
                 for (int j = 0; j < numofmechs; j++) {
                     m = new SUnit();
-                    m.fromString(TokenReader.readString(ST));
+                    m.fromString(TokenReader.readString(stringTokenizer));
 
                     if (newbieHouse) {
                         int priceForUnit = getPriceForUnit(m.getWeightclass(), m.getType());
@@ -404,29 +416,29 @@ public class SHouse extends TimeUpdateHouse implements Comparable<SHouse>, ISell
             }
 
             // BattleArmor
-            pilotCount = TokenReader.readInt(ST);
+            pilotCount = TokenReader.readInt(stringTokenizer);
             for (; pilotCount > 0; pilotCount--) {
                 SPilot p = new SPilot();
-                p.fromFileFormat(TokenReader.readString(ST), "#");
+                p.fromFileFormat(TokenReader.readString(stringTokenizer), "#");
                 getPilotQueues().loadPilot(Unit.BATTLEARMOR, p);
             }
 
             // ProtoMeks
-            pilotCount = TokenReader.readInt(ST);
+            pilotCount = TokenReader.readInt(stringTokenizer);
             for (; pilotCount > 0; pilotCount--) {
                 SPilot p = new SPilot();
-                p.fromFileFormat(TokenReader.readString(ST), "#");
+                p.fromFileFormat(TokenReader.readString(stringTokenizer), "#");
                 getPilotQueues().loadPilot(Unit.PROTOMEK, p);
             }
 
-            setMessageOfTheDay(TokenReader.readString(ST));
+            setMessageOfTheDay(TokenReader.readString(stringTokenizer));
 
-            setHouseDefectionTo(TokenReader.readBoolean(ST));
+            setHouseDefectionTo(TokenReader.readBoolean(stringTokenizer));
 
             try {
                 for (int pos = 0; pos < Unit.MAXBUILD; pos++) {
-                    setBaseGunner(TokenReader.readInt(ST), pos);
-                    setBasePilot(TokenReader.readInt(ST), pos);
+                    setBaseGunner(TokenReader.readInt(stringTokenizer), pos);
+                    setBasePilot(TokenReader.readInt(stringTokenizer), pos);
                 }
             } catch (Exception ex) {
                 setPilotQueues(new PilotQueues(getBaseGunnerVect(), getBasePilotVect(), getBasePilotSkillVect()));
@@ -438,7 +450,7 @@ public class SHouse extends TimeUpdateHouse implements Comparable<SHouse>, ISell
 
             try {
                 for (int pos = 0; pos < Unit.MAXBUILD; pos++) {
-                    String skill = TokenReader.readString(ST);
+                    String skill = TokenReader.readString(stringTokenizer);
                     setBasePilotSkill(skill, pos);
                 }
             } catch (Exception ex) {
@@ -449,46 +461,46 @@ public class SHouse extends TimeUpdateHouse implements Comparable<SHouse>, ISell
                 // the queue
             }
 
-            setTechLevel(TokenReader.readInt(ST));
+            setTechLevel(TokenReader.readInt(stringTokenizer));
 
-            int amount = TokenReader.readInt(ST);
+            int amount = TokenReader.readInt(stringTokenizer);
 
             for (; amount > 0; amount--) {
                 SubFaction newSubFaction = new SubFaction();
-                newSubFaction.fromString(TokenReader.readString(ST));
+                newSubFaction.fromString(TokenReader.readString(stringTokenizer));
                 getSubFactionList().put(newSubFaction.getConfig("Name"), newSubFaction);
             }
 
-            amount = TokenReader.readInt(ST);
+            amount = TokenReader.readInt(stringTokenizer);
             for (; amount > 0; amount--) {
-                leaders.add(TokenReader.readString(ST));
+                leaders.add(TokenReader.readString(stringTokenizer));
             }
 
-            techResearchPoints = TokenReader.readInt(ST);
+            techResearchPoints = TokenReader.readInt(stringTokenizer);
 
             if (CampaignMain.campaignMain.getBooleanConfig("UsePartsRepair")) {
-                unitParts.fromString(TokenReader.readString(ST), "#");
+                unitParts.fromString(TokenReader.readString(stringTokenizer), "#");
             } else {
-                TokenReader.readString(ST);
+                TokenReader.readString(stringTokenizer);
             }
 
-            int size = TokenReader.readInt(ST);
+            int size = TokenReader.readInt(stringTokenizer);
             for (; size > 0; size--) {
                 ComponentToCritsConverter converter = new ComponentToCritsConverter();
-                converter.setCritName(TokenReader.readString(ST));
-                converter.setMinCritLevel(TokenReader.readInt(ST));
-                converter.setComponentUsedType(TokenReader.readInt(ST));
-                converter.setComponentUsedWeight(TokenReader.readInt(ST));
+                converter.setCritName(TokenReader.readString(stringTokenizer));
+                converter.setMinCritLevel(TokenReader.readInt(stringTokenizer));
+                converter.setComponentUsedType(TokenReader.readInt(stringTokenizer));
+                converter.setComponentUsedWeight(TokenReader.readInt(stringTokenizer));
             }
 
             // READ THE Aero units on the BM
 
             for (int i = 0; i < 4; i++) {
-                int numofmechs = TokenReader.readInt(ST);
+                int numofmechs = TokenReader.readInt(stringTokenizer);
                 SUnit m = null;
                 for (int j = 0; j < numofmechs; j++) {
                     m = new SUnit();
-                    m.fromString(TokenReader.readString(ST));
+                    m.fromString(TokenReader.readString(stringTokenizer));
 
                     if (newbieHouse) {
                         int priceForUnit = getPriceForUnit(m.getWeightclass(), m.getType());
@@ -502,11 +514,11 @@ public class SHouse extends TimeUpdateHouse implements Comparable<SHouse>, ISell
                 }
             }
 
-            // Aero's
-            pilotCount = TokenReader.readInt(ST);
+            // Aero'string
+            pilotCount = TokenReader.readInt(stringTokenizer);
             for (; pilotCount > 0; pilotCount--) {
                 SPilot p = new SPilot();
-                p.fromFileFormat(TokenReader.readString(ST), "#");
+                p.fromFileFormat(TokenReader.readString(stringTokenizer), "#");
                 getPilotQueues().loadPilot(Unit.AERO, p);
             }
 
@@ -529,11 +541,11 @@ public class SHouse extends TimeUpdateHouse implements Comparable<SHouse>, ISell
                 MWLogger.mainLog("Merc House");
                 int contractamount = 0;
 
-                contractamount = TokenReader.readInt(ST);
+                contractamount = TokenReader.readInt(stringTokenizer);
                 java.util.Hashtable<String, ContractInfo> merctable = new java.util.Hashtable<String, ContractInfo>();
                 for (int i = 0; i < contractamount; i++) {
                     ContractInfo ci = new ContractInfo();
-                    ci.fromString(TokenReader.readString(ST));
+                    ci.fromString(TokenReader.readString(stringTokenizer));
                     merctable.put(ci.getPlayerName(), ci);
                 }
                 ((MercHouse) this).setOutstandingContracts(merctable);
@@ -550,11 +562,11 @@ public class SHouse extends TimeUpdateHouse implements Comparable<SHouse>, ISell
             loadConfigFile();
             setUsedMekBayMultiplier(Float.parseFloat(getConfig("UsedPurchaseCostMulti")));
 
-            return s;
+            return string;
         } catch (Exception ex) {
             MWLogger.errLog(ex);
             MWLogger.errLog("Error while loading faction: " + getName() + " Going forward anyway ...");
-            return s;
+            return string;
         }
     }
 
@@ -2078,7 +2090,7 @@ public class SHouse extends TimeUpdateHouse implements Comparable<SHouse>, ISell
          * In sum, we can put all players in the Reserve hash at this point, and
          * they will be properly moved afterwards when setBusyNoOpList() is run.
          */
-        CampaignMain.campaignMain.getIThread().removeImmunity(p);// logging in player
+        CampaignMain.campaignMain.getImmunityThread().removeImmunity(p);// logging in player
         // should NEVER be
         // immune
 

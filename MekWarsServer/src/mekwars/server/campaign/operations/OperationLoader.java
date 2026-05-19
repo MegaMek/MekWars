@@ -1,25 +1,44 @@
 /*
- * MekWars - Copyright (C) 2005
+ * Copyright (C) 2005 - nmorris (urgru@users.sourceforge.net)
+ * Copyright (C) 2026 The MegaMek Team. All Rights Reserved.
  *
- * Original author - nmorris (urgru@users.sourceforge.net)
+ * This file is part of MekWars.
  *
- * This program is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License as published by the Free
- * Software Foundation; either version 2 of the License, or (at your option)
- * any later version.
+ * MekWars is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License (GPL),
+ * version 3 or (at your option) any later version,
+ * as published by the Free Software Foundation.
  *
- * This program is distributed in the hope that it will be useful, but
- * WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
- * or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License
- * for more details.
+ * MekWars is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty
+ * of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU General Public License for more details.
+ *
+ * A copy of the GPL should have been included with this project;
+ * if not, see <https://www.gnu.org/licenses/>.
+ *
+ * NOTICE: The MegaMek organization is a non-profit group of volunteers
+ * creating free software for the BattleTech community.
+ *
+ * MechWarrior, BattleMech, `Mech and AeroTech are registered trademarks
+ * of The Topps Company, Inc. All Rights Reserved.
+ *
+ * Catalyst Game Labs and the Catalyst Game Labs logo are trademarks of
+ * InMediaRes Productions, LLC.
+ *
+ * MechWarrior Copyright Microsoft Corporation. MekWars was created under
+ * Microsoft's "Game Content Usage Rules"
+ * <https://www.xbox.com/en-US/developers/rules> and it is not endorsed by or
+ * affiliated with Microsoft.
  */
+
 
 /*
  * A utility which reads operation information.
  *
  * Has methods to read
  *  - Operations
- *  - ModifiyingOperations
+ *  - ModifyingOperations
  *  - SAVED LongOperations
  *
  * NOTE: The loader/writer DO NOT handle the reading and writing
@@ -30,13 +49,16 @@ package mekwars.server.campaign.operations;
 
 //IMPORTS
 
-import common.campaign.operations.DefaultOperation;
-import common.campaign.operations.ModifyingOperation;
-import common.campaign.operations.Operation;
-import common.util.MWLogger;
+import java.io.FileInputStream;
+import java.util.Properties;
 
+import megamek.logging.MMLogger;
+import mekwars.common.campaign.operations.DefaultOperation;
+import mekwars.common.campaign.operations.ModifyingOperation;
+import mekwars.common.campaign.operations.Operation;
 
 public class OperationLoader {
+    private final static MMLogger LOGGER = MMLogger.create(OperationLoader.class);
 
     //IVARS
     DefaultOperation defaults;
@@ -68,25 +90,22 @@ public class OperationLoader {
      * @urgru 5/30/05
      */
     public Operation loadOpValues(String opName) {
+        Properties opValues = new Properties();
 
-        java.util.Properties opValues = new java.util.Properties();
-
-        //attempt to load shortvals
-        String shortFilename = "./data/operations/short/" + opName;
+        //attempt to load short vals
+        String shortFilename = STR."./data/operations/short/\{opName}";
         try {
-            opValues.load(new java.io.FileInputStream(shortFilename));
+            opValues.load(new FileInputStream(shortFilename));
         } catch (Exception e) {
-            MWLogger.errLog("Problems loading short op: " + opName);
-            MWLogger.errLog(e);
+            LOGGER.error(e, "Problems loading short op: {}", opName);
         }
 
-        //attempt to load longvals
-        String longFilename = "./data/operations/long/" + opName;
+        //attempt to load long vals
+        String longFilename = STR."./data/operations/long/\{opName}";
         try {
-            opValues.load(new java.io.FileInputStream(longFilename));
+            opValues.load(new FileInputStream(longFilename));
         } catch (Exception e) {
-            //exception loading long. presume that its intentionally
-            //missing and this is a short-only operation
+            LOGGER.error(e, "Problems loading long op: {}", opName);
         }
 
         opName = opName.substring(0, opName.length() - 4);//remove ".txt"
@@ -111,12 +130,11 @@ public class OperationLoader {
         java.util.Properties modValues = new java.util.Properties();
 
         //attempt load
-        String modFilename = "./data/operations/modifiers/" + opName;
+        String modFilename = STR."./data/operations/modifiers/\{opName}";
         try {
             modValues.load(new java.io.FileInputStream(modFilename));
         } catch (Exception e) {
-            MWLogger.errLog("Problems loading mod op: " + opName);
-            MWLogger.errLog(e);
+            LOGGER.error(e, STR."Problems loading mod op: \{opName}");
         }
 
         opName = opName.substring(0, opName.length() - 5);//remove ".txt"

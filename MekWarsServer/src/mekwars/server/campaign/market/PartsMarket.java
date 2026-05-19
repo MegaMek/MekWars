@@ -111,7 +111,7 @@ public class PartsMarket {
                 bmEquipment.setAmount(Math.max(masterEq.getMinProduction(),
                       CampaignMain.campaignMain.getRandomNumber(masterEq.getMaxProduction()) + 1));
                 bmEquipment.setCost(Math.max(masterEq.getMinCost(),
-                      CampaignMain.campaignMain.getR().nextDouble() * masterEq.getMaxCost()));
+                      CampaignMain.campaignMain.getRandom().nextDouble() * masterEq.getMaxCost()));
                 bmEquipment.setCostUp(false);
                 bmEquipment.getEquipmentName();
                 bmEquipment.getTech(year);
@@ -163,7 +163,7 @@ public class PartsMarket {
                         //Only want the price to go down 10% max.
                         double newCost = Math.max(masterEq.getMinCost(),
                               Math.max(bmEquipment.getCost() * 0.9,
-                                    CampaignMain.campaignMain.getR().nextDouble() * bmEquipment.getCost()));
+                                    CampaignMain.campaignMain.getRandom().nextDouble() * bmEquipment.getCost()));
                         bmEquipment.setCost(newCost);
                     }
                 } catch (IllegalArgumentException iae) {
