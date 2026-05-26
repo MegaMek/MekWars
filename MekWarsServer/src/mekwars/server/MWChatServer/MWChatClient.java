@@ -65,6 +65,10 @@ public class MWChatClient implements IConnectionListener, ICommands {
         ((ConnectionHandler) _connectionHandler).init();
     }
 
+    public static String getKey(String userId) {
+        return userId.toLowerCase();
+    }
+
     public AbstractConnectionHandler createConnectionHandler(java.net.Socket s) throws java.io.IOException {
         return new ConnectionHandler(s, this);
     }
@@ -155,10 +159,6 @@ public class MWChatClient implements IConnectionListener, ICommands {
              * (String)i.next(); _ignored.put(s.toLowerCase(), s); }
              */
         }
-    }
-
-    public static String getKey(String userId) {
-        return userId.toLowerCase();
     }
 
     /**

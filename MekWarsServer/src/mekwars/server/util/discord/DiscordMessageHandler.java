@@ -15,9 +15,9 @@
  */
 package mekwars.server.util.discord;
 
-import mekwars.server.campaign.CampaignMain;
-
 import java.net.http.HttpClient;
+
+import mekwars.server.campaign.CampaignMain;
 
 /**
  * Provides integration with a Discord webhook.  Status messages and Operation outcome can be sent to the webhook.

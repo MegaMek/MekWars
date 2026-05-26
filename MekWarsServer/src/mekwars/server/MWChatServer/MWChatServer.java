@@ -111,20 +111,29 @@ public class MWChatServer implements ICommands {
         _killedUsers = new TimedUserList(60 * 60 * 2);
     }
 
-    public void initCommandProcessor(java.util.Properties p) {
-        CommandProcessorRemote.init(p);
-    }
-
-    public void initTranslator(java.util.Properties p) {
-        Translator.init(p);
-    }
-
     public static java.util.Properties getProperties() {
         return _properties;
     }
 
-    public int getKickBanSeconds() {
-        return _kickBanSeconds;
+    /**
+     * returns a key for referencing the users hashmap. mainly to avoid case-sensitivity problems.
+     */
+    public static String clientKey(MWChatClient client) {
+        return client.getKey();
+    }
+
+    /**
+     * returns a key for referencing the rooms hashmap. mainly to avoid case-sensitivity problems.
+     */
+    public static String roomKey(String room) {
+        return room.toLowerCase();
+    }
+
+    /**
+     * returns a key for referencing the rooms hashmap. mainly to avoid case-sensitivity problems.
+     */
+    public static String roomKey(RoomServer room) {
+        return roomKey(room.getName());
     }
 
     /*protected Dispatcher createDispatcher() {
@@ -134,6 +143,35 @@ public class MWChatServer implements ICommands {
     public Dispatcher getDispatcher() {
         return _dispatcher;
     }*/
+
+    /**
+     * returns a key for referencing the users hashmap. mainly to avoid case-sensitivity problems.
+     */
+    public static String clientKey(String client) {
+
+        // Sometimes bad strings are set up. Not much to do about it except
+        // return the null and hope for the best --Torren.
+        if (client == null) {return null;}
+
+        try {
+            return client.toLowerCase();
+        } catch (Exception ex) {
+            MWLogger.errLog(ex);
+            return null;
+        }
+    }
+
+    public void initCommandProcessor(java.util.Properties p) {
+        CommandProcessorRemote.init(p);
+    }
+
+    public void initTranslator(java.util.Properties p) {
+        Translator.init(p);
+    }
+
+    public int getKickBanSeconds() {
+        return _kickBanSeconds;
+    }
 
     public int getRoomAccessLevel(MWChatClient client, RoomServer rs) {
         return _roomAuthenticator.getAccessLevel(client, rs);
@@ -210,13 +248,6 @@ public class MWChatServer implements ICommands {
                 throw new Exception(INVALID_CHARACTER);
             }
         }
-    }
-
-    /**
-     * returns a key for referencing the users hashmap. mainly to avoid case-sensitivity problems.
-     */
-    public static String clientKey(MWChatClient client) {
-        return client.getKey();
     }
 
     /**
@@ -302,22 +333,8 @@ public class MWChatServer implements ICommands {
         }
     }
 
-    /**
-     * returns a key for referencing the rooms hashmap. mainly to avoid case-sensitivity problems.
-     */
-    public static String roomKey(String room) {
-        return room.toLowerCase();
-    }
-
     public RoomServer createRoomServer(String roomName, String password) {
         return new RoomServer(roomName, password, this);
-    }
-
-    /**
-     * returns a key for referencing the rooms hashmap. mainly to avoid case-sensitivity problems.
-     */
-    public static String roomKey(RoomServer room) {
-        return roomKey(room.getName());
     }
 
     /**
@@ -358,23 +375,6 @@ public class MWChatServer implements ICommands {
     public MWChatClient getClient(String target) {
         try {
             return _users.get(clientKey(target));
-        } catch (Exception ex) {
-            MWLogger.errLog(ex);
-            return null;
-        }
-    }
-
-    /**
-     * returns a key for referencing the users hashmap. mainly to avoid case-sensitivity problems.
-     */
-    public static String clientKey(String client) {
-
-        // Sometimes bad strings are set up. Not much to do about it except
-        // return the null and hope for the best --Torren.
-        if (client == null) {return null;}
-
-        try {
-            return client.toLowerCase();
         } catch (Exception ex) {
             MWLogger.errLog(ex);
             return null;

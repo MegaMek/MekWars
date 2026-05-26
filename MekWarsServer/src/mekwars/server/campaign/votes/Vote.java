@@ -79,6 +79,14 @@ public class Vote {
     }
 
     /**
+     *
+     * @param s String name to set as receiving player
+     */
+    public void setRecipient(String s) {
+        recipient = s;
+    }
+
+    /**
      * @return int vote type
      *       <p>
      *       Types are declared as public final ints in Vote.java
@@ -93,14 +101,6 @@ public class Vote {
      */
     public void setType(int i) {
         voteType = i;
-    }
-
-    /**
-     *
-     * @param s String name to set as receiving player
-     */
-    public void setRecipient(String s) {
-        recipient = s;
     }
 
 }//end VoteManager class

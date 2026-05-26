@@ -1,9 +1,9 @@
 package mekwars.server.util;
 
 
-import mekwars.server.campaign.CampaignMain;
-
 import java.lang.ref.Cleaner;
+
+import mekwars.server.campaign.CampaignMain;
 
 public class StringUtil {
 
