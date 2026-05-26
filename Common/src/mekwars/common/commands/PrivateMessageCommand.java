@@ -157,7 +157,7 @@ public class PrivateMessageCommand extends Command {
                 if (client.getConfig().isParam("TIMESTAMP")) {message = client.getShortTime() + message;}
 
                 //put the message in PrivateMessageCommand panel
-                client.addToChat(message, CCommPanel.CHANNEL_PMAIL, tabName);
+                client.addToChat(message, CCommPanel.CHANNEL_PRIVATE_MAIL, tabName);
 
                 //if PMs show in main, make it red and show there too
                 if (client.getConfig().isParam("MAINCHANNELPM")) {

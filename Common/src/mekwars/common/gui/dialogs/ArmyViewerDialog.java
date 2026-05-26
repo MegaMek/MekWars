@@ -1,38 +1,36 @@
-
 /*
- * MekWars - Copyright (C) 2004, 2005
+ * Copyright (C) 2002, 2004 Josh Yockey
+ * Copyright (C) 2026 The MegaMek Team. All Rights Reserved.
  *
- * This program is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License as published by the Free
- * Software Foundation; either version 2 of the License, or (at your option)
- * any later version.
+ * This file is part of MekWars.
  *
- * This program is distributed in the hope that it will be useful, but
- * WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
- * or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License
- * for more details.
+ * MekWars is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License (GPL),
+ * version 3 or (at your option) any later version,
+ * as published by the Free Software Foundation.
+ *
+ * MekWars is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty
+ * of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU General Public License for more details.
+ *
+ * A copy of the GPL should have been included with this project;
+ * if not, see <https://www.gnu.org/licenses/>.
+ *
+ * NOTICE: The MegaMek organization is a non-profit group of volunteers
+ * creating free software for the BattleTech community.
+ *
+ * MechWarrior, BattleMech, `Mech and AeroTech are registered trademarks
+ * of The Topps Company, Inc. All Rights Reserved.
+ *
+ * Catalyst Game Labs and the Catalyst Game Labs logo are trademarks of
+ * InMediaRes Productions, LLC.
+ *
+ * MechWarrior Copyright Microsoft Corporation. MekWars was created under
+ * Microsoft's "Game Content Usage Rules"
+ * <https://www.xbox.com/en-US/developers/rules> and it is not endorsed by or
+ * affiliated with Microsoft.
  */
-
-/*
- * MechSelectorJDialog.java - Copyright (C) 2002,2004 Josh Yockey
- *
- *  This program is free software; you can redistribute it and/or modify it
- *  under the terms of the GNU General Public License as published by the Free
- *  Software Foundation; either version 2 of the License, or (at your option)
- *  any later version.
- *
- *  This program is distributed in the hope that it will be useful, but
- *  WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
- *  or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License
- *  for more details.
- */
-
-/*
- * Thanks to the MegaMek Crew for the Code base
- * Modified by Torren (Jason Tighe)
- * From Megamek.client.MechSelectorDialgo.java
- */
-
 package mekwars.common.gui.dialogs;
 
 
@@ -41,27 +39,33 @@ package mekwars.common.gui.dialogs;
  */
 
 import java.awt.Dimension;
+import java.awt.Font;
+import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
 import java.io.Serial;
 import java.util.StringTokenizer;
 import java.util.TreeSet;
 import javax.swing.*;
+import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 
+import megamek.codeUtilities.MathUtility;
 import megamek.common.units.Infantry;
+import megamek.logging.MMLogger;
 import mekwars.common.Unit;
 import mekwars.common.campaign.CArmy;
 import mekwars.common.campaign.CPlayer;
 import mekwars.common.campaign.CUnit;
 import mekwars.common.campaign.clientutils.protocol.IClient;
-import mekwars.common.util.MWLogger;
 import mekwars.common.util.SpringLayoutHelper;
 
 public class ArmyViewerDialog extends JDialog implements ActionListener, ListSelectionListener, ItemListener {
     public static final int AVD_DEFEND = 0;
     public static final int AVD_ATTACK = 1;
     public static final int AVD_ATTACK_FROM_RESERVE = 2;
+    private static final MMLogger LOGGER = MMLogger.create(ArmyViewerDialog.class);
     @Serial
     private static final long serialVersionUID = -3851019509649287454L;
     private static final String SPACES = "                        ";
@@ -79,11 +83,11 @@ public class ArmyViewerDialog extends JDialog implements ActionListener, ListSel
     private final String defenderName;
     private final int opID;
     private final int teamNumbers;
+    private final int viewerMode;
     private int selectedArmyId = -1;
-    private int viewerMode;
 
     public ArmyViewerDialog(IClient client, String opName, StringTokenizer validArmyList, int mode, String planet,
-          String defender, int opid, int teamNumbers) {
+          String defender, int opID, int teamNumbers) {
         super(client.getMainFrame(), "Army Viewer", true);//dummy frame as owner
 
         //save params
@@ -93,13 +97,13 @@ public class ArmyViewerDialog extends JDialog implements ActionListener, ListSel
         this.viewerMode = mode;
         this.planetName = planet;
         this.defenderName = defender;
-        this.opID = opid;
+        this.opID = opID;
         this.teamNumbers = teamNumbers;
 
         //We are defending and need to parse out which armies we can do that with!
         if (validArmyList != null) {
             while (validArmyList.hasMoreElements()) {
-                this.validArmyList.add(Integer.parseInt(validArmyList.nextToken()));
+                this.validArmyList.add(MathUtility.parseInt(validArmyList.nextToken(), -1));
             }
         }
 
@@ -110,6 +114,7 @@ public class ArmyViewerDialog extends JDialog implements ActionListener, ListSel
         if (teamNumbers > 1) {
             for (int team = 1; team <= teamNumbers; team++) {teamBox.addItem(STR."Team #\{team}");}
         }
+
         //construct text boxes
         armyView = new JTextArea(15, 38);
         armyView.setAutoscrolls(true);
@@ -127,18 +132,18 @@ public class ArmyViewerDialog extends JDialog implements ActionListener, ListSel
 
         //set list/scroll options
         listScrollPane.setAlignmentX(LEFT_ALIGNMENT);
-        listScrollPane.setHorizontalScrollBarPolicy(javax.swing.ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
+        listScrollPane.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
         leftScrollPane.setAlignmentX(LEFT_ALIGNMENT);
-        leftScrollPane.setHorizontalScrollBarPolicy(javax.swing.ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
-        armyList.setSelectionMode(javax.swing.ListSelectionModel.SINGLE_SELECTION);
+        leftScrollPane.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
+        armyList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
 
         //set fonts
-        armyView.setFont(new java.awt.Font("Monospaced", java.awt.Font.PLAIN, 11));
-        armyList.setFont(new java.awt.Font("Monospaced", java.awt.Font.PLAIN, 11));
+        armyView.setFont(new Font("Monospaced", Font.PLAIN, 11));
+        armyList.setFont(new Font("Monospaced", Font.PLAIN, 11));
 
 
         //panel w/ 1x3 SpringLayout for the mechView bits
-        javax.swing.JPanel textBoxSpring = new javax.swing.JPanel(new javax.swing.SpringLayout());
+        JPanel textBoxSpring = new JPanel(new SpringLayout());
         textBoxSpring.add(listScrollPane);
         textBoxSpring.add(leftScrollPane);
         SpringLayoutHelper.setupSpringGrid(textBoxSpring, 3);
@@ -150,10 +155,12 @@ public class ArmyViewerDialog extends JDialog implements ActionListener, ListSel
 
         //set up the overall SpringLayout
         JPanel springHolder = new JPanel(new SpringLayout());
+
         if (this.teamNumbers > 1) {
             springHolder.add(teamBox);
             teamBox.setSelectedIndex(-1);
         }
+
         springHolder.add(textBoxSpring);
         springHolder.add(buttonHolder);
         SpringLayoutHelper.setupSpringGrid(springHolder, 1);
@@ -200,14 +207,17 @@ public class ArmyViewerDialog extends JDialog implements ActionListener, ListSel
             }
         } else {//Defend
             for (CArmy army : player.getArmies()) {
-                if (!army.isDisabled()) {
-                    if (this.validArmyList.contains(army.getID())) {defaultModel.add(x++, formatArmy(army));}
+                if (!army.isDisabled() && this.validArmyList.contains(army.getID())) {
+                    defaultModel.add(x++, formatArmy(army));
                 }
             }
         }
+
         repaint();
 
-        if (defaultModel.getSize() > 0) {armyList.setSelectedIndex(0);}
+        if (defaultModel.getSize() > 0) {
+            armyList.setSelectedIndex(0);
+        }
     }
 
     @Override
@@ -219,6 +229,7 @@ public class ArmyViewerDialog extends JDialog implements ActionListener, ListSel
 
     void previewArmy(int armyID) {
         armyView.setEditable(false);
+
         if (armyID > -1) {
             StringBuilder armyText = new StringBuilder();
             CArmy army = player.getArmy(armyID);
@@ -245,24 +256,26 @@ public class ArmyViewerDialog extends JDialog implements ActionListener, ListSel
     }
 
     private String formatArmy(CArmy army) {
-
         return STR."\{makeLength(STR."#\{army.getID()}", 3)} \{makeLength(army.getName(),
               15)} \{makeLength(STR."BV: \{army.getBV()}", 10)}";
     }
 
     private String makeLength(String s, int nLength) {
-        if (s.length() == nLength) {return s;} else if (s.length() > nLength) {
+        if (s.length() == nLength) {
+            return s;
+        } else if (s.length() > nLength) {
             return STR."\{s.substring(0, nLength - 2)}..";
         } else {
             return s + SPACES.substring(0, nLength - s.length());
         }
     }
 
-    public void actionPerformed(java.awt.event.ActionEvent ae) {
+    public void actionPerformed(ActionEvent ae) {
         if (ae.getSource() == bCancel) {
             this.setVisible(false);
             selectedArmyId = -1;
         }
+
         if (ae.getSource() == bSelect) {
             try {
 
@@ -284,10 +297,11 @@ public class ArmyViewerDialog extends JDialog implements ActionListener, ListSel
                         team = teamBox.getSelectedIndex();
 
                         if (team == -1) {
-                            javax.swing.JOptionPane.showMessageDialog(this, "You must pick a Team!");
+                            JOptionPane.showMessageDialog(this, "You must pick a Team!");
                             return;
                         } else {team++;}
                     }
+
                     client.sendChat(STR."/c defend#\{opID}#\{armyID}#\{team}");
                 } else if (viewerMode == AVD_ATTACK) {
                     client.sendChat(STR."\{IClient.CAMPAIGN_PREFIX}c attack#\{opName}#\{armyID}#\{planetName}");
@@ -297,7 +311,7 @@ public class ArmyViewerDialog extends JDialog implements ActionListener, ListSel
                 this.setVisible(false);
 
             } catch (Exception ex) {
-                MWLogger.errLog(ex);
+                LOGGER.error(ex, "Action Performed Error: {}", ex.getLocalizedMessage());
             }
         }// end unit selector if.
     }
@@ -305,9 +319,10 @@ public class ArmyViewerDialog extends JDialog implements ActionListener, ListSel
     /**
      * for compliance with ListSelectionListener
      */
-    public void valueChanged(javax.swing.event.ListSelectionEvent event) {
+    public void valueChanged(ListSelectionEvent event) {
 
         int selected = armyList.getSelectedIndex();
+
         if (selected == -1) {
             clearArmyPreview();
             return;
@@ -320,7 +335,7 @@ public class ArmyViewerDialog extends JDialog implements ActionListener, ListSel
 
     }
 
-    public void itemStateChanged(java.awt.event.ItemEvent ie) {
+    public void itemStateChanged(ItemEvent itemEvent) {
 
         Object currSelection = armyList.getSelectedValue();
 

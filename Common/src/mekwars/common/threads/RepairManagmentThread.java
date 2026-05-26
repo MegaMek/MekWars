@@ -14,11 +14,6 @@
  * for more details.
  */
 
-/**
- * @author Torren (Jason Tighe) Created 02/01/2006
- *       <p>
- *       This Thread is run by the client to allow them to queue up jobs.
- */
 package mekwars.common.threads;
 
 import java.util.Iterator;
@@ -26,16 +21,18 @@ import java.util.StringTokenizer;
 import java.util.Vector;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
+import megamek.codeUtilities.MathUtility;
 import megamek.common.CriticalSlot;
 import megamek.common.equipment.Mounted;
 import megamek.common.units.Mek;
+import megamek.logging.MMLogger;
 import mekwars.common.campaign.CUnit;
 import mekwars.common.campaign.clientutils.protocol.IClient;
 import mekwars.common.campaign.pilot.skills.PilotSkill;
-import mekwars.common.util.MWLogger;
 import mekwars.common.util.UnitUtils;
 
 public class RepairManagmentThread extends Thread {
+    private final static MMLogger LOGGER = MMLogger.create(RepairManagmentThread.class);
     private final Vector<ConcurrentLinkedQueue<String>> workOrders = new Vector<>(5, 1);
     private final IClient client;
     private long averageRepairTime = 1000;
@@ -64,14 +61,12 @@ public class RepairManagmentThread extends Thread {
             } catch (Exception ex) {
                 client.systemMessage(
                       "Error processing Repair Management queue. Alert an SO and check your ./logs/error.0 for the error");
-                MWLogger.errLog("Error in Repair Management Queue");
-                MWLogger.errLog(ex);
+                LOGGER.error(ex, "Error in Repair Management Queue");
             }
         }
     }
 
     private void processWorkOrders() {
-
         int availableTechs = 1;
 
         synchronized (workOrders) {
@@ -88,7 +83,9 @@ public class RepairManagmentThread extends Thread {
                     continue;
                 }
 
-                if (pos != UnitUtils.TECH_PILOT) {availableTechs = client.getPlayer().getAvailableTechs().get(pos);}
+                if (pos != UnitUtils.TECH_PILOT) {
+                    availableTechs = client.getPlayer().getAvailableTechs().get(pos);
+                }
 
                 //all techs are busy to keep it moving.
                 if (availableTechs <= 0) {
@@ -99,23 +96,23 @@ public class RepairManagmentThread extends Thread {
                 Iterator<String> workQueue = workOrders.elementAt(pos).iterator();
 
                 while (workQueue.hasNext()) {
-                    //no more techs can't continue;
+                    //no more techs, can't continue;
                     if (availableTechs <= 0) {
                         break;
                     }
 
                     StringTokenizer order = new StringTokenizer(workQueue.next(), "#");
 
-                    CUnit unit = client.getPlayer().getUnit(Integer.parseInt(order.nextToken()));
-                    int location = Integer.parseInt(order.nextToken());
-                    int slot = Integer.parseInt(order.nextToken());
-                    int roll = Integer.parseInt(order.nextToken());
-                    int retries = Integer.parseInt(order.nextToken());
+                    CUnit unit = client.getPlayer().getUnit(MathUtility.parseInt(order.nextToken(), -1));
+                    int location = MathUtility.parseInt(order.nextToken(), -1);
+                    int slot = MathUtility.parseInt(order.nextToken(), -1);
+                    int roll = MathUtility.parseInt(order.nextToken(), -1);
+                    int retries = MathUtility.parseInt(order.nextToken(), -1);
 
                     boolean armor = (slot >= UnitUtils.LOC_FRONT_ARMOR);
 
                     if (unit == null) {
-                        MWLogger.errLog("Unable to find unit to repair. removing repair job");
+                        LOGGER.debug("Unable to find unit to repair. removing repair job");
                         client.systemMessage("Unable to find unit to repair. removing repair job");
                         workQueue.remove();
                         continue;
@@ -129,7 +126,9 @@ public class RepairManagmentThread extends Thread {
                         }
 
                         //Pilot is busy repairing wait for the next round.
-                        if (pos == UnitUtils.TECH_PILOT && unit.getPilotIsReparing()) {continue;}
+                        if (pos == UnitUtils.TECH_PILOT && unit.getPilotIsRepairing()) {
+                            continue;
+                        }
 
                         //check to see if CS are viable before anything else.
                         if (!armor) {
@@ -149,9 +148,11 @@ public class RepairManagmentThread extends Thread {
                         } else {
                             if (slot == UnitUtils.LOC_FRONT_ARMOR) {
                                 int tempLocation = location;
+
                                 if (location >= UnitUtils.LOC_CENTER_TORSOR) {
                                     tempLocation -= 7;
                                 }
+
                                 if (unit.getEntity().getArmor(tempLocation) ==
                                           unit.getEntity().getOArmor(tempLocation)) {
                                     client.systemMessage(STR."\{UnitUtils.techDescription(pos)} tech work order canceled due to an already repaired Armor.");
@@ -180,7 +181,9 @@ public class RepairManagmentThread extends Thread {
                             }
                         }
                         //check to see if we are able to process this repair if not continue to the next if so great!
-                        if (!UnitUtils.checkRepairViability(unit.getEntity(), location, slot, armor)) {continue;}
+                        if (!UnitUtils.checkRepairViability(unit.getEntity(), location, slot, armor)) {
+                            continue;
+                        }
                     }
 
                     int techWorkMod = roll - UnitUtils.getTechRoll(unit.getEntity(), location, slot, pos, armor,
@@ -209,7 +212,6 @@ public class RepairManagmentThread extends Thread {
         }
     }
 
-    //String format unitID#Location#SlotID(using the armor/is/rear armor slots as well)#baseRoll
     public void addWorkOrder(int techType, String workOrder) {
         workOrders.elementAt(techType).add(workOrder);
     }
@@ -226,6 +228,7 @@ public class RepairManagmentThread extends Thread {
         Iterator<String> repairs = workOrders.elementAt(techType).iterator();
         while (repairs.hasNext()) {
             String repair = repairs.next();
+
             if (repair.equals(data)) {
                 repairs.remove();
                 break;
@@ -235,34 +238,32 @@ public class RepairManagmentThread extends Thread {
         client.systemMessage(STR."Removed work orders for for \{UnitUtils.techDescription(techType)} techs.");
     }
 
-    public boolean isQueued(int Location, int slot, int unitid) {
-
+    public boolean isQueued(int Location, int slot, int unitID) {
         for (int tech = UnitUtils.TECH_GREEN; tech <= UnitUtils.TECH_PILOT; tech++) {
             for (String repair : workOrders.elementAt(tech)) {
-                if (repair.indexOf(Integer.toString(unitid)) == 0) {
+                if (repair.indexOf(Integer.toString(unitID)) == 0) {
                     java.util.StringTokenizer order = new StringTokenizer(repair, "#");
                     order.nextToken();//unit id Already Verified it.
-                    int locationid = Integer.parseInt(order.nextToken());
-                    int slotid = Integer.parseInt(order.nextToken());
-                    if (slotid == UnitUtils.LOC_REAR_ARMOR) {
+
+                    int locationid = MathUtility.parseInt(order.nextToken(), -1);
+                    int slotID = MathUtility.parseInt(order.nextToken(), -1);
+
+                    if (slotID == UnitUtils.LOC_REAR_ARMOR) {
                         locationid -= 7;
                     }
 
-                    if (locationid == Location && slotid == slot) {
+                    if (locationid == Location && slotID == slot) {
                         return true;
                     }
-
                 }
-
             }
         }
 
         return false;
     }
 
-    public boolean hasQueuedOrders(int unitid) {
-
-        String id = Integer.toString(unitid);
+    public boolean hasQueuedOrders(int unitID) {
+        String id = Integer.toString(unitID);
 
         for (int tech = UnitUtils.TECH_GREEN; tech <= UnitUtils.TECH_PILOT; tech++) {
             for (String repair : workOrders.elementAt(tech)) {
@@ -280,51 +281,50 @@ public class RepairManagmentThread extends Thread {
         CUnit unit = client.getPlayer().getUnit(unitID);
 
         for (int tech = UnitUtils.TECH_GREEN; tech <= UnitUtils.TECH_PILOT; tech++) {
-            java.util.Iterator<String> repairs = workOrders.elementAt(tech).iterator();
-            while (repairs.hasNext()) {
-                String repair = repairs.next();
+            for (String repair : workOrders.elementAt(tech)) {
                 if (repair.indexOf(Integer.toString(unitID)) == 0) {
-                    java.util.StringTokenizer order = new java.util.StringTokenizer(repair, "#");
+                    StringTokenizer order = new StringTokenizer(repair, "#");
                     order.nextToken();//unit id Already Verified it.
-                    int locationid = Integer.parseInt(order.nextToken());
-                    int slotid = Integer.parseInt(order.nextToken());
+                    int locationID = MathUtility.parseInt(order.nextToken(), -1);
+                    int slotID = MathUtility.parseInt(order.nextToken(), -1);
 
-                    if (data.toString().equals("None.")) {data = new StringBuilder();}
+                    if (data.toString().equals("None.")) {
+                        data = new StringBuilder();
+                    }
 
-                    if (slotid == UnitUtils.LOC_FRONT_ARMOR) {
+                    if (slotID == UnitUtils.LOC_FRONT_ARMOR) {
                         data.append(UnitUtils.techDescription(tech))
                               .append(" tech queued for external armor repair ")
-                              .append(unit.getEntity().getLocationAbbr(locationid))
+                              .append(unit.getEntity().getLocationAbbr(locationID))
                               .append(".");
-                    } else if (slotid == UnitUtils.LOC_REAR_ARMOR) {
+                    } else if (slotID == UnitUtils.LOC_REAR_ARMOR) {
                         data.append(UnitUtils.techDescription(tech))
                               .append(" tech queued for external armor repair ")
-                              .append(unit.getEntity().getLocationAbbr(locationid - 7))
+                              .append(unit.getEntity().getLocationAbbr(locationID - 7))
                               .append("(r).");
-                    } else if (slotid == UnitUtils.LOC_INTERNAL_ARMOR) {
+                    } else if (slotID == UnitUtils.LOC_INTERNAL_ARMOR) {
                         data.append(UnitUtils.techDescription(tech))
                               .append(" tech queued for internal structure repair ")
-                              .append(unit.getEntity().getLocationAbbr(locationid))
+                              .append(unit.getEntity().getLocationAbbr(locationID))
                               .append(".");
                     } else {
-                        CriticalSlot cs = unit.getEntity().getCritical(locationid, slotid);
+                        CriticalSlot criticalSlot = unit.getEntity().getCritical(locationID, slotID);
 
-                        if (cs.getType() == CriticalSlot.TYPE_EQUIPMENT) {
-                            Mounted<?> mounted = cs.getMount();
+                        if (criticalSlot.getType() == CriticalSlot.TYPE_EQUIPMENT) {
+                            Mounted<?> mounted = criticalSlot.getMount();
                             data.append(UnitUtils.techDescription(tech))
                                   .append(" tech queued for repair of ")
                                   .append(mounted.getName())
                                   .append("(")
-                                  .append(unit.getEntity().getLocationAbbr(locationid))
+                                  .append(unit.getEntity().getLocationAbbr(locationID))
                                   .append(").");
-                        }// end CS type if
-                        else {
-                            if (unit.getEntity() instanceof Mek) {
+                        } else {
+                            if (unit.getEntity() instanceof Mek mek) {
                                 data.append(UnitUtils.techDescription(tech))
                                       .append(" tech queued for repair of ")
-                                      .append(((Mech) unit.getEntity()).getSystemName(cs.getIndex()))
+                                      .append(mek.getSystemName(criticalSlot.getIndex()))
                                       .append("(")
-                                      .append(unit.getEntity().getLocationAbbr(locationid))
+                                      .append(unit.getEntity().getLocationAbbr(locationID))
                                       .append(").");
                             }
                         }//end CS type else

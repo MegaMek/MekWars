@@ -36,11 +36,12 @@ import java.util.Map;
 import java.util.StringTokenizer;
 import java.util.TreeMap;
 
-import mekwars.common.util.MWLogger;
+import megamek.logging.MMLogger;
 
 public class ResultsFlags extends PlayerFlags {
     public static final int APPLIES_TO_ATTACKER = 1;
     public static final int APPLIES_TO_DEFENDER = 2;
+    private static final MMLogger LOGGER = MMLogger.create(ResultsFlags.class);
     private final Map<Integer, Integer> flagsApplyTo;
 
     public ResultsFlags() {
@@ -60,14 +61,16 @@ public class ResultsFlags extends PlayerFlags {
         setFlagName(id, name);
         setFlag(name, value);
         int appliesTo = 0;
+
         if (appliesToAttacker) {
             appliesTo += ResultsFlags.APPLIES_TO_ATTACKER;
         }
+
         if (appliesToDefender) {
             appliesTo += ResultsFlags.APPLIES_TO_DEFENDER;
         }
         flagsApplyTo.put(id, appliesTo);
-        //MWLogger.debugLog("Setting flag " + name + "(id: " + id + ") to value " + value);
+        LOGGER.debug("Setting flag {}(id: {}) to value {}", name, id, value);
     }
 
     public boolean flagAppliesToDefender(String name) {
@@ -102,6 +105,7 @@ public class ResultsFlags extends PlayerFlags {
         if (data.equalsIgnoreCase(" ")) {
             return;
         }
+
         System.out.println(data);
         StringTokenizer st = new StringTokenizer(data, "$");
         while (st.hasMoreTokens()) {
@@ -134,7 +138,7 @@ public class ResultsFlags extends PlayerFlags {
         if (flag != -1) {
             flags.set(flag, value);
         } else {
-            MWLogger.errLog(STR."Unknown Flag checked: \{name}");
+            LOGGER.error("Unknown Flag checked: {}", name);
         }
     }
 
@@ -145,10 +149,12 @@ public class ResultsFlags extends PlayerFlags {
      */
     public void clearFlag(String name) {
         int id = getFlagKey(name);
+
         if (id == -1) {
             // invalid name
             return;
         }
+
         flagNames.remove(id);
         flags.clear(id);
         flagsApplyTo.remove(id);
@@ -162,10 +168,13 @@ public class ResultsFlags extends PlayerFlags {
      */
     public String export() {
         StringBuilder toReturn = new StringBuilder();
+
         if (flagNames.isEmpty()) {
             return "";
         }
+
         toReturn.append(this.flagType).append("$");
+
         for (int key : flagNames.keySet()) {
             String name = flagNames.get(key);
             String isTrue = Boolean.toString(flags.get(key));
@@ -179,6 +188,7 @@ public class ResultsFlags extends PlayerFlags {
                   .append(appliesTo)
                   .append("$");
         }
+
         return toReturn.toString();
     }
 

@@ -1,46 +1,70 @@
 /*
- * MekWars - Copyright (C) 2004
+ * Copyright (C) 2004 Helge Richter (McWizard)
+ * Copyright (C) 2026 The MegaMek Team. All Rights Reserved.
  *
- * Derived from MegaMekNET (http://www.sourceforge.net/projects/megameknet)
- * Original author Helge Richter (McWizard)
+ * This file is part of MekWars.
  *
- * This program is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License as published by the Free
- * Software Foundation; either version 2 of the License, or (at your option)
- * any later version.
+ * MekWars is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License (GPL),
+ * version 3 or (at your option) any later version,
+ * as published by the Free Software Foundation.
  *
- * This program is distributed in the hope that it will be useful, but
- * WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
- * or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License
- * for more details.
+ * MekWars is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty
+ * of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU General Public License for more details.
+ *
+ * A copy of the GPL should have been included with this project;
+ * if not, see <https://www.gnu.org/licenses/>.
+ *
+ * NOTICE: The MegaMek organization is a non-profit group of volunteers
+ * creating free software for the BattleTech community.
+ *
+ * MechWarrior, BattleMech, `Mech and AeroTech are registered trademarks
+ * of The Topps Company, Inc. All Rights Reserved.
+ *
+ * Catalyst Game Labs and the Catalyst Game Labs logo are trademarks of
+ * InMediaRes Productions, LLC.
+ *
+ * MechWarrior Copyright Microsoft Corporation. MekWars was created under
+ * Microsoft's "Game Content Usage Rules"
+ * <https://www.xbox.com/en-US/developers/rules> and it is not endorsed by or
+ * affiliated with Microsoft.
  */
 
 package mekwars.common.gui.panels;
 
 import java.awt.BorderLayout;
 import java.awt.Color;
+import java.awt.Component;
 import java.awt.Dimension;
+import java.awt.Toolkit;
+import java.awt.datatransfer.Clipboard;
+import java.awt.datatransfer.DataFlavor;
+import java.awt.datatransfer.StringSelection;
+import java.awt.datatransfer.Transferable;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.ComponentEvent;
 import java.awt.event.ComponentListener;
+import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.io.Serial;
-import javax.swing.JEditorPane;
-import javax.swing.JList;
-import javax.swing.JPanel;
-import javax.swing.JPopupMenu;
-import javax.swing.JScrollPane;
-import javax.swing.JTabbedPane;
-import javax.swing.KeyStroke;
-import javax.swing.ScrollPaneConstants;
-import javax.swing.SwingConstants;
+import java.io.StringReader;
+import java.util.StringTokenizer;
+import javax.swing.*;
 import javax.swing.border.LineBorder;
+import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
+import javax.swing.text.BadLocationException;
 
+import jakarta.annotation.Nonnull;
+import megamek.codeUtilities.MathUtility;
+import megamek.logging.MMLogger;
 import mekwars.common.campaign.clientutils.protocol.IClient;
 import mekwars.common.gui.MyHTMLEditorKit;
 import mekwars.common.gui.listeners.MMNetHyperLinkListener;
-import mekwars.common.util.MWLogger;
 import mekwars.common.util.StringUtils;
-import org.jspecify.annotations.NonNull;
 
 /**
  * This is a tabbed multi-channel Communications Panel using Swing to manage the display.
@@ -50,12 +74,11 @@ import org.jspecify.annotations.NonNull;
  */
 
 public class CCommPanel extends JPanel implements ChangeListener, ComponentListener, MouseListener {
-
     public static final int CHANNEL_MAIN = 0;
-    public static final int CHANNEL_HMAIL = 1;
-    public static final int CHANNEL_PMAIL = 2;
-    public static final int CHANNEL_PLOG = 3;
-    public static final int CHANNEL_SLOG = 4;
+    public static final int CHANNEL_HOUSE_MAIL = 1;
+    public static final int CHANNEL_PRIVATE_MAIL = 2;
+    public static final int CHANNEL_PERSONAL_LOG = 3;
+    public static final int CHANNEL_SYSTEM_LOG = 4;
     public static final int CHANNEL_MISC = 5;
     public static final int CHANNEL_RPG = 6;
     public static final int CHANNEL_MOD = 7;
@@ -71,6 +94,7 @@ public class CCommPanel extends JPanel implements ChangeListener, ComponentListe
      * @see CCommPanel#MAX_BUFFER
      */
     public static final int CAP_BUFFER_AMOUNT = 60000;
+    private static final MMLogger LOGGER = MMLogger.create(CCommPanel.class);
     /**
      *
      */
@@ -118,9 +142,9 @@ public class CCommPanel extends JPanel implements ChangeListener, ComponentListe
     CChatField chatField;
     Color TabForeground;
     Color TabBackground;
-    boolean autoTextUpdate;
     CCommPanel.CTabForwardAction ForwardCommTab;
     CCommPanel.CTabBackwardAction BackwardCommTab;
+    private boolean autoTextUpdate;
 
     public CCommPanel(IClient client) {
         int index;
@@ -138,7 +162,7 @@ public class CCommPanel extends JPanel implements ChangeListener, ComponentListe
 
         CommTPane.addMouseListener(this);
 
-        TabForeground = StringUtils.html2Color(this.client.getConfigParam("SYSMESSAGECOLOR"));
+        TabForeground = StringUtils.html2Color(this.client.getConfigParam("SYS_MESSAGE_COLOR"));
         TabBackground = new JList<>().getSelectionBackground().darker();
         autoTextUpdate = this.client.getConfig().isParam("AUTOSCROLL");
         setLayout(new BorderLayout());
@@ -154,8 +178,8 @@ public class CCommPanel extends JPanel implements ChangeListener, ComponentListe
         MChannelPanel.setLayout(new BorderLayout());
         MChannelPanel.add(MChannelSPane, BorderLayout.CENTER);
         String mnemonicText;
-        tabText = this.client.getConfig().getParam("MAINCHANNELTABNAME");
-        mnemonicText = this.client.getConfig().getParam("MAINCHANNELMNEMONIC");
+        tabText = this.client.getConfig().getParam("MAIN_CHANNEL_TAB_NAME");
+        mnemonicText = this.client.getConfig().getParam("MAIN_CHANNEL_MNEMONIC");
 
         CommTPane.addTab(tabText,
               null,
@@ -179,17 +203,17 @@ public class CCommPanel extends JPanel implements ChangeListener, ComponentListe
         HMailEPane.addHyperlinkListener(chatHLL);
         HMailEPane.setEditorKit(kit);
         HMailEPane.addMouseListener(this);
-        HMailEPane.setName(Integer.toString(CHANNEL_HMAIL));
+        HMailEPane.setName(Integer.toString(CHANNEL_HOUSE_MAIL));
         HMailSPane.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
         HMailSPane.setViewportBorder(new LineBorder(new java.awt.Color(0, 0, 0)));
         HMailSPane.setViewportView(HMailEPane);
         HMailPanel.setLayout(new BorderLayout());
         HMailPanel.add(HMailSPane, BorderLayout.CENTER);
 
-        if (this.client.getConfig().isParam("HOUSEMAILVISIBLE")) {
+        if (this.client.getConfig().isParam("HOUSE_MAIL_VISIBLE")) {
 
-            tabText = this.client.getConfig().getParam("HOUSEMAILTABNAME");
-            mnemonicText = this.client.getConfig().getParam("HOUSEMAILMNEMONIC");
+            tabText = this.client.getConfig().getParam("HOUSE_MAIL_TAB_NAME");
+            mnemonicText = this.client.getConfig().getParam("HOUSE_MAIL_MNEMONIC");
 
             CommTPane.addTab(tabText,
                   null,
@@ -223,9 +247,9 @@ public class CCommPanel extends JPanel implements ChangeListener, ComponentListe
         RPGChannelPanel.setLayout(new BorderLayout());
         RPGChannelPanel.add(RPGChannelSPane, BorderLayout.CENTER);
 
-        if (this.client.getConfig().isParam("RPGVISIBLE")) {
-            tabText = this.client.getConfig().getParam("RPGTABNAME");
-            mnemonicText = this.client.getConfig().getParam("RPGMNEMONIC");
+        if (this.client.getConfig().isParam("RPG_VISIBLE")) {
+            tabText = this.client.getConfig().getParam("RPG_TAB_NAME");
+            mnemonicText = this.client.getConfig().getParam("RPG_MNEMONIC");
 
             CommTPane.addTab(tabText, null, RPGChannelPanel, STR."RP (Alt + \{mnemonicText.toUpperCase()})");
             index = CommTPane.indexOfComponent(RPGChannelPanel);
@@ -242,13 +266,13 @@ public class CCommPanel extends JPanel implements ChangeListener, ComponentListe
             getActionMap().put("RPGChannelSelect", RPGChannelSelect);
         }
 
-        if (!this.client.getConfig().isParam("USEMULTIPLEPM")) {
+        if (!this.client.getConfig().isParam("USE_MULTIPLE_PM")) {
             PMailEPane.setEditable(false);
             PMailEPane.setCaret(new ScrollCaret());
             PMailEPane.addHyperlinkListener(chatHLL);
             PMailEPane.setEditorKit(kit);
             PMailEPane.addMouseListener(this);
-            PMailEPane.setName(Integer.toString(CHANNEL_PMAIL));
+            PMailEPane.setName(Integer.toString(CHANNEL_PRIVATE_MAIL));
             PMailSPane.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
             PMailSPane.setViewportBorder(new LineBorder(new Color(0, 0, 0)));
             PMailSPane.setViewportView(PMailEPane);
@@ -256,9 +280,9 @@ public class CCommPanel extends JPanel implements ChangeListener, ComponentListe
             PMailPanel.add(PMailSPane, BorderLayout.CENTER);
 
 
-            if (this.client.getConfig().isParam("PRIVATEMAILVISIBLE")) {
-                tabText = this.client.getConfig().getParam("PRIVATEMAILTABNAME");
-                mnemonicText = this.client.getConfig().getParam("PRIVATEMAILMNEMONIC");
+            if (this.client.getConfig().isParam("PRIVATE_MAIL_VISIBLE")) {
+                tabText = this.client.getConfig().getParam("PRIVATE_MAIL_TAB_NAME");
+                mnemonicText = this.client.getConfig().getParam("PRIVATE_MAIL_MNEMONIC");
 
                 CommTPane.addTab(tabText, null, PMailPanel, STR."Private Mail (Alt + \{mnemonicText.toUpperCase()})");
                 index = CommTPane.indexOfComponent(PMailPanel);
@@ -281,16 +305,16 @@ public class CCommPanel extends JPanel implements ChangeListener, ComponentListe
         PLogEPane.addHyperlinkListener(chatHLL);
         PLogEPane.setEditorKit(kit);
         PLogEPane.addMouseListener(this);
-        PLogEPane.setName(Integer.toString(CHANNEL_PLOG));
+        PLogEPane.setName(Integer.toString(CHANNEL_PERSONAL_LOG));
         PLogSPane.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
         PLogSPane.setViewportBorder(new LineBorder(new Color(0, 0, 0)));
         PLogSPane.setViewportView(PLogEPane);
         PLogPanel.setLayout(new BorderLayout());
         PLogPanel.add(PLogSPane, BorderLayout.CENTER);
 
-        if (this.client.getConfig().isParam("PERSONALLOGVISIBLE")) {
-            tabText = this.client.getConfig().getParam("PERSONALLOGTABNAME");
-            mnemonicText = this.client.getConfig().getParam("PERSONALLOGMNEMONIC");
+        if (this.client.getConfig().isParam("PERSONAL_LOG_VISIBLE")) {
+            tabText = this.client.getConfig().getParam("PERSONAL_LOG_TAB_NAME");
+            mnemonicText = this.client.getConfig().getParam("PERSONAL_LOG_MNEMONIC");
 
             CommTPane.addTab(tabText, null, PLogPanel, STR."Logged Messages (Alt + \{mnemonicText.toUpperCase()})");
             index = CommTPane.indexOfComponent(PLogPanel);
@@ -312,16 +336,16 @@ public class CCommPanel extends JPanel implements ChangeListener, ComponentListe
         SLogEPane.addHyperlinkListener(chatHLL);
         SLogEPane.setEditorKit(kit);
         SLogEPane.addMouseListener(this);
-        SLogEPane.setName(Integer.toString(CHANNEL_SLOG));
+        SLogEPane.setName(Integer.toString(CHANNEL_SYSTEM_LOG));
         SLogSPane.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
         SLogSPane.setViewportBorder(new LineBorder(new Color(0, 0, 0)));
         SLogSPane.setViewportView(SLogEPane);
         SLogPanel.setLayout(new BorderLayout());
         SLogPanel.add(SLogSPane, BorderLayout.CENTER);
 
-        if (this.client.getConfig().isParam("SYSTEMLOGVISIBLE")) {
-            tabText = this.client.getConfig().getParam("SYSTEMLOGTABNAME");
-            mnemonicText = this.client.getConfig().getParam("SYSTEMLOGMNEMONIC");
+        if (this.client.getConfig().isParam("SYSTEM_LOG_VISIBLE")) {
+            tabText = this.client.getConfig().getParam("SYSTEM_LOG_TAB_NAME");
+            mnemonicText = this.client.getConfig().getParam("SYSTEM_LOG_MNEMONIC");
 
             CommTPane.addTab(tabText, null, SLogPanel, STR."System Messages (Alt + \{mnemonicText.toUpperCase()})");
             index = CommTPane.indexOfComponent(SLogPanel);
@@ -351,9 +375,9 @@ public class CCommPanel extends JPanel implements ChangeListener, ComponentListe
         MiscChannelPanel.setLayout(new BorderLayout());
         MiscChannelPanel.add(MiscChannelSPane, BorderLayout.CENTER);
 
-        if (this.client.getConfig().isParam("MISCELLANEOUSVISIBLE")) {
-            tabText = this.client.getConfig().getParam("MISCELLANEOUSTABNAME");
-            mnemonicText = this.client.getConfig().getParam("MISCELLANEOUSMNEMONIC");
+        if (this.client.getConfig().isParam("MISCELLANEOUS_VISIBLE")) {
+            tabText = this.client.getConfig().getParam("MISCELLANEOUS_TAB_NAME");
+            mnemonicText = this.client.getConfig().getParam("MISCELLANEOUS_MNEMONIC");
 
             CommTPane.addTab(tabText,
                   null,
@@ -416,9 +440,8 @@ public class CCommPanel extends JPanel implements ChangeListener, ComponentListe
         getActionMap().put("TabBackward", BackwardCommTab);
 
         /*
-         * Add Function Keys to the maps. Putting them here is fairly hacky;
-         * however, the tabbing controls (more forwward and back with x/z) are
-         * already here, so one more universal listen in CommPanel shouldn't
+         * Add Function Keys to the maps. Putting them here is fairly hacky; however, the tabbing controls (more
+         * forward and back with x/z) are already here, so one more universal listen in CommPanel shouldn't
          * kill anyone.
          *
          * See the CFXKeyAction() private classes for actual functionality.
@@ -438,6 +461,14 @@ public class CCommPanel extends JPanel implements ChangeListener, ComponentListe
         getActionMap().put("HitF5", new CCommPanel.CF5KeyAction());
     }// end CommPanel()
 
+    public boolean getAutoTextUpdate() {
+        return autoTextUpdate;
+    }
+
+    public void setAutoTextUpdate(boolean newValue) {
+        autoTextUpdate = newValue;
+    }
+
     // something that the user has typed
     public boolean sendChat(String s) {
         if (!s.startsWith(IClient.GUI_PREFIX) &&
@@ -454,7 +485,7 @@ public class CCommPanel extends JPanel implements ChangeListener, ComponentListe
         }
 
         if (!s.startsWith(IClient.GUI_PREFIX) &&
-                  !client.getConfig().isParam("USEMULTIPLEPM") &&
+                  !client.getConfig().isParam("USE_MULTIPLE_PM") &&
                   CommTPane.getSelectedIndex() == CommTPane.indexOfComponent(PMailPanel)) {
             String receiver = client.getLastQuery();
             if (receiver != null && !receiver.isEmpty()) {
@@ -467,7 +498,7 @@ public class CCommPanel extends JPanel implements ChangeListener, ComponentListe
         }
         if (!s.startsWith(
               IClient.GUI_PREFIX) &&
-                  client.getConfig().isParam("USEMULTIPLEPM") &&
+                  client.getConfig().isParam("USE_MULTIPLE_PM") &&
                   CommTPane.getComponent(CommTPane.getSelectedIndex()).getName() != null &&
                   CommTPane.getComponent(CommTPane.getSelectedIndex()).getName()
                         .startsWith("Mail Tab ")) {
@@ -490,7 +521,7 @@ public class CCommPanel extends JPanel implements ChangeListener, ComponentListe
                 s += "|mm";
             } else if (CommTPane.getSelectedIndex() == CommTPane.indexOfComponent(HMailPanel)) {
                 s += "|hm";
-            } else if (!client.getConfig().isParam("USEMULTIPLEPM") &&
+            } else if (!client.getConfig().isParam("USE_MULTIPLE_PM") &&
                              CommTPane.getSelectedIndex() == CommTPane.indexOfComponent(PMailPanel)) {
                 s += "|mail";
                 String receiver = client.getLastQuery();
@@ -501,11 +532,11 @@ public class CCommPanel extends JPanel implements ChangeListener, ComponentListe
                     chatField.setText(s);
                     return false;
                 }
-            } else if (client.getConfig().isParam("USEMULTIPLEPM") &&
+            } else if (client.getConfig().isParam("USE_MULTIPLE_PM") &&
                              CommTPane.getComponent(CommTPane.getSelectedIndex()).getName() != null &&
                              CommTPane.getComponent(CommTPane.getSelectedIndex()).getName().startsWith("Mail Tab ")) {
                 s += "|mail";
-                javax.swing.JPanel panel = ((javax.swing.JPanel) CommTPane.getComponent(CommTPane.getSelectedIndex()));
+                JPanel panel = ((JPanel) CommTPane.getComponent(CommTPane.getSelectedIndex()));
                 String mailTab = "Mail Tab ";
                 String receiver = panel.getName().substring(mailTab.length()).trim();
                 if (!receiver.isEmpty()) {s += STR."|\{receiver}";} else {
@@ -525,8 +556,8 @@ public class CCommPanel extends JPanel implements ChangeListener, ComponentListe
         int count = 0;
 
         for (int pos = 0; pos < CommTPane.getTabCount(); pos++) {
-            if (CommTPane.getComponent(pos) instanceof javax.swing.JPanel) {
-                panel = (javax.swing.JPanel) CommTPane.getComponent(pos);
+            if (CommTPane.getComponent(pos) instanceof JPanel) {
+                panel = (JPanel) CommTPane.getComponent(pos);
                 if (panel != null && panel.getName() != null && panel.getName().startsWith("Mail Tab ")) {
                     count++;
                 }
@@ -540,60 +571,70 @@ public class CCommPanel extends JPanel implements ChangeListener, ComponentListe
         JScrollPane newSTab = new JScrollPane();
         javax.swing.JPanel newPanel = new javax.swing.JPanel();
         MMNetHyperLinkListener chatHLL = new MMNetHyperLinkListener(client);
-        String mnoemonic = Integer.toString(getNextMailTabNumber());
+        String mnemonic = Integer.toString(getNextMailTabNumber());
 
         newETab.setEditable(false);
         newETab.setCaret(new ScrollCaret());
         newETab.addHyperlinkListener(chatHLL);
         newETab.setEditorKit(kit);
-        newSTab.setHorizontalScrollBarPolicy(javax.swing.ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
-        newSTab.setViewportBorder(new javax.swing.border.LineBorder(new java.awt.Color(0, 0, 0)));
+        newSTab.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
+        newSTab.setViewportBorder(new LineBorder(new Color(0, 0, 0)));
         newSTab.setViewportView(newETab);
-        newPanel.setLayout(new java.awt.BorderLayout());
-        newPanel.add(newSTab, java.awt.BorderLayout.CENTER);
+        newPanel.setLayout(new BorderLayout());
+        newPanel.add(newSTab, BorderLayout.CENTER);
 
         newPanel.setName(STR."Mail Tab \{tabName}");
         newETab.addMouseListener(this);
 
-        CommTPane.addTab(STR."\{mnoemonic}. \{tabName}",
+        CommTPane.addTab(STR."\{mnemonic}. \{tabName}",
               null,
               newPanel,
-              STR."Mail From \{tabName} (Alt + \{mnoemonic})");
+              STR."Mail From \{tabName} (Alt + \{mnemonic})");
 
         int index = CommTPane.indexOfComponent(newPanel);
-        int mnemo = CommTPane.getTitleAt(index).indexOf(mnoemonic.toUpperCase());
-        if (mnemo == -1) {mnemo = CommTPane.getTitleAt(index).indexOf(mnoemonic.toLowerCase());}
+        int mnemo = CommTPane.getTitleAt(index).indexOf(mnemonic.toUpperCase());
+
+        if (mnemo == -1) {
+            mnemo = CommTPane.getTitleAt(index).indexOf(mnemonic.toLowerCase());
+        }
 
         CommTPane.setDisplayedMnemonicIndexAt(index, mnemo);
         CCommPanel.CSelectTabAction LogSelect = new CCommPanel.CSelectTabAction(
               newPanel);
-        getInputMap(WHEN_IN_FOCUSED_WINDOW).put(javax.swing.KeyStroke.getKeyStroke(STR."alt \{mnoemonic.toUpperCase()}"),
+        getInputMap(WHEN_IN_FOCUSED_WINDOW).put(KeyStroke.getKeyStroke(STR."alt \{mnemonic.toUpperCase()}"),
               STR."Mail From \{tabName}");
         getActionMap().put(STR."Mail From \{tabName}", LogSelect);
     }
 
     public int getNextMailTabNumber() {
-        javax.swing.JPanel panel;
+        JPanel panel;
         int count;
-        int maxTabs = client.getConfig().getIntParam("MAXPMTABS");
+        int maxTabs = client.getConfig().getIntParam("MAX_PM_TABS");
         boolean found;
 
         for (count = 1; count <= maxTabs; count++) {
             found = false;
             for (int pos = 0; pos < CommTPane.getTabCount(); pos++) {
-                if (CommTPane.getComponent(pos) instanceof javax.swing.JPanel) {
-                    panel = (javax.swing.JPanel) CommTPane.getComponent(pos);
+                if (CommTPane.getComponent(pos) instanceof JPanel) {
+                    panel = (JPanel) CommTPane.getComponent(pos);
                     if (panel != null && panel.getName() != null && panel.getName().startsWith("Mail Tab ")) {
                         String tabText = CommTPane.getTitleAt(pos).trim();
-                        if (tabText.startsWith("*")) {tabText = tabText.substring(1);}
-                        if (Integer.parseInt(tabText.substring(0, tabText.indexOf("."))) == count) {
+
+                        if (tabText.startsWith("*")) {
+                            tabText = tabText.substring(1);
+                        }
+
+                        if (MathUtility.parseInt(tabText.substring(0, tabText.indexOf(".")), -1) == count) {
                             found = true;
                             break;// no reason to continue the search.
                         }
                     }
                 }
             }
-            if (!found) {break;}
+
+            if (!found) {
+                break;
+            }
         }
         return count;
 
@@ -611,60 +652,65 @@ public class CCommPanel extends JPanel implements ChangeListener, ComponentListe
         setChat(s, channel, null);
     }
 
-    // this method needs some tuning (carret and scrollbar issues)
+    // this method needs some tuning (carrot and scrollbar issues)
     public void setChat(String s, int channel, String mailTab) {
-
         int tabChannel = channel;
-        if (channel == CHANNEL_HMAIL) {
-            if (!client.getConfig().isParam("HOUSEMAILVISIBLE")) {
+        if (channel == CHANNEL_HOUSE_MAIL) {
+            if (!client.getConfig().isParam("HOUSE_MAIL_VISIBLE")) {
                 printCommLog(s, channel);
                 return;
             }
             // else
             tabChannel = CommTPane.indexOfComponent(HMailPanel);
-        } else if (channel == CHANNEL_PMAIL) {
+        } else if (channel == CHANNEL_PRIVATE_MAIL) {
 
-            if (!client.getConfig().isParam("PRIVATEMAILVISIBLE")) {
+            if (!client.getConfig().isParam("PRIVATE_MAIL_VISIBLE")) {
                 printCommLog(s, channel);
                 return;
             }
 
-            if (client.getConfig().isParam("USEMULTIPLEPM")) {
-                if (mailTab == null) {return;}
+            if (client.getConfig().isParam("USE_MULTIPLE_PM")) {
+                if (mailTab == null) {
+                    return;
+                }
                 // else
                 tabChannel = CommTPane.indexOfComponent(findMailTab(mailTab));
             } else {
                 tabChannel = CommTPane.indexOfComponent(PMailPanel);
             }
-        } else if (channel == CHANNEL_PLOG) {
-            if (!client.getConfig().isParam("PERSONALLOGVISIBLE")) {
+        } else if (channel == CHANNEL_PERSONAL_LOG) {
+            if (!client.getConfig().isParam("PERSONAL_LOG_VISIBLE")) {
                 printCommLog(s, channel);
                 return;
             }
             // else
             tabChannel = CommTPane.indexOfComponent(PLogPanel);
-        } else if (channel == CHANNEL_SLOG) {
-            if (!client.getConfig().isParam("SYSTEMLOGVISIBLE")) {
+        } else if (channel == CHANNEL_SYSTEM_LOG) {
+            if (!client.getConfig().isParam("SYSTEM_LOG_VISIBLE")) {
                 printCommLog(s, channel);
                 return;
             }
             // else
             tabChannel = CommTPane.indexOfComponent(SLogPanel);
         } else if (channel == CHANNEL_MISC) {
-            if (!client.getConfig().isParam("MISCELLANEOUSVISIBLE")) {
+            if (!client.getConfig().isParam("MISCELLANEOUS_VISIBLE")) {
                 printCommLog(s, channel);
                 return;
             }
             // else
             tabChannel = CommTPane.indexOfComponent(MiscChannelPanel);
         } else if (channel == CHANNEL_MOD) {
-            if (CommTPane.indexOfComponent(ModMailPanel) == -1) {createModTab();}
+            if (CommTPane.indexOfComponent(ModMailPanel) == -1) {
+                createModTab();
+            }
             tabChannel = CommTPane.indexOfComponent(ModMailPanel);
         } else if (channel == CHANNEL_ERROR) {
-            if (CommTPane.indexOfComponent(ErrorLogPanel) == -1) {createErrorTab();}
+            if (CommTPane.indexOfComponent(ErrorLogPanel) == -1) {
+                createErrorTab();
+            }
             tabChannel = CommTPane.indexOfComponent(ErrorLogPanel);
         } else if (channel == CHANNEL_RPG) {
-            if (!client.getConfig().isParam("RPGVISIBLE")) {
+            if (!client.getConfig().isParam("RPG_VISIBLE")) {
                 printCommLog(s, channel);
                 return;
             }
@@ -672,9 +718,9 @@ public class CCommPanel extends JPanel implements ChangeListener, ComponentListe
             tabChannel = CommTPane.indexOfComponent(RPGChannelPanel);
         }
 
-        javax.swing.JEditorPane editorpane = getEditorPane(channel, mailTab);
-        javax.swing.JScrollBar scrollbar = null;
-        if (editorpane == null) {
+        JEditorPane editorPane = getEditorPane(channel, mailTab);
+        JScrollBar scrollbar = null;
+        if (editorPane == null) {
             return;
         }
 
@@ -682,7 +728,7 @@ public class CCommPanel extends JPanel implements ChangeListener, ComponentListe
             scrollbar = getScrollPane(channel, mailTab).getVerticalScrollBar();
         }
 
-        int oldSize = editorpane.getDocument().getLength();
+        int oldSize = editorPane.getDocument().getLength();
         boolean scroll = true;
         if (CommTPane.getSelectedIndex() != -1 && CommTPane.getSelectedIndex() != tabChannel) {
             String title = CommTPane.getTitleAt(tabChannel);
@@ -694,9 +740,7 @@ public class CCommPanel extends JPanel implements ChangeListener, ComponentListe
                 if (CommTPane.getComponentAt(tabChannel) != PLogPanel &&
                           CommTPane.getComponentAt(tabChannel) != SLogPanel) {
                     CommTPane.setForegroundAt(tabChannel, TabForeground); // invert
-                    // tab
-                    // text
-                    // CommTPane.setBackgroundAt(tabChannel, TabBackground);
+
                 }
             }
         }
@@ -706,27 +750,33 @@ public class CCommPanel extends JPanel implements ChangeListener, ComponentListe
                   !autoTextUpdate &&
                   (scrollbar.getValue() + scrollbar.getVisibleAmount()) < scrollbar.getMaximum() * 0.97) {
             scroll = false;
-            ((ScrollCaret) editorpane.getCaret()).showCaret = false;
-        } else {((ScrollCaret) editorpane.getCaret()).showCaret = true;}
+            ((ScrollCaret) editorPane.getCaret()).showCaret = false;
+        } else {
+            ((ScrollCaret) editorPane.getCaret()).showCaret = true;
+        }
 
         try {
             if (s.endsWith("<br>")) {
                 s = s.substring(0, s.length() - 4);
             }
-            editorpane.getEditorKit().read(new java.io.StringReader(s),
-                  editorpane.getDocument(),
-                  editorpane.getDocument().getLength());
+
+            editorPane.getEditorKit().read(new StringReader(s),
+                  editorPane.getDocument(),
+                  editorPane.getDocument().getLength());
         } catch (Exception ex) {
-            MWLogger.errLog(ex);
+            LOGGER.error(ex, "Issue with Editor Kit {}", ex.getLocalizedMessage());
         }
         if (oldSize > MAX_BUFFER) { // used to bo only when scrolling
             try {
                 // remove enough to get us back in our "nice" zone
-                editorpane.getDocument().remove(0, oldSize - CAP_BUFFER_AMOUNT);
-            } catch (javax.swing.text.BadLocationException ex) {/* Ignore */
+                editorPane.getDocument().remove(0, oldSize - CAP_BUFFER_AMOUNT);
+            } catch (BadLocationException ignored) {
+                LOGGER.debug("Bad Location Exception... ignored");
             }
         }
-        if (scroll) {editorpane.setCaretPosition(editorpane.getDocument().getLength());}
+        if (scroll) {
+            editorPane.setCaretPosition(editorPane.getDocument().getLength());
+        }
     }
 
     public void printCommLog(String s, int channel) {
@@ -734,13 +784,13 @@ public class CCommPanel extends JPanel implements ChangeListener, ComponentListe
 
         if (channel == CHANNEL_MAIN) {
             filePath = "./logs/Main.html";
-        } else if (channel == CHANNEL_HMAIL) {
+        } else if (channel == CHANNEL_HOUSE_MAIL) {
             filePath = "./logs/HouseMail.html";
-        } else if (channel == CHANNEL_PMAIL) {
+        } else if (channel == CHANNEL_PRIVATE_MAIL) {
             filePath = "./logs/PrivateMail.html";
-        } else if (channel == CHANNEL_PLOG) {
+        } else if (channel == CHANNEL_PERSONAL_LOG) {
             filePath = "./logs/PersonalLog.html";
-        } else if (channel == CHANNEL_SLOG) {
+        } else if (channel == CHANNEL_SYSTEM_LOG) {
             filePath = "./logs/SystemLog.html";
         } else if (channel == CHANNEL_MISC) {
             filePath = "./logs/Misc.html";
@@ -757,16 +807,16 @@ public class CCommPanel extends JPanel implements ChangeListener, ComponentListe
             ps.close();
             fos.close();
         } catch (Exception e) {
-            MWLogger.errLog(e);
+            LOGGER.error(e, "File Related Error {}", e.getLocalizedMessage());
         }
     }
 
-    public javax.swing.JPanel findMailTab(String tabName) {
-        javax.swing.JPanel panel;
+    public JPanel findMailTab(String tabName) {
+        JPanel panel;
 
         for (int pos = 0; pos < CommTPane.getTabCount(); pos++) {
-            if (CommTPane.getComponent(pos) instanceof javax.swing.JPanel) {
-                panel = (javax.swing.JPanel) CommTPane.getComponent(pos);
+            if (CommTPane.getComponent(pos) instanceof JPanel) {
+                panel = (JPanel) CommTPane.getComponent(pos);
                 if (panel != null && panel.getName() != null && panel.getName().equals(STR."Mail Tab \{tabName}")) {
                     return panel;
                 }
@@ -780,11 +830,14 @@ public class CCommPanel extends JPanel implements ChangeListener, ComponentListe
         CommTPane.addTab(tabText, null, ModMailPanel, "Mod Communication Channel (Alt + O)");
         int index = CommTPane.indexOfComponent(ModMailPanel);
         int mnemo = CommTPane.getTitleAt(index).indexOf("O");
-        if (mnemo == -1) {mnemo = CommTPane.getTitleAt(index).indexOf("o");}
+
+        if (mnemo == -1) {
+            mnemo = CommTPane.getTitleAt(index).indexOf("o");
+        }
 
         CommTPane.setDisplayedMnemonicIndexAt(index, mnemo);
         ModMailSelect = new CCommPanel.CSelectTabAction(ModMailPanel);
-        getInputMap(WHEN_IN_FOCUSED_WINDOW).put(javax.swing.KeyStroke.getKeyStroke("alt O"), "ModMailSelect");
+        getInputMap(WHEN_IN_FOCUSED_WINDOW).put(KeyStroke.getKeyStroke("alt O"), "ModMailSelect");
         getActionMap().put("ModMailSelect", ModMailSelect);
 
     }
@@ -799,38 +852,42 @@ public class CCommPanel extends JPanel implements ChangeListener, ComponentListe
 
         CommTPane.setDisplayedMnemonicIndexAt(index, mnemo);
         ErrorLogSelect = new CCommPanel.CSelectTabAction(ErrorLogPanel);
-        getInputMap(WHEN_IN_FOCUSED_WINDOW).put(javax.swing.KeyStroke.getKeyStroke("alt R"), "ErrorLogSelect");
+        getInputMap(WHEN_IN_FOCUSED_WINDOW).put(KeyStroke.getKeyStroke("alt R"), "ErrorLogSelect");
         getActionMap().put("ErrorLogSelect", ErrorLogSelect);
     }
 
-    public javax.swing.JEditorPane getEditorPane(int channel, String mailTab) {
+    public JEditorPane getEditorPane(int channel, String mailTab) {
 
         if (channel == CHANNEL_MAIN) {
             return MChannelEPane;
         }
-        if (channel == CHANNEL_HMAIL) {
+        if (channel == CHANNEL_HOUSE_MAIL) {
             return HMailEPane;
         }
 
-        if (channel == CHANNEL_PMAIL) {
+        if (channel == CHANNEL_PRIVATE_MAIL) {
 
-            if (client.getConfig().isParam("USEMULTIPLEPM")) {
+            if (client.getConfig().isParam("USE_MULTIPLE_PM")) {
 
-                javax.swing.JPanel panel = findMailTab(mailTab);
-                if (panel == null) {return null;}
+                JPanel panel = findMailTab(mailTab);
+                if (panel == null) {
+                    return null;
+                }
 
-                javax.swing.JScrollPane sPane = (javax.swing.JScrollPane) panel.getComponent(0);
-                if (sPane == null) {return null;}
+                JScrollPane sPane = (JScrollPane) panel.getComponent(0);
+                if (sPane == null) {
+                    return null;
+                }
 
-                return (javax.swing.JEditorPane) sPane.getViewport().getView();
+                return (JEditorPane) sPane.getViewport().getView();
             }
             return PMailEPane;
         }
 
-        if (channel == CHANNEL_PLOG) {
+        if (channel == CHANNEL_PERSONAL_LOG) {
             return PLogEPane;
         }
-        if (channel == CHANNEL_SLOG) {
+        if (channel == CHANNEL_SYSTEM_LOG) {
             return SLogEPane;
         }
         if (channel == CHANNEL_MISC) {
@@ -849,24 +906,26 @@ public class CCommPanel extends JPanel implements ChangeListener, ComponentListe
         return null;
     }
 
-    public javax.swing.JScrollPane getScrollPane(int channel, String tabName) {
+    public JScrollPane getScrollPane(int channel, String tabName) {
         if (channel == CHANNEL_MAIN) {
             return MChannelSPane;
-        } else if (channel == CHANNEL_HMAIL) {
+        } else if (channel == CHANNEL_HOUSE_MAIL) {
             return HMailSPane;
         }
 
-        // special accomidation for PM's b/c of multimail tabs
-        else if (channel == CHANNEL_PMAIL) {
-            if (client.getConfig().isParam("USEMULTIPLEPM")) {
-                javax.swing.JPanel panel = findMailTab(tabName);
-                if (panel == null) {return null;}
-                return (javax.swing.JScrollPane) panel.getComponent(0);
+        // special accommodation for PM's b/c of multi mail tabs
+        else if (channel == CHANNEL_PRIVATE_MAIL) {
+            if (client.getConfig().isParam("USE_MULTIPLE_PM")) {
+                JPanel panel = findMailTab(tabName);
+                if (panel == null) {
+                    return null;
+                }
+                return (JScrollPane) panel.getComponent(0);
             }
             return PMailSPane;
-        } else if (channel == CHANNEL_PLOG) {
+        } else if (channel == CHANNEL_PERSONAL_LOG) {
             return PLogSPane;
-        } else if (channel == CHANNEL_SLOG) {
+        } else if (channel == CHANNEL_SYSTEM_LOG) {
             return SLogSPane;
         } else if (channel == CHANNEL_MISC) {
             return MiscChannelSPane;
@@ -881,7 +940,7 @@ public class CCommPanel extends JPanel implements ChangeListener, ComponentListe
         return null;
     }
 
-    public javax.swing.JTextField getInputField() {
+    public JTextField getInputField() {
         return chatField;
     }
 
@@ -889,23 +948,20 @@ public class CCommPanel extends JPanel implements ChangeListener, ComponentListe
         chatField.requestFocusInWindow(); // pass focus to input field
     }
 
-    public int getTabIndex(javax.swing.JPanel panel) {
+    public int getTabIndex(JPanel panel) {
         return CommTPane.indexOfComponent(panel);
     }
 
     // change listener
-    public void stateChanged(javax.swing.event.ChangeEvent e) {
-        // JScrollBar scrollbar = MChannelSPane.getVerticalScrollBar();
+    public void stateChanged(ChangeEvent changeEvent) {
         int index = CommTPane.getSelectedIndex();
-        if (e.getSource() == CommTPane) // watch CommTPane changes
+        if (changeEvent.getSource() == CommTPane) // watch CommTPane changes
         {
             if (index == -1) {
                 return;
             }
+
             String title = CommTPane.getTitleAt(CommTPane.getSelectedIndex()); // get
-            // selected
-            // tab
-            // title
             if (title.startsWith("*")) // if selected tab is marked with "*",
             // remove mark and change color
             {
@@ -920,40 +976,38 @@ public class CCommPanel extends JPanel implements ChangeListener, ComponentListe
         }
     }
 
-    public void componentResized(java.awt.event.ComponentEvent e) {
+    public void componentResized(ComponentEvent componentEvent) {
         for (int i = 0; i < CommTPane.getTabCount(); i++) {
 
-            if (getScrollPane(i) == null || getEditorPane(i) == null) {continue;}
+            if (getScrollPane(i) == null || getEditorPane(i) == null) {
+                continue;
+            }
 
-            javax.swing.JScrollPane scrollpane = getScrollPane(i);
-            javax.swing.JEditorPane editorpane = getEditorPane(i);
-            javax.swing.JScrollBar scrollbar = scrollpane.getVerticalScrollBar();
-            editorpane.setCaretPosition(editorpane.getDocument().getLength()); // we
-            // document
-            scrollbar.setValue(scrollbar.getMaximum() - scrollbar.getVisibleAmount()); // and
-            // scrollbar
-            // at
-            // bottom
+            JScrollPane scrollPane = getScrollPane(i);
+            JEditorPane editorPane = getEditorPane(i);
+            JScrollBar scrollbar = scrollPane.getVerticalScrollBar();
+            editorPane.setCaretPosition(editorPane.getDocument().getLength());
+            scrollbar.setValue(scrollbar.getMaximum() - scrollbar.getVisibleAmount());
         }
     }
 
-    public javax.swing.JScrollPane getScrollPane(int channel) {
+    public JScrollPane getScrollPane(int channel) {
         return getScrollPane(channel, null);
     }
 
-    public javax.swing.JEditorPane getEditorPane(int channel) {
+    public JEditorPane getEditorPane(int channel) {
         return getEditorPane(channel, null);
     }
 
-    public void componentMoved(java.awt.event.ComponentEvent e) {
+    public void componentMoved(ComponentEvent componentEvent) {
     }
 
-    public void componentShown(java.awt.event.ComponentEvent e) {
+    public void componentShown(ComponentEvent componentEvent) {
     }
 
     // change listener
     // component listener
-    public void componentHidden(java.awt.event.ComponentEvent e) {
+    public void componentHidden(ComponentEvent componentEvent) {
     }
 
     /**
@@ -962,142 +1016,137 @@ public class CCommPanel extends JPanel implements ChangeListener, ComponentListe
     public void selectFirstTab() {
         try {
             CommTPane.setSelectedIndex(0);
-        } catch (Exception e) {
-            // do nothing. just means no upper-level tabs.
+        } catch (Exception ignored) {
+            LOGGER.debug("No upper level tab.. moving on.");
         }
     }
 
     // receiver interface
-    public void mouseClicked(java.awt.event.MouseEvent e) {
+    public void mouseClicked(MouseEvent mouseEvent) {
 
         // only close from right clicks
-        if (e.getButton() != java.awt.event.MouseEvent.BUTTON3) {
+        if (mouseEvent.getButton() != MouseEvent.BUTTON3) {
             return;
         }
 
-        if (e.getSource() instanceof JEditorPane pane) {
-            javax.swing.JPopupMenu clipboard = new javax.swing.JPopupMenu();
+        if (mouseEvent.getSource() instanceof JEditorPane pane) {
+            JPopupMenu clipboard = new JPopupMenu();
 
             pane.requestFocusInWindow();
             // Information
-            javax.swing.JMenuItem copy = new javax.swing.JMenuItem("Copy");
+            JMenuItem copy = new JMenuItem("Copy");
+
             if (pane.getSelectionStart() == pane.getSelectionEnd()) {copy.setActionCommand("");} else {
                 copy.setActionCommand(pane.getSelectedText());
             }
-            copy.addActionListener(ae -> {
-                java.awt.datatransfer.StringSelection ss = new java.awt.datatransfer.StringSelection(ae.getActionCommand());
-                java.awt.datatransfer.Clipboard clipboard1 = java.awt.Toolkit.getDefaultToolkit()
-                                                                   .getSystemClipboard();
-                clipboard1.setContents(ss, ss);
+
+            copy.addActionListener(actionEvent -> {
+                StringSelection stringSelection = new StringSelection(actionEvent.getActionCommand());
+                Clipboard clipboard1 = Toolkit.getDefaultToolkit().getSystemClipboard();
+                clipboard1.setContents(stringSelection, stringSelection);
             });
 
             clipboard.add(copy);
 
             clipboard.addSeparator();
 
-            copy = new javax.swing.JMenuItem("Select All");
+            copy = new JMenuItem("Select All");
             copy.setActionCommand(pane.getName());
-            copy.addActionListener(ae -> {
-                try {
-                    int index = Integer.parseInt(ae.getActionCommand());
-                    JEditorPane pane1 = getEditorPane(index);
-                    pane1.selectAll();
-                } catch (Exception ex) {
-                    MWLogger.errLog(ex);
-                }
+            copy.addActionListener(actionEvent -> {
+                int index = MathUtility.parseInt(actionEvent.getActionCommand(), 0);
+                JEditorPane pane1 = getEditorPane(index);
+                pane1.selectAll();
             });
 
             clipboard.add(copy);
-            clipboard.show(e.getComponent(), e.getX(), e.getY());
+            clipboard.show(mouseEvent.getComponent(), mouseEvent.getX(), mouseEvent.getY());
             return;
         }
 
-        if (e.getSource() instanceof CChatField) {
+        if (mouseEvent.getSource() instanceof CChatField) {
             JPopupMenu clipboard = getClipboard();
 
-            clipboard.show(e.getComponent(), e.getX(), e.getY());
+            clipboard.show(mouseEvent.getComponent(), mouseEvent.getX(), mouseEvent.getY());
             return;
         }
 
         // only close from click on CommTPane
-        if (!e.getComponent().equals(CommTPane)) {
+        if (!mouseEvent.getComponent().equals(CommTPane)) {
             return;
         }
 
         // offer to close error tab
         if (CommTPane.getSelectedIndex() == CommTPane.indexOfComponent(ErrorLogPanel)) {
-            javax.swing.JPopupMenu popup = new javax.swing.JPopupMenu();
-            javax.swing.JMenuItem info = new javax.swing.JMenuItem("Close");
+            JPopupMenu popup = new JPopupMenu();
+            JMenuItem info = new JMenuItem("Close");
             info.addActionListener(_ -> CommTPane.remove(CommTPane.getSelectedComponent()));
             popup.add(info);
-            popup.show(e.getComponent(), e.getX(), e.getY());
+            popup.show(mouseEvent.getComponent(), mouseEvent.getX(), mouseEvent.getY());
         }
 
         // offer to close mail tabs
-        if (client.getConfig().isParam("USEMULTIPLEPM") &&
+        if (client.getConfig().isParam("USE_MULTIPLE_PM") &&
                   CommTPane.getSelectedComponent() instanceof JPanel panel) {
             if (panel.getName().startsWith("Mail Tab ")) {
-                javax.swing.JPopupMenu popup = new javax.swing.JPopupMenu();
-                javax.swing.JMenuItem info = new javax.swing.JMenuItem("Close");
+                JPopupMenu popup = new JPopupMenu();
+                JMenuItem info = new JMenuItem("Close");
                 info.addActionListener(_ -> CommTPane.remove(CommTPane.getSelectedComponent()));
                 popup.add(info);
-                popup.show(e.getComponent(), e.getX(), e.getY());
+                popup.show(mouseEvent.getComponent(), mouseEvent.getX(), mouseEvent.getY());
             }
         }
     }
 
-    private @NonNull JPopupMenu getClipboard() {
+    private @Nonnull JPopupMenu getClipboard() {
         JPopupMenu clipboard = new JPopupMenu();
-        javax.swing.JMenuItem copy = new javax.swing.JMenuItem("Cut");
+        JMenuItem copy = new JMenuItem("Cut");
 
         copy.addActionListener(_ -> {
-            java.awt.datatransfer.StringSelection ss = new java.awt.datatransfer.StringSelection(chatField.getSelectedText());
-            java.awt.datatransfer.Clipboard clipboard2 = java.awt.Toolkit.getDefaultToolkit()
-                                                               .getSystemClipboard();
-            clipboard2.setContents(ss, ss);
+            StringSelection stringSelection = new StringSelection(chatField.getSelectedText());
+            Clipboard clipboard2 = Toolkit.getDefaultToolkit().getSystemClipboard();
+            clipboard2.setContents(stringSelection, stringSelection);
             try {
                 String newText = chatField.getText(0, chatField.getSelectionStart());
                 newText += chatField.getText(chatField.getSelectionEnd(),
                       chatField.getText().length() - chatField.getSelectionEnd());
                 chatField.setText(newText);
             } catch (Exception ex) {
-                MWLogger.errLog(ex);
+                LOGGER.error(ex, "Untracked Exception - getClipboard(): {}", ex.getLocalizedMessage());
             }
         });
 
         clipboard.add(copy);
 
-        copy = new javax.swing.JMenuItem("Copy");
+        copy = new JMenuItem("Copy");
         copy.addActionListener(_ -> {
-            java.awt.datatransfer.StringSelection ss = new java.awt.datatransfer.StringSelection(chatField.getSelectedText());
-            java.awt.datatransfer.Clipboard clipboard3 = java.awt.Toolkit.getDefaultToolkit()
-                                                               .getSystemClipboard();
-            clipboard3.setContents(ss, ss);
+            StringSelection stringSelection = new StringSelection(chatField.getSelectedText());
+            Clipboard clipboard3 = Toolkit.getDefaultToolkit().getSystemClipboard();
+            clipboard3.setContents(stringSelection, stringSelection);
         });
 
         clipboard.add(copy);
 
-        copy = new javax.swing.JMenuItem("Paste");
-        copy.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent ae) {
-                java.awt.datatransfer.Clipboard clipboard = java.awt.Toolkit.getDefaultToolkit()
-                                                                  .getSystemClipboard();
+        copy = new JMenuItem("Paste");
+        copy.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent actionEvent) {
+                Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
                 String clipping;
-                java.awt.datatransfer.Transferable data = clipboard.getContents(this);
+                Transferable data = clipboard.getContents(this);
 
                 try {
-                    clipping = (String) data.getTransferData(java.awt.datatransfer.DataFlavor.stringFlavor);
+                    clipping = (String) data.getTransferData(DataFlavor.stringFlavor);
                 } catch (Exception ex) {
                     clipping = data.toString();
-                    MWLogger.errLog(ex);
+                    LOGGER.error(ex, "Data: {}", clipping);
                 }
+
                 chatField.setText(chatField.getText() + clipping);
             }
         });
 
         clipboard.add(copy);
 
-        copy = new javax.swing.JMenuItem("Delete");
+        copy = new JMenuItem("Delete");
         copy.addActionListener(_ -> {
             try {
                 String newText = chatField.getText(0, chatField.getSelectionStart());
@@ -1105,7 +1154,7 @@ public class CCommPanel extends JPanel implements ChangeListener, ComponentListe
                       chatField.getText().length() - chatField.getSelectionEnd());
                 chatField.setText(newText);
             } catch (Exception ex) {
-                MWLogger.errLog(ex);
+                LOGGER.error(ex, "Delete event listener: {}", ex.getLocalizedMessage());
             }
         });
 
@@ -1113,40 +1162,33 @@ public class CCommPanel extends JPanel implements ChangeListener, ComponentListe
 
         clipboard.addSeparator();
 
-        copy = new javax.swing.JMenuItem("Select All");
-        copy.addActionListener(_ -> {
-            try {
-                chatField.selectAll();
-            } catch (Exception ex) {
-                MWLogger.errLog(ex);
-            }
-        });
+        copy = new JMenuItem("Select All");
+        copy.addActionListener(_ -> chatField.selectAll());
 
         clipboard.add(copy);
         return clipboard;
     }
 
-    public void mousePressed(java.awt.event.MouseEvent arg0) {
+    public void mousePressed(MouseEvent mouseEvent) {
     }
 
-    public void mouseReleased(java.awt.event.MouseEvent arg0) {
+    public void mouseReleased(MouseEvent mouseEvent) {
     }
 
-    public void mouseEntered(java.awt.event.MouseEvent arg0) {
+    public void mouseEntered(MouseEvent mouseEvent) {
     }
 
-    public void mouseExited(java.awt.event.MouseEvent arg0) {
+    public void mouseExited(MouseEvent mouseEvent) {
     }
 
     public void reload() {
-
         int index;
         int mnemo;
         String tabText;
 
         String mnemonicText;
-        tabText = client.getConfig().getParam("MAINCHANNELTABNAME");
-        mnemonicText = client.getConfig().getParam("MAINCHANNELMNEMONIC");
+        tabText = client.getConfig().getParam("MAIN_CHANNEL_TAB_NAME");
+        mnemonicText = client.getConfig().getParam("MAIN_CHANNEL_MNEMONIC");
 
         CommTPane.addTab(tabText,
               null,
@@ -1154,17 +1196,20 @@ public class CCommPanel extends JPanel implements ChangeListener, ComponentListe
               STR."Interfaction Communication Channel (Alt + \{mnemonicText})");
         index = CommTPane.indexOfComponent(MChannelPanel);
         mnemo = CommTPane.getTitleAt(index).indexOf(mnemonicText.toUpperCase());
-        if (mnemo == -1) {mnemo = CommTPane.getTitleAt(index).indexOf(mnemonicText.toLowerCase());}
+
+        if (mnemo == -1) {
+            mnemo = CommTPane.getTitleAt(index).indexOf(mnemonicText.toLowerCase());
+        }
+
         CommTPane.setDisplayedMnemonicIndexAt(index, mnemo);
 
-        getInputMap(WHEN_IN_FOCUSED_WINDOW).put(javax.swing.KeyStroke.getKeyStroke(STR."alt \{mnemonicText.toUpperCase()}"),
+        getInputMap(WHEN_IN_FOCUSED_WINDOW).put(KeyStroke.getKeyStroke(STR."alt \{mnemonicText.toUpperCase()}"),
               "MChannelSelect");
         getActionMap().put("MChannelSelect", MChannelSelect);
 
-        if (client.getConfig().isParam("HOUSEMAILVISIBLE")) {
-
-            tabText = client.getConfig().getParam("HOUSEMAILTABNAME");
-            mnemonicText = client.getConfig().getParam("HOUSEMAILMNEMONIC");
+        if (client.getConfig().isParam("HOUSE_MAIL_VISIBLE")) {
+            tabText = client.getConfig().getParam("HOUSE_MAIL_TAB_NAME");
+            mnemonicText = client.getConfig().getParam("HOUSE_MAIL_MNEMONIC");
 
             CommTPane.addTab(tabText,
                   null,
@@ -1172,70 +1217,100 @@ public class CCommPanel extends JPanel implements ChangeListener, ComponentListe
                   STR."House Communication Channel (Alt + \{mnemonicText.toUpperCase()})");
             index = CommTPane.indexOfComponent(HMailPanel);
             mnemo = CommTPane.getTitleAt(index).indexOf(mnemonicText.toUpperCase());
-            if (mnemo == -1) {mnemo = CommTPane.getTitleAt(index).indexOf(mnemonicText.toLowerCase());}
+
+            if (mnemo == -1) {
+                mnemo = CommTPane.getTitleAt(index).indexOf(mnemonicText.toLowerCase());
+            }
+
             CommTPane.setDisplayedMnemonicIndexAt(index, mnemo);
-            if (HMailSelect == null) {HMailSelect = new CCommPanel.CSelectTabAction(HMailPanel);}
-            getInputMap(WHEN_IN_FOCUSED_WINDOW).put(javax.swing.KeyStroke.getKeyStroke(STR."alt \{mnemonicText.toUpperCase()}"),
+
+            if (HMailSelect == null) {
+                HMailSelect = new CCommPanel.CSelectTabAction(HMailPanel);
+            }
+
+            getInputMap(WHEN_IN_FOCUSED_WINDOW).put(KeyStroke.getKeyStroke(STR."alt \{mnemonicText.toUpperCase()}"),
                   "HMailSelect");
             getActionMap().put("HMailSelect", HMailSelect);
         }
 
-        if (!client.getConfig().isParam("USEMULTIPLEPM")) {
+        if (!client.getConfig().isParam("USE_MULTIPLE_PM")) {
 
-            if (client.getConfig().isParam("PRIVATEMAILVISIBLE")) {
-                tabText = client.getConfig().getParam("PRIVATEMAILTABNAME");
-                mnemonicText = client.getConfig().getParam("PRIVATEMAILMNEMONIC");
+            if (client.getConfig().isParam("PRIVATE_MAIL_VISIBLE")) {
+                tabText = client.getConfig().getParam("PRIVATE_MAIL_TAB_NAME");
+                mnemonicText = client.getConfig().getParam("PRIVATE_MAIL_MNEMONIC");
 
                 CommTPane.addTab(tabText, null, PMailPanel, STR."Private Mail (Alt + \{mnemonicText.toUpperCase()})");
                 index = CommTPane.indexOfComponent(PMailPanel);
                 mnemo = CommTPane.getTitleAt(index).indexOf(mnemonicText.toUpperCase());
-                if (mnemo == -1) {mnemo = CommTPane.getTitleAt(index).indexOf(mnemonicText.toLowerCase());}
+
+                if (mnemo == -1) {
+                    mnemo = CommTPane.getTitleAt(index).indexOf(mnemonicText.toLowerCase());
+                }
+
                 CommTPane.setDisplayedMnemonicIndexAt(index, mnemo);
-                if (PMailSelect == null) {PMailSelect = new CCommPanel.CSelectTabAction(PMailPanel);}
-                getInputMap(WHEN_IN_FOCUSED_WINDOW).put(javax.swing.KeyStroke.getKeyStroke(STR."alt \{mnemonicText.toUpperCase()}"),
+                if (PMailSelect == null) {
+                    PMailSelect = new CCommPanel.CSelectTabAction(PMailPanel);
+                }
+
+                getInputMap(WHEN_IN_FOCUSED_WINDOW).put(KeyStroke.getKeyStroke(STR."alt \{mnemonicText.toUpperCase()}"),
                       "PMailSelect");
                 getActionMap().put("PMailSelect", PMailSelect);
 
             }
         }
 
-        if (client.getConfig().isParam("PERSONALLOGVISIBLE")) {
+        if (client.getConfig().isParam("PERSONAL_LOG_VISIBLE")) {
 
-            tabText = client.getConfig().getParam("PERSONALLOGTABNAME");
-            mnemonicText = client.getConfig().getParam("PERSONALLOGMNEMONIC");
+            tabText = client.getConfig().getParam("PERSONAL_LOG_TAB_NAME");
+            mnemonicText = client.getConfig().getParam("PERSONAL_LOG_MNEMONIC");
 
             CommTPane.addTab(tabText, null, PLogPanel, STR."Logged Messages (Alt + \{mnemonicText.toUpperCase()})");
             index = CommTPane.indexOfComponent(PLogPanel);
             mnemo = CommTPane.getTitleAt(index).indexOf(mnemonicText.toUpperCase());
-            if (mnemo == -1) {mnemo = CommTPane.getTitleAt(index).indexOf(mnemonicText.toLowerCase());}
+
+            if (mnemo == -1) {
+                mnemo = CommTPane.getTitleAt(index).indexOf(mnemonicText.toLowerCase());
+            }
+
             CommTPane.setDisplayedMnemonicIndexAt(index, mnemo);
-            if (PLogSelect == null) {PLogSelect = new CCommPanel.CSelectTabAction(PLogPanel);}
+
+            if (PLogSelect == null) {
+                PLogSelect = new CCommPanel.CSelectTabAction(PLogPanel);
+            }
+
             getInputMap(WHEN_IN_FOCUSED_WINDOW).put(javax.swing.KeyStroke.getKeyStroke(STR."alt \{mnemonicText.toUpperCase()}"),
                   STR."PLogSelect (Alt + \{mnemonicText.toUpperCase()})");
             getActionMap().put("PLogSelect", PLogSelect);
         }
 
-        if (client.getConfig().isParam("SYSTEMLOGVISIBLE")) {
-
-            tabText = client.getConfig().getParam("SYSTEMLOGTABNAME");
-            mnemonicText = client.getConfig().getParam("SYSTEMLOGMNEMONIC");
+        if (client.getConfig().isParam("SYSTEM_LOG_VISIBLE")) {
+            tabText = client.getConfig().getParam("SYSTEM_LOG_TAB_NAME");
+            mnemonicText = client.getConfig().getParam("SYSTEM_LOG_MNEMONIC");
 
             CommTPane.addTab(tabText, null, SLogPanel, STR."System Messages (Alt + \{mnemonicText.toUpperCase()})");
             index = CommTPane.indexOfComponent(SLogPanel);
             mnemo = CommTPane.getTitleAt(index).indexOf(mnemonicText.toUpperCase());
-            if (mnemo == -1) {mnemo = CommTPane.getTitleAt(index).indexOf(mnemonicText.toLowerCase());}
+
+            if (mnemo == -1) {
+                mnemo = CommTPane.getTitleAt(index).indexOf(mnemonicText.toLowerCase());
+            }
+
             CommTPane.setDisplayedMnemonicIndexAt(index, mnemo);
-            if (SLogSelect == null) {SLogSelect = new CCommPanel.CSelectTabAction(SLogPanel);}
+
+            if (SLogSelect == null) {
+                SLogSelect = new CCommPanel.CSelectTabAction(SLogPanel);
+            }
+
             getInputMap(WHEN_IN_FOCUSED_WINDOW).put(javax.swing.KeyStroke.getKeyStroke(STR."alt \{mnemonicText.toUpperCase()}"),
                   "SLogSelect");
             getActionMap().put("SLogSelect", SLogSelect);
         }
 
         /* Misc-Channel */
-        if (client.getConfig().isParam("MISCELLANEOUSVISIBLE")) {
+        if (client.getConfig().isParam("MISCELLANEOUS_VISIBLE")) {
 
-            tabText = client.getConfig().getParam("MISCELLANEOUSTABNAME");
-            mnemonicText = client.getConfig().getParam("MISCELLANEOUSMNEMONIC");
+            tabText = client.getConfig().getParam("MISCELLANEOUS_TAB_NAME");
+            mnemonicText = client.getConfig().getParam("MISCELLANEOUS_MNEMONIC");
 
             CommTPane.addTab(tabText,
                   null,
@@ -1243,36 +1318,45 @@ public class CCommPanel extends JPanel implements ChangeListener, ComponentListe
                   STR."Miscellaneous Stuff (Alt + \{mnemonicText.toUpperCase()})");
             index = CommTPane.indexOfComponent(MiscChannelPanel);
             mnemo = CommTPane.getTitleAt(index).indexOf(mnemonicText.toUpperCase());
-            if (mnemo == -1) {mnemo = CommTPane.getTitleAt(index).indexOf(mnemonicText.toLowerCase());}
+
+            if (mnemo == -1) {
+                mnemo = CommTPane.getTitleAt(index).indexOf(mnemonicText.toLowerCase());
+            }
+
             CommTPane.setDisplayedMnemonicIndexAt(index, mnemo);
+
             if (MiscChannelSelect == null) {
                 MiscChannelSelect = new CCommPanel.CSelectTabAction(MiscChannelPanel);
             }
+
             getInputMap(WHEN_IN_FOCUSED_WINDOW).put(javax.swing.KeyStroke.getKeyStroke(STR."alt \{mnemonicText.toUpperCase()}"),
                   "MiscChannelSelect");
             getActionMap().put("MiscChannelSelect", MiscChannelSelect);
         }
         /* RPG-Channel */
-        if (client.getConfig().isParam("RPGVISIBLE")) {
+        if (client.getConfig().isParam("RPG_VISIBLE")) {
 
-            tabText = client.getConfig().getParam("RPGTABNAME");
-            mnemonicText = client.getConfig().getParam("RPGMNEMONIC");
+            tabText = client.getConfig().getParam("RPG_TAB_NAME");
+            mnemonicText = client.getConfig().getParam("RPG_MNEMONIC");
 
             CommTPane.addTab(tabText, null, RPGChannelPanel, STR."RP (Alt + \{mnemonicText.toUpperCase()})");
             index = CommTPane.indexOfComponent(RPGChannelPanel);
             mnemo = CommTPane.getTitleAt(index).indexOf(mnemonicText.toUpperCase());
-            if (mnemo == -1) {mnemo = CommTPane.getTitleAt(index).indexOf(mnemonicText.toLowerCase());}
+
+            if (mnemo == -1) {
+                mnemo = CommTPane.getTitleAt(index).indexOf(mnemonicText.toLowerCase());
+            }
+
             CommTPane.setDisplayedMnemonicIndexAt(index, mnemo);
             RPGChannelSelect = new CCommPanel.CSelectTabAction(RPGChannelPanel);
             getInputMap(WHEN_IN_FOCUSED_WINDOW).put(javax.swing.KeyStroke.getKeyStroke(STR."alt \{mnemonicText.toUpperCase()}"),
                   "RPGChannelSelect");
             getActionMap().put("RPGChannelSelect", RPGChannelSelect);
         }
-
     }
 
     private void processFunctionKeyCommand(String command) {
-        java.util.StringTokenizer commands = new java.util.StringTokenizer(command, ";");
+        StringTokenizer commands = new StringTokenizer(command, ";");
 
         while (commands.hasMoreTokens()) {
             client.sendChat(STR."\{IClient.CAMPAIGN_PREFIX}c \{commands.nextToken()}");
@@ -1280,7 +1364,7 @@ public class CCommPanel extends JPanel implements ChangeListener, ComponentListe
     }
 
     // component listener actions
-    private class CTabForwardAction extends javax.swing.AbstractAction {
+    private class CTabForwardAction extends AbstractAction {
 
         @Serial
         private static final long serialVersionUID = -7910457998205249026L;
@@ -1289,23 +1373,27 @@ public class CCommPanel extends JPanel implements ChangeListener, ComponentListe
             // empty constructor
         }
 
-        public void actionPerformed(java.awt.event.ActionEvent e) {
+        public void actionPerformed(ActionEvent actionEvent) {
             int count = CommTPane.getTabCount();
+
             if (count < 2) {
                 return;
             }
+
             int index = CommTPane.getSelectedIndex();
+
             do {
                 index++;
                 if (index == count) {
                     index = 0;
                 }
             } while (!CommTPane.isEnabledAt(index));
+
             CommTPane.setSelectedIndex(index);
         }
     }
 
-    private class CTabBackwardAction extends javax.swing.AbstractAction {
+    private class CTabBackwardAction extends AbstractAction {
 
         @Serial
         private static final long serialVersionUID = -880460003608846342L;
@@ -1314,78 +1402,84 @@ public class CCommPanel extends JPanel implements ChangeListener, ComponentListe
             // empty constructor
         }
 
-        public void actionPerformed(java.awt.event.ActionEvent e) {
+        public void actionPerformed(ActionEvent actionEvent) {
             int count = CommTPane.getTabCount();
+
             if (count < 2) {
                 return;
             }
+
             int index = CommTPane.getSelectedIndex();
+
             do {
                 index--;
                 if (index == -1) {
                     index = count - 1;
                 }
             } while (!CommTPane.isEnabledAt(index));
+
             CommTPane.setSelectedIndex(index);
         }
     }
 
-    private class CSelectTabAction extends javax.swing.AbstractAction {
+    private class CSelectTabAction extends AbstractAction {
 
         @Serial
         private static final long serialVersionUID = -3297024782997974093L;
-        private final java.awt.Component Tab;
+        private final Component Tab;
 
-        public CSelectTabAction(java.awt.Component tab) {
+        public CSelectTabAction(Component tab) {
             Tab = tab;
         }
 
-        public void actionPerformed(java.awt.event.ActionEvent e) {
-            if (CommTPane.isEnabledAt(CommTPane.indexOfComponent(Tab))) {CommTPane.setSelectedComponent(Tab);}
+        public void actionPerformed(ActionEvent actionEvent) {
+            if (CommTPane.isEnabledAt(CommTPane.indexOfComponent(Tab))) {
+                CommTPane.setSelectedComponent(Tab);
+            }
         }
     }
 
-    private class CF1KeyAction extends javax.swing.AbstractAction {
+    private class CF1KeyAction extends AbstractAction {
         @Serial
         private static final long serialVersionUID = -9057337706669800548L;
 
-        public void actionPerformed(java.awt.event.ActionEvent e) {
+        public void actionPerformed(ActionEvent actionEvent) {
             processFunctionKeyCommand(client.getConfigParam("F1BIND"));
         }
     }// end CF1Action
 
-    private class CF2KeyAction extends javax.swing.AbstractAction {
+    private class CF2KeyAction extends AbstractAction {
         @Serial
         private static final long serialVersionUID = 2756143179187978156L;
 
-        public void actionPerformed(java.awt.event.ActionEvent e) {
+        public void actionPerformed(ActionEvent actionEvent) {
             processFunctionKeyCommand(client.getConfigParam("F2BIND"));
         }
     }// end CF1Action
 
-    private class CF3KeyAction extends javax.swing.AbstractAction {
+    private class CF3KeyAction extends AbstractAction {
         @Serial
         private static final long serialVersionUID = -4939591054092680536L;
 
-        public void actionPerformed(java.awt.event.ActionEvent e) {
+        public void actionPerformed(ActionEvent actionEvent) {
             processFunctionKeyCommand(client.getConfigParam("F3BIND"));
         }
     }// end CF1Action
 
-    private class CF4KeyAction extends javax.swing.AbstractAction {
+    private class CF4KeyAction extends AbstractAction {
         @Serial
         private static final long serialVersionUID = -6563867639119041768L;
 
-        public void actionPerformed(java.awt.event.ActionEvent e) {
+        public void actionPerformed(ActionEvent actionEvent) {
             processFunctionKeyCommand(client.getConfigParam("F4BIND"));
         }
     }// end CF1Action
 
-    private class CF5KeyAction extends javax.swing.AbstractAction {
+    private class CF5KeyAction extends AbstractAction {
         @Serial
         private static final long serialVersionUID = 6214466835711778622L;
 
-        public void actionPerformed(java.awt.event.ActionEvent e) {
+        public void actionPerformed(ActionEvent actionEvent) {
             processFunctionKeyCommand(client.getConfigParam("F5BIND"));
         }
     }// end CF1Action

@@ -303,8 +303,6 @@ public interface IClient {
 
     void updateClient();
 
-    void setBotsOnSameTeam(Boolean aBoolean);
-
     void retrieveOpData(String aShort, String s);
 
     void updateParam(StringTokenizer st);
@@ -334,4 +332,8 @@ public interface IClient {
     int getTechLaborCosts(Entity entity, int techGreen);
 
     double getTotalRepairCosts(Entity entity);
+
+    boolean isBotsOnSameTeam();
+
+    void setBotsOnSameTeam(Boolean aBoolean);
 }

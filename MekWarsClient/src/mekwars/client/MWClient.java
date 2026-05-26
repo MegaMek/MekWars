@@ -537,6 +537,174 @@ public final class MWClient extends GameHost implements IClient {
         TO.run();
     }
 
+    //private static MWLogger logger = MWLogger.getInstance();
+    // Main-Method
+    public static void main(String[] args) {
+
+        GUIClientConfig config;
+        boolean dedicated = false;
+        int i;
+
+
+        createLoggers();
+        /*
+         * put StdErr and StdOut into ./logs/megameklog.txt, because MegaMek
+         * uses StdOut and StdErr, but the part of MegaMek that sets that up
+         * does not get called when we launch MegaMek in MekWars Redirect output
+         * to logfiles, unless turned off. Moved megameklog.txt to the logs
+         * folder -- Torren
+         */
+        String logFileName = "./logs/megameklog.txt";
+        boolean enableSplashScreen = true;
+        try {
+            java.io.PrintStream ps = new java.io.PrintStream(new java.io.BufferedOutputStream(
+                  new java.io.FileOutputStream(logFileName), 64));
+            System.setOut(ps);
+            System.setErr(ps);
+        } catch (Exception ex) {
+            MWLogger.errLog(ex);
+            MWLogger.errLog("Unable to redirect MegaMek output to "
+                                  + logFileName);
+        }
+
+        MWLogger.infoLog("Starting MekWars client Version: "
+                               + CLIENT_VERSION);
+        try {
+            for (i = 0; i < args.length; i++) {
+                if (args[i].equalsIgnoreCase("-dedicated")
+                          || args[i].equalsIgnoreCase("-d")) {
+                    dedicated = true;
+                }
+                // add more args?
+                else if (args[i].equalsIgnoreCase("-disableSplash")) {
+                    enableSplashScreen = false;
+                } else if (args[i].equalsIgnoreCase("-enableSplash")) {
+                    enableSplashScreen = true;
+                }
+            }
+            config = new GUIClientConfig(dedicated);
+
+            if (!enableSplashScreen) {
+                config.setParam("ENABLESPLASHSCREEN", "false");
+            } else {
+                config.setParam("ENABLESPLASHSCREEN", "true");
+            }
+            /*
+             * clear any cache'd unit files. these will be rebuilt later in the
+             * start process. clearing @ each start ensures that updates take
+             * hold properly.
+             */
+            java.io.File cache = new java.io.File("./data/mechfiles/units.cache");
+            if (cache.exists()) {
+                cache.delete();
+            }
+
+            /*
+             * Config files have been loaded, and command line args have been
+             * parsed. Construct the actual client. NOTE: client constrtuctor
+             * attempts to pull the oplist, campaign config and other
+             * non-interactive data over the DATAPORT before client.start()
+             * attempts to connect to the chat server on the SERVERPORT.
+             */
+            new mekwars.client.MWClient(config);
+
+        } catch (Exception ex) {
+            MWLogger.errLog(ex);
+            MWLogger.errLog("Couldn't create client Object");
+            System.exit(1);
+        }
+    }
+
+    private static void createLoggers() {
+    }
+
+    public static StringBuilder prepareReport(GameInterface myGame, boolean usingAdvancedRepairs,
+          Buildings buildingTemplate) {
+        StringBuilder result = new StringBuilder();
+        String name = "";
+        // Parse the real player name from the Modified In game one..
+        StringBuilder winnerName = new StringBuilder();
+        if (myGame.hasWinner()) {
+
+            int numberOfWinners = 0;
+            // Multiple Winners
+            List<String> winners = myGame.getWinners();
+
+            // TODO: Winners is sometimes coming up empty. Let's see why
+            MWLogger.errLog("Finding winners:");
+            MWLogger.errLog(winners.toString());
+
+            for (String winner : winners) {
+                java.util.StringTokenizer st = new java.util.StringTokenizer(winner, "~");
+                name = "";
+                while (st.hasMoreElements()) {
+                    name = st.nextToken().trim();
+                }
+                // some players set themselves as a team of 1.
+                // This keeps that from happening.
+                if (numberOfWinners > 0) {
+                    winnerName.append("*");
+                }
+                numberOfWinners++;
+
+                winnerName.append(name);
+            }
+            if (winnerName.toString().endsWith("*")) {
+                winnerName = new StringBuilder(winnerName.substring(0, winnerName.length() - 1));
+            }
+            winnerName.append("#");
+        } else {
+            winnerName = new StringBuilder("DRAW#");
+        }
+
+        result.append(winnerName);
+
+        // Report the mech stat
+        Enumeration<Entity> en = myGame.getDevastatedEntities();
+        while (en.hasMoreElements()) {
+            Entity ent = en.nextElement();
+            if (ent.getOwner().getName().startsWith("War Bot")) {
+                continue;
+            }
+            result.append(SerializeEntity.serializeEntity(ent, true, false, usingAdvancedRepairs));
+            result.append("#");
+        }
+        en = myGame.getGraveyardEntities();
+        while (en.hasMoreElements()) {
+            Entity ent = en.nextElement();
+            if (ent.getOwner().getName().startsWith("War Bot")) {
+                continue;
+            }
+            result.append(SerializeEntity.serializeEntity(ent, true, false, usingAdvancedRepairs));
+            result.append("#");
+
+        }
+        java.util.Iterator<Entity> en2 = myGame.getEntities();
+        while (en2.hasNext()) {
+            Entity ent = en2.next();
+            if (ent.getOwner().getName().startsWith("War Bot")) {
+                continue;
+            }
+            result.append(SerializeEntity.serializeEntity(ent, true, false, usingAdvancedRepairs));
+            result.append("#");
+        }
+        en = myGame.getRetreatedEntities();
+        while (en.hasMoreElements()) {
+            Entity ent = en.nextElement();
+            if (ent.getOwner().getName().startsWith("War Bot")) {
+                continue;
+            }
+            result.append(SerializeEntity.serializeEntity(ent, true, false, usingAdvancedRepairs));
+            result.append("#");
+        }
+
+        if (buildingTemplate != null) {
+            result.append("BL*").append(buildingTemplate);
+        }
+        MWLogger.infoLog("CR|" + result);
+        return result;
+    }
+
     private void createProtCommands() {
         addProtCommand(new CommPCmd(this));
         addProtCommand(new PingPCmd(this));
@@ -670,87 +838,6 @@ public final class MWClient extends GameHost implements IClient {
         if (command.isAlias()) {
             GUICommands.put(command.getAlias(), command);
         }
-    }
-
-    //private static MWLogger logger = MWLogger.getInstance();
-    // Main-Method
-    public static void main(String[] args) {
-
-        GUIClientConfig config;
-        boolean dedicated = false;
-        int i;
-
-
-        createLoggers();
-        /*
-         * put StdErr and StdOut into ./logs/megameklog.txt, because MegaMek
-         * uses StdOut and StdErr, but the part of MegaMek that sets that up
-         * does not get called when we launch MegaMek in MekWars Redirect output
-         * to logfiles, unless turned off. Moved megameklog.txt to the logs
-         * folder -- Torren
-         */
-        String logFileName = "./logs/megameklog.txt";
-        boolean enableSplashScreen = true;
-        try {
-            java.io.PrintStream ps = new java.io.PrintStream(new java.io.BufferedOutputStream(
-                  new java.io.FileOutputStream(logFileName), 64));
-            System.setOut(ps);
-            System.setErr(ps);
-        } catch (Exception ex) {
-            MWLogger.errLog(ex);
-            MWLogger.errLog("Unable to redirect MegaMek output to "
-                                  + logFileName);
-        }
-
-        MWLogger.infoLog("Starting MekWars client Version: "
-                               + CLIENT_VERSION);
-        try {
-            for (i = 0; i < args.length; i++) {
-                if (args[i].equalsIgnoreCase("-dedicated")
-                          || args[i].equalsIgnoreCase("-d")) {
-                    dedicated = true;
-                }
-                // add more args?
-                else if (args[i].equalsIgnoreCase("-disableSplash")) {
-                    enableSplashScreen = false;
-                } else if (args[i].equalsIgnoreCase("-enableSplash")) {
-                    enableSplashScreen = true;
-                }
-            }
-            config = new GUIClientConfig(dedicated);
-
-            if (!enableSplashScreen) {
-                config.setParam("ENABLESPLASHSCREEN", "false");
-            } else {
-                config.setParam("ENABLESPLASHSCREEN", "true");
-            }
-            /*
-             * clear any cache'd unit files. these will be rebuilt later in the
-             * start process. clearing @ each start ensures that updates take
-             * hold properly.
-             */
-            java.io.File cache = new java.io.File("./data/mechfiles/units.cache");
-            if (cache.exists()) {
-                cache.delete();
-            }
-
-            /*
-             * Config files have been loaded, and command line args have been
-             * parsed. Construct the actual client. NOTE: client constrtuctor
-             * attempts to pull the oplist, campaign config and other
-             * non-interactive data over the DATAPORT before client.start()
-             * attempts to connect to the chat server on the SERVERPORT.
-             */
-            new mekwars.client.MWClient(config);
-
-        } catch (Exception ex) {
-            MWLogger.errLog(ex);
-            MWLogger.errLog("Couldn't create client Object");
-            System.exit(1);
-        }
-    }
-
-    private static void createLoggers() {
     }
 
     /*
@@ -1225,7 +1312,7 @@ public final class MWClient extends GameHost implements IClient {
             message = "<font color=\"" + sysColour + "\"><b>" + message
                             + "</b></font>";
 
-            addToChat(message, CCommPanel.CHANNEL_SLOG);
+            addToChat(message, CCommPanel.CHANNEL_SYSTEM_LOG);
             if (Config.isParam("MAINCHANNELSM")) {
                 addToChat(message);
             }
@@ -2877,6 +2964,10 @@ public final class MWClient extends GameHost implements IClient {
         return game;
     }
 
+    public void setGame(Game game) {
+        this.game = game;
+    }
+
     /**
      * Sets the current advanced terrain and map size that will be used on next playboard
      */
@@ -3142,7 +3233,7 @@ public final class MWClient extends GameHost implements IClient {
 
             sendChat(input);
             s = "Sent command: " + '"' + input.substring(CAMPAIGN_PREFIX.length()) + '"';
-            addToChat(s, CCommPanel.CHANNEL_PLOG, null);
+            addToChat(s, CCommPanel.CHANNEL_PERSONAL_LOG, null);
         } else {
             sendChat(input);
             String color = getUser(myUsername).getHtmlColor();
@@ -3153,7 +3244,7 @@ public final class MWClient extends GameHost implements IClient {
                 s = "<font color=\"" + Config.isParam("CHATFONTCOLOR") + "\">" + getShortTime() + "</font>" + s;
 
             }
-            addToChat(s, CCommPanel.CHANNEL_PLOG, null);
+            addToChat(s, CCommPanel.CHANNEL_PERSONAL_LOG, null);
             chatCaptureForBot(myUsername, addon, input); //@salient
         }
     }// end processGUIInput
@@ -3257,10 +3348,6 @@ public final class MWClient extends GameHost implements IClient {
             return IgnorePrivate;
         }
         return (new java.util.Vector<String>(1, 1));
-    }
-
-    public void setGame(Game game) {
-        this.game = game;
     }
 
     public void resetGame() { // reset hosted game
@@ -3470,6 +3557,16 @@ public final class MWClient extends GameHost implements IClient {
         }
     }
 
+
+    //@Salient ... ugh... how can i get to the damn house configs
+    //    public String getHouseConfigs(String key)
+    //    {
+    //    	//CampaignData.cd.ge
+    //    	SHouse house = CampaignData.cd.getHouseByName(this.getPlayer().getHouse());
+    //
+    //    	return CampaignData.cd.getServerConfigs().getProperty(key).trim();
+    //    }
+
     public void loadBanAmmo(String line) {
 
         try {
@@ -3491,16 +3588,6 @@ public final class MWClient extends GameHost implements IClient {
         }// make it compatible with people that had the old format,without
         // the timestamp on the first line, the first time and now dont.
     }
-
-
-    //@Salient ... ugh... how can i get to the damn house configs
-    //    public String getHouseConfigs(String key)
-    //    {
-    //    	//CampaignData.cd.ge
-    //    	SHouse house = CampaignData.cd.getHouseByName(this.getPlayer().getHouse());
-    //
-    //    	return CampaignData.cd.getServerConfigs().getProperty(key).trim();
-    //    }
 
     public void saveBannedAmmo(String timestamp) {
         // Save banned ammo
@@ -3568,7 +3655,6 @@ public final class MWClient extends GameHost implements IClient {
                      Boolean.parseBoolean(getServerConfigs("UseSimpleRepair"));
     }
 
-
     protected void sendServerGameUpdate() {
         // Report the mech stat
 
@@ -3627,94 +3713,6 @@ public final class MWClient extends GameHost implements IClient {
 
         return dummyUser;
     }
-
-    public static StringBuilder prepareReport(GameInterface myGame, boolean usingAdvancedRepairs,
-          Buildings buildingTemplate) {
-        StringBuilder result = new StringBuilder();
-        String name = "";
-        // Parse the real player name from the Modified In game one..
-        StringBuilder winnerName = new StringBuilder();
-        if (myGame.hasWinner()) {
-
-            int numberOfWinners = 0;
-            // Multiple Winners
-            List<String> winners = myGame.getWinners();
-
-            // TODO: Winners is sometimes coming up empty. Let's see why
-            MWLogger.errLog("Finding winners:");
-            MWLogger.errLog(winners.toString());
-
-            for (String winner : winners) {
-                java.util.StringTokenizer st = new java.util.StringTokenizer(winner, "~");
-                name = "";
-                while (st.hasMoreElements()) {
-                    name = st.nextToken().trim();
-                }
-                // some players set themselves as a team of 1.
-                // This keeps that from happening.
-                if (numberOfWinners > 0) {
-                    winnerName.append("*");
-                }
-                numberOfWinners++;
-
-                winnerName.append(name);
-            }
-            if (winnerName.toString().endsWith("*")) {
-                winnerName = new StringBuilder(winnerName.substring(0, winnerName.length() - 1));
-            }
-            winnerName.append("#");
-        } else {
-            winnerName = new StringBuilder("DRAW#");
-        }
-
-        result.append(winnerName);
-
-        // Report the mech stat
-        Enumeration<Entity> en = myGame.getDevastatedEntities();
-        while (en.hasMoreElements()) {
-            Entity ent = en.nextElement();
-            if (ent.getOwner().getName().startsWith("War Bot")) {
-                continue;
-            }
-            result.append(SerializeEntity.serializeEntity(ent, true, false, usingAdvancedRepairs));
-            result.append("#");
-        }
-        en = myGame.getGraveyardEntities();
-        while (en.hasMoreElements()) {
-            Entity ent = en.nextElement();
-            if (ent.getOwner().getName().startsWith("War Bot")) {
-                continue;
-            }
-            result.append(SerializeEntity.serializeEntity(ent, true, false, usingAdvancedRepairs));
-            result.append("#");
-
-        }
-        java.util.Iterator<Entity> en2 = myGame.getEntities();
-        while (en2.hasNext()) {
-            Entity ent = en2.next();
-            if (ent.getOwner().getName().startsWith("War Bot")) {
-                continue;
-            }
-            result.append(SerializeEntity.serializeEntity(ent, true, false, usingAdvancedRepairs));
-            result.append("#");
-        }
-        en = myGame.getRetreatedEntities();
-        while (en.hasMoreElements()) {
-            Entity ent = en.nextElement();
-            if (ent.getOwner().getName().startsWith("War Bot")) {
-                continue;
-            }
-            result.append(SerializeEntity.serializeEntity(ent, true, false, usingAdvancedRepairs));
-            result.append("#");
-        }
-
-        if (buildingTemplate != null) {
-            result.append("BL*").append(buildingTemplate);
-        }
-        MWLogger.infoLog("CR|" + result);
-        return result;
-    }
-
 
     // this adds 1 to the number of games played and if it matched the restart
     // amount it restarts the ded.

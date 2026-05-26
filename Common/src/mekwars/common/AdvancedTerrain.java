@@ -1,18 +1,35 @@
 /*
- * MekWars - Copyright (C) 2004
+ * Copyright (C) 2004 Helge Richter (McWizard)
+ * Copyright (C) 2026 The MegaMek Team. All Rights Reserved.
  *
- * Derived from MegaMekNET (http://www.sourceforge.net/projects/megameknet)
- * Original author Helge Richter (McWizard)
+ * This file is part of MekWars.
  *
- * This program is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License as published by the Free
- * Software Foundation; either version 2 of the License, or (at your option)
- * any later version.
+ * MekWars is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License (GPL),
+ * version 3 or (at your option) any later version,
+ * as published by the Free Software Foundation.
  *
- * This program is distributed in the hope that it will be useful, but
- * WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
- * or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License
- * for more details.
+ * MekWars is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty
+ * of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU General Public License for more details.
+ *
+ * A copy of the GPL should have been included with this project;
+ * if not, see <https://www.gnu.org/licenses/>.
+ *
+ * NOTICE: The MegaMek organization is a non-profit group of volunteers
+ * creating free software for the BattleTech community.
+ *
+ * MechWarrior, BattleMech, `Mech and AeroTech are registered trademarks
+ * of The Topps Company, Inc. All Rights Reserved.
+ *
+ * Catalyst Game Labs and the Catalyst Game Labs logo are trademarks of
+ * InMediaRes Productions, LLC.
+ *
+ * MechWarrior Copyright Microsoft Corporation. MekWars was created under
+ * Microsoft's "Game Content Usage Rules"
+ * <https://www.xbox.com/en-US/developers/rules> and it is not endorsed by or
+ * affiliated with Microsoft.
  */
 
 package mekwars.common;
@@ -102,7 +119,6 @@ final public class AdvancedTerrain {
         setLowTemp(TokenReader.readInt(command));
         setHighTemp(TokenReader.readInt(command));
         setGravity(TokenReader.readDouble(command));
-        setVacuum(TokenReader.readBoolean(command));
         setNightChance(TokenReader.readInt(command));
         setNightTempMod(TokenReader.readInt(command));
         setMinVisibility(TokenReader.readInt(command));
@@ -147,6 +163,9 @@ final public class AdvancedTerrain {
 
     }
 
+    public AdvancedTerrain() {
+    }
+
     public void setTornadoF13WindChance(int chance) {
         tornadoF13WindsChance = chance;
     }
@@ -167,11 +186,8 @@ final public class AdvancedTerrain {
         this.emi = emi;
     }
 
-    public AdvancedTerrain() {
-    }
-
     public void binIn(BinReader in) throws IOException {
-        displayName = in.readLine("displayName");
+        displayName = in.read("displayName");
         Name = displayName;
         lowTemp = in.readInt("lowTemp");
         highTemp = in.readInt("highTemp");
@@ -179,8 +195,8 @@ final public class AdvancedTerrain {
         vacuum = in.readBoolean("vacuum");
         fullMoonChance = in.readInt("nightChance");
         nightTempMod = in.readInt("nightTempMod");
-        minVisibility = in.readInt("minvisibility");
-        maxVisibility = in.readInt("maxvisibility");
+        minVisibility = in.readInt("minVisibility");
+        maxVisibility = in.readInt("maxVisibility");
         moderateRainfallChance = in.readInt("moderateRainfallChance");
         moderateSnowfallChance = in.readInt("moderateSnowfallChance");
         heavySnowfallChance = in.readInt("heavySnowfallChance");
@@ -208,7 +224,6 @@ final public class AdvancedTerrain {
     }
 
     public void binOut(BinWriter out) throws IOException {
-
         out.println(displayName, "displayName");
         out.println(lowTemp, "lowTemp");
         out.println(highTemp, "highTemp");
@@ -216,8 +231,8 @@ final public class AdvancedTerrain {
         out.println(vacuum, "vacuum");
         out.println(fullMoonChance, "nightChance");
         out.println(nightTempMod, "nightTempMod");
-        out.println(minVisibility, "minvisibility");
-        out.println(maxVisibility, "maxvisibility");
+        out.println(minVisibility, "minVisibility");
+        out.println(maxVisibility, "maxVisibility");
         out.println(moderateRainfallChance, "moderateRainfallChance");
         out.println(moderateSnowfallChance, "moderateSnowfallChance");
         out.println(heavySnowfallChance, "heavySnowfallChance");
@@ -251,16 +266,6 @@ final public class AdvancedTerrain {
     public void setDisplayName(String name) {
         displayName = name;
         Name = name;
-    }
-
-    @Deprecated
-    public boolean isVacuum() {
-        return vacuum;
-    }
-
-    @Deprecated
-    public void setVacuum(boolean vacuum) {
-        this.vacuum = vacuum;
     }
 
     public int getLowTemp() {
@@ -327,22 +332,18 @@ final public class AdvancedTerrain {
         nightTempMod = mod;
     }
 
-    @Deprecated
     public int getMinVisibility() {
         return minVisibility;
     }
 
-    @Deprecated
     public void setMinVisibility(int minVisibility) {
         this.minVisibility = minVisibility;
     }
 
-    @Deprecated
     public int getMaxVisibility() {
         return maxVisibility;
     }
 
-    @Deprecated
     public void setMaxVisibility(int maxVisibility) {
         this.maxVisibility = maxVisibility;
     }
@@ -633,43 +634,39 @@ final public class AdvancedTerrain {
         windDirection = dir;
     }
 
-    public boolean hasShifitingWindDirection() {
+    public boolean hasShiftingWindDirection() {
         return shiftWindDirection;
     }
 
-    public boolean hasShifitingWindStrength() {
+    public boolean hasShiftingWindStrength() {
         return shiftWindStrength;
     }
 
     public String toStringPlanetaryConditions() {
-        StringBuilder results = new StringBuilder();
 
-        results.append(toString());
-        results.append("$");
-        results.append(lightConditions);
-        results.append("$");
-        results.append(weatherConditions);
-        results.append("$");
-        results.append(windStrength);
-        results.append("$");
-        results.append(windDirection);
-        results.append("$");
-        results.append(shiftWindDirection);
-        results.append("$");
-        results.append(shiftWindStrength);
-        results.append("$");
-        results.append(fog);
-        results.append("$");
-        results.append(temperature);
-        results.append("$");
-        results.append(emi);
-        results.append("$");
-        results.append(terrainAffected);
-        results.append("$");
-        results.append(maxWindStrength);
-
-        return results.toString();
-
+        return this +
+                     "$" +
+                     lightConditions +
+                     "$" +
+                     weatherConditions +
+                     "$" +
+                     windStrength +
+                     "$" +
+                     windDirection +
+                     "$" +
+                     shiftWindDirection +
+                     "$" +
+                     shiftWindStrength +
+                     "$" +
+                     fog +
+                     "$" +
+                     temperature +
+                     "$" +
+                     emi +
+                     "$" +
+                     terrainAffected +
+                     "$" +
+                     maxWindStrength;
     }
 
     public boolean isTerrainAffected() {
@@ -758,52 +755,7 @@ final public class AdvancedTerrain {
     }
 
     public String toImageDescription() {
-        return "<table><TR>" +
-                     "<TD>" +
-                     "lightConditions" +
-                     "</TD><TD>" +
-                     "weatherConditions" +
-                     "</TD><TD>" +
-                     "windStrength" +
-                     "</TD><TD>" +
-                     "windDirection" +
-                     "</TD><TD>" +
-                     "shiftWindDirection" +
-                     "</TD><TD>" +
-                     "shiftWindStrength" +
-                     "</TD><TD>" +
-                     "fog" +
-                     "</TD><TD>" +
-                     "temperature" +
-                     "</TD><TD>" +
-                     "emi" +
-                     "</TD><TD>" +
-                     "terrainAffected" +
-                     "</TD><TD>" +
-                     "maxWindStrength" +
-                     "</TD></TR><TR><TD>" +
-                     lightConditions +
-                     "</TD><TD>" +
-                     weatherConditions +
-                     "</TD><TD>" +
-                     windStrength +
-                     "</TD><TD>" +
-                     windDirection +
-                     "</TD><TD>" +
-                     shiftWindDirection +
-                     "</TD><TD>" +
-                     shiftWindStrength +
-                     "</TD><TD>" +
-                     fog +
-                     "</TD><TD>" +
-                     temperature +
-                     "</TD><TD>" +
-                     emi +
-                     "</TD><TD>" +
-                     terrainAffected +
-                     "</TD><TD>" +
-                     maxWindStrength +
-                     "</TR><table>";
+        return STR."<table><TR><TD>lightConditions</TD><TD>weatherConditions</TD><TD>windStrength</TD><TD>windDirection</TD><TD>shiftWindDirection</TD><TD>shiftWindStrength</TD><TD>fog</TD><TD>temperature</TD><TD>emi</TD><TD>terrainAffected</TD><TD>maxWindStrength</TD></TR><TR><TD>\{lightConditions}</TD><TD>\{weatherConditions}</TD><TD>\{windStrength}</TD><TD>\{windDirection}</TD><TD>\{shiftWindDirection}</TD><TD>\{shiftWindStrength}</TD><TD>\{fog}</TD><TD>\{temperature}</TD><TD>\{emi}</TD><TD>\{terrainAffected}</TD><TD>\{maxWindStrength}</TR><table>";
     }
 
     public String WeatherForecast() {

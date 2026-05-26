@@ -1,158 +1,172 @@
 /*
- * MekWars - Copyright (C) 2007
+ * Copyright (C) 2007 MekWars
+ * Copyright (C) 2026 The MegaMek Team. All Rights Reserved.
  *
+ * This file is part of MekWars.
  *
- * This program is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License as published by the Free
- * Software Foundation; either version 2 of the License, or (at your option)
- * any later version.
+ * MekWars is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License (GPL),
+ * version 3 or (at your option) any later version,
+ * as published by the Free Software Foundation.
  *
- * This program is distributed in the hope that it will be useful, but
- * WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
- * or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License
- * for more details.
+ * MekWars is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty
+ * of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU General Public License for more details.
+ *
+ * A copy of the GPL should have been included with this project;
+ * if not, see <https://www.gnu.org/licenses/>.
+ *
+ * NOTICE: The MegaMek organization is a non-profit group of volunteers
+ * creating free software for the BattleTech community.
+ *
+ * MechWarrior, BattleMech, `Mech and AeroTech are registered trademarks
+ * of The Topps Company, Inc. All Rights Reserved.
+ *
+ * Catalyst Game Labs and the Catalyst Game Labs logo are trademarks of
+ * InMediaRes Productions, LLC.
+ *
+ * MechWarrior Copyright Microsoft Corporation. MekWars was created under
+ * Microsoft's "Game Content Usage Rules"
+ * <https://www.xbox.com/en-US/developers/rules> and it is not endorsed by or
+ * affiliated with Microsoft.
  */
-
 
 package mekwars.common.gui.panels;
 
+import java.awt.Dimension;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
+import java.awt.event.ActionEvent;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
+import java.io.Serial;
+import javax.swing.JButton;
+import javax.swing.JOptionPane;
+import javax.swing.JPanel;
+import javax.swing.JScrollPane;
+import javax.swing.JTable;
+import javax.swing.ListSelectionModel;
+import javax.swing.SpringLayout;
+
+import megamek.codeUtilities.MathUtility;
 import mekwars.common.BMEquipment;
 import mekwars.common.campaign.CCampaign;
+import mekwars.common.campaign.clientutils.protocol.IClient;
 import mekwars.common.gui.TableSorter;
+import mekwars.common.gui.models.BlackMarketPartsModel;
 import mekwars.common.util.SpringLayoutHelper;
 
 /**
  * Black Market Parts Panel
  */
 
-public class CBMPartsPanel extends javax.swing.JPanel {
+public class CBMPartsPanel extends JPanel {
 
     /**
      *
      */
+    @Serial
     private static final long serialVersionUID = -5553918525846016147L;
-    public BlackMarketPartsModel BlackMarketInfo;
-    client.MWClient mwclient;
-    long lastUpdate = -1;//update time for button
-    private javax.swing.JTable tblMarket = new javax.swing.JTable();
-    private javax.swing.JScrollPane spMarket = new javax.swing.JScrollPane();
-
-    private javax.swing.JButton btnBuy = new javax.swing.JButton("Buy");
-
-    private javax.swing.JPanel pnlBuyBtns = new javax.swing.JPanel();
-    private javax.swing.JPanel pnlBuy = new javax.swing.JPanel();
-    private javax.swing.JPanel spacingPanel1 = new javax.swing.JPanel();
-    private javax.swing.JPanel spacingPanel3 = new javax.swing.JPanel();
-
-    private CCampaign theCampaign;
-    private java.awt.GridBagConstraints gridBagConstraints;
+    private final JTable tblMarket = new JTable();
+    private final IClient client;
+    private final JButton btnBuy = new JButton("Buy");
+    private final JPanel pnlBuyButtons = new JPanel();
+    private final CCampaign theCampaign;
+    private final BlackMarketPartsModel blackMarketPartsModel;
     private BMEquipment bme;
 
-    public CBMPartsPanel(client.MWClient client, String type) {
+    public CBMPartsPanel(IClient client, String type) {
         setLayout(new java.awt.GridBagLayout());
-        mwclient = client;
+        this.client = client;
 
-        BlackMarketInfo = new BlackMarketPartsModel(mwclient, type);
+        blackMarketPartsModel = new BlackMarketPartsModel(this.client, type);
         theCampaign = client.getCampaign();
-        TableSorter sorter = new TableSorter(BlackMarketInfo, client, TableSorter.SORTER_BMPARTS);
+        TableSorter sorter = new TableSorter(blackMarketPartsModel, client, TableSorter.SORTER_BM_PARTS);
         tblMarket.setModel(sorter);
 
-        btnBuy.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {btnBuyPartsPerformed(evt);}
-        });
+        btnBuy.addActionListener(this::btnBuyPartsPerformed);
 
-        tblMarket.addMouseListener(new java.awt.event.MouseAdapter() {
+        tblMarket.addMouseListener(new MouseAdapter() {
             @Override
-            public void mouseClicked(java.awt.event.MouseEvent e) {
-                if (e.getClickCount() == 2) {
-                    btnBuyPartsPerformed(new java.awt.event.ActionEvent(btnBuy, 0, ""));
+            public void mouseClicked(MouseEvent mouseEvent) {
+                if (mouseEvent.getClickCount() == 2) {
+                    btnBuyPartsPerformed(new ActionEvent(btnBuy, 0, ""));
                 }
             }
         });
 
 
-        BlackMarketInfo.initColumnSizes(tblMarket);
-        for (int i = 0; i < BlackMarketInfo.getColumnCount(); i++) {
-            tblMarket.getColumnModel().getColumn(i).setCellRenderer(BlackMarketInfo.getRenderer());
+        blackMarketPartsModel.initColumnSizes(tblMarket);
+
+        for (int i = 0; i < blackMarketPartsModel.getColumnCount(); i++) {
+            tblMarket.getColumnModel().getColumn(i).setCellRenderer(blackMarketPartsModel.getRenderer());
         }
 
         sorter.addMouseListenerToHeaderInTable(tblMarket);
-        tblMarket.setSelectionMode(javax.swing.ListSelectionModel.SINGLE_SELECTION);
-        javax.swing.ListSelectionModel rowSM = tblMarket.getSelectionModel();
-        rowSM.addListSelectionListener(new javax.swing.event.ListSelectionListener() {
-            public void valueChanged(javax.swing.event.ListSelectionEvent e) {
-
-                //ignore dragging
-                if (e.getValueIsAdjusting()) {
-                    return;
-                }
-
-                javax.swing.ListSelectionModel lsm = (javax.swing.ListSelectionModel) e.getSource();
-
-			/*	if (lsm.isSelectionEmpty())
-                    ((MechInfo)pnlMekIcon).setImageVisible(false);
-				*/
-                int selectedRow = lsm.getMinSelectionIndex();
-                String part = (String) tblMarket.getModel().getValueAt(selectedRow, BlackMarketPartsModel.PART);
-                if (part != null) {
-                    bme = getPartsAtRow(tblMarket.getSelectedRow());
-
-                    //if there is a unit in the row, update the dynamic buttons.
-                    if (bme != null) {
-                        btnBuy.setEnabled(true);
-                    } else {//dim them all
-                        btnBuy.setEnabled(false);
-                    }
-                }
-
+        tblMarket.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+        ListSelectionModel rowSM = tblMarket.getSelectionModel();
+        rowSM.addListSelectionListener(listSelectionEvent -> {
+            //ignore dragging
+            if (listSelectionEvent.getValueIsAdjusting()) {
+                return;
             }
+
+            ListSelectionModel lsm = (ListSelectionModel) listSelectionEvent.getSource();
+
+            int selectedRow = lsm.getMinSelectionIndex();
+            String part = (String) tblMarket.getModel().getValueAt(selectedRow, BlackMarketPartsModel.PART);
+            if (part != null) {
+                bme = getPartsAtRow(tblMarket.getSelectedRow());
+                btnBuy.setEnabled(bme != null);
+            }
+
         });
 
-        pnlBuy.setLayout(new java.awt.GridBagLayout());
+        JPanel pnlBuy = new JPanel();
+        pnlBuy.setLayout(new GridBagLayout());
 
+        JScrollPane spMarket = new JScrollPane();
         spMarket.setToolTipText("Click on the column header to sort.");
-        spMarket.setPreferredSize(new java.awt.Dimension(300, 370));
+        spMarket.setPreferredSize(new Dimension(300, 370));
         tblMarket.setDoubleBuffered(true);
         spMarket.setViewportView(tblMarket);
-        gridBagConstraints = new java.awt.GridBagConstraints();
+        GridBagConstraints gridBagConstraints = new GridBagConstraints();
         gridBagConstraints.gridx = 0;
         gridBagConstraints.gridy = 0;
-        gridBagConstraints.fill = java.awt.GridBagConstraints.BOTH;
+        gridBagConstraints.fill = GridBagConstraints.BOTH;
         gridBagConstraints.weightx = 1.0;
         gridBagConstraints.weighty = 1.0;
-        //gridBagConstraints.insets = new Insets(0, 0, 0, 0);
         pnlBuy.add(spMarket, gridBagConstraints);
 
         //lay out the buttons
-        javax.swing.JPanel panelButtonWrapper = new javax.swing.JPanel();
-        //panelButtonWrapper.setLayout(new BoxLayout(panelButtonWrapper, BoxLayout.Y_AXIS));
-        pnlBuyBtns.setLayout(new javax.swing.SpringLayout());
+        JPanel panelButtonWrapper = new JPanel();
+        pnlBuyButtons.setLayout(new SpringLayout());
 
-        spacingPanel1 = new javax.swing.JPanel();
-        spacingPanel1.setMaximumSize(new java.awt.Dimension(20, 1));
-        //pnlBuyBtns.add(spacingPanel1);
+        JPanel spacingPanel1 = new JPanel();
+        spacingPanel1.setMaximumSize(new Dimension(20, 1));
 
-        spacingPanel3 = new javax.swing.JPanel();
-        spacingPanel3.setMaximumSize(new java.awt.Dimension(20, 1));
+        JPanel spacingPanel3 = new JPanel();
+        spacingPanel3.setMaximumSize(new Dimension(20, 1));
 
-        //do the actual button layout, springmanagement, etc.
+        //do the actual button layout, spring management, etc.
         resetButtonBar();
 
-        panelButtonWrapper.add(pnlBuyBtns);
+        panelButtonWrapper.add(pnlBuyButtons);
 
-        gridBagConstraints = new java.awt.GridBagConstraints();
+        gridBagConstraints = new GridBagConstraints();
         gridBagConstraints.gridx = 0;
         gridBagConstraints.gridy = 1;
-        gridBagConstraints.fill = java.awt.GridBagConstraints.HORIZONTAL;
+        gridBagConstraints.fill = GridBagConstraints.HORIZONTAL;
         gridBagConstraints.weightx = 1.0;
         gridBagConstraints.weighty = 0.0;
         pnlBuy.add(panelButtonWrapper, gridBagConstraints);
 
-        gridBagConstraints = new java.awt.GridBagConstraints();
+        gridBagConstraints = new GridBagConstraints();
         gridBagConstraints.gridx = 1;
         gridBagConstraints.gridy = 0;
         gridBagConstraints.gridheight = 2;
-        gridBagConstraints.fill = java.awt.GridBagConstraints.BOTH;
+        gridBagConstraints.fill = GridBagConstraints.BOTH;
         gridBagConstraints.ipadx = 30;
         gridBagConstraints.weightx = 1.0;
         gridBagConstraints.weighty = 1.0;
@@ -167,10 +181,10 @@ public class CBMPartsPanel extends javax.swing.JPanel {
      *
      * @param evt
      */
-    private void btnBuyPartsPerformed(java.awt.event.ActionEvent evt) {
+    private void btnBuyPartsPerformed(ActionEvent evt) {
         int row = tblMarket.getSelectedRow();
 
-        //shouldnt ever happen, but still trap
+        //shouldn't ever happen, but still trap
         if (row < 0) {
             return;
         }
@@ -181,52 +195,49 @@ public class CBMPartsPanel extends javax.swing.JPanel {
         if (bme != null) {
 
             //generate a new option dialog
-            String playerAmountString = javax.swing.JOptionPane.showInputDialog(mwclient.getMainFrame(),
-                  "<HTML><center>How many units of " + bme.getEquipmentName() + " would you like to buy?",
+            String playerAmountString = JOptionPane.showInputDialog(client.getMainFrame(),
+                  STR."<HTML><center>How many units of \{bme.getEquipmentName()} would you like to buy?",
                   "Amount to Buy",
-                  javax.swing.JOptionPane.PLAIN_MESSAGE);
+                  JOptionPane.PLAIN_MESSAGE);
 
             //Clicked Cancel
-            if (playerAmountString == null || playerAmountString.trim().length() == 0) {
+            if (playerAmountString == null || playerAmountString.trim().isEmpty()) {
                 return;
             }
 
             try {
-                int amount = Integer.parseInt(playerAmountString);
+                int amount = MathUtility.parseInt(playerAmountString, 0);
 
                 if (amount > bme.getAmount()) {
-                    javax.swing.JOptionPane.showMessageDialog(this,
-                          "There are only " + bme.getAmount() + " " + bme.getEquipmentName() + " parts available.");
+                    JOptionPane.showMessageDialog(this,
+                          STR."There are only \{bme.getAmount()} \{bme.getEquipmentName()} parts available.");
                     return;
                 }
 
-                if (amount * bme.getCost() > mwclient.getPlayer().getMoney()) {
-                    javax.swing.JOptionPane.showMessageDialog(this,
-                          "You only have " + mwclient.moneyOrFluMessage(true, true, mwclient.getPlayer().getMoney()));
+                if (amount * bme.getCost() > client.getPlayer().getMoney()) {
+                    JOptionPane.showMessageDialog(this,
+                          STR."You only have \{client.moneyOrFluMessage(true, true, client.getPlayer().getMoney())}");
                     return;
                 }
 
             } catch (Exception ex) {
                 //Trap the error
-                javax.swing.JOptionPane.showConfirmDialog(mwclient.getMainFrame(), "Invalid Syntax Try Again.");
+                JOptionPane.showConfirmDialog(client.getMainFrame(), "Invalid Syntax Try Again.");
                 return;
             }
-            mwclient.sendChat(client.MWClient.CAMPAIGN_PREFIX +
-                                    "c buyparts#" +
-                                    bme.getEquipmentInternalName() +
-                                    "#" +
-                                    playerAmountString);
+            client.sendChat(STR."\{IClient.CAMPAIGN_PREFIX}c buyparts#\{bme.getEquipmentInternalName()}#\{playerAmountString}");
 
         }
     }//end btnBuyPartsPerformed
 
     public BMEquipment getPartsAtRow(int row) {
         bme = null;
-        String part = (String) tblMarket.getModel().getValueAt(row, BlackMarketPartsModel.INTERNALPART);
+        String part = (String) tblMarket.getModel().getValueAt(row, BlackMarketPartsModel.INTERNAL_PART);
 
         if (part != null) {
             bme = theCampaign.getBlackMarketParts().get(part);
         }
+        
         return bme;
     }
 
@@ -236,12 +247,12 @@ public class CBMPartsPanel extends javax.swing.JPanel {
          * no image, just buttons. this is a nice, simple,
          * centered spring layout. no fuss, no muss.
          */
-        pnlBuyBtns.removeAll();
+        pnlBuyButtons.removeAll();
 
-        pnlBuyBtns.add(btnBuy);
-        SpringLayoutHelper.setupSpringGrid(pnlBuyBtns, 8);
+        pnlBuyButtons.add(btnBuy);
+        SpringLayoutHelper.setupSpringGrid(pnlBuyButtons, 8);
 
-        pnlBuyBtns.validate();
+        pnlBuyButtons.validate();
         this.repaint();
     }
 
@@ -251,7 +262,7 @@ public class CBMPartsPanel extends javax.swing.JPanel {
 
     public void fireMarketChanged() {
         //here's a problem MyBlackMarket has to be created somehow (by parsing BM or from Player data)
-        BlackMarketInfo.refreshModel();
+        blackMarketPartsModel.refreshModel();
         tblMarket.setPreferredSize(new java.awt.Dimension(tblMarket.getWidth(),
               tblMarket.getRowHeight() * (tblMarket.getRowCount())));
         tblMarket.revalidate();

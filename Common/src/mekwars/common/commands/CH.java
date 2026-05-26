@@ -206,7 +206,7 @@ public class CH extends Command {
                         }
                     } else {
                         // add message to faction panel
-                        client.addToChat(message.toString(), CCommPanel.CHANNEL_HMAIL);
+                        client.addToChat(message.toString(), CCommPanel.CHANNEL_HOUSE_MAIL);
 
                         // also add to main, if configured to do so
                         if (client.getConfig().isParam("MAINCHANNELHM")) {
@@ -505,7 +505,7 @@ public class CH extends Command {
                     }
 
                     // keep logging, even if sound is disabled
-                    client.addToChat(message.toString(), CCommPanel.CHANNEL_PLOG);// log the message
+                    client.addToChat(message.toString(), CCommPanel.CHANNEL_PERSONAL_LOG);// log the message
                 } else if (client.hasKeyWords(message.toString())) {
 
                     if (client.getConfig().isParam("ENABLEKEYWORDSOUND")) {
@@ -513,7 +513,7 @@ public class CH extends Command {
                     }
 
                     // keep logging, even if sound is disabled
-                    client.addToChat(message.toString(), CCommPanel.CHANNEL_PLOG);
+                    client.addToChat(message.toString(), CCommPanel.CHANNEL_PERSONAL_LOG);
                 }
             }
 

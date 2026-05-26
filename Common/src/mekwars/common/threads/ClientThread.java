@@ -13,8 +13,14 @@
 package mekwars.common.threads;
 
 import java.awt.KeyboardFocusManager;
+import java.io.File;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
+import java.util.Random;
+import java.util.StringTokenizer;
+import java.util.TreeSet;
+import java.util.Vector;
 
 import megamek.client.AbstractClient;
 import megamek.client.Client;
@@ -24,11 +30,13 @@ import megamek.client.bot.princess.Princess;
 import megamek.client.bot.ui.swing.BotGUI;
 import megamek.client.ui.clientGUI.ClientGUI;
 import megamek.client.ui.util.MegaMekController;
+import megamek.codeUtilities.MathUtility;
 import megamek.common.KeyBindParser;
 import megamek.common.OffBoardDirection;
 import megamek.common.board.Board;
 import megamek.common.board.BoardDimensions;
 import megamek.common.board.Coords;
+import megamek.common.enums.BuildingType;
 import megamek.common.enums.GamePhase;
 import megamek.common.icons.Camouflage;
 import megamek.common.loaders.MapSettings;
@@ -41,6 +49,7 @@ import megamek.common.units.Crew;
 import megamek.common.units.CrewType;
 import megamek.common.units.Entity;
 import megamek.common.util.BuildingTemplate;
+import megamek.logging.MMLogger;
 import mekwars.common.AdvancedTerrain;
 import mekwars.common.PlanetEnvironment;
 import mekwars.common.Unit;
@@ -48,10 +57,10 @@ import mekwars.common.campaign.Buildings;
 import mekwars.common.campaign.CArmy;
 import mekwars.common.campaign.CUnit;
 import mekwars.common.campaign.clientutils.protocol.IClient;
-import mekwars.common.util.MWLogger;
 import mekwars.common.util.UnitUtils;
 
 public class ClientThread extends Thread implements CloseClientListener {
+    private final static MMLogger LOGGER = MMLogger.create(ClientThread.class);
 
     final int N = 0;
     final int NE = 1;
@@ -74,8 +83,8 @@ public class ClientThread extends Thread implements CloseClientListener {
     private ClientGUI swingGui;
 
     // CONSTRUCTOR
-    public ClientThread(String name, String servername, String ip, int port, IClient client,
-          java.util.ArrayList<Unit> meks, java.util.ArrayList<CUnit> autoArmy) {
+    public ClientThread(String name, String servername, String ip, int port, IClient client, ArrayList<Unit> meks,
+          ArrayList<CUnit> autoArmy) {
         super(name);
         myName = name.trim();
         serverName = servername;
@@ -84,14 +93,24 @@ public class ClientThread extends Thread implements CloseClientListener {
         this.client = client;
         this.meks = meks;
         this.autoArmy = autoArmy;
+
         if (serverip.contains("127.0.0.1")) {
             serverip = "127.0.0.1";
         }
+
         controller = new MegaMekController();
         KeyboardFocusManager keyboardFocusManager = KeyboardFocusManager.getCurrentKeyboardFocusManager();
         keyboardFocusManager.addKeyEventDispatcher(controller);
 
         KeyBindParser.parseKeyBindings(controller);
+    }
+
+    public static Comparator<? super Object> stringComparator() {
+        return (Comparator<Object>) (o1, o2) -> {
+            String s1 = ((String) o1).toLowerCase();
+            String s2 = ((String) o2).toLowerCase();
+            return s1.compareTo(s2);
+        };
     }
 
     public Client getMMClient() {
@@ -111,7 +130,6 @@ public class ClientThread extends Thread implements CloseClientListener {
         mmClient.addCloseClientListener(this);
 
         try {
-
             // clear out everything.
             client.getPlayer().setConventionalMinesAllowed(0);
             client.getPlayer().setVibraMinesAllowed(0);
@@ -123,10 +141,8 @@ public class ClientThread extends Thread implements CloseClientListener {
             client.getGameOptions().clear();
             // get rid of any bots.
 
-        }// end try
-        catch (Exception ex) {
-            MWLogger.errLog("Error reporting game!");
-            MWLogger.errLog(ex);
+        } catch (Exception ex) {
+            LOGGER.error(ex, "Error reporting game!");
         }
 
         if (swingGui != null) {
@@ -144,7 +160,7 @@ public class ClientThread extends Thread implements CloseClientListener {
         if (client.getGameOptions().isEmpty()) {
             client.setWaiting(true);
 
-            client.sendChat(IClient.CAMPAIGN_PREFIX + "c RequestOperationSettings");
+            client.sendChat(STR."\{IClient.CAMPAIGN_PREFIX}c RequestOperationSettings");
             while (client.isWaiting()) {
                 try {
                     client.addToChat("Retrieving Operation Data Please Wait..");
@@ -162,10 +178,10 @@ public class ClientThread extends Thread implements CloseClientListener {
         } catch (Exception ex) {
             mmClient = null;
             client.showInfoWindow("Couldn't join this game!");
-            MWLogger.infoLog(serverip + " " + serverPort);
+            LOGGER.info(STR."\{serverip} \{serverPort}");
             return;
         }
-        // mmClient.retrieveServerInfo();
+
         try {
             while (mmClient.getLocalPlayer() == null) {
                 Thread.sleep(50);
@@ -180,7 +196,7 @@ public class ClientThread extends Thread implements CloseClientListener {
             if ((client.getCurrentEnvironment() != null) && (mmClient.getGame().getPhase() == GamePhase.LOUNGE)) {
                 // creates the playboard*/
                 MapSettings mySettings = MapSettings.getInstance();
-                mySettings.setBoardSize(client.getMapSize().getWidth(), client.getMapSize().getHeight());
+                mySettings.setBoardSize((int) client.getMapSize().getWidth(), (int) client.getMapSize().getHeight());
                 mySettings.setMapSize(1, 1);  // Note to self: MapSize in MM is boards x boards, not hexes x hexes
 
                 AdvancedTerrain aTerrain = client.getCurrentAdvancedTerrain();
@@ -192,15 +208,15 @@ public class ClientThread extends Thread implements CloseClientListener {
                     mySettings.setBoardSize(planetEnvironment.getXBoardSize(), planetEnvironment.getYBoardSize());
                     mySettings.setMapSize(planetEnvironment.getXSize(), planetEnvironment.getYSize());
 
-                    ArrayList<String> boardvec = new ArrayList<>();
+                    ArrayList<String> boardVector = new ArrayList<>();
                     if (planetEnvironment.getStaticMapName().toLowerCase().endsWith("surprise")) {
                         int maxBoards = planetEnvironment.getXBoardSize() * planetEnvironment.getYBoardSize();
 
                         for (int i = 0; i < maxBoards; i++) {
-                            boardvec.add(MapSettings.BOARD_SURPRISE);
+                            boardVector.add(MapSettings.BOARD_SURPRISE);
                         }
 
-                        mySettings.setBoardsSelectedVector(boardvec);
+                        mySettings.setBoardsSelectedVector(boardVector);
 
                         if (planetEnvironment.getStaticMapName().contains("/")) {
                             String folder = planetEnvironment.getStaticMapName()
@@ -301,10 +317,10 @@ public class ClientThread extends Thread implements CloseClientListener {
 
                         int maxBoards = planetEnvironment.getXBoardSize() * planetEnvironment.getYBoardSize();
                         for (int i = 0; i < maxBoards; i++) {
-                            boardvec.add(MapSettings.BOARD_GENERATED);
+                            boardVector.add(MapSettings.BOARD_GENERATED);
                         }
 
-                        mySettings.setBoardsSelectedVector(boardvec);
+                        mySettings.setBoardsSelectedVector(boardVector);
                         if (planetEnvironment.getStaticMapName().contains("/")) {
                             String folder = planetEnvironment.getStaticMapName()
                                                   .substring(0, planetEnvironment.getStaticMapName().lastIndexOf("/"));
@@ -325,7 +341,7 @@ public class ClientThread extends Thread implements CloseClientListener {
 
                         if ((client.getBuildingTemplate() != null) &&
                                   (client.getBuildingTemplate().getTotalBuildings() > 0)) {
-                            java.util.ArrayList<BuildingTemplate> buildingList = generateRandomBuildings(mySettings,
+                            ArrayList<BuildingTemplate> buildingList = generateRandomBuildings(mySettings,
                                   client.getBuildingTemplate());
                             mySettings.setBoardBuildings(buildingList);
                         } else if (!currentEnvironment.getCityType().equalsIgnoreCase("NONE")) {
@@ -340,8 +356,8 @@ public class ClientThread extends Thread implements CloseClientListener {
                                   currentEnvironment.getTownSize());
                         }
                     } else {
-                        boardvec.add(planetEnvironment.getStaticMapName());
-                        mySettings.setBoardsSelectedVector(boardvec);
+                        boardVector.add(planetEnvironment.getStaticMapName());
+                        mySettings.setBoardsSelectedVector(boardVector);
                     }
 
                     PlanetaryConditions planetCondition = new PlanetaryConditions();
@@ -352,8 +368,8 @@ public class ClientThread extends Thread implements CloseClientListener {
                     planetCondition.setEMI(aTerrain.hasEMI());
                     planetCondition.setFog(aTerrain.getFog());
                     planetCondition.setLight(aTerrain.getLightConditions());
-                    planetCondition.setShiftingWindDirection(aTerrain.hasShifitingWindDirection());
-                    planetCondition.setShiftingWindStrength(aTerrain.hasShifitingWindStrength());
+                    planetCondition.setShiftingWindDirection(aTerrain.hasShiftingWindDirection());
+                    planetCondition.setShiftingWindStrength(aTerrain.hasShiftingWindStrength());
                     planetCondition.setTerrainAffected(aTerrain.isTerrainAffected());
                     planetCondition.setWeather(aTerrain.getWeatherConditions());
                     planetCondition.setWindDirection(aTerrain.getWindDirection());
@@ -477,8 +493,8 @@ public class ClientThread extends Thread implements CloseClientListener {
                         planetCondition.setEMI(aTerrain.hasEMI());
                         planetCondition.setFog(aTerrain.getFog());
                         planetCondition.setLight(aTerrain.getLightConditions());
-                        planetCondition.setShiftingWindDirection(aTerrain.hasShifitingWindDirection());
-                        planetCondition.setShiftingWindStrength(aTerrain.hasShifitingWindStrength());
+                        planetCondition.setShiftingWindDirection(aTerrain.hasShiftingWindDirection());
+                        planetCondition.setShiftingWindStrength(aTerrain.hasShiftingWindStrength());
                         planetCondition.setTerrainAffected(aTerrain.isTerrainAffected());
                         planetCondition.setWeather(aTerrain.getWeatherConditions());
                         planetCondition.setWindDirection(aTerrain.getWindDirection());
@@ -503,7 +519,7 @@ public class ClientThread extends Thread implements CloseClientListener {
              * Add bots, if being used in this game.
              */
             if (client.isUsingBots()) {
-                String name = "War Bot" + mmClient.getLocalPlayer().getId();
+                String name = STR."War Bot\{mmClient.getLocalPlayer().getId()}";
                 bot = new Princess(name, mmClient.getHost(), mmClient.getPort());
                 bot.getGame().addGameListener(new BotGUI(bot));
                 try {
@@ -512,16 +528,16 @@ public class ClientThread extends Thread implements CloseClientListener {
                     while (bot.getLocalPlayer() == null) {
                         Thread.sleep(50);
                     }
+
                     // if game is running, shouldn't do the following, so detect
                     // the phase
                     for (int i = 0; (i < 1000) && (bot.getGame().getPhase() == GamePhase.UNKNOWN); i++) {
                         Thread.sleep(50);
                     }
                 } catch (Exception ex) {
-                    MWLogger.errLog("Bot Error!");
-                    MWLogger.errLog(ex);
+                    LOGGER.error(ex, "Bot Error!");
                 }
-                //                bot.retrieveServerInfo();
+
                 Thread.sleep(125);
 
                 swingGui.getBots().put(name, bot);
@@ -539,25 +555,20 @@ public class ClientThread extends Thread implements CloseClientListener {
             if (((mmClient.getGame() != null) && (mmClient.getGame().getPhase() == GamePhase.LOUNGE))) {
 
                 mmClient.getGame().getOptions().loadOptions();
-                if ((meks.size() > 0) && (xmlGameOptions.size() > 0)) {
+                if ((!meks.isEmpty()) && (!xmlGameOptions.isEmpty())) {
                     mmClient.sendGameOptions("", xmlGameOptions);
                 }
 
                 ClientPreferences cs = PreferenceManager.getClientPreferences();
-                cs.setStampFilenames(Boolean.parseBoolean(client.getserverConfigs("MMTimeStampLogFile")));
-                cs.setShowUnitId(Boolean.parseBoolean(client.getserverConfigs("MMShowUnitId")));
-                cs.setKeepGameLog(Boolean.parseBoolean(client.getserverConfigs("MMKeepGameLog")));
-                cs.setGameLogFilename(client.getserverConfigs("MMGameLogName"));
-                /*the cs object ref is no longer needed, so release the ref to it- BarukKhazad!
-                 */
-                cs = null;
+                cs.setStampFilenames(MathUtility.parseBoolean(client.getServerConfigs("MMTimeStampLogFile"), false));
+                cs.setShowUnitId(MathUtility.parseBoolean(client.getServerConfigs("MMShowUnitId"), false));
+                cs.setKeepGameLog(MathUtility.parseBoolean(client.getServerConfigs("MMKeepGameLog"), false));
+                cs.setGameLogFilename(client.getServerConfigs("MMGameLogName"));
 
-                if (!client.getConfig().getParam("UNITCAMO").equals(Camouflage.NO_CAMOUFLAGE)) {
+                if (!client.getConfig().getParam("UNIT_CAMO").equals(Camouflage.NO_CAMOUFLAGE)) {
                     mmClient.getLocalPlayer()
                           .setCamouflage(new Camouflage(Camouflage.ROOT_CATEGORY,
-                                client.getConfig().getParam("UNITCAMO")));
-                    //                    mmClient.getLocalPlayer().setCategory(Camouflage.ROOT_CATEGORY);
-                    //                    mmClient.getLocalPlayer().setCamoFileName(mmClient.getConfig().getParam("UNITCAMO"));
+                                client.getConfig().getParam("UNIT_CAMO")));
                     playerUpdate = true;
                 }
 
@@ -574,9 +585,8 @@ public class ClientThread extends Thread implements CloseClientListener {
                     CUnit mek = (CUnit) unit;
                     // Get the Entity
                     Entity entity = mek.getEntity();
-                    // Set the TempID for autoreporting
+                    // Set the TempID for auto reporting
                     entity.setExternalId(mek.getId());
-                    // entity.setId(mek.getId());
                     // Set the owner
                     entity.setOwner(mmClient.getLocalPlayer());
                     // Set if unit is a commander in this army.
@@ -586,60 +596,36 @@ public class ClientThread extends Thread implements CloseClientListener {
                     if (!entity.hasSearchlight()) {
                         entity.getQuirks().getOption("searchlight").setValue(nightGame);
                     }
+
                     entity.setSearchlightState(nightGame);
 
-                    // Set the correct home edge for off board units
+                    // Set the correct home edge for off-board units
                     if (entity.isOffBoard()) {
-                        OffBoardDirection direction = OffBoardDirection.NORTH;
-                        switch (client.getPlayerStartingEdge()) {
-                            case 4:
-                            case 14:
-                                direction = OffBoardDirection.EAST;
-                                break;
-                            case 5:
-                            case 6:
-                            case 7:
-                            case 15:
-                            case 16:
-                            case 17:
-                                direction = OffBoardDirection.SOUTH;
-                                break;
-                            case 8:
-                            case 18:
-                                direction = OffBoardDirection.WEST;
-                                break;
-                            default:
-                                direction = OffBoardDirection.NORTH;
-                                break;
-                        }
+                        OffBoardDirection direction = switch (client.getPlayerStartingEdge()) {
+                            case 4, 14 -> OffBoardDirection.EAST;
+                            case 5, 6, 7, 15, 16, 17 -> OffBoardDirection.SOUTH;
+                            case 8, 18 -> OffBoardDirection.WEST;
+                            default -> OffBoardDirection.NORTH;
+                        };
                         entity.setOffBoard(entity.getOffBoardDistance(), direction);
                     }
 
                     // Add Pilot to entity
                     entity.setCrew(UnitUtils.createEntityPilot(mek));
+                    List<Entity> entities = new ArrayList<>();
+                    entities.add(entity);
                     // Add Mek to game
-                    mmClient.sendAddEntity(entity);
-                    // Wait a few secs to not overuse bandwith
-                    Thread.sleep(125);
-                    /*the entity object ref was passed so release the ref to it- BarukKhazad!
-                     * some concern that this "entity" is a keyword of some sort, expect it to puke on conplie if yes
-                     * fahr- this represents anything on the map - but in this case is units
-                     */
-                    entity = null;
+                    mmClient.sendAddEntity(entities);
                 }
 
                 /*
                  * Army meks already loaded (see previous for loop). Now try to
                  * load the artillery units generated by the server (see
-                 * AutoArmy.java in the server.campaign pacakage for generation
+                 * AutoArmy.java in the server.campaign package for generation
                  * details).
                  */
-                java.util.Iterator<CUnit> autoIt = autoArmy.iterator();
-                while (autoIt.hasNext()) {
-
+                for (CUnit autoUnit : autoArmy) {
                     // get the unit
-                    CUnit autoUnit = autoIt.next();
-
                     // get the entity
                     Entity entity = autoUnit.getEntity();
 
@@ -648,7 +634,6 @@ public class ClientThread extends Thread implements CloseClientListener {
                     entity.setSearchlightState(nightGame);
 
                     // Had issues with Id's so we are now setting them.
-                    // entity.setId(autoUnit.getId());
                     entity.setExternalId(autoUnit.getId());
 
                     // Set the owner
@@ -667,34 +652,23 @@ public class ClientThread extends Thread implements CloseClientListener {
                         entity.setCrew(UnitUtils.createEntityPilot(autoUnit));
                     }
 
-                    // MWLogger.errLog(entity.getModel()+"
-                    // direction "+entity.getOffBoardDirection());
-                    // add the unit to the game.
                     if (bot != null) {
                         bot.sendAddEntity(entity);
                     } else {
                         mmClient.sendAddEntity(entity);
                     }
-
-                    // Wait a few secs to not overuse bandwith
-                    Thread.sleep(125);
-                    /*the entity object ref was passed so release the ref to it- BarukKhazad!
-                     * some concern that this "entity" is a keyword of some sort, expect it to puke on conplie if yes
-                     */
-                    entity = null;
-                }// end while(more autoarty)
+                }
 
                 if (client.getPlayerStartingEdge() != Buildings.EDGE_UNKNOWN) {
                     mmClient.getLocalPlayer().setStartingPos(client.getPlayerStartingEdge());
                     playerUpdate = true;
                 }
 
-                if (meks.size() > 0) {
+                if (!meks.isEmpty()) {
                     // check armies for C3Network meks
-
                     synchronized (currA) {
 
-                        if (currA.getC3Network().size() > 0) {
+                        if (!currA.getC3Network().isEmpty()) {
                             // Thread.sleep(125);
                             playerUpdate = true;
                             for (int slave : currA.getC3Network().keySet()) {
@@ -721,7 +695,7 @@ public class ClientThread extends Thread implements CloseClientListener {
             }
 
         } catch (Exception e) {
-            MWLogger.errLog(e);
+            LOGGER.error(e, "Error in Client Thread: {}", e.getLocalizedMessage());
         }
         /*the swingGui object ref was initialized and is
          *active on the mmClient thread, so release the ref to it- BarukKhazad!
@@ -733,12 +707,11 @@ public class ClientThread extends Thread implements CloseClientListener {
     /**
      * Scans the boards directory for map boards of the appropriate size and returns them.
      */
-    private java.util.ArrayList<String> scanForBoards(int boardWidth, int boardHeight, String folder) {
+    private ArrayList<String> scanForBoards(int boardWidth, int boardHeight, String folder) {
         BoardDimensions dimension = new BoardDimensions(boardWidth, boardHeight);
-        java.util.ArrayList<String> boards = new java.util.ArrayList<String>();
-        // Board Board = mmClient.game.getBoard();
+        ArrayList<String> boards = new ArrayList<>();
 
-        java.io.File boardDir = new java.io.File("data/boards/" + folder);
+        File boardDir = new File(STR."data/boards/\{folder}");
 
         // just a check...
         if (!boardDir.isDirectory()) {
@@ -747,27 +720,29 @@ public class ClientThread extends Thread implements CloseClientListener {
 
         // scan files
         String[] fileList = boardDir.list();
-        java.util.Vector<String> tempList = new java.util.Vector<String>(1, 1);
-        java.util.Comparator<? super String> sortComp = mekwars.common.threads.ClientThread.stringComparator();
-        for (String path : fileList) {
-            if (path.indexOf(".board") == -1) {
-                continue;
-            }
+        Vector<String> tempList = new Vector<>(1, 1);
+        Comparator<? super String> sortComp = ClientThread.stringComparator();
+        if (fileList != null) {
+            for (String path : fileList) {
+                if (!path.contains(".board")) {
+                    continue;
+                }
 
-            if (folder.trim().length() > 0) {
-                path = folder + "/" + path;
-            }
+                if (!folder.trim().isEmpty()) {
+                    path = STR."\{folder}/\{path}";
+                }
 
-            if (Board.boardIsSize(new java.io.File(path), dimension)) {
-                tempList.addElement(path.substring(0, path.lastIndexOf(".board")));
+                if (Board.boardIsSize(new java.io.File(path), dimension)) {
+                    tempList.addElement(path.substring(0, path.lastIndexOf(".board")));
+                }
             }
         }
 
         // if there are any boards, add these:
-        if (tempList.size() > 0) {
+        if (!tempList.isEmpty()) {
             boards.add(MapSettings.BOARD_SURPRISE);
             boards.add(MapSettings.BOARD_GENERATED);
-            java.util.Collections.sort(tempList, sortComp);
+            tempList.sort(sortComp);
             for (int loop = 0; loop < tempList.size(); loop++) {
                 boards.add(tempList.elementAt(loop));
             }
@@ -778,11 +753,16 @@ public class ClientThread extends Thread implements CloseClientListener {
         return boards;
     }
 
-    private java.util.ArrayList<BuildingTemplate> generateRandomBuildings(MapSettings mapSettings,
-          Buildings buildingTemplate) {
+    /*
+     * Taken from Megamek Code for use with MekWars The call was private and was
+     * needed. Thanks to Ben Mazur and all the MM coders, we hope for a long
+     * and happy relationship. Torren.
+     */
 
-        java.util.ArrayList<BuildingTemplate> buildingList = new java.util.ArrayList<BuildingTemplate>();
-        java.util.ArrayList<String> buildingTypes = new java.util.ArrayList<String>();
+    private ArrayList<BuildingTemplate> generateRandomBuildings(MapSettings mapSettings, Buildings buildingTemplate) {
+
+        ArrayList<BuildingTemplate> buildingList = new ArrayList<>();
+        ArrayList<BuildingType> buildingTypes = new ArrayList<>();
 
         int width = mapSettings.getBoardWidth();
         int height = mapSettings.getBoardHeight();
@@ -814,7 +794,7 @@ public class ClientThread extends Thread implements CloseClientListener {
                 break;
         }
 
-        java.util.StringTokenizer types = new java.util.StringTokenizer(buildingTemplate.getBuildingType(), ",");
+        StringTokenizer types = new StringTokenizer(buildingTemplate.getBuildingType(), ",");
 
         while (types.hasMoreTokens()) {
             buildingTypes.add(types.nextToken());
@@ -822,24 +802,24 @@ public class ClientThread extends Thread implements CloseClientListener {
 
         int typeSize = buildingTypes.size();
 
-        java.util.Random r = new java.util.Random();
+        Random random = new Random();
 
-        java.util.TreeSet<String> tempMap = new java.util.TreeSet<String>();
+        TreeSet<String> tempMap = new TreeSet<>();
         Coords coord = new Coords(0, 0);
         String stringCoord = "";
 
         for (int count = 0; count < buildingTemplate.getTotalBuildings(); count++) {
             int loops = 0;
             boolean CFx2 = false;
-            java.util.ArrayList<Coords> coordList = new java.util.ArrayList<Coords>();
+            ArrayList<Coords> cordList = new ArrayList<>();
             do {
                 if (loops++ > 100) {
                     CFx2 = true;
                     break;
                 }
 
-                int x = r.nextInt(width) + minWidth;
-                int y = r.nextInt(height) + minHeight;
+                int x = random.nextInt(width) + minWidth;
+                int y = random.nextInt(height) + minHeight;
 
                 if (x >= mapSettings.getBoardWidth()) {
                     x = mapSettings.getBoardWidth() - 2;
@@ -855,18 +835,18 @@ public class ClientThread extends Thread implements CloseClientListener {
 
                 coord = new Coords(x, y);
 
-                stringCoord = x + "," + y;
+                stringCoord = STR."\{x},\{y}";
             } while (tempMap.contains(stringCoord));
 
             tempMap.add(stringCoord);
-            coordList.add(coord);
+            cordList.add(coord);
 
             int floors = buildingTemplate.getMaxFloors() - buildingTemplate.getMinFloors();
 
             if (floors <= 0) {
                 floors = buildingTemplate.getMinFloors();
             } else {
-                floors = r.nextInt(floors) + buildingTemplate.getMinFloors();
+                floors = random.nextInt(floors) + buildingTemplate.getMinFloors();
             }
 
             int totalCF = buildingTemplate.getMaxCF() - buildingTemplate.getMinCF();
@@ -874,34 +854,29 @@ public class ClientThread extends Thread implements CloseClientListener {
             if (totalCF <= 0) {
                 totalCF = buildingTemplate.getMinCF();
             } else {
-                totalCF = r.nextInt(totalCF) + buildingTemplate.getMinCF();
+                totalCF = random.nextInt(totalCF) + buildingTemplate.getMinCF();
             }
 
             if (CFx2) {
                 totalCF *= 2;
             }
 
-            int type = 1;
+            BuildingType type = BuildingType.UNKNOWN;
+
             try {
                 if (typeSize == 1) {
-                    type = Integer.parseInt(buildingTypes.get(0));
+                    type = buildingTypes.getFirst();
                 } else {
-                    type = Integer.parseInt(buildingTypes.get(r.nextInt(typeSize)));
+                    type = MathUtility.parseInt(buildingTypes.get(random.nextInt(typeSize)), 0);
                 }
             } catch (Exception ex) {
             } // someone entered a bad building type.
 
-            buildingList.add(new BuildingTemplate(type, coordList, totalCF, floors, -1));
+            buildingList.add(new BuildingTemplate(type, cordList, totalCF, floors, -1));
         }
 
         return buildingList;
     }
-
-    /*
-     * Taken form Megamek Code for use with MekWars The call was private and was
-     * needed. Thanks to Ben Mazur and all of the MM coders we hope for a long
-     * and happy relation ship. Torren.
-     */
 
     /**
      * @param army
@@ -976,17 +951,6 @@ public class ClientThread extends Thread implements CloseClientListener {
             MWLogger.errLog(ex);
             MWLogger.errLog("Error in setting up C3Network");
         }
-    }
-
-    public static java.util.Comparator<? super Object> stringComparator() {
-        return new java.util.Comparator<Object>() {
-            @Override
-            public int compare(Object o1, Object o2) {
-                String s1 = ((String) o1).toLowerCase();
-                String s2 = ((String) o2).toLowerCase();
-                return s1.compareTo(s2);
-            }
-        };
     }
 
     /*

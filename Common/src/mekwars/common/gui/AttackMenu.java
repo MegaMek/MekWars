@@ -1,22 +1,40 @@
 /*
- * MekWars - Copyright (C) 2004
+ * Copyright (C) 2004 Helge Richter (McWizard)
+ * Copyright (C) 2026 The MegaMek Team. All Rights Reserved.
  *
- * Derived from MegaMekNET (http://www.sourceforge.net/projects/megameknet)
- * Original author Helge Richter (McWizard)
+ * This file is part of MekWars.
  *
- * This program is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License as published by the Free
- * Software Foundation; either version 2 of the License, or (at your option)
- * any later version.
+ * MekWars is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License (GPL),
+ * version 3 or (at your option) any later version,
+ * as published by the Free Software Foundation.
  *
- * This program is distributed in the hope that it will be useful, but
- * WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
- * or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License
- * for more details.
+ * MekWars is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty
+ * of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU General Public License for more details.
+ *
+ * A copy of the GPL should have been included with this project;
+ * if not, see <https://www.gnu.org/licenses/>.
+ *
+ * NOTICE: The MegaMek organization is a non-profit group of volunteers
+ * creating free software for the BattleTech community.
+ *
+ * MechWarrior, BattleMech, `Mech and AeroTech are registered trademarks
+ * of The Topps Company, Inc. All Rights Reserved.
+ *
+ * Catalyst Game Labs and the Catalyst Game Labs logo are trademarks of
+ * InMediaRes Productions, LLC.
+ *
+ * MechWarrior Copyright Microsoft Corporation. MekWars was created under
+ * Microsoft's "Game Content Usage Rules"
+ * <https://www.xbox.com/en-US/developers/rules> and it is not endorsed by or
+ * affiliated with Microsoft.
  */
 
 package mekwars.common.gui;
 
+import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.FocusListener;
 import java.awt.event.MouseListener;
@@ -36,6 +54,8 @@ import javax.swing.JPanel;
 import javax.swing.JSeparator;
 import javax.swing.event.MenuKeyListener;
 
+import megamek.codeUtilities.MathUtility;
+import megamek.logging.MMLogger;
 import mekwars.common.House;
 import mekwars.common.Planet;
 import mekwars.common.campaign.CArmy;
@@ -43,7 +63,6 @@ import mekwars.common.campaign.clientutils.protocol.IClient;
 import mekwars.common.gui.dialogs.ArmyViewerDialog;
 import mekwars.common.gui.dialogs.PlanetNameDialog;
 import mekwars.common.gui.dialogs.PlayerNameDialog;
-import mekwars.common.util.MWLogger;
 
 /**
  * Create an "Attack" menu. Used in Map, CMainFramge, etc. to generate menus which show a player's currently available
@@ -54,23 +73,25 @@ import mekwars.common.util.MWLogger;
  */
 
 public class AttackMenu extends JMenu implements ActionListener {
+    private static final MMLogger LOGGER = MMLogger.create(AttackMenu.class);
+
     @Serial
     private static final long serialVersionUID = 7420602115238025725L;
     //Statics
-    private static final int OPRANGE = 0;
-    private static final int OPCOLOR = 1;
-    private static final int OPFACINFO = 3;
-    private static final int OPHOMEINFO = 4;
-    private static final int OPLAUNCHON = 5;
-    private static final int OPLAUNCHFROM = 6;
-    private static final int OPMINOWN = 7;
-    private static final int OPMAXOWN = 8;
-    private static final int OPLEGALDEFENDERS = 9;
-    private static final int OPALLOWEDPLANETFLAGS = 10;
-    private static final int OPDISALLOWEDPLANETFLAGS = 11;
-    private static final int OPAFR = 12;
-    private static final int OPACTIVE = 13;
-    private static final int OPACCESSLEVEL = 14;
+    private static final int OP_RANGE = 0;
+    private static final int OP_COLOR = 1;
+    private static final int OP_FACTION_INFO = 3;
+    private static final int OP_HOME_INFO = 4;
+    private static final int OP_LAUNCH_ON = 5;
+    private static final int OP_LAUNCH_FROM = 6;
+    private static final int OP_MIN_OWN = 7;
+    private static final int OP_MAX_OWN = 8;
+    private static final int OP_LEGAL_DEFENDERS = 9;
+    private static final int OP_ALLOW_ED_PLANET_FLAGS = 10;
+    private static final int OP_DISALLOW_ED_PLANET_FLAGS = 11;
+    private static final int OP_AFR = 12;
+    private static final int OP_ACTIVE = 13;
+    private static final int OP_ACCESS_LEVEL = 14;
     //VARS
     private final IClient client;
     private int armyID;
@@ -82,6 +103,24 @@ public class AttackMenu extends JMenu implements ActionListener {
         this.client = client;
         this.armyID = armyID;
         this.planetName = planetName;
+    }
+
+    private static @org.jspecify.annotations.NonNull JMenuItem getJMenuItem(boolean fullMenu,
+          String currName, String settings) {
+        String color = settings;
+
+        //we don't care about range here, but we do
+        //want to take notice of longs and colors.
+        String menuItemName;
+
+        if (!fullMenu) {
+            menuItemName = STR."<html><font color=\{color}>\{currName}</font></html>";
+        } else {
+            menuItemName = STR." - \{currName}";
+        }
+
+        JMenuItem currItem = new JMenuItem(menuItemName);
+        return currItem;
     }
 
     //METHODS
@@ -132,31 +171,31 @@ public class AttackMenu extends JMenu implements ActionListener {
                 //Sub Faction Access Level;
                 int accessLevel = client.getPlayer().getSubFactionAccess();
 
-                //put all elibibles into a temporary tree. this weeds out
+                //put all eligible into a temporary tree. this weeds out
                 //duplicate entries and saves some loops through the planets.
                 TreeSet<String> tempEligible = new TreeSet<>();
                 for (CArmy currA : client.getPlayer().getArmies()) {
                     tempEligible.addAll(currA.getLegalOperations());
                 }
 
-                //loop through all armies and eligibles
+                //loop through all armies and eligible
                 for (String currOpName : tempEligible) {
 
                     String[] opProps = client.getAllOps().get(currOpName);
 
                     //load relevant properties, and the players house ID
-                    double range = Double.parseDouble(opProps[mekwars.common.gui.AttackMenu.OPRANGE]);
-                    String facInfo = opProps[mekwars.common.gui.AttackMenu.OPFACINFO];
-                    String homeInfo = opProps[mekwars.common.gui.AttackMenu.OPHOMEINFO];
-                    int launchOn = Integer.parseInt(opProps[mekwars.common.gui.AttackMenu.OPLAUNCHON]);
-                    int launchFrom = Integer.parseInt(opProps[mekwars.common.gui.AttackMenu.OPLAUNCHFROM]);
-                    double minOwn = Double.parseDouble(opProps[mekwars.common.gui.AttackMenu.OPMINOWN]);
-                    double maxOwn = Double.parseDouble(opProps[mekwars.common.gui.AttackMenu.OPMAXOWN]);
-                    String legalDefenders = opProps[mekwars.common.gui.AttackMenu.OPLEGALDEFENDERS];
-                    String allowPlanetFlags = STR."\{opProps[AttackMenu.OPALLOWEDPLANETFLAGS]}^";
-                    String disallowPlanetFlags = STR."\{opProps[AttackMenu.OPDISALLOWEDPLANETFLAGS]}^";
-                    boolean reserveOnly = Boolean.parseBoolean(opProps[mekwars.common.gui.AttackMenu.OPAFR]);
-                    int minAccessLevel = Integer.parseInt(opProps[mekwars.common.gui.AttackMenu.OPACCESSLEVEL]);
+                    double range = MathUtility.parseDouble(opProps[AttackMenu.OP_RANGE], 0.0);
+                    String facInfo = opProps[AttackMenu.OP_FACTION_INFO];
+                    String homeInfo = opProps[AttackMenu.OP_HOME_INFO];
+                    int launchOn = MathUtility.parseInt(opProps[AttackMenu.OP_LAUNCH_ON], 0);
+                    int launchFrom = MathUtility.parseInt(opProps[AttackMenu.OP_LAUNCH_FROM], 0);
+                    double minOwn = MathUtility.parseDouble(opProps[AttackMenu.OP_MIN_OWN], 0.0);
+                    double maxOwn = MathUtility.parseDouble(opProps[AttackMenu.OP_MAX_OWN], 0.0);
+                    String legalDefenders = opProps[AttackMenu.OP_LEGAL_DEFENDERS];
+                    String allowPlanetFlags = STR."\{opProps[AttackMenu.OP_ALLOW_ED_PLANET_FLAGS]}^";
+                    String disallowPlanetFlags = STR."\{opProps[AttackMenu.OP_DISALLOW_ED_PLANET_FLAGS]}^";
+                    boolean reserveOnly = MathUtility.parseBoolean(opProps[AttackMenu.OP_AFR], false);
+                    int minAccessLevel = MathUtility.parseInt(opProps[AttackMenu.OP_ACCESS_LEVEL], 0);
 
                     //Your sub faction is not allowed to use this!
                     if (accessLevel < minAccessLevel) {
@@ -166,9 +205,9 @@ public class AttackMenu extends JMenu implements ActionListener {
                     //only check for a legal defender limit if necessary
                     if (!legalDefenders.startsWith("allFactions")) {
 
-                        java.util.TreeMap<String, Object> legalDefTree = new java.util.TreeMap<>();
-                        java.util.StringTokenizer legalDefTokenizer = new java.util.StringTokenizer(legalDefenders,
-                              "$");
+                        TreeMap<String, Object> legalDefTree = new TreeMap<>();
+                        StringTokenizer legalDefTokenizer = new StringTokenizer(legalDefenders, "$");
+
                         while (legalDefTokenizer.hasMoreTokens()) {
                             legalDefTree.put(legalDefTokenizer.nextToken(), null);
                         }
@@ -208,8 +247,13 @@ public class AttackMenu extends JMenu implements ActionListener {
                                     100.0D;   //Baruk 2015-11-7 modified to include planet CP in formula
 
                     //check the ownership requirements
-                    if (tp.getInfluence().getInfluence(houseID) < minOwn) {continue;}
-                    if (tp.getInfluence().getInfluence(houseID) > maxOwn) {continue;}
+                    if (tp.getInfluence().getInfluence(houseID) < minOwn) {
+                        continue;
+                    }
+
+                    if (tp.getInfluence().getInfluence(houseID) > maxOwn) {
+                        continue;
+                    }
 
                     //check on-target launch
                     if (tp.getInfluence().getInfluence(houseID) >= launchOn) {
@@ -220,39 +264,54 @@ public class AttackMenu extends JMenu implements ActionListener {
                     //Check for allowed planet flags. the planet most have these flags.
                     if (!allowPlanetFlags.isEmpty()) {
                         boolean allowOp = true;
-                        StringTokenizer st = new StringTokenizer(allowPlanetFlags, "^");
-                        while (st.hasMoreTokens()) {
-                            String key = st.nextToken();
+                        StringTokenizer stringTokenizer = new StringTokenizer(allowPlanetFlags, "^");
+                        while (stringTokenizer.hasMoreTokens()) {
+                            String key = stringTokenizer.nextToken();
 
-                            if (key.trim().isEmpty()) {continue;}
+                            if (key.trim().isEmpty()) {
+                                continue;
+                            }
+
                             if (!tp.getPlanetFlags().containsKey(key)) {
-                                MWLogger.errLog(STR."\{tp.getName()} does not have flag: \{key}");
+                                LOGGER.debug(STR."\{tp.getName()} does not have flag: \{key}");
                                 allowOp = false;
                                 break;
                             }
                         }
-                        if (!allowOp) {continue;}
+
+                        if (!allowOp) {
+                            continue;
+                        }
                     }
 
                     //AFR games do not show up in the AttackMenu/Star Map Menu/HQ
-                    if (reserveOnly) {continue;}
+                    if (reserveOnly) {
+                        continue;
+                    }
 
                     //Check for disallowed planet flags. If the planet has one of these flags
                     // The planet will not be allowed.
                     if (!disallowPlanetFlags.isEmpty()) {
                         boolean allowOp = true;
-                        StringTokenizer st = new StringTokenizer(disallowPlanetFlags, "^");
-                        while (st.hasMoreTokens()) {
-                            String key = st.nextToken();
+                        StringTokenizer stringTokenizer = new StringTokenizer(disallowPlanetFlags, "^");
 
-                            if (key.trim().isEmpty()) {continue;}
+                        while (stringTokenizer.hasMoreTokens()) {
+                            String key = stringTokenizer.nextToken();
+
+                            if (key.trim().isEmpty()) {
+                                continue;
+                            }
+
                             if (tp.getPlanetFlags().containsKey(key)) {
                                 allowOp = false;
-                                MWLogger.errLog(STR."\{tp.getName()} has flag: \{key}");
+                                LOGGER.debug(STR."\{tp.getName()} has flag: \{key}");
                                 break;
                             }
                         }
-                        if (!allowOp) {continue;}
+
+                        if (!allowOp) {
+                            continue;
+                        }
                     }
 
                     //cant launch on world. see if the operation can be started
@@ -261,18 +320,18 @@ public class AttackMenu extends JMenu implements ActionListener {
 
                         //check to see if operation can reach target world from currP
                         if (currP.getInfluence().getInfluence(houseID) >= launchFrom) {
-                            double tdist = currP.getPosition().distanceSq(tp.getPosition());
+                            double tDist = currP.getPosition().distanceSq(tp.getPosition());
 
-                            if (tdist <= range) {
+                            if (tDist <= range) {
                                 allEligible.add(currOpName);
                                 break;
                             }
                         }
 
-                    }//end while(still looking for launch points)
+                    }
 
-                }//end for(all ops in tempEligible)
-            }//end else(need to filter for range and factories)
+                }
+            }
 
             if (allEligible.isEmpty()) {
                 JMenuItem filler = new JMenuItem("None");
@@ -280,53 +339,26 @@ public class AttackMenu extends JMenu implements ActionListener {
             }
 
             for (String currName : allEligible) {
-
                 if (!allOps.containsKey(currName)) {
-
                     client.updateOpData(false);
 
-                    if (!allOps.containsKey(currName)) {
-                        MWLogger.errLog(STR."Error in updateMenuItems(): no _\{currName}_ in allOps.");
-
-                        StringBuilder allOpsList = new StringBuilder("allOps contains: ");
-
-                        for (String currO : allOps.keySet()) {
-                            allOpsList.append(currO).append(" ");
-                        }
-
-                        MWLogger.errLog(allOpsList.toString());
-
-                        //don't want to stop building because of one bad apple - continue to next element.
-                        continue;
-                    }
+                    if (checkAllOpsMenuItems(allOps, currName)) {continue;}
                 }
 
                 String[] settings = allOps.get(currName);
-                String color = settings[mekwars.common.gui.AttackMenu.OPCOLOR];
-
-                //we don't care about range here, but we do
-                //want to take notice of longs and colours.
-                String menuItemName;
-                if (!fullMenu) {
-                    menuItemName = STR."<html><font color=\{color}>\{currName}</font></html>";
-                } else {
-                    menuItemName = STR." - \{currName}";
-                }
-
-                JMenuItem currItem = new JMenuItem(menuItemName);
+                JMenuItem currItem = getJMenuItem(fullMenu, currName, settings[AttackMenu.OP_COLOR]);
                 currItem.addActionListener(this);
                 currItem.setActionCommand(currName);
                 this.add(currItem);
             }
 
-        }
+        } else {
 
-        /*
-         * Else, this menu is being generated by the CHQPanel
-         * when a player right-clicks on an army. Show only
-         * the attacks which the army in question may make.
-         */
-        else {
+            /*
+             * Else, this menu is being generated by the CHQPanel
+             * when a player right-clicks on an army. Show only
+             * the attacks which the army in question may make.
+             */
 
             CArmy clickArmy = client.getPlayer().getArmy(armyID);
 
@@ -339,39 +371,20 @@ public class AttackMenu extends JMenu implements ActionListener {
 
                 for (String currName : clickArmy.getLegalOperations()) {
 
-                    if (!allOps.containsKey(currName)) {
-                        MWLogger.errLog(STR."Error in updateMenuItems(): no _\{currName}_ in allOps.");
-
-                        StringBuilder allOpsList = new StringBuilder("allOps contains: ");
-                        for (String currO : allOps.keySet()) {allOpsList.append(currO).append(" ");}
-                        MWLogger.errLog(allOpsList.toString());
-
-                        //don't stop building the list just because of one bad apple...
+                    if (checkAllOpsMenuItems(allOps, currName)) {
                         continue;
                     }
-
 
                     String[] settings = allOps.get(currName);
                     /*
                      * Filter out games that are reserve-only. Attack menus in HQ, CMainFrame and
                      * on the map may only be used to start games when a player is active, so
                      */
-                    if (Boolean.parseBoolean(settings[mekwars.common.gui.AttackMenu.OPAFR])) {
+                    if (Boolean.parseBoolean(settings[mekwars.common.gui.AttackMenu.OP_AFR])) {
                         continue;
                     }
 
-                    String color = settings[mekwars.common.gui.AttackMenu.OPCOLOR];
-
-                    //we don't care about range here, but we do
-                    //want to take notice of longs and colours.
-                    String menuItemName;
-                    if (!fullMenu) {
-                        menuItemName = STR."<html><font color=\{color}>\{currName}</font></html>";
-                    } else {
-                        menuItemName = STR." - \{currName}";
-                    }
-
-                    JMenuItem currItem = new JMenuItem(menuItemName);
+                    JMenuItem currItem = getJMenuItem(fullMenu, currName, settings[AttackMenu.OP_COLOR]);
                     currItem.addActionListener(this);
                     currItem.setActionCommand(currName);
                     this.add(currItem);
@@ -386,7 +399,6 @@ public class AttackMenu extends JMenu implements ActionListener {
          */
 
         if (fullMenu) {
-
             this.setText("Games");
             this.setMnemonic('G');
 
@@ -445,6 +457,25 @@ public class AttackMenu extends JMenu implements ActionListener {
         }
     }
 
+    private boolean checkAllOpsMenuItems(TreeMap<String, String[]> allOps, String currName) {
+        if (!allOps.containsKey(currName)) {
+            LOGGER.debug(STR."Error in updateMenuItems(): no _\{currName}_ in allOps.");
+
+            StringBuilder allOpsList = new StringBuilder("allOps contains: ");
+
+            for (String currO : allOps.keySet()) {
+                allOpsList.append(currO).append(" ");
+            }
+
+            LOGGER.debug(allOpsList.toString());
+
+            //don't stop building the list just because of one bad apple...
+            return true;
+        }
+
+        return false;
+    }
+
     /**
      * The actionCommand has to be of the following structure:
      * <p>
@@ -455,13 +486,13 @@ public class AttackMenu extends JMenu implements ActionListener {
      * <p>
      * cmd is the command and one of those:
      * <p>
-     * if arg0 == "multi" arg1: maxattackers arg2: minattackers arg3: maxdefenders arg4: mindefenders
+     * if arg0 == "multi" arg1: max attackers arg2: min attackers arg3: max defenders arg4: min defenders
      *
      * @see ActionListener#actionPerformed
      */
-    public void actionPerformed(java.awt.event.ActionEvent e) {
+    public void actionPerformed(ActionEvent actionEvent) {
 
-        String name = e.getActionCommand();
+        String name = actionEvent.getActionCommand();
 
         switch (name) {
             case "cmdCancelGames" -> {
@@ -549,7 +580,7 @@ public class AttackMenu extends JMenu implements ActionListener {
                 Iterator<String> i = allEligible.iterator();
                 while (i.hasNext()) {
                     String[] currProperties = client.getAllOps().get(i.next());
-                    if (Boolean.parseBoolean(currProperties[AttackMenu.OPACTIVE]))//13 is active only
+                    if (Boolean.parseBoolean(currProperties[AttackMenu.OP_ACTIVE]))//13 is active only
                     {i.remove();}
                 }
 
@@ -561,7 +592,9 @@ public class AttackMenu extends JMenu implements ActionListener {
                 JDialog dlg = jop.createDialog(client.getMainFrame(), "Select an operation.");
                 dlg.setVisible(true);
 
-                if ((Integer) jop.getValue() == JOptionPane.CANCEL_OPTION) {return;}
+                if ((Integer) jop.getValue() == JOptionPane.CANCEL_OPTION) {
+                    return;
+                }
 
                 Op = (String) attackCombo.getSelectedItem();
 
@@ -581,7 +614,9 @@ public class AttackMenu extends JMenu implements ActionListener {
                 target = playerDialog.getPlayerName();
                 playerDialog.dispose();
 
-                if (target == null) {return;}
+                if (target == null) {
+                    return;
+                }
 
                 new ArmyViewerDialog(client,
                       Op,
@@ -626,7 +661,6 @@ public class AttackMenu extends JMenu implements ActionListener {
 
         //check the army name/id
         if (armyID < 0) {
-
             new ArmyViewerDialog(client, name, null, ArmyViewerDialog.AVD_ATTACK, planetName, null, -1, -1);
         } else {
             client.sendChat(STR."\{IClient.CAMPAIGN_PREFIX}c attack#\{name}#\{armyID}#\{planetName}");

@@ -136,7 +136,7 @@ public class MailGCmd extends CGUICommand {
         }
 
         //add to PrivateMessageCommand Channel
-        mwclient.addToChat(message, CCommPanel.CHANNEL_PMAIL, tabName);
+        mwclient.addToChat(message, CCommPanel.CHANNEL_PRIVATE_MAIL, tabName);
 
         //if should be shown in main, add there as well
         if (Config.isParam("MAINCHANNELPM")) {

@@ -46,7 +46,7 @@ import java.util.StringTokenizer;
 import java.util.TreeMap;
 import java.util.Vector;
 
-import mekwars.common.util.MWLogger;
+import megamek.logging.MMLogger;
 
 /**
  *
@@ -55,6 +55,7 @@ public class FlagSet {
     // Flag Types - since they load differently and all
     public static final int FLAG_TYPE_PLAYER = 0;
     public static final int FLAG_TYPE_RESULTS = 1;
+    private static final MMLogger LOGGER = MMLogger.create(FlagSet.class);
     protected BitSet flags = new BitSet();
     protected Map<Integer, String> flagNames;
     protected int flagType;
@@ -70,9 +71,11 @@ public class FlagSet {
      */
     public Vector<String> getFlagNames() {
         Vector<String> v = new Vector<>();
+
         for (int i : flagNames.keySet()) {
             v.add(flagNames.get(i));
         }
+
         return v;
     }
 
@@ -88,7 +91,7 @@ public class FlagSet {
         if (flag != -1) {
             return flags.get(flag);
         } else {
-            MWLogger.errLog("Unknown Flag checked: " + name);
+            LOGGER.error("Unknown Flag checked: {}", name);
             return false;
         }
     }
@@ -104,11 +107,13 @@ public class FlagSet {
         if (flagNames.isEmpty()) {
             return -1;
         }
+
         for (int i = 0; i < flagNames.size(); i++) {
             if (flagNames.get(i).equalsIgnoreCase(name)) {
                 return i;
             }
         }
+
         return -1;
     }
 
@@ -149,7 +154,7 @@ public class FlagSet {
         if (flag != -1) {
             flags.set(flag, value);
         } else {
-            MWLogger.errLog("Unknown Flag checked: " + name);
+            LOGGER.error("Unknown Flag checked: {}", name);
         }
     }
 
@@ -178,11 +183,11 @@ public class FlagSet {
             try {
                 file.createNewFile();
             } catch (IOException e) {
-                MWLogger.errLog(e);
-                MWLogger.errLog("Unable to create pFlags.dat");
+                LOGGER.error(e, "Unable to create pFlags.dat");
                 return;
             }
         }
+
         try {
             FileWriter fileWriter = new FileWriter("./data/pFlags.dat");
             BufferedWriter out = new BufferedWriter(fileWriter);
@@ -190,8 +195,7 @@ public class FlagSet {
             out.close();
             fileWriter.close();
         } catch (IOException e) {
-            MWLogger.errLog(e);
-            MWLogger.errLog("Error saving pFlags.dat");
+            LOGGER.error(e, "Error saving pFlags.dat");
         }
 
     }
@@ -207,11 +211,13 @@ public class FlagSet {
         if (flagNames.isEmpty()) {
             return " ";
         }
+
         for (int key : flagNames.keySet()) {
             String name = flagNames.get(key);
             String isTrue = Boolean.toString(flags.get(key));
             toReturn.append(name).append("#").append(key).append("#").append(isTrue).append("$");
         }
+
         return toReturn.toString();
     }
 
@@ -224,16 +230,16 @@ public class FlagSet {
             FileReader fr = new FileReader(file);
             BufferedReader br = new BufferedReader(fr);
             String s;
+
             try {
                 while ((s = br.readLine()) != null) {
                     loadDefaults(s);
                 }
             } catch (IOException e) {
-                MWLogger.errLog(e);
-                MWLogger.errLog("Error reading pFlags.dat");
+                LOGGER.error(e, "Error reading pFlags.dat");
             }
         } catch (FileNotFoundException e) {
-            MWLogger.errLog("No pFlags.dat. Returning");
+            LOGGER.error(e, "No pFlags.dat. Returning");
         }
     }
 

@@ -1,49 +1,85 @@
 /*
- * MekWars - Copyright (C) 2007
+ * Copyright (C) 2007 MekWars
+ * Copyright (C) 2026 The MegaMek Team. All Rights Reserved.
  *
+ * This file is part of MekWars.
  *
- * This program is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License as published by the Free
- * Software Foundation; either version 2 of the License, or (at your option)
- * any later version.
+ * MekWars is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License (GPL),
+ * version 3 or (at your option) any later version,
+ * as published by the Free Software Foundation.
  *
- * This program is distributed in the hope that it will be useful, but
- * WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
- * or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License
- * for more details.
+ * MekWars is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty
+ * of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU General Public License for more details.
+ *
+ * A copy of the GPL should have been included with this project;
+ * if not, see <https://www.gnu.org/licenses/>.
+ *
+ * NOTICE: The MegaMek organization is a non-profit group of volunteers
+ * creating free software for the BattleTech community.
+ *
+ * MechWarrior, BattleMech, `Mech and AeroTech are registered trademarks
+ * of The Topps Company, Inc. All Rights Reserved.
+ *
+ * Catalyst Game Labs and the Catalyst Game Labs logo are trademarks of
+ * InMediaRes Productions, LLC.
+ *
+ * MechWarrior Copyright Microsoft Corporation. MekWars was created under
+ * Microsoft's "Game Content Usage Rules"
+ * <https://www.xbox.com/en-US/developers/rules> and it is not endorsed by or
+ * affiliated with Microsoft.
  */
 
 package mekwars.common.gui.models;
 
+import java.awt.Color;
+import java.awt.Component;
+import java.io.Serial;
+import java.text.DecimalFormat;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.TreeMap;
+import javax.swing.JLabel;
+import javax.swing.JTable;
+import javax.swing.table.AbstractTableModel;
+import javax.swing.table.DefaultTableCellRenderer;
+import javax.swing.table.TableColumn;
+
+import megamek.codeUtilities.MathUtility;
 import mekwars.common.BMEquipment;
 import mekwars.common.campaign.CCampaign;
+import mekwars.common.campaign.clientutils.protocol.IClient;
 
 /**
  * Adapted from BlackMarketModel by Steve Hawkins
  */
 
-public class BlackMarketPartsModel extends javax.swing.table.AbstractTableModel {
+public class BlackMarketPartsModel extends AbstractTableModel {
 
     public final static int PART = 0;
     public final static int TECH = 1;
     public final static int COST = 2;
     public final static int AMOUNT = 3;
-    public final static int INTERNALPART = 4;
+    public final static int INTERNAL_PART = 4;
+
+    @Serial
     private static final long serialVersionUID = -4312857440681697117L;
     final String[] columnNames = { "Part", "Tech", "Cost", "Amount", };
     final String[] longValues = { "XXXXXX-XXXX-XXXXXX", "XXXXXXXXX", "XXXXXXXXX", "XXXXXXXXX", };
-    public client.MWClient mwclient;
-    public java.util.TreeMap<String, BMEquipment> components; // this collection is backed
+    public IClient client;
+    public TreeMap<String, BMEquipment> components; // this collection is backed
     // by the main map, so it
     // should always be good
-    public Object[] sortedComponents = null; // not really though, sort is
+    public List<BMEquipment> sortedComponents = new ArrayList<>(); // not really though, sort is
     CCampaign theCampaign;
     // handled elsewhere...
     private String type = "";
 
-    public BlackMarketPartsModel(client.MWClient client, String type) {
-        mwclient = client;
-        theCampaign = mwclient.getCampaign();
+    public BlackMarketPartsModel(IClient client, String type) {
+        this.client = client;
+        theCampaign = this.client.getCampaign();
         this.type = type;
         components = theCampaign.getBlackMarketParts();
 
@@ -51,33 +87,34 @@ public class BlackMarketPartsModel extends javax.swing.table.AbstractTableModel 
     }
 
     private void filter() {
-        java.util.TreeMap<String, BMEquipment> tempTree = new java.util.TreeMap<String, BMEquipment>();
+        TreeMap<String, BMEquipment> tempTree = new TreeMap<>();
+
         for (String key : components.keySet()) {
-            BMEquipment eq = components.get(key);
-            if (eq.getEquipmentType().equals(type)) {
-                tempTree.put(key, eq);
+            BMEquipment bmEquipment = components.get(key);
+
+            if (bmEquipment.getEquipmentType().equals(type)) {
+                tempTree.put(key, bmEquipment);
             }
         }
-        // this.bids = client.getMyBids();
 
-        if (tempTree.size() > 0) {
-            sortedComponents = tempTree.values().toArray();
+        if (!tempTree.isEmpty()) {
+            sortedComponents.clear();
+            sortedComponents.addAll(tempTree.values());
         }
     }
 
     public void refreshModel() {
-        // do a resort
-        // this.sortedComponents = this.components.values().toArray();
         filter();
         fireTableDataChanged();
     }
 
-    public void initColumnSizes(javax.swing.JTable table) {
-        javax.swing.table.TableColumn column = null;
-        java.awt.Component comp = null;
+    public void initColumnSizes(JTable table) {
+        TableColumn column;
+        Component comp;
         int headerWidth = 0;
-        int cellWidth = 0;
-        mekwars.common.gui.models.BlackMarketPartsModel model = this;
+        int cellWidth;
+        BlackMarketPartsModel model = this;
+
         for (int i = 0; i < getColumnCount(); i++) {
             column = table.getColumnModel().getColumn(i);
             comp = table.getDefaultRenderer(model.getColumnClass(i))
@@ -91,7 +128,8 @@ public class BlackMarketPartsModel extends javax.swing.table.AbstractTableModel 
         if (sortedComponents == null) {
             return 0;
         }
-        return sortedComponents.length;
+
+        return sortedComponents.size();
     }
 
     public int getColumnCount() {
@@ -102,30 +140,30 @@ public class BlackMarketPartsModel extends javax.swing.table.AbstractTableModel 
         if (row < 0) {
             return "";
         }
-        if (row >= sortedComponents.length) {
+
+        if (row >= sortedComponents.size()) {
             return "";
         }
-        BMEquipment bme = (BMEquipment) sortedComponents[row];
-        switch (col) {
-            case PART:
-                return bme.getEquipmentName();
-            case COST:
-                java.text.DecimalFormat df = new java.text.DecimalFormat("#,###,###,##0.00");
-                return df.format(bme.getCost());
-            case TECH:
-                return bme.getTech(Integer.parseInt(mwclient.getServerConfigs("CampaignYear")));
-            case AMOUNT:
-                if (mwclient.getPlayer().getPartsCache().getPartsCritCount(bme.getEquipmentInternalName()) < 1) {
-                    return bme.getAmount();
+
+        BMEquipment bme = sortedComponents.get(row);
+        return switch (col) {
+            case PART -> bme.getEquipmentName();
+            case COST -> {
+                DecimalFormat df = new DecimalFormat("#,###,###,##0.00");
+                yield df.format(bme.getCost());
+            }
+            case TECH -> bme.getTech(MathUtility.parseInt(client.getServerConfigs("CampaignYear"), 0));
+            case AMOUNT -> {
+                if (client.getPlayer().getPartsCache().getPartsCritCount(bme.getEquipmentInternalName()) < 1) {
+                    yield bme.getAmount();
                 }
-                return bme.getAmount() +
-                             "(" +
-                             mwclient.getPlayer().getPartsCache().getPartsCritCount(bme.getEquipmentInternalName()) +
-                             ")";
-            case INTERNALPART:
-                return bme.getEquipmentInternalName();
-        }
-        return "";
+                yield STR."\{bme.getAmount()}(\{client.getPlayer()
+                                                      .getPartsCache()
+                                                      .getPartsCritCount(bme.getEquipmentInternalName())})";
+            }
+            case INTERNAL_PART -> bme.getEquipmentInternalName();
+            default -> "";
+        };
     }
 
     @Override
@@ -133,79 +171,68 @@ public class BlackMarketPartsModel extends javax.swing.table.AbstractTableModel 
         return (columnNames[col]);
     }
 
-    @Override
-    public boolean isCellEditable(int row, int col) {
-        return false;
-    }
-
-    public mekwars.common.gui.models.BlackMarketPartsModel.Renderer getRenderer() {
-        return new mekwars.common.gui.models.BlackMarketPartsModel.Renderer();
+    public BlackMarketPartsModel.Renderer getRenderer() {
+        return new BlackMarketPartsModel.Renderer();
     }
 
     /*
      * Rendered cannot be static because it uses parent data structs.
      */
-    class Renderer extends javax.swing.table.DefaultTableCellRenderer {
-
-        /**
-         *
-         */
+    public class Renderer extends DefaultTableCellRenderer {
+        @Serial
         private static final long serialVersionUID = 5506902358006897558L;
 
         @Override
-        public java.awt.Component getTableCellRendererComponent(javax.swing.JTable table, Object value,
-              boolean isSelected, boolean hasFocus, int row, int column) {
-            java.awt.Component d = super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
-            int year = Integer.parseInt(mwclient.getServerConfigs("CampaignYear"));
-            javax.swing.JLabel c = new javax.swing.JLabel(); // use a new label for everything (should
+        public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus,
+              int row, int column) {
+            Component tableCellRendererComponent = super.getTableCellRendererComponent(table,
+                  value,
+                  isSelected,
+                  hasFocus,
+                  row,
+                  column);
+            int year = MathUtility.parseInt(client.getServerConfigs("CampaignYear"), 0);
+            JLabel jLabel = new JLabel(); // use a new label for everything (should
             // be made better later)
-            c.setOpaque(true);
+            jLabel.setOpaque(true);
             if (components.size() < row ||
                       row < 0 ||
-                      !components.containsKey(table.getModel()
-                                                    .getValueAt(row,
-                                                          mekwars.common.gui.models.BlackMarketPartsModel.INTERNALPART))) {
-                return c;
+                      !components.containsKey(table.getModel().getValueAt(row, BlackMarketPartsModel.INTERNAL_PART))) {
+                return jLabel;
             }
-            if (table.getModel().getValueAt(row, column) != null) {
-                c.setText(table.getModel().getValueAt(row, column).toString());
-            }
-            c.setToolTipText("");
 
-            BMEquipment bme = components.get(table.getModel()
-                                                   .getValueAt(row,
-                                                         mekwars.common.gui.models.BlackMarketPartsModel.INTERNALPART));
-            String description = "<html><body>" +
-                                       bme.getEquipmentName() +
-                                       " C:" +
-                                       bme.getCost() +
-                                       " A:" +
-                                       bme.getAmount() +
-                                       " T:" +
-                                       bme.getTech(year) +
-                                       "<br>";
+            if (table.getModel().getValueAt(row, column) != null) {
+                jLabel.setText(table.getModel().getValueAt(row, column).toString());
+            }
+
+            jLabel.setToolTipText("");
+
+            BMEquipment bme = components.get(table.getModel().getValueAt(row, BlackMarketPartsModel.INTERNAL_PART));
+            String description = STR."<html><body>\{bme.getEquipmentName()} C:\{bme.getCost()} A:\{bme.getAmount()} T:\{bme.getTech(
+                  year)}<br>";
 
             description += "</body></html>";
-            c.setToolTipText(description);
+            jLabel.setToolTipText(description);
+
             if (isSelected) {
-                c.setForeground(d.getForeground());
-                c.setBackground(d.getBackground());
-                return c;
+                jLabel.setForeground(tableCellRendererComponent.getForeground());
+                jLabel.setBackground(tableCellRendererComponent.getBackground());
+                return jLabel;
             }
 
             if (row % 2 == 0) {
-                c.setBackground(java.awt.Color.lightGray);
+                jLabel.setBackground(Color.lightGray);
             } else {
-                c.setBackground(java.awt.Color.white);
+                jLabel.setBackground(Color.white);
             }
 
             if (bme.isCostUp()) {
-                c.setForeground(new java.awt.Color(195, 11, 00));
+                jLabel.setForeground(new Color(195, 11, 0));
             } else {
-                c.setForeground(new java.awt.Color(03, 149, 50));
+                jLabel.setForeground(new Color(3, 149, 50));
             }
 
-            return c;
+            return jLabel;
         }
     }
 }

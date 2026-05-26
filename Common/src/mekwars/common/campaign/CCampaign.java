@@ -104,9 +104,9 @@ public class CCampaign {
                     }
 
                     client.addToChat("<font color=\"red\"><b>Your forces are under attack!</b></font>",
-                          CCommPanel.CHANNEL_HMAIL);
+                          CCommPanel.CHANNEL_HOUSE_MAIL);
                     client.addToChat("<font color=\"red\"><b>Your forces are under attack!</b></font>",
-                          CCommPanel.CHANNEL_PMAIL,
+                          CCommPanel.CHANNEL_PRIVATE_MAIL,
                           "Server");
                     if (client.getConfig().isParam("POPUPONATTACK")) {
                         int opID = TokenReader.readInt(ST);

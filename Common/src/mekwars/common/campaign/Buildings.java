@@ -36,6 +36,8 @@ package mekwars.common.campaign;
 
 import java.util.StringTokenizer;
 
+import megamek.common.enums.BuildingType;
+
 
 public final class Buildings {
 
@@ -69,7 +71,7 @@ public final class Buildings {
     private int minCF = 0;
     private int maxCF = 0;
     private int startingEdge = EDGE_UNKNOWN;
-    private String buildingType = "1";
+    private BuildingType buildingType = BuildingType.UNKNOWN;
     private String cityType = "NONE";
     private int cityBlocks = 0;
 
@@ -165,8 +167,12 @@ public final class Buildings {
         maxCF = cf;
     }
 
-    public String getBuildingType() {
+    public BuildingType getBuildingType() {
         return buildingType;
+    }
+
+    public void setBuildingType(BuildingType type) {
+        buildingType = type;
     }
 
     public int getStartingEdge() {
@@ -177,10 +183,6 @@ public final class Buildings {
         startingEdge = edge;
     }
 
-    public void setBuildingType(String type) {
-        buildingType = type;
-    }
-
     public void fromString(StringTokenizer buildingTemplate) {
         setTotalBuildings(Integer.parseInt(buildingTemplate.nextToken()));
         setMinBuildings(Integer.parseInt(buildingTemplate.nextToken()));
@@ -188,7 +190,7 @@ public final class Buildings {
         setMaxFloors(Integer.parseInt(buildingTemplate.nextToken()));
         setMinCF(Integer.parseInt(buildingTemplate.nextToken()));
         setMaxCF(Integer.parseInt(buildingTemplate.nextToken()));
-        setBuildingType(buildingTemplate.nextToken());
+        setBuildingType(BuildingType.valueOf(buildingTemplate.nextToken()));
         setStartingEdge(Integer.parseInt(buildingTemplate.nextToken()));
     }
 }
