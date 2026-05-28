@@ -1,4 +1,45 @@
+/*
+ * Copyright (C) 2026 The MegaMek Team. All Rights Reserved.
+ *
+ * This file is part of MekWars.
+ *
+ * MekWars is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License (GPL),
+ * version 3 or (at your option) any later version,
+ * as published by the Free Software Foundation.
+ *
+ * MekWars is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty
+ * of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU General Public License for more details.
+ *
+ * A copy of the GPL should have been included with this project;
+ * if not, see <https://www.gnu.org/licenses/>.
+ *
+ * NOTICE: The MegaMek organization is a non-profit group of volunteers
+ * creating free software for the BattleTech community.
+ *
+ * MechWarrior, BattleMech, `Mech and AeroTech are registered trademarks
+ * of The Topps Company, Inc. All Rights Reserved.
+ *
+ * Catalyst Game Labs and the Catalyst Game Labs logo are trademarks of
+ * InMediaRes Productions, LLC.
+ *
+ * MechWarrior Copyright Microsoft Corporation. MekWars was created under
+ * Microsoft's "Game Content Usage Rules"
+ * <https://www.xbox.com/en-US/developers/rules> and it is not endorsed by or
+ * affiliated with Microsoft.
+ */
+
 package mekwars.common.gui;
+
+import java.io.Serial;
+import java.io.Serializable;
+import java.util.Vector;
+import javax.swing.table.TableModel;
+
+import megamek.logging.MMLogger;
+import mekwars.common.campaign.clientutils.protocol.IClient;
 
 /**
  * A sorter for TableModels. The sorter has a model (conforming to TableModel) and itself implements TableModel.
@@ -10,42 +51,30 @@ package mekwars.common.gui;
  * which means that it does not move around rows when its comparison function returns 0 to denote that they are
  * equivalent.
  *
- * @version 1.5 12/17/97
  * @author Philip Milne
+ * @version 1.5 12/17/97
  */
-
-import java.io.Serial;
-import java.io.Serializable;
-
-import mekwars.common.campaign.clientutils.protocol.IClient;
-import mekwars.common.util.MWLogger;
-
 public class TableSorter extends TableMap implements Serializable {
-
     // VARIABLES
     public final static int SORTER_BM = 0;
     public final static int SORTER_BUILD_TABLES = 1;
     public final static int SORTER_BATTLES = 2;
     public final static int SORTER_BM_PARTS = 3;
-    /**
-     *
-     */
+    private final static MMLogger LOGGER = MMLogger.create(TableSorter.class);
+
     @Serial
     private static final long serialVersionUID = -3715062654870040447L;
-    int[] indexes;
-    java.util.Vector<Integer> sortingColumns = new java.util.Vector<>(1, 1);
-    boolean ascending = true;
-    int compares;
-    int sortMode;
-
-    // store the "current" column in order to toggle
-    // acending/decending sorts @urgru 3.27.05
-    int currentColumn = -2;
-    boolean currentOrder = true;// ascending
-    IClient client = null;
+    private final Vector<Integer> sortingColumns = new Vector<>(1, 1);
+    private final int sortMode;
+    private boolean currentOrder = true;// ascending
+    private IClient client = null;
+    private int currentColumn = -2;
+    private int[] indexes;
+    private boolean ascending = true;
+    private int compares;
 
     // CONSTRUCTOR
-    public TableSorter(javax.swing.table.TableModel model, IClient client, int mode) {
+    public TableSorter(TableModel model, IClient client, int mode) {
         setModel(model);
 
         this.client = client;
@@ -54,21 +83,24 @@ public class TableSorter extends TableMap implements Serializable {
     }
 
     @Override
-    public void setModel(javax.swing.table.TableModel model) {
+    public void setModel(TableModel model) {
         super.setModel(model);
         reallocateIndexes();
     }
 
     @Override
     public Object getValueAt(int aRow, int aColumn) {
-        if (aRow < 0 || aRow >= indexes.length) {return null;}
+        if (aRow < 0 || aRow >= indexes.length) {
+            return null;
+        }
+
         checkModel();
         return model.getValueAt(indexes[aRow], aColumn);
     }
 
     public void checkModel() {
         if (indexes.length != model.getRowCount()) {
-            MWLogger.errLog("Sorter not informed of a change in model.");
+            LOGGER.debug("Sorter not informed of a change in model.");
         }
     }
 
@@ -80,7 +112,6 @@ public class TableSorter extends TableMap implements Serializable {
 
     @Override
     public void tableChanged(javax.swing.event.TableModelEvent e) {
-        // MMClient.mwClientLog.clientOutputLog("Sorter: tableChanged");
         reallocateIndexes();
 
         super.tableChanged(e);
@@ -92,8 +123,8 @@ public class TableSorter extends TableMap implements Serializable {
     public void loadSavedSortPreferences(int mode) {
 
         if (mode == mekwars.common.gui.TableSorter.SORTER_BM) {
-            currentColumn = Integer.parseInt(client.getConfigParam("BMSORTCOLUMN"));
-            currentOrder = Boolean.parseBoolean(client.getConfigParam("BMSORTORDER"));
+            currentColumn = Integer.parseInt(client.getConfigParam("BM_SORT_COLUMN"));
+            currentOrder = Boolean.parseBoolean(client.getConfigParam("BM_SORT_ORDER"));
         } else if (mode == mekwars.common.gui.TableSorter.SORTER_BUILD_TABLES) {
             currentColumn = Integer.parseInt(client.getConfigParam("TABLEBROWSERSORTCOLUMN"));
             currentOrder = Boolean.parseBoolean(client.getConfigParam("TABLEBROWSERSORTORDER"));

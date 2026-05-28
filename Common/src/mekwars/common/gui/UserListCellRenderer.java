@@ -1,3 +1,36 @@
+/*
+ * Copyright (C) 2026 The MegaMek Team. All Rights Reserved.
+ *
+ * This file is part of MekWars.
+ *
+ * MekWars is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License (GPL),
+ * version 3 or (at your option) any later version,
+ * as published by the Free Software Foundation.
+ *
+ * MekWars is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty
+ * of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU General Public License for more details.
+ *
+ * A copy of the GPL should have been included with this project;
+ * if not, see <https://www.gnu.org/licenses/>.
+ *
+ * NOTICE: The MegaMek organization is a non-profit group of volunteers
+ * creating free software for the BattleTech community.
+ *
+ * MechWarrior, BattleMech, `Mech and AeroTech are registered trademarks
+ * of The Topps Company, Inc. All Rights Reserved.
+ *
+ * Catalyst Game Labs and the Catalyst Game Labs logo are trademarks of
+ * InMediaRes Productions, LLC.
+ *
+ * MechWarrior Copyright Microsoft Corporation. MekWars was created under
+ * Microsoft's "Game Content Usage Rules"
+ * <https://www.xbox.com/en-US/developers/rules> and it is not endorsed by or
+ * affiliated with Microsoft.
+ */
+
 package mekwars.common.gui;
 
 import java.awt.Component;
@@ -10,35 +43,33 @@ import javax.swing.ListCellRenderer;
 import javax.swing.ListModel;
 import javax.swing.ListSelectionModel;
 
+import megamek.logging.MMLogger;
 import mekwars.common.campaign.CUser;
 import mekwars.common.campaign.clientutils.protocol.IClient;
 import mekwars.common.gui.models.CUserListModel;
-import mekwars.common.util.MWLogger;
 
 public class UserListCellRenderer extends javax.swing.JLabel implements ListCellRenderer<CUserListModel> {
+    private static final MMLogger LOGGER = MMLogger.create(UserListCellRenderer.class);
 
-    /**
-     *
-     */
     @Serial
     private static final long serialVersionUID = 4400213401819469963L;
-    IClient client;
-    CUserListModel Owner;
-    boolean LoggedIn = false;
-    boolean TextBold;
-    boolean TextColor;
-    boolean TextImage;
-    ImageIcon LogoutImage;
-    ImageIcon ReserveImage;
-    ImageIcon ActiveImage;
-    ImageIcon FightImage;
+    private final IClient client;
+    private final CUserListModel Owner;
+    private boolean LoggedIn = false;
+    private boolean TextBold;
+    private boolean TextColor;
+    private boolean TextImage;
+    private ImageIcon LogoutImage;
+    private ImageIcon ReserveImage;
+    private ImageIcon ActiveImage;
+    private ImageIcon FightImage;
 
     public UserListCellRenderer(CUserListModel towner) {
         Owner = towner;
-        client = towner.client;
-        TextBold = client.getConfig().isParam("USERLISTBOLD");
-        TextColor = client.getConfig().isParam("USERLISTCOLOR");
-        TextImage = client.getConfig().isParam("USERLISTIMAGE");
+        client = towner.getClient();
+        TextBold = client.getConfig().isParam("USER_LIST_BOLD");
+        TextColor = client.getConfig().isParam("USER_LIST_COLOR");
+        TextImage = client.getConfig().isParam("USER_LIST_IMAGE");
         LogoutImage = client.getConfig().getImage("LOGOUT");
         ReserveImage = client.getConfig().getImage("RESERVE");
         ActiveImage = client.getConfig().getImage("ACTIVE");
@@ -51,9 +82,9 @@ public class UserListCellRenderer extends javax.swing.JLabel implements ListCell
     }
 
     public void refreshParams() {
-        TextBold = client.getConfig().isParam("USERLISTBOLD");
-        TextColor = client.getConfig().isParam("USERLISTCOLOR");
-        TextImage = client.getConfig().isParam("USERLISTIMAGE");
+        TextBold = client.getConfig().isParam("USER_LIST_BOLD");
+        TextColor = client.getConfig().isParam("USER_LIST_COLOR");
+        TextImage = client.getConfig().isParam("USER_LIST_IMAGE");
         LogoutImage = client.getConfig().getImage("LOGOUT");
         ReserveImage = client.getConfig().getImage("RESERVE");
         ActiveImage = client.getConfig().getImage("ACTIVE");
@@ -82,15 +113,16 @@ public class UserListCellRenderer extends javax.swing.JLabel implements ListCell
     public Component getListCellRendererComponent(JList<? extends CUserListModel> list, CUserListModel value, int index,
           boolean isSelected, boolean cellHasFocus) {
         //have to make this renderer faster
-        int userlevel;
+        int userLevel;
         int status;
 
         CUser user = Owner.getUser(index);
+
         if (user == null) {
             return null;
         }
 
-        userlevel = user.getUserLevel();
+        userLevel = user.getUserLevel();
         String invisFlag = " ";
 
         //if you can see them, and they are invis, then your level is >= to theres
@@ -98,24 +130,25 @@ public class UserListCellRenderer extends javax.swing.JLabel implements ListCell
             invisFlag = "(I) ";
         }
 
-        if (userlevel < 30) {
+        if (userLevel < 30) {
             setText(user.getName());
         }
 
-        if (userlevel >= 30 && userlevel < 100) {
+        if (userLevel >= 30 && userLevel < 100) {
             setText(STR."^\{invisFlag}\{user.getName()}");
         }
 
-        if (userlevel >= 100 && userlevel < 200) {
+        if (userLevel >= 100 && userLevel < 200) {
             setText(STR."*\{invisFlag}\{user.getName()}");
         }
 
-        if (userlevel >= 200) {
+        if (userLevel >= 200) {
             setText(STR."@\{invisFlag}\{user.getName()}");
         }
 
         //check users No-Play status
         boolean isOnNoPlay = false;
+
         if (client.getPlayer().getAdminExcludes().contains(user.getName().toLowerCase())) {
             isOnNoPlay = true;
         } else if (client.getPlayer().getPlayerExcludes().contains(user.getName().toLowerCase())) {
@@ -127,9 +160,10 @@ public class UserListCellRenderer extends javax.swing.JLabel implements ListCell
         String searchString = user.getName().trim();
         int isMuted = 0;
 
-        if (userlevel < 100) {
-            String ignoreList = client.getConfig().getParam("IGNOREPUBLIC");
+        if (userLevel < 100) {
+            String ignoreList = client.getConfig().getParam("IGNORE_PUBLIC");
             StringTokenizer it = new StringTokenizer(ignoreList, ",");
+
             while (it.hasMoreTokens()) {
                 String currString = it.nextToken().trim();
                 if (currString.equalsIgnoreCase(searchString)) {
@@ -138,7 +172,7 @@ public class UserListCellRenderer extends javax.swing.JLabel implements ListCell
             }
 
             //search PrivateMessageCommand mute as well
-            ignoreList = client.getConfig().getParam("IGNOREPRIVATE");
+            ignoreList = client.getConfig().getParam("IGNORE_PRIVATE");
             it = new StringTokenizer(ignoreList, ",");
             while (it.hasMoreTokens()) {
                 String currString = it.nextToken().trim();
@@ -150,7 +184,7 @@ public class UserListCellRenderer extends javax.swing.JLabel implements ListCell
 
             //and the faction ...
             if (user.getHouse().equals(client.getPlayer().getHouse())) {
-                ignoreList = client.getConfig().getParam("IGNOREHOUSE");
+                ignoreList = client.getConfig().getParam("IGNORE_HOUSE");
                 it = new StringTokenizer(ignoreList, ",");
                 while (it.hasMoreTokens()) {
                     String currString = it.nextToken();
@@ -192,7 +226,7 @@ public class UserListCellRenderer extends javax.swing.JLabel implements ListCell
                     try {
                         setIcon(LogoutImage);
                     } catch (Exception ex) {
-                        MWLogger.errLog(ex);
+                        LOGGER.error(ex, "Unable to set Logged Out icon: {}", ex.getLocalizedMessage());
                     }
                 }
             } else {
@@ -207,21 +241,21 @@ public class UserListCellRenderer extends javax.swing.JLabel implements ListCell
                         try {
                             setIcon(ReserveImage);
                         } catch (Exception ex) {
-                            MWLogger.errLog(ex);
+                            LOGGER.error(ex, "Unable to set Reserve Icon: {}", ex.getLocalizedMessage());
                         }
                     }
                     if (status == IClient.STATUS_ACTIVE) {
                         try {
                             setIcon(ActiveImage);
                         } catch (Exception ex) {
-                            MWLogger.errLog(ex);
+                            LOGGER.error(ex, "Unable to set Active Icon: {}", ex.getLocalizedMessage());
                         }
                     }
                     if (status == IClient.STATUS_FIGHTING) {
                         try {
                             setIcon(FightImage);
                         } catch (Exception ex) {
-                            MWLogger.errLog(ex);
+                            LOGGER.error(ex, "Unable to set Fighting Icon: {}", ex.getLocalizedMessage());
                         }
                     }
                 } else {
@@ -229,7 +263,7 @@ public class UserListCellRenderer extends javax.swing.JLabel implements ListCell
                 }
             }
             setIconTextGap(7);
-            setToolTipText(user.getInfo(client.getConfig().isParam("NOIMGINCHAT")));
+            setToolTipText(user.getInfo(client.getConfig().isParam("NO_IMG_IN_CHAT")));
         } else {
 
             //logged-out users don't see bold names OR icons

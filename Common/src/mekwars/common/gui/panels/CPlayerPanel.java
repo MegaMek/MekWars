@@ -1,18 +1,35 @@
 /*
- * MekWars - Copyright (C) 2004
+ * Copyright (C) 2004 Helge Richter (McWizard)
+ * Copyright (C) 2026 The MegaMek Team. All Rights Reserved.
  *
- * Derived from MegaMekNET (http://www.sourceforge.net/projects/megameknet)
- * Original author Helge Richter (McWizard)
+ * This file is part of MekWars.
  *
- * This program is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License as published by the Free
- * Software Foundation; either version 2 of the License, or (at your option)
- * any later version.
+ * MekWars is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License (GPL),
+ * version 3 or (at your option) any later version,
+ * as published by the Free Software Foundation.
  *
- * This program is distributed in the hope that it will be useful, but
- * WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
- * or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License
- * for more details.
+ * MekWars is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty
+ * of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU General Public License for more details.
+ *
+ * A copy of the GPL should have been included with this project;
+ * if not, see <https://www.gnu.org/licenses/>.
+ *
+ * NOTICE: The MegaMek organization is a non-profit group of volunteers
+ * creating free software for the BattleTech community.
+ *
+ * MechWarrior, BattleMech, `Mech and AeroTech are registered trademarks
+ * of The Topps Company, Inc. All Rights Reserved.
+ *
+ * Catalyst Game Labs and the Catalyst Game Labs logo are trademarks of
+ * InMediaRes Productions, LLC.
+ *
+ * MechWarrior Copyright Microsoft Corporation. MekWars was created under
+ * Microsoft's "Game Content Usage Rules"
+ * <https://www.xbox.com/en-US/developers/rules> and it is not endorsed by or
+ * affiliated with Microsoft.
  */
 
 package mekwars.common.gui.panels;
@@ -32,12 +49,12 @@ import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.border.LineBorder;
 
+import megamek.logging.MMLogger;
 import mekwars.common.campaign.CPlayer;
 import mekwars.common.campaign.clientutils.IClientConfig;
 import mekwars.common.campaign.clientutils.protocol.IClient;
 import mekwars.common.gui.MyHTMLEditorKit;
 import mekwars.common.gui.listeners.MMNetHyperLinkListener;
-import mekwars.common.util.MWLogger;
 import mekwars.common.util.UnitUtils;
 
 /**
@@ -45,10 +62,8 @@ import mekwars.common.util.UnitUtils;
  */
 
 public class CPlayerPanel extends JScrollPane {
+    private static final MMLogger LOGGER = MMLogger.create(CPlayerPanel.class);
 
-    /**
-     *
-     */
     @Serial
     private static final long serialVersionUID = -7036003412110367753L;
     private static final String PP_NAME = "Name";
@@ -61,6 +76,8 @@ public class CPlayerPanel extends JScrollPane {
     private static final String PP_IDLE_TECHS = "Idle Techs:";
     private static final String PP_FREE_UNITS = "Free Units:"; //@Salient for free build
     private static String PP_REWARD;
+    private final IClient client;
+    private final CPlayer player;
     protected JPanel PlayerPanel = new JPanel();
     protected JEditorPane lblLogo = new JEditorPane("text/html", "");
     protected JPanel InfoPanel = new JPanel();
@@ -76,9 +93,7 @@ public class CPlayerPanel extends JScrollPane {
     protected JLabel lblNextTick = new JLabel();
     protected JLabel lblFreeMeks = new JLabel(); //@Salient for free build
     protected long nextTick = System.currentTimeMillis();
-    IClient client;
-    CPlayer player;
-    IClientConfig config;
+    private IClientConfig config;
 
     public CPlayerPanel(IClient client) {
         PP_REWARD = STR."\{client.getServerConfigs("RPLongName")}:";
@@ -96,7 +111,7 @@ public class CPlayerPanel extends JScrollPane {
         player = client.getPlayer();
         config = client.getConfig();
         logo = client.getConfig().isParam("LOGO");
-        height = client.getConfig().getIntParam("PLAYERPANELHEIGHT");
+        height = client.getConfig().getIntParam("PLAYER_PANEL_HEIGHT");
 
         setMinimumSize(new Dimension(0, 0));
 
@@ -152,11 +167,6 @@ public class CPlayerPanel extends JScrollPane {
         lblNextTick.setText("Next Tick: N/A");
         InfoPanel.add(lblName);
 
-        //Comment out profession/rank until it actually means something.
-        //Label is still being made and updated, just not added to the panel.
-        //@urgru 12.1.04
-        //InfoPanel.add(lblProfession);
-
         InfoPanel.add(lblStatus);
         InfoPanel.add(lblExp);
 
@@ -202,7 +212,6 @@ public class CPlayerPanel extends JScrollPane {
 
         Thread clockT = new CPlayerPanel.TThread(this);
         clockT.start();
-
     }
 
     public void refresh() {
@@ -213,9 +222,10 @@ public class CPlayerPanel extends JScrollPane {
                 lblLogo.getEditorKit().read(new StringReader(client.getPlayer().getLogo()), lblLogo.getDocument(), 0);
                 lblLogo.setCaretPosition(lblLogo.getDocument().getLength());
             } catch (Exception ex) {
-                MWLogger.errLog(ex);
+                LOGGER.error(ex, "Unable to refresh: {}", ex.getLocalizedMessage());
             }
         }
+
         lblName.setText(player.getName());
         lblStatus.setText(STR."\{PP_STATUS} \{client.getStatus()}");
         lblExp.setText(STR."\{PP_EXP} \{player.getExp()}");
@@ -230,6 +240,7 @@ public class CPlayerPanel extends JScrollPane {
                   false,
                   -player.getMoney())}: \{NumberFormat.getInstance().format(player.getMoney())}");
         }
+
         if (player.getInfluence() == 0) {
             lblInfluence.setText(STR."\{client.moneyOrFluMessage(false, false, -2)}: \{player.getInfluence()}");
         } else {
@@ -239,7 +250,7 @@ public class CPlayerPanel extends JScrollPane {
         }
 
         if (client.isUsingAdvanceRepairs()) {
-            //when the client first loads it doesn't have data in the vectors.
+            //when the client first loads, it doesn't have data in the vectors.
             try {
                 lblMekBay.setText(STR."\{PP_BAYS} \{player.getFreeBays()}/\{player.getBays()} (\{client.moneyOrFluMessage(
                       true,
@@ -250,7 +261,9 @@ public class CPlayerPanel extends JScrollPane {
                                                                                                    .get(UnitUtils.TECH_REG)}/\{player.getAvailableTechs()
                                                                                                                                      .get(UnitUtils.TECH_VET)}/\{player.getAvailableTechs()
                                                                                                                                                                        .get(UnitUtils.TECH_ELITE)}");
-            } catch (Exception ex) {}
+            } catch (Exception ex) {
+                LOGGER.debug(ex, "Not sure why we're catching the error: {}", ex.getLocalizedMessage());
+            }
         } else {
             lblMekBay.setText(STR."\{PP_TECHS} \{player.getFreeBays()}/\{player.getBays()}");
             lblTechs.setText(STR."\{PP_PAID_TECHS} \{player.getTechs()} (\{client.moneyOrFluMessage(true,
@@ -273,7 +286,6 @@ public class CPlayerPanel extends JScrollPane {
     }
 
     private static class TThread extends Thread {
-
         CPlayerPanel myPanel;
 
         public TThread(CPlayerPanel panel) {
@@ -287,7 +299,7 @@ public class CPlayerPanel extends JScrollPane {
                 try {
                     wait(1000);
                 } catch (Exception ex) {
-                    MWLogger.errLog(ex);
+                    LOGGER.error(ex, "Thread Escaped! {}", ex.getLocalizedMessage());
                 }
             }
         }

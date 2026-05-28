@@ -1,18 +1,35 @@
 /*
- * MekWars - Copyright (C) 2004
+ * Copyright (C) 2004 Helge Richter (McWizard)
+ * Copyright (C) 2026 The MegaMek Team. All Rights Reserved.
  *
- * Derived from MegaMekNET (http://www.sourceforge.net/projects/megameknet)
- * Original author Helge Richter (McWizard)
+ * This file is part of MekWars.
  *
- * This program is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License as published by the Free
- * Software Foundation; either version 2 of the License, or (at your option)
- * any later version.
+ * MekWars is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License (GPL),
+ * version 3 or (at your option) any later version,
+ * as published by the Free Software Foundation.
  *
- * This program is distributed in the hope that it will be useful, but
- * WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
- * or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License
- * for more details.
+ * MekWars is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty
+ * of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU General Public License for more details.
+ *
+ * A copy of the GPL should have been included with this project;
+ * if not, see <https://www.gnu.org/licenses/>.
+ *
+ * NOTICE: The MegaMek organization is a non-profit group of volunteers
+ * creating free software for the BattleTech community.
+ *
+ * MechWarrior, BattleMech, `Mech and AeroTech are registered trademarks
+ * of The Topps Company, Inc. All Rights Reserved.
+ *
+ * Catalyst Game Labs and the Catalyst Game Labs logo are trademarks of
+ * InMediaRes Productions, LLC.
+ *
+ * MechWarrior Copyright Microsoft Corporation. MekWars was created under
+ * Microsoft's "Game Content Usage Rules"
+ * <https://www.xbox.com/en-US/developers/rules> and it is not endorsed by or
+ * affiliated with Microsoft.
  */
 
 package mekwars.common.gui.panels;
@@ -40,11 +57,11 @@ import javax.swing.JScrollPane;
 import javax.swing.border.LineBorder;
 import javax.swing.plaf.basic.BasicButtonUI;
 
+import megamek.logging.MMLogger;
 import mekwars.common.campaign.clientutils.protocol.IClient;
 import mekwars.common.gui.listeners.UserListPopupListener;
 import mekwars.common.gui.models.CUserListModel;
 import mekwars.common.threads.ActivationThread;
-import mekwars.common.util.MWLogger;
 import mekwars.common.util.StringUtils;
 
 /**
@@ -52,10 +69,8 @@ import mekwars.common.util.StringUtils;
  */
 
 public class CUserListPanel extends JPanel implements ActionListener {
+    private static final MMLogger LOGGER = MMLogger.create(CUserListPanel.class);
 
-    /**
-     *
-     */
     @Serial
     private static final long serialVersionUID = 6676029823454849117L;
     public static int SORT_MODE_NAME = 0;
@@ -74,27 +89,21 @@ public class CUserListPanel extends JPanel implements ActionListener {
     private final Icon mouseDeactivateIcon;
     private final Icon activateFlashIcon;
     private final Icon deactivateFlashIcon;
-    IClient client;
-    boolean LoggedIn = false;
-    boolean Dedicated;
-    JScrollPane UserListSP;
-    JList<CUserListModel> UserList;
-    CUserListModel Users;
-    //additional info
-    JPanel countPanel = new JPanel();
-    JLabel CountLabel = new JLabel();
-    JLabel LinksLabel = new JLabel();
-    JButton ActivityButton = new JButton();
-    JButton LinkButton1 = new JButton();
-    JButton LinkButton2 = new JButton();
-    JButton LinkButton3 = new JButton();
-    JPanel linksPanel = new JPanel();
-    JPanel bottomPanel = new JPanel();
-    UserListPopupListener UserListPopup = new UserListPopupListener(this);
+    private final JPanel countPanel = new JPanel();
+    private final JLabel CountLabel = new JLabel();
+    private final JLabel LinksLabel = new JLabel();
+    private final JButton ActivityButton = new JButton();
+    private final JButton LinkButton1 = new JButton();
+    private final JButton LinkButton2 = new JButton();
+    private final JButton LinkButton3 = new JButton();
+    private final JPanel linksPanel = new JPanel();
+    private final JPanel bottomPanel = new JPanel();
+    private final IClient client;
+    private final JList<CUserListModel> UserList;
+    private final CUserListModel Users;
 
     public CUserListPanel(IClient client) {
         this.client = client;
-        Dedicated = this.client.getConfig().isParam("USERLISTDEDICATEDS");
         setLayout(new BorderLayout());
         setPreferredSize(new Dimension(180, 480));
         setMinimumSize(new Dimension(120, 100));
@@ -104,23 +113,26 @@ public class CUserListPanel extends JPanel implements ActionListener {
         UserList = new JList<>();
         UserList.add(Users.getRenderer());
         UserList.setAlignmentX(0.0F);
-        UserList.addMouseListener(UserListPopup);
-        UserList.setCellRenderer(Users.getRenderer());
-        UserListSP = new JScrollPane(UserList);
-        UserListSP.setPreferredSize(new Dimension(180, 380));
-        UserListSP.setMinimumSize(new Dimension(180, 100));
-        UserListSP.setMaximumSize(new Dimension(180, 2000));
-        UserListSP.setBorder(new LineBorder(Color.black));
-        UserListSP.setViewportView(UserList);
-        add(UserListSP, BorderLayout.CENTER);
 
-        UserList.setBackground(StringUtils.html2Color(this.client.getConfigParam("BACKGROUNDCOLOR")));
+        UserListPopupListener userListPopup = new UserListPopupListener(this);
+        UserList.addMouseListener(userListPopup);
+        UserList.setCellRenderer(Users.getRenderer());
+
+        JScrollPane userListSP = new JScrollPane(UserList);
+        userListSP.setPreferredSize(new Dimension(180, 380));
+        userListSP.setMinimumSize(new Dimension(180, 100));
+        userListSP.setMaximumSize(new Dimension(180, 2000));
+        userListSP.setBorder(new LineBorder(Color.black));
+        userListSP.setViewportView(UserList);
+        add(userListSP, BorderLayout.CENTER);
+
+        UserList.setBackground(StringUtils.html2Color(this.client.getConfigParam("BACKGROUND_COLOR")));
         //set up the count label
         CountLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
         CountLabel.setAlignmentY(Component.CENTER_ALIGNMENT);
         CountLabel.setBorder(BorderFactory.createEmptyBorder(3, 2, 2, 2));
         CountLabel.setText(STR."Player Count: \{UserList.getModel().getSize()}");
-        CountLabel.setVisible(this.client.getConfig().isParam("USERLISTCOUNT"));
+        CountLabel.setVisible(this.client.getConfig().isParam("USER_LIST_COUNT"));
 
         if (new File("./data/images/activatebutton.png").exists()) {
             activateIcon = new ImageIcon("./data/images/activatebutton.png");
@@ -171,7 +183,6 @@ public class CUserListPanel extends JPanel implements ActionListener {
         }
 
         //set up activity button
-        //setActivateButtonText("Waiting ...");
         ActivityButton.setEnabled(false);
         ActivityButton.setAlignmentX(Component.CENTER_ALIGNMENT);
         ActivityButton.setAlignmentY(Component.CENTER_ALIGNMENT);
@@ -182,7 +193,7 @@ public class CUserListPanel extends JPanel implements ActionListener {
 
         resetActivityButton();
 
-        ActivityButton.setVisible(this.client.getConfig().isParam("USERLISTACTIVITYBTN"));
+        ActivityButton.setVisible(this.client.getConfig().isParam("USER_LIST_ACTIVITY_BTN"));
 
         //add the button and label to CountPanel
         countPanel.setLayout(new BoxLayout(countPanel, BoxLayout.Y_AXIS));
@@ -198,7 +209,7 @@ public class CUserListPanel extends JPanel implements ActionListener {
         }
 
         //restore the previous sort mode
-        String mode = this.client.getConfig().getParam("SORTMODE");
+        String mode = this.client.getConfig().getParam("SORT_MODE");
         switch (mode) {
             case "HOUSE" -> ((CUserListModel) UserList.getModel()).setSortMode(SORT_MODE_HOUSE);
             case "EXP" -> ((CUserListModel) UserList.getModel()).setSortMode(SORT_MODE_EXP);
@@ -210,13 +221,13 @@ public class CUserListPanel extends JPanel implements ActionListener {
                 }
             }
             case "STATUS" -> ((CUserListModel) UserList.getModel()).setSortMode(SORT_MODE_STATUS);
-            case "USERLEVEL" -> ((CUserListModel) UserList.getModel()).setSortMode(SORT_MODE_USER_LEVEL);
+            case "USER_LEVEL" -> ((CUserListModel) UserList.getModel()).setSortMode(SORT_MODE_USER_LEVEL);
             case "COUNTRY" -> ((CUserListModel) UserList.getModel()).setSortMode(SORT_MODE_COUNTRY);
             default -> ((CUserListModel) UserList.getModel()).setSortMode(SORT_MODE_NAME);
         }
 
         //restore the previous sort order
-        String order = this.client.getConfig().getParam("SORTORDER");
+        String order = this.client.getConfig().getParam("SORT_ORDER");
         if (order.equals("DESCENDING")) {
             ((CUserListModel) UserList.getModel()).setSortOrder(SORT_ORDER_DESCENDING);
         } else {
@@ -254,10 +265,12 @@ public class CUserListPanel extends JPanel implements ActionListener {
         LinkButton1.addActionListener(_ -> {
             Desktop desktop = Desktop.isDesktopSupported() ? Desktop.getDesktop() : null;
             if (desktop != null && desktop.isSupported(Desktop.Action.BROWSE)) {
+                String uri = client.getServerConfigs("Link1_URL");
+
                 try {
-                    desktop.browse(new URI(client.getServerConfigs("Link1_URL")));
+                    desktop.browse(new URI(uri));
                 } catch (Exception e) {
-                    e.printStackTrace();
+                    LOGGER.error(e, "Unable to browse to (Link1_URL) {} due to: {}", uri, e.getLocalizedMessage());
                 }
             }
         });
@@ -277,10 +290,11 @@ public class CUserListPanel extends JPanel implements ActionListener {
         LinkButton2.addActionListener(_ -> {
             Desktop desktop = Desktop.isDesktopSupported() ? Desktop.getDesktop() : null;
             if (desktop != null && desktop.isSupported(Desktop.Action.BROWSE)) {
+                String uri = client.getServerConfigs("Link2_URL");
                 try {
                     desktop.browse(new URI(client.getServerConfigs("Link2_URL")));
                 } catch (Exception e) {
-                    e.printStackTrace();
+                    LOGGER.error(e, "Unable to browse to (Link2_URL) {} due to {}", uri, e.getLocalizedMessage());
                 }
             }
         });
@@ -304,10 +318,11 @@ public class CUserListPanel extends JPanel implements ActionListener {
         LinkButton3.addActionListener(_ -> {
             Desktop desktop = Desktop.isDesktopSupported() ? Desktop.getDesktop() : null;
             if (desktop != null && desktop.isSupported(Desktop.Action.BROWSE)) {
+                String uri = client.getServerConfigs("Link3_URL");
                 try {
-                    desktop.browse(new URI(client.getServerConfigs("Link3_URL")));
+                    desktop.browse(new URI(uri));
                 } catch (Exception e) {
-                    e.printStackTrace();
+                    LOGGER.error(e, "Unable to go to (Link3_URL) {} due to {}", uri, e.getLocalizedMessage());
                 }
             }
         });
@@ -348,15 +363,13 @@ public class CUserListPanel extends JPanel implements ActionListener {
         try {
             ((CUserListModel) UserList.getModel()).refreshModel();
         } catch (Exception ex) {
-            MWLogger.errLog(ex);
+            LOGGER.error(ex, "Unable to refresh the model. {}", ex.getLocalizedMessage());
         }
         CountLabel.setText(STR."Player Count: \{UserList.getModel().getSize()}");
     }
 
     public void setLoggedIn(boolean loggedIn) {
-        LoggedIn = loggedIn;
-
-        if (LoggedIn) {
+        if (loggedIn) {
             ActivityButton.setEnabled(true);//update button for status
             setActivateButtonText("Activate");
         } else {//logged out
@@ -376,9 +389,11 @@ public class CUserListPanel extends JPanel implements ActionListener {
     public void setActivityButton(Boolean activate) {
         if (activate) {
             setActivateButtonText("Activate");
-            if (client.getConfig().isParam("ENABLEDEACTIVATESOUND")) {
-                client.doPlaySound(client.getConfigParam("SOUNDONDEACTIVATE"));
+
+            if (client.getConfig().isParam("ENABLE_DEACTIVATE_SOUND")) {
+                client.doPlaySound(client.getConfigParam("SOUND_ON_DEACTIVATE"));
             }
+
             ActivationThread animator = new ActivationThread(client,
                   ActivityButton,
                   deactivateFlashIcon,
@@ -388,9 +403,11 @@ public class CUserListPanel extends JPanel implements ActionListener {
 
         } else {
             setActivateButtonText("Deactivate");
-            if (client.getConfig().isParam("ENABLEACTIVATESOUND")) {
-                client.doPlaySound(client.getConfigParam("SOUNDONACTIVATE"));
+
+            if (client.getConfig().isParam("ENABLE_ACTIVATE_SOUND")) {
+                client.doPlaySound(client.getConfigParam("SOUND_ON_ACTIVATE"));
             }
+
             ActivationThread animator = new ActivationThread(client,
                   ActivityButton,
                   activateFlashIcon,
@@ -416,12 +433,10 @@ public class CUserListPanel extends JPanel implements ActionListener {
                 client.sendChat(STR."\{IClient.CAMPAIGN_PREFIX}c activate#\{IClient.CLIENT_VERSION}");
             } else if (client.getMyStatus() == IClient.STATUS_ACTIVE) {
                 client.sendChat("/c deactivate");
-            } else if (client.getMyStatus() == IClient.STATUS_LOGGED_OUT)//is logged out
-            {
+            } else if (client.getMyStatus() == IClient.STATUS_LOGGED_OUT) {
                 client.sendChat("/c login");
             }
         }
     }
-
 }
 

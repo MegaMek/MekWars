@@ -1,18 +1,35 @@
 /*
- * MekWars - Copyright (C) 2004
+ * Copyright (C) 2004 Helge Richter (McWizard)
+ * Copyright (C) 2026 The MegaMek Team. All Rights Reserved.
  *
- * Derived from MegaMekNET (http://www.sourceforge.net/projects/megameknet)
- * Original author Helge Richter (McWizard)
+ * This file is part of MekWars.
  *
- * This program is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License as published by the Free
- * Software Foundation; either version 2 of the License, or (at your option)
- * any later version.
+ * MekWars is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License (GPL),
+ * version 3 or (at your option) any later version,
+ * as published by the Free Software Foundation.
  *
- * This program is distributed in the hope that it will be useful, but
- * WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
- * or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License
- * for more details.
+ * MekWars is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty
+ * of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU General Public License for more details.
+ *
+ * A copy of the GPL should have been included with this project;
+ * if not, see <https://www.gnu.org/licenses/>.
+ *
+ * NOTICE: The MegaMek organization is a non-profit group of volunteers
+ * creating free software for the BattleTech community.
+ *
+ * MechWarrior, BattleMech, `Mech and AeroTech are registered trademarks
+ * of The Topps Company, Inc. All Rights Reserved.
+ *
+ * Catalyst Game Labs and the Catalyst Game Labs logo are trademarks of
+ * InMediaRes Productions, LLC.
+ *
+ * MechWarrior Copyright Microsoft Corporation. MekWars was created under
+ * Microsoft's "Game Content Usage Rules"
+ * <https://www.xbox.com/en-US/developers/rules> and it is not endorsed by or
+ * affiliated with Microsoft.
  */
 
 package mekwars.common.gui.panels;
@@ -24,6 +41,7 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.io.File;
 import java.io.Serial;
+import java.util.Arrays;
 import java.util.Iterator;
 import java.util.StringTokenizer;
 import java.util.TreeMap;
@@ -36,6 +54,7 @@ import megamek.common.units.Crew;
 import megamek.common.units.CrewType;
 import megamek.common.units.Entity;
 import megamek.common.units.Infantry;
+import megamek.logging.MMLogger;
 import mekwars.common.House;
 import mekwars.common.Unit;
 import mekwars.common.UnitFactory;
@@ -48,7 +67,6 @@ import mekwars.common.gui.MWUnitDisplay;
 import mekwars.common.gui.MyHTMLEditorKit;
 import mekwars.common.gui.listeners.BuyPopupListener;
 import mekwars.common.gui.listeners.MMNetHyperLinkListener;
-import mekwars.common.util.MWLogger;
 import mekwars.common.util.SpringLayoutHelper;
 import mekwars.common.util.UnitUtils;
 
@@ -57,44 +75,37 @@ import mekwars.common.util.UnitUtils;
  */
 
 public class CHSPanel extends JPanel {
+    private static final MMLogger LOGGER = MMLogger.create(CHSPanel.class);
 
-    /**
-     *
-     */
     @Serial
     private static final long serialVersionUID = -6985292870326367798L;
     private final JPanel hsButtonSpringPanel;
     private final JLabel lblInfo = new JLabel();
-    // hashtable of Hashtable
     private final TreeMap<String, String> componentsInfo;
     private final TreeMap<String, TreeMap<String, String>> factoriesInfo;
     private final TreeMap<String, Vector<HSMek>> unitsInfo;
     private final BuyPopupListener myPopup;
-    IClient client;
-    CPlayer thePlayer;
-    CCampaign theCampaign;
-    JEditorPane mainPane = new JEditorPane();
-    JScrollPane scrollPane = new JScrollPane();
-    MyHTMLEditorKit kit = new MyHTMLEditorKit();
-    GridBagConstraints gridBagConstraints;
-    // Needed to internally store SHouse Status
+    private final IClient client;
+    private final CPlayer thePlayer;
+    private final JEditorPane mainPane = new JEditorPane();
     private String HouseName;
 
     public CHSPanel(IClient client) {
-
         setLayout(new GridBagLayout());
         this.client = client;
-        theCampaign = this.client.getCampaign();
+        CCampaign theCampaign = this.client.getCampaign();
         thePlayer = theCampaign.getPlayer();
         myPopup = new BuyPopupListener(this);
 
+        MyHTMLEditorKit kit = new MyHTMLEditorKit();
         mainPane.setEditorKit(kit);
         mainPane.setEditable(false);
         mainPane.addHyperlinkListener(new MMNetHyperLinkListener(this.client, this));
+        JScrollPane scrollPane = new JScrollPane();
         scrollPane.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
         scrollPane.setViewportBorder(new LineBorder(new java.awt.Color(0, 0, 0)));
         scrollPane.setViewportView(mainPane);
-        gridBagConstraints = new GridBagConstraints();
+        GridBagConstraints gridBagConstraints = new GridBagConstraints();
         gridBagConstraints.gridx = 0;
         gridBagConstraints.gridy = 0;
         gridBagConstraints.fill = GridBagConstraints.BOTH;
@@ -160,7 +171,7 @@ public class CHSPanel extends JPanel {
 
     // make popup on press or release of New button
     private void buyNewUnitMouseEvent(MouseEvent event) {
-        javax.swing.JPopupMenu buy = createBuyNewPopupMenu();
+        JPopupMenu buy = createBuyNewPopupMenu();
         buy.show(event.getComponent(), event.getX(), event.getY());
     }
 
@@ -168,7 +179,7 @@ public class CHSPanel extends JPanel {
     }// do nothing
 
     private void buyUsedUnitMouseEvent(MouseEvent event) {
-        javax.swing.JPopupMenu buy = createBuyUsedPopupMenu();
+        JPopupMenu buy = createBuyUsedPopupMenu();
         buy.show(event.getComponent(), event.getX(), event.getY());
     }
 
@@ -183,14 +194,17 @@ public class CHSPanel extends JPanel {
         menuItem.setActionCommand(STR."BUY|LIGHT|\{Unit.MEK}");
         menuItem.addActionListener(myPopup);
         tmenu.add(menuItem);
+
         menuItem = new JMenuItem("Medium Mek");
         menuItem.setActionCommand(STR."BUY|MEDIUM|\{Unit.MEK}");
         menuItem.addActionListener(myPopup);
         tmenu.add(menuItem);
+
         menuItem = new JMenuItem("Heavy Mek");
         menuItem.setActionCommand(STR."BUY|HEAVY|\{Unit.MEK}");
         menuItem.addActionListener(myPopup);
         tmenu.add(menuItem);
+
         menuItem = new JMenuItem("Assault Mek");
         menuItem.setActionCommand(STR."BUY|ASSAULT|\{Unit.MEK}");
         menuItem.addActionListener(myPopup);
@@ -203,14 +217,17 @@ public class CHSPanel extends JPanel {
             menuItem.setActionCommand(STR."BUY|LIGHT|\{Unit.VEHICLE}");
             menuItem.addActionListener(myPopup);
             tmenu.add(menuItem);
+
             menuItem = new JMenuItem("Medium Vehicle");
             menuItem.setActionCommand(STR."BUY|MEDIUM|\{Unit.VEHICLE}");
             menuItem.addActionListener(myPopup);
             tmenu.add(menuItem);
+
             menuItem = new JMenuItem("Heavy Vehicle");
             menuItem.setActionCommand(STR."BUY|HEAVY|\{Unit.VEHICLE}");
             menuItem.addActionListener(myPopup);
             tmenu.add(menuItem);
+
             menuItem = new JMenuItem("Assault Vehicle");
             menuItem.setActionCommand(STR."BUY|ASSAULT|\{Unit.VEHICLE}");
             menuItem.addActionListener(myPopup);
@@ -224,14 +241,17 @@ public class CHSPanel extends JPanel {
             menuItem.setActionCommand(STR."BUY|LIGHT|\{Unit.INFANTRY}");
             menuItem.addActionListener(myPopup);
             tmenu.add(menuItem);
+
             menuItem = new JMenuItem("Medium Infantry");
             menuItem.setActionCommand(STR."BUY|MEDIUM|\{Unit.INFANTRY}");
             menuItem.addActionListener(myPopup);
             tmenu.add(menuItem);
+
             menuItem = new JMenuItem("Heavy Infantry");
             menuItem.setActionCommand(STR."BUY|HEAVY|\{Unit.INFANTRY}");
             menuItem.addActionListener(myPopup);
             tmenu.add(menuItem);
+
             menuItem = new JMenuItem("Assault Infantry");
             menuItem.setActionCommand(STR."BUY|ASSAULT|\{Unit.INFANTRY}");
             menuItem.addActionListener(myPopup);
@@ -245,14 +265,17 @@ public class CHSPanel extends JPanel {
             menuItem.setActionCommand(STR."BUY|LIGHT|\{Unit.PROTOMEK}");
             menuItem.addActionListener(myPopup);
             tmenu.add(menuItem);
+
             menuItem = new JMenuItem("Medium ProtoMek");
             menuItem.setActionCommand(STR."BUY|MEDIUM|\{Unit.PROTOMEK}");
             menuItem.addActionListener(myPopup);
             tmenu.add(menuItem);
+
             menuItem = new JMenuItem("Heavy ProtoMek");
             menuItem.setActionCommand(STR."BUY|HEAVY|\{Unit.PROTOMEK}");
             menuItem.addActionListener(myPopup);
             tmenu.add(menuItem);
+
             menuItem = new JMenuItem("Assault ProtoMek");
             menuItem.setActionCommand(STR."BUY|ASSAULT|\{Unit.PROTOMEK}");
             menuItem.addActionListener(myPopup);
@@ -266,14 +289,17 @@ public class CHSPanel extends JPanel {
             menuItem.setActionCommand(STR."BUY|LIGHT|\{Unit.BATTLEARMOR}");
             menuItem.addActionListener(myPopup);
             tmenu.add(menuItem);
+
             menuItem = new JMenuItem("Medium Battle Armor");
             menuItem.setActionCommand(STR."BUY|MEDIUM|\{Unit.BATTLEARMOR}");
             menuItem.addActionListener(myPopup);
             tmenu.add(menuItem);
+
             menuItem = new JMenuItem("Heavy Battle Armor");
             menuItem.setActionCommand(STR."BUY|HEAVY|\{Unit.BATTLEARMOR}");
             menuItem.addActionListener(myPopup);
             tmenu.add(menuItem);
+
             menuItem = new JMenuItem("Assault Battle Armor");
             menuItem.setActionCommand(STR."BUY|ASSAULT|\{Unit.BATTLEARMOR}");
             menuItem.addActionListener(myPopup);
@@ -287,14 +313,17 @@ public class CHSPanel extends JPanel {
             menuItem.setActionCommand(STR."BUY|LIGHT|\{Unit.AERO}");
             menuItem.addActionListener(myPopup);
             tmenu.add(menuItem);
+
             menuItem = new JMenuItem("Medium Aero");
             menuItem.setActionCommand(STR."BUY|MEDIUM|\{Unit.AERO}");
             menuItem.addActionListener(myPopup);
             tmenu.add(menuItem);
+
             menuItem = new JMenuItem("Heavy Aero");
             menuItem.setActionCommand(STR."BUY|HEAVY|\{Unit.AERO}");
             menuItem.addActionListener(myPopup);
             tmenu.add(menuItem);
+
             menuItem = new JMenuItem("Assault Aero");
             menuItem.setActionCommand(STR."BUY|ASSAULT|\{Unit.AERO}");
             menuItem.addActionListener(myPopup);
@@ -309,14 +338,17 @@ public class CHSPanel extends JPanel {
             menuItem.setActionCommand(STR."BUYP|\{Unit.MEK}|\{Unit.LIGHT}");
             menuItem.addActionListener(myPopup);
             smenu.add(menuItem);
+
             menuItem = new JMenuItem("Medium Pilot");
             menuItem.setActionCommand(STR."BUYP|\{Unit.MEK}|\{Unit.MEDIUM}");
             menuItem.addActionListener(myPopup);
             smenu.add(menuItem);
+
             menuItem = new JMenuItem("Heavy Pilot");
             menuItem.setActionCommand(STR."BUYP|\{Unit.MEK}|\{Unit.HEAVY}");
             menuItem.addActionListener(myPopup);
             smenu.add(menuItem);
+
             menuItem = new JMenuItem("Assault Pilot");
             menuItem.setActionCommand(STR."BUYP|\{Unit.MEK}|\{Unit.ASSAULT}");
             menuItem.addActionListener(myPopup);
@@ -329,14 +361,17 @@ public class CHSPanel extends JPanel {
                 menuItem.setActionCommand(STR."BUYP|\{Unit.PROTOMEK}|\{Unit.LIGHT}");
                 menuItem.addActionListener(myPopup);
                 smenu.add(menuItem);
+
                 menuItem = new JMenuItem("Medium Pilot");
                 menuItem.setActionCommand(STR."BUYP|\{Unit.PROTOMEK}|\{Unit.MEDIUM}");
                 menuItem.addActionListener(myPopup);
                 smenu.add(menuItem);
+
                 menuItem = new JMenuItem("Heavy Pilot");
                 menuItem.setActionCommand(STR."BUYP|\{Unit.PROTOMEK}|\{Unit.HEAVY}");
                 menuItem.addActionListener(myPopup);
                 smenu.add(menuItem);
+
                 menuItem = new JMenuItem("Assault Pilot");
                 menuItem.setActionCommand(STR."BUYP|\{Unit.PROTOMEK}|\{Unit.ASSAULT}");
                 menuItem.addActionListener(myPopup);
@@ -359,14 +394,17 @@ public class CHSPanel extends JPanel {
         menuItem.setActionCommand(STR."BUYU|LIGHT|\{Unit.MEK}");
         menuItem.addActionListener(myPopup);
         tmenu.add(menuItem);
+
         menuItem = new JMenuItem("Medium Mek");
         menuItem.setActionCommand(STR."BUYU|MEDIUM|\{Unit.MEK}");
         menuItem.addActionListener(myPopup);
         tmenu.add(menuItem);
+
         menuItem = new JMenuItem("Heavy Mek");
         menuItem.setActionCommand(STR."BUYU|HEAVY|\{Unit.MEK}");
         menuItem.addActionListener(myPopup);
         tmenu.add(menuItem);
+
         menuItem = new JMenuItem("Assault Mek");
         menuItem.setActionCommand(STR."BUYU|ASSAULT|\{Unit.MEK}");
         menuItem.addActionListener(myPopup);
@@ -379,14 +417,17 @@ public class CHSPanel extends JPanel {
             menuItem.setActionCommand(STR."BUYU|LIGHT|\{Unit.VEHICLE}");
             menuItem.addActionListener(myPopup);
             tmenu.add(menuItem);
+
             menuItem = new JMenuItem("Medium Vehicle");
             menuItem.setActionCommand(STR."BUYU|MEDIUM|\{Unit.VEHICLE}");
             menuItem.addActionListener(myPopup);
             tmenu.add(menuItem);
+
             menuItem = new JMenuItem("Heavy Vehicle");
             menuItem.setActionCommand(STR."BUYU|HEAVY|\{Unit.VEHICLE}");
             menuItem.addActionListener(myPopup);
             tmenu.add(menuItem);
+
             menuItem = new JMenuItem("Assault Vehicle");
             menuItem.setActionCommand(STR."BUYU|ASSAULT|\{Unit.VEHICLE}");
             menuItem.addActionListener(myPopup);
@@ -399,14 +440,17 @@ public class CHSPanel extends JPanel {
             menuItem.setActionCommand(STR."BUYU|LIGHT|\{Unit.INFANTRY}");
             menuItem.addActionListener(myPopup);
             tmenu.add(menuItem);
+
             menuItem = new JMenuItem("Medium Infantry");
             menuItem.setActionCommand(STR."BUYU|MEDIUM|\{Unit.INFANTRY}");
             menuItem.addActionListener(myPopup);
             tmenu.add(menuItem);
+
             menuItem = new JMenuItem("Heavy Infantry");
             menuItem.setActionCommand(STR."BUYU|HEAVY|\{Unit.INFANTRY}");
             menuItem.addActionListener(myPopup);
             tmenu.add(menuItem);
+
             menuItem = new JMenuItem("Assault Infantry");
             menuItem.setActionCommand(STR."BUYU|ASSAULT|\{Unit.INFANTRY}");
             menuItem.addActionListener(myPopup);
@@ -420,14 +464,17 @@ public class CHSPanel extends JPanel {
             menuItem.setActionCommand(STR."BUYU|LIGHT|\{Unit.PROTOMEK}");
             menuItem.addActionListener(myPopup);
             tmenu.add(menuItem);
+
             menuItem = new JMenuItem("Medium Infantry");
             menuItem.setActionCommand(STR."BUYU|MEDIUM|\{Unit.PROTOMEK}");
             menuItem.addActionListener(myPopup);
             tmenu.add(menuItem);
+
             menuItem = new JMenuItem("Heavy Infantry");
             menuItem.setActionCommand(STR."BUYU|HEAVY|\{Unit.PROTOMEK}");
             menuItem.addActionListener(myPopup);
             tmenu.add(menuItem);
+
             menuItem = new JMenuItem("Assault Infantry");
             menuItem.setActionCommand(STR."BUYU|ASSAULT|\{Unit.PROTOMEK}");
             menuItem.addActionListener(myPopup);
@@ -441,14 +488,17 @@ public class CHSPanel extends JPanel {
             menuItem.setActionCommand(STR."BUYU|LIGHT|\{Unit.BATTLEARMOR}");
             menuItem.addActionListener(myPopup);
             tmenu.add(menuItem);
+
             menuItem = new JMenuItem("Medium Battle Armor");
             menuItem.setActionCommand(STR."BUYU|MEDIUM|\{Unit.BATTLEARMOR}");
             menuItem.addActionListener(myPopup);
             tmenu.add(menuItem);
+
             menuItem = new JMenuItem("Heavy Battle Armor");
             menuItem.setActionCommand(STR."BUYU|HEAVY|\{Unit.BATTLEARMOR}");
             menuItem.addActionListener(myPopup);
             tmenu.add(menuItem);
+
             menuItem = new JMenuItem("Assault Battle Armor");
             menuItem.setActionCommand(STR."BUYU|ASSAULT|\{Unit.BATTLEARMOR}");
             menuItem.addActionListener(myPopup);
@@ -458,18 +508,22 @@ public class CHSPanel extends JPanel {
         if (Boolean.parseBoolean(client.getServerConfigs("UseAero"))) {
             tmenu = new JMenu("Aero");
             buy.add(tmenu);
+
             menuItem = new JMenuItem("Light Aero");
             menuItem.setActionCommand(STR."BUYU|LIGHT|\{Unit.AERO}");
             menuItem.addActionListener(myPopup);
             tmenu.add(menuItem);
+
             menuItem = new JMenuItem("Medium Aero");
             menuItem.setActionCommand(STR."BUYU|MEDIUM|\{Unit.AERO}");
             menuItem.addActionListener(myPopup);
             tmenu.add(menuItem);
+
             menuItem = new JMenuItem("Heavy Aero");
             menuItem.setActionCommand(STR."BUYU|HEAVY|\{Unit.AERO}");
             menuItem.addActionListener(myPopup);
             tmenu.add(menuItem);
+
             menuItem = new JMenuItem("Assault Aero");
             menuItem.setActionCommand(STR."BUYU|ASSAULT|\{Unit.AERO}");
             menuItem.addActionListener(myPopup);
@@ -596,6 +650,7 @@ public class CHSPanel extends JPanel {
          *
          * :-(
          */
+
         if (canProduce(Unit.MEK, type)) {
             addFactoryHelper(weight, Unit.MEK, timeToRefresh, founder, planet, factoryName, accessLevel, factoryID);
         }
@@ -653,6 +708,7 @@ public class CHSPanel extends JPanel {
         }
 
         int test = productionCapabilities;
+
         if ((test - UnitFactory.BUILD_AERO) >= 0) {
             test -= UnitFactory.BUILD_AERO;
             if (type_id == Unit.AERO) {
@@ -839,14 +895,14 @@ public class CHSPanel extends JPanel {
         // if weight and type map is null, there is no way to change the
         // factory.
         if (weightAndTypeMap == null) {
-            MWLogger.errLog("Error updating factory: null treemap at weight & type.");
+            LOGGER.debug("Error updating factory: null treemap at weight & type.");
             return;
         }
 
         // no factory with matching name on planet. return.
         String oldFactoryInfo = weightAndTypeMap.get(STR."\{planet}$\{factoryName}");
         if (oldFactoryInfo == null) {
-            MWLogger.errLog("Error updating factory: null oldFactory.");
+            LOGGER.debug("Error updating factory: null oldFactory.");
             return;
         }
 
@@ -862,8 +918,9 @@ public class CHSPanel extends JPanel {
     public void updateDisplay() {
 
         // Returns the Private Status for Members only
-        StringBuilder result = new StringBuilder(STR."<BODY  TEXT=\"\{client.getConfigParam("CHATFONTCOLOR")}\" BGCOLOR=\"\{client.getConfigParam(
-              "BACKGROUNDCOLOR")}\">");
+        StringBuilder result =
+              new StringBuilder(STR."<BODY  TEXT=\"\{client.getConfigParam("CHAT_FONT_COLOR")}\" BGCOLOR=\"\{client.getConfigParam(
+                    "BACKGROUND_COLOR")}\">");
         boolean usingAdvanceRepairs = client.isUsingAdvanceRepairs();
         int playerAccessLevel = client.getPlayer().getSubFactionAccess();
         result.append(STR."<TABLE Border=\"1\"><TR><TH>\{HouseName}</TH><TH>\{client.getServerConfigs(
@@ -894,7 +951,7 @@ public class CHSPanel extends JPanel {
                 String Comps = componentsInfo.get(STR."\{weight}$\{type_id}");
                 StringTokenizer ST = new StringTokenizer(Comps, "$");
                 int comps = Integer.parseInt(ST.nextToken());
-                if ((comps > 0) || (factoriesInfo.get(weight + "$" + type_id) != null)) {
+                if ((comps > 0) || (factoriesInfo.get(STR."\{weight}$\{type_id}") != null)) {
 
                     result.append("<TD>" + "<img src=\"data/images/miniticks.gif\">:").append(comps);
                     result.append("<img src=\"data/images/units.gif\">:").append(ST.nextToken()).append("<br>");
@@ -1049,13 +1106,13 @@ public class CHSPanel extends JPanel {
                           false)})\" src=\"data/images/cart.gif\"></a> \{Unit.getWeightClassDesc(weight)}: ");
                     Vector<HSMek> v = unitsInfo.get(STR."\{weight}$\{type}");
                     HSMek[] entities = new HSMek[v.size()];
+
                     for (int i = 0; i < v.size(); i++) {
                         entities[i] = v.elementAt(i);
                     }
 
                     // alpha sort
-                    java.util.Arrays.sort(entities, (obj1, obj2) -> {
-
+                    Arrays.sort(entities, (obj1, obj2) -> {
                         // if the names are the same, check for damage
                         if (obj1.getName().compareTo(obj2.getName()) == 0) {
 
@@ -1161,9 +1218,11 @@ public class CHSPanel extends JPanel {
                         }
 
                         unitString.append("</a>");
+
                         if (usingAdvanceRepairs) {
                             unitString.append("</font>");
                         }
+
                         if (j < (entities.length - 1)) {
                             unitString.append(", ");
                         } else {

@@ -1,17 +1,35 @@
 /*
- * MekWars - Copyright (C) 2004
- * Derived from MegaMekNET (http://www.sourceforge.net/projects/megameknet)
- * Original author Helge Richter (McWizard)
+ * Copyright (C) 2004 Helge Richter (McWizard)
+ * Copyright (C) 2026 The MegaMek Team. All Rights Reserved.
  *
- * This program is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License as published by the Free
- * Software Foundation; either version 2 of the License, or (at your option)
- * any later version.
+ * This file is part of MekWars.
  *
- * This program is distributed in the hope that it will be useful, but
- * WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
- * or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License
- * for more details.
+ * MekWars is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License (GPL),
+ * version 3 or (at your option) any later version,
+ * as published by the Free Software Foundation.
+ *
+ * MekWars is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty
+ * of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU General Public License for more details.
+ *
+ * A copy of the GPL should have been included with this project;
+ * if not, see <https://www.gnu.org/licenses/>.
+ *
+ * NOTICE: The MegaMek organization is a non-profit group of volunteers
+ * creating free software for the BattleTech community.
+ *
+ * MechWarrior, BattleMech, `Mech and AeroTech are registered trademarks
+ * of The Topps Company, Inc. All Rights Reserved.
+ *
+ * Catalyst Game Labs and the Catalyst Game Labs logo are trademarks of
+ * InMediaRes Productions, LLC.
+ *
+ * MechWarrior Copyright Microsoft Corporation. MekWars was created under
+ * Microsoft's "Game Content Usage Rules"
+ * <https://www.xbox.com/en-US/developers/rules> and it is not endorsed by or
+ * affiliated with Microsoft.
  */
 
 package mekwars.common.gui.panels;
@@ -20,6 +38,8 @@ import java.awt.Dimension;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.event.ActionEvent;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import java.io.Serial;
 import java.util.StringTokenizer;
 
@@ -32,7 +52,9 @@ import javax.swing.JTable;
 import javax.swing.ListSelectionModel;
 import javax.swing.SpringLayout;
 
+import megamek.codeUtilities.MathUtility;
 import megamek.common.units.Entity;
+import megamek.logging.MMLogger;
 import mekwars.common.campaign.CBMUnit;
 import mekwars.common.campaign.CCampaign;
 import mekwars.common.campaign.CPlayer;
@@ -42,17 +64,15 @@ import mekwars.common.gui.MekInfo;
 import mekwars.common.gui.TableSorter;
 import mekwars.common.gui.dialogs.SellUnitDialog;
 import mekwars.common.gui.models.BlackMarketModel;
-import mekwars.common.util.MWLogger;
 import mekwars.common.util.SpringLayoutHelper;
 
 /**
  * Black Market Panel
  */
 
-public class CBMPanel extends javax.swing.JPanel {
-    /**
-     *
-     */
+public class CBMPanel extends JPanel {
+    private static final MMLogger LOGGER = MMLogger.create(CBMPanel.class);
+
     @Serial
     private static final long serialVersionUID = -432087180209544906L;
     private final JTable tblMarket = new JTable();
@@ -67,17 +87,17 @@ public class CBMPanel extends javax.swing.JPanel {
     private final JPanel pnlMekIconHolder;
     private final boolean hideBMUnits;
     private final CCampaign theCampaign;
+    private final IClient client;
+    private final CPlayer Player;
     public BlackMarketModel BlackMarketInfo;
-    IClient client;
-    CPlayer Player;
     private JPanel pnlMekIcon;
     private boolean factionBidsAllowed = true;
-    private CBMUnit mm;
+    private CBMUnit cbmUnit;
 
     public CBMPanel(IClient client) {
         setLayout(new GridBagLayout());
         this.client = client;
-        hideBMUnits = Boolean.parseBoolean(this.client.getServerConfigs("HiddenBMUnits"));
+        hideBMUnits = MathUtility.parseBoolean(this.client.getServerConfigs("HiddenBMUnits"), false);
 
         pnlMekIconHolder = new JPanel();
         pnlMekIconHolder.setMaximumSize(new Dimension(84, 72));
@@ -94,16 +114,17 @@ public class CBMPanel extends javax.swing.JPanel {
         TableSorter sorter = new TableSorter(BlackMarketInfo, client, TableSorter.SORTER_BM);
         tblMarket.setModel(sorter);
 
-        tblMarket.addMouseListener(new java.awt.event.MouseAdapter() {
+        tblMarket.addMouseListener(new MouseAdapter() {
             @Override
-            public void mouseClicked(java.awt.event.MouseEvent e) {
-                if (e.getClickCount() == 2) {
-                    btnShowMekActionPerformed(new java.awt.event.ActionEvent(btnShowMek, 0, ""));
+            public void mouseClicked(MouseEvent mouseEvent) {
+                if (mouseEvent.getClickCount() == 2) {
+                    btnShowMekActionPerformed(new ActionEvent(btnShowMek, 0, ""));
                 }
             }
         });
 
         BlackMarketInfo.initColumnSizes(tblMarket);
+
         for (int i = 0; i < BlackMarketInfo.getColumnCount(); i++) {
             tblMarket.getColumnModel().getColumn(i).setCellRenderer(BlackMarketInfo.getRenderer());
         }
@@ -126,31 +147,26 @@ public class CBMPanel extends javax.swing.JPanel {
 
             int selectedRow = lsm.getMinSelectionIndex();
             Integer auctionId = (Integer) tblMarket.getModel().getValueAt(selectedRow, BlackMarketModel.AUCTION_ID);
+
             if (auctionId != null) {
-                mm = getMarketMechAtRow(tblMarket.getSelectedRow());
+                cbmUnit = getMarketMechAtRow(tblMarket.getSelectedRow());
 
                 //if there is a unit in the row, update the dynamic buttons.
-                if (mm != null) {
-
+                if (cbmUnit != null) {
                     if (!hideBMUnits) {
                         btnShowMek.setEnabled(true);
                     }
 
-                    btnRecallBid.setEnabled(mm.getBid() > 0);
+                    btnRecallBid.setEnabled(cbmUnit.getBid() > 0);
 
-                    if (mm.playerIsSeller()) {
+                    if (cbmUnit.playerIsSeller()) {
                         btnBid.setEnabled(false);
                         btnRecallUnit.setEnabled(true);
                     } else {
                         //check cached faction ban value
-                        if (factionBidsAllowed) {
-                            btnBid.setEnabled(true);
-                        } else {
-                            btnBid.setEnabled(false);
-                        }
+                        btnBid.setEnabled(factionBidsAllowed);
                         btnRecallUnit.setEnabled(false);
                     }
-
 
                     //refresh the camo ... may have changed.
                     CBMPanel.this.client.getMainFrame().getMainPanel().getBMPanel().resetCamo();
@@ -247,11 +263,14 @@ public class CBMPanel extends javax.swing.JPanel {
         if (hideBMUnits) {
             return;
         }
-        mm = getMarketMechAtRow(tblMarket.getSelectedRow());
-        if (mm == null) {
+
+        cbmUnit = getMarketMechAtRow(tblMarket.getSelectedRow());
+
+        if (cbmUnit == null) {
             return;
         }
-        Entity theEntity = mm.getEmbeddedUnit().getEntity();
+
+        Entity theEntity = cbmUnit.getEmbeddedUnit().getEntity();
         theEntity.loadAllWeapons();
 
         JFrame infoWindow = new JFrame();
@@ -261,25 +280,27 @@ public class CBMPanel extends javax.swing.JPanel {
         infoWindow.setSize(300, 400);
         infoWindow.setResizable(false);
 
-        infoWindow.setTitle(mm.getModelName());
+        infoWindow.setTitle(cbmUnit.getModelName());
         infoWindow.setLocationRelativeTo(client.getMainFrame());//center it
         infoWindow.setVisible(true);
         unitDisplay.displayEntity(theEntity);
     }
 
     public CBMUnit getMarketMechAtRow(int row) {
-        mm = null;
+        cbmUnit = null;
         Integer auctionId = (Integer) tblMarket.getModel().getValueAt(row, BlackMarketModel.AUCTION_ID);
+
         if (auctionId != null) {
-            mm = theCampaign.getBlackMarket().get(auctionId);
+            cbmUnit = theCampaign.getBlackMarket().get(auctionId);
         }
-        return mm;
+
+        return cbmUnit;
     }
 
     //refresh preview image
     public void resetCamo() {
 
-        if (!hideBMUnits && client.getConfig().isParam("BMPREVIEWIMAGE")) {
+        if (!hideBMUnits && client.getConfig().isParam("BM_PREVIEW_IMAGE")) {
 
             //refresh the camo ... may have been changed.
             pnlMekIcon = new MekInfo(client.getConfig().getImage("CAMO"));
@@ -287,12 +308,11 @@ public class CBMPanel extends javax.swing.JPanel {
             pnlMekIcon.setPreferredSize(new Dimension(84, 72));
             pnlMekIcon.setMaximumSize(new Dimension(84, 72));
 
-
             try {
-                ((MekInfo) pnlMekIcon).setUnit(mm.getEmbeddedUnit().getEntity());
+                ((MekInfo) pnlMekIcon).setUnit(cbmUnit.getEmbeddedUnit().getEntity());
                 ((MekInfo) pnlMekIcon).setImageVisible(true);
             } catch (Exception e) {
-                //just means no entity has been selected yet
+                LOGGER.debug(e, "Entity not selected yet. {}", e.getLocalizedMessage());
             }
 
             pnlMekIconHolder.removeAll();
@@ -320,26 +340,25 @@ public class CBMPanel extends javax.swing.JPanel {
         }
 
         //get the unit
-        mm = getMarketMechAtRow(tblMarket.getSelectedRow());
+        cbmUnit = getMarketMechAtRow(tblMarket.getSelectedRow());
 
         //also shouldn't ever happen but, again, catch it
-        if (mm.playerIsSeller()) {
+        if (cbmUnit.playerIsSeller()) {
             return;
         }
 
-        if (mm != null) {
-
-            int auctionID = mm.getAuctionID();
+        if (cbmUnit != null) {
+            int auctionID = cbmUnit.getAuctionID();
             if (auctionID != -1) {//-1 is the default value. indicates null auction.
 
                 //generate a new option dialog
                 String playerBidString = JOptionPane.showInputDialog(client.getMainFrame(),
-                      STR."<HTML><center>How much would you like to bid on the \{mm.getModelName()}?<BR>Minimum is \{client.moneyOrFluMessage(
+                      STR."<HTML><center>How much would you like to bid on the \{cbmUnit.getModelName()}?<BR>Minimum is \{client.moneyOrFluMessage(
                             true,
                             true,
-                            mm.getMinBid())}.</center></HTML>",
+                            cbmUnit.getMinBid())}.</center></HTML>",
                       "Amount to Bid",
-                      javax.swing.JOptionPane.PLAIN_MESSAGE);
+                      JOptionPane.PLAIN_MESSAGE);
 
                 //Clicked Cancel
                 if ((playerBidString == null) || (playerBidString.trim().isEmpty())) {
@@ -347,13 +366,13 @@ public class CBMPanel extends javax.swing.JPanel {
                 }
 
                 try {
-                    int playerBid = Integer.parseInt(playerBidString);
+                    int playerBid = MathUtility.parseInt(playerBidString, -1);
 
-                    if (playerBid < mm.getMinBid()) {
-                        String toUser = STR."CH|CLIENT: You tried to bid less than the minimum your contacts are willing to accept for the \{mm.getModelName()}. Try bidding \{client.moneyOrFluMessage(
+                    if (playerBid < cbmUnit.getMinBid()) {
+                        String toUser = STR."CH|CLIENT: You tried to bid less than the minimum your contacts are willing to accept for the \{cbmUnit.getModelName()}. Try bidding \{client.moneyOrFluMessage(
                               true,
                               false,
-                              mm.getMinBid())} or more.";
+                              cbmUnit.getMinBid())} or more.";
                         client.doParseDataInput(toUser);
                         return;
                     }
@@ -364,12 +383,8 @@ public class CBMPanel extends javax.swing.JPanel {
                     //bid and retract buttons will be active simultaneously, so disable both
                     btnBid.setEnabled(false);
                     btnRecallBid.setEnabled(false);
-                } catch (NumberFormatException NFE) {
-                    String toUser = "CH|CLIENT: Invalid Bid amount. Try using numbers next time!";
-                    client.doParseDataInput(toUser);
-                    return;
                 } catch (Exception ex) {
-                    MWLogger.errLog(ex);
+                    LOGGER.error(ex, "Unhandled exception: {}", ex.getLocalizedMessage());
                 }
             }
         }
@@ -380,10 +395,10 @@ public class CBMPanel extends javax.swing.JPanel {
      */
     private void btnRecallBidActionPerformed(ActionEvent evt) {
 
-        mm = getMarketMechAtRow(tblMarket.getSelectedRow());
+        cbmUnit = getMarketMechAtRow(tblMarket.getSelectedRow());
 
         //break out if no selection
-        if (mm == null) {
+        if (cbmUnit == null) {
             return;
         }
 
@@ -393,7 +408,7 @@ public class CBMPanel extends javax.swing.JPanel {
         }
 
         //returns passed. send the recall command and deselect the buttons.
-        client.sendChat(STR."\{IClient.CAMPAIGN_PREFIX}c recallbid#\{mm.getAuctionID()}");
+        client.sendChat(STR."\{IClient.CAMPAIGN_PREFIX}c recallbid#\{cbmUnit.getAuctionID()}");
         btnRecallBid.setEnabled(false);
         btnRecallUnit.setEnabled(false);
         btnBid.setEnabled(false);
@@ -405,20 +420,20 @@ public class CBMPanel extends javax.swing.JPanel {
      */
     private void btnRecallUnitActionPerformed(ActionEvent evt) {
 
-        mm = getMarketMechAtRow(tblMarket.getSelectedRow());
+        cbmUnit = getMarketMechAtRow(tblMarket.getSelectedRow());
 
         //break out if no selection
-        if (mm == null) {
+        if (cbmUnit == null) {
             return;
         }
 
         //not the players unit, so he cant terminate the sale
-        if (!mm.playerIsSeller()) {
+        if (!cbmUnit.playerIsSeller()) {
             return;
         }
 
         //returns passed. send the recall command and deselect the buttons.
-        client.sendChat(STR."\{IClient.CAMPAIGN_PREFIX}c recall#\{mm.getAuctionID()}");
+        client.sendChat(STR."\{IClient.CAMPAIGN_PREFIX}c recall#\{cbmUnit.getAuctionID()}");
         btnRecallBid.setEnabled(false);
         btnRecallUnit.setEnabled(false);
         btnBid.setEnabled(false);
@@ -434,7 +449,7 @@ public class CBMPanel extends javax.swing.JPanel {
 
     public void resetButtonBar() {
 
-        if (client.getConfig().isParam("BMPREVIEWIMAGE")) {
+        if (client.getConfig().isParam("BM_PREVIEW_IMAGE")) {
 
             /*
              * Pain in the ass layout. Have to keep the
@@ -450,9 +465,11 @@ public class CBMPanel extends javax.swing.JPanel {
 
             //standard spring layout for the buttons
             JPanel buttonSpring = new JPanel(new SpringLayout());
+
             if (!hideBMUnits) {
                 buttonSpring.add(btnShowMek);
             }
+
             buttonSpring.add(btnBid);
             buttonSpring.add(spacingPanel1);
             buttonSpring.add(btnBid);
@@ -473,9 +490,7 @@ public class CBMPanel extends javax.swing.JPanel {
             pnlBuyButtons.add(new javax.swing.JLabel("\n "));
             pnlBuyButtons.add(buttonSpring);
             SpringLayoutHelper.setupSpringGrid(pnlBuyButtons, 1, 3);
-
         } else {
-
             /*
              * no image, just buttons. this is a nice, simple,
              * centered spring layout. no fuss, no muss.
@@ -485,6 +500,7 @@ public class CBMPanel extends javax.swing.JPanel {
             if (!hideBMUnits) {
                 pnlBuyButtons.add(btnShowMek);
             }
+
             pnlBuyButtons.add(btnBid);
             pnlBuyButtons.add(spacingPanel1);
             pnlBuyButtons.add(btnBid);

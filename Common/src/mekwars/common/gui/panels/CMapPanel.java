@@ -1,32 +1,51 @@
 /*
- * MekWars - Copyright (C) 2004
+ * Copyright (C) 2004 Helge Richter (McWizard)
+ * Copyright (C) 2026 The MegaMek Team. All Rights Reserved.
  *
- * Derived from MegaMekNET (http://www.sourceforge.net/projects/megameknet)
- * Original author Helge Richter (McWizard)
+ * This file is part of MekWars.
  *
- * This program is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License as published by the Free
- * Software Foundation; either version 2 of the License, or (at your option)
- * any later version.
+ * MekWars is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License (GPL),
+ * version 3 or (at your option) any later version,
+ * as published by the Free Software Foundation.
  *
- * This program is distributed in the hope that it will be useful, but
- * WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
- * or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License
- * for more details.
+ * MekWars is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty
+ * of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU General Public License for more details.
+ *
+ * A copy of the GPL should have been included with this project;
+ * if not, see <https://www.gnu.org/licenses/>.
+ *
+ * NOTICE: The MegaMek organization is a non-profit group of volunteers
+ * creating free software for the BattleTech community.
+ *
+ * MechWarrior, BattleMech, `Mech and AeroTech are registered trademarks
+ * of The Topps Company, Inc. All Rights Reserved.
+ *
+ * Catalyst Game Labs and the Catalyst Game Labs logo are trademarks of
+ * InMediaRes Productions, LLC.
+ *
+ * MechWarrior Copyright Microsoft Corporation. MekWars was created under
+ * Microsoft's "Game Content Usage Rules"
+ * <https://www.xbox.com/en-US/developers/rules> and it is not endorsed by or
+ * affiliated with Microsoft.
  */
 
 package mekwars.common.gui.panels;
 
+import java.awt.event.ComponentAdapter;
+import java.awt.event.ComponentEvent;
 import java.io.Serial;
 import javax.swing.JPanel;
 import javax.swing.JSlider;
 import javax.swing.event.ChangeListener;
 
+import megamek.logging.MMLogger;
 import mekwars.common.CampaignData;
 import mekwars.common.campaign.clientutils.protocol.IClient;
 import mekwars.common.gui.CMainFrame;
 import mekwars.common.gui.InnerStellarMap;
-import mekwars.common.util.MWLogger;
 
 /**
  * Class used to display Stellar InnerStellarMap in GUI
@@ -37,10 +56,8 @@ import mekwars.common.util.MWLogger;
  */
 
 public class CMapPanel extends JPanel {
+    private static final MMLogger LOGGER = MMLogger.create(CMapPanel.class);
 
-    /**
-     *
-     */
     @Serial
     private static final long serialVersionUID = 5547551465585402891L;
     /**
@@ -95,26 +112,32 @@ public class CMapPanel extends JPanel {
         add(slider);
         add(map);
 
-        addComponentListener(new java.awt.event.ComponentAdapter() {
+        addComponentListener(new ComponentAdapter() {
             @Override
-            public void componentResized(java.awt.event.ComponentEvent e) {
-                map.setSize(e.getComponent().getSize());
-                slider.setBounds(e.getComponent().getWidth() - 155, 5, 150, slider.getPreferredSize().height);
+            public void componentResized(ComponentEvent componentEvent) {
+                map.setSize(componentEvent.getComponent().getSize());
+                slider.setBounds(componentEvent.getComponent().getWidth() - 155,
+                      5,
+                      150,
+                      slider.getPreferredSize().height);
             }
 
             @Override
-            public void componentShown(java.awt.event.ComponentEvent e) {
-                map.setSize(e.getComponent().getSize());
-                slider.setBounds(e.getComponent().getWidth() - 155, 5, 150, slider.getPreferredSize().height);
+            public void componentShown(ComponentEvent componentEvent) {
+                map.setSize(componentEvent.getComponent().getSize());
+                slider.setBounds(componentEvent.getComponent().getWidth() - 155,
+                      5,
+                      150,
+                      slider.getPreferredSize().height);
             }
         });
 
-        //if the map is visible, select the correct planet last(since this involves several updates)
-        if (client.getConfig().isParam("MAPTABVISIBLE")) {
+        //if the map is visible, select the correct planet last (since this involves several updates)
+        if (client.getConfig().isParam("MAP_TAB_VISIBLE")) {
             try {
                 map.activate(client.getData().getPlanet(map.getConf().getPlanetID()));
             } catch (Exception ex) {
-                MWLogger.errLog(ex);
+                LOGGER.error(ex, "Unable to access planet. {}", ex.getLocalizedMessage());
             }
         }
 

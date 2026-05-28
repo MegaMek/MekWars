@@ -1,6 +1,40 @@
+/*
+ * Copyright (C) 2026 The MegaMek Team. All Rights Reserved.
+ *
+ * This file is part of MekWars.
+ *
+ * MekWars is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License (GPL),
+ * version 3 or (at your option) any later version,
+ * as published by the Free Software Foundation.
+ *
+ * MekWars is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty
+ * of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU General Public License for more details.
+ *
+ * A copy of the GPL should have been included with this project;
+ * if not, see <https://www.gnu.org/licenses/>.
+ *
+ * NOTICE: The MegaMek organization is a non-profit group of volunteers
+ * creating free software for the BattleTech community.
+ *
+ * MechWarrior, BattleMech, `Mech and AeroTech are registered trademarks
+ * of The Topps Company, Inc. All Rights Reserved.
+ *
+ * Catalyst Game Labs and the Catalyst Game Labs logo are trademarks of
+ * InMediaRes Productions, LLC.
+ *
+ * MechWarrior Copyright Microsoft Corporation. MekWars was created under
+ * Microsoft's "Game Content Usage Rules"
+ * <https://www.xbox.com/en-US/developers/rules> and it is not endorsed by or
+ * affiliated with Microsoft.
+ */
+
 package mekwars.common.gui.models;
 
 import java.io.Serial;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.SortedSet;
@@ -12,23 +46,26 @@ import mekwars.common.campaign.clientutils.protocol.IClient;
 import mekwars.common.comparators.UserComparator;
 import mekwars.common.gui.UserListCellRenderer;
 
-public class CUserListModel extends AbstractListModel {
+public class CUserListModel extends AbstractListModel<CUser> {
     /**
      *
      */
     @Serial
     private static final long serialVersionUID = 9141928592065940657L;
-    SortedSet<CUser> Users;  //users set
-    UserListCellRenderer Renderer;  //list cells renderer
-    IClient client;  //client owning this model
-    boolean Dedicated; //dedicated hosts visible
-
+    private final SortedSet<CUser> Users;  //users' set
+    private final UserListCellRenderer Renderer;  //list cells renderer
+    private final IClient client;  //client owning this model
+    private boolean Dedicated; //dedicated hosts visible
 
     public CUserListModel(IClient client) {
         this.client = client;
-        Dedicated = this.client.getConfig().isParam("USERLISTDEDICATEDS");
+        Dedicated = this.client.getConfig().isParam("USER_LIST_DEDICATEDS");
         Users = Collections.synchronizedSortedSet(new TreeSet<>(new UserComparator()));
         Renderer = new UserListCellRenderer(this);
+    }
+
+    public IClient getClient() {
+        return client;
     }
 
     public synchronized void remove(CUser user) {
@@ -43,9 +80,9 @@ public class CUserListModel extends AbstractListModel {
         return Users.size();
     }
 
-    public synchronized Object getElementAt(int index) {
+    public synchronized CUser getElementAt(int index) {
         if (index < Users.size()) {
-            return (((CUser) Users.toArray()[index]).getName());
+            return new ArrayList<>(Users).get(index);
         }
 
         return null;
