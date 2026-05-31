@@ -37,14 +37,17 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
+import java.io.IOException;
 import java.io.PrintStream;
 import java.io.Serial;
+import java.io.Serializable;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Hashtable;
 import java.util.Properties;
 import java.util.Random;
 import java.util.StringTokenizer;
+import java.util.TreeSet;
 import java.util.Vector;
 
 import megamek.client.Client;
@@ -59,6 +62,7 @@ import mekwars.common.Equipment;
 import mekwars.common.House;
 import mekwars.common.Influences;
 import mekwars.common.Planet;
+import mekwars.common.campaign.operations.Operation;
 import mekwars.common.flags.PlayerFlags;
 import mekwars.common.util.MekWarsFileReader;
 import mekwars.common.util.UnitUtils;
@@ -93,7 +97,7 @@ import mekwars.server.util.discord.DiscordMessageHandler;
 import mekwars.server.util.rss.Feed;
 import mekwars.server.util.rss.FeedMessage;
 
-public final class CampaignMain implements java.io.Serializable {
+public final class CampaignMain implements Serializable {
     private static final MMLogger LOGGER = MMLogger.create(CampaignMain.class);
 
     @Serial
@@ -167,9 +171,7 @@ public final class CampaignMain implements java.io.Serializable {
         // Try to read the config file
         try {
             config.putAll(defaultServerOptions.getServerDefaults());// load all the defaults
-            // into the config file
-            // before you load in the
-            // campaign stuff
+            // into the config file before you load in the campaign stuff
             config.load(new FileInputStream(this.serv.getConfigParam("CAMPAIGN_CONFIG")));
 
 
@@ -212,9 +214,8 @@ public final class CampaignMain implements java.io.Serializable {
         // added
 
         /*
-         * Create the auction environment/market. Notice that the new market
-         * implementation does not save a .dat file. While saving the status was
-         * a nice idea, it was creating dupes and NPEs after crashes.
+         * Create the auction environment/market. Notice that the new market implementation does not save a .dat file.
+         * While saving the status was a nice idea, it was creating dupes and NPEs after crashes.
          */
 
         market = new Market();
@@ -299,9 +300,8 @@ public final class CampaignMain implements java.io.Serializable {
         voteManager = new VoteManager(this);
 
         /*
-         * start an OperationManager. The manager loads all ops files and
-         * creates necessary instances of Validators, Resolvers and other helper
-         * objects as part of its construction.
+         * start an OperationManager. The manager loads all op files and creates the necessary instances of Validators,
+         * Resolvers and other helper objects as part of its construction.
          */
         createNewOpsManager();
 
@@ -330,9 +330,9 @@ public final class CampaignMain implements java.io.Serializable {
         thread.start();
 
         // start tick, slice and immunity threads
-        tickThread = new TickThread(this, Integer.parseInt(getConfig("TickTime")));
+        tickThread = new TickThread(this, MathUtility.parseInt(getConfig("TickTime"), 1000));
         tickThread.start();
-        SliceThread SThread = new SliceThread(this, Integer.parseInt(getConfig("SliceTime")));
+        SliceThread SThread = new SliceThread(this, MathUtility.parseInt(getConfig("SliceTime"), 500));
         SThread.start();// it slices, it dices, it chops!
         immunityThread = new ImmunityThread();
         immunityThread.start();
@@ -369,7 +369,7 @@ public final class CampaignMain implements java.io.Serializable {
                 }
             }
             dis.close();
-        } catch (java.io.IOException e) {
+        } catch (IOException e) {
             LOGGER.error(e, "IO Exception: {}", e.getLocalizedMessage());
         } finally {
             CampaignMain.campaignMain.setSupportUnits(units);
@@ -460,17 +460,14 @@ public final class CampaignMain implements java.io.Serializable {
     }
 
     public void fromUser(String text, String Username) {
-        // if you don't have a client sign on to the server then you do not get
-        // to send commands
-        if (mekwars.server.campaign.CampaignMain.campaignMain.getServer().getClient(Username) == null) {
+        // if you don't have a client sign on to the server, then you do not get to send commands
+        if (CampaignMain.campaignMain.getServer().getClient(Username) == null) {
             return;
         }
 
         /*
-         * Only a few commands should be accepted from a logged out player.
-         * Unless the command is enrolled, login, or register, return without
-         * further processing. Register won't succeed unless player has a
-         * campaign account.
+         * Only a few commands should be accepted from a logged-out player. Unless the command is enrolled, login, or
+         *  register, return without further processing. Register won't succeed unless a player has a campaign account.
          */
         if (!isLoggedIn(Username) &&
                   (!text.toUpperCase().contains("ENROLL")) &&
@@ -495,7 +492,6 @@ public final class CampaignMain implements java.io.Serializable {
                     this.getPlayer(Username).setLastTimeCommandSent(System.currentTimeMillis());
                 } catch (Exception ex) {
                     if (!Username.startsWith("[Dedicated]")) {
-                        // commands
                         LOGGER.error("Command received from a null player ({})?", Username);
                     }
                 }
@@ -534,15 +530,14 @@ public final class CampaignMain implements java.io.Serializable {
     }
 
     public boolean isLoggedIn(String Username) {
-        // always treat dedicateds as logged in
+        // always treat dedicated as logged in
         if (Username.startsWith("[Dedicated]")) {
             return true;
         }
 
         /*
-         * search all houses, all states, for user with this name. the hash
-         * searches are O(1), which means this is actually much faster than the
-         * old MMNET way, which was to try a .equals() on every player's name.
+         * search all houses, all states, for user with this name. the hash searches are O(1), which means this is
+         * actually much faster than the old MMNET way, which was to try a .equals() on every player's name.
          */
         String lowerName = Username.toLowerCase();
         for (House house : data.getAllHouses()) {
@@ -559,7 +554,7 @@ public final class CampaignMain implements java.io.Serializable {
             }
         }
 
-        // we couldnt find the player. return false.
+        // we couldn't find the player. return false.
         return false;
     }
 
@@ -600,12 +595,12 @@ public final class CampaignMain implements java.io.Serializable {
         }
 
         // look for faction players
-        SPlayer result = null;
-        for (House vh : data.getAllHouses()) {
-            SHouse h = (SHouse) vh;
-            result = h.getPlayer(pName);
+        SPlayer result;
+        for (House house : data.getAllHouses()) {
+            SHouse sHouse = (SHouse) house;
+            result = sHouse.getPlayer(pName);
+
             if (result != null) {
-                // MWLogger.debugLog(pName+" Found in house data");
                 return result;
             }
         }
@@ -632,53 +627,50 @@ public final class CampaignMain implements java.io.Serializable {
     private SPlayer loadPlayerFile(String name, boolean explicitName, boolean mute) {
 
         if (!name.startsWith("[Dedicated]") && !name.startsWith("War Bot")) {
-
-            MekwarsFileReader dis = null;
+            MekWarsFileReader dis = null;
 
             try {
                 // log the load attempt & create readers
-                MWLogger.mainLog("Loading pfile for: " + name);
+                LOGGER.info("Loading pfile for: {}", name);
 
-                java.io.File pFile = null;
+                File pFile;
                 if (explicitName) {
-                    pFile = new java.io.File("./campaign/players/" + name);
+                    pFile = new File(STR."./campaign/players/\{name}");
                 } else {
-                    pFile = new java.io.File("./campaign/players/" + name.toLowerCase() + ".dat");
+                    pFile = new File(STR."./campaign/players/\{name.toLowerCase()}.dat");
                 }
 
                 if (!pFile.exists()) {
                     return null;
                 }
 
-                dis = new MekwarsFileReader(pFile);
+                dis = new MekWarsFileReader(pFile);
 
                 // create player from string read by dis
-                SPlayer p = new SPlayer();
+                SPlayer sPlayer = new SPlayer();
                 String pString = dis.readLine();
 
                 if (pString == null) {
                     return null;
                 }
 
-                p.fromString(pString);
+                sPlayer.fromString(pString);
 
-                return p;
-            } catch (java.io.FileNotFoundException fnf) {
+                return sPlayer;
+            } catch (FileNotFoundException fnf) {
 
                 if (!name.toLowerCase().startsWith("nobody") &&
                           !name.equals("SERVER") &&
                           !name.toLowerCase().startsWith("war bot") &&
                           !name.toLowerCase().startsWith("[dedicated]") &&
                           !mute) {
-                    MWLogger.errLog("could not find a pfile for " + name);
-                    MWLogger.debugLog(fnf);
-                    MWLogger.debugLog("could not find a pfile for " + name);
+                    LOGGER.debug(fnf, "could not find a Pfile for {}", name);
                 }
+
                 return null;
             } catch (Exception ex) {
                 if (!mute) {
-                    MWLogger.errLog(ex);
-                    MWLogger.errLog("Unable to load pfile for " + name);
+                    LOGGER.error(ex, "Unable to load pfile for {}", name);
                 }
                 return null;
             } finally {
@@ -688,49 +680,49 @@ public final class CampaignMain implements java.io.Serializable {
                         dis.close();
                     }
                 } catch (Exception ex) {
-                    MWLogger.errLog(ex);
+                    LOGGER.error(ex, "Failed closing the stream");
                 }
             }
         }
 
         return null;
-
     }
 
-    public SPlanet getPlanetFromPartialString(String PlanetName, String Username) {
+    public SPlanet getPlanetFromPartialString(String planetName, String username) {
 
         // store matches so we can tell player if there's more than one
         int numMatches = 0;
         SPlanet theMatch = null;
 
-        for (Planet currP : data.getAllPlanets()) {
-            SPlanet p = (SPlanet) currP;
+        for (Planet planet : data.getAllPlanets()) {
+            SPlanet sPlanet = (SPlanet) planet;
 
             // exact match
-            if (p.getName().equals(PlanetName)) {
-                return p;
+            if (sPlanet.getName().equals(planetName)) {
+                return sPlanet;
             }
 
             // store all matches
-            if (p.getName().startsWith(PlanetName)) {
-                theMatch = p;
+            if (sPlanet.getName().startsWith(planetName)) {
+                theMatch = sPlanet;
                 numMatches++;
             }
         }
 
         // too many matches
         if (numMatches > 1) {
-            if (Username != null) {
-                toUser("\"" + PlanetName + "\" is not unique [" + numMatches + " matches]. Please be more specific.",
-                      Username);
+            if (username != null) {
+                toUser(STR."\"\{planetName}\" is not unique [\{numMatches} matches]. Please be more specific.",
+                      username);
             }
+
             return null;
         }
 
         if (numMatches == 0) {
-            if (Username != null) {
-                toUser("Couldn't find a planet whose name begins with \"" + PlanetName + "\". Try again.",
-                      Username,
+            if (username != null) {
+                toUser(STR."Couldn't find a planet whose name begins with \"\{planetName}\". Try again.",
+                      username,
                       true);
             }
             return null;
@@ -740,30 +732,29 @@ public final class CampaignMain implements java.io.Serializable {
         return theMatch;
     }
 
-    public void doSendHouseMail(SHouse h, String Username, String text) {
+    public void doSendHouseMail(SHouse sHouse, String username, String text) {
 
-        // send the text to all logged in players
-        text = "(Housemail)" + Username + ":" + text;
-        this.doSendToAllOnlinePlayers(h, text, true);
+        // send the text to all logged-in players
+        text = STR."(Housemail)\{username}:\{text}";
+        this.doSendToAllOnlinePlayers(sHouse, text, true);
 
         // then add it to the faction's log
-        MWLogger.factionLog(h.getName(), text.substring(11));
+        LOGGER.info(sHouse.getName(), text.substring(11));
     }
 
     /**
      * Send a bit of text to all players in a given faction. Can be chat, or a command/message.
      */
-    public void doSendToAllOnlinePlayers(SHouse h, String text, boolean isChat) {
-
-        for (String currName : h.getReservePlayers().keySet()) {
+    public void doSendToAllOnlinePlayers(SHouse sHouse, String text, boolean isChat) {
+        for (String currName : sHouse.getReservePlayers().keySet()) {
             this.toUser(text, currName, isChat);
         }
 
-        for (String currName : h.getActivePlayers().keySet()) {
+        for (String currName : sHouse.getActivePlayers().keySet()) {
             this.toUser(text, currName, isChat);
         }
 
-        for (String currName : h.getFightingPlayers().keySet()) {
+        for (String currName : sHouse.getFightingPlayers().keySet()) {
             this.toUser(text, currName, isChat);
         }
     }
@@ -771,47 +762,46 @@ public final class CampaignMain implements java.io.Serializable {
     /**
      * Loop through all online players (all houses, all three duty modes) and send mail to those players who are mods.
      */
-    public void doSendModMail(String Username, String text) {
-
+    public void doSendModMail(String username, String text) {
         int sendCommandLevel = 0;
-        int commandLevel = mekwars.server.campaign.CampaignMain.campaignMain.getServerCommands()
-                                 .get("MM")
-                                 .getExecutionLevel();
-        int userLevel = 0;
-        try {
-            if (Username.equalsIgnoreCase("NOTE")) {
-                if (!mekwars.server.campaign.CampaignMain.campaignMain.getBooleanConfig(
-                      "AllowLowerLevelUsersToSeeUpperLevelUsersDoings")) {
-                    sendCommandLevel = mekwars.server.campaign.CampaignMain.campaignMain.getServer()
-                                             .getUserLevel(text.substring(0, text.indexOf(" ")).trim());
-                } else {
-                    sendCommandLevel = 100;
-                }
+        int commandLevel = CampaignMain.campaignMain.getServerCommands().get("MM").getExecutionLevel();
+        int userLevel;
+
+        if (username.equalsIgnoreCase("NOTE")) {
+            if (!CampaignMain.campaignMain.getBooleanConfig("AllowLowerLevelUsersToSeeUpperLevelUsersDoings")) {
+                sendCommandLevel = CampaignMain.campaignMain.getServer()
+                                         .getUserLevel(text.substring(0, text.indexOf(" ")).trim());
+            } else {
+                sendCommandLevel = 100;
             }
-        } catch (Exception ex) {
-            MWLogger.errLog(ex);
         }
 
         // Note it to the logs
-        MWLogger.modLog(Username + ": " + text);
-        text = "(Moderator Mail) " + Username + ": " + text;
-        for (House vh : data.getAllHouses()) {
-            SHouse h = (SHouse) vh;
+        LOGGER.info("{}: {}", username, text);
+        text = STR."(Moderator Mail) \{username}: \{text}";
 
-            for (String currName : h.getReservePlayers().keySet()) {
-                userLevel = mekwars.server.campaign.CampaignMain.campaignMain.getServer().getUserLevel(currName);
+        for (House house : data.getAllHouses()) {
+            SHouse sHouse = (SHouse) house;
+
+            for (String currName : sHouse.getReservePlayers().keySet()) {
+                userLevel = CampaignMain.campaignMain.getServer().getUserLevel(currName);
+
                 if (userLevel >= commandLevel && userLevel >= sendCommandLevel) {
                     this.toUser(text, currName, true);
                 }
             }
-            for (String currName : h.getActivePlayers().keySet()) {
-                userLevel = mekwars.server.campaign.CampaignMain.campaignMain.getServer().getUserLevel(currName);
+
+            for (String currName : sHouse.getActivePlayers().keySet()) {
+                userLevel = CampaignMain.campaignMain.getServer().getUserLevel(currName);
+
                 if (userLevel >= commandLevel && userLevel >= sendCommandLevel) {
                     this.toUser(text, currName, true);
                 }
             }
-            for (String currName : h.getFightingPlayers().keySet()) {
-                userLevel = mekwars.server.campaign.CampaignMain.campaignMain.getServer().getUserLevel(currName);
+
+            for (String currName : sHouse.getFightingPlayers().keySet()) {
+                userLevel = CampaignMain.campaignMain.getServer().getUserLevel(currName);
+
                 if (userLevel >= commandLevel && userLevel >= sendCommandLevel) {
                     this.toUser(text, currName, true);
                 }
@@ -823,28 +813,28 @@ public final class CampaignMain implements java.io.Serializable {
      * After an error, loop through all online players and send text of the error to anyone who has modmail access.
      */
     public void doSendErrLog(String text) {
-        text = "(Error Log): " + text;
-        for (House vh : data.getAllHouses()) {
-            SHouse h = (SHouse) vh;
+        text = STR."(Error Log): \{text}";
+        for (House house : data.getAllHouses()) {
+            SHouse sHouse = (SHouse) house;
 
-            for (String currName : h.getReservePlayers().keySet()) {
-                Command command = mekwars.server.campaign.CampaignMain.campaignMain.getServerCommands().get("MM");
-                if (mekwars.server.campaign.CampaignMain.campaignMain.getServer().getUserLevel(currName) >=
-                          command.getExecutionLevel()) {
+            for (String currName : sHouse.getReservePlayers().keySet()) {
+                Command command = CampaignMain.campaignMain.getServerCommands().get("MM");
+
+                if (CampaignMain.campaignMain.getServer().getUserLevel(currName) >= command.getExecutionLevel()) {
                     this.toUser(text, currName, true);
                 }
             }
-            for (String currName : h.getActivePlayers().keySet()) {
-                Command command = mekwars.server.campaign.CampaignMain.campaignMain.getServerCommands().get("MM");
-                if (mekwars.server.campaign.CampaignMain.campaignMain.getServer().getUserLevel(currName) >=
-                          command.getExecutionLevel()) {
+            for (String currName : sHouse.getActivePlayers().keySet()) {
+                Command command = CampaignMain.campaignMain.getServerCommands().get("MM");
+
+                if (CampaignMain.campaignMain.getServer().getUserLevel(currName) >= command.getExecutionLevel()) {
                     this.toUser(text, currName, true);
                 }
             }
-            for (String currName : h.getFightingPlayers().keySet()) {
-                Command command = mekwars.server.campaign.CampaignMain.campaignMain.getServerCommands().get("MM");
-                if (mekwars.server.campaign.CampaignMain.campaignMain.getServer().getUserLevel(currName) >=
-                          command.getExecutionLevel()) {
+            for (String currName : sHouse.getFightingPlayers().keySet()) {
+                Command command = CampaignMain.campaignMain.getServerCommands().get("MM");
+
+                if (CampaignMain.campaignMain.getServer().getUserLevel(currName) >= command.getExecutionLevel()) {
                     this.toUser(text, currName, true);
                 }
             }
@@ -852,14 +842,14 @@ public final class CampaignMain implements java.io.Serializable {
         }
     }
 
-    public java.util.Hashtable<String, Command> getServerCommands() {
+    public Hashtable<String, Command> getServerCommands() {
         return commands;
     }
 
     /**
      * @return Returns the mechStats.
      */
-    public java.util.Hashtable<String, MekStatistics> getMekStats() {
+    public Hashtable<String, MekStatistics> getMekStats() {
         return mekStats;
     }
 
@@ -869,27 +859,21 @@ public final class CampaignMain implements java.io.Serializable {
          * Format should be: Winner#DE#...Unit...#GY#...Units...#AL#...Units...
          */
 
-        /*
-         * return if the Username isn't listed if (s.indexOf(Username) == -1)
-         * return;
-         */
-
-        // Now adays deds and Hosts actually report the game not the players.
-        // So we need to check the winner if the winner is NULL due to a DRAW
-        // Then check the name of the first player in the report string which
-        // is the second element in a * delimited string
+        // Nowadays dedicated and Hosts actually report the game, not the players. So we need to check the winner if
+        // the winner is NULL due to a DRAW Then check the name of the first player in the report string which is the
+        // second element in a * delimited string
         // -Torren
-        java.util.TreeSet<String> players = new java.util.TreeSet<String>();
+        TreeSet<String> players = new TreeSet<>();
 
-        java.util.StringTokenizer report = new java.util.StringTokenizer(s, "#");
+        StringTokenizer report = new StringTokenizer(s, "#");
         SPlayer reporter = this.getPlayer(report.nextToken());
 
         while (report.hasMoreElements()) {
-            java.util.StringTokenizer report2 = new java.util.StringTokenizer(report.nextToken(), "*");
+            StringTokenizer report2 = new StringTokenizer(report.nextToken(), "*");
 
             String test = report2.nextToken();
 
-            // dont bother trying to process auto army or MechWarriors.
+            // don't bother trying to process auto army or MekWarriors.
             if (test.equals("MW") || test.equals("-1")) {
                 continue;
             }
@@ -898,41 +882,39 @@ public final class CampaignMain implements java.io.Serializable {
             while (report2.hasMoreTokens()) {
                 SPlayer player = this.getPlayer(report2.nextToken(), false, true);
                 if (player != null) {
-                    if (!players.contains(player.getName().toLowerCase())) {
-                        players.add(player.getName().toLowerCase());
-                    }
+                    players.add(player.getName().toLowerCase());
 
                     if (reporter == null) {
                         reporter = player;
                     }
+
                     break;
                 }
             }
         }
 
         if (reporter == null) {
-            MWLogger.errLog("reporter is null! " + s);
+            LOGGER.debug("reporter is null! {}", s);
             return;
         }
 
         /*
-         * If the player isn't in any ShortOperations, he obviously has no
-         * standing to report. Tasks code used to sort winners and losers at
-         * this point, but we handle that in the ShortResovler.
+         * If the player isn't in any ShortOperations, he obviously has no standing to report. Tasks code used to
+         * sort winners and losers at this point, but we handle that in the ShortResovler.
          */
-        ShortOperation so = getOpsManager().getShortOpForPlayer(reporter);
-        if (so == null) {
+        ShortOperation shortOpForPlayer = getOpsManager().getShortOpForPlayer(reporter);
+        if (shortOpForPlayer == null) {
             return;
         }
 
-        if (!so.validatePlayers(players)) {
-            MWLogger.errLog("Unable to validate all players for: " + s);
+        if (!shortOpForPlayer.validatePlayers(players)) {
+            LOGGER.debug("Unable to validate all players for: {}", s);
             return;
         }
 
-        if (so.hasPlayer(reporter)) {
-            Operation o = getOpsManager().getOperation(so.getName());
-            getOpsManager().resolveShortAttack(o, so, s);
+        if (shortOpForPlayer.hasPlayer(reporter)) {
+            Operation o = getOpsManager().getOperation(shortOpForPlayer.getName());
+            getOpsManager().resolveShortAttack(o, shortOpForPlayer, s);
             return;
         }
 
@@ -2110,7 +2092,7 @@ public final class CampaignMain implements java.io.Serializable {
         // log the number of games underway
         int gameCount = 0;
         for (ShortOperation currO : getOpsManager().getRunningOps().values()) {
-            if (currO.getStatus() == ShortOperation.STATUS_INPROGRESS) {
+            if (currO.getStatus() == ShortOperation.STATUS_IN_PROGRESS) {
                 gameCount++;
             }
         }

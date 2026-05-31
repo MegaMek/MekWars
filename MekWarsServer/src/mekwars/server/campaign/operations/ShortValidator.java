@@ -689,7 +689,7 @@ public class ShortValidator {
                       longID,
                       false);
                 manager.addShortOperation(newOp, ap, o);
-                newOp.changeStatus(ShortOperation.STATUS_INPROGRESS);
+                newOp.changeStatus(ShortOperation.STATUS_IN_PROGRESS);
                 newOp.changeStatus(ShortOperation.STATUS_REPORTING);
                 int conquestCap = o.getIntValue("ConquestAmountCap");
                 int totalConquest = o.getIntValue("AttackerBaseConquestAmount");

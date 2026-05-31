@@ -1442,7 +1442,7 @@ public class SHouse extends TimeUpdateHouse implements Comparable<SHouse>, ISell
         java.util.Iterator<SPlanet> e = Planets.values().iterator();
         while (e.hasNext()) {
             SPlanet p = e.next();
-            java.util.Vector<SUnitFactory> v = p.getFactoriesOfWeighclass(weight);
+            java.util.Vector<SUnitFactory> v = p.getFactoriesOfWeightClass(weight);
             for (int i = 0; i < v.size(); i++) {
                 SUnitFactory MF = v.elementAt(i);
                 if (MF.canProduce(type) && (ignoreRefresh || MF.getTicksUntilRefresh() < 1)) {
@@ -1860,7 +1860,7 @@ public class SHouse extends TimeUpdateHouse implements Comparable<SHouse>, ISell
     private void modifyUnitSupport(SPlanet p, boolean addProduction) {
         if (p.getFactoryCount() > 0) {
             for (int weightclass = Unit.LIGHT; weightclass <= Unit.ASSAULT; weightclass++) {
-                for (SUnitFactory uf : p.getFactoriesOfWeighclass(weightclass)) {
+                for (SUnitFactory uf : p.getFactoriesOfWeightClass(weightclass)) {
                     String typeString = uf.getTypeString();
                     String dirName = "./campaign/factions/support/" + uf.getFounder() + "_" + uf.getSize() + "_";
                     dirName = dirName.toLowerCase();

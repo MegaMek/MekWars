@@ -130,10 +130,10 @@ public class OpsChickenThread extends Thread {
                 }
 
                 if (parentOp.getDefenders().size() + parentOp.getAttackers().size() > minPlayers) {
-                    parentOp.changeStatus(ShortOperation.STATUS_INPROGRESS);
+                    parentOp.changeStatus(ShortOperation.STATUS_IN_PROGRESS);
                 } else {
                     CampaignMain.campaignMain.getOpsManager()
-                          .terminateOperation(parentOp, OperationManager.TERM_NOPOSSIBLEDEFENDERS, null);
+                          .terminateOperation(parentOp, OperationManager.TERM_NO_POSSIBLE_DEFENDERS, null);
                 }
                 return;
             }

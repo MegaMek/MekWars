@@ -1,28 +1,53 @@
 /*
- * MekWars - Copyright (C) 2004
+ * Copyright (C) 2004 Helge Richter (McWizard)
+ * Copyright (C) 2026 The MegaMek Team. All Rights Reserved.
  *
- * Derived from MegaMekNET (http://www.sourceforge.net/projects/megameknet)
- * Original author Helge Richter (McWizard)
+ * This file is part of MekWars.
  *
- * This program is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License as published by the Free
- * Software Foundation; either version 2 of the License, or (at your option)
- * any later version.
+ * MekWars is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License (GPL),
+ * version 3 or (at your option) any later version,
+ * as published by the Free Software Foundation.
  *
- * This program is distributed in the hope that it will be useful, but
- * WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
- * or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License
- * for more details.
+ * MekWars is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty
+ * of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU General Public License for more details.
+ *
+ * A copy of the GPL should have been included with this project;
+ * if not, see <https://www.gnu.org/licenses/>.
+ *
+ * NOTICE: The MegaMek organization is a non-profit group of volunteers
+ * creating free software for the BattleTech community.
+ *
+ * MechWarrior, BattleMech, `Mech and AeroTech are registered trademarks
+ * of The Topps Company, Inc. All Rights Reserved.
+ *
+ * Catalyst Game Labs and the Catalyst Game Labs logo are trademarks of
+ * InMediaRes Productions, LLC.
+ *
+ * MechWarrior Copyright Microsoft Corporation. MekWars was created under
+ * Microsoft's "Game Content Usage Rules"
+ * <https://www.xbox.com/en-US/developers/rules> and it is not endorsed by or
+ * affiliated with Microsoft.
  */
+
 
 package mekwars.common.gui;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.PrintStream;
 import java.io.Serial;
 import java.io.Serializable;
+import java.util.Properties;
+import java.util.TreeMap;
+import javax.swing.ImageIcon;
+import javax.swing.JOptionPane;
 
+import megamek.logging.MMLogger;
 import mekwars.common.campaign.clientutils.IClientConfig;
-import mekwars.common.util.MWLogger;
-
 
 /**
  * Class for client's configuration.
@@ -31,56 +56,57 @@ public class GUIClientConfig implements IClientConfig, Serializable {
     // VARIABLES
     public static final String IMAGE_PATH = "data/images/";
     public static final String CAMO_PATH = "data/images/camo/";
+    private static final MMLogger LOGGER = MMLogger.create(GUIClientConfig.class);
     @Serial
     private static final long serialVersionUID = 415432969624634387L;
-    private final java.util.Properties config; // config. player values.
-    private java.util.TreeMap<String, javax.swing.ImageIcon> images; // treemap with images
+    private final Properties config; // config. player values.
+    private TreeMap<String, ImageIcon> images; // treemap with images
 
     // CONSTRUCTOR
     public GUIClientConfig(boolean dedicated) {
-
         config = setDefaults();
-        images = new java.util.TreeMap<>();
+        images = new TreeMap<>();
 
         // check to see if a config is present. if not, make one.
-        if (!(new java.io.File(CONFIG_FILE).exists()) && !(new java.io.File(CONFIG_BACKUP_FILE).exists())) {
+        if (!(new File(CONFIG_FILE).exists()) && !(new File(CONFIG_BACKUP_FILE).exists())) {
             createConfig();
         }
 
         // load the saved mwconfig.txt file
         try {
-            java.io.File configfile = new java.io.File(CONFIG_FILE);
-            java.io.FileInputStream fis = new java.io.FileInputStream(configfile);
+            File configFile = new File(CONFIG_FILE);
+            if (!configFile.exists()) {
+                configFile = new File(CONFIG_BACKUP_FILE);
+            }
 
-            config.load(fis);  // Here's the change.
-            fis.close();
-        } catch (java.io.IOException ie) {
-            try {
-                java.io.File configfile = new java.io.File(CONFIG_BACKUP_FILE);
-                java.io.FileInputStream fis = new java.io.FileInputStream(configfile);
-                config.load(fis);
+            if (configFile.exists()) {
+                FileInputStream fis = new FileInputStream(configFile);
+                config.load(fis);  // Here's the change.
                 fis.close();
-            } catch (Exception ex) {
-                MWLogger.errLog(ex);
-                javax.swing.JOptionPane.showMessageDialog(null, "Unable to load Backup config file");
+            } else {
+                LOGGER.error("Neither Main nor Backup Config File Exists.");
+                JOptionPane.showMessageDialog(null, "Unable to load Main nor Backup Config File.");
             }
         } catch (Exception ex) {
-            MWLogger.errLog(ex);
-            javax.swing.JOptionPane.showMessageDialog(null, "Unable to load main config file");
+            LOGGER.error(ex, "Unhandled by other means. {}", ex.getLocalizedMessage());
+            JOptionPane.showMessageDialog(null, "Unhandled exception by other means.");
         }
 
         // check for a serverdata.dat
         try {
-            java.io.File configfile = new java.io.File("serverdata.dat");
-            java.io.FileInputStream fis = new java.io.FileInputStream(configfile);
-            config.load(fis);
-            fis.close();
-            configfile.delete();
-            saveConfig();
-        } catch (java.io.FileNotFoundException fnfe) {
-            // Exception simply means serverdata.dat is not present.
+            File configfile = new File("serverdata.dat");
+
+            if (configfile.exists()) {
+                FileInputStream fis = new FileInputStream(configfile);
+                config.load(fis);
+                fis.close();
+
+                if (configfile.delete()) {
+                    saveConfig();
+                }
+            }
         } catch (Exception ex) {
-            MWLogger.errLog(ex);
+            LOGGER.error("File exists but something else happened. {}", ex.getLocalizedMessage());
         }
 
         // if a -d arg was passed, set dedicated to true
@@ -88,23 +114,24 @@ public class GUIClientConfig implements IClientConfig, Serializable {
             setParam("DEDICATED", "TRUE");
         }
 
-        // deds have no gui, so dont load images.
+        // dedicated have no gui, so dont load images.
         if (isParam("DEDICATED")) {
             return;
         }
 
         // not a ded, so fill the images treemap
-        images = new java.util.TreeMap<>();
+        images = new TreeMap<>();
 
-        loadImage(IMAGE_PATH + "logout_colored.gif", "LOGOUT", 20, 20);
-        loadImage(IMAGE_PATH + "reserve_colored.gif", "RESERVE", 20, 20);
-        loadImage(IMAGE_PATH + "active_colored.gif", "ACTIVE", 20, 20);
-        loadImage(IMAGE_PATH + "fighting_colored.gif", "FIGHT", 20, 20);
-        loadImage(IMAGE_PATH + getParam("LOGOIMAGE"), "LOGO", 100, 100);
-        loadImage(IMAGE_PATH + getParam("TRAYIMAGE"), "TRAY", 20, 20);
-        loadImage(IMAGE_PATH + getParam("REPAIRIMAGE"), "REPAIR", 100, 100);
-        if (!getParam("UNITCAMO").trim().isEmpty()) {
-            loadImage(CAMO_PATH + getParam("UNITCAMO"), "CAMO", 84, 72);
+        loadImage(STR."\{IMAGE_PATH}logout_colored.gif", "LOGOUT", 20, 20);
+        loadImage(STR."\{IMAGE_PATH}reserve_colored.gif", "RESERVE", 20, 20);
+        loadImage(STR."\{IMAGE_PATH}active_colored.gif", "ACTIVE", 20, 20);
+        loadImage(STR."\{IMAGE_PATH}fighting_colored.gif", "FIGHT", 20, 20);
+        loadImage(IMAGE_PATH + getParam("LOGO_IMAGE"), "LOGO", 100, 100);
+        loadImage(IMAGE_PATH + getParam("TRAY_IMAGE"), "TRAY", 20, 20);
+        loadImage(IMAGE_PATH + getParam("REPAIR_IMAGE"), "REPAIR", 100, 100);
+
+        if (!getParam("UNIT_CAMO").trim().isEmpty()) {
+            loadImage(CAMO_PATH + getParam("UNIT_CAMO"), "CAMO", 84, 72);
         }
     }
 
@@ -114,86 +141,84 @@ public class GUIClientConfig implements IClientConfig, Serializable {
      * Private method that loads hardcoded defaults. These are loaded before the players config values, adding any new
      * configs in their default position and ensuring that no config value is even missing.
      */
-    private java.util.Properties setDefaults() {
-        java.util.Properties defaults = new java.util.Properties();
+    private Properties setDefaults() {
+        Properties defaults = new Properties();
         // general properties
         defaults.setProperty("NAME", "");
-        defaults.setProperty("NAMEPASSWORD", "");
+        defaults.setProperty("NAME_PASSWORD", "");
         defaults.setProperty("PORT", "2346");
-        defaults.setProperty("SERVERIP", "");
-        defaults.setProperty("SERVERPORT", "2347");
-        defaults.setProperty("DATAPORT", "4867");
-        defaults.setProperty("AUTOCONNECT", "NO");
+        defaults.setProperty("SERVER_IP", "");
+        defaults.setProperty("SERVER_PORT", "2347");
+        defaults.setProperty("DATA_PORT", "4867");
+        defaults.setProperty("AUTO_CONNECT", "NO");
         defaults.setProperty("TIMEOUT", "180");
         // GUI properties
-        defaults.setProperty("LOOKANDFEEL", "system"); // look and feel type
+        defaults.setProperty("LOOK_AND_FEEL", "system"); // look and feel type
         defaults.setProperty("TIMESTAMP", "YES");
         // dedicated properties
         defaults.setProperty("DEDICATED", "NO");
-        defaults.setProperty("DEDICATEDOWNERNAME", "");
+        defaults.setProperty("DEDICATED_OWNER_NAME", "");
         // MainFrame properties
-        defaults.setProperty("SPLITTERSIZE", "7"); // divider thickness
-        defaults.setProperty("PLAYERPANEL", "YES"); // visible player panel
-        defaults.setProperty("PLAYERPANELHEIGHT", "130"); // player panel height
-        // (excluding logo
-        // height)
+        defaults.setProperty("SPLITTER_SIZE", "7"); // divider thickness
+        defaults.setProperty("PLAYER_PANEL", "YES"); // visible player panel
+        defaults.setProperty("PLAYER_PANEL_HEIGHT", "130"); // player panel height
+        // (excluding logo height)
         defaults.setProperty("LOGO", "NO"); // logo visible
-        // defaults.setProperty("LOGOIMAGE","logo.jpg");
-        defaults.setProperty("POPUPONATTACK", "YES"); // pop up dialog on attack
-        defaults.setProperty("POPUPONMESSAGE", "NO"); // pop up dialog on popup
+        defaults.setProperty("POP_UP_ON_ATTACK", "YES"); // pop up dialog on attack
+        defaults.setProperty("POP_UP_ON_MESSAGE", "NO"); // pop up dialog on popup
         // message
         // HQ Panel properties
-        defaults.setProperty("UNITCAMO", "Flame.jpg"); // camouflage for units
+        defaults.setProperty("UNIT_CAMO", "Flame.jpg"); // camouflage for units
         // in hangar bay
-        defaults.setProperty("UNITHEX", "NO"); // hexes for units in hangar bay
-        defaults.setProperty("HQCOLORSCHEME", "grey");// colors for unit
+        defaults.setProperty("UNIT_HEX", "NO"); // hexes for units in hangar bay
+        defaults.setProperty("HQ_COLOR_SCHEME", "grey");// colors for unit
         // backgrounds in HQ
-        defaults.setProperty("UNITAMOUNT", "10"); // hexes for units in hangar
+        defaults.setProperty("UNIT_AMOUNT", "10"); // hexes for units in hangar
         // bay
         // UserList properties
-        defaults.setProperty("USERLISTBOLD", "YES"); // bold names on userlist
-        defaults.setProperty("USERLISTCOLOR", "YES"); // colored names on
+        defaults.setProperty("USER_LIST_BOLD", "YES"); // bold names on userlist
+        defaults.setProperty("USER_LIST_COLOR", "YES"); // colored names on
         // userlist
-        defaults.setProperty("USERLISTIMAGE", "YES"); // images on userlist
-        defaults.setProperty("USERLISTCOUNT", "YES"); // player count on
+        defaults.setProperty("USER_LIST_IMAGE", "YES"); // images on userlist
+        defaults.setProperty("USER_LIST_COUNT", "YES"); // player count on
         // userlist
-        defaults.setProperty("USERLISTDEDICATEDS", "NO"); // show dedicated
+        defaults.setProperty("USER_LIST_DEDICATEDS", "NO"); // show dedicated
         // hosts on userlist
-        defaults.setProperty("USERLISTACTIVITYBTN", "YES");// show
+        defaults.setProperty("USER_LIST_ACTIVITY_BUTTON", "YES");// show
         // activate/deactivate
         // button
         // Chat properties
-        defaults.setProperty("MAINCHANNELHM", "NO"); // show factionmail in main
+        defaults.setProperty("MAIN_CHANNEL_HM", "NO"); // show factionmail in main
         // channel
-        defaults.setProperty("MAINCHANNELPM", "NO"); // show privatemail in main
+        defaults.setProperty("MAIN_CHANNEL_PM", "NO"); // show privatemail in main
         // channel
-        defaults.setProperty("MAINCHANNELSM", "NO"); // show system messages in
+        defaults.setProperty("MAIN_CHANNEL_SM", "NO"); // show system messages in
         // main channel
-        defaults.setProperty("MAINCHANNELMISC", "NO"); // show misc messages in
+        defaults.setProperty("MAIN_CHANNEL_MISC", "NO"); // show misc messages in
         // main channel
-        defaults.setProperty("MAINCHANNELRPG", "NO"); // show in char messages
+        defaults.setProperty("MAIN_CHANNEL_RPG", "NO"); // show in char messages
         // in main channel
-        defaults.setProperty("MAINCHANNELMM", "NO"); // show modmail in main
+        defaults.setProperty("MAIN_CHANNEL_MM", "NO"); // show modmail in main
         // channel
         defaults.setProperty("AUTOSCROLL", "NO"); // automatic chat scrolling
-        defaults.setProperty("REPLYTOSENDER", "YES"); // PM tab replies to last
+        defaults.setProperty("REPLY_TO_SENDER", "YES"); // PM tab replies to last
         // mail sender
-        defaults.setProperty("REPLYTORECEIVER", "NO"); // PM tab replies to last
+        defaults.setProperty("REPLY_TO_RECEIVER", "NO"); // PM tab replies to last
         // mail sender
-        defaults.setProperty("CHATFONTSIZE", "+0");
-        defaults.setProperty("CHATFONTCOLOR", "black");
+        defaults.setProperty("CHAT_FONT_SIZE", "+0");
+        defaults.setProperty("CHAT_FONT_COLOR", "black");
         // sound properties
-        defaults.setProperty("SOUNDONCALL", "./data/sounds/call.wav");
-        defaults.setProperty("SOUNDONKEYWORD", "./data/sounds/call.wav");
-        defaults.setProperty("SOUNDONMESSAGE", "./data/sounds/mail.wav");
-        defaults.setProperty("SOUNDONATTACK", "./data/sounds/attack.wav");
-        defaults.setProperty("SOUNDONBMWIN", "./data/sounds/radarping.wav");
-        defaults.setProperty("SOUNDONACTIVATE", "./data/sounds/activate.wav");
-        defaults.setProperty("SOUNDONDEACTIVATE", "./data/sounds/deactivate.wav");
-        defaults.setProperty("SOUNDONENEMYDETECTED", "./data/sounds/enemy detected.wav");
-        defaults.setProperty("SOUNDONEXITCLIENT", "./data/sounds/exit client.wav");
-        defaults.setProperty("SOUNDONMENU", "./data/sounds/menu.wav");
-        defaults.setProperty("SOUNDONMENUPOPUP", "./data/sounds/menu popup.wav");
+        defaults.setProperty("SOUND_ON_CALL", "./data/sounds/call.wav");
+        defaults.setProperty("SOUND_ON_KEYWORD", "./data/sounds/call.wav");
+        defaults.setProperty("SOUND_ON_MESSAGE", "./data/sounds/mail.wav");
+        defaults.setProperty("SOUND_ON_ATTACK", "./data/sounds/attack.wav");
+        defaults.setProperty("SOUND_ON_BMWIN", "./data/sounds/radarping.wav");
+        defaults.setProperty("SOUND_ON_ACTIVATE", "./data/sounds/activate.wav");
+        defaults.setProperty("SOUND_ON_DEACTIVATE", "./data/sounds/deactivate.wav");
+        defaults.setProperty("SOUND_ON_ENEMY_DETECTED", "./data/sounds/enemy detected.wav");
+        defaults.setProperty("SOUND_ON_EXIT_CLIENT", "./data/sounds/exit client.wav");
+        defaults.setProperty("SOUND_ON_MENU", "./data/sounds/menu.wav");
+        defaults.setProperty("SOUND_ON_MENU_POP_UP", "./data/sounds/menu popup.wav");
 
         defaults.setProperty("ENABLECALLSOUND", "YES");
         defaults.setProperty("ENABLEKEYWORDSOUND", "YES");
@@ -410,119 +435,21 @@ public class GUIClientConfig implements IClientConfig, Serializable {
         return defaults;
     }
 
-    // Creates a new config file
-    /*
-     * All this does ATM is create an empty mwconfig.txt. Lines commented out
-     * are old MMNET options that the client code supports, but which are not
-     * presented to the user in the MekWars client GUI. The vast majority are
-     * totally unused because the players don't know about them. Over time, the
-     * options will be made public or removed.
-     */
-    /* (non-Javadoc)
-     * @see client.IClientConfig#createConfig()
+    /**
+     * All this does ATM is created an empty mwconfig.txt. Lines commented out are old MMNET options that the client
+     * code supports, but which are not presented to the user in the MekWars client GUI. The vast majority are totally
+     * unused because the players don't know about them. Over time, the options will be made public or removed.
      */
     @Override
     public void createConfig() {
         try {
-            java.io.FileOutputStream fos = new java.io.FileOutputStream(CONFIG_FILE);
-            java.io.PrintStream ps = new java.io.PrintStream(fos);
+            FileOutputStream fos = new FileOutputStream(CONFIG_FILE);
+            PrintStream ps = new PrintStream(fos);
 
-            /*
-             * Options below are supported in code, but not yet in config
-             * dialog.
-             */
-            // ps.println("#If you want a Password for your game, enter it here");
-            // ps.println("#GAMEPASSWORD: ");
-            // ps.println("#Size of chat font (as in html font tag)");
-            // ps.println("#CHATFONTSIZE: +0");
-            // ps.println("#Color of chat font (as in html font tag)");
-            // ps.println("#CHATFONTCOLOR: black");
-            // ps.println("#If you don't want the Player Panel to be visible, set it to NO");
-            // ps.println("PLAYERPANEL: YES");
-            // ps.println("#Put player panel height in pixels (excluding logo height) here (default is 130)");
-            // ps.println("#PLAYERPANELHEIGHT: 130");
-            // ps.println("#If you don't want the Logo to be visible, set it to NO");
-            // ps.println("LOGO: NO");
-            // ps.println("#A picture (from /data/images) to be shown as your logo in client. If you comment it out, it will download your unit logo!");
-            // ps.println("LOGOIMAGE: logo.jpg");
-            // ps.println("#The thickness of splitters dividing client windows");
-            // ps.println("#SPLITTERSIZE: 7");
-            // ps.println("#set to NO if you do not want server messages to appear as popup.");
-            // ps.println("#if turned off, messages will appear in main chat.");
-            // ps.println("POPUPONMESSAGE: NO");
-            /*
-             * Options below are supported in config dialog.
-             */
-            // ps.println("#Your Color used for your name in the chat ");
-            // ps.println("#Color of your name in chat.");
-            // ps.println("#Choices: standard HTML colours, any hex colour with a Red Value under AA)");
-            // ps.println("COLOR: black");
-            // ps.println("#IP of MekWars Server you are connecting to");
-            // ps.println("#Servers listed on forums @ http://www.sourceforge.net/projects/mekwars");
-            // ps.println("SERVERIP: SEE THE MEKWARS PROJECT PAGE FOR A LIST OF KNOWN SERVERS");
-            // ps.println("#MegaMek host settings");
-            // ps.println("#IF and only IF your ip isn't detected correctly, you may edit this setting (very unlikely that this happens)");
-            // ps.println("#This is your current IP, needed to host games. You can use a Dynamically assigned DNS entry or just your plain IP here.");
-            // ps.println("#If you don't know your IP-Address try this website: http://www.whatismyip.com");
-            // ps.println("#You only need to enable that line if your IP isn't shown correctly when you create a game.");
-            // ps.println("#IP: 127.0.0.1");
-            // ps.println("#The maximum number of players you want to join your host. (If you host a game) Default: 12");
-            // ps.println("MAXPLAYERS: 12");
-            // ps.println("#A comment for your game (If you host a game)");
-            // ps.println("COMMENT: ");
-            // ps.println("#SOUND SETTINGS");
-            // ps.println("#Play this file if anyone calls my name");
-            // ps.println("SOUNDONCALL: ./data/sounds/call.wav");
-            // ps.println("#Play this file when a Player joins the room");
-            // ps.println("#SOUNDONJOIN: ./data/sounds/join.wav");
-            // ps.println("#Play this file when a Player exits the room");
-            // ps.println("#SOUNDONEXIT: ./data/sounds/exit.wav");
-            // ps.println("#Play this file when someone sends you a message");
-            // ps.println("SOUNDONMESSAGE: ./data/sounds/mail.wav");
-            // ps.println("#Play this file when someone attacks you");
-            // ps.println("SOUNDONATTACK: ./data/sounds/attack.wav");
-            // ps.println("#Dedicated server settings");
-            // ps.println("#Should this be a Dedicated Server ONLY?");
-            // ps.println("DEDICATED: NO");
-            // ps.println("#(Only if Dedicated Only) Put names of people allowed to reset him here, separated with commas");
-            // ps.println("DEDICATEDOWNERNAME: ");
-            // ps.println("#If you don't want to see news and statuses in Main Channel, set it to NO");
-            // ps.println("MAINCHANNELNEWS: YES");
-            // ps.println("#If you don't want to see faction mails in Main Channel, set it to NO");
-            // ps.println("MAINCHANNELHM: NO");
-            // ps.println("#If you don't want to see private mails in Main Channel, set it to NO");
-            // ps.println("MAINCHANNELPM: NO");
-            // ps.println("#If you don't want to see system messages in Main Channel, set it to NO");
-            // ps.println("MAINCHANNELSM: NO");
-            // ps.println("#If you don't want to see misc messages in Main Channel, set it to NO");
-            // ps.println("MAINCHANNELMISC: NO");
-            // ps.println("#If you want to hear a sound when specific word is received, put them in here, separated with commas");
-            // ps.println("#REPLYTOSENDER: YES");
-            // ps.println("#If you don't want PM tab reply to last mail receiver, set it to NO");
-            // ps.println("#REPLYTORECEIVER: NO");
-            // ps.println("#If you don't want dialog to popup on when you are attacked, set it to NO");
-            // ps.println("#POPUPONATTACK: YES");
-            // ps.println("#PanelDivider set between 1-100");
-            // ps.println("PANELDIVIDER: 40");
-            // ps.println("#bind commands to Function keys. /c is automatically added.");
-            // ps.println("#Example binding for F1 to mysatus and transfermomey follow.");
-            // ps.println("#F1BIND: transfermoney#urgru#30");
-            // ps.println("F1BIND: mystatus");
-            // ps.println("F2BIND:");
-            // ps.println("F3BIND:");
-            // ps.println("F4BIND:");
-            // ps.println("F5BIND:");
-            // ps.println("#number of games a ded will play before it restarts");
-            // ps.println("DEDAUTORESTART: 20");
-            // these should be pre-empted by the serverdata.dat values set by
-            // server op
-            // ps.println("CAMPAIGNSERVERNAME: MekWars Server");
-            // ps.println("TRAYIMAGE: reserve_colored.gif");
-            // ps.println("UPDATEKEY: -1");
             ps.close();
             fos.close();
         } catch (Exception ex) {
-            javax.swing.JOptionPane.showMessageDialog(null,
+            JOptionPane.showMessageDialog(null,
                   "Failed to create config file. Check folder write access privledges?");
             System.exit(0);
         }

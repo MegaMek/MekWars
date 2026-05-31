@@ -1,29 +1,56 @@
 /*
- * Copyright (c) 2000 Lyrisoft Solutions, Inc.
- * Used by permission
- */
-
-/*
- * Derived from MegaMekNET (http://www.sourceforge.net/projects/megameknet)
+ * Copyright (c) 2000 Lyrisoft Solutions, Inc. - Used by permission
+ * Copyright (C) 2002-2003 Helge Richter, MMNET
+ * Copyright (C) 2026 The MegaMek Team. All Rights Reserved.
  *
- * Changes to IAuthenticator made by Helge Richter and MMNET
- * developers. 2002-2003.
+ * This file is part of MekWars.
+ *
+ * MekWars is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License (GPL),
+ * version 3 or (at your option) any later version,
+ * as published by the Free Software Foundation.
+ *
+ * MekWars is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty
+ * of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU General Public License for more details.
+ *
+ * A copy of the GPL should have been included with this project;
+ * if not, see <https://www.gnu.org/licenses/>.
+ *
+ * NOTICE: The MegaMek organization is a non-profit group of volunteers
+ * creating free software for the BattleTech community.
+ *
+ * MechWarrior, BattleMech, `Mech and AeroTech are registered trademarks
+ * of The Topps Company, Inc. All Rights Reserved.
+ *
+ * Catalyst Game Labs and the Catalyst Game Labs logo are trademarks of
+ * InMediaRes Productions, LLC.
+ *
+ * MechWarrior Copyright Microsoft Corporation. MekWars was created under
+ * Microsoft's "Game Content Usage Rules"
+ * <https://www.xbox.com/en-US/developers/rules> and it is not endorsed by or
+ * affiliated with Microsoft.
  */
 
 package mekwars.server.util;
 
 /*
  * Modified 2/26/2003 by Jonathan Ellis
- * - rereading file into memory is nice b/c it allows
- * users to be manually added externally while server is running,
- * but it's prohibitively slow past a few thousand users.
- * changed to only read once.  Now that PasswdAuthenticator
+ * - rereading file into memory is nice b/c it allows users to be manually added externally while the server is running,
+ * but it prohibitively slows *  past a few thousand users. changed to only read once.  Now that PasswdAuthenticator
  * will auto-add users, the old feature really isn't necessary.
- * - removed some unnecessary synchronization.  Remember
- * Hashtable synchronizes automatically.
+ * - removed some unnecessary synchronization.  Remember the Hashtable synchronizes automatically.
  */
 
+import java.io.IOException;
+
+import megamek.logging.MMLogger;
+import mekwars.server.MWChatServer.auth.AccessRole;
+import mekwars.server.MWChatServer.commands.ICommands;
+import mekwars.server.MWChatServer.translator.jcrypt;
 import mekwars.server.campaign.CampaignMain;
+import mekwars.server.campaign.SPlayer;
 
 /**
  * Represents a unix-style passwd file with three colon-delimited fields:
@@ -32,19 +59,19 @@ import mekwars.server.campaign.CampaignMain;
  * <li>crypted password (String)
  */
 
-public class MWPasswd implements server.MWChatServer.commands.ICommands {
+public class MWPasswd implements ICommands {
+    private final static MMLogger LOGGER = MMLogger.create(MWPasswd.class);
 
-    /**
-     * Load the whole passwd file into memory, as a Hashtable of PasswdRecords
-     */
     static {
         reloadFile();
     }
 
     public static String getUserId(String target) {
-        server.campaign.SPlayer player = CampaignMain.campaignMain.getPlayer(target);
+        SPlayer player = CampaignMain.campaignMain.getPlayer(target);
 
-        if (player == null) {return null;}
+        if (player == null) {
+            return null;
+        }
 
         return player.getName();
     }
@@ -57,52 +84,46 @@ public class MWPasswd implements server.MWChatServer.commands.ICommands {
      *
      * @return the PasswdRecord or null if the user was not found
      *
-     * @throw AccessDenied if the user was found, but his password did not match the contents of the passwd file.
      */
-    public static final MWPasswdRecord getRecord(String userId, String password)
-          throws java.io.IOException, Exception {
-        MWPasswdRecord r;
-        r = getRecord(userId.toLowerCase());
+    public static MWPasswdRecord getRecord(String userId, String password) throws Exception {
+        MWPasswdRecord mwPasswdRecord;
+        mwPasswdRecord = getRecord(userId.toLowerCase());
 
-        if (r == null) {
-            //MWLogger.errLog("r is null");
+        if (mwPasswdRecord == null) {
             return null;
         }
+
         if (password == null) {
             password = "";
         }
+
         if (password.length() < 2) {
-            MWLogger.infoLog("Access denied: " + userId);
+            LOGGER.info("Access denied: {}", userId);
             throw new Exception(userId);
         }
 
         try {
-            String salt = r.passwd.substring(0, 2);
-            if (server.MWChatServer.translator.jcrypt.crypt(salt, password).equals(r.passwd)) {
-                //r.setTime(System.currentTimeMillis());
-                //writeRecord(r,userId);
-                return r;
+            String salt = mwPasswdRecord.passwd.substring(0, 2);
+            if (jcrypt.crypt(salt, password).equals(mwPasswdRecord.passwd)) {
+                return mwPasswdRecord;
             }
         } catch (Exception ex) {
             return null;
         }
 
         //else
-        MWLogger.errLog("Access denied: " + userId);
+        LOGGER.debug("Access denied: {}", userId);
         throw new Exception(ACCESS_DENIED);
     }
 
-    public static final MWPasswdRecord getRecord(String userId) {
-        server.campaign.SPlayer player = CampaignMain.campaignMain.getPlayer(userId);
+    public static MWPasswdRecord getRecord(String userId) {
+        SPlayer player = CampaignMain.campaignMain.getPlayer(userId);
 
         if (player == null) {
-            //MWLogger.errLog("Player is null");
             return null;
         }
 
         if (player.getPassword() == null) {
-            //MWPasswd.reloadFile();
-            //MWLogger.errLog("password is null");
             return null;
         }
         //else
@@ -113,82 +134,45 @@ public class MWPasswd implements server.MWChatServer.commands.ICommands {
      * Write a PasswdRecord to the passwd file. If an line already existed for the user specified, it gets overwritten,
      * otherwise, it is appended.
      *
-     * @param r the record to write
+     * @param mwPasswdRecord the record to write
      */
-    public static final void writeRecord(MWPasswdRecord r, String userId) throws java.io.IOException {
-        server.campaign.SPlayer player = CampaignMain.campaignMain.getPlayer(userId);
+    public static void writeRecord(MWPasswdRecord mwPasswdRecord, String userId) {
+        SPlayer player = CampaignMain.campaignMain.getPlayer(userId);
 
-        if (player == null) {return;}
+        if (player == null) {
+            return;
+        }
 
-        player.setPassword(r);
+        player.setPassword(mwPasswdRecord);
     }
 
-    public static final void removeRecord(String userid) {
-        server.campaign.SPlayer player = CampaignMain.campaignMain.getPlayer(userid);
+    public static void removeRecord(String userid) {
+        SPlayer player = CampaignMain.campaignMain.getPlayer(userid);
 
-        if (player == null) {return;}
+        if (player == null) {
+            return;
+        }
 
-        if (player.getPassword() != null) {player.setPassword(null);}
+        if (player.getPassword() != null) {
+            player.setPassword(null);
+        }
 
     }
 
     /**
      * Save the in-memory Hashtable of PasswdRecords out to disk.
      */
-    public synchronized static final void save() throws java.io.IOException {
-/*        PrintWriter out = null;
-
-        try {
-            out = new PrintWriter(new FileWriter(getPasswdFileName()));
-            for (Enumeration e = records.elements(); e.hasMoreElements(); ) {
-                saveRecord(out, (MWPasswdRecord)e.nextElement());
-            }
-        }
-        finally {
-            if (out != null) {
-                out.close();
-            }
-        }*/
+    public synchronized static void save() throws IOException {
     }
 
     public static void reloadFile() {
-/*		records = new Hashtable<String,MWPasswdRecord>();
-
-		BufferedReader reader = null;
-		int lineno = 1;
-		try {
-			InputStream is = ResourceLoader.getResource("./conf/nfc.passwd");
-			reader = new BufferedReader(new InputStreamReader(is));
-			String s;
-			while ((s = reader.readLine()) != null) {
-				MWPasswdRecord r = parseRecord(s);
-				records.put(r.userId.toLowerCase(), r);
-			}
-			lineno++;
-		}
-		catch (FileNotFoundException FNFE) {
-		}
-		catch(Exception ex){
-            MWLogger.errLog("Error reading passwd file, line " + lineno);
-            MWLogger.errLog(ex);
-		}
-		finally {
-			if (reader != null) {
-				try {
-					reader.close();
-				} catch (Exception e) {
-                    MWLogger.errLog(e);
-				}
-			}
-		}
-        return;*/
     }
 
-    public static void main(String[] args) {
+    static void main(String[] args) {
         try {
             writeRecord(args[0], Integer.parseInt(args[1]), args[2]);
         } catch (java.io.IOException e) {
-            MWLogger.errLog("An I/O error occurred: " + e.getMessage());
+            LOGGER.error(e, "An I/O error occurred: {}", e.getMessage());
         } catch (Exception e) {
             showUsageAndExit();
         }
@@ -202,40 +186,26 @@ public class MWPasswd implements server.MWChatServer.commands.ICommands {
      * @param access the access level
      * @param passwd the plaintext password that will get encrypted
      */
-    public static final void writeRecord(String userId, int access, String passwd)
-          throws java.io.IOException {
-        server.campaign.SPlayer player = CampaignMain.campaignMain.getPlayer(userId);
+    public static void writeRecord(String userId, AccessRole access, String passwd) throws IOException {
+        SPlayer player = CampaignMain.campaignMain.getPlayer(userId);
 
         if (player == null) {
-            MWLogger.errLog("writeRecord::Player is null");
+            LOGGER.info("writeRecord::Player is null");
             return;
         }
 
-        MWPasswdRecord r = new MWPasswdRecord(userId, access, passwd, System.currentTimeMillis(), "");
+        MWPasswdRecord mwPasswdRecord = new MWPasswdRecord(userId, access, passwd, System.currentTimeMillis(), "");
         String salt = String.valueOf(System.currentTimeMillis());
         int len = salt.length();
         salt = salt.substring(len - 2, len);
-        r.passwd = server.MWChatServer.translator.jcrypt.crypt(salt, passwd);
-        player.setPassword(r);
-        //writeRecord(r);
+        mwPasswdRecord.passwd = jcrypt.crypt(salt, passwd);
+        player.setPassword(mwPasswdRecord);
     }
 
-    private static final void showUsageAndExit() {
-        MWLogger.errLog("Passwd Program.  Adds new line to the passwd file, encrypting the password.");
-        MWLogger.errLog("usage: java com.lyrisoft.chat.server.remote.auth.Passwd " +
-                              "[user id] [access level] [password] [timeoflastuse]");
+    private static void showUsageAndExit() {
+        LOGGER.debug("Passwd Program.  Adds new line to the passwd file, encrypting the password.");
+        LOGGER.debug("usage: java com.lyrisoft.chat.server.remote.auth.Passwd " +
+                           "[user id] [access level] [password] [time of last use]");
         System.exit(1);
     }
-
-    /*public static String getUserId(String target)
-    {
-       MWPasswdRecord record = (MWPasswdRecord)records.get(target.toLowerCase());
-
-       if ( record == null )
-           return null;
-
-       return record.userId;
-    }*/
-
-
 }

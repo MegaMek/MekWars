@@ -1,51 +1,68 @@
 /*
- * MekWars - Copyright (C) 2004
+ * Copyright (C) 2004 MekWars
+ * Copyright (C) 2026 The MegaMek Team. All Rights Reserved.
  *
- * Derived from MegaMekNET (http://www.sourceforge.net/projects/megameknet)
+ * This file is part of MekWars.
  *
- * This program is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License as published by the Free
- * Software Foundation; either version 2 of the License, or (at your option)
- * any later version.
+ * MekWars is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License (GPL),
+ * version 3 or (at your option) any later version,
+ * as published by the Free Software Foundation.
  *
- * This program is distributed in the hope that it will be useful, but
- * WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
- * or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License
- * for more details.
+ * MekWars is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty
+ * of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU General Public License for more details.
+ *
+ * A copy of the GPL should have been included with this project;
+ * if not, see <https://www.gnu.org/licenses/>.
+ *
+ * NOTICE: The MegaMek organization is a non-profit group of volunteers
+ * creating free software for the BattleTech community.
+ *
+ * MechWarrior, BattleMech, `Mech and AeroTech are registered trademarks
+ * of The Topps Company, Inc. All Rights Reserved.
+ *
+ * Catalyst Game Labs and the Catalyst Game Labs logo are trademarks of
+ * InMediaRes Productions, LLC.
+ *
+ * MechWarrior Copyright Microsoft Corporation. MekWars was created under
+ * Microsoft's "Game Content Usage Rules"
+ * <https://www.xbox.com/en-US/developers/rules> and it is not endorsed by or
+ * affiliated with Microsoft.
  */
+
 
 package mekwars.server.campaign.commands;
 
-import common.Planet;
-import common.UnitFactory;
-import common.util.MWLogger;
-import common.util.UnitUtils;
+import java.util.StringTokenizer;
+
 import megamek.common.TechConstants;
+import mekwars.common.Planet;
+import mekwars.common.UnitFactory;
+import mekwars.common.util.UnitUtils;
 import mekwars.server.campaign.CampaignMain;
-import server.campaign.util.HouseRankingHelpContainer;
-import server.util.MWPasswd;
+import mekwars.server.campaign.SPlayer;
+import mekwars.server.campaign.util.HouseRankingHelpContainer;
+import mekwars.server.util.MWPasswd;
 
 public class DefectCommand implements Command {
 
     int accessLevel = 0;
     String syntax = "";
 
-    public void process(java.util.StringTokenizer command, String Username) {
-
+    public void process(StringTokenizer command, String Username) {
         if (accessLevel != 0) {
             int userLevel = CampaignMain.campaignMain.getServer().getUserLevel(Username);
             if (userLevel < getExecutionLevel()) {
-                CampaignMain.campaignMain.toUser("AM:Insufficient access level for command. Level: " +
-                                                       userLevel +
-                                                       ". Required: " +
-                                                       accessLevel +
-                                                       ".", Username, true);
+                CampaignMain.campaignMain.toUser(STR."AM:Insufficient access level for command. Level: \{userLevel}. Required: \{accessLevel}.",
+                      Username,
+                      true);
                 return;
             }
         }
 
         if (command.hasMoreTokens()) {
-
             boolean isSingleFaction = CampaignMain.campaignMain.getBooleanConfig("AllowSinglePlayerFactions");
 
             String HouseName = command.nextToken();
@@ -54,17 +71,18 @@ public class DefectCommand implements Command {
             // check confirmation, used later
             boolean commandConfirmed = false;
             boolean allowDamagedUnits = CampaignMain.campaignMain.isUsingAdvanceRepair() &&
-                                              CampaignMain.campaignMain.getBooleanConfig(
-                                                    "AllowDonatingOfDamagedUnits");
+                                              CampaignMain.campaignMain.getBooleanConfig("AllowDonatingOfDamagedUnits");
 
-            if (command.hasMoreElements() && ((String) command.nextElement()).equals("CONFIRM")) {
+            if (command.hasMoreElements() && command.nextElement().equals("CONFIRM")) {
                 commandConfirmed = true;
             }
 
-            if (command.hasMoreTokens()) {shortName = command.nextToken();}
+            if (command.hasMoreTokens()) {
+                shortName = command.nextToken();
+            }
 
-            server.campaign.SPlayer p = CampaignMain.campaignMain.getPlayer(Username);
-            if (CampaignMain.campaignMain.getMarket().hasActiveListings(p)) {
+            SPlayer campaignMainPlayer = CampaignMain.campaignMain.getPlayer(Username);
+            if (CampaignMain.campaignMain.getMarket().hasActiveListings(campaignMainPlayer)) {
                 CampaignMain.campaignMain.toUser(
                       "AM:You are not allowed to defect while you have units on the black market.",
                       Username,
@@ -81,7 +99,7 @@ public class DefectCommand implements Command {
 
             server.campaign.SHouse newHouse = (server.campaign.SHouse) CampaignMain.campaignMain.getData()
                                                                              .getHouseByName(HouseName);
-            server.campaign.SHouse oldHouse = p.getMyHouse();
+            server.campaign.SHouse oldHouse = campaignMainPlayer.getMyHouse();
             if (!oldHouse.getHouseDefectionFrom()) {
                 CampaignMain.campaignMain.toUser("AM:You may not defect from this faction!", Username, true);
                 return;
@@ -94,7 +112,7 @@ public class DefectCommand implements Command {
                 return;
             }
 
-            if (CampaignMain.campaignMain.getOpsManager().getShortOpForPlayer(p) != null) {
+            if (CampaignMain.campaignMain.getOpsManager().getShortOpForPlayer(campaignMainPlayer) != null) {
                 CampaignMain.campaignMain.toUser(
                       "AM:You may not defect while playing a game. Try again after your game is finished.",
                       Username,
@@ -102,7 +120,7 @@ public class DefectCommand implements Command {
                 return;
             }
 
-            if (p.getDutyStatus() == server.campaign.SPlayer.STATUS_ACTIVE) {
+            if (campaignMainPlayer.getDutyStatus() == server.campaign.SPlayer.STATUS_ACTIVE) {
                 CampaignMain.campaignMain.toUser(
                       "AM:You may not defect while active. Try again after you've returned to reserve.",
                       Username,
@@ -112,7 +130,7 @@ public class DefectCommand implements Command {
 
             // establish XP minimums
             int mercEXPRequired = CampaignMain.campaignMain.getIntegerConfig("MinEXPforMercenaries") -
-                                        10 * (int) (p.getRating() - 1600); // Min
+                                        10 * (int) (campaignMainPlayer.getRating() - 1600); // Min
             // EXP to become a merc is that standard amount (7500) minus 10 per
             // ELO above 1600.
             int minEXPRequired = CampaignMain.campaignMain.getIntegerConfig("MinEXPforDefecting"); // basic
@@ -132,32 +150,36 @@ public class DefectCommand implements Command {
             }
 
             // throw out if players has too little XP to defect
-            if (p.getExperience() < minEXPRequired) {
+            if (campaignMainPlayer.getExperience() < minEXPRequired) {
                 CampaignMain.campaignMain.toUser("AM:You're too inexperienced to defect. You need at least " +
                                                        minEXPRequired +
-                                                       " XP to join that faction.", p.getName(), true);
+                                                       " XP to join that faction.", campaignMainPlayer.getName(), true);
                 return;
             }
 
             // throw out if going to same faction
             if (newHouse != null && newHouse.equals(oldHouse)) {
-                CampaignMain.campaignMain.toUser("AM:You're already in that faction!", p.getName(), true);
+                CampaignMain.campaignMain.toUser("AM:You're already in that faction!",
+                      campaignMainPlayer.getName(),
+                      true);
                 return;
             }
 
             // throw out if player is going merc and lacks the requisite XP
-            else if (newHouse != null && p.getExperience() < mercEXPRequired && newHouse.isMercHouse()) {
+            else if (newHouse != null &&
+                           campaignMainPlayer.getExperience() < mercEXPRequired &&
+                           newHouse.isMercHouse()) {
                 if (Boolean.parseBoolean(CampaignMain.campaignMain.getConfig("HideELO"))) {
                     CampaignMain.campaignMain.toUser(
                           "AM:You're too inexperienced to defect to a Mercenary faction!",
-                          p.getName(),
+                          campaignMainPlayer.getName(),
                           true);
                 } else {
                     CampaignMain.campaignMain.toUser(
                           "AM:You're too inexperienced to defect to a Mercenary faction!  You need " +
                                 mercEXPRequired +
                                 " experience with your current Rating!",
-                          p.getName(),
+                          campaignMainPlayer.getName(),
                           true);
                 }
                 return;
@@ -180,7 +202,7 @@ public class DefectCommand implements Command {
              */
             boolean regged = false;
             try {
-                MWPasswd.getRecord(p.getName(), null);
+                MWPasswd.getRecord(campaignMainPlayer.getName(), null);
             } catch (Exception ex) {
                 regged = true;
             }
@@ -217,10 +239,10 @@ public class DefectCommand implements Command {
             }
 
             // store so player can be told exactly how much was lost.
-            int oldExp = p.getExperience();
-            int oldMoney = p.getMoney();
-            int oldFlu = p.getInfluence();
-            int oldRP = p.getReward();
+            int oldExp = campaignMainPlayer.getExperience();
+            int oldMoney = campaignMainPlayer.getMoney();
+            int oldFlu = campaignMainPlayer.getInfluence();
+            int oldRP = campaignMainPlayer.getReward();
 
             int newExp = 0;
             int newMoney = 0;
@@ -232,7 +254,7 @@ public class DefectCommand implements Command {
             int fluLoss = 0;
             int rwdLoss = 0;
 
-            int startingUnits = p.getUnits().size();
+            int startingUnits = campaignMainPlayer.getUnits().size();
             int unitsToLose = 0;
 
             // counter used for proper string formatting later
@@ -241,9 +263,9 @@ public class DefectCommand implements Command {
             /*
              * If leaving SOL and the player's units are to be reset, announce.
              */
-            boolean solToBeReset = p.getMyHouse().isNewbieHouse() &&
+            boolean solToBeReset = campaignMainPlayer.getMyHouse().isNewbieHouse() &&
                                          CampaignMain.campaignMain.getBooleanConfig("ReplaceUnitsLeavingSOL");
-            boolean replaceWithFaction = p.getMyHouse().isNewbieHouse() &&
+            boolean replaceWithFaction = campaignMainPlayer.getMyHouse().isNewbieHouse() &&
                                                CampaignMain.campaignMain.getBooleanConfig("FactionUnitsLeavingSOL");
 
             /*
@@ -402,7 +424,7 @@ public class DefectCommand implements Command {
                                                            shortName +
                                                            "\">here</a>] to confirm your defection to " +
                                                            HouseName +
-                                                           ".<br>", p.getName(), true);
+                                                           ".<br>", campaignMainPlayer.getName(), true);
                     return;
                 } else if (solToBeReset && !replaceWithFaction) {
                     CampaignMain.campaignMain.toUser("AM:Click [<a href=\"MWDEFECTDLG/c defect#" +
@@ -411,7 +433,9 @@ public class DefectCommand implements Command {
                                                            shortName +
                                                            "\">here</a>] to confirm your defection to " +
                                                            HouseName +
-                                                           ". Your units will be reset.<br>", p.getName(), true);
+                                                           ". Your units will be reset.<br>",
+                          campaignMainPlayer.getName(),
+                          true);
                     return;
                 } else if (solToBeReset && replaceWithFaction) {
                     CampaignMain.campaignMain.toUser("AM:Click [<a href=\"MWDEFECTDLG/c defect#" +
@@ -422,7 +446,9 @@ public class DefectCommand implements Command {
                                                            HouseName +
                                                            ". " +
                                                            HouseName +
-                                                           " will replace your units.", p.getName(), true);
+                                                           " will replace your units.",
+                          campaignMainPlayer.getName(),
+                          true);
                     return;
                 }
 
@@ -435,7 +461,7 @@ public class DefectCommand implements Command {
                                                            shortName +
                                                            "\">here</a>] to confirm your defection to " +
                                                            HouseName +
-                                                           ".<br>", p.getName(), true);
+                                                           ".<br>", campaignMainPlayer.getName(), true);
                     return;
                 }
 
@@ -455,7 +481,7 @@ public class DefectCommand implements Command {
                                   "#CONFIRM\">here</a>] to confirm your defection to " +
                                   HouseName +
                                   ".<br>";
-                CampaignMain.campaignMain.toUser(toReturn, p.getName(), true);
+                CampaignMain.campaignMain.toUser(toReturn, campaignMainPlayer.getName(), true);
                 return;
 
             }// end if(unconfirmed)
@@ -502,10 +528,10 @@ public class DefectCommand implements Command {
 
                 if (solToBeReset) {
 
-                    server.campaign.NewbieHouse nh = (server.campaign.NewbieHouse) p.getMyHouse();
+                    server.campaign.NewbieHouse nh = (server.campaign.NewbieHouse) campaignMainPlayer.getMyHouse();
 
-                    if (replaceWithFaction) {nh.requestNewMech(p, true, HouseName);} else {
-                        nh.requestNewMech(p, true, null);
+                    if (replaceWithFaction) {nh.requestNewMech(campaignMainPlayer, true, HouseName);} else {
+                        nh.requestNewMech(campaignMainPlayer, true, null);
                     }
 
                     toReturn += "Your units ";
@@ -516,13 +542,13 @@ public class DefectCommand implements Command {
                 } else {
 
                     // set new values. simple.
-                    p.addExperience(-expLoss, false);// pos number for string
+                    campaignMainPlayer.addExperience(-expLoss, false);// pos number for string
                     // setup. negate to
                     // reduce.
-                    p.addMoney(-mnyLoss);// pos number for string setup.
+                    campaignMainPlayer.addMoney(-mnyLoss);// pos number for string setup.
                     // negate to reduce.
-                    p.setInfluence(newFlu);
-                    p.setReward(newRP);
+                    campaignMainPlayer.setInfluence(newFlu);
+                    campaignMainPlayer.setReward(newRP);
 
                     // have string show those losses
                     toReturn += "You've lost " + penString;
@@ -542,7 +568,7 @@ public class DefectCommand implements Command {
                     if (unitsToLose == startingUnits) {
 
                         // move all units to the faction bay
-                        for (server.campaign.SUnit currU : p.getUnits()) {
+                        for (server.campaign.SUnit currU : campaignMainPlayer.getUnits()) {
                             damaged = (!UnitUtils.canStartUp(currU.getEntity()) ||
                                              UnitUtils.hasArmorDamage(currU.getEntity()) ||
                                              UnitUtils.hasCriticalDamage(currU.getEntity()));
@@ -550,7 +576,7 @@ public class DefectCommand implements Command {
                                 hsUpdates.append(oldHouse.addUnit(currU, false));
                             }
                         }
-                        p.stripOfAllUnits(false);
+                        campaignMainPlayer.stripOfAllUnits(false);
 
                         // add to string
                         toReturn += " and all of your units";
@@ -567,8 +593,8 @@ public class DefectCommand implements Command {
                             if (numRemoved != 0) {toReturn += ", ";}
 
                             // pick random unit
-                            server.campaign.SUnit toRemove = p.getUnits().get(
-                                  CampaignMain.campaignMain.getRandomNumber(p.getUnits().size()));
+                            server.campaign.SUnit toRemove = campaignMainPlayer.getUnits().get(
+                                  CampaignMain.campaignMain.getRandomNumber(campaignMainPlayer.getUnits().size()));
 
                             // make an actual unit, store name, remove
                             toReturn += toRemove.getModelName();
@@ -579,7 +605,7 @@ public class DefectCommand implements Command {
                             if ((damaged && allowDamagedUnits) || !damaged) {
                                 hsUpdates.append(oldHouse.addUnit(toRemove, false));
                             }
-                            p.removeUnit(toRemove.getId(), false);// check ops
+                            campaignMainPlayer.removeUnit(toRemove.getId(), false);// check ops
                             // will
                             // execute
                             // on login
@@ -610,23 +636,23 @@ public class DefectCommand implements Command {
              * relevant messages w/i the faction, to the player and on the RSS
              * feed.
              */
-            p.getMyHouse().removeLeader(p.getName());
+            campaignMainPlayer.getMyHouse().removeLeader(campaignMainPlayer.getName());
 
-            String clientVersion = p.getPlayerClientVersion();
+            String clientVersion = campaignMainPlayer.getPlayerClientVersion();
 
-            p.getMyHouse().removePlayer(p, false);
-            p.setMyHouse(newHouse);
-            p.setSubFaction(newHouse.getZeroLevelSubFaction());
-            // CampaignMain.cm.forceSavePlayer(p);
+            campaignMainPlayer.getMyHouse().removePlayer(campaignMainPlayer, false);
+            campaignMainPlayer.setMyHouse(newHouse);
+            campaignMainPlayer.setSubFaction(newHouse.getZeroLevelSubFaction());
+            // CampaignMain.cm.forceSavePlayer(campaignMainPlayer);
 
             // send the various messages
             CampaignMain.campaignMain.toUser(toReturn, Username, true);
             CampaignMain.campaignMain.doSendHouseMail(oldHouse,
                   "NOTE: ",
-                  p.getName() + " defected to " + HouseName);
+                  campaignMainPlayer.getName() + " defected to " + HouseName);
             CampaignMain.campaignMain.doSendHouseMail(newHouse,
                   "NOTE: ",
-                  p.getName() + " joined the faction! (Defected from " + oldHouse.getName() + ")");
+                  campaignMainPlayer.getName() + " joined the faction! (Defected from " + oldHouse.getName() + ")");
 
             // do we really want to keep the RSS feed?
             CampaignMain.campaignMain.addToNewsFeed("Player Defection",
@@ -638,8 +664,8 @@ public class DefectCommand implements Command {
                                                           " to " +
                                                           HouseName);
 
-            if (p.getMyLogo().trim().equals(oldHouse.getLogo().trim())) {
-                p.setMyLogo(newHouse.getLogo().trim());
+            if (campaignMainPlayer.getMyLogo().trim().equals(oldHouse.getLogo().trim())) {
+                campaignMainPlayer.setMyLogo(newHouse.getLogo().trim());
             }
 
             // for now, move defecting players back to standard-user access.
@@ -647,7 +673,7 @@ public class DefectCommand implements Command {
             // let people defect and retain faction leadership access, etc. May
             // be
             // a problem for mods, but better than the alternative ...
-            if (p.getMyHouse().equals(newHouse) &&
+            if (campaignMainPlayer.getMyHouse().equals(newHouse) &&
                       !CampaignMain.campaignMain.getServer().isAdmin(Username) &&
                       !isSingleFaction) {MWPasswd.getRecord(Username).setAccess(2);}
 
@@ -655,7 +681,9 @@ public class DefectCommand implements Command {
              * Player is part of his new house. Check the ammo in all of his
              * units, removing illegal ammos.
              */
-            for (server.campaign.SUnit currU : p.getUnits()) {server.campaign.SUnit.checkAmmoForUnit(currU, newHouse);}
+            for (server.campaign.SUnit currU : campaignMainPlayer.getUnits()) {
+                server.campaign.SUnit.checkAmmoForUnit(currU, newHouse);
+            }
 
             /*
              * Might as well just log the player into his new faction. Sort of
@@ -663,9 +691,9 @@ public class DefectCommand implements Command {
              * process right here.
              */
 
-            CampaignMain.campaignMain.forceSavePlayer(p);
+            CampaignMain.campaignMain.forceSavePlayer(campaignMainPlayer);
             CampaignMain.campaignMain.doLoginPlayer(Username);
-            CampaignMain.campaignMain.toUser("SP|Welcome to " + HouseName + "!", p.getName(), false);
+            CampaignMain.campaignMain.toUser("SP|Welcome to " + HouseName + "!", campaignMainPlayer.getName(), false);
 
             /*
              * Now that the player is in his new faction, check his tech status.
@@ -673,14 +701,14 @@ public class DefectCommand implements Command {
              * and he doesnt have enough hired techs to pick up the slack, some
              * units should be unmaintained.
              */
-            if (p.getFreeBays() < 0) {
-                p.setRandomUnmaintained();
+            if (campaignMainPlayer.getFreeBays() < 0) {
+                campaignMainPlayer.setRandomUnmaintained();
 
-                int factionBays = p.getMyHouse().getBaysProvided();
+                int factionBays = campaignMainPlayer.getMyHouse().getBaysProvided();
                 int minBays = CampaignMain.campaignMain.getIntegerConfig("MinimumHouseBays");
 
                 String dismayMessage = "You are dismayed when you discover that " +
-                                             p.getMyHouse().getName() +
+                                             campaignMainPlayer.getMyHouse().getName() +
                                              " only has ";
                 if (minBays > factionBays) {dismayMessage += minBays;} else {dismayMessage += factionBays;}
 
@@ -695,8 +723,8 @@ public class DefectCommand implements Command {
                 CampaignMain.campaignMain.toUser(dismayMessage, Username, true);
             }// end if(defection leaves player with negative bays)
 
-            p.setPlayerClientVersion(clientVersion);
-            CampaignMain.campaignMain.forceSavePlayer(p);
+            campaignMainPlayer.setPlayerClientVersion(clientVersion);
+            CampaignMain.campaignMain.forceSavePlayer(campaignMainPlayer);
 
         }// end if(more tokens)
 

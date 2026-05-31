@@ -167,7 +167,7 @@ public class ShortResolver {
 
         shortOp = so;
         // return if the game is waiting, already reporting or already finished.
-        if (so.getStatus() != ShortOperation.STATUS_INPROGRESS) {
+        if (so.getStatus() != ShortOperation.STATUS_IN_PROGRESS) {
             return;
         }
 
@@ -246,7 +246,7 @@ public class ShortResolver {
             // set to reporting status
             so.changeStatus(ShortOperation.STATUS_REPORTING);
             CampaignMain.campaignMain.getOpsManager()
-                  .terminateOperation(so, OperationManager.TERM_REPORTINGERROR, null);
+                  .terminateOperation(so, OperationManager.TERM_REPORT_ING_ERROR, null);
             MWLogger.errLog("Error while trying to Resolve game: " +
                                   so.getShortID() +
                                   " Result sent by Game: " +
@@ -523,7 +523,7 @@ public class ShortResolver {
         server.campaign.SPlayer loser = CampaignMain.campaignMain.getPlayer(loserName);
 
         // return if the game is waiting
-        if (so.getStatus() != ShortOperation.STATUS_INPROGRESS) {
+        if (so.getStatus() != ShortOperation.STATUS_IN_PROGRESS) {
             return;
         }
 
@@ -549,7 +549,7 @@ public class ShortResolver {
             MWLogger.errLog("Autoreporting error: Game had no winner." + so.getShortID() + " Result sent by Game: ");
             CampaignMain.campaignMain.toUser("Autoreporting error: Game had no winner.", loserName, true);
             CampaignMain.campaignMain.getOpsManager()
-                  .terminateOperation(so, OperationManager.TERM_REPORTINGERROR, null);
+                  .terminateOperation(so, OperationManager.TERM_REPORT_ING_ERROR, null);
             return;
         }
 
@@ -558,7 +558,7 @@ public class ShortResolver {
             MWLogger.errLog("Autoreporting error: Game had no loser." + so.getShortID() + " Result sent by Game: ");
             CampaignMain.campaignMain.toUser("Autoreporting error: Game had no loser.", winnerName, true);
             CampaignMain.campaignMain.getOpsManager()
-                  .terminateOperation(so, OperationManager.TERM_REPORTINGERROR, null);
+                  .terminateOperation(so, OperationManager.TERM_REPORT_ING_ERROR, null);
             return;
         }
 
@@ -599,7 +599,7 @@ public class ShortResolver {
                   loserName,
                   true);
             CampaignMain.campaignMain.getOpsManager()
-                  .terminateOperation(so, OperationManager.TERM_REPORTINGERROR, null);
+                  .terminateOperation(so, OperationManager.TERM_REPORT_ING_ERROR, null);
             return;
         }
 
@@ -617,7 +617,7 @@ public class ShortResolver {
                   winnerName,
                   true);
             CampaignMain.campaignMain.getOpsManager()
-                  .terminateOperation(so, OperationManager.TERM_REPORTINGERROR, null);
+                  .terminateOperation(so, OperationManager.TERM_REPORT_ING_ERROR, null);
             return;
         }
 

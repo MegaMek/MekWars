@@ -15,7 +15,7 @@
  */
 
 /*
- * original author - @McWizard
+ * the original author - @McWizard
  * rewritten extensively on 2/04/03. @urgru.
  *
  * factories now produce on demand, and only decrement
@@ -24,19 +24,25 @@
 
 package mekwars.server.campaign;
 
-import common.Unit;
-import common.UnitFactory;
-import common.util.MWLogger;
-import common.util.TokenReader;
-import server.campaign.pilot.SPilot;
-import server.campaign.util.SerializedMessage;
+import java.io.File;
+import java.io.Serial;
+import java.io.Serializable;
+import java.util.Random;
+import java.util.StringTokenizer;
+import java.util.UUID;
+import java.util.Vector;
 
+import megamek.logging.MMLogger;
+import mekwars.common.Unit;
+import mekwars.common.UnitFactory;
+import mekwars.common.util.TokenReader;
+import mekwars.server.campaign.pilot.SPilot;
+import mekwars.server.campaign.util.SerializedMessage;
 
-public class SUnitFactory extends UnitFactory implements java.io.Serializable {
+public class SUnitFactory extends UnitFactory implements Serializable {
+    private static final MMLogger LOGGER = MMLogger.create(SUnitFactory.class);
 
-    /**
-     *
-     */
+    @Serial
     private static final long serialVersionUID = 1735176578439214960L;
     // VARIABLES
     private SPlanet planet;
@@ -46,13 +52,13 @@ public class SUnitFactory extends UnitFactory implements java.io.Serializable {
         // empty
     }
 
-    public SUnitFactory(String Name, SPlanet P, String Size, String Faction, int ticksuntilrefresh, int refreshSpeed,
-          int type, String buildTableFolder, int accessLevel) {
+    public SUnitFactory(String Name, SPlanet sPlanet, String Size, String Faction, int ticksUntilRefresh,
+          int refreshSpeed, int type, String buildTableFolder, int accessLevel) {
         setName(Name);
-        setPlanet(P);
+        setPlanet(sPlanet);
         setSize(Size);
         setFounder(Faction);
-        setTicksUntilRefresh(ticksuntilrefresh);
+        setTicksUntilRefresh(ticksUntilRefresh);
         setRefreshSpeed(refreshSpeed);
         setType(type);
         setBuildTableFolder(buildTableFolder);
@@ -62,9 +68,9 @@ public class SUnitFactory extends UnitFactory implements java.io.Serializable {
     // STRING SAVE METHODS
 
     /**
-     * Used for Serialisation
+     * Used for Serialization
      *
-     * @return A Serialised form of the UnitFactory
+     * @return A Serialized form of the UnitFactory
      */
     @Override
     public String toString() {
@@ -76,13 +82,14 @@ public class SUnitFactory extends UnitFactory implements java.io.Serializable {
         result.append(getTicksUntilRefresh());
         result.append(getRefreshSpeed());
 
-        String buildtablefolder = getBuildTableFolder().replaceAll(BuildTable.STANDARD +
-                                                                         "\\" +
-                                                                         java.io.File.separatorChar, "");
+        String buildTableFolder = getBuildTableFolder().replaceAll(STR."\{BuildTable.STANDARD}\{File.separatorChar}",
+              "");
 
-        if (buildtablefolder.trim().length() < 1 || buildtablefolder.equals(BuildTable.STANDARD)) {
+        if (buildTableFolder.trim().isEmpty() || buildTableFolder.equals(BuildTable.STANDARD)) {
             result.append("0");
-        } else {result.append(buildtablefolder);}
+        } else {
+            result.append(buildTableFolder);
+        }
 
         result.append(getType());
         result.append(isLocked());
@@ -92,32 +99,34 @@ public class SUnitFactory extends UnitFactory implements java.io.Serializable {
     }
 
     /**
-     * Used to DE-Serialise a MF
+     * Used to DE-Serialize a MF
      *
-     * @param s The Serialised Version
-     * @param p A SPlanet where this MF is placed upon
-     * @param r The Random Object
+     * @param string  The Serialized Version
+     * @param sPlanet A SPlanet where this MF is placed upon
+     * @param random  The Random Object
      */
-    public void fromString(String s, SPlanet p, java.util.Random r) {
-        s = s.substring(3);
-        java.util.StringTokenizer ST = new java.util.StringTokenizer(s, "*");
-        setName(TokenReader.readString(ST));
-        setSize(TokenReader.readString(ST));
-        setFounder(TokenReader.readString(ST));
-        setTicksUntilRefresh(TokenReader.readInt(ST));
-        setRefreshSpeed(TokenReader.readInt(ST));
+    public void fromString(String string, SPlanet sPlanet, Random random) {
+        string = string.substring(3);
+        StringTokenizer stringTokenizer = new StringTokenizer(string, "*");
+        setName(TokenReader.readString(stringTokenizer));
+        setSize(TokenReader.readString(stringTokenizer));
+        setFounder(TokenReader.readString(stringTokenizer));
+        setTicksUntilRefresh(TokenReader.readInt(stringTokenizer));
+        setRefreshSpeed(TokenReader.readInt(stringTokenizer));
 
-        setBuildTableFolder(TokenReader.readString(ST));
+        setBuildTableFolder(TokenReader.readString(stringTokenizer));
 
-        setType(TokenReader.readInt(ST));
-        setLock(TokenReader.readBoolean(ST));
-        setAccessLevel(TokenReader.readInt(ST));
-        if (ST.hasMoreTokens()) {
-            setID(TokenReader.readString(ST));
+        setType(TokenReader.readInt(stringTokenizer));
+        setLock(TokenReader.readBoolean(stringTokenizer));
+        setAccessLevel(TokenReader.readInt(stringTokenizer));
+
+        if (stringTokenizer.hasMoreTokens()) {
+            setID(TokenReader.readString(stringTokenizer));
         } else {
-            setID(java.util.UUID.randomUUID().toString());
+            setID(UUID.randomUUID().toString());
         }
-        setPlanet(p);
+
+        setPlanet(sPlanet);
     }
 
     // METHODS
@@ -126,20 +135,32 @@ public class SUnitFactory extends UnitFactory implements java.io.Serializable {
         String sizeid = "";
         String result = "";
         int size = getWeightclass();
-        if (size == Unit.LIGHT) {sizeid += "l";} else if (size == Unit.MEDIUM) {sizeid += "m";} else if (size ==
-                                                                                                               Unit.HEAVY) {
+
+        if (size == Unit.LIGHT) {
+            sizeid += "l";
+        } else if (size == Unit.MEDIUM) {
+            sizeid += "m";
+        } else if (size == Unit.HEAVY) {
             sizeid += "h";
-        } else if (size ==
-                         Unit.ASSAULT) {sizeid += "a";}
-        if (canProduce(Unit.MEK)) {sizeid += "m";} else if (canProduce(Unit.VEHICLE)) {
+        } else if (size == Unit.ASSAULT) {
+            sizeid += "a";
+        }
+
+        if (canProduce(Unit.MEK)) {
+            sizeid += "m";
+        } else if (canProduce(Unit.VEHICLE)) {
             sizeid += "v";
         } else if (canProduce(Unit.INFANTRY)) {
             sizeid += "li";// override size w/ light
-        } else if (canProduce(Unit.BATTLEARMOR)) {sizeid += "b";} else if (canProduce(Unit.PROTOMEK)) {
+        } else if (canProduce(Unit.BATTLEARMOR)) {
+            sizeid += "b";
+        } else if (canProduce(Unit.PROTOMEK)) {
             sizeid += "p";
-        } else if (canProduce(Unit.AERO)) {sizeid += "ae";}
+        } else if (canProduce(Unit.AERO)) {
+            sizeid += "ae";
+        }
 
-        result += "<img src=\"data/images/" + sizeid + ".gif\">";
+        result += STR."<img src=\"data/images/\{sizeid}.gif\">";
         return result;
     }
 
@@ -149,64 +170,57 @@ public class SUnitFactory extends UnitFactory implements java.io.Serializable {
      *
      * @return the Mek Produced
      */
-    public java.util.Vector<mekwars.server.campaign.SUnit> getMechProduced(int type_id, SPilot pilot) {
-
+    public Vector<SUnit> getMechProduced(int type_id, SPilot pilot) {
         // Build the fluff text for the mek
-        String Filename = "";
+        String filename = "";
         String producer = "Built by ";
-        java.util.Vector<mekwars.server.campaign.SUnit> units = new java.util.Vector<mekwars.server.campaign.SUnit>(1,
-              1);
+        Vector<SUnit> units = new Vector<>(1, 1);
 
-        if (this.getPlanet().getOwner() != null) {producer += this.getPlanet().getOwner().getName();} else {
+        if (this.getPlanet().getOwner() != null) {
+            producer += this.getPlanet().getOwner().getName();
+        } else {
             producer += this.getFounder();
         }
 
         /*
-         * add a production location to the fluff, if from a normal planet. null
-         * planet will normally be reward point production.
+         * add a production location to the fluff, if from a normal planet. null planet will normally be a reward point
+         *  production.
          */
-        if (this.getPlanet().getName() != null) {producer += " on " + this.getPlanet().getName();}
+        if (this.getPlanet().getName() != null) {
+            producer += STR." on \{this.getPlanet().getName()}";
+        }
 
         String unitSize = getSize();
+
         if (CampaignMain.campaignMain.getBooleanConfig("UseOnlyOneVehicleSize") && type_id == Unit.VEHICLE) {
             unitSize = Unit.getWeightClassDesc(CampaignMain.campaignMain.getRandomNumber(4));
         }
 
-        Filename = BuildTable.getUnitFilename(this.getFounder(), unitSize, type_id, getBuildTableFolder());
+        filename = BuildTable.getUnitFilename(this.getFounder(), unitSize, type_id, getBuildTableFolder());
         // log the creation
-        String buildtableName = this.getFounder() + "_" + this.getSize();
-        if (type_id != Unit.MEK) {buildtableName += Unit.getTypeClassDesc(type_id);}
+        String buildtableName = STR."\{this.getFounder()}_\{this.getSize()}";
+
+        if (type_id != Unit.MEK) {
+            buildtableName += Unit.getTypeClassDesc(type_id);
+        }
 
         if (this.getPlanet().getOwner() != null) {
-            MWLogger.infoLog("New unit for " +
-                                   this.getPlanet().getOwner().getName() +
-                                   " on " +
-                                   this.getPlanet().getName() +
-                                   ": " +
-                                   Filename +
-                                   "(Table: " +
-                                   buildtableName +
-                                   ")");
+            LOGGER.info(STR."New unit for \{this.getPlanet().getOwner().getName()} on \{this.getPlanet()
+                                                                                              .getName()}: \{filename}(Table: \{buildtableName})");
         } else {
-            MWLogger.infoLog("New unit for " +
-                                   this.getFounder() +
-                                   " on " +
-                                   this.getPlanet().getName() +
-                                   ": " +
-                                   Filename +
-                                   "(Table: " +
-                                   buildtableName +
-                                   ")");
+            LOGGER.info(STR."New unit for \{this.getFounder()} on \{this.getPlanet()
+                                                                          .getName()}: \{filename}(Table: \{buildtableName})");
         }
 
-        if (Filename.toLowerCase().trim().endsWith(".mul")) {
-            units.addAll(SUnit.createMULUnits(Filename, producer));
+        if (filename.toLowerCase().trim().endsWith(".mul")) {
+            units.addAll(SUnit.createMULUnits(filename, producer));
         } else {
             // Build the unit & create history entry
-            SUnit cm = new SUnit(producer, Filename, this.getWeightclass());
-            cm.setPilot(pilot);
-            units.add(cm);
+            SUnit sUnit = new SUnit(producer, filename, this.getWeightclass());
+            sUnit.setPilot(pilot);
+            units.add(sUnit);
         }
+
         return units;
     }
 
@@ -220,8 +234,8 @@ public class SUnitFactory extends UnitFactory implements java.io.Serializable {
     /**
      * @param planet The planet to set.
      */
-    public void setPlanet(SPlanet pl) {
-        this.planet = pl;
+    public void setPlanet(SPlanet sPlanet) {
+        this.planet = sPlanet;
     }
 
     /**
@@ -229,35 +243,31 @@ public class SUnitFactory extends UnitFactory implements java.io.Serializable {
      * it properly (albeit hackishly) updates players' clients with accurate refresh times.
      */
     public String addRefresh(int i, boolean sendHSUpdate) {
-        MWLogger.debugLog("Starting refresh on " + getName() + ", adding " + i);
+        LOGGER.debug("Starting refresh on {}, adding {}", getName(), i);
         int startRefresh = getTicksUntilRefresh();
 
         setTicksUntilRefresh(getTicksUntilRefresh() + i);
-        if (getTicksUntilRefresh() < 0) {setTicksUntilRefresh(0);}
 
-        if (getTicksUntilRefresh() == startRefresh) {return "";}
+        if (getTicksUntilRefresh() < 0) {
+            setTicksUntilRefresh(0);
+        }
+
+        if (getTicksUntilRefresh() == startRefresh) {
+            return "";
+        }
 
         /*
          * Change the factory's information (refresh time) Format:
          * HS|CF|weight$metatype$planet$name$timetorefresh$accessLevel|
          */
-        String hsUpdate = "CF|" +
-                                getWeightclass() +
-                                "$" +
-                                getType() +
-                                "$" +
-                                getPlanet().getName() +
-                                "$" +
-                                getName() +
-                                "$" +
-                                getTicksUntilRefresh() +
-                                "$" +
-                                getAccessLevel() +
-                                "|";
+        String hsUpdate = STR."CF|\{getWeightclass()}$\{getType()}$\{getPlanet().getName()}$\{getName()}$\{getTicksUntilRefresh()}$\{getAccessLevel()}|";
 
         if (sendHSUpdate) {
             SHouse owner = getPlanet().getOwner();
-            if (owner != null) {CampaignMain.campaignMain.doSendToAllOnlinePlayers(owner, "HS|" + hsUpdate, false);}
+
+            if (owner != null) {
+                CampaignMain.campaignMain.doSendToAllOnlinePlayers(owner, STR."HS|\{hsUpdate}", false);
+            }
         }
 
         return hsUpdate;
@@ -267,35 +277,47 @@ public class SUnitFactory extends UnitFactory implements java.io.Serializable {
      * The cost (money) of a unit from this factory. Back referenced to the faction that originally owned the world.
      * Hacky. Ugly.
      */
-    public int getPriceForUnit(int weightclass, int typeid) {
+    public int getPriceForUnit(int weightClass, int typeID) {
         SHouse originalHouse = (SHouse) CampaignMain.campaignMain.getData().getHouseByName(this.getFounder());
-        return originalHouse.getPriceForUnit(weightclass, typeid);
+
+        if (originalHouse != null) {
+            return originalHouse.getPriceForUnit(weightClass, typeID);
+        }
+
+        return -1;
     }
 
     /**
      * The cost (flu) of a unit from this factory. Back referenced to the faction that originally owned the world.
      * Hacky. Ugly.
      */
-    public int getInfluenceForUnit(int weightclass, int typeid) {
+    public int getInfluenceForUnit(int weightClass, int typeID) {
         SHouse originalHouse = (SHouse) CampaignMain.campaignMain.getData().getHouseByName(this.getFounder());
-        return originalHouse.getInfluenceForUnit(weightclass, typeid);
+
+        if (originalHouse != null) {
+            return originalHouse.getInfluenceForUnit(weightClass, typeID);
+        }
+
+        return -1;
     }
 
     /**
      * The cost (PP) of a unit from this factory. Back referenced to the faction that originally owned the world. Hacky.
      * Ugly.
      */
-    public int getPPCost(int weightclass, int typeid) {
+    public int getPPCost(int weightClass, int typeID) {
         SHouse originalHouse = (SHouse) CampaignMain.campaignMain.getData().getHouseByName(this.getFounder());
-        return originalHouse.getPPCost(weightclass, typeid);
+
+        if (originalHouse != null) {
+            return originalHouse.getPPCost(weightClass, typeID);
+        }
+
+        return -1;
     }
 
     /**
      * This is used for tech raids. to increase other players build tables.
      *
-     * @param type_id
-     *
-     * @return
      */
     public String getTechProduced(int type_id) {
 

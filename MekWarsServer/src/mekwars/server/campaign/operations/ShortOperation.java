@@ -1,20 +1,43 @@
 /*
- * MekWars - Copyright (C) 2005
+ * Copyright (C) 2005 nmorris (urgru@users.sourceforge.net)
+ * Copyright (C) 2026 The MegaMek Team. All Rights Reserved.
  *
- * Original author - nmorris (urgru@users.sourceforge.net)
+ * This file is part of MekWars.
  *
- * This program is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software
- * Foundation; either version 2 of the License, or (at your option) any later version.
+ * MekWars is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License (GPL),
+ * version 3 or (at your option) any later version,
+ * as published by the Free Software Foundation.
  *
- * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
- * A PARTICULAR PURPOSE. See the GNU General Public License for more details.
+ * MekWars is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty
+ * of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU General Public License for more details.
+ *
+ * A copy of the GPL should have been included with this project;
+ * if not, see <https://www.gnu.org/licenses/>.
+ *
+ * NOTICE: The MegaMek organization is a non-profit group of volunteers
+ * creating free software for the BattleTech community.
+ *
+ * MechWarrior, BattleMech, `Mech and AeroTech are registered trademarks
+ * of The Topps Company, Inc. All Rights Reserved.
+ *
+ * Catalyst Game Labs and the Catalyst Game Labs logo are trademarks of
+ * InMediaRes Productions, LLC.
+ *
+ * MechWarrior Copyright Microsoft Corporation. MekWars was created under
+ * Microsoft's "Game Content Usage Rules"
+ * <https://www.xbox.com/en-US/developers/rules> and it is not endorsed by or
+ * affiliated with Microsoft.
  */
+
 
 /*
  * ShortOperations are holders for real game information - players, type, target, etc. EVERY game is managed by a short operation.
  *
- * Creation of a ShortOperation on will fail unless: 1) Operation is 1 game in length, or 2) LongOperation of the type, initiatiated by player's faction, is
- * already under way on target world.
+ * Creation of a ShortOperation on will fail unless: 1) Operation is 1 game in length, or 2) LongOperation of the type, initiative by player's faction, is
+ * already under way on the target world.
  *
  * In some senses, the ShortOp is the closest thing the Operations system as a whole has to the old MMNET/early-MekWars style Task; however, many Task functions
  * are carried out by the Manager, Validators and Resolvers.
@@ -24,18 +47,33 @@
 
 package mekwars.server.campaign.operations;
 
+import java.awt.Dimension;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.TreeMap;
+import java.util.TreeSet;
+import java.util.Vector;
+
 import megamek.common.planetaryConditions.EMI;
+import megamek.common.planetaryConditions.Light;
 import megamek.common.planetaryConditions.PlanetaryConditions;
+import megamek.common.planetaryConditions.Weather;
+import megamek.common.planetaryConditions.Wind;
+import megamek.logging.MMLogger;
 import mekwars.common.AdvancedTerrain;
 import mekwars.common.Continent;
 import mekwars.common.PlanetEnvironment;
 import mekwars.common.Unit;
 import mekwars.common.UnitFactory;
 import mekwars.common.campaign.Buildings;
-import mekwars.common.util.MWLogger;
+import mekwars.common.campaign.operations.Operation;
 import mekwars.common.util.StringUtils;
 import mekwars.common.util.UnitUtils;
 import mekwars.server.campaign.CampaignMain;
+import mekwars.server.campaign.SArmy;
+import mekwars.server.campaign.SPlanet;
+import mekwars.server.campaign.SPlayer;
+import mekwars.server.campaign.SUnit;
 import mekwars.server.campaign.operations.resolvers.NewShortResolver;
 import mekwars.server.campaign.operations.resolvers.ShortOpPlayers;
 import mekwars.server.campaign.pilot.SPilot;
@@ -44,60 +82,92 @@ import mekwars.server.util.StringUtil;
 // IMPORTS
 
 public class ShortOperation implements Comparable<Object> {
-
+    private static final MMLogger LOGGER = MMLogger.create(ShortOperation.class);
     // IVARS
 
     // progress info. finished short ops removed from
     // running and IDs released on ticks.
     public static int STATUS_WAITING = 0;
-    public static int STATUS_INPROGRESS = 1;
+    public static int STATUS_IN_PROGRESS = 1;
     public static int STATUS_REPORTING = 2;
     public static int STATUS_FINISHED = 4;
-    public java.util.Vector<server.campaign.SUnit> preCapturedUnits = null;
-    // Starting values. Used in /c modgames and in ShortResolver. Increased by
-    // addAttacker/Defender.
-    int startingBV = 0;
-    int startingUnits = 0;
-    // Finishing values. Use in /c modgames and *set* by the ShortResolver.
-    int finishingBV = 0;
-    // Header for modgames info.
-    String modHeader = "";
-    // holding vars for pertinant game info
-    private server.campaign.SPlanet targetWorld;
-    private boolean fromReserve;
+    // holding vars for pertinent game info
+    private final SPlanet targetWorld;
+    private final boolean fromReserve;
+    private final TreeMap<String, Integer> defenders;
+    private final TreeMap<String, Integer> attackers;
+    private final TreeMap<String, SPlayer> winners;
+    private final TreeMap<String, SPlayer> losers;
+    private final ArrayList<SArmy> pdList;
+    private final TreeMap<String, OpsChickenThread> chickenThreads;
+    private final TreeMap<Integer, OperationEntity> unitsInProgress;
+    private final TreeMap<Integer, SPilot> pilotsInProgress;
+    private final SPlayer initiator;// player who sends the command to start an op
+    private final Continent playContinent;
+    private final PlanetEnvironment playEnvironment;
+    private final StringBuilder cityBuilder = new StringBuilder();
+    private final TreeSet<String> cancellingPlayers = new TreeSet<>();
+    /*
+     * For the time being, we're only allowing 1 v 1 games. This will change in
+     * the future, and MOST of the code is already multiplayer friendly.
+     */
+    private final int maxAttackers = 1;
+    private final int maxDefenders = 1;
+    private final int minAttackers = 1;
+    private final int minDefenders = 1;
+    /*
+     * The GameOptions and Attacker/Defender AUtoArmies. Generated when
+     * switching to IN_PROGRESS status. Save in case the game needs to be
+     * rehosted, player quits and returns, etc.
+     */
+    private final StringBuffer gameOptions = new StringBuffer();
+    private final HashMap<String, String> MULHash = new HashMap<String, String>();
+    private final int[] mapEdge = { Buildings.NORTH, Buildings.SOUTH, Buildings.EAST, Buildings.WEST };
+    private final int[] mapEdgeReverse = { Buildings.SOUTH, Buildings.NORTH, Buildings.WEST, Buildings.EAST };
+    private final int[] playerEdge = { Buildings.NORTHWEST, Buildings.NORTH, Buildings.NORTHEAST, Buildings.EAST,
+                                       Buildings.SOUTHEAST, Buildings.SOUTH, Buildings.SOUTHWEST, Buildings.WEST,
+                                       Buildings.EDGE, Buildings.CENTER, Buildings.NORTHWEST_DEEP, Buildings.NORTH_DEEP,
+                                       Buildings.NORTHEAST_DEEP, Buildings.EAST_DEEP, Buildings.SOUTHEAST_DEEP,
+                                       Buildings.SOUTH_DEEP, Buildings.SOUTHWEST_DEEP, Buildings.WEST_DEEP };
+    private final int[] playerEdgeReverse = { Buildings.SOUTHEAST, Buildings.SOUTH, Buildings.SOUTHWEST, Buildings.WEST,
+                                              Buildings.NORTHWEST, Buildings.NORTH, Buildings.NORTHEAST, Buildings.EAST,
+                                              Buildings.CENTER, Buildings.EDGE, Buildings.SOUTHEAST_DEEP,
+                                              Buildings.SOUTH_DEEP, Buildings.SOUTHWEST_DEEP, Buildings.WEST_DEEP,
+                                              Buildings.NORTHWEST_DEEP, Buildings.NORTH_DEEP, Buildings.NORTHEAST_DEEP,
+                                              Buildings.EAST_DEEP };
+    private final int[] teamEdge = { Buildings.NORTH, Buildings.SOUTH, Buildings.EAST, Buildings.WEST,
+                                     Buildings.NORTHWEST, Buildings.SOUTHEAST, Buildings.NORTHEAST,
+                                     Buildings.SOUTHWEST };
+    /*
+     * last, but certainly not least, holders for the underlying operation and
+     * (if to an extent) player ModifyingOperation names.
+     *
+     * use names instead of direct references. Manager will feed Resolver the latest
+     * version of named ops/mods when game ends.
+     */
+    private final String opName;
+    private final TreeMap<String, String> playerModifyingOps;
+    private final OperationReporter reporter = new OperationReporter();
+    public Vector<SUnit> preCapturedUnits = null;
+    // Starting values. Used in /c mod games and in ShortResolver. Increased by addAttacker/Defender.
+    private int startingBV = 0;
+    private int startingUnits = 0;
+    // Finishing values. Use in /c mod games and *set* by the ShortResolver.
+    private int finishingBV = 0;
+    // Header for module info.
+    private String modHeader = "";
     private int shortID = -1;
-    private int longID = -1;// id of parent long op, if one exists
-    private java.util.TreeMap<String, Integer> defenders;
-    private java.util.TreeMap<String, Integer> attackers;
-    private java.util.TreeMap<String, server.campaign.SPlayer> winners;
-    private java.util.TreeMap<String, server.campaign.SPlayer> losers;
-    private java.util.ArrayList<server.campaign.SArmy> pdlist;
-    private java.util.TreeMap<String, OpsChickenThread> chickenThreads;
-    private java.util.TreeMap<Integer, OperationEntity> unitsInProgress;
-    private java.util.TreeMap<Integer, SPilot> pilotsInProgress;
-    private server.campaign.SPlayer initiator;// player who sends the command to start an op
-    private Continent playContinent;
-    private PlanetEnvironment playEnvironment;
-    private StringBuilder cityBuilder = new StringBuilder();
+    private int longID = -1;// id of parent-long op, if one exists
     // intel info
     private AdvancedTerrain aTerrain = null;
     private boolean intelVacuum = false;
     private boolean doubleBlind = false;
     private double intelGravity = 0;
     private int intelTemp = 0;
-    private int intelTimeFrame = PlanetaryConditions.L_DAY;
+    private Light intelTimeFrame = Light.DAY;
     private int intelVisibility = 999;
-    private int intelWeather = PlanetaryConditions.WE_NONE;
-    private int intelWind = PlanetaryConditions.WI_NONE;
-    private java.util.TreeSet<String> cancellingPlayers = new java.util.TreeSet<String>();
-    /*
-     * For the time being, we're only allowing 1 v 1 games. This will change in
-     * the future, and MOST of the code is already multiplayer friendly.
-     */
-    private int maxAttackers = 1;
-    private int maxDefenders = 1;
-    private int minAttackers = 1;
-    private int minDefenders = 1;
+    private Weather intelWeather = Weather.CLEAR;
+    private Wind intelWind = Wind.CALM;
     // string set by Resolver. Returned for getFinishedInfo()
     private String completeFinishedString;
     private String incompleteFinishedString;
@@ -105,12 +175,6 @@ public class ShortOperation implements Comparable<Object> {
     private int showsToClear;// number of tick-shows remaining before removal
     private long startTime = -1;
     private long completionTime = -1;
-    /*
-     * The GameOptions and Attacker/Defender AUtoArmies. Generated when
-     * switching to INPROGRESS status. Save in case the game needs to be
-     * rehosted, player quits and returns, etc.
-     */
-    private StringBuffer gameOptions = new StringBuffer();
     private String attackerAutoString = null;
     private String defenderAutoString = null;
     private String attackerAutoEmplacementsString = null;
@@ -121,55 +185,29 @@ public class ShortOperation implements Comparable<Object> {
     private String defendArtDesc = "";
     private float defenderArmyCount = 0;
     private float attackerArmyCount = 0;
-    private java.util.HashMap<String, String> MULHash = new java.util.HashMap<String, String>();
     /*
      * Building Options for any building destruction tasks
      */
     private boolean isBuildingOperation = false;
     private String buildingOptions = "";
-    private int[] mapEdge = { Buildings.NORTH, Buildings.SOUTH, Buildings.EAST, Buildings.WEST };
-    private int[] mapEdgeReverse = { Buildings.SOUTH, Buildings.NORTH, Buildings.WEST, Buildings.EAST };
-    private int[] playerEdge = { Buildings.NORTHWEST, Buildings.NORTH, Buildings.NORTHEAST, Buildings.EAST,
-                                 Buildings.SOUTHEAST, Buildings.SOUTH, Buildings.SOUTHWEST, Buildings.WEST,
-                                 Buildings.EDGE, Buildings.CENTER, Buildings.NORTHWESTDEEP, Buildings.NORTHDEEP,
-                                 Buildings.NORTHEASTDEEP, Buildings.EASTDEEP, Buildings.SOUTHEASTDEEP,
-                                 Buildings.SOUTHDEEP, Buildings.SOUTHWESTDEEP, Buildings.WESTDEEP };
-    private int[] playerEdgeReverse = { Buildings.SOUTHEAST, Buildings.SOUTH, Buildings.SOUTHWEST, Buildings.WEST,
-                                        Buildings.NORTHWEST, Buildings.NORTH, Buildings.NORTHEAST, Buildings.EAST,
-                                        Buildings.CENTER, Buildings.EDGE, Buildings.SOUTHEASTDEEP, Buildings.SOUTHDEEP,
-                                        Buildings.SOUTHWESTDEEP, Buildings.WESTDEEP, Buildings.NORTHWESTDEEP,
-                                        Buildings.NORTHDEEP, Buildings.NORTHEASTDEEP, Buildings.EASTDEEP };
     private int attackerEdge = -1;
     private int defenderEdge = -1;
     private int totalBuildings = -1;
     private int minBuildings = -1;
-    private int[] teamEdge = { Buildings.NORTH, Buildings.SOUTH, Buildings.EAST, Buildings.WEST, Buildings.NORTHWEST,
-                               Buildings.SOUTHEAST, Buildings.NORTHEAST, Buildings.SOUTHWEST };
     private boolean isTeamOp = false;
     // The map size, to save. Default to 2x1 FASA. Store to resend after logout.
-    private java.awt.Dimension mapsize = new java.awt.Dimension(32, 17);
-    /*
-     * last, but certainly not least, holders for the underlying operation and
-     * (if extent) player ModifyingOperation names.
-     *
-     * use names instead of direct references. Resolver will be fed latest
-     * version of named ops/mods by Manager when game ends.
-     */
-    private String opName;
-    private java.util.TreeMap<String, String> playerModifyingOps;
+    private Dimension mapSize = new Dimension(32, 17);
     // autoReport String
     private String autoReportString = null;
     private int playersReported = 0;
     private String bots;
     private String botTeams;
-    private OperationReporter reporter = new OperationReporter();
     private NewShortResolver resolver;
 
 
     // CONSTRUCTOR
-    public ShortOperation(String opName, server.campaign.SPlanet target, server.campaign.SPlayer initiator,
-          server.campaign.SArmy attackingArmy, java.util.ArrayList<server.campaign.SArmy> possibleDefenders,
-          int shortID, int longID, boolean fromReserve) {
+    public ShortOperation(String opName, SPlanet target, SPlayer initiator, SArmy attackingArmy,
+          ArrayList<SArmy> possibleDefenders, int shortID, int longID, boolean fromReserve) {
 
         // save params
         targetWorld = target;
@@ -179,13 +217,13 @@ public class ShortOperation implements Comparable<Object> {
         this.longID = longID;
         this.fromReserve = fromReserve;
 
-        // construct the treemaps
-        playerModifyingOps = new java.util.TreeMap<String, String>();
-        chickenThreads = new java.util.TreeMap<String, OpsChickenThread>();
-        attackers = new java.util.TreeMap<String, Integer>();
-        defenders = new java.util.TreeMap<String, Integer>();
-        winners = new java.util.TreeMap<String, server.campaign.SPlayer>();
-        losers = new java.util.TreeMap<String, server.campaign.SPlayer>();
+        // construct the treemap
+        playerModifyingOps = new TreeMap<>();
+        chickenThreads = new TreeMap<>();
+        attackers = new TreeMap<>();
+        defenders = new TreeMap<>();
+        winners = new TreeMap<String, SPlayer>();
+        losers = new TreeMap<String, SPlayer>();
 
         // fetch an environment to play in
         playContinent = targetWorld.getEnvironments().getRandomEnvironment(CampaignMain.campaignMain.getRandom());
@@ -196,8 +234,8 @@ public class ShortOperation implements Comparable<Object> {
         addAttacker(initiator, attackingArmy, "");
 
         // set up the death trees, for use in auto-disconnection-reporting
-        unitsInProgress = new java.util.TreeMap<Integer, OperationEntity>();
-        pilotsInProgress = new java.util.TreeMap<Integer, SPilot>();
+        unitsInProgress = new TreeMap<>();
+        pilotsInProgress = new TreeMap<>();
 
         // set initial counter, status, strings, etc
         showsToClear = 3;// 3 tick default
@@ -205,32 +243,28 @@ public class ShortOperation implements Comparable<Object> {
         gameOptions.append("GO|");
         gameOptions.append(CampaignMain.campaignMain.getMegaMekOptionsToString());
 
-        // add to gamelog
-        String toLog = "Attack: #" +
-                             shortID +
-                             "/" +
-                             initiator.getName() +
-                             "/" +
-                             opName +
-                             "/" +
-                             target.getName() +
-                             ".<br> - Potential Defenders: ";
-        for (server.campaign.SArmy currA : possibleDefenders) {
-            toLog += currA.getName() + "/" + currA.getID() + " ";
+        // add to game log
+        StringBuilder toLog = new StringBuilder(STR."Attack: #\{shortID}/\{initiator.getName()}/\{opName}/\{target.getName()}.<br> - Potential Defenders: ");
+
+        for (SArmy currA : possibleDefenders) {
+            toLog.append(currA.getName()).append("/").append(currA.getID()).append(" ");
         }
-        MWLogger.gameLog(toLog);
 
-        Operation o = CampaignMain.campaignMain.getOpsManager().getOperation(opName);
+        LOGGER.info(toLog.toString());
 
-        preCapturedUnits = new java.util.Vector<server.campaign.SUnit>(1, 1);
+        Operation operation = CampaignMain.campaignMain.getOpsManager().getOperation(opName);
 
+        preCapturedUnits = new java.util.Vector<SUnit>(1, 1);
 
-        pdlist = possibleDefenders;
+        pdList = possibleDefenders;
 
         // inform the defenders
         // Faction Team Ops have a delay in defender informing.
-        if ((!fromReserve && !o.getBooleanValue("TeamOperation") && !o.getBooleanValue("TeamsMustBeSameFaction")) ||
-                  (o.getBooleanValue("TeamOperation") && !o.getBooleanValue("TeamsMustBeSameFaction"))) {
+        if ((!fromReserve &&
+                   !operation.getBooleanValue("TeamOperation") &&
+                   !operation.getBooleanValue("TeamsMustBeSameFaction")) ||
+                  (operation.getBooleanValue("TeamOperation") &&
+                         !operation.getBooleanValue("TeamsMustBeSameFaction"))) {
             informPossibleDefenders();
         }
     }
@@ -239,37 +273,38 @@ public class ShortOperation implements Comparable<Object> {
 
     /**
      * Method which adds an attacker to the short. Should only be called after validation.
-     * <p>
-     * NOTE: Ops store a player's NAME, not a special player like the old TaskPlayer. Instead of a special player. The
-     * ID# of the army used in the game is keyed to the player name.
+     * <sPlayer>
+     * NOTE: Ops store sArmy player's NAME, not sArmy special player like the old TaskPlayer. Instead of sArmy special
+     * player. The ID# of the army used in the game is keyed to the player name.
      */
-    public void addAttacker(server.campaign.SPlayer p, server.campaign.SArmy a, String modName) {
-        Operation o = CampaignMain.campaignMain.getOpsManager().getOperation(opName);
+    public void addAttacker(SPlayer sPlayer, SArmy sArmy, String modName) {
+        Operation operation = CampaignMain.campaignMain.getOpsManager().getOperation(opName);
 
-        attackers.put(p.getName().toLowerCase(), a.getID());
-        reporter.addAttacker(p.getName(), a.getID());
-        if (!modName.equals("")) {
-            playerModifyingOps.put(p.getName().toLowerCase(), modName);
+        attackers.put(sPlayer.getName().toLowerCase(), sArmy.getID());
+        reporter.addAttacker(sPlayer.getName(), sArmy.getID());
+        
+        if (!modName.isEmpty()) {
+            playerModifyingOps.put(sPlayer.getName().toLowerCase(), modName);
         }
 
         // also, lock the participating army and update the client GUI
-        p.lockArmy(a.getID());
+        sPlayer.lockArmy(sArmy.getID());
 
         // increase the unit and BV counts
-        startingBV += a.getOperationsBV(null);
-        startingUnits += a.getAmountOfUnits();
+        startingBV += sArmy.getOperationsBV(null);
+        startingUnits += sArmy.getAmountOfUnits();
 
-        if (o.getBooleanValue("TeamOperation")) {
+        if (operation.getBooleanValue("TeamOperation")) {
 
-            if (o.getBooleanValue("TeamsMustBeSameFaction")) {
-                int maxPlayers = o.getIntValue("TeamSize");
-                int maxBV = o.getIntValue("MaxAttackerBV");
+            if (operation.getBooleanValue("TeamsMustBeSameFaction")) {
+                int maxPlayers = operation.getIntValue("TeamSize");
+                int maxBV = operation.getIntValue("MaxAttackerBV");
                 if ((getAttackers().size() >= maxPlayers) || (getAttackersBV() >= maxBV)) {
                     informPossibleDefenders();
                 }
             } else {
-                int maxTeams = o.getIntValue("NumberOfTeams");
-                int maxPlayersPerTeam = o.getIntValue("TeamSize");
+                int maxTeams = operation.getIntValue("NumberOfTeams");
+                int maxPlayersPerTeam = operation.getIntValue("TeamSize");
                 int maxPlayers = Math.max(2, Math.min(8, maxTeams)) * maxPlayersPerTeam;
 
                 // MWLogger.errLog("Max Teams: "+maxTeams+" Players
@@ -277,7 +312,7 @@ public class ShortOperation implements Comparable<Object> {
                 // Team: "+maxPlayersPerTeam+" Max Players: "+maxPlayers+"
                 // Current Players: "+this.getAllPlayerNames().size());
                 if (getAllPlayerNames().size() >= maxPlayers) {
-                    changeStatus(STATUS_INPROGRESS);
+                    changeStatus(STATUS_IN_PROGRESS);
                 }
 
             }
@@ -365,13 +400,13 @@ public class ShortOperation implements Comparable<Object> {
             // "+maxPlayersPerTeam+" Max Players: "+maxPlayers+" Current
             // Players: "+this.getAllPlayerNames().size());
             if (getAllPlayerNames().size() >= maxPlayers) {
-                changeStatus(STATUS_INPROGRESS);
+                changeStatus(STATUS_IN_PROGRESS);
             } else if (o.getBooleanValue("TeamsMustBeSameFaction") &&
                              checkDefendersAndLaunch(maxTeams, maxPlayersPerTeam)) {
-                changeStatus(STATUS_INPROGRESS);
+                changeStatus(STATUS_IN_PROGRESS);
             }
         } else if (!o.getBooleanValue("FreeForAllOperation")) {
-            changeStatus(STATUS_INPROGRESS);
+            changeStatus(STATUS_IN_PROGRESS);
         }
     }
 
@@ -460,7 +495,7 @@ public class ShortOperation implements Comparable<Object> {
          * server options to the players, generates autoarmies and generally
          * does everything imaginable.
          */
-        if (newStatus == STATUS_INPROGRESS) {
+        if (newStatus == STATUS_IN_PROGRESS) {
 
             // get the op we are setting up.
             Operation o = CampaignMain.campaignMain.getOpsManager().getOperation(opName);
@@ -480,7 +515,7 @@ public class ShortOperation implements Comparable<Object> {
 
             //Should the battle be autoresolved?
             if (o.getBooleanValue("AutoresolveBattle")) {
-                currentStatus = STATUS_INPROGRESS;
+                currentStatus = STATUS_IN_PROGRESS;
                 switchPlayerStatusToFighting();
                 server.campaign.autoresolve.BattleResolver.getInstance().resolve(this);
                 return;
@@ -1127,7 +1162,7 @@ public class ShortOperation implements Comparable<Object> {
              * Cancel any outstanding chicken threads 3) Add the game info to
              * client-side logs
              */
-            currentStatus = STATUS_INPROGRESS;
+            currentStatus = STATUS_IN_PROGRESS;
             switchPlayerStatusToFighting();
             // Build player list and submit to NewShortResolver
             submitPlayerList();
@@ -1466,7 +1501,7 @@ public class ShortOperation implements Comparable<Object> {
 
             int sizeX = Math.max(totalWeight + 3, o.getIntValue("MapSizeX"));
             int sizeY = Math.max(totalWeight - 2, o.getIntValue("MapSizeY"));
-            mapsize = new java.awt.Dimension(sizeX, sizeY);
+            mapSize = new java.awt.Dimension(sizeX, sizeY);
 
 
 
@@ -1505,18 +1540,18 @@ public class ShortOperation implements Comparable<Object> {
                     CampaignMain.campaignMain.toUser("PE|" +
                                                            playEnvironment.toString(cityBuilder.toString()) +
                                                            "|" +
-                                                           mapsize.width +
+                                                           mapSize.width +
                                                            "|" +
-                                                           mapsize.height +
+                                                           mapSize.height +
                                                            "|" +
                                                            o.getValue("MapMedium"), currN, false);
                 } else {
                     CampaignMain.campaignMain.toUser("PE|" +
                                                            playEnvironment.toString(cityBuilder.toString()) +
                                                            "|" +
-                                                           mapsize.width +
+                                                           mapSize.width +
                                                            "|" +
-                                                           mapsize.height +
+                                                           mapSize.height +
                                                            "|" +
                                                            o.getValue("MapMedium"), currN, false);
                 }
@@ -1868,7 +1903,7 @@ public class ShortOperation implements Comparable<Object> {
          * Most of what needs to be sent was saved during
          * changeStatus(IN_PROGRESS)
          */
-        if (currentStatus != STATUS_INPROGRESS) {
+        if (currentStatus != STATUS_IN_PROGRESS) {
             return;
         }
 
@@ -1890,18 +1925,18 @@ public class ShortOperation implements Comparable<Object> {
             CampaignMain.campaignMain.toUser("PE|" +
                                                    playEnvironment.toString(cityBuilder.toString()) +
                                                    "|" +
-                                                   mapsize.width +
+                                                   mapSize.width +
                                                    "|" +
-                                                   mapsize.height +
+                                                   mapSize.height +
                                                    "|" +
                                                    o.getValue("MapMedium"), lowerName, false);
         } else {
             CampaignMain.campaignMain.toUser("PE|" +
                                                    playEnvironment.toString(cityBuilder.toString()) +
                                                    "|" +
-                                                   mapsize.width +
+                                                   mapSize.width +
                                                    "|" +
-                                                   mapsize.height +
+                                                   mapSize.height +
                                                    "|" +
                                                    o.getValue("MapMedium"), lowerName, false);
         }
@@ -2067,7 +2102,7 @@ public class ShortOperation implements Comparable<Object> {
     public void informPossibleDefenders() {
 
         // look at every army in the potential defender list
-        for (server.campaign.SArmy currArmy : pdlist) {
+        for (server.campaign.SArmy currArmy : pdList) {
 
             server.campaign.SPlayer currPlayer = CampaignMain.campaignMain.getPlayer(currArmy.getPlayerName());
             String playername = currPlayer.getName().toLowerCase();
@@ -2152,7 +2187,7 @@ public class ShortOperation implements Comparable<Object> {
 
         if (currentStatus == STATUS_WAITING) {
             return getWaitingInfo(complete);
-        } else if ((currentStatus == STATUS_INPROGRESS) || (currentStatus == STATUS_REPORTING)) {
+        } else if ((currentStatus == STATUS_IN_PROGRESS) || (currentStatus == STATUS_REPORTING)) {
             return getInProgressInfo(complete, mod);
         } else if (currentStatus == STATUS_FINISHED) {
             return getFinishedInfo(complete, mod);

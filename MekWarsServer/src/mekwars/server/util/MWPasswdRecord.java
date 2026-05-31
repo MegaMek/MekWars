@@ -12,13 +12,15 @@
 
 package mekwars.server.util;
 
+import mekwars.server.MWChatServer.auth.AccessRole;
+
 /**
  * Represents a line in the passwd file.  All fields are public
  */
 public class MWPasswdRecord {
     public String userId;
     public String passwd;
-    public int access;
+    public AccessRole access;
     public long time;
     private Long id;
 
@@ -29,7 +31,7 @@ public class MWPasswdRecord {
     /**
      * Constructor for convenience
      */
-    public MWPasswdRecord(String userId, int access, String cryptedPasswd, long time, String logo) {
+    public MWPasswdRecord(String userId, AccessRole access, String cryptedPasswd, long time, String logo) {
         this.userId = userId;
         this.access = access;
         this.passwd = cryptedPasswd;
@@ -81,14 +83,14 @@ public class MWPasswdRecord {
     /**
      * @return Returns the access.
      */
-    public int getAccess() {
+    public AccessRole getAccess() {
         return access;
     }
 
     /**
      * @param access The access to set.
      */
-    public void setAccess(int access) {
+    public void setAccess(AccessRole access) {
         this.access = access;
     }
 

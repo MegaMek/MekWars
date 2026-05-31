@@ -15,13 +15,11 @@
  */
 package mekwars.server.campaign;
 
-import common.Army;
-import common.Unit;
-import common.campaign.operations.Operation;
-import common.util.MWLogger;
-import common.util.TokenReader;
+import java.util.Iterator;
+import java.util.TreeMap;
+import java.util.Vector;
+
 import megamek.common.battleArmor.BattleArmor;
-import megamek.common.battlevalue.BvMultiplier;
 import megamek.common.equipment.AmmoType;
 import megamek.common.equipment.Mounted;
 import megamek.common.units.Aero;
@@ -29,6 +27,9 @@ import megamek.common.units.Entity;
 import megamek.common.units.Infantry;
 import megamek.common.units.Tank;
 import megamek.common.units.VTOL;
+import mekwars.common.Army;
+import mekwars.common.Unit;
+import mekwars.common.util.TokenReader;
 
 /**
  * @author Helge Richter
@@ -37,23 +38,23 @@ import megamek.common.units.VTOL;
 
 public class SArmy extends Army {
 
+    private final TreeMap<String, String> legalOperations = new TreeMap<>();
     // VARIABLES
     private float rawForceSize = 0;
-    private java.util.Vector<SArmy> opponents = new java.util.Vector<SArmy>(1, 1);
-    private java.util.TreeMap<String, String> legalOperations = new java.util.TreeMap<String, String>();
-    private String playerName = "";
+    private Vector<SArmy> opponents;
+    private String playerName;
 
     // CONSTRUCTORS
     public SArmy(String ownerName) {
         super();
-        opponents = new java.util.Vector<SArmy>(1, 1);
+        opponents = new Vector<>(1, 1);
         playerName = ownerName;
     }
 
     public SArmy(int id, String ownerName) {
         super();
         setID(id);
-        opponents = new java.util.Vector<SArmy>(1, 1);
+        opponents = new Vector<>(1, 1);
         playerName = ownerName;
     }
 
@@ -64,8 +65,7 @@ public class SArmy extends Army {
     }
 
     public void removeUnit(int id) {
-
-        java.util.Iterator<Unit> i = getUnits().iterator();
+        Iterator<Unit> i = getUnits().iterator();
         while (i.hasNext()) {
             if (i.next().getId() == id) {
                 i.remove();
@@ -80,9 +80,9 @@ public class SArmy extends Army {
     }
 
     public int getUnitPosition(int id) {
-        java.util.Vector<Unit> v = getUnits();
-        for (int i = 0; i < v.size(); i++) {
-            SUnit unit = (SUnit) v.elementAt(i);
+        Vector<Unit> units = getUnits();
+        for (int i = 0; i < units.size(); i++) {
+            SUnit unit = (SUnit) units.elementAt(i);
             if (unit.getId() == id) {
                 return i;
             }
@@ -95,22 +95,22 @@ public class SArmy extends Army {
      */
     public float getRawForceSize() {
 
-        // dont recalculate if it isnt necessary
+        // dont recalculate if it isn't necessary
         if (rawForceSize != 0) {
             return rawForceSize;
         }
 
         // no break, generate a raw force size
-        for (Unit u : getUnits()) {
-            if (u.getType() == Unit.INFANTRY) {
+        for (Unit unit : getUnits()) {
+            if (unit.getType() == Unit.INFANTRY) {
                 rawForceSize += CampaignMain.campaignMain.getFloatConfig("InfantryOperationsBVMod");
-            } else if (u.getType() == Unit.VEHICLE) {
+            } else if (unit.getType() == Unit.VEHICLE) {
                 rawForceSize += CampaignMain.campaignMain.getFloatConfig("VehicleOperationsBVMod");
-            } else if (u.getType() == Unit.BATTLEARMOR) {
+            } else if (unit.getType() == Unit.BATTLEARMOR) {
                 rawForceSize += CampaignMain.campaignMain.getFloatConfig("BAOperationsBVMod");
-            } else if (u.getType() == Unit.PROTOMEK) {
+            } else if (unit.getType() == Unit.PROTOMEK) {
                 rawForceSize += CampaignMain.campaignMain.getFloatConfig("ProtoOperationsBVMod");
-            } else if (u.getType() == Unit.AERO) {
+            } else if (unit.getType() == Unit.AERO) {
                 rawForceSize += CampaignMain.campaignMain.getFloatConfig("AeroOperationsBVMod");
             } else {
                 // all other allowed types have a 1.0 weight
@@ -122,20 +122,21 @@ public class SArmy extends Army {
     }// end getRawForceSize()
 
     /**
-     * @param rfs - the forcesize to set (Operations Rule)
+     * @param rawForceSize - the forcesize to set (Operations Rule)
      */
-    public void setRawForceSize(float rfs) {
-        rawForceSize = rfs;
+    public void setRawForceSize(float rawForceSize) {
+        this.rawForceSize = rawForceSize;
     }
 
     /**
      * @author Torren 2/23/2007 New Tech Manual rules on force Size. This returns the new <code>BV</code> of the
      *       <code>this</code> army which is considerd the larger force
      */
-    public int getOperationsBV(mekwars.server.campaign.SArmy OpposingForce) {
+    public int getOperationsBV(SArmy OpposingForce) {
 
         // if not using the operations rules, return a normal BV.
         boolean usingOpRules = CampaignMain.campaignMain.getBooleanConfig("UseOperationsRule");
+
         if (!usingOpRules) {
             return getBV();
         }

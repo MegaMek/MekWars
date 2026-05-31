@@ -53,16 +53,17 @@ import java.util.StringTokenizer;
 import java.util.Vector;
 import java.util.zip.Inflater;
 
-import mekwars.common.campaign.clientutils.protocol.ConnectionHandlerLocal;
+import megamek.logging.MMLogger;
 import mekwars.common.campaign.clientutils.protocol.IClient;
 import mekwars.common.campaign.clientutils.protocol.IConnectionHandler;
 import mekwars.common.campaign.clientutils.protocol.IConnectionListener;
-import mekwars.common.util.MWLogger;
 
 /**
  * Constantly read from the socket's input stream
  */
 public class ReaderThread extends Thread {
+    private final static MMLogger LOGGER = MMLogger.create(ReaderThread.class);
+
     private static final int NL = 10; // "\n" in ASCII and UTF8
     private final IConnectionHandler _connectionHandler;
     private final Inflater inflater = new Inflater();
@@ -75,12 +76,13 @@ public class ReaderThread extends Thread {
 
     public ReaderThread(IConnectionHandler handler, Socket s) {
         super("ConnectionHandler$ReaderThread");
-        //_in = in;
+
         try {
             _sis = s.getInputStream();
         } catch (Exception ex) {
-            MWLogger.errLog(ex);
+            LOGGER.error(ex, "Unable to get input stream. {}", ex.getLocalizedMessage());
         }
+
         _connectionHandler = handler;
     }
 
@@ -103,46 +105,42 @@ public class ReaderThread extends Thread {
                             try {
                                 inflate(newLine);
                             } catch (Exception ex) {
-                                MWLogger.errLog(ex);
+                                LOGGER.error(ex, "Unable to inflate: {}", ex.getLocalizedMessage());
                             }
+
                             continue;
                         }
                     }
 
                     //else
-                    ConnectionHandlerLocal.DEBUG(STR."< \{newLine}");
                     _listener.incomingMessage(newLine);
 
                 } else {
-                    MWLogger.errLog(STR."Null listener: \{newLine}");
+                    LOGGER.debug(STR."Null listener: \{newLine}");
                 }
             }
-            MWLogger.errLog("ReaderThread: stopping gracefully.");
 
+            LOGGER.debug("ReaderThread: stopping gracefully.");
         } catch (IOException e) {
             if (keepGoing) {
                 pleaseStop();
-                MWLogger.errLog("ReaderThread Error");
-                MWLogger.errLog(e);
+                LOGGER.error(e, "ReaderThread Error");
                 _connectionHandler.shutdown(true);
             }
         }
     }
 
     private String readLine() throws IOException {
-        try {
-            int n = 0;
-            int i;
-            while ((i = _sis.read()) != NL) {
-                rlBuffer[n++] = (byte) i;
-            }
-            // rlBuffer[n++] = (byte) NL;
-            byte[] a = new byte[n];
-            System.arraycopy(rlBuffer, 0, a, 0, n);
-            return new String(a, StandardCharsets.UTF_8);
-        } catch (Exception e) {
-            throw new IOException();
+        int n = 0;
+        int i;
+
+        while ((i = _sis.read()) != NL) {
+            rlBuffer[n++] = (byte) i;
         }
+
+        byte[] a = new byte[n];
+        System.arraycopy(rlBuffer, 0, a, 0, n);
+        return new String(a, StandardCharsets.UTF_8);
     }
 
     /**
@@ -152,9 +150,11 @@ public class ReaderThread extends Thread {
     private String[] decompose(String input) {
         StringTokenizer st = new StringTokenizer(input, IClient.DELIMITER);
         Vector<String> v = new Vector<>(5, 1);
+
         while (st.hasMoreTokens()) {
             v.addElement(st.nextToken());
         }
+
         String[] args = new String[v.size()];
         v.copyInto(args);
         return args;
@@ -166,17 +166,20 @@ public class ReaderThread extends Thread {
         int fullSize = 29999;
 
         //just in case
-        if (args.length > 2) {fullSize = Integer.parseInt(args[2]);}
+        if (args.length > 2) {
+            fullSize = Integer.parseInt(args[2]);
+        }
 
         byte[] compressedBytes = new byte[size];
         byte[] rawBytes = new byte[fullSize];
-        // use an Inflater instead of InflaterInputStream so we don't
-        // have to worry about the internal IIS buffers screwing our stream
-        // position.
+
+        // use an Inflater instead of InflaterInputStream so we don't have to worry about the internal IIS buffers
+        // screwing our stream position.
         int totalRead = 0;
+
         while (totalRead < size) {
             totalRead += _sis.read(compressedBytes, totalRead, size - totalRead);
-            ConnectionHandlerLocal.DEBUG(STR."< Read \{totalRead} of \{size}");
+            LOGGER.debug(STR."< Read \{totalRead} of \{size}");
         }
 
         inflater.reset();
@@ -186,7 +189,7 @@ public class ReaderThread extends Thread {
         BufferedReader br = new BufferedReader(new InputStreamReader(new ByteArrayInputStream(rawBytes, 0, textLength),
               StandardCharsets.UTF_8));
         while ((command = br.readLine()) != null) {
-            ConnectionHandlerLocal.DEBUG(STR."< inflated: \{command}");
+            LOGGER.debug(STR."< inflated: \{command}");
             _listener.incomingMessage(command);
         }
     }

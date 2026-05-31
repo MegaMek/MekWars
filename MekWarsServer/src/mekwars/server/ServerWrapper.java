@@ -1,18 +1,37 @@
 /*
- * MekWars - Copyright (C) 2004
+ * Copyright (C) 2004 MekWars
+ * Copyright (C) 2026 The MegaMek Team. All Rights Reserved.
  *
- * Derived from MegaMekNET (http://www.sourceforge.net/projects/megameknet)
+ * This file is part of MekWars.
  *
- * This program is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License as published by the Free
- * Software Foundation; either version 2 of the License, or (at your option)
- * any later version.
+ * MekWars is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License (GPL),
+ * version 3 or (at your option) any later version,
+ * as published by the Free Software Foundation.
  *
- * This program is distributed in the hope that it will be useful, but
- * WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
- * or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License
- * for more details.
+ * MekWars is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty
+ * of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU General Public License for more details.
+ *
+ * A copy of the GPL should have been included with this project;
+ * if not, see <https://www.gnu.org/licenses/>.
+ *
+ * NOTICE: The MegaMek organization is a non-profit group of volunteers
+ * creating free software for the BattleTech community.
+ *
+ * MechWarrior, BattleMech, `Mech and AeroTech are registered trademarks
+ * of The Topps Company, Inc. All Rights Reserved.
+ *
+ * Catalyst Game Labs and the Catalyst Game Labs logo are trademarks of
+ * InMediaRes Productions, LLC.
+ *
+ * MechWarrior Copyright Microsoft Corporation. MekWars was created under
+ * Microsoft's "Game Content Usage Rules"
+ * <https://www.xbox.com/en-US/developers/rules> and it is not endorsed by or
+ * affiliated with Microsoft.
  */
+
 
 /*
  * ClientTest.java
@@ -24,6 +43,8 @@ package mekwars.server;
 
 import java.rmi.AccessException;
 
+import megamek.codeUtilities.MathUtility;
+import megamek.logging.MMLogger;
 import mekwars.common.campaign.clientutils.protocol.CConnector;
 import mekwars.common.util.StringUtils;
 import mekwars.server.MWChatServer.MWChatClient;
@@ -34,20 +55,20 @@ import mekwars.server.MWChatServer.commands.ICommands;
 
 
 public class ServerWrapper extends MWChatServer {
-
-    MWServ myServer;
+    private final static MMLogger LOGGER = MMLogger.create(ServerWrapper.class);
+    private final MWServ myServer;
 
     public ServerWrapper(MWServ server) throws Exception {
-        super(server.getConfigParam("SERVERIP"), Integer.parseInt(server.getConfigParam("SERVERPORT")));
+        super(server.getConfigParam("SERVER_IP"), MathUtility.parseInt(server.getConfigParam("SERVER_PORT"), 2350));
         this.myServer = server;
     }
 
-    public static mekwars.server.ServerWrapper createServer(MWServ server) throws Exception {
-        return new mekwars.server.ServerWrapper(server);
+    public static ServerWrapper createServer(MWServ server) throws Exception {
+        return new ServerWrapper(server);
     }
 
     public void start() {
-        MWLogger.mainLog("Starting");
+        LOGGER.info("Starting");
         this.acceptConnections();
     }
 
@@ -59,20 +80,16 @@ public class ServerWrapper extends MWChatServer {
         if (username == null) {
             return; //happens when access is denied
         }
-        try {
-            this.myServer.clientRecieve(command, username);
-        } catch (Exception e) {
-            MWLogger.errLog(e);
-        }
+
+        this.myServer.clientRecieve(command, username);
     }
 
     //this is a hack...
     //there should be comm objects
     public void broadcastComm(String command) {
-        MWLogger.debugLog("Sending Broadcast Message: " + command);
+        LOGGER.debug(STR."Sending Broadcast Message: \{command}");
         synchronized (_users) {
-            for (java.util.Iterator<MWChatClient> i = _users.values().iterator(); i.hasNext(); ) {
-                MWChatClient cc = i.next();
+            for (MWChatClient cc : _users.values()) {
                 this.sendServerMessage(command, MWChatServer.clientKey(cc));
             }
         }

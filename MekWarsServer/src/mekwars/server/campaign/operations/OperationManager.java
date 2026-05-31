@@ -190,7 +190,7 @@ public class OperationManager extends AbstractOperationManager implements I_Oper
         if (so == null) {return;}
 
         //only have a possible resolution if game was in progress
-        if (so.getStatus() != ShortOperation.STATUS_INPROGRESS) {return;}
+        if (so.getStatus() != ShortOperation.STATUS_IN_PROGRESS) {return;}
 
         //if the operation has more than 2 players, return
         if (so.getAllPlayerNames().size() > 2) {return;}
@@ -292,27 +292,27 @@ public class OperationManager extends AbstractOperationManager implements I_Oper
             if (so.getStatus() == ShortOperation.STATUS_FINISHED) {return;}
 
             //do not cancel running games involuntarily, unless *EVERY* player involved is gone
-            if (so.getStatus() == ShortOperation.STATUS_INPROGRESS &&
-                      (termCode != TERM_TERMCOMMAND && termCode != TERM_NO_REMAINING_PLAYERS)) {return;}
+            if (so.getStatus() == ShortOperation.STATUS_IN_PROGRESS &&
+                      (termCode != TERM_TERM_COMMAND && termCode != TERM_NO_REMAINING_PLAYERS)) {return;}
         }
 
         //assemble message header
         String message = "Attack #" + so.getShortID() + " was cancelled";
         switch (termCode) {
 
-            case TERM_TERMCOMMAND:
+            case TERM_TERM_COMMAND:
                 message += " by " + terminator.getName();
                 break;
 
-            case TERM_NOPOSSIBLEDEFENDERS:
+            case TERM_NO_POSSIBLE_DEFENDERS:
                 message += " because no potential defenders remained";
                 break;
 
-            case TERM_NOATTACKERS:
+            case TERM_NO_ATTACKERS:
                 message += " because no attacking players remained";
                 break;
 
-            case TERM_REPORTINGERROR:
+            case TERM_REPORT_ING_ERROR:
                 message += " because there was a reporting error";
                 break;
 
@@ -423,7 +423,7 @@ public class OperationManager extends AbstractOperationManager implements I_Oper
          * Players from in-progress games ought be returned to their previous status. AFR
          * players should go reserve, standard game players should be made Active.
          */
-        if (so.getStatus() == ShortOperation.STATUS_INPROGRESS) {
+        if (so.getStatus() == ShortOperation.STATUS_IN_PROGRESS) {
 
             for (String currN : so.getAllPlayerNames()) {
 
@@ -479,8 +479,8 @@ public class OperationManager extends AbstractOperationManager implements I_Oper
      * ShortResolver should call for all players when a game finishes, and this class should call for all players
      * whenver terminating a game.
      */
-    public void clearAllDisconnectionTracks(ShortOperation so) {
-        for (String currN : so.getAllPlayerNames()) {
+    public void clearAllDisconnectionTracks(ShortOperation shortOperation) {
+        for (String currN : shortOperation.getAllPlayerNames()) {
             String lowerName = currN.toLowerCase();
             OpsDisconnectionThread discoThread = disconnectionThreads.get(lowerName);
             if (discoThread != null) {
@@ -597,9 +597,9 @@ public class OperationManager extends AbstractOperationManager implements I_Oper
      * Conduit method. Takes ShortOperation, Operation, and a report String from CampaignMain and sends them to the
      * ShortResolver.
      */
-    public void resolveShortAttack(Operation o, ShortOperation so, String report) {
+    public void resolveShortAttack(Operation operation, ShortOperation shortOperation, String report) {
         synchronized (this.shortResolver) {
-            this.shortResolver.resolveShortAttack(o, so, report);
+            this.shortResolver.resolveShortAttack(operation, shortOperation, report);
         }
     }
 
@@ -611,9 +611,10 @@ public class OperationManager extends AbstractOperationManager implements I_Oper
      * Conduit method. Takes ShortOperation, Operation, a winner and a loser from a DisconnectionThread and sends them
      * to ShortResolver
      */
-    public void resolveShortAttack(Operation o, ShortOperation so, String winnerName, String loserName) {
+    public void resolveShortAttack(Operation operation, ShortOperation shortOperation, String winnerName,
+          String loserName) {
         synchronized (this.shortResolver) {
-            this.shortResolver.resolveShortAttack(o, so, winnerName, loserName);
+            this.shortResolver.resolveShortAttack(operation, shortOperation, winnerName, loserName);
         }
     }
 
@@ -767,7 +768,7 @@ public class OperationManager extends AbstractOperationManager implements I_Oper
         }
 
         //terminate any operations which may no longer be defended.
-        for (ShortOperation so : toTerminate) {this.terminateOperation(so, TERM_NOPOSSIBLEDEFENDERS, null);}
+        for (ShortOperation so : toTerminate) {this.terminateOperation(so, TERM_NO_POSSIBLE_DEFENDERS, null);}
 
     }
 
@@ -826,7 +827,7 @@ public class OperationManager extends AbstractOperationManager implements I_Oper
         }//end for(each running operation)
 
         //terminate any empty games
-        for (ShortOperation ott : toTerminate) {this.terminateOperation(ott, TERM_NOATTACKERS, null);}
+        for (ShortOperation ott : toTerminate) {this.terminateOperation(ott, TERM_NO_ATTACKERS, null);}
 
     }//end removePlayerFromAllAttackerLists
 

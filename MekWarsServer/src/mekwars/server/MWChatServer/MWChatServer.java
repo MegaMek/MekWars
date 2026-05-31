@@ -1,78 +1,88 @@
 /*
- * MekWars - Copyright (C) 2005
+ * Copyright (C) 2005 Torren (torren@users.sourceforge.net)
+ * Copyright (C) 2026 The MegaMek Team. All Rights Reserved.
  *
- * Original author - Torren (torren@users.sourceforge.net)
+ * This file is part of MekWars.
  *
- * This program is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License as published by the Free
- * Software Foundation; either version 2 of the License, or (at your option)
- * any later version.
+ * MekWars is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License (GPL),
+ * version 3 or (at your option) any later version,
+ * as published by the Free Software Foundation.
  *
- * This program is distributed in the hope that it will be useful, but
- * WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
- * or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License
- * for more details.
+ * MekWars is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty
+ * of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU General Public License for more details.
+ *
+ * A copy of the GPL should have been included with this project;
+ * if not, see <https://www.gnu.org/licenses/>.
+ *
+ * NOTICE: The MegaMek organization is a non-profit group of volunteers
+ * creating free software for the BattleTech community.
+ *
+ * MechWarrior, BattleMech, `Mech and AeroTech are registered trademarks
+ * of The Topps Company, Inc. All Rights Reserved.
+ *
+ * Catalyst Game Labs and the Catalyst Game Labs logo are trademarks of
+ * InMediaRes Productions, LLC.
+ *
+ * MechWarrior Copyright Microsoft Corporation. MekWars was created under
+ * Microsoft's "Game Content Usage Rules"
+ * <https://www.xbox.com/en-US/developers/rules> and it is not endorsed by or
+ * affiliated with Microsoft.
  */
+
 
 /*
  * Derived from NFCChat, a GPL chat client/server.
  * Original code can be found @ http://nfcchat.sourceforge.net
  * Our thanks to the original authors.
  */
-/**
- *
- * @author Torren (Jason Tighe) 11.5.05
- *
- */
 
 package mekwars.server.MWChatServer;
 
+import java.net.ServerSocket;
 import java.rmi.AccessException;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Properties;
 
-import common.util.MWLogger;
-import server.MWChatServer.auth.Auth;
-import server.MWChatServer.auth.IAuthenticator;
-import server.MWChatServer.auth.IRoomAuthenticator;
-import server.MWChatServer.auth.NullRoomAuthenticator;
-import server.MWChatServer.auth.PasswdAuthenticator;
-import server.MWChatServer.commands.ICommands;
+import mekwars.server.MWChatServer.auth.Auth;
+import mekwars.server.MWChatServer.auth.IAuthenticator;
+import mekwars.server.MWChatServer.auth.IRoomAuthenticator;
+import mekwars.server.MWChatServer.auth.NullRoomAuthenticator;
+import mekwars.server.MWChatServer.auth.PasswdAuthenticator;
+import mekwars.server.MWChatServer.commands.ICommands;
 
 public class MWChatServer implements ICommands {
 
-    protected static java.util.Properties _properties;
+    protected static Properties _properties;
     protected boolean _asciiRoomNames;
 
     protected TimedUserList _killedUsers;
     protected IAuthenticator _authenticator;
     protected IRoomAuthenticator _roomAuthenticator;
 
-    protected java.util.Map<String, mekwars.server.MWChatServer.MWChatClient> _users = java.util.Collections.synchronizedMap(
-          new java.util.HashMap<String, mekwars.server.MWChatServer.MWChatClient>());
-    protected java.util.HashMap<String, mekwars.server.MWChatServer.RoomServer> _rooms = new java.util.HashMap<String, mekwars.server.MWChatServer.RoomServer>();
+    protected Map<String, MWChatClient> _users = Collections.synchronizedMap(new HashMap<>());
+    protected HashMap<String, RoomServer> _rooms = new HashMap<>();
 
     protected String _motd;
 
-    protected java.net.ServerSocket _serverSocket;
-    // protected Dispatcher _dispatcher;
-    //protected Thread _dispatchThread;
+    protected ServerSocket _serverSocket;
 
     protected int _cumulativeLogins = 0;
     protected int _port = 0;
     protected int _kickBanSeconds = 60 * 60 * 24;
 
     public MWChatServer(String IPAddress, int port) throws Exception {
-
-    	/*_dispatcher = createDispatcher();
-        _dispatchThread = new Thread(_dispatcher, "Dispatcher");
-        _dispatchThread.start();*/
-
-        java.util.Properties commandProps = new java.util.Properties();
+        Properties commandProps = new Properties();
         commandProps.setProperty("signon.class", "server.MWChatServer.commands.SignOn");
         commandProps.setProperty("signon.access", "0");
         commandProps.setProperty("comm.class", "server.MWChatServer.commands.Command");
         initCommandProcessor(commandProps);
 
-        java.util.Properties messagesProps = new java.util.Properties();
+        Properties messagesProps = new Properties();
         messagesProps.setProperty("access_denied", "Accessdenied.");
         messagesProps.setProperty("sql_error", "SQLError:{0}");
         messagesProps.setProperty("already_on", "Youarealreadysignedon");

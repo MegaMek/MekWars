@@ -1,85 +1,119 @@
+/*
+ * Copyright (C) 2026 The MegaMek Team. All Rights Reserved.
+ *
+ * This file is part of MekWars.
+ *
+ * MekWars is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License (GPL),
+ * version 3 or (at your option) any later version,
+ * as published by the Free Software Foundation.
+ *
+ * MekWars is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty
+ * of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU General Public License for more details.
+ *
+ * A copy of the GPL should have been included with this project;
+ * if not, see <https://www.gnu.org/licenses/>.
+ *
+ * NOTICE: The MegaMek organization is a non-profit group of volunteers
+ * creating free software for the BattleTech community.
+ *
+ * MechWarrior, BattleMech, `Mech and AeroTech are registered trademarks
+ * of The Topps Company, Inc. All Rights Reserved.
+ *
+ * Catalyst Game Labs and the Catalyst Game Labs logo are trademarks of
+ * InMediaRes Productions, LLC.
+ *
+ * MechWarrior Copyright Microsoft Corporation. MekWars was created under
+ * Microsoft's "Game Content Usage Rules"
+ * <https://www.xbox.com/en-US/developers/rules> and it is not endorsed by or
+ * affiliated with Microsoft.
+ */
+
 package mekwars.server.campaign.operations.newopmanager;
 
-import common.campaign.operations.Operation;
+import java.util.TreeMap;
+
+import mekwars.common.campaign.operations.Operation;
+import mekwars.server.campaign.SArmy;
+import mekwars.server.campaign.SHouse;
+import mekwars.server.campaign.SPlanet;
+import mekwars.server.campaign.SPlayer;
+import mekwars.server.campaign.operations.OpsScrapThread;
+import mekwars.server.campaign.operations.ShortOperation;
+import mekwars.server.campaign.operations.ShortValidator;
 
 public interface I_OperationManager {
 
     //statics
-    public static final int TERM_TERMCOMMAND = 0;
-    public static final int TERM_NOATTACKERS = 1;
-    public static final int TERM_NOPOSSIBLEDEFENDERS = 2;
-    public static final int TERM_REPORTINGERROR = 3;
-    public static final int TERM_NO_REMAINING_PLAYERS = 4;
+    int TERM_TERM_COMMAND = 0;
+    int TERM_NO_ATTACKERS = 1;
+    int TERM_NO_POSSIBLE_DEFENDERS = 2;
+    int TERM_REPORT_ING_ERROR = 3;
+    int TERM_NO_REMAINING_PLAYERS = 4;
 
-    public String tick();
+    String tick();
 
-    public void resolveShortAttack(Operation o, server.campaign.operations.ShortOperation so, String report);
+    void resolveShortAttack(Operation operation, ShortOperation shortOperation, String report);
 
-    public void resolveShortAttack(Operation o, server.campaign.operations.ShortOperation so, String winnerName,
-          String loserName);
+    void resolveShortAttack(Operation operation, ShortOperation shortOperation, String winnerName, String loserName);
 
-    public server.campaign.operations.ShortOperation getShortOpForPlayer(server.campaign.SPlayer p);
+    ShortOperation getShortOpForPlayer(SPlayer sPlayer);
 
-    public Operation getOperation(String name);
+    Operation getOperation(String name);
 
-    public void checkOperations(server.campaign.SArmy a, boolean display);
+    void checkOperations(SArmy sArmy, boolean display);
 
-    public java.util.TreeMap<Integer, server.campaign.operations.ShortOperation> getRunningOps();
+    TreeMap<Integer, ShortOperation> getRunningOps();
 
-    public void doDisconnectCheckOnPlayer(String name);
+    void doDisconnectCheckOnPlayer(String name);
 
-    public void doReconnectCheckOnPlayer(String name);
+    void doReconnectCheckOnPlayer(String name);
 
-    public boolean playerHasActiveChickenThread(server.campaign.SPlayer p);
+    boolean playerHasActiveChickenThread(SPlayer sPlayer);
 
-    public void terminateOperation(server.campaign.operations.ShortOperation so, int termCode,
-          server.campaign.SPlayer terminator);
+    void terminateOperation(ShortOperation shortOperation, int termCode, SPlayer terminator);
 
-    public void terminateOperation(server.campaign.operations.ShortOperation so, int termCode,
-          server.campaign.SPlayer terminator, boolean ignoreStatus);
+    void terminateOperation(ShortOperation shortOperation, int termCode, SPlayer terminator, boolean ignoreStatus);
 
-    public void clearAllDisconnectionTracks(server.campaign.operations.ShortOperation so);
+    void clearAllDisconnectionTracks(ShortOperation shortOperation);
 
-    public void removePlayerFromAllAttackerLists(server.campaign.SPlayer p,
-          server.campaign.operations.ShortOperation so, boolean verbose);
+    void removePlayerFromAllAttackerLists(SPlayer sPlayer, ShortOperation shortOperation, boolean verbose);
 
-    public void removePlayerFromAllDefenderLists(server.campaign.SPlayer p,
-          server.campaign.operations.ShortOperation so, boolean verbose);
+    void removePlayerFromAllDefenderLists(SPlayer sPlayer, ShortOperation shortOperation, boolean verbose);
 
-    public void removePlayerFromAllPossibleDefenderLists(String playerName, boolean penalize);
+    void removePlayerFromAllPossibleDefenderLists(String playerName, boolean penalize);
 
-    public java.util.TreeMap<String, server.campaign.operations.OpsScrapThread> getScrapThreads();
+    TreeMap<String, OpsScrapThread> getScrapThreads();
 
-    public boolean hasMULOnlyOps();
+    boolean hasMULOnlyOps();
 
-    public server.campaign.operations.ShortValidator getShortValidator();
+    ShortValidator getShortValidator();
 
-    public java.util.TreeMap<String, Operation> getOperations();
+    TreeMap<String, Operation> getOperations();
 
-    public int getFreeShortID();
+    int getFreeShortID();
 
-    public int getFreeLongID();
+    int getFreeLongID();
 
-    public void loadOperations();
+    void loadOperations();
 
-    public void addShortOperation(server.campaign.operations.ShortOperation so, server.campaign.SPlayer ap,
-          Operation o);
+    void addShortOperation(ShortOperation shortOperation, SPlayer sPlayer, Operation operation);
 
-    public String validateShortDefense(server.campaign.SPlayer dp, server.campaign.SArmy da, Operation o,
-          server.campaign.SPlanet target);
+    String validateShortDefense(SPlayer sPlayer, SArmy sArmy, Operation operation, SPlanet target);
 
-    public String validateShortAttack(
-          server.campaign.SPlayer ap, server.campaign.SArmy aa, Operation o, server.campaign.SPlanet target, int longID,
+    String validateShortAttack(SPlayer sPlayer, SArmy sArmy, Operation operation, SPlanet target, int longID,
           boolean joiningAttack);
 
-    public int playerIsADefender(server.campaign.SPlayer p);
+    int playerIsADefender(SPlayer sPlayer);
 
-    public int playerIsAnAttacker(server.campaign.SPlayer p);
+    int playerIsAnAttacker(SPlayer sPlayer);
 
-    public int getLongID(server.campaign.SHouse h, server.campaign.SPlanet p);
+    int getLongID(SHouse sHouse, SPlanet sPlanet);
 
-    public boolean hasSpecificLongOnPlanet(server.campaign.SHouse h, server.campaign.SPlanet p, Operation o);
+    boolean hasSpecificLongOnPlanet(SHouse sHouse, SPlanet sPlanet, Operation operation);
 
-    public boolean hasLongOnPlanet(server.campaign.SHouse h, server.campaign.SPlanet p);
+    boolean hasLongOnPlanet(SHouse sHouse, SPlanet sPlanet);
 
 }

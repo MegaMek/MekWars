@@ -1,5 +1,4 @@
 /*
- * Copyright (C) 2004 MekWars
  * Copyright (C) 2026 The MegaMek Team. All Rights Reserved.
  *
  * This file is part of MekWars.
@@ -32,53 +31,19 @@
  * affiliated with Microsoft.
  */
 
+package mekwars.server.MWChatServer.auth;
 
-package mekwars.server.campaign.data;
+public enum AccessRole {
+    NONE(0),
+    GUEST(1),
+    REGISTERED(2),
+    MODERATOR(100),
+    ADMIN(200),
+    SERVER(1000);
 
-import java.util.Date;
+    public final int value;
 
-import mekwars.common.Influences;
-import mekwars.common.Planet;
-import mekwars.common.util.Position;
-
-/**
- * Adds the ability to trace the last change time to a planet.
- *
- * @author Imi (immanuel.scholz@gmx.de)
- */
-public class TimeUpdatePlanet extends Planet {
-
-    /**
-     * The time at which this data was changed last.
-     */
-    private Date timestamp;
-
-    public TimeUpdatePlanet(int id, String name, Position position, Influences flu) {
-        super(id, name, position, flu);
-    }
-
-    public TimeUpdatePlanet() {
-        super();
-    }
-
-    /**
-     * @return Returns the timestamp which this data was last changed.
-     */
-    public Date getLastChanged() {
-        return timestamp;
-    }
-
-    /**
-     * Mark the data as updated.
-     */
-    public void updated() {
-        timestamp = new Date();
-    }
-
-    /**
-     * @param timestamp The timestamp to set.
-     */
-    public void setTimestamp(Date timestamp) {
-        this.timestamp = timestamp;
+    AccessRole(int value) {
+        this.value = value;
     }
 }
