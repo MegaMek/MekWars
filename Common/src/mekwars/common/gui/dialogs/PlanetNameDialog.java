@@ -51,15 +51,18 @@ import javax.swing.JList;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTextField;
+import javax.swing.ScrollPaneConstants;
 import javax.swing.SpringLayout;
 
+import megamek.codeUtilities.MathUtility;
+import megamek.logging.MMLogger;
 import mekwars.common.House;
 import mekwars.common.Planet;
 import mekwars.common.campaign.clientutils.protocol.IClient;
-import mekwars.common.util.MWLogger;
 import mekwars.common.util.SpringLayoutHelper;
 
 public class PlanetNameDialog extends JDialog implements ActionListener {
+    private static final MMLogger LOGGER = MMLogger.create(PlanetNameDialog.class);
 
     @Serial
     private static final long serialVersionUID = 3344329118582475184L;
@@ -77,15 +80,14 @@ public class PlanetNameDialog extends JDialog implements ActionListener {
     public PlanetNameDialog(IClient client, String boxText, String[] opProps) {
 
         /*
-         * NOTE: variables are final in order to
-         * allow access by caretUpdate()
+         * NOTE: variables are final to allow access by caretUpdate()
          */
 
         //super, and variable saves
         super(client.getMainFrame(), boxText, true);//dummy frame as owner
         this.planets = client.getData().getAllPlanets();
         //set up a list of names to feed into a list
-        planetNames = new java.util.TreeSet<String>();//tree to alpha sort
+        planetNames = new TreeSet<>();//tree to alpha sort
 
         /*
          * Loop through planets. If there is no range info, the menu is
@@ -101,32 +103,38 @@ public class PlanetNameDialog extends JDialog implements ActionListener {
             for (Planet planet : planets) {
                 //get the planet
                 //load relevant properties.
-                double range = Double.parseDouble(opProps[0]);
+                double range = MathUtility.parseDouble(opProps[0], 0.0);
                 String facInfo = opProps[3];
                 String homeInfo = opProps[4];
-                int launchOn = Integer.parseInt(opProps[5]);
-                int launchFrom = Integer.parseInt(opProps[6]);
-                int minOwn = Integer.parseInt(opProps[7]);
-                int maxOwn = Integer.parseInt(opProps[8]);
+                int launchOn = MathUtility.parseInt(opProps[5], 0);
+                int launchFrom = MathUtility.parseInt(opProps[6], 0);
+                int minOwn = MathUtility.parseInt(opProps[7], 0);
+                int maxOwn = MathUtility.parseInt(opProps[8], 0);
                 String legalDefenders = opProps[9];
                 String allowPlanetFlags = opProps[10];
                 String disallowPlanetFlags = opProps[11];
 
                 //only check for a legal defender limits if necessary
                 if (!legalDefenders.equals("allFactions")) {
-
                     TreeMap<String, Object> legalDefTree = new TreeMap<>();
                     StringTokenizer legalDefTokenizer = new StringTokenizer(legalDefenders, "$");
-                    while (legalDefTokenizer.hasMoreTokens()) {legalDefTree.put(legalDefTokenizer.nextToken(), null);}
+                    while (legalDefTokenizer.hasMoreTokens()) {
+                        legalDefTree.put(legalDefTokenizer.nextToken(), null);
+                    }
 
                     Iterator<House> houseIt = planet.getInfluence().getHouses().iterator();
                     boolean foundDefender = false;
+
                     while (houseIt.hasNext() && !foundDefender) {
                         House currH = houseIt.next();
-                        if (legalDefTree.containsKey(currH.getName())) {foundDefender = true;}
+                        if (legalDefTree.containsKey(currH.getName())) {
+                            foundDefender = true;
+                        }
                     }
 
-                    if (!foundDefender) {continue;}
+                    if (!foundDefender) {
+                        continue;
+                    }
                 }
 
                 //see if we even want to check this world ...
@@ -152,6 +160,7 @@ public class PlanetNameDialog extends JDialog implements ActionListener {
                 if (tpOwned < minOwn) {
                     continue;
                 }
+
                 if (tpOwned > maxOwn) {
                     continue;
                 }
@@ -165,20 +174,25 @@ public class PlanetNameDialog extends JDialog implements ActionListener {
                 //Check for allowed planet flags. the planet most have these flags.
                 if (!allowPlanetFlags.isEmpty()) {
                     boolean allowOp = true;
-                    StringTokenizer st = new StringTokenizer(allowPlanetFlags, "^");
-                    while (st.hasMoreTokens()) {
-                        String key = st.nextToken();
+                    StringTokenizer stringTokenizer = new StringTokenizer(allowPlanetFlags, "^");
+
+                    while (stringTokenizer.hasMoreTokens()) {
+                        String key = stringTokenizer.nextToken();
 
                         if (key.trim().isEmpty()) {
                             continue;
                         }
+
                         if (!planet.getPlanetFlags().containsKey(key)) {
-                            MWLogger.errLog(STR."\{planet.getName()} does not have flag: \{key}");
+                            LOGGER.debug(STR."\{planet.getName()} does not have flag: \{key}");
                             allowOp = false;
                             break;
                         }
                     }
-                    if (!allowOp) {continue;}
+
+                    if (!allowOp) {
+                        continue;
+                    }
                 }
 
                 //Check for disallowed planet flags. If the planet has one of these flags
@@ -186,32 +200,37 @@ public class PlanetNameDialog extends JDialog implements ActionListener {
                 if (!disallowPlanetFlags.isEmpty()) {
 
                     boolean allowOp = true;
-                    StringTokenizer st = new StringTokenizer(disallowPlanetFlags, "^");
-                    while (st.hasMoreTokens()) {
-                        String key = st.nextToken();
+                    StringTokenizer stringTokenizer = new StringTokenizer(disallowPlanetFlags, "^");
+                    while (stringTokenizer.hasMoreTokens()) {
+                        String key = stringTokenizer.nextToken();
 
-                        if (key.trim().isEmpty()) {continue;}
+                        if (key.trim().isEmpty()) {
+                            continue;
+                        }
+
                         if (planet.getPlanetFlags().containsKey(key)) {
                             allowOp = false;
                             break;
                         }
                     }
-                    if (!allowOp) {continue;}
+
+                    if (!allowOp) {
+                        continue;
+                    }
                 }
 
-                //alas, we now devolve into O^2 and check all planets for possible
-                //launchpads to the target world. Better to do this client side and
-                //verify once on the server than to force the server to repeatedly
-                //make this loop, but my skin still crawls. @urgru 10.10.05
-                java.util.Iterator<Planet> i2 = planets.iterator();
+                // alas, we now devolve into O^2 and check all planets for possible launchpads to the target world.
+                // Better to do this client side and verify once on the server than to force the server to repeatedly
+                // make this loop, but my skin still crawls. @urgru 10.10.05
+                Iterator<Planet> i2 = planets.iterator();
                 boolean launchFound = false;
                 while (i2.hasNext() && !launchFound) {
 
                     Planet lp = i2.next();
 
                     if (lp.getInfluence().getInfluence(houseID) >= launchFrom) {
-                        double tdist = lp.getPosition().distanceSq(planet.getPosition());
-                        if (tdist <= range) {
+                        double dist = lp.getPosition().distanceSq(planet.getPosition());
+                        if (dist <= range) {
                             launchFound = true;
                             planetNames.add(planet.getName());
                         }
@@ -240,8 +259,9 @@ public class PlanetNameDialog extends JDialog implements ActionListener {
                     matchingPlanetsList.setListData(allPlanetNames);
                     return;
                 }
-                ArrayList<String> possiblePlanets = new java.util.ArrayList<>();
+                ArrayList<String> possiblePlanets = new ArrayList<>();
                 text = text.toLowerCase();
+
                 for (String curPlanet : planetNames) {
                     if (curPlanet.toLowerCase().contains(text)) {
                         possiblePlanets.add(curPlanet);
@@ -258,6 +278,7 @@ public class PlanetNameDialog extends JDialog implements ActionListener {
                 boolean shouldContinue = true;
                 int element = 0;
                 Iterator<String> it = possiblePlanets.iterator();
+
                 while (it.hasNext() && shouldContinue) {
                     String name = it.next();
                     if (name.toLowerCase().startsWith(text)) {
@@ -279,7 +300,7 @@ public class PlanetNameDialog extends JDialog implements ActionListener {
         //holds the JList
         JScrollPane scrollPane = new JScrollPane(matchingPlanetsList);
         scrollPane.setAlignmentX(LEFT_ALIGNMENT);
-        scrollPane.setHorizontalScrollBarPolicy(javax.swing.ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
+        scrollPane.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
 
         //set up listeners for the buttons
         JButton okayButton = new JButton("OK");
@@ -317,8 +338,7 @@ public class PlanetNameDialog extends JDialog implements ActionListener {
     }
 
     private void checkMinimumSize() {
-
-        java.awt.Dimension curDim = this.getSize();
+        Dimension curDim = this.getSize();
 
         int height;
         int width;
@@ -327,12 +347,16 @@ public class PlanetNameDialog extends JDialog implements ActionListener {
         if (curDim.getWidth() < 300) {
             width = 300;
             shouldRedraw = true;
-        } else {width = (int) curDim.getWidth();}
+        } else {
+            width = (int) curDim.getWidth();
+        }
 
         if (curDim.getHeight() < 300) {
             height = 300;
             shouldRedraw = true;
-        } else {height = (int) curDim.getHeight();}
+        } else {
+            height = (int) curDim.getHeight();
+        }
 
         if (shouldRedraw) {
             this.setSize(new Dimension(width, height));
@@ -350,10 +374,14 @@ public class PlanetNameDialog extends JDialog implements ActionListener {
         if (command.equals(okayCommand)) {
             String selectedPlanet = matchingPlanetsList.getSelectedValue();
             if (selectedPlanet == null) {selectedPlanet = nameField.getText();}
-            if (selectedPlanet == null || selectedPlanet.isEmpty()) {return;}
+            if (selectedPlanet == null || selectedPlanet.isEmpty()) {
+                return;
+            }
+
             if (matchingPlanetsList.getModel().getSize() == 1) {
                 selectedPlanet = matchingPlanetsList.getModel().getElementAt(0);
             }
+
             for (Planet planet : planets) {
                 if (selectedPlanet.equals(planet.getName())) {
                     this.setPlanetName(planet.getName());
@@ -361,6 +389,7 @@ public class PlanetNameDialog extends JDialog implements ActionListener {
                     return;
                 }
             }
+            
             this.setPlanetName(null);
         }
 

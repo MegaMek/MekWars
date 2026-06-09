@@ -30,28 +30,29 @@ import java.io.Serial;
 import java.util.LinkedHashMap;
 import java.util.Properties;
 import java.util.Vector;
+import javax.swing.BoxLayout;
 import javax.swing.DefaultComboBoxModel;
 import javax.swing.JComboBox;
 import javax.swing.JDialog;
 import javax.swing.JFrame;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
+import javax.swing.WindowConstants;
 
+import megamek.logging.MMLogger;
 import mekwars.common.VerticalLayout;
 import mekwars.common.campaign.clientutils.protocol.IClient;
 import mekwars.common.campaign.operations.DefaultOperation;
 import mekwars.common.campaign.operations.Operation;
 import mekwars.common.util.MMNetXStream;
-import mekwars.common.util.MWLogger;
 
 public class OperationViewerDialog extends JDialog implements Runnable {
-    /**
-     *
-     */
+    private static final MMLogger LOGGER = MMLogger.create(OperationViewerDialog.class);
+
     @Serial
     private static final long serialVersionUID = 1L;
 
-    private final String xmldir = "./data/operations/xml";
+    private final String xmlDir = "./data/operations/xml";
     private final LinkedHashMap<String, OpViewerOpPane> ops = new LinkedHashMap<>();
 
     private final JPanel mainPanel = new JPanel();
@@ -61,8 +62,8 @@ public class OperationViewerDialog extends JDialog implements Runnable {
     private final JPanel htmlPanel = new JPanel();
     private final JFrame mainframe;
     private final Vector<TemplateElement> templateElements = new Vector<>();
+    private final IClient client;
     private JComboBox<String> selector = new JComboBox<>();
-    private IClient client;
 
     public OperationViewerDialog(JFrame mainframe, IClient client) {
         super(mainframe, "Operations Viewer", false);
@@ -79,21 +80,15 @@ public class OperationViewerDialog extends JDialog implements Runnable {
 
     private void parseTemplate() {
         File file = new File("./data/operations/OpTemplate.html");
-        if (file.exists()) {
-            BufferedReader bufferedReader = null;
-            try {
-                bufferedReader = new BufferedReader(new FileReader(file));
-            } catch (FileNotFoundException e) {
-                // TODO Auto-generated catch block
-                e.printStackTrace();
-            }
 
-            try {
+        if (file.exists()) {
+            try (BufferedReader bufferedReader = new BufferedReader(new FileReader(file))) {
                 for (String line; (line = bufferedReader.readLine()) != null; ) {
                     // Here, we will parse out the entire thing into a vector of phrases.
                     if (line.startsWith("%%ANCHOR")) {
                         continue;
                     }
+
                     if (line.contains("%%")) {
                         String[] arr = line.split("%%");
                         for (String s : arr) {
@@ -102,18 +97,9 @@ public class OperationViewerDialog extends JDialog implements Runnable {
                     } else {
                         templateElements.add(new TemplateElement(line, client));
                     }
-
                 }
-            } catch (java.io.IOException e) {
-                // TODO Auto-generated catch block
-                e.printStackTrace();
-            }
-
-            try {
-                bufferedReader.close();
-            } catch (java.io.IOException e) {
-                // TODO Auto-generated catch block
-                e.printStackTrace();
+            } catch (IOException e) {
+                LOGGER.error(e, "IO Exception trying to read lines: {}", e.getLocalizedMessage());
             }
         }
     }
@@ -123,21 +109,26 @@ public class OperationViewerDialog extends JDialog implements Runnable {
         Properties properties = new Properties();
         Operation operation = new Operation("Defaults", new DefaultOperation(), properties);
         ops.put(operation.getName(), new OpViewerOpPane(getOpHTML(operation)));
-        File dir = new File(xmldir);
-        for (final File fileEntry : dir.listFiles()) {
-            if (!fileEntry.isDirectory() && fileEntry.getName().endsWith(".xml")) {
-                MMNetXStream xml = new MMNetXStream();
+        File dir = new File(xmlDir);
 
-                try {
-                    properties = (Properties) xml.fromXML(new FileReader(fileEntry));
-                } catch (FileNotFoundException e) {
-                    // TODO Auto-generated catch block
-                    e.printStackTrace();
-                    MWLogger.errLog(e);
+        File[] fileList = dir.listFiles();
+
+        if (fileList != null) {
+            for (final File fileEntry : fileList) {
+                if (!fileEntry.isDirectory() && fileEntry.getName().endsWith(".xml")) {
+                    MMNetXStream xml = new MMNetXStream();
+
+                    try {
+                        properties = (Properties) xml.fromXML(new FileReader(fileEntry));
+                    } catch (FileNotFoundException e) {
+                        LOGGER.error(e, "File not found: {}", e.getLocalizedMessage());
+                    }
+
+                    operation = new Operation(fileEntry.getName().replace(".xml", ""),
+                          new DefaultOperation(),
+                          properties);
+                    ops.put(operation.getName(), new OpViewerOpPane(getOpHTML(operation)));
                 }
-
-                operation = new Operation(fileEntry.getName().replace(".xml", ""), new DefaultOperation(), properties);
-                ops.put(operation.getName(), new OpViewerOpPane(getOpHTML(operation)));
             }
         }
     }
@@ -182,11 +173,11 @@ public class OperationViewerDialog extends JDialog implements Runnable {
             size.width = Math.max(size.width, pane.getPreferredSize().width);
         }
 
-        for (String s : ops.keySet()) {
-            ops.get(s).setPreferredSize(size);
+        for (String string : ops.keySet()) {
+            ops.get(string).setPreferredSize(size);
         }
 
-        contentPanel.setLayout(new javax.swing.BoxLayout(contentPanel, javax.swing.BoxLayout.X_AXIS));
+        contentPanel.setLayout(new BoxLayout(contentPanel, BoxLayout.X_AXIS));
 
         contentPanel.add(anchorPanel);
         contentPanel.add(scrollPane);
@@ -208,7 +199,7 @@ public class OperationViewerDialog extends JDialog implements Runnable {
 
         this.addComponentListener(new ComponentAdapter() {
             @Override
-            public void componentResized(ComponentEvent e) {
+            public void componentResized(ComponentEvent componentEvent) {
                 htmlPanel.revalidate();
                 htmlPanel.repaint();
             }
@@ -217,7 +208,7 @@ public class OperationViewerDialog extends JDialog implements Runnable {
         this.setResizable(true);
         this.pack();
         this.setLocationRelativeTo(mainframe);
-        this.setDefaultCloseOperation(javax.swing.WindowConstants.DISPOSE_ON_CLOSE);
+        this.setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
         this.setVisible(true);
     }
 
@@ -250,20 +241,15 @@ public class OperationViewerDialog extends JDialog implements Runnable {
         File file = new File(fileName);
 
         if (file.exists()) {
-            try {
-                BufferedReader bufferedReader = new BufferedReader(new FileReader(file));
+            try (BufferedReader bufferedReader = new BufferedReader(new FileReader(file))) {
                 for (String line; (line = bufferedReader.readLine()) != null; ) {
                     if (line.contains("%%ANCHOR%")) {
                         buttons.add(buildAnchorButton(line));
                     }
                 }
-                bufferedReader.close();
             } catch (IOException e) {
-                // TODO Auto-generated catch block
-                e.printStackTrace();
-                MWLogger.errLog(e);
+                LOGGER.error(e, "IO Error: {}", e.getLocalizedMessage());
             }
-
         }
 
         return buttons;

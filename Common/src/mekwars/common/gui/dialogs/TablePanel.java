@@ -16,7 +16,20 @@
  */
 package mekwars.common.gui.dialogs;
 
+import java.awt.BorderLayout;
+import java.awt.Component;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import java.io.Serial;
+import java.util.HashMap;
+import java.util.LinkedHashSet;
+import java.util.TreeSet;
+import javax.swing.JFrame;
+import javax.swing.JPanel;
+import javax.swing.JScrollPane;
+import javax.swing.JTable;
 
 import jakarta.annotation.Nonnull;
 import megamek.client.ui.dialogs.unitDisplay.UnitDisplayPanel;
@@ -25,6 +38,7 @@ import megamek.common.loaders.MekFileParser;
 import megamek.common.loaders.MekSummary;
 import megamek.common.loaders.MekSummaryCache;
 import megamek.common.units.Entity;
+import megamek.logging.MMLogger;
 import mekwars.common.House;
 import mekwars.common.Unit;
 import mekwars.common.campaign.clientutils.protocol.IClient;
@@ -32,7 +46,6 @@ import mekwars.common.gui.MWUnitDisplay;
 import mekwars.common.gui.dialogs.buildtableviewer.BuildTable;
 import mekwars.common.gui.dialogs.buildtableviewer.BuildTableViewer;
 import mekwars.common.gui.dialogs.buildtableviewer.SelectorPanel;
-import mekwars.common.util.MWLogger;
 
 /**
  * A JPanel containing a JTable representing a BuildTable
@@ -40,7 +53,8 @@ import mekwars.common.util.MWLogger;
  * @author Spork
  *
  */
-public class TablePanel extends javax.swing.JPanel implements java.awt.event.ActionListener {
+public class TablePanel extends JPanel implements ActionListener {
+    private static final MMLogger LOGGER = MMLogger.create(TablePanel.class);
 
     @Serial
     private static final long serialVersionUID = 1348587767892438630L;
@@ -48,27 +62,47 @@ public class TablePanel extends javax.swing.JPanel implements java.awt.event.Act
     private final BuildTableViewer viewer;
     private final IClient client;
 
-    private final java.util.HashMap<String, BuildTable> tables = new java.util.HashMap<>();
+    private final HashMap<String, BuildTable> tables = new HashMap<>();
 
-    private javax.swing.JPanel displayPanel = new javax.swing.JPanel();
+    private JPanel displayPanel = new JPanel();
 
     /**
      * Build a TablePanel containing a JTable representing a BuildTable
      *
-     * @param v the BuildTableViewer itself
-     * @param s the SelectorPanel containing the faction/type/weight JCombos
-     * @param c the client
+     * @param buildTableViewer the BuildTableViewer itself
+     * @param selectorPanel    the SelectorPanel containing the faction/type/weight JCombos
+     * @param iClient          the client
      */
-    public TablePanel(BuildTableViewer v, SelectorPanel s, IClient c) {
-        viewer = v;
-        selector = s;
-        client = c;
+    public TablePanel(BuildTableViewer buildTableViewer, SelectorPanel selectorPanel, IClient iClient) {
+        viewer = buildTableViewer;
+        selector = selectorPanel;
+        client = iClient;
         selector.addActionListener(this);
-        //this.setBorder(BorderFactory.createLineBorder(Color.black));
 
         prepTables();
         add(displayPanel);
         selector.setDefaultSelectedFaction(client.getPlayer().getHouse());
+    }
+
+    private static @Nonnull BuildTable getBuildTable(String factionName, int unitWeight, int unitType) {
+        BuildTable buildTable = new BuildTable();
+
+        //Build the file name
+        StringBuilder stringBuilder = new StringBuilder();
+        stringBuilder.append(factionName);
+        stringBuilder.append("_");
+        stringBuilder.append(Unit.getWeightClassDesc(unitWeight));
+
+        if (unitType != Unit.MEK) {
+            stringBuilder.append(Unit.getTypeClassDesc(unitType));
+        }
+
+        stringBuilder.append(".txt");
+
+        buildTable.setName(stringBuilder.toString());
+        buildTable.loadTable();
+
+        return buildTable;
     }
 
     /**
@@ -78,7 +112,7 @@ public class TablePanel extends javax.swing.JPanel implements java.awt.event.Act
      */
     private void prepTables() {
         //TODO: Make the viewer deal with non-faction tables
-        java.util.TreeSet<String> factionNamesOrdered = new java.util.TreeSet<>();
+        TreeSet<String> factionNamesOrdered = new TreeSet<>();
 
         for (House house : client.getData().getAllHouses()) {
             if (house.getId() > -1) {
@@ -86,7 +120,7 @@ public class TablePanel extends javax.swing.JPanel implements java.awt.event.Act
             }
         }
 
-        java.util.LinkedHashSet<String> factionNames = new java.util.LinkedHashSet<>(factionNamesOrdered);
+        LinkedHashSet<String> factionNames = new LinkedHashSet<>(factionNamesOrdered);
         factionNames.add("Common");
 
         for (String factionName : factionNames) {
@@ -99,56 +133,36 @@ public class TablePanel extends javax.swing.JPanel implements java.awt.event.Act
         }
     }
 
-    private static @Nonnull BuildTable getBuildTable(String factionName, int unitWeight, int unitType) {
-        BuildTable bt = new BuildTable();
-
-        //Build the file name
-        StringBuilder sb = new StringBuilder();
-        sb.append(factionName);
-        sb.append("_");
-        sb.append(Unit.getWeightClassDesc(unitWeight));
-        if (unitType != Unit.MEK) {
-            sb.append(Unit.getTypeClassDesc(unitType));
-        }
-        sb.append(".txt");
-
-        bt.setName(sb.toString());
-        bt.loadTable();
-        return bt;
-    }
-
     /**
      * The Selector changed, so display the new table
      */
     @Override
-    public void actionPerformed(java.awt.event.ActionEvent e) {
+    public void actionPerformed(ActionEvent actionEvent) {
         String tableToDisplay = selector.getSelectionString();
-        BuildTable bt = tables.get(tableToDisplay);
+        BuildTable buildTable = tables.get(tableToDisplay);
 
         remove(displayPanel);
 
-        displayPanel = new javax.swing.JPanel();
-        //displayPanel.setLayout(new BorderLayout());
-        java.awt.Component table = bt.getTable();
-        if (table instanceof javax.swing.JTable) {
-            //displayPanel.add(((JTable)table).getTableHeader(), BorderLayout.NORTH);
-            table.addMouseListener(new java.awt.event.MouseAdapter() {
-                public void mouseClicked(java.awt.event.MouseEvent e) {
-                    if (e.getClickCount() == 2) {
-                        javax.swing.JTable target = (javax.swing.JTable) e.getSource();
+        displayPanel = new JPanel();
+        Component table = buildTable.getTable();
+        if (table instanceof JTable) {
+            table.addMouseListener(new MouseAdapter() {
+                public void mouseClicked(MouseEvent mouseEvent) {
+                    if (mouseEvent.getClickCount() == 2) {
+                        JTable target = (JTable) mouseEvent.getSource();
                         int row = target.getSelectedRow();
                         String unit = (String) target.getValueAt(row, 1);
                         actOnCell(unit);
                     }
                 }
             });
-            javax.swing.JScrollPane pane = new javax.swing.JScrollPane(table);
-            pane.setHorizontalScrollBarPolicy(javax.swing.JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
+
+            JScrollPane pane = new JScrollPane(table);
+            pane.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
             displayPanel.add(pane);
         } else {
-            displayPanel.add(bt.getTable(), java.awt.BorderLayout.CENTER);
+            displayPanel.add(buildTable.getTable(), BorderLayout.CENTER);
         }
-
 
         add(displayPanel);
         this.revalidate();
@@ -172,11 +186,12 @@ public class TablePanel extends javax.swing.JPanel implements java.awt.event.Act
             String fileName = cellContents.trim();
             fileName = fileName.substring(0, fileName.length() - 4);
 
-            MekSummary ms = MekSummaryCache.getInstance().getMek(fileName);
-            try {
-                entity = new MekFileParser(ms.getSourceFile(), ms.getEntryName()).getEntity();
+            MekSummary mekSummary = MekSummaryCache.getInstance().getMek(fileName);
 
-                javax.swing.JFrame infoWindow = new javax.swing.JFrame();
+            try {
+                entity = new MekFileParser(mekSummary.getSourceFile(), mekSummary.getEntryName()).getEntity();
+
+                JFrame infoWindow = new JFrame();
                 UnitDisplayPanel unitDisplay = new MWUnitDisplay(null, client);
                 entity.loadAllWeapons();
                 infoWindow.getContentPane().add(unitDisplay);
@@ -186,9 +201,8 @@ public class TablePanel extends javax.swing.JPanel implements java.awt.event.Act
                 infoWindow.setLocationRelativeTo(null);
                 infoWindow.setVisible(true);
                 unitDisplay.displayEntity(entity);
-
             } catch (EntityLoadingException e) {
-                MWLogger.errLog(e);
+                LOGGER.error(e, "Unable to load Entity: {}", e.getLocalizedMessage());
             }
         }
     }

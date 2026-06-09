@@ -12,18 +12,23 @@ import java.awt.event.KeyListener;
 import java.awt.event.WindowEvent;
 import java.io.Serial;
 import java.util.ArrayList;
+import java.util.Map;
 import java.util.regex.PatternSyntaxException;
 import javax.swing.*;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
+import javax.swing.table.TableColumn;
 import javax.swing.table.TableRowSorter;
 
+import jakarta.annotation.Nullable;
 import megamek.client.Client;
 import megamek.client.ui.dialogs.UnitFailureDialog;
 import megamek.client.ui.dialogs.UnitLoadingDialog;
 import megamek.client.ui.dialogs.advancedsearch.AdvancedSearchDialog;
 import megamek.client.ui.dialogs.advancedsearch.MekSearchFilter;
 import megamek.client.ui.dialogs.unitSelectorDialogs.ConfigurableMekViewPanel;
+import megamek.client.ui.enums.DialogResult;
+import megamek.codeUtilities.MathUtility;
 import megamek.common.TechConstants;
 import megamek.common.loaders.EntityLoadingException;
 import megamek.common.loaders.MekFileParser;
@@ -32,8 +37,8 @@ import megamek.common.loaders.MekSummaryCache;
 import megamek.common.units.Entity;
 import megamek.common.units.EntityWeightClass;
 import megamek.common.units.UnitType;
+import megamek.logging.MMLogger;
 import mekwars.common.campaign.clientutils.protocol.IClient;
-import mekwars.common.util.MWLogger;
 import mekwars.common.util.UnitUtils;
 
 public class NewUnitViewerDialog extends JDialog implements Runnable, KeyListener, ActionListener {
@@ -43,15 +48,15 @@ public class NewUnitViewerDialog extends JDialog implements Runnable, KeyListene
     public static final int UNIT_RESEARCH = 3;
     @Serial
     private static final long serialVersionUID = 8144354264100884817L;
-    // how long after a key is typed does a new search begin
+    private static final MMLogger LOGGER = MMLogger.create(NewUnitViewerDialog.class);
     private final static int KEY_TIMEOUT = 1000;
     private final MekTableModel unitModel;
     private final UnitLoadingDialog unitLoadingDialog;
     private final Client mmClient = new Client("temp", "None", 0);
     private final int viewerType;
-    JTextField txtFilter;
-    IClient client;
-    AdvancedSearchDialog asd;
+    private final IClient client;
+    private final AdvancedSearchDialog advancedSearchDialog;
+    private JTextField txtFilter;
     private JButton btnSelectClose;
     private JButton btnSelect;
     private JButton btnClose;
@@ -81,11 +86,13 @@ public class NewUnitViewerDialog extends JDialog implements Runnable, KeyListene
         this.client = client;
 
         viewerType = viewer;
-        if (viewerType == mekwars.common.gui.dialogs.NewUnitViewerDialog.OMNI_VARIANT_SELECTOR) {
+
+        if (viewerType == NewUnitViewerDialog.OMNI_VARIANT_SELECTOR) {
             setTitle("Omni Variant Selector");
-        } else if (viewerType == mekwars.common.gui.dialogs.NewUnitViewerDialog.UNIT_SELECTOR) {
+        } else if (viewerType == NewUnitViewerDialog.UNIT_SELECTOR) {
             setTitle("Unit Selector");
         }
+
         unitLoadingDialog = uld;
 
         unitModel = new MekTableModel();
@@ -94,13 +101,15 @@ public class NewUnitViewerDialog extends JDialog implements Runnable, KeyListene
         int height = 600;
         setSize(width, height);
         setLocationRelativeTo(mainFrame);
-        asd = new AdvancedSearchDialog(mainFrame, Integer.parseInt(this.client.getServerConfigs("CampaignYear")));
+        advancedSearchDialog = new AdvancedSearchDialog(mainFrame,
+              MathUtility.parseInt(this.client.getServerConfigs("CampaignYear"),
+                    3055));
     }
 
     private void initComponents() {
         setMinimumSize(new Dimension(640, 480));
 
-        GridBagConstraints c;
+        GridBagConstraints gridBagConstraints;
 
         JPanel selectionPanel = new JPanel(new GridBagLayout());
         selectionPanel.setMinimumSize(new Dimension(500, 500));
@@ -113,8 +122,8 @@ public class NewUnitViewerDialog extends JDialog implements Runnable, KeyListene
         JScrollPane scrTableUnits = new JScrollPane();
         tableUnits = new JTable();
         tableUnits.addKeyListener(this);
-        tableUnits.getInputMap(JComponent.WHEN_ANCESTOR_OF_FOCUSED_COMPONENT).put(
-              KeyStroke.getKeyStroke(KeyEvent.VK_ENTER, 0), "");
+        tableUnits.getInputMap(JComponent.WHEN_ANCESTOR_OF_FOCUSED_COMPONENT)
+              .put(KeyStroke.getKeyStroke(KeyEvent.VK_ENTER, 0), "");
         panelMekView = new ConfigurableMekViewPanel();
         panelMekView.setMinimumSize(new Dimension(300, 500));
         panelMekView.setPreferredSize(new Dimension(300, 600));
@@ -146,15 +155,18 @@ public class NewUnitViewerDialog extends JDialog implements Runnable, KeyListene
         tableUnits.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         sorter = new TableRowSorter<>(unitModel);
         tableUnits.setRowSorter(sorter);
+
         tableUnits.getSelectionModel().addListSelectionListener(
               evt -> {
                   if (!evt.getValueIsAdjusting()) {
                       refreshUnitView();
                   }
               });
-        javax.swing.table.TableColumn column;
+
+        TableColumn column;
         for (int i = 0; i < MekTableModel.N_COL; i++) {
             column = tableUnits.getColumnModel().getColumn(i);
+
             if (i == MekTableModel.COL_CHASSIS) {
                 column.setPreferredWidth(125);
             } else if ((i == MekTableModel.COL_MODEL) || (i == MekTableModel.COL_COST)) {
@@ -165,27 +177,28 @@ public class NewUnitViewerDialog extends JDialog implements Runnable, KeyListene
                 column.setPreferredWidth(25);
             }
         }
+
         tableUnits.setFont(new Font("Monospaced", Font.PLAIN, 12)); //$NON-NLS-1$
         scrTableUnits.setViewportView(tableUnits);
 
-        c = new GridBagConstraints();
-        c.gridx = 0;
-        c.gridy = 2;
-        c.fill = GridBagConstraints.BOTH;
-        c.anchor = GridBagConstraints.NORTHWEST;
-        c.weightx = 1.0;
-        c.weighty = 1.0;
-        selectionPanel.add(scrTableUnits, c);
+        gridBagConstraints = new GridBagConstraints();
+        gridBagConstraints.gridx = 0;
+        gridBagConstraints.gridy = 2;
+        gridBagConstraints.fill = GridBagConstraints.BOTH;
+        gridBagConstraints.anchor = GridBagConstraints.NORTHWEST;
+        gridBagConstraints.weightx = 1.0;
+        gridBagConstraints.weighty = 1.0;
+        selectionPanel.add(scrTableUnits, gridBagConstraints);
 
         panelFilterButtons.setMinimumSize(new Dimension(300, 120));
         panelFilterButtons.setPreferredSize(new Dimension(300, 120));
         panelFilterButtons.setLayout(new GridBagLayout());
 
-        c = new GridBagConstraints();
-        c.gridx = 0;
-        c.gridy = 2;
-        c.anchor = GridBagConstraints.WEST;
-        panelFilterButtons.add(lblType, c);
+        gridBagConstraints = new GridBagConstraints();
+        gridBagConstraints.gridx = 0;
+        gridBagConstraints.gridy = 2;
+        gridBagConstraints.anchor = GridBagConstraints.WEST;
+        panelFilterButtons.add(lblType, gridBagConstraints);
 
         DefaultComboBoxModel<String> techModel = new DefaultComboBoxModel<>();
         for (int i = 0; i < TechConstants.SIZE; i++) {
@@ -196,17 +209,17 @@ public class NewUnitViewerDialog extends JDialog implements Runnable, KeyListene
         comboType.setMinimumSize(new Dimension(200, 27));
         comboType.setPreferredSize(new Dimension(200, 27));
         comboType.addActionListener(this);
-        c = new GridBagConstraints();
-        c.gridx = 1;
-        c.gridy = 2;
-        c.anchor = GridBagConstraints.WEST;
-        panelFilterButtons.add(comboType, c);
+        gridBagConstraints = new GridBagConstraints();
+        gridBagConstraints.gridx = 1;
+        gridBagConstraints.gridy = 2;
+        gridBagConstraints.anchor = GridBagConstraints.WEST;
+        panelFilterButtons.add(comboType, gridBagConstraints);
 
-        c = new GridBagConstraints();
-        c.gridx = 0;
-        c.gridy = 1;
-        c.anchor = GridBagConstraints.WEST;
-        panelFilterButtons.add(lblWeight, c);
+        gridBagConstraints = new GridBagConstraints();
+        gridBagConstraints.gridx = 0;
+        gridBagConstraints.gridy = 1;
+        gridBagConstraints.anchor = GridBagConstraints.WEST;
+        panelFilterButtons.add(lblWeight, gridBagConstraints);
 
         DefaultComboBoxModel<String> weightModel = new DefaultComboBoxModel<>();
         for (int i = 0; i < EntityWeightClass.SIZE; i++) {
@@ -219,38 +232,41 @@ public class NewUnitViewerDialog extends JDialog implements Runnable, KeyListene
         comboWeight.setMinimumSize(new Dimension(200, 27));
         comboWeight.setPreferredSize(new Dimension(200, 27));
         comboWeight.addActionListener(this);
-        c = new GridBagConstraints();
-        c.gridx = 1;
-        c.gridy = 1;
-        c.anchor = GridBagConstraints.WEST;
-        panelFilterButtons.add(comboWeight, c);
+        gridBagConstraints = new GridBagConstraints();
+        gridBagConstraints.gridx = 1;
+        gridBagConstraints.gridy = 1;
+        gridBagConstraints.anchor = GridBagConstraints.WEST;
+        panelFilterButtons.add(comboWeight, gridBagConstraints);
 
-        c = new GridBagConstraints();
-        c.gridx = 0;
-        c.gridy = 0;
-        c.fill = GridBagConstraints.HORIZONTAL;
-        c.anchor = GridBagConstraints.WEST;
-        panelFilterButtons.add(lblUnitType, c);
+        gridBagConstraints = new GridBagConstraints();
+        gridBagConstraints.gridx = 0;
+        gridBagConstraints.gridy = 0;
+        gridBagConstraints.fill = GridBagConstraints.HORIZONTAL;
+        gridBagConstraints.anchor = GridBagConstraints.WEST;
+        panelFilterButtons.add(lblUnitType, gridBagConstraints);
 
         DefaultComboBoxModel<String> unitTypeModel = new DefaultComboBoxModel<>();
         unitTypeModel.addElement("All");
         unitTypeModel.setSelectedItem("All");
+
         for (int i = 0; i < UnitType.SIZE; i++) {
             unitTypeModel.addElement(UnitType.getTypeDisplayableName(i));
         }
+
         comboUnitType.setModel(unitTypeModel);
         comboUnitType.setMinimumSize(new Dimension(200, 27));
         comboUnitType.setPreferredSize(new Dimension(200, 27));
         comboUnitType.addActionListener(this);
-        c = new GridBagConstraints();
-        c.gridx = 1;
-        c.gridy = 0;
-        c.anchor = GridBagConstraints.WEST;
-        panelFilterButtons.add(comboUnitType, c);
+        gridBagConstraints = new GridBagConstraints();
+        gridBagConstraints.gridx = 1;
+        gridBagConstraints.gridy = 0;
+        gridBagConstraints.anchor = GridBagConstraints.WEST;
+        panelFilterButtons.add(comboUnitType, gridBagConstraints);
 
         txtFilter.setText("");
         txtFilter.setMinimumSize(new Dimension(200, 28));
         txtFilter.setPreferredSize(new Dimension(200, 28));
+
         txtFilter.getDocument().addDocumentListener(new DocumentListener() {
             public void insertUpdate(DocumentEvent e) {
                 filterUnits();
@@ -264,67 +280,68 @@ public class NewUnitViewerDialog extends JDialog implements Runnable, KeyListene
                 filterUnits();
             }
         });
-        c = new GridBagConstraints();
-        c.gridx = 1;
-        c.gridy = 3;
-        c.anchor = GridBagConstraints.WEST;
-        panelFilterButtons.add(txtFilter, c);
 
-        c = new GridBagConstraints();
-        c.gridx = 0;
-        c.gridy = 3;
-        c.anchor = GridBagConstraints.WEST;
-        panelFilterButtons.add(lblFilter, c);
+        gridBagConstraints = new GridBagConstraints();
+        gridBagConstraints.gridx = 1;
+        gridBagConstraints.gridy = 3;
+        gridBagConstraints.anchor = GridBagConstraints.WEST;
+        panelFilterButtons.add(txtFilter, gridBagConstraints);
+
+        gridBagConstraints = new GridBagConstraints();
+        gridBagConstraints.gridx = 0;
+        gridBagConstraints.gridy = 3;
+        gridBagConstraints.anchor = GridBagConstraints.WEST;
+        panelFilterButtons.add(lblFilter, gridBagConstraints);
 
         lblImage.setHorizontalAlignment(SwingConstants.CENTER);
         lblImage.setText(""); // NOI18N
-        c = new GridBagConstraints();
-        c.gridx = 2;
-        c.gridy = 0;
-        c.gridheight = 4;
-        c.fill = GridBagConstraints.BOTH;
-        c.weightx = 1.0;
-        c.weighty = 1.0;
-        panelFilterButtons.add(lblImage, c);
+        gridBagConstraints = new GridBagConstraints();
+        gridBagConstraints.gridx = 2;
+        gridBagConstraints.gridy = 0;
+        gridBagConstraints.gridheight = 4;
+        gridBagConstraints.fill = GridBagConstraints.BOTH;
+        gridBagConstraints.weightx = 1.0;
+        gridBagConstraints.weighty = 1.0;
+        panelFilterButtons.add(lblImage, gridBagConstraints);
 
-        c = new GridBagConstraints();
-        c.gridx = 0;
-        c.gridy = 0;
-        c.fill = GridBagConstraints.HORIZONTAL;
-        c.anchor = GridBagConstraints.NORTHWEST;
-        c.weightx = 0.0;
-        c.insets = new Insets(10, 10, 10, 0);
-        selectionPanel.add(panelFilterButtons, c);
+        gridBagConstraints = new GridBagConstraints();
+        gridBagConstraints.gridx = 0;
+        gridBagConstraints.gridy = 0;
+        gridBagConstraints.fill = GridBagConstraints.HORIZONTAL;
+        gridBagConstraints.anchor = GridBagConstraints.NORTHWEST;
+        gridBagConstraints.weightx = 0.0;
+        gridBagConstraints.insets = new Insets(10, 10, 10, 0);
+        selectionPanel.add(panelFilterButtons, gridBagConstraints);
 
         panelSearchButtons.setLayout(new GridBagLayout());
 
         btnAdvSearch.setText("Advanced Search"); //$NON-NLS-1$
         btnAdvSearch.addActionListener(this);
-        c = new GridBagConstraints();
-        c.gridx = 0;
-        c.gridwidth = 1;
-        c.gridy = 0;
-        c.anchor = GridBagConstraints.WEST;
-        panelSearchButtons.add(btnAdvSearch, c);
+        gridBagConstraints = new GridBagConstraints();
+        gridBagConstraints.gridx = 0;
+        gridBagConstraints.gridwidth = 1;
+        gridBagConstraints.gridy = 0;
+        gridBagConstraints.anchor = GridBagConstraints.WEST;
+        panelSearchButtons.add(btnAdvSearch, gridBagConstraints);
 
         btnResetSearch.setText("Reset"); //$NON-NLS-1$
         btnResetSearch.addActionListener(this);
         btnResetSearch.setEnabled(false);
-        c = new GridBagConstraints();
-        c.gridx = 1;
-        c.gridwidth = 1;
-        c.gridy = 0;
-        c.anchor = GridBagConstraints.WEST;
-        panelSearchButtons.add(btnResetSearch, c);
+        gridBagConstraints = new GridBagConstraints();
+        gridBagConstraints.gridx = 1;
+        gridBagConstraints.gridwidth = 1;
+        gridBagConstraints.gridy = 0;
+        gridBagConstraints.anchor = GridBagConstraints.WEST;
+        panelSearchButtons.add(btnResetSearch, gridBagConstraints);
 
-        c = new GridBagConstraints();
-        c.gridx = 0;
-        c.gridy = 1;
-        c.fill = GridBagConstraints.HORIZONTAL;
-        c.anchor = GridBagConstraints.NORTHWEST;
-        c.weightx = 0.0;
-        c.insets = new Insets(10, 10, 10, 0);
-        selectionPanel.add(panelSearchButtons, c);
+        gridBagConstraints = new GridBagConstraints();
+        gridBagConstraints.gridx = 0;
+        gridBagConstraints.gridy = 1;
+        gridBagConstraints.fill = GridBagConstraints.HORIZONTAL;
+        gridBagConstraints.anchor = GridBagConstraints.NORTHWEST;
+        gridBagConstraints.weightx = 0.0;
+        gridBagConstraints.insets = new Insets(10, 10, 10, 0);
+        selectionPanel.add(panelSearchButtons, gridBagConstraints);
 
         panelOKButtons.setLayout(new GridBagLayout());
 
@@ -346,15 +363,16 @@ public class NewUnitViewerDialog extends JDialog implements Runnable, KeyListene
 
         JSplitPane splitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, true, selectionPanel, panelMekView);
         splitPane.setResizeWeight(0);
-        c = new GridBagConstraints();
-        c.gridx = c.gridy = 0;
-        c.fill = GridBagConstraints.BOTH;
-        c.weightx = c.weighty = 1;
-        getContentPane().add(splitPane, c);
-        c.insets = new Insets(5, 0, 5, 0);
-        c.weightx = c.weighty = 0;
-        c.gridy = 1;
-        getContentPane().add(panelOKButtons, c);
+        gridBagConstraints = new GridBagConstraints();
+        gridBagConstraints.gridx = gridBagConstraints.gridy = 0;
+        gridBagConstraints.fill = GridBagConstraints.BOTH;
+        gridBagConstraints.weightx = gridBagConstraints.weighty = 1;
+        getContentPane().add(splitPane, gridBagConstraints);
+
+        gridBagConstraints.insets = new Insets(5, 0, 5, 0);
+        gridBagConstraints.weightx = gridBagConstraints.weighty = 0;
+        gridBagConstraints.gridy = 1;
+        getContentPane().add(panelOKButtons, gridBagConstraints);
 
         pack();
     }
@@ -372,94 +390,97 @@ public class NewUnitViewerDialog extends JDialog implements Runnable, KeyListene
     }
 
     void filterUnits() {
-        javax.swing.RowFilter<MekTableModel, Integer> unitTypeFilter;
+        RowFilter<MekTableModel, Integer> unitTypeFilter;
         final int nType = comboType.getSelectedIndex();
         final int nClass = comboWeight.getSelectedIndex();
         final int nUnit = comboUnitType.getSelectedIndex() - 1;
         //If current expression doesn't parse, don't update.
+
         try {
-            unitTypeFilter = new javax.swing.RowFilter<>() {
+            unitTypeFilter = new RowFilter<>() {
                 @Override
                 public boolean include(RowFilter.Entry<? extends MekTableModel, ? extends Integer> entry) {
-                    MekTableModel mechModel = entry.getModel();
-                    MekSummary mech = mechModel.getMechSummary(entry.getIdentifier());
-                    if (/* Weight */
-                          ((nClass == EntityWeightClass.SIZE) || (mech.getWeightClass() == nClass)) &&
-                                /*Canon*/
-                                (!mmClient.getGame().getOptions().booleanOption("canon_only") || mech.isCanon()) &&
-                                /*Technology Level*/
-                                ((nType == TechConstants.T_ALL)
-                                       || (nType == mech.getType())
-                                       || ((nType == TechConstants.T_IS_TW_ALL)
-                                                 && ((mech.getType() <= TechConstants.T_IS_TW_NON_BOX)
-                                                           || (mech.getType() == TechConstants.T_INTRO_BOX_SET)))
-                                       || ((nType == TechConstants.T_TW_ALL)
-                                                 && ((mech.getType() <= TechConstants.T_IS_TW_NON_BOX)
-                                                           || (mech.getType() <= TechConstants.T_INTRO_BOX_SET)
-                                                           || (mech.getType() <= TechConstants.T_CLAN_TW)))
-                                       || ((nType == TechConstants.T_ALL_IS)
-                                                 && ((mech.getType() <= TechConstants.T_IS_TW_NON_BOX)
-                                                           || (mech.getType() == TechConstants.T_INTRO_BOX_SET)
-                                                           || (mech.getType() == TechConstants.T_IS_ADVANCED)
-                                                           || (mech.getType() == TechConstants.T_IS_EXPERIMENTAL)
-                                                           || (mech.getType() == TechConstants.T_IS_UNOFFICIAL)))
-                                       || ((nType == TechConstants.T_ALL_CLAN)
-                                                 && ((mech.getType() == TechConstants.T_CLAN_TW)
-                                                           || (mech.getType() == TechConstants.T_CLAN_ADVANCED)
-                                                           || (mech.getType() == TechConstants.T_CLAN_EXPERIMENTAL)
-                                                           || (mech.getType() == TechConstants.T_CLAN_UNOFFICIAL))))
-                                && ((nUnit == -1) || mech.getUnitType().equals(UnitType.getTypeName(nUnit)))
-                                /*Advanced Search*/
-                                && ((searchFilter == null) || MekSearchFilter.isMatch(mech, searchFilter))
-                                && !(mech.getYear() > Integer.parseInt(client.getServerConfigs("CampaignYear")))) {
+                    MekTableModel mekModel = entry.getModel();
+                    MekSummary mek = mekModel.getMechSummary(entry.getIdentifier());
+                    if (((nClass == EntityWeightClass.SIZE) || (mek.getWeightClass() == nClass)) &&
+                              (!mmClient.getGame().getOptions().booleanOption("canon_only") || mek.isCanon()) &&
+                              ((nType == TechConstants.T_ALL)
+                                     || (nType == mek.getType())
+                                     || ((nType == TechConstants.T_IS_TW_ALL)
+                                               && ((mek.getType() <= TechConstants.T_IS_TW_NON_BOX)
+                                                         || (mek.getType() == TechConstants.T_INTRO_BOX_SET)))
+                                     || ((nType == TechConstants.T_TW_ALL)
+                                               && ((mek.getType() <= TechConstants.T_IS_TW_NON_BOX)
+                                                         || (mek.getType() <= TechConstants.T_INTRO_BOX_SET)
+                                                         || (mek.getType() <= TechConstants.T_CLAN_TW)))
+                                     || ((nType == TechConstants.T_ALL_IS)
+                                               && ((mek.getType() <= TechConstants.T_IS_TW_NON_BOX)
+                                                         || (mek.getType() == TechConstants.T_INTRO_BOX_SET)
+                                                         || (mek.getType() == TechConstants.T_IS_ADVANCED)
+                                                         || (mek.getType() == TechConstants.T_IS_EXPERIMENTAL)
+                                                         || (mek.getType() == TechConstants.T_IS_UNOFFICIAL)))
+                                     || ((nType == TechConstants.T_ALL_CLAN)
+                                               && ((mek.getType() == TechConstants.T_CLAN_TW)
+                                                         || (mek.getType() == TechConstants.T_CLAN_ADVANCED)
+                                                         || (mek.getType() == TechConstants.T_CLAN_EXPERIMENTAL)
+                                                         || (mek.getType() == TechConstants.T_CLAN_UNOFFICIAL))))
+                              && ((nUnit == -1) || mek.getUnitType().equals(UnitType.getTypeName(nUnit)))
+                              && ((searchFilter == null) || MekSearchFilter.isMatch(mek, searchFilter))
+                              && !(mek.getYear() > MathUtility.parseInt(client.getServerConfigs("CampaignYear"),
+                          3025))) {
                         if (!txtFilter.getText().isEmpty()) {
                             String text = txtFilter.getText();
-                            return mech.getName().toLowerCase().contains(text.toLowerCase());
+                            return mek.getName().toLowerCase().contains(text.toLowerCase());
                         }
+
                         return true;
                     }
+
                     return false;
                 }
             };
         } catch (PatternSyntaxException e) {
             return;
         }
+
         sorter.setRowFilter(unitTypeFilter);
     }
 
-    public Entity getSelectedEntity() {
+    public @Nullable Entity getSelectedEntity() {
         int view = tableUnits.getSelectedRow();
+
         if (view < 0) {
             // selection got filtered away
             return null;
         }
+
         int selected = tableUnits.convertRowIndexToModel(view);
         // else
-        MekSummary ms = meks[selected];
+        MekSummary mekSummary = meks[selected];
         try {
             // For some unknown reason the base path gets screwed up after you
-            // print so this sets the source file to the full path.
-            return new MekFileParser(ms.getSourceFile(), ms.getEntryName()).getEntity();
+            //  print, so this sets the source file to the full path.
+            return new MekFileParser(mekSummary.getSourceFile(), mekSummary.getEntryName()).getEntity();
         } catch (EntityLoadingException ex) {
-            System.out.println(STR."Unable to load mech: \{ms.getSourceFile()}: \{ms.getEntryName()}: \{ex.getMessage()}");
-            ex.printStackTrace();
+            LOGGER.error(ex,
+                  STR."Unable to load mech: \{mekSummary.getSourceFile()}: \{mekSummary.getEntryName()}: \{ex.getMessage()}");
             return null;
         }
     }
 
     public void run() {
-        // Loading meks can take a while, so it will have its own thread.
-        // This prevents the UI from freezing and allows the
-        // "Please wait..." dialog to behave properly on various Java VMs.
-        MekSummaryCache mscInstance = MekSummaryCache.getInstance();
-        meks = mscInstance.getAllMeks();
+        // Loading meks can take a while, so it will have its own thread. This prevents the UI from freezing and
+        // allows the "Please wait..." dialog to behave properly on various Java VMs.
+        MekSummaryCache mekSummaryCache = MekSummaryCache.getInstance();
+        meks = mekSummaryCache.getAllMeks();
 
         // break out if there are no units to filter
         if (meks == null) {
-            System.err.println("No units to filter!");
+            LOGGER.error("No units to filter!");
         } else {
             unitModel.setData(meks);
         }
+
         filterUnits();
 
         //initialize with the units sorted alphabetically by chassis
@@ -476,8 +497,8 @@ public class NewUnitViewerDialog extends JDialog implements Runnable, KeyListene
         // In some cases, it's possible to get here without an initialized
         // instance (loading a saved game without a cache).  In these cases,
         // we don't care about the failed loads.
-        if (mscInstance.isInitialized()) {
-            final java.util.Map<String, String> hFailedFiles = MekSummaryCache.getInstance().getFailedFiles();
+        if (mekSummaryCache.isInitialized()) {
+            final Map<String, String> hFailedFiles = MekSummaryCache.getInstance().getFailedFiles();
             if ((hFailedFiles != null) && (!hFailedFiles.isEmpty())) {
                 // self-showing dialog
                 new UnitFailureDialog(client.getMainFrame(), hFailedFiles);
@@ -497,7 +518,8 @@ public class NewUnitViewerDialog extends JDialog implements Runnable, KeyListene
             comboWeight.setSelectedIndex(selectedUnitWeight);
             comboType.setSelectedIndex(selectedUnitRulesLevel);
         }
-        asd.clearSearches();
+
+        advancedSearchDialog.clearSearches();
         searchFilter = null;
         btnResetSearch.setEnabled(false);
 
@@ -506,9 +528,9 @@ public class NewUnitViewerDialog extends JDialog implements Runnable, KeyListene
     }
 
     @Override
-    protected void processWindowEvent(WindowEvent e) {
-        super.processWindowEvent(e);
-        if (e.getID() == WindowEvent.WINDOW_DEACTIVATED) {
+    protected void processWindowEvent(WindowEvent windowEvent) {
+        super.processWindowEvent(windowEvent);
+        if (windowEvent.getID() == WindowEvent.WINDOW_DEACTIVATED) {
             selectedUnitType = comboUnitType.getSelectedIndex();
             selectedUnitWeight = comboWeight.getSelectedIndex();
             selectedUnitRulesLevel = comboType.getSelectedIndex();
@@ -517,31 +539,33 @@ public class NewUnitViewerDialog extends JDialog implements Runnable, KeyListene
         }
     }
 
-    public void keyTyped(KeyEvent ke) {
+    public void keyTyped(KeyEvent keyEvent) {
     }
 
-    public void keyPressed(KeyEvent ke) {
-        if (ke.getKeyCode() == KeyEvent.VK_ENTER) {
-            ActionEvent event = new ActionEvent(btnSelect, ActionEvent.ACTION_PERFORMED, ""); //$NON-NLS-1$
+    public void keyPressed(KeyEvent keyEvent) {
+        if (keyEvent.getKeyCode() == KeyEvent.VK_ENTER) {
+            ActionEvent event = new ActionEvent(btnSelect, ActionEvent.ACTION_PERFORMED, "");
             actionPerformed(event);
         }
         long curTime = System.currentTimeMillis();
+
         if ((curTime - lastSearch) > KEY_TIMEOUT) {
             searchBuffer = new StringBuffer();
         }
+
         lastSearch = curTime;
-        searchBuffer.append(ke.getKeyChar());
+        searchBuffer.append(keyEvent.getKeyChar());
         searchFor(searchBuffer.toString().toLowerCase());
     }
 
-    public void actionPerformed(ActionEvent ev) {
-        if (ev.getSource().equals(comboType) ||
-                  ev.getSource().equals(comboWeight) ||
-                  ev.getSource().equals(comboUnitType)) {
+    public void actionPerformed(ActionEvent actionEvent) {
+        if (actionEvent.getSource().equals(comboType) ||
+                  actionEvent.getSource().equals(comboWeight) ||
+                  actionEvent.getSource().equals(comboUnitType)) {
             filterUnits();
-        } else if (ev.getSource().equals(btnClose)) {
+        } else if (actionEvent.getSource().equals(btnClose)) {
             setVisible(false);
-        } else if (ev.getSource().equals(btnShowBV)) {
+        } else if (actionEvent.getSource().equals(btnShowBV)) {
             JEditorPane tEditorPane = new JEditorPane();
             tEditorPane.setContentType("text/html");
             tEditorPane.setEditable(false);
@@ -564,129 +588,131 @@ public class NewUnitViewerDialog extends JDialog implements Runnable, KeyListene
                   "BV",
                   JOptionPane.INFORMATION_MESSAGE,
                   null);
-        } else if (ev.getSource().equals(btnAdvSearch)) {
-            searchFilter = asd.showDialog();
-            btnResetSearch.setEnabled((searchFilter != null) && !searchFilter.isDisabled);
+        } else if (actionEvent.getSource().equals(btnAdvSearch)) {
+            DialogResult result = advancedSearchDialog.showDialog();
+            btnResetSearch.setEnabled((result.isConfirmed()));
             filterUnits();
-        } else if (ev.getSource().equals(btnResetSearch)) {
-            asd.clearSearches();
+        } else if (actionEvent.getSource().equals(btnResetSearch)) {
+            advancedSearchDialog.clearSearches();
             searchFilter = null;
             btnResetSearch.setEnabled(false);
             filterUnits();
-        } else if (ev.getSource().equals(btnSelect) || ev.getSource().equals(btnSelectClose)) {
+        } else if (actionEvent.getSource().equals(btnSelect) || actionEvent.getSource().equals(btnSelectClose)) {
             saveComboBoxSettings();
             if (viewerType == NewUnitViewerDialog.OMNI_VARIANT_SELECTOR) {
                 try {
-                    MekSummary ms = getSelectedMechSummary();
-                    String unit = ms.getName();
-                    setVisible(false);
-                    String moneyMod = JOptionPane.showInputDialog(client.getMainFrame(),
-                          STR."Money Mod for \{unit}",
-                          0);
+                    MekSummary selectedMekSummary = getSelectedMekSummary();
+                    if (selectedMekSummary != null) {
+                        String unit = selectedMekSummary.getName();
+                        setVisible(false);
+                        String moneyMod = JOptionPane.showInputDialog(client.getMainFrame(),
+                              STR."Money Mod for \{unit}",
+                              0);
 
-                    if ((moneyMod == null) || (moneyMod.isEmpty())) {
-                        dispose();
-                        return;
+                        if ((moneyMod == null) || (moneyMod.isEmpty())) {
+                            dispose();
+                            return;
+                        }
+
+                        String compMod = JOptionPane.showInputDialog(client.getMainFrame(),
+                              STR."Comp Mod for \{unit}",
+                              0);
+
+                        if ((compMod == null) || (compMod.isEmpty())) {
+                            dispose();
+                            return;
+                        }
+
+                        String fluMod = JOptionPane.showInputDialog(client.getMainFrame(),
+                              STR."Flu Mod for \{unit}",
+                              0);
+
+                        if ((fluMod == null) || (fluMod.isEmpty())) {
+                            dispose();
+                            return;
+                        }
+
+                        client.sendChat(
+                              STR."\{IClient.CAMPAIGN_PREFIX}c AddOmniVariantMod#\{unit}#\{moneyMod}$\{compMod}$\{fluMod}");
                     }
-
-                    String compMod = JOptionPane.showInputDialog(client.getMainFrame(),
-                          STR."Comp Mod for \{unit}",
-                          0);
-
-                    if ((compMod == null) || (compMod.isEmpty())) {
-                        dispose();
-                        return;
-                    }
-
-                    String fluMod = JOptionPane.showInputDialog(client.getMainFrame(),
-                          STR."Flu Mod for \{unit}",
-                          0);
-
-                    if ((fluMod == null) || (fluMod.isEmpty())) {
-                        dispose();
-                        return;
-                    }
-
-                    client.sendChat(
-                          STR."\{IClient.CAMPAIGN_PREFIX}c AddOmniVariantMod#\{unit}#\{moneyMod}$\{compMod}$\{fluMod}");
-
                     dispose();
                 } catch (Exception ex) {
-                    MWLogger.errLog(ex);
+                    LOGGER.error(ex, "Unable to perform action (AddOmniVariantMod): {}", ex.getLocalizedMessage());
                 }
-            }// end omni selector if
-            else if (viewerType == NewUnitViewerDialog.UNIT_SELECTOR) {
+            } else if (viewerType == NewUnitViewerDialog.UNIT_SELECTOR) {
                 try {
-                    MekSummary ms = getSelectedMechSummary();
-                    String unitFile;
-                    String unit = ms.getName();
-                    setVisible(false);
-                    int weightClass = comboWeight.getSelectedIndex();
-                    // Item "All" takes up Weight Class 0, so this is usually 1 off.
-                    if (weightClass > 0) {
-                        weightClass -= 1;
+                    MekSummary selectedMekSummary = getSelectedMekSummary();
+                    if (selectedMekSummary != null) {
+                        String unitFile;
+                        String unit = selectedMekSummary.getName();
+                        setVisible(false);
+                        int weightClass = comboWeight.getSelectedIndex();
+                        // Item "All" takes up Weight Class 0, so this is usually 1 off.
+
+                        if (weightClass > 0) {
+                            weightClass -= 1;
+                        }
+
+                        unitFile = UnitUtils.getMekSummaryFileName(selectedMekSummary);
+
+
+                        String fluff = JOptionPane.showInputDialog(client.getMainFrame(), STR."Fluff text for \{unit}");
+
+                        if ((fluff == null) || (fluff.isEmpty())) {
+                            dispose();
+                            return;
+                        }
+
+                        String gunnery = JOptionPane.showInputDialog(client.getMainFrame(),
+                              STR."Gunnery skill for \{unit}",
+                              99);
+
+                        if ((gunnery == null) || (gunnery.isEmpty())) {
+                            dispose();
+                            return;
+                        }
+
+                        String piloting = JOptionPane.showInputDialog(client.getMainFrame(),
+                              STR."Piloting Mod for \{unit}",
+                              99);
+
+                        if ((piloting == null) || (piloting.isEmpty())) {
+                            dispose();
+                            return;
+                        }
+
+                        String skills;
+                        skills = JOptionPane.showInputDialog(client.getMainFrame(),
+                              STR."Skills Mod for \{unit} (comma delimited)");
+
+                        if (skills == null) {
+                            dispose();
+                            return;
+                        }
+
+                        client.sendChat(
+                              STR."\{IClient.CAMPAIGN_PREFIX}c createUnit#\{unitFile}#\{fluff}#\{gunnery}#\{piloting}#\{weightClass}#\{skills}");
                     }
-                    unitFile = UnitUtils.getMekSummaryFileName(ms);
-
-
-                    String fluff = JOptionPane.showInputDialog(client.getMainFrame(),
-                          STR."Fluff text for \{unit}");
-
-                    if ((fluff == null) || (fluff.isEmpty())) {
-                        dispose();
-                        return;
-                    }
-
-                    String gunnery = JOptionPane.showInputDialog(client.getMainFrame(),
-                          STR."Gunnery skill for \{unit}",
-                          99);
-
-                    if ((gunnery == null) || (gunnery.isEmpty())) {
-                        dispose();
-                        return;
-                    }
-
-                    String piloting = JOptionPane.showInputDialog(client.getMainFrame(),
-                          STR."Piloting Mod for \{unit}",
-                          99);
-
-                    if ((piloting == null) || (piloting.isEmpty())) {
-                        dispose();
-                        return;
-                    }
-
-                    String skills;
-                    skills = JOptionPane.showInputDialog(client.getMainFrame(),
-                          STR."Skills Mod for \{unit} (comma delimited)");
-
-                    if (skills == null) {
-                        dispose();
-                        return;
-                    }
-
-                    client.sendChat(
-                          STR."\{IClient.CAMPAIGN_PREFIX}c createunit#\{unitFile}#\{fluff}#\{gunnery}#\{piloting}#\{weightClass}#\{skills}");
 
                     dispose();
                 } catch (Exception ex) {
-                    MWLogger.errLog(ex);
+                    LOGGER.error(ex, "Unable to perform action (createUnit): {}", ex.getLocalizedMessage());
                 }
             } else if (viewerType == NewUnitViewerDialog.UNIT_RESEARCH) {
-                MekSummary ms = getSelectedMechSummary();
+                MekSummary selectedMekSummary = getSelectedMekSummary();
 
-                String unitFile;
-                unitFile = UnitUtils.getMekSummaryFileName(ms);
-                setVisible(false);
+                if (selectedMekSummary != null) {
+                    String unitFile;
+                    unitFile = UnitUtils.getMekSummaryFileName(selectedMekSummary);
+                    setVisible(false);
 
-                if (!unitFile.equals("null")) {
-                    client.sendChat(STR."\{IClient.CAMPAIGN_PREFIX}c researchunit#\{unitFile}");
+                    if (!unitFile.equals("null")) {
+                        client.sendChat(STR."\{IClient.CAMPAIGN_PREFIX}c researchunit#\{unitFile}");
+                    }
                 }
-
                 dispose();
 
-            }
-            // end unit selector if.
-            else {
+            } else {
                 dispose();
             }
         }
@@ -697,6 +723,7 @@ public class NewUnitViewerDialog extends JDialog implements Runnable, KeyListene
         for (int i = 0; i < meks.length; i++) {
             if (meks[i].getName().toLowerCase().startsWith(search)) {
                 int selected = tableUnits.convertRowIndexToView(i);
+
                 if (selected > -1) {
                     tableUnits.changeSelection(selected, 0, false, false);
                     break;
@@ -707,19 +734,21 @@ public class NewUnitViewerDialog extends JDialog implements Runnable, KeyListene
 
     private void saveComboBoxSettings() {
 
-        client.getConfig().setParam("UNITVIEWERWEIGHT", (String) comboWeight.getSelectedItem());
-        client.getConfig().setParam("UNITVIEWERTECH", (String) comboType.getSelectedItem());
-        client.getConfig().setParam("UNITVIEWERTYPE", (String) comboUnitType.getSelectedItem());
+        client.getConfig().setParam("UNIT_VIEWER_WEIGHT", (String) comboWeight.getSelectedItem());
+        client.getConfig().setParam("UNIT_VIEWER_TECH", (String) comboType.getSelectedItem());
+        client.getConfig().setParam("UNIT_VIEWER_TYPE", (String) comboUnitType.getSelectedItem());
         client.getConfig().saveConfig();
         client.setConfig();
     }
 
-    public MekSummary getSelectedMechSummary() {
+    public @Nullable MekSummary getSelectedMekSummary() {
         int view = tableUnits.getSelectedRow();
+
         if (view < 0) {
             // selection got filtered away
             return null;
         }
+
         int selected = tableUnits.convertRowIndexToModel(view);
         // else
         return meks[selected];
@@ -727,7 +756,7 @@ public class NewUnitViewerDialog extends JDialog implements Runnable, KeyListene
     }
 
     @Override
-    public void keyReleased(java.awt.event.KeyEvent e) {
+    public void keyReleased(KeyEvent keyEvent) {
 
     }
 

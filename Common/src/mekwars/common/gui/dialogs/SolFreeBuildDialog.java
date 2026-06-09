@@ -14,88 +14,81 @@
  * for more details.
  */
 
-/*
- * SolFreeBuildDialog
- * @Author Salient (mwosux@gmail.com) August 2017
- * Duplicated and modified TableViewerDialog in an attempt to create new dialog
- * for SOL players to create any mek/vee on a pre defined build table. This is part
- * of a Larger system to change how SOL works in general.
- *
- */
-
-
 package mekwars.common.gui.dialogs;
 
+import java.awt.Color;
+import java.awt.Component;
+import java.awt.Dimension;
+import java.awt.event.ItemEvent;
+import java.awt.event.ItemListener;
+import java.awt.event.KeyEvent;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.io.Serial;
+import java.util.StringTokenizer;
+import java.util.TreeMap;
+import java.util.TreeSet;
+import java.util.Vector;
+import javax.swing.*;
 
+import jakarta.annotation.Nullable;
 import megamek.client.ui.dialogs.unitDisplay.UnitDisplayPanel;
+import megamek.codeUtilities.MathUtility;
 import megamek.common.loaders.MULParser;
 import megamek.common.units.Entity;
+import megamek.logging.MMLogger;
 import mekwars.common.House;
 import mekwars.common.Unit;
 import mekwars.common.campaign.clientutils.protocol.IClient;
 import mekwars.common.gui.MWUnitDisplay;
 import mekwars.common.gui.TableSorter;
-import mekwars.common.util.MWLogger;
 import mekwars.common.util.SpringLayoutHelper;
 
-public class SolFreeBuildDialog extends javax.swing.JFrame implements java.awt.event.ItemListener {
+/**
+ * SolFreeBuildDialog
+ * <p>
+ * August 2017 Duplicated and modified TableViewerDialog in an attempt to create a new dialog for SOL players to create
+ * any mek/vee on a pre-defined build table. This is part of a Larger system to change how SOL works in general.
+ *
+ * @author Salient (mwosux@gmail.com)
+ */
+public class SolFreeBuildDialog extends JFrame implements ItemListener {
+    private static final MMLogger LOGGER = MMLogger.create(SolFreeBuildDialog.class);
 
-    /**
-     *
-     */
     @Serial
     private static final long serialVersionUID = -5449999786199993020L;
-    // ivars
-    javax.swing.JComboBox<String> weightClassCombo;
-    javax.swing.JComboBox<String> factionCombo;
-    javax.swing.JComboBox<String> unitTypeCombo;
-
-    javax.swing.JLabel factionLabel = new javax.swing.JLabel("Faction: ", javax.swing.SwingConstants.RIGHT);
-    javax.swing.JLabel typeLabel = new javax.swing.JLabel("Type: ", javax.swing.SwingConstants.RIGHT);
-    javax.swing.JLabel weightLabel = new javax.swing.JLabel("Class: ", javax.swing.SwingConstants.RIGHT);
-    javax.swing.JLabel percentageLabel = new javax.swing.JLabel("Please Select a Unit To Create",
-          javax.swing.SwingConstants.CENTER);
-
-    String[] factionArray = {};
-    String[] unitTypeArray = { "Mek", "Vehicle", "BattleArmor", "Infantry", "ProtoMek", "Aero" };
-    String[] weightClassArray = { "Light", "Medium", "Heavy", "Assault" };
-
-    int factionSort = 0;
-    int unitSort = 0;
-    int weightSort = 0;
-
-    javax.swing.JTable generalTable = new javax.swing.JTable();
-    javax.swing.JScrollPane generalScrollPane;
-
-    javax.swing.JButton closeButton = new javax.swing.JButton("Close");
-    javax.swing.JButton refreshButton = new javax.swing.JButton("Reload Data");
-    javax.swing.JButton createButton = new javax.swing.JButton("Create (ALT+C)");
-
-    // model and whatnot for refreshing
-    TableViewerModel tvModel;
-
-    // maps and sorts
-    java.util.TreeMap<Object, TableUnit> currentUnits;
-    TableUnit[] sortedUnits = {};// sorts generated from the map.
-
-    //@Salient adding this to capture unit selection
-    TableUnit selectedUnit;
-
-    IClient client;
+    private final TableViewerModel tvModel;
+    private final TreeMap<Object, TableUnit> currentUnits;
+    private final IClient client;
+    private final JTable generalTable = new JTable();
+    private final JButton refreshButton = new JButton("Reload Data");
+    private final JButton createButton = new JButton("Create (ALT+C)");
+    private final JComboBox<String> weightClassCombo;
+    private final JComboBox<String> factionCombo;
+    private final JComboBox<String> unitTypeCombo;
+    private String[] unitTypeArray = { "Mek", "Vehicle", "BattleArmor", "Infantry", "ProtoMek", "Aero" };
+    private int factionSort = 0;
+    private int unitSort = 0;
+    private int weightSort = 0;
 
     // constructor
     public SolFreeBuildDialog(IClient client) {
         super("Free Unit Browser");
 
         this.client = client;
-        currentUnits = new java.util.TreeMap<>();
-        generalScrollPane = new javax.swing.JScrollPane();
+        currentUnits = new TreeMap<>();
+        JScrollPane generalScrollPane = new JScrollPane();
 
         // alpha sorted faction array. hacky and evil.
-        java.util.TreeSet<String> factionNames = new java.util.TreeSet<>();// tree to alpha
+        TreeSet<String> factionNames = new TreeSet<>();// tree to alpha
 
-        // if freebuild use all option is checked, and player is in SOL, all houses are loaded into the dialog
+        // if free build use all option is checked, and player is in SOL, all houses are loaded into the dialog
         if (this.client.getServerConfigs("Sol_FreeBuild_UseAll").equalsIgnoreCase("true") &&
                   this.client.getPlayer()
                         .getHouse()
@@ -123,20 +116,22 @@ public class SolFreeBuildDialog extends javax.swing.JFrame implements java.awt.e
             factionNames.add(this.client.getPlayer().getHouse().trim());
         }
 
-        factionArray = factionNames.toArray(factionArray);
+        String[] factionArray = factionNames.toArray(new String[0]);
 
         // CONSTRUCT GUI
         // make combo boxes
-        weightClassCombo = new javax.swing.JComboBox<>(weightClassArray);
-        factionCombo = new javax.swing.JComboBox<>(factionArray);
-        unitTypeCombo = new javax.swing.JComboBox<>();
+        String[] weightClassArray = { "Light", "Medium", "Heavy", "Assault" };
+        weightClassCombo = new JComboBox<>(weightClassArray);
+        factionCombo = new JComboBox<>(factionArray);
+        unitTypeCombo = new JComboBox<>();
 
         for (int type = Unit.MEK; type < Unit.MAX_BUILD; type++) {
             unitTypeCombo.addItem(Unit.getTypeClassDesc(type));
         }
 
         // set max combo heights
-        java.awt.Dimension comboDim = new java.awt.Dimension();
+        Dimension comboDim = new Dimension();
+        JLabel factionLabel = new JLabel("Faction: ", SwingConstants.RIGHT);
         comboDim.setSize(factionCombo.getMinimumSize().getWidth() * 1.5, factionLabel.getMinimumSize().getHeight() + 2);
 
         factionCombo.setAlignmentX(java.awt.Component.CENTER_ALIGNMENT);
@@ -147,11 +142,13 @@ public class SolFreeBuildDialog extends javax.swing.JFrame implements java.awt.e
         unitTypeCombo.setMaximumSize(comboDim);
 
         // put the combos and their labels into a spring
-        javax.swing.JPanel comboPanel = new javax.swing.JPanel(new javax.swing.SpringLayout());
+        JPanel comboPanel = new JPanel(new SpringLayout());
         comboPanel.add(factionLabel);
         comboPanel.add(factionCombo);
+        JLabel typeLabel = new JLabel("Type: ", SwingConstants.RIGHT);
         comboPanel.add(typeLabel);
         comboPanel.add(unitTypeCombo);
+        JLabel weightLabel = new JLabel("Class: ", SwingConstants.RIGHT);
         comboPanel.add(weightLabel);
         comboPanel.add(weightClassCombo);
         SpringLayoutHelper.setupSpringGrid(comboPanel, 3, 2);
@@ -167,29 +164,32 @@ public class SolFreeBuildDialog extends javax.swing.JFrame implements java.awt.e
         weightClassCombo.addItemListener(this);
 
         // allow the close button to actually close things ...
-        closeButton.setAlignmentX(java.awt.Component.CENTER_ALIGNMENT);
-        closeButton.setAlignmentY(java.awt.Component.CENTER_ALIGNMENT);
+        JButton closeButton = new JButton("Close");
+        closeButton.setAlignmentX(Component.CENTER_ALIGNMENT);
+        closeButton.setAlignmentY(Component.CENTER_ALIGNMENT);
         closeButton.addActionListener(_ -> dispose());
 
-        refreshButton.setAlignmentX(java.awt.Component.CENTER_ALIGNMENT);
-        refreshButton.setAlignmentY(java.awt.Component.CENTER_ALIGNMENT);
+        refreshButton.setAlignmentX(Component.CENTER_ALIGNMENT);
+        refreshButton.setAlignmentY(Component.CENTER_ALIGNMENT);
         refreshButton.addActionListener(_ -> refreshButton_ActionPerformed());
 
-        createButton.setAlignmentX(java.awt.Component.CENTER_ALIGNMENT);
-        createButton.setAlignmentY(java.awt.Component.CENTER_ALIGNMENT);
-        createButton.setMnemonic(java.awt.event.KeyEvent.VK_C);
+        createButton.setAlignmentX(Component.CENTER_ALIGNMENT);
+        createButton.setAlignmentY(Component.CENTER_ALIGNMENT);
+        createButton.setMnemonic(KeyEvent.VK_C);
         createButton.addActionListener(_ -> createUnit_ActionPerformed());
 
         // set up the BM-style table
+        // sorts generated from the map.
+        TableUnit[] sortedUnits = {};
         tvModel = new TableViewerModel(this.client, currentUnits, sortedUnits);
         TableSorter sorter = new TableSorter(tvModel, client, TableSorter.SORTER_BUILD_TABLES);
         generalTable.setModel(sorter);
 
         // make it possible to double-click for unit info
-        generalTable.addMouseListener(new java.awt.event.MouseAdapter() {
+        generalTable.addMouseListener(new MouseAdapter() {
             @Override
-            public void mouseClicked(java.awt.event.MouseEvent e) {
-                if (e.getClickCount() == 2) {
+            public void mouseClicked(MouseEvent mouseEvent) {
+                if (mouseEvent.getClickCount() == 2) {
                     TableUnit u = getUnitAtRow(generalTable.getSelectedRow());
                     if (u == null) {
                         return;
@@ -198,7 +198,7 @@ public class SolFreeBuildDialog extends javax.swing.JFrame implements java.awt.e
                     Entity theEntity = u.getEntity();
                     theEntity.loadAllWeapons();
 
-                    javax.swing.JFrame infoWindow = new javax.swing.JFrame();
+                    JFrame infoWindow = new JFrame();
                     UnitDisplayPanel unitDetailInfo = new MWUnitDisplay(null, client);
 
                     infoWindow.getContentPane().add(unitDetailInfo);
@@ -238,21 +238,21 @@ public class SolFreeBuildDialog extends javax.swing.JFrame implements java.awt.e
         generalScrollPane.setToolTipText("Click on column header to sort.");
         generalScrollPane.setViewportView(generalTable);
         generalScrollPane.setBorder(
-              javax.swing.BorderFactory.createCompoundBorder(javax.swing.BorderFactory.createEmptyBorder(10, 0, 10, 0),
-                    javax.swing.BorderFactory.createLineBorder(
-                          java.awt.Color.BLACK, 1)));
+              BorderFactory.createCompoundBorder(BorderFactory.createEmptyBorder(10, 0, 10, 0),
+                    BorderFactory.createLineBorder(Color.BLACK, 1)));
 
         // make a box layout to hold the combos and table
-        javax.swing.JPanel boxPanel = new javax.swing.JPanel();
-        boxPanel.setLayout(new javax.swing.BoxLayout(boxPanel, javax.swing.BoxLayout.Y_AXIS));
-        javax.swing.JPanel buttonPanel = new javax.swing.JPanel(new javax.swing.SpringLayout());
+        JPanel boxPanel = new JPanel();
+        boxPanel.setLayout(new BoxLayout(boxPanel, BoxLayout.Y_AXIS));
+        JPanel buttonPanel = new JPanel(new SpringLayout());
 
         // center the percentage label
-        percentageLabel.setAlignmentX(java.awt.Component.CENTER_ALIGNMENT);
-        percentageLabel.setAlignmentY(java.awt.Component.CENTER_ALIGNMENT);
-        percentageLabel.setBorder(javax.swing.BorderFactory.createEmptyBorder(0, 0, 10, 0));
+        JLabel percentageLabel = new JLabel("Please Select a Unit To Create", SwingConstants.CENTER);
+        percentageLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
+        percentageLabel.setAlignmentY(Component.CENTER_ALIGNMENT);
+        percentageLabel.setBorder(BorderFactory.createEmptyBorder(0, 0, 10, 0));
 
-        // add combo boxes scrollPane and percentage info to the boxpanel
+        // add combo boxes scrollPane and percentage info to the box panel
         boxPanel.add(comboPanel);
         boxPanel.add(generalScrollPane);
         boxPanel.add(percentageLabel);
@@ -260,13 +260,12 @@ public class SolFreeBuildDialog extends javax.swing.JFrame implements java.awt.e
         buttonPanel.add(refreshButton);
         buttonPanel.add(closeButton);
 
-
         SpringLayoutHelper.setupSpringGrid(buttonPanel, 3);
 
         boxPanel.add(buttonPanel);
 
         // give the box a small border
-        boxPanel.setBorder(javax.swing.BorderFactory.createEmptyBorder(20, 20, 20, 20));
+        boxPanel.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
 
         // add the box to the main panel
         getContentPane().add(boxPanel);
@@ -292,11 +291,9 @@ public class SolFreeBuildDialog extends javax.swing.JFrame implements java.awt.e
     }
 
     // methods
-    public TableUnit getUnitAtRow(int row) {
+    public @Nullable TableUnit getUnitAtRow(int row) {
+        String filename = (String) generalTable.getModel().getValueAt(row, TableViewerModel.FILENAME);
 
-        String filename = (String) generalTable.getModel()
-                                         .getValueAt(row,
-                                               mekwars.common.gui.dialogs.TableViewerModel.FILENAME);
         if (filename != null) {
             return currentUnits.get(filename);
         }
@@ -309,19 +306,23 @@ public class SolFreeBuildDialog extends javax.swing.JFrame implements java.awt.e
      * Method to conform with ItemListener. Takes item events from the combo boxes and triggers table loads.
      */
     @Override
-    public void itemStateChanged(java.awt.event.ItemEvent i) {
+    public void itemStateChanged(ItemEvent itemEvent) {
 
         /*
          * Do not re-load tables and units if there is no actual change in the
          * selection.
          */
-        @SuppressWarnings("unchecked")
-        javax.swing.JComboBox<String> source = (javax.swing.JComboBox<String>) i.getSource();
-        if ((source == unitTypeCombo) && (unitSort == unitTypeCombo.getSelectedIndex())) {
-            return;
-        } else if ((source == weightClassCombo) && (weightSort == weightClassCombo.getSelectedIndex())) {
-            return;
-        } else if ((source == factionCombo) && (factionSort == factionCombo.getSelectedIndex())) {
+        Object source = itemEvent.getSource();
+
+        if (source instanceof JComboBox<?> comboSource) {
+            if ((comboSource == unitTypeCombo) && (unitSort == unitTypeCombo.getSelectedIndex())) {
+                return;
+            } else if ((comboSource == weightClassCombo) && (weightSort == weightClassCombo.getSelectedIndex())) {
+                return;
+            } else if ((comboSource == factionCombo) && (factionSort == factionCombo.getSelectedIndex())) {
+                return;
+            }
+        } else {
             return;
         }
 
@@ -334,9 +335,9 @@ public class SolFreeBuildDialog extends javax.swing.JFrame implements java.awt.e
         factionSort = factionCombo.getSelectedIndex();
 
         // save the new sort to the config
-        client.getConfig().setParam("TABLEVIEWERFACTION", (String) factionCombo.getSelectedItem());
-        client.getConfig().setParam("TABLEVIEWERTYPE", (String) unitTypeCombo.getSelectedItem());
-        client.getConfig().setParam("TALEVIEWERWEIGHT", (String) weightClassCombo.getSelectedItem());
+        client.getConfig().setParam("TABLE_VIEWER_FACTION", (String) factionCombo.getSelectedItem());
+        client.getConfig().setParam("TABLE_VIEWER_TYPE", (String) unitTypeCombo.getSelectedItem());
+        client.getConfig().setParam("TABLE_VIEWER_WEIGHT", (String) weightClassCombo.getSelectedItem());
         client.getConfig().saveConfig();
         client.setConfig();
 
@@ -345,14 +346,9 @@ public class SolFreeBuildDialog extends javax.swing.JFrame implements java.awt.e
     }
 
     /**
-     * Method which loads tables and TableUnits, based on current ComboBox selections. This is the beef of the class
-     * ...
+     * Method that loads tables and TableUnits, based on current ComboBox selections. This is the beef of the class ...
      */
-    @SuppressWarnings("unused")
     public void loadTables() {
-
-        // System.out.println("loadTables() called");
-
         String factionString = "";
         String addOnString = "";
 
@@ -360,10 +356,9 @@ public class SolFreeBuildDialog extends javax.swing.JFrame implements java.awt.e
          * First, determine faction.
          */
         factionString += (String) factionCombo.getSelectedItem();
-        // System.out.println("Faction String: " + factionString);
 
         /*
-         * Next, determine the weightclass.
+         * Next, determine the weight class.
          */
         addOnString += STR."_\{weightClassCombo.getSelectedItem()}";
 
@@ -377,15 +372,14 @@ public class SolFreeBuildDialog extends javax.swing.JFrame implements java.awt.e
 
         // always look for a .txt
         addOnString += ".txt";
-        // System.out.println("AddOn String: " + addOnString);
 
         /*
          * Look for the build tables
          */
-        java.io.File buildTablePath;
-        buildTablePath = new java.io.File("./data/buildtables/standard");
+        File buildTablePath;
+        buildTablePath = new File("./data/buildtables/standard");
         if (!buildTablePath.exists()) {
-            MWLogger.errLog("Could not find build tables.");
+            LOGGER.debug("Could not find build tables.");
             return;
         }
 
@@ -399,66 +393,21 @@ public class SolFreeBuildDialog extends javax.swing.JFrame implements java.awt.e
          * and lowercasing/
          */
         boolean overrideWithCommon = false;
-        // System.out.println("Attempting to find base table entry.");
-        java.io.File tableEntry = new java.io.File(buildTablePath.getPath() +
-                                                         java.io.File.separatorChar +
-                                                         factionString +
-                                                         addOnString);
-        if (tableEntry == null) {
-            tableEntry = new java.io.File((buildTablePath.getPath() +
-                                                 java.io.File.separatorChar +
-                                                 factionString +
-                                                 addOnString).toLowerCase());
-        }
 
         /*
-         * Server defaults to common if a table isnt present. For example, if
-         * Davion_AssaultBattleArmor isn't present,
-         * Common_AssaultBattleArmor.txt is used instead. So, check that here as
-         * well.
-         */
-        if (tableEntry == null) {
-            // System.out.println("Didn't find Faction table in lower case
-            // either. Retrying with Common.");
-            overrideWithCommon = true;
-            tableEntry = new java.io.File(buildTablePath.getPath() +
-                                                java.io.File.separatorChar +
-                                                "Common" +
-                                                addOnString);
-        }
-
-        /*
-         * If cased common is also null, try lower case. If this fails, return.
-         */
-        if (tableEntry == null) {
-            // System.out.println("Didn't find Common table with standard
-            // casing. Retrying in lower case.");
-            tableEntry = new java.io.File((buildTablePath.getPath() +
-                                                 java.io.File.separatorChar +
-                                                 "Common" +
-                                                 addOnString).toLowerCase());
-        }
-
-        if (tableEntry == null) {
-            // System.out.println("Didn't find Common table with lowercase.
-            // Returning.");
-            return;
-        }
-
-        /*
-         * A clutch of treemaps. These are used to store info on crosslinked
+         * A clutch of treetops. These are used to store info on cross linked
          * tables. Note that linkage hops could extend in perpetuity, so
          * stopping after 3 hops will generate some minor rounding errors.
          */
-        java.util.TreeMap<String, Double> crossMap1 = new java.util.TreeMap<>();
-        java.util.TreeMap<String, Double> crossMap2 = new java.util.TreeMap<>();
+        TreeMap<String, Double> crossMap1 = new TreeMap<>();
+        TreeMap<String, Double> crossMap2 = new TreeMap<>();
 
         /*
          * Original Table. A dummy treemap is used here in order to pass a
          * treemap to the doTableLayer method. The initial table is the only
          * value and carries a 100% weight.
          */
-        java.util.TreeMap<String, Double> temp = new java.util.TreeMap<>();
+        TreeMap<String, Double> temp = new TreeMap<>();
         temp.put(factionString, 100.0);// using 100 makes things
         // %'s instead of decimals
         // ...
@@ -477,134 +426,108 @@ public class SolFreeBuildDialog extends javax.swing.JFrame implements java.awt.e
             crossMap1 = crossMap2;
             crossMap2 = new java.util.TreeMap<>();
         }
-
-        /*
-         * Table, and 3 degrees of seperation, processed as well as possible.
-         * Holes may exist if linked tables are given bad pointers on the
-         * tables, or if linkages are pervasive and 3 hops are insufficient to
-         * cover most of the crosstalk.
-         */
-
-        /*
-         * Update the total percentage counter.
-         */
-        double totalPercent = 0;
-
-        for (TableUnit currUnit : currentUnits.values()) {
-            totalPercent += currUnit.getFrequency();
-        }
-
-        java.text.DecimalFormat myFormatter = new java.text.DecimalFormat("###.#####");
     }
 
     // refresh
     public void refresh() {
         tvModel.refreshModel();
-        generalTable.setPreferredSize(new java.awt.Dimension(generalTable.getWidth(),
+        generalTable.setPreferredSize(new Dimension(generalTable.getWidth(),
               generalTable.getRowHeight() * (generalTable.getRowCount())));
         generalTable.revalidate();
     }
 
     /**
      * Helper method which reads a given layer of tables. Extracted from loadTables to reduce repetition; however, doing
-     * do actually makes each check (inparticular, the first and last map levels) more complex than they would
+     * do actually makes each check (in particular, the first and last map levels) more complex than they would
      * otherwise.
      */
-    public void doTableLayer(java.util.TreeMap<String, Double> curr, java.util.TreeMap<String, Double> next, String add,
-          java.io.File buildTablePath, boolean commonOverride) {
+    public void doTableLayer(TreeMap<String, Double> curr, TreeMap<String, Double> next, String add,
+          File buildTablePath, boolean commonOverride) {
 
         /*
          * Set up an iterator of target tables. Note that the first level (base
-         * table) is put into a dummy treemap in order to have an iterator.
+         * table) is put into a dummy treemap to have an iterator.
          */
         for (String currTableName : curr.keySet()) {
             // get zip entry for the new file.
-            java.io.File tableEntry;
+            File tableEntry;
             if (commonOverride) {
-                tableEntry = new java.io.File(buildTablePath.getPath() + java.io.File.separatorChar + "Common" + add);
+                tableEntry = new File(STR."\{buildTablePath.getPath()}\{File.separatorChar}Common\{add}");
             } else {
-                tableEntry = new java.io.File(buildTablePath.getPath() +
-                                                    java.io.File.separatorChar +
-                                                    currTableName +
-                                                    add);
+                tableEntry = new File(buildTablePath.getPath() + File.separatorChar + currTableName + add);
             }
 
             if (!tableEntry.exists()) {
                 if (commonOverride) {
-                    tableEntry = new java.io.File((buildTablePath.getPath() +
-                                                         java.io.File.separatorChar +
-                                                         "Common" +
-                                                         add).toLowerCase());
+                    tableEntry = new File((STR."\{buildTablePath.getPath()}\{File.separatorChar}Common\{add}").toLowerCase());
                 } else {
-                    tableEntry = new java.io.File((buildTablePath.getPath() +
-                                                         java.io.File.separatorChar +
-                                                         currTableName +
-                                                         add).toLowerCase());
+                    tableEntry = new File((buildTablePath.getPath() +
+                                                 File.separatorChar +
+                                                 currTableName +
+                                                 add).toLowerCase());
                 }
             }
 
             // ignore missing links
             if (tableEntry.exists()) {
-
                 /*
                  * Loop through the target table once to determine the total
                  * weighting of all entries. This total is used to determine the
                  * fractional values of each line on a second pass.
                  */
-                int totaltableweight = getTotalWeightForTable(tableEntry);
+                int totalWeightForTable = getTotalWeightForTable(tableEntry);
 
                 /*
                  * InputStream and Buffered reader for a second pass through the
                  * file.
                  */
-                java.io.InputStream is = getEntryInputStream(tableEntry);
-                java.io.BufferedReader dis = new java.io.BufferedReader(new java.io.InputStreamReader(is));
+                InputStream is = getEntryInputStream(tableEntry);
+                BufferedReader dis = new BufferedReader(new InputStreamReader(is));
 
                 /*
                  * TableMultiplier is used to determine the relative value of
                  * each entry. For example, if the Orion ONI-1K appears on a
-                 * target table at 50%, and the tableweight is .10 (aka - 10%),
-                 * the ONI's actual frequncy is 5%.
+                 * target table at 50%, and the table weight is .10 (aka - 10%),
+                 * the ONI's actual frequency is 5%.
                  */
-                double tablemultiplier = curr.get(currTableName);
+                double tableMultiplier = curr.get(currTableName);
 
                 try {
                     while (dis.ready()) {
-
                         // read the line. make sure it's not empty.
-                        String l = dis.readLine();
-                        if ((l == null) || (l.trim().isEmpty())) {
+                        String line = dis.readLine();
+                        if ((line == null) || (line.trim().isEmpty())) {
                             continue;
                         }
 
                         // remove excess whitespace
-                        l = l.trim();
-                        l = l.replaceAll("\\s+", " ");
-                        if (l.indexOf(" ") == 0) {
-                            l = l.substring(1);
+                        line = line.trim();
+                        line = line.replaceAll("\\s+", " ");
+                        if (line.indexOf(" ") == 0) {
+                            line = line.substring(1);
                         }
 
                         /*
                          * All lines should have weights. Set up a
-                         * StringTokenizer and grab common data before seperate
+                         * StringTokenizer and grab common data before separate
                          * file/table work is done.
                          */
-                        java.util.StringTokenizer ST = new java.util.StringTokenizer(l);
-                        double weight = Double.parseDouble((String) ST.nextElement());
+                        StringTokenizer stringTokenizer = new StringTokenizer(line);
+                        double weight = MathUtility.parseDouble((String) stringTokenizer.nextElement(), 0.0);
 
                         /*
                          * Determine whether this line is a cross-linked table
                          * or an actual unit file. Assume a valid file if the
                          * entry ends with a known unit file extension. If no
-                         * known extension is present, assume a crosslinked
+                         * known extension is present, assume a cross linked
                          * table.
                          */
-                        if (hasValidExtension(l) && (weight != 0)) {
-
+                        if (hasValidExtension(line) && (weight != 0)) {
                             StringBuilder Filename = new StringBuilder();
-                            while (ST.hasMoreElements()) {
-                                Filename.append(ST.nextToken());
-                                if (ST.hasMoreElements()) {
+                            while (stringTokenizer.hasMoreElements()) {
+                                Filename.append(stringTokenizer.nextToken());
+
+                                if (stringTokenizer.hasMoreElements()) {
                                     Filename.append(" ");
                                 }
                             }
@@ -616,94 +539,94 @@ public class SolFreeBuildDialog extends javax.swing.JFrame implements java.awt.e
                              * simply add its frequency to that of the existing
                              * unit.
                              */
-                            double frequency = (weight / totaltableweight) * tablemultiplier;
+                            double frequency = (weight / totalWeightForTable) * tableMultiplier;
 
                             if (Filename.toString().toLowerCase().endsWith(".mul")) {
-
-                                java.util.Vector<Entity> loadedUnits;
-                                java.io.File entityFile = new java.io.File("data/armies/" + Filename);
+                                Vector<Entity> loadedUnits;
+                                File entityFile = new File(STR."data/armies/\{Filename}");
 
                                 try {
                                     loadedUnits = new MULParser(entityFile, null).getEntities();
                                     loadedUnits.trimToSize();
                                     frequency /= loadedUnits.size();
                                 } catch (Exception ex) {
-                                    MWLogger.errLog("Unable to load file " + entityFile.getName());
-                                    MWLogger.errLog(ex);
+                                    LOGGER.error(ex, "Unable to load file {}", entityFile.getName());
                                     continue;
                                 }
 
-                                for (Entity en : loadedUnits) {
-                                    TableUnit tu = new TableUnit(en, frequency);
-                                    TableUnit eu = currentUnits.get(tu.getRealFilename());// existing
+                                for (Entity entity : loadedUnits) {
+                                    TableUnit tableUnit = new TableUnit(entity, frequency);
+                                    TableUnit existingUnit = currentUnits.get(tableUnit.getRealFilename());// existing
                                     // unit
-                                    if (eu != null) {
-                                        eu.addFrequencyFrom(tu);
+                                    if (existingUnit != null) {
+                                        existingUnit.addFrequencyFrom(tableUnit);
                                     } else {
-                                        currentUnits.put(tu.getRealFilename(), tu);
+                                        currentUnits.put(tableUnit.getRealFilename(), tableUnit);
                                     }
 
                                     /*
                                      * Add this table as a source.
                                      */
-                                    eu = currentUnits.get(tu.getRealFilename());// existing
+                                    existingUnit = currentUnits.get(tableUnit.getRealFilename());// existing
                                     // unit
-                                    if (eu.getTables().get(currTableName) == null) {
-                                        eu.getTables().put(currTableName, frequency);
+                                    if (existingUnit.getTables().get(currTableName) == null) {
+                                        existingUnit.getTables().put(currTableName, frequency);
                                     } else {
-                                        Double currFreq = eu.getTables().get(currTableName);
+                                        Double currFreq = existingUnit.getTables().get(currTableName);
                                         Double newFreq = currFreq + frequency;
-                                        eu.getTables().remove(currTableName);
-                                        eu.getTables().put(currTableName, newFreq);
+                                        existingUnit.getTables().remove(currTableName);
+                                        existingUnit.getTables().put(currTableName, newFreq);
                                     }
                                 }
                             } else {
-                                TableUnit tu = new TableUnit(Filename.toString(), frequency);
-                                TableUnit eu = currentUnits.get(Filename.toString());// existing
+                                TableUnit tableUnit = new TableUnit(Filename.toString(), frequency);
+                                TableUnit existingUnit = currentUnits.get(Filename.toString());// existing
                                 // unit
-                                if (eu != null) {
-                                    eu.addFrequencyFrom(tu);
+                                if (existingUnit != null) {
+                                    existingUnit.addFrequencyFrom(tableUnit);
                                 } else {
-                                    currentUnits.put(Filename.toString(), tu);
+                                    currentUnits.put(Filename.toString(), tableUnit);
                                 }
 
                                 /*
                                  * Add this table as a source.
                                  */
-                                eu = currentUnits.get(Filename.toString());// existing
+                                existingUnit = currentUnits.get(Filename.toString());// existing
                                 // unit
-                                if (eu.getTables().get(currTableName) == null) {
-                                    eu.getTables().put(currTableName, frequency);
+                                if (existingUnit.getTables().get(currTableName) == null) {
+                                    existingUnit.getTables().put(currTableName, frequency);
                                 } else {
-                                    Double currFreq = eu.getTables().get(currTableName);
+                                    Double currFreq = existingUnit.getTables().get(currTableName);
                                     Double newFreq = currFreq + frequency;
-                                    eu.getTables().remove(currTableName);
-                                    eu.getTables().put(currTableName, newFreq);
+                                    existingUnit.getTables().remove(currTableName);
+                                    existingUnit.getTables().put(currTableName, newFreq);
                                 }
                             }
-                        } else if (weight != 0) {// is a crosslink table
+                        } else if (weight != 0) {// is a crossing table
                             StringBuilder crossTableName = new StringBuilder();
-                            while (ST.hasMoreElements()) {
-                                crossTableName.append(ST.nextToken());
-                                if (ST.hasMoreElements()) {
+                            while (stringTokenizer.hasMoreElements()) {
+                                crossTableName.append(stringTokenizer.nextToken());
+                                if (stringTokenizer.hasMoreElements()) {
                                     crossTableName.append(" ");
                                 }
                             }
 
                             /*
-                             * Put the crosslink into the map, if another layer
+                             * Put the cross link into the map, if another layer
                              * exists. Check for duplication. If next is null
-                             * there are no more crosslink hops to be mode,
+                             * there are no more cross link hops to be mode,
                              * which means sorting would be a waste of time.
                              */
                             if (next != null) {
                                 if (next.containsKey("crossTableName")) {
-                                    Double d = next.get(crossTableName.toString());
-                                    double newTableWeight = d + ((weight / totaltableweight) * tablemultiplier);
+                                    Double aDouble = next.get(crossTableName.toString());
+                                    double newTableWeight = aDouble +
+                                                                  ((weight / totalWeightForTable) * tableMultiplier);
                                     next.remove(crossTableName.toString());
                                     next.put(crossTableName.toString(), newTableWeight);
                                 } else {
-                                    next.put(crossTableName.toString(), (weight / totaltableweight) * tablemultiplier);
+                                    next.put(crossTableName.toString(),
+                                          (weight / totalWeightForTable) * tableMultiplier);
                                 }
                             }
                         }
@@ -719,32 +642,32 @@ public class SolFreeBuildDialog extends javax.swing.JFrame implements java.awt.e
     }// end doTableLayer()
 
     /**
-     * Helper which loops through a table, ignoring filenames and tablenames. Returns total table weighting for use when
+     * Helper that loops through a table, ignoring filenames and table names. Returns total table weighting for use when
      * analyzing names.
      */
-    public int getTotalWeightForTable(java.io.File bf) {
-
+    public int getTotalWeightForTable(File file) {
         int totalweight = 0;
 
         try {
-            java.io.FileInputStream fis = new java.io.FileInputStream(bf);
-            java.io.BufferedReader dis = new java.io.BufferedReader(new java.io.InputStreamReader(fis));
+            FileInputStream fis = new FileInputStream(file);
+            BufferedReader dis = new BufferedReader(new InputStreamReader(fis));
+
             while (dis.ready()) {
                 // read the line and remove excess whitespace
-                String l = dis.readLine();
+                String line = dis.readLine();
 
-                if ((l == null) || (l.trim().isEmpty())) {
+                if ((line == null) || (line.trim().isEmpty())) {
                     continue;
                 }
 
-                l = l.trim();
-                l = l.replaceAll("\\s+", " ");
-                if (l.indexOf(" ") == 0) {
-                    l = l.substring(1);
+                line = line.trim();
+                line = line.replaceAll("\\s+", " ");
+                if (line.indexOf(" ") == 0) {
+                    line = line.substring(1);
                 }
 
-                java.util.StringTokenizer ST = new java.util.StringTokenizer(l);
-                totalweight += Integer.parseInt((String) ST.nextElement());
+                StringTokenizer stringTokenizer = new StringTokenizer(line);
+                totalweight += MathUtility.parseInt((String) stringTokenizer.nextElement(), 0);
             }
             fis.close();
             dis.close();
@@ -752,59 +675,33 @@ public class SolFreeBuildDialog extends javax.swing.JFrame implements java.awt.e
             // nothing
         }
 
-        // System.out.println("totalweight of current table: " + totalweight);
         return totalweight;
     }
 
     /**
-     * Helper which takes a File entry and returns an input stream. Handles errors, etc. to reduce clutter in
+     * Helper that takes a File entry and returns an input stream. Handles errors, etc. to reduce clutter in
      * loadTables().
      */
-    public java.io.InputStream getEntryInputStream(java.io.File bf) {
-        java.io.InputStream is;
+    public @Nullable InputStream getEntryInputStream(File file) {
+        InputStream inputStream;
+
         try {
-            is = new java.io.FileInputStream(bf);
-            return is;
-        } catch (java.io.IOException io) {
+            inputStream = new FileInputStream(file);
+            return inputStream;
+        } catch (IOException io) {
             return null;
         }
     }
 
     /**
-     * Helper which checks strings to see if they end with a known-good unit file extension.
+     * Helper that checks strings to see if they end with a known-good unit file extension.
      */
-    public boolean hasValidExtension(String l) {
-        String lc = l.toLowerCase();
-        return lc.endsWith(".blk") || lc.endsWith(".mtf") || lc.endsWith(".mul");
+    public boolean hasValidExtension(String line) {
+        String lowerCase = line.toLowerCase();
+        return lowerCase.endsWith(".blk") || lowerCase.endsWith(".mtf") || lowerCase.endsWith(".mul");
     }
 
     public void refreshButton_ActionPerformed() {
-
-        int userLevel = client.getUserLevel();
-
-        refreshButton.setEnabled(false);
-        if (userLevel >= client.getData().getAccessLevel("AdminRequestBuildTable")) {
-            client.sendChat(IClient.CAMPAIGN_PREFIX + "c AdminRequestBuildTable#list#true");
-        } else if (userLevel >= client.getData().getAccessLevel("RequestBuildTable")) {
-            client.sendChat(IClient.CAMPAIGN_PREFIX + "c RequestBuildTable#list#true");
-        }
-
-        client.setWaiting(true);
-        while (client.isWaiting()) {
-            try {
-                Thread.sleep(100);
-            } catch (Exception ex) {
-
-            }
-        }
-        loadTables();
-        refresh();
-        refreshButton.setEnabled(true);
-    }
-
-    public void createButton_ActionPerformed() {
-
-
         int userLevel = client.getUserLevel();
 
         refreshButton.setEnabled(false);
@@ -818,7 +715,31 @@ public class SolFreeBuildDialog extends javax.swing.JFrame implements java.awt.e
         while (client.isWaiting()) {
             try {
                 Thread.sleep(100);
-            } catch (Exception ex) {
+            } catch (Exception ignored) {
+
+            }
+        }
+
+        loadTables();
+        refresh();
+        refreshButton.setEnabled(true);
+    }
+
+    public void createButton_ActionPerformed() {
+        int userLevel = client.getUserLevel();
+
+        refreshButton.setEnabled(false);
+        if (userLevel >= client.getData().getAccessLevel("AdminRequestBuildTable")) {
+            client.sendChat(STR."\{IClient.CAMPAIGN_PREFIX}c AdminRequestBuildTable#list#true");
+        } else if (userLevel >= client.getData().getAccessLevel("RequestBuildTable")) {
+            client.sendChat(STR."\{IClient.CAMPAIGN_PREFIX}c RequestBuildTable#list#true");
+        }
+
+        client.setWaiting(true);
+        while (client.isWaiting()) {
+            try {
+                Thread.sleep(100);
+            } catch (Exception ignored) {
 
             }
         }
@@ -830,20 +751,24 @@ public class SolFreeBuildDialog extends javax.swing.JFrame implements java.awt.e
     //@Salient
     public void createUnit_ActionPerformed() {
 
-        selectedUnit = getUnitAtRow(generalTable.getSelectedRow());
-        Entity tempEntity = selectedUnit.getEntity();
+        TableUnit selectedUnit = getUnitAtRow(generalTable.getSelectedRow());
         //why does mekwars use 0-3 and megamek uses 1-4 for weight classes? ... :(
 
         if (selectedUnit != null) {
+            Entity tempEntity = selectedUnit.getEntity();
             createButton.setEnabled(false);
 
-            if (client.getServerConfigs("Sol_FreeBuild_UseAll").equalsIgnoreCase("true") ||
-                      client.getServerConfigs("FreeBuild_PostDefection")
-                            .equalsIgnoreCase("true")) //may not need this, command will always check house table if postdefection is enabled.
+            Object factionComboSelectedItem = factionCombo.getSelectedItem();
+
+            if ((factionComboSelectedItem instanceof String selectedFaction) &&
+                      (client.getServerConfigs("Sol_FreeBuild_UseAll").equalsIgnoreCase("true") ||
+                             client.getServerConfigs("FreeBuild_PostDefection")
+                                   .equalsIgnoreCase("true"))) //may not need this, command will always check house table if
+            // postdefection is enabled.
             {
                 client.sendChat(
                       STR."\{IClient.CAMPAIGN_PREFIX}SOLCREATEUNIT \{selectedUnit.getRealFilename()}#\{TableUnit.getEntityWeight(
-                            tempEntity)}#\{factionCombo.getSelectedItem().toString()}");
+                            tempEntity)}#\{selectedFaction}");
             } else {
                 client.sendChat(
                       STR."\{IClient.CAMPAIGN_PREFIX}SOLCREATEUNIT \{selectedUnit.getRealFilename()}#\{TableUnit.getEntityWeight(

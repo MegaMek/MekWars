@@ -17,31 +17,45 @@
 
 package mekwars.common.gui;
 
-import common.util.MWLogger;
+import java.awt.Toolkit;
+import java.io.Serial;
+import java.text.NumberFormat;
+import java.text.ParseException;
+import java.util.Locale;
+import javax.swing.JTextField;
+import javax.swing.text.AttributeSet;
+import javax.swing.text.BadLocationException;
+import javax.swing.text.Document;
+import javax.swing.text.PlainDocument;
 
-public class WholeNumberField extends javax.swing.JTextField {
+import megamek.logging.MMLogger;
+
+public class WholeNumberField extends JTextField {
+    private static final MMLogger LOGGER = MMLogger.create(WholeNumberField.class);
     /**
      *
      */
+    @Serial
     private static final long serialVersionUID = 3640879107242018821L;
-    private java.awt.Toolkit toolkit;
-    private java.text.NumberFormat integerFormatter;
+    private final Toolkit toolkit;
+    private final NumberFormat integerFormatter;
 
     public WholeNumberField(int value, int columns) {
         super(columns);
-        toolkit = java.awt.Toolkit.getDefaultToolkit();
-        integerFormatter = java.text.NumberFormat.getNumberInstance(java.util.Locale.US);
+        toolkit = Toolkit.getDefaultToolkit();
+        integerFormatter = NumberFormat.getNumberInstance(Locale.US);
         integerFormatter.setParseIntegerOnly(true);
         setValue(value);
     }
 
     public int getValue() {
         int retVal = 0;
+
         try {
             retVal = integerFormatter.parse(getText()).intValue();
-        } catch (java.text.ParseException e) {
-            // This should never happen because insertString allows
-            // only properly formatted data to get in the field.
+        } catch (ParseException ex) {
+            LOGGER.error(ex, "In theory, shouldn't occur. But theory doesn't match practice. : {}",
+                  ex.getLocalizedMessage());
             toolkit.beep();
         }
         return retVal;
@@ -52,21 +66,19 @@ public class WholeNumberField extends javax.swing.JTextField {
     }
 
     @Override
-    protected javax.swing.text.Document createDefaultModel() {
-        return new mekwars.common.gui.WholeNumberField.WholeNumberDocument();
+    protected Document createDefaultModel() {
+        return new WholeNumberField.WholeNumberDocument();
     }
 
-    protected class WholeNumberDocument extends javax.swing.text.PlainDocument {
+    protected class WholeNumberDocument extends PlainDocument {
         /**
          *
          */
+        @Serial
         private static final long serialVersionUID = -6680227995973307297L;
 
         @Override
-        public void insertString(int offs,
-              String str,
-              javax.swing.text.AttributeSet a)
-              throws javax.swing.text.BadLocationException {
+        public void insertString(int offs, String str, AttributeSet attributeSet) throws BadLocationException {
             char[] source = str.toCharArray();
             char[] result = new char[source.length];
             int j = 0;
@@ -74,10 +86,11 @@ public class WholeNumberField extends javax.swing.JTextField {
             for (int i = 0; i < result.length; i++) {
                 if (Character.isDigit(source[i])) {result[j++] = source[i];} else {
                     toolkit.beep();
-                    MWLogger.errLog("insertString: " + source[i]);
+                    LOGGER.debug("insertString: {}", source[i]);
                 }
             }
-            super.insertString(offs, new String(result, 0, j), a);
+            
+            super.insertString(offs, new String(result, 0, j), attributeSet);
         }
     }
 }
