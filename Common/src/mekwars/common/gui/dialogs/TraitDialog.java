@@ -29,13 +29,15 @@ import java.util.StringTokenizer;
 import java.util.TreeSet;
 import javax.swing.*;
 
+import megamek.codeUtilities.MathUtility;
+import megamek.logging.MMLogger;
 import mekwars.common.House;
 import mekwars.common.campaign.clientutils.protocol.IClient;
 import mekwars.common.campaign.pilot.skills.PilotSkill;
-import mekwars.common.util.MWLogger;
 import mekwars.common.util.SpringLayoutHelper;
 
 public final class TraitDialog implements ActionListener, KeyListener {
+    private final static MMLogger LOGGER = MMLogger.create(TraitDialog.class);
 
     private final static String okayCommand = "Add";
     private final static String cancelCommand = "Close";
@@ -50,7 +52,7 @@ public final class TraitDialog implements ActionListener, KeyListener {
     private final JTextField gunneryLaserText = new JTextField(3);
     private final JTextField gunneryBallisticText = new JTextField(3);
     private final JTextField gunneryMissileText = new JTextField(3);
-    private final JTextField astechText = new JTextField(3);
+    private final JTextField asTechText = new JTextField(3);
     private final JTextField tacticalGeniusText = new JTextField(3);
     private final JTextField weaponSpecialistText = new JTextField(3);
     private final JTextField meleeSpecialistText = new JTextField(3);
@@ -81,6 +83,7 @@ public final class TraitDialog implements ActionListener, KeyListener {
         //COMBO BOXES
         TreeSet<String> names = new TreeSet<>();
         names.add("Common"); //start with the common faction
+
         for (House house : this.client.getData().getAllHouses()) {
             names.add(house.getName());
         }
@@ -105,12 +108,14 @@ public final class TraitDialog implements ActionListener, KeyListener {
         removeButton.addActionListener(this);
         okayButton.setToolTipText("Save Trait");
         String windowName = "Trait Editor";
+
         if (player) {
             cancelButton.setToolTipText("Exit");
             windowName = "Trait Viewer";
         } else {
             cancelButton.setToolTipText("Exit without saving changes");
         }
+
         removeButton.setToolTipText("Delete Trait");
         traitComboBox.addActionListener(this);
         factionComboBox.addActionListener(this);
@@ -138,16 +143,18 @@ public final class TraitDialog implements ActionListener, KeyListener {
 
         JLabel traitLabel = new JLabel("Trait:", SwingConstants.TRAILING);
         comboPanel.add(traitLabel);
+
         if (player) {traitComboBox.setToolTipText("Select a trait.");} else {
             traitComboBox.setToolTipText("Select a trait or enter a new one.");
         }
+
         comboPanel.add(traitComboBox);
 
-        JLabel astechLabel = new JLabel("AT:", SwingConstants.TRAILING);
-        skillPanel.add(astechLabel);
-        astechText.setToolTipText("<html>Astech<br>Modifies the chance for a pilot to receive this skill</html>");
-        astechText.setEditable(!player);
-        skillPanel.add(astechText);
+        JLabel asTechLabel = new JLabel("AT:", SwingConstants.TRAILING);
+        skillPanel.add(asTechLabel);
+        asTechText.setToolTipText("<html>AsTech<br>Modifies the chance for a pilot to receive this skill</html>");
+        asTechText.setEditable(!player);
+        skillPanel.add(asTechText);
 
         JLabel dodgeManeuverLabel = new JLabel("DM:", SwingConstants.TRAILING);
         skillPanel.add(dodgeManeuverLabel);
@@ -268,15 +275,15 @@ public final class TraitDialog implements ActionListener, KeyListener {
         traitsPanel.add(comboPanel);
         traitsPanel.add(skillPanel);
 
-        javax.swing.JPanel mainPanel = new javax.swing.JPanel();
+        JPanel mainPanel = new JPanel();
 
         // Set the user's options
         Object[] options = { okayButton, removeButton, cancelButton };
 
         // Create the pane containing the buttons
-        pane = new javax.swing.JOptionPane(traitsPanel,
-              javax.swing.JOptionPane.PLAIN_MESSAGE,
-              javax.swing.JOptionPane.DEFAULT_OPTION,
+        pane = new JOptionPane(traitsPanel,
+              JOptionPane.PLAIN_MESSAGE,
+              JOptionPane.DEFAULT_OPTION,
               null,
               options,
               null);
@@ -304,19 +311,19 @@ public final class TraitDialog implements ActionListener, KeyListener {
         client.loadServerTraitFiles();
     }
 
-    public void keyTyped(KeyEvent e) {
+    public void keyTyped(KeyEvent keyEvent) {
     }
 
-    public void keyPressed(KeyEvent e) {
+    public void keyPressed(KeyEvent keyEvent) {
     }
 
-    public void keyReleased(KeyEvent e) {
+    public void keyReleased(KeyEvent keyEvent) {
 
         String faction = (String) factionComboBox.getSelectedItem();
         String trait = ((String) traitComboBox.getSelectedItem());
 
         if (faction != null && trait != null) {
-            if (e.getComponent().equals(factionComboBox)) {
+            if (keyEvent.getComponent().equals(factionComboBox)) {
                 loadFactionTraits(faction);
             } else {
                 populateTraits(faction, trait.trim());
@@ -327,11 +334,17 @@ public final class TraitDialog implements ActionListener, KeyListener {
     private void loadFactionTraits(String faction) {
         File traitFile = new File(STR."\{client.getCacheDir()}/\{faction.toLowerCase()}traitnames.txt");
         TreeSet<String> names = new TreeSet<>();
-        if (traitComboBox.getItemCount() > 0) {traitComboBox.removeAllItems();}
+
+        if (traitComboBox.getItemCount() > 0) {
+            traitComboBox.removeAllItems();
+        }
+
         BufferedReader dis = null;
+
         try {
             FileInputStream fis = new FileInputStream(traitFile);
             dis = new BufferedReader(new InputStreamReader(fis));
+
             while (dis.ready()) {
                 StringTokenizer traitName = new StringTokenizer(dis.readLine(), delimiter);
                 names.add(traitName.nextToken());
@@ -339,16 +352,18 @@ public final class TraitDialog implements ActionListener, KeyListener {
 
             names.forEach(traitComboBox::addItem);
         } catch (Exception ex) {
-            MWLogger.errLog(STR."Unable to load faction \{faction}");
-            MWLogger.errLog(ex);
+            LOGGER.error(ex, STR."Unable to load faction \{faction}");
         } finally {
             try {
                 dis.close();
             } catch (java.io.IOException e) {
-                MWLogger.errLog(e);
+                LOGGER.error(e);
             }
         }
-        if (traitComboBox.getItemCount() > 0) {traitComboBox.setSelectedIndex(0);}
+        if (traitComboBox.getItemCount() > 0) {
+            traitComboBox.setSelectedIndex(0);
+        }
+
         traitComboBox.revalidate();
     }
 
@@ -358,7 +373,7 @@ public final class TraitDialog implements ActionListener, KeyListener {
         gunneryLaserText.setText("0");
         gunneryBallisticText.setText("0");
         gunneryMissileText.setText("0");
-        astechText.setText("0");
+        asTechText.setText("0");
         tacticalGeniusText.setText("0");
         weaponSpecialistText.setText("0");
         meleeSpecialistText.setText("0");
@@ -374,12 +389,15 @@ public final class TraitDialog implements ActionListener, KeyListener {
         quickStudyText.setText("0");
         medtechText.setText("0");
         BufferedReader dis = null;
+
         try {
             FileInputStream fis = new FileInputStream(traitFile);
             dis = new BufferedReader(new InputStreamReader(fis));
+
             while (dis.ready()) {
                 StringTokenizer traitNames = new StringTokenizer(dis.readLine(), delimiter);
                 String traitName = traitNames.nextToken();
+
                 if (traitName.equalsIgnoreCase(trait)) {
                     while (traitNames.hasMoreTokens()) {
                         int traitID = Integer.parseInt(traitNames.nextToken());
@@ -392,7 +410,7 @@ public final class TraitDialog implements ActionListener, KeyListener {
                         } else if (traitID == PilotSkill.GunneryMissileSkillID) {
                             gunneryMissileText.setText(traitMod);
                         } else if (traitID == PilotSkill.AstechSkillID) {
-                            astechText.setText(traitMod);
+                            asTechText.setText(traitMod);
                         } else if (traitID == PilotSkill.DodgeManeuverSkillID) {
                             dodgeManeuverText.setText(traitMod);
                         } else if (traitID == PilotSkill.IronManSkillID) {
@@ -419,25 +437,26 @@ public final class TraitDialog implements ActionListener, KeyListener {
                             giftedText.setText(traitMod);
                         } else if (traitID == PilotSkill.QuickStudyID) {
                             quickStudyText.setText(traitMod);
-                        } else if (traitID == PilotSkill.MedTechID) {medtechText.setText(traitMod);}
+                        } else if (traitID == PilotSkill.MedTechID) {
+                            medtechText.setText(traitMod);
+                        }
                     }
                 }
 
             }
         } catch (Exception ex) {
-            MWLogger.errLog("populate Traits error");
-            MWLogger.errLog(ex);
+            LOGGER.error(ex, "populate Traits error");
         } finally {
             try {
                 dis.close();
             } catch (java.io.IOException e) {
-                MWLogger.errLog(e);
+                LOGGER.error(e);
             }
         }
     }
 
-    public void actionPerformed(ActionEvent e) {
-        String command = e.getActionCommand();
+    public void actionPerformed(ActionEvent actionEvent) {
+        String command = actionEvent.getActionCommand();
 
         switch (command) {
             case okayCommand -> {
@@ -506,109 +525,109 @@ public final class TraitDialog implements ActionListener, KeyListener {
     public String getResults(String faction, String trait) {
         String result = STR."\{faction}#\{trait}#";
 
-        if (Integer.parseInt(gunneryBallisticText.getText()) != 0) {
+        if (MathUtility.parseInt(gunneryBallisticText.getText(), 0) != 0) {
             result += PilotSkill.GunneryBallisticSkillID;
             result += delimiter;
             result += gunneryBallisticText.getText();
             result += delimiter;
         }
-        if (Integer.parseInt(gunneryLaserText.getText()) != 0) {
+        if (MathUtility.parseInt(gunneryLaserText.getText(), 0) != 0) {
             result += PilotSkill.GunneryLaserSkillID;
             result += delimiter;
             result += gunneryLaserText.getText();
             result += delimiter;
         }
-        if (Integer.parseInt(gunneryMissileText.getText()) != 0) {
+        if (MathUtility.parseInt(gunneryMissileText.getText(), 0) != 0) {
             result += PilotSkill.GunneryMissileSkillID;
             result += delimiter;
             result += gunneryMissileText.getText();
             result += delimiter;
         }
-        if (Integer.parseInt(astechText.getText()) != 0) {
+        if (MathUtility.parseInt(asTechText.getText(), 0) != 0) {
             result += PilotSkill.AstechSkillID;
             result += delimiter;
-            result += astechText.getText();
+            result += asTechText.getText();
             result += delimiter;
         }
-        if (Integer.parseInt(dodgeManeuverText.getText()) != 0) {
+        if (MathUtility.parseInt(dodgeManeuverText.getText(), 0) != 0) {
             result += PilotSkill.DodgeManeuverSkillID;
             result += delimiter;
             result += dodgeManeuverText.getText();
             result += delimiter;
         }
-        if (Integer.parseInt(ironManText.getText()) != 0) {
+        if (MathUtility.parseInt(ironManText.getText(), 0) != 0) {
             result += PilotSkill.IronManSkillID;
             result += delimiter;
             result += ironManText.getText();
             result += delimiter;
         }
-        if (Integer.parseInt(maneuveringAceText.getText()) != 0) {
+        if (MathUtility.parseInt(maneuveringAceText.getText(), 0) != 0) {
             result += PilotSkill.ManeuveringAceSkillID;
             result += delimiter;
             result += maneuveringAceText.getText();
             result += delimiter;
         }
-        if (Integer.parseInt(meleeSpecialistText.getText()) != 0) {
+        if (MathUtility.parseInt(meleeSpecialistText.getText(), 0) != 0) {
             result += PilotSkill.MeleeSpecialistSkillID;
             result += delimiter;
             result += meleeSpecialistText.getText();
             result += delimiter;
         }
-        if (Integer.parseInt(NAGText.getText()) != 0) {
+        if (MathUtility.parseInt(NAGText.getText(), 0) != 0) {
             result += PilotSkill.NaturalAptitudeGunnerySkillID;
             result += delimiter;
             result += NAGText.getText();
             result += delimiter;
         }
-        if (Integer.parseInt(NAPText.getText()) != 0) {
+        if (MathUtility.parseInt(NAPText.getText(), 0) != 0) {
             result += PilotSkill.NaturalAptitudePilotingSkillID;
             result += delimiter;
             result += NAPText.getText();
             result += delimiter;
         }
-        if (Integer.parseInt(painResistanceText.getText()) != 0) {
+        if (MathUtility.parseInt(painResistanceText.getText(), 0) != 0) {
             result += PilotSkill.PainResistanceSkillID;
             result += delimiter;
             result += painResistanceText.getText();
             result += delimiter;
         }
-        if (Integer.parseInt(survivalistSkillText.getText()) != 0) {
+        if (MathUtility.parseInt(survivalistSkillText.getText(), 0) != 0) {
             result += PilotSkill.SurvivalistSkillID;
             result += delimiter;
             result += survivalistSkillText.getText();
             result += delimiter;
         }
-        if (Integer.parseInt(tacticalGeniusText.getText()) != 0) {
+        if (MathUtility.parseInt(tacticalGeniusText.getText(), 0) != 0) {
             result += PilotSkill.TacticalGeniusSkillID;
             result += delimiter;
             result += tacticalGeniusText.getText();
             result += delimiter;
         }
-        if (Integer.parseInt(weaponSpecialistText.getText()) != 0) {
+        if (MathUtility.parseInt(weaponSpecialistText.getText(), 0) != 0) {
             result += PilotSkill.WeaponSpecialistSkillID;
             result += delimiter;
             result += weaponSpecialistText.getText();
             result += delimiter;
         }
-        if (Integer.parseInt(enhancedInterfaceText.getText()) != 0) {
+        if (MathUtility.parseInt(enhancedInterfaceText.getText(), 0) != 0) {
             result += PilotSkill.EnhancedInterfaceID;
             result += delimiter;
             result += enhancedInterfaceText.getText();
             result += delimiter;
         }
-        if (Integer.parseInt(giftedText.getText()) != 0) {
+        if (MathUtility.parseInt(giftedText.getText(), 0) != 0) {
             result += PilotSkill.GiftedID;
             result += delimiter;
             result += giftedText.getText();
             result += delimiter;
         }
-        if (Integer.parseInt(quickStudyText.getText()) != 0) {
+        if (MathUtility.parseInt(quickStudyText.getText(), 0) != 0) {
             result += PilotSkill.QuickStudyID;
             result += delimiter;
             result += quickStudyText.getText();
             result += delimiter;
         }
-        if (Integer.parseInt(medtechText.getText()) != 0) {
+        if (MathUtility.parseInt(medtechText.getText(), 0) != 0) {
             result += PilotSkill.MedTechID;
             result += delimiter;
             result += medtechText.getText();
@@ -617,7 +636,6 @@ public final class TraitDialog implements ActionListener, KeyListener {
 
 
         result += "#CONFIRM";
-        //MMClient.mwClientLog.clientErrLog("Result: "+result);
         return result;
     }
 }//end TraitDialog.java
