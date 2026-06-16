@@ -1,6 +1,4 @@
 /*
- * Derived from MegaMekNET (http://www.sourceforge.net/projects/megamek)
- * Copyright (C) 2004 Helge Richter (McWizard)
  * Copyright (C) 2026 The MegaMek Team. All Rights Reserved.
  *
  * This file is part of MekWars.
@@ -36,38 +34,35 @@
 
 package mekwars.common.commands;
 
+import java.util.StringTokenizer;
+
+import megamek.logging.MMLogger;
 import mekwars.common.campaign.clientutils.protocol.IClient;
-import mekwars.common.util.MWLogger;
+import mekwars.common.util.TokenReader;
 
-/**
- * @author Imi (immanuel.scholz@gmx.de)
- */
-public class TL extends Command {
+public class SetServerConfigCommand extends Command {
+    private final static MMLogger LOGGER = MMLogger.create(SetServerConfigCommand.class);
 
-    /**
-     * @param client
-     */
-    public TL(IClient client) {
+    public SetServerConfigCommand(IClient client) {
         super(client);
     }
 
     /**
-     * @see Command#execute(String)
+     * @see Command#execute(java.lang.String)
      */
     @Override
     public void execute(String input) {
-        java.util.StringTokenizer st = decode(input);
-        if (!st.hasMoreElements()) {return;} // sanity check
         try {
-            java.io.FileWriter out = new java.io.FileWriter("./logs/gamedata.log",
-                  true); // opened in APPEND mode; will be controlled by config setting
-            out.write(st.nextToken()); // dump actual task data as sent by the server
-            out.write("\n");
-            out.close();
-        } catch (java.io.IOException e) {
-            MWLogger.errLog(e);
+            StringTokenizer st = decode(input);
+
+            while (st.hasMoreTokens()) {
+                client.setServerConfigs(TokenReader.readString(st), TokenReader.readString(st));
+            }
+        } catch (Exception ex) {
+            LOGGER.error(ex, "Error setting server config");
         }
-    }
+        //client.setWaiting(false);
+    }//end execute
 
     /**
      * @param s
@@ -84,4 +79,4 @@ public class TL extends Command {
     public void parseArguments(String s) {
 
     }
-}
+}//end SC.java

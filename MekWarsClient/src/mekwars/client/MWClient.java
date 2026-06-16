@@ -64,7 +64,7 @@ import mekwars.common.commands.AcknowledgeSignOnPlayerCommand;
 import mekwars.common.commands.CommPCmd;
 import mekwars.common.commands.Command;
 import mekwars.common.commands.IProtCommand;
-import mekwars.common.commands.PingPCmd;
+import mekwars.common.commands.PingPlayerCommand;
 import mekwars.common.commands.PongPCmd;
 import mekwars.common.gui.CMainFrame;
 import mekwars.common.gui.GUIClientConfig;
@@ -537,177 +537,9 @@ public final class MWClient extends GameHost implements IClient {
         TO.run();
     }
 
-    //private static MWLogger logger = MWLogger.getInstance();
-    // Main-Method
-    public static void main(String[] args) {
-
-        GUIClientConfig config;
-        boolean dedicated = false;
-        int i;
-
-
-        createLoggers();
-        /*
-         * put StdErr and StdOut into ./logs/megameklog.txt, because MegaMek
-         * uses StdOut and StdErr, but the part of MegaMek that sets that up
-         * does not get called when we launch MegaMek in MekWars Redirect output
-         * to logfiles, unless turned off. Moved megameklog.txt to the logs
-         * folder -- Torren
-         */
-        String logFileName = "./logs/megameklog.txt";
-        boolean enableSplashScreen = true;
-        try {
-            java.io.PrintStream ps = new java.io.PrintStream(new java.io.BufferedOutputStream(
-                  new java.io.FileOutputStream(logFileName), 64));
-            System.setOut(ps);
-            System.setErr(ps);
-        } catch (Exception ex) {
-            MWLogger.errLog(ex);
-            MWLogger.errLog("Unable to redirect MegaMek output to "
-                                  + logFileName);
-        }
-
-        MWLogger.infoLog("Starting MekWars client Version: "
-                               + CLIENT_VERSION);
-        try {
-            for (i = 0; i < args.length; i++) {
-                if (args[i].equalsIgnoreCase("-dedicated")
-                          || args[i].equalsIgnoreCase("-d")) {
-                    dedicated = true;
-                }
-                // add more args?
-                else if (args[i].equalsIgnoreCase("-disableSplash")) {
-                    enableSplashScreen = false;
-                } else if (args[i].equalsIgnoreCase("-enableSplash")) {
-                    enableSplashScreen = true;
-                }
-            }
-            config = new GUIClientConfig(dedicated);
-
-            if (!enableSplashScreen) {
-                config.setParam("ENABLESPLASHSCREEN", "false");
-            } else {
-                config.setParam("ENABLESPLASHSCREEN", "true");
-            }
-            /*
-             * clear any cache'd unit files. these will be rebuilt later in the
-             * start process. clearing @ each start ensures that updates take
-             * hold properly.
-             */
-            java.io.File cache = new java.io.File("./data/mechfiles/units.cache");
-            if (cache.exists()) {
-                cache.delete();
-            }
-
-            /*
-             * Config files have been loaded, and command line args have been
-             * parsed. Construct the actual client. NOTE: client constrtuctor
-             * attempts to pull the oplist, campaign config and other
-             * non-interactive data over the DATAPORT before client.start()
-             * attempts to connect to the chat server on the SERVERPORT.
-             */
-            new mekwars.client.MWClient(config);
-
-        } catch (Exception ex) {
-            MWLogger.errLog(ex);
-            MWLogger.errLog("Couldn't create client Object");
-            System.exit(1);
-        }
-    }
-
-    private static void createLoggers() {
-    }
-
-    public static StringBuilder prepareReport(GameInterface myGame, boolean usingAdvancedRepairs,
-          Buildings buildingTemplate) {
-        StringBuilder result = new StringBuilder();
-        String name = "";
-        // Parse the real player name from the Modified In game one..
-        StringBuilder winnerName = new StringBuilder();
-        if (myGame.hasWinner()) {
-
-            int numberOfWinners = 0;
-            // Multiple Winners
-            List<String> winners = myGame.getWinners();
-
-            // TODO: Winners is sometimes coming up empty. Let's see why
-            MWLogger.errLog("Finding winners:");
-            MWLogger.errLog(winners.toString());
-
-            for (String winner : winners) {
-                java.util.StringTokenizer st = new java.util.StringTokenizer(winner, "~");
-                name = "";
-                while (st.hasMoreElements()) {
-                    name = st.nextToken().trim();
-                }
-                // some players set themselves as a team of 1.
-                // This keeps that from happening.
-                if (numberOfWinners > 0) {
-                    winnerName.append("*");
-                }
-                numberOfWinners++;
-
-                winnerName.append(name);
-            }
-            if (winnerName.toString().endsWith("*")) {
-                winnerName = new StringBuilder(winnerName.substring(0, winnerName.length() - 1));
-            }
-            winnerName.append("#");
-        } else {
-            winnerName = new StringBuilder("DRAW#");
-        }
-
-        result.append(winnerName);
-
-        // Report the mech stat
-        Enumeration<Entity> en = myGame.getDevastatedEntities();
-        while (en.hasMoreElements()) {
-            Entity ent = en.nextElement();
-            if (ent.getOwner().getName().startsWith("War Bot")) {
-                continue;
-            }
-            result.append(SerializeEntity.serializeEntity(ent, true, false, usingAdvancedRepairs));
-            result.append("#");
-        }
-        en = myGame.getGraveyardEntities();
-        while (en.hasMoreElements()) {
-            Entity ent = en.nextElement();
-            if (ent.getOwner().getName().startsWith("War Bot")) {
-                continue;
-            }
-            result.append(SerializeEntity.serializeEntity(ent, true, false, usingAdvancedRepairs));
-            result.append("#");
-
-        }
-        java.util.Iterator<Entity> en2 = myGame.getEntities();
-        while (en2.hasNext()) {
-            Entity ent = en2.next();
-            if (ent.getOwner().getName().startsWith("War Bot")) {
-                continue;
-            }
-            result.append(SerializeEntity.serializeEntity(ent, true, false, usingAdvancedRepairs));
-            result.append("#");
-        }
-        en = myGame.getRetreatedEntities();
-        while (en.hasMoreElements()) {
-            Entity ent = en.nextElement();
-            if (ent.getOwner().getName().startsWith("War Bot")) {
-                continue;
-            }
-            result.append(SerializeEntity.serializeEntity(ent, true, false, usingAdvancedRepairs));
-            result.append("#");
-        }
-
-        if (buildingTemplate != null) {
-            result.append("BL*").append(buildingTemplate);
-        }
-        MWLogger.infoLog("CR|" + result);
-        return result;
-    }
-
     private void createProtCommands() {
         addProtCommand(new CommPCmd(this));
-        addProtCommand(new PingPCmd(this));
+        addProtCommand(new PingPlayerCommand(this));
         addProtCommand(new PongPCmd(this));
         addProtCommand(new AcknowledgeSignOnPlayerCommand(this));
     }
@@ -805,7 +637,92 @@ public final class MWClient extends GameHost implements IClient {
             MWLogger.errLog("Error in setupAllOps()");
             MWLogger.errLog(e);
         }
-    }// end setupAllOps
+    }// end setupAllOps    public static StringBuilder prepareReport(GameInterface myGame, boolean usingAdvancedRepairs,
+          Buildings buildingTemplate) {
+        StringBuilder result = new StringBuilder();
+        String name = "";
+        // Parse the real player name from the Modified In game one..
+        StringBuilder winnerName = new StringBuilder();
+        if (myGame.hasWinner()) {
+
+            int numberOfWinners = 0;
+            // Multiple Winners
+            List<String> winners = myGame.getWinners();
+
+            // TODO: Winners is sometimes coming up empty. Let's see why
+            MWLogger.errLog("Finding winners:");
+            MWLogger.errLog(winners.toString());
+
+            for (String winner : winners) {
+                java.util.StringTokenizer st = new java.util.StringTokenizer(winner, "~");
+                name = "";
+                while (st.hasMoreElements()) {
+                    name = st.nextToken().trim();
+                }
+                // some players set themselves as a team of 1.
+                // This keeps that from happening.
+                if (numberOfWinners > 0) {
+                    winnerName.append("*");
+                }
+                numberOfWinners++;
+
+                winnerName.append(name);
+            }
+            if (winnerName.toString().endsWith("*")) {
+                winnerName = new StringBuilder(winnerName.substring(0, winnerName.length() - 1));
+            }
+            winnerName.append("#");
+        } else {
+            winnerName = new StringBuilder("DRAW#");
+        }
+
+        result.append(winnerName);
+
+        // Report the mech stat
+        Enumeration<Entity> en = myGame.getDevastatedEntities();
+        while (en.hasMoreElements()) {
+            Entity ent = en.nextElement();
+            if (ent.getOwner().getName().startsWith("War Bot")) {
+                continue;
+            }
+            result.append(SerializeEntity.serializeEntity(ent, true, false, usingAdvancedRepairs));
+            result.append("#");
+        }
+        en = myGame.getGraveyardEntities();
+        while (en.hasMoreElements()) {
+            Entity ent = en.nextElement();
+            if (ent.getOwner().getName().startsWith("War Bot")) {
+                continue;
+            }
+            result.append(SerializeEntity.serializeEntity(ent, true, false, usingAdvancedRepairs));
+            result.append("#");
+
+        }
+        java.util.Iterator<Entity> en2 = myGame.getEntities();
+        while (en2.hasNext()) {
+            Entity ent = en2.next();
+            if (ent.getOwner().getName().startsWith("War Bot")) {
+                continue;
+            }
+            result.append(SerializeEntity.serializeEntity(ent, true, false, usingAdvancedRepairs));
+            result.append("#");
+        }
+        en = myGame.getRetreatedEntities();
+        while (en.hasMoreElements()) {
+            Entity ent = en.nextElement();
+            if (ent.getOwner().getName().startsWith("War Bot")) {
+                continue;
+            }
+            result.append(SerializeEntity.serializeEntity(ent, true, false, usingAdvancedRepairs));
+            result.append("#");
+        }
+
+        if (buildingTemplate != null) {
+            result.append("BL*").append(buildingTemplate);
+        }
+        MWLogger.infoLog("CR|" + result);
+        return result;
+    }
 
     protected java.util.Vector<String> splitString(String string, String splitter) {
         java.util.Vector<String> vector = new java.util.Vector<String>(1, 1);
@@ -838,6 +755,87 @@ public final class MWClient extends GameHost implements IClient {
         if (command.isAlias()) {
             GUICommands.put(command.getAlias(), command);
         }
+    }
+
+    //private static MWLogger logger = MWLogger.getInstance();
+    // Main-Method
+    public static void main(String[] args) {
+
+        GUIClientConfig config;
+        boolean dedicated = false;
+        int i;
+
+
+        createLoggers();
+        /*
+         * put StdErr and StdOut into ./logs/megameklog.txt, because MegaMek
+         * uses StdOut and StdErr, but the part of MegaMek that sets that up
+         * does not get called when we launch MegaMek in MekWars Redirect output
+         * to logfiles, unless turned off. Moved megameklog.txt to the logs
+         * folder -- Torren
+         */
+        String logFileName = "./logs/megameklog.txt";
+        boolean enableSplashScreen = true;
+        try {
+            java.io.PrintStream ps = new java.io.PrintStream(new java.io.BufferedOutputStream(
+                  new java.io.FileOutputStream(logFileName), 64));
+            System.setOut(ps);
+            System.setErr(ps);
+        } catch (Exception ex) {
+            MWLogger.errLog(ex);
+            MWLogger.errLog("Unable to redirect MegaMek output to "
+                                  + logFileName);
+        }
+
+        MWLogger.infoLog("Starting MekWars client Version: "
+                               + CLIENT_VERSION);
+        try {
+            for (i = 0; i < args.length; i++) {
+                if (args[i].equalsIgnoreCase("-dedicated")
+                          || args[i].equalsIgnoreCase("-d")) {
+                    dedicated = true;
+                }
+                // add more args?
+                else if (args[i].equalsIgnoreCase("-disableSplash")) {
+                    enableSplashScreen = false;
+                } else if (args[i].equalsIgnoreCase("-enableSplash")) {
+                    enableSplashScreen = true;
+                }
+            }
+            config = new GUIClientConfig(dedicated);
+
+            if (!enableSplashScreen) {
+                config.setParam("ENABLESPLASHSCREEN", "false");
+            } else {
+                config.setParam("ENABLESPLASHSCREEN", "true");
+            }
+            /*
+             * clear any cache'd unit files. these will be rebuilt later in the
+             * start process. clearing @ each start ensures that updates take
+             * hold properly.
+             */
+            java.io.File cache = new java.io.File("./data/mechfiles/units.cache");
+            if (cache.exists()) {
+                cache.delete();
+            }
+
+            /*
+             * Config files have been loaded, and command line args have been
+             * parsed. Construct the actual client. NOTE: client constrtuctor
+             * attempts to pull the oplist, campaign config and other
+             * non-interactive data over the DATAPORT before client.start()
+             * attempts to connect to the chat server on the SERVERPORT.
+             */
+            new mekwars.client.MWClient(config);
+
+        } catch (Exception ex) {
+            MWLogger.errLog(ex);
+            MWLogger.errLog("Couldn't create client Object");
+            System.exit(1);
+        }
+    }
+
+    private static void createLoggers() {
     }
 
     /*
@@ -901,406 +899,6 @@ public final class MWClient extends GameHost implements IClient {
 
     public boolean isMuted() {
         return SoundMuted;
-    }
-
-    public boolean isBotsOnSameTeam() {
-        return botsOnSameTeam;
-    }
-
-    public void setBotsOnSameTeam(Boolean sameTeam) {
-        botsOnSameTeam = sameTeam;
-    }
-
-    public void retrieveOpData(String type, String data) {
-
-        java.util.StringTokenizer st = new java.util.StringTokenizer(data, "#");
-
-        String opName = st.nextToken();
-
-        java.io.File opFile = new java.io.File("./data/operations/" + type);
-
-        if (!opFile.exists()) {
-            opFile.mkdirs();
-        }
-
-        opFile = new java.io.File("./data/operations/" + type + "/" + opName + ".txt");
-        try {
-            java.io.FileOutputStream out = new java.io.FileOutputStream(opFile);
-            java.io.PrintStream p = new java.io.PrintStream(out);
-            while (st.hasMoreTokens()) {
-                p.println(st.nextToken().replaceAll("\\(pound\\)", "#"));
-            }
-            p.close();
-            out.close();
-        } catch (Exception ex) {
-            MWLogger.errLog(ex);
-        }
-
-    }
-
-    public void updateParam(java.util.StringTokenizer ST) {
-        try {
-            getConfig().setParam(ST.nextToken(), ST.nextToken());
-            getConfig().saveConfig();
-            setConfig();
-        } catch (Exception ex) {
-            MWLogger.errLog(ex);
-        }
-    }
-
-    public void setServerOpFlags(java.util.StringTokenizer st) {
-        java.util.TreeMap<String, String> map = new java.util.TreeMap<String, String>();
-
-        try {
-            while (st.hasMoreTokens()) {
-                map.put(st.nextToken(), st.nextToken());
-            }
-            getData().getPlanetOpFlags().clear();
-            getData().getPlanetOpFlags().putAll(map);
-        } catch (Exception ex) {
-        }
-    }
-
-    public void updatePartsBlackMarket(String data, int year) {
-
-        java.util.StringTokenizer ST = new java.util.StringTokenizer(data, "#");
-        boolean allowTechCrossOver = Boolean.parseBoolean(this
-                                                                .getServerConfigs("AllowCrossOverTech"));
-        int houseTechLevel = getData().getHouseByName(getPlayer().getHouse())
-                                   .getTechLevel();
-
-        getCampaign().getBlackMarketParts().clear();
-
-        while (ST.hasMoreTokens()) {
-
-            BMEquipment bme = new BMEquipment();
-            boolean error = false;
-            boolean disallowed = false;
-            try {
-                error = false;
-                disallowed = false;
-                bme.setEquipmentInternalName(ST.nextToken());
-                bme.setAmount(Integer.parseInt(ST.nextToken()));
-                bme.setCost(Double.parseDouble(ST.nextToken()));
-                bme.setCostUp(Boolean.parseBoolean(ST.nextToken()));
-
-                bme.getTech(year);
-
-                if (!allowTechCrossOver
-                          && !UnitUtils
-                                    .isSameTech(bme.getTechLevel(), houseTechLevel)) {
-                    disallowed = true;
-                }
-            } catch (Exception e) {
-                // TODO Auto-generated catch block
-                MWLogger.errLog("Exception in Parts BM");
-                MWLogger.errLog(e.getLocalizedMessage());
-                error = true;
-            }
-
-            if (!error && !disallowed) {
-                getCampaign().getBlackMarketParts().put(
-                      bme.getEquipmentInternalName(), bme);
-            }
-        }
-
-        getMainFrame().getMainPanel().refreshBME();
-    }
-
-    public void updatePlayerPartsCache(String data) {
-
-        java.util.StringTokenizer ST = new java.util.StringTokenizer(data, "#");
-        String key = ST.nextToken();
-        int value = Integer.parseInt(ST.nextToken());
-
-        if (value < 1) {
-            getPlayer().getPartsCache().remove(key, Math.abs(value));
-        } else {
-            getPlayer().getPartsCache().add(key, value);
-        }
-
-        getMainFrame().getMainPanel().refreshBME();
-    }
-
-    public void retrieveMul(String data) {
-
-        java.util.StringTokenizer st = new java.util.StringTokenizer(data, "#");
-
-        String mulName = st.nextToken();
-
-        java.io.File mulFile = new java.io.File("./data/armies/");
-
-        if (!mulFile.exists()) {
-            mulFile.mkdirs();
-        }
-
-        mulFile = new java.io.File("./data/armies/" + mulName);
-        try {
-            java.io.FileOutputStream out = new java.io.FileOutputStream(mulFile);
-            java.io.PrintStream p = new java.io.PrintStream(out);
-            while (st.hasMoreTokens()) {
-                p.println(st.nextToken().replaceAll("\\(pound\\)", "#"));
-            }
-            p.close();
-            out.close();
-        } catch (Exception ex) {
-            MWLogger.errLog(ex);
-        }
-
-    }
-
-    public void createNewHouse(java.util.StringTokenizer st) {
-        House house = new House();
-
-        house.setId(TokenReader.readInt(st));
-        house.setName(TokenReader.readString(st));
-        house.setLogo(TokenReader.readString(st));
-        house.setBaseGunner(TokenReader.readInt(st));
-        house.setBasePilot(TokenReader.readInt(st));
-        house.setHouseColor(TokenReader.readString(st));
-        house.setHousePlayerColors(TokenReader.readString(st));
-        house.setAbbreviation(TokenReader.readString(st));
-        house.setConquerable(TokenReader.readBoolean(st));
-        house.setTechLevel(TokenReader.readInt(st));
-        house.setHouseDefectionFrom(TokenReader.readBoolean(st));
-        house.setHouseDefectionTo(TokenReader.readBoolean(st));
-        house.setUsedMekBayMultiplier(TokenReader.readFloat(st));
-        getData().addHouse(house);
-    }
-
-    public String createFilenameChecksum(String filename) throws Exception {
-        byte[] b = createChecksum(filename);
-        StringBuilder result = new StringBuilder();
-        for (byte value : b) {
-            result.append(Integer.toString((value & 0xff) + 0x100, 16).substring(1));
-        }
-        return result.toString();
-    }
-
-    public String getLastQuery() {
-        return LastQuery;
-    }
-
-    public void setLastQuery(String name) {
-        LastQuery = name;
-    }
-
-    public synchronized java.util.ArrayList<String> getPartialUser(String u) {
-
-        String result = "";
-        java.util.TreeSet<String> userNames = new java.util.TreeSet<String>();
-
-        // there are spaces in the text so get the last word
-        if (u.trim().indexOf(" ") != -1) {
-            result = u.substring(u.trim().lastIndexOf(" ")).trim();
-            u = u.substring(0, u.trim().lastIndexOf(" ")).trim();
-        } else {// The name is the first word.
-            result = u.trim();
-            u = "";
-        }
-
-        if (result.isEmpty()) {
-            return null;
-        }
-
-        int myLevel = getUser(getPlayer().getName()).getUserLevel();
-        for (CUser usr : Users) {
-            if (usr.getName().toLowerCase().startsWith(result.toLowerCase())
-                      && (!usr.isInvisible() || (usr.isInvisible() && (myLevel >= usr.getUserLevel())))) {
-                userNames.add(usr.getName());
-            }
-        }
-
-        // We have a sorted tree set. Convert to an ArrayList so we can work
-        // with them more easily.
-        java.util.ArrayList<String> test = new java.util.ArrayList<String>();
-        test.addAll(userNames);
-        return test;
-    }
-
-    public java.util.Map<Integer, Influences> getChangesSinceLastRefresh() {
-        return dataFetcher.getChangesSinceLastRefresh();
-    }
-
-    public int getMinPlanetOwnerShip(Planet p) {
-
-        if (p.getMinPlanetOwnerShip() == -1) {
-            return Integer.parseInt(getServerConfigs("MinPlanetOwnerShip"));
-        }
-
-        return p.getMinPlanetOwnerShip();
-    }
-
-    public int getTechLaborCosts(Entity unit, int techType) {
-        int cost = 0;
-        int techCost = Integer.parseInt(getServerConfigs(UnitUtils
-                                                               .techDescription(techType) + "TechRepairCost"));
-        int totalCrits = 0;
-        boolean damagedEngine = false;
-
-        for (int critLocation = 0; critLocation < unit.locations(); critLocation++) {
-            // These three location have rear armor so the user might be
-            // selecting that armor instead of crit.
-            if ((critLocation == Mek.LOC_CENTER_TORSO) || (critLocation == Mek.LOC_LEFT_TORSO)
-                      || (critLocation == Mek.LOC_RIGHT_TORSO)) {
-                if (unit.getArmor(critLocation, false) != unit.getOArmor(
-                      critLocation, false)) {
-                    cost += techCost;
-                }
-                if (unit.getArmor(critLocation, true) != unit.getOArmor(
-                      critLocation, true)) {
-                    cost += techCost;
-                }
-                if (unit.getInternal(critLocation) != unit
-                                                            .getOInternal(critLocation)) {
-                    cost += techCost;
-                }
-            }// end toros armor
-            else {
-                if (unit.getArmor(critLocation, false) != unit.getOArmor(
-                      critLocation, false)) {
-                    cost += techCost;
-                }
-                if (unit.getInternal(critLocation) != unit
-                                                            .getOInternal(critLocation)) {
-                    cost += techCost;
-                }
-            }// end armor
-
-            // check for damage system crits.
-            for (int critSlot = 0; critSlot < unit
-                                                    .getNumberOfCriticals(critLocation); critSlot++) {
-
-                CriticalSlot cs = unit.getCritical(critLocation, critSlot);
-
-                if (cs == null) {
-                    continue;
-                }
-
-                if (cs.isBreached()) {
-                    continue;
-                }
-
-                if (!cs.isDamaged()) {
-                    continue;
-                }
-
-                if (UnitUtils.isEngineCrit(cs)) {
-                    damagedEngine = true;
-                    continue;
-                }
-                totalCrits++;
-
-            }// end slot for
-        }// end location for
-
-        // check for damaged engines
-        if (damagedEngine) {
-            totalCrits = +UnitUtils.getNumberOfEngineCrits(unit);
-        }
-
-        cost += (techCost * totalCrits) + techCost;
-
-        return cost;
-    }
-
-    public double getTotalRepairCosts(Entity unit) {
-
-        int cost = 0;
-        int systemCrits = 0;
-        int engineCrits = 0;
-
-        for (int critLocation = 0; critLocation < unit.locations(); critLocation++) {
-            // These three location have rear armor so the user might be
-            // selecting that armor instead of crit.
-            if ((critLocation == Mek.LOC_CENTER_TORSO) || (critLocation == Mek.LOC_LEFT_TORSO)
-                      || (critLocation == Mek.LOC_RIGHT_TORSO)) {
-                if (unit.getArmor(critLocation, false) != unit.getOArmor(
-                      critLocation, false)) {
-                    cost += (int) (CUnit.getArmorCost(unit, this, critLocation)
-                                         * (unit.getOArmor(critLocation, false) - unit
-                                                                                        .getArmor(critLocation,
-                                                                                              false)));
-                }
-                if (unit.getArmor(critLocation, true) != unit.getOArmor(
-                      critLocation, true)) {
-                    cost += (int) (CUnit.getArmorCost(unit, this, critLocation)
-                                         * (unit.getOArmor(critLocation, false) - unit
-                                                                                        .getArmor(critLocation,
-                                                                                              false)));
-                }
-                if (unit.getInternal(critLocation) != unit
-                                                            .getOInternal(critLocation)) {
-                    cost += (int) (CUnit.getStructureCost(unit, this)
-                                         * (unit.getOInternal(critLocation) - unit
-                                                                                    .getInternal(critLocation)));
-                }
-            }// end toros armor
-            else {
-                if (unit.getArmor(critLocation, false) != unit.getOArmor(
-                      critLocation, false)) {
-                    cost += (int) (CUnit.getArmorCost(unit, this, critLocation)
-                                         * (unit.getOArmor(critLocation, false) - unit
-                                                                                        .getArmor(critLocation,
-                                                                                              false)));
-                }
-                if (unit.getInternal(critLocation) != unit
-                                                            .getOInternal(critLocation)) {
-                    cost += CUnit.getStructureCost(unit, this)
-                                  * (unit.getOInternal(critLocation) - unit
-                                                                             .getInternal(critLocation));
-                }
-            }// end armor
-
-            for (int critSlot = 0; critSlot < unit
-                                                    .getNumberOfCriticals(critLocation); critSlot++) {
-
-                CriticalSlot cs = unit.getCritical(critLocation, critSlot);
-
-                if (cs == null) {
-                    continue;
-                }
-
-                if (cs.isBreached()) {
-                    continue;
-                }
-
-                if (!cs.isDamaged()) {
-                    continue;
-                }
-
-                if (UnitUtils.isEngineCrit(cs)) {
-                    engineCrits = UnitUtils.getNumberOfEngineCrits(unit);
-                } else if (cs.getType() == CriticalSlot.TYPE_SYSTEM) {
-                    systemCrits++;
-                } else {
-                    cost += CUnit.getCritCost(unit, this, cs);
-                }
-            }// end slot for
-        }// end location for
-
-        cost += Integer.parseInt(this.getServerConfigs("SystemCritRepairCost"))
-                      * systemCrits;
-        cost += Integer.parseInt(this.getServerConfigs("EngineCritRepairCost"))
-                      * engineCrits;
-
-        return cost;
-    }
-
-    public byte[] createChecksum(String filename) throws Exception {
-        java.io.InputStream fis = new java.io.FileInputStream(filename);
-
-        byte[] buffer = new byte[1024];
-        java.security.MessageDigest complete = java.security.MessageDigest.getInstance("MD5");
-        int numRead;
-        do {
-            numRead = fis.read(buffer);
-            if (numRead > 0) {
-                complete.update(buffer, 0, numRead);
-            }
-        } while (numRead != -1);
-        fis.close();
-        return complete.digest();
     }
 
     // IClient interface
@@ -3337,6 +2935,406 @@ public final class MWClient extends GameHost implements IClient {
         System.exit(0);
     }
 
+    public void retrieveOpData(String type, String data) {
+
+        java.util.StringTokenizer st = new java.util.StringTokenizer(data, "#");
+
+        String opName = st.nextToken();
+
+        java.io.File opFile = new java.io.File("./data/operations/" + type);
+
+        if (!opFile.exists()) {
+            opFile.mkdirs();
+        }
+
+        opFile = new java.io.File("./data/operations/" + type + "/" + opName + ".txt");
+        try {
+            java.io.FileOutputStream out = new java.io.FileOutputStream(opFile);
+            java.io.PrintStream p = new java.io.PrintStream(out);
+            while (st.hasMoreTokens()) {
+                p.println(st.nextToken().replaceAll("\\(pound\\)", "#"));
+            }
+            p.close();
+            out.close();
+        } catch (Exception ex) {
+            MWLogger.errLog(ex);
+        }
+
+    }
+
+    public void updateParam(java.util.StringTokenizer ST) {
+        try {
+            getConfig().setParam(ST.nextToken(), ST.nextToken());
+            getConfig().saveConfig();
+            setConfig();
+        } catch (Exception ex) {
+            MWLogger.errLog(ex);
+        }
+    }
+
+    public void setServerOpFlags(java.util.StringTokenizer st) {
+        java.util.TreeMap<String, String> map = new java.util.TreeMap<String, String>();
+
+        try {
+            while (st.hasMoreTokens()) {
+                map.put(st.nextToken(), st.nextToken());
+            }
+            getData().getPlanetOpFlags().clear();
+            getData().getPlanetOpFlags().putAll(map);
+        } catch (Exception ex) {
+        }
+    }
+
+    public void updatePartsBlackMarket(String data, int year) {
+
+        java.util.StringTokenizer ST = new java.util.StringTokenizer(data, "#");
+        boolean allowTechCrossOver = Boolean.parseBoolean(this
+                                                                .getServerConfigs("AllowCrossOverTech"));
+        int houseTechLevel = getData().getHouseByName(getPlayer().getHouse())
+                                   .getTechLevel();
+
+        getCampaign().getBlackMarketParts().clear();
+
+        while (ST.hasMoreTokens()) {
+
+            BMEquipment bme = new BMEquipment();
+            boolean error = false;
+            boolean disallowed = false;
+            try {
+                error = false;
+                disallowed = false;
+                bme.setEquipmentInternalName(ST.nextToken());
+                bme.setAmount(Integer.parseInt(ST.nextToken()));
+                bme.setCost(Double.parseDouble(ST.nextToken()));
+                bme.setCostUp(Boolean.parseBoolean(ST.nextToken()));
+
+                bme.getTech(year);
+
+                if (!allowTechCrossOver
+                          && !UnitUtils
+                                    .isSameTech(bme.getTechLevel(), houseTechLevel)) {
+                    disallowed = true;
+                }
+            } catch (Exception e) {
+                // TODO Auto-generated catch block
+                MWLogger.errLog("Exception in Parts BM");
+                MWLogger.errLog(e.getLocalizedMessage());
+                error = true;
+            }
+
+            if (!error && !disallowed) {
+                getCampaign().getBlackMarketParts().put(
+                      bme.getEquipmentInternalName(), bme);
+            }
+        }
+
+        getMainFrame().getMainPanel().refreshBME();
+    }
+
+    public void updatePlayerPartsCache(String data) {
+
+        java.util.StringTokenizer ST = new java.util.StringTokenizer(data, "#");
+        String key = ST.nextToken();
+        int value = Integer.parseInt(ST.nextToken());
+
+        if (value < 1) {
+            getPlayer().getPartsCache().remove(key, Math.abs(value));
+        } else {
+            getPlayer().getPartsCache().add(key, value);
+        }
+
+        getMainFrame().getMainPanel().refreshBME();
+    }
+
+    public void retrieveMul(String data) {
+
+        java.util.StringTokenizer st = new java.util.StringTokenizer(data, "#");
+
+        String mulName = st.nextToken();
+
+        java.io.File mulFile = new java.io.File("./data/armies/");
+
+        if (!mulFile.exists()) {
+            mulFile.mkdirs();
+        }
+
+        mulFile = new java.io.File("./data/armies/" + mulName);
+        try {
+            java.io.FileOutputStream out = new java.io.FileOutputStream(mulFile);
+            java.io.PrintStream p = new java.io.PrintStream(out);
+            while (st.hasMoreTokens()) {
+                p.println(st.nextToken().replaceAll("\\(pound\\)", "#"));
+            }
+            p.close();
+            out.close();
+        } catch (Exception ex) {
+            MWLogger.errLog(ex);
+        }
+
+    }
+
+    public void createNewHouse(java.util.StringTokenizer st) {
+        House house = new House();
+
+        house.setId(TokenReader.readInt(st));
+        house.setName(TokenReader.readString(st));
+        house.setLogo(TokenReader.readString(st));
+        house.setBaseGunner(TokenReader.readInt(st));
+        house.setBasePilot(TokenReader.readInt(st));
+        house.setHouseColor(TokenReader.readString(st));
+        house.setHousePlayerColors(TokenReader.readString(st));
+        house.setAbbreviation(TokenReader.readString(st));
+        house.setConquerable(TokenReader.readBoolean(st));
+        house.setTechLevel(TokenReader.readInt(st));
+        house.setHouseDefectionFrom(TokenReader.readBoolean(st));
+        house.setHouseDefectionTo(TokenReader.readBoolean(st));
+        house.setUsedMekBayMultiplier(TokenReader.readFloat(st));
+        getData().addHouse(house);
+    }
+
+    public String createFilenameChecksum(String filename) throws Exception {
+        byte[] b = createChecksum(filename);
+        StringBuilder result = new StringBuilder();
+        for (byte value : b) {
+            result.append(Integer.toString((value & 0xff) + 0x100, 16).substring(1));
+        }
+        return result.toString();
+    }
+
+    public String getLastQuery() {
+        return LastQuery;
+    }
+
+    public void setLastQuery(String name) {
+        LastQuery = name;
+    }
+
+    public synchronized java.util.ArrayList<String> getPartialUser(String u) {
+
+        String result = "";
+        java.util.TreeSet<String> userNames = new java.util.TreeSet<String>();
+
+        // there are spaces in the text so get the last word
+        if (u.trim().indexOf(" ") != -1) {
+            result = u.substring(u.trim().lastIndexOf(" ")).trim();
+            u = u.substring(0, u.trim().lastIndexOf(" ")).trim();
+        } else {// The name is the first word.
+            result = u.trim();
+            u = "";
+        }
+
+        if (result.isEmpty()) {
+            return null;
+        }
+
+        int myLevel = getUser(getPlayer().getName()).getUserLevel();
+        for (CUser usr : Users) {
+            if (usr.getName().toLowerCase().startsWith(result.toLowerCase())
+                      && (!usr.isInvisible() || (usr.isInvisible() && (myLevel >= usr.getUserLevel())))) {
+                userNames.add(usr.getName());
+            }
+        }
+
+        // We have a sorted tree set. Convert to an ArrayList so we can work
+        // with them more easily.
+        java.util.ArrayList<String> test = new java.util.ArrayList<String>();
+        test.addAll(userNames);
+        return test;
+    }
+
+    public java.util.Map<Integer, Influences> getChangesSinceLastRefresh() {
+        return dataFetcher.getChangesSinceLastRefresh();
+    }
+
+    public int getMinPlanetOwnerShip(Planet p) {
+
+        if (p.getMinPlanetOwnerShip() == -1) {
+            return Integer.parseInt(getServerConfigs("MinPlanetOwnerShip"));
+        }
+
+        return p.getMinPlanetOwnerShip();
+    }
+
+    public int getTechLaborCosts(Entity unit, int techType) {
+        int cost = 0;
+        int techCost = Integer.parseInt(getServerConfigs(UnitUtils
+                                                               .techDescription(techType) + "TechRepairCost"));
+        int totalCrits = 0;
+        boolean damagedEngine = false;
+
+        for (int critLocation = 0; critLocation < unit.locations(); critLocation++) {
+            // These three location have rear armor so the user might be
+            // selecting that armor instead of crit.
+            if ((critLocation == Mek.LOC_CENTER_TORSO) || (critLocation == Mek.LOC_LEFT_TORSO)
+                      || (critLocation == Mek.LOC_RIGHT_TORSO)) {
+                if (unit.getArmor(critLocation, false) != unit.getOArmor(
+                      critLocation, false)) {
+                    cost += techCost;
+                }
+                if (unit.getArmor(critLocation, true) != unit.getOArmor(
+                      critLocation, true)) {
+                    cost += techCost;
+                }
+                if (unit.getInternal(critLocation) != unit
+                                                            .getOInternal(critLocation)) {
+                    cost += techCost;
+                }
+            }// end toros armor
+            else {
+                if (unit.getArmor(critLocation, false) != unit.getOArmor(
+                      critLocation, false)) {
+                    cost += techCost;
+                }
+                if (unit.getInternal(critLocation) != unit
+                                                            .getOInternal(critLocation)) {
+                    cost += techCost;
+                }
+            }// end armor
+
+            // check for damage system crits.
+            for (int critSlot = 0; critSlot < unit
+                                                    .getNumberOfCriticals(critLocation); critSlot++) {
+
+                CriticalSlot cs = unit.getCritical(critLocation, critSlot);
+
+                if (cs == null) {
+                    continue;
+                }
+
+                if (cs.isBreached()) {
+                    continue;
+                }
+
+                if (!cs.isDamaged()) {
+                    continue;
+                }
+
+                if (UnitUtils.isEngineCrit(cs)) {
+                    damagedEngine = true;
+                    continue;
+                }
+                totalCrits++;
+
+            }// end slot for
+        }// end location for
+
+        // check for damaged engines
+        if (damagedEngine) {
+            totalCrits = +UnitUtils.getNumberOfEngineCrits(unit);
+        }
+
+        cost += (techCost * totalCrits) + techCost;
+
+        return cost;
+    }
+
+    public double getTotalRepairCosts(Entity unit) {
+
+        int cost = 0;
+        int systemCrits = 0;
+        int engineCrits = 0;
+
+        for (int critLocation = 0; critLocation < unit.locations(); critLocation++) {
+            // These three location have rear armor so the user might be
+            // selecting that armor instead of crit.
+            if ((critLocation == Mek.LOC_CENTER_TORSO) || (critLocation == Mek.LOC_LEFT_TORSO)
+                      || (critLocation == Mek.LOC_RIGHT_TORSO)) {
+                if (unit.getArmor(critLocation, false) != unit.getOArmor(
+                      critLocation, false)) {
+                    cost += (int) (CUnit.getArmorCost(unit, this, critLocation)
+                                         * (unit.getOArmor(critLocation, false) - unit
+                                                                                        .getArmor(critLocation,
+                                                                                              false)));
+                }
+                if (unit.getArmor(critLocation, true) != unit.getOArmor(
+                      critLocation, true)) {
+                    cost += (int) (CUnit.getArmorCost(unit, this, critLocation)
+                                         * (unit.getOArmor(critLocation, false) - unit
+                                                                                        .getArmor(critLocation,
+                                                                                              false)));
+                }
+                if (unit.getInternal(critLocation) != unit
+                                                            .getOInternal(critLocation)) {
+                    cost += (int) (CUnit.getStructureCost(unit, this)
+                                         * (unit.getOInternal(critLocation) - unit
+                                                                                    .getInternal(critLocation)));
+                }
+            }// end toros armor
+            else {
+                if (unit.getArmor(critLocation, false) != unit.getOArmor(
+                      critLocation, false)) {
+                    cost += (int) (CUnit.getArmorCost(unit, this, critLocation)
+                                         * (unit.getOArmor(critLocation, false) - unit
+                                                                                        .getArmor(critLocation,
+                                                                                              false)));
+                }
+                if (unit.getInternal(critLocation) != unit
+                                                            .getOInternal(critLocation)) {
+                    cost += CUnit.getStructureCost(unit, this)
+                                  * (unit.getOInternal(critLocation) - unit
+                                                                             .getInternal(critLocation));
+                }
+            }// end armor
+
+            for (int critSlot = 0; critSlot < unit
+                                                    .getNumberOfCriticals(critLocation); critSlot++) {
+
+                CriticalSlot cs = unit.getCritical(critLocation, critSlot);
+
+                if (cs == null) {
+                    continue;
+                }
+
+                if (cs.isBreached()) {
+                    continue;
+                }
+
+                if (!cs.isDamaged()) {
+                    continue;
+                }
+
+                if (UnitUtils.isEngineCrit(cs)) {
+                    engineCrits = UnitUtils.getNumberOfEngineCrits(unit);
+                } else if (cs.getType() == CriticalSlot.TYPE_SYSTEM) {
+                    systemCrits++;
+                } else {
+                    cost += CUnit.getCritCost(unit, this, cs);
+                }
+            }// end slot for
+        }// end location for
+
+        cost += Integer.parseInt(this.getServerConfigs("SystemCritRepairCost"))
+                      * systemCrits;
+        cost += Integer.parseInt(this.getServerConfigs("EngineCritRepairCost"))
+                      * engineCrits;
+
+        return cost;
+    }
+
+    public boolean isBotsOnSameTeam() {
+        return botsOnSameTeam;
+    }
+
+    public void setBotsOnSameTeam(Boolean sameTeam) {
+        botsOnSameTeam = sameTeam;
+    }
+
+    public byte[] createChecksum(String filename) throws Exception {
+        java.io.InputStream fis = new java.io.FileInputStream(filename);
+
+        byte[] buffer = new byte[1024];
+        java.security.MessageDigest complete = java.security.MessageDigest.getInstance("MD5");
+        int numRead;
+        do {
+            numRead = fis.read(buffer);
+            if (numRead > 0) {
+                complete.update(buffer, 0, numRead);
+            }
+        } while (numRead != -1);
+        fis.close();
+        return complete.digest();
+    }
+
     public java.util.Vector<String> getIgnored(int type) {
         if (type == IGNORE_PUBLIC) {
             return IgnorePublic;
@@ -3557,16 +3555,6 @@ public final class MWClient extends GameHost implements IClient {
         }
     }
 
-
-    //@Salient ... ugh... how can i get to the damn house configs
-    //    public String getHouseConfigs(String key)
-    //    {
-    //    	//CampaignData.cd.ge
-    //    	SHouse house = CampaignData.cd.getHouseByName(this.getPlayer().getHouse());
-    //
-    //    	return CampaignData.cd.getServerConfigs().getProperty(key).trim();
-    //    }
-
     public void loadBanAmmo(String line) {
 
         try {
@@ -3588,6 +3576,16 @@ public final class MWClient extends GameHost implements IClient {
         }// make it compatible with people that had the old format,without
         // the timestamp on the first line, the first time and now dont.
     }
+
+
+    //@Salient ... ugh... how can i get to the damn house configs
+    //    public String getHouseConfigs(String key)
+    //    {
+    //    	//CampaignData.cd.ge
+    //    	SHouse house = CampaignData.cd.getHouseByName(this.getPlayer().getHouse());
+    //
+    //    	return CampaignData.cd.getServerConfigs().getProperty(key).trim();
+    //    }
 
     public void saveBannedAmmo(String timestamp) {
         // Save banned ammo
@@ -3649,6 +3647,8 @@ public final class MWClient extends GameHost implements IClient {
     public void gameVictory(PostGameResolution e) {
 
     }
+
+
 
     public boolean isUsingAdvanceRepairs() {
         return Boolean.parseBoolean(getServerConfigs("UseAdvanceRepair")) ||

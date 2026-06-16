@@ -152,7 +152,7 @@ public class Planet implements Comparable<Object>, MutableSerializable {
 
     public void binIn(BinReader in, CampaignData data) throws IOException {
         setId(in.readInt("id"));
-        setName(in.readLine("name"));
+        setName(in.read("name"));
         setPosition(new Position(in.readDouble("x"), in.readDouble("y")));
         int size = in.readInt("unitFactories.size");
         setUnitFactories(new Vector<>(size, 1));
@@ -163,7 +163,7 @@ public class Planet implements Comparable<Object>, MutableSerializable {
         }
         setEnvironments(new PlanetEnvironments());
         getEnvironments().binIn(in, data);
-        setDescription(in.readLine("description"));
+        setDescription(in.read("description"));
         setBaysProvided(in.readInt("baysProvided"));
         setConquerable(in.readBoolean("conquerable"));
         setCompProduction(in.readInt("compProduction"));
@@ -171,14 +171,14 @@ public class Planet implements Comparable<Object>, MutableSerializable {
         getInfluence().binIn(in);
         setMinPlanetOwnerShip(in.readInt("minplanetownership"));
         setHomeWorld(in.readBoolean("homeworld"));
-        setOriginalOwner(in.readLine("originalowner"));
+        setOriginalOwner(in.read("originalowner"));
         TreeMap<String, String> map = new TreeMap<>();
         size = in.readInt("PlanetFlags.size");
         for (int i = 0; i < size; ++i) {
             String key;
             String value;
-            key = in.readLine("PlanetFlags.key");
-            value = in.readLine("PlanetFlags.value");
+            key = in.read("PlanetFlags.key");
+            value = in.read("PlanetFlags.value");
             map.put(key, value);
         }
         setPlanetFlags(map);

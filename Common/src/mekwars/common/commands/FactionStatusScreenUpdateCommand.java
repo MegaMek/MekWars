@@ -36,8 +36,10 @@
 
 package mekwars.common.commands;
 
+import java.util.StringTokenizer;
+
+import megamek.logging.MMLogger;
 import mekwars.common.campaign.clientutils.protocol.IClient;
-import mekwars.common.util.MWLogger;
 
 /**
  * Updates the faction status screen
@@ -45,6 +47,7 @@ import mekwars.common.util.MWLogger;
  * @author Imi (immanuel.scholz@gmx.de)
  */
 public class FactionStatusScreenUpdateCommand extends Command {
+    private static final MMLogger LOGGER = MMLogger.create(FactionStatusScreenUpdateCommand.class);
 
     /**
      * @see Command#Command(IClient)
@@ -58,19 +61,14 @@ public class FactionStatusScreenUpdateCommand extends Command {
      */
     @Override
     public void execute(String input) {
-
-        java.util.StringTokenizer st = decode(input);
+        StringTokenizer stringTokenizer = decode(input);
         String cmdName;
         String cmdData;
 
-        while (st.hasMoreTokens()) {
-            cmdName = st.nextToken();
-            cmdData = st.nextToken();
-            try {
-                this.issueSubCommand(cmdName, cmdData);
-            } catch (Exception ex) {
-                MWLogger.errLog(ex);
-            }
+        while (stringTokenizer.hasMoreTokens()) {
+            cmdName = stringTokenizer.nextToken();
+            cmdData = stringTokenizer.nextToken();
+            this.issueSubCommand(cmdName, cmdData);
 
             if (cmdName.equals("CA")) {
                 return;//return without updating view
@@ -82,10 +80,10 @@ public class FactionStatusScreenUpdateCommand extends Command {
     }
 
     /**
-     * @param s
+     * @param string
      */
     @Override
-    public void parseReplyArgs(String s) {
+    public void parseReplyArgs(String string) {
 
     }
 

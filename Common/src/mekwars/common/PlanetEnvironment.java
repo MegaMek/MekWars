@@ -483,60 +483,75 @@ final public class PlanetEnvironment {
                            (RoughMinHexes + RoughMaxSpots) / 2);
         int forest = (((ForestMaxSpots + ForestMinSpots) / 2) *
                             (ForestMinHexes + ForestMaxSpots) / 2);
-        /*int swamp=(((SwampMaxSpots+SwampMinSpots)/2)*
-                (SwampMinHexes+SwampMaxSpots)/2);
-        int pavement=(((PavementMaxSpots+PavementMinSpots)/2)*
-                (PavementMinHexes+PavementMaxSpots)/2);
-          */
         /* generate the hilliness/crater description */
-        String path = "file:///" + new File("").getAbsolutePath();
+        String path = STR."file:///\{new File("").getAbsolutePath()}";
 
-        if (HillElevationRange < 2) {result += "<img src=\"" + path + "/data/images/hill0.gif\">";}
-        //result+="<img src=\"file:///"+path+"/data/images/hill0.gif\">";
+        if (HillElevationRange < 2) {
+            result += STR."<img src=\"\{path}/data/images/hill0.gif\">";
+        }
+
         if ((HillElevationRange < 5) && (HillElevationRange >= 2)) {
-            result += "<img src=\"" + path + "/data/images/hill1.gif\">";
+            result += STR."<img src=\"\{path}/data/images/hill1.gif\">";
         }
+
         if ((HillElevationRange >= 5) && (HillElevationRange <= 8)) {
-            result += "<img src=\"" + path + "/data/images/hill2.gif\">";
+            result += STR."<img src=\"\{path}/data/images/hill2.gif\">";
         }
-        if (HillElevationRange > 8) {result += "<img src=\"" + path + "/data/images/hill3.gif\">";}
-        if (rough > 8) {result += "<img src=\"" + path + "/data/images/roug1.gif\">";}
-        if (CraterProb > 30) {result += "<img src=\"" + path + "/data/images/crtr1.gif\">";}
+
+        if (HillElevationRange > 8) {
+            result += STR."<img src=\"\{path}/data/images/hill3.gif\">";
+        }
+
+        if (rough > 8) {
+            result += STR."<img src=\"\{path}/data/images/roug1.gif\">";
+        }
+
+        if (CraterProb > 30) {
+            result += STR."<img src=\"\{path}/data/images/crtr1.gif\">";
+        }
 
         /* woods */
         if (forest > 15 && forest < 30) {
-            result += "<img src=\"" + path + "/data/images/wood1.gif\">";
+            result += STR."<img src=\"\{path}/data/images/wood1.gif\">";
         } else if (forest >= 30 && forest < 50) {
-            result += "<img src=\"" + path + "/data/images/wood2.gif\">";
-        } else if (forest >= 50) {result += "<img src=\"" + path + "/data/images/wood3.gif\">";}
+            result += STR."<img src=\"\{path}/data/images/wood2.gif\">";
+        } else if (forest >= 50) {result += STR."<img src=\"\{path}/data/images/wood3.gif\">";}
 
         /*water */
-        if (water > 5 && water < 20) {result += "<img src=\"" + path + "/data/images/watr1.gif\">";} else if (water >=
-                                                                                                                    20) {
-            result += "<img src=\"" + path + "/data/images/watr2.gif\">";
+        if (water > 5 && water < 20) {
+            result += STR."<img src=\"\{path}/data/images/watr1.gif\">";
+        } else if (water >= 20) {
+            result += STR."<img src=\"\{path}/data/images/watr2.gif\">";
         }
-        if (getRiverProb() > 50) {result += "<img src=\"" + path + "/data/images/rivr1.gif\">";}
-        if (getRoadProb() > 50) {result += "<img src=\"" + path + "/data/images/road1.gif\">";}
+
+        if (getRiverProb() > 50) {
+            result += STR."<img src=\"\{path}/data/images/rivr1.gif\">";
+        }
+
+        if (getRoadProb() > 50) {
+            result += STR."<img src=\"\{path}/data/images/road1.gif\">";
+        }
 
         return result;
 
     }
 
     public String toString(String city) {
-
         //no city info then use the normal one.
-        if (city.trim().length() <= 1) {return this.toString();}
+        if (city.trim().length() <= 1) {
+            return this.toString();
+        }
 
         //else
         String result = "PE$";
-        result += Name + "$";
-        result += CraterProb + "$";
-        result += CraterMinNum + "$";
-        result += CraterMaxNum + "$";
-        result += CraterMinRadius + "$";
+        result += STR."\{Name}$";
+        result += STR."\{CraterProb}$";
+        result += STR."\{CraterMinNum}$";
+        result += STR."\{CraterMaxNum}$";
+        result += STR."\{CraterMinRadius}$";
         result += CraterMaxRadius + "$";
-        result += Hilliness + "$";
-        result += HillElevationRange + "$";
+        result += STR."\{Hilliness}$";
+        result += STR."\{HillElevationRange}$";
         result += HillInvertProb + "$";
         result += WaterMinSpots + "$";
         result += WaterMaxSpots + "$";
@@ -1368,7 +1383,7 @@ final public class PlanetEnvironment {
      */
     public void binIn(BinReader in, CampaignData data) throws IOException {
         id = in.readInt("id");
-        Name = in.readLine("name");
+        Name = in.read("name");
         CraterProb = in.readInt("CraterProb");
         CraterMinNum = in.readInt("CraterMinNum");
         CraterMaxNum = in.readInt("CraterMaxNum");
@@ -1409,7 +1424,7 @@ final public class PlanetEnvironment {
         RoadProb = in.readInt("RoadProb");
         RiverProb = in.readInt("RiverProb");
         Algorithm = in.readInt("Algorithm");
-        Theme = in.readLine("Theme");
+        Theme = in.read("Theme");
         IceMinSpots = in.readInt("IceMinSpots");
         IceMaxSpots = in.readInt("IceMaxSpots");
         IceMinHexes = in.readInt("IceMinHexes");
@@ -1442,7 +1457,7 @@ final public class PlanetEnvironment {
         MinFloors = in.readInt("MinFloors");
         MaxFloors = in.readInt("MaxFloors");
         CityDensity = in.readInt("CityDensity");
-        CityType = in.readLine("CityType");
+        CityType = in.read("CityType");
         Roads = in.readInt("Roads");
         TownSize = in.readInt("TownSize");
         MountPeaks = in.readInt("MountPeaks");
@@ -1452,7 +1467,7 @@ final public class PlanetEnvironment {
         MountHeightMax = in.readInt("MountHeightMax");
         MountStyle = in.readInt("MountStyle");
         staticMap = in.readBoolean("staticMap");
-        staticMapName = in.readLine("staticMapName");
+        staticMapName = in.read("staticMapName");
         xSize = in.readInt("xSize");
         ySize = in.readInt("ySize");
         xBoardSize = in.readInt("xBoardSize");
@@ -1465,17 +1480,6 @@ final public class PlanetEnvironment {
      */
     public int getId() {
         return id;
-    }
-
-    /**
-     * Do not use this to set the id. This is only used in PlanetEnvironments.add until .dat - saving vanishes.
-     *
-     * @param id The id to set.
-     *
-     * @TODO DON'T USE THIS! You were warned! (imi)
-     */
-    public void setId(int id) {
-        this.id = id;
     }
 
     /**
@@ -1497,7 +1501,10 @@ final public class PlanetEnvironment {
     }
 
     public void setTheme(String theme) {
-        if (theme.length() <= 1) {theme = " ";}
+        if (theme.length() <= 1) {
+            theme = " ";
+        }
+
         Theme = theme;
     }
 

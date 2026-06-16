@@ -36,15 +36,18 @@
 
 package mekwars.common.commands;
 
+import java.util.StringTokenizer;
+
 import megamek.client.ui.dialogs.UnitLoadingDialog;
+import megamek.logging.MMLogger;
 import mekwars.common.campaign.clientutils.protocol.IClient;
 import mekwars.common.gui.dialogs.RePodSelectorDialog;
-import mekwars.common.util.MWLogger;
 
 /**
  * @@author jtighe
  */
 public class UnitRePodDialogCommand extends Command {
+    private static final MMLogger LOGGER = MMLogger.create(UnitRePodDialogCommand.class);
 
     /**
      *
@@ -58,31 +61,28 @@ public class UnitRePodDialogCommand extends Command {
      */
     @Override
     public void execute(String input) {
-        java.util.StringTokenizer ST = decode(input);
+        StringTokenizer stringTokenizer = decode(input);
 
         try {
+            String unitId = stringTokenizer.nextToken();
 
-            String unitId = ST.nextToken();
-
-            if (!ST.hasMoreTokens()) {
-                String toUser = "CH|CLIENT: Your faction has no re-pod options for Unit "
-                                      + unitId + ".";
+            if (!stringTokenizer.hasMoreTokens()) {
+                String toUser = STR."CH|CLIENT: Your faction has no re-pod options for Unit \{unitId}.";
                 client.doParseDataInput(toUser);
             } else {
-                String chassisList = ST.nextToken();
+                String chassisList = stringTokenizer.nextToken();
                 UnitLoadingDialog unitLoadingDialog = new UnitLoadingDialog(client.getMainFrame());
-                RePodSelectorDialog repodSelector = new RePodSelectorDialog(client.getMainFrame(),
+                RePodSelectorDialog rePodSelector = new RePodSelectorDialog(client.getMainFrame(),
                       unitLoadingDialog,
                       client,
                       chassisList,
                       unitId);
                 sleep(125);
-                new Thread(repodSelector).start();
+                new Thread(rePodSelector).start();
             }
 
         } catch (Exception ex) {
-            MWLogger.errLog(ex);
-            MWLogger.errLog("Unable to run RePod Dialog");
+            LOGGER.error(ex, "Unable to run RePod Dialog");
         }
     }
 

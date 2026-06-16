@@ -1,5 +1,4 @@
 /*
- * Copyright (C) 2006 - jtighe (torren@users.sourceforge.net)
  * Copyright (C) 2026 The MegaMek Team. All Rights Reserved.
  *
  * This file is part of MekWars.
@@ -31,72 +30,55 @@
  * <https://www.xbox.com/en-US/developers/rules> and it is not endorsed by or
  * affiliated with Microsoft.
  */
-
-
 package mekwars.common.commands;
 
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.PrintStream;
 import java.util.StringTokenizer;
 
+import megamek.logging.MMLogger;
 import mekwars.common.campaign.clientutils.protocol.IClient;
-import mekwars.common.util.MWLogger;
 
 /**
- * @author Torren Ded MegaMekLog
+ * Ping command
  */
-public class DMML extends Command {
+public class PingPlayerCommand extends CProtCommand {
+    private final static MMLogger LOGGER = MMLogger.create(PingPlayerCommand.class);
 
-    /**
-     * @see Command#Command(IClient)
-     */
-    public DMML(IClient mwclient) {
-        super(mwclient);
+    public PingPlayerCommand(IClient client) {
+        super(client);
+        setName("ping");
     }
 
-    /**
-     * @see Command#execute(String)
-     */
+    // execute command
     @Override
-    public void execute(String input) {
-        StringTokenizer st = decode(input);
-        if (st.hasMoreElements()) {
-            String logName = st.nextToken();
+    public boolean execute(String input) {
+        StringTokenizer stringTokenizer = new StringTokenizer(input, getDelimiter());
+        if (check(stringTokenizer.nextToken()) && stringTokenizer.hasMoreTokens()) {
+            input = decompose(input);
+            stringTokenizer = new StringTokenizer(input, getDelimiter());
+            String sender = stringTokenizer.nextToken();
+            String stamp = stringTokenizer.nextToken();
 
-            File logFile = new File(STR."./logs/\{logName}.log");
+            LOGGER.info("Received server ping.");
 
-            try {
-                logFile.createNewFile();
-                FileOutputStream fileOutputStream = new FileOutputStream(logFile, true);
-                PrintStream printStream = new PrintStream(fileOutputStream);
+            getConnector().send(STR."\{getPrefix()}pong\{getDelimiter()}\{sender}\{getDelimiter()}\{stamp}");
 
-                while (st.hasMoreElements()) {
-                    printStream.append(st.nextToken());
-                    printStream.append(" ");
-                }
-                printStream.append('\n');
-                printStream.flush();
-                printStream.close();
-            } catch (Exception ex) {
-                MWLogger.errLog(ex);
+            if (!sender.equals("server")) {
+                echo(input);
+            } else {
+                getClient().setLastPing(System.currentTimeMillis() / 1000);
             }
+
+            return true;
         }
+
+        return false;
     }
 
-    /**
-     * @param s
-     */
+    // echo command in GUI
     @Override
-    public void parseReplyArgs(String s) {
-
-    }
-
-    /**
-     * @param s
-     */
-    @Override
-    public void parseArguments(String s) {
-
+    protected void echo(String input) {
+        StringTokenizer stringTokenizer = new StringTokenizer(input, getDelimiter());
+        String sender = stringTokenizer.nextToken();
+        getClient().systemMessage(STR."Ping request from \{sender}");
     }
 }

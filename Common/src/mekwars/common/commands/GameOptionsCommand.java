@@ -36,17 +36,22 @@
 
 package mekwars.common.commands;
 
+import java.io.File;
+import java.util.HashMap;
+import java.util.StringTokenizer;
+
 import megamek.common.options.GameOptions;
 import megamek.common.options.IBasicOption;
 import megamek.common.options.Option;
+import megamek.logging.MMLogger;
 import mekwars.common.campaign.clientutils.protocol.IClient;
-import mekwars.common.util.MWLogger;
 
 /**
  * @author Imi (immanuel.scholz@gmx.de)
  */
 
 public class GameOptionsCommand extends Command {
+    private final static MMLogger LOGGER = MMLogger.create(GameOptionsCommand.class);
 
     public GameOptionsCommand(IClient client) {
         super(client);
@@ -57,20 +62,20 @@ public class GameOptionsCommand extends Command {
      */
     @Override
     public void execute(String input) {
-        java.util.StringTokenizer st = decode(input);
+        StringTokenizer stringTokenizer = decode(input);
         client.getGameOptions().clear();
-        java.util.HashMap<String, IBasicOption> optionsHash = new java.util.HashMap<>();
+        HashMap<String, IBasicOption> optionsHash = new HashMap<>();
         IBasicOption gameOption;
 
-        java.io.File mmconf = new java.io.File("./mmconf");
+        File mmconf = new File("./mmconf");
 
         if (!mmconf.exists()) {
             mmconf.mkdir();
         }
 
-        while (st.hasMoreElements()) {
-            String option = st.nextToken();
-            String value = st.nextToken();
+        while (stringTokenizer.hasMoreElements()) {
+            String option = stringTokenizer.nextToken();
+            String value = stringTokenizer.nextToken();
 
             try {
                 gameOption = new Option(new GameOptions(), option, Integer.parseInt(value));
@@ -90,7 +95,7 @@ public class GameOptionsCommand extends Command {
                             optionsHash.put(gameOption.getName(), gameOption);
                         }
                     } catch (Exception ex2) {
-                        MWLogger.infoLog(STR."Unknown format: \{option} :: \{value}");
+                        LOGGER.info(STR."Unknown format: \{option} :: \{value}");
                     }
                 }
             }

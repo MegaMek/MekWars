@@ -154,7 +154,6 @@ public class CampaignData implements TerrainProvider {
      * @see TerrainProvider#addAdvancedTerrain(AdvancedTerrain)
      */
     public void addTerrain(@Nonnull Terrain terrain) {
-        terrain.setId(getUnusedTerrainID());
         terrains.add(terrain);
         terrains.trimToSize();
     }
@@ -164,7 +163,7 @@ public class CampaignData implements TerrainProvider {
      *
      * @param faction The faction to hold.
      *                <p>
-     *                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      TODO You should use XStream to initialize CampaignData
+     *                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     TODO You should use XStream to initialize CampaignData
      */
     public void addHouse(@Nonnull House faction) {
         if (faction.getId() == -1 && !faction.getName().equalsIgnoreCase("None")) {
@@ -192,26 +191,6 @@ public class CampaignData implements TerrainProvider {
     }
 
     /**
-     * Retrieve an unused id for terrains. Only used upon start up of a new server using XML files.
-     *
-     * @return An terrain id not used yet.
-     */
-    public int getUnusedTerrainID() {
-        int id = -1;
-        int hid;
-
-        for (Terrain terrain : terrains) {
-            hid = terrain.getId();
-            if (hid > id) {
-                id = hid;
-            }
-        }
-        id++;
-
-        return id;
-    }
-
-    /**
      * Retrieve an unused id for adv terrains. Only used upon start up of a new server using XML files.
      *
      * @return An terrain id not used yet.
@@ -235,8 +214,8 @@ public class CampaignData implements TerrainProvider {
      *
      * @return An House id not used yet.
      *       <p>
-     *                                                                                                                                                                                                                                                                                                                                                             TODO There should be no need for such function, since ID's should extracted from resource files. This
-     *                                                                                                                                                                                                                                                                                                                                                                   function will vanish if ids are part of the resource.
+     *                                                                                                                                                                                                                                                                                                                                                                   TODO There should be no need for such function, since ID's should extracted from resource files. This
+     *                                                                                                                                                                                                                                                                                                                                                                         function will vanish if ids are part of the resource.
      */
     public int getUnusedHouseID() {
         int id = -1;
@@ -257,8 +236,8 @@ public class CampaignData implements TerrainProvider {
      *
      * @return An Planet id not used yet.
      *       <p>
-     *                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           TODO There should be no need for such function, since ID's should extracted from resource files. This
-     *                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 function will vanish if ids are part of the resource.
+     *                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 TODO There should be no need for such function, since ID's should extracted from resource files. This
+     *                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       function will vanish if ids are part of the resource.
      */
     public int getUnusedPlanetID() {
         int id = 0;
@@ -266,6 +245,26 @@ public class CampaignData implements TerrainProvider {
         while (planets.containsKey(id)) {
             id++;
         }
+
+        return id;
+    }
+
+    /**
+     * Retrieve an unused id for terrains. Only used upon start up of a new server using XML files.
+     *
+     * @return An terrain id not used yet.
+     */
+    public int getUnusedTerrainID() {
+        int id = -1;
+        int hid;
+
+        for (Terrain terrain : terrains) {
+            hid = terrain.getId();
+            if (hid > id) {
+                id = hid;
+            }
+        }
+        id++;
 
         return id;
     }

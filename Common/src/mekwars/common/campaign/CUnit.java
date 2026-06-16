@@ -45,6 +45,7 @@ import java.util.StringJoiner;
 import java.util.StringTokenizer;
 
 import megamek.client.generator.RandomGenderGenerator;
+import megamek.codeUtilities.MathUtility;
 import megamek.common.CriticalSlot;
 import megamek.common.OffBoardDirection;
 import megamek.common.equipment.AmmoMounted;
@@ -59,6 +60,7 @@ import megamek.common.units.CrewType;
 import megamek.common.units.Entity;
 import megamek.common.units.Infantry;
 import megamek.common.units.Mek;
+import megamek.logging.MMLogger;
 import mekwars.common.House;
 import mekwars.common.MegaMekPilotOption;
 import mekwars.common.Unit;
@@ -74,6 +76,7 @@ import mekwars.common.util.UnitUtils;
  * Class for unit object used by client
  */
 public class CUnit extends Unit {
+    private static final MMLogger LOGGER = MMLogger.create(CUnit.class);
 
     // VARIABLES
     protected Entity unitEntity;
@@ -90,6 +93,14 @@ public class CUnit extends Unit {
         init();
     }
 
+    // PRIVATE METHODS
+    private void init() {
+        unitEntity = null;
+        BV = 0;
+        setStatus(STATUS_OK);
+        setProducer("unknown origin");
+    }
+
     public CUnit(IClient client) {
         this.client = client;
         init();
@@ -100,46 +111,41 @@ public class CUnit extends Unit {
      *
      * @return int - # of MU it takes to buy a unit of the given weight class
      */
-    public static int getPriceForUnit(IClient client, int weightClass,
-          int type_id, House producer) {
+    public static int getPriceForUnit(IClient client, int weightClass, int type_id, House producer) {
+        int result;
 
-        int result = Integer.MAX_VALUE;
-        try {
-            String classType = STR."\{Unit.getWeightClassDesc(weightClass)}\{Unit.getTypeClassDesc(type_id)}Price";
+        String classType = STR."\{Unit.getWeightClassDesc(weightClass)}\{Unit.getTypeClassDesc(type_id)}Price";
 
-            if (type_id == Unit.MEK) {
-                result = Integer.parseInt(client.getServerConfigs(STR."\{Unit.getWeightClassDesc(weightClass)}Price"));
-            } else {
-                result = Integer.parseInt(client.getServerConfigs(classType));
-            }
+        if (type_id == Unit.MEK) {
+            result = MathUtility.parseInt(client.getServerConfigs(STR."\{Unit.getWeightClassDesc(weightClass)}Price"),
+                  0);
+        } else {
+            result = MathUtility.parseInt(client.getServerConfigs(classType), 0);
+        }
 
-            // modify the result by the faction price modifier
-            result += producer.getHouseUnitPriceMod(type_id, weightClass);
+        // modify the result by the faction price modifier
+        result += producer.getHouseUnitPriceMod(type_id, weightClass);
 
-            // dont allow negative pricing
-            if (result < 0) {
-                result = 0;
-            }
-        } catch (Exception ex) {
-            MWLogger.errLog(ex);
+        // dont allow negative pricing
+        if (result < 0) {
+            result = 0;
         }
         return result;
     }// end getPriceForCUnit()
 
     /**
-     * A method which returns the influence cost of a specified campaign mech.
+     * A method that returns the influence cost of a specified campaign mech.
      *
      * @return int - # if IP it takes to buy a mech of the given units weight class
      */
-    public static int getInfluenceForUnit(IClient mwclient, int weightClass, int type_id, House producer) {
-
+    public static int getInfluenceForUnit(IClient client, int weightClass, int type_id, House producer) {
         int result;
         String classType = STR."\{Unit.getWeightClassDesc(weightClass)}\{Unit.getTypeClassDesc(type_id)}Inf";
 
         if (type_id == Unit.MEK) {
-            result = Integer.parseInt(mwclient.getServerConfigs(STR."\{Unit.getWeightClassDesc(weightClass)}Inf"));
+            result = MathUtility.parseInt(client.getServerConfigs(STR."\{Unit.getWeightClassDesc(weightClass)}Inf"), 0);
         } else {
-            result = Integer.parseInt(mwclient.getServerConfigs(classType));
+            result = MathUtility.parseInt(client.getServerConfigs(classType), 0);
         }
 
         // modify the result by the faction price modifier
@@ -154,27 +160,25 @@ public class CUnit extends Unit {
     }
 
     /**
-     * A method which returns the PP COST of a unit. Meks and Vehicles are segregated by weightClass. Infantry are flat
-     * priced accross
+     * A method that returns the PP COST of a unit. Meks and Vehicles are segregated by weightClass. Infantry are flat-
+     * * priced across
      * <p>
      * all weight classes. @ param weight - the weight class to be checked @ return int - the PP cost
      */
-    public static int getPPForUnit(IClient client, int weightClass,
-          int type_id, House producer) {
-
+    public static int getPPForUnit(IClient client, int weightClass, int type_id, House producer) {
         int result;
         String classType = STR."\{Unit.getWeightClassDesc(weightClass)}\{Unit.getTypeClassDesc(type_id)}PP";
 
         if (type_id == Unit.MEK) {
-            result = Integer.parseInt(client.getServerConfigs(STR."\{Unit.getWeightClassDesc(weightClass)}PP"));
+            result = MathUtility.parseInt(client.getServerConfigs(STR."\{Unit.getWeightClassDesc(weightClass)}PP"), 0);
         } else {
-            result = Integer.parseInt(client.getServerConfigs(classType));
+            result = MathUtility.parseInt(client.getServerConfigs(classType), 0);
         }
 
-        // adjust PP cost by faction specific mod
+        // adjust PP cost by faction-specific mod
         result += producer.getHouseUnitComponentMod(type_id, weightClass);
 
-        // dont allow a unit to consume negative PP
+        // don't allow a unit to consume negative PP
         if (result < 0) {
             result = 0;
         }
@@ -185,12 +189,12 @@ public class CUnit extends Unit {
     public static double getArmorCost(Entity unit, IClient client, int location) {
         double cost;
 
-        if (Boolean.parseBoolean(client.getServerConfigs("UsePartsRepair"))) {
+        if (MathUtility.parseBoolean(client.getServerConfigs("UsePartsRepair"), false)) {
             return 0;
         }
 
         String armorCost = STR."CostPoint\{UnitUtils.getArmorShortName(unit, location)}";
-        cost = Double.parseDouble(client.getServerConfigs(armorCost));
+        cost = MathUtility.parseDouble(client.getServerConfigs(armorCost), 0.0);
 
         return cost;
     }
@@ -198,12 +202,12 @@ public class CUnit extends Unit {
     public static double getStructureCost(Entity unit, IClient client) {
         double cost;
 
-        if (Boolean.parseBoolean(client.getServerConfigs("UsePartsRepair"))) {
+        if (MathUtility.parseBoolean(client.getServerConfigs("UsePartsRepair"), false)) {
             return 0;
         }
 
         String armorCost = STR."CostPoint\{UnitUtils.getInternalShortName(unit)}IS";
-        cost = Double.parseDouble(client.getServerConfigs(armorCost));
+        cost = MathUtility.parseDouble(client.getServerConfigs(armorCost), 0.0);
 
         return cost;
     }
@@ -211,7 +215,7 @@ public class CUnit extends Unit {
     public static double getCritCost(Entity unit, IClient client, CriticalSlot crit) {
         double cost;
 
-        if (Boolean.parseBoolean(client.getServerConfigs("UsePartsRepair"))) {
+        if (MathUtility.parseBoolean(client.getServerConfigs("UsePartsRepair"), false)) {
             return 0;
         }
 
@@ -225,12 +229,12 @@ public class CUnit extends Unit {
 
         // else
         if (UnitUtils.isEngineCrit(crit)) {
-            cost = Double.parseDouble(client.getServerConfigs("EngineCritRepairCost"));
+            cost = MathUtility.parseDouble(client.getServerConfigs("EngineCritRepairCost"), 0.0);
         } else if (crit.getType() == CriticalSlot.TYPE_SYSTEM) {
             if (crit.isMissing()) {
-                cost = Double.parseDouble(client.getServerConfigs("SystemCritReplaceCost"));
+                cost = MathUtility.parseDouble(client.getServerConfigs("SystemCritReplaceCost"), 0.0);
             } else {
-                cost = Double.parseDouble(client.getServerConfigs("SystemCritRepairCost"));
+                cost = MathUtility.parseDouble(client.getServerConfigs("SystemCritRepairCost"), 0.0);
             }
         } else {
             Mounted<?> mounted = crit.getMount();
@@ -238,46 +242,38 @@ public class CUnit extends Unit {
             if (mounted.getType() instanceof WeaponType weapon) {
                 if (weapon.hasFlag(WeaponType.F_ENERGY)) {
                     if (crit.isMissing()) {
-                        cost = Double.parseDouble(client.getServerConfigs("EnergyWeaponCritReplaceCost"));
+                        cost = MathUtility.parseDouble(client.getServerConfigs("EnergyWeaponCritReplaceCost"), 0.0);
                     } else {
-                        cost = Double.parseDouble(client.getServerConfigs("EnergyWeaponCritRepairCost"));
+                        cost = MathUtility.parseDouble(client.getServerConfigs("EnergyWeaponCritRepairCost"), 0.0);
                     }
                 } else if (weapon.hasFlag(WeaponType.F_BALLISTIC)) {
                     if (crit.isMissing()) {
-                        cost = Double.parseDouble(client.getServerConfigs("BallisticCritReplaceCost"));
+                        cost = MathUtility.parseDouble(client.getServerConfigs("BallisticCritReplaceCost"), 0.0);
                     } else {
-                        cost = Double.parseDouble(client.getServerConfigs("BallisticCritRepairCost"));
+                        cost = MathUtility.parseDouble(client.getServerConfigs("BallisticCritRepairCost"), 0.0);
                     }
                 } else if (weapon.hasFlag(WeaponType.F_MISSILE)) {
                     if (crit.isMissing()) {
-                        cost = Double.parseDouble(client.getServerConfigs("MissileCritReplaceCost"));
+                        cost = MathUtility.parseDouble(client.getServerConfigs("MissileCritReplaceCost"), 0.0);
                     } else {
-                        cost = Double.parseDouble(client.getServerConfigs("MissileCritRepairCost"));
+                        cost = MathUtility.parseDouble(client.getServerConfigs("MissileCritRepairCost"), 0.0);
                     }
                 } else // use the misc eq costs.
                     if (crit.isMissing()) {
-                        cost = Double.parseDouble(client.getServerConfigs("EquipmentCritReplaceCost"));
+                        cost = MathUtility.parseDouble(client.getServerConfigs("EquipmentCritReplaceCost"), 0.0);
                     } else {
-                        cost = Double.parseDouble(client.getServerConfigs("EquipmentCritRepairCost"));
+                        cost = MathUtility.parseDouble(client.getServerConfigs("EquipmentCritRepairCost"), 0.0);
                     }
             } else // use the misc eq costs.
                 if (crit.isMissing()) {
-                    cost = Double.parseDouble(client.getServerConfigs("EquipmentCritReplaceCost"));
+                    cost = MathUtility.parseDouble(client.getServerConfigs("EquipmentCritReplaceCost"), 0.0);
                 } else {
-                    cost = Double.parseDouble(client.getServerConfigs("EquipmentCritRepairCost"));
+                    cost = MathUtility.parseDouble(client.getServerConfigs("EquipmentCritRepairCost"), 0.0);
                 }
         }
 
         cost = Math.max(cost, 1);
         return cost;
-    }
-
-    // PRIVATE METHODS
-    private void init() {
-        unitEntity = null;
-        BV = 0;
-        setStatus(STATUS_OK);
-        setProducer("unknown origin");
     }
 
     public String getHtmlQuirkList() {
@@ -291,28 +287,30 @@ public class CUnit extends Unit {
     // PUBLIC METHODS
     public boolean setData(String data) {
 
-        StringTokenizer ST;
+        StringTokenizer stringTokenizer;
         String element;
         String unitDamage;
-        MWLogger.infoLog(STR."PDATA: \{data}");
+        LOGGER.info(STR."PDATA: \{data}");
 
-        ST = new StringTokenizer(data, "$");
-        element = TokenReader.readString(ST);
+        stringTokenizer = new StringTokenizer(data, "$");
+        element = TokenReader.readString(stringTokenizer);
+
         if (!element.equals("CM")) {
             return (false);
         }
 
-        setUnitFilename(TokenReader.readString(ST));
-        setId((TokenReader.readInt(ST)));
-        setStatus(TokenReader.readInt(ST));
+        setUnitFilename(TokenReader.readString(stringTokenizer));
+        setId((TokenReader.readInt(stringTokenizer)));
+        setStatus(TokenReader.readInt(stringTokenizer));
 
-        setProducer(TokenReader.readString(ST));
+        setProducer(TokenReader.readString(stringTokenizer));
         String pilotName;
         int gunnery;
         int piloting;
         int exp;
         Pilot pilot;
-        StringTokenizer STR = new StringTokenizer(TokenReader.readString(ST), "#");
+
+        StringTokenizer STR = new StringTokenizer(TokenReader.readString(stringTokenizer), "#");
         pilotName = TokenReader.readString(STR);
         exp = TokenReader.readInt(STR);
         gunnery = TokenReader.readInt(STR);
@@ -320,6 +318,7 @@ public class CUnit extends Unit {
         pilot = new Pilot(pilotName, gunnery, piloting);
         pilot.setExperience(exp);
         int skillAmount = TokenReader.readInt(STR);
+
         for (int i = 0; i < skillAmount; i++) {
             PilotSkill skill = new PilotSkill(TokenReader.readInt(STR),
                   TokenReader.readString(STR), TokenReader.readInt(STR),
@@ -339,32 +338,34 @@ public class CUnit extends Unit {
                 pilot.setHeadHit(TokenReader.readBoolean(STR));
                 pilot.setExplosion(TokenReader.readBoolean(STR));
             }
+
             pilot.getSkills().add(skill);
         }
 
         pilot.setKills(TokenReader.readInt(STR));
-
         pilot.setHits(TokenReader.readInt(STR));
 
-        int mmOptionsAmount = TokenReader.readInt(ST);
+        int mmOptionsAmount = TokenReader.readInt(stringTokenizer);
+
         for (int i = 0; i < mmOptionsAmount; i++) {
             MegaMekPilotOption mo = new MegaMekPilotOption(
-                  TokenReader.readString(ST),
-                  Boolean.parseBoolean(TokenReader.readString(ST)));
+                  TokenReader.readString(stringTokenizer),
+                  MathUtility.parseBoolean(TokenReader.readString(stringTokenizer), false));
             pilot.addMegaMekOption(mo);
         }
 
-        setType(TokenReader.readInt(ST));
+        setType(TokenReader.readInt(stringTokenizer));
         setPilot(pilot);
-        BV = Math.max(TokenReader.readInt(ST), 0);
+        BV = Math.max(TokenReader.readInt(stringTokenizer), 0);
 
-        setWeightClass(TokenReader.readInt(ST));
-        setId(TokenReader.readInt(ST));
+        setWeightClass(TokenReader.readInt(stringTokenizer));
+        setId(TokenReader.readInt(stringTokenizer));
 
         createEntity();
+
         if (unitEntity == null) {
-            MWLogger.errLog("Cannot load entity!");
-            return (false);
+            LOGGER.error("Cannot load entity!");
+            return false;
         }
 
         // don't try to set ammo and eject on an OMG
@@ -382,20 +383,22 @@ public class CUnit extends Unit {
         }
 
         // set auto eject if its a Mek
-        if ((unitEntity instanceof Mek mek) && ST.hasMoreElements()) {
-            mek.setAutoEject(Boolean.parseBoolean(TokenReader.readString(ST)));
+        if ((unitEntity instanceof Mek mek) && stringTokenizer.hasMoreElements()) {
+            mek.setAutoEject(Boolean.parseBoolean(TokenReader.readString(stringTokenizer)));
         }
 
         // then set up ammo loadout
         {
             try {
-                int maxCrits = TokenReader.readInt(ST);
+                int maxCrits = TokenReader.readInt(stringTokenizer);
                 List<AmmoMounted> entityAmmo = unitEntity.getAmmo();
                 for (int count = 0; count < maxCrits; count++) {
-                    AmmoType.AmmoTypeEnum weaponType = AmmoType.AmmoTypeEnum.fromIndex(TokenReader.readInt(ST));
-                    String ammoName = TokenReader.readString(ST);
-                    int shots = TokenReader.readInt(ST);
-                    boolean hotLoaded = TokenReader.readBoolean(ST);
+                    AmmoType.AmmoTypeEnum weaponType = AmmoType.AmmoTypeEnum.fromIndex(TokenReader.readInt(
+                          stringTokenizer));
+
+                    String ammoName = TokenReader.readString(stringTokenizer);
+                    int shots = TokenReader.readInt(stringTokenizer);
+                    boolean hotLoaded = TokenReader.readBoolean(stringTokenizer);
 
                     AmmoMounted mWeapon = entityAmmo.get(count);
 
@@ -405,19 +408,18 @@ public class CUnit extends Unit {
                     mWeapon.setHotLoad(hotLoaded);
                 }
             } catch (Exception ex) {
-                // ammo crits change or something bad. just continue with the
-                // next unit
+                LOGGER.debug(ex, "Error setting ammo");
                 return true;
             }
         }// end ammo
 
-        // setup rapid fire Machine guns, if any
+        // set up rapid fire Machine guns, if any
         {
-            int maxMachineGuns = TokenReader.readInt(ST);
+            int maxMachineGuns = TokenReader.readInt(stringTokenizer);
             for (int count = 0; count < maxMachineGuns; count++) {
-                int location = TokenReader.readInt(ST);
-                int slot = TokenReader.readInt(ST);
-                boolean selection = TokenReader.readBoolean(ST);
+                int location = TokenReader.readInt(stringTokenizer);
+                int slot = TokenReader.readInt(stringTokenizer);
+                boolean selection = TokenReader.readBoolean(stringTokenizer);
                 CriticalSlot criticalSlot = unitEntity.getCritical(location, slot);
 
                 Mounted<?> mg = criticalSlot.getMount();
@@ -427,34 +429,33 @@ public class CUnit extends Unit {
             }
         }// Machine Guns
 
-        TokenReader.readString(ST);// unused
+        TokenReader.readString(stringTokenizer);// unused
 
         targetSystem.setEntity(unitEntity);
         try {
-            targetSystem.setTargetSystem(TokenReader.readInt(ST));
+            targetSystem.setTargetSystem(TokenReader.readInt(stringTokenizer));
         } catch (TargetTypeOutOfBoundsException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
+            LOGGER.error("Error setting target system");
         }
 
-        int suppUnit = TokenReader.readInt(ST);
+        int suppUnit = TokenReader.readInt(stringTokenizer);
         setSupportUnit(suppUnit == 1);
 
-        scrappableFor = TokenReader.readInt(ST);
+        scrappableFor = TokenReader.readInt(stringTokenizer);
 
-        unitDamage = TokenReader.readString(ST);
+        unitDamage = TokenReader.readString(stringTokenizer);
 
-        pilotIsRepairing = TokenReader.readBoolean(ST);
+        pilotIsRepairing = TokenReader.readBoolean(stringTokenizer);
 
-        setRepairCosts(TokenReader.readInt(ST), TokenReader.readInt(ST));
+        setRepairCosts(TokenReader.readInt(stringTokenizer), TokenReader.readInt(stringTokenizer));
 
-        setChristmasUnit(TokenReader.readBoolean(ST));
+        setChristmasUnit(TokenReader.readBoolean(stringTokenizer));
 
         //@salient Quirks - set unit quirks, or drop data if quirks have been turned off
-        if (ST.hasMoreTokens() && Boolean.parseBoolean(client.getServerConfigs("EnableQuirks"))) {
-            setUnitQuirks(TokenReader.readString(ST));
-        } else if (ST.hasMoreTokens()) {
-            TokenReader.readString(ST);
+        if (stringTokenizer.hasMoreTokens() && Boolean.parseBoolean(client.getServerConfigs("EnableQuirks"))) {
+            setUnitQuirks(TokenReader.readString(stringTokenizer));
+        } else if (stringTokenizer.hasMoreTokens()) {
+            TokenReader.readString(stringTokenizer);
         }
 
         unitEntity.setExternalId(getId());
@@ -463,7 +464,7 @@ public class CUnit extends Unit {
 
         getC3Type(unitEntity);
 
-        return (true);
+        return true;
     }
 
     /**
@@ -473,7 +474,7 @@ public class CUnit extends Unit {
         unitEntity = UnitUtils.createEntity(getUnitFilename());
 
         if (unitEntity == null) {
-            MWLogger.errLog("Error unit failed to load. Exiting.");
+            LOGGER.error("Error unit failed to load. Exiting.");
             System.exit(1);
         }
 
@@ -506,16 +507,16 @@ public class CUnit extends Unit {
 
     //@salient this method is only accessible when quirks are enabled.
     private void setUnitQuirks(String data) {
-        StringTokenizer st = new StringTokenizer(data, "!");
-        if (st.hasMoreTokens()) {
-            htmlQuirkList = TokenReader.readString(st);
-            quirkList = TokenReader.readString(st);
+        StringTokenizer stringTokenizer = new StringTokenizer(data, "!");
+        if (stringTokenizer.hasMoreTokens()) {
+            htmlQuirkList = TokenReader.readString(stringTokenizer);
+            quirkList = TokenReader.readString(stringTokenizer);
         }
 
         if (quirkList != null) {
-            st = new StringTokenizer(quirkList, "&");
-            while (st.hasMoreTokens()) {
-                String quirk = TokenReader.readString(st);
+            stringTokenizer = new StringTokenizer(quirkList, "&");
+            while (stringTokenizer.hasMoreTokens()) {
+                String quirk = TokenReader.readString(stringTokenizer);
                 if (!quirk.equalsIgnoreCase("none")) {
                     unitEntity.getQuirks().getOption(quirk).setValue(true);
                 }
@@ -548,6 +549,7 @@ public class CUnit extends Unit {
             if (unitEntity.getQuirks().count(group.getKey()) > 0) {
                 for (Enumeration<IOption> options = group.getOptions(); options.hasMoreElements(); ) {
                     IOption option = options.nextElement();
+
                     if (option != null && option.booleanValue()) {
                         quirksList.add(option.getName());
                     }
@@ -574,7 +576,7 @@ public class CUnit extends Unit {
     }
 
     /**
-     * Method which generates data for an auto unit. Since auto units have no unique properties this can be assembled
+     * Method that generates data for an auto unit. Since auto units have no unique properties, this can be assembled
      * client side rather than sent from the server.
      *
      * @urgru 1/4/05
@@ -648,12 +650,14 @@ public class CUnit extends Unit {
         tinfo += STR." // Exp: \{getPilot().getExperience()} // Kills: \{getPilot().getKills()}<br> ";
 
         if (getPilot().getSkills().size() > 0) {
-            tinfo += "Skills: ";
-            tinfo += getPilot().getSkillString(
-                  false,
-                  client.getData()
-                        .getHouseByName(client.getPlayer().getHouse())
-                        .getBasePilotSkill(getType()));
+            House house = client.getData().getHouseByName(client.getPlayer().getHouse());
+
+            if (house != null) {
+                tinfo += "Skills: ";
+                tinfo += getPilot().getSkillString(
+                      false,
+                      house.getBasePilotSkill(getType()));
+            }
             tinfo += "<br>";
         }
 
@@ -739,7 +743,7 @@ public class CUnit extends Unit {
                 dis.close();
                 fis.close();
             } catch (Exception ex) {
-
+                LOGGER.error(ex, "Error reading omnivehiclelist.txt");
             }
         }
 
@@ -777,8 +781,7 @@ public class CUnit extends Unit {
         try {
             targetSystem.setTargetSystem(type);
         } catch (TargetTypeOutOfBoundsException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
+            LOGGER.error("Error setting target system");
         }
     }
 }// end CUnit.java

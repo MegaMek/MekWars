@@ -22,24 +22,26 @@ import java.io.IOException;
 import java.net.URISyntaxException;
 import java.util.StringTokenizer;
 import javax.swing.JEditorPane;
+import javax.swing.JOptionPane;
 import javax.swing.event.HyperlinkEvent;
 import javax.swing.event.HyperlinkListener;
 import javax.swing.text.html.HTML;
 import javax.swing.text.html.HTMLDocument;
 import javax.swing.text.html.HTMLFrameHyperlinkEvent;
 
+import megamek.codeUtilities.MathUtility;
+import megamek.logging.MMLogger;
 import mekwars.common.Planet;
 import mekwars.common.campaign.clientutils.protocol.IClient;
 import mekwars.common.gui.InnerStellarMap;
 import mekwars.common.gui.panels.CHSPanel;
-import mekwars.common.util.MWLogger;
 
 public class MMNetHyperLinkListener implements HyperlinkListener {
-
+    private static final MMLogger LOGGER = MMLogger.create(MMNetHyperLinkListener.class);
+    private final IClient client;
     protected boolean isHovering = false;
-    protected String Tooltip = null;
-    protected CHSPanel HSPanel = null;
-    IClient client;
+    protected String tooltip = null;
+    protected CHSPanel hsPanel = null;
 
     /*
      * Construct, which takes only IClient,
@@ -54,7 +56,7 @@ public class MMNetHyperLinkListener implements HyperlinkListener {
 
     public MMNetHyperLinkListener(IClient client, CHSPanel panel) {
         this.client = client;
-        HSPanel = panel;
+        hsPanel = panel;
     }
 
     public boolean isHoveringOverHyperlink() {
@@ -68,146 +70,149 @@ public class MMNetHyperLinkListener implements HyperlinkListener {
      *       <code>null</code> if not currently hovering over a URL
      */
     public String getTooltip() {
-        return Tooltip;
+        return tooltip;
     }
 
     public void hyperlinkUpdate(HyperlinkEvent event) {
         if (event.getEventType() == HyperlinkEvent.EventType.ENTERED) {
             isHovering = true;
+
             try {
-                Tooltip = (String) event.getSourceElement()
+                tooltip = (String) event.getSourceElement()
                                          .getAttributes()
                                          .getAttribute(HTML.getAttributeKey("alt"));
-                MWLogger.infoLog(Tooltip);
-                if (HSPanel != null) {
-                    HSPanel.setInfoText(Tooltip);
+                LOGGER.info(tooltip);
+                if (hsPanel != null) {
+                    hsPanel.setInfoText(tooltip);
                 }
             } catch (Exception ex) {
-                MWLogger.errLog(ex);
+                LOGGER.error(ex, "Hyperlink Error: {}", ex.getLocalizedMessage());
             }
         } else if (event.getEventType() == HyperlinkEvent.EventType.EXITED) {
             isHovering = false;
-            if (HSPanel != null) {
-                HSPanel.setInfoText("");
+
+            if (hsPanel != null) {
+                hsPanel.setInfoText("");
             }
-            Tooltip = null;
+
+            tooltip = null;
         }
 
 
         if (event.getEventType() == HyperlinkEvent.EventType.ACTIVATED) {
             JEditorPane pane = (JEditorPane) event.getSource();
-            if (event instanceof HTMLFrameHyperlinkEvent evt) {
+            if (event instanceof HTMLFrameHyperlinkEvent htmlFrameHyperlinkEvent) {
                 HTMLDocument doc = (HTMLDocument) pane.getDocument();
-                doc.processHTMLFrameHyperlinkEvent(evt);
+                doc.processHTMLFrameHyperlinkEvent(htmlFrameHyperlinkEvent);
             } else {
-                try {
-                    if (event.getDescription().startsWith("MEKWARS")) {
-                        String command = event.getDescription();
-                        command = command.substring(7);
-                        client.sendChat(command);
-                    } else if (event.getDescription().startsWith("MEKMAIL")) {
-                        String command = event.getDescription();
-                        command = command.substring(7);
-                        StringTokenizer commandStr = new StringTokenizer(command, "*");
-                        command = STR."\{commandStr.nextToken()}, \{commandStr.nextToken()}";
-                        MWLogger.errLog(STR."Command \{command}");
-                        client.sendChat(STR."/mail \{command}");
-                    } else if (event.getDescription().startsWith("MEKINFO")) {
-                        String command = event.getDescription();
-                        command = command.substring(7);
-                        StringTokenizer ST = new StringTokenizer(command, "#");
-                        String filename = ST.nextToken().replace("%22", "\"");
+                if (event.getDescription().startsWith("MEKWARS")) {
+                    String command = event.getDescription();
+                    command = command.substring(7);
+                    client.sendChat(command);
+                } else if (event.getDescription().startsWith("MEK_MAIL")) {
+                    String command = event.getDescription();
+                    command = command.substring(7);
+                    StringTokenizer commandStr = new StringTokenizer(command, "*");
+                    command = STR."\{commandStr.nextToken()}, \{commandStr.nextToken()}";
+                    LOGGER.debug(STR."Command \{command}");
+                    client.sendChat(STR."/mail \{command}");
+                } else if (event.getDescription().startsWith("MEK_INFO")) {
+                    String command = event.getDescription();
+                    command = command.substring(7);
+                    StringTokenizer stringTokenizer = new StringTokenizer(command, "#");
+                    String filename = stringTokenizer.nextToken().replace("%22", "\"");
 
-                        int BV = Integer.parseInt(ST.nextToken());
-                        int gunnery = Integer.parseInt(ST.nextToken());
-                        int piloting = Integer.parseInt(ST.nextToken());
-                        String battleDamage = "";
-                        if (ST.hasMoreTokens()) {battleDamage = ST.nextToken();}
-                        client.getMainFrame()
-                              .getMainPanel()
-                              .getHSPanel()
-                              .showInfoWindow(filename, BV, gunnery, piloting, battleDamage);
-                    } else if (event.getDescription().startsWith("MWUSERP")) {
-                        client.rewardPointsDialog();
-                    } else if (event.getDescription().startsWith("MWREG")) {
-                        client.getMainFrame().jMenuFileRegister_actionPerformed();
-                    } else if (event.getDescription().startsWith("JUMPTOPLANET")) {
-                        String command = event.getDescription();
-                        command = command.substring(12);
-                        StringTokenizer ST = new StringTokenizer(command, "#");
-                        String planetName = ST.nextToken();
+                    int BV = MathUtility.parseInt(stringTokenizer.nextToken(), 0);
+                    int gunnery = MathUtility.parseInt(stringTokenizer.nextToken(), 0);
+                    int piloting = MathUtility.parseInt(stringTokenizer.nextToken(), 0);
 
-                        //fetch the map
-                        InnerStellarMap map = client.getMainFrame().getMainPanel().getMapPanel().getMap();
+                    String battleDamage = "";
+                    if (stringTokenizer.hasMoreTokens()) {
+                        battleDamage = stringTokenizer.nextToken();
+                    }
 
-                        //get the planet
-                        Planet currPlanet = client.getData().getPlanetByName(planetName);
+                    client.getMainFrame()
+                          .getMainPanel()
+                          .getHSPanel()
+                          .showInfoWindow(filename, BV, gunnery, piloting, battleDamage);
+                } else if (event.getDescription().startsWith("MW_USER_P")) {
+                    client.rewardPointsDialog();
+                } else if (event.getDescription().startsWith("MW_REG")) {
+                    client.getMainFrame().jMenuFileRegister_actionPerformed();
+                } else if (event.getDescription().startsWith("JUMP_TO_PLANET")) {
+                    String command = event.getDescription();
+                    command = command.substring(12);
+                    StringTokenizer stringTokenizer = new StringTokenizer(command, "#");
+                    String planetName = stringTokenizer.nextToken();
 
-                        if (currPlanet != null) {
-                            map.setSelectedPlanet(currPlanet);
-                            map.activate(currPlanet, true);
-                            map.saveMapSelection(currPlanet);
+                    //fetch the map
+                    InnerStellarMap map = client.getMainFrame().getMainPanel().getMapPanel().getMap();
 
-                            /*
-                             * If the map is visible and we're supposed to jump to it, get the
-                             * main panel and call .selectMapTab(). selectMap will check where
-                             * the map is (top or bottom) and send the correct tab to the front.
-                             */
-                            if (client.getConfig().isParam("MAPTABONCLICK") &&
-                                      client.getConfig().isParam("MAPTABVISIBLE")) {
-                                client.getMainFrame().getMainPanel().selectMapTab();
-                            }
-                        }
-                    } else if (event.getDescription().startsWith("MWDEFECTDLG")) {
-                        String command = event.getDescription();
-                        command = command.substring(11);//strip command code
+                    //get the planet
+                    Planet currPlanet = client.getData().getPlanetByName(planetName);
 
-                        //open a warning dialog
-                        Object[] options = { " Defect ", " Cancel " };
-                        int confirmed = javax.swing.JOptionPane.showOptionDialog(client.getMainFrame(),
-                              "Are you SURE you want to defect?",
-                              "Defection Confirmation",
-                              javax.swing.JOptionPane.DEFAULT_OPTION,
-                              javax.swing.JOptionPane.WARNING_MESSAGE,
-                              null,
-                              options,
-                              options[1]);
+                    if (currPlanet != null) {
+                        map.setSelectedPlanet(currPlanet);
+                        map.activate(currPlanet, true);
+                        map.saveMapSelection(currPlanet);
 
-                        //if confirmed, send CONFIRM command
-                        if (confirmed == javax.swing.JOptionPane.OK_OPTION) {client.sendChat(command);}
-                    } else if (event.getDescription().startsWith("MWSOLDEFECT")) {
-                        client.getMainFrame().jMenuCommanderDefect_actionPerformed();
-                    } else if (event.getDescription().startsWith("REMOVEQUEUEDWORKORDER")) {
-                        String command = event.getDescription();
-                        StringTokenizer ST = new StringTokenizer(command, "|");
-                        ST.nextToken();//strip command code
-                        int tech = Integer.parseInt(ST.nextToken());
-                        String position = ST.nextToken();
-
-                        client.getRMT().removeWorkOrder(tech, position);
-
-                    } else if (event.getDescription().startsWith("REMOVESALVAGEQUEUEDWORKORDER")) {
-                        String command = event.getDescription();
-                        StringTokenizer ST = new StringTokenizer(command, "|");
-                        ST.nextToken();//strip command code
-                        int tech = Integer.parseInt(ST.nextToken());
-                        String position = ST.nextToken();
-
-                        client.getSMT().removeWorkOrder(tech, position);
-
-                    } else {
-                        if (Desktop.isDesktopSupported() && Desktop.getDesktop().isSupported(Desktop.Action.BROWSE)) {
-                            try {
-                                Desktop.getDesktop().browse(event.getURL().toURI());
-                            } catch (IOException e) {
-                                throw new RuntimeException(e);
-                            } catch (URISyntaxException e) {
-                                throw new RuntimeException(e);
-                            }
+                        /*
+                         * If the map is visible and we're supposed to jump to it, get the
+                         * main panel and call .selectMapTab(). selectMap will check where
+                         * the map is (top or bottom) and send the correct tab to the front.
+                         */
+                        if (client.getConfig().isParam("MAP_TAB_ON_CLICK") &&
+                                  client.getConfig().isParam("MAP_TAB_VISIBLE")) {
+                            client.getMainFrame().getMainPanel().selectMapTab();
                         }
                     }
-                } catch (Throwable t) {
-                    MWLogger.errLog((Exception) t);
+                } else if (event.getDescription().startsWith("MW_DEFECT_DIALOG")) {
+                    String command = event.getDescription();
+                    command = command.substring(11);//strip command code
+
+                    //open a warning dialog
+                    Object[] options = { " Defect ", " Cancel " };
+                    int confirmed = JOptionPane.showOptionDialog(client.getMainFrame(),
+                          "Are you SURE you want to defect?",
+                          "Defection Confirmation",
+                          JOptionPane.DEFAULT_OPTION,
+                          JOptionPane.WARNING_MESSAGE,
+                          null,
+                          options,
+                          options[1]);
+
+                    //if confirmed, send CONFIRM command
+                    if (confirmed == JOptionPane.OK_OPTION) {
+                        client.sendChat(command);
+                    }
+
+                } else if (event.getDescription().startsWith("MW_SOL_DEFECT")) {
+                    client.getMainFrame().jMenuCommanderDefect_actionPerformed();
+                } else if (event.getDescription().startsWith("REMOVE_QUEUED_WORK_ORDER")) {
+                    String command = event.getDescription();
+                    StringTokenizer stringTokenizer = new StringTokenizer(command, "|");
+                    stringTokenizer.nextToken();//strip command code
+                    int tech = MathUtility.parseInt(stringTokenizer.nextToken(), 0);
+                    String position = stringTokenizer.nextToken();
+
+                    client.getRMT().removeWorkOrder(tech, position);
+                } else if (event.getDescription().startsWith("REMOVE_SALVAGE_QUEUED_WORK_ORDER")) {
+                    String command = event.getDescription();
+                    StringTokenizer stringTokenizer = new StringTokenizer(command, "|");
+                    stringTokenizer.nextToken();//strip command code
+                    int tech = MathUtility.parseInt(stringTokenizer.nextToken(), 0);
+                    String position = stringTokenizer.nextToken();
+
+                    client.getSMT().removeWorkOrder(tech, position);
+                } else {
+                    if (Desktop.isDesktopSupported() && Desktop.getDesktop().isSupported(Desktop.Action.BROWSE)) {
+                        try {
+                            Desktop.getDesktop().browse(event.getURL().toURI());
+                        } catch (IOException | URISyntaxException e) {
+                            LOGGER.error(e, "Unable to browse to URL: {}", event.getURL().toExternalForm());
+                            throw new RuntimeException(e);
+                        }
+                    }
                 }
             }
         }

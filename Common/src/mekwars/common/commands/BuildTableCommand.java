@@ -35,11 +35,15 @@
 package mekwars.common.commands;
 
 import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.PrintStream;
 import java.util.StringTokenizer;
 
+import megamek.logging.MMLogger;
 import mekwars.common.campaign.clientutils.protocol.IClient;
 import mekwars.common.gui.panels.CCommPanel;
-import mekwars.common.util.MWLogger;
 
 /**
  * @author Spork
@@ -48,6 +52,7 @@ import mekwars.common.util.MWLogger;
  *
  */
 public class BuildTableCommand extends Command {
+    private final static MMLogger LOGGER = MMLogger.create(BuildTableCommand.class);
 
     /**
      *
@@ -61,26 +66,27 @@ public class BuildTableCommand extends Command {
      */
     @Override
     public void execute(String input) {
-        StringTokenizer st = decode(input);
+        StringTokenizer stringTokenizer = decode(input);
 
-        String cmd = st.nextToken();
+        String cmd = stringTokenizer.nextToken();
         boolean viewer = false;
-        if (cmd.equalsIgnoreCase("LS")) {
-            StringTokenizer folderT = new StringTokenizer(st.nextToken(), "?");
 
-            if (st.hasMoreTokens()) {
-                viewer = Boolean.parseBoolean(st.nextToken());
+        if (cmd.equalsIgnoreCase("LS")) {
+            StringTokenizer folderTokenizer = new StringTokenizer(stringTokenizer.nextToken(), "?");
+
+            if (stringTokenizer.hasMoreTokens()) {
+                viewer = Boolean.parseBoolean(stringTokenizer.nextToken());
             }
 
-            while (folderT.hasMoreTokens()) {
+            while (folderTokenizer.hasMoreTokens()) {
                 //Token 1 is the folder
-                String dName = folderT.nextToken();
-                MWLogger.infoLog(dName);
+                String dName = folderTokenizer.nextToken();
+                LOGGER.info(dName);
                 // Token 2 is the names of the lists
-                if (folderT.hasMoreTokens()) {
-                    StringTokenizer listT = new StringTokenizer(folderT.nextToken(), "*");
-                    while (listT.hasMoreTokens()) {
-                        String fileName = listT.nextToken();
+                if (folderTokenizer.hasMoreTokens()) {
+                    StringTokenizer listTokenizer = new StringTokenizer(folderTokenizer.nextToken(), "*");
+                    while (listTokenizer.hasMoreTokens()) {
+                        String fileName = listTokenizer.nextToken();
                         long time = 0;
                         File file = new File(STR."./data/buildtables/\{dName}/\{fileName}");
 
@@ -101,29 +107,28 @@ public class BuildTableCommand extends Command {
 
         }
         if (cmd.equalsIgnoreCase("PLS")) {
-            StringTokenizer folderT = new StringTokenizer(st.nextToken(), "?");
+            StringTokenizer folderTokenizer = new StringTokenizer(stringTokenizer.nextToken(), "?");
 
-            if (st.hasMoreTokens()) {
-                viewer = Boolean.parseBoolean(st.nextToken());
+            if (stringTokenizer.hasMoreTokens()) {
+                viewer = Boolean.parseBoolean(stringTokenizer.nextToken());
             }
 
-            while (folderT.hasMoreTokens()) {
+            while (folderTokenizer.hasMoreTokens()) {
                 //Token 1 is the folder
-                String dName = folderT.nextToken();
-                MWLogger.infoLog(dName);
+                String dName = folderTokenizer.nextToken();
+                LOGGER.info(dName);
                 // Token 2 is the names of the lists
-                if (folderT.hasMoreTokens()) {
-                    StringTokenizer listT = new StringTokenizer(folderT.nextToken(), "*");
-                    while (listT.hasMoreTokens()) {
-                        String fileName = listT.nextToken();
+                if (folderTokenizer.hasMoreTokens()) {
+                    StringTokenizer listTokenizer = new StringTokenizer(folderTokenizer.nextToken(), "*");
+                    while (listTokenizer.hasMoreTokens()) {
+                        String fileName = listTokenizer.nextToken();
                         long time = 0;
                         File file = new File(STR."./data/buildtables/\{dName}/\{fileName}");
 
                         if (file.exists()) {
                             time = file.lastModified();
                         }
-                        client.sendChat(
-                              STR."\{IClient.CAMPAIGN_PREFIX}RequestBuildTable get#\{dName}#\{fileName}#\{time}");
+                        client.sendChat(STR."\{IClient.CAMPAIGN_PREFIX}RequestBuildTable get#\{dName}#\{fileName}#\{time}");
                     }
                 }
 
@@ -132,47 +137,50 @@ public class BuildTableCommand extends Command {
                 client.sendChat(STR."\{IClient.CAMPAIGN_PREFIX}RequestBuildTable view");
             }
         } else if (cmd.equalsIgnoreCase("BuildTableCommand")) {
-            String folder = st.nextToken();
-            String table = st.nextToken();
+            String folder = stringTokenizer.nextToken();
+            String table = stringTokenizer.nextToken();
             boolean isMod = client.isMod();
-            java.io.File file = new java.io.File("./data/buildtables");
+            File file = new File("./data/buildtables");
 
             if (!file.exists()) {
                 file.mkdir();
             }
 
-            file = new java.io.File(STR."./data/buildtables/\{folder}");
+            file = new File(STR."./data/buildtables/\{folder}");
 
             if (!file.exists()) {
                 file.mkdir();
             }
 
-            file = new java.io.File(STR."./data/buildtables/\{folder}/\{table}");
+            file = new File(STR."./data/buildtables/\{folder}/\{table}");
 
             try {
                 file.createNewFile();
-            } catch (java.io.IOException e1) {
-                // TODO Auto-generated catch block
-                e1.printStackTrace();
+            } catch (IOException e1) {
+                LOGGER.error(e1, "Unable to create build table file");
             }
-            java.io.FileOutputStream out;
+
+            FileOutputStream out;
             try {
-                out = new java.io.FileOutputStream(file);
-                java.io.PrintStream p = new java.io.PrintStream(out);
-                while (st.hasMoreTokens()) {p.println(st.nextToken());}
+                out = new FileOutputStream(file);
+                PrintStream printStream = new PrintStream(out);
+                while (stringTokenizer.hasMoreTokens()) {
+                    printStream.println(stringTokenizer.nextToken());
+                }
+
                 if (isMod) {
                     client.addToChat(STR."Received build table \{folder}/\{table}", CCommPanel.CHANNEL_MISC);
                 }
-                p.close();
+
+                printStream.close();
+
                 try {
                     out.close();
-                } catch (java.io.IOException e) {
-                    // TODO Auto-generated catch block
-                    MWLogger.errLog(e);
+                } catch (IOException e) {
+                    LOGGER.error(e, "Unable to close build table file");
                 }
-            } catch (java.io.FileNotFoundException e) {
-                // TODO Auto-generated catch block
-                MWLogger.errLog(e);
+            } catch (FileNotFoundException e) {
+                LOGGER.error(e, "Unable to find build table file");
             }
         } else if (cmd.equalsIgnoreCase("VS")) {
             client.setWaiting(false);

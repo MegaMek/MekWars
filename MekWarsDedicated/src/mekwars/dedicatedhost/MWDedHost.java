@@ -51,7 +51,7 @@ import mekwars.common.campaign.clientutils.protocol.IClient;
 import mekwars.common.commands.CommPCmd;
 import mekwars.common.commands.Command;
 import mekwars.common.commands.IProtCommand;
-import mekwars.common.commands.PingPCmd;
+import mekwars.common.commands.PingPlayerCommand;
 import mekwars.common.commands.PongPCmd;
 import mekwars.common.util.UnitUtils;
 import mekwars.dedicatedhost.protocol.DataFetchClient;
@@ -199,7 +199,7 @@ public final class MWDedHost extends GameHost implements IClient {
 
     protected void createProtCommands() {
         addProtCommand(new CommPCmd(this));
-        addProtCommand(new PingPCmd(this));
+        addProtCommand(new PingPlayerCommand(this));
         addProtCommand(new PongPCmd(this));
         addProtCommand(new AckSignonPCmd(this));
     }

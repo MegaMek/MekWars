@@ -90,12 +90,12 @@ public class CUserListPanel extends JPanel implements ActionListener {
     private final Icon activateFlashIcon;
     private final Icon deactivateFlashIcon;
     private final JPanel countPanel = new JPanel();
-    private final JLabel CountLabel = new JLabel();
-    private final JLabel LinksLabel = new JLabel();
-    private final JButton ActivityButton = new JButton();
-    private final JButton LinkButton1 = new JButton();
-    private final JButton LinkButton2 = new JButton();
-    private final JButton LinkButton3 = new JButton();
+    private final JLabel countLabel = new JLabel();
+    private final JLabel linksLabel = new JLabel();
+    private final JButton activityButton = new JButton();
+    private final JButton linkButton1 = new JButton();
+    private final JButton linkButton2 = new JButton();
+    private final JButton linkButton3 = new JButton();
     private final JPanel linksPanel = new JPanel();
     private final JPanel bottomPanel = new JPanel();
     private final IClient client;
@@ -130,11 +130,11 @@ public class CUserListPanel extends JPanel implements ActionListener {
 
         cUserListModelJList.setBackground(StringUtils.html2Color(this.client.getConfigParam("BACKGROUND_COLOR")));
         //set up the count label
-        CountLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
-        CountLabel.setAlignmentY(Component.CENTER_ALIGNMENT);
-        CountLabel.setBorder(BorderFactory.createEmptyBorder(3, 2, 2, 2));
-        CountLabel.setText(STR."Player Count: \{cUserListModelJList.getModel().getSize()}");
-        CountLabel.setVisible(this.client.getConfig().isParam("USER_LIST_COUNT"));
+        countLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
+        countLabel.setAlignmentY(Component.CENTER_ALIGNMENT);
+        countLabel.setBorder(BorderFactory.createEmptyBorder(3, 2, 2, 2));
+        countLabel.setText(STR."Player Count: \{cUserListModelJList.getModel().getSize()}");
+        countLabel.setVisible(this.client.getConfig().isParam("USER_LIST_COUNT"));
 
         if (new File("./data/images/activatebutton.png").exists()) {
             activateIcon = new ImageIcon("./data/images/activatebutton.png");
@@ -185,22 +185,22 @@ public class CUserListPanel extends JPanel implements ActionListener {
         }
 
         //set up activity button
-        ActivityButton.setEnabled(false);
-        ActivityButton.setAlignmentX(Component.CENTER_ALIGNMENT);
-        ActivityButton.setAlignmentY(Component.CENTER_ALIGNMENT);
-        ActivityButton.addActionListener(this);
-        ActivityButton.setRolloverEnabled(true);
-        ActivityButton.setRolloverIcon(mouseActivateIcon);
-        ActivityButton.setIcon(activateIcon);
+        activityButton.setEnabled(false);
+        activityButton.setAlignmentX(Component.CENTER_ALIGNMENT);
+        activityButton.setAlignmentY(Component.CENTER_ALIGNMENT);
+        activityButton.addActionListener(this);
+        activityButton.setRolloverEnabled(true);
+        activityButton.setRolloverIcon(mouseActivateIcon);
+        activityButton.setIcon(activateIcon);
 
         resetActivityButton();
 
-        ActivityButton.setVisible(this.client.getConfig().isParam("USER_LIST_ACTIVITY_BTN"));
+        activityButton.setVisible(this.client.getConfig().isParam("USER_LIST_ACTIVITY_BTN"));
 
         //add the button and label to CountPanel
         countPanel.setLayout(new BoxLayout(countPanel, BoxLayout.Y_AXIS));
-        countPanel.add(ActivityButton);
-        countPanel.add(CountLabel);
+        countPanel.add(activityButton);
+        countPanel.add(countLabel);
 
         //@ Salient - toggle for link area
         if (this.client.getServerConfigs("Enable_Link_Area").equalsIgnoreCase("false")) {
@@ -240,31 +240,31 @@ public class CUserListPanel extends JPanel implements ActionListener {
 
     public void resetActivityButton() {
         if (activateIcon != null) {
-            ActivityButton.setUI(new BasicButtonUI());
+            activityButton.setUI(new BasicButtonUI());
             java.awt.Insets noInsets = new Insets(0, 0, 0, 0);
-            ActivityButton.setMargin(noInsets);
-            ActivityButton.setBorder(BorderFactory.createEmptyBorder());
-            ActivityButton.setContentAreaFilled(false);
-            ActivityButton.setLayout(null);
-            ActivityButton.setBorderPainted(false);
+            activityButton.setMargin(noInsets);
+            activityButton.setBorder(BorderFactory.createEmptyBorder());
+            activityButton.setContentAreaFilled(false);
+            activityButton.setLayout(null);
+            activityButton.setBorderPainted(false);
         }
     }
 
     private void createLinkArea() {
-        LinksLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
-        LinksLabel.setAlignmentY(Component.CENTER_ALIGNMENT);
-        LinksLabel.setText(client.getServerConfigs("Link_Area_Label").trim());
+        linksLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
+        linksLabel.setAlignmentY(Component.CENTER_ALIGNMENT);
+        linksLabel.setText(client.getServerConfigs("Link_Area_Label").trim());
 
         Icon link1Icon = new ImageIcon(client.getServerConfigs("Link1_Icon").trim());
-        LinkButton1.setEnabled(true);
-        LinkButton1.setIcon(link1Icon);
-        LinkButton1.setAlignmentX(Component.CENTER_ALIGNMENT);
-        LinkButton1.setAlignmentY(Component.CENTER_ALIGNMENT);
-        LinkButton1.setPreferredSize(new Dimension(30, 30));
-        LinkButton1.setMinimumSize(new Dimension(30, 30));
-        LinkButton1.setMaximumSize(new Dimension(30, 30));
+        linkButton1.setEnabled(true);
+        linkButton1.setIcon(link1Icon);
+        linkButton1.setAlignmentX(Component.CENTER_ALIGNMENT);
+        linkButton1.setAlignmentY(Component.CENTER_ALIGNMENT);
+        linkButton1.setPreferredSize(new Dimension(30, 30));
+        linkButton1.setMinimumSize(new Dimension(30, 30));
+        linkButton1.setMaximumSize(new Dimension(30, 30));
 
-        LinkButton1.addActionListener(_ -> {
+        linkButton1.addActionListener(_ -> {
             Desktop desktop = Desktop.isDesktopSupported() ? Desktop.getDesktop() : null;
             if (desktop != null && desktop.isSupported(Desktop.Action.BROWSE)) {
                 String uri = client.getServerConfigs("Link1_URL");
@@ -277,19 +277,19 @@ public class CUserListPanel extends JPanel implements ActionListener {
             }
         });
 
-        LinkButton1.setVisible(client.getServerConfigs("Enable_Link1_Button").equalsIgnoreCase("true"));
+        linkButton1.setVisible(client.getServerConfigs("Enable_Link1_Button").equalsIgnoreCase("true"));
 
         //button2
         Icon link2Icon = new ImageIcon(client.getServerConfigs("Link2_Icon").trim());
-        LinkButton2.setEnabled(true);
-        LinkButton2.setIcon(link2Icon);
-        LinkButton2.setAlignmentX(Component.CENTER_ALIGNMENT);
-        LinkButton2.setAlignmentY(Component.CENTER_ALIGNMENT);
-        LinkButton2.setPreferredSize(new Dimension(30, 30));
-        LinkButton2.setMinimumSize(new Dimension(30, 30));
-        LinkButton2.setMaximumSize(new Dimension(30, 30));
+        linkButton2.setEnabled(true);
+        linkButton2.setIcon(link2Icon);
+        linkButton2.setAlignmentX(Component.CENTER_ALIGNMENT);
+        linkButton2.setAlignmentY(Component.CENTER_ALIGNMENT);
+        linkButton2.setPreferredSize(new Dimension(30, 30));
+        linkButton2.setMinimumSize(new Dimension(30, 30));
+        linkButton2.setMaximumSize(new Dimension(30, 30));
 
-        LinkButton2.addActionListener(_ -> {
+        linkButton2.addActionListener(_ -> {
             Desktop desktop = Desktop.isDesktopSupported() ? Desktop.getDesktop() : null;
             if (desktop != null && desktop.isSupported(Desktop.Action.BROWSE)) {
                 String uri = client.getServerConfigs("Link2_URL");
@@ -301,19 +301,19 @@ public class CUserListPanel extends JPanel implements ActionListener {
             }
         });
 
-        LinkButton2.setVisible(client.getServerConfigs("Enable_Link2_Button").equalsIgnoreCase("true"));
+        linkButton2.setVisible(client.getServerConfigs("Enable_Link2_Button").equalsIgnoreCase("true"));
 
         //button3
         Icon link3Icon = new ImageIcon(client.getServerConfigs("Link3_Icon").trim());
-        LinkButton3.setEnabled(true);
-        LinkButton3.setIcon(link3Icon);
-        LinkButton3.setAlignmentX(Component.CENTER_ALIGNMENT);
-        LinkButton3.setAlignmentY(Component.CENTER_ALIGNMENT);
-        LinkButton3.setPreferredSize(new Dimension(30, 30));
-        LinkButton3.setMinimumSize(new Dimension(30, 30));
-        LinkButton3.setMaximumSize(new Dimension(30, 30));
+        linkButton3.setEnabled(true);
+        linkButton3.setIcon(link3Icon);
+        linkButton3.setAlignmentX(Component.CENTER_ALIGNMENT);
+        linkButton3.setAlignmentY(Component.CENTER_ALIGNMENT);
+        linkButton3.setPreferredSize(new Dimension(30, 30));
+        linkButton3.setMinimumSize(new Dimension(30, 30));
+        linkButton3.setMaximumSize(new Dimension(30, 30));
 
-        LinkButton3.addActionListener(_ -> {
+        linkButton3.addActionListener(_ -> {
             Desktop desktop = Desktop.isDesktopSupported() ? Desktop.getDesktop() : null;
             if (desktop != null && desktop.isSupported(Desktop.Action.BROWSE)) {
                 String uri = client.getServerConfigs("Link3_URL");
@@ -325,7 +325,7 @@ public class CUserListPanel extends JPanel implements ActionListener {
             }
         });
 
-        LinkButton3.setVisible(client.getServerConfigs("Enable_Link3_Button").equalsIgnoreCase("true"));
+        linkButton3.setVisible(client.getServerConfigs("Enable_Link3_Button").equalsIgnoreCase("true"));
 
 
         linksPanel.setLayout(new FlowLayout(FlowLayout.TRAILING));
@@ -333,10 +333,10 @@ public class CUserListPanel extends JPanel implements ActionListener {
         linksPanel.setPreferredSize(new Dimension(175, 34));
         linksPanel.setMinimumSize(new Dimension(175, 34));
         linksPanel.setMaximumSize(new Dimension(175, 34));
-        linksPanel.add(LinksLabel);
-        linksPanel.add(LinkButton1);
-        linksPanel.add(LinkButton2);
-        linksPanel.add(LinkButton3);
+        linksPanel.add(linksLabel);
+        linksPanel.add(linkButton1);
+        linksPanel.add(linkButton2);
+        linksPanel.add(linkButton3);
 
         bottomPanel.setLayout(new BorderLayout());
         bottomPanel.add(countPanel, BorderLayout.CENTER);
@@ -347,6 +347,14 @@ public class CUserListPanel extends JPanel implements ActionListener {
 
     public CUserListModel getcUserListModel() {
         return cUserListModel;
+    }
+
+    public JButton getActivateButton() {
+        return activityButton;
+    }
+
+    public JLabel getCountLabel() {
+        return countLabel;
     }
 
     public boolean isDedicated() {
@@ -371,7 +379,7 @@ public class CUserListPanel extends JPanel implements ActionListener {
         } catch (Exception ex) {
             LOGGER.error(ex, "Unable to refresh the model. {}", ex.getLocalizedMessage());
         }
-        CountLabel.setText(STR."Player Count: \{cUserListModelJList.getModel().getSize()}");
+        countLabel.setText(STR."Player Count: \{cUserListModelJList.getModel().getSize()}");
     }
 
     public boolean isLoggedIn() {
@@ -382,19 +390,19 @@ public class CUserListPanel extends JPanel implements ActionListener {
         isLoggedIn = loggedIn;
 
         if (loggedIn) {
-            ActivityButton.setEnabled(true);//update button for status
+            activityButton.setEnabled(true);//update button for status
             setActivateButtonText("Activate");
         } else {//logged out
-            ActivityButton.setEnabled(true);//update button for status
+            activityButton.setEnabled(true);//update button for status
             setActivateButtonText("Login");
         }
     }
 
     public void setActivateButtonText(String s) {
-        if (ActivityButton.getIcon() == null) {
-            ActivityButton.setText(s);
+        if (activityButton.getIcon() == null) {
+            activityButton.setText(s);
         } else {
-            ActivityButton.setText("");
+            activityButton.setText("");
         }
     }
 
@@ -407,7 +415,7 @@ public class CUserListPanel extends JPanel implements ActionListener {
             }
 
             ActivationThread animator = new ActivationThread(client,
-                  ActivityButton,
+                  activityButton,
                   deactivateFlashIcon,
                   activateIcon,
                   mouseActivateIcon);
@@ -421,7 +429,7 @@ public class CUserListPanel extends JPanel implements ActionListener {
             }
 
             ActivationThread animator = new ActivationThread(client,
-                  ActivityButton,
+                  activityButton,
                   activateFlashIcon,
                   deactivateIcon,
                   mouseDeactivateIcon);
@@ -430,16 +438,16 @@ public class CUserListPanel extends JPanel implements ActionListener {
     }
 
     public void setActivityButtonEnabled(boolean activityButtonEnabled) {
-        ActivityButton.setEnabled(activityButtonEnabled);
+        activityButton.setEnabled(activityButtonEnabled);
     }
 
     /**
      * ActionPerformed method, to comply with ActionListener.
      * <p>
-     * If ActivityButton is pressed, look at client's current login/activity status and act accordingly.
+     * If activityButton is pressed, look at client's current login/activity status and act accordingly.
      */
     public void actionPerformed(java.awt.event.ActionEvent e) {
-        if (e.getSource() == ActivityButton) {
+        if (e.getSource() == activityButton) {
             if (client.getMyStatus() == IClient.STATUS_RESERVE)//is reserve
             {
                 client.sendChat(STR."\{IClient.CAMPAIGN_PREFIX}c activate#\{IClient.CLIENT_VERSION}");

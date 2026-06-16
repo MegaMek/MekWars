@@ -35,17 +35,16 @@ package mekwars.common.campaign.targetsystems;
 import java.util.Vector;
 
 import megamek.common.units.Entity;
+import megamek.logging.MMLogger;
 
 public class TargetSystem {
-
     public final static int TS_TYPE_STANDARD = 0;
     public final static int TS_TYPE_ANTIAIR = 1;
     public final static int TS_TYPE_SHORT = 2;
     public final static int TS_TYPE_MEDIUM = 3;
     public final static int TS_TYPE_LONG = 4;
-
     public final static int TS_TYPE_MAX = 4;
-
+    private final static MMLogger LOGGER = MMLogger.create(TargetSystem.class);
     private Entity entity;
     private int currentType = TS_TYPE_STANDARD;
 
@@ -135,8 +134,7 @@ public class TargetSystem {
         try {
             name = getTypeName(currentType);
         } catch (TargetTypeOutOfBoundsException | TargetTypeNotImplementedException e) {
-            // TODO Auto-generated catch block
-            MWLogger.errLog(e);
+            LOGGER.error(e, "Error getting target system name");
         }
         return name;
     }
@@ -164,7 +162,7 @@ public class TargetSystem {
             try {
                 names.add(getTypeName(i));
             } catch (TargetTypeOutOfBoundsException | TargetTypeNotImplementedException e) {
-                MWLogger.errLog(e);
+                LOGGER.error(e, "Error getting name array");
             }
         }
         String[] toReturn = new String[names.size()];
@@ -180,7 +178,7 @@ public class TargetSystem {
                     names.add(getTypeName(i));
                 }
             } catch (TargetTypeOutOfBoundsException | TargetTypeNotImplementedException e) {
-                MWLogger.errLog(e);
+                LOGGER.error(e, "Error getting non banned name array.");
             }
         }
         String[] toReturn = new String[names.size()];

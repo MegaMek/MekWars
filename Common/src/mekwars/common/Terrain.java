@@ -85,7 +85,7 @@ final public class Terrain {
      */
     public void binIn(BinReader in, CampaignData data) throws IOException {
         id = in.readInt("id");
-        Name = in.readLine("name");
+        Name = in.read("name");
 
         int environments = in.readInt("environmentsize");
 
@@ -103,16 +103,6 @@ final public class Terrain {
      */
     public int getId() {
         return id;
-    }
-
-    /**
-     *
-     */
-    public void setId(int id) {
-        this.id = id;
-        for (PlanetEnvironment pe : environments) {
-            pe.setId(id);
-        }
     }
 
     /**

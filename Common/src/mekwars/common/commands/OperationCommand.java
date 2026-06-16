@@ -36,14 +36,23 @@
 
 package mekwars.common.commands;
 
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.util.Hashtable;
+import java.util.Properties;
 import java.util.StringTokenizer;
+import java.util.Vector;
 
+import megamek.logging.MMLogger;
 import mekwars.common.campaign.clientutils.protocol.IClient;
 import mekwars.common.campaign.operations.DefaultOperation;
 import mekwars.common.campaign.operations.Operation;
 import mekwars.common.gui.dialogs.opviewer.OperationViewerDialog;
 import mekwars.common.util.MMNetXStream;
-import mekwars.common.util.MWLogger;
 
 /**
  *
@@ -53,6 +62,7 @@ import mekwars.common.util.MWLogger;
  *
  */
 public class OperationCommand extends Command {
+    private final static MMLogger LOGGER = MMLogger.create(OperationCommand.class);
 
     public OperationCommand(IClient client) {
         super(client);
@@ -60,7 +70,7 @@ public class OperationCommand extends Command {
 
     @Override
     public void execute(String input) {
-        OperationViewerDialog ojd;
+        OperationViewerDialog operationViewerDialog;
         StringTokenizer stringTokenizer = decode(input);
         String cmd = stringTokenizer.nextToken().trim();
 
@@ -68,67 +78,71 @@ public class OperationCommand extends Command {
             case "add":
                 String name = stringTokenizer.nextToken().trim();
                 MMNetXStream xml = new MMNetXStream();
-                java.util.Properties properties = (java.util.Properties) xml.fromXML(stringTokenizer.nextToken());
+                Properties properties = (Properties) xml.fromXML(stringTokenizer.nextToken());
                 Operation operation = new Operation(name, new DefaultOperation(), properties);
                 String folder = "./data/operations/xml";
                 String fileName = STR."\{name}.xml";
                 operation.writeToXmlFile(folder, fileName);
                 break;
             case "view":
-                ojd = new OperationViewerDialog(client.getMainFrame(), client);
-                new Thread(ojd).start();
+                operationViewerDialog = new OperationViewerDialog(client.getMainFrame(), client);
+                new Thread(operationViewerDialog).start();
                 break;
             case "md5":
-                java.util.Hashtable<String, String> serverMd5s = new java.util.Hashtable<>();
-                java.util.StringTokenizer stk = new java.util.StringTokenizer(stringTokenizer.nextToken(), "#");
-                while (stk.hasMoreTokens()) {
-                    String opName = stk.nextToken();
-                    String opMd5 = stk.nextToken();
+                Hashtable<String, String> serverMd5s = new Hashtable<>();
+                StringTokenizer tokenizer = new StringTokenizer(stringTokenizer.nextToken(), "#");
+
+                while (tokenizer.hasMoreTokens()) {
+                    String opName = tokenizer.nextToken();
+                    String opMd5 = tokenizer.nextToken();
                     serverMd5s.put(opName, opMd5);
                 }
+
                 // Do we have a local md5 file?
-                java.io.File md5File = new java.io.File("./data/operations/opsmd5.txt");
+                File md5File = new File("./data/operations/opsmd5.txt");
                 if (!md5File.exists()) {
                     // No, we do not.
                     // Write it out. Since we don't know if we're synced up
                     // locally, pull *all* operations
-
-                    java.io.FileWriter fw;
+                    FileWriter fileWriter;
 
                     try {
-                        fw = new java.io.FileWriter(md5File);
+                        fileWriter = new FileWriter(md5File);
+
                         for (String key : serverMd5s.keySet()) {
-                            fw.write(STR."\{key}#\{serverMd5s.get(key)}\n");
+                            fileWriter.write(STR."\{key}#\{serverMd5s.get(key)}\n");
                         }
-                        fw.close();
-                    } catch (java.io.IOException e) {
-                        // TODO Auto-generated catch block
-                        e.printStackTrace();
+
+                        fileWriter.close();
+                    } catch (IOException e) {
+                        LOGGER.error(e, "Unable to write opsmd5.txt");
                     }
 
                     // Delete all local op xmls
-                    java.io.File dir = new java.io.File("./data/operations/xml");
+                    File dir = new File("./data/operations/xml");
                     if (dir.exists()) {
                         String[] fileList = dir.list();
+
                         if (fileList != null) {
-                            for (String s : fileList) {
-                                if (s.endsWith(".xml")) {
-                                    java.io.File file = new java.io.File(STR."\{dir}/\{s}");
+                            for (String string : fileList) {
+                                if (string.endsWith(".xml")) {
+                                    File file = new File(STR."\{dir}/\{string}");
                                     file.delete();
                                 }
                             }
                         }
                     }
+
                     client.sendChat(STR."\{IClient.CAMPAIGN_PREFIX}getops getall");
                     return;
                 } else {
                     // We *do* have the file.  Check the contents.
-                    java.util.Vector<String> opsToGet = new java.util.Vector<>();
-                    java.util.Vector<String> opsToTest = new java.util.Vector<>();
-                    try (java.io.FileInputStream in = new java.io.FileInputStream(md5File)) {
-                        java.io.BufferedReader br = new java.io.BufferedReader(new java.io.InputStreamReader(in));
-                        while (br.ready()) {
-                            String line = br.readLine();
+                    Vector<String> opsToGet = new Vector<>();
+                    Vector<String> opsToTest = new Vector<>();
+                    try (FileInputStream fileInputStream = new FileInputStream(md5File)) {
+                        BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(fileInputStream));
+                        while (bufferedReader.ready()) {
+                            String line = bufferedReader.readLine();
                             String[] arr = line.split("#");
                             String opName = arr[0];
                             String opMd5 = arr[1];
@@ -140,39 +154,39 @@ public class OperationCommand extends Command {
                             }
                         }
                     } catch (java.io.IOException e) {
-                        // TODO Auto-generated catch block
-                        e.printStackTrace();
+                        LOGGER.error(e, "Unable to read opsmd5.txt");
                     }
 
                     // If opsToGet is populated, then our MD5 file is wrong.
                     // Write out a new one
                     if (!opsToGet.isEmpty()) {
-                        java.io.FileWriter fw;
+                        FileWriter fileWriter;
+
                         try {
-                            fw = new java.io.FileWriter(md5File);
+                            fileWriter = new FileWriter(md5File);
 
                             for (String key : serverMd5s.keySet()) {
-                                fw.write(STR."""
+                                fileWriter.write(STR."""
 \{key}#\{serverMd5s.get(key)}
 """);
                             }
 
-                            fw.close();
+                            fileWriter.close();
                         } catch (java.io.IOException e) {
-                            // TODO Auto-generated catch block
-                            e.printStackTrace();
+                            LOGGER.error(e, "Unable to write opsmd5.txt");
                         }
                     }
 
                     // First, check that we don't have extraneous old xml files
-                    java.io.File dir = new java.io.File("./data/operations/xml");
+                    File dir = new File("./data/operations/xml");
                     if (dir.exists()) {
                         String[] fileList = dir.list();
+
                         if (fileList != null) {
-                            for (String s : fileList) {
-                                if (s.endsWith(".xml")) {
-                                    if (!opsToTest.contains(s.replace(".xml", ""))) {
-                                        java.io.File file = new java.io.File(STR."\{dir}/\{s}");
+                            for (String string : fileList) {
+                                if (string.endsWith(".xml")) {
+                                    if (!opsToTest.contains(string.replace(".xml", ""))) {
+                                        File file = new File(STR."\{dir}/\{string}");
                                         file.delete();
                                     }
                                 }
@@ -187,7 +201,8 @@ public class OperationCommand extends Command {
                         return;
                     } else {
                         for (String opName : opsToTest) {
-                            java.io.File file = new java.io.File(STR."\{dir}/\{opName}.xml");
+                            File file = new File(STR."\{dir}/\{opName}.xml");
+
                             if (!file.exists()) {
                                 opsToGet.add(opName);
                             }
@@ -219,13 +234,13 @@ public class OperationCommand extends Command {
                         client.sendChat(STR."\{IClient.CAMPAIGN_PREFIX}getops getsome#\{sb.toString()}");
                     } else {
                         // Our ops are good
-                        ojd = new OperationViewerDialog(client.getMainFrame(), client);
-                        new Thread(ojd).start();
+                        operationViewerDialog = new OperationViewerDialog(client.getMainFrame(), client);
+                        new Thread(operationViewerDialog).start();
                     }
                 }
                 break;
             default:
-                MWLogger.errLog("Default case reached in OperationCommand command");
+                LOGGER.debug("Default case reached in OperationCommand command");
                 break;
         }
 

@@ -37,12 +37,13 @@ package mekwars.common.commands;
 
 import java.util.StringTokenizer;
 
+import megamek.codeUtilities.MathUtility;
+import megamek.logging.MMLogger;
 import mekwars.common.campaign.CPlayer;
 import mekwars.common.campaign.CUnit;
 import mekwars.common.campaign.clientutils.protocol.IClient;
 import mekwars.common.campaign.pilot.Pilot;
 import mekwars.common.gui.dialogs.AdvancedRepairDialog;
-import mekwars.common.util.MWLogger;
 import mekwars.common.util.TokenReader;
 import mekwars.common.util.UnitUtils;
 
@@ -51,6 +52,7 @@ import mekwars.common.util.UnitUtils;
  */
 
 public class PlayerCommand extends Command {
+    private final static MMLogger LOGGER = MMLogger.create(PlayerCommand.class);
 
     /**
      *
@@ -64,12 +66,12 @@ public class PlayerCommand extends Command {
      */
     @Override
     public void execute(String input) {
-        java.util.StringTokenizer st = decode(input);
+        java.util.StringTokenizer stringTokenizer = decode(input);
 
-        String cmd = TokenReader.readString(st);
+        String cmd = TokenReader.readString(stringTokenizer);
         CPlayer player = client.getPlayer();
 
-        if (!st.hasMoreTokens()) {
+        if (!stringTokenizer.hasMoreTokens()) {
             return;
         }
 
@@ -78,70 +80,70 @@ public class PlayerCommand extends Command {
                 client.updateClient();
                 return;
             }
-            case "RA" -> player.removeArmy(TokenReader.readInt(st));
-            case "LA" -> player.playerLockArmy(TokenReader.readInt(st));
-            case "ULA" -> player.playerUnlockArmy(TokenReader.readInt(st));
-            case "TAD" -> player.toggleArmyDisabled(TokenReader.readInt(st));
-            case "SAD" -> player.setArmyData(TokenReader.readString(st));
-            case "SABV" -> player.setArmyBV(TokenReader.readString(st));
-            case "AAU" -> player.addArmyUnit(TokenReader.readString(st));
-            case "RAU" -> player.removeArmyUnit(TokenReader.readString(st));
-            case "HD" -> player.setHangarData(TokenReader.readString(st));
-            case "RU" -> player.removeUnit(TokenReader.readInt(st));
-            case "SE" -> player.setExp(TokenReader.readInt(st));
-            case "SM" -> player.setMoney(TokenReader.readInt(st));
-            case "UMT" -> player.setMekToken(TokenReader.readInt(st)); //@Salient
-            case "SB" -> player.setBays(TokenReader.readInt(st));
-            case "SF" -> player.setFreeBays(TokenReader.readInt(st));
-            case "SI" -> player.setInfluence(TokenReader.readInt(st));
-            case "SR" -> player.setRating(TokenReader.readDouble(st));
-            case "SRP" -> player.setRewardPoints(TokenReader.readInt(st));
-            case "SH" -> player.setHouse(TokenReader.readString(st));
-            case "ST" -> player.setTechnicians(TokenReader.readInt(st));
-            case "SSN" -> player.setSubFaction(TokenReader.readString(st));
-            case "AAA" -> player.setAutoArmy(st);// give it the whole tokenizer
-            case "AAM" -> player.setMines(st);// give it the whole tokenizer
-            case "GEA" -> player.setAutoGunEmplacements(st);// give it the whole tokenizer
-            case "SUS" -> player.setUnitStatus(TokenReader.readString(st));
-            case "RNA" -> player.setArmyName(TokenReader.readString(st));
-            case "SAB" -> player.setArmyLimit(TokenReader.readString(st));
-            case "SAL" -> player.setArmyLock(TokenReader.readString(st));
-            case "UU" -> player.updateUnitData(st);
-            case "UUMG" -> player.updateUnitMachineGuns(st);
+            case "RA" -> player.removeArmy(TokenReader.readInt(stringTokenizer));
+            case "LA" -> player.playerLockArmy(TokenReader.readInt(stringTokenizer));
+            case "ULA" -> player.playerUnlockArmy(TokenReader.readInt(stringTokenizer));
+            case "TAD" -> player.toggleArmyDisabled(TokenReader.readInt(stringTokenizer));
+            case "SAD" -> player.setArmyData(TokenReader.readString(stringTokenizer));
+            case "SABV" -> player.setArmyBV(TokenReader.readString(stringTokenizer));
+            case "AAU" -> player.addArmyUnit(TokenReader.readString(stringTokenizer));
+            case "RAU" -> player.removeArmyUnit(TokenReader.readString(stringTokenizer));
+            case "HD" -> player.setHangarData(TokenReader.readString(stringTokenizer));
+            case "RU" -> player.removeUnit(TokenReader.readInt(stringTokenizer));
+            case "SE" -> player.setExp(TokenReader.readInt(stringTokenizer));
+            case "SM" -> player.setMoney(TokenReader.readInt(stringTokenizer));
+            case "UMT" -> player.setMekToken(TokenReader.readInt(stringTokenizer)); //@Salient
+            case "SB" -> player.setBays(TokenReader.readInt(stringTokenizer));
+            case "SF" -> player.setFreeBays(TokenReader.readInt(stringTokenizer));
+            case "SI" -> player.setInfluence(TokenReader.readInt(stringTokenizer));
+            case "SR" -> player.setRating(TokenReader.readDouble(stringTokenizer));
+            case "SRP" -> player.setRewardPoints(TokenReader.readInt(stringTokenizer));
+            case "SH" -> player.setHouse(TokenReader.readString(stringTokenizer));
+            case "ST" -> player.setTechnicians(TokenReader.readInt(stringTokenizer));
+            case "SSN" -> player.setSubFaction(TokenReader.readString(stringTokenizer));
+            case "AAA" -> player.setAutoArmy(stringTokenizer);// give it the whole tokenizer
+            case "AAM" -> player.setMines(stringTokenizer);// give it the whole tokenizer
+            case "GEA" -> player.setAutoGunEmplacements(stringTokenizer);// give it the whole tokenizer
+            case "SUS" -> player.setUnitStatus(TokenReader.readString(stringTokenizer));
+            case "RNA" -> player.setArmyName(TokenReader.readString(stringTokenizer));
+            case "SAB" -> player.setArmyLimit(TokenReader.readString(stringTokenizer));
+            case "SAL" -> player.setArmyLock(TokenReader.readString(stringTokenizer));
+            case "UU" -> player.updateUnitData(stringTokenizer);
+            case "UUMG" -> player.updateUnitMachineGuns(stringTokenizer);
             case "BMW" -> {
-                if (client.getConfig().isParam("ENABLEBMSOUND")) {
-                    client.doPlaySound(client.getConfig().getParam("SOUNDONBMWIN"));
+                if (client.getConfig().isParam("ENABLE_BM_SOUND")) {
+                    client.doPlaySound(client.getConfig().getParam("SOUND_ON_BM_WIN"));
                 }
             }
-            case "PPQ" -> player.getPersonalPilotQueue().fromString(TokenReader.readString(st));
-            case "PEU" -> player.setPlayerExcludes(TokenReader.readString(st), "$");
-            case "AEU" -> player.setAdminExcludes(TokenReader.readString(st), "$");
-            case "RPU" -> player.repositionArmyUnit(TokenReader.readString(st));
-            case "UOE" -> player.updateOperations(TokenReader.readString(st));
-            case "UTT" -> player.updateTotalTechs(TokenReader.readString(st));
-            case "UAT" -> player.updateAvailableTechs(TokenReader.readString(st));
+            case "PPQ" -> player.getPersonalPilotQueue().fromString(TokenReader.readString(stringTokenizer));
+            case "PEU" -> player.setPlayerExcludes(TokenReader.readString(stringTokenizer), "$");
+            case "AEU" -> player.setAdminExcludes(TokenReader.readString(stringTokenizer), "$");
+            case "RPU" -> player.repositionArmyUnit(TokenReader.readString(stringTokenizer));
+            case "UOE" -> player.updateOperations(TokenReader.readString(stringTokenizer));
+            case "UTT" -> player.updateTotalTechs(TokenReader.readString(stringTokenizer));
+            case "UAT" -> player.updateAvailableTechs(TokenReader.readString(stringTokenizer));
             case "GBB" -> client.getConnector().closeConnection();
-            case "UB" -> client.setUsingBots(TokenReader.readBoolean(st));
-            case "BOST" -> client.setBotsOnSameTeam(TokenReader.readBoolean(st));
-            case "SHFF" -> player.setHouseFightingFor(TokenReader.readString(st));
+            case "UB" -> client.setUsingBots(TokenReader.readBoolean(stringTokenizer));
+            case "BOST" -> client.setBotsOnSameTeam(TokenReader.readBoolean(stringTokenizer));
+            case "SHFF" -> player.setHouseFightingFor(TokenReader.readString(stringTokenizer));
             case "SUL" -> {
-                player.setLogo(TokenReader.readString(st));
+                player.setLogo(TokenReader.readString(stringTokenizer));
                 client.getMainFrame().getMainPanel().getPlayerPanel().refresh();
             }
-            case "AP2PPQ" -> player.getPersonalPilotQueue().addPilot(st);
-            case "RPPPQ" -> player.getPersonalPilotQueue().removePilot(st);
-            case "RSOD" -> client.retrieveOpData("short", TokenReader.readString(st));
-            case "UCP" -> client.updateParam(st);
-            case "SOFL" -> client.setServerOpFlags(st);
-            case "SAOFS" -> player.setArmyOpForceSize(TokenReader.readString(st));
-            case "FC" -> player.setFactionConfigs(TokenReader.readString(st));
-            case "UPBM" -> client.updatePartsBlackMarket(TokenReader.readString(st),
-                  Integer.parseInt(client.getServerConfigs("CampaignYear")));
-            case "UPPC" -> client.updatePlayerPartsCache(TokenReader.readString(st));
-            case "RPPC" -> client.getPlayer().getPartsCache().fromString(st);
-            case "STN" -> client.getPlayer().setTeamNumber(TokenReader.readInt(st));
+            case "AP2PPQ" -> player.getPersonalPilotQueue().addPilot(stringTokenizer);
+            case "RPPPQ" -> player.getPersonalPilotQueue().removePilot(stringTokenizer);
+            case "RSOD" -> client.retrieveOpData("short", TokenReader.readString(stringTokenizer));
+            case "UCP" -> client.updateParam(stringTokenizer);
+            case "SOFL" -> client.setServerOpFlags(stringTokenizer);
+            case "SAOFS" -> player.setArmyOpForceSize(TokenReader.readString(stringTokenizer));
+            case "FC" -> player.setFactionConfigs(TokenReader.readString(stringTokenizer));
+            case "UPBM" -> client.updatePartsBlackMarket(TokenReader.readString(stringTokenizer),
+                  MathUtility.parseInt(client.getServerConfigs("CampaignYear"), 3045));
+            case "UPPC" -> client.updatePlayerPartsCache(TokenReader.readString(stringTokenizer));
+            case "RPPC" -> client.getPlayer().getPartsCache().fromString(stringTokenizer);
+            case "STN" -> client.getPlayer().setTeamNumber(TokenReader.readInt(stringTokenizer));
             case "VUI" -> {
-                StringTokenizer data = new StringTokenizer(TokenReader.readString(st), "#");
+                StringTokenizer data = new StringTokenizer(TokenReader.readString(stringTokenizer), "#");
                 String filename = TokenReader.readString(data);
                 int BV = TokenReader.readInt(data);
                 int gunnery = TokenReader.readInt(data);
@@ -158,7 +160,7 @@ public class PlayerCommand extends Command {
                       .showInfoWindow(filename, BV, gunnery, piloting, damage);
             }
             case "VURD" -> {
-                StringTokenizer data = new StringTokenizer(TokenReader.readString(st), "#");
+                StringTokenizer data = new StringTokenizer(TokenReader.readString(stringTokenizer), "#");
                 String filename = TokenReader.readString(data);
                 String damage = TokenReader.readString(data);
                 CUnit unit = new CUnit(client);
@@ -176,39 +178,40 @@ public class PlayerCommand extends Command {
                     client.getMainFrame().updateAttackMenu();
                 }
             }
-            case "RMF" -> client.retrieveMul(TokenReader.readString(st));
-            case "SMFD" -> client.getMainFrame().showMulFileList(TokenReader.readString(st));
-            case "CAFM" -> client.getMainFrame().createArmyFromMul(TokenReader.readString(st));
+            case "RMF" -> client.retrieveMul(TokenReader.readString(stringTokenizer));
+            case "SMFD" -> client.getMainFrame().showMulFileList(TokenReader.readString(stringTokenizer));
+            case "CAFM" -> client.getMainFrame().createArmyFromMul(TokenReader.readString(stringTokenizer));
             case "USU" -> {
                 // Update Supported Units
-                while (st.hasMoreTokens()) {
-                    boolean addSupport = TokenReader.readBoolean(st);
-                    String unitName = TokenReader.readString(st);
+                while (stringTokenizer.hasMoreTokens()) {
+                    boolean addSupport = TokenReader.readBoolean(stringTokenizer);
+                    String unitName = TokenReader.readString(stringTokenizer);
+
                     if (addSupport) {
                         player.getMyHouse().addUnitSupported(unitName);
                     } else {
                         player.getMyHouse().removeUnitSupported(unitName);
                     }
                 }
-                MWLogger.infoLog(player.getMyHouse().getSupportedUnits().toString());
+                LOGGER.info(player.getMyHouse().getSupportedUnits().toString());
             }
             case "CSU" -> {
                 // clear supported units
-                MWLogger.infoLog("Clearing Supported Units");
+                LOGGER.info("Clearing Supported Units");
                 player.getMyHouse().supportedUnits.clear();
                 player.getMyHouse()
-                      .setNonFactionUnitsCostMore(Boolean.parseBoolean(client.getServerConfigs(
-                            "UseNonFactionUnitsIncreasedTechs")));
+                      .setNonFactionUnitsCostMore(MathUtility.parseBoolean(client.getServerConfigs(
+                            "UseNonFactionUnitsIncreasedTechs"), false));
             }
-            case "SMA" -> client.getPlayer().setMULCreatedArmy(st);
-            case "ANH" -> client.createNewHouse(st);
+            case "SMA" -> client.getPlayer().setMULCreatedArmy(stringTokenizer);
+            case "ANH" -> client.createNewHouse(stringTokenizer);
             case "RPF" -> {
-                int id = TokenReader.readInt(st);
+                int id = TokenReader.readInt(stringTokenizer);
                 client.getData().removeHouse(id);
             }
-            case "UDT" ->
-                  client.addToChat(TokenReader.readString(st), client.getConfig().getIntParam("USERDEFINDMESSAGETAB"));
-            case "CCC" -> client.getCampaign().setComponentConverter(st.nextToken());
+            case "UDT" -> client.addToChat(TokenReader.readString(stringTokenizer),
+                  client.getConfig().getIntParam("USER_DEFIND_MESSAGE_TAB"));
+            case "CCC" -> client.getCampaign().setComponentConverter(stringTokenizer.nextToken());
             case "SUD" -> {
                 try {
                     StringBuilder userData = new StringBuilder(STR."\{IClient.CAMPAIGN_PREFIX}c sendclientdata#");
@@ -223,21 +226,21 @@ public class PlayerCommand extends Command {
                           { "user.name", "user.language", "user.country", "user.timezone", "os.name", "os.arch",
                             "os.version", "java.version" };
 
-                    for (String s : userDataSet) {
-                        String property = System.getProperty(s, "Unknown");
+                    for (String string : userDataSet) {
+                        String property = System.getProperty(string, "Unknown");
                         userData.append(property);
                         userData.append("#");
                     }
                     client.sendChat(userData.toString());
                 } catch (Exception ex) {
+                    LOGGER.error(ex, "Error creating MD5 Checksums for client data.");
                 }
             }
-            case "ROP" -> client.getPlayer().setAutoReorder(TokenReader.readBoolean(st));
-            case "SHP" -> player.parseHangarPenaltyString(TokenReader.readString(st));
+            case "ROP" -> client.getPlayer().setAutoReorder(TokenReader.readBoolean(stringTokenizer));
+            case "SHP" -> player.parseHangarPenaltyString(TokenReader.readString(stringTokenizer));
             case "STS" -> {
-                int unitID = TokenReader.readInt(st);
-                int targetType = TokenReader.readInt(st);
-                //MWLogger.errLog("Setting Targeting for Unit " + unitID + " to " + targetType);
+                int unitID = TokenReader.readInt(stringTokenizer);
+                int targetType = TokenReader.readInt(stringTokenizer);
                 player.getUnit(unitID).setTargetSystem(targetType);
                 client.doParseDataInput(STR."CH|AM: Targeting for unit \{unitID} set to \{player.getUnit(unitID)
                                                                                                 .getTargetSystemTypeDesc()}");

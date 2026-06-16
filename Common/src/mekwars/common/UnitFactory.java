@@ -243,16 +243,16 @@ public class UnitFactory implements Serializable {
      * Read from a binary stream
      */
     public void binIn(BinReader in) throws IOException {
-        name = in.readLine("name");
-        size = in.readLine("size");
-        founder = in.readLine("faction");
+        name = in.read("name");
+        size = in.read("size");
+        founder = in.read("faction");
         ticksUntilRefresh = in.readInt("ticksUntilRefresh");
         refreshSpeed = in.readInt("refreshSpeed");
         type = in.readInt("type");
         factoryLocked = in.readBoolean("factorylock");
         factoryAccessLevel = in.readInt("factoryaccess");
-        buildTableFolder = in.readLine("buildtablefolder");
-        factoryID = in.readLine("factoryID");
+        buildTableFolder = in.read("buildtablefolder");
+        factoryID = in.read("factoryID");
     }
 
     public String getTypeString() {

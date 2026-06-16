@@ -48,6 +48,15 @@ public class Influences implements MutableSerializable {
     }
 
     /**
+     * Sets the whole influences.
+     *
+     * @param influences The new influences. Key=TimeUpdateHouse, Value=Integer.
+     */
+    public void setInfluence(HashMap<Integer, Integer> influences) {
+        this.influences = influences;
+    }
+
+    /**
      * Create an empty Influence.
      */
     public Influences() {
@@ -58,15 +67,6 @@ public class Influences implements MutableSerializable {
      */
     public Influences(Influences influences) {
         setInfluence(new HashMap<>(influences.influences));
-    }
-
-    /**
-     * Sets the whole influences.
-     *
-     * @param influences The new influences. Key=TimeUpdateHouse, Value=Integer.
-     */
-    public void setInfluence(HashMap<Integer, Integer> influences) {
-        this.influences = influences;
     }
 
     /**
@@ -132,8 +132,7 @@ public class Influences implements MutableSerializable {
 
             return faction.getId();
         } catch (Exception ex) {
-            MWLogger.errLog(ex);
-            MWLogger.errLog("Error in Influenes.getOwner()");
+            LOGGER.error(ex, "Error in Influenes.getOwner()");
             return null;
         }
 

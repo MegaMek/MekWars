@@ -580,33 +580,33 @@ public class UserListPopupListener extends MouseAdapter implements ActionListene
         } else if (command.equals("ULC") && stringTokenizer.hasMoreElements()) {
             command = stringTokenizer.nextToken();
             cUserListPanel.getClient().getConfig().setParam("USER_LIST_COLOR", command);
-            cUserListPanel.Users.getRenderer().refreshParams();
+            cUserListPanel.getcUserListModel().getRenderer().refreshParams();
             cUserListPanel.getcUserListModelJList().repaint();
             cUserListPanel.getClient().getConfig().saveConfig();
         } else if (command.equals("ULI") && stringTokenizer.hasMoreElements()) {
             command = stringTokenizer.nextToken();
-            cUserListPanel.client.getConfig().setParam("USERLISTIMAGE", command);
-            cUserListPanel.Users.getRenderer().refreshParams();
-            cUserListPanel.UserList.repaint();
+            cUserListPanel.getClient().getConfig().setParam("USER_LIST_IMAGE", command);
+            cUserListPanel.getcUserListModel().getRenderer().refreshParams();
+            cUserListPanel.getcUserListModelJList().repaint();
             cUserListPanel.getClient().getConfig().saveConfig();
         } else if (command.equals("ULB") && stringTokenizer.hasMoreElements()) {
             command = stringTokenizer.nextToken();
-            cUserListPanel.client.getConfig().setParam("USERLISTBOLD", command);
-            cUserListPanel.Users.getRenderer().refreshParams();
-            cUserListPanel.UserList.repaint();
-            cUserListPanel.client.getConfig().saveConfig();
+            cUserListPanel.getClient().getConfig().setParam("USER_LIST_BOLD", command);
+            cUserListPanel.getcUserListModel().getRenderer().refreshParams();
+            cUserListPanel.getcUserListModelJList().repaint();
+            cUserListPanel.getClient().getConfig().saveConfig();
         } else if (command.equals("ULN") && stringTokenizer.hasMoreElements()) {
             command = stringTokenizer.nextToken();
-            cUserListPanel.client.getConfig().setParam("USERLISTCOUNT", command);
-            cUserListPanel.CountLabel.setVisible(Boolean.parseBoolean(command));
+            cUserListPanel.getClient().getConfig().setParam("USER_LIST_COUNT", command);
+            cUserListPanel.getCountLabel().setVisible(Boolean.parseBoolean(command));
             cUserListPanel.repaint();
-            cUserListPanel.client.getConfig().saveConfig();
+            cUserListPanel.getClient().getConfig().saveConfig();
         } else if (command.equals("ULA") && stringTokenizer.hasMoreElements()) {
             command = stringTokenizer.nextToken();
-            cUserListPanel.client.getConfig().setParam("USERLISTACTIVITYBTN", command);
-            cUserListPanel.ActivityButton.setVisible(Boolean.parseBoolean(command));
+            cUserListPanel.getClient().getConfig().setParam("USER_LIST_ACTIVITY_BUTTON", command);
+            cUserListPanel.getActivateButton().setVisible(Boolean.parseBoolean(command));
             cUserListPanel.repaint();
-            cUserListPanel.client.getConfig().saveConfig();
+            cUserListPanel.getClient().getConfig().saveConfig();
         }
 
         /*

@@ -35,7 +35,6 @@ package mekwars.common.commands;
 import java.util.StringTokenizer;
 
 import mekwars.common.campaign.clientutils.protocol.IClient;
-import mekwars.common.campaign.clientutils.protocol.TransportCodec;
 
 /**
  * Comm command
@@ -53,8 +52,14 @@ public class CommPCmd extends CProtCommand {
 
         StringTokenizer ST = new StringTokenizer(input, delimiter);
         if (check(ST.nextToken()) && ST.hasMoreTokens()) {
-            input = TransportCodec.unescape(ST.nextToken());
-            if (!client.isDedicated()) {client.doParseDataInput(input);} else {client.parseDedDataInput(input);}
+            input = ST.nextToken();
+
+            if (!client.isDedicated()) {
+                client.doParseDataInput(input);
+            } else {
+                client.parseDedDataInput(input);
+            }
+
             return true;
         }
 

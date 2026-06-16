@@ -102,7 +102,9 @@ public class SHouse extends TimeUpdateHouse implements Comparable<SHouse>, ISell
     private int initialHouseRanking = 0;
     private String messageOfTheDay = "";
     private String announcement = "";
-    private PilotQueues pilotQueues = new PilotQueues(getBaseGunnerVect(), getBasePilotVect(), getBasePilotSkillVect());
+    private PilotQueues pilotQueues = new PilotQueues(getBaseGunnerVector(),
+          getBasePilotVector(),
+          getBasePilotSkillVector());
     private boolean inHouseAttacks = false;
     private Properties config = new Properties();
     private int techResearchPoints = 0;
@@ -180,6 +182,21 @@ public class SHouse extends TimeUpdateHouse implements Comparable<SHouse>, ISell
             getComponents().get(Unit.AERO).add(0);
         }
 
+    }
+
+    public java.util.Hashtable<Integer, java.util.Vector<Integer>> getComponents() {
+        return Components;
+    }
+
+    public java.util.concurrent.ConcurrentHashMap<Integer, java.util.Vector<java.util.Vector<mekwars.server.campaign.SUnit>>> getHangar() {
+        return Hangar;
+    }
+
+    public java.util.Vector<java.util.Vector<SUnit>> getHangar(int Type_id) {
+        if (Hangar == null || Hangar.size() < Type_id) {
+            return null;
+        }
+        return Hangar.get(Type_id);
     }
 
     public String fromString(String string, Random random) {
@@ -441,7 +458,7 @@ public class SHouse extends TimeUpdateHouse implements Comparable<SHouse>, ISell
                     setBasePilot(TokenReader.readInt(stringTokenizer), pos);
                 }
             } catch (Exception ex) {
-                setPilotQueues(new PilotQueues(getBaseGunnerVect(), getBasePilotVect(), getBasePilotSkillVect()));
+                setPilotQueues(new PilotQueues(getBaseGunnerVector(), getBasePilotVector(), getBasePilotSkillVector()));
                 getPilotQueues().setFactionString(getName());// set the
                 // faction
                 // name for
@@ -454,7 +471,7 @@ public class SHouse extends TimeUpdateHouse implements Comparable<SHouse>, ISell
                     setBasePilotSkill(skill, pos);
                 }
             } catch (Exception ex) {
-                setPilotQueues(new PilotQueues(getBaseGunnerVect(), getBasePilotVect(), getBasePilotSkillVect()));
+                setPilotQueues(new PilotQueues(getBaseGunnerVector(), getBasePilotVector(), getBasePilotSkillVector()));
                 getPilotQueues().setFactionString(getName());// set the
                 // faction
                 // name for
@@ -530,7 +547,7 @@ public class SHouse extends TimeUpdateHouse implements Comparable<SHouse>, ISell
                 getComponentConverter().put(converter.getCritName(), converter);
             }
 
-            setPilotQueues(new PilotQueues(getBaseGunnerVect(), getBasePilotVect(), getBasePilotSkillVect()));
+            setPilotQueues(new PilotQueues(getBaseGunnerVector(), getBasePilotVector(), getBasePilotSkillVector()));
             getPilotQueues().setFactionString(getName());// set the
             // faction name
             // for the queue
@@ -568,10 +585,6 @@ public class SHouse extends TimeUpdateHouse implements Comparable<SHouse>, ISell
             MWLogger.errLog("Error while loading faction: " + getName() + " Going forward anyway ...");
             return string;
         }
-    }
-
-    public java.util.concurrent.ConcurrentHashMap<Integer, java.util.Vector<java.util.Vector<mekwars.server.campaign.SUnit>>> getHangar() {
-        return Hangar;
     }
 
     public boolean isNewbieHouse() {
@@ -620,6 +633,14 @@ public class SHouse extends TimeUpdateHouse implements Comparable<SHouse>, ISell
         return result;
     }// end getPriceForUnit()
 
+    public String getConfig(String key) {
+
+        if (config == null || config.getProperty(key) == null) {
+            return CampaignMain.campaignMain.getConfig(key);
+        }
+        return config.getProperty(key).trim();
+    }
+
     /**
      * Method which adds a unit to the house. If sendUpdate is true, all logged in house members are sent an HS|AU|. AU|
      * cmd is returned for use in bulk commands by other methods, like SHouse.tick().
@@ -652,6 +673,10 @@ public class SHouse extends TimeUpdateHouse implements Comparable<SHouse>, ISell
         }
 
         return hsUpdate;
+    }
+
+    public PilotQueues getPilotQueues() {
+        return pilotQueues;
     }
 
     public java.util.Hashtable<String, ComponentToCritsConverter> getComponentConverter() {
@@ -805,6 +830,10 @@ public class SHouse extends TimeUpdateHouse implements Comparable<SHouse>, ISell
         } catch (Exception ex) {
             return false;
         }
+    }
+
+    public void setPilotQueues(PilotQueues q) {
+        pilotQueues = q;
     }
 
     public mekwars.server.campaign.SHouse getHouseFightingFor(SPlayer player) {
@@ -1289,6 +1318,19 @@ public class SHouse extends TimeUpdateHouse implements Comparable<SHouse>, ISell
         return result;
     }
 
+    // VOTE AND RANKING METHODS @urgru 9/12/04
+    /*
+     * Need to make a few temp vectors when a faction is first created, which
+     * hold ranking orders. Think about how to do this while still being
+     * efficient w/i Hibernate. Looping through the entive vote vector for each
+     * player to get a typecount seems too inefficient for words --- but may be
+     * fine w/ SQL.
+     *
+     * Talk about this with Helge before implementing anything.
+     */
+
+    // PRODUCTION POINT METHODS @urgru 02/03/03
+
     /**
      * @param m
      *
@@ -1452,19 +1494,6 @@ public class SHouse extends TimeUpdateHouse implements Comparable<SHouse>, ISell
         }
         return possible;
     }
-
-    // VOTE AND RANKING METHODS @urgru 9/12/04
-    /*
-     * Need to make a few temp vectors when a faction is first created, which
-     * hold ranking orders. Think about how to do this while still being
-     * efficient w/i Hibernate. Looping through the entive vote vector for each
-     * player to get a typecount seems too inefficient for words --- but may be
-     * fine w/ SQL.
-     *
-     * Talk about this with Helge before implementing anything.
-     */
-
-    // PRODUCTION POINT METHODS @urgru 02/03/03
 
     public int getMaxAllowedPP(int weight, int type_id) {
         String unitAPMax = "";
@@ -1674,44 +1703,6 @@ public class SHouse extends TimeUpdateHouse implements Comparable<SHouse>, ISell
             }
         }
         return count;
-    }
-
-    /**
-     * Method required for ISeller compliance. Used to distinguish between human controlled actors (SPlayer class) and
-     * factions/automated actors (this).
-     */
-    public boolean isHuman() {
-        return false;
-    }
-
-    /**
-     * Method required for compliance with ISeller. Loop through all house queues and return a unit with matching ID, or
-     * null if no matching unit is found.
-     * <p>
-     * NOTE: This should be used sparingly. Outside of the Market and various admin commands, there are ALWAYS better
-     * ways to get a unit from SHouse.
-     */
-    public SUnit getUnit(int unitIDtoFind) {
-
-        // for all types and weight classes
-        for (int type_id = 0; type_id < Unit.TOTALTYPES; type_id++) {
-            for (int i = Unit.LIGHT; i <= Unit.ASSAULT; i++) {
-
-                // Loop through all units of the current type/weightclass
-                java.util.Iterator<mekwars.server.campaign.SUnit> it = (this.getHangar(type_id)
-                                                                              .elementAt(i)).iterator();
-                while (it.hasNext()) {
-                    SUnit currU = it.next();
-                    if (currU.getId() == unitIDtoFind) {
-                        return currU;
-                    }
-                }
-
-            }// end weight class loop
-        }// end unit type loop
-
-        // no matching unit in any weight/type queue
-        return null;
     }
 
     /**
@@ -1980,6 +1971,15 @@ public class SHouse extends TimeUpdateHouse implements Comparable<SHouse>, ISell
             p.addMoney(amount);
             setMoney(getMoney() - amount);
         }
+    }
+
+    // Getter and Setter
+    public int getMoney() {
+        return Money;
+    }
+
+    public void setMoney(int newMoney) {
+        Money = newMoney;
     }
 
     public String removeUnit(SUnit unitToRemove, boolean sendUpdate) {
@@ -2530,30 +2530,6 @@ public class SHouse extends TimeUpdateHouse implements Comparable<SHouse>, ISell
         return result.toString();
     }
 
-    // Getter and Setter
-    public int getMoney() {
-        return Money;
-    }
-
-    public void setMoney(int newMoney) {
-        Money = newMoney;
-    }
-
-    public java.util.Vector<java.util.Vector<SUnit>> getHangar(int Type_id) {
-        if (Hangar == null || Hangar.size() < Type_id) {
-            return null;
-        }
-        return Hangar.get(Type_id);
-    }
-
-    public String getConfig(String key) {
-
-        if (config == null || config.getProperty(key) == null) {
-            return CampaignMain.campaignMain.getConfig(key);
-        }
-        return config.getProperty(key).trim();
-    }
-
     public String getAnnouncement() {
         return announcement;
     }
@@ -2571,10 +2547,6 @@ public class SHouse extends TimeUpdateHouse implements Comparable<SHouse>, ISell
      */
     private String stripReturns(String motd) {
         return motd.replaceAll("[\\r\\n]", "");
-    }
-
-    public java.util.Hashtable<Integer, java.util.Vector<Integer>> getComponents() {
-        return Components;
     }
 
     /**
@@ -2603,14 +2575,6 @@ public class SHouse extends TimeUpdateHouse implements Comparable<SHouse>, ISell
      */
     public void setInHouseAttacks(boolean inHouseAttacks) {
         this.inHouseAttacks = inHouseAttacks;
-    }
-
-    public PilotQueues getPilotQueues() {
-        return pilotQueues;
-    }
-
-    public void setPilotQueues(PilotQueues q) {
-        pilotQueues = q;
     }
 
     /**
@@ -2860,6 +2824,44 @@ public class SHouse extends TimeUpdateHouse implements Comparable<SHouse>, ISell
 
     public void addMoney(int amount) {
         setMoney(getMoney() + amount);
+    }
+
+    /**
+     * Method required for compliance with ISeller. Loop through all house queues and return a unit with matching ID, or
+     * null if no matching unit is found.
+     * <p>
+     * NOTE: This should be used sparingly. Outside of the Market and various admin commands, there are ALWAYS better
+     * ways to get a unit from SHouse.
+     */
+    public SUnit getUnit(int unitIDtoFind) {
+
+        // for all types and weight classes
+        for (int type_id = 0; type_id < Unit.TOTALTYPES; type_id++) {
+            for (int i = Unit.LIGHT; i <= Unit.ASSAULT; i++) {
+
+                // Loop through all units of the current type/weightclass
+                java.util.Iterator<mekwars.server.campaign.SUnit> it = (this.getHangar(type_id)
+                                                                              .elementAt(i)).iterator();
+                while (it.hasNext()) {
+                    SUnit currU = it.next();
+                    if (currU.getId() == unitIDtoFind) {
+                        return currU;
+                    }
+                }
+
+            }// end weight class loop
+        }// end unit type loop
+
+        // no matching unit in any weight/type queue
+        return null;
+    }
+
+    /**
+     * Method required for ISeller compliance. Used to distinguish between human controlled actors (SPlayer class) and
+     * factions/automated actors (this).
+     */
+    public boolean isHuman() {
+        return false;
     }
 
     public void addComponentsProduced(int unitType, int amount) {
