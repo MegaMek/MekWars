@@ -399,7 +399,7 @@ public class CMainPanel extends JPanel implements ChangeListener, ComponentListe
         if (status == IClient.STATUS_RESERVE) {
             if (lastStatus == IClient.STATUS_LOGGED_OUT) {
                 UserListPanel.setLoggedIn(true);
-                UserListPanel.getUsers().getRenderer().setLoggedIn(true);
+                UserListPanel.getcUserListModel().getRenderer().setLoggedIn(true);
 
                 if (client.getConfig().isParam("PLAYER_PANEL")) {
                     PlayerPanel.setVisible(true);
@@ -412,7 +412,7 @@ public class CMainPanel extends JPanel implements ChangeListener, ComponentListe
 
         if (status == IClient.STATUS_DISCONNECTED || status == IClient.STATUS_LOGGED_OUT) {
             UserListPanel.setLoggedIn(false);
-            UserListPanel.getUsers().getRenderer().setLoggedIn(false);
+            UserListPanel.getcUserListModel().getRenderer().setLoggedIn(false);
             PlayerPanel.setVisible(false);
         }
 

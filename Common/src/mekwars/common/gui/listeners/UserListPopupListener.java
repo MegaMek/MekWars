@@ -1,16 +1,26 @@
 package mekwars.common.gui.listeners;
 
+import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.io.File;
+import java.net.URL;
+import java.net.URLClassLoader;
+import java.util.StringTokenizer;
+import javax.swing.JCheckBoxMenuItem;
+import javax.swing.JMenu;
+import javax.swing.JMenuItem;
+import javax.swing.JPopupMenu;
 
+import megamek.codeUtilities.MathUtility;
+import megamek.logging.MMLogger;
 import mekwars.common.campaign.CUser;
 import mekwars.common.campaign.clientutils.protocol.IClient;
-import mekwars.common.gui.models.CUserListModel;
 import mekwars.common.gui.panels.CUserListPanel;
-import mekwars.common.util.MWLogger;
 
 public class UserListPopupListener extends MouseAdapter implements ActionListener {
+    private final static MMLogger LOGGER = MMLogger.create(UserListPopupListener.class);
 
     private final CUserListPanel cUserListPanel;
 
@@ -21,128 +31,123 @@ public class UserListPopupListener extends MouseAdapter implements ActionListene
     @Override
     public void mouseClicked(MouseEvent event) {
         if (event.getClickCount() == 2) {
+            int row = cUserListPanel.getcUserListModelJList().locationToIndex(event.getPoint());
 
-            int row = cUserListPanel.getUserList().locationToIndex(event.getPoint());
-            if (row > -1 && row < cUserListPanel.getUserList().getModel().getSize()) {
+            if (row > -1 && row < cUserListPanel.getcUserListModelJList().getModel().getSize()) {
                 //don't show mail/money/mute/noplay for player himself
-                CUser user = ((CUserListModel) cUserListPanel.getUserList().getModel()).getUser(row);
+                CUser user = cUserListPanel.getcUserListModel().getUser(row);
                 String input = STR."\{IClient.GUI_PREFIX}mail \{user.getName()}, ";
-                input = input + cUserListPanel.client.getMainFrame().getMainPanel().getCommPanel().getInput();
-                cUserListPanel.client.getMainFrame().getMainPanel().getCommPanel().setInput(input);
-                cUserListPanel.client.getMainFrame().getMainPanel().getCommPanel().focusInputField();
+                input = input + cUserListPanel.getClient().getMainFrame().getMainPanel().getCommPanel().getInput();
+                cUserListPanel.getClient().getMainFrame().getMainPanel().getCommPanel().setInput(input);
+                cUserListPanel.getClient().getMainFrame().getMainPanel().getCommPanel().focusInputField();
             }
 
         }
     }
 
     @Override
-    public void mousePressed(java.awt.event.MouseEvent e) {maybeShowPopup(e);}
+    public void mousePressed(MouseEvent mouseEvent) {
+        maybeShowPopup(mouseEvent);
+    }
 
     @Override
-    public void mouseReleased(java.awt.event.MouseEvent e) {maybeShowPopup(e);}
+    public void mouseReleased(MouseEvent mouseEvent) {
+        maybeShowPopup(mouseEvent);
+    }
 
-    private void maybeShowPopup(java.awt.event.MouseEvent e) {
-        javax.swing.JMenuItem item;
-        javax.swing.JPopupMenu popup;
+    private void maybeShowPopup(MouseEvent mouseEvent) {
+        JMenuItem item;
+        JPopupMenu popup;
         int row = -1;
         String userName = "";
 
-        popup = new javax.swing.JPopupMenu();
-        if (e.isPopupTrigger()) {
+        popup = new JPopupMenu();
+        if (mouseEvent.isPopupTrigger()) {
 
-            row = cUserListPanel.UserList.locationToIndex(e.getPoint());
-            if (row > -1 && row < cUserListPanel.UserList.getModel().getSize()) {
+            row = cUserListPanel.getcUserListModelJList().locationToIndex(mouseEvent.getPoint());
+            if (row > -1 && row < cUserListPanel.getcUserListModelJList().getModel().getSize()) {
                 //don't show mail/money/mute/noplay for player himself
-                CUser user = ((CUserListModel) cUserListPanel.UserList.getModel()).getUser(
-                      row);
+                CUser user = cUserListPanel.getcUserListModel().getUser(row);
                 userName = user.getName();
 
                 /*
                  * MOD MENU @Torren 4.7.05
                  *
-                 * Most of the mod menu moved into a seperate
+                 * Most of the mod menu moved into a separate
                  * admin package, since its a waste if bytes to
                  * have all players downloading things that only
-                 * a handful have access to.
+                 * a handful has access to.
                  */
-                if (cUserListPanel.client.isMod()) {
-                    java.net.URLClassLoader loader = null;
+                if (cUserListPanel.getClient().isMod()) {
+                    URLClassLoader loader = null;
                     try {
-                        java.io.File loadJar = new java.io.File("./MekWarsAdmin.jar");
+                        File loadJar = new File("./MekWarsAdmin.jar");
                         if (!loadJar.exists()) {
-                            MWLogger.errLog("StaffUserlistPopupMenu creation skipped. No MekWarsAdmin.jar present.");
+                            LOGGER.debug("StaffUserlistPopupMenu creation skipped. No MekWarsAdmin.jar present.");
                         } else {
-                            loader = new java.net.URLClassLoader(new java.net.URL[] { loadJar.toURI().toURL() });
-                            Class<?> c = loader.loadClass("admin.StaffUserlistPopupMenu");
-                            Object o = c.newInstance();
-                            c.getDeclaredMethod("createMenu",
-                                  new Class[] { client.MWClient.class, client.CUser.class }).invoke(o,
-                                  new Object[] { cUserListPanel.client, user });
-                            popup.add((javax.swing.JMenu) o);
+                            loader = new URLClassLoader(new URL[] { loadJar.toURI().toURL() });
+                            Class<?> loadedClass = loader.loadClass("admin.StaffUserlistPopupMenu");
+                            Object newInstance = loadedClass.getDeclaredConstructor().newInstance();
+                            loadedClass.getDeclaredMethod("createMenu", new Class[] { IClient.class, CUser.class })
+                                  .invoke(newInstance, cUserListPanel.getClient(), user);
+                            popup.add((JMenu) newInstance);
                         }
                     } catch (Exception ex) {
-                        MWLogger.errLog("StaffUserlistPopupMenu creation FAILED!");
-                        MWLogger.errLog(ex);
+                        LOGGER.error(ex, "StaffUserlistPopupMenu creation FAILED!");
                     } finally {
                         try {
                             loader.close();
                         } catch (java.io.IOException e1) {
-                            MWLogger.errLog(e1);
+                            LOGGER.error(e1, "URLClassLoader close FAILED!");
                         }
                     }
 
                     popup.addSeparator();
                 }
 
+                IClient panelClient = cUserListPanel.getClient();
 
-                if (!userName.equalsIgnoreCase(cUserListPanel.client.getPlayer().getName())) {
-                    item = new javax.swing.JMenuItem("<HTML>Mail " + userName + "</b></HTML>");
-                    item.setActionCommand("MA|" + userName);
+                if (!userName.equalsIgnoreCase(panelClient.getPlayer().getName())) {
+                    item = new JMenuItem(STR."<HTML>Mail \{userName}</b></HTML>");
+                    item.setActionCommand(STR."MA|\{userName}");
                     item.addActionListener(this);
                     popup.add(item);
 
-                    //popup.addSeparator();
+                    if (cUserListPanel.isLoggedIn() && user.getStatus() != IClient.STATUS_LOGGED_OUT) {
+                        JMenu sendMen = new JMenu("Send");
 
-                    if (cUserListPanel.LoggedIn &&
-                              user.getStatus() != cUserListPanel.client.MWClient.STATUS_LOGGEDOUT) {
-
-                        javax.swing.JMenu sendMen = new javax.swing.JMenu("Send");
-
-                        item = new javax.swing.JMenuItem("Send " +
-                                                               cUserListPanel.client.moneyOrFluMessage(true,
-                                                                     false,
-                                                                     -2));
-                        item.setActionCommand("MO|" + userName);
+                        item = new JMenuItem(STR."Send \{panelClient.moneyOrFluMessage(true,
+                              false,
+                              -2)}");
+                        item.setActionCommand(STR."MO|\{userName}");
                         item.addActionListener(this);
                         sendMen.add(item);
 
-                        item = new javax.swing.JMenuItem("Send " +
-                                                               cUserListPanel.client.getserverConfigs("RPLongName"));
-                        item.setActionCommand("MR|" + userName);
+                        item = new JMenuItem(STR."Send \{panelClient.getServerConfigs("RPLongName")}");
+                        item.setActionCommand(STR."MR|\{userName}");
                         item.addActionListener(this);
                         sendMen.add(item);
 
-                        item = new javax.swing.JMenuItem("Send " +
-                                                               cUserListPanel.client.getserverConfigs("FluLongName")); //@salient
-                        item.setActionCommand("MI|" + userName);
+                        item = new JMenuItem(STR."Send \{panelClient.getServerConfigs("FluLongName")}"); //@salient
+                        item.setActionCommand(STR."MI|\{userName}");
                         item.addActionListener(this);
                         sendMen.add(item);
 
-                        item = new javax.swing.JMenuItem("Send Unit");
-                        item.setActionCommand("TU|" + userName);
+                        item = new JMenuItem("Send Unit");
+                        item.setActionCommand(STR."TU|\{userName}");
                         item.addActionListener(this);
                         sendMen.add(item);
 
-                        if (Boolean.parseBoolean(cUserListPanel.client.getserverConfigs("AllowPersonalPilotQueues"))) {
-                            item = new javax.swing.JMenuItem("Send Pilot");
-                            item.setActionCommand("TP|" + userName);
+                        if (MathUtility.parseBoolean(panelClient.getServerConfigs("AllowPersonalPilotQueues"), false)) {
+                            item = new JMenuItem("Send Pilot");
+                            item.setActionCommand(STR."TP|\{userName}");
                             item.addActionListener(this);
                             sendMen.add(item);
                         }
 
-                        if (Boolean.parseBoolean(cUserListPanel.client.getserverConfigs("UseDirectSell"))) {
-                            item = new javax.swing.JMenuItem("Direct Sell Unit");
-                            item.setActionCommand("DSU|" + userName);
+                        if (MathUtility.parseBoolean(panelClient.getServerConfigs("UseDirectSell"), false)) {
+                            item = new JMenuItem("Direct Sell Unit");
+                            item.setActionCommand(STR."DSU|\{userName}");
                             item.addActionListener(this);
                             sendMen.add(item);
                         }
@@ -150,31 +155,34 @@ public class UserListPopupListener extends MouseAdapter implements ActionListene
                         popup.add(sendMen);
                     }
 
-                    javax.swing.JMenu blockMen = new javax.swing.JMenu("Block");
+                    JMenu blockMen = new JMenu("Block");
 
                     /*
-                     * Mute/Unmute the player. Detect name string in the ignore
-                     * list and then display as appropriate. for Main.
+                     * Mute/Unmute the player. Detect the name string in the ignore
+                     * list and then display it as appropriate. for Main.
                      */
 
-                    String searchString = userName;
                     boolean matched = false;
 
-                    String ignoreList = cUserListPanel.client.getConfig().getParam("IGNOREPUBLIC");
-                    java.util.StringTokenizer st = new java.util.StringTokenizer(ignoreList, ",");
-                    while (st.hasMoreTokens() && !matched) {
-                        String currString = st.nextToken().trim();
-                        if (currString.equalsIgnoreCase(searchString)) {matched = true;}
+                    String ignoreList = panelClient.getConfig().getParam("IGNORE_PUBLIC");
+                    StringTokenizer stringTokenizer = new StringTokenizer(ignoreList, ",");
+
+                    while (stringTokenizer.hasMoreTokens() && !matched) {
+                        String currString = stringTokenizer.nextToken().trim();
+
+                        if (currString.equalsIgnoreCase(userName)) {
+                            matched = true;
+                        }
                     }
 
                     if (!matched) {
-                        item = new javax.swing.JMenuItem("Mute (Main)");
-                        item.setActionCommand("MU|" + userName + "|PUBLIC");
+                        item = new JMenuItem("Mute (Main)");
+                        item.setActionCommand(STR."MU|\{userName}|PUBLIC");
                         item.addActionListener(this);
                         blockMen.add(item);
                     } else {
-                        item = new javax.swing.JMenuItem("Unmute (Main)");
-                        item.setActionCommand("UMU|" + userName + "|PUBLIC");
+                        item = new JMenuItem("Unmute (Main)");
+                        item.setActionCommand(STR."UMU|\{userName}|PUBLIC");
                         item.addActionListener(this);
                         blockMen.add(item);
                     }
@@ -182,45 +190,51 @@ public class UserListPopupListener extends MouseAdapter implements ActionListene
                     /*
                      * Mute/Unmute the player via PrivateMessageCommand
                      */
-                    ignoreList = cUserListPanel.client.getConfig().getParam("IGNOREPRIVATE");
-                    st = new java.util.StringTokenizer(ignoreList, ",");
+                    ignoreList = panelClient.getConfig().getParam("IGNORE_PRIVATE");
+                    stringTokenizer = new StringTokenizer(ignoreList, ",");
                     matched = false;
-                    while (st.hasMoreTokens() && !matched) {
-                        String currString = st.nextToken().trim();
-                        if (currString.equalsIgnoreCase(searchString)) {matched = true;}
+                    while (stringTokenizer.hasMoreTokens() && !matched) {
+                        String currString = stringTokenizer.nextToken().trim();
+
+                        if (currString.equalsIgnoreCase(userName)) {
+                            matched = true;
+                        }
                     }
 
                     if (!matched) {
-                        item = new javax.swing.JMenuItem("Mute (Private)");
-                        item.setActionCommand("MU|" + userName + "|PRIVATE");
+                        item = new JMenuItem("Mute (Private)");
+                        item.setActionCommand(STR."MU|\{userName}|PRIVATE");
                         item.addActionListener(this);
                         blockMen.add(item);
                     } else {
-                        item = new javax.swing.JMenuItem("Unmute (Private)");
-                        item.setActionCommand("UMU|" + userName + "|PRIVATE");
+                        item = new JMenuItem("Unmute (Private)");
+                        item.setActionCommand(STR."UMU|\{userName}|PRIVATE");
                         item.addActionListener(this);
                         blockMen.add(item);
                     }
 
                     //if in the same faction, also show faction mute
-                    if (user.getHouse().equals(cUserListPanel.client.getPlayer().getHouse())) {
-
-                        ignoreList = cUserListPanel.client.getConfig().getParam("IGNOREHOUSE");
-                        st = new java.util.StringTokenizer(ignoreList, ",");
+                    if (user.getHouse().equals(panelClient.getPlayer().getHouse())) {
+                        ignoreList = panelClient.getConfig().getParam("IGNORE_HOUSE");
+                        stringTokenizer = new StringTokenizer(ignoreList, ",");
                         matched = false;
-                        while (st.hasMoreTokens() && !matched) {
-                            String currString = st.nextToken().trim();
-                            if (currString.equalsIgnoreCase(searchString)) {matched = true;}
+
+                        while (stringTokenizer.hasMoreTokens() && !matched) {
+                            String currString = stringTokenizer.nextToken().trim();
+
+                            if (currString.equalsIgnoreCase(userName)) {
+                                matched = true;
+                            }
                         }
 
                         if (!matched) {
-                            item = new javax.swing.JMenuItem("Mute (House)");
-                            item.setActionCommand("MU|" + userName + "|HOUSE");
+                            item = new JMenuItem("Mute (House)");
+                            item.setActionCommand(STR."MU|\{userName}|HOUSE");
                             item.addActionListener(this);
                             blockMen.add(item);
                         } else {
-                            item = new javax.swing.JMenuItem("Unmute (House)");
-                            item.setActionCommand("UMU|" + userName + "|HOUSE");
+                            item = new JMenuItem("Unmute (House)");
+                            item.setActionCommand(STR."UMU|\{userName}|HOUSE");
                             item.addActionListener(this);
                             blockMen.add(item);
                         }
@@ -232,382 +246,363 @@ public class UserListPopupListener extends MouseAdapter implements ActionListene
                      * Only show this option if list size >= 1. If the list
                      * is disabled, its just a confusing extraneous option.
                      */
-                    if (Integer.parseInt(cUserListPanel.client.getserverConfigs("NoPlayListSize")) >= 1) {
-
-                        if (cUserListPanel.LoggedIn &&
-                                  user.getStatus() != cUserListPanel.client.MWClient.STATUS_LOGGEDOUT) {
+                    if (MathUtility.parseInt(panelClient.getServerConfigs("NoPlayListSize"), 0) >= 1) {
+                        if (cUserListPanel.isLoggedIn() && user.getStatus() != IClient.STATUS_LOGGED_OUT) {
                             boolean isOnNoPlay = false;
-                            if (cUserListPanel.client.getPlayer().getAdminExcludes().contains(userName.toLowerCase())) {
+
+                            if (panelClient.getPlayer().getAdminExcludes().contains(userName.toLowerCase())) {
                                 isOnNoPlay = true;
-                            } else if (cUserListPanel.client.getPlayer()
-                                             .getPlayerExcludes()
-                                             .contains(userName.toLowerCase())) {
+                            } else if (panelClient.getPlayer().getPlayerExcludes().contains(userName.toLowerCase())) {
                                 isOnNoPlay = true;
                             }
 
                             if (isOnNoPlay) {
-                                item = new javax.swing.JMenuItem("Remove from No-Play");
-                                item.setActionCommand("RNP|" + userName);
-                                item.addActionListener(this);
-                                blockMen.add(item);
+                                item = new JMenuItem("Remove from No-Play");
+                                item.setActionCommand(STR."RNP|\{userName}");
                             } else {
-                                item = new javax.swing.JMenuItem("Add to No-Play");
-                                item.setActionCommand("ANP|" + userName);
-                                item.addActionListener(this);
-                                blockMen.add(item);
+                                item = new JMenuItem("Add to No-Play");
+                                item.setActionCommand(STR."ANP|\{userName}");
                             }
+
+                            item.addActionListener(this);
+                            blockMen.add(item);
                         } else {//show blank
-                            item = new javax.swing.JMenuItem("No-Play");
+                            item = new JMenuItem("No-Play");
                             item.setEnabled(false);
                             blockMen.add(item);
                         }
                         popup.addSeparator();
-                    }//end if(should draw no-play menu items)
+                    }//end if (should draw no-play menu items)
                     popup.add(blockMen);
 
 
-                }//end if(clicked player isn't THE player)
+                }//end if (clicked player isn't THE player)
                 //Toggle ascending/decending order
-                if (((CUserListModel) cUserListPanel.UserList.getModel()).getSortOrder() ==
-                          CUserListPanel.SORT_ORDER_DESCENDING) {
-                    item = new javax.swing.JMenuItem("Ascending Order");
+                if (cUserListPanel.getcUserListModel().getSortOrder() == CUserListPanel.SORT_ORDER_DESCENDING) {
+                    item = new JMenuItem("Ascending Order");
                     item.setActionCommand("SO|A");
-                    item.addActionListener(this);
-                    popup.add(item);
                 } else {
-                    item = new javax.swing.JMenuItem("Descending Order");
+                    item = new JMenuItem("Descending Order");
                     item.setActionCommand("SO|D");
-                    item.addActionListener(this);
-                    popup.add(item);
                 }
+                item.addActionListener(this);
+                popup.add(item);
 
                 //Sort Sub-Menu
-                javax.swing.JMenu sortSub = new javax.swing.JMenu("Sort By");
+                JMenu sortSub = new JMenu("Sort By");
                 popup.add(sortSub);
 
-                item = new javax.swing.JMenuItem("Name");
+                item = new JMenuItem("Name");
                 item.setActionCommand("SM|N");
                 item.addActionListener(this);
                 sortSub.add(item);
-                if (cUserListPanel.LoggedIn) {
-                    item = new javax.swing.JMenuItem("Faction");
+
+                if (cUserListPanel.isLoggedIn()) {
+                    item = new JMenuItem("Faction");
                     item.setActionCommand("SM|H");
                     item.addActionListener(this);
                     sortSub.add(item);
-                    item = new javax.swing.JMenuItem("Experience");
+
+                    item = new JMenuItem("Experience");
                     item.setActionCommand("SM|E");
                     item.addActionListener(this);
                     sortSub.add(item);
-                    if (!Boolean.parseBoolean(cUserListPanel.client.getserverConfigs("HideELO"))) {
-                        item = new javax.swing.JMenuItem("Rating");
+
+                    if (!MathUtility.parseBoolean(panelClient.getServerConfigs("HideELO"), false)) {
+                        item = new JMenuItem("Rating");
                         item.setActionCommand("SM|R");
                         item.addActionListener(this);
                         sortSub.add(item);
                     }
-                    item = new javax.swing.JMenuItem("Status");
+
+                    item = new JMenuItem("Status");
                     item.setActionCommand("SM|S");
                     item.addActionListener(this);
                     sortSub.add(item);
                 }
-                item = new javax.swing.JMenuItem("Userlevel");
+                item = new JMenuItem("User Level");
                 item.setActionCommand("SM|L");
                 item.addActionListener(this);
                 sortSub.add(item);
-                item = new javax.swing.JMenuItem("Country");
+
+                item = new JMenuItem("Country");
                 item.setActionCommand("SM|C");
                 item.addActionListener(this);
                 sortSub.add(item);
 
                 popup.addSeparator();
 
-                javax.swing.JMenu settingSub = new javax.swing.JMenu("List Settings");
+                JMenu settingSub = new JMenu("List Settings");
                 popup.add(settingSub);
 
                 //activity button
-                item = new javax.swing.JCheckBoxMenuItem("Activity Button");
-                if (cUserListPanel.client.getConfig().isParam("USERLISTACTIVITYBTN")) {item.setSelected(true);} else {
-                    item.setSelected(false);
-                }
-                item.setActionCommand("ULA|" + !item.isSelected());
+                item = new JCheckBoxMenuItem("Activity Button");
+
+                item.setSelected(panelClient.getConfig().isParam("USER_LIST_ACTIVITY_BUTTON"));
+
+                item.setActionCommand(STR."ULA|\{!item.isSelected()}");
                 item.addActionListener(this);
                 settingSub.add(item);
 
                 //bold names
-                item = new javax.swing.JCheckBoxMenuItem("Bold Names");
-                if (cUserListPanel.client.getConfig().isParam("USERLISTBOLD")) {item.setSelected(true);} else {
-                    item.setSelected(false);
-                }
-                item.setActionCommand("ULB|" + !item.isSelected());
+                item = new JCheckBoxMenuItem("Bold Names");
+                item.setSelected(panelClient.getConfig().isParam("USER_LIST_BOLD"));
+                item.setActionCommand(STR."ULB|\{!item.isSelected()}");
                 item.addActionListener(this);
                 settingSub.add(item);
 
                 //color
-                item = new javax.swing.JCheckBoxMenuItem("Colored Names");
-                if (cUserListPanel.client.getConfig().isParam("USERLISTCOLOR")) {item.setSelected(true);} else {
-                    item.setSelected(false);
-                }
-                item.setActionCommand("ULC|" + !item.isSelected());
+                item = new JCheckBoxMenuItem("Colored Names");
+                item.setSelected(panelClient.getConfig().isParam("USER_LIST_COLOR"));
+                item.setActionCommand(STR."ULC|\{!item.isSelected()}");
                 item.addActionListener(this);
                 settingSub.add(item);
 
                 //deds
-                item = new javax.swing.JCheckBoxMenuItem("Dedicated Hosts");
-                if (cUserListPanel.Dedicated) {item.setSelected(true);} else {item.setSelected(false);}
+                item = new JCheckBoxMenuItem("Dedicated Hosts");
+                item.setSelected(cUserListPanel.isDedicated());
                 item.setActionCommand("TD");
                 item.addActionListener(this);
                 settingSub.add(item);
 
                 //player count
-                item = new javax.swing.JCheckBoxMenuItem("Player Count");
-                if (cUserListPanel.client.getConfig().isParam("USERLISTCOUNT")) {item.setSelected(true);} else {
-                    item.setSelected(false);
-                }
-                item.setActionCommand("ULN|" + !item.isSelected());
+                item = new JCheckBoxMenuItem("Player Count");
+                item.setSelected(panelClient.getConfig().isParam("USER_LIST_COUNT"));
+                item.setActionCommand(STR."ULN|\{!item.isSelected()}");
                 item.addActionListener(this);
                 settingSub.add(item);
 
                 //images
-                item = new javax.swing.JCheckBoxMenuItem("Status Images");
-                if (cUserListPanel.client.getConfig().isParam("USERLISTIMAGE")) {item.setSelected(true);} else {
-                    item.setSelected(false);
-                }
-                item.setActionCommand("ULI|" + !item.isSelected());
+                item = new JCheckBoxMenuItem("Status Images");
+                item.setSelected(panelClient.getConfig().isParam("USER_LIST_IMAGE"));
+                item.setActionCommand(STR."ULI|\{!item.isSelected()}");
                 item.addActionListener(this);
                 settingSub.add(item);
 
-                popup.show(e.getComponent(), e.getX(), e.getY());
+                popup.show(mouseEvent.getComponent(), mouseEvent.getX(), mouseEvent.getY());
             }
         }
     }
 
-    public void actionPerformed(java.awt.event.ActionEvent actionEvent) {
-        String s = actionEvent.getActionCommand();
-        java.util.StringTokenizer st = new java.util.StringTokenizer(s, "|");
-        String command = st.nextToken();
+    public void actionPerformed(ActionEvent actionEvent) {
+        String actionCommand = actionEvent.getActionCommand();
+        StringTokenizer stringTokenizer = new StringTokenizer(actionCommand, "|");
+        String command = stringTokenizer.nextToken();
         String userName = "";
 
         //send mail
-        if (command.equals("MA") && st.hasMoreElements()) {
-            userName = st.nextToken();
-            cUserListPanel.client.getMainFrame().jMenuFileMail_actionPerformed(userName);
+        if (command.equals("MA") && stringTokenizer.hasMoreElements()) {
+            userName = stringTokenizer.nextToken();
+            cUserListPanel.getClient().getMainFrame().jMenuFileMail_actionPerformed(userName);
             return;
         }
         //send Money
-        if (command.equals("MO") && st.hasMoreElements()) {
-            userName = st.nextToken();
-            cUserListPanel.client.getMainFrame().jMenuCommanderTransferMoney_actionPerformed(userName);
+        if (command.equals("MO") && stringTokenizer.hasMoreElements()) {
+            userName = stringTokenizer.nextToken();
+            cUserListPanel.getClient().getMainFrame().jMenuCommanderTransferMoney_actionPerformed(userName);
             return;
         }
 
-        if (command.equals("MR") && st.hasMoreElements()) {
-            userName = st.nextToken();
-            cUserListPanel.client.getMainFrame().jMenuCommanderTransferRewardPoints_actionPerformed(userName);
+        if (command.equals("MR") && stringTokenizer.hasMoreElements()) {
+            userName = stringTokenizer.nextToken();
+            cUserListPanel.getClient().getMainFrame().jMenuCommanderTransferRewardPoints_actionPerformed(userName);
             return;
         }
 
         //@Salient
-        if (command.equals("MI") && st.hasMoreElements()) {
-            userName = st.nextToken();
-            cUserListPanel.client.getMainFrame().jMenuCommanderTransferInfluence_actionPerformed(userName);
+        if (command.equals("MI") && stringTokenizer.hasMoreElements()) {
+            userName = stringTokenizer.nextToken();
+            cUserListPanel.getClient().getMainFrame().jMenuCommanderTransferInfluence_actionPerformed(userName);
             return;
         }
 
-        if (command.equals("TU") && st.hasMoreElements()) {
-            userName = st.nextToken();
-            if (true) {cUserListPanel.client.getMainFrame().jMenuCommanderTransferUnit_actionPerformed(userName, -1);}
+        if (command.equals("TU") && stringTokenizer.hasMoreElements()) {
+            userName = stringTokenizer.nextToken();
+            cUserListPanel.getClient().getMainFrame().jMenuCommanderTransferUnit_actionPerformed(userName, -1);
             return;
         }
 
-        if (command.equals("TP") && st.hasMoreElements()) {
-            userName = st.nextToken();
-            if (true) {cUserListPanel.client.getMainFrame().jMenuCommanderTransferPilot_actionPerformed(userName);}
+        if (command.equals("TP") && stringTokenizer.hasMoreElements()) {
+            userName = stringTokenizer.nextToken();
+            cUserListPanel.getClient().getMainFrame().jMenuCommanderTransferPilot_actionPerformed(userName);
             return;
         }
 
-        if (command.equals("DSU") && st.hasMoreElements()) {
-            userName = st.nextToken();
-            if (true) {cUserListPanel.client.getMainFrame().jMenuCommanderDirectSell_actionPerformed(userName, null);}
+        if (command.equals("DSU") && stringTokenizer.hasMoreElements()) {
+            userName = stringTokenizer.nextToken();
+            cUserListPanel.getClient().getMainFrame().jMenuCommanderDirectSell_actionPerformed(userName, null);
             return;
         }
 
-        if (command.equals("MU") && st.hasMoreElements()) {
-            userName = st.nextToken();
-            String mode = st.nextToken();
-            if (true) {
+        if (command.equals("MU") && stringTokenizer.hasMoreElements()) {
+            userName = stringTokenizer.nextToken();
+            String mode = stringTokenizer.nextToken();
+            String searchString = userName;
+            String ignoreList = cUserListPanel.getClient().getConfig().getParam(STR."IGNORE\{mode}");
+            StringBuilder newList = new StringBuilder();
+            StringTokenizer tokenizer = new StringTokenizer(ignoreList, ",");
+            boolean matched = false;
 
-                String searchString = userName;
-                String ignoreList = cUserListPanel.client.getConfig().getParam("IGNORE" + mode);
-                String newList = "";
-                java.util.StringTokenizer it = new java.util.StringTokenizer(ignoreList, ",");
-                boolean matched = false;
-                while (it.hasMoreTokens() && !matched) {
-                    //rebuild the list to make sure ,'s are ok.
-                    String currString = it.nextToken();
-                    newList += currString + ",";
-                    if (currString.equals(searchString)) {matched = true;}
+            while (tokenizer.hasMoreTokens() && !matched) {
+                //rebuild the list to make sure ,'actionCommand are ok.
+                String currString = tokenizer.nextToken();
+                newList.append(currString).append(",");
+
+                if (currString.equals(searchString)) {
+                    matched = true;
                 }
-                if (!matched) {newList += searchString + ",";}
-                cUserListPanel.client.getConfig().setParam("IGNORE" + mode, newList);
-                cUserListPanel.client.setIgnorePublic();
-                cUserListPanel.client.setIgnoreHouse();
-                cUserListPanel.client.setIgnorePrivate();
-                cUserListPanel.client.getConfig().saveConfig();
-                String toUser = "CH|CLIENT: You muted " + searchString + " (" + mode + ").";
-                cUserListPanel.client.doParseDataInput(toUser);
-                cUserListPanel.UserList.repaint();
             }
+
+            if (!matched) {
+                newList.append(searchString).append(",");
+            }
+
+            cUserListPanel.getClient().getConfig().setParam(STR."IGNORE\{mode}", newList.toString());
+            cUserListPanel.getClient().setIgnorePublic();
+            cUserListPanel.getClient().setIgnoreHouse();
+            cUserListPanel.getClient().setIgnorePrivate();
+            cUserListPanel.getClient().getConfig().saveConfig();
+            String toUser = STR."CH|CLIENT: You muted \{searchString} (\{mode}).";
+            cUserListPanel.getClient().doParseDataInput(toUser);
+            cUserListPanel.getcUserListModelJList().repaint();
         }//end mute
 
-        if (command.equals("UMU") && st.hasMoreElements()) {
-            userName = st.nextToken();
-            String mode = st.nextToken();
-            if (true) {
+        if (command.equals("UMU") && stringTokenizer.hasMoreElements()) {
+            userName = stringTokenizer.nextToken();
+            String mode = stringTokenizer.nextToken();
+            String searchString = userName;
+            String ignoreList = cUserListPanel.getClient().getConfig().getParam(STR."IGNORE\{mode}");
+            StringBuilder newList = new StringBuilder();
+            StringTokenizer tokenizer = new StringTokenizer(ignoreList, ",");
 
-                String searchString = userName;
-                String ignoreList = cUserListPanel.client.getConfig().getParam("IGNORE" + mode);
-                String newList = "";
-                java.util.StringTokenizer it = new java.util.StringTokenizer(ignoreList, ",");
-                while (it.hasMoreTokens()) {
-                    String currString = it.nextToken();
-                    if (!currString.equals(searchString)) {newList += currString + ",";}
-                    //else do nothing ...
+            while (tokenizer.hasMoreTokens()) {
+                String currString = tokenizer.nextToken();
 
-                }//end while(more ignore tokens)
-                cUserListPanel.client.getConfig().setParam("IGNORE" + mode, newList);
-                cUserListPanel.client.setIgnorePublic();
-                cUserListPanel.client.setIgnoreHouse();
-                cUserListPanel.client.setIgnorePrivate();
-                cUserListPanel.client.getConfig().saveConfig();
-                String toUser = "CH|CLIENT: You unmuted " + searchString + " (" + mode + ").";
-                cUserListPanel.client.doParseDataInput(toUser);
-                cUserListPanel.UserList.repaint();
-            }
+                if (!currString.equals(searchString)) {
+                    newList.append(currString).append(",");
+                }
+                //else do nothing ...
+
+            }//end while(more ignore tokens)
+
+            cUserListPanel.getClient().getConfig().setParam(STR."IGNORE\{mode}", newList.toString());
+            cUserListPanel.getClient().setIgnorePublic();
+            cUserListPanel.getClient().setIgnoreHouse();
+            cUserListPanel.getClient().setIgnorePrivate();
+            cUserListPanel.getClient().getConfig().saveConfig();
+
+            String toUser = STR."CH|CLIENT: You unmuted \{searchString} (\{mode}).";
+            cUserListPanel.getClient().doParseDataInput(toUser);
+            cUserListPanel.getcUserListModelJList().repaint();
         }//end unmute
 
-        if (command.equals("RNP") && st.hasMoreElements()) {
-
-            userName = st.nextToken();
-            if (true) {
-
-                cUserListPanel.client.sendChat(cUserListPanel.client.MWClient.CAMPAIGN_PREFIX +
-                                                     "c noplay#remove#" +
-                                                     userName);
-            }
+        if (command.equals("RNP") && stringTokenizer.hasMoreElements()) {
+            userName = stringTokenizer.nextToken();
+            cUserListPanel.getClient().sendChat(STR."\{IClient.CAMPAIGN_PREFIX}c noplay#remove#\{userName}");
         }
 
-        if (command.equals("ANP") && st.hasMoreElements()) {
-            userName = st.nextToken();
-            if (true) {
-
-                cUserListPanel.client.sendChat(cUserListPanel.client.MWClient.CAMPAIGN_PREFIX +
-                                                     "c noplay#add#" +
-                                                     userName);
-            }
+        if (command.equals("ANP") && stringTokenizer.hasMoreElements()) {
+            userName = stringTokenizer.nextToken();
+            cUserListPanel.getClient().sendChat(STR."\{IClient.CAMPAIGN_PREFIX}c noplay#add#\{userName}");
         }
 
         //change sort mode
-        if (command.equals("SM") && st.hasMoreElements()) {
-            command = st.nextToken();
-            if (command.equals("N")) {
-                ((CUserListModel) cUserListPanel.UserList.getModel()).setSortMode(CUserListPanel.SORT_MODE_NAME);
-            } else if (command.equals("H")) {
-                ((CUserListModel) cUserListPanel.UserList.getModel()).setSortMode(CUserListPanel.SORT_MODE_HOUSE);
-            } else if (command.equals("E")) {
-                ((CUserListModel) cUserListPanel.UserList.getModel()).setSortMode(CUserListPanel.SORT_MODE_EXP);
-            } else if (command.equals("R")) {
-                if (!Boolean.parseBoolean(cUserListPanel.client.getserverConfigs("HideELO"))) {
-                    ((CUserListModel) cUserListPanel.UserList.getModel()).setSortMode(
-                          CUserListPanel.SORT_MODE_RATING);
-                } else {
-                    ((CUserListModel) cUserListPanel.UserList.getModel()).setSortMode(
-                          CUserListPanel.SORT_MODE_NAME);
+        if (command.equals("SM") && stringTokenizer.hasMoreElements()) {
+            command = stringTokenizer.nextToken();
+            switch (command) {
+                case "N" -> cUserListPanel.getcUserListModel().setSortMode(CUserListPanel.SORT_MODE_NAME);
+                case "H" -> cUserListPanel.getcUserListModel().setSortMode(CUserListPanel.SORT_MODE_HOUSE);
+                case "E" -> cUserListPanel.getcUserListModel().setSortMode(CUserListPanel.SORT_MODE_EXP);
+                case "R" -> {
+                    if (!MathUtility.parseBoolean(cUserListPanel.getClient().getServerConfigs("HideELO"), false)) {
+                        cUserListPanel.getcUserListModel().setSortMode(CUserListPanel.SORT_MODE_RATING);
+                    } else {
+                        cUserListPanel.getcUserListModel().setSortMode(CUserListPanel.SORT_MODE_NAME);
+                    }
                 }
-            } else if (command.equals("S")) {
-                ((CUserListModel) cUserListPanel.UserList.getModel()).setSortMode(
-                      CUserListPanel.SORT_MODE_STATUS);
-            } else if (command.equals("L")) {
-                ((CUserListModel) cUserListPanel.UserList.getModel()).setSortMode(
-                      CUserListPanel.SORT_MODE_USER_LEVEL);
-            } else if (command.equals("C")) {
-                ((CUserListModel) cUserListPanel.UserList.getModel()).setSortMode(
-                      CUserListPanel.SORT_MODE_COUNTRY);
+                case "S" -> cUserListPanel.getcUserListModel().setSortMode(CUserListPanel.SORT_MODE_STATUS);
+                case "L" -> cUserListPanel.getcUserListModel().setSortMode(CUserListPanel.SORT_MODE_USER_LEVEL);
+                case "C" -> cUserListPanel.getcUserListModel().setSortMode(CUserListPanel.SORT_MODE_COUNTRY);
             }
 
-            //saveblock
-            if (command.equals("H")) {
-                cUserListPanel.client.getConfig().setParam("SORTMODE", "HOUSE");
-            } else if (command.equals(
-                  "E")) {cUserListPanel.client.getConfig().setParam("SORTMODE", "EXP");} else if (command.equals("R")) {
-                cUserListPanel.client.getConfig().setParam("SORTMODE", "RATING");
-            } else if (command.equals("S")) {
-                cUserListPanel.client.getConfig().setParam("SORTMODE", "STATUS");
-            } else if (command.equals("L")) {
-                cUserListPanel.client.getConfig().setParam("SORTMODE", "USERLEVEL");
-            } else if (command.equals("C")) {cUserListPanel.client.getConfig().setParam("SORTMODE", "COUNTRY");} else {
-                cUserListPanel.client.getConfig().setParam("SORTMODE", "NAME");
+            //save block
+            switch (command) {
+                case "H" -> cUserListPanel.getClient().getConfig().setParam("SORT_MODE", "HOUSE");
+                case "E" -> cUserListPanel.getClient().getConfig().setParam("SORT_MODE", "EXP");
+                case "R" -> cUserListPanel.getClient().getConfig().setParam("SORT_MODE", "RATING");
+                case "S" -> cUserListPanel.getClient().getConfig().setParam("SORT_MODE", "STATUS");
+                case "L" -> cUserListPanel.getClient().getConfig().setParam("SORT_MODE", "USER_LEVEL");
+                case "C" -> cUserListPanel.getClient().getConfig().setParam("SORT_MODE", "COUNTRY");
+                default -> cUserListPanel.getClient().getConfig().setParam("SORT_MODE", "NAME");
             }
-            cUserListPanel.client.getConfig().saveConfig();
+
+            cUserListPanel.getClient().getConfig().saveConfig();
 
             return;
         }
         //change sort order
-        if (command.equals("SO") && st.hasMoreElements()) {
-            command = st.nextToken();
+        if (command.equals("SO") && stringTokenizer.hasMoreElements()) {
+            command = stringTokenizer.nextToken();
+
             if (command.equals("A")) {
-                ((CUserListModel) cUserListPanel.UserList.getModel()).setSortOrder(
-                      CUserListPanel.SORT_ORDER_ASCENDING);
-            }
-            if (command.equals("D")) {
-                ((CUserListModel) cUserListPanel.UserList.getModel()).setSortOrder(
-                      CUserListPanel.SORT_ORDER_DESCENDING);
+                cUserListPanel.getcUserListModel().setSortOrder(CUserListPanel.SORT_ORDER_ASCENDING);
             }
 
-            //saveblock
-            if (command.equals("D")) {cUserListPanel.client.getConfig().setParam("SORTORDER", "DESCENDING");} else {
-                cUserListPanel.client.getConfig().setParam("SORTORDER", "ASCENDING");
+            if (command.equals("D")) {
+                cUserListPanel.getcUserListModel().setSortOrder(CUserListPanel.SORT_ORDER_DESCENDING);
             }
-            cUserListPanel.client.getConfig().saveConfig();
+
+            //save block
+            if (command.equals("D")) {
+                cUserListPanel.getClient().getConfig().setParam("SORT_ORDER", "DESCENDING");
+            } else {
+                cUserListPanel.getClient().getConfig().setParam("SORT_ORDER", "ASCENDING");
+            }
+
+            cUserListPanel.getClient().getConfig().saveConfig();
 
             return;
         }
 
-        //settingss
+        //settings
         if (command.equals("TD")) {
-            cUserListPanel.Dedicated = !cUserListPanel.Dedicated;
-            if (cUserListPanel.Dedicated) {
-                cUserListPanel.client.getConfig().setParam("USERLISTDEDICATEDS", "YES");
+            cUserListPanel.setDedicated(!cUserListPanel.isDedicated());
+
+            if (cUserListPanel.isDedicated()) {
+                cUserListPanel.getClient().getConfig().setParam("USER_LIST_DEDICATEDS", "YES");
             } else {
-                cUserListPanel.client.getConfig().setParam("USERLISTDEDICATEDS", "NO");
+                cUserListPanel.getClient().getConfig().setParam("USER_LIST_DEDICATEDS", "NO");
             }
-            ((CUserListModel) cUserListPanel.UserList.getModel()).setDedicated(cUserListPanel.Dedicated);
+
+            cUserListPanel.getcUserListModel().setDedicated(cUserListPanel.isDedicated());
             cUserListPanel.refresh();
-            cUserListPanel.client.getConfig().saveConfig();
-        } else if (command.equals("ULC") && st.hasMoreElements()) {
-            command = st.nextToken();
-            cUserListPanel.client.getConfig().setParam("USERLISTCOLOR", command);
+            cUserListPanel.getClient().getConfig().saveConfig();
+        } else if (command.equals("ULC") && stringTokenizer.hasMoreElements()) {
+            command = stringTokenizer.nextToken();
+            cUserListPanel.getClient().getConfig().setParam("USER_LIST_COLOR", command);
             cUserListPanel.Users.getRenderer().refreshParams();
-            cUserListPanel.UserList.repaint();
-            cUserListPanel.client.getConfig().saveConfig();
-        } else if (command.equals("ULI") && st.hasMoreElements()) {
-            command = st.nextToken();
+            cUserListPanel.getcUserListModelJList().repaint();
+            cUserListPanel.getClient().getConfig().saveConfig();
+        } else if (command.equals("ULI") && stringTokenizer.hasMoreElements()) {
+            command = stringTokenizer.nextToken();
             cUserListPanel.client.getConfig().setParam("USERLISTIMAGE", command);
             cUserListPanel.Users.getRenderer().refreshParams();
             cUserListPanel.UserList.repaint();
-            cUserListPanel.client.getConfig().saveConfig();
-        } else if (command.equals("ULB") && st.hasMoreElements()) {
-            command = st.nextToken();
+            cUserListPanel.getClient().getConfig().saveConfig();
+        } else if (command.equals("ULB") && stringTokenizer.hasMoreElements()) {
+            command = stringTokenizer.nextToken();
             cUserListPanel.client.getConfig().setParam("USERLISTBOLD", command);
             cUserListPanel.Users.getRenderer().refreshParams();
             cUserListPanel.UserList.repaint();
             cUserListPanel.client.getConfig().saveConfig();
-        } else if (command.equals("ULN") && st.hasMoreElements()) {
-            command = st.nextToken();
+        } else if (command.equals("ULN") && stringTokenizer.hasMoreElements()) {
+            command = stringTokenizer.nextToken();
             cUserListPanel.client.getConfig().setParam("USERLISTCOUNT", command);
             cUserListPanel.CountLabel.setVisible(Boolean.parseBoolean(command));
             cUserListPanel.repaint();
             cUserListPanel.client.getConfig().saveConfig();
-        } else if (command.equals("ULA") && st.hasMoreElements()) {
-            command = st.nextToken();
+        } else if (command.equals("ULA") && stringTokenizer.hasMoreElements()) {
+            command = stringTokenizer.nextToken();
             cUserListPanel.client.getConfig().setParam("USERLISTACTIVITYBTN", command);
             cUserListPanel.ActivityButton.setVisible(Boolean.parseBoolean(command));
             cUserListPanel.repaint();

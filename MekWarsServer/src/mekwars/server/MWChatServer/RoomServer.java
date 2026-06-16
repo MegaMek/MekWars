@@ -257,7 +257,7 @@ public class RoomServer implements ICommands {
     /**
      * Get a string array containing the names of all the users in this room
 
-     public String[] getUsers() {
+     public String[] getcUserListModel() {
      String[] names = new String[_users.size()];
      synchronized (_users) {
      int j = 0;

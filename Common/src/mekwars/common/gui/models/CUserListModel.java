@@ -108,7 +108,7 @@ public class CUserListModel extends AbstractListModel<CUser> {
         int myLevel = client.getUserLevel();
 
         /*
-         * Sync on client.getUsers() to prevent ConcurrentModError
+         * Sync on client.getcUserListModel() to prevent ConcurrentModError
          * while rebuilding the CUserListPanel.
          */
         Collection<CUser> users = client.getUsers();

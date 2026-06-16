@@ -99,8 +99,10 @@ public class CUserListPanel extends JPanel implements ActionListener {
     private final JPanel linksPanel = new JPanel();
     private final JPanel bottomPanel = new JPanel();
     private final IClient client;
-    private final JList<CUserListModel> UserList;
-    private final CUserListModel Users;
+    private final JList<CUserListModel> cUserListModelJList;
+    private final CUserListModel cUserListModel;
+    private boolean isLoggedIn = false;
+    private boolean isDedicated = false;
 
     public CUserListPanel(IClient client) {
         this.client = client;
@@ -109,29 +111,29 @@ public class CUserListPanel extends JPanel implements ActionListener {
         setMinimumSize(new Dimension(120, 100));
         setMaximumSize(new Dimension(180, 2000));
 
-        Users = new CUserListModel(this.client);
-        UserList = new JList<>();
-        UserList.add(Users.getRenderer());
-        UserList.setAlignmentX(0.0F);
+        cUserListModel = new CUserListModel(this.client);
+        cUserListModelJList = new JList<>();
+        cUserListModelJList.add(cUserListModel.getRenderer());
+        cUserListModelJList.setAlignmentX(0.0F);
 
         UserListPopupListener userListPopup = new UserListPopupListener(this);
-        UserList.addMouseListener(userListPopup);
-        UserList.setCellRenderer(Users.getRenderer());
+        cUserListModelJList.addMouseListener(userListPopup);
+        cUserListModelJList.setCellRenderer(cUserListModel.getRenderer());
 
-        JScrollPane userListSP = new JScrollPane(UserList);
+        JScrollPane userListSP = new JScrollPane(cUserListModelJList);
         userListSP.setPreferredSize(new Dimension(180, 380));
         userListSP.setMinimumSize(new Dimension(180, 100));
         userListSP.setMaximumSize(new Dimension(180, 2000));
         userListSP.setBorder(new LineBorder(Color.black));
-        userListSP.setViewportView(UserList);
+        userListSP.setViewportView(cUserListModelJList);
         add(userListSP, BorderLayout.CENTER);
 
-        UserList.setBackground(StringUtils.html2Color(this.client.getConfigParam("BACKGROUND_COLOR")));
+        cUserListModelJList.setBackground(StringUtils.html2Color(this.client.getConfigParam("BACKGROUND_COLOR")));
         //set up the count label
         CountLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
         CountLabel.setAlignmentY(Component.CENTER_ALIGNMENT);
         CountLabel.setBorder(BorderFactory.createEmptyBorder(3, 2, 2, 2));
-        CountLabel.setText(STR."Player Count: \{UserList.getModel().getSize()}");
+        CountLabel.setText(STR."Player Count: \{cUserListModelJList.getModel().getSize()}");
         CountLabel.setVisible(this.client.getConfig().isParam("USER_LIST_COUNT"));
 
         if (new File("./data/images/activatebutton.png").exists()) {
@@ -211,27 +213,27 @@ public class CUserListPanel extends JPanel implements ActionListener {
         //restore the previous sort mode
         String mode = this.client.getConfig().getParam("SORT_MODE");
         switch (mode) {
-            case "HOUSE" -> ((CUserListModel) UserList.getModel()).setSortMode(SORT_MODE_HOUSE);
-            case "EXP" -> ((CUserListModel) UserList.getModel()).setSortMode(SORT_MODE_EXP);
+            case "HOUSE" -> getcUserListModel().setSortMode(SORT_MODE_HOUSE);
+            case "EXP" -> getcUserListModel().setSortMode(SORT_MODE_EXP);
             case "RATING" -> {
                 if (!Boolean.parseBoolean(this.client.getServerConfigs("HideELO"))) {
-                    ((CUserListModel) UserList.getModel()).setSortMode(SORT_MODE_RATING);
+                    getcUserListModel().setSortMode(SORT_MODE_RATING);
                 } else {
-                    ((CUserListModel) UserList.getModel()).setSortMode(SORT_MODE_NAME);
+                    getcUserListModel().setSortMode(SORT_MODE_NAME);
                 }
             }
-            case "STATUS" -> ((CUserListModel) UserList.getModel()).setSortMode(SORT_MODE_STATUS);
-            case "USER_LEVEL" -> ((CUserListModel) UserList.getModel()).setSortMode(SORT_MODE_USER_LEVEL);
-            case "COUNTRY" -> ((CUserListModel) UserList.getModel()).setSortMode(SORT_MODE_COUNTRY);
-            default -> ((CUserListModel) UserList.getModel()).setSortMode(SORT_MODE_NAME);
+            case "STATUS" -> getcUserListModel().setSortMode(SORT_MODE_STATUS);
+            case "USER_LEVEL" -> getcUserListModel().setSortMode(SORT_MODE_USER_LEVEL);
+            case "COUNTRY" -> getcUserListModel().setSortMode(SORT_MODE_COUNTRY);
+            default -> getcUserListModel().setSortMode(SORT_MODE_NAME);
         }
 
         //restore the previous sort order
         String order = this.client.getConfig().getParam("SORT_ORDER");
         if (order.equals("DESCENDING")) {
-            ((CUserListModel) UserList.getModel()).setSortOrder(SORT_ORDER_DESCENDING);
+            getcUserListModel().setSortOrder(SORT_ORDER_DESCENDING);
         } else {
-            ((CUserListModel) UserList.getModel()).setSortOrder(SORT_ORDER_ASCENDING);
+            getcUserListModel().setSortOrder(SORT_ORDER_ASCENDING);
         }
 
     }
@@ -299,11 +301,7 @@ public class CUserListPanel extends JPanel implements ActionListener {
             }
         });
 
-        if (client.getServerConfigs("Enable_Link2_Button").equalsIgnoreCase("true")) {
-            LinkButton2.setVisible(true);
-        } else {
-            LinkButton2.setVisible(false);
-        }
+        LinkButton2.setVisible(client.getServerConfigs("Enable_Link2_Button").equalsIgnoreCase("true"));
 
         //button3
         Icon link3Icon = new ImageIcon(client.getServerConfigs("Link3_Icon").trim());
@@ -347,28 +345,42 @@ public class CUserListPanel extends JPanel implements ActionListener {
         add(bottomPanel, BorderLayout.SOUTH);
     }
 
+    public CUserListModel getcUserListModel() {
+        return cUserListModel;
+    }
+
+    public boolean isDedicated() {
+        return isDedicated;
+    }
+
+    public void setDedicated(boolean isDedicated) {
+        this.isDedicated = isDedicated;
+    }
+
     public IClient getClient() {
         return client;
     }
 
-    public CUserListModel getUsers() {
-        return Users;
-    }
-
-    public JList<CUserListModel> getUserList() {
-        return UserList;
+    public JList<CUserListModel> getcUserListModelJList() {
+        return cUserListModelJList;
     }
 
     public synchronized void refresh() {
         try {
-            ((CUserListModel) UserList.getModel()).refreshModel();
+            getcUserListModel().refreshModel();
         } catch (Exception ex) {
             LOGGER.error(ex, "Unable to refresh the model. {}", ex.getLocalizedMessage());
         }
-        CountLabel.setText(STR."Player Count: \{UserList.getModel().getSize()}");
+        CountLabel.setText(STR."Player Count: \{cUserListModelJList.getModel().getSize()}");
+    }
+
+    public boolean isLoggedIn() {
+        return isLoggedIn;
     }
 
     public void setLoggedIn(boolean loggedIn) {
+        isLoggedIn = loggedIn;
+
         if (loggedIn) {
             ActivityButton.setEnabled(true);//update button for status
             setActivateButtonText("Activate");
@@ -417,8 +429,8 @@ public class CUserListPanel extends JPanel implements ActionListener {
         }
     }
 
-    public void setActivityButtonEnabled(boolean b) {
-        ActivityButton.setEnabled(b);
+    public void setActivityButtonEnabled(boolean activityButtonEnabled) {
+        ActivityButton.setEnabled(activityButtonEnabled);
     }
 
     /**
