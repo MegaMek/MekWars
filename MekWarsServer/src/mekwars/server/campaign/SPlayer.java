@@ -16,9 +16,7 @@
 
 package mekwars.server.campaign;
 
-
-//import org.json.simple.JSONObject;
-
+import mekwars.common.Player;
 import mekwars.common.SubFaction;
 import mekwars.common.Unit;
 import mekwars.common.campaign.pilot.Pilot;
@@ -50,11 +48,11 @@ import mekwars.server.util.QuirkHandler;
  *       Modifications: - Moved slice flu generation to a Quartz task
  */
 
-public final class SPlayer extends Player implements Comparable<Object>, IBuyer, ISeller {
+public final class SPlayer extends Player implements Comparable<SPlayer>, IBuyer, ISeller {
 
     // STATIC VARIABLES
     // STATUS_DISCONNECTED, which is used by the client, is 0
-    public static final int STATUS_LOGGEDOUT = 1;
+    public static final int STATUS_LOGGED_OUT = 1;
     public static final int STATUS_RESERVE = 2;
     public static final int STATUS_ACTIVE = 3;
     public static final int STATUS_FIGHTING = 4;
@@ -175,20 +173,6 @@ public final class SPlayer extends Player implements Comparable<Object>, IBuyer,
 
         // else
         return false;
-    }
-
-    // NAME GET/SET METHODS
-    public String getName() {
-        return name;
-    }
-
-    public void setName(String s) {
-
-        if (s == null) {
-            throw new NullPointerException();
-        }
-        name = s;
-        setSave();
     }
 
     /**
@@ -840,51 +824,6 @@ public final class SPlayer extends Player implements Comparable<Object>, IBuyer,
         return numBays;
     }// end TotalMechBays()
 
-    /**
-     * @return the number of technicians the player has
-     */
-    @Override
-    public int getTechnicians() {
-        if (CampaignMain.campaignMain.isUsingAdvanceRepair()) {
-            return getBaysOwned();
-        }
-        // else
-        return technicians;
-    }
-
-    /**
-     * @param t - int to set technicians to.
-     */
-    @Override
-    public void setTechnicians(int t) {
-
-        int maxTechs = 0;
-
-        // dont allow negative techs. always set negatives back to 0.
-        if (t < 0) {
-            t = 0;
-        }
-
-        if (getMyHouse() != null) {
-            maxTechs = Integer.parseInt(getMyHouse().getConfig("MaxTechsToHire"));
-        } else {
-            maxTechs = CampaignMain.campaignMain.getIntegerConfig("MaxTechsToHire");
-        }
-
-        if (maxTechs != -1) {
-            technicians = Math.min(maxTechs, t);
-        } else {
-            technicians = t;
-        }
-
-        // clear the tech payment any time a new number of techs is set
-        setCurrentTechPayment(-1);
-        CampaignMain.campaignMain.toUser("PL|ST|" + t, name, false);
-        CampaignMain.campaignMain.toUser("PL|SB|" + getTotalMekBays(), name, false);
-        CampaignMain.campaignMain.toUser("PL|SF|" + getFreeBays(), name, false);
-        setSave();
-    }
-
     public int getBaysOwned() {
         return baysOwned;
     }
@@ -1141,8 +1080,6 @@ public final class SPlayer extends Player implements Comparable<Object>, IBuyer,
         return "";
     }
 
-    // EXPERIENCE SET/ADD/GET Methods
-
     public void setFluffText(String s) {
         fluffText = s;
 
@@ -1160,8 +1097,6 @@ public final class SPlayer extends Player implements Comparable<Object>, IBuyer,
     public void setFighting(boolean newStatus) {
         this.setFighting(newStatus, false);
     }
-
-    // SPECIAL USE METHODS (PRIVATE OR PUBLIC&STATIC)
 
     /**
      * Transition a player between fighting and active status.
@@ -1255,6 +1190,8 @@ public final class SPlayer extends Player implements Comparable<Object>, IBuyer,
         myHouse.getFightingPlayers().put(lowerName, this);
         CampaignMain.campaignMain.toUser("CS|" + +mekwars.server.campaign.SPlayer.STATUS_FIGHTING, name, false);
     }
+
+    // EXPERIENCE SET/ADD/GET Methods
 
     /**
      * Method that determines the weighted number or armies a player has active. Each army gives an initial weight of 1.
@@ -1484,14 +1421,12 @@ public final class SPlayer extends Player implements Comparable<Object>, IBuyer,
         return armies;
     }
 
-    // METHODS TO CHECK/COMMENT
+    // SPECIAL USE METHODS (PRIVATE OR PUBLIC&STATIC)
 
     public void setArmies(java.util.Vector<mekwars.server.campaign.SArmy> v) {
         armies = v;
         setSave();
     }
-
-    //MINI CAMPAIGN CODE
 
     /**
      * A method which resets the weightedArmyNumber to -1, forcing a recalculation next time the above method
@@ -1540,6 +1475,8 @@ public final class SPlayer extends Player implements Comparable<Object>, IBuyer,
         return password;
     }
 
+    // METHODS TO CHECK/COMMENT
+
     public void setPassword(MWPasswdRecord pass) {
 
         if (pass == null) {
@@ -1553,13 +1490,7 @@ public final class SPlayer extends Player implements Comparable<Object>, IBuyer,
         setSave();
     }
 
-    /**
-     * Method required for ISeller compliance. Used to distinguish between human controlled actors (this class) and
-     * factions/automated actors (SHouse).
-     */
-    public boolean isHuman() {
-        return true;
-    }
+    //MINI CAMPAIGN CODE
 
     /**
      * A Method to get the current duty status of a player. Options are, from lowest to hightest, STATUS_LOGGEDOUT,
@@ -1749,27 +1680,6 @@ public final class SPlayer extends Player implements Comparable<Object>, IBuyer,
         return id;
     }
 
-    // doesnt work, dunno why... might work, just didn't work in shortresolver?
-    //    //@salient
-    //    public void removeLockedUnitsFromArmiesMC()
-    //    {
-    //    	if(!getMyHouse().getBooleanConfig("LockUnits"))
-    //    		return;
-    //
-    //    	getLockedArmy();
-    //        for (SArmy army : getArmies())
-    //        {
-    //        	for (Unit aUnit : army.getUnits())
-    //        	{
-    //        		if(aUnit.isLocked())
-    //        			army.removeUnit(aUnit.getId());
-    //        	}
-    //        }
-    //
-    //    	refreshGUI();
-    //    	toSelf("AM: Locked Units Removed From Army!");
-    //    }
-
     public int getFreeArmyId() {
         int i = 0;
         boolean free = false;
@@ -1819,13 +1729,6 @@ public final class SPlayer extends Player implements Comparable<Object>, IBuyer,
             bv += currU.getBVForMatch();
         }
         return bv;
-    }
-
-    /**
-     * Get the amount of money the player currently has on hand. Required for IBuyer.
-     */
-    public int getMoney() {
-        return money;
     }
 
     /**
@@ -2078,6 +1981,27 @@ public final class SPlayer extends Player implements Comparable<Object>, IBuyer,
         reportStatusMC();
         return true;
     }
+
+    // doesnt work, dunno why... might work, just didn't work in shortresolver?
+    //    //@salient
+    //    public void removeLockedUnitsFromArmiesMC()
+    //    {
+    //    	if(!getMyHouse().getBooleanConfig("LockUnits"))
+    //    		return;
+    //
+    //    	getLockedArmy();
+    //        for (SArmy army : getArmies())
+    //        {
+    //        	for (Unit aUnit : army.getUnits())
+    //        	{
+    //        		if(aUnit.isLocked())
+    //        			army.removeUnit(aUnit.getId());
+    //        	}
+    //        }
+    //
+    //    	refreshGUI();
+    //    	toSelf("AM: Locked Units Removed From Army!");
+    //    }
 
     //@salient send msg to self
     public void toSelf(String msg) {
@@ -2352,6 +2276,21 @@ public final class SPlayer extends Player implements Comparable<Object>, IBuyer,
         setSave();
     }
 
+    /**
+     * Get the amount of money the player currently has on hand. Required for IBuyer.
+     */
+    public int getMoney() {
+        return money;
+    }
+
+    /**
+     * Method required for ISeller compliance. Used to distinguish between human controlled actors (this class) and
+     * factions/automated actors (SHouse).
+     */
+    public boolean isHuman() {
+        return true;
+    }
+
     //@salient
     public boolean hasRP() {
         if (getReward() != 0) {return true;} else {return false;}
@@ -2497,6 +2436,48 @@ public final class SPlayer extends Player implements Comparable<Object>, IBuyer,
         addMekToken(getMekTokenLimit());//have to go to limit to clear to 0, counts up
     }
 
+    //@salient
+    public boolean hasCurrency() {
+        if (getMoney() != 0 || getInfluence() != 0 || getReward() != 0 || getRemainingMekTokens() != 0) {
+            return true;
+        } else {return false;}
+    }
+
+    /**
+     * @return current post-game payment to technicians, in Cbills
+     */
+    @Override
+    public int getCurrentTechPayment() {
+
+        // recalculate if -1
+        if (currentTechPayment < 0) {
+            doPayTechniciansMath();
+        }
+
+        return currentTechPayment;
+    }
+
+    /**
+     * @param i - post-game payment to set, in Cbills
+     */
+    @Override
+    public void setCurrentTechPayment(int i) {
+        currentTechPayment = i;
+        setSave();
+    }
+
+    /**
+     * @return the number of technicians the player has
+     */
+    @Override
+    public int getTechnicians() {
+        if (CampaignMain.campaignMain.isUsingAdvanceRepair()) {
+            return getBaysOwned();
+        }
+        // else
+        return technicians;
+    }
+
     //@salient- compare client quirks with server
     // lol while this works, realized the way i'm doing things
     // makes this check meaningless... what needs to be checked is the hosts xmls, not the client quirks
@@ -2526,33 +2507,69 @@ public final class SPlayer extends Player implements Comparable<Object>, IBuyer,
     //        return true;
     //    }
 
-    //@salient
-    public boolean hasCurrency() {
-        if (getMoney() != 0 || getInfluence() != 0 || getReward() != 0 || getRemainingMekTokens() != 0) {
-            return true;
-        } else {return false;}
-    }
-
     /**
-     * @return current post-game payment to technicians, in Cbills
+     * @param t - int to set technicians to.
      */
     @Override
-    public int getCurrentTechPayment() {
+    public void setTechnicians(int t) {
 
-        // recalculate if -1
-        if (currentTechPayment < 0) {
-            doPayTechniciansMath();
+        int maxTechs = 0;
+
+        // dont allow negative techs. always set negatives back to 0.
+        if (t < 0) {
+            t = 0;
         }
 
-        return currentTechPayment;
+        if (getMyHouse() != null) {
+            maxTechs = Integer.parseInt(getMyHouse().getConfig("MaxTechsToHire"));
+        } else {
+            maxTechs = CampaignMain.campaignMain.getIntegerConfig("MaxTechsToHire");
+        }
+
+        if (maxTechs != -1) {
+            technicians = Math.min(maxTechs, t);
+        } else {
+            technicians = t;
+        }
+
+        // clear the tech payment any time a new number of techs is set
+        setCurrentTechPayment(-1);
+        CampaignMain.campaignMain.toUser("PL|ST|" + t, name, false);
+        CampaignMain.campaignMain.toUser("PL|SB|" + getTotalMekBays(), name, false);
+        CampaignMain.campaignMain.toUser("PL|SF|" + getFreeBays(), name, false);
+        setSave();
     }
 
     /**
-     * @param i - post-game payment to set, in Cbills
+     * @param t - the number of technicians to add (subtract) from the player's total sub-zero cases are checked in
+     *          setTechs(). no check here.
      */
     @Override
-    public void setCurrentTechPayment(int i) {
-        currentTechPayment = i;
+    public void addTechnicians(int t) {
+        if (CampaignMain.campaignMain.isUsingAdvanceRepair()) {
+            addBays(t);
+        } else {
+            setTechnicians(getTechnicians() + t);
+        }
+    }
+
+    @Override
+    public void setTeamNumber(int team) {
+        super.setTeamNumber(team);
+        setSave();
+    }
+
+    // NAME GET/SET METHODS
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String s) {
+
+        if (s == null) {
+            throw new NullPointerException();
+        }
+        name = s;
         setSave();
     }
 
@@ -2679,19 +2696,6 @@ public final class SPlayer extends Player implements Comparable<Object>, IBuyer,
         lastISP = isp;
     }
 
-    /**
-     * @param t - the number of technicians to add (subtract) from the player's total sub-zero cases are checked in
-     *          setTechs(). no check here.
-     */
-    @Override
-    public void addTechnicians(int t) {
-        if (CampaignMain.campaignMain.isUsingAdvanceRepair()) {
-            addBays(t);
-        } else {
-            setTechnicians(getTechnicians() + t);
-        }
-    }
-
     public String getColoredName() {
         return "<font color=\"" + getHouseFightingFor().getHouseColor() + "\">" + name + "</font>";
     }
@@ -2775,11 +2779,11 @@ public final class SPlayer extends Player implements Comparable<Object>, IBuyer,
         scrapsThisTick = scraps;
     }
 
+    // INFLUENCE SET/ADD/GET METHODS @urgru 1/30/03
+
     public void addScrapThisTick() {
         scrapsThisTick += 1;
     }
-
-    // INFLUENCE SET/ADD/GET METHODS @urgru 1/30/03
 
     public int getDonationsThisTick() {
         return donationsThisTick;
@@ -2924,15 +2928,15 @@ public final class SPlayer extends Player implements Comparable<Object>, IBuyer,
         return lastTimeCommandSent;
     }
 
-    public void setLastTimeCommandSent(long l) {
-        lastTimeCommandSent = l;
-    }
-
     // STATUS DISPLAY METHODS
     /*
      * These would normally be under the PUBLIC METHODS heading; however,
      * they're important (and long) enough to justify their own heading.
      */
+
+    public void setLastTimeCommandSent(long l) {
+        lastTimeCommandSent = l;
+    }
 
     public long getLastAttackFromReserve() {
         return lastAttackFromReserve;
@@ -3866,12 +3870,6 @@ public final class SPlayer extends Player implements Comparable<Object>, IBuyer,
 
     public void setForumID(int id) {
         forumID = id;
-    }
-
-    @Override
-    public void setTeamNumber(int team) {
-        super.setTeamNumber(team);
-        setSave();
     }
 
     public boolean playerIsLoading() {

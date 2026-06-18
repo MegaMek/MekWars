@@ -699,7 +699,7 @@ public class AdvancedRepairDialog extends JFrame implements ActionListener, Mous
                     return;
                 }
 
-                if ((!UnitUtils.checkRepairViability(unit, critLocation, critSlot, armor) || (numberOfTechs <= 0)) &&
+                if ((!UnitUtils.isRepairViabile(unit, critLocation, critSlot, armor) || (numberOfTechs <= 0)) &&
                           (techType != UnitUtils.TECH_REWARD_POINTS)) {
 
                     if (!client.getRMT().isQueued(critLocation, critSlot, unit.getExternalId())) {

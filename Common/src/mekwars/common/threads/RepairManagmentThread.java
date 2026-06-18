@@ -181,7 +181,7 @@ public class RepairManagmentThread extends Thread {
                             }
                         }
                         //check to see if we are able to process this repair if not continue to the next if so great!
-                        if (!UnitUtils.checkRepairViability(unit.getEntity(), location, slot, armor)) {
+                        if (!UnitUtils.isRepairViabile(unit.getEntity(), location, slot, armor)) {
                             continue;
                         }
                     }

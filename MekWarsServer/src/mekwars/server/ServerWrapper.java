@@ -189,7 +189,7 @@ public class ServerWrapper extends MWChatServer {
             _cumulativeLogins++;
         }
 
-        client.ackSignon(auth.getUserId());
+        client.ackSignOn(auth.getUserId());
         return this.myServer.clientLogin(client.getUserId());
     }
 

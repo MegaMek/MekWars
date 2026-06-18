@@ -19,17 +19,15 @@
  * Original code can be found @ http://nfcchat.sourceforge.net
  * Our thanks to the original authors.
  */
-/**
- *
- * @author Torren (Jason Tighe) 11.5.05
- *
- */
 
 package mekwars.server.MWChatServer;
 
-import common.util.MWLogger;
-import server.MWChatServer.auth.IAuthenticator;
-import server.MWChatServer.commands.ICommands;
+import java.io.IOException;
+import java.net.Socket;
+
+import megamek.logging.MMLogger;
+import mekwars.server.MWChatServer.auth.AccessRole;
+import mekwars.server.MWChatServer.commands.ICommands;
 
 /**
  * This is the representation of a client, on the server side. All the IChatClient interface methods are implemented by
@@ -38,39 +36,33 @@ import server.MWChatServer.commands.ICommands;
  * @see CommandMakerRemote
  */
 public class MWChatClient implements IConnectionListener, ICommands {
+    private static final MMLogger LOGGER = MMLogger.create(MWChatClient.class);
 
+    private final long _connectionTime;
+    private final String _host;
     protected AbstractConnectionHandler _connectionHandler;
     protected MWChatServer _server;
-
     protected String _userId;
-
-    private int _accessLevel = IAuthenticator.NONE;
-    private long _connectionTime;
-
-    private String _host;
+    private AccessRole _accessLevel = AccessRole.NONE;
     private String _clientVersion;
     private String _key = "";
 
     private boolean _tunneling = false;
 
-    public MWChatClient(MWChatServer server, java.net.Socket s) throws java.io.IOException {
+    public MWChatClient(MWChatServer server, Socket socket) throws IOException {
         _server = server;
         _connectionTime = System.currentTimeMillis();
-        _host = s.getInetAddress().getHostAddress();
+        _host = socket.getInetAddress().getHostAddress();
 
         // constructing our CH in three steps like this
         // looks ugly, but we do it so all FlashMWChatClient
         // has to override is createConnectionHandler.
-        _connectionHandler = createConnectionHandler(s);
+        _connectionHandler = createConnectionHandler(socket);
         ((ConnectionHandler) _connectionHandler).init();
     }
 
-    public static String getKey(String userId) {
-        return userId.toLowerCase();
-    }
-
-    public AbstractConnectionHandler createConnectionHandler(java.net.Socket s) throws java.io.IOException {
-        return new ConnectionHandler(s, this);
+    public AbstractConnectionHandler createConnectionHandler(Socket socket) throws IOException {
+        return new ConnectionHandler(socket, this);
     }
 
     public boolean getTunneling() {
@@ -87,16 +79,16 @@ public class MWChatClient implements IConnectionListener, ICommands {
     /**
      * Get the access level for this user
      *
-     * @see IAuthenticator
+     * @see AccessRole
      */
-    public int getAccessLevel() {
+    public AccessRole getAccessLevel() {
         return _accessLevel;
     }
 
     /**
      * Set the access level for this user
      */
-    public void setAccessLevel(int level) {
+    public void setAccessLevel(AccessRole level) {
         _accessLevel = level;
     }
 
@@ -137,13 +129,11 @@ public class MWChatClient implements IConnectionListener, ICommands {
      * Set the user's id
      */
     public void setUserId(String userId) {
-
         if (userId == null || userId.equalsIgnoreCase("null")) {
             try {
                 throw new NullPointerException();
             } catch (Exception ex) {
-                MWLogger.errLog("Null user in setUserId report the following error to Torren");
-                MWLogger.errLog(ex);
+                LOGGER.error(ex, "Null user in setUserId report the following error to Torren");
             }
         }
         // it's possible for this to be called multiple times
@@ -151,14 +141,11 @@ public class MWChatClient implements IConnectionListener, ICommands {
         if (_userId == null || !_userId.equals(userId)) {
             _userId = userId;
             _key = userId == null ? null : mekwars.server.MWChatServer.MWChatClient.getKey(userId);
-            /*
-             * List savedIgnored =
-             * _server.getIgnoreStore().getIgnoredByUser(_userId); _ignored =
-             * new HashMap(savedIgnored.size()); for (Iterator i =
-             * savedIgnored.iterator(); i.hasNext(); ) { String s =
-             * (String)i.next(); _ignored.put(s.toLowerCase(), s); }
-             */
         }
+    }
+
+    public static String getKey(String userId) {
+        return userId.toLowerCase();
     }
 
     /**
@@ -180,8 +167,6 @@ public class MWChatClient implements IConnectionListener, ICommands {
      * @see CommandProcessorRemote#process
      */
     public void incomingMessage(String msg) {
-        // deal with message
-        // MWLogger.infoLog("incoming mesage: "+msg);
         CommandProcessorRemote.process(msg, this);
     }
 
@@ -198,12 +183,13 @@ public class MWChatClient implements IConnectionListener, ICommands {
     /**
      * Construct and queue a message that will be sent back to the client
      */
-    public void ackSignon(String myName) {
+    public void ackSignOn(String myName) {
         if (_connectionHandler == null) {
-            System.err.println("conn handler is null");
+            System.err.println("connection handler is null");
+            return;
         }
-        _connectionHandler.queueMessage(CommandMakerRemote
-                                              .constructSignonAck(myName));
+
+        _connectionHandler.queueMessage(CommandMakerRemote.constructSignonAck(myName));
     }
 
     /**
@@ -218,104 +204,91 @@ public class MWChatClient implements IConnectionListener, ICommands {
      * Construct and queue a message that will be sent back to the client
      */
     public void ackJoinRoom(String room) {
-        _connectionHandler.queueMessage(CommandMakerRemote
-                                              .constructJoinRoomAck(room));
+        _connectionHandler.queueMessage(CommandMakerRemote.constructJoinRoomAck(room));
     }
 
     /**
      * Construct and queue a message that will be sent back to the client
      */
     public void ackPartRoom(String room) {
-        _connectionHandler.queueMessage(CommandMakerRemote
-                                              .constructPartRoomAck(room));
+        _connectionHandler.queueMessage(CommandMakerRemote.constructPartRoomAck(room));
     }
 
     /**
      * Construct and queue a message that will be sent back to the client
      */
     public void messageFromUser(String user, String room, String msg) {
-        _connectionHandler.queueMessage(CommandMakerRemote
-                                              .constructRoomMessage(user, room, msg));
+        _connectionHandler.queueMessage(CommandMakerRemote.constructRoomMessage(user, room, msg));
     }
 
     /**
      * Construct and queue a message that will be sent back to the client
      */
     public void roomList(String[] roomList) {
-        _connectionHandler.queueMessage(CommandMakerRemote
-                                              .constructRoomListMessage(roomList));
+        _connectionHandler.queueMessage(CommandMakerRemote.constructRoomListMessage(roomList));
     }
 
     /**
      * Construct and queue a message that will be sent back to the client
      */
     public void globalUserList(String[] users) {
-        _connectionHandler.queueMessage(CommandMakerRemote
-                                              .constructGlobalUserListMessage(users));
+        _connectionHandler.queueMessage(CommandMakerRemote.constructGlobalUserListMessage(users));
     }
 
     /**
      * Construct and queue a message that will be sent back to the client
      */
     public void roomUserList(String room, String[] users) {
-        _connectionHandler.queueMessage(CommandMakerRemote
-                                              .constructRoomUserListMessage(room, users));
+        _connectionHandler.queueMessage(CommandMakerRemote.constructRoomUserListMessage(room, users));
     }
 
     /**
      * Construct and queue a message that will be sent back to the client
      */
     public void userJoinedRoom(String user, String room) {
-        _connectionHandler.queueMessage(CommandMakerRemote
-                                              .constructUserJoinedRoomMessage(user, room));
+        _connectionHandler.queueMessage(CommandMakerRemote.constructUserJoinedRoomMessage(user, room));
     }
 
     /**
      * Construct and queue a message that will be sent back to the client
      */
     public void userPartedRoom(String user, String room, boolean signOff) {
-        _connectionHandler.queueMessage(CommandMakerRemote
-                                              .constructUserPartedRoomMessage(user, room, signOff));
+        _connectionHandler.queueMessage(CommandMakerRemote.constructUserPartedRoomMessage(user, room, signOff));
     }
 
     /**
      * Construct and queue a message that will be sent back to the client
      */
     public void generalError(String message) {
-        _connectionHandler.queueMessage(CommandMakerRemote
-                                              .constructErrorMessage(message));
+        _connectionHandler.queueMessage(CommandMakerRemote.constructErrorMessage(message));
     }
 
     /**
      * Construct and queue a message that will be sent back to the client
      */
     public void generalMessage(String message) {
-        _connectionHandler.queueMessage(CommandMakerRemote
-                                              .constructGeneralMessage(message));
+        _connectionHandler.queueMessage(CommandMakerRemote.constructGeneralMessage(message));
     }
 
     /**
      * Construct and queue a message that will be sent back to the client
      */
     public void generalRoomMessage(String room, String message) {
-        _connectionHandler.queueMessage(CommandMakerRemote
-                                              .constructGeneralRoomMessage(room, message));
+        _connectionHandler.queueMessage(CommandMakerRemote.constructGeneralRoomMessage(room, message));
     }
 
     /**
      * Construct and queue a message that will be sent back to the client
      */
     public void ping(String user, String arg) {
-        _connectionHandler.queuePriorityMessage(CommandMakerRemote
-                                                      .constructPing(user, arg));
+        _connectionHandler.queuePriorityMessage(CommandMakerRemote.constructPing(user, arg));
     }
 
     /**
      * Construct and queue a message that will be sent back to the client
      */
     public void pong(String user, String arg) {
-        _connectionHandler.queueMessage(CommandMakerRemote.constructPong(user,
-              arg));
+        _connectionHandler.queueMessage(CommandMakerRemote.constructPong(user, arg));
     }
 
     /**
@@ -325,8 +298,7 @@ public class MWChatClient implements IConnectionListener, ICommands {
      * @param room  the room.
      */
     public void roomJoinError(String error, String room) {
-        _connectionHandler.queueMessage(CommandMakerRemote
-                                              .constructRoomJoinError(error, room));
+        _connectionHandler.queueMessage(CommandMakerRemote.constructRoomJoinError(error, room));
     }
 
     /**
@@ -336,8 +308,7 @@ public class MWChatClient implements IConnectionListener, ICommands {
      * @param user  the user.
      */
     public void signOnError(String error, String user) {
-        _connectionHandler.queueMessage(CommandMakerRemote
-                                              .constructSignOnError(error, user));
+        _connectionHandler.queueMessage(CommandMakerRemote.constructSignOnError(error, user));
     }
 
     /**
@@ -347,19 +318,16 @@ public class MWChatClient implements IConnectionListener, ICommands {
      * @param arg  anything you'd want to add.
      */
     public void error(String type, String arg) {
-        _connectionHandler.queueMessage(CommandMakerRemote.constructError(type,
-              arg));
+        _connectionHandler.queueMessage(CommandMakerRemote.constructError(type, arg));
     }
 
     /**
      * Create a killed message and send it to the client.
      *
      * @param killer the user that killed this MWChatClient.
-     * @param msg
      */
     public void killed(String killer, String msg) {
-        _connectionHandler.queuePriorityMessage(CommandMakerRemote
-                                                      .constructKilled(killer, msg));
+        _connectionHandler.queuePriorityMessage(CommandMakerRemote.constructKilled(killer, msg));
     }
 
     /**
@@ -368,8 +336,7 @@ public class MWChatClient implements IConnectionListener, ICommands {
      * @param victim the victim.
      */
     public void ackKill(String victim) {
-        _connectionHandler.queueMessage(CommandMakerRemote
-                                              .constructAckKill(victim));
+        _connectionHandler.queueMessage(CommandMakerRemote.constructAckKill(victim));
     }
 
     /**
@@ -385,8 +352,7 @@ public class MWChatClient implements IConnectionListener, ICommands {
      * @param userId the user that signed on.
      */
     public void userSignOn(String userId) {
-        _connectionHandler.queueMessage(CommandMakerRemote
-                                              .constructUserSignOn(userId));
+        _connectionHandler.queueMessage(CommandMakerRemote.constructUserSignOn(userId));
     }
 
     /**
@@ -395,8 +361,7 @@ public class MWChatClient implements IConnectionListener, ICommands {
      * @param userId the user that signed off.
      */
     public void userSignOff(String userId) {
-        _connectionHandler.queueMessage(CommandMakerRemote
-                                              .constructUserSignOff(userId));
+        _connectionHandler.queueMessage(CommandMakerRemote.constructUserSignOff(userId));
     }
 
     /**
@@ -405,8 +370,7 @@ public class MWChatClient implements IConnectionListener, ICommands {
      * @param room the room that was created.
      */
     public void roomCreated(String room) {
-        _connectionHandler.queueMessage(CommandMakerRemote
-                                              .constructRoomCreated(room));
+        _connectionHandler.queueMessage(CommandMakerRemote.constructRoomCreated(room));
     }
 
     public String getKey() {
@@ -416,5 +380,4 @@ public class MWChatClient implements IConnectionListener, ICommands {
     public void ackMail(String toUser) {
         _connectionHandler.queueMessage(CommandMakerRemote.constructAckMail(toUser));
     }
-
 }

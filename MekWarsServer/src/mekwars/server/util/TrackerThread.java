@@ -17,6 +17,16 @@
 package mekwars.server.util;
 
 
+import java.io.IOException;
+import java.io.PrintWriter;
+import java.net.Socket;
+import java.util.UUID;
+
+import megamek.logging.MMLogger;
+import mekwars.server.MWServ;
+import mekwars.server.campaign.CampaignMain;
+import org.jspecify.annotations.NonNull;
+
 /**
  *
  * @author urgru
@@ -25,29 +35,34 @@ package mekwars.server.util;
  *       <p>
  *       A thread which communicates with the tracker.
  *       <p>
- *       ChangeLog: Updated to use campaignconfig instead of ServerConfig, so we don't have to reboot to affect change.
+ *       ChangeLog: Updated to use CampaignConfig instead of ServerConfig, so we don't have to reboot to affect change.
  *       *
  */
 public class TrackerThread extends Thread {
+    private final static MMLogger LOGGER = MMLogger.create(TrackerThread.class);
 
     //VARIABLE
-    server.MWServ serv;
-    private String trackerID = "0";
+    MWServ serv;
+    private UUID trackerID = null;
 
-    //CONSTRUCTOS
-    public TrackerThread(server.MWServ s) {
+    public TrackerThread(MWServ mwServ) {
         super("Tracker Thread");
-        serv = s;
-        if (trackerID.equalsIgnoreCase("0")) {
-            // Tracker ID not loaded yet
-            if ((trackerID = serv.getCampaign().getConfig("TrackerUUID")).equalsIgnoreCase("0")) {
-                // The tracker ID is not yet set by the server.  Let's set it so this never happens again
-                trackerID = java.util.UUID.randomUUID().toString();
-                serv.getCampaign().getConfig().setProperty("TrackerUUID", trackerID);
+        serv = mwServ;
+
+        if (trackerID == null) {
+            // Tracker ID isn't loaded yet
+            String savedUUIDString = serv.getCampaign().getConfig("TrackerUUID");
+            try {
+                trackerID = UUID.fromString(savedUUIDString);
+            } catch (Exception e) {
+                // The server does not yet set the tracker ID. Let mwServ set it so this never happens again
+                trackerID = UUID.randomUUID();
+                serv.getCampaign().getConfig().setProperty("TrackerUUID", String.valueOf(trackerID));
                 serv.saveConfigs();
             }
         }
-        MWLogger.infoLog("Created TrackerThread");
+
+        LOGGER.info("Created TrackerThread");
     }
 
     //METHODS
@@ -55,7 +70,7 @@ public class TrackerThread extends Thread {
     @Override
     public synchronized void run() {
 
-        MWLogger.infoLog("TrackerThread running.");
+        LOGGER.info("TrackerThread running.");
 
         //core info
         String name = serv.getCampaign().getConfig("ServerName");
@@ -65,31 +80,32 @@ public class TrackerThread extends Thread {
         //ip of tracker
         //String trackerAddress = serv.getConfigParam("TRACKERADDRESS");
         String trackerAddress = serv.getCampaign().getConfig("TrackerAddress");
-        MWLogger.infoLog(name + " " + link + " " + desc + " " + trackerAddress);
+        LOGGER.info(STR."\{name} \{link} \{desc} \{trackerAddress}");
 
         /*
          * Immediately send core info to tracker.
          */
-        java.net.Socket sock = null;
-        try {
-            MWLogger.infoLog("TrackerThread attempting to send ServerStart information.");
-            sock = new java.net.Socket(trackerAddress, 13731);//fixed port
-            java.io.PrintWriter pw = new java.io.PrintWriter(sock.getOutputStream());
+        Socket sock = null;
 
-            pw.println("SS%" + name + "%" + link + "%" + server.MWServ.SERVER_VERSION + "%" + desc);
-            pw.flush();
-            pw.close();
-            MWLogger.infoLog("TrackerThread sent server start information.");
+        try {
+            LOGGER.info("TrackerThread attempting to send ServerStart information.");
+            sock = new Socket(trackerAddress, 13731);//fixed port
+            PrintWriter printWriter = new PrintWriter(sock.getOutputStream());
+
+            printWriter.println(STR."SS%\{name}%\{link}%\{MWServ.SERVER_VERSION}%\{desc}");
+            printWriter.flush();
+            printWriter.close();
+            LOGGER.info("TrackerThread sent server start information.");
         } catch (Exception e) {
-            MWLogger.infoLog("TrackerThread could not contact tracker. Shutting down.");
-            MWLogger.errLog("Could not contact tracker. Shutting down trackerthread.");
-            MWLogger.errLog(e);
+            LOGGER.error(e, "Could not contact tracker. Shutting down TrackerThread.");
             return;
         } finally {
             try {
-                if (sock != null) {sock.close();}
-            } catch (java.io.IOException e) {
-                MWLogger.errLog(e);
+                if (sock != null && !sock.isClosed()) {
+                    sock.close();
+                }
+            } catch (IOException e) {
+                LOGGER.error(e);
             }
         }
 
@@ -106,7 +122,7 @@ public class TrackerThread extends Thread {
         try {
             while (true) {
 
-                //10 minute wait between updates
+                //10-minute wait between updates
 
                 try {
                     Thread.sleep(600000);
@@ -118,38 +134,40 @@ public class TrackerThread extends Thread {
                 //set up substrings
                 //name - already saved from ServerStart
                 int playersOnline = serv.userCount(false);
-                int gamesInProgress = 0;
-                int gamesCompleted = 0;
-
-                //get campaign main. if not null, get game info.
-                server.campaign.CampaignMain campaign = serv.getCampaign();
-                if (campaign != null) {
-                    gamesInProgress = campaign.getOpsManager().getRunningOps().size();
-                    gamesCompleted = campaign.getGamesCompleted();
-                    campaign.setGamesCompleted(0);
-                }
-
-                //string to send to tracker
-                String toSend = "PH%" + name + "%" + playersOnline + "%" + gamesInProgress + "%" + gamesCompleted;
+                String toSend = getToSend(name, playersOnline);
 
                 //set up a socket to the tracker and send this record
                 try {
-                    MWLogger.infoLog("TrackerThread attempting to send PhoneHome information.");
-                    sock = new java.net.Socket(trackerAddress, 13731);//fixed port
-                    java.io.PrintWriter pw = new java.io.PrintWriter(sock.getOutputStream());
+                    LOGGER.info("TrackerThread attempting to send PhoneHome information.");
+                    sock = new Socket(trackerAddress, 13731);//fixed port
+                    PrintWriter printWriter = new PrintWriter(sock.getOutputStream());
 
-                    pw.println(toSend);
-                    pw.flush();
-                    pw.close();
-                    MWLogger.infoLog("TrackerThread sent PH% information.");
+                    printWriter.println(toSend);
+                    printWriter.flush();
+                    printWriter.close();
+                    LOGGER.info("TrackerThread sent PH% information.");
                 } catch (Exception e) {
-                    MWLogger.infoLog("TrackerThread could not reach tracker for PH%.");
-                    MWLogger.errLog("Could not contact tracker.");
-                    MWLogger.errLog(e);
+                    LOGGER.error(e, "Could not contact tracker.");
                 }
             }//end (forever)
         } catch (Exception ex) {
-            MWLogger.errLog(ex);
+            LOGGER.error(ex);
         }
+    }
+
+    private @NonNull String getToSend(String name, int playersOnline) {
+        int gamesInProgress = 0;
+        int gamesCompleted = 0;
+
+        //get campaign main. if not null, get game info.
+        CampaignMain campaign = serv.getCampaign();
+        if (campaign != null) {
+            gamesInProgress = campaign.getOpsManager().getRunningOps().size();
+            gamesCompleted = campaign.getGamesCompleted();
+            campaign.setGamesCompleted(0);
+        }
+
+        //string to send to tracker
+        return STR."PH%\{name}%\{playersOnline}%\{gamesInProgress}%\{gamesCompleted}";
     }
 }

@@ -20,55 +20,69 @@
  */
 package mekwars.server.campaign.commands;
 
-import common.util.MWLogger;
-import common.util.UnitUtils;
+
+import java.util.StringTokenizer;
+
+import megamek.codeUtilities.MathUtility;
 import megamek.common.CriticalSlot;
-import megamek.common.Entity;
-import megamek.common.Mech;
-import megamek.common.Mounted;
-import megamek.common.Tank;
+import megamek.common.equipment.Mounted;
+import megamek.common.units.Entity;
+import megamek.common.units.Tank;
+import mekwars.common.util.UnitUtils;
+import mekwars.server.MWChatServer.auth.AccessRole;
 import mekwars.server.campaign.CampaignMain;
-import server.util.RepairTrackingThread;
+import mekwars.server.campaign.SPlayer;
+import mekwars.server.campaign.SUnit;
+import mekwars.server.util.RepairTrackingThread;
 
 /**
  * @author Torren (Jason Tighe) this parses out what the User wants reparied on thier unit and sends that data to the
  *       repair thread
  */
 public class RepairUnitCommand implements Command {
-
-    int accessLevel = 0;
+    AccessRole accessLevel = AccessRole.NONE;
     String syntax = "";
 
-    public void process(java.util.StringTokenizer command, String Username) {
-
-        if (accessLevel != 0) {
+    public void process(StringTokenizer command, String Username) {
+        if (accessLevel != AccessRole.NONE) {
             int userLevel = CampaignMain.campaignMain.getServer().getUserLevel(Username);
             if (userLevel < getExecutionLevel()) {
-                CampaignMain.campaignMain.toUser("AM:Insufficient access level for command. Level: " +
-                                                       userLevel +
-                                                       ". Required: " +
-                                                       accessLevel +
-                                                       ".", Username, true);
+                CampaignMain.campaignMain.toUser(STR."AM:Insufficient access level for command. Level: \{userLevel}. Required: \{accessLevel}.",
+                      Username,
+                      true);
                 return;
             }
         }
 
         try {
 
-            int unitID = Integer.parseInt(command.nextToken());
-            int location = Integer.parseInt(command.nextToken());
-            int slot = Integer.parseInt(command.nextToken());
-            boolean armor = Boolean.parseBoolean(command.nextToken());
-            int techType = Integer.parseInt(command.nextToken());
-            int retries = Integer.parseInt(command.nextToken());
-            int techWorkMod = Integer.parseInt(command.nextToken());
-            boolean sendDialogUpdate = Boolean.parseBoolean(command.nextToken());
+            int unitID = MathUtility.parseInt(command.nextToken(), 0);
+            int location = MathUtility.parseInt(command.nextToken(), 0);
+            int slot = MathUtility.parseInt(command.nextToken(), 0);
+            boolean armor = MathUtility.parseBoolean(command.nextToken(), false);
+            int techType = MathUtility.parseInt(command.nextToken(), 0);
+            int retries = MathUtility.parseInt(command.nextToken(), 0);
+            int techWorkMod = MathUtility.parseInt(command.nextToken(), 0);
+            boolean sendDialogUpdate = MathUtility.parseBoolean(command.nextToken(), false);
 
             retries = Math.max(0, retries);
 
-            server.campaign.SPlayer player = CampaignMain.campaignMain.getPlayer(Username);
-            server.campaign.SUnit unit = player.getUnit(unitID);
+            SPlayer player = CampaignMain.campaignMain.getPlayer(Username);
+            SUnit unit = player.getUnit(unitID);
+
+            if (unit == null) {
+                CampaignMain.campaignMain.toUser(STR."FSM|You do not have a unit with ID#\{unitID}.", Username, false);
+                return;
+            }
+
             Entity entity = unit.getEntity();
+
+            if (entity == null) {
+                CampaignMain.campaignMain.toUser(STR."FSM|You do not have a unit with an Entity \{unitID}.",
+                      Username,
+                      false);
+                return;
+            }
             String repairMessage = "";
             int tabLocation = location;
             int cost = CampaignMain.campaignMain.getRepairCost(entity,

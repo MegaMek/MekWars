@@ -21,171 +21,142 @@ package mekwars.server;
 
 // import org.mekwars.libpk.logging.PKLogManager;
 
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.InputStreamReader;
+import java.io.PrintStream;
+import java.net.InetAddress;
+import java.util.Date;
+import java.util.Hashtable;
+import java.util.Properties;
+import java.util.StringTokenizer;
+import java.util.Vector;
+
+import megamek.codeUtilities.MathUtility;
+import megamek.logging.MMLogger;
 import mekwars.common.MMGame;
 import mekwars.common.commands.Command;
+import mekwars.server.MWChatServer.MWChatClient;
+import mekwars.server.MWChatServer.MWChatServer;
+import mekwars.server.MWChatServer.auth.AccessRole;
 import mekwars.server.campaign.CampaignMain;
 import mekwars.server.campaign.DefaultServerOptions;
 import mekwars.server.campaign.SPlayer;
 import mekwars.server.util.IpCountry;
 import mekwars.server.util.TrackerThread;
-import org.apache.logging.log4j.LogManager;
 
 public class MWServ {
 
     // Static logging engine, and static version info.
     public static final String SERVER_VERSION = "0.8.0.0";
-    private static MWLogger logger;
+    private static final MMLogger LOGGER = MMLogger.create(MWServ.class);
+    private final Hashtable<String, MMGame> games = new Hashtable<>();
+    private final Hashtable<String, MWClientInfo> users = new Hashtable<>();
+    private final Hashtable<InetAddress, Vector<MWClientInfo>> ips = new Hashtable<>();
+    private final Hashtable<InetAddress, Long> bannedIPs = new Hashtable<>();
+    private final Hashtable<String, String> bannedAccounts = new Hashtable<>();
+    private final Hashtable<String, Long> ISPLog = new Hashtable<>();
+    private final Hashtable<MWClientInfo, InetAddress> ipHelp = new Hashtable<>();
+    private final Properties config = new Properties();
+    private final Hashtable<InetAddress, String> IPLog = new Hashtable<>();
+    private final CampaignMain campaign;
+    private final Command.Table myCommands = new Command.Table();
+    private final Vector<String> ignoreList = new Vector<>(1, 1);
+    private final Vector<String> factionLeaderIgnoreList = new Vector<>(1, 1);
     private ServerWrapper myCommunicator;
-    private java.util.Hashtable<String, MMGame> games = new java.util.Hashtable<String, MMGame>();
-    private java.util.Hashtable<String, MWClientInfo> users = new java.util.Hashtable<String, MWClientInfo>();
-    private java.util.Hashtable<java.net.InetAddress, java.util.Vector<MWClientInfo>> ips = new java.util.Hashtable<java.net.InetAddress, java.util.Vector<MWClientInfo>>();
-    private java.util.Hashtable<java.net.InetAddress, Long> banips = new java.util.Hashtable<java.net.InetAddress, Long>();
-    private java.util.Hashtable<String, String> banaccounts = new java.util.Hashtable<String, String>();
-    private java.util.Hashtable<String, Long> ISPlog = new java.util.Hashtable<String, Long>();
-    private java.util.Hashtable<MWClientInfo, java.net.InetAddress> iphelp = new java.util.Hashtable<MWClientInfo, java.net.InetAddress>();
-    private java.util.Properties config = new java.util.Properties();
-    private java.util.Hashtable<String, String> mails = new java.util.Hashtable<String, String>();
-    private java.util.Hashtable<java.net.InetAddress, String> iplog = new java.util.Hashtable<java.net.InetAddress, String>();
-    // private Hashtable versionsubids = new Hashtable();
+    private Hashtable<String, String> mails = new Hashtable<>();
     private IpCountry ipToCountry = null;
-    // private String log = "";
-    private CampaignMain campaign;
-    private Command.Table myCommands = new Command.Table();
-    private java.util.Vector<String> ignoreList = new java.util.Vector<String>(1, 1);
-    private java.util.Vector<String> factionLeaderIgnoreList = new java.util.Vector<String>(1, 1);
     private TrackerThread trackerThread;
 
     // private boolean debug = true;
 
     /*
-     * List of Abreviations for the protocol used by the client only: NG = New
-     * Game (NG|<IP>|<Port>|<MaxPlayers>|<Version>|<Comment>) CG = Close Game
-     * (CG) RU = Refresh Users (RU) GB = Goodbye (client exit) (GB) SO = Sign-On
-     * (SO|<Version>|<UserName>) Used by Both: CH = Chat Server news:(CH|<text>)
-     * client Chat: (CH|<UserName>|<Color>|<Text>) Used only by the Server: GS =
-     * Games (GS|<MMGame.toString()>|<MMGame.toString()|...) UsersCommand = Users
-     * (UsersCommand|<MWClientInfo.toString()>|<MWClientInfo.toString()>|..) UR = Update
-     * Request (UR|<Text to Show>) UserGoneCommand = User Gone
-     * (UserGoneCommand|<MWClientInfo.toString>|[Gone]) Gone is used when the client didn't
-     * just change his name NU = New User (NU|<MWClientInfo.toString>|[NEW]) NEW
-     * is used the same way as GONE in UserGoneCommand ER = Error (Not yet used)
-     * (ER|<ErrorLevel>|<description>) CR = Campaign Result -> Just give to
-     * CampaignMain
+     * List of Abbreviations for the protocol used by the client only:
+     * - NG = New Game (NG|<IP>|<Port>|<MaxPlayers>|<Version>|<Comment>)
+     * - CG = Close Game (CG)
+     * - RU = Refresh Users (RU)
+     * - GB = Goodbye (client exit) (GB)
+     * - SO = Sign-On (SO|<Version>|<UserName>)
+     *
+     * Used by Both:
+     * - CH = Chat Server news:(CH|<text>)
+     *
+     * - client Chat: (CH|<UserName>|<Color>|<Text>)
+     *
+     * Used only by the Server:
+     * - GS = Games (GS|<MMGame.toString()>|<MMGame.toString()|...)
+     *
+     * UsersCommand = Users
+     * (UsersCommand|<MWClientInfo.toString()>|<MWClientInfo.toString()>|..)
+     * - UR = Update Request (UR|<Text to Show>)
+     *
+     * UserGoneCommand = User Gone
+     * (UserGoneCommand|<MWClientInfo.toString>|[Gone])
+     * Gone is used when the client didn't just change his name
+     *
+     * NU = New User (NU|<MWClientInfo.toString>|[NEW])
+     * NEW is used the same way as GONE in UserGoneCommand
+     *
+     * ER = Error (Not yet used) (ER|<ErrorLevel>|<description>)
+     * CR = Campaign Result -> Just give to CampaignMain
      */
 
     MWServ(String[] argv) {
+        LOGGER.info("Server Start up");
 
-        String logFileName = "./logs/logFile.txt";
-        String errorFileName = "./logs/errorFile.txt";
-        LogManager.getLogger().info("Server Start up");
-        logger = MWLogger.getInstance();
-        createLoggers();
-
-        try {
-            // MWLogger.mainLog("Redirecting output to " +
-            // logFileName);
-            java.io.PrintStream ps = new java.io.PrintStream(new java.io.BufferedOutputStream(new java.io.FileOutputStream(
-                  logFileName), 64));
-            System.setOut(ps);
-        } catch (Exception ex) {
-            MWLogger.errLog(ex);
-            MWLogger.errLog("Unable to redirect standard output to " + logFileName);
-        }
-
-        try {
-            // MWLogger.mainLog("Redirecting output to " +
-            // logFileName);
-            java.io.PrintStream ps = new java.io.PrintStream(new java.io.BufferedOutputStream(new java.io.FileOutputStream(
-                  errorFileName), 64));
-            System.setErr(ps);
-        } catch (Exception ex) {
-            MWLogger.errLog(ex);
-            MWLogger.errLog("Unable to redirect standard error to " + errorFileName);
-        }
-
-        MWLogger.mainLog("----- MekWars Server V " + SERVER_VERSION + " is starting up... -----");
-        /*** Required to kick off the Server ***/
-        MWLogger.mainLog("Loading configuration...");
+        LOGGER.info(STR."----- MekWars Server V \{SERVER_VERSION} is starting up... -----");
+        LOGGER.info("Loading configuration...");
         loadConfig();
-        MWLogger.mainLog("Configuration loaded.");
-        /*
-         * for (int i = 0; i < argv.length; i++) { if (argv[0].equals("debug"))
-         * debug = false; }
-         */
-        if (Boolean.parseBoolean(getConfigParam("RESOLVECOUNTRY"))) {
+        LOGGER.info("Configuration loaded.");
+
+        if (MathUtility.parseBoolean(getConfigParam("RESOLVE_COUNTRY"), false)) {
             ipToCountry = new IpCountry("./data/iplist.txt", "./data/countrynames.txt");
         }
 
-        MWLogger.mainLog("Loading mail file...");
+        LOGGER.info("Loading mail file...");
         mails = checkAndCreateConfig("./data/mails.txt");
-        MWLogger.mainLog("Mail file loaded.");
-        MWLogger.mainLog("Creating new campaign environment...");
+        LOGGER.info("Mail file loaded.");
+        LOGGER.info("Creating new campaign environment...");
         campaign = new server.campaign.CampaignMain(this);
-        MWLogger.mainLog("Environment created.");
+        LOGGER.info("Environment created.");
 
         // Touch log files
-        MWLogger.mainLog("Initializing log subsystem. Touching log files.");
-        MWLogger.mainLog("Main channel log touched.");
-        MWLogger.gameLog("Game log touched.");
-        MWLogger.cmdLog("Command log touched.");
-        MWLogger.pmLog("Private messages (PM) log touched.");
-        MWLogger.bmLog("Black Market (BM) log touched.");
-        MWLogger.infoLog("Server info log touched.");
-        MWLogger.warnLog("Server warnings log touched.");
-        MWLogger.errLog("Server errors log touched.");
-        MWLogger.modLog("Moderators log touched.");
-        MWLogger.tickLog("Tick report log touched.");
+        LOGGER.info("Initializing log subsystem. Touching log files.");
+        LOGGER.info("Main channel log touched.");
+        LOGGER.info("Game log touched.");
+        LOGGER.info("Command log touched.");
+        LOGGER.info("Private messages (PM) log touched.");
+        LOGGER.info("Black Market (BM) log touched.");
+        LOGGER.info("Server info log touched.");
+        LOGGER.warn("Server warnings log touched.");
+        LOGGER.error("Server errors log touched.");
+        LOGGER.info("Moderators log touched.");
+        LOGGER.info("Tick report log touched.");
 
         // start the TrackerThread if using tracker
         this.startTracker();
 
         //start server
-        MWLogger.mainLog("Entering main loop cycle. Starting the server...");
+        LOGGER.info("Entering main loop cycle. Starting the server...");
         startServer(argv);
-    }
-
-    public static void main(String[] argv) {
-        new mekwars.server.MWServ(argv);
-    }
-
-    public static void stop() {
-        System.exit(0);
-    }
-
-    private void createLoggers() {
-        // PKLogManager logger = PKLogManager.getInstance();
-        // logger.addLog("infolog");
-        // logger.addLog(PKLogManager.ERRORLOG);
-        // logger.addLog("debuglog");
-        // logger.addLog("mainlog");
-        // logger.addLog("gamelog");
-        // logger.addLog("resultslog");
-        // logger.addLog("cmdlog");
-        // logger.addLog("pmlog");
-        // logger.addLog("bmlog");
-        // logger.addLog("warnlog");
-        // logger.addLog("modlog");
-        // logger.addLog("ticklog");
-        // logger.addLog("iplog");
-        // logger.addLog("testlog");
     }
 
     public void loadConfig() {
         try {
-            config.load(new java.io.FileInputStream("./data/serverconfig.txt"));
+            config.load(new FileInputStream("./data/serverconfig.txt"));
         } catch (Exception e) {
-            config.setProperty("INFOMESSAGE",
-                  "For MekWars project info, visit http://www.sourceforge.net/projects/mekwars");
-            config.setProperty("RESOLVECOUNTRY", "true");
-            config.setProperty("CAMPAIGNCONFIG", "./data/campaignconfig.txt");
-            config.setProperty("DATAPORT", "4867");
+            config.setProperty("INFO_MESSAGE", "For MekWars project info, visit https://github.com/megamek/MekWars");
+            config.setProperty("RESOLVE_COUNTRY", "true");
+            config.setProperty("CAMPAIGN_CONFIG", "./data/campaignconfig.txt");
+            config.setProperty("DATA_PORT", "4867");
             config.setProperty("SERVERIP", "-1");// this binds to all local IPs
             // in MWChatServer.java
             try {
-                config.store(new java.io.FileOutputStream("./data/serverconfig.txt"), "Server config File");
+                config.store(new FileOutputStream("./data/serverconfig.txt"), "Server config File");
             } catch (Exception e1) {
-                MWLogger.errLog("config file could not be read or written, defaults will be used.");
-                MWLogger.errLog(e1);
+                LOGGER.error(e1, "config file could not be read or written, defaults will be used.");
             }
         }
 
@@ -194,52 +165,55 @@ public class MWServ {
         loadISPs();
     }
 
-    public String getConfigParam(String p) {
-        String res = config.getProperty(p);
+    public String getConfigParam(String propertyName) {
+        String res = config.getProperty(propertyName);
+
         if (res != null) {
             return res;
         }
+
         return "-1";
     }
 
-    public java.util.Hashtable<String, String> checkAndCreateConfig(String filename) {
+    public Hashtable<String, String> checkAndCreateConfig(String filename) {
         try {
-            java.io.File configFile = new java.io.File(filename);
-            java.io.FileInputStream fis = new java.io.FileInputStream(configFile);
-            java.io.BufferedReader dis = new java.io.BufferedReader(new java.io.InputStreamReader(fis));
+            File configFile = new File(filename);
+            FileInputStream fis = new FileInputStream(configFile);
+            BufferedReader dis = new BufferedReader(new InputStreamReader(fis));
             dis.readLine();
             dis.close();
             fis.close();
         } catch (Exception ex) {
             try {
-                MWLogger.infoLog("Creating new File");
-                MWLogger.mainLog("Creating new File");
+                LOGGER.info("Creating new File");
                 if (filename.equals("./data/mails.txt")) {
-                    java.io.FileOutputStream out = new java.io.FileOutputStream(filename);
-                    java.io.PrintStream p = new java.io.PrintStream(out);
-                    p.println("<EOF>");
-                    p.close();
+                    FileOutputStream out = new FileOutputStream(filename);
+                    PrintStream printStream = new PrintStream(out);
+                    printStream.println("<EOF>");
+                    printStream.close();
                     out.close();
                 }
             } catch (Exception e) {
-                MWLogger.errLog(e);
-                MWLogger.mainLog("No file named " + filename + " was found and cannot create one!");
+                LOGGER.error(e, STR."No file named \{filename} was found and cannot create one!");
                 System.exit(1);
             }
         }
+
         if (filename.equals("./data/mails.txt")) {
             return getMails();
         }
-        return new java.util.Hashtable<String, String>();
+
+        return new Hashtable<>();
     }
 
     public void startTracker() {
-        if (Boolean.parseBoolean(getCampaign().getConfig("UseTracker"))) {
+        if (MathUtility.parseBoolean(getCampaign().getConfig("UseTracker"), false)) {
 
             if (this.trackerThread != null) {
                 this.trackerThread.interrupt();
             }
-            MWLogger.infoLog("Attempting to create TrackerThread in MWServ.");
+
+            LOGGER.info("Attempting to create TrackerThread in MWServ.");
             TrackerThread trackT = new TrackerThread(this);
             trackT.start();
             this.trackerThread = trackT;
@@ -249,272 +223,217 @@ public class MWServ {
     // this will just loop and take in info...
     public void startServer(String[] args) {
         if (args == null) {
-            MWLogger.infoLog("Server started without parameters");
+            LOGGER.info("Server started without parameters");
         }
         try {
             myCommunicator = ServerWrapper.createServer(this);
             myCommunicator.start();
         } catch (Exception e) {
-            MWLogger.errLog("== PROBLEM STARTING SERVER WRAPPER ==");
-            MWLogger.errLog(e);
+            LOGGER.error(e, "== PROBLEM STARTING SERVER WRAPPER ==");
         }
     }
 
     public void loadBanPlayers() {
         // Loading the banned players file.
         try {
-            MWLogger.infoLog("Loading Ban Players");
-            java.io.File banFile = new java.io.File("./data/accountbans.txt");
+            LOGGER.info("Loading Ban Players");
+            File banFile = new File("./data/accountbans.txt");
 
-            // make the file, if its missing
+            // make the file if its missing
             if (!banFile.exists()) {
                 banFile.createNewFile();
             }
 
-            java.io.FileInputStream fis = new java.io.FileInputStream(banFile);
-            java.io.BufferedReader dis = new java.io.BufferedReader(new java.io.InputStreamReader(fis));
-            while (dis.ready()) {
-                String input = dis.readLine();
-                java.util.StringTokenizer st = new java.util.StringTokenizer(input, "=");
-                String toBan = st.nextToken().trim();
-                String howLong = st.nextToken().trim();
-                if ((toBan != null) && (howLong != null)) {
-                    banaccounts.put(toBan.toLowerCase(), howLong);
-                    MWLogger.infoLog("Added " + toBan + " to the banlist (for " + howLong + ")");
-                    MWLogger.mainLog("Added " + toBan + " to the banlist (for " + howLong + ")");
-                } else {
-                    MWLogger.warnLog("Initial bans warning: " + toBan + " / " + howLong);
-                }
+            FileInputStream fileInputStream = new FileInputStream(banFile);
+            BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(fileInputStream));
+
+            while (bufferedReader.ready()) {
+                String input = bufferedReader.readLine();
+                StringTokenizer stringTokenizer = new StringTokenizer(input, "=");
+                String toBan = stringTokenizer.nextToken().trim();
+                String howLong = stringTokenizer.nextToken().trim();
+
+                bannedAccounts.put(toBan.toLowerCase(), howLong);
+                LOGGER.info("Added {} to the banlist (for {})", toBan, howLong);
             }
-            dis.close();
-            fis.close();
+
+            bufferedReader.close();
+            fileInputStream.close();
         } catch (Exception ex) {
-            MWLogger.errLog("Problems reading ban file at startup!");
+            LOGGER.error("Problems reading ban file at startup!");
         }
     }
 
     public void loadBanIP() {
         // Load the Permanently Banned IP'S
         try {
-            java.io.File banFile = new java.io.File("./data/ipbans.txt");
+            File banFile = new File("./data/ipbans.txt");
 
             // make the file, if its missing
             if (!banFile.exists()) {
                 banFile.createNewFile();
             }
 
-            java.io.FileInputStream fis = new java.io.FileInputStream(banFile);
-            java.io.BufferedReader dis = new java.io.BufferedReader(new java.io.InputStreamReader(fis));
-            while (dis.ready()) {
-                String line = dis.readLine();
-                /*
-                 * System.err.println("System property hostname: "+System.getProperty
-                 * ("hostname")); if
-                 * (line.startsWith(System.getProperty("hostname"))) { continue;
-                 * // skip fake IPs }
-                 */
-                java.util.StringTokenizer ST = new java.util.StringTokenizer(line, "=");
-                String ip = ST.nextToken();
-                Long time = Long.valueOf(ST.nextToken());
+            FileInputStream fileInputStream = new FileInputStream(banFile);
+            BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(fileInputStream));
+            while (bufferedReader.ready()) {
+                String line = bufferedReader.readLine();
+                StringTokenizer stringTokenizer = new StringTokenizer(line, "=");
+                String ip = stringTokenizer.nextToken();
+                Long time = Long.valueOf(stringTokenizer.nextToken());
                 // get rid of any actual system names and just grab the IP.
-                if (ip.indexOf("/") > -1) {
+                if (ip.contains("/")) {
                     ip = ip.substring(ip.indexOf("/") + 1);
                 }
-                java.net.InetAddress ia = java.net.InetAddress.getByName(ip);
-                if (ia != null) {
-                    banips.put(ia, time);
-                    MWLogger.infoLog("Added " + line + " to the list of banned IPs");
-                    MWLogger.mainLog("Added " + line + " to the list of banned IP's");
+
+                InetAddress inetAddress = java.net.InetAddress.getByName(ip);
+
+                if (inetAddress != null) {
+                    bannedIPs.put(inetAddress, time);
+                    LOGGER.info("Added {} to the list of banned IP's", line);
                 } else {
-                    MWLogger.warnLog("Importing IP bans; offending line: " + line);
+                    LOGGER.warn("Importing IP bans; offending line: {}", line);
                 }
             }
-            dis.close();
-            fis.close();
+            bufferedReader.close();
+            fileInputStream.close();
         } catch (Exception ex) {
-            MWLogger.errLog("Problems with loading IP banlist:");
-            MWLogger.errLog(ex);
+            LOGGER.error(ex, "Problems with loading IP banlist:");
         }
     }
 
     public void loadISPs() {
         // Loading the ISP file.
         try {
-            MWLogger.infoLog("Loading ISPs");
-            java.io.File ispFile = new java.io.File("./data/isps.txt");
+            LOGGER.info("Loading ISPs");
+            File ispFile = new File("./data/isps.txt");
 
-            // make the file, if its missing
+            // make the file if its missing
             if (!ispFile.exists()) {
                 ispFile.createNewFile();
             }
 
-            java.io.FileInputStream fis = new java.io.FileInputStream(ispFile);
-            java.io.BufferedReader dis = new java.io.BufferedReader(new java.io.InputStreamReader(fis));
-            while (dis.ready()) {
-                String input = dis.readLine();
-                java.util.StringTokenizer st = new java.util.StringTokenizer(input, "=");
-                String isp = st.nextToken().trim();
-                Long address = Long.parseLong(st.nextToken().trim());
-                if ((isp != null) && (address != null)) {
-                    ISPlog.put(isp.toLowerCase(), address);
-                    MWLogger.infoLog("Added " + isp + " to the ISP List");
-                    MWLogger.mainLog("Added " + isp + " to the ISP List");
-                }
+            FileInputStream fileInputStream = new FileInputStream(ispFile);
+            BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(fileInputStream));
+
+            while (bufferedReader.ready()) {
+                String input = bufferedReader.readLine();
+                StringTokenizer stringTokenizer = new StringTokenizer(input, "=");
+                String isp = stringTokenizer.nextToken().trim();
+                Long address = MathUtility.parseLong(stringTokenizer.nextToken().trim(), 0L);
+
+                ISPLog.put(isp.toLowerCase(), address);
+                LOGGER.info("Added {} to the ISP List", isp);
             }
-            dis.close();
-            fis.close();
+
+            bufferedReader.close();
+            fileInputStream.close();
         } catch (Exception ex) {
-            MWLogger.errLog("Problems reading ISP file at startup!");
+            LOGGER.error(ex, "Problems reading ISP file at startup!");
         }
     }
 
-    public java.util.Hashtable<String, String> getMails() {
-        java.util.Hashtable<String, String> result = new java.util.Hashtable<String, String>();
+    public Hashtable<String, String> getMails() {
+        Hashtable<String, String> result = new Hashtable<>();
+
         try {
-            java.io.File configFile = new java.io.File("./data/mails.txt");
-            java.io.FileInputStream fis = new java.io.FileInputStream(configFile);
-            java.io.BufferedReader dis = new java.io.BufferedReader(new java.io.InputStreamReader(fis));
-            String tmp = dis.readLine();
+            File configFile = new File("./data/mails.txt");
+            FileInputStream fileInputStream = new FileInputStream(configFile);
+            BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(fileInputStream));
+            String tmp = bufferedReader.readLine();
+
             while (!(tmp == null)) {
-                java.util.StringTokenizer st = new java.util.StringTokenizer(tmp, "|");
-                if (st.hasMoreElements()) {
-                    String name = (String) st.nextElement();
-                    if (st.hasMoreElements()) {
-                        String mail = (String) st.nextElement();
+                StringTokenizer stringTokenizer = new StringTokenizer(tmp, "|");
+
+                if (stringTokenizer.hasMoreElements()) {
+                    String name = (String) stringTokenizer.nextElement();
+
+                    if (stringTokenizer.hasMoreElements()) {
+                        String mail = (String) stringTokenizer.nextElement();
                         if (result.get(name) != null) {
-                            result.put(name, mails.get(name) + "<br>" + mail);
+                            result.put(name, STR."\{mails.get(name)}<br>\{mail}");
                         } else {
                             result.put(name, mail);
                         }
                     }
                 }
-                tmp = dis.readLine();
+                tmp = bufferedReader.readLine();
             }
 
-            dis.close();
-            fis.close();
+            bufferedReader.close();
+            fileInputStream.close();
         } catch (Exception ex) {
-            MWLogger.errLog("Problems reading mail file:");
-            MWLogger.errLog(ex);
+            LOGGER.error(ex, "Problems reading mail file:");
         }
+
         return result;
     }
 
-    public server.campaign.CampaignMain getCampaign() {
+    public CampaignMain getCampaign() {
         return campaign;
     }
 
-    /*** Once a user(lPID) logs in this function is kicked off ****/
+    public static void main(String[] argv) {
+        new MWServ(argv);
+    }
+
+    public static void stop() {
+        System.exit(0);
+    }
+
+    /*** Once a user(lPID) logs in, this function is kicked off ****/
     public boolean clientLogin(String name) {
         String originalName = name;
         name = name.toLowerCase();
-        java.net.InetAddress hisip = getIP(name);
-        server.MWChatServer.MWChatClient client = myCommunicator.getClient(name);
+        InetAddress userIP = getIP(name);
+        MWChatClient client = myCommunicator.getClient(name);
 
 
-        MWLogger.ipLog("Connection from " + getIP(name) + " (" + name + ")");
+        LOGGER.info(STR."Connection from \{getIP(name)} (\{name})");
         // Double account check
-        // Don't worry about deds or nobodies.
+        // Don't worry about dedicated or nobodies.
         if (!originalName.startsWith("[Dedicated]") && !originalName.startsWith("Nobody")) {
-            if (iplog.get(hisip) != null) {
-                String logname = (String) iplog.get(hisip);
+            if (IPLog.get(userIP) != null) {
+                String logname = IPLog.get(userIP);
+
                 if (!name.equals(logname)) {
                     String nametmp = name;
 
-                    SPlayer a = getCampaign().getPlayer(name);
-                    if (a != null) {
-                        nametmp += " " + getCampaign().getPlayer(name).getMyHouse().getAbbreviation();
+                    SPlayer player = getCampaign().getPlayer(name);
+                    if (player != null) {
+                        nametmp += STR." \{getCampaign().getPlayer(name).getMyHouse().getAbbreviation()}";
                     }
 
-                    SPlayer b = getCampaign().getPlayer(logname);
-                    if (b != null) {
-                        logname += " " + getCampaign().getPlayer(logname).getMyHouse().getAbbreviation();
+                    SPlayer playerWithLogName = getCampaign().getPlayer(logname);
+
+                    if (playerWithLogName != null) {
+                        logname += STR." \{getCampaign().getPlayer(logname).getMyHouse().getAbbreviation()}";
                     }
-                    if ((a != null) && (b != null)) {
-                        if (a.getGroupAllowance() != 0 && a.getGroupAllowance() != b.getGroupAllowance()) {
-                            // MWLogger.modLog("Double Accounting: " +
-                            // nametmp + " and " + logname + " IP: " + hisip);
+
+                    if ((player != null) && (playerWithLogName != null)) {
+                        if (player.getGroupAllowance() != 0 &&
+                                  player.getGroupAllowance() != playerWithLogName.getGroupAllowance()) {
                             getCampaign().doSendModMail("NOTE:",
-                                  "Double Accounting: " +
-                                        nametmp +
-                                        " Group: " +
-                                        a.getGroupAllowance() +
-                                        " and " +
-                                        logname +
-                                        " Group: " +
-                                        b.getGroupAllowance() +
-                                        " IP: " +
-                                        hisip);
+                                  STR."Double Accounting: \{nametmp} Group: \{player.getGroupAllowance()} and \{logname} Group: \{playerWithLogName.getGroupAllowance()} IP: \{userIP}");
                         }
                     } else {
-                        // MWLogger.modLog("Double Accounting: " +
-                        // nametmp + " and " + logname + " IP: " + hisip);
                         getCampaign().doSendModMail("NOTE:",
-                              "Double Accounting: " + nametmp + " and " + logname + " IP: " + hisip);
+                              STR."Double Accounting: \{nametmp} and \{logname} IP: \{userIP}");
                     }
                 }
             }
-            iplog.put(hisip, name);
+            IPLog.put(userIP, name);
         }
 
         // Banned IP-check
-        if (banips.get(hisip) != null) {
-            Long until = banips.get(hisip);
-            if (until.longValue() > System.currentTimeMillis() || until.longValue() == 0) {
-                if (until.longValue() != 0) {
-                    clientSend("CH|You are banned. You may not join this server until " +
-                                     new java.util.Date(until.longValue()).toString(), name);
-                    getCampaign().doSendModMail("NOTE:",
-                          name + " (IP: " + hisip + ") tried to gain access to the server");
-                }
-                try {
-                    Thread.sleep(125);
-                } catch (Exception ex) {
-                }
-
-                myCommunicator.kill(name, "");
-                return false;
-            }
-
-            // else
-            banips.remove(hisip);
-            bansUpdate();
-        }
-        // Banned Accounts name Check
-        if (banaccounts.get(name.toLowerCase()) != null) {
-            Long until = Long.valueOf(banaccounts.get(name.toLowerCase()));
-            if (until.longValue() > System.currentTimeMillis() || until.longValue() == 0) {
-                if (until.longValue() != 0) {
-                    clientSend("CH|You are banned. You may not join this server until " +
-                                     new java.util.Date(until.longValue()).toString(), name);
-                    getCampaign().doSendModMail("NOTE:",
-                          name + " (IP: " + hisip + ") tried to gain access to the server");
-                }
-                try {
-                    Thread.sleep(125);
-                } catch (Exception ex) {
-                }
-                myCommunicator.kill(name, "");
-                return false;
-            }
-
-            // else
-            banaccounts.remove(name);
-            bansUpdate();
-        }
-        // Banned Accounts name Check
-        if (ISPlog.containsKey(client.getClientVersion())) {
-            Long until = ISPlog.get(client.getClientVersion());
+        if (bannedIPs.get(userIP) != null) {
+            Long until = bannedIPs.get(userIP);
             if (until > System.currentTimeMillis() || until == 0) {
-                if (until.longValue() != 0) {
-                    clientSend("CH|You have been banned. You may not join this server until " +
-                                     new java.util.Date(until.longValue()).toString(), name);
+                if (until != 0) {
+                    clientSend(STR."CH|You are banned. You may not join this server until \{new Date(until).toString()}",
+                          name);
                     getCampaign().doSendModMail("NOTE:",
-                          name + " (IP: " + hisip + ") tried to gain access to the server");
-                }
-                try {
-                    Thread.sleep(125);
-                } catch (Exception ex) {
+                          STR."\{name} (IP: \{userIP}) tried to gain access to the server");
                 }
 
                 myCommunicator.kill(name, "");
@@ -522,30 +441,72 @@ public class MWServ {
             }
 
             // else
-            ISPlog.remove(name);
+            bannedIPs.remove(userIP);
             bansUpdate();
         }
-        int status = 2;
-        server.MWChatServer.MWChatClient c = myCommunicator.getClient(server.MWChatServer.MWChatServer.clientKey(name));
-        if (c != null) {
-            status = c.getAccessLevel();
+        // Banned Accounts name Check
+        if (bannedAccounts.get(name.toLowerCase()) != null) {
+            long until = MathUtility.parseLong(bannedAccounts.get(name.toLowerCase()), 0);
+
+            if (until > System.currentTimeMillis() || until == 0) {
+                if (until != 0) {
+                    clientSend(STR."CH|You are banned. You may not join this server until \{new Date(until.longValue()).toString()}",
+                          name);
+                    getCampaign().doSendModMail("NOTE:",
+                          STR."\{name} (IP: \{userIP}) tried to gain access to the server");
+                }
+
+                myCommunicator.kill(name, "");
+                return false;
+            }
+
+            // else
+            bannedAccounts.remove(name);
+            bansUpdate();
         }
+        // Banned Accounts name Check
+        if (ISPLog.containsKey(client.getClientVersion())) {
+            Long until = ISPLog.get(client.getClientVersion());
+            if (until > System.currentTimeMillis() || until == 0) {
+                if (until != 0) {
+                    clientSend(STR."CH|You have been banned. You may not join this server until \{new Date(until).toString()}",
+                          name);
+                    getCampaign().doSendModMail("NOTE:",
+                          STR."\{name} (IP: \{userIP}) tried to gain access to the server");
+                }
+
+                myCommunicator.kill(name, "");
+                return false;
+            }
+
+            // else
+            ISPLog.remove(name);
+            bansUpdate();
+        }
+
+        AccessRole status = AccessRole.REGISTERED;
+        MWChatClient chatClient = myCommunicator.getClient(MWChatServer.clientKey(name));
+
+        if (chatClient != null) {
+            status = chatClient.getAccessLevel();
+        }
+
         boolean invis = false;
 
         if (getCampaign().getPlayer(name) != null) {
             invis = getCampaign().getPlayer(name).isInvisible();
         }
+
         MWClientInfo newUser = new MWClientInfo(originalName, getIP(name), System.currentTimeMillis(), status, invis);
-        MWLogger.infoLog(originalName +
-                               " logged in from " +
-                               getIP(name).toString() +
-                               " at " +
-                               new java.util.Date(System.currentTimeMillis()).toString());
+        LOGGER.info("{} logged in from {} at {}",
+              originalName,
+              getIP(name).toString(),
+              new Date(System.currentTimeMillis()).toString());
 
         // Double IP Check
         if (!originalName.startsWith("[Dedicated]")) {
-            if (ips.get(hisip) != null) {
-                java.util.Vector<MWClientInfo> allthose = ips.get(hisip);
+            if (ips.get(userIP) != null) {
+                java.util.Vector<MWClientInfo> allthose = ips.get(userIP);
                 StringBuilder result = new StringBuilder("Warning: " + originalName + " has the same IP as ");
                 boolean allowed = true;
                 int groupid = 0;
@@ -582,9 +543,9 @@ public class MWServ {
             } else {
                 java.util.Vector<MWClientInfo> allthose = new java.util.Vector<MWClientInfo>(1, 1);
                 allthose.add(newUser);
-                ips.put(hisip, allthose);
+                ips.put(userIP, allthose);
             }
-            iphelp.put(newUser, hisip);
+            ipHelp.put(newUser, userIP);
         }
 
         String clientVersion = "any " + SERVER_VERSION.substring(0, SERVER_VERSION.lastIndexOf(".")) + ".x";
@@ -652,32 +613,32 @@ public class MWServ {
             // Updating ban file for account names
             java.io.FileOutputStream out = new java.io.FileOutputStream("./data/accountbans.txt");
             java.io.PrintStream p = new java.io.PrintStream(out);
-            for (java.util.Enumeration<String> e = banaccounts.keys(); e.hasMoreElements(); ) {
+            for (java.util.Enumeration<String> e = bannedAccounts.keys(); e.hasMoreElements(); ) {
                 Object q = e.nextElement();
-                p.println(q + "=" + banaccounts.get(q));
+                p.println(q + "=" + bannedAccounts.get(q));
             }
             p.close();
             out.close();
             // Updating ban file for IP addresses
             out = new java.io.FileOutputStream("./data/ipbans.txt");
             p = new java.io.PrintStream(out);
-            for (java.util.Enumeration<java.net.InetAddress> e = banips.keys(); e.hasMoreElements(); ) {
+            for (java.util.Enumeration<java.net.InetAddress> e = bannedIPs.keys(); e.hasMoreElements(); ) {
                 Object q = e.nextElement();
-                p.println(q + "=" + banips.get(q));
+                p.println(q + "=" + bannedIPs.get(q));
             }
             p.close();
             out.close();
             // Updating ISP List
             out = new java.io.FileOutputStream("./data/isps.txt");
             p = new java.io.PrintStream(out);
-            for (String key : ISPlog.keySet()) {
-                p.println(key + "=" + ISPlog.get(key));
+            for (String key : ISPLog.keySet()) {
+                p.println(key + "=" + ISPLog.get(key));
             }
             p.close();
             out.close();
         } catch (Exception e) {
-            MWLogger.errLog("Problem updating ban files:");
-            MWLogger.errLog(e);
+            LOGGER.error("Problem updating ban files:");
+            LOGGER.error(e);
         }
     }
 
@@ -704,13 +665,14 @@ public class MWServ {
          */
     }
 
-    public int getUserLevel(String username) {
-        server.MWChatServer.MWChatClient c = myCommunicator.getClient(server.MWChatServer.MWChatServer.clientKey(
-              username));
-        if (c != null) {
-            return c.getAccessLevel();
+    public AccessRole getUserLevel(String username) {
+        MWChatClient chatClient = myCommunicator.getClient(MWChatServer.clientKey(username));
+
+        if (chatClient != null) {
+            return chatClient.getAccessLevel();
         }
-        return 0;
+
+        return AccessRole.NONE;
     }
 
     public void clientLogout(String name) {
@@ -726,7 +688,7 @@ public class MWServ {
             return;
         }
 
-        java.net.InetAddress hisip = iphelp.get(user);
+        java.net.InetAddress hisip = ipHelp.get(user);
         if (hisip != null) {
             java.util.Vector<MWClientInfo> all = ips.get(hisip);
             if (all != null) {
@@ -737,7 +699,7 @@ public class MWServ {
                     }
                 }
             }
-            iphelp.remove(user);
+            ipHelp.remove(user);
         }
 
         campaign.getOpsManager().doDisconnectCheckOnPlayer(name);
@@ -748,7 +710,7 @@ public class MWServ {
         } else {
             sendRemoveUserToAll(name, true);
         }
-        MWLogger.infoLog("client " + name + "logged out.");
+        LOGGER.info("client " + name + "logged out.");
         users.remove(name.toLowerCase());
 
         // remove his host, if he has a game open
@@ -777,16 +739,16 @@ public class MWServ {
 
     public void sendRemoveUserToAll(String name, boolean userGone, String ip) {
         if (userGone && ip != null) {
-            MWLogger.infoLog(name + " left the room (IP:" + ip + ").");
+            LOGGER.info(name + " left the room (IP:" + ip + ").");
         } else if (userGone) {
-            MWLogger.infoLog(name + " left the room");
+            LOGGER.info(name + " left the room");
         }
         myCommunicator.broadcastComm("UserGoneCommand|" + getUser(name) + (userGone ? "|GONE" : ""));
     }
 
     public void sendRemoveUserToAll(String name, boolean userGone) {
         if (userGone) {
-            MWLogger.infoLog(name + " left the room.");
+            LOGGER.info(name + " left the room.");
         }
         myCommunicator.broadcastComm("UserGoneCommand|" + getUser(name) + (userGone ? "|GONE" : ""));
     }
@@ -923,15 +885,15 @@ public class MWServ {
                 }
             } else if (task.equals("CR")) {
                 String result = st.nextToken();
-                MWLogger.gameLog("Starting report process by " + name);
-                MWLogger.gameLog(name + " reported: " + lineIn);
+                LOGGER.info("Starting report process by " + name);
+                LOGGER.info(name + " reported: " + lineIn);
                 getCampaign().doProcessAutomaticReport(result, name);
             } else if (task.equals("IPU")) {// InProgressUpdate
                 String result = st.nextToken();
                 getCampaign().addInProgressUpdate(result, name);
             } else {
                 clientSend("CH|Unknown command. Please make sure your client is up to date.", name);
-                MWLogger.warnLog("Got a strange command, " + task + ", from " + name);
+                LOGGER.warn("Got a strange command, " + task + ", from " + name);
             }
         } catch (Exception ex) {
             // The GB doesn't arrive at the server because of the client
@@ -942,8 +904,8 @@ public class MWServ {
                 clientSend(
                       "CH|Your client sent a false packet or caused a server error. You probably entered an illegal server command.",
                       name);
-                MWLogger.errLog("False packet/illegal command (from " + name + "):");
-                MWLogger.errLog(ex);
+                LOGGER.error("False packet/illegal command (from " + name + "):");
+                LOGGER.error(ex);
             }
         }
     }
@@ -979,12 +941,12 @@ public class MWServ {
 
     public void sendChat(String s) {
         myCommunicator.broadcastComm("CH|" + s);
-        MWLogger.mainLog(s);
+        LOGGER.info(s);
     }
 
     public void statusMessage() {
-        MWLogger.mainLog("Open Games: " + games.size());
-        MWLogger.infoLog("Open Games: " + games.size());
+        LOGGER.info("Open Games: " + games.size());
+        LOGGER.info("Open Games: " + games.size());
     }
 
     public void retreiveISPS(Long time, String name) {
@@ -1007,8 +969,8 @@ public class MWServ {
                     String player = dis.readLine();
                     if (player.equalsIgnoreCase(name)) {
                         String provderName = newFile.getName().substring(0, newFile.getName().lastIndexOf(".prv"));
-                        MWLogger.errLog("Provider: " + provderName);
-                        ISPlog.put(provderName, time);
+                        LOGGER.error("Provider: " + provderName);
+                        ISPLog.put(provderName, time);
                         in.close();
                         dis.close();
                         break;
@@ -1062,7 +1024,7 @@ public class MWServ {
     }
 
     public void doStoreMail(String s, String name) {
-        // MWLogger.mainLog("Debug: " + s);
+        // LOGGER.info("Debug: " + s);
         java.util.StringTokenizer st = new java.util.StringTokenizer(s, ",");
         String target = "";
         String text = "";
@@ -1087,26 +1049,26 @@ public class MWServ {
 
                 if (campaign.getPlayer(name) != null) {
                     if (campaign.getPlayer(target) != null) {
-                        MWLogger.pmLog(name +
-                                             "[" +
-                                             campaign.getPlayer(name).getMyHouse().getAbbreviation() +
-                                             "] -> " +
-                                             target +
-                                             "[" +
-                                             campaign.getPlayer(target).getMyHouse().getAbbreviation() +
-                                             "]: " +
-                                             mailtext);
+                        LOGGER.info(name +
+                                          "[" +
+                                          campaign.getPlayer(name).getMyHouse().getAbbreviation() +
+                                          "] -> " +
+                                          target +
+                                          "[" +
+                                          campaign.getPlayer(target).getMyHouse().getAbbreviation() +
+                                          "]: " +
+                                          mailtext);
                     } else {
-                        MWLogger.pmLog(name +
-                                             "[" +
-                                             campaign.getPlayer(name).getMyHouse().getAbbreviation() +
-                                             "] -> " +
-                                             target +
-                                             ": " +
-                                             mailtext);
+                        LOGGER.info(name +
+                                          "[" +
+                                          campaign.getPlayer(name).getMyHouse().getAbbreviation() +
+                                          "] -> " +
+                                          target +
+                                          ": " +
+                                          mailtext);
                     }
                 } else {
-                    MWLogger.pmLog(name + " -> " + target + ": " + mailtext);
+                    LOGGER.info(name + " -> " + target + ": " + mailtext);
                 }
 
             }
@@ -1156,8 +1118,8 @@ public class MWServ {
             p.close();
             out.close();
         } catch (Exception ex) {
-            MWLogger.errLog("Problems writing mail file:");
-            MWLogger.errLog(ex);
+            LOGGER.error("Problems writing mail file:");
+            LOGGER.error(ex);
         }
     }
 
@@ -1183,7 +1145,7 @@ public class MWServ {
                 doStoreMailToHashtable(null, username, txt);
             }
         } catch (Exception ex) {
-            MWLogger.errLog(ex);
+            LOGGER.error(ex);
         }
     }
 
@@ -1210,15 +1172,15 @@ public class MWServ {
     }
 
     public java.util.Hashtable<MWClientInfo, java.net.InetAddress> getIPHelp() {
-        return iphelp;
+        return ipHelp;
     }
 
     public java.util.Hashtable<java.net.InetAddress, Long> getBanIps() {
-        return banips;
+        return bannedIPs;
     }
 
     public java.util.Hashtable<String, String> getBanAccounts() {
-        return banaccounts;
+        return bannedAccounts;
     }
 
     public void saveConfigs() {

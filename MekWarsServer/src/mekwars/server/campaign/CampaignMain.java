@@ -56,6 +56,7 @@ import megamek.common.CriticalSlot;
 import megamek.common.equipment.Mounted;
 import megamek.common.equipment.WeaponType;
 import megamek.common.options.IOption;
+import megamek.common.units.Entity;
 import megamek.logging.MMLogger;
 import mekwars.common.CampaignData;
 import mekwars.common.Equipment;
@@ -66,6 +67,7 @@ import mekwars.common.campaign.operations.Operation;
 import mekwars.common.flags.PlayerFlags;
 import mekwars.common.util.MekWarsFileReader;
 import mekwars.common.util.UnitUtils;
+import mekwars.server.MWChatServer.auth.AccessRole;
 import mekwars.server.MWServ;
 import mekwars.server.campaign.commands.*;
 import mekwars.server.campaign.commands.admin.*;
@@ -104,11 +106,11 @@ public final class CampaignMain implements Serializable {
     private static final long serialVersionUID = -8671163467590633378L;
 
     /**
-     * I realized, that almost every class needs access to the current global campaign state. So I decided (after
+     * I realized that almost every class needs access to the current global campaign state. So I decided (after
      * consultation with McWizard) to make this back reference obsolete by introducing a public static member (Java's
-     * pardon to a global variable). Although this reduces code size, complexity of code and memory footprint, this is
-     * still a HACK! Java wasn't invented to step back to the old days of global variables. Object oriented coding
-     * should try to minimize cross references.. But someday you gotta do what you gotta do..... Imi.
+     * pardon to a global variable). Although this reduces code size, complexity of code, and memory footprint, this is
+     * still a HACK! Java wasn't invented to step back to the old days of global variables. Object-oriented coding
+     * should try to minimize cross-references. But someday you got top do what you got to do... Imi.
      */
     public static CampaignMain campaignMain;
 
@@ -129,7 +131,7 @@ public final class CampaignMain implements Serializable {
     private final Random random = new Random(System.currentTimeMillis());
     private final HashMap<String, ChatRoom> chatRooms = new HashMap<>();
     /**
-     * This is a hash collection of all the players that have yet to log into their houses This catch all is to keep
+     * This is a hash collection of all the players that have yet to log into their houses. This catch all is to keep
      * from having to load the player file over and over again. Once the player has been logged in they are removed from
      * this hash and added to the houses memory.
      */
@@ -175,7 +177,7 @@ public final class CampaignMain implements Serializable {
             config.load(new FileInputStream(this.serv.getConfigParam("CAMPAIGN_CONFIG")));
 
 
-            // Right here, we're going to try to prune old cruft from the configs Over the course of many years, as
+            // Right here, we're going to try to prune old cruft from the configs. Over the course of many years, as
             // config options change, crap never gets removed from campaignconfig.txt.  We're seeing this very badly on
             // MMNet, and probably other servers are, as well.
             Vector<String> keysToRemove = new Vector<>();
@@ -199,7 +201,7 @@ public final class CampaignMain implements Serializable {
             LOGGER.error(ex, "Problems with loading campaign config");
             defaultServerOptions.createConfig();
             try {
-                config.load(new java.io.FileInputStream(this.serv.getConfigParam("CAMPAIGN_CONFIG")));
+                config.load(new FileInputStream(this.serv.getConfigParam("CAMPAIGN_CONFIG")));
             } catch (Exception ex1) {
                 LOGGER.error(ex1, "Problems with loading camping config from defaults");
                 System.exit(1);
@@ -452,7 +454,7 @@ public final class CampaignMain implements Serializable {
     }
 
     public void createNewOpsManager() {
-        if (mekwars.server.campaign.CampaignMain.campaignMain.getBooleanConfig("UseNewOpManager")) {
+        if (CampaignMain.campaignMain.getBooleanConfig("UseNewOpManager")) {
             opsManager = new NewOperationManager();
         } else {
             opsManager = new OperationManager();
@@ -568,12 +570,12 @@ public final class CampaignMain implements Serializable {
 
     /**
      * Get an SPlayer, by name. This searches the reserve, active, and fighting hashes of all factions until the player
-     * is found or factions are exhausted. If a player is not in a faction, check the to-save hash. Its entirely
+     * is found or factions are exhausted. If a player is not in a faction, check the to-save hash. It's entirely
      * possible that the player is already in memory, but logged out and is awaiting a purge. If no matching player is
      * found online, the server will attempt to read one in from a text file. If even this fails, a null is returned.
      * NOTE: A player brought into memory using getPlayer is not automatically logged into his house. Temporary loads
      * (ex: commands targeted at offline players) will put the player directly into the save queue, as if he was logged
-     * out. This is why the save queue is/must be searched prior to* reading the text file.
+     * out. This is why the save queue is/must be searched before* reading the text file.
      */
     public SPlayer getPlayer(String pName) {
         return getPlayer(pName, true, false);
@@ -619,19 +621,18 @@ public final class CampaignMain implements Serializable {
     }
 
     /**
-     * Method which loads a player file from text. THIS SHOULD NOT BE USED. CampaignMain.getPlayer(String name) will
-     * check to see if a player is already in memory, and then call this loader if the player needs to be brought in
-     * from text. If you need to get a player, always use .getPlayer(String name) instead. A player who is loaded is put
-     * into the CampaignMain
+     * Method that loads a player file from text. THIS SHOULD NOT BE USED. CampaignMain.getPlayer(String name) will
+     * check to see if a player is already in memory and then call this loader if the player needs to be brought in from
+     * text. If you need to get a player, always use .getPlayer(String name) instead. A player who is loaded is put into
+     * the CampaignMain
      */
     private SPlayer loadPlayerFile(String name, boolean explicitName, boolean mute) {
-
         if (!name.startsWith("[Dedicated]") && !name.startsWith("War Bot")) {
             MekWarsFileReader dis = null;
 
             try {
                 // log the load attempt & create readers
-                LOGGER.info("Loading pfile for: {}", name);
+                LOGGER.info("Loading Player File for: {}", name);
 
                 File pFile;
                 if (explicitName) {
@@ -658,20 +659,20 @@ public final class CampaignMain implements Serializable {
 
                 return sPlayer;
             } catch (FileNotFoundException fnf) {
-
                 if (!name.toLowerCase().startsWith("nobody") &&
                           !name.equals("SERVER") &&
                           !name.toLowerCase().startsWith("war bot") &&
                           !name.toLowerCase().startsWith("[dedicated]") &&
                           !mute) {
-                    LOGGER.debug(fnf, "could not find a Pfile for {}", name);
+                    LOGGER.debug(fnf, "could not find a Player File for {}", name);
                 }
 
                 return null;
             } catch (Exception ex) {
                 if (!mute) {
-                    LOGGER.error(ex, "Unable to load pfile for {}", name);
+                    LOGGER.error(ex, "Unable to load Player File for {}", name);
                 }
+
                 return null;
             } finally {
                 // close the streams and return player
@@ -764,7 +765,8 @@ public final class CampaignMain implements Serializable {
      */
     public void doSendModMail(String username, String text) {
         int sendCommandLevel = 0;
-        int commandLevel = CampaignMain.campaignMain.getServerCommands().get("MM").getExecutionLevel();
+        AccessRole commandLevel = CampaignMain.campaignMain.getServerCommands().get("MM").getExecutionLevel();
+
         int userLevel;
 
         if (username.equalsIgnoreCase("NOTE")) {
