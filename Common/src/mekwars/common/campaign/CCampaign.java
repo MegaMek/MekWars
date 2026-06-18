@@ -40,6 +40,8 @@ import java.io.File;
 import java.util.StringTokenizer;
 import java.util.TreeMap;
 
+import megamek.codeUtilities.MathUtility;
+import megamek.logging.MMLogger;
 import mekwars.common.BMEquipment;
 import mekwars.common.campaign.clientutils.protocol.IClient;
 import mekwars.common.gui.dialogs.ArmyViewerDialog;
@@ -53,12 +55,13 @@ import mekwars.common.util.TokenReader;
  * TODO: Properly comment this class.
  */
 public class CCampaign {
+    private final static MMLogger LOGGER = MMLogger.create(CCampaign.class);
 
-    IClient client;
-    CPlayer Player;
-    TreeMap<Integer, CBMUnit> BlackMarket = new TreeMap<>();
-    TreeMap<String, BMEquipment> BlackMarketParts = new TreeMap<>();
-    TreeMap<String, ComponentToCritsConverter> ComponentConverter = new TreeMap<>();
+    private final IClient client;
+    private final TreeMap<Integer, CBMUnit> BlackMarket = new TreeMap<>();
+    private final TreeMap<String, BMEquipment> BlackMarketParts = new TreeMap<>();
+    private final TreeMap<String, ComponentToCritsConverter> ComponentConverter = new TreeMap<>();
+    private CPlayer Player;
 
     public CCampaign(IClient client) {
         this.client = client;
@@ -73,17 +76,17 @@ public class CCampaign {
             try {
                 f.mkdirs();
             } catch (Exception e) {
-                MWLogger.errLog(e);
+                LOGGER.error(e, "Error creating campaign directory:");
             }
         }
     }
 
     public void decodeCommand(String command) {
-        StringTokenizer ST;
+        StringTokenizer stringTokenizer;
         String element;
 
-        ST = new StringTokenizer(command, "|");
-        element = TokenReader.readString(ST);
+        stringTokenizer = new StringTokenizer(command, "|");
+        element = TokenReader.readString(stringTokenizer);
         command = command.substring(3);
 
         switch (element) {
@@ -96,11 +99,10 @@ public class CCampaign {
             }
             case "CC" -> {
                 // Campaign Command
-
-                String commandId = TokenReader.readString(ST);
+                String commandId = TokenReader.readString(stringTokenizer);
                 if (commandId.equals("AT")) {//incoming attack
-                    if (client.getConfig().isParam("ENABLEATTACKSOUND")) {
-                        client.doPlaySound(client.getConfigParam("SOUNDONATTACK"));
+                    if (client.getConfig().isParam("ENABLE_ATTACK_SOUND")) {
+                        client.doPlaySound(client.getConfigParam("SOUND_ON_ATTACK"));
                     }
 
                     client.addToChat("<font color=\"red\"><b>Your forces are under attack!</b></font>",
@@ -108,15 +110,22 @@ public class CCampaign {
                     client.addToChat("<font color=\"red\"><b>Your forces are under attack!</b></font>",
                           CCommPanel.CHANNEL_PRIVATE_MAIL,
                           "Server");
-                    if (client.getConfig().isParam("POPUPONATTACK")) {
-                        int opID = TokenReader.readInt(ST);
-                        int teams = TokenReader.readInt(ST);
-                        new ArmyViewerDialog(client, null, ST, ArmyViewerDialog.AVD_DEFEND, null, null, opID, teams);
+                    if (client.getConfig().isParam("POP_UP_ON_ATTACK")) {
+                        int opID = TokenReader.readInt(stringTokenizer);
+                        int teams = TokenReader.readInt(stringTokenizer);
+                        new ArmyViewerDialog(client,
+                              null,
+                              stringTokenizer,
+                              ArmyViewerDialog.AVD_DEFEND,
+                              null,
+                              null,
+                              opID,
+                              teams);
                     }
                 }
                 if (commandId.equals("NT")) {//next tick
-                    int time = TokenReader.readInt(ST);
-                    boolean decrement = TokenReader.readBoolean(ST);
+                    int time = TokenReader.readInt(stringTokenizer);
+                    boolean decrement = TokenReader.readBoolean(stringTokenizer);
                     client.processTick(time);
 
                     /*
@@ -153,7 +162,7 @@ public class CCampaign {
                 }
                 return;
             }
-            case "ST" -> {
+            case "stringTokenizer" -> {
                 if (!showStatus(command)) {
                     client.addToChat("<b>Error: Status show failed.</b><br>");
                     return;
@@ -185,13 +194,13 @@ public class CCampaign {
     public void setBMData(String command) {
 
         //create tokenizer
-        java.util.StringTokenizer mainTokenizer = new java.util.StringTokenizer(command, "$");
+        StringTokenizer mainTokenizer = new StringTokenizer(command, "$");
 
         //clear all current BM data
         BlackMarket.clear();
 
         while (mainTokenizer.hasMoreTokens()) {
-            boolean hidden = Boolean.parseBoolean(client.getServerConfigs("HiddenBMUnits"));
+            boolean hidden = MathUtility.parseBoolean(client.getServerConfigs("HiddenBMUnits"), false);
             CBMUnit currBMUnit = new CBMUnit(TokenReader.readString(mainTokenizer), this, hidden);
             BlackMarket.put(currBMUnit.getAuctionID(), currBMUnit);
         }
@@ -208,15 +217,19 @@ public class CCampaign {
      * Method that adds a unit to the client's BM representation.
      */
     public void addBMUnit(String command) {
-        CBMUnit bmUnit = new CBMUnit(command, this, Boolean.parseBoolean(client.getServerConfigs("HiddenBMUnits")));
+        CBMUnit bmUnit = new CBMUnit(command,
+              this,
+              MathUtility.parseBoolean(client.getServerConfigs("HiddenBMUnits"), false));
         BlackMarket.put(bmUnit.getAuctionID(), bmUnit);
     }
 
     /**
-     * Method that repaces a CBMUnit. Called after a player bids on a unit in order to change colors and show amount.
+     * Method that repaces a CBMUnit. Called after a player bids on a unit to change colors and show amount.
      */
     public void changeBMUnit(String command) {
-        CBMUnit bmUnit = new CBMUnit(command, this, Boolean.parseBoolean(client.getServerConfigs("HiddenBMUnits")));
+        CBMUnit bmUnit = new CBMUnit(command,
+              this,
+              MathUtility.parseBoolean(client.getServerConfigs("HiddenBMUnits"), false));
         BlackMarket.remove(bmUnit.getAuctionID());
         BlackMarket.put(bmUnit.getAuctionID(), bmUnit);
     }
@@ -243,20 +256,20 @@ public class CCampaign {
 
     public void setComponentConverter(String converterData) {
         try {
-            StringTokenizer st = new StringTokenizer(converterData, "#");
+            StringTokenizer stringTokenizer = new StringTokenizer(converterData, "#");
 
             ComponentConverter.clear();
-            while (st.hasMoreTokens()) {
+            while (stringTokenizer.hasMoreTokens()) {
                 ComponentToCritsConverter converter = new ComponentToCritsConverter();
-                converter.setCritName(TokenReader.readString(st));
-                converter.setMinCritLevel(TokenReader.readInt(st));
-                converter.setComponentUsedType(TokenReader.readInt(st));
-                converter.setComponentUsedWeight(TokenReader.readInt(st));
+                converter.setCritName(TokenReader.readString(stringTokenizer));
+                converter.setMinCritLevel(TokenReader.readInt(stringTokenizer));
+                converter.setComponentUsedType(TokenReader.readInt(stringTokenizer));
+                converter.setComponentUsedWeight(TokenReader.readInt(stringTokenizer));
                 ComponentConverter.put(converter.getCritName(), converter);
             }
             client.setWaiting(false);
         } catch (Exception ex) {
-            MWLogger.errLog(ex);
+            LOGGER.error(ex, "Unable to set component converter: {}", ex.getLocalizedMessage());
         }
     }
 }

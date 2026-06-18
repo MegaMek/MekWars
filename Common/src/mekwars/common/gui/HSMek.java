@@ -19,8 +19,8 @@ package mekwars.common.gui;
 
 import java.util.StringTokenizer;
 
-import megamek.client.generator.RandomGenderGenerator;
 import megamek.common.battleArmor.BattleArmor;
+import megamek.common.enums.Gender;
 import megamek.common.units.Crew;
 import megamek.common.units.CrewType;
 import megamek.common.units.Entity;
@@ -92,7 +92,8 @@ public class HSMek {
                     factionGunnery,
                     factionGunnery,
                     factionPiloting,
-                    RandomGenderGenerator.generate(),
+                    Gender.RANDOMIZE,
+                    false,
                     null));
 
         //set type

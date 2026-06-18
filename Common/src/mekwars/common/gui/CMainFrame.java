@@ -2085,7 +2085,7 @@ How much do you wish to offer? (\{client.moneyOrFluMessage(true, true, -2)})
         StringBuilder result = new StringBuilder();
         int year = Integer.parseInt(client.getServerConfigs("CampaignYear"));
 
-        result.append(p.getPartsCache().tableizeComponents(year));
+        result.append(p.getPartsCache().tableComponents(year));
         client.doParseDataInput(STR."SM|\{result}");
     }
 

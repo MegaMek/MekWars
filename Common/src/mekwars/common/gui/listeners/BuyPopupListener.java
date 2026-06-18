@@ -1,41 +1,34 @@
 package mekwars.common.gui.listeners;
 
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.MouseAdapter;
+import java.util.StringTokenizer;
+
+import mekwars.common.campaign.clientutils.protocol.IClient;
 import mekwars.common.gui.panels.CHSPanel;
 
-public class BuyPopupListener extends java.awt.event.MouseAdapter implements java.awt.event.ActionListener {
+public class BuyPopupListener extends MouseAdapter implements ActionListener {
     private final CHSPanel chsPanel;
 
-    public BuyPopupListener(CHSPanel chsPanel) {this.chsPanel = chsPanel;}
+    public BuyPopupListener(CHSPanel chsPanel) {
+        this.chsPanel = chsPanel;
+    }
 
-    public void actionPerformed(java.awt.event.ActionEvent actionEvent) {
-        String s = actionEvent.getActionCommand();
-        java.util.StringTokenizer st = new java.util.StringTokenizer(s, "|");
-        String command = st.nextToken();
+    public void actionPerformed(ActionEvent actionEvent) {
+        String actionCommand = actionEvent.getActionCommand();
+        StringTokenizer stringTokenizer = new StringTokenizer(actionCommand, "|");
+        String command = stringTokenizer.nextToken();
 
         if (command.equalsIgnoreCase("BUY")) {
-            chsPanel.client.sendChat(chsPanel.client.MWClient.CAMPAIGN_PREFIX +
-                                           "c request#" +
-                                           st.nextToken() +
-                                           "#" +
-                                           st.nextToken());
-            // (client.getMainFrame().getMainPanel().getCommPanel()).
-            // removeHttpLinksFromEditorPane(CCommPanel.CHANNEL_MISC);
+            chsPanel.getClient()
+                  .sendChat(STR."\{IClient.CAMPAIGN_PREFIX}c request#\{stringTokenizer.nextToken()}#\{stringTokenizer.nextToken()}");
         } else if (command.equalsIgnoreCase("BUYU")) {
-            chsPanel.client.sendChat(chsPanel.client.MWClient.CAMPAIGN_PREFIX +
-                                           "c requestdonated#" +
-                                           st.nextToken() +
-                                           "#" +
-                                           st.nextToken());
-            // (client.getMainFrame().getMainPanel().getCommPanel()).
-            // removeHttpLinksFromEditorPane(CCommPanel.CHANNEL_MISC);
+            chsPanel.getClient()
+                  .sendChat(STR."\{IClient.CAMPAIGN_PREFIX}c requestdonated#\{stringTokenizer.nextToken()}#\{stringTokenizer.nextToken()}");
         } else if (command.equalsIgnoreCase("BUYP")) {
-            chsPanel.client.sendChat(chsPanel.client.MWClient.CAMPAIGN_PREFIX +
-                                           "c buypilotsfromhouse#" +
-                                           st.nextToken() +
-                                           "#" +
-                                           st.nextToken());
-            // (client.getMainFrame().getMainPanel().getCommPanel()).
-            // removeHttpLinksFromEditorPane(CCommPanel.CHANNEL_MISC);
+            chsPanel.getClient()
+                  .sendChat(STR."\{IClient.CAMPAIGN_PREFIX}c buypilotsfromhouse#\{stringTokenizer.nextToken()}#\{stringTokenizer.nextToken()}");
         }
     }
 }

@@ -21,21 +21,23 @@ import java.util.Hashtable;
 import java.util.StringTokenizer;
 import java.util.Vector;
 
+import megamek.codeUtilities.MathUtility;
 import megamek.common.CriticalSlot;
 import megamek.common.TechConstants;
 import megamek.common.equipment.EquipmentType;
 import megamek.common.equipment.Mounted;
 import megamek.common.units.Entity;
+import megamek.logging.MMLogger;
 
 public class UnitComponents {
+    private final static MMLogger LOGGER = MMLogger.create(UnitComponents.class);
+    private final Hashtable<String, Integer> components = new Hashtable<>();
 
-    Hashtable<String, Integer> components = new Hashtable<>();
-
-    public String tableizeComponents(int year) {
-        return tableizeComponents(components, year);
+    public String tableComponents(int year) {
+        return tableComponents(components, year);
     }
 
-    public String tableizeComponents(Hashtable<String, Integer> parts, int year) {
+    public String tableComponents(Hashtable<String, Integer> parts, int year) {
 
         StringBuilder result = new StringBuilder();
 
@@ -139,33 +141,34 @@ public class UnitComponents {
 
     public void fromString(String data, String token) {
 
-        StringTokenizer st = new StringTokenizer(data, token);
+        StringTokenizer stringTokenizer = new StringTokenizer(data, token);
 
         try {
             components.clear();
-            while (st.hasMoreTokens()) {
-                String key = st.nextToken();
-                if (!st.hasMoreElements()) {
+            while (stringTokenizer.hasMoreTokens()) {
+                String key = stringTokenizer.nextToken();
+                if (!stringTokenizer.hasMoreElements()) {
                     return;
                 }
-                int value = Integer.parseInt(st.nextToken());
+                int value = MathUtility.parseInt(stringTokenizer.nextToken(), -1);
                 components.put(key, value);
             }
         } catch (Exception ex) {
-            MWLogger.errLog(ex);
+            LOGGER.error(ex, "Unable to parse: {} {}", data, token);
         }
 
     }
 
-    public void fromString(StringTokenizer st) {
+    public void fromString(StringTokenizer stringTokenizer) {
 
         try {
             components.clear();
-            while (st.hasMoreTokens()) {
-                components.put(st.nextToken(), Integer.parseInt(st.nextToken()));
+            while (stringTokenizer.hasMoreTokens()) {
+                components.put(stringTokenizer.nextToken(), MathUtility.parseInt(stringTokenizer.nextToken(), -1));
             }
         } catch (Exception ex) {
-            MWLogger.errLog(ex);
+            LOGGER.error(ex, "Unable to parse from Tokenizer: {} {}", stringTokenizer.toString(),
+                  stringTokenizer.toString());
         }
 
     }

@@ -18,9 +18,9 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Random;
-import java.util.StringTokenizer;
 import java.util.TreeSet;
 import java.util.Vector;
+import javax.swing.JFrame;
 
 import megamek.client.AbstractClient;
 import megamek.client.Client;
@@ -38,6 +38,7 @@ import megamek.common.board.BoardDimensions;
 import megamek.common.board.Coords;
 import megamek.common.enums.BuildingType;
 import megamek.common.enums.GamePhase;
+import megamek.common.enums.Gender;
 import megamek.common.icons.Camouflage;
 import megamek.common.loaders.MapSettings;
 import megamek.common.options.IBasicOption;
@@ -105,14 +106,6 @@ public class ClientThread extends Thread implements CloseClientListener {
         KeyBindParser.parseKeyBindings(controller);
     }
 
-    public static Comparator<? super Object> stringComparator() {
-        return (Comparator<Object>) (o1, o2) -> {
-            String s1 = ((String) o1).toLowerCase();
-            String s2 = ((String) o2).toLowerCase();
-            return s1.compareTo(s2);
-        };
-    }
-
     public Client getMMClient() {
         return mmClient;
     }
@@ -165,13 +158,13 @@ public class ClientThread extends Thread implements CloseClientListener {
                 try {
                     client.addToChat("Retrieving Operation Data Please Wait..");
                     Thread.sleep(1000);
-                } catch (Exception ex) {
+                } catch (Exception ignored) {
 
                 }
             }
         }
 
-        List<IBasicOption> xmlGameOptions = client.getGameOptions();
+        Vector<IBasicOption> xmlGameOptions = client.getGameOptions();
 
         try {
             mmClient.connect();
@@ -521,7 +514,7 @@ public class ClientThread extends Thread implements CloseClientListener {
             if (client.isUsingBots()) {
                 String name = STR."War Bot\{mmClient.getLocalPlayer().getId()}";
                 bot = new Princess(name, mmClient.getHost(), mmClient.getPort());
-                bot.getGame().addGameListener(new BotGUI(bot));
+                bot.getGame().addGameListener(new BotGUI(new JFrame(), bot));
                 try {
                     bot.connect();
                     Thread.sleep(125);
@@ -545,16 +538,16 @@ public class ClientThread extends Thread implements CloseClientListener {
                 if (client.isBotsOnSameTeam()) {
                     bot.getLocalPlayer().setTeam(5);
                 }
-                java.util.Random r = new java.util.Random();
+                Random random = new Random();
 
-                bot.getLocalPlayer().setStartingPos(r.nextInt(11));
+                bot.getLocalPlayer().setStartingPos(random.nextInt(11));
                 bot.sendPlayerInfo();
                 Thread.sleep(125);
             }
 
             if (((mmClient.getGame() != null) && (mmClient.getGame().getPhase() == GamePhase.LOUNGE))) {
-
                 mmClient.getGame().getOptions().loadOptions();
+
                 if ((!meks.isEmpty()) && (!xmlGameOptions.isEmpty())) {
                     mmClient.sendGameOptions("", xmlGameOptions);
                 }
@@ -646,16 +639,16 @@ public class ClientThread extends Thread implements CloseClientListener {
                     if (entity.getCrew().getName().equalsIgnoreCase("Unnamed") ||
                               entity.getCrew().getName().equalsIgnoreCase("vacant")) {
                         // set the pilot
-                        Crew pilot = new Crew(CrewType.SINGLE, "AutoArtillery", 1, 4, 5);
+                        Crew pilot = new Crew(CrewType.SINGLE, "AutoArtillery", 1, 4, 5, Gender.RANDOMIZE, false, null);
                         entity.setCrew(pilot);
                     } else {
                         entity.setCrew(UnitUtils.createEntityPilot(autoUnit));
                     }
 
                     if (bot != null) {
-                        bot.sendAddEntity(entity);
+                        bot.sendAddEntity(List.of(entity));
                     } else {
-                        mmClient.sendAddEntity(entity);
+                        mmClient.sendAddEntity(List.of(entity));
                     }
                 }
 
@@ -667,9 +660,7 @@ public class ClientThread extends Thread implements CloseClientListener {
                 if (!meks.isEmpty()) {
                     // check armies for C3Network meks
                     synchronized (currA) {
-
                         if (!currA.getC3Network().isEmpty()) {
-                            // Thread.sleep(125);
                             playerUpdate = true;
                             for (int slave : currA.getC3Network().keySet()) {
                                 linkMegaMekC3Units(currA, slave, currA.getC3Network().get(slave));
@@ -753,14 +744,7 @@ public class ClientThread extends Thread implements CloseClientListener {
         return boards;
     }
 
-    /*
-     * Taken from Megamek Code for use with MekWars The call was private and was
-     * needed. Thanks to Ben Mazur and all the MM coders, we hope for a long
-     * and happy relationship. Torren.
-     */
-
     private ArrayList<BuildingTemplate> generateRandomBuildings(MapSettings mapSettings, Buildings buildingTemplate) {
-
         ArrayList<BuildingTemplate> buildingList = new ArrayList<>();
         ArrayList<BuildingType> buildingTypes = new ArrayList<>();
 
@@ -793,14 +777,6 @@ public class ClientThread extends Thread implements CloseClientListener {
             default:
                 break;
         }
-
-        StringTokenizer types = new StringTokenizer(buildingTemplate.getBuildingType(), ",");
-
-        while (types.hasMoreTokens()) {
-            buildingTypes.add(types.nextToken());
-        }
-
-        int typeSize = buildingTypes.size();
 
         Random random = new Random();
 
@@ -861,31 +837,27 @@ public class ClientThread extends Thread implements CloseClientListener {
                 totalCF *= 2;
             }
 
-            BuildingType type = BuildingType.UNKNOWN;
-
-            try {
-                if (typeSize == 1) {
-                    type = buildingTypes.getFirst();
-                } else {
-                    type = MathUtility.parseInt(buildingTypes.get(random.nextInt(typeSize)), 0);
-                }
-            } catch (Exception ex) {
-            } // someone entered a bad building type.
-
+            BuildingType type = buildingTemplate.getBuildingType();
             buildingList.add(new BuildingTemplate(type, cordList, totalCF, floors, -1));
         }
 
         return buildingList;
     }
 
+    /*
+     * Taken from Megamek Code for use with MekWars The call was private and was
+     * needed. Thanks to Ben Mazur and all the MM coders, we hope for a long
+     * and happy relationship. Torren.
+     */
+
     /**
      * @param army
-     * @param slaveid
-     * @param masterid This function goes through and makes sure the slave is linked to the master unit
+     * @param slaveID
+     * @param masterID This function goes through and makes sure the slave is linked to the master unit
      *
      * @author jtighe
      */
-    public void linkMegaMekC3Units(CArmy army, Integer slaveid, Integer masterid) {
+    public void linkMegaMekC3Units(CArmy army, Integer slaveID, Integer masterID) {
         Entity c3Unit = null;
         Entity c3Master = null;
 
@@ -893,64 +865,56 @@ public class ClientThread extends Thread implements CloseClientListener {
             try {
 
                 for (Entity en : mmClient.getGame().getEntitiesVector()) {
-                    if ((c3Unit == null) && (en.getExternalId() == slaveid)) {
+                    if ((c3Unit == null) && (en.getExternalId() == slaveID)) {
                         c3Unit = en;
                     }
 
-                    if ((c3Master == null) && (en.getExternalId() == masterid)) {
+                    if ((c3Master == null) && (en.getExternalId() == masterID)) {
                         c3Master = en;
                     }
                 }
                 Thread.sleep(10);// give the queue time to refresh
             } catch (Exception ex) {
-                MWLogger.errLog("Error in linkMegaMekC3Units");
-                MWLogger.errLog(ex);
+                LOGGER.error(ex, "Error in linkMegaMekC3Units");
             }
         }
 
         // catch for some funky stuff
         if ((c3Unit == null) || (c3Master == null)) {
-            MWLogger.errLog("Null Units c3Unit: " + c3Unit + " C3Master: " + c3Master);
+            LOGGER.debug(STR."Null Units c3Unit: \{c3Unit} C3Master: \{c3Master}");
             return;
         }
 
         try {
-            CUnit masterUnit = (CUnit) army.getUnit(masterid);
-            // MWLogger.errLog("Master Unit:
-            // "+masterUnit.getModelName());
-            // MWLogger.errLog("Slave Unit:
-            // "+c3Unit.getModel());
+            CUnit masterUnit = (CUnit) army.getUnit(masterID);
             if (!masterUnit.hasC3SlavesLinkedTo(army) &&
                       masterUnit.hasBeenC3LinkedTo(army) &&
-                      ((masterUnit.getC3Level() == Unit.C3_MASTER) || (masterUnit.getC3Level() == Unit.C3_MMASTER))) {
-                // MWLogger.errLog("Unit:
-                // "+c3Master.getModel()+" id: "+c3Master.getExternalId());
+                      ((masterUnit.getC3Level() == Unit.C3_MASTER) || (masterUnit.getC3Level() == Unit.C3M_MASTER))) {
                 if (c3Master.getC3MasterId() == Entity.NONE) {
                     c3Master.setShutDown(false);
                     c3Master.setC3Master(c3Master, false);
                     mmClient.sendUpdateEntity(c3Master);
                 }
-                /*
-                 * if ( c3Master.hasC3MM() )
-                 * MWLogger.errLog("hasC3MM"); else
-                 * MWLogger.errLog("!hasC3MM");
-                 */
             } else if (c3Master.getC3MasterId() != Entity.NONE) {
                 c3Master.setShutDown(false);
                 c3Master.setC3Master(Entity.NONE, false);
                 mmClient.sendUpdateEntity(c3Master);
             }
-            // MWLogger.errLog("c3Unit: "+c3Unit.getModel()+"
-            // Master: "+c3Master.getModel());
             c3Unit.setShutDown(false);
             c3Unit.setC3Master(c3Master, false);
-            // MWLogger.errLog("c3Master Set to
-            // "+c3Unit.getC3MasterId()+" "+c3Unit.getC3NetId());
+
             mmClient.sendUpdateEntity(c3Unit);
         } catch (Exception ex) {
-            MWLogger.errLog(ex);
-            MWLogger.errLog("Error in setting up C3Network");
+            LOGGER.error(ex, "Error in setting up C3Network");
         }
+    }
+
+    public static Comparator<? super Object> stringComparator() {
+        return (Comparator<Object>) (o1, o2) -> {
+            String s1 = ((String) o1).toLowerCase();
+            String s2 = ((String) o2).toLowerCase();
+            return s1.compareTo(s2);
+        };
     }
 
     /*
@@ -972,7 +936,5 @@ public class ClientThread extends Thread implements CloseClientListener {
         // GC'ed.
         client.closingGame(serverName);
         System.gc();
-
     }
-
 }

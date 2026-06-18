@@ -37,12 +37,16 @@
 package mekwars.common.campaign;
 
 import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.NoSuchElementException;
 import java.util.StringTokenizer;
 import java.util.Vector;
 
 import jakarta.annotation.Nonnull;
+import megamek.codeUtilities.MathUtility;
 import megamek.common.CriticalSlot;
 import megamek.common.OffBoardDirection;
+import megamek.logging.MMLogger;
 import mekwars.common.House;
 import mekwars.common.Player;
 import mekwars.common.SubFaction;
@@ -58,10 +62,9 @@ import mekwars.common.util.UnitUtils;
  * Class for Player object used by client
  */
 public class CPlayer extends Player {
-
     public static final String PREFIX = "PL"; // prefix for player strings
     public static final String DELIMITER = "#"; // delimiter for player strings
-
+    private static final MMLogger LOGGER = MMLogger.create(CPlayer.class);
     private final IClient client;
     private final int[][] hangarPurchasePenalties = new int[6][4];
     private final ArrayList<String> adminExcludes;
@@ -120,17 +123,17 @@ public class CPlayer extends Player {
     }
 
     public boolean decodeCommand(String command) {
-        java.util.StringTokenizer ST;
+        StringTokenizer stringTokenizer;
         String element;
 
-        ST = new java.util.StringTokenizer(command, "|");
-        element = TokenReader.readString(ST);
+        stringTokenizer = new StringTokenizer(command, "|");
+        element = TokenReader.readString(stringTokenizer);
 
         if (!element.equals("PL")) {
             return (false);
         }
 
-        element = TokenReader.readString(ST);
+        element = TokenReader.readString(stringTokenizer);
         command = command.substring(3);
 
         if (element.equals("DA")) {// is a PI|DA
@@ -148,13 +151,13 @@ public class CPlayer extends Player {
      * @return success
      */
     public boolean setData(String data) {
-        java.util.StringTokenizer ST;
+        StringTokenizer stringTokenizer;
         String element;
         CUnit tmek;
         int i, armiesCount, hangerCount;
 
-        ST = new java.util.StringTokenizer(data, "~");
-        element = TokenReader.readString(ST);
+        stringTokenizer = new StringTokenizer(data, "~");
+        element = TokenReader.readString(stringTokenizer);
 
         if (!element.equals("CP")) {
             return false;
@@ -168,50 +171,51 @@ public class CPlayer extends Player {
         Armies.clear();
         Hangar.clear();
 
-        Name = TokenReader.readString(ST);
+        Name = TokenReader.readString(stringTokenizer);
 
-        Money = TokenReader.readInt(ST);
-        Exp = TokenReader.readInt(ST);
+        Money = TokenReader.readInt(stringTokenizer);
+        Exp = TokenReader.readInt(stringTokenizer);
 
-        hangerCount = TokenReader.readInt(ST);
+        hangerCount = TokenReader.readInt(stringTokenizer);
+
         for (i = 0; i < hangerCount; i++) {
             tmek = new CUnit(client);
-            if (tmek.setData(TokenReader.readString(ST))) {
+            if (tmek.setData(TokenReader.readString(stringTokenizer))) {
                 Hangar.add(tmek);
             }
         }
 
-        armiesCount = (TokenReader.readInt(ST));
+        armiesCount = (TokenReader.readInt(stringTokenizer));
 
         for (i = 0; i < armiesCount; i++) {
             CArmy army = new CArmy();
-            army.fromString(TokenReader.readString(ST), this, "%", client);
+            army.fromString(TokenReader.readString(stringTokenizer), this, "%", client);
             Armies.add(army);
         }
 
-        Bays = TokenReader.readInt(ST);
-        FreeBays = TokenReader.readInt(ST);
-        Rating = Double.parseDouble(TokenReader.readString(ST));
-        Influence = TokenReader.readInt(ST);
-        setTechnicians(TokenReader.readInt(ST));
+        Bays = TokenReader.readInt(stringTokenizer);
+        FreeBays = TokenReader.readInt(stringTokenizer);
+        Rating = Double.parseDouble(TokenReader.readString(stringTokenizer));
+        Influence = TokenReader.readInt(stringTokenizer);
+        setTechnicians(TokenReader.readInt(stringTokenizer));
         doPayTechniciansMath();
-        RewardPoints = TokenReader.readInt(ST);
-        String string = TokenReader.readString(ST);
+        RewardPoints = TokenReader.readInt(stringTokenizer);
+        String string = TokenReader.readString(stringTokenizer);
         setMekToken(Integer.parseInt(string));
-        House = TokenReader.readString(ST);
-        setHouseFightingFor(TokenReader.readString(ST));
-        setLogo(TokenReader.readString(ST));
-        setInvisible(TokenReader.readBoolean(ST));
+        House = TokenReader.readString(stringTokenizer);
+        setHouseFightingFor(TokenReader.readString(stringTokenizer));
+        setLogo(TokenReader.readString(stringTokenizer));
+        setInvisible(TokenReader.readBoolean(stringTokenizer));
 
         if (Boolean.parseBoolean(client.getServerConfigs("UsePartsRepair"))) {
-            partsCache.fromString(TokenReader.readString(ST), "|");
+            partsCache.fromString(TokenReader.readString(stringTokenizer), "|");
         } else {
-            TokenReader.readString(ST);
+            TokenReader.readString(stringTokenizer);
         }
 
-        setAutoReorder(TokenReader.readBoolean(ST));
+        setAutoReorder(TokenReader.readBoolean(stringTokenizer));
 
-        MWLogger.infoLog(STR."My Player Flags: \{flags.export()}");
+        LOGGER.info(STR."My Player Flags: \{flags.export()}");
 
         // traps run. sort the HQ. this isn't duplicative, b/c
         // direct lods (PS instead of PL) don't trigger sorts.
@@ -241,8 +245,8 @@ public class CPlayer extends Player {
         float amountToPay = 0;
 
         // load config variables needed to do the math ...
-        float additive = Float.parseFloat(client.getServerConfigs("AdditivePerTech"));
-        float ceiling = Float.parseFloat(client.getServerConfigs("AdditiveCostCeiling"));
+        float additive = MathUtility.parseFloat(client.getServerConfigs("AdditivePerTech"), 0.0f);
+        float ceiling = MathUtility.parseFloat(client.getServerConfigs("AdditiveCostCeiling"), 0.0f);
 
         /*
          * divide the ceiling by the additive. techs past this number are all charged at the ceiling rate. Example:
@@ -253,13 +257,13 @@ public class CPlayer extends Player {
         if (Techs > techCeiling) {
             int techsPastCeiling = Techs - techCeiling;
             amountToPay += ceiling * techsPastCeiling;
-        }// end if(some techs are paid @ ceiling price)
+        }// end if (some techs are paid @ ceiling price)
 
         /*
-         * Add up the number of times the non-ceiling techs were incremented,
+         * Add up the number of times the non-ceiling techs were increased,
          * then figure out their total cost. In cases where the ceiling is
          * passed, the flat fee techs are handled above, so only techs up to
-         * that ceiling need to have the additive math done. If the ceiling isnt
+         * that ceiling need to have the additive math done. If the ceiling isn't
          * reached, just use the number of techToPay from the param.
          */
 
@@ -272,10 +276,8 @@ public class CPlayer extends Player {
 
         amountToPay += hangarPenalty;
 
-        // now return the amount in INT form since we don't support fractional
-        // MU costs.
-        // also, set the currentTechPayment to avoid doing this math again if
-        // possible
+        // now return the amount in INT form since we don't support fractional MU costs. also, set the
+        // currentTechPayment to avoid doing this math again if possible
 
         TechCost = Math.round(amountToPay);
     }
@@ -294,6 +296,7 @@ public class CPlayer extends Player {
         for (int i = 1; i <= techsUsingAdditive; i++) {
             totalAdditions += i;
         }// end for(all counted techs)
+
         return totalAdditions;
     }
 
@@ -314,6 +317,7 @@ public class CPlayer extends Player {
 
         // swap the armies
         removeArmy(newArmy.getID());
+
         if (Armies.size() < newArmy.getID()) {
             Armies.add(newArmy);
         } else {
@@ -322,7 +326,6 @@ public class CPlayer extends Player {
     }
 
     public CArmy getArmy(int id) {
-
         for (CArmy currA : Armies) {
             if (currA.getID() == id) {
                 return currA;
@@ -336,8 +339,7 @@ public class CPlayer extends Player {
      * CPlayer.setArmyData(), which removes all old instances of an army before adding the new data.
      */
     public void removeArmy(int lanceID) {
-
-        for (java.util.Iterator<mekwars.common.campaign.CArmy> i = Armies.iterator(); i.hasNext(); ) {
+        for (Iterator<CArmy> i = Armies.iterator(); i.hasNext(); ) {
             if (i.next().getID() == lanceID) {
                 i.remove();
                 client.getMainFrame().updateAttackMenu();// removing an army
@@ -357,7 +359,7 @@ public class CPlayer extends Player {
                 sortHangar();// sort it!
             }
         } catch (Exception e) {
-            MWLogger.errLog(e);
+            LOGGER.error(e, "Unable to set hangar data");
         }
     }
 
@@ -369,18 +371,18 @@ public class CPlayer extends Player {
     public void sortHangar() {
 
         // load configs
-        String primeSortOrder = client.getConfigParam("PRIMARYHQSORTORDER");
-        String secondarySortOrder = client.getConfigParam("SECONDARYHQSORTORDER");
-        String tertiarySortOrder = client.getConfigParam("TERTIARYHQSORTORDER");
+        String primeSortOrder = client.getConfigParam("PRIMARY_HQ_SORT_ORDER");
+        String secondarySortOrder = client.getConfigParam("SECONDARY_HQ_SORT_ORDER");
+        String tertiarySortOrder = client.getConfigParam("TERTIARY_HQ_SORT_ORDER");
 
         // Choices [note - this array must be duplicated in CHQPanel's
         // maybeShowPopup()]
-        String[] choices =
-              { "Name", "Battle Value", "Gunnery Skill", "ID Number", "MP (Jumping)", "MP (Walking)", "Pilot Kills",
-                "Unit Type", "Weight (Class)", "Weight (Tons)", "No Sort" };
+        String[] choices = { "Name", "Battle Value", "Gunnery Skill", "ID Number", "MP (Jumping)", "MP (Walking)",
+                             "Pilot Kills", "Unit Type", "Weight (Class)", "Weight (Tons)", "No Sort" };
 
         // determine which sort will dominate
         int primarySort = CUnitComparator.HQ_SORT_NONE;
+
         for (int i = 0; i < choices.length; i++) {
             if (primeSortOrder.equals(choices[i])) {
                 primarySort = i;
@@ -389,6 +391,7 @@ public class CPlayer extends Player {
 
         // determine secondary sort
         int secondarySort = CUnitComparator.HQ_SORT_NONE;
+
         for (int i = 0; i < choices.length; i++) {
             if (secondarySortOrder.equals(choices[i])) {
                 secondarySort = i;
@@ -397,6 +400,7 @@ public class CPlayer extends Player {
 
         // determine tertiary sort
         int tertiarySort = CUnitComparator.HQ_SORT_NONE;
+
         for (int i = 0; i < choices.length; i++) {
             if (tertiarySortOrder.equals(choices[i])) {
                 tertiarySort = i;
@@ -435,39 +439,39 @@ public class CPlayer extends Player {
     /**
      * Called by PL|UU - updates a unit's data.
      */
-    public void updateUnitData(StringTokenizer st) {
+    public void updateUnitData(StringTokenizer stringTokenizer) {
         try {
-            CUnit currUnit = getUnit(TokenReader.readInt(st));
-            currUnit.setData(TokenReader.readString(st));
+            CUnit currUnit = getUnit(TokenReader.readInt(stringTokenizer));
+            currUnit.setData(TokenReader.readString(stringTokenizer));
             sortHangar();// properties have changes. sort. YARR!
         } catch (Exception e) {
-            MWLogger.errLog(e);
+            LOGGER.error(e, "Unable to update unit data");
         }
     }
 
     public CUnit getUnit(int unitID) {
-
         for (CUnit currU : Hangar) {
             if (currU.getId() == unitID) {
                 return currU;
             }
         }
+
         return null;
     }
 
-    public void updateUnitMachineGuns(StringTokenizer st) {
+    public void updateUnitMachineGuns(StringTokenizer stringTokenizer) {
         try {
-            CUnit currUnit = getUnit(TokenReader.readInt(st));
-            int location = TokenReader.readInt(st);
-            int slot = TokenReader.readInt(st);
-            boolean selection = TokenReader.readBoolean(st);
+            CUnit currUnit = getUnit(TokenReader.readInt(stringTokenizer));
+            int location = TokenReader.readInt(stringTokenizer);
+            int slot = TokenReader.readInt(stringTokenizer);
+            boolean selection = TokenReader.readBoolean(stringTokenizer);
 
             CriticalSlot crit = currUnit.getEntity().getCritical(location, slot);
             crit.getMount().setRapidFire(selection);
 
             sortHangar();// properties have changes. sort. YARR!
         } catch (Exception e) {
-            MWLogger.errLog(e);
+            LOGGER.error(e, "Unable to Update Unit Machine Guns");
         }
     }
 
@@ -479,13 +483,13 @@ public class CPlayer extends Player {
      * for details/explanation.
      */
     public boolean removeUnit(int unitID) {
-
         for (java.util.Iterator<mekwars.common.campaign.CUnit> i = Hangar.iterator(); i.hasNext(); ) {
             if (i.next().getId() == unitID) {
                 i.remove();
                 return (true);
             }
         }
+
         return (false);
     }
 
@@ -544,16 +548,16 @@ public class CPlayer extends Player {
         return Exp;
     }
 
-    public void setExp(int texp) {
-        Exp = texp;
+    public void setExp(int exp) {
+        Exp = exp;
     }
 
     public double getRating() {
         return Rating;
     }
 
-    public void setRating(double trating) {
-        Rating = trating;
+    public void setRating(double rating) {
+        Rating = rating;
     }
 
     public int getRewardPoints() {
@@ -568,32 +572,32 @@ public class CPlayer extends Player {
         return Money;
     }
 
-    public void setMoney(int tmoney) {
-        Money = tmoney;
+    public void setMoney(int money) {
+        Money = money;
     }
 
     public int getBays() {
         return Bays;
     }
 
-    public void setBays(int tbays) {
-        Bays = tbays;
+    public void setBays(int bays) {
+        Bays = bays;
     }
 
     public int getFreeBays() {
         return FreeBays;
     }
 
-    public void setFreeBays(int tfreebays) {
-        FreeBays = tfreebays;
+    public void setFreeBays(int freeBays) {
+        FreeBays = freeBays;
     }
 
     public int getInfluence() {
         return Influence;
     }
 
-    public void setInfluence(int tinfluence) {
-        Influence = tinfluence;
+    public void setInfluence(int influence) {
+        Influence = influence;
     }
 
     public int getTechs() {
@@ -605,35 +609,37 @@ public class CPlayer extends Player {
             return 0;
         }
         // else
-        return TechCost +
-                     getHangarPenalty();  // If not using sliding hangar costs, hangarPenalty will be 0, so will still return the same.
+        // If not using sliding hangar costs, hangarPenalty will be 0, so will still return the same.
+        return TechCost + getHangarPenalty();
     }
 
     public int getHangarPenalty() {
         return hangarPenalty;
     }
 
-    public void setHangarPenalty(int p) {
-        hangarPenalty = p;
+    public void setHangarPenalty(int hangarPenalty) {
+        this.hangarPenalty = hangarPenalty;
     }
 
-    public java.util.Vector<mekwars.common.campaign.CUnit> getHangar() {
+    public Vector<CUnit> getHangar() {
         return Hangar;
     }
 
     /**
-     * Calculate the the ID that would be assined to a newly created army. This is used by the army builder to construct
-     * /c exm# commands for an as-yet non-existant army.
+     * Calculate the ID that would be assigned to a newly created army. This is used by the army builder to construct /c
+     * exm# commands for an as-yet non-existent army.
      */
     public int getNextNewArmyID() {
         int newID = -1;
         int possibleNewID = 0;
+
         while (newID == -1) {
             for (int i = 0; i < Armies.size(); i++) {
                 if ((Armies.get(i)).getID() == possibleNewID) {
                     newID = i;
                 }
             }
+
             if (newID == -1) {
                 newID = possibleNewID;
             } else {
@@ -641,24 +647,26 @@ public class CPlayer extends Player {
                 newID = -1;
             }
         }
+
         return newID;
     }
 
     /**
-     * Method which greates an autoarmy gun emplacements. takes in a string with weight classes, and uses server configs
+     * Method that creates an autonomy gun emplacement. Takes in a string with weight classes and uses server configs
      * (path, filenames) to construct units of those weights.
      * <p>
      * Units are added to servers when a player joins a game, same as units from locked armies.
      */
-    public void setAutoGunEmplacements(StringTokenizer st) {
+    public void setAutoGunEmplacements(StringTokenizer stringTokenizer) {
 
         // if its a null, this was just a clearing call.
-        if (st == null) {
+        if (stringTokenizer == null) {
             return;
         }
 
-        while (st.hasMoreTokens()) {
-            String filename = TokenReader.readString(st);
+        while (stringTokenizer.hasMoreTokens()) {
+            String filename = TokenReader.readString(stringTokenizer);
+
             if (filename.equals("CLEAR")) {
                 return;
             }
@@ -669,34 +677,34 @@ public class CPlayer extends Player {
         }// end while(tokens)
     }// end setAutoArmy()
 
-    public void setMULCreatedArmy(StringTokenizer st) {
+    public void setMULCreatedArmy(StringTokenizer stringTokenizer) {
 
-        while (st.hasMoreElements()) {
-            String data = TokenReader.readString(st);
+        while (stringTokenizer.hasMoreElements()) {
+            String data = TokenReader.readString(stringTokenizer);
             if (data.equalsIgnoreCase("CLEAR")) {
                 return;
             }
 
-            CUnit cm = new CUnit();
-            cm.setData(data);
-            AutoArmy.add(cm);
+            CUnit cUnit = new CUnit();
+            cUnit.setData(data);
+            AutoArmy.add(cUnit);
         }
     }
 
     /**
-     * Method which returns the autoArmy arraylist.
+     * Method that returns the autoArmy arraylist.
      */
     public ArrayList<CUnit> getAutoArmy() {
         return AutoArmy;
     }
 
     /**
-     * Method which greates an autoarmy. takes in a string with weight classes, and uses server configs (path,
-     * filenames) to construct units of those weights.
+     * Method that creates an autonomy. Takes in a string with weight classes and uses server configs (path, filenames)
+     * to construct units of those weights.
      * <p>
      * Units are added to servers when a player joins a game, same as units from locked armies.
      */
-    public void setAutoArmy(StringTokenizer st) {
+    public void setAutoArmy(StringTokenizer stringTokenizer) {
 
         /*
          * clear the previous auto army. Auto army is always called first, and is
@@ -705,18 +713,18 @@ public class CPlayer extends Player {
         AutoArmy = new ArrayList<>();
 
         // if its a null, this was just a clearing call.
-        if (st == null) {
+        if (stringTokenizer == null) {
             return;
         }
 
-        while (st.hasMoreTokens()) {
-            String filename = TokenReader.readString(st);
+        while (stringTokenizer.hasMoreTokens()) {
+            String filename = TokenReader.readString(stringTokenizer);
             if (filename.equals("CLEAR")) {
                 return;
             }
 
             // get the distance
-            int distInBoards = Integer.parseInt(client.getServerConfigs("DistanceFromMap"));
+            int distInBoards = MathUtility.parseInt(client.getServerConfigs("DistanceFromMap"), 0);
             int distInHexes = distInBoards * 17;// 17 hexes per board.
 
             CUnit currUnit = getCUnit(filename, distInHexes);
@@ -734,12 +742,7 @@ public class CPlayer extends Player {
          */
         OffBoardDirection direction = OffBoardDirection.NORTH;
         switch (client.getPlayerStartingEdge()) {
-            case 0:
-                break;
-            case 1:
-            case 2:
-            case 3:
-                direction = OffBoardDirection.NORTH;
+            case 0, 1, 2, 3:
                 break;
             case 4:
                 direction = OffBoardDirection.EAST;
@@ -818,22 +821,21 @@ public class CPlayer extends Player {
     }
 
     /**
-     * Method which resorts every unit. Inefficient, but we hate clients. Because we're evil. So there.
+     * Method that resorts every unit. Inefficient, but we hate clients. Because we're evil. So there.
      *
      * @urgru 4.4.05
      */
     public void sortArmies() {
 
         // load configs
-        String primeSortOrder = client.getConfigParam("PRIMARYARMYSORTORDER");
-        String secondarySortOrder = client.getConfigParam("SECONDARYARMYSORTORDER");
-        String tertiarySortOrder = client.getConfigParam("TERTIARYARMYSORTORDER");
+        String primeSortOrder = client.getConfigParam("PRIMARY_ARMY_SORT_ORDER");
+        String secondarySortOrder = client.getConfigParam("SECONDARY_ARMY_SORT_ORDER");
+        String tertiarySortOrder = client.getConfigParam("TERTIARY_ARMY_SORT_ORDER");
 
         // Choices [note - this array must be duplicated in CHQPanel's
         // maybeShowPopup()]
-        String[] choices =
-              { "Name", "Battle Value", "ID Number", "Max Tonnage", "Avg Walk MP", "Avg Jump MP", "Number Of Units",
-                "No Sort" };
+        String[] choices = { "Name", "Battle Value", "ID Number", "Max Tonnage", "Avg Walk MP", "Avg Jump MP",
+                             "Number Of Units", "No Sort" };
 
         // determine which sort will dominate
         int primarySort = CArmyComparator.ARMY_SORT_NONE;
@@ -889,11 +891,11 @@ public class CPlayer extends Player {
     }
 
     public void removeArmyUnit(String data) {
-        StringTokenizer ST = new StringTokenizer(data, DELIMITER);
-        if (ST.hasMoreTokens()) {
-            int army = TokenReader.readInt(ST);
-            int unitId = TokenReader.readInt(ST);
-            int bv = TokenReader.readInt(ST);
+        StringTokenizer stringTokenizer = new StringTokenizer(data, DELIMITER);
+        if (stringTokenizer.hasMoreTokens()) {
+            int army = TokenReader.readInt(stringTokenizer);
+            int unitId = TokenReader.readInt(stringTokenizer);
+            int bv = TokenReader.readInt(stringTokenizer);
 
             java.util.Iterator<Unit> i = getArmy(army).getUnits().iterator();
             while (i.hasNext()) {
@@ -911,7 +913,7 @@ public class CPlayer extends Player {
     }
 
     /**
-     * Method called from PL| which updates a CArmy's legalOperations tree.
+     * Method called from PL| that updates a CArmy's legalOperations tree.
      */
     public void updateOperations(String data) {
 
@@ -938,7 +940,8 @@ public class CPlayer extends Player {
             try {
                 mode = TokenReader.readString(tokenizer);
                 name = TokenReader.readString(tokenizer);
-            } catch (java.util.NoSuchElementException e) {
+            } catch (NoSuchElementException e) {
+                LOGGER.debug(e, "updateOperations: No more tokens");
                 return;
             }
 
@@ -962,16 +965,16 @@ public class CPlayer extends Player {
     }
 
     public void repositionArmyUnit(String data) {
-        StringTokenizer ST = new StringTokenizer(data, DELIMITER);
+        StringTokenizer stringTokenizer = new StringTokenizer(data, DELIMITER);
 
-        int army = TokenReader.readInt(ST);
-        int unitId = TokenReader.readInt(ST);
-        int position = TokenReader.readInt(ST);
+        int army = TokenReader.readInt(stringTokenizer);
+        int unitId = TokenReader.readInt(stringTokenizer);
+        int position = TokenReader.readInt(stringTokenizer);
 
-        CArmy a = getArmy(army);
+        CArmy cArmy = getArmy(army);
 
         // remove the unit
-        java.util.Iterator<Unit> i = a.getUnits().iterator();
+        Iterator<Unit> i = cArmy.getUnits().iterator();
         while (i.hasNext()) {
             if (i.next().getId() == unitId) {
                 i.remove();
@@ -985,10 +988,10 @@ public class CPlayer extends Player {
     }
 
     public void setUnitStatus(String data) {
-        StringTokenizer ST = new StringTokenizer(data, DELIMITER);
-        if (ST.hasMoreTokens()) {
-            int unitId = TokenReader.readInt(ST);
-            int status = TokenReader.readInt(ST);
+        StringTokenizer stringTokenizer = new StringTokenizer(data, DELIMITER);
+        if (stringTokenizer.hasMoreTokens()) {
+            int unitId = TokenReader.readInt(stringTokenizer);
+            int status = TokenReader.readInt(stringTokenizer);
             CUnit unit = getUnit(unitId);
 
             if (unit == null) {
@@ -1004,14 +1007,15 @@ public class CPlayer extends Player {
     }
 
     public void setArmyName(String data) {
-        StringTokenizer ST = new StringTokenizer(data, DELIMITER);
-        if (ST.hasMoreTokens()) {
-            int army = TokenReader.readInt(ST);
-            String name = TokenReader.readString(ST);
+        StringTokenizer stringTokenizer = new StringTokenizer(data, DELIMITER);
+        if (stringTokenizer.hasMoreTokens()) {
+            int army = TokenReader.readInt(stringTokenizer);
+            String name = TokenReader.readString(stringTokenizer);
 
             if (name.equals("-1")) {
                 name = "";
             }
+
             if (getArmy(army) != null) {
                 getArmy(army).setName(name);
             }
@@ -1037,23 +1041,24 @@ public class CPlayer extends Player {
     }
 
     public void setArmyBV(String data) {
-        StringTokenizer ST = new StringTokenizer(data, DELIMITER);
-        if (ST.hasMoreTokens()) {
-            int army = TokenReader.readInt(ST);
+        StringTokenizer stringTokenizer = new StringTokenizer(data, DELIMITER);
+        if (stringTokenizer.hasMoreTokens()) {
+            int army = TokenReader.readInt(stringTokenizer);
+
             if (getArmy(army) != null) {
-                getArmy(army).setBV(TokenReader.readInt(ST));
+                getArmy(army).setBV(TokenReader.readInt(stringTokenizer));
             } else {
-                MWLogger.errLog(STR."Bad Army id: \{army}");
+                LOGGER.debug(STR."Bad Army id: \{army}");
             }
         }
     }
 
     public void setArmyLimit(String data) {
-        StringTokenizer ST = new StringTokenizer(data, DELIMITER);
-        if (ST.hasMoreTokens()) {
-            int army = TokenReader.readInt(ST);
-            int lowerLimit = TokenReader.readInt(ST);
-            int upperLimit = TokenReader.readInt(ST);
+        StringTokenizer stringTokenizer = new StringTokenizer(data, DELIMITER);
+        if (stringTokenizer.hasMoreTokens()) {
+            int army = TokenReader.readInt(stringTokenizer);
+            int lowerLimit = TokenReader.readInt(stringTokenizer);
+            int upperLimit = TokenReader.readInt(stringTokenizer);
 
             getArmy(army).setLowerLimiter(lowerLimit);
             getArmy(army).setUpperLimiter(upperLimit);
@@ -1061,10 +1066,10 @@ public class CPlayer extends Player {
     }
 
     public void setArmyOpForceSize(String data) {
-        StringTokenizer ST = new StringTokenizer(data, DELIMITER);
-        if (ST.hasMoreTokens()) {
-            int army = TokenReader.readInt(ST);
-            float opForceSize = TokenReader.readFloat(ST);
+        StringTokenizer stringTokenizer = new StringTokenizer(data, DELIMITER);
+        if (stringTokenizer.hasMoreTokens()) {
+            int army = TokenReader.readInt(stringTokenizer);
+            float opForceSize = TokenReader.readFloat(stringTokenizer);
 
             getArmy(army).setOpForceSize(opForceSize);
         }
@@ -1072,10 +1077,10 @@ public class CPlayer extends Player {
     }
 
     public void setArmyLock(String data) {
-        StringTokenizer ST = new StringTokenizer(data, DELIMITER);
-        if (ST.hasMoreTokens()) {
-            int army = TokenReader.readInt(ST);
-            boolean lock = TokenReader.readBoolean(ST);
+        StringTokenizer stringTokenizer = new StringTokenizer(data, DELIMITER);
+        if (stringTokenizer.hasMoreTokens()) {
+            int army = TokenReader.readInt(stringTokenizer);
+            boolean lock = TokenReader.readBoolean(stringTokenizer);
             getArmy(army).setLocked(lock);
         }
     }
@@ -1108,13 +1113,16 @@ public class CPlayer extends Player {
      */
     public void setAdminExcludes(String buffer, String token) {
         adminExcludes.clear();
-        StringTokenizer ST = new StringTokenizer(buffer, token);
-        while (ST.hasMoreElements()) {
-            String curr = TokenReader.readString(ST);
+        StringTokenizer stringTokenizer = new StringTokenizer(buffer, token);
+
+        while (stringTokenizer.hasMoreElements()) {
+            String curr = TokenReader.readString(stringTokenizer);
+
             if (!curr.equals("0")) {
                 adminExcludes.add(curr);
             }
         }
+
         client.getMainFrame().getMainPanel().getUserListPanel().repaint();
     }
 
@@ -1136,9 +1144,9 @@ public class CPlayer extends Player {
      */
     public void setPlayerExcludes(String buffer, String token) {
         playerExcludes.clear();
-        StringTokenizer ST = new StringTokenizer(buffer, token);
-        while (ST.hasMoreElements()) {
-            String curr = TokenReader.readString(ST);
+        StringTokenizer stringTokenizer = new StringTokenizer(buffer, token);
+        while (stringTokenizer.hasMoreElements()) {
+            String curr = TokenReader.readString(stringTokenizer);
             if (!curr.equals("0")) {
                 playerExcludes.add(curr);
             }
@@ -1146,21 +1154,21 @@ public class CPlayer extends Player {
         client.getMainFrame().getMainPanel().getUserListPanel().repaint();
     }
 
-    public java.util.ArrayList<String> getAdminExcludes() {
+    public ArrayList<String> getAdminExcludes() {
         return adminExcludes;
     }
 
-    public java.util.ArrayList<String> getPlayerExcludes() {
+    public ArrayList<String> getPlayerExcludes() {
         return playerExcludes;
     }
 
-    public int getHangarSpaceRequired(int typeid, int weightclass, int baymod, String model) {
-
-        if (typeid == Unit.PROTOMEK) {
+    public int getHangarSpaceRequired(int typeID, int weightClass, int bayMod, String model) {
+        if (typeID == Unit.PROTOMEK) {
             return 0;
         }
 
-        if ((typeid == Unit.INFANTRY) && Boolean.parseBoolean(client.getServerConfigs("FootInfTakeNoBays"))) {
+        if ((typeID == Unit.INFANTRY) &&
+                  MathUtility.parseBoolean(client.getServerConfigs("FootInfTakeNoBays"), false)) {
 
             // check types
             boolean isFoot = model.startsWith("Foot");
@@ -1172,12 +1180,12 @@ public class CPlayer extends Player {
         }
 
         int result;
-        String techAmount = STR."TechsFor\{Unit.getWeightClassDesc(weightclass)}\{Unit.getTypeClassDesc(typeid)}";
-        result = Integer.parseInt(client.getServerConfigs(techAmount));
+        String techAmount = STR."TechsFor\{Unit.getWeightClassDesc(weightClass)}\{Unit.getTypeClassDesc(typeID)}";
+        result = MathUtility.parseInt(client.getServerConfigs(techAmount), 0);
 
-        // Apply Pilot Mods (Astech skill)
+        // Apply Pilot Mods (AsTech skill)
         if (!client.isUsingAdvanceRepairs()) {
-            result += baymod;
+            result += bayMod;
         }
 
         // no negative techs
@@ -1279,9 +1287,9 @@ public class CPlayer extends Player {
         vibraMinesAllowed = mines;
     }
 
-    public void setMines(StringTokenizer st) {
-        setConventionalMinesAllowed(TokenReader.readInt(st));
-        setVibraMinesAllowed(TokenReader.readInt(st));
+    public void setMines(StringTokenizer stringTokenizer) {
+        setConventionalMinesAllowed(TokenReader.readInt(stringTokenizer));
+        setVibraMinesAllowed(TokenReader.readInt(stringTokenizer));
     }
 
     public void setFactionConfigs(String data) {
@@ -1291,10 +1299,10 @@ public class CPlayer extends Player {
             return;
         }
 
-        StringTokenizer ST = new StringTokenizer(data, DELIMITER);
-        while (ST.hasMoreTokens()) {
-            String key = TokenReader.readString(ST);
-            String value = TokenReader.readString(ST);
+        StringTokenizer stringTokenizer = new StringTokenizer(data, DELIMITER);
+        while (stringTokenizer.hasMoreTokens()) {
+            String key = TokenReader.readString(stringTokenizer);
+            String value = TokenReader.readString(stringTokenizer);
 
             client.setServerConfigs(key, value);
         }
@@ -1322,11 +1330,12 @@ public class CPlayer extends Player {
     public int getSubFactionAccess() {
 
         SubFaction mySubFaction = myHouse.getSubFactionList().get(subFactionName);
+
         if (mySubFaction == null) {
             return 0;
         }
 
-        return Integer.parseInt(mySubFaction.getConfig("AccessLevel"));
+        return MathUtility.parseInt(mySubFaction.getConfig("AccessLevel"), 0);
 
     }
 
@@ -1339,11 +1348,11 @@ public class CPlayer extends Player {
     }
 
     public void parseHangarPenaltyString(String readString) {
-        StringTokenizer st = new StringTokenizer(readString, "*");
-        setHangarPenalty(Integer.parseInt(st.nextToken()));
+        StringTokenizer stringTokenizer = new StringTokenizer(readString, "*");
+        setHangarPenalty(Integer.parseInt(stringTokenizer.nextToken()));
         for (int type = Unit.MEK; type < Unit.MAX_BUILD; type++) {
             for (int weight = Unit.LIGHT; weight <= Unit.ASSAULT; weight++) {
-                setHangarPurchasePenalty(type, weight, Integer.parseInt(st.nextToken()));
+                setHangarPurchasePenalty(type, weight, Integer.parseInt(stringTokenizer.nextToken()));
             }
         }
         client.getMainFrame().getMainPanel().getHSPanel().updateDisplay();

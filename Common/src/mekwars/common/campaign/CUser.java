@@ -40,6 +40,8 @@ import java.awt.Color;
 import java.util.StringTokenizer;
 
 import jakarta.annotation.Nonnull;
+import megamek.codeUtilities.MathUtility;
+import megamek.logging.MMLogger;
 import mekwars.common.House;
 import mekwars.common.campaign.clientutils.IClientUser;
 import mekwars.common.campaign.clientutils.protocol.IClient;
@@ -50,35 +52,22 @@ import mekwars.common.util.StringUtils;
  */
 
 public class CUser implements Comparable<CUser>, IClientUser {
+    private final static MMLogger LOGGER = MMLogger.create(CUser.class);
 
     protected String name;
-
     protected String addon;
-
     protected int userLevel = 0;
-
     protected String playerHouse;
-
     protected String fluff;
-
     protected int exp;
-
     protected float rating;
-
     protected int status;
-
     protected String htmlColor;
-
     protected Color rgbColor;
-
     protected String country;
-
     protected boolean loggedIn = false;
-
     protected boolean merc = false;
-
     protected boolean invisible = false;
-
     protected String subFaction = "";
 
     /**
@@ -104,7 +93,7 @@ public class CUser implements Comparable<CUser>, IClientUser {
      */
     public CUser(String data) {
 
-        StringTokenizer ST;
+        StringTokenizer stringTokenizer;
 
         addon = "";
         playerHouse = "";
@@ -114,15 +103,16 @@ public class CUser implements Comparable<CUser>, IClientUser {
         status = IClient.STATUS_LOGGED_OUT;
         rgbColor = Color.black;
 
-        ST = new StringTokenizer(data, "~");
+        stringTokenizer = new StringTokenizer(data, "~");
+
         try {
-            name = ST.nextToken();
-            htmlColor = ST.nextToken();
-            country = ST.nextToken();
-            userLevel = Integer.parseInt(ST.nextToken());
-            invisible = Boolean.parseBoolean(ST.nextToken());
+            name = stringTokenizer.nextToken();
+            htmlColor = stringTokenizer.nextToken();
+            country = stringTokenizer.nextToken();
+            userLevel = Integer.parseInt(stringTokenizer.nextToken());
+            invisible = Boolean.parseBoolean(stringTokenizer.nextToken());
         } catch (Exception ex) {
-            MWLogger.errLog("Error in deserializing user");
+            LOGGER.error(ex, "Error in deserializing user");
         }
     }
 
@@ -199,34 +189,38 @@ public class CUser implements Comparable<CUser>, IClientUser {
     }
 
     public void setCampaignData(IClient client, String data) {
-        StringTokenizer ST = new StringTokenizer(data, "#");
-        try {
-            exp = Integer.parseInt(ST.nextToken());
-            rating = Float.parseFloat(ST.nextToken());
-            setStatus(Integer.parseInt(ST.nextToken()));
+        StringTokenizer stringTokenizer = new StringTokenizer(data, "#");
 
-            if (ST.hasMoreTokens()) {
-                fluff = ST.nextToken();
+        try {
+            exp = MathUtility.parseInt(stringTokenizer.nextToken(), 0);
+            rating = MathUtility.parseFloat(stringTokenizer.nextToken(), 0.0f);
+            setStatus(MathUtility.parseInt(stringTokenizer.nextToken(), 0));
+
+            if (stringTokenizer.hasMoreTokens()) {
+                fluff = stringTokenizer.nextToken();
             }
 
             if (fluff.equals(" ") || fluff.equals("0")) {
                 fluff = "";
             }
 
-            if (ST.hasMoreTokens()) {playerHouse = ST.nextToken();}
-            if (ST.hasMoreElements()) {merc = Boolean.parseBoolean(ST.nextToken());}
+            if (stringTokenizer.hasMoreTokens()) {playerHouse = stringTokenizer.nextToken();}
+            if (stringTokenizer.hasMoreElements()) {merc = Boolean.parseBoolean(stringTokenizer.nextToken());}
 
-            if (ST.hasMoreElements()) {subFaction = ST.nextToken();}
+            if (stringTokenizer.hasMoreElements()) {subFaction = stringTokenizer.nextToken();}
 
             // Abbreviation and Color from House (sed to be sent as part of
             // player update)
             House playerH = client.getData().getHouseByName(playerHouse);
-            addon = playerH.getAbbreviation();
 
             rgbColor = java.awt.Color.black;
-            rgbColor = StringUtils.html2Color(playerH.getHousePlayerColor());
+
+            if (playerH != null) {
+                addon = playerH.getAbbreviation();
+                rgbColor = StringUtils.html2Color(playerH.getHousePlayerColor());
+            }
         } catch (Exception ex) {
-            MWLogger.errLog(ex);
+            LOGGER.error(ex, "Unable to set Campaign Data: {}", ex.getLocalizedMessage());
         }
     }
 
@@ -246,6 +240,7 @@ public class CUser implements Comparable<CUser>, IClientUser {
 
     public void setStatus(int status) {
         this.status = status;
+
         if (status == IClient.STATUS_LOGGED_OUT) {
             loggedIn = false;
             clearCampaignData();
@@ -281,6 +276,7 @@ public class CUser implements Comparable<CUser>, IClientUser {
         }
 
         info.append("</body></html>");
+
         return info.toString();
     }
 

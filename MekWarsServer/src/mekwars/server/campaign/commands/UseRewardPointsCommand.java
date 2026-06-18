@@ -17,17 +17,26 @@
 
 package mekwars.server.campaign.commands;
 
-import common.Unit;
-import common.util.MWLogger;
-import common.util.StringUtils;
-import common.util.UnitUtils;
-import megamek.common.AmmoType;
+import java.util.StringTokenizer;
+import java.util.Vector;
+
+import megamek.codeUtilities.MathUtility;
 import megamek.common.CriticalSlot;
-import megamek.common.Entity;
-import megamek.common.Mech;
-import megamek.common.Mounted;
+import megamek.common.equipment.AmmoMounted;
+import megamek.common.equipment.Mounted;
+import megamek.common.units.Entity;
+import megamek.common.units.Mek;
+import mekwars.common.Unit;
+import mekwars.common.util.StringUtils;
+import mekwars.common.util.UnitUtils;
+import mekwars.server.MWChatServer.auth.AccessRole;
+import mekwars.server.campaign.BuildTable;
 import mekwars.server.campaign.CampaignMain;
-import server.campaign.pilot.SPilot;
+import mekwars.server.campaign.SHouse;
+import mekwars.server.campaign.SPlayer;
+import mekwars.server.campaign.SUnit;
+import mekwars.server.campaign.SUnitFactory;
+import mekwars.server.campaign.pilot.SPilot;
 
 /**
  *
@@ -38,20 +47,17 @@ import server.campaign.pilot.SPilot;
  *
  */
 public class UseRewardPointsCommand implements Command {
-
-    int accessLevel = 0;
+    AccessRole accessLevel = AccessRole.NONE;
     String syntax = "";
 
-    public void process(java.util.StringTokenizer command, String Username) {
+    public void process(StringTokenizer command, String Username) {
 
-        if (accessLevel != 0) {
+        if (accessLevel != AccessRole.NONE) {
             int userLevel = CampaignMain.campaignMain.getServer().getUserLevel(Username);
             if (userLevel < getExecutionLevel()) {
-                CampaignMain.campaignMain.toUser("AM:Insufficient access level for command. Level: " +
-                                                       userLevel +
-                                                       ". Required: " +
-                                                       accessLevel +
-                                                       ".", Username, true);
+                CampaignMain.campaignMain.toUser(STR."AM:Insufficient access level for command. Level: \{userLevel}. Required: \{accessLevel}.",
+                      Username,
+                      true);
                 return;
             }
         }
@@ -70,8 +76,9 @@ public class UseRewardPointsCommand implements Command {
         String techs = "";
         String rewards = "";
 
-        server.campaign.SPlayer player = CampaignMain.campaignMain.getPlayer(Username);
-        server.campaign.SHouse house = player.getMyHouse();
+        SPlayer player = CampaignMain.campaignMain.getPlayer(Username);
+        SHouse house = player.getMyHouse();
+
         // Salient - added additional case for RP for CBills
         if (rewardSelection < 0 || rewardSelection > 4) {
             CampaignMain.campaignMain.toUser(
@@ -82,184 +89,150 @@ public class UseRewardPointsCommand implements Command {
         }
         switch (rewardSelection) {
             case 0:  //buying techs.
-                rewardPoints = Integer.parseInt(command.nextToken());
+                rewardPoints = MathUtility.parseInt(command.nextToken(), -1);
 
                 if (rewardPoints < 0) {
-                    CampaignMain.campaignMain.toUser("AM:Invalid input - negative " +
-                                                           CampaignMain.campaignMain.getConfig("RPLongName") +
-                                                           ".", Username, true);
+                    CampaignMain.campaignMain.toUser(STR."AM:Invalid input - negative \{CampaignMain.campaignMain.getConfig(
+                          "RPLongName")}.", Username, true);
                     return;
                 }
 
-                if (!(Boolean.parseBoolean(house.getConfig("AllowTechsForRewards")))) {
-                    CampaignMain.campaignMain.toUser("AM:Sorry but you are not allowed to buy techs with " +
-                                                           CampaignMain.campaignMain.getConfig("RPLongName") +
-                                                           ".", Username, true);
+                if (!(MathUtility.parseBoolean(house.getConfig("AllowTechsForRewards"), false))) {
+                    CampaignMain.campaignMain.toUser(STR."AM:Sorry but you are not allowed to buy techs with \{CampaignMain.campaignMain.getConfig(
+                          "RPLongName")}.", Username, true);
                     return;
                 }
 
                 if (rewardPoints > player.getReward()) {
                     if (player.getReward() == 1) {
-                        CampaignMain.campaignMain.toUser("AM:You only have 1 " +
-                                                               CampaignMain.campaignMain.getConfig(
-                                                                     "RPShortName") +
-                                                               ". Try again later.", Username, true);
+                        CampaignMain.campaignMain.toUser(STR."AM:You only have 1 \{CampaignMain.campaignMain.getConfig(
+                              "RPShortName")}. Try again later.", Username, true);
                     } else {
-                        CampaignMain.campaignMain.toUser("AM:You only have " +
-                                                               player.getReward() +
-                                                               " " +
-                                                               CampaignMain.campaignMain.getConfig(
-                                                                     "RPShortName") +
-                                                               " . Try again later.", Username, true);
+                        CampaignMain.campaignMain.toUser(STR."AM:You only have \{player.getReward()} \{CampaignMain.campaignMain.getConfig(
+                              "RPShortName")} . Try again later.", Username, true);
                     }
                     return;
                 }
                 if (CampaignMain.campaignMain.isUsingAdvanceRepair()) {
-                    int typeOfTechToBuy = rewardPoints;
-                    int techCost = Integer.parseInt(house.getConfig("RewardPointsFor" +
-                                                                          UnitUtils.techDescription(typeOfTechToBuy)));
+                    int techCost = MathUtility.parseInt(house.getConfig(STR."RewardPointsFor\{UnitUtils.techDescription(
+                          rewardPoints)}"), 0);
 
                     if (player.getReward() < techCost) {
-                        CampaignMain.campaignMain.toUser("AM:You do not have enough " +
-                                                               CampaignMain.campaignMain.getConfig(
-                                                                     "RPLongName") +
-                                                               " to buy this tech. You need " +
-                                                               techCost, Username, true);
+                        CampaignMain.campaignMain.toUser(STR."AM:You do not have enough \{CampaignMain.campaignMain.getConfig(
+                              "RPLongName")} to buy this tech. You need \{techCost}", Username, true);
                         return;
                     }
 
                     player.addReward(-techCost);
-                    player.addTotalTechs(typeOfTechToBuy, 1);
-                    player.addAvailableTechs(typeOfTechToBuy, 1);
-                    if (techCost > 1) {rewards = "s";}
+                    player.addTotalTechs(rewardPoints, 1);
+                    player.addAvailableTechs(rewardPoints, 1);
 
-                    CampaignMain.campaignMain.toUser("AM:You hired " +
-                                                           StringUtils.aOrAn(UnitUtils.techDescription(
-                                                                 typeOfTechToBuy), true) +
-                                                           " tech for " +
-                                                           techCost +
-                                                           "RP" +
-                                                           rewards +
-                                                           ".", Username, true);
+                    if (techCost > 1) {
+                        rewards = "s";
+                    }
+
+                    CampaignMain.campaignMain.toUser(STR."AM:You hired \{StringUtils.aOrAn(UnitUtils.techDescription(
+                          rewardPoints), true)} tech for \{techCost}RP\{rewards}.", Username, true);
 
                 } else {
-                    int numOfTechBought = (Integer.parseInt(house.getConfig("TechsForARewardPoint")));
+                    int numOfTechBought = MathUtility.parseInt(house.getConfig("TechsForARewardPoint"), 0);
                     numOfTechBought *= rewardPoints;
-                    if (numOfTechBought > 1) {techs = "s";}
-                    if (rewardPoints > 1) {rewards = "s";}
-                    CampaignMain.campaignMain.toUser("AM:You hired " +
-                                                           numOfTechBought +
-                                                           " tech" +
-                                                           techs +
-                                                           " for " +
-                                                           rewardPoints +
-                                                           " " +
-                                                           CampaignMain.campaignMain.getConfig("RPLongName") +
-                                                           rewards +
-                                                           ".", Username, true);
+
+                    if (numOfTechBought > 1) {
+                        techs = "s";
+                    }
+
+                    if (rewardPoints > 1) {
+                        rewards = "s";
+                    }
+
+                    CampaignMain.campaignMain.toUser(STR."AM:You hired \{numOfTechBought} tech\{techs} for \{rewardPoints} \{CampaignMain.campaignMain.getConfig(
+                          "RPLongName")}\{rewards}.", Username, true);
                     player.addReward(-rewardPoints);
                     player.addTechnicians(numOfTechBought);
                 }
                 break;
 
             case 1: //buying influence
-                rewardPoints = Integer.parseInt(command.nextToken());
+                rewardPoints = MathUtility.parseInt(command.nextToken(), -1);
 
                 if (rewardPoints < 0) {
-                    CampaignMain.campaignMain.toUser("AM:Invalid input - negative " +
-                                                           CampaignMain.campaignMain.getConfig("RPLongName") +
-                                                           ".", Username, true);
+                    CampaignMain.campaignMain.toUser(STR."AM:Invalid input - negative \{CampaignMain.campaignMain.getConfig(
+                          "RPLongName")}.", Username, true);
                     return;
                 }
 
-                if (!(Boolean.parseBoolean(house.getConfig("AllowInfluenceForRewards")))) {
-                    CampaignMain.campaignMain.toUser("Sorry but you are not allowed to buy influence with " +
-                                                           CampaignMain.campaignMain.getConfig("RPLongName") +
-                                                           ".", Username, true);
+                if (!(MathUtility.parseBoolean(house.getConfig("AllowInfluenceForRewards"), false))) {
+                    CampaignMain.campaignMain.toUser(STR."Sorry but you are not allowed to buy influence with \{CampaignMain.campaignMain.getConfig(
+                          "RPLongName")}.", Username, true);
                     return;
                 }
 
                 if (rewardPoints > player.getReward()) {
-
                     if (player.getReward() == 0) {
-                        CampaignMain.campaignMain.toUser("AM:You don't have any " +
-                                                               CampaignMain.campaignMain.getConfig(
-                                                                     "RPLongName") +
-                                                               ". Purchase fails.", Username, true);
+                        CampaignMain.campaignMain.toUser(STR."AM:You don't have any \{CampaignMain.campaignMain.getConfig(
+                              "RPLongName")}. Purchase fails.", Username, true);
                     } else {
-                        String toSend = "AM:You only have " +
-                                              player.getReward() +
-                                              CampaignMain.campaignMain.getConfig("RPLongName") +
-                                              StringUtils.addAnS(player.getReward()) +
-                                              ". Try again.";
+                        String toSend = STR."AM:You only have \{player.getReward()}\{CampaignMain.campaignMain.getConfig(
+                              "RPLongName")}\{StringUtils.addAnS(player.getReward())}. Try again.";
                         CampaignMain.campaignMain.toUser(toSend, Username, true);
                     }
 
                     return;
                 }
 
-                int amountOfInfluenceBought = (Integer.parseInt(house.getConfig("InfluenceForARewardPoint")));
+                int amountOfInfluenceBought = MathUtility.parseInt(house.getConfig("InfluenceForARewardPoint"), 0);
                 amountOfInfluenceBought *= rewardPoints;
-                CampaignMain.campaignMain.toUser("AM:You've bought " +
-                                                       CampaignMain.campaignMain.moneyOrFluMessage(false,
-                                                             true,
-                                                             amountOfInfluenceBought) +
-                                                       " for " +
-                                                       rewardPoints +
-                                                       " " +
-                                                       CampaignMain.campaignMain.getConfig("RPLongName") +
-                                                       StringUtils.addAnS(rewardPoints) +
-                                                       ".", Username, true);
+                CampaignMain.campaignMain.toUser(STR."AM:You've bought \{CampaignMain.campaignMain.moneyOrFluMessage(
+                      false,
+                      true,
+                      amountOfInfluenceBought)} for \{rewardPoints} \{CampaignMain.campaignMain.getConfig("RPLongName")}\{StringUtils.addAnS(
+                      rewardPoints)}.", Username, true);
 
                 player.addReward(-rewardPoints);
                 player.addInfluence(amountOfInfluenceBought);
                 break;
 
             case 2: //buying units
-                if (!(Boolean.parseBoolean(house.getConfig("AllowUnitsForRewards")))) {
-                    CampaignMain.campaignMain.toUser("AM:Sorry but you are not allowed to buy units with " +
-                                                           CampaignMain.campaignMain.getConfig("RPLongName") +
-                                                           ".", Username, true);
+                if (!(MathUtility.parseBoolean(house.getConfig("AllowUnitsForRewards"), false))) {
+                    CampaignMain.campaignMain.toUser(STR."AM:Sorry but you are not allowed to buy units with \{CampaignMain.campaignMain.getConfig(
+                          "RPLongName")}.", Username, true);
                     return;
                 }
+
                 int rewardPointsAvailable = player.getReward();
                 int unitTotalRewardPointCost = 0;
+
                 String typestring = command.nextToken();
                 String weightstring = command.nextToken();
-                int unitType = Unit.MEK;
-                int unitWeight = Unit.LIGHT;
-                server.campaign.SHouse faction = player.getHouseFightingFor();
+
+                int unitType;
+                int unitWeight;
+
+                SHouse faction = player.getHouseFightingFor();
+
                 double rareCost = 1;
                 boolean buyRareUnit = false;
-                java.util.Vector<server.campaign.SUnit> newUnits = new java.util.Vector<server.campaign.SUnit>(1, 1);
-                SPilot newPilot = null;
+
+                Vector<SUnit> newUnits = new Vector<SUnit>(1, 1);
+                SPilot newPilot;
                 String factionstring = "common";
 
                 if (house.getBooleanConfig("AllowRareUnitsForRewards")) {
                     rareCost = (house.getDoubleConfig("RewardPointMultiplierForRare"));
                 }
 
-                try {
-                    unitType = Integer.parseInt(typestring);
-                } catch (Exception ex) {
-                    unitType = Unit.getTypeIDForName(typestring);
-                }
-
-                try {
-                    unitWeight = Integer.parseInt(weightstring);
-                } catch (Exception ex) {
-                    unitWeight = Unit.getWeightIDForName(weightstring.toUpperCase());
-                }
+                unitType = MathUtility.parseInt(typestring, 0);
+                unitWeight = MathUtility.parseInt(weightstring, 0);
 
                 if (command.hasMoreElements()) {
                     factionstring = command.nextToken();
-                    if (factionstring.equalsIgnoreCase("rare")) {
 
+                    if (factionstring.equalsIgnoreCase("rare")) {
                         if (!(Boolean.parseBoolean(house.getConfig("AllowRareUnitsForRewards")))) {
                             CampaignMain.campaignMain.toUser(
-                                  "AM:Sorry. You are not allowed to buy rare units with your " +
-                                        CampaignMain.campaignMain.getConfig("RPLongName") +
-                                        ".",
+                                  STR."AM:Sorry. You are not allowed to buy rare units with your \{CampaignMain.campaignMain.getConfig(
+                                        "RPLongName")}.",
                                   Username,
                                   true);
                             return;
@@ -275,45 +248,55 @@ public class UseRewardPointsCommand implements Command {
 
                     if (faction == null) {
                         faction = player.getHouseFightingFor();
-                        if (faction == null) {factionstring = "Common";}
+                        if (faction == null) {
+                            factionstring = "Common";
+                        }
                     }
                 }
 
                 String configName = "";
+
                 if (unitType == Unit.MEK) {
-                    configName = Unit.getWeightClassDesc(unitWeight) + "RP";
+                    configName = STR."\{Unit.getWeightClassDesc(unitWeight)}RP";
                 } else {
-                    configName = Unit.getWeightClassDesc(unitWeight) + Unit.getTypeClassDesc(unitType) + "RP";
+                    configName = STR."\{Unit.getWeightClassDesc(unitWeight)}\{Unit.getTypeClassDesc(unitType)}RP";
                 }
-                unitTotalRewardPointCost = Integer.parseInt(house.getConfig(configName));
-                //unitTotalRewardPointCost = weightCost + typeCost;
 
-                if (!player.getHouseFightingFor().equals(faction)) {
-                    double nonHouseUnitMod = Double.parseDouble(house.getConfig(player.getHouseFightingFor().getName() +
-                                                                                      "To" +
-                                                                                      faction.getName() +
-                                                                                      "RewardPointMultiplier"));
+                unitTotalRewardPointCost = MathUtility.parseInt(house.getConfig(configName), 0);
+
+                if (faction != null && !player.getHouseFightingFor().equals(faction)) {
+                    double nonHouseUnitMod = MathUtility.parseDouble(house.getConfig(STR."\{player.getHouseFightingFor()
+                                                                                                  .getName()}To\{faction.getName()}RewardPointMultiplier"),
+                          0.0);
+
                     if (nonHouseUnitMod < 0) {
-                        nonHouseUnitMod = Double.parseDouble(house.getConfig("RewardPointNonHouseMultiplier"));
+                        nonHouseUnitMod = MathUtility.parseDouble(house.getConfig("RewardPointNonHouseMultiplier"),
+                              0.0);
                     }
-                    if (nonHouseUnitMod > 0) {unitTotalRewardPointCost *= nonHouseUnitMod;}
+
+                    if (nonHouseUnitMod > 0) {
+                        unitTotalRewardPointCost = (int) Math.round(unitTotalRewardPointCost * nonHouseUnitMod);
+                    }
                 }
 
-                if (buyRareUnit) {unitTotalRewardPointCost *= rareCost;}
+                if (buyRareUnit) {
+                    unitTotalRewardPointCost = (int) Math.round(unitTotalRewardPointCost * rareCost);
+                }
 
                 if (unitTotalRewardPointCost > rewardPointsAvailable) {
-                    CampaignMain.campaignMain.toUser("AM:Sorry. You need more " +
-                                                           CampaignMain.campaignMain.getConfig("RPLongName") +
-                                                           " to buy that kind of unit.", Username, true);
+                    CampaignMain.campaignMain.toUser(STR."AM:Sorry. You need more \{CampaignMain.campaignMain.getConfig(
+                          "RPLongName")} to buy that kind of unit.", Username, true);
                     return;
                 }
 
                 try {
-                    //Lets get us a pilot and a unit
-                    if (Boolean.parseBoolean(house.getConfig("AllowPersonalPilotQueues")) &&
+                    //Let's get us a pilot and a unit
+                    if (MathUtility.parseBoolean(house.getConfig("AllowPersonalPilotQueues"), false) &&
                               (unitType == Unit.MEK || unitType == Unit.PROTOMEK)) {
                         newPilot = new SPilot("Vacant", 99, 99);
-                    } else {newPilot = player.getMyHouse().getNewPilot(unitType);}
+                    } else {
+                        newPilot = player.getMyHouse().getNewPilot(unitType);
+                    }
 
                     newUnits.addAll(getUnitProduced(unitType,
                           unitWeight,
@@ -321,51 +304,36 @@ public class UseRewardPointsCommand implements Command {
                           factionstring,
                           player.getMyHouse()));
 
-                    for (server.campaign.SUnit newUnit : newUnits) {
+                    for (SUnit newUnit : newUnits) {
                         player.addUnit(newUnit, true);
-                        CampaignMain.campaignMain.toUser("AM:You've bought a " +
-                                                               newUnit.getModelName() +
-                                                               " for " +
-                                                               unitTotalRewardPointCost +
-                                                               " " +
-                                                               CampaignMain.campaignMain.getConfig(
-                                                                     "RPLongName") +
-                                                               ".", Username, true);
+                        CampaignMain.campaignMain.toUser(STR."AM:You've bought a \{newUnit.getModelName()} for \{unitTotalRewardPointCost} \{CampaignMain.campaignMain.getConfig(
+                              "RPLongName")}.", Username, true);
                     }
                     player.addReward(-unitTotalRewardPointCost);
                 } catch (Exception ex) {
                     CampaignMain.campaignMain.toUser(
-                          "AM:An error has occured while trying to create your requested unit. Please contact an admin. Faction: " +
-                                factionstring +
-                                " Type: " +
-                                unitType +
-                                " Class: " +
-                                unitWeight,
+                          STR."AM:An error has occured while trying to create your requested unit. Please contact an admin. Faction: \{factionstring} Type: \{unitType} Class: \{unitWeight}",
                           Username,
                           true);
-                    MWLogger.errLog(ex);
-                    MWLogger.errLog("Error creating unit in " + this.getClass().getName());
+                    LOGGER.error(ex, STR."Error creating unit in \{this.getClass().getName()}");
                 }
                 break;
 
             case 3://repairs
-                rewardPoints = Integer.parseInt(house.getConfig("RewardPointsForRepair"));
+                rewardPoints = MathUtility.parseInt(house.getConfig("RewardPointsForRepair"), -1);
 
                 if (rewardPoints > player.getReward()) {
-                    CampaignMain.campaignMain.toUser("AM:You need more " +
-                                                           CampaignMain.campaignMain.getConfig("RPLongName") +
-                                                           " to repair this unit (requires " +
-                                                           rewardPoints +
-                                                           " RP)", Username, true);
+                    CampaignMain.campaignMain.toUser(STR."AM:You need more \{CampaignMain.campaignMain.getConfig(
+                          "RPLongName")} to repair this unit (requires \{rewardPoints} RP)", Username, true);
                     return;
                 }
 
                 int unitID = Integer.parseInt(command.nextToken());
-                server.campaign.SUnit unit = player.getUnit(unitID);
+                SUnit unit = player.getUnit(unitID);
 
                 //break out if the player doesn't have a unit with that id
                 if (unit == null) {
-                    CampaignMain.campaignMain.toUser("AM:You don't have a unit with ID# " + unitID + ".",
+                    CampaignMain.campaignMain.toUser(STR."AM:You don't have a unit with ID# \{unitID}.",
                           Username,
                           true);
                     return;
@@ -373,36 +341,41 @@ public class UseRewardPointsCommand implements Command {
 
                 Entity entity = unit.getEntity();
 
-                if (entity.getInternal(Mech.LOC_CT) < 1) {
-                    CampaignMain.campaignMain.toUser("AM:Sorry but cored units cannot be repaired with " +
-                                                           CampaignMain.campaignMain.getConfig("RPLongName") +
-                                                           "!", Username);
+                if (entity.getInternal(Mek.LOC_CENTER_TORSO) < 1) {
+                    CampaignMain.campaignMain.toUser(STR."AM:Sorry but cored units cannot be repaired with \{CampaignMain.campaignMain.getConfig(
+                          "RPLongName")}!", Username);
                     return;
                 }
 
                 for (int x = 0; x < entity.locations(); x++) {
                     entity.setArmor(entity.getOArmor(x), x);
-                    if (entity.hasRearArmor(x)) {entity.setArmor(entity.getOArmor(x, true), x, true);}
+
+                    if (entity.hasRearArmor(x)) {
+                        entity.setArmor(entity.getOArmor(x, true), x, true);
+                    }
+
                     entity.setInternal(entity.getOInternal(x), x);
-                    for (int y = 0; y < entity.getNumberOfCriticals(x); y++) {
-                        CriticalSlot cs = entity.getCritical(x, y);
+                    for (int y = 0; y < entity.getNumberOfCriticalSlots(x); y++) {
+                        CriticalSlot criticalSlot = entity.getCritical(x, y);
 
-                        if (cs == null) {continue;}
+                        if (criticalSlot == null) {
+                            continue;
+                        }
 
-                        if (cs.getType() == CriticalSlot.TYPE_EQUIPMENT) {
-                            Mounted mounted = cs.getMount();
+                        if (criticalSlot.getType() == CriticalSlot.TYPE_EQUIPMENT) {
+                            Mounted<?> mounted = criticalSlot.getMount();
                             UnitUtils.repairEquipment(mounted, entity, x);
                         }// end CS type if
                         else {
-                            if (UnitUtils.isEngineCrit(cs)) {
+                            if (UnitUtils.isEngineCrit(criticalSlot)) {
                                 UnitUtils.repairDamagedEngine(entity);
                             } else {
-                                if (entity instanceof Mech) {
+                                if (entity instanceof Mek) {
                                     //Fix both breached and damaged crits.
-                                    UnitUtils.fixCriticalSlot(cs, entity, true);
-                                    UnitUtils.fixCriticalSlot(cs, entity, false);
+                                    UnitUtils.fixCriticalSlot(criticalSlot, true);
+                                    UnitUtils.fixCriticalSlot(criticalSlot, false);
                                 }
-                                entity.setCritical(x, y, cs);
+                                entity.setCritical(x, y, criticalSlot);
                             }
                         }//end CS type else
 
@@ -410,20 +383,18 @@ public class UseRewardPointsCommand implements Command {
                 }
 
                 //Fill up ammo.
-                for (Mounted weap : entity.getAmmo()) {
-                    if (weap.byShot()) {
-                        weap.setShotsLeft(weap.getOriginalShots());
+                for (AmmoMounted ammoMounted : entity.getAmmo()) {
+                    if (ammoMounted.isByShot()) {
+                        ammoMounted.setShotsLeft(ammoMounted.getOriginalShots());
                     } else {
-                        weap.setShotsLeft(((AmmoType) weap.getType()).getShots());
+                        ammoMounted.setShotsLeft(ammoMounted.getType().getShots());
                     }
                 }
 
-                CampaignMain.campaignMain.toUser("AM:Unit #" +
-                                                       unitID +
-                                                       " " +
-                                                       unit.getModelName() +
-                                                       " is now fully repaired.", Username, true);
-                CampaignMain.campaignMain.toUser("PL|UU|" + unit.getId() + "|" + unit.toString(true),
+                CampaignMain.campaignMain.toUser(STR."AM:Unit #\{unitID} \{unit.getModelName()} is now fully repaired.",
+                      Username,
+                      true);
+                CampaignMain.campaignMain.toUser(STR."PL|UU|\{unit.getId()}|\{unit.toString(true)}",
                       Username,
                       false);
                 player.addReward(-rewardPoints);
@@ -433,52 +404,41 @@ public class UseRewardPointsCommand implements Command {
 
             // @Author Salient (mwosux@gmail.com) , Add RP for CBills
             case 4: //buying CBills
-                rewardPoints = Integer.parseInt(command.nextToken());
+                rewardPoints = MathUtility.parseInt(command.nextToken(), -1);
 
                 if (rewardPoints < 0) {
-                    CampaignMain.campaignMain.toUser("AM:Invalid input - negative " +
-                                                           CampaignMain.campaignMain.getConfig("RPLongName") +
-                                                           ".", Username, true);
+                    CampaignMain.campaignMain.toUser(STR."AM:Invalid input - negative \{CampaignMain.campaignMain.getConfig(
+                          "RPLongName")}.", Username, true);
                     return;
                 }
 
-                if (!(Boolean.parseBoolean(house.getConfig("AllowCBillsForRewards")))) {
-                    CampaignMain.campaignMain.toUser("Sorry but you are not allowed to buy CBills with " +
-                                                           CampaignMain.campaignMain.getConfig("RPLongName") +
-                                                           ".", Username, true);
+                if (!(MathUtility.parseBoolean(house.getConfig("AllowCBillsForRewards"), false))) {
+                    CampaignMain.campaignMain.toUser(STR."Sorry but you are not allowed to buy CBills with \{CampaignMain.campaignMain.getConfig(
+                          "RPLongName")}.", Username, true);
                     return;
                 }
 
                 if (rewardPoints > player.getReward()) {
-
                     if (player.getReward() == 0) {
-                        CampaignMain.campaignMain.toUser("AM:You don't have any " +
-                                                               CampaignMain.campaignMain.getConfig(
-                                                                     "RPLongName") +
-                                                               ". Purchase fails.", Username, true);
+                        CampaignMain.campaignMain.toUser(STR."AM:You don't have any \{CampaignMain.campaignMain.getConfig(
+                              "RPLongName")}. Purchase fails.", Username, true);
                     } else {
-                        String toSend = "AM:You only have " +
-                                              player.getReward() +
-                                              CampaignMain.campaignMain.getConfig("RPLongName") +
-                                              StringUtils.addAnS(player.getReward()) +
-                                              ". Try again.";
+                        String toSend = STR."AM:You only have \{player.getReward()}\{CampaignMain.campaignMain.getConfig(
+                              "RPLongName")}\{StringUtils.addAnS(player.getReward())}. Try again.";
                         CampaignMain.campaignMain.toUser(toSend, Username, true);
                     }
 
                     return;
                 }
 
-                int amountOfCBillsBought = (Integer.parseInt(house.getConfig("CBillsForARewardPoint")));
+                int amountOfCBillsBought = MathUtility.parseInt(house.getConfig("CBillsForARewardPoint"), 0);
                 amountOfCBillsBought *= rewardPoints;
-                CampaignMain.campaignMain.toUser("AM:You've bought " +
-                                                       CampaignMain.campaignMain.moneyOrFluMessage(true,
-                                                             false,
-                                                             amountOfCBillsBought) +
-                                                       " for " +
-                                                       rewardPoints +
-                                                       " " +
-                                                       CampaignMain.campaignMain.getConfig("RPLongName") +
-                                                       ".", Username, true);
+                CampaignMain.campaignMain.toUser(STR."AM:You've bought \{CampaignMain.campaignMain.moneyOrFluMessage(
+                            true,
+                            false,
+                            amountOfCBillsBought)} for \{rewardPoints} \{CampaignMain.campaignMain.getConfig("RPLongName")}.",
+                      Username,
+                      true);
 
                 player.addReward(-rewardPoints);
                 player.addMoney(amountOfCBillsBought);
@@ -487,46 +447,47 @@ public class UseRewardPointsCommand implements Command {
 
     }
 
-    public int getExecutionLevel() {return accessLevel;}
+    public AccessRole getExecutionLevel() {
+        return accessLevel;
+    }
 
-    public void setExecutionLevel(int i) {accessLevel = i;}
+    public void setExecutionLevel(AccessRole accessRole) {
+        accessLevel = accessRole;
+    }
 
-    public String getSyntax() {return syntax;}
+    public String getSyntax() {
+        return syntax;
+    }
 
     /**
      * Build a unit. Derived from SUnitFactory.java's getUnitProduced()
      *
      * @return the Mek Produced
      */
-    private java.util.Vector<server.campaign.SUnit> getUnitProduced(int type_id, int weightClass, SPilot pilot,
-          String faction, server.campaign.SHouse house) {
-
-        server.campaign.SUnitFactory factory = new server.campaign.SUnitFactory();
+    private Vector<SUnit> getUnitProduced(int type_id, int weightClass, SPilot pilot, String faction, SHouse house) {
+        SUnitFactory factory = new SUnitFactory();
         String unitSize = Unit.getWeightClassDesc(weightClass);
         factory.setFounder(faction);
-        java.util.Vector<server.campaign.SUnit> units = new java.util.Vector<server.campaign.SUnit>(1, 1);
+        Vector<SUnit> units = new Vector<SUnit>(1, 1);
         String Filename = "";
 
         //Use special RP-build fluff text for the unit
         String producer = "Reward Unit";
 
-        if (Boolean.parseBoolean(house.getConfig("UseOnlyOneVehicleSize")) && type_id == Unit.VEHICLE) {
+        if (MathUtility.parseBoolean(house.getConfig("UseOnlyOneVehicleSize"), false) && type_id == Unit.VEHICLE) {
             unitSize = Unit.getWeightClassDesc(CampaignMain.campaignMain.getRandomNumber(4));
         }
 
-        Filename = server.campaign.BuildTable.getUnitFilename(faction,
-              unitSize,
-              type_id,
-              server.campaign.BuildTable.REWARD);//build from rewards dir.
+        Filename = BuildTable.getUnitFilename(faction, unitSize, type_id, BuildTable.REWARD);//build from rewards dir.
 
         if (Filename.toLowerCase().endsWith(".mul")) {
-            units.addAll(server.campaign.SUnit.createMULUnits(Filename, producer));
+            units.addAll(SUnit.createMULUnits(Filename, producer));
         } else {
-            server.campaign.SUnit cm = new server.campaign.SUnit(producer, Filename, weightClass);
-            cm.setPilot(pilot);
-            units.add(cm);
+            SUnit sUnit = new SUnit(producer, Filename, weightClass);
+            sUnit.setPilot(pilot);
+            units.add(sUnit);
         }
-        factory = null;  // clear this out of memory
+        // clear this out of memory
         return units;
     }
 }

@@ -37,6 +37,7 @@ import java.io.Serial;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.SortedSet;
 import java.util.TreeSet;
 import javax.swing.AbstractListModel;
@@ -93,11 +94,23 @@ public class CUserListModel extends AbstractListModel<CUser> {
     }
 
     public int getSortMode() {
-        return ((UserComparator) Users.comparator()).getMode();
+        Comparator<?> comparator = Users.comparator();
+
+        if (!(comparator instanceof UserComparator userComparator)) {
+            return 0;
+        }
+
+        return userComparator.getMode();
     }
 
     public void setSortMode(int sortMode) {
-        ((UserComparator) Users.comparator()).setMode(sortMode);
+        Comparator<?> comparator = Users.comparator();
+
+        if (!(comparator instanceof UserComparator userComparator)) {
+            return;
+        }
+
+        userComparator.setMode(sortMode);
         refreshModel();
     }
 
@@ -138,11 +151,23 @@ public class CUserListModel extends AbstractListModel<CUser> {
     }
 
     public int getSortOrder() {
-        return ((UserComparator) Users.comparator()).getOrder();
+        Comparator<?> comparator = Users.comparator();
+
+        if (!(comparator instanceof UserComparator userComparator)) {
+            return 0;
+        }
+
+        return userComparator.getOrder();
     }
 
     public void setSortOrder(int sortOrder) {
-        ((UserComparator) Users.comparator()).setOrder(sortOrder);
+        Comparator<?> comparator = Users.comparator();
+
+        if (!(comparator instanceof UserComparator userComparator)) {
+            return;
+        }
+
+        userComparator.setOrder(sortOrder);
         refreshModel();
     }
 

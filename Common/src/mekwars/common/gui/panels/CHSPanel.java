@@ -533,8 +533,12 @@ public class CHSPanel extends JPanel {
         return buy;
     }
 
+    public IClient getClient() {
+        return client;
+    }
+
     /**
-     * Set faction name. Called in response to FactionStatusScreenUpdateCommand|FN| command.
+     * Set the faction name. Called in response to FactionStatusScreenUpdateCommand|FN| command.
      */
     public void setFactionName(String name) {
         HouseName = name;

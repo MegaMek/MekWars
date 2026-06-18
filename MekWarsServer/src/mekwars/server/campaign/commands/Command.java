@@ -17,14 +17,18 @@
 
 package mekwars.server.campaign.commands;
 
+import java.util.StringTokenizer;
+
+import mekwars.server.MWChatServer.auth.AccessRole;
+
 public interface Command {
 
-    public void process(java.util.StringTokenizer command, String Username);
+    public void process(StringTokenizer command, String Username);
 
     //for userlevel configurability
-    public int getExecutionLevel();
+    public AccessRole getExecutionLevel();
 
-    public void setExecutionLevel(int i);
+    public void setExecutionLevel(AccessRole accessRole);
 
     public String getSyntax();
 }

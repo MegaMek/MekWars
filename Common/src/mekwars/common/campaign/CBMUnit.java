@@ -36,7 +36,7 @@
 
 package mekwars.common.campaign;
 
-import megamek.client.generator.RandomGenderGenerator;
+import megamek.common.enums.Gender;
 import megamek.common.units.Crew;
 import megamek.common.units.CrewType;
 import mekwars.common.Unit;
@@ -123,7 +123,8 @@ public class CBMUnit {
                         factionGunnery,
                         factionGunnery,
                         factionPiloting,
-                        RandomGenderGenerator.generate(),
+                        Gender.RANDOMIZE,
+                        false,
                         null));
         }
     }

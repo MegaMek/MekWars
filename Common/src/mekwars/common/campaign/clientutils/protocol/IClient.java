@@ -336,4 +336,6 @@ public interface IClient {
     boolean isBotsOnSameTeam();
 
     void setBotsOnSameTeam(Boolean aBoolean);
+
+    void closingGame(String serverName);
 }

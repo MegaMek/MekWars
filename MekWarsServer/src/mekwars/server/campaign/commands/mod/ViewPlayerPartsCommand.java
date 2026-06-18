@@ -16,28 +16,29 @@
 
 package mekwars.server.campaign.commands.mod;
 
+import java.util.StringTokenizer;
+
+import mekwars.server.MWChatServer.auth.AccessRole;
 import mekwars.server.campaign.CampaignMain;
+import mekwars.server.campaign.SPlayer;
+import mekwars.server.campaign.commands.Command;
 
 /**
- * Return a human readable string that describes the player's Parts cache.
+ * Return a human-readable string that describes the player's Parts cache.
  */
-public class ViewPlayerPartsCommand implements server.campaign.commands.Command {
+public class ViewPlayerPartsCommand implements Command {
 
-    int accessLevel = server.MWChatServer.auth.IAuthenticator.MODERATOR;
+    AccessRole accessLevel = AccessRole.MODERATOR;
     String syntax = "Player Name";
 
-    public String getSyntax() {return syntax;}
+    public void process(StringTokenizer command, String Username) {
 
-    public void process(java.util.StringTokenizer command, String Username) {
-
-        if (accessLevel != 0) {
+        if (accessLevel != AccessRole.NONE) {
             int userLevel = CampaignMain.campaignMain.getServer().getUserLevel(Username);
             if (userLevel < getExecutionLevel()) {
-                CampaignMain.campaignMain.toUser("AM:Insufficient access level for command. Level: " +
-                                                       userLevel +
-                                                       ". Required: " +
-                                                       accessLevel +
-                                                       ".", Username, true);
+                CampaignMain.campaignMain.toUser(STR."AM:Insufficient access level for command. Level: \{userLevel}. Required: \{accessLevel}.",
+                      Username,
+                      true);
                 return;
             }
         }
@@ -52,20 +53,28 @@ public class ViewPlayerPartsCommand implements server.campaign.commands.Command 
             CampaignMain.campaignMain.toUser("Syntax: ViewPlayerParts#Name#", Username);
             return;
         }
-        server.campaign.SPlayer p = CampaignMain.campaignMain.getPlayer(command.nextToken());
 
-        StringBuffer toReturn = new StringBuffer("Parts cache for " + p.getName() + ".<br>");
+        SPlayer player = CampaignMain.campaignMain.getPlayer(command.nextToken());
 
-        toReturn.append(p.getUnitParts()
-                              .tableizeComponents(CampaignMain.campaignMain.getIntegerConfig("CampaignYear")));
+        String toReturn = STR."Parts cache for \{player.getName()}.<br>" + player.getUnitParts()
+                                                                                 .tableComponents(CampaignMain.campaignMain.getIntegerConfig(
+                                                                                       "CampaignYear"));
 
-        CampaignMain.campaignMain.toUser("SM|" + toReturn.toString(), Username, false);
+        CampaignMain.campaignMain.toUser(STR."SM|\{toReturn}", Username, false);
 
         CampaignMain.campaignMain.doSendModMail("NOTE",
-              Username + " has viewed " + p.getName() + "'s parts cache.");
+              STR."\{Username} has viewed \{player.getName()}'s parts cache.");
     }
 
-    public int getExecutionLevel() {return accessLevel;}
+    public AccessRole getExecutionLevel() {
+        return accessLevel;
+    }
 
-    public void setExecutionLevel(int i) {accessLevel = i;}
+    public void setExecutionLevel(AccessRole accessRole) {
+        accessLevel = accessRole;
+    }
+
+    public String getSyntax() {
+        return syntax;
+    }
 }

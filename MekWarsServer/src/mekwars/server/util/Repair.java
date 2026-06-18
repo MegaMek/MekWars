@@ -51,26 +51,6 @@ class Repair {
         }
     }
 
-    public Repair(server.campaign.SPlayer player, int unitID, java.util.Vector<Integer> techs, int repairTime,
-          boolean simpleRepair, boolean salvage) {
-
-        this.simpleRepair = simpleRepair;
-        this.repairTime = repairTime;
-        this.techs = techs;
-        this.unitID = unitID;
-        unit = player.getUnit(unitID).getEntity();
-        Username = player.getName();
-        location = UnitUtils.LOC_CT;
-        slot = UnitUtils.LOC_FRONT_ARMOR;
-        armor = true;
-        unit.setArmor(0, UnitUtils.LOC_CT);
-        UnitUtils.setArmorRepair(unit, UnitUtils.LOC_FRONT_ARMOR, UnitUtils.LOC_CT);
-        startTime = System.currentTimeMillis();
-        endTime = startTime + (repairTime * 1000);
-        this.salvage = salvage;
-        //CampaignMain.cm.toUser("PL|UU|"+unitID+"|"+unit.toString(true),Username,false);
-    }
-
     public void setRepairTime() {
         //repair time in MS
         repairTime = Long.parseLong(CampaignMain.campaignMain.getConfig("TimeForEachRepairPoint")) * 1000;
@@ -112,6 +92,26 @@ class Repair {
         endTime = startTime + repairTime;
 
         //MWLogger.errLog("Start Time: "+startTime+" End Time: "+endTime);
+    }
+
+    public Repair(server.campaign.SPlayer player, int unitID, java.util.Vector<Integer> techs, int repairTime,
+          boolean simpleRepair, boolean salvage) {
+
+        this.simpleRepair = simpleRepair;
+        this.repairTime = repairTime;
+        this.techs = techs;
+        this.unitID = unitID;
+        unit = player.getUnit(unitID).getEntity();
+        Username = player.getName();
+        location = UnitUtils.LOC_CT;
+        slot = UnitUtils.LOC_FRONT_ARMOR;
+        armor = true;
+        unit.setArmor(0, UnitUtils.LOC_CT);
+        UnitUtils.setArmorRepair(unit, UnitUtils.LOC_FRONT_ARMOR, UnitUtils.LOC_CT);
+        startTime = System.currentTimeMillis();
+        endTime = startTime + (repairTime * 1000);
+        this.salvage = salvage;
+        //CampaignMain.cm.toUser("PL|UU|"+unitID+"|"+unit.toString(true),Username,false);
     }
 
     public boolean finishRepair() {
@@ -213,8 +213,8 @@ class Repair {
                             } else {
                                 if (entity instanceof Mech) {
                                     //Fix both breached and damaged crits.
-                                    UnitUtils.fixCriticalSlot(cs, entity, true);
-                                    UnitUtils.fixCriticalSlot(cs, entity, false);
+                                    UnitUtils.fixCriticalSlot(cs, true);
+                                    UnitUtils.fixCriticalSlot(cs, false);
                                 }
                                 entity.setCritical(x, y, cs);
                             }

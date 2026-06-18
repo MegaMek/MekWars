@@ -38,6 +38,7 @@ import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.StringTokenizer;
 
+import megamek.logging.MMLogger;
 import mekwars.common.Unit;
 import mekwars.common.campaign.pilot.Pilot;
 import mekwars.common.campaign.pilot.skills.PilotSkill;
@@ -52,6 +53,7 @@ import mekwars.common.util.TokenReader;
  */
 
 public class CPersonalPilotQueues {
+    private final static MMLogger LOGGER = MMLogger.create(CPersonalPilotQueues.class);
 
     /*
      * Don't need to synchronize on the client side. Two threads won't WRITE to
@@ -93,8 +95,7 @@ public class CPersonalPilotQueues {
 
             this.getUnitTypeQueue(pilotType).get(pilotClass).addLast(pilot);
         } catch (Exception ex) {
-            MWLogger.errLog("Error while adding pilot to PPQ");
-            MWLogger.errLog(ex);
+            LOGGER.error(ex, "Error while adding pilot to PPQ");
         }
 
     }
@@ -104,8 +105,7 @@ public class CPersonalPilotQueues {
      * loops through the full data.
      */
     private Pilot getPilotFromString(String pilotData) {
-
-        java.util.StringTokenizer subTokenizer = new java.util.StringTokenizer(pilotData, "#");
+        StringTokenizer subTokenizer = new StringTokenizer(pilotData, "#");
         String pilotName = TokenReader.readString(subTokenizer);
         int exp = TokenReader.readInt(subTokenizer);
         int gunnery = TokenReader.readInt(subTokenizer);
@@ -123,12 +123,13 @@ public class CPersonalPilotQueues {
                   TokenReader.readInt(subTokenizer),
                   TokenReader.readString(subTokenizer));
 
-            if (skill.getName().equals("Weapon Specialist"))// WS skill has an
-            // extra var
-            {pilot.setWeapon(TokenReader.readString(subTokenizer));}
+            if (skill.getName().equals("Weapon Specialist")) {
+                pilot.setWeapon(TokenReader.readString(subTokenizer));
+            }
 
-            if (skill.getName().equals("Trait"))// Trait skill has an extra var
-            {pilot.setCurrentFaction(TokenReader.readString(subTokenizer));}
+            if (skill.getName().equals("Trait")) {
+                pilot.setCurrentFaction(TokenReader.readString(subTokenizer));
+            }
 
             if (skill.getName().equals("Edge")) {
                 pilot.setTac(TokenReader.readBoolean(subTokenizer));
@@ -151,7 +152,6 @@ public class CPersonalPilotQueues {
      * returns mek or proto as needed and then work on the arraylist without regard to type.
      */
     private ArrayList<LinkedList<Pilot>> getUnitTypeQueue(int typeToGet) {
-
         if (typeToGet == Unit.PROTOMEK) {
             return protoPilots;
         }
@@ -169,23 +169,22 @@ public class CPersonalPilotQueues {
      * <p>
      * Format: PL|RPPPQ|Unit Type|Unit Weight|Position
      */
-    public void removePilot(StringTokenizer ST) {
+    public void removePilot(StringTokenizer stringTokenizer) {
 
         try {
-            int pilotType = TokenReader.readInt(ST);
-            int pilotClass = TokenReader.readInt(ST);
-            int pilotPosition = TokenReader.readInt(ST);
+            int pilotType = TokenReader.readInt(stringTokenizer);
+            int pilotClass = TokenReader.readInt(stringTokenizer);
+            int pilotPosition = TokenReader.readInt(stringTokenizer);
 
             this.getUnitTypeQueue(pilotType).get(pilotClass).remove(pilotPosition);
         } catch (Exception ex) {
-            MWLogger.errLog("Unable to remove pilot form queue");
-            MWLogger.errLog(ex);
+            LOGGER.error(ex, "Unable to remove pilot form queue");
         }
     }
 
     /**
      * Method that returns a particular class/size queue. Used throughout the client code to fetch queue, which are then
-     * iterated in order to draw menus, dialog boxes, etc.
+     * iterated to draw menus, dialog boxes, etc.
      * <p>
      * Because these queues are always created in the constructor, they will never be null, even if a LIGHTONLY option
      * for vehs or infantry is enabled.
@@ -201,17 +200,23 @@ public class CPersonalPilotQueues {
      * (subtokens).
      */
     public void fromString(String stringFromServer) {
-
         StringTokenizer mainTokenizer = new StringTokenizer(stringFromServer, "$");
 
         // first, clear all existing pilots from the linked lists
-        for (LinkedList<Pilot> currList : mekPilots) {currList.clear();}
-        for (LinkedList<Pilot> currList : protoPilots) {currList.clear();}
-        for (LinkedList<Pilot> currList : aeroPilots) {currList.clear();}
+        for (LinkedList<Pilot> currList : mekPilots) {
+            currList.clear();
+        }
+
+        for (LinkedList<Pilot> currList : protoPilots) {
+            currList.clear();
+        }
+
+        for (LinkedList<Pilot> currList : aeroPilots) {
+            currList.clear();
+        }
 
         // loop once to read in meks (light -> assault lists)
         for (int weightClass = Unit.LIGHT; weightClass <= Unit.ASSAULT; weightClass++) {
-
             int listSize = TokenReader.readInt(mainTokenizer);
             for (int count = 0; count < listSize; count++) {
                 Pilot toAdd = this.getPilotFromString(TokenReader.readString(mainTokenizer));
@@ -221,7 +226,6 @@ public class CPersonalPilotQueues {
 
         // loop a second time to read in protomeks (light -> assault lists)
         for (int weightClass = Unit.LIGHT; weightClass <= Unit.ASSAULT; weightClass++) {
-
             int listSize = TokenReader.readInt(mainTokenizer);
             for (int count = 0; count < listSize; count++) {
                 Pilot toAdd = this.getPilotFromString(TokenReader.readString(mainTokenizer));
@@ -231,7 +235,6 @@ public class CPersonalPilotQueues {
 
         // loop a third time to read in Aeros (light -> assault lists)
         for (int weightClass = Unit.LIGHT; weightClass <= Unit.ASSAULT; weightClass++) {
-
             int listSize = TokenReader.readInt(mainTokenizer);
             for (int count = 0; count < listSize; count++) {
                 Pilot toAdd = this.getPilotFromString(TokenReader.readString(mainTokenizer));

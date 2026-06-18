@@ -15,43 +15,43 @@
 
 package mekwars.server.campaign.commands.leader;
 
+import java.util.StringTokenizer;
+
 import mekwars.server.campaign.CampaignMain;
+import mekwars.server.campaign.SHouse;
+import mekwars.server.campaign.SPlayer;
+import mekwars.server.campaign.commands.Command;
 
-public class ViewFactionPartsCacheCommand implements server.campaign.commands.Command {
-
+public class ViewFactionPartsCacheCommand implements Command {
     int accessLevel = CampaignMain.campaignMain.getIntegerConfig("factionLeaderLevel");
     String syntax = "";
 
-    public String getSyntax() {
-        return syntax;
-    }
-
-    public void process(java.util.StringTokenizer command, String Username) {
+    public void process(StringTokenizer command, String Username) {
 
         if (accessLevel != 0) {
             int userLevel = CampaignMain.campaignMain.getServer().getUserLevel(Username);
             if (userLevel < getExecutionLevel()) {
-                CampaignMain.campaignMain.toUser("AM:Insufficient access level for command. Level: " +
-                                                       userLevel +
-                                                       ". Required: " +
-                                                       accessLevel +
-                                                       ".", Username, true);
+                CampaignMain.campaignMain.toUser(STR."AM:Insufficient access level for command. Level: \{userLevel}. Required: \{accessLevel}.",
+                      Username,
+                      true);
                 return;
             }
         }
 
         int year = CampaignMain.campaignMain.getIntegerConfig("CampaignYear");
 
-        server.campaign.SPlayer player = CampaignMain.campaignMain.getPlayer(Username);
-        server.campaign.SHouse house = player.getMyHouse();
+        SPlayer player = CampaignMain.campaignMain.getPlayer(Username);
+        SHouse house = player.getMyHouse();
 
         if (command.hasMoreElements() && CampaignMain.campaignMain.getServer().isModerator(Username)) {
             house = CampaignMain.campaignMain.getHouseFromPartialString(command.nextToken(), Username);
         }
 
-        if (house == null) {return;}
+        if (house == null) {
+            return;
+        }
 
-        String results = "SM|" + house.getUnitParts().tableizeComponents(year);
+        String results = STR."SM|\{house.getUnitParts().tableComponents(year)}";
 
         CampaignMain.campaignMain.toUser(results, Username, false);
     }
@@ -60,7 +60,11 @@ public class ViewFactionPartsCacheCommand implements server.campaign.commands.Co
         return accessLevel;
     }
 
-    public void setExecutionLevel(int i) {
-        accessLevel = i;
+    public void setExecutionLevel(int executionLevel) {
+        accessLevel = executionLevel;
+    }
+
+    public String getSyntax() {
+        return syntax;
     }
 }// end RequestSubFactionPromotionCommand class
