@@ -1,19 +1,23 @@
 package mekwars.server.campaign.operations.resolvers;
 
+import java.util.Vector;
+
+import mekwars.server.campaign.SPlayer;
+
 public class Team {
-    public java.util.Vector<server.campaign.SPlayer> players;
+    public Vector<SPlayer> players;
     public int teamID;
 
-    public Team(int id, java.util.Vector<server.campaign.SPlayer> p) {
+    public Team(int id, Vector<SPlayer> p) {
         teamID = id;
         players = p;
     }
 
     public Team() {
-        players = new java.util.Vector<server.campaign.SPlayer>();
+        players = new Vector<>();
     }
 
-    public java.util.Vector<server.campaign.SPlayer> getPlayers() {
+    public Vector<SPlayer> getPlayers() {
         return players;
     }
 
@@ -22,7 +26,7 @@ public class Team {
     }
 
     boolean playerPlaysFor(String name) {
-        for (server.campaign.SPlayer p : players) {
+        for (SPlayer p : players) {
             if (p.getName().equalsIgnoreCase(name)) {
                 return true;
             }

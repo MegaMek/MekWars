@@ -16,18 +16,20 @@
 
 package mekwars.server.campaign.market;
 
+import mekwars.server.campaign.SUnit;
+
 /**
- * Interface which defines the methods needed by an actor who is able to sell units using the market. Both SHouse and
+ * Interface that defines the methods needed by an actor who is able to sell units using the market. Both SHouse and
  * SPlayer implement ISeller.
  */
 public interface ISeller {
 
-    public abstract void addMoney(int amountToAdd);
+    void addMoney(int amountToAdd);
 
-    public abstract String removeUnit(server.campaign.SUnit unitToRemove, boolean sendUpdate);
+    String removeUnit(SUnit unitToRemove, boolean sendUpdate);
 
-    public abstract server.campaign.SUnit getUnit(int unitID);
+    SUnit getUnit(int unitID);
 
-    public abstract boolean isHuman();
+    boolean isHuman();
 
 }

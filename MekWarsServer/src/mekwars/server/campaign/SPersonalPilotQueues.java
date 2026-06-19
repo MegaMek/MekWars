@@ -20,57 +20,55 @@
  */
 package mekwars.server.campaign;
 
-import common.Unit;
-import common.campaign.pilot.Pilot;
-import common.util.TokenReader;
-import server.campaign.pilot.SPilot;
-import server.campaign.util.SerializedMessage;
+import java.io.Serial;
+import java.io.Serializable;
+import java.util.LinkedList;
+import java.util.StringTokenizer;
+import java.util.Vector;
+
+import mekwars.common.Unit;
+import mekwars.common.campaign.pilot.Pilot;
+import mekwars.common.util.TokenReader;
+import mekwars.server.campaign.pilot.SPilot;
+import mekwars.server.campaign.util.SerializedMessage;
 
 /**
  * @author Torren (Jason Tighe) Server-side holder of Personal Pilot Queue information. The queue is a collection of
  *       pilots, managed by a player, which may be moved between eligible units (restricted by type and weightclass).
  */
 
-public class SPersonalPilotQueues implements java.io.Serializable {
+public class SPersonalPilotQueues implements Serializable {
 
     /**
      *
      */
+    @Serial
     private static final long serialVersionUID = 8106810403277431436L;
     // VARIABLES
     /*
      * In the past, we've stored pilots in a master vector of types. This worked well; however, it forced a unit-type catch and transition every time a Proto pilot was sent to the queue because protos were at get(1) but have a type constant of 3 (Unit.PROTOMEK). Instead of constantly changing the type ID's being passed in, we'll just use seperate list-holding vectors.
      */
-    private java.util.Vector<java.util.LinkedList<Pilot>> mekPilots = new java.util.Vector<java.util.LinkedList<Pilot>>(
-          4,
-          1);
-    private java.util.Vector<java.util.LinkedList<Pilot>> protoPilots = new java.util.Vector<java.util.LinkedList<Pilot>>(
-          4,
-          1);
-    private java.util.Vector<java.util.LinkedList<Pilot>> aeroPilots = new java.util.Vector<java.util.LinkedList<Pilot>>(
-          4,
-          1);
+    private final Vector<LinkedList<Pilot>> mekPilots = new Vector<>(4, 1);
+    private final Vector<LinkedList<Pilot>> protoPilots = new Vector<>(4, 1);
+    private final Vector<LinkedList<Pilot>> aeroPilots = new Vector<>(4, 1);
     private int playerID = 0;
 
     // CONSTRUCTOR
 
     /**
-     * Simple no-paramater constructor that creates the list-holding vectors and populates the weightclasses. LIGHTONLY
-     * values for infantry and vehicles are not checked, and Lists are created for all types/weightclasses. This ensures
-     * that a null is never returned by a getPilotQueue() call.
+     * Simple no-parameter constructor that creates the list-holding vectors and populates the weight classes. LIGHT
+     * ONLY values for infantry and vehicles are not checked, and Lists are created for all types/weightclasses. This
+     * ensures that a null is never returned by a getPilotQueue() call.
      */
     public SPersonalPilotQueues() {
-
         for (int i = Unit.LIGHT; i <= Unit.ASSAULT; i++) {// for (0 - 3)
-            mekPilots.add(i, new java.util.LinkedList<Pilot>());
-            protoPilots.add(i, new java.util.LinkedList<Pilot>());
-            aeroPilots.add(i, new java.util.LinkedList<Pilot>());
+            mekPilots.add(i, new LinkedList<>());
+            protoPilots.add(i, new LinkedList<>());
+            aeroPilots.add(i, new LinkedList<>());
         }
-
     }
 
     // METHODS
-
     public int getOwnerID() {
         return this.playerID;
     }
@@ -81,16 +79,13 @@ public class SPersonalPilotQueues implements java.io.Serializable {
 
     /**
      * Check the specified queue's size and send a warning to the named player if they've exceeded the queue cap. Have
-     * to do this in a stand alone method b/c the PPQ has no knowledge of it's owning player and must be sent a name.
+     * to do this in a stand-alone method b/c the PPQ has no knowledge of its owning player and must be sent a name.
      */
     public void checkQueueAndWarn(String playerName, int unitType, int weightClass) {
         int size = this.getPilotQueue(unitType, weightClass).size();
         if (size > CampaignMain.campaignMain.getIntegerConfig("MaxAllowedPilotsInQueueToBuyFromHouse")) {
-            CampaignMain.campaignMain.toUser("WARNING: You have more " +
-                                                   Unit.getWeightClassDesc(weightClass) +
-                                                   " " +
-                                                   Unit.getTypeClassDesc(unitType) +
-                                                   " pilots than allowed. HQ will randomly reassign some of them, if you do not.",
+            CampaignMain.campaignMain.toUser(STR."WARNING: You have more \{Unit.getWeightClassDesc(weightClass)} \{Unit.getTypeClassDesc(
+                        unitType)} pilots than allowed. HQ will randomly reassign some of them, if you do not.",
                   playerName);
         }
     }
@@ -98,7 +93,7 @@ public class SPersonalPilotQueues implements java.io.Serializable {
     /**
      * Return the complete pilot list for a given unitType/weightClass.
      */
-    public java.util.LinkedList<Pilot> getPilotQueue(int unitType, int weightClass) {
+    public LinkedList<Pilot> getPilotQueue(int unitType, int weightClass) {
         return this.getUnitTypeQueue(unitType).get(weightClass);
     }
 
@@ -106,10 +101,15 @@ public class SPersonalPilotQueues implements java.io.Serializable {
      * Rather than if/else'ing meks and protos throughout the other methods of the class, use a private get method which
      * returns mek or proto as needed and then work on the vector without regard to type.
      */
-    private java.util.Vector<java.util.LinkedList<Pilot>> getUnitTypeQueue(int typeToGet) {
+    private Vector<LinkedList<Pilot>> getUnitTypeQueue(int typeToGet) {
+        if (typeToGet == Unit.PROTOMEK) {
+            return protoPilots;
+        }
 
-        if (typeToGet == Unit.PROTOMEK) {return protoPilots;}
-        if (typeToGet == Unit.AERO) {return aeroPilots;}
+        if (typeToGet == Unit.AERO) {
+            return aeroPilots;
+        }
+
         // else
         return mekPilots;
     }
@@ -121,48 +121,48 @@ public class SPersonalPilotQueues implements java.io.Serializable {
         mekPilots.clear();
         protoPilots.clear();
         aeroPilots.clear();
+
         for (int i = Unit.LIGHT; i <= Unit.ASSAULT; i++) {// for (0 - 3)
-            mekPilots.add(i, new java.util.LinkedList<Pilot>());
-            protoPilots.add(i, new java.util.LinkedList<Pilot>());
-            aeroPilots.add(i, new java.util.LinkedList<Pilot>());
+            mekPilots.add(i, new java.util.LinkedList<>());
+            protoPilots.add(i, new java.util.LinkedList<>());
+            aeroPilots.add(i, new java.util.LinkedList<>());
         }
     }
 
     /**
      * Convert the pilot queue information into a data string. Although toClient doesn't change this string-out
-     * directly, it is needed by SPilot's toString equivalent (SPilot.toFileFormat()). WARNING: This format MAY NOT BE
-     * CHANGED. Any restructuring of this data would break servers' player saves.
+     * directly, it is necessary by SPilot's toString equivalent (SPilot.toFileFormat()). WARNING: This format MAY NOT
+     * BE CHANGED. Any restructuring of this data would break servers' player saves.
      *
      * @return - a data string.
      */
     public String toString(boolean toClient) {
-
         SerializedMessage result = new SerializedMessage("$");
 
         // meks first
         for (int weightClass = Unit.LIGHT; weightClass <= Unit.ASSAULT; weightClass++) {
-            java.util.LinkedList<Pilot> currList = this.getPilotQueue(Unit.MEK, weightClass);
+            LinkedList<Pilot> currList = this.getPilotQueue(Unit.MEK, weightClass);
             result.append(currList.size());
-            for (int position = 0; position < currList.size(); position++) {
-                result.append(((SPilot) currList.get(position)).toFileFormat("#", toClient));
+            for (Pilot pilot : currList) {
+                result.append(((SPilot) pilot).toFileFormat("#", toClient));
             }
         }
 
         // protos second
         for (int weightClass = Unit.LIGHT; weightClass <= Unit.ASSAULT; weightClass++) {
-            java.util.LinkedList<Pilot> currList = this.getPilotQueue(Unit.PROTOMEK, weightClass);
+            LinkedList<Pilot> currList = this.getPilotQueue(Unit.PROTOMEK, weightClass);
             result.append(currList.size());
-            for (int position = 0; position < currList.size(); position++) {
-                result.append(((SPilot) currList.get(position)).toFileFormat("#", toClient));
+            for (Pilot pilot : currList) {
+                result.append(((SPilot) pilot).toFileFormat("#", toClient));
             }
         }
 
         // aeros third
         for (int weightClass = Unit.LIGHT; weightClass <= Unit.ASSAULT; weightClass++) {
-            java.util.LinkedList<Pilot> currList = this.getPilotQueue(Unit.AERO, weightClass);
+            LinkedList<Pilot> currList = this.getPilotQueue(Unit.AERO, weightClass);
             result.append(currList.size());
-            for (int position = 0; position < currList.size(); position++) {
-                result.append(((SPilot) currList.get(position)).toFileFormat("#", toClient));
+            for (Pilot pilot : currList) {
+                result.append(((SPilot) pilot).toFileFormat("#", toClient));
             }
         }
 
@@ -177,13 +177,13 @@ public class SPersonalPilotQueues implements java.io.Serializable {
     }
 
     public void fromString(String buffer, String delimiter) {
-
-        java.util.StringTokenizer mainTokenizer = new java.util.StringTokenizer(buffer, delimiter);
+        StringTokenizer mainTokenizer = new java.util.StringTokenizer(buffer, delimiter);
         int capSize = CampaignMain.campaignMain.getIntegerConfig("MaxAllowedPilotsInQueueToBuyFromHouse");
 
         // loop once to read in meks (light -> assault lists)
         for (int weightClass = Unit.LIGHT; weightClass <= Unit.ASSAULT; weightClass++) {
             int listSize = TokenReader.readInt(mainTokenizer);
+
             for (int count = 0; count < listSize; count++) {
                 SPilot filePilot = new SPilot();
                 filePilot.fromFileFormat(TokenReader.readString(mainTokenizer), "#");
@@ -226,7 +226,7 @@ public class SPersonalPilotQueues implements java.io.Serializable {
             }
         }
         /*
-         * OLD PASRING PRESERVED FOR REFERENCE
+         * OLD PASSING PRESERVED FOR REFERENCE
          */
         /*
          * StringTokenizer ST = new StringTokenizer(buffer,delimiter); for (int type = 0; type <= ppProto; type++ ){ for ( int weight = 0; weight <= SUnit.ASSAULT; weight++ ){ int size = Integer.parseInt(ST.nextToken()); for( int count = 0 ; count < size; count++ ){ SPilot pilot = new SPilot(); pilot.fromFileFormat(ST.nextToken(),"#"); this.addPilot(type,weight,pilot); } } }
@@ -263,21 +263,21 @@ public class SPersonalPilotQueues implements java.io.Serializable {
      * market, the hiring/purchase of a new pilot, and more. The type of unit that the pilot may use is embedded within
      * the Pilot/SPilot that is passed as a param; however, the weight class is not and must be set here.
      *
-     * @param p      - the actual pilot to add.
-     * @param weight - weightclass of unit the pilot may use
+     * @param pilot       - the actual pilot to add.
+     * @param weightClass - weightclass of unit the pilot may use
      */
-    public void addPilot(Pilot p, int weightClass) {
+    public void addPilot(Pilot pilot, int weightClass) {
 
         /*
          * On the off chance a VACANT pilot is somehow added to the player's queue, kill it off.
          */
-        if (p.getName().trim().equalsIgnoreCase("Vacant")) {
-            p = null;// some how a bad pilot go through the checks.
+        if (pilot.getName().trim().equalsIgnoreCase("Vacant")) {
+            pilot = null;// some how a bad pilot go through the checks.
             return;
         }
 
         // add the pilot to the correct weightclass list.
-        this.getUnitTypeQueue(p.getUnitType()).get(weightClass).addLast(p);
+        this.getUnitTypeQueue(pilot.getUnitType()).get(weightClass).addLast(pilot);
     }
 
 }// end SPersonalPilotQueues.java

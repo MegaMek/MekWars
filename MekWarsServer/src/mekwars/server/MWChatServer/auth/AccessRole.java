@@ -46,4 +46,8 @@ public enum AccessRole {
     AccessRole(int value) {
         this.value = value;
     }
+
+    public boolean isGreaterOrEqual(AccessRole role) {
+        return this.value >= role.value;
+    }
 }

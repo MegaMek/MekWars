@@ -1,17 +1,22 @@
 package mekwars.server.campaign.operations.resolvers;
 
-import common.util.MWLogger;
+import java.util.HashMap;
+import java.util.Vector;
+
+import megamek.logging.MMLogger;
+import mekwars.server.campaign.SPlayer;
 
 public class ShortOpPlayers {
-    private java.util.HashMap<Integer, mekwars.server.campaign.operations.resolvers.Team> teams;
+    private final static MMLogger LOGGER = MMLogger.create(ShortOpPlayers.class);
+    private final HashMap<Integer, Team> teams;
 
     public ShortOpPlayers() {
-        teams = new java.util.HashMap<Integer, mekwars.server.campaign.operations.resolvers.Team>();
+        teams = new java.util.HashMap<>();
     }
 
-    public void addTeam(int id, java.util.Vector<server.campaign.SPlayer> p) {
-        Team t = new Team(id, p);
-        teams.put(Integer.valueOf(id), t);
+    public void addTeam(int id, Vector<SPlayer> players) {
+        Team t = new Team(id, players);
+        teams.put(id, t);
     }
 
     /**
@@ -19,10 +24,10 @@ public class ShortOpPlayers {
      */
     public void reportTeams() {
         for (int id : teams.keySet()) {
-            MWLogger.testLog("SOP Reporting: TeamID " + id);
+            LOGGER.debug(STR."SOP Reporting: TeamID \{id}");
             Team t = getTeam(id);
-            for (server.campaign.SPlayer p : t.getPlayers()) {
-                MWLogger.testLog("==> " + p.getName());
+            for (SPlayer p : t.getPlayers()) {
+                LOGGER.debug("==> {}", p.getName());
             }
         }
     }

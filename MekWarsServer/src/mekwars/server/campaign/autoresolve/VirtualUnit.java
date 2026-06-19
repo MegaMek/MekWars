@@ -1,16 +1,18 @@
 package mekwars.server.campaign.autoresolve;
 
-import server.campaign.SUnit;
+import mekwars.server.campaign.SPlayer;
+import mekwars.server.campaign.SUnit;
 
 public class VirtualUnit {
 
-    private mekwars.server.campaign.autoresolve.VirtualUnit.MovementMode movementMode;
+    private final SUnit unit;
+    private final SPlayer player;
+    private final boolean attacker;
+    private VirtualUnit.MovementMode movementMode;
     private int movementDistance;
-    private mekwars.server.campaign.autoresolve.VirtualUnit target;
-    private SUnit unit;
-    private server.campaign.SPlayer player;
-    private boolean attacker;
-    public VirtualUnit(SUnit unit, server.campaign.SPlayer player, boolean attacker) {
+    private VirtualUnit target;
+
+    public VirtualUnit(SUnit unit, SPlayer player, boolean attacker) {
         this.unit = unit;
         this.player = player;
         this.attacker = attacker;
@@ -23,12 +25,12 @@ public class VirtualUnit {
         unit.reportStateToPlayer(player);
     }
 
-    public void setMovement(mekwars.server.campaign.autoresolve.VirtualUnit.MovementMode mode, int distance) {
+    public void setMovement(VirtualUnit.MovementMode mode, int distance) {
         this.movementMode = mode;
         this.movementDistance = distance;
     }
 
-    public mekwars.server.campaign.autoresolve.VirtualUnit.MovementMode getMovementMode() {
+    public VirtualUnit.MovementMode getMovementMode() {
         return movementMode;
     }
 
@@ -40,7 +42,7 @@ public class VirtualUnit {
         return unit;
     }
 
-    public server.campaign.SPlayer getPlayer() {
+    public SPlayer getPlayer() {
         return player;
     }
 
@@ -48,11 +50,11 @@ public class VirtualUnit {
         return attacker;
     }
 
-    public mekwars.server.campaign.autoresolve.VirtualUnit getTarget() {
+    public VirtualUnit getTarget() {
         return target;
     }
 
-    public void setTarget(mekwars.server.campaign.autoresolve.VirtualUnit target) {
+    public void setTarget(VirtualUnit target) {
         this.target = target;
     }
 
@@ -63,5 +65,4 @@ public class VirtualUnit {
     public enum MovementMode {
         STANDING, WALKING, RUNNING, JUMPING
     }
-
 }

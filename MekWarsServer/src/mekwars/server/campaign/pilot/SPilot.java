@@ -20,24 +20,38 @@
  */
 package mekwars.server.campaign.pilot;
 
-import common.campaign.pilot.Pilot;
-import common.campaign.pilot.skills.PilotSkill;
-import common.util.MWLogger;
-import common.util.TokenReader;
-import megamek.common.Infantry;
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.util.Random;
+import java.util.StringTokenizer;
+
+import megamek.codeUtilities.MathUtility;
+import megamek.common.units.Infantry;
+import megamek.logging.MMLogger;
+import mekwars.common.campaign.pilot.Pilot;
+import mekwars.common.campaign.pilot.skills.PilotSkill;
+import mekwars.common.util.TokenReader;
 import mekwars.server.campaign.CampaignMain;
-import server.campaign.pilot.skills.AstechSkill;
-import server.campaign.pilot.skills.EdgeSkill;
-import server.campaign.pilot.skills.SPilotSkill;
-import server.campaign.pilot.skills.TraitSkill;
-import server.campaign.pilot.skills.WeaponSpecialistSkill;
-import server.campaign.util.SerializedMessage;
+import mekwars.server.campaign.SHouse;
+import mekwars.server.campaign.SPlayer;
+import mekwars.server.campaign.SUnit;
+import mekwars.server.campaign.pilot.skills.AstechSkill;
+import mekwars.server.campaign.pilot.skills.EdgeSkill;
+import mekwars.server.campaign.pilot.skills.SPilotSkill;
+import mekwars.server.campaign.pilot.skills.TraitSkill;
+import mekwars.server.campaign.pilot.skills.WeaponSpecialistSkill;
+import mekwars.server.campaign.util.SerializedMessage;
 
 /**
  * @author Helge Richter
  *
  */
 public class SPilot extends Pilot {
+    private final static MMLogger LOGGER = MMLogger.create(SPilot.class);
     /**
      *
      */
@@ -53,31 +67,31 @@ public class SPilot extends Pilot {
         // TODO: remove when possible
     }
 
-    public static mekwars.server.campaign.pilot.SPilot getMekWarrior(int originalID, int pickedUpId) {
-        mekwars.server.campaign.pilot.SPilot mw = new mekwars.server.campaign.pilot.SPilot();
-        mw.setOriginalID(originalID);
-        mw.setPickedUpID(pickedUpId);
-        return mw;
+    public static SPilot getMekWarrior(int originalID, int pickedUpId) {
+        SPilot sPilot = new SPilot();
+        sPilot.setOriginalID(originalID);
+        sPilot.setPickedUpID(pickedUpId);
+        return sPilot;
     }
 
     /**
      * Get a random pilot name.
      *
-     * @param r
-     *
-     * @return
      */
-    public static String getRandomPilotName(java.util.Random r) {
+    public static String getRandomPilotName(Random random) {
         String result = "John Doe";
-        java.io.BufferedReader dis = null;
+        BufferedReader dis = null;
+
         try {
-            java.io.File configFile = new java.io.File("./data/pilotnames/Pilotnames.txt");
-            java.io.FileInputStream fis = new java.io.FileInputStream(configFile);
-            dis = new java.io.BufferedReader(new java.io.InputStreamReader(fis));
-            int names = Integer.parseInt(dis.readLine());
-            int pilotid = r.nextInt(names);
+            File configFile = new File("./data/pilotnames/Pilotnames.txt");
+            FileInputStream fileInputStream = new FileInputStream(configFile);
+            dis = new BufferedReader(new InputStreamReader(fileInputStream));
+            int names = MathUtility.parseInt(dis.readLine(), 0);
+            int pilotid = random.nextInt(names);
+
             while (dis.ready()) {
                 String line = dis.readLine();
+
                 if (pilotid <= 0) {
                     return line;
                 }
@@ -86,36 +100,35 @@ public class SPilot extends Pilot {
                 pilotid--;
             }
         } catch (Exception e) {
-            MWLogger.errLog("A problem occured with your Pilotnames File!");
+            LOGGER.error(e, "A problem occurred with your Pilot names File!");
         } finally {
             if (dis != null) {
                 try {
                     dis.close();
-                } catch (java.io.IOException e) {
+                } catch (IOException e) {
                     // TODO Auto-generated catch block
-                    MWLogger.errLog("Unable to close reader in GetRandomPilotName");
-                    MWLogger.errLog(e.getMessage());
+                    LOGGER.error(e, "Unable to close reader in GetRandomPilotName: {}", e.getLocalizedMessage());
                 }
             }
         }
+
         return result;
     }
 
     /**
      * Used to check and level up pilot. This should only be called from within ShortResolver.getSalvageStrings()
      *
-     * @param the   unit to check
+     * @param unit  unit to check
      * @param owner of unit. used to send updates.
      *
      * @return a string detailing outcome.
      */
-    public String checkForPilotSkillImprovement(server.campaign.SUnit unit, server.campaign.SPlayer owner) {
-
+    public String checkForPilotSkillImprovement(SUnit unit, SPlayer owner) {
         if (CampaignMain.campaignMain.getBooleanConfig("PlayersCanBuyPilotUpgrades")) {
             return "";
         }
 
-        server.campaign.SHouse house = owner.getMyHouse();
+        SHouse house = owner.getMyHouse();
         /*
          * This is a pretty radical departure from the old Tasks-style levelling
          * chart. People will flip their crap when they see they no longer have
@@ -161,21 +174,19 @@ public class SPilot extends Pilot {
         int oldBV = unit.getBVForMatch();
 
         /*
-         * Check to see whether or not the pilot is elite. This is used to
-         * determine whether or not to make a level-up roll, and in the
+         * Check to see whether the pilot is elite. This is used to
+         * determine whether to make a level-up roll, and in the
          * construction of a return string.
          */
-        boolean pilotIsElite = false;
-        if (getGunnery() <= bestGunnery && getPiloting() <= bestPiloting) {
-            pilotIsElite = true;
-        }
+        boolean pilotIsElite = getGunnery() <= bestGunnery && getPiloting() <= bestPiloting;
+
         if (getGunnery() + getPiloting() <= bestTotal) {
             pilotIsElite = true;
         }
 
         /*
-         * Determine how high a player must roll in order to achieve a level up.
-         * This is somewhat configurable, but not exactly the highly ganular
+         * Determine how high a player must roll to achieve a level up.
+         * This is somewhat configurable, but not exactly the highly granular
          * control some operators would like to see.
          *
          * Should be revisited at a later date.
@@ -208,8 +219,8 @@ public class SPilot extends Pilot {
         }
 
         /*
-         * Check the level up mode. If the pilot isn't elite, we check for level
-         * ups. If the pilto is elite, and there's a chance to retire
+         * Check the level-up mode. If the pilot isn't elite, we check for level
+         * ups. If the pilot is elite, and there's a chance to retire
          * automatically on this server, we check for a level DOWN (back to
          * base).
          *
@@ -219,17 +230,15 @@ public class SPilot extends Pilot {
          */
         boolean shouldLevelUp = false;
         boolean shouldLevelDown = false;
-        boolean useRandomLevels = house.getBooleanConfig("UseRandomPilotLevelups");
-        if (!pilotIsElite) {
+        boolean useRandomLevels = house.getBooleanConfig("UseRandomPilotLevelUps");
 
+        if (!pilotIsElite) {
             if (!useRandomLevels && getExperience() >= dieSize) {
                 shouldLevelUp = true;
             } else if (getExperience() >= CampaignMain.campaignMain.getRandomNumber(dieSize)) {
                 shouldLevelUp = true;
             }
-
-        } else if (pilotIsElite && house.getBooleanConfig("RandomRetirementOfElites")) {
-
+        } else if (house.getBooleanConfig("RandomRetirementOfElites")) {
             if (!useRandomLevels && getExperience() >= dieSize) {
                 shouldLevelDown = true;
             } else if (getExperience() >= CampaignMain.campaignMain.getRandomNumber(dieSize)) {
@@ -288,17 +297,22 @@ public class SPilot extends Pilot {
                 // at 4/4, differential = 0
                 // at 4/3, differential = 1
 
-                if ((random - differential) < 5) {levelGunnery = true;} else {levelPiloting = true;}
-            } else {
-                if (differential > 0) {levelGunnery = true;} else if (differential < 0) {
+                if ((random - differential) < 5) {
+                    levelGunnery = true;
+                } else {
                     levelPiloting = true;
-                } else if (random < 3
-                                 // 0-2, 30% chance for piloting on push
-                                 ||
-                                 (unit.getEntity() instanceof Infantry && random < 5)) // differential
-                {
+                }
+
+            } else {
+                if (differential > 0) {
+                    levelGunnery = true;
+                } else if (differential < 0) {
+                    levelPiloting = true;
+                } else if (random < 3 || (unit.getEntity() instanceof Infantry && random < 5)) {
                     levelPiloting = true; // 50/50 for Infantry
-                } else {levelGunnery = true;}
+                } else {
+                    levelGunnery = true;
+                }
             }
 
             /*
@@ -348,17 +362,7 @@ public class SPilot extends Pilot {
             // been untouched because of caps)
             if (levelGunnery || levelPiloting) {
                 unit.setPilot(this);// refresh pilot! HACKY! CHANGE!
-                return " and advanced a level. " +
-                             getName() +
-                             " is now " +
-                             getGunnery() +
-                             "/" +
-                             getPiloting() +
-                             " [Old BV: " +
-                             oldBV +
-                             "/New BV: " +
-                             unit.getBVForMatch() +
-                             "]";
+                return STR." and advanced a level. \{getName()} is now \{getGunnery()}/\{getPiloting()} [Old BV: \{oldBV}/New BV: \{unit.getBVForMatch()}]";
             }
         }
 
@@ -376,49 +380,37 @@ public class SPilot extends Pilot {
             String oldName = getName();
 
             // Age the pilot. Odds of someone getting beyond a 10th generation
-            // eliete are so slim that we need not worry.
+            // elite are so slim that we need not worry.
             if (oldName.endsWith("Jr.")) {
-                setName(oldName.substring(0, oldName.lastIndexOf("Jr.")) + "III");
+                setName(STR."\{oldName.substring(0, oldName.lastIndexOf("Jr."))}III");
             } else if (oldName.endsWith("III")) {
-                setName(oldName.substring(0, oldName.lastIndexOf("III")) + "IV");
+                setName(STR."\{oldName.substring(0, oldName.lastIndexOf("III"))}IV");
             } else if (oldName.endsWith("IV")) {
-                setName(oldName.substring(0, oldName.lastIndexOf("IV")) + "V");
+                setName(STR."\{oldName.substring(0, oldName.lastIndexOf("IV"))}V");
             } else if (oldName.endsWith("V")) {
-                setName(oldName + "I");
+                setName(STR."\{oldName}I");
             } else if (oldName.endsWith("VI")) {
-                setName(oldName + "I");
+                setName(STR."\{oldName}I");
             } else if (oldName.endsWith("VII")) {
-                setName(oldName + "I");
+                setName(STR."\{oldName}I");
             } else if (oldName.endsWith("VIII")) {
-                setName(oldName.substring(0, oldName.lastIndexOf("VIII")) + "IX");
+                setName(STR."\{oldName.substring(0, oldName.lastIndexOf("VIII"))}IX");
             } else if (oldName.endsWith("IX")) {
-                setName(oldName.substring(0, oldName.lastIndexOf("IX")) + "X");
+                setName(STR."\{oldName.substring(0, oldName.lastIndexOf("IX"))}X");
             } else {
-                setName(oldName + " Jr.");
+                setName(STR."\{oldName} Jr.");
             }
 
             // New pilots are getting old injuries
             super.setHits(0);
 
             unit.setPilot(this);// refresh pilot! HACKY! CHANGE!
-            return ". " +
-                         oldName +
-                         " grew weary of war and retired from active duty. The unit was passed on to " +
-                         getName() +
-                         " [" +
-                         getGunnery() +
-                         "/" +
-                         getPiloting() +
-                         ", Old BV: " +
-                         oldBV +
-                         "/New BV: " +
-                         unit.getBVForMatch() +
-                         "]";
+            return STR.". \{oldName} grew weary of war and retired from active duty. The unit was passed on to \{getName()} [\{getGunnery()}/\{getPiloting()}, Old BV: \{oldBV}/New BV: \{unit.getBVForMatch()}]";
         }
 
         if (skillToAdd != null) {
 
-            // special accomidation for WS and Trait
+            // special accommodation for WS and Trait
             if (skillToAdd instanceof WeaponSpecialistSkill) {
                 ((WeaponSpecialistSkill) skillToAdd).assignWeapon(unit.getEntity(), this);
             } else if (skillToAdd instanceof TraitSkill) {
@@ -442,12 +434,13 @@ public class SPilot extends Pilot {
             int newBV = unit.getBVForMatch();
 
             if (skillToAdd instanceof AstechSkill && !CampaignMain.campaignMain.isUsingAdvanceRepair()) {
-                CampaignMain.campaignMain.toUser("PL|SF|" + owner.getFreeBays(), owner.getName(), false);
+                CampaignMain.campaignMain.toUser(STR."PL|SF|\{owner.getFreeBays()}", owner.getName(), false);
             }
 
-            String toSend = ". " + getName() + " gained the " + skillToAdd.getName() + " skill";
+            String toSend = STR.". \{getName()} gained the \{skillToAdd.getName()} skill";
+
             if (newBV != oldBV) {
-                toSend += " [Old BV: " + oldBV + "/New BV: " + newBV + "]";
+                toSend += STR." [Old BV: \{oldBV}/New BV: \{newBV}]";
             }
 
             return toSend;
@@ -455,12 +448,12 @@ public class SPilot extends Pilot {
 
         /*
          * NOTE: ShortResolver looks for "is elite" in SkillImprovement returns
-         * to differntiate between those units which level up and those which
+         * to differentiate between those units which level up and those which
          * simply cannot level. If this message is changed at all, make sure to
          * update the ShortResovler as well.
          */
         if (pilotIsElite) {
-            return " but could not level up because " + getName() + " is elite";
+            return STR." but could not level up because \{getName()} is elite";
         }
         // else
         return "";
@@ -503,7 +496,7 @@ public class SPilot extends Pilot {
         }
         result.append(getKills());
         if (!toPlayer) {
-            if (getCurrentFaction().trim().length() > 0) {
+            if (!getCurrentFaction().trim().isEmpty()) {
                 result.append(getCurrentFaction());
             } else {
                 result.append(CampaignMain.campaignMain.getConfig("NewbieHouseName"));
@@ -542,29 +535,29 @@ public class SPilot extends Pilot {
         TraitSkill traitSkill = null;
 
         try {
-            java.util.StringTokenizer ST = new java.util.StringTokenizer(s, delimiter);
+            StringTokenizer stringTokenizer = new StringTokenizer(s, delimiter);
 
-            if (ST.countTokens() < 1) {
+            if (stringTokenizer.countTokens() < 1) {
                 setName("NULL");
                 return;
             }
-            setName(TokenReader.readString(ST));
-            setExperience(TokenReader.readInt(ST));
-            setGunnery(TokenReader.readInt(ST));
-            setPiloting(TokenReader.readInt(ST));
-            int skills = TokenReader.readInt(ST);
+            setName(TokenReader.readString(stringTokenizer));
+            setExperience(TokenReader.readInt(stringTokenizer));
+            setGunnery(TokenReader.readInt(stringTokenizer));
+            setPiloting(TokenReader.readInt(stringTokenizer));
+            int skills = TokenReader.readInt(stringTokenizer);
             for (int i = 0; i < skills; i++) {
-                SPilotSkill skill = SPilotSkills.getPilotSkill(TokenReader.readInt(ST));
-                int level = TokenReader.readInt(ST);
+                SPilotSkill skill = SPilotSkills.getPilotSkill(TokenReader.readInt(stringTokenizer));
+                int level = TokenReader.readInt(stringTokenizer);
                 if (skill instanceof AstechSkill) {
                     skill = new AstechSkill(PilotSkill.AstechSkillID);
                 }
 
                 if (skill instanceof WeaponSpecialistSkill) {
-                    setWeapon(TokenReader.readString(ST));
+                    setWeapon(TokenReader.readString(stringTokenizer));
                 }
                 if (skill instanceof TraitSkill) {
-                    String traitName = TokenReader.readString(ST);
+                    String traitName = TokenReader.readString(stringTokenizer);
 
                     if (traitName.equalsIgnoreCase("none")) {
                         traitSkill = (TraitSkill) skill;
@@ -575,10 +568,10 @@ public class SPilot extends Pilot {
 
                 if (skill instanceof EdgeSkill) {
                     skill = new EdgeSkill(PilotSkill.EdgeSkillID);
-                    ((EdgeSkill) skill).setTac(TokenReader.readBoolean(ST));
-                    ((EdgeSkill) skill).setKO(TokenReader.readBoolean(ST));
-                    ((EdgeSkill) skill).setHeadHit(TokenReader.readBoolean(ST));
-                    ((EdgeSkill) skill).setExplosion(TokenReader.readBoolean(ST));
+                    ((EdgeSkill) skill).setTac(TokenReader.readBoolean(stringTokenizer));
+                    ((EdgeSkill) skill).setKO(TokenReader.readBoolean(stringTokenizer));
+                    ((EdgeSkill) skill).setHeadHit(TokenReader.readBoolean(stringTokenizer));
+                    ((EdgeSkill) skill).setExplosion(TokenReader.readBoolean(stringTokenizer));
                 }
 
                 skill.setLevel(level);
@@ -586,19 +579,19 @@ public class SPilot extends Pilot {
                 skill.modifyPilot(this);
             }
 
-            setKills(TokenReader.readInt(ST));
+            setKills(TokenReader.readInt(stringTokenizer));
 
-            setCurrentFaction(TokenReader.readString(ST));
+            setCurrentFaction(TokenReader.readString(stringTokenizer));
 
-            setPilotId(TokenReader.readInt(ST));
+            setPilotId(TokenReader.readInt(stringTokenizer));
 
-            setHits(TokenReader.readInt(ST));
+            setHits(TokenReader.readInt(stringTokenizer));
 
-            TokenReader.readString(ST);
+            TokenReader.readString(stringTokenizer);
 
             /*
-             * some times a pilot doesn't get assigned a skill this code fixes
-             * that however the Trait skill needs a house name other wise they
+             * sometimes a pilot doesn't get assigned a skill this code fixes
+             * that however, the Trait skill needs a house name other wise they
              * default to common.
              */
             if (traitSkill != null) {
@@ -609,8 +602,7 @@ public class SPilot extends Pilot {
                 setPilotId(CampaignMain.campaignMain.getAndUpdateCurrentPilotID());
             }
         } catch (Exception ex) {
-            MWLogger.errLog("Error loading Pilot " + getName());
-            MWLogger.errLog(ex);
+            LOGGER.error(ex, STR."Error loading Pilot \{getName()}");
         }
     }
 
@@ -645,7 +637,7 @@ public class SPilot extends Pilot {
     /**
      * sets Pilots living status
      *
-     * @param death - whether or not the pilot is alive or dead
+     * @param death - whether the pilot is alive or dead
      */
     public void setDeath(boolean death) {
         this.death = death;
@@ -659,17 +651,15 @@ public class SPilot extends Pilot {
     }
 
     /**
-     * @param pilot
-     *
      * @return String
      *
      * @author Torren (Jason Tighe)
      */
-    public String getPilotCaptureMessageToOwner(server.campaign.SUnit unit) {
-        java.io.BufferedReader dis = null;
+    public String getPilotCaptureMessageToOwner(SUnit unit) {
+        BufferedReader dis = null;
         try {
 
-            java.io.File folder = new java.io.File("./data/pilotmessages");
+            File folder = new File("./data/pilotmessages");
 
             if (!folder.exists()) {
                 folder.mkdir();
@@ -677,10 +667,10 @@ public class SPilot extends Pilot {
 
             String scrapFile = "/pilotcapturemessagestoowner.txt";
             // MWLogger.errLog(folder.getPath()+scrapFile);
-            java.io.FileInputStream fis = new java.io.FileInputStream(folder.getPath() + scrapFile);
-            dis = new java.io.BufferedReader(new java.io.InputStreamReader(fis));
+            FileInputStream fileInputStream = new FileInputStream(folder.getPath() + scrapFile);
+            dis = new BufferedReader(new InputStreamReader(fileInputStream));
             int messages = Integer.parseInt(dis.readLine());
-            java.util.Random rand = new java.util.Random();
+            Random rand = new Random();
             int id = rand.nextInt(messages);
             String scrapMessage = "";
             while (dis.ready()) {
@@ -693,19 +683,18 @@ public class SPilot extends Pilot {
             String scrapMessageWithPilot = scrapMessage.replaceAll("PILOT", getName());
             return scrapMessageWithPilot.replaceAll("UNIT", unit.getModelName());
 
-        } catch (java.io.FileNotFoundException fnfn) {
-            return getName() + " was captured by enemy forces after fleeing the " + unit.getModelName() + ".";
+        } catch (FileNotFoundException fnfn) {
+            return STR."\{getName()} was captured by enemy forces after fleeing the \{unit.getModelName()}.";
         } catch (Exception e) {
-            MWLogger.errLog("A problem occured with your pilotcapturemessagestoowner File!");
-            return getName() + " was captured by enemy forces after fleeing the " + unit.getModelName() + ".";
+            LOGGER.error(e, "A problem occurred with your pilot capture messages to owner File!");
+            return STR."\{getName()} was captured by enemy forces after fleeing the \{unit.getModelName()}.";
         } finally {
             if (dis != null) {
                 try {
                     dis.close();
-                } catch (java.io.IOException e) {
-                    // TODO Auto-generated catch block
-                    MWLogger.errLog("Unable to close reader in GetPilotCaptureMessageToOwner");
-                    MWLogger.errLog(e.getMessage());
+                } catch (IOException e) {
+                    LOGGER.error(e, "Unable to close reader in GetPilotCaptureMessageToOwner - {}",
+                          e.getLocalizedMessage());
                 }
             }
         }
@@ -713,17 +702,15 @@ public class SPilot extends Pilot {
     }
 
     /**
-     * @param pilot
-     *
      * @return String
      *
      * @author Torren (Jason Tighe)
      */
-    public String getPilotCaptureAndDefectedMessage(server.campaign.SUnit unit, server.campaign.SHouse house) {
-        java.io.BufferedReader dis = null;
+    public String getPilotCaptureAndDefectedMessage(SUnit unit, SHouse house) {
+        BufferedReader dis = null;
         try {
 
-            java.io.File folder = new java.io.File("./data/pilotmessages");
+            File folder = new File("./data/pilotmessages");
 
             if (!folder.exists()) {
                 folder.mkdir();
@@ -731,10 +718,10 @@ public class SPilot extends Pilot {
 
             String scrapFile = "/pilotcaptureanddefectedmessages.txt";
             // MWLogger.errLog(folder.getPath()+scrapFile);
-            java.io.FileInputStream fis = new java.io.FileInputStream(folder.getPath() + scrapFile);
-            dis = new java.io.BufferedReader(new java.io.InputStreamReader(fis));
+            FileInputStream fis = new FileInputStream(folder.getPath() + scrapFile);
+            dis = new BufferedReader(new InputStreamReader(fis));
             int messages = Integer.parseInt(dis.readLine());
-            java.util.Random rand = new java.util.Random();
+            Random rand = new Random();
             int id = rand.nextInt(messages);
             String scrapMessage = "";
             while (dis.ready()) {
@@ -748,42 +735,36 @@ public class SPilot extends Pilot {
             String scrapMessageWithHouse = scrapMessageWithPilot.replaceAll("HOUSE", house.getNameAsLink());
             return scrapMessageWithHouse.replaceAll("UNIT", unit.getModelName());
 
-        } catch (java.io.FileNotFoundException fnfn) {
-            return getName() +
-                         " was rescued from his unit by our infantry and has decided to join " +
-                         house.getColoredNameAsLink() +
-                         ".";
+        } catch (FileNotFoundException fnfn) {
+            return STR."\{getName()} was rescued from his unit by our infantry and has decided to join \{house.getColoredNameAsLink()}.";
         } catch (Exception e) {
-            MWLogger.errLog("A problem occured with your pilotcapturemessagesdefect File!");
-            return getName() +
-                         " was rescued from his unit by our infantry and has decided to join " +
-                         house.getColoredNameAsLink() +
-                         ".";
+            LOGGER.error(e, "A problem occurred with your pilot capture messages defect File!");
+            return STR."\{getName()} was rescued from his unit by our infantry and has decided to join \{house.getColoredNameAsLink()}.";
         } finally {
             if (dis != null) {
                 try {
                     dis.close();
-                } catch (java.io.IOException e) {
-                    // TODO Auto-generated catch block
-                    MWLogger.errLog("Unable to close reader in GetPilotCaptureAndDefectedMessage");
-                    MWLogger.errLog(e.getMessage());
+                } catch (IOException e) {
+                    LOGGER.error(e,
+                          "Unable to close reader in GetPilotCaptureAndDefectedMessage - {}",
+                          e.getLocalizedMessage());
                 }
             }
         }
     }
 
     /**
-     * @param pilot
+     * @param unit
      *
      * @return String
      *
      * @author Torren (Jason Tighe)
      */
-    public String getPilotCaptureAndRemovedMessage(server.campaign.SUnit unit) {
-        java.io.BufferedReader dis = null;
-        try {
+    public String getPilotCaptureAndRemovedMessage(SUnit unit) {
+        BufferedReader dis = null;
 
-            java.io.File folder = new java.io.File("./data/pilotmessages");
+        try {
+            File folder = new File("./data/pilotmessages");
 
             if (!folder.exists()) {
                 folder.mkdir();
@@ -791,10 +772,10 @@ public class SPilot extends Pilot {
 
             String scrapFile = "/pilotcaptureandremovedmessages.txt";
             // MWLogger.errLog(folder.getPath()+scrapFile);
-            java.io.FileInputStream fis = new java.io.FileInputStream(folder.getPath() + scrapFile);
-            dis = new java.io.BufferedReader(new java.io.InputStreamReader(fis));
+            FileInputStream fis = new FileInputStream(folder.getPath() + scrapFile);
+            dis = new BufferedReader(new InputStreamReader(fis));
             int messages = Integer.parseInt(dis.readLine());
-            java.util.Random rand = new java.util.Random();
+            Random rand = new Random();
             int id = rand.nextInt(messages);
             String scrapMessage = "";
             while (dis.ready()) {
@@ -807,19 +788,19 @@ public class SPilot extends Pilot {
             String scrapMessageWithPilot = scrapMessage.replaceAll("PILOT", getName());
             return scrapMessageWithPilot.replaceAll("UNIT", unit.getModelName());
 
-        } catch (java.io.FileNotFoundException fnfn) {
-            return getName() + " captured by our infantry transferred to HQ for interrogation.";
+        } catch (FileNotFoundException fnfn) {
+            return STR."\{getName()} captured by our infantry transferred to HQ for interrogation.";
         } catch (Exception e) {
-            MWLogger.errLog("A problem occured with your pilotcapturemessagesdefect File!");
-            return getName() + " captured by our infantry transferred to HQ for interrogation.";
+            LOGGER.error(e, "A problem occurred with your pilot capture messages defect File!");
+            return STR."\{getName()} captured by our infantry transferred to HQ for interrogation.";
         } finally {
             if (dis != null) {
                 try {
                     dis.close();
-                } catch (java.io.IOException e) {
-                    // TODO Auto-generated catch block
-                    MWLogger.errLog("Unable to close reader in GetPilotCaptureAndRemoveMessage");
-                    MWLogger.errLog(e.getMessage());
+                } catch (IOException e) {
+                    LOGGER.error(e,
+                          "Unable to close reader in GetPilotCaptureAndRemoveMessage - {}",
+                          e.getLocalizedMessage());
                 }
             }
         }
@@ -829,17 +810,15 @@ public class SPilot extends Pilot {
     // STATIC METHODS
 
     /**
-     * @param pilot
-     *
      * @return String
      *
      * @author Torren (Jason Tighe)
      */
-    public String getPilotRescueMessage(server.campaign.SUnit unit) {
-        java.io.BufferedReader dis = null;
+    public String getPilotRescueMessage(SUnit unit) {
+        BufferedReader dis = null;
         try {
 
-            java.io.File folder = new java.io.File("./data/pilotmessages");
+            File folder = new File("./data/pilotmessages");
 
             if (!folder.exists()) {
                 folder.mkdir();
@@ -847,10 +826,10 @@ public class SPilot extends Pilot {
 
             String scrapFile = "/pilotrescuemessages.txt";
             // MWLogger.errLog(folder.getPath()+scrapFile);
-            java.io.FileInputStream fis = new java.io.FileInputStream(folder.getPath() + scrapFile);
-            dis = new java.io.BufferedReader(new java.io.InputStreamReader(fis));
+            FileInputStream fis = new FileInputStream(folder.getPath() + scrapFile);
+            dis = new BufferedReader(new InputStreamReader(fis));
             int messages = Integer.parseInt(dis.readLine());
-            java.util.Random rand = new java.util.Random();
+            Random rand = new Random();
             int id = rand.nextInt(messages);
             String scrapMessage = "";
             while (dis.ready()) {
@@ -863,19 +842,17 @@ public class SPilot extends Pilot {
             String scrapMessageWithPilot = scrapMessage.replaceAll("PILOT", getName());
             return scrapMessageWithPilot.replaceAll("UNIT", unit.getModelName());
 
-        } catch (java.io.FileNotFoundException fnfn) {
-            return getName() + " hiked back to base.";
+        } catch (FileNotFoundException fnfn) {
+            return STR."\{getName()} hiked back to base.";
         } catch (Exception e) {
-            MWLogger.errLog("A problem occured with your pilotcapturemessages File!");
-            return getName() + " hiked back to base.";
+            LOGGER.error(e, "A problem occurred with your pilot capture messages File!");
+            return STR."\{getName()} hiked back to base.";
         } finally {
             if (dis != null) {
                 try {
                     dis.close();
-                } catch (java.io.IOException e) {
-                    // TODO Auto-generated catch block
-                    MWLogger.errLog("Unable to close reader in GetPilotRescueMessage");
-                    MWLogger.errLog(e.getMessage());
+                } catch (IOException e) {
+                    LOGGER.error(e, "Unable to close reader in GetPilotRescueMessage - {}", e.getLocalizedMessage());
                 }
             }
         }

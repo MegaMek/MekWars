@@ -16,17 +16,24 @@
 
 package mekwars.server.campaign.mercenaries;
 
-import mekwars.server.campaign.CampaignMain;
+import java.io.Serial;
+import java.util.Hashtable;
 
-public class MercHouse extends server.campaign.SHouse {
+import mekwars.server.campaign.CampaignMain;
+import mekwars.server.campaign.SHouse;
+import mekwars.server.campaign.SPlanet;
+import mekwars.server.campaign.SPlayer;
+
+public class MercHouse extends SHouse {
 
 
     /**
      *
      */
+    @Serial
     private static final long serialVersionUID = 5440419107794020517L;
     //merc vars
-    private java.util.Hashtable<String, ContractInfo> OutstandingContracts = new java.util.Hashtable<String, ContractInfo>();
+    private Hashtable<String, ContractInfo> OutstandingContracts = new Hashtable<>();
 
     //constructor
     public MercHouse(int id, String name, String HouseColor, int BaseGunner, int BasePilot, String abbreviation) {
@@ -45,20 +52,13 @@ public class MercHouse extends server.campaign.SHouse {
     }
 
     /**
-     * A method which overrides SHouse's getDistance. returns distance in terms of employer's reach, or a maxval if a
-     * merc has no employer.
+     * A method which override's SHouse's isMerc() and returns true.
      *
-     * @param p      - planet one is attempting to reach
-     * @param player - used to draw out contract info, ascertain employer
-     *
-     * @return int - distance to the planet being checked
+     * @return boolean - true
      */
     @Override
-    public int getDistanceTo(server.campaign.SPlanet p, server.campaign.SPlayer player) {
-        if (this.getHouseFightingFor(player).isMercHouse())//mercs cant hire other mercs, so this is a safe check
-        {return Integer.MAX_VALUE - 2;}
-        //else
-        return this.getHouseFightingFor(player).getDistanceTo(p, player);
+    public boolean isMercHouse() {
+        return true;
     }
 
     /**
@@ -72,75 +72,13 @@ public class MercHouse extends server.campaign.SHouse {
      * @return SHouse - the faction the player is fighting for
      */
     @Override
-    public server.campaign.SHouse getHouseFightingFor(server.campaign.SPlayer player) {
+    public SHouse getHouseFightingFor(SPlayer player) {
 
         ContractInfo playerContract = getOutstandingContracts().get(player.getName().toLowerCase());
         if (playerContract != null) { //if a contract exists, return employer
             return playerContract.getEmployingHouse();
         }
         return this;
-    }
-
-    public java.util.Hashtable<String, ContractInfo> getOutstandingContracts() {
-        return OutstandingContracts;
-    }
-
-    public void setOutstandingContracts(java.util.Hashtable<String, ContractInfo> h) {
-        OutstandingContracts = h;
-    }
-
-    /**
-     * A method which override's SHouse's isMerc() and returns true.
-     *
-     * @return boolean - true
-     */
-    @Override
-    public boolean isMercHouse() {
-        return true;
-    }
-
-    /**
-     * A method which adds a player contract to the OutstandingContracts hash
-     *
-     * @param cToAdd - contract to add to the hash
-     * @param player - SPlayer to use as key in hash
-     */
-    public void setContract(ContractInfo cToAdd, server.campaign.SPlayer player) {
-        //add contract to hash, with player as key.
-        getOutstandingContracts().put(player.getName().toLowerCase(), cToAdd);
-        setOutstandingContracts(getOutstandingContracts());
-    }
-
-    /**
-     * A method which deletes contracts, making players employable as a result
-     *
-     * @param player - an SPlayer player, used as a key to search hash for the contract
-     *
-     * @return boolean - boolean indicating whether or not a contract was removed
-     */
-    public boolean endContract(server.campaign.SPlayer player) {
-        boolean terminated = false;
-        if (getOutstandingContracts().containsKey(player.getName().toLowerCase())) { // proced to remove
-            getOutstandingContracts().remove(player.getName().toLowerCase());
-            //and then add the player to the potential hires list
-            //UnemployedPlayers.put(player, player.getName());
-            //and set a boolean to return..
-            terminated = true;
-        }//end if(contract exists to terminate)
-        return terminated;
-    }
-
-    /**
-     * A method which returns the contract a given player is performing
-     *
-     * @param player - a player to search hash with
-     *
-     * @return ContractInfo - the player's contract
-     */
-    public ContractInfo getContractInfo(server.campaign.SPlayer player) {
-        ContractInfo currentContract = null;
-        currentContract = getOutstandingContracts().get(player.getName().toLowerCase());
-        return currentContract;
     }
 
     /**
@@ -155,26 +93,6 @@ public class MercHouse extends server.campaign.SHouse {
         int mercBays = CampaignMain.campaignMain.getIntegerConfig("MercHouseBays");
         return mercBays;
     }
-
-    /**
-     * Mercs get no welfare, instead a loan rec. urgru 11/11/02
-     * <p>
-     * A method which overrides standard faction welfare, removing financial assistance for mercs.
-     *
-     * @param p - player being checked
-     *
-     * @return string - a string, indicating result of welfare check
-     */
-    public String payWelfare(server.campaign.SPlayer p) {
-        String s = "";
-        if (p.getMoney() < 30) {
-            s = "You're running low on funds. It may be time to secure a loan.";
-        }//end if
-        else {
-            s = "";
-        }//end else
-        return s;
-    }//end merc modified welfare
 
     //Wiz's save code.
     @Override
@@ -203,6 +121,95 @@ public class MercHouse extends server.campaign.SHouse {
         }
         return result.toString();
     }
+
+    public java.util.Hashtable<String, ContractInfo> getOutstandingContracts() {
+        return OutstandingContracts;
+    }
+
+    public void setOutstandingContracts(java.util.Hashtable<String, ContractInfo> h) {
+        OutstandingContracts = h;
+    }
+
+    /**
+     * A method which overrides SHouse's getDistance. returns distance in terms of employer's reach, or a maxval if a
+     * merc has no employer.
+     *
+     * @param sPlanet - planet one is attempting to reach
+     * @param player  - used to draw out contract info, ascertain employer
+     *
+     * @return int - distance to the planet being checked
+     */
+    @Override
+    public int getDistanceTo(SPlanet sPlanet, SPlayer player) {
+        if (this.getHouseFightingFor(player).isMercHouse()) {
+            return Integer.MAX_VALUE - 2;
+        }
+        //else
+        return this.getHouseFightingFor(player).getDistanceTo(sPlanet, player);
+    }
+
+    /**
+     * A method which adds a player contract to the OutstandingContracts hash
+     *
+     * @param cToAdd - contract to add to the hash
+     * @param player - SPlayer to use as key in hash
+     */
+    public void setContract(ContractInfo cToAdd, SPlayer player) {
+        //add contract to hash, with player as key.
+        getOutstandingContracts().put(player.getName().toLowerCase(), cToAdd);
+        setOutstandingContracts(getOutstandingContracts());
+    }
+
+    /**
+     * A method which deletes contracts, making players employable as a result
+     *
+     * @param player - an SPlayer player, used as a key to search hash for the contract
+     *
+     * @return boolean - boolean indicating whether or not a contract was removed
+     */
+    public boolean endContract(SPlayer player) {
+        boolean terminated = false;
+        if (getOutstandingContracts().containsKey(player.getName().toLowerCase())) { // proced to remove
+            getOutstandingContracts().remove(player.getName().toLowerCase());
+            //and then add the player to the potential hires list
+            //UnemployedPlayers.put(player, player.getName());
+            //and set a boolean to return..
+            terminated = true;
+        }//end if(contract exists to terminate)
+        return terminated;
+    }
+
+    /**
+     * A method which returns the contract a given player is performing
+     *
+     * @param player - a player to search hash with
+     *
+     * @return ContractInfo - the player's contract
+     */
+    public ContractInfo getContractInfo(SPlayer player) {
+        ContractInfo currentContract = null;
+        currentContract = getOutstandingContracts().get(player.getName().toLowerCase());
+        return currentContract;
+    }
+
+    /**
+     * Mercs get no welfare, instead a loan rec. urgru 11/11/02
+     * <sPlayer>
+     * A method which overrides standard faction welfare, removing financial assistance for mercs.
+     *
+     * @param sPlayer - player being checked
+     *
+     * @return string - a string, indicating result of welfare check
+     */
+    public String payWelfare(SPlayer sPlayer) {
+        String s = "";
+        if (sPlayer.getMoney() < 30) {
+            s = "You're running low on funds. It may be time to secure a loan.";
+        } else {
+            s = "";
+        }//end else
+        return s;
+    }//end merc modified welfare
 
     public boolean canConquerPlanets() {
         return false;

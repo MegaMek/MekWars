@@ -16,11 +16,22 @@
 
 package mekwars.server.campaign.util;
 
-import common.House;
-import common.campaign.operations.Operation;
-import common.util.MWLogger;
-import common.util.StringUtils;
+import java.util.ArrayList;
+import java.util.Enumeration;
+import java.util.Iterator;
+import java.util.TreeMap;
+import java.util.Vector;
+
+import megamek.codeUtilities.MathUtility;
+import megamek.logging.MMLogger;
+import mekwars.common.House;
+import mekwars.common.campaign.operations.Operation;
+import mekwars.common.util.StringUtils;
 import mekwars.server.campaign.CampaignMain;
+import mekwars.server.campaign.SArmy;
+import mekwars.server.campaign.SHouse;
+import mekwars.server.campaign.SPlayer;
+import mekwars.server.campaign.operations.newopmanager.I_OperationManager;
 
 /**
  *
@@ -34,22 +45,27 @@ import mekwars.server.campaign.CampaignMain;
  */
 
 public class OpponentListHelper {
-
     public static final int MODE_ADD = 0;
     public static final int MODE_REMOVE = 1;
+    private static final MMLogger LOGGER = MMLogger.create(OpponentListHelper.class);
     //VARIABLES
-    private server.campaign.SPlayer searchPlayer;
-    private java.util.TreeMap<String, java.util.ArrayList<server.campaign.SArmy>> potentialOpponents;
-    private int currentMode = -1;
+    private final SPlayer searchPlayer;
+    private final TreeMap<String, ArrayList<SArmy>> potentialOpponents;
+    private final int currentMode;
 
     //CONSTRUCTOR
-    public OpponentListHelper(server.campaign.SPlayer p, int mode) {
-        searchPlayer = p;
-        potentialOpponents = new java.util.TreeMap<String, java.util.ArrayList<server.campaign.SArmy>>();
+    public OpponentListHelper(SPlayer player, int mode) {
+        searchPlayer = player;
+        potentialOpponents = new TreeMap<>();
         currentMode = mode;
 
-        if (mode == MODE_ADD) {this.getOpponentsForAll();}
-        if (mode == MODE_REMOVE) {this.removeOpponentsForAll();}
+        if (mode == MODE_ADD) {
+            this.getOpponentsForAll();
+        }
+
+        if (mode == MODE_REMOVE) {
+            this.removeOpponentsForAll();
+        }
 
     }//end all-armies constructor
 
@@ -66,33 +82,38 @@ public class OpponentListHelper {
          * immune players, people at the same IP, or excluded players to creep
          * into the OLH.
          */
-        server.campaign.SHouse searchHouse = searchPlayer.getHouseFightingFor();
+        SHouse searchHouse = searchPlayer.getHouseFightingFor();
 
-        for (House h : CampaignMain.campaignMain.getData().getAllHouses()) {
+        for (House house : CampaignMain.campaignMain.getData().getAllHouses()) {
 
-            server.campaign.SHouse currHouse = (server.campaign.SHouse) h;
+            SHouse currHouse = (SHouse) house;
 
             //check all active player and ONLY active players
             playersLoop:
-            for (server.campaign.SPlayer currPlayer : currHouse.getActivePlayers().values()) {
+            for (SPlayer currPlayer : currHouse.getActivePlayers().values()) {
 
                 //don't allow people to play against themselves
-                if (searchPlayer.equals(currPlayer)) {continue playersLoop;}
+                if (searchPlayer.equals(currPlayer)) {
+                    continue;
+                }
 
                 //if the player is immune, skip him
-                if (CampaignMain.campaignMain.getImmunityThread().isImmune(currPlayer)) {continue playersLoop;}
+                if (CampaignMain.campaignMain.getImmunityThread().isImmune(currPlayer)) {
+                    continue;
+                }
 
                 //if player has no armies, skip him
-                if (currPlayer.getArmies().size() == 0) {continue playersLoop;}
+                if (currPlayer.getArmies().isEmpty()) {
+                    continue;
+                }
 
                 //check exclusion status of the players.
-                if (currPlayer.getExclusionList().checkExclude(searchPlayer.getName()) !=
-                          server.campaign.util.ExclusionList.NO_EXCLUSION) {
-                    continue playersLoop;
+                if (currPlayer.getExclusionList().checkExclude(searchPlayer.getName()) != ExclusionList.NO_EXCLUSION) {
+                    continue;
                 }
-                if (searchPlayer.getExclusionList().checkExclude(currPlayer.getName()) !=
-                          server.campaign.util.ExclusionList.NO_EXCLUSION) {
-                    continue playersLoop;
+
+                if (searchPlayer.getExclusionList().checkExclude(currPlayer.getName()) != ExclusionList.NO_EXCLUSION) {
+                    continue;
                 }
 
                 //check for same IP if account involvement is barred
@@ -102,10 +123,11 @@ public class OpponentListHelper {
                                           .getIP(searchPlayer.getName())
                                           .toString();
                         String p2 = CampaignMain.campaignMain.getServer().getIP(currPlayer.getName()).toString();
-                        if (p1.equals(p2)) {continue playersLoop;}
+                        if (p1.equals(p2)) {
+                            continue;
+                        }
                     } catch (Exception e) {
-                        MWLogger.errLog("Exception while checking players' IPs in OLH.");
-                        MWLogger.errLog(e);
+                        LOGGER.error(e, "Exception while checking players' IPs in OLH.");
                     }
                 }
 
@@ -115,31 +137,31 @@ public class OpponentListHelper {
                  * enemy army to possDefendArmies and crossing the armies
                  * as opponents in each others' lists.
                  */
-                java.util.ArrayList<server.campaign.SArmy> possDefendArmies = new java.util.ArrayList<server.campaign.SArmy>();
-                server.campaign.operations.newopmanager.I_OperationManager manager = CampaignMain.campaignMain.getOpsManager();
+                ArrayList<SArmy> possDefendArmies = new ArrayList<SArmy>();
+                I_OperationManager manager = CampaignMain.campaignMain.getOpsManager();
 
-                for (server.campaign.SArmy searchArmy : searchPlayer.getArmies()) {
-                    for (server.campaign.SArmy enemyArmy : currPlayer.getArmies()) {
+                for (SArmy searchArmy : searchPlayer.getArmies()) {
+                    for (SArmy enemyArmy : currPlayer.getArmies()) {
                         if (!searchArmy.isDisabled()) {
                             attackLoop:
+
                             for (String attack : searchArmy.getLegalOperations().keySet()) {
-                                Operation o = manager.getOperation(attack);
+                                Operation operation = manager.getOperation(attack);
 
                                 //continue to next operation if this is our faction and attacks aren't allowed
-                                if (currHouse.equals(searchHouse) && !o.getBooleanValue("AllowInFaction")) {
-                                    continue attackLoop;
+                                if (currHouse.equals(searchHouse) && !operation.getBooleanValue("AllowInFaction")) {
+                                    continue;
                                 }
 
+                                if (searchArmy.matches(enemyArmy, operation) && !enemyArmy.isDisabled()) {
 
-                                if (searchArmy.matches(enemyArmy, o) && !enemyArmy.isDisabled()) {
-
-                                    //cross link
+                                    //cross-link
                                     searchArmy.addOpponent(enemyArmy);
                                     enemyArmy.addOpponent(searchArmy);
 
                                     //only add each army one time
                                     if (!possDefendArmies.contains(enemyArmy)) {possDefendArmies.add(enemyArmy);}
-                                    break attackLoop;
+                                    break;
                                 }
                             }
                         }
@@ -148,28 +170,22 @@ public class OpponentListHelper {
 
                 /*
                  * If there are no armies that can be attacked, continue to the
-                 * next player without making a possDefeders entry or sorting.
+                 * next player without making a possDefenders entry or sorting.
                  */
-                if (possDefendArmies.size() == 0) {continue playersLoop;}
+                if (possDefendArmies.isEmpty()) {
+                    continue;
+                }
 
                 /*
                  * Construct a potentialOpponents entry for this player. The
                  * entry built here will be used to generate the info message.
                  */
-                java.util.ArrayList<server.campaign.SArmy> toStore = new java.util.ArrayList<server.campaign.SArmy>();
+                ArrayList<SArmy> toStore = new ArrayList<SArmy>();
 
                 //do insertion sort on the armies, by ID. inefficient.
                 possDefLoop:
-                for (server.campaign.SArmy currArmy : possDefendArmies) {
-
-					/*first insertion is automatic. otherwise NPE @ toStore.get(0).getID() below.
-					if (toStore.size() == 0) {
-						toStore.add(currArmy);
-						continue possDefLoop;
-					}*/
-
+                for (SArmy currArmy : possDefendArmies) {
                     for (int j = 0; j < toStore.size(); j++) {
-
                         //if the army's ID is less than the currently stored ID @ an index, insert there
                         if (currArmy.getID() < toStore.get(j).getID()) {
                             toStore.add(j, currArmy);
@@ -179,19 +195,17 @@ public class OpponentListHelper {
                     }
                     //if the end of the array is reached, just insert. has highest ID so far.
                     toStore.add(currArmy);
-
-
                 }//end for(all armies in set)
 
                 potentialOpponents.put(currPlayer.getName(), toStore);
 
-            }//end for(all active players in house)
+            }//end for (all active players in house)
         }//end for(all houses)
 
     }//end getOpponentsForAll()
 
     /**
-     * Method which removes all opponentlists for a player, and removes his armies from other player's opplists.
+     * Method that removes all opponent lists for a player, and removes his armies from another player's opp lists.
      */
     private void removeOpponentsForAll() {
 
@@ -200,52 +214,56 @@ public class OpponentListHelper {
          * he is no longer an eligible attack target. Need to remove his oplists
          * and clear his entries on other players oplists.
          */
-        for (server.campaign.SArmy currArmy : searchPlayer.getArmies()) {
+        for (SArmy currArmy : searchPlayer.getArmies()) {
 
             //remove curr army from all opparmies which link it.
-            java.util.Enumeration<server.campaign.SArmy> j = currArmy.getOpponents().elements();
+            Enumeration<SArmy> j = currArmy.getOpponents().elements();
             while (j.hasMoreElements()) {
-                server.campaign.SArmy oppArmy = j.nextElement();
+                SArmy oppArmy = j.nextElement();
                 oppArmy.removeOpponent(currArmy);
 
                 //add to the
                 String currName = oppArmy.getPlayerName().toLowerCase();
-                if (potentialOpponents.get(currName) == null) {
-                    potentialOpponents.put(currName, new java.util.ArrayList<server.campaign.SArmy>());
-                }
+                potentialOpponents.computeIfAbsent(currName, k -> new ArrayList<>());
             }
 
             //reset currArmy's OpponentList
-            currArmy.setOpponents(new java.util.Vector<server.campaign.SArmy>(1, 1));
+            currArmy.setOpponents(new Vector<SArmy>(1, 1));
 
-        }//end while(more armies to unlink)
+        }//end while (more armies to unlink)
     }//end removeOpponentsForAll()
 
 
     /**
-     * Method which sends "New Opponent"-style messages to players who are already active, based on contents of
+     * Method that sends "New Opponent"-style messages to players who are already active, based on the contents of
      * possibleOpponents hash.
      * <p>
      * Note that this is a public method, whereas nearly all other Helper methods are private. Send info is called after
-     * the Helper is constrcuted.
+     * the Helper is constructed.
      */
     public void sendInfoToOpponents(String s) {
-
         for (String currOppName : potentialOpponents.keySet()) {
-
             StringBuilder output = new StringBuilder("ED:[!] ");
-            server.campaign.SPlayer currOpp = CampaignMain.campaignMain.getPlayer(currOppName);
+            SPlayer currOpp = CampaignMain.campaignMain.getPlayer(currOppName);
 
-            if (currOpp == null) {continue;}
+            if (currOpp == null) {
+                continue;
+            }
 
             //if opponent doesn't meet min active time, don't send.
-            long minActiveTime = Long.parseLong(CampaignMain.campaignMain.getConfig("MinActiveTime")) * 1000;
-            if (System.currentTimeMillis() - currOpp.getActiveSince() <= minActiveTime) {continue;}
+            long minActiveTime = MathUtility.parseLong(CampaignMain.campaignMain.getConfig("MinActiveTime"), 0) * 1000;
+            if (System.currentTimeMillis() - currOpp.getActiveSince() <= minActiveTime) {
+                continue;
+            }
 
             //get the colored faction name
-            server.campaign.SHouse searchHouse = searchPlayer.getHouseFightingFor();
+            SHouse searchHouse = searchPlayer.getHouseFightingFor();
             String colHouseName = searchHouse.getColoredNameAsLink();
-            output.append(StringUtils.aOrAn(searchHouse.getName(), false, false) + " " + colHouseName + " unit " + s);
+            output.append(StringUtils.aOrAn(searchHouse.getName(), false, false))
+                  .append(" ")
+                  .append(colHouseName)
+                  .append(" unit ")
+                  .append(s);
 
             /*
              * If its an add, show exactly which armies can attack. A remove
@@ -253,37 +271,37 @@ public class OpponentListHelper {
              * text.
              */
             if (currentMode == MODE_ADD) {
-                java.util.ArrayList<server.campaign.SArmy> currOppArmies = potentialOpponents.get(currOppName);
+                java.util.ArrayList<SArmy> currOppArmies = potentialOpponents.get(currOppName);
                 if (currOppArmies.size() > 1) {
-
                     output.append("Armies ");
-                    java.util.Iterator<server.campaign.SArmy> i = currOppArmies.iterator();
+                    Iterator<SArmy> i = currOppArmies.iterator();
+
                     while (i.hasNext()) {
                         output.append(i.next().getID());
                         if (i.hasNext()) {output.append(", ");}
                     }
-                    //try to remove the last instance of ", "
+                    //try to remove the last instance of ","
                     int lastComma = output.lastIndexOf(", ");
                     if (lastComma >= 0) {
                         String front = output.substring(0, lastComma);
                         String back = output.substring(lastComma + 2, output.length());
-                        output = new StringBuilder(front + " and " + back);
+                        output = new StringBuilder(STR."\{front} and \{back}");
                     }
 
                 } else { // we can assume size == 1
-                    server.campaign.SArmy currArmy = currOppArmies.get(0);
-                    output.append("Army " + currArmy.getID());
+                    SArmy currArmy = currOppArmies.getFirst();
+                    output.append("Army ").append(currArmy.getID());
                 }
             }
 
             /*
-             * Also give the user a link which he can click in order
-             * to issue a checkattack command and see the matchups.
+             * Also give the user a link which he can click
+             * to issue a check attack command and see the matchups.
              */
-            output.append(". [<a href=\"MEKWARS/c checkattack\">Report</a>]");
+            output.append(". [<a href=\"MEKWARS/c check attack\">Report</a>]");
             CampaignMain.campaignMain.toUser(output.toString(), currOppName, true);
 
-        }//end while(more opponents to inform)
+        }//end while (more opponents to inform)
     }//end sendInfoToOpponents()
 
 }//end OpponentListHelper class

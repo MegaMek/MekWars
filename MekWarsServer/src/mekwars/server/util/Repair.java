@@ -1,22 +1,29 @@
 package mekwars.server.util;
 
+import java.util.Vector;
+
+import megamek.codeUtilities.MathUtility;
 import megamek.common.CriticalSlot;
 import megamek.common.equipment.AmmoType;
 import megamek.common.equipment.Mounted;
+import megamek.common.units.Entity;
 import mekwars.common.campaign.pilot.Pilot;
 import mekwars.common.campaign.pilot.skills.PilotSkill;
 import mekwars.common.util.StringUtils;
 import mekwars.common.util.UnitUtils;
 import mekwars.server.campaign.CampaignMain;
+import mekwars.server.campaign.SPlayer;
+import mekwars.server.campaign.SUnit;
 
-class Repair {
+public class Repair {
 
-    private Entity unit;
-    private String Username;
-    private int unitID;
+    private final Entity unit;
+    private final String Username;
+    private final int unitID;
+    private final int slot;
+    private final boolean salvage;
     private boolean armor = false;
     private int location = -1;
-    private int slot;
     private long repairTime;
     private long startTime;
     private long endTime;
@@ -25,12 +32,16 @@ class Repair {
     private int techWorkMod;
     private boolean simpleRepair = false;
     private java.util.Vector<Integer> techs;
-    private boolean salvage = false;
 
-    public Repair(server.campaign.SPlayer player, int unitID, boolean armor, int location, int slot, int techType,
-          int retries, int techWorkMod, boolean salvage) {
+    public Repair(SPlayer player, int unitID, boolean armor, int location, int slot, int techType, int retries,
+          int techWorkMod, boolean salvage) {
 
-        unit = player.getUnit(unitID).getEntity();
+        SUnit playerUnit = player.getUnit(unitID);
+
+        if (playerUnit != null) {
+            unit = playerUnit.getEntity();
+        }
+
         this.location = location;
         this.slot = slot;
         this.unitID = unitID;
@@ -53,19 +64,17 @@ class Repair {
 
     public void setRepairTime() {
         //repair time in MS
-        repairTime = Long.parseLong(CampaignMain.campaignMain.getConfig("TimeForEachRepairPoint")) * 1000;
+        repairTime = MathUtility.parseLong(CampaignMain.campaignMain.getConfig("TimeForEachRepairPoint"), 0) * 1000;
         if (!armor) {
-            CriticalSlot cs = unit.getCritical(location, slot);
-            UnitUtils.setRepairing(unit, cs);
-            //MWLogger.errLog("number of crits "+ UnitUtils.getNumberOfCrits(unit,cs));
-            repairTime *= UnitUtils.getNumberOfCrits(unit, cs);
-            //MWLogger.errLog("Repair Time: "+repairTime);
+            CriticalSlot criticalSlot = unit.getCritical(location, slot);
+            UnitUtils.setRepairing(unit, criticalSlot);
+            repairTime *= UnitUtils.getNumberOfCrits(unit, criticalSlot);
         } else {
             int templocation = location;
             if (slot != UnitUtils.LOC_INTERNAL_ARMOR) {
                 switch (location) {
-                    case UnitUtils.LOC_CTR:
-                        templocation = UnitUtils.LOC_CT;
+                    case UnitUtils.LOC_CENTER_TORSO:
+                        templocation = UnitUtils.LOC_CENTER_TORSO;
                         break;
                     case UnitUtils.LOC_LTR:
                         templocation = UnitUtils.LOC_LT;
@@ -83,20 +92,19 @@ class Repair {
         if (techWorkMod > 0) {
             repairTime /= 2;
         }
+
         if (techWorkMod < 0) {
             for (int x = 0; x > techWorkMod; x--) {
                 repairTime *= 2;
             }
         }
+
         startTime = System.currentTimeMillis();
         endTime = startTime + repairTime;
-
-        //MWLogger.errLog("Start Time: "+startTime+" End Time: "+endTime);
     }
 
-    public Repair(server.campaign.SPlayer player, int unitID, java.util.Vector<Integer> techs, int repairTime,
-          boolean simpleRepair, boolean salvage) {
-
+    public Repair(SPlayer player, int unitID, Vector<Integer> techs, int repairTime, boolean simpleRepair,
+          boolean salvage) {
         this.simpleRepair = simpleRepair;
         this.repairTime = repairTime;
         this.techs = techs;

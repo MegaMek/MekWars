@@ -15,15 +15,18 @@
  */
 package mekwars.server.campaign.pilot.skills;
 
-import common.Unit;
-import common.campaign.pilot.Pilot;
-import megamek.common.Entity;
+import java.util.Vector;
+
+import megamek.common.units.Entity;
+import mekwars.common.Unit;
+import mekwars.common.campaign.pilot.Pilot;
 import mekwars.server.campaign.CampaignMain;
+import mekwars.server.campaign.SHouse;
 
 /**
  * Pilot traits for use with moding the gaining of other traits
  *
- * @@author Torren (Jason Tighe)
+ * @author Torren (Jason Tighe)
  */
 public class TraitSkill extends SPilotSkill {
 
@@ -42,9 +45,9 @@ public class TraitSkill extends SPilotSkill {
             return 0;
         }
 
-        String chance = "chancefor" + getAbbreviation() + "for" + Unit.getTypeClassDesc(unitType);
+        String chance = STR."chancefor\{getAbbreviation()}for\{Unit.getTypeClassDesc(unitType)}";
 
-        server.campaign.SHouse house = CampaignMain.campaignMain.getHouseFromPartialString(pilot.getCurrentFaction());
+        SHouse house = CampaignMain.campaignMain.getHouseFromPartialString(pilot.getCurrentFaction());
 
         if (house == null) {
             return CampaignMain.campaignMain.getIntegerConfig(chance);
@@ -58,13 +61,13 @@ public class TraitSkill extends SPilotSkill {
         return 0;
     }
 
-    public void assignTrait(Pilot p) {
+    public void assignTrait(Pilot pilot) {
         int size = 0;
-        String Trait = "none";
-        String faction = p.getCurrentFaction();
+        String Trait;
+        String faction = pilot.getCurrentFaction();
 
         // MWLogger.errLog("Trait Skill Faction: "+faction);
-        java.util.Vector<String> traitNames = CampaignMain.campaignMain.getFactionTraits(faction);
+        Vector<String> traitNames = CampaignMain.campaignMain.getFactionTraits(faction);
 
         size = traitNames.size();
 
@@ -79,10 +82,10 @@ public class TraitSkill extends SPilotSkill {
         } else {
             Trait = traitNames.elementAt(CampaignMain.campaignMain.getRandomNumber(size));
         }
-        if (Trait.indexOf("*") > -1) {
-            p.setTraitName(Trait.substring(0, Trait.indexOf("*")));
+        if (Trait.contains("*")) {
+            pilot.setTraitName(Trait.substring(0, Trait.indexOf("*")));
         } else {
-            p.setTraitName(Trait);
+            pilot.setTraitName(Trait);
         }
     }
 }

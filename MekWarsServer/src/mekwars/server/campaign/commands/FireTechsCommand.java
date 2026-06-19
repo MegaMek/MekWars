@@ -148,7 +148,7 @@ public class FireTechsCommand implements Command {
             return;
         }
 
-        if (command.hasMoreElements()) {techType = Integer.parseInt(command.nextToken());}
+        techType = Integer.parseInt(command.nextToken());
 
         int totalTechsToFire = player.getTotalTechs().elementAt(techType);
         int availableTechsToFire = player.getAvailableTechs().elementAt(techType);

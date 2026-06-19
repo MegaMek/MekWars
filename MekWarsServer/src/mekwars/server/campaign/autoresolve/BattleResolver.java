@@ -1,53 +1,48 @@
 package mekwars.server.campaign.autoresolve;
 
-import client.MWClient;
-import common.Unit;
-import common.campaign.operations.Operation;
-import megamek.common.Coords;
-import megamek.common.Entity;
-import megamek.common.Game;
+
+import java.io.IOException;
+
 import megamek.common.HitData;
-import megamek.common.MapSettings;
-import megamek.common.Mounted;
-import megamek.common.Player;
 import megamek.common.ToHitData;
+import megamek.common.board.Coords;
+import megamek.common.equipment.Mounted;
+import megamek.common.game.Game;
+import megamek.common.loaders.MapSettings;
+import megamek.common.units.Entity;
 import megamek.common.util.BoardUtilities;
 import megamek.common.weapons.Weapon;
-import megamek.server.GameManager;
+import megamek.logging.MMLogger;
 import megamek.server.Server;
+import megamek.server.totalWarfare.TWGameManager;
+import mekwars.common.Unit;
+import mekwars.common.campaign.operations.Operation;
 import mekwars.server.campaign.CampaignMain;
-import server.campaign.SArmy;
-import server.campaign.SUnit;
-import server.campaign.autoresolve.VirtualUnit.MovementMode;
-import server.campaign.operations.ShortOperation;
+import mekwars.server.campaign.SArmy;
+import mekwars.server.campaign.SPlayer;
+import mekwars.server.campaign.SUnit;
+import mekwars.server.campaign.operations.ShortOperation;
 
 public class BattleResolver {
-
-    private static mekwars.server.campaign.autoresolve.BattleResolver instance;
+    private static final MMLogger LOGGER = MMLogger.create(BattleResolver.class);
     private Server server;
 
     private BattleResolver() {
         try {
-            server = new Server("", 50000, new GameManager());
-        } catch (java.io.IOException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
+            server = new Server("", 50000, new TWGameManager());
+        } catch (IOException e) {
+            LOGGER.error(e, "Unable to start server");
         }
     }
 
-    public static mekwars.server.campaign.autoresolve.BattleResolver getInstance() {
-        if (instance == null) {
-            synchronized (mekwars.server.campaign.autoresolve.BattleResolver.class) {
-                if (instance == null) {
-                    instance = new mekwars.server.campaign.autoresolve.BattleResolver();
-                }
-            }
-        }
-        return instance;
+    public static BattleResolver getInstance() {
+        return BattleResolverHolder.instance;
     }
 
-    public void resolve(ShortOperation so) {
-        Battlefield bf = new Battlefield(prepareAttackers(so), prepareDefenders(so), new BattleReport());
+    public void resolve(ShortOperation shortOperation) {
+        Battlefield bf = new Battlefield(prepareAttackers(shortOperation),
+              prepareDefenders(shortOperation),
+              new BattleReport());
 
         //Determine starting Distance
         //TODO: For now it's 21 hexes, later it will be a pilot Skill
@@ -82,31 +77,34 @@ public class BattleResolver {
         }
 
         if (endingBVAttacker > endingBVDefender) {
-            server.campaign.SPlayer winner = CampaignMain.campaignMain.getPlayer(so.getAttackers().firstKey());
-            so.getWinners().put(winner.getName().toLowerCase(), winner);
+            SPlayer winner = CampaignMain.campaignMain.getPlayer(shortOperation.getAttackers().firstKey());
+            shortOperation.getWinners().put(winner.getName().toLowerCase(), winner);
             bf.addWinner(winner.getName());
-            server.campaign.SPlayer loser = CampaignMain.campaignMain.getPlayer(so.getDefenders().firstKey());
-            so.getLosers().put(loser.getName().toLowerCase(), loser);
+            server.campaign.SPlayer loser = CampaignMain.campaignMain.getPlayer(shortOperation.getDefenders()
+                                                                                      .firstKey());
+            shortOperation.getLosers().put(loser.getName().toLowerCase(), loser);
         } else {
-            server.campaign.SPlayer winner = CampaignMain.campaignMain.getPlayer(so.getDefenders().firstKey());
-            so.getWinners().put(winner.getName().toLowerCase(), winner);
+            server.campaign.SPlayer winner = CampaignMain.campaignMain.getPlayer(shortOperation.getDefenders()
+                                                                                       .firstKey());
+            shortOperation.getWinners().put(winner.getName().toLowerCase(), winner);
             bf.addWinner(winner.getName());
-            server.campaign.SPlayer loser = CampaignMain.campaignMain.getPlayer(so.getAttackers().firstKey());
-            so.getLosers().put(loser.getName().toLowerCase(), loser);
+            server.campaign.SPlayer loser = CampaignMain.campaignMain.getPlayer(shortOperation.getAttackers()
+                                                                                      .firstKey());
+            shortOperation.getLosers().put(loser.getName().toLowerCase(), loser);
         }
 
         //Report to Players and Campaign
-        Operation o = CampaignMain.campaignMain.getOpsManager().getOperation(so.getName());
+        Operation o = CampaignMain.campaignMain.getOpsManager().getOperation(shortOperation.getName());
 
         // set to reporting status
-        //        so.changeStatus(ShortOperation.STATUS_REPORTING);
-        //        so.getReporter().setWinnersAndLosers(so.getWinners(), so.getLosers());
+        //        shortOperation.changeStatus(ShortOperation.STATUS_REPORTING);
+        //        shortOperation.getReporter().setWinnersAndLosers(shortOperation.getWinners(), shortOperation.getLosers());
 
         //Build report String
         String report = buildReportString(bf);
 
 
-        CampaignMain.campaignMain.getOpsManager().resolveShortAttack(o, so, report);
+        CampaignMain.campaignMain.getOpsManager().resolveShortAttack(o, shortOperation, report);
 
 
         for (VirtualUnit unit : bf.getAllUnits()) {
@@ -114,7 +112,7 @@ public class BattleResolver {
         }
 
         //TODO: Better reporting
-        for (String player : so.getAllPlayerNames()) {
+        for (String player : shortOperation.getAllPlayerNames()) {
             CampaignMain.campaignMain.toUser(bf.getBattleReport().getReport().toString(), player, true);
         }
     }
@@ -278,16 +276,10 @@ public class BattleResolver {
 
         //Determine location
         HitData hd = ent.rollHitLocation(ToHitData.HIT_NORMAL, ToHitData.SIDE_FRONT);
+    }
 
-        // TODO recode auto resolver.
-        //Do damage
-        // Vector<Report> report = server.damageEntity(ent, hd, damage);
-
-        //Prepare Output
-        // for (Report r: report){
-        // 	String text = r.getText();
-        // 	bf.getBattleReport().addFireEvent(unit, text);
-        // }
+    private static final class BattleResolverHolder {
+        private static final BattleResolver instance = new BattleResolver();
     }
 
 }

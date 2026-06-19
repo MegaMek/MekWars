@@ -1,12 +1,19 @@
 package mekwars.server.campaign.pilot;
 
-import common.campaign.pilot.skills.PilotSkill;
-import common.util.MWLogger;
-import server.campaign.pilot.skills.*;
+
+import java.util.Hashtable;
+import java.util.Iterator;
+import java.util.StringTokenizer;
+import java.util.Vector;
+
+import megamek.logging.MMLogger;
+import mekwars.common.campaign.pilot.skills.PilotSkill;
+import mekwars.server.campaign.CampaignMain;
+import mekwars.server.campaign.pilot.skills.*;
 
 public class SPilotSkills {
-    private static java.util.Hashtable<Integer, SPilotSkill> pilotSkills = new java.util.Hashtable<Integer, SPilotSkill>();
-
+    private static final Hashtable<Integer, SPilotSkill> pilotSkills = new Hashtable<>();
+    private static final MMLogger LOGGER = MMLogger.create(SPilotSkills.class);
 
     public static void initializePilotSkills() {
         // PilotSkills
@@ -35,34 +42,35 @@ public class SPilotSkills {
         pilotSkills.put(PilotSkill.GiftedID, (new GiftedSkill(PilotSkill.GiftedID)));
         pilotSkills.put(PilotSkill.MedTechID, (new MedTechSkill(PilotSkill.MedTechID)));
         pilotSkills.put(PilotSkill.EdgeSkillID, (new EdgeSkill(PilotSkill.EdgeSkillID)));
-        pilotSkills.put(PilotSkill.ClanPilotTraingID, (new ClanPilotTrainingSkill(PilotSkill.ClanPilotTraingID)));
+        pilotSkills.put(PilotSkill.ClanPilotTrainingID, (new ClanPilotTrainingSkill(PilotSkill.ClanPilotTrainingID)));
         pilotSkills.put(PilotSkill.VDNIID, (new VDNI(PilotSkill.VDNIID)));
         pilotSkills.put(PilotSkill.BufferedVDNIID, (new BufferedVDNI(PilotSkill.BufferedVDNIID)));
         pilotSkills.put(PilotSkill.PainShuntID, (new PainShunt(PilotSkill.PainShuntID)));
     }
 
-    public static SPilotSkill getRandomSkill(SPilot p, int unitType) {
+    public static SPilotSkill getRandomSkill(SPilot sPilot, int unitType) {
         int total = 0;
 
-        java.util.Iterator<SPilotSkill> it = pilotSkills.values().iterator();
-        java.util.Hashtable<Integer, Integer> skilltable = new java.util.Hashtable<Integer, Integer>();
-        if (p.getSkills().has(PilotSkill.TraitID)) {
-            // SPilotSkill skill =
-            // (SPilotSkill)p.getSkills().getPilotSkill(SPilotSkill.TraitID);
-            String trait = p.getTraitName();
-            if (trait.indexOf("*") > -1) {
+        Iterator<SPilotSkill> it = pilotSkills.values().iterator();
+        Hashtable<Integer, Integer> skillTable = new Hashtable<>();
+        if (sPilot.getSkills().has(PilotSkill.TraitID)) {
+            String trait = sPilot.getTraitName();
+
+            if (trait.contains("*")) {
                 trait = trait.substring(0, trait.indexOf("*"));
             }
-            java.util.Vector<String> traitsList = CampaignMain.campaignMain.getFactionTraits(p.getCurrentFaction());
+
+            Vector<String> traitsList = CampaignMain.campaignMain.getFactionTraits(sPilot.getCurrentFaction());
             traitsList.trimToSize();
+
             for (String traitNames : traitsList) {
-                java.util.StringTokenizer traitName = new java.util.StringTokenizer(traitNames, "*");
+                StringTokenizer traitName = new StringTokenizer(traitNames, "*");
                 String traitString = traitName.nextToken();
                 if (traitString.equalsIgnoreCase(trait)) {
                     while (traitName.hasMoreElements()) {
-                        int traitid = Integer.parseInt(traitName.nextToken());
+                        int traitID = Integer.parseInt(traitName.nextToken());
                         int traitMod = Integer.parseInt(traitName.nextToken());
-                        skilltable.put(traitid, traitMod);
+                        skillTable.put(traitID, traitMod);
                     }
                 }
             }
@@ -71,7 +79,7 @@ public class SPilotSkills {
         // check for trait mods and add them
         while (it.hasNext()) {
             SPilotSkill skill = it.next();
-            total += skill.getChance(unitType, p);
+            total += skill.getChance(unitType, sPilot);
         }
 
         if (total == 0) {
@@ -81,34 +89,27 @@ public class SPilotSkills {
          * int rnd = 1; if (total > 1) rnd = getR().nextInt(total) + 1;
          */
         it = pilotSkills.values().iterator();
-        java.util.Vector<SPilotSkill> skillBuilder = new java.util.Vector<SPilotSkill>(total, 1);
+        Vector<SPilotSkill> skillBuilder = new Vector<>(total, 1);
 
         try {
             while (it.hasNext()) {
                 SPilotSkill skill = it.next();
-                int chance = skill.getChance(unitType, p);
-                if (skilltable.get(skill.getId()) != null) {
-                    chance += skilltable.get(skill.getId());
+                int chance = skill.getChance(unitType, sPilot);
+
+                if (skillTable.get(skill.getId()) != null) {
+                    chance += skillTable.get(skill.getId());
                 }
 
                 for (int pos = 0; pos < chance; pos++) {
                     skillBuilder.add(skill);
                 }
                 skillBuilder.trimToSize();
-                /*
-                 * //MWLogger.errLog("Pilot: "+p.getName()+" Skill:
-                 * "+skill.getName()+" Rnd "+rnd+ " chance: "+chance); if ( rnd
-                 * <= chance ) return skill; //else rnd -=
-                 * skill.getChance(unitType,p);
-                 */
             }
 
             return skillBuilder.elementAt(CampaignMain.campaignMain.getRandomNumber(skillBuilder.size()));
         } catch (Exception ex) {
-            MWLogger.errLog("Problems during skill earning! Skill Table Size = " +
-                                  skillBuilder.size() +
-                                  " total = " +
-                                  total);
+            LOGGER.error(ex,
+                  STR."Problems during skill earning! Skill Table Size = \{skillBuilder.size()} total = \{total}");
             return null;
         }
     }
@@ -117,7 +118,6 @@ public class SPilotSkills {
      * Create a skill from a string. Used by CreateUnitCommand.
      */
     public static SPilotSkill getPilotSkill(String skill) {
-
         for (SPilotSkill pSkill : pilotSkills.values()) {
             if (pSkill.getName().equalsIgnoreCase(skill) || pSkill.getAbbreviation().equalsIgnoreCase(skill)) {
                 return pSkill;

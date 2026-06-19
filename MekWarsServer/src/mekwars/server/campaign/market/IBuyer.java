@@ -16,18 +16,20 @@
 
 package mekwars.server.campaign.market;
 
+import mekwars.server.campaign.SUnit;
+
 /**
- * Interface which defines the methods needed by an actor who is able to buy units from the market. At this time, only
+ * Interface that defines the methods needed by an actor who is able to buy units from the market. At this time, only
  * the SPlayer should be an IBuyer; however, buying may be expanded to SHouse once leadership is implemented.
  */
 public interface IBuyer {
 
-    public abstract void addMoney(int amountToAdd);
+    void addMoney(int amountToAdd);
 
-    public abstract int getMoney();
+    int getMoney();
 
-    public abstract String addUnit(server.campaign.SUnit toAdd, boolean isNew, boolean sendUpdate);
+    String addUnit(SUnit toAdd, boolean isNew, boolean sendUpdate);
 
-    public abstract boolean isHuman();
+    boolean isHuman();
 
 }

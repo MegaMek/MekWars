@@ -1,29 +1,28 @@
 package mekwars.server.campaign.operations.resolvers;
 
-import common.UnitFactory;
+import mekwars.common.UnitFactory;
+import mekwars.server.campaign.SPlanet;
+import mekwars.server.campaign.operations.ShortOperation;
 
 public class NewShortResolver {
-    int gameID;
-    ShortOpPlayers players;
-    server.campaign.SPlanet planet;
-    server.campaign.operations.ShortOperation op;
-    UnitFactory factory;
-    String opName;
+    private int gameID;
+    private ShortOpPlayers players;
+    private SPlanet planet;
+    private ShortOperation op;
+    private UnitFactory factory;
+    private String opName;
 
-    boolean canTakeLand;
-    boolean canTakeUnits;
-    boolean canTakeComponents;
-    boolean affectsELO;
+    private boolean canTakeLand;
+    private boolean canTakeUnits;
+    private boolean canTakeComponents;
+    private boolean affectsELO;
 
-    public NewShortResolver(int gameId, server.campaign.SPlanet p, server.campaign.operations.ShortOperation o,
-          ShortOpPlayers sop) {
+    public NewShortResolver(int gameId, SPlanet sPlanet, ShortOperation shortOperation, ShortOpPlayers shortOpPlayers) {
         this.gameID = gameId;
-        planet = p;
-        op = o;
-        players = sop;
+        planet = sPlanet;
+        op = shortOperation;
+        players = shortOpPlayers;
         opName = op.getName();
-
-
     }
 
     private int calculateLandExchange() {

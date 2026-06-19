@@ -16,8 +16,12 @@
 
 package mekwars.server.campaign;
 
-import common.util.MWLogger;
-import server.campaign.util.OpponentListHelper;
+
+import java.util.ArrayList;
+import java.util.TreeMap;
+
+import megamek.logging.MMLogger;
+import mekwars.server.campaign.util.OpponentListHelper;
 
 /**
  * @author urgru
@@ -28,12 +32,13 @@ import server.campaign.util.OpponentListHelper;
 public final class ImmunityThread extends Thread {//no extension
 
     //VARIABLES
-    private java.util.TreeMap<String, Long> immunePlayers;
+    private final static MMLogger LOGGER = MMLogger.create(ImmunityThread.class);
+    private final TreeMap<String, Long> immunePlayers;
 
     //CONSTRUCTOR
     public ImmunityThread() {
         super("Immunity Thread");
-        this.immunePlayers = new java.util.TreeMap<String, Long>();
+        this.immunePlayers = new TreeMap<>();
     }
 
     //METHODS
@@ -42,44 +47,49 @@ public final class ImmunityThread extends Thread {//no extension
      * Method that adds a newly immune player to the Thread. The player is informed of his immunity. If he's a newbie,
      * he is also told if/how to reset his units.
      *
-     * @param p - player who is now immune.
+     * @param sPlayer - player who is now immune.
      */
-    public void addImmunePlayer(SPlayer p) {
+    public void addImmunePlayer(SPlayer sPlayer) {
 
         //get name and immunity duration
-        String lowername = p.getName().toLowerCase();
+        String lowerCaseName = sPlayer.getName().toLowerCase();
         int immunitySeconds = CampaignMain.campaignMain.getIntegerConfig("ImmunityTime");
 
         //if immunity is disabled, just ignore and return.
-        if (immunitySeconds < 1) {return;}
+        if (immunitySeconds < 1) {
+            return;
+        }
 
         //inform player. also, if newbie, tell him about potential unit resets
-        CampaignMain.campaignMain.toUser("You are immune to attack for " +
-                                               immunitySeconds +
-                                               " seconds. [<a href=\"MEKWARS/c deactivate\">Deactivate</a>]",
-              p.getName(),
+        CampaignMain.campaignMain.toUser(STR."You are immune to attack for \{immunitySeconds} seconds. [<a href=\"MEKWARS/c deactivate\">Deactivate</a>]",
+              sPlayer.getName(),
               true);
-        if (p.getMyHouse().isNewbieHouse()) {
+        if (sPlayer.getMyHouse().isNewbieHouse()) {
             int numResets = CampaignMain.campaignMain.getIntegerConfig("NumResetsWhileImmune");
             if (numResets > 0) {
-
                 //set the resets
-                NewbieHouse pHouse = (NewbieHouse) p.getMyHouse();
-                pHouse.addResetPlayer(p, numResets);
+                NewbieHouse pHouse = (NewbieHouse) sPlayer.getMyHouse();
+                pHouse.addResetPlayer(sPlayer, numResets);
 
                 //and inform the lucky player
                 String toSend = "You may reset your units ";
-                if (numResets == 1) {toSend += " once";} else {toSend += numResets + " times";}
-                CampaignMain.campaignMain.toUser(toSend += " while immune by selecting \"Reset Units\" in the HQ. You may only reset while in reserve.",
-                      p.getName(),
+
+                if (numResets == 1) {
+                    toSend += " once";
+                } else {
+                    toSend += STR."\{numResets} times";
+                }
+
+                CampaignMain.campaignMain.toUser(STR."\{toSend} while immune by selecting \"Reset Units\" in the HQ. You may only reset while in reserve.",
+                      sPlayer.getName(),
                       true);
 
             }
         }
 
-        //put name and end-time (in millis) in immune players hash. SYNCHED!
+        //put name and end-time (in millis) in immune players hash. SYNCED!
         synchronized (immunePlayers) {
-            this.immunePlayers.put(lowername, System.currentTimeMillis() + (immunitySeconds * 1000));
+            this.immunePlayers.put(lowerCaseName, System.currentTimeMillis() + (immunitySeconds * 1000L));
         }
 
     }
@@ -87,21 +97,21 @@ public final class ImmunityThread extends Thread {//no extension
     /**
      * Check to see if a player is immune.
      */
-    public boolean isImmune(SPlayer p) {
-        return immunePlayers.containsKey(p.getName().toLowerCase());
+    public boolean isImmune(SPlayer sPlayer) {
+        return immunePlayers.containsKey(sPlayer.getName().toLowerCase());
     }
 
     /**
-     * Remove a player from the Immunity list. This is called when logging in or activating, but shoud NEVER be called
-     * when deactivating. If de-activated players were removed using this call, SOL would not be able to reset units.
+     * Remove a player from the Immunity list. This is called when logging in or activating, but should NEVER be called
+     * when deactivating. If deactivated players were removed using this call, SOL would not be able to reset units.
      */
-    public void removeImmunity(SPlayer p) {
+    public void removeImmunity(SPlayer sPlayer) {
         synchronized (immunePlayers) {
-            immunePlayers.remove(p.getName().toLowerCase());
+            immunePlayers.remove(sPlayer.getName().toLowerCase());
         }
-        if (p.getMyHouse().isNewbieHouse()) {
-            NewbieHouse pHouse = (NewbieHouse) p.getMyHouse();
-            pHouse.removeResetPlayer(p);
+        if (sPlayer.getMyHouse().isNewbieHouse()) {
+            NewbieHouse pHouse = (NewbieHouse) sPlayer.getMyHouse();
+            pHouse.removeResetPlayer(sPlayer);
         }
     }
 
@@ -111,39 +121,37 @@ public final class ImmunityThread extends Thread {//no extension
      */
     @Override
     public synchronized void run() {
-
         while (true) {
-
-            //polle very 5 seconds
+            //poll very 5 seconds
             this.extendedWait(5000);
 
             synchronized (immunePlayers) {
 
                 //keep track of players to be removed
-                java.util.ArrayList<String> toRemove = new java.util.ArrayList<String>();
+                ArrayList<String> toRemove = new ArrayList<>();
 
                 //loop through all players
                 for (String currName : immunePlayers.keySet()) {
-
                     //if the player's immunity has not expired, continue
-                    Long startTime = System.currentTimeMillis();
-                    if (startTime < immunePlayers.get(currName)) {continue;}
+                    long startTime = System.currentTimeMillis();
+                    if (startTime < immunePlayers.get(currName)) {
+                        continue;
+                    }
 
-                    //immunity expired. add to removal list
+                    //immunity expired. add to a removal list
                     toRemove.add(currName);
-
                 }
 
                 //remove and inform expired players
                 for (String currName : toRemove) {
-
                     //load the player
-                    SPlayer p = CampaignMain.campaignMain.getPlayer(currName);
+                    SPlayer player = CampaignMain.campaignMain.getPlayer(currName);
 
-                    if (p == null) {
+                    if (player == null) {
                         synchronized (immunePlayers) {
                             immunePlayers.remove(currName);
                         }
+
                         continue;
                     }
 
@@ -151,27 +159,28 @@ public final class ImmunityThread extends Thread {//no extension
                      * make sure the player is still active (hasnt logged out, deactivated (voluntary
                      * of otherwise) and subsequently re-activated, attacked or joined a game.
                      */
-                    if (p.getDutyStatus() == SPlayer.STATUS_ACTIVE) {
-
+                    if (player.getDutyStatus() == SPlayer.STATUS_ACTIVE) {
                         //tell the player
-                        CampaignMain.campaignMain.toUser("[!] Your post-game immunity expired!", p.getName(), true);
+                        CampaignMain.campaignMain.toUser("[!] Your post-game immunity expired!",
+                              player.getName(),
+                              true);
 
                         //alert other players
-                        OpponentListHelper olh = new OpponentListHelper(p, OpponentListHelper.MODE_ADD);
-                        olh.sendInfoToOpponents(
+                        OpponentListHelper opponentListHelper = new OpponentListHelper(player,
+                              OpponentListHelper.MODE_ADD);
+                        opponentListHelper.sendInfoToOpponents(
                               " finished an R&R cycle and returned to the front. You may attack it with ");
 
                         //newbie player handling. if he has resets left, tell him time has expired. always remove from the list.
-                        if (p.getMyHouse().isNewbieHouse()) {
-
-                            NewbieHouse currH = (NewbieHouse) p.getMyHouse();
-                            if (currH.getResetsRemaining(p) > 0) {
+                        if (player.getMyHouse().isNewbieHouse()) {
+                            NewbieHouse currH = (NewbieHouse) player.getMyHouse();
+                            if (currH.getResetsRemaining(player) > 0) {
                                 CampaignMain.campaignMain.toUser("[!] Your post-game reset time expired!",
-                                      p.getName(),
+                                      player.getName(),
                                       true);
                             }
 
-                            currH.removeResetPlayer(p);
+                            currH.removeResetPlayer(player);
                         }
                     }
 
@@ -180,19 +189,19 @@ public final class ImmunityThread extends Thread {//no extension
                     }
                 }
 
-            }//end synch lock on immunePlayers
+            }//end sync lock on immunePlayers
 
         }
     }// end run()
 
     /**
-     * Method that waits the Immunity thread and prints any interuptions to the error log.
+     * Method that waits the Immunity thread and prints any interruptions to the error log.
      */
     public void extendedWait(int time) {
         try {
             this.wait(time);
         } catch (Exception ex) {
-            MWLogger.errLog(ex);
+            LOGGER.error(ex);
         }
     }
 

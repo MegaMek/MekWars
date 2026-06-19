@@ -49,12 +49,15 @@ package mekwars.server.campaign.operations;
 
 import java.awt.Dimension;
 import java.util.ArrayList;
+import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.TreeMap;
 import java.util.TreeSet;
 import java.util.Vector;
 
+import megamek.common.planetaryConditions.Atmosphere;
 import megamek.common.planetaryConditions.EMI;
+import megamek.common.planetaryConditions.Fog;
 import megamek.common.planetaryConditions.Light;
 import megamek.common.planetaryConditions.PlanetaryConditions;
 import megamek.common.planetaryConditions.Weather;
@@ -69,11 +72,13 @@ import mekwars.common.campaign.Buildings;
 import mekwars.common.campaign.operations.Operation;
 import mekwars.common.util.StringUtils;
 import mekwars.common.util.UnitUtils;
+import mekwars.server.campaign.AutoArmy;
 import mekwars.server.campaign.CampaignMain;
 import mekwars.server.campaign.SArmy;
 import mekwars.server.campaign.SPlanet;
 import mekwars.server.campaign.SPlayer;
 import mekwars.server.campaign.SUnit;
+import mekwars.server.campaign.autoresolve.BattleResolver;
 import mekwars.server.campaign.operations.resolvers.NewShortResolver;
 import mekwars.server.campaign.operations.resolvers.ShortOpPlayers;
 import mekwars.server.campaign.pilot.SPilot;
@@ -282,7 +287,7 @@ public class ShortOperation implements Comparable<Object> {
 
         attackers.put(sPlayer.getName().toLowerCase(), sArmy.getID());
         reporter.addAttacker(sPlayer.getName(), sArmy.getID());
-        
+
         if (!modName.isEmpty()) {
             playerModifyingOps.put(sPlayer.getName().toLowerCase(), modName);
         }
@@ -322,16 +327,16 @@ public class ShortOperation implements Comparable<Object> {
 
     private void submitPlayerList() {
         ShortOpPlayers sop = new ShortOpPlayers();
-        java.util.HashMap<Integer, java.util.Vector<server.campaign.SPlayer>> teams = new java.util.HashMap<Integer, java.util.Vector<server.campaign.SPlayer>>();
+        java.util.HashMap<Integer, java.util.Vector<SPlayer>> teams = new java.util.HashMap<>();
 
         for (String pName : getAllPlayerNames()) {
-            server.campaign.SPlayer p = CampaignMain.campaignMain.getPlayer(pName);
+            SPlayer p = CampaignMain.campaignMain.getPlayer(pName);
             int teamID = p.getTeamNumber();
 
             if (teams.containsKey(teamID)) {
                 teams.get(teamID).add(p);
             } else {
-                java.util.Vector<server.campaign.SPlayer> v = new java.util.Vector<server.campaign.SPlayer>();
+                java.util.Vector<SPlayer> v = new java.util.Vector<>();
                 v.add(p);
                 teams.put(teamID, v);
             }
@@ -351,28 +356,33 @@ public class ShortOperation implements Comparable<Object> {
     /**
      * Method which removes an attacker, and all of his armies, from a ShortOperation.
      */
-    public void removeAttacker(server.campaign.SPlayer p) {
+    public void removeAttacker(SPlayer p) {
 
         // remove from maps
         String pNameLower = p.getName().toLowerCase();
         if (attackers.containsKey(pNameLower)) {
             int armyID = attackers.remove(pNameLower);
 
+            SArmy army = p.getArmy(armyID);
+
             // decrease starting values
-            startingBV -= p.getArmy(armyID).getOperationsBV(null);
-            startingUnits -= p.getArmy(armyID).getAmountOfUnits();
+            if (army != null) {
+                startingBV -= army.getOperationsBV(null);
+                startingUnits -= army.getAmountOfUnits();
+            }
         }
         playerModifyingOps.remove(pNameLower);
     }
 
     /**
-     * Method which adds a defender to the short. Should only be called after validation.
+     * Method that adds a defender to the short. Should only be called after validation.
      */
-    public void addDefender(server.campaign.SPlayer p, server.campaign.SArmy a, String modName) {
+    public void addDefender(SPlayer p, SArmy a, String modName) {
         Operation o = CampaignMain.campaignMain.getOpsManager().getOperation(opName);
         defenders.put(p.getName().toLowerCase(), a.getID());
         reporter.addDefender(p.getName(), a.getID());
-        if (!modName.equals("")) {
+
+        if (!modName.isEmpty()) {
             playerModifyingOps.put(p.getName().toLowerCase(), modName);
         }
 
@@ -413,25 +423,21 @@ public class ShortOperation implements Comparable<Object> {
     /**
      * Method which removes an attacker, and all of his armies, from a ShortOperation.
      */
-    public void removeDefender(server.campaign.SPlayer p) {
-
+    public void removeDefender(SPlayer p) {
         // remove from maps
         String pNameLower = p.getName().toLowerCase();
         if (defenders.containsKey(pNameLower)) {
             int armyID = defenders.remove(pNameLower);
 
+            SArmy army = p.getArmy(armyID);
+
             // decrease starting values
-            startingBV -= p.getArmy(armyID).getOperationsBV(null);
-            startingUnits -= p.getArmy(armyID).getAmountOfUnits();
+            if (army != null) {
+                startingBV -= army.getOperationsBV(null);
+                startingUnits -= army.getAmountOfUnits();
+            }
         }
         playerModifyingOps.remove(pNameLower);
-    }
-
-    /**
-     * Method which returns the name of this operation. Used to pull an Operation (parameter bag) from the manager.
-     */
-    public String getName() {
-        return opName;
     }
 
     /**
@@ -483,27 +489,23 @@ public class ShortOperation implements Comparable<Object> {
      *
      */
     public void changeStatus(int newStatus) {
-
-        java.util.Random r = CampaignMain.campaignMain.getRandom();
-
         /*
-         * Never change to waiting mode. First actual switch is to INPROGRESS.
+         * Never change to waiting mode. The first actual switch is to IN_PROGRESS.
          */
 
         /*
-         * INPROGRESS change is analagous to Task's switchToRunning. It sends
-         * server options to the players, generates autoarmies and generally
+         * IN_PROGRESS change is analogous to Task's switchToRunning. It sends
+         * server options to the players, generates auto armies and generally
          * does everything imaginable.
          */
         if (newStatus == STATUS_IN_PROGRESS) {
-
             // get the op we are setting up.
-            Operation o = CampaignMain.campaignMain.getOpsManager().getOperation(opName);
+            Operation operation = CampaignMain.campaignMain.getOpsManager().getOperation(opName);
 
             // Should always have at least 1 attacker if not well then this is
             // More fubared then anything I can come up with.
-            if (defenders.size() < 1) {
-                if (!o.getBooleanValue("AttackerAllowAgainstUnclaimedLand")) {
+            if (defenders.isEmpty()) {
+                if (!operation.getBooleanValue("AttackerAllowAgainstUnclaimedLand")) {
                     for (String currP : attackers.keySet()) {
                         CampaignMain.campaignMain.toUser(
                               "No defenders are listed for this op, someone screwed up!",
@@ -513,38 +515,37 @@ public class ShortOperation implements Comparable<Object> {
                 return;
             }
 
-            //Should the battle be autoresolved?
-            if (o.getBooleanValue("AutoresolveBattle")) {
+            //Should the battle be auto resolved?
+            if (operation.getBooleanValue("AutoResolveBattle")) {
                 currentStatus = STATUS_IN_PROGRESS;
                 switchPlayerStatusToFighting();
-                server.campaign.autoresolve.BattleResolver.getInstance().resolve(this);
+                BattleResolver.getInstance().resolve(this);
                 return;
             }
 
-            isBuildingOperation = o.getIntValue("TotalBuildings") > 0;
+            isBuildingOperation = operation.getIntValue("TotalBuildings") > 0;
             /*
              * Check to see if this is a building operation. If so, build an
              * info string that can be sent to all players and reconnectors.
              */
             if (isBuildingOperation) {
+                totalBuildings = operation.getIntValue("TotalBuildings");
+                minBuildings = operation.getIntValue("MinBuildingsForOp");
+                buildingOptions = STR."RBP|\{totalBuildings}";
+                buildingOptions += STR."|\{minBuildings}";
+                buildingOptions += STR."|\{operation.getValue("MinFloors")}";
+                buildingOptions += STR."|\{operation.getValue("MaxFloors")}";
+                buildingOptions += STR."|\{operation.getValue("MinCF")}";
+                buildingOptions += STR."|\{operation.getValue("MaxCF")}";
+                buildingOptions += STR."|\{operation.getValue("BuildingType")}";
 
-                totalBuildings = o.getIntValue("TotalBuildings");
-                minBuildings = o.getIntValue("MinBuildingsForOp");
-                buildingOptions = "RBP|" + totalBuildings;
-                buildingOptions += "|" + minBuildings;
-                buildingOptions += "|" + o.getValue("MinFloors");
-                buildingOptions += "|" + o.getValue("MaxFloors");
-                buildingOptions += "|" + o.getValue("MinCF");
-                buildingOptions += "|" + o.getValue("MaxCF");
-                buildingOptions += "|" + o.getValue("BuildingType");
-
-                if (o.getBooleanValue("BuildingsStartOnMapEdge")) {
+                if (operation.getBooleanValue("BuildingsStartOnMapEdge")) {
                     int pos = CampaignMain.campaignMain.getRandomNumber(mapEdge.length);
                     defenderEdge = mapEdge[pos];
                     attackerEdge = mapEdgeReverse[pos];
-                    buildingOptions += "|" + defenderEdge;
+                    buildingOptions += STR."|\{defenderEdge}";
                 } else {
-                    buildingOptions += "|" + Buildings.EDGE_UNKNOWN;
+                    buildingOptions += STR."|\{Buildings.EDGE_UNKNOWN}";
                 }
             }
 
@@ -554,19 +555,19 @@ public class ShortOperation implements Comparable<Object> {
              * can assume that the server lets people pick their own deployment
              * areas. Probably by rolling.
              */
-            else if (o.getBooleanValue("RandomDeployment")) {
-                int pos = getRandomDeployment(o);
+            else if (operation.getBooleanValue("RandomDeployment")) {
+                int pos = getRandomDeployment(operation);
                 attackerEdge = playerEdge[pos];
                 defenderEdge = playerEdgeReverse[pos];
-                if (pos >= Buildings.NORTHWESTDEEP) {
+                if (pos >= Buildings.NORTHWEST_DEEP) {
                     gameOptions.append("|deep_deployment|true");
                 }
             }
 
-            if (o.getBooleanValue("TeamOperation")) {
+            if (operation.getBooleanValue("TeamOperation")) {
                 for (String currN : getAllPlayerNames()) {
-                    server.campaign.SPlayer cPlayer = CampaignMain.campaignMain.getPlayer(currN);
-                    String edge = "GMEP|" + teamEdge[cPlayer.getTeamNumber() - 1];
+                    SPlayer cPlayer = CampaignMain.campaignMain.getPlayer(currN);
+                    String edge = STR."GMEP|\{teamEdge[cPlayer.getTeamNumber() - 1]}";
                     CampaignMain.campaignMain.toUser(edge, currN, false);
                 }
             }
@@ -576,20 +577,20 @@ public class ShortOperation implements Comparable<Object> {
             // This way if you have 9 or less players each gets it own starting
             // position
             // More then 9 and you start doubling up.
-            else if (o.getBooleanValue("FreeForAllOperation") && (getAllPlayerNames().size() > 2)) { // 2
+            else if (operation.getBooleanValue("FreeForAllOperation") && (getAllPlayerNames().size() > 2)) { // 2
                 // player FFA start on opposite ends
-                java.util.ArrayList<Integer> edges = new java.util.ArrayList<Integer>(10);
+                ArrayList<Integer> edges = new ArrayList<>(10);
                 int countDown = 9;
                 boolean found = false;
-                int pos = 0;
+                int pos;
 
                 for (pos = 0; pos < 10; pos++) {
                     edges.add(0);
                 }
+
                 pos = 0;
 
                 for (String currN : getAllPlayerNames()) {
-
                     while (!found) {
                         pos = CampaignMain.campaignMain.getRandomNumber(9) + 1;
                         if (edges.get(pos) != 1) {
@@ -597,6 +598,7 @@ public class ShortOperation implements Comparable<Object> {
                             edges.add(pos, 1);
                         }
                     }
+
                     found = false;
                     countDown--;
 
@@ -606,14 +608,17 @@ public class ShortOperation implements Comparable<Object> {
                         pos++;
                     }
 
-                    String edge = "GMEP|" + pos;
+                    String edge = STR."GMEP|\{pos}";
                     CampaignMain.campaignMain.toUser(edge, currN, false);
+
                     if (countDown <= 0) {
                         edges.clear();
                         countDown = 9;
+
                         for (pos = 0; pos < 10; pos++) {
                             edges.add(0);
                         }
+
                         pos = 0;
                     }
                 }
@@ -624,58 +629,66 @@ public class ShortOperation implements Comparable<Object> {
             else {
                 if (defenderEdge != -1) {
                     for (String currN : defenders.keySet()) {
-                        String edge = "GMEP|" + defenderEdge;
+                        String edge = STR."GMEP|\{defenderEdge}";
                         CampaignMain.campaignMain.toUser(edge, currN, false);
                     }
                 }
 
                 if (attackerEdge != -1) {
                     for (String currN : attackers.keySet()) {
-                        String edge = "GMEP|" + attackerEdge;
+                        String edge = STR."GMEP|\{attackerEdge}";
                         CampaignMain.campaignMain.toUser(edge, currN, false);
                     }
                 }
             }
 
             /*
-             * Check to see if autoartillery should be assigned to either group
-             * of players. If so, check the group modifiers and boundaries, and
+             * Check to see if auto artillery should be assigned to either group
+             * of players. If so, check the group modifiers and boundaries and
              * then assign the tubes.
              */
-            boolean attackerArty = o.getBooleanValue("AttackerReceivesAutoArtillery");
-            boolean defenderArty = o.getBooleanValue("DefenderReceivesAutoArtillery");
+            boolean attackerArty = operation.getBooleanValue("AttackerReceivesAutoArtillery");
+            boolean defenderArty = operation.getBooleanValue("DefenderReceivesAutoArtillery");
 
             // if we're going to be adding arty to someone, total the BVs in use
             int totalBV = 0;
             if (attackerArty || defenderArty) {
-
                 for (String currN : defenders.keySet()) {
-                    server.campaign.SPlayer currPlayer = CampaignMain.campaignMain.getPlayer(currN);
-                    totalBV += currPlayer.getArmy(defenders.get(currN)).getBV();
+                    SPlayer currPlayer = CampaignMain.campaignMain.getPlayer(currN);
+                    SArmy currArmy = currPlayer.getArmy(defenders.get(currN));
+
+                    if (currArmy != null) {
+                        totalBV += currArmy.getBV();
+                    }
                 }
                 for (String currN : attackers.keySet()) {
-                    server.campaign.SPlayer currPlayer = CampaignMain.campaignMain.getPlayer(currN);
-                    totalBV += currPlayer.getArmy(attackers.get(currN)).getBV();
+                    SPlayer currPlayer = CampaignMain.campaignMain.getPlayer(currN);
+                    SArmy currArmy = currPlayer.getArmy(attackers.get(currN));
+
+                    if (currArmy != null) {
+                        totalBV += currArmy.getBV();
+                    }
                 }
 
             }
 
-            // check the attacker adjustments and boundarier
+            // check the attacker adjustments and boundaries
             int attackArtBV = 0;
             if (attackerArty) {
                 attackArtBV = totalBV;
                 // load adjustments
-                int flatMod = o.getIntValue("AttackerFlatArtilleryModifier");
-                double percMod = o.getDoubleValue("AttackerPercentArtilleryModifier");
+                int flatMod = operation.getIntValue("AttackerFlatArtilleryModifier");
+                double percMod = operation.getDoubleValue("AttackerPercentArtilleryModifier");
 
                 // load the boundaries
-                int attackArtyMin = o.getIntValue("MinAttackerArtilleryBV");
-                int attackArtyMax = o.getIntValue("MaxAttackerArtilleryBV");
+                int attackArtyMin = operation.getIntValue("MinAttackerArtilleryBV");
+                int attackArtyMax = operation.getIntValue("MaxAttackerArtilleryBV");
 
                 // adjust. percent first (rounding error), then the flat mod.
                 if (percMod > 0) {
                     attackArtBV = (int) (totalBV * percMod);
                 }
+
                 attackArtBV = attackArtBV + flatMod;
 
                 // make sure we're within the configured bounds
@@ -686,22 +699,23 @@ public class ShortOperation implements Comparable<Object> {
                 }
             }
 
-            // check the defender adjustments and boundarier
+            // check the defender adjustments and boundaries
             int defendArtBV = 0;
             if (defenderArty) {
                 defendArtBV = totalBV;
                 // load adjustments
-                int flatMod = o.getIntValue("DefenderFlatArtilleryModifier");
-                double percMod = o.getDoubleValue("DefenderPercentArtilleryModifier");
+                int flatMod = operation.getIntValue("DefenderFlatArtilleryModifier");
+                double percMod = operation.getDoubleValue("DefenderPercentArtilleryModifier");
 
                 // load the boundaries
-                int defendArtyMin = o.getIntValue("MinDefenderArtilleryBV");
-                int defendArtyMax = o.getIntValue("MaxDefenderArtilleryBV");
+                int defendArtyMin = operation.getIntValue("MinDefenderArtilleryBV");
+                int defendArtyMax = operation.getIntValue("MaxDefenderArtilleryBV");
 
                 // adjust. percent first (rounding error), then the flat mod.
                 if (percMod > 0) {
                     defendArtBV = (int) (defendArtBV * percMod);
                 }
+
                 defendArtBV = defendArtBV + flatMod;
 
                 // make sure we're within the configured bounds
@@ -712,17 +726,13 @@ public class ShortOperation implements Comparable<Object> {
                 }
             }
 
-            // send attacker autoarmy, and save string for future use
+            // send attacker autonomy, and save string for future use
             if (attackArtBV > 0) {
-
-                // all attackers will have same autoarmy
-                server.campaign.AutoArmy currAutoArmy = new server.campaign.AutoArmy(attackArtBV, false);
-                attackerAutoString = "PL|AAA|" + currAutoArmy.toString("|");
-                attackArtDesc = "[Bonus Arty: " +
-                                      currAutoArmy.getUnits().size() +
-                                      " pieces, " +
-                                      currAutoArmy.getBV() +
-                                      "BV]<br>";
+                // all attackers will have same autonomy
+                AutoArmy currAutoArmy = new AutoArmy(attackArtBV, false);
+                attackerAutoString = STR."PL|AAA|\{currAutoArmy.toString("|")}";
+                attackArtDesc = STR."[Bonus Arty: \{currAutoArmy.getUnits()
+                                                          .size()} pieces, \{currAutoArmy.getBV()}BV]<br>";
 
                 // so send it to each attacker ...
                 for (String currP : attackers.keySet()) {
@@ -738,15 +748,11 @@ public class ShortOperation implements Comparable<Object> {
 
             // send defender autoarmy, and save for future use
             if (defendArtBV > 0) {
-
                 // all defenders will have same autoarmy
-                server.campaign.AutoArmy currAutoArmy = new server.campaign.AutoArmy(defendArtBV, false);
-                defenderAutoString = "PL|AAA|" + currAutoArmy.toString("|");
-                defendArtDesc = "[Bonus Arty: " +
-                                      currAutoArmy.getUnits().size() +
-                                      " pieces, " +
-                                      currAutoArmy.getBV() +
-                                      "BV]<br>";
+                AutoArmy currAutoArmy = new AutoArmy(defendArtBV, false);
+                defenderAutoString = STR."PL|AAA|\{currAutoArmy.toString("|")}";
+                defendArtDesc = STR."[Bonus Arty: \{currAutoArmy.getUnits()
+                                                          .size()} pieces, \{currAutoArmy.getBV()}BV]<br>";
 
                 // so send it to each defender ...
                 for (String currP : defenders.keySet()) {
@@ -764,35 +770,42 @@ public class ShortOperation implements Comparable<Object> {
             /*
              * Check to see if anyone gets Gun Emplacements
              */
-            boolean attackerGuns = o.getBooleanValue("AttackerReceivesGunEmplacement");
-            boolean defenderGuns = o.getBooleanValue("DefenderReceivesGunEmplacement");
+            boolean attackerGuns = operation.getBooleanValue("AttackerReceivesGunEmplacement");
+            boolean defenderGuns = operation.getBooleanValue("DefenderReceivesGunEmplacement");
 
             // if we're going to be adding arty to someone, total the BVs in use
             totalBV = 0;
             if (attackerGuns || defenderGuns) {
-
                 for (String currN : defenders.keySet()) {
-                    server.campaign.SPlayer currPlayer = CampaignMain.campaignMain.getPlayer(currN);
-                    totalBV += currPlayer.getArmy(defenders.get(currN)).getBV();
+                    SPlayer currPlayer = CampaignMain.campaignMain.getPlayer(currN);
+                    SArmy currArmy = currPlayer.getArmy(defenders.get(currN));
+
+                    if (currArmy != null) {
+                        totalBV += currArmy.getBV();
+                    }
                 }
                 for (String currN : attackers.keySet()) {
-                    server.campaign.SPlayer currPlayer = CampaignMain.campaignMain.getPlayer(currN);
-                    totalBV += currPlayer.getArmy(attackers.get(currN)).getBV();
+                    SPlayer currPlayer = CampaignMain.campaignMain.getPlayer(currN);
+                    SArmy currArmy = currPlayer.getArmy(attackers.get(currN));
+
+                    if (currArmy != null) {
+                        totalBV += currArmy.getBV();
+                    }
                 }
 
             }
 
-            // check the attacker adjustments and boundarier
+            // check the attacker adjustments and boundaries
             int attackGunBV = 0;
             if (attackerGuns) {
                 attackGunBV = totalBV;
                 // load adjustments
-                int flatMod = o.getIntValue("AttackerFlatGunEmplacementModifier");
-                double percMod = o.getDoubleValue("AttackerPercentGunEmplacementModifier");
+                int flatMod = operation.getIntValue("AttackerFlatGunEmplacementModifier");
+                double percMod = operation.getDoubleValue("AttackerPercentGunEmplacementModifier");
 
                 // load the boundaries
-                int attackGunsMin = o.getIntValue("MinAttackerGunEmplacementBV");
-                int attackGunsMax = o.getIntValue("MaxAttackerGunEmplacementBV");
+                int attackGunsMin = operation.getIntValue("MinAttackerGunEmplacementBV");
+                int attackGunsMax = operation.getIntValue("MaxAttackerGunEmplacementBV");
 
                 // adjust. percent first (rounding error), then the flat mod.
                 if (percMod > 0) {
@@ -808,17 +821,17 @@ public class ShortOperation implements Comparable<Object> {
                 }
             }
 
-            // check the defender adjustments and boundarier
+            // check the defender adjustments and boundaries
             int defendGunBV = 0;
             if (defenderGuns) {
                 defendGunBV = totalBV;
                 // load adjustments
-                int flatMod = o.getIntValue("DefenderFlatGunEmplacementModifier");
-                double percMod = o.getDoubleValue("DefenderPercentGunEmplacementModifier");
+                int flatMod = operation.getIntValue("DefenderFlatGunEmplacementModifier");
+                double percMod = operation.getDoubleValue("DefenderPercentGunEmplacementModifier");
 
                 // load the boundaries
-                int defendGunsMin = o.getIntValue("MinDefenderGunEmplacementBV");
-                int defendGunsMax = o.getIntValue("MaxDefenderGunEmplacementBV");
+                int defendGunsMin = operation.getIntValue("MinDefenderGunEmplacementBV");
+                int defendGunsMax = operation.getIntValue("MaxDefenderGunEmplacementBV");
 
                 // adjust. percent first (rounding error), then the flat mod.
                 if (percMod > 0) {
@@ -838,13 +851,10 @@ public class ShortOperation implements Comparable<Object> {
             if (attackGunBV > 0) {
 
                 // all attackers will have same autoarmy
-                server.campaign.AutoArmy currAutoArmy = new server.campaign.AutoArmy(attackGunBV, true);
-                attackerAutoEmplacementsString = "PL|GEA|" + currAutoArmy.toString("|");
-                attackArtDesc += "[Bonus Gun Emplacements: " +
-                                       currAutoArmy.getUnits().size() +
-                                       " pieces, " +
-                                       currAutoArmy.getBV() +
-                                       "BV]<br>";
+                AutoArmy currAutoArmy = new AutoArmy(attackGunBV, true);
+                attackerAutoEmplacementsString = STR."PL|GEA|\{currAutoArmy.toString("|")}";
+                attackArtDesc += STR."[Bonus Gun Emplacements: \{currAutoArmy.getUnits()
+                                                                       .size()} pieces, \{currAutoArmy.getBV()}BV]<br>";
 
                 // so send it to each attacker ...
                 for (String currP : attackers.keySet()) {
@@ -861,13 +871,10 @@ public class ShortOperation implements Comparable<Object> {
             if (defendGunBV > 0) {
 
                 // all defenders will have same autoarmy
-                server.campaign.AutoArmy currAutoArmy = new server.campaign.AutoArmy(defendGunBV, true);
-                defenderAutoEmplacementsString = "PL|GEA|" + currAutoArmy.toString("|");
-                defendArtDesc += "[Bonus Gun Emplacements: " +
-                                       currAutoArmy.getUnits().size() +
-                                       " pieces, " +
-                                       currAutoArmy.getBV() +
-                                       "BV]<br>";
+                AutoArmy currAutoArmy = new AutoArmy(defendGunBV, true);
+                defenderAutoEmplacementsString = STR."PL|GEA|\{currAutoArmy.toString("|")}";
+                defendArtDesc += STR."[Bonus Gun Emplacements: \{currAutoArmy.getUnits()
+                                                                       .size()} pieces, \{currAutoArmy.getBV()}BV]<br>";
 
                 // so send it to each defender ...
                 for (String currP : defenders.keySet()) {
@@ -886,8 +893,8 @@ public class ShortOperation implements Comparable<Object> {
              * players. If so, check the group modifiers to find out how many.
              */
 
-            boolean attackerMines = o.getBooleanValue("AttackerReceivesMines");
-            boolean defenderMines = o.getBooleanValue("DefenderReceivesMines");
+            boolean attackerMines = operation.getBooleanValue("AttackerReceivesMines");
+            boolean defenderMines = operation.getBooleanValue("DefenderReceivesMines");
 
             // if we're going to be adding mines to someone, total the BVs in
             // use and tonnage
@@ -896,14 +903,22 @@ public class ShortOperation implements Comparable<Object> {
             if (attackerMines || defenderMines) {
 
                 for (String currN : defenders.keySet()) {
-                    server.campaign.SPlayer currPlayer = CampaignMain.campaignMain.getPlayer(currN);
-                    totalBV += currPlayer.getArmy(defenders.get(currN)).getBV();
-                    totalTonnage += currPlayer.getArmy(defenders.get(currN)).getTotalTonnage();
+                    SPlayer currPlayer = CampaignMain.campaignMain.getPlayer(currN);
+                    SArmy currArmy = currPlayer.getArmy(defenders.get(currN));
+
+                    if (currArmy != null) {
+                        totalBV += currArmy.getBV();
+                        totalTonnage += currArmy.getTotalTonnage();
+                    }
                 }
                 for (String currN : attackers.keySet()) {
-                    server.campaign.SPlayer currPlayer = CampaignMain.campaignMain.getPlayer(currN);
-                    totalBV += currPlayer.getArmy(attackers.get(currN)).getBV();
-                    totalTonnage += currPlayer.getArmy(attackers.get(currN)).getTotalTonnage();
+                    SPlayer currPlayer = CampaignMain.campaignMain.getPlayer(currN);
+                    SArmy currArmy = currPlayer.getArmy(attackers.get(currN));
+
+                    if (currArmy != null) {
+                        totalBV += currArmy.getBV();
+                        totalTonnage += currArmy.getTotalTonnage();
+                    }
                 }
 
             }
@@ -914,12 +929,12 @@ public class ShortOperation implements Comparable<Object> {
             if (attackerMines) {
 
                 // Conventional
-                int ConventionalBVMod = o.getIntValue("AttackerBVPerConventional");
-                int ConventionalTonMod = o.getIntValue("AttackerTonPerConventional");
+                int ConventionalBVMod = operation.getIntValue("AttackerBVPerConventional");
+                int ConventionalTonMod = operation.getIntValue("AttackerTonPerConventional");
 
                 // Vibra
-                int VibraBVMod = o.getIntValue("AttackerBVPerVibra");
-                int VibraTonMod = o.getIntValue("AttackerTonPerVibra");
+                int VibraBVMod = operation.getIntValue("AttackerBVPerVibra");
+                int VibraTonMod = operation.getIntValue("AttackerTonPerVibra");
 
                 if (ConventionalBVMod > 0) {
                     attackerConventionalMines += totalBV / ConventionalBVMod;
@@ -943,13 +958,13 @@ public class ShortOperation implements Comparable<Object> {
             if (defenderMines) {
 
                 // Conventional
-                int ConventionalBVMod = o.getIntValue("DefenderBVPerConventional");
+                int ConventionalBVMod = operation.getIntValue("DefenderBVPerConventional");
                 // DefenderTonPerConventional
-                int ConventionalTonMod = o.getIntValue("DefenderTonPerConventional");
+                int ConventionalTonMod = operation.getIntValue("DefenderTonPerConventional");
 
                 // Vibra
-                int VibraBVMod = o.getIntValue("DefenderBVPerVibra");
-                int VibraTonMod = o.getIntValue("DefenderTonPerVibra");
+                int VibraBVMod = operation.getIntValue("DefenderBVPerVibra");
+                int VibraTonMod = operation.getIntValue("DefenderTonPerVibra");
 
                 if (ConventionalBVMod > 0) {
                     defenderConventionalMines += totalBV / ConventionalBVMod;
@@ -971,12 +986,8 @@ public class ShortOperation implements Comparable<Object> {
             if ((attackerConventionalMines > 0) || (attackerVibraMines > 0)) {
 
                 // all attackers will have same number of mines
-                attackerAutoMinesString = "PL|AAM|" + attackerConventionalMines + "|" + attackerVibraMines;
-                attackArtDesc += "[Bonus Mines: Conventional: " +
-                                       attackerConventionalMines +
-                                       " Vibra: " +
-                                       attackerVibraMines +
-                                       "]<br>";
+                attackerAutoMinesString = STR."PL|AAM|\{attackerConventionalMines}|\{attackerVibraMines}";
+                attackArtDesc += STR."[Bonus Mines: Conventional: \{attackerConventionalMines} Vibra: \{attackerVibraMines}]<br>";
 
                 // so send it to each attacker ...
                 for (String currP : attackers.keySet()) {
@@ -994,12 +1005,8 @@ public class ShortOperation implements Comparable<Object> {
             if ((defenderConventionalMines > 0) || (defenderVibraMines > 0)) {
 
                 // all defenders will have same autoarmy
-                defenderAutoMinesString = "PL|AAM|" + defenderConventionalMines + "|" + defenderVibraMines;
-                defendArtDesc += "[Bonus Mines: Conventional: " +
-                                       defenderConventionalMines +
-                                       " Vibra: " +
-                                       defenderVibraMines +
-                                       "]<br>";
+                defenderAutoMinesString = STR."PL|AAM|\{defenderConventionalMines}|\{defenderVibraMines}";
+                defendArtDesc += STR."[Bonus Mines: Conventional: \{defenderConventionalMines} Vibra: \{defenderVibraMines}]<br>";
 
                 // so send it to each defender ...
                 for (String currP : defenders.keySet()) {
@@ -1013,8 +1020,8 @@ public class ShortOperation implements Comparable<Object> {
                 }
             }
 
-            bots = "PL|UB|" + o.getBooleanValue("BotControlsAll");
-            botTeams = "PL|BOST|" + o.getBooleanValue("BotsAllOnSameTeam");
+            bots = STR."PL|UB|\{operation.getBooleanValue("BotControlsAll")}";
+            botTeams = STR."PL|BOST|\{operation.getBooleanValue("BotsAllOnSameTeam")}";
 
             for (String currN : defenders.keySet()) {
                 CampaignMain.campaignMain.toUser(bots, currN, false);
@@ -1030,8 +1037,8 @@ public class ShortOperation implements Comparable<Object> {
              * Check for Mul Armies
              */
 
-            boolean attackerHasMUL = o.getBooleanValue("AttackerReceivesMULArmy");
-            boolean defenderHasMUL = o.getBooleanValue("DefenderReceivesMULArmy");
+            boolean attackerHasMUL = operation.getBooleanValue("AttackerReceivesMULArmy");
+            boolean defenderHasMUL = operation.getBooleanValue("DefenderReceivesMULArmy");
 
             if (attackerHasMUL || defenderHasMUL) {
                 for (String currPlayer : attackers.keySet()) {
@@ -1040,46 +1047,46 @@ public class ShortOperation implements Comparable<Object> {
 
                         attackerMULs = "PL|SMA|";
 
-                        boolean stolenUnits = o.getBooleanValue("AttackerUnitsTakenBeforeFightStarts");
-                        attackerMULs += generateMULList(o.getIntValue("MinAttackerMulArmies"),
-                              o.getIntValue("MaxAttackerMulArmies"),
-                              o.getValue("AttackerMulArmyList"),
+                        boolean stolenUnits = operation.getBooleanValue("AttackerUnitsTakenBeforeFightStarts");
+                        attackerMULs += generateMULList(operation.getIntValue("MinAttackerMulArmies"),
+                              operation.getIntValue("MaxAttackerMulArmies"),
+                              operation.getValue("AttackerMulArmyList"),
                               stolenUnits,
-                              o);
-                        attackerMULs += generateMULList(o.getIntValue("MinAttackerMulMeks"),
-                              o.getIntValue("MaxAttackerMulMeks"),
-                              o.getValue("AttackerMulMekList"),
+                              operation);
+                        attackerMULs += generateMULList(operation.getIntValue("MinAttackerMulMeks"),
+                              operation.getIntValue("MaxAttackerMulMeks"),
+                              operation.getValue("AttackerMulMekList"),
                               stolenUnits,
-                              o);
-                        attackerMULs += generateMULList(o.getIntValue("MinAttackerMulVehicles"),
-                              o.getIntValue("MaxAttackerMulVehicles"),
-                              o.getValue("AttackerMulVehicleList"),
+                              operation);
+                        attackerMULs += generateMULList(operation.getIntValue("MinAttackerMulVehicles"),
+                              operation.getIntValue("MaxAttackerMulVehicles"),
+                              operation.getValue("AttackerMulVehicleList"),
                               stolenUnits,
-                              o);
-                        attackerMULs += generateMULList(o.getIntValue("MinAttackerMulInf"),
-                              o.getIntValue("MaxAttackerMulInf"),
-                              o.getValue("AttackerMulInfList"),
+                              operation);
+                        attackerMULs += generateMULList(operation.getIntValue("MinAttackerMulInf"),
+                              operation.getIntValue("MaxAttackerMulInf"),
+                              operation.getValue("AttackerMulInfList"),
                               stolenUnits,
-                              o);
-                        attackerMULs += generateMULList(o.getIntValue("MinAttackerMulBA"),
-                              o.getIntValue("MaxAttackerMulBA"),
-                              o.getValue("AttackerMulBAList"),
+                              operation);
+                        attackerMULs += generateMULList(operation.getIntValue("MinAttackerMulBA"),
+                              operation.getIntValue("MaxAttackerMulBA"),
+                              operation.getValue("AttackerMulBAList"),
                               stolenUnits,
-                              o);
-                        attackerMULs += generateMULList(o.getIntValue("MinAttackerMulAero"),
-                              o.getIntValue("MaxAttackerMulAero"),
-                              o.getValue("AttackerMulAeroList"),
+                              operation);
+                        attackerMULs += generateMULList(operation.getIntValue("MinAttackerMulAero"),
+                              operation.getIntValue("MaxAttackerMulAero"),
+                              operation.getValue("AttackerMulAeroList"),
                               stolenUnits,
-                              o);
-                        attackerMULs += generateMULList(o.getIntValue("MinAttackerMulProto"),
-                              o.getIntValue("MaxAttackerMulProto"),
-                              o.getValue("AttackerMulProtoList"),
+                              operation);
+                        attackerMULs += generateMULList(operation.getIntValue("MinAttackerMulProto"),
+                              operation.getIntValue("MaxAttackerMulProto"),
+                              operation.getValue("AttackerMulProtoList"),
                               stolenUnits,
-                              o);
+                              operation);
 
                     } else {
-                        if (o.getBooleanValue("AttackerUnitsTakenBeforeFightStarts")) {
-                            attackerMULs += generateMULList(-1, -1, "", true, o);
+                        if (operation.getBooleanValue("AttackerUnitsTakenBeforeFightStarts")) {
+                            attackerMULs += generateMULList(-1, -1, "", true, operation);
                         } else {
                             attackerMULs = "PL|SMA|CLEAR";
                         }
@@ -1094,41 +1101,41 @@ public class ShortOperation implements Comparable<Object> {
 
                         defenderMULs = "PL|SMA|";
 
-                        defenderMULs += generateMULList(o.getIntValue("MinDefenderMulArmies"),
-                              o.getIntValue("MaxDefenderMulArmies"),
-                              o.getValue("DefenderMulArmyList"),
+                        defenderMULs += generateMULList(operation.getIntValue("MinDefenderMulArmies"),
+                              operation.getIntValue("MaxDefenderMulArmies"),
+                              operation.getValue("DefenderMulArmyList"),
                               false,
-                              o);
-                        defenderMULs += generateMULList(o.getIntValue("MinDefenderMulMeks"),
-                              o.getIntValue("MaxDefenderMulMeks"),
-                              o.getValue("DefenderMulMekList"),
+                              operation);
+                        defenderMULs += generateMULList(operation.getIntValue("MinDefenderMulMeks"),
+                              operation.getIntValue("MaxDefenderMulMeks"),
+                              operation.getValue("DefenderMulMekList"),
                               false,
-                              o);
-                        defenderMULs += generateMULList(o.getIntValue("MinDefenderMulVehicles"),
-                              o.getIntValue("MaxDefenderMulVehicles"),
-                              o.getValue("DefenderMulVehicleList"),
+                              operation);
+                        defenderMULs += generateMULList(operation.getIntValue("MinDefenderMulVehicles"),
+                              operation.getIntValue("MaxDefenderMulVehicles"),
+                              operation.getValue("DefenderMulVehicleList"),
                               false,
-                              o);
-                        defenderMULs += generateMULList(o.getIntValue("MinDefenderMulInf"),
-                              o.getIntValue("MaxDefenderMulInf"),
-                              o.getValue("DefenderMulInfList"),
+                              operation);
+                        defenderMULs += generateMULList(operation.getIntValue("MinDefenderMulInf"),
+                              operation.getIntValue("MaxDefenderMulInf"),
+                              operation.getValue("DefenderMulInfList"),
                               false,
-                              o);
-                        defenderMULs += generateMULList(o.getIntValue("MinDefenderMulBA"),
-                              o.getIntValue("MaxDefenderMulBA"),
-                              o.getValue("DefenderMulBAList"),
+                              operation);
+                        defenderMULs += generateMULList(operation.getIntValue("MinDefenderMulBA"),
+                              operation.getIntValue("MaxDefenderMulBA"),
+                              operation.getValue("DefenderMulBAList"),
                               false,
-                              o);
-                        defenderMULs += generateMULList(o.getIntValue("MinDefenderMulAero"),
-                              o.getIntValue("MaxDefenderMulAero"),
-                              o.getValue("DefenderMulAeroList"),
+                              operation);
+                        defenderMULs += generateMULList(operation.getIntValue("MinDefenderMulAero"),
+                              operation.getIntValue("MaxDefenderMulAero"),
+                              operation.getValue("DefenderMulAeroList"),
                               false,
-                              o);
-                        defenderMULs += generateMULList(o.getIntValue("MinDefenderMulProto"),
-                              o.getIntValue("MaxDefenderMulProto"),
-                              o.getValue("DefenderMulProtoList"),
+                              operation);
+                        defenderMULs += generateMULList(operation.getIntValue("MinDefenderMulProto"),
+                              operation.getIntValue("MaxDefenderMulProto"),
+                              operation.getValue("DefenderMulProtoList"),
                               false,
-                              o);
+                              operation);
                     } else {
                         defenderMULs = "PL|SMA|CLEAR";
                     }
@@ -1139,17 +1146,14 @@ public class ShortOperation implements Comparable<Object> {
             } else {
                 for (String currPlayer : attackers.keySet()) {
                     String attackerMULs = "";
-                    if (o.getBooleanValue("AttackerUnitsTakenBeforeFightStarts")) {
-
+                    if (operation.getBooleanValue("AttackerUnitsTakenBeforeFightStarts")) {
                         attackerMULs = "PL|SMA|";
-                        attackerMULs += generateMULList(-1, -1, "", true, o);
+                        attackerMULs += generateMULList(-1, -1, "", true, operation);
                         CampaignMain.campaignMain.toUser(attackerMULs, currPlayer, false);
                         MULHash.put(currPlayer, attackerMULs);
-
-                    } else {
-                        attackerMULs = "PL|SMA|CLEAR";
                     }
                 }
+
                 String defenderMULs = "PL|SMA|CLEAR";
                 for (String currPlayer : defenders.keySet()) {
                     CampaignMain.campaignMain.toUser(defenderMULs, currPlayer, false);
@@ -1167,24 +1171,21 @@ public class ShortOperation implements Comparable<Object> {
             // Build player list and submit to NewShortResolver
             submitPlayerList();
 
-
-
-
             /*
              * Send GameOptions to the player.
              *
-             * Support for player configurable options was present at this point
+             * Support for player-configurable options was present at this point
              * in the old Task system, but those settings had been unmaintained
-             * for awhile and are/were barely functional. Leaving player
+             * for a while and are/were barely functional. Leaving player
              * config'ed options out for now, but when they get rewritten, this
              * is where they should be matched and sent to the players.
              */
 
-            // look for blind drop first. MM defaults this to false, so only
+            // look for the blind drop first. MM defaults this to false, so only
             // look for true.
             if (CampaignMain.campaignMain.getBooleanConfig("UseBlindDrops")) {
                 gameOptions.append("|real_blind_drop|true");
-            } else if (o.getBooleanValue("RealBlindDrop")) {
+            } else if (operation.getBooleanValue("RealBlindDrop")) {
                 gameOptions.append("|double_blind|true");
                 gameOptions.append("|real_blind_drop|true");
                 doubleBlind = true;
@@ -1192,7 +1193,7 @@ public class ShortOperation implements Comparable<Object> {
                 gameOptions.append("|real_blind_drop|false");
             }
 
-            // if Op isn't set to double blind check to see if the game option
+            // if Op isn't set to double-blind check to see if the game option
             // is.
             if (!doubleBlind) {
                 doubleBlind = CampaignMain.campaignMain.getMegaMekClient()
@@ -1229,120 +1230,120 @@ public class ShortOperation implements Comparable<Object> {
 
                 if ((CampaignMain.campaignMain.getRandomNumber(1000) + 1) <= aTerrain.getDuskChance()) {
                     tempToSet -= Math.abs(aTerrain.getNightTempMod()) / 2;
-                    intelTimeFrame = PlanetaryConditions.L_DUSK;
-                    aTerrain.setLightConditions(PlanetaryConditions.L_DUSK);
+                    intelTimeFrame = Light.DUSK;
+                    aTerrain.setLightConditions(Light.DUSK);
                 } else if ((CampaignMain.campaignMain.getRandomNumber(1000) + 1) <= aTerrain.getNightChance()) {
                     tempToSet -= Math.abs(aTerrain.getNightTempMod());
-                    intelTimeFrame = PlanetaryConditions.L_FULL_MOON;
-                    aTerrain.setLightConditions(PlanetaryConditions.L_FULL_MOON);
+                    intelTimeFrame = Light.FULL_MOON;
+                    aTerrain.setLightConditions(Light.FULL_MOON);
                 } else if ((CampaignMain.campaignMain.getRandomNumber(1000) + 1) <=
                                  aTerrain.getMoonLessNightChance()) {
                     tempToSet -= Math.abs(aTerrain.getNightTempMod());
-                    intelTimeFrame = PlanetaryConditions.L_MOONLESS;
-                    aTerrain.setLightConditions(PlanetaryConditions.L_MOONLESS);
+                    intelTimeFrame = Light.MOONLESS;
+                    aTerrain.setLightConditions(Light.MOONLESS);
                 } else if ((CampaignMain.campaignMain.getRandomNumber(1000) + 1) <=
                                  aTerrain.getPitchBlackNightChance()) {
                     tempToSet -= Math.abs(aTerrain.getNightTempMod());
-                    intelTimeFrame = PlanetaryConditions.L_PITCH_BLACK;
-                    aTerrain.setLightConditions(PlanetaryConditions.L_PITCH_BLACK);
+                    intelTimeFrame = Light.PITCH_BLACK;
+                    aTerrain.setLightConditions(Light.PITCH_BLACK);
                 }
                 // else normal daylight conditions
                 else {
-                    intelTimeFrame = PlanetaryConditions.L_DAY;
+                    intelTimeFrame = Light.DAY;
                 }
 
                 if ((CampaignMain.campaignMain.getRandomNumber(1000) + 1) <= aTerrain.getLightRainfallChance()) {
-                    aTerrain.setWeatherConditions(PlanetaryConditions.WE_LIGHT_RAIN);
+                    aTerrain.setWeatherConditions(Weather.LIGHT_RAIN);
                 } else if ((CampaignMain.campaignMain.getRandomNumber(1000) + 1) <=
                                  aTerrain.getModerateRainFallChance()) {
-                    aTerrain.setWeatherConditions(PlanetaryConditions.WE_MOD_RAIN);
+                    aTerrain.setWeatherConditions(Weather.MOD_RAIN);
                 } else if ((CampaignMain.campaignMain.getRandomNumber(1000) + 1) <=
                                  aTerrain.getHeavyRainfallChance()) {
-                    aTerrain.setWeatherConditions(PlanetaryConditions.WE_HEAVY_RAIN);
+                    aTerrain.setWeatherConditions(Weather.HEAVY_RAIN);
                 } else if ((CampaignMain.campaignMain.getRandomNumber(1000) + 1) <=
                                  aTerrain.getDownPourChance()) {
-                    aTerrain.setWeatherConditions(PlanetaryConditions.WE_DOWNPOUR);
+                    aTerrain.setWeatherConditions(Weather.DOWNPOUR);
                 } else if ((CampaignMain.campaignMain.getRandomNumber(1000) + 1) <=
                                  aTerrain.getLightSnowfallChance()) {
-                    aTerrain.setWeatherConditions(PlanetaryConditions.WE_LIGHT_SNOW);
+                    aTerrain.setWeatherConditions(Weather.LIGHT_SNOW);
                 } else if ((CampaignMain.campaignMain.getRandomNumber(1000) + 1) <=
                                  aTerrain.getModerateSnowFallChance()) {
-                    aTerrain.setWeatherConditions(PlanetaryConditions.WE_MOD_SNOW);
+                    aTerrain.setWeatherConditions(Weather.MOD_SNOW);
                 } else if ((CampaignMain.campaignMain.getRandomNumber(1000) + 1) <=
                                  aTerrain.getHeavySnowfallChance()) {
-                    aTerrain.setWeatherConditions(PlanetaryConditions.WE_HEAVY_SNOW);
+                    aTerrain.setWeatherConditions(Weather.HEAVY_SNOW);
                 } else if ((CampaignMain.campaignMain.getRandomNumber(1000) + 1) <= aTerrain.getSleetChance()) {
-                    aTerrain.setWeatherConditions(PlanetaryConditions.WE_SLEET);
+                    aTerrain.setWeatherConditions(Weather.SLEET);
                 } else if ((CampaignMain.campaignMain.getRandomNumber(1000) + 1) <=
                                  aTerrain.getIceStormChance()) {
-                    aTerrain.setWeatherConditions(PlanetaryConditions.WE_ICE_STORM);
+                    aTerrain.setWeatherConditions(Weather.ICE_STORM);
                 } else if ((CampaignMain.campaignMain.getRandomNumber(1000) + 1) <=
                                  aTerrain.getLightHailChance()) {
-                    aTerrain.setWeatherConditions(PlanetaryConditions.WE_LIGHT_HAIL);
+                    aTerrain.setWeatherConditions(Weather.LIGHT_HAIL);
                 } else if ((CampaignMain.campaignMain.getRandomNumber(1000) + 1) <=
                                  aTerrain.getHeavyHailChance()) {
-                    aTerrain.setWeatherConditions(PlanetaryConditions.WE_HEAVY_HAIL);
+                    aTerrain.setWeatherConditions(Weather.HEAVY_HAIL);
                 }
 
                 if ((CampaignMain.campaignMain.getRandomNumber(1000) + 1) <= aTerrain.getLightWindsChance()) {
-                    aTerrain.setWindStrength(PlanetaryConditions.WI_LIGHT_GALE);
+                    aTerrain.setWindStrength(Wind.LIGHT_GALE);
                 } else if ((CampaignMain.campaignMain.getRandomNumber(1000) + 1) <=
                                  aTerrain.getModerateWindsChance()) {
-                    aTerrain.setWindStrength(PlanetaryConditions.WI_MOD_GALE);
+                    aTerrain.setWindStrength(Wind.MOD_GALE);
                 } else if ((CampaignMain.campaignMain.getRandomNumber(1000) + 1) <=
                                  aTerrain.getStrongWindsChance()) {
-                    aTerrain.setWindStrength(PlanetaryConditions.WI_STRONG_GALE);
+                    aTerrain.setWindStrength(Wind.STRONG_GALE);
                 } else if ((CampaignMain.campaignMain.getRandomNumber(1000) + 1) <=
                                  aTerrain.getStormWindsChance()) {
-                    aTerrain.setWindStrength(PlanetaryConditions.WI_STORM);
+                    aTerrain.setWindStrength(Wind.STORM);
                 } else if ((CampaignMain.campaignMain.getRandomNumber(1000) + 1) <=
                                  aTerrain.getTornadoF13WindsChance()) {
-                    aTerrain.setWindStrength(PlanetaryConditions.WI_TORNADO_F13);
+                    aTerrain.setWindStrength(Wind.TORNADO_F1_TO_F3);
                 } else if ((CampaignMain.campaignMain.getRandomNumber(1000) + 1) <=
                                  aTerrain.getTornadoF4WindsChance()) {
-                    aTerrain.setWindStrength(PlanetaryConditions.WI_TORNADO_F4);
+                    aTerrain.setWindStrength(Wind.TORNADO_F4);
                 }
 
                 boolean wind = false;
 
                 if (aTerrain.getLightWindsChance() > 0) {
                     wind = true;
-                    aTerrain.setMaxWindStrength(PlanetaryConditions.WI_LIGHT_GALE);
+                    aTerrain.setMaxWindStrength(Wind.LIGHT_GALE);
                 }
 
                 if (aTerrain.getModerateWindsChance() > 0) {
                     wind = true;
-                    aTerrain.setMaxWindStrength(PlanetaryConditions.WI_MOD_GALE);
+                    aTerrain.setMaxWindStrength(Wind.MOD_GALE);
                 }
                 if (aTerrain.getStrongWindsChance() > 0) {
                     wind = true;
-                    aTerrain.setMaxWindStrength(PlanetaryConditions.WI_STRONG_GALE);
+                    aTerrain.setMaxWindStrength(Wind.STRONG_GALE);
                 }
                 if (aTerrain.getStormWindsChance() > 0) {
                     wind = true;
-                    aTerrain.setMaxWindStrength(PlanetaryConditions.WI_STORM);
+                    aTerrain.setMaxWindStrength(Wind.STORM);
                 }
                 if (aTerrain.getTornadoF13WindsChance() > 0) {
                     wind = true;
-                    aTerrain.setMaxWindStrength(PlanetaryConditions.WI_TORNADO_F13);
+                    aTerrain.setMaxWindStrength(Wind.TORNADO_F1_TO_F3);
                 }
                 if (aTerrain.getTornadoF4WindsChance() > 0) {
                     wind = true;
-                    aTerrain.setMaxWindStrength(PlanetaryConditions.WI_TORNADO_F4);
+                    aTerrain.setMaxWindStrength(Wind.TORNADO_F4);
                 }
 
                 if ((CampaignMain.campaignMain.getRandomNumber(1000) + 1) <= aTerrain.getLightFogChance()) {
-                    aTerrain.setFog(PlanetaryConditions.FOG_LIGHT);
+                    aTerrain.setFog(Fog.FOG_LIGHT);
                 } else if ((CampaignMain.campaignMain.getRandomNumber(1000) + 1) <=
                                  aTerrain.getHeavyFogChance()) {
-                    aTerrain.setFog(PlanetaryConditions.FOG_HEAVY);
+                    aTerrain.setFog(Fog.FOG_HEAVY);
                 }
 
                 if ((CampaignMain.campaignMain.getRandomNumber(1000) + 1) <= aTerrain.getEMIChance()) {
                     aTerrain.setEMI(EMI.EMI);
                 }
 
-                if (aTerrain.getAtmosphere() <= PlanetaryConditions.ATMO_TRACE) {
+                if (aTerrain.getAtmosphere().isLighterOrEqualThan(Atmosphere.TRACE)) {
                     gameOptions.append("|fire|false");
                     aTerrain.setShiftingWindDirection(false);
                     aTerrain.setShiftingWindStrength(false);
@@ -1352,83 +1353,80 @@ public class ShortOperation implements Comparable<Object> {
                                  .booleanOption("tacops_start_fire") && !wind) {
                     aTerrain.setShiftingWindDirection(true);
                     aTerrain.setShiftingWindStrength(true);
-                    aTerrain.setMaxWindStrength(PlanetaryConditions.WI_LIGHT_GALE);
+                    aTerrain.setMaxWindStrength(Wind.LIGHT_GALE);
                 }
 
-
                 aTerrain.setTemperature(tempToSet);
-
             }
 
-            PlanetaryConditions pc = new PlanetaryConditions();
+            PlanetaryConditions planetaryConditions = new PlanetaryConditions();
 
-            pc.setAtmosphere(aTerrain.getAtmosphere());
-            pc.setFog(aTerrain.getFog());
-            pc.setLight(aTerrain.getLightConditions());
-            pc.setWindStrength(aTerrain.getWindStrength());
-            pc.setWeather(aTerrain.getWeatherConditions());
+            planetaryConditions.setAtmosphere(aTerrain.getAtmosphere());
+            planetaryConditions.setFog(aTerrain.getFog());
+            planetaryConditions.setLight(aTerrain.getLightConditions());
+            planetaryConditions.setWind(aTerrain.getWindStrength());
+            planetaryConditions.setWeather(aTerrain.getWeatherConditions());
 
             intelWeather = aTerrain.getWeatherConditions();
             intelWind = aTerrain.getWindStrength();
             intelTemp = aTerrain.getTemperature();
             intelGravity = aTerrain.getGravity();
             intelVacuum = aTerrain.getAtmosphere() <= PlanetaryConditions.ATMO_TRACE;
-            intelVisibility = pc.getVisualRange(null, false);
+            intelVisibility = planetaryConditions.getVisualRange(null, false);
 
 
             // if this is a DB game then exclusive_db_deployment needs to be
             // turned off as players
             // maybe getting random edges assigned to them
-            if (o.getBooleanValue("FreeForAllOperation")) {
+            if (operation.getBooleanValue("FreeForAllOperation")) {
                 gameOptions.append("|exclusive_db_deployment|false");
             }
 
             // Check if this operation is using victory conditions. If so then
-            // Send the pertinate data.
-            if (((o.getIntValue("NumberOfVictoryConditions") > 0) && (o.getBooleanValue("UseDestroyEnemyBV"))) ||
-                      o.getBooleanValue("UseBVRatioPercent") ||
-                      o.getBooleanValue("UseUnitCommander") ||
-                      o.getBooleanValue("UseGameTurnLimit") ||
-                      o.getBooleanValue("UseKillCount")) {
+            // Send the pertinent data.
+            if (((operation.getIntValue("NumberOfVictoryConditions") > 0) &&
+                       (operation.getBooleanValue("UseDestroyEnemyBV"))) ||
+                      operation.getBooleanValue("UseBVRatioPercent") ||
+                      operation.getBooleanValue("UseUnitCommander") ||
+                      operation.getBooleanValue("UseGameTurnLimit") ||
+                      operation.getBooleanValue("UseKillCount")) {
                 gameOptions.append("|check_victory|true");
                 gameOptions.append("|achieve_conditions|");
-                gameOptions.append(o.getValue("NumberOfVictoryConditions"));
+                gameOptions.append(operation.getValue("NumberOfVictoryConditions"));
                 gameOptions.append("|use_bv_destroyed|");
-                gameOptions.append(o.getValue("UseDestroyEnemyBV"));
+                gameOptions.append(operation.getValue("UseDestroyEnemyBV"));
                 gameOptions.append("|bv_destroyed_percent|");
-                gameOptions.append(o.getValue("DestroyEnemyBV"));
+                gameOptions.append(operation.getValue("DestroyEnemyBV"));
                 gameOptions.append("|use_bv_ratio|");
-                gameOptions.append(o.getValue("UseBVRatioPercent"));
+                gameOptions.append(operation.getValue("UseBVRatioPercent"));
                 gameOptions.append("|bv_ratio_percent|");
-                gameOptions.append(o.getValue("BVRatioPercent"));
+                gameOptions.append(operation.getValue("BVRatioPercent"));
                 gameOptions.append("|commander_killed|");
-                gameOptions.append(o.getValue("UseUnitCommander"));
+                gameOptions.append(operation.getValue("UseUnitCommander"));
                 gameOptions.append("|use_game_turn_limit|");
-                gameOptions.append(o.getValue("UseGameTurnLimit"));
+                gameOptions.append(operation.getValue("UseGameTurnLimit"));
                 gameOptions.append("|game_turn_limit|");
-                gameOptions.append(o.getValue("GameTurnLimit"));
+                gameOptions.append(operation.getValue("GameTurnLimit"));
                 gameOptions.append("|use_kill_count|");
-                gameOptions.append(o.getValue("UseKillCount"));
+                gameOptions.append(operation.getValue("UseKillCount"));
                 gameOptions.append("|game_kill_count|");
-                gameOptions.append(o.getValue("KillCount"));
+                gameOptions.append(operation.getValue("KillCount"));
             } else {
                 gameOptions.append(
                       "|check_victory|true|use_bv_destroyed|false|use_bv_ratio|false|use_game_turn_limit|false|use_kill_count|false");
             }
 
-            // if your using bots then turn off exclusive db deployment.
-            if (o.getBooleanValue("BotControlsAll") || o.getBooleanValue("BotsAllOnSameTeam")) {
+            // if you're using bots then turn off exclusive db deployment.
+            if (operation.getBooleanValue("BotControlsAll") || operation.getBooleanValue("BotsAllOnSameTeam")) {
                 gameOptions.append("|exclusive_db_deployment|false");
             }
 
             gameOptions.append("|individual_initiative|");
-            gameOptions.append(o.getValue("IndividualInit"));
+            gameOptions.append(operation.getValue("IndividualInit"));
 
             // If Server is not using Force Size mod then turn off the option In
             // MM
             // This will allow for closer BV's between MW and MM
-            //gameOptions.append("|no_force_size_mod|");
-            //gameOptions.append(!CampaignMain.cm.getBooleanConfig("UseOperationsRule"));
             gameOptions.append("|year|");
             gameOptions.append(CampaignMain.campaignMain.getIntegerConfig("CampaignYear"));
 
@@ -1440,13 +1438,16 @@ public class ShortOperation implements Comparable<Object> {
             if (CampaignMain.campaignMain.isUsingAdvanceRepair()) {
                 // defending units
                 for (String currN : defenders.keySet()) {
-                    server.campaign.SPlayer currP = CampaignMain.campaignMain.getPlayer(currN);
-                    server.campaign.SArmy currA = currP.getArmy(defenders.get(currN));
-                    java.util.Enumeration<Unit> units = currA.getUnits().elements();
-                    while (units.hasMoreElements()) {
-                        server.campaign.SUnit u = (server.campaign.SUnit) units.nextElement();
-                        if (UnitUtils.isRepairing(u.getEntity())) {
-                            CampaignMain.campaignMain.getRTT().stopAllRepairJobs(u.getId(), currP);
+                    SPlayer currP = CampaignMain.campaignMain.getPlayer(currN);
+                    SArmy currA = currP.getArmy(defenders.get(currN));
+
+                    if (currA != null) {
+                        Enumeration<Unit> units = currA.getUnits().elements();
+                        while (units.hasMoreElements()) {
+                            SUnit nextElement = (SUnit) units.nextElement();
+                            if (UnitUtils.isRepairing(nextElement.getEntity())) {
+                                CampaignMain.campaignMain.getRTT().stopAllRepairJobs(nextElement.getId(), currP);
+                            }
                         }
                     }
                 }
@@ -1499,8 +1500,8 @@ public class ShortOperation implements Comparable<Object> {
             // do the actual math ...
             totalWeight = (int) Math.sqrt(totalWeight);
 
-            int sizeX = Math.max(totalWeight + 3, o.getIntValue("MapSizeX"));
-            int sizeY = Math.max(totalWeight - 2, o.getIntValue("MapSizeY"));
+            int sizeX = Math.max(totalWeight + 3, operation.getIntValue("MapSizeX"));
+            int sizeY = Math.max(totalWeight - 2, operation.getIntValue("MapSizeY"));
             mapSize = new java.awt.Dimension(sizeX, sizeY);
 
 
@@ -1513,15 +1514,15 @@ public class ShortOperation implements Comparable<Object> {
 
             // Check to see if we are using the Random City Generator for MM
             // If so then sent the playEnvironment
-            if (o.getBooleanValue("RCGUseCityGenerator")) {
+            if (operation.getBooleanValue("RCGUseCityGenerator")) {
                 cityBuilder.append("0$0$");// min max buildings old code.
-                cityBuilder.append(o.getValue("RCGMinCF") + "$");
-                cityBuilder.append(o.getValue("RCGMaxCF") + "$");
-                cityBuilder.append(o.getValue("RCGMinFloors") + "$");
-                cityBuilder.append(o.getValue("RCGMaxFloors") + "$");
-                cityBuilder.append(o.getValue("RCGCityDensity") + "$");
-                cityBuilder.append(o.getValue("RCGCityType") + "$");
-                cityBuilder.append(o.getValue("RCGCityBlocks") + "$");
+                cityBuilder.append(operation.getValue("RCGMinCF") + "$");
+                cityBuilder.append(operation.getValue("RCGMaxCF") + "$");
+                cityBuilder.append(operation.getValue("RCGMinFloors") + "$");
+                cityBuilder.append(operation.getValue("RCGMaxFloors") + "$");
+                cityBuilder.append(operation.getValue("RCGCityDensity") + "$");
+                cityBuilder.append(operation.getValue("RCGCityType") + "$");
+                cityBuilder.append(operation.getValue("RCGCityBlocks") + "$");
             }
 
             //Now that everything is setup, send the intel reports!
@@ -1544,7 +1545,7 @@ public class ShortOperation implements Comparable<Object> {
                                                            "|" +
                                                            mapSize.height +
                                                            "|" +
-                                                           o.getValue("MapMedium"), currN, false);
+                                                           operation.getValue("MapMedium"), currN, false);
                 } else {
                     CampaignMain.campaignMain.toUser("PE|" +
                                                            playEnvironment.toString(cityBuilder.toString()) +
@@ -1553,7 +1554,7 @@ public class ShortOperation implements Comparable<Object> {
                                                            "|" +
                                                            mapSize.height +
                                                            "|" +
-                                                           o.getValue("MapMedium"), currN, false);
+                                                           operation.getValue("MapMedium"), currN, false);
                 }
 
                 if (buildingOptions.length() > 1) {
@@ -1989,6 +1990,13 @@ public class ShortOperation implements Comparable<Object> {
         c.putAll(attackers);
         c.putAll(defenders);
         return c;
+    }
+
+    /**
+     * Method which returns the name of this operation. Used to pull an Operation (parameter bag) from the manager.
+     */
+    public String getName() {
+        return opName;
     }
 
     /**

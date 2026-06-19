@@ -1,53 +1,53 @@
 package mekwars.server.util;
 
+import java.util.Enumeration;
+import java.util.StringJoiner;
 
 import megamek.common.options.IOption;
 import megamek.common.options.IOptionGroup;
+import megamek.logging.MMLogger;
 import mekwars.server.campaign.CampaignMain;
+import mekwars.server.campaign.SUnit;
 
 //@Salient this is a wrapper class for MM's QuirksHandler
 public class QuirkHandler {
-    private static mekwars.server.util.QuirkHandler handler;
+    private static final MMLogger LOGGER = MMLogger.create(QuirkHandler.class);
+    private static QuirkHandler handler;
 
-    protected QuirkHandler() throws Exception {
-        if (CampaignMain.campaignMain.getBooleanConfig("EnableQuirks")) {
-            QuirksHandler.initQuirksList();
-        }
-
+    protected QuirkHandler() {
     }
 
-    public static mekwars.server.util.QuirkHandler getInstance() {
+    public static QuirkHandler getInstance() {
         if (handler == null) {
             try {
-                handler = new mekwars.server.util.QuirkHandler();
+                handler = new QuirkHandler();
             } catch (Exception e) {
-                MWLogger.errLog(e);
+                LOGGER.error(e);
             }
         }
+
         return handler;
     }
 
-    public void setQuirks(server.campaign.SUnit unit) {
+    public void setQuirks(SUnit unit) {
         if (CampaignMain.campaignMain.getBooleanConfig("EnableQuirks")) {
-            unit.getEntity().loadDefaultQuirks();
-            MWLogger.debugLog(unit.getModelName() + " " + unit.getId() + " Quirks: " + returnQuirkList(unit));
+            LOGGER.debug(STR."\{unit.getModelName()} \{unit.getId()} Quirks: \{returnQuirkList(unit)}");
         }
     }
 
     /**
-     * @param unit
-     *
      * @return quirksList
      */
-    public String returnQuirkList(server.campaign.SUnit unit) {
-        java.util.StringJoiner quirksList = new java.util.StringJoiner("&");
+    public String returnQuirkList(SUnit unit) {
+        StringJoiner quirksList = new StringJoiner("&");
 
-        for (java.util.Enumeration<IOptionGroup> optionGroups = unit.getEntity().getQuirks().getGroups();
+        for (Enumeration<IOptionGroup> optionGroups = unit.getEntity().getQuirks().getGroups();
               optionGroups.hasMoreElements(); ) {
             IOptionGroup group = optionGroups.nextElement();
             if (unit.getEntity().getQuirks().count(group.getKey()) > 0) {
-                for (java.util.Enumeration<IOption> options = group.getOptions(); options.hasMoreElements(); ) {
+                for (Enumeration<IOption> options = group.getOptions(); options.hasMoreElements(); ) {
                     IOption option = options.nextElement();
+
                     if (option != null && option.booleanValue()) {
                         quirksList.add(option.getName());
                     }
@@ -63,17 +63,15 @@ public class QuirkHandler {
     }
 
     /**
-     * @param unit
-     *
      * @return quirksList
      */
-    public String returnQuirkSave(server.campaign.SUnit unit) {
+    public String returnQuirkSave(SUnit unit) {
         if (CampaignMain.campaignMain.getBooleanConfig("EnableQuirks")) {
-            java.util.StringJoiner quirksList = new java.util.StringJoiner("!");
+            StringJoiner quirksList = new StringJoiner("!");
             quirksList.add(returnHtmlQuirkList(unit));
             quirksList.add(returnQuirkList(unit));
 
-            MWLogger.debugLog(unit.getVerboseModelName() + ": " + quirksList.toString());
+            LOGGER.debug(STR."\{unit.getVerboseModelName()}: \{quirksList.toString()}");
 
             return quirksList.toString(); // if a unit has no quirks, it will return a "!"
         }
@@ -82,18 +80,17 @@ public class QuirkHandler {
     }
 
     /**
-     * @param unit
-     *
      * @return quirksList
      */
-    public String returnHtmlQuirkList(server.campaign.SUnit unit) {
-        java.util.StringJoiner quirksList = new java.util.StringJoiner("<br>*");
+    public String returnHtmlQuirkList(SUnit unit) {
+        StringJoiner quirksList = new StringJoiner("<br>*");
 
-        for (java.util.Enumeration<IOptionGroup> optionGroups = unit.getEntity().getQuirks().getGroups();
+        for (Enumeration<IOptionGroup> optionGroups = unit.getEntity().getQuirks().getGroups();
               optionGroups.hasMoreElements(); ) {
             IOptionGroup group = optionGroups.nextElement();
+
             if (unit.getEntity().getQuirks().count(group.getKey()) > 0) {
-                for (java.util.Enumeration<IOption> options = group.getOptions(); options.hasMoreElements(); ) {
+                for (Enumeration<IOption> options = group.getOptions(); options.hasMoreElements(); ) {
                     IOption option = options.nextElement();
                     if (option != null && option.booleanValue()) {
                         quirksList.add(option.getDisplayableNameWithValue());
@@ -109,13 +106,15 @@ public class QuirkHandler {
         return quirksList.toString();
     }
 
-    public boolean hasQuirks(server.campaign.SUnit unit) {
-        for (java.util.Enumeration<IOptionGroup> optionGroups = unit.getEntity().getQuirks().getGroups();
+    public boolean hasQuirks(SUnit unit) {
+        for (Enumeration<IOptionGroup> optionGroups = unit.getEntity().getQuirks().getGroups();
               optionGroups.hasMoreElements(); ) {
             IOptionGroup group = optionGroups.nextElement();
+
             if (unit.getEntity().getQuirks().count(group.getKey()) > 0) {
-                for (java.util.Enumeration<IOption> options = group.getOptions(); options.hasMoreElements(); ) {
+                for (Enumeration<IOption> options = group.getOptions(); options.hasMoreElements(); ) {
                     IOption option = options.nextElement();
+
                     if (option != null && option.booleanValue()) {
                         return true;
                     }
@@ -124,7 +123,5 @@ public class QuirkHandler {
         }
         return false;
     }
-
-
 }
 

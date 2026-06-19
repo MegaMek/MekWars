@@ -14,18 +14,15 @@
  * for more details.
  */
 
-/**
- *
- * @author Torren (Jason Tighe) 10.6.05
- *
- */
-
 package mekwars.server.util;
+
+import java.util.Vector;
 
 import megamek.common.CriticalSlot;
 import megamek.common.equipment.Mounted;
 import mekwars.common.util.UnitUtils;
 import mekwars.server.campaign.CampaignMain;
+import mekwars.server.campaign.SPlayer;
 
 /**
  *
@@ -35,17 +32,17 @@ import mekwars.server.campaign.CampaignMain;
  */
 public class RepairTrackingThread extends Thread {
 
-    private java.util.Vector<Repair> repairList = new java.util.Vector<Repair>(1, 1);
-    private long repairtime = 0;
+    private final Vector<Repair> repairList = new Vector<>(1, 1);
+    private final long repairTime;
 
 
     public RepairTrackingThread(long Time) {
         super("Repair Tracking Thread");
-        repairtime = Time;
+        repairTime = Time;
     }
 
-    public static mekwars.server.util.Repair Repair(server.campaign.SPlayer player, int unitID, boolean armor,
-          int location, int slot, int techType, int retries, int techWorkMod, boolean salvage) {
+    public static Repair Repair(SPlayer player, int unitID, boolean armor, int location, int slot, int techType,
+          int retries, int techWorkMod, boolean salvage) {
 
         return new mekwars.server.util.Repair(player,
               unitID,
@@ -68,8 +65,8 @@ public class RepairTrackingThread extends Thread {
     public synchronized void run() {
         try {
             while (true) {
-                //MWLogger.errLog("Wait time: "+repairtime);
-                this.wait(repairtime);
+                //MWLogger.errLog("Wait time: "+repairTime);
+                this.wait(repairTime);
                 checkRepairs();
             }
         } catch (Exception ex) {

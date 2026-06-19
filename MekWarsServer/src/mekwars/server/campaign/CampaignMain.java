@@ -434,7 +434,7 @@ public final class CampaignMain implements Serializable {
     }
 
     public double getDoubleConfig(String key) {
-        return MathUtility.parseDouble(campaignMain.getConfig(key), -1);
+        return MathUtility.parseDouble(campaignMain.getConfig(key), -1.0);
     }
 
     public String getConfig(String key) {
@@ -764,17 +764,17 @@ public final class CampaignMain implements Serializable {
      * Loop through all online players (all houses, all three duty modes) and send mail to those players who are mods.
      */
     public void doSendModMail(String username, String text) {
-        int sendCommandLevel = 0;
+        AccessRole sendCommandLevel = AccessRole.NONE;
         AccessRole commandLevel = CampaignMain.campaignMain.getServerCommands().get("MM").getExecutionLevel();
 
-        int userLevel;
+        AccessRole userLevel;
 
         if (username.equalsIgnoreCase("NOTE")) {
             if (!CampaignMain.campaignMain.getBooleanConfig("AllowLowerLevelUsersToSeeUpperLevelUsersDoings")) {
                 sendCommandLevel = CampaignMain.campaignMain.getServer()
                                          .getUserLevel(text.substring(0, text.indexOf(" ")).trim());
             } else {
-                sendCommandLevel = 100;
+                sendCommandLevel = AccessRole.MODERATOR;
             }
         }
 
@@ -788,7 +788,7 @@ public final class CampaignMain implements Serializable {
             for (String currName : sHouse.getReservePlayers().keySet()) {
                 userLevel = CampaignMain.campaignMain.getServer().getUserLevel(currName);
 
-                if (userLevel >= commandLevel && userLevel >= sendCommandLevel) {
+                if (userLevel.isGreaterOrEqual(commandLevel) && userLevel.isGreaterOrEqual(sendCommandLevel)) {
                     this.toUser(text, currName, true);
                 }
             }
@@ -796,7 +796,7 @@ public final class CampaignMain implements Serializable {
             for (String currName : sHouse.getActivePlayers().keySet()) {
                 userLevel = CampaignMain.campaignMain.getServer().getUserLevel(currName);
 
-                if (userLevel >= commandLevel && userLevel >= sendCommandLevel) {
+                if (userLevel.isGreaterOrEqual(commandLevel) && userLevel.isGreaterOrEqual(sendCommandLevel)) {
                     this.toUser(text, currName, true);
                 }
             }
@@ -804,7 +804,7 @@ public final class CampaignMain implements Serializable {
             for (String currName : sHouse.getFightingPlayers().keySet()) {
                 userLevel = CampaignMain.campaignMain.getServer().getUserLevel(currName);
 
-                if (userLevel >= commandLevel && userLevel >= sendCommandLevel) {
+                if (userLevel.isGreaterOrEqual(commandLevel) && userLevel.isGreaterOrEqual(sendCommandLevel)) {
                     this.toUser(text, currName, true);
                 }
             }
@@ -822,21 +822,27 @@ public final class CampaignMain implements Serializable {
             for (String currName : sHouse.getReservePlayers().keySet()) {
                 Command command = CampaignMain.campaignMain.getServerCommands().get("MM");
 
-                if (CampaignMain.campaignMain.getServer().getUserLevel(currName) >= command.getExecutionLevel()) {
+                if (CampaignMain.campaignMain.getServer()
+                          .getUserLevel(currName)
+                          .isGreaterOrEqual(command.getExecutionLevel())) {
                     this.toUser(text, currName, true);
                 }
             }
             for (String currName : sHouse.getActivePlayers().keySet()) {
                 Command command = CampaignMain.campaignMain.getServerCommands().get("MM");
 
-                if (CampaignMain.campaignMain.getServer().getUserLevel(currName) >= command.getExecutionLevel()) {
+                if (CampaignMain.campaignMain.getServer()
+                          .getUserLevel(currName)
+                          .isGreaterOrEqual(command.getExecutionLevel())) {
                     this.toUser(text, currName, true);
                 }
             }
             for (String currName : sHouse.getFightingPlayers().keySet()) {
                 Command command = CampaignMain.campaignMain.getServerCommands().get("MM");
 
-                if (CampaignMain.campaignMain.getServer().getUserLevel(currName) >= command.getExecutionLevel()) {
+                if (CampaignMain.campaignMain.getServer()
+                          .getUserLevel(currName)
+                          .isGreaterOrEqual(command.getExecutionLevel())) {
                     this.toUser(text, currName, true);
                 }
             }
@@ -1191,7 +1197,7 @@ public final class CampaignMain implements Serializable {
         toLogout.getMyHouse().doLogout(toLogout);// hacky.
 
         // clear the addon and send the new logged out status to all players
-        this.doSendToAllOnlinePlayers("PI|CS|" + name + "|" + SPlayer.STATUS_LOGGEDOUT, false);
+        this.doSendToAllOnlinePlayers("PI|CS|" + name + "|" + SPlayer.STATUS_LOGGED_OUT, false);
         toUser("[*] You've logged out of the campaign.", name, true);
     }
 
@@ -1925,7 +1931,7 @@ public final class CampaignMain implements Serializable {
 
         // if he's already logged out, who cares?
         // Well, it turns out that some people do care - see RFE 2126734
-        if (p.getDutyStatus() <= SPlayer.STATUS_LOGGEDOUT &&
+        if (p.getDutyStatus() <= SPlayer.STATUS_LOGGED_OUT &&
                   !mekwars.server.campaign.CampaignMain.campaignMain.getBooleanConfig("DisconnectIdleUsers")) {
             return;
         }
@@ -2587,7 +2593,7 @@ public final class CampaignMain implements Serializable {
          * we can null his player and save some memory space @ next gc().
          * Iterator<SPlayer> i = savePlayers.values().iterator(); while
          * (i.hasNext()) { SPlayer p = i.next(); if (p.isRemoveable()) {
-         * i.remove(); if (p.getDutyStatus() == SPlayer.STATUS_LOGGEDOUT) p =
+         * i.remove(); if (p.getDutyStatus() == SPlayer.STATUS_LOGGED_OUT) p =
          * null; } }
          */
 

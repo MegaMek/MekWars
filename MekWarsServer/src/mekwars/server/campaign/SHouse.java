@@ -72,11 +72,11 @@ import mekwars.server.campaign.util.SerializedMessage;
  * @version 2016.10.06
  *       <p>
  *       Modifications: - Changed addActivityPP to just keep track of PP, which is then used at the tick. Looping
- *       through the planets was taking way too long. - Moved component prodution to addActivityPP to enable access from
- *       a Quartz task
+ *       through the planets was taking way too long. - Moved component production to addActivityPP to enable access
+ *       from a Quartz task
  *
  */
-public class SHouse extends TimeUpdateHouse implements Comparable<SHouse>, ISeller, IBuyer, Serializable {
+public class SHouse extends TimeUpdateHouse implements Comparable<Object>, ISeller, IBuyer, Serializable {
 
     @Serial
     private static final long serialVersionUID = -1558672678021355218L;
@@ -1982,6 +1982,13 @@ public class SHouse extends TimeUpdateHouse implements Comparable<SHouse>, ISell
         Money = newMoney;
     }
 
+    /**
+     * Pass-though method. <code>boolean isNew</code> is unused in SHouse; however, it is needed to comply with IBuyer.
+     */
+    public String addUnit(SUnit unit, boolean isNew, boolean sendUpdate) {
+        return this.addUnit(unit, sendUpdate);
+    }
+
     public String removeUnit(SUnit unitToRemove, boolean sendUpdate) {
 
         java.util.Vector<mekwars.server.campaign.SUnit> Weightclass = this.getHangar(unitToRemove.getType())
@@ -1994,13 +2001,6 @@ public class SHouse extends TimeUpdateHouse implements Comparable<SHouse>, ISell
         }
 
         return hsUpdate;
-    }
-
-    /**
-     * Pass-though method. <code>boolean isNew</code> is unused in SHouse; however, it is needed to comply with IBuyer.
-     */
-    public String addUnit(SUnit unit, boolean isNew, boolean sendUpdate) {
-        return this.addUnit(unit, sendUpdate);
     }
 
     /*
@@ -2722,7 +2722,7 @@ public class SHouse extends TimeUpdateHouse implements Comparable<SHouse>, ISell
         // add info to logs
         java.util.Date d = new java.util.Date(System.currentTimeMillis());
         MWLogger.mainLog(d + ":" + "User Logged out: " + realName);
-        CampaignMain.campaignMain.toUser("CS|" + SPlayer.STATUS_LOGGEDOUT, realName, false);
+        CampaignMain.campaignMain.toUser("CS|" + SPlayer.STATUS_LOGGED_OUT, realName, false);
     }
 
     /**

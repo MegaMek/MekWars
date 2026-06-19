@@ -15,9 +15,11 @@
  */
 package mekwars.server.campaign.pilot.skills;
 
-import common.campaign.pilot.Pilot;
-import common.campaign.pilot.skills.PilotSkill;
-import megamek.common.Entity;
+
+import megamek.common.units.Entity;
+import mekwars.common.campaign.pilot.Pilot;
+import mekwars.common.campaign.pilot.skills.PilotSkill;
+import mekwars.server.campaign.pilot.SPilot;
 
 /**
  * Base class for all skill implementations. Overide this if you want to create a cool new skill. You may want to use
@@ -59,9 +61,9 @@ public abstract class SPilotSkill extends PilotSkill {
 
         // AstechSkills follow their own Rules.
         if (this instanceof AstechSkill) {
-            ((AstechSkill) this).addToPilot(pilot);
+            this.addToPilot(pilot);
         } else if (this instanceof EdgeSkill) {
-            ((EdgeSkill) this).addToPilot(pilot);
+            this.addToPilot(pilot);
         } else {
             setLevel(-1);
             pilot.getSkills().add(this);
@@ -71,7 +73,6 @@ public abstract class SPilotSkill extends PilotSkill {
     /**
      * Remove a skill from a pilot
      *
-     * @param pilot
      */
     public void removeFromPilot(Pilot pilot) {
         pilot.getSkills().remove(this);
@@ -85,7 +86,7 @@ public abstract class SPilotSkill extends PilotSkill {
 
     public abstract int getBVMod(Entity unit);
 
-    public int getBVMod(Entity unit, server.campaign.pilot.SPilot pilot) {
+    public int getBVMod(Entity unit, SPilot pilot) {
         return 0;
     }
 }
