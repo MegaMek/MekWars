@@ -50,9 +50,9 @@ public class CommPCmd extends CProtCommand {
     @Override
     public boolean execute(String input) {
 
-        StringTokenizer ST = new StringTokenizer(input, delimiter);
-        if (check(ST.nextToken()) && ST.hasMoreTokens()) {
-            input = ST.nextToken();
+        StringTokenizer stringTokenizer = new StringTokenizer(input, delimiter);
+        if (check(stringTokenizer.nextToken()) && stringTokenizer.hasMoreTokens()) {
+            input = stringTokenizer.nextToken();
 
             if (!client.isDedicated()) {
                 client.doParseDataInput(input);

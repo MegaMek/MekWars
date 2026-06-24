@@ -577,7 +577,7 @@ public class AdvancedRepairDialog extends JFrame implements ActionListener, Mous
 
         Pilot pilot = playerUnit.getPilot();
 
-        if (pilot.getSkills().has(PilotSkill.AstechSkillID)) {
+        if (pilot.getSkills().has(PilotSkill.AsTechSkillID)) {
             techString.add(UnitUtils.techDescription(UnitUtils.TECH_PILOT));
         }
 
@@ -736,7 +736,7 @@ public class AdvancedRepairDialog extends JFrame implements ActionListener, Mous
                 if (techString != null) {
                     if (UnitUtils.techType(techString) == UnitUtils.TECH_PILOT) {
                         Pilot pilot = playerUnit.getPilot();
-                        techType = pilot.getSkills().getPilotSkill(PilotSkill.AstechSkillID).getLevel();
+                        techType = pilot.getSkills().getPilotSkill(PilotSkill.AsTechSkillID).getLevel();
                     } else if (UnitUtils.techType(techString) == UnitUtils.TECH_REWARD_POINTS) {
                         techType = UnitUtils.TECH_REWARD_POINTS;
                     }

@@ -33,6 +33,9 @@
 
 package mekwars.common.commands;
 
+import java.util.StringTokenizer;
+
+import megamek.codeUtilities.MathUtility;
 import mekwars.common.campaign.clientutils.protocol.IClient;
 
 /**
@@ -57,13 +60,13 @@ public class GameMapEdgePlacementCommand extends Command {
      */
     @Override
     public void execute(String input) {
-        java.util.StringTokenizer st = decode(input);
-        int edge = Integer.parseInt(st.nextToken());
+        StringTokenizer stringTokenizer = decode(input);
+        int edge = MathUtility.parseInt(stringTokenizer.nextToken(), 0);
         client.setPlayerStartingEdge(edge);
     }
 
     /**
-     * @param s
+     *
      */
     @Override
     public void parseReplyArgs(String s) {
@@ -71,7 +74,7 @@ public class GameMapEdgePlacementCommand extends Command {
     }
 
     /**
-     * @param s
+     *
      */
     @Override
     public void parseArguments(String s) {

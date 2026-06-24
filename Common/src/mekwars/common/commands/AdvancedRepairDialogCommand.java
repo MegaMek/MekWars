@@ -63,10 +63,10 @@ public class AdvancedRepairDialogCommand extends Command {
      */
     @Override
     public void execute(String input) {
-        StringTokenizer st = decode(input);
-        int unitID = Integer.parseInt(st.nextToken());
+        StringTokenizer stringTokenizer = decode(input);
+        int unitID = Integer.parseInt(stringTokenizer.nextToken());
 
-        if (st.hasMoreElements()) {
+        if (stringTokenizer.hasMoreElements()) {
             new AdvancedRepairDialog(client, unitID, true);
         } else {
             new AdvancedRepairDialog(client, unitID, false);
@@ -77,7 +77,7 @@ public class AdvancedRepairDialogCommand extends Command {
      *
      */
     @Override
-    public void parseReplyArgs(String s) {
+    public void parseReplyArgs(String string) {
 
     }
 
@@ -93,7 +93,7 @@ public class AdvancedRepairDialogCommand extends Command {
      *
      */
     @Override
-    public void parseArguments(String s) {
+    public void parseArguments(String string) {
 
     }
 }

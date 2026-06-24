@@ -48,15 +48,16 @@ public class SetServerConfigCommand extends Command {
     }
 
     /**
-     * @see Command#execute(java.lang.String)
+     * @see Command#execute(String)
      */
     @Override
     public void execute(String input) {
         try {
-            StringTokenizer st = decode(input);
+            StringTokenizer stringTokenizer = decode(input);
 
-            while (st.hasMoreTokens()) {
-                client.setServerConfigs(TokenReader.readString(st), TokenReader.readString(st));
+            while (stringTokenizer.hasMoreTokens()) {
+                client.setServerConfigs(TokenReader.readString(stringTokenizer),
+                      TokenReader.readString(stringTokenizer));
             }
         } catch (Exception ex) {
             LOGGER.error(ex, "Error setting server config");
@@ -65,7 +66,7 @@ public class SetServerConfigCommand extends Command {
     }//end execute
 
     /**
-     * @param s
+     *
      */
     @Override
     public void parseReplyArgs(String s) {
@@ -73,7 +74,7 @@ public class SetServerConfigCommand extends Command {
     }
 
     /**
-     * @param s
+     *
      */
     @Override
     public void parseArguments(String s) {

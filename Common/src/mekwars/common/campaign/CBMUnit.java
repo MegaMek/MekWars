@@ -36,6 +36,8 @@
 
 package mekwars.common.campaign;
 
+import java.util.StringTokenizer;
+
 import megamek.common.enums.Gender;
 import megamek.common.units.Crew;
 import megamek.common.units.CrewType;
@@ -44,7 +46,7 @@ import mekwars.common.campaign.pilot.Pilot;
 import mekwars.common.util.TokenReader;
 
 /**
- * client-side market unit. The market uses the filenames and other data from the CBMUnit to generate temporary CUnits
+ * Client-side market unit. The market uses the filenames and other data from the CBMUnit to generate temporary CUnits
  * (to determine BV, etc.).
  * <p>
  * In the past, this class extended CUnit. This is no longer the case. Using minimal data (not sending ammo settings and
@@ -52,18 +54,18 @@ import mekwars.common.util.TokenReader;
  */
 public class CBMUnit {
 
-    CUnit embeddedUnit = null;
     //IVARS
-    private boolean soldByPlayer = false;
-    private String modelName = "";
-    private String fileName = "";
-    private int auctionID = -1;
-    private int unitID = -1;
-    private int salesTicksRemaining = -1;
-    private int minBid = -1;
-    private int playersBid = -1;
-    private String unitWeight = "";
-    private String unitType = "";
+    private final boolean soldByPlayer;
+    private final String modelName;
+    private final String fileName;
+    private final int auctionID;
+    private final int unitID;
+    private final int minBid;
+    private final int playersBid;
+    private final String unitWeight;
+    private final String unitType;
+    CUnit embeddedUnit = null;
+    private int salesTicksRemaining;
 
     //CONSTRUCTOR
 
@@ -76,18 +78,17 @@ public class CBMUnit {
     public CBMUnit(String listingData, CCampaign campaign, boolean hiddenUnits) {
 
         //read data
-        java.util.StringTokenizer ST = new java.util.StringTokenizer(listingData, "*");
-        auctionID = TokenReader.readInt(ST);
-        unitID = TokenReader.readInt(ST);
-        modelName = TokenReader.readString(ST);
-        fileName = TokenReader.readString(ST);
-        salesTicksRemaining = TokenReader.readInt(ST);
-        minBid = TokenReader.readInt(ST);
-        soldByPlayer = TokenReader.readBoolean(ST);
-        playersBid = TokenReader.readInt(ST);
-        unitType = TokenReader.readString(ST);
-        unitWeight = TokenReader.readString(ST);
-
+        StringTokenizer stringTokenizer = new StringTokenizer(listingData, "*");
+        auctionID = TokenReader.readInt(stringTokenizer);
+        unitID = TokenReader.readInt(stringTokenizer);
+        modelName = TokenReader.readString(stringTokenizer);
+        fileName = TokenReader.readString(stringTokenizer);
+        salesTicksRemaining = TokenReader.readInt(stringTokenizer);
+        minBid = TokenReader.readInt(stringTokenizer);
+        soldByPlayer = TokenReader.readBoolean(stringTokenizer);
+        playersBid = TokenReader.readInt(stringTokenizer);
+        unitType = TokenReader.readString(stringTokenizer);
+        unitWeight = TokenReader.readString(stringTokenizer);
 
         //bury a CUnit
         if (!hiddenUnits) {
@@ -102,6 +103,7 @@ public class CBMUnit {
         if (!hiddenUnits) {
             int factionGunnery = campaign.getPlayer().getMyHouse().getBaseGunner();
             int factionPiloting = campaign.getPlayer().getMyHouse().getBasePilot();
+
             if ((embeddedUnit.getType() == Unit.MEK) || (embeddedUnit.getType() == Unit.VEHICLE)) {
                 embeddedUnit.setPilot(new Pilot("BM Unit", factionGunnery, factionPiloting));
             } else {

@@ -226,10 +226,10 @@ public class RePodSelectorDialog extends JFrame
             populateTextFields = false;
         }
 
-        ConfigurableMekViewPanel mechView = null;
+        ConfigurableMekViewPanel mekViewPanel = null;
 
         try {
-            mechView = new ConfigurableMekViewPanel(currEntity);
+            mekViewPanel = new ConfigurableMekViewPanel(currEntity);
         } catch (Exception e) {
             // the error unit didn't load right. this is bad news.
             populateTextFields = false;
@@ -239,8 +239,8 @@ public class RePodSelectorDialog extends JFrame
         mechViewRight.setEditable(false);
 
         if (populateTextFields) {
-            mechViewLeft.setText(mechView.getMechReadoutBasic());
-            mechViewRight.setText(mechView.getMechReadoutLoadout());
+            mechViewLeft.setText(mekViewPanel.getMechReadoutBasic());
+            mechViewRight.setText(mekViewPanel.getMechReadoutLoadout());
         } else {
             mechViewLeft.setText("No unit selected");
             mechViewRight.setText("No unit selected");
@@ -305,7 +305,7 @@ public class RePodSelectorDialog extends JFrame
 
                 if ((chassisList.get(model) != null) && !vMeks.contains(meks[x])) {
                     vMeks.addElement(meks[x]);
-                }// end if(chassie)
+                }// end if(chassis)
             }// end for(all meks)
         } catch (Exception ex) {
             LOGGER.error(ex, STR."meks size: \{meks.length} x: \{x}");

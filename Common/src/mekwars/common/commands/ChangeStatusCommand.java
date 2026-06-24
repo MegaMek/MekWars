@@ -59,7 +59,7 @@ public class ChangeStatusCommand extends Command {
     }
 
     /**
-     * @param s
+     *
      */
     @Override
     public void parseReplyArgs(String s) {
@@ -67,7 +67,7 @@ public class ChangeStatusCommand extends Command {
     }
 
     /**
-     * @param mwClient
+     *
      */
     @Override
     public void setClient(IClient mwClient) {
@@ -75,7 +75,7 @@ public class ChangeStatusCommand extends Command {
     }
 
     /**
-     * @param s
+     *
      */
     @Override
     public void parseArguments(String s) {

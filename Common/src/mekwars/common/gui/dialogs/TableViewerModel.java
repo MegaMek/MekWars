@@ -1,8 +1,14 @@
 package mekwars.common.gui.dialogs;
 
 import java.io.Serial;
+import java.text.DecimalFormat;
+import java.util.Arrays;
 import java.util.TreeMap;
 
+import javax.swing.table.AbstractTableModel;
+
+import megamek.codeUtilities.MathUtility;
+import megamek.logging.MMLogger;
 import mekwars.common.campaign.clientutils.protocol.IClient;
 import mekwars.common.util.CUnitComparator;
 
@@ -12,8 +18,7 @@ import mekwars.common.util.CUnitComparator;
  * sorting columns - name, weight, model, % frequency, etc. Modeled along
  * the BlackMarketModel from client.gui
  */
-class TableViewerModel extends javax.swing.table.AbstractTableModel {
-
+class TableViewerModel extends AbstractTableModel {
     // IVARS
     // static ints
     public final static int UNIT = 0;// model/name
@@ -21,6 +26,7 @@ class TableViewerModel extends javax.swing.table.AbstractTableModel {
     public final static int BATTLEVALUE = 2;
     public final static int FREQUENCY = 3;
     public final static int FILENAME = 4;
+    private final static MMLogger LOGGER = MMLogger.create(TableViewerModel.class);
     /**
      *
      */
@@ -29,10 +35,9 @@ class TableViewerModel extends javax.swing.table.AbstractTableModel {
     java.util.TreeMap<Object, TableUnit> currentUnits;
     TableUnit[] sortedUnits;
 
-    int currentSortMode = mekwars.common.gui.dialogs.TableViewerModel.FREQUENCY;
+    int currentSortMode = TableViewerModel.FREQUENCY;
 
     // column name array
-    //String[] columnNames = { "Unit", "Weight", "BV", "Frequency" };
     String[] columnNames = { "Unit", "Weight", "BV" };
     // client reference
     IClient client;
@@ -73,7 +78,6 @@ class TableViewerModel extends javax.swing.table.AbstractTableModel {
 
         switch (col) {
             case UNIT:
-
                 try {
                     if ((currU.getType() == mekwars.common.Unit.MEK) &&
                               (currU.getEntity() != null) &&
@@ -83,29 +87,19 @@ class TableViewerModel extends javax.swing.table.AbstractTableModel {
                     // else
                     return STR."<html><body>\{currU.getModelName()}";
                 } catch (Exception ex) {
-                    mekwars.common.util.MWLogger.errLog(ex);
+                    LOGGER.error(ex, "Error in TableViewerModel.getValueAt for UNIT: {}", ex.getLocalizedMessage());
                     return "";
                 }
             case WEIGHT:
                 return (int) currU.getEntity().getWeight();
 
             case BATTLEVALUE:
-
                 return currU.getEntity().calculateBattleValue();
 
             case FREQUENCY:
-
-                java.text.DecimalFormat myFormatter = new java.text.DecimalFormat("##0.00");
+                DecimalFormat myFormatter = new DecimalFormat("##0.00");
                 String val = myFormatter.format(currU.getFrequency());
-                //Double returnVal = Double.parseDouble(val);
-                double returnVal = 0.0;
-                try {
-                    returnVal = java.text.NumberFormat.getNumberInstance().parse(val).doubleValue();
-                } catch (java.text.ParseException e) {
-                    e.printStackTrace();
-                }
-
-                return returnVal;
+                return MathUtility.parseDouble(val, 0.0);
 
             case FILENAME:
                 return currU.getRealFilename();
@@ -117,13 +111,13 @@ class TableViewerModel extends javax.swing.table.AbstractTableModel {
 
     // override naming
     @Override
-    public String getColumnName(int col) {
-        return (columnNames[col]);
+    public String getColumnName(int column) {
+        return (columnNames[column]);
     }
 
     @Override
-    public Class<?> getColumnClass(int c) {
-        return getValueAt(0, c).getClass();
+    public Class<?> getColumnClass(int columnIndex) {
+        return getValueAt(0, columnIndex).getClass();
     }
 
     // isEditable, overridden from AbstractModel
@@ -137,7 +131,7 @@ class TableViewerModel extends javax.swing.table.AbstractTableModel {
     }
 
     /*
-     * getRenderer, overridden from AbstractModel in order to use custom
+     * getRenderer, overridden from AbstractModel to use custom
      * renderer.
      */
     public TableViewerRenderer getRenderer() {
@@ -145,7 +139,7 @@ class TableViewerModel extends javax.swing.table.AbstractTableModel {
     }
 
     /*
-     * refresh model in order to draw new contents, reorder existin
+     * refresh model to draw new contents, reorder existing
      * contents.
      */
     public void refreshModel() {
@@ -163,50 +157,40 @@ class TableViewerModel extends javax.swing.table.AbstractTableModel {
         CUnitComparator comparator;
 
         switch (sortMode) {
-            case mekwars.common.gui.dialogs.TableViewerModel.UNIT:
-
+            case TableViewerModel.UNIT:
                 sortedUnits = currentUnits.values().toArray(sortedUnits);
                 comparator = new CUnitComparator(CUnitComparator.HQ_SORT_NAME);
-                java.util.Arrays.sort(sortedUnits, comparator);
+                Arrays.sort(sortedUnits, comparator);
                 return sortedUnits;
 
-            case mekwars.common.gui.dialogs.TableViewerModel.WEIGHT:
-
+            case TableViewerModel.WEIGHT:
                 sortedUnits = currentUnits.values().toArray(sortedUnits);
                 comparator = new CUnitComparator(CUnitComparator.HQ_SORT_WEIGHT_TONS);
-                java.util.Arrays.sort(sortedUnits, comparator);
+                Arrays.sort(sortedUnits, comparator);
                 return sortedUnits;
 
-            case mekwars.common.gui.dialogs.TableViewerModel.BATTLEVALUE:
-
+            case TableViewerModel.BATTLEVALUE:
                 sortedUnits = currentUnits.values().toArray(sortedUnits);
                 comparator = new CUnitComparator(CUnitComparator.HQ_SORT_BV);
-                java.util.Arrays.sort(sortedUnits, comparator);
+                Arrays.sort(sortedUnits, comparator);
                 return sortedUnits;
 
-            case mekwars.common.gui.dialogs.TableViewerModel.FREQUENCY:
-
+            case TableViewerModel.FREQUENCY:
                 sortedUnits = currentUnits.values().toArray(sortedUnits);
-                java.util.Arrays.sort(sortedUnits,
+                Arrays.sort(sortedUnits,
                       (o1, o2) -> {
+                          Double d1 = 0.0;
+                          double d2 = 0.0;
 
-                          try {
-                              Double d1 = 0.0;
-                              double d2 = 0.0;
-
-                              if (o1 != null) {
-                                  d1 = o1.getFrequency();
-                              }
-
-                              if (o2 != null) {
-                                  d2 = o2.getFrequency();
-                              }
-
-                              return d1.compareTo(d2);
-                          } catch (Exception ex) {
-                              mekwars.common.util.MWLogger.errLog(ex);
-                              return 0;
+                          if (o1 != null) {
+                              d1 = o1.getFrequency();
                           }
+
+                          if (o2 != null) {
+                              d2 = o2.getFrequency();
+                          }
+
+                          return d1.compareTo(d2);
                       });
                 return sortedUnits;
 

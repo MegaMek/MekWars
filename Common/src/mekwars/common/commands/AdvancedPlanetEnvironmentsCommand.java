@@ -36,6 +36,8 @@
 
 package mekwars.common.commands;
 
+import java.util.StringTokenizer;
+
 import mekwars.common.AdvancedTerrain;
 import mekwars.common.campaign.clientutils.protocol.IClient;
 
@@ -60,14 +62,14 @@ public class AdvancedPlanetEnvironmentsCommand extends Command {
      */
     @Override
     public void execute(String input) {
-        java.util.StringTokenizer st = decode(input);
-        AdvancedTerrain aTerrain = new AdvancedTerrain(st.nextToken());
+        StringTokenizer stringTokenizer = decode(input);
+        AdvancedTerrain aTerrain = new AdvancedTerrain(stringTokenizer.nextToken());
 
         client.setAdvancedTerrain(aTerrain);
     }
 
     @Override
-    public void parseReplyArgs(String s) {
+    public void parseReplyArgs(String string) {
 
     }
 
@@ -77,7 +79,7 @@ public class AdvancedPlanetEnvironmentsCommand extends Command {
     }
 
     @Override
-    public void parseArguments(String s) {
+    public void parseArguments(String string) {
 
     }
 }

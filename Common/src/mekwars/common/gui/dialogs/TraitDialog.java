@@ -409,7 +409,7 @@ public final class TraitDialog implements ActionListener, KeyListener {
                             gunneryLaserText.setText(traitMod);
                         } else if (traitID == PilotSkill.GunneryMissileSkillID) {
                             gunneryMissileText.setText(traitMod);
-                        } else if (traitID == PilotSkill.AstechSkillID) {
+                        } else if (traitID == PilotSkill.AsTechSkillID) {
                             asTechText.setText(traitMod);
                         } else if (traitID == PilotSkill.DodgeManeuverSkillID) {
                             dodgeManeuverText.setText(traitMod);
@@ -544,7 +544,7 @@ public final class TraitDialog implements ActionListener, KeyListener {
             result += delimiter;
         }
         if (MathUtility.parseInt(asTechText.getText(), 0) != 0) {
-            result += PilotSkill.AstechSkillID;
+            result += PilotSkill.AsTechSkillID;
             result += delimiter;
             result += asTechText.getText();
             result += delimiter;

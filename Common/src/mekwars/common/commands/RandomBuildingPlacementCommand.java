@@ -34,11 +34,13 @@
 
 package mekwars.common.commands;
 
+import java.util.StringTokenizer;
+
 import mekwars.common.campaign.Buildings;
 import mekwars.common.campaign.clientutils.protocol.IClient;
 
 /**
- * @@author Torren (Jason Tighe)
+ * @author Torren (Jason Tighe)
  *       <p>
  *       Used for Randomn Building Placement on RMG's
  *
@@ -49,8 +51,8 @@ public class RandomBuildingPlacementCommand extends Command {
     /**
      * @see Command#Command(IClient)
      */
-    public RandomBuildingPlacementCommand(IClient mwclient) {
-        super(mwclient);
+    public RandomBuildingPlacementCommand(IClient client) {
+        super(client);
     }
 
     /**
@@ -58,16 +60,16 @@ public class RandomBuildingPlacementCommand extends Command {
      */
     @Override
     public void execute(String input) {
-        java.util.StringTokenizer st = decode(input);
+        StringTokenizer stringTokenizer = decode(input);
         Buildings building = new Buildings();
 
-        building.fromString(st);
+        building.fromString(stringTokenizer);
 
         client.setBuildingTemplate(building);
     }
 
     /**
-     * @param s
+     *
      */
     @Override
     public void parseReplyArgs(String s) {
@@ -75,7 +77,7 @@ public class RandomBuildingPlacementCommand extends Command {
     }
 
     /**
-     * @param s
+     *
      */
     @Override
     public void parseArguments(String s) {

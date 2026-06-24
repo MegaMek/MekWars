@@ -22,7 +22,7 @@ public class SPilotSkills {
         pilotSkills.put(PilotSkill.MeleeSpecialistSkillID,
               (new MeleeSpecialistSkill(PilotSkill.MeleeSpecialistSkillID)));
         pilotSkills.put(PilotSkill.PainResistanceSkillID, (new PainResistanceSkill(PilotSkill.PainResistanceSkillID)));
-        pilotSkills.put(PilotSkill.AstechSkillID, (new AstechSkill(PilotSkill.AstechSkillID)));
+        pilotSkills.put(PilotSkill.AsTechSkillID, (new AstechSkill(PilotSkill.AsTechSkillID)));
         pilotSkills.put(PilotSkill.NaturalAptitudeGunnerySkillID,
               (new NaturalAptitudeGunnerySkill(PilotSkill.NaturalAptitudeGunnerySkillID)));
         pilotSkills.put(PilotSkill.NaturalAptitudePilotingSkillID,

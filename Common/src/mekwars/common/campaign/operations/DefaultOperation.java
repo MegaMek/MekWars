@@ -263,7 +263,7 @@ public class DefaultOperation {
          *                           [ensure that there is a difference of at least 100
          * AFC=233; DFC=433          [between the highest and lowest units. Probably only
          *                           [interesting to create "Buddy" games where a high BV
-         *                           [mech has to pair with a low in a tag team.
+         *                           [mek has to pair with a low in a tag team.
          *                           [Set <= 0 to DISABLE. Defaults to 0.
          *
          * HighestAttackerPilotSkillTotal - Highest total skill, Gunnery + Piloting, that an
@@ -307,7 +307,7 @@ public class DefaultOperation {
          * like the Vedette. Options exist to stop spread checks on these unit types (Meks will always be checked),
          * but these may be unbalancing in and of themselves. The recommended solution for servers which want to use
          * spreads AND combined arms is to set a very wide spread ... something in the range of 1000 BV ... not count
-         * protos/BV for spread, and enforce Infantry moves with mechs (MM option) and ProtosMustBeGroups
+         * protos/BV for spread, and enforce Infantry moves with meks (MM option) and ProtosMustBeGroups
          * (Operations option).]
          *
          * MaxTotalAttackerTonnage - max total tonnage for attacking force - AFC=211

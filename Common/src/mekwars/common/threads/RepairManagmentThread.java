@@ -119,7 +119,7 @@ public class RepairManagmentThread extends Thread {
                     }
 
                     synchronized (unit) {
-                        if (pos == UnitUtils.TECH_PILOT && !unit.getPilot().getSkills().has(PilotSkill.AstechSkillID)) {
+                        if (pos == UnitUtils.TECH_PILOT && !unit.getPilot().getSkills().has(PilotSkill.AsTechSkillID)) {
                             client.systemMessage(STR."Work order found for the pilot of \{unit.getModelName()} however the pilot cannot repair this unit.<br>The work order has been terminated.");
                             workQueue.remove();
                             continue;
@@ -195,7 +195,7 @@ public class RepairManagmentThread extends Thread {
                               slot,
                               unit.getPilot()
                                     .getSkills()
-                                    .getPilotSkill(PilotSkill.AstechSkillID)
+                                    .getPilotSkill(PilotSkill.AsTechSkillID)
                                     .getLevel(),
                               armor,
                               this.client.getData()

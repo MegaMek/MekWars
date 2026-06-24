@@ -31,13 +31,11 @@
  * affiliated with Microsoft.
  */
 
-
 package mekwars.common.campaign;
 
 import java.util.StringTokenizer;
 
 import megamek.common.enums.BuildingType;
-
 
 public final class Buildings {
 

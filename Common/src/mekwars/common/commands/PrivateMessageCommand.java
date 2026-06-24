@@ -36,6 +36,12 @@
 
 package mekwars.common.commands;
 
+import java.util.StringTokenizer;
+
+import javax.swing.JPanel;
+
+import megamek.codeUtilities.MathUtility;
+import mekwars.common.House;
 import mekwars.common.campaign.CUser;
 import mekwars.common.campaign.clientutils.protocol.IClient;
 import mekwars.common.gui.panels.CCommPanel;
@@ -59,16 +65,15 @@ public class PrivateMessageCommand extends Command {
      */
     @Override
     public void execute(String input) {
-        java.util.StringTokenizer st = decode(input);
-        javax.swing.JPanel mailTab;
+        StringTokenizer stringTokenizer = decode(input);
+        JPanel mailTab;
 
-        if (st.hasMoreElements()) {
-
-            String name = st.nextToken(); // Parse the name
-            if (!client.isIgnored(name, IClient.IGNORE_PRIVATE) && st.hasMoreElements()) {
+        if (stringTokenizer.hasMoreElements()) {
+            String name = stringTokenizer.nextToken(); // Parse the name
+            if (!client.isIgnored(name, IClient.IGNORE_PRIVATE) && stringTokenizer.hasMoreElements()) {
 
                 //update the reply default, if toSender
-                if (client.getConfig().isParam("REPLYTOSENDER")) {
+                if (client.getConfig().isParam("REPLY_TO_SENDER")) {
                     client.setLastQuery(name);
                 }
 
@@ -76,18 +81,18 @@ public class PrivateMessageCommand extends Command {
                 CUser sender = (CUser) client.getUser(name);
                 String usercolor = ((CUser) client.getUser(name)).getHtmlColor();//preferred colour
                 String addon = ((CUser) client.getUser(name)).getAddon();//addon
-                String message = st.nextToken(); // Parse the message --Torren
-                String factioncolor = client.getConfig().getParam("CHATFONTCOLOR");
+                String message = stringTokenizer.nextToken(); // Parse the message --Torren
+                String factioncolor = client.getConfig().getParam("CHAT_FONT_COLOR");
                 String tabName = name;
-                String fontSize = client.getConfig().getParam("CHATFONTSIZE");
+                String fontSize = client.getConfig().getParam("CHAT_FONT_SIZE");
 
-                if (Boolean.parseBoolean(client.getConfigParam("INVERTCHATCOLOR"))) {
+                if (MathUtility.parseBoolean(client.getConfigParam("INVERT_CHAT_COLOR"), false)) {
                     factioncolor = StringUtils.color2html(StringUtils.invertColor(StringUtils.html2Color(factioncolor)));
                     usercolor = StringUtils.color2html(StringUtils.invertColor(StringUtils.html2Color(usercolor)));
                 }
 
-                if (client.getConfig().isParam("USEMULTIPLEPM")) {
-                    int maxTabs = client.getConfig().getIntParam("MAXPMTABS");
+                if (client.getConfig().isParam("USE_MULTIPLE_PM")) {
+                    int maxTabs = client.getConfig().getIntParam("MAX_PM_TABS");
                     //Check to see if the Mail tab exists if not create a new one.
                     mailTab = client.getMainFrame().getMainPanel().getCommPanel().findMailTab(tabName);
                     if (mailTab == null) {
@@ -95,8 +100,8 @@ public class PrivateMessageCommand extends Command {
 
                         if (count >= maxTabs) {
                             client.sendChat(STR."\{IClient.CAMPAIGN_PREFIX}mail \{name}, \{client.getConfigParam(
-                                  "MAXPMMESSAGE")}");
-                            String sysColour = client.getConfigParam("SYSMESSAGECOLOR");
+                                  "MAX_PM_MESSAGE")}");
+                            String sysColour = client.getConfigParam("SYS_MESSAGE_COLOR");
                             message = STR."<font color=\"\{sysColour}\"><b>\{name} tried to PrivateMessageCommand you while you where busy</b></font>";
                             client.addToChat(message);
                             return;
@@ -104,14 +109,18 @@ public class PrivateMessageCommand extends Command {
                         client.getMainFrame().getMainPanel().getCommPanel().createMailTab(tabName);
                     }
                 }
-                //draw a factioncolour from the datafeed
+                //draw a faction color from the datafeed
                 if (sender.getHouse().length() > 1 && client.getData().getHouseByName(sender.getHouse()) != null) {
-                    factioncolor = client.getData().getHouseByName(sender.getHouse()).getHouseColor();
+                    House currentHouse = client.getData().getHouseByName(sender.getHouse());
+
+                    if (currentHouse != null) {
+                        factioncolor = currentHouse.getHouseColor();
+                    }
                 }
 
                 //set up the name and addon colours
-                String colorSetting = client.getConfig().getParam("PLAYERCHATCOLORMODE").toLowerCase();
-                if (colorSetting.equals("factionadd") || colorSetting.equals("factionall")) {
+                String colorSetting = client.getConfig().getParam("PLAYER_CHAT_COLOR_MODE").toLowerCase();
+                if (colorSetting.equals("faction_add") || colorSetting.equals("faction_all")) {
                     addon = addon.isEmpty() ?
                                   "" :
                                   STR." <b><font color=\"\{factioncolor}\">[\{addon}]</b></font>";
@@ -119,14 +128,14 @@ public class PrivateMessageCommand extends Command {
                     addon = addon.isEmpty() ? "" : STR." <b><font color=\"\{usercolor}\">[\{addon}]</b></font>";
                 }
 
-                if (colorSetting.equals("factionname") || colorSetting.equals("factionall")) {
+                if (colorSetting.equals("faction_name") || colorSetting.equals("faction_all")) {
                     name = name.isEmpty() ? "" : STR." <b><font color=\"\{factioncolor}\">\{name}</b></font>";
                 } else {
                     name = name.isEmpty() ? "" : STR." <b><font color=\"\{usercolor}\">\{name}</b></font>";
                 }
                 //faction mail emote. [does this work server side? never seen it used.]
                 if (message.startsWith("#me")) {
-                    if (client.getConfig().isParam("COLOREDEMOTES")) {
+                    if (client.getConfig().isParam("COLORED_EMOTES")) {
                         message = STR."*** \{name}\{message.substring(3)}";
                     } else {
                         message = STR."*** \{tabName}\{message.substring(3)}";
@@ -139,7 +148,7 @@ public class PrivateMessageCommand extends Command {
                 }
 
                 //if the user wants to, remove any img tags
-                if (client.getConfig().isParam("NOIMGINCHAT")) {
+                if (client.getConfig().isParam("NO_IMG_IN_CHAT")) {
                     int start = message.toLowerCase().indexOf("<img");
                     int finish = -1;
 
@@ -154,14 +163,16 @@ public class PrivateMessageCommand extends Command {
                 }
 
                 //add timestamp
-                if (client.getConfig().isParam("TIMESTAMP")) {message = client.getShortTime() + message;}
+                if (client.getConfig().isParam("TIMESTAMP")) {
+                    message = client.getShortTime() + message;
+                }
 
                 //put the message in PrivateMessageCommand panel
                 client.addToChat(message, CCommPanel.CHANNEL_PRIVATE_MAIL, tabName);
 
                 //if PMs show in main, make it red and show there too
-                if (client.getConfig().isParam("MAINCHANNELPM")) {
-                    String sysColour = client.getConfigParam("SYSMESSAGECOLOR");
+                if (client.getConfig().isParam("MAIN_CHANNEL_PM")) {
+                    String sysColour = client.getConfigParam("SYS_MESSAGE_COLOR");
                     message = STR."<font color=\"\{sysColour}\"><b>Private Mail: </b></font>\{message}";
                     client.addToChat(message);
                 }
@@ -172,19 +183,19 @@ public class PrivateMessageCommand extends Command {
                  * 2) Name
                  * 3) Keyword
                  */
-                if (client.getConfig().isParam("ENABLEMESSAGESOUND")) {
-                    client.doPlaySound(client.getConfig().getParam("SOUNDONMESSAGE"));
-                } else if (message.contains(client.getUsername()) && client.getConfig().isParam("ENABLECALLSOUND")) {
-                    client.doPlaySound("SOUNDONCALL");
-                } else if (client.hasKeyWords(message) && client.getConfig().isParam("ENABLEKEYWORDSOUND")) {
-                    client.doPlaySound(client.getConfig().getParam("SOUNDONKEYWORD"));
+                if (client.getConfig().isParam("ENABLE_MESSAGE_SOUND")) {
+                    client.doPlaySound(client.getConfig().getParam("SOUND_ON_MESSAGE"));
+                } else if (message.contains(client.getUsername()) && client.getConfig().isParam("ENABLE_CALL_SOUND")) {
+                    client.doPlaySound("SOUND_ON_CALL");
+                } else if (client.hasKeyWords(message) && client.getConfig().isParam("ENABLE_KEYWORD_SOUND")) {
+                    client.doPlaySound(client.getConfig().getParam("SOUND_ON_KEYWORD"));
                 }
             }
         }
     }
 
     /**
-     * @param s
+     *
      */
     @Override
     public void parseReplyArgs(String s) {
@@ -192,7 +203,7 @@ public class PrivateMessageCommand extends Command {
     }
 
     /**
-     * @param s
+     *
      */
     @Override
     public void parseArguments(String s) {

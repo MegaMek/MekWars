@@ -1,10 +1,18 @@
 package mekwars.common.gui.dialogs.customUnits;
 
+import java.awt.Dimension;
+import java.util.Enumeration;
 import java.util.Vector;
+import javax.swing.JCheckBox;
 import javax.swing.JComboBox;
+import javax.swing.JPanel;
 
 import megamek.common.equipment.AmmoType;
 import megamek.common.equipment.Mounted;
+import megamek.common.units.Entity;
+import megamek.common.units.Mek;
+import megamek.common.units.Tank;
+import megamek.logging.MMLogger;
 import mekwars.common.campaign.clientutils.protocol.IClient;
 import mekwars.common.gui.dialogs.CustomUnitDialog;
 
@@ -14,77 +22,74 @@ import mekwars.common.gui.dialogs.CustomUnitDialog;
  * the Panel extension is carried over from the original MegaMek code-path
  * and works well enough for our purposes. @urgru 7/30/05
  */
-public class MunitionChoicePanel extends javax.swing.JPanel {
+public class MunitionChoicePanel extends JPanel {
+    private static final MMLogger LOGGER = MMLogger.create(MunitionChoicePanel.class);
+
     /**
      *
      */
     @java.io.Serial
     private static final long serialVersionUID = -5861067242226106955L;
-    private final mekwars.common.gui.dialogs.CustomUnitDialog customUnitDialog;
-    private final java.util.Vector<megamek.common.equipment.AmmoType> m_vTypes;
+    private final CustomUnitDialog customUnitDialog;
+    private final Vector<AmmoType> m_vTypes;
     private final JComboBox<String> m_choice;
-    private final megamek.common.equipment.Mounted<?> m_mounted;
+    private final Mounted<?> m_mounted;
     private final int location;
     private final IClient client;
 
-    protected javax.swing.JCheckBox chDump = new javax.swing.JCheckBox();
-    protected javax.swing.JCheckBox chHotLoad = new javax.swing.JCheckBox();
+    protected JCheckBox chDump = new JCheckBox();
+    protected JCheckBox chHotLoad = new JCheckBox();
 
-    public MunitionChoicePanel(CustomUnitDialog customUnitDialog, Mounted<?> m, Vector<AmmoType> vTypes, int location) {
+    public MunitionChoicePanel(CustomUnitDialog customUnitDialog, Mounted<?> mounted, Vector<AmmoType> vTypes,
+          int location) {
         this.customUnitDialog = customUnitDialog;
         this.client = customUnitDialog.getClient();
         boolean canDump = customUnitDialog.canDump();
 
         // save params
         m_vTypes = vTypes;
-        m_mounted = m;
+        m_mounted = mounted;
         this.location = location;
 
         // setup panel
-        megamek.common.equipment.AmmoType curType = (megamek.common.equipment.AmmoType) m.getType();
-        m_choice = new javax.swing.JComboBox<>();
-        java.util.Enumeration<megamek.common.equipment.AmmoType> e = m_vTypes.elements();
+        AmmoType curType = (AmmoType) mounted.getType();
+        m_choice = new JComboBox<>();
+        Enumeration<AmmoType> elements = m_vTypes.elements();
 
-        for (int x = 0; e.hasMoreElements(); x++) {
-            megamek.common.equipment.AmmoType at = e.nextElement();
-            m_choice.setMaximumSize(new java.awt.Dimension(5, 5));
+        for (int x = 0; elements.hasMoreElements(); x++) {
+            AmmoType ammoType = elements.nextElement();
+            m_choice.setMaximumSize(new Dimension(5, 5));
             int cost;
-            int shotsLeft = m.getUsableShotsLeft();
-            if (!curType.getInternalName().equalsIgnoreCase(at.getInternalName())) {
+            int shotsLeft = mounted.getUsableShotsLeft();
+
+            if (!curType.getInternalName().equalsIgnoreCase(ammoType.getInternalName())) {
                 shotsLeft = 0;
             }
 
             double ammoCost = 0;
+
             try {
-                ammoCost = client.getAmmoCost(at.getInternalName());
+                ammoCost = client.getAmmoCost(ammoType.getInternalName());
             } catch (Exception ex) {
-                mekwars.common.util.MWLogger.errLog("error finding cost for: " + at.getName());
-                mekwars.common.util.MWLogger.errLog(ex);
+                LOGGER.error(ex, "error finding cost for: {}", ammoType.getName());
             }
-            if (m.getLocation() == megamek.common.units.Entity.LOC_NONE) {
+            if (mounted.getLocation() == megamek.common.units.Entity.LOC_NONE) {
                 if (customUnitDialog.isUsingCrits()) {
-                    m_choice.addItem(at.getName() +
-                                           " (" +
-                                           shotsLeft +
-                                           "/1/" +
-                                           client.getPlayer()
-                                                 .getPartsCache()
-                                                 .getPartsCritCount(at.getInternalName()) +
-                                           ")");
+                    m_choice.addItem(STR."\{ammoType.getName()} (\{shotsLeft}/1/\{client.getPlayer()
+                                                                                        .getPartsCache()
+                                                                                        .getPartsCritCount(ammoType.getInternalName())})");
                 } else {
-                    m_choice.addItem(at.getName() +
-                                           " (" +
-                                           shotsLeft +
-                                           "/1) " +
-                                           client.moneyOrFluMessage(true, true, (int) ammoCost));
+                    m_choice.addItem(STR."\{ammoType.getName()} (\{shotsLeft}/1) \{client.moneyOrFluMessage(true,
+                          true,
+                          (int) ammoCost)}");
                 }
             } else {
-                int refillShots = at.getShots();
-                if (m.getUsableShotsLeft() == 0) {
+                int refillShots = ammoType.getShots();
+                if (mounted.getUsableShotsLeft() == 0) {
                     // Capital Weapon
-                    refillShots = m.getOriginalShots();
+                    refillShots = mounted.getOriginalShots();
                 }
-                if (!curType.getInternalName().equalsIgnoreCase(at.getInternalName())) {
+                if (!curType.getInternalName().equalsIgnoreCase(ammoType.getInternalName())) {
                     shotsLeft = 0;
                 }
 
@@ -96,49 +101,39 @@ public class MunitionChoicePanel extends javax.swing.JPanel {
                     cost = (int) Math.ceil(ammoCost * refillShots);
                 }
 
-                // MWLogger.errLog("Cost: "+cost+" string: "+client.moneyOrFluMessage(true,true,cost));
                 if (customUnitDialog.isUsingCrits()) {
-                    m_choice.addItem(at.getName() +
-                                           " (" +
-                                           shotsLeft +
-                                           "/" +
-                                           refillShots +
-                                           "/" +
-                                           client.getPlayer()
-                                                 .getPartsCache()
-                                                 .getPartsCritCount(at.getInternalName()) +
-                                           ")");
+                    m_choice.addItem(STR."\{ammoType.getName()} (\{shotsLeft}/\{refillShots}/\{client.getPlayer()
+                                                                                                     .getPartsCache()
+                                                                                                     .getPartsCritCount(
+                                                                                                           ammoType.getInternalName())})");
                 } else {
-                    m_choice.addItem(at.getName() +
-                                           " (" +
-                                           shotsLeft +
-                                           "/" +
-                                           refillShots +
-                                           ") " +
-                                           client.moneyOrFluMessage(true, true, cost));
+                    m_choice.addItem(STR."\{ammoType.getName()} (\{shotsLeft}/\{refillShots}) \{client.moneyOrFluMessage(
+                          true,
+                          true,
+                          cost)}");
                 }
 
             }
-            if (at.getInternalName().equalsIgnoreCase(curType.getInternalName())) {
+            if (ammoType.getInternalName().equalsIgnoreCase(curType.getInternalName())) {
                 m_choice.setSelectedIndex(x);
             }
         }
 
         add(m_choice);
 
-        // set up the dump checkbox, if dumping is allowed
+        // set up the dump check box, if dumping is allowed
         if (canDump) {
-            if (m.getUsableShotsLeft() == 0) {
+            if (mounted.getUsableShotsLeft() == 0) {
                 chDump.setSelected(true);
             }
             chDump.setText("Dump");
             add(chDump);
         }
         if (customUnitDialog.getMMClient().getGame().getOptions().booleanOption("tacops_hotload") &&
-                  ((customUnitDialog.getEntity() instanceof megamek.common.units.Mek) ||
-                         (customUnitDialog.getEntity() instanceof megamek.common.units.Tank)) &&
-                  m.getType().hasFlag(megamek.common.equipment.AmmoType.F_HOTLOAD)) {
-            chHotLoad.setSelected(m.isHotLoaded());
+                  ((customUnitDialog.getEntity() instanceof Mek) ||
+                         (customUnitDialog.getEntity() instanceof Tank)) &&
+                  mounted.getType().hasFlag(AmmoType.F_HOTLOAD)) {
+            chHotLoad.setSelected(mounted.isHotLoaded());
             chHotLoad.setText("Hot-Load");
             add(chHotLoad);
         } else {
@@ -150,7 +145,7 @@ public class MunitionChoicePanel extends javax.swing.JPanel {
     }
 
     /*
-     * Yes this to load the ammo Save Weapon Type from at.getAmmoType() call
+     * Yes, this to load the ammo Save Weapon Type from at.getAmmoType() call
      * weapon type save weapon position with at.getMunitionType() call ammo
      * type Load at.getMunitionsFor(ammoType) returns vector
      * ammo_vector.elementAt(MunitionType);
@@ -162,10 +157,10 @@ public class MunitionChoicePanel extends javax.swing.JPanel {
         if (n < 0) {
             return;
         }
-        megamek.common.equipment.AmmoType at = m_vTypes.elementAt(n);
-        // m_mounted.changeAmmoType(at);
 
-        int totalShots = at.getShots();
+        AmmoType ammoType = m_vTypes.elementAt(n);
+
+        int totalShots = ammoType.getShots();
 
         boolean hotloaded = false;
 
@@ -176,14 +171,14 @@ public class MunitionChoicePanel extends javax.swing.JPanel {
         if (chDump.isSelected()) {
             m_mounted.setShotsLeft(0);
             totalShots = 0;
-        } else if (m_mounted.getLocation() == megamek.common.units.Entity.LOC_NONE) {
+        } else if (m_mounted.getLocation() == Entity.LOC_NONE) {
             totalShots = 1;
         }
 
         // m_mounted.setShotsLeft(totalShots);
         client.sendChat(
-              STR."\{mekwars.common.campaign.clientutils.protocol.IClient.CAMPAIGN_PREFIX}c setunitammo#\{customUnitDialog.getEntity()
-                                                                                                                .getExternalId()}#\{location}#\{at.getAmmoType()}#\{at.getInternalName()}#\{totalShots}#\{hotloaded}");
+              STR."\{IClient.CAMPAIGN_PREFIX}c setunitammo#\{customUnitDialog.getEntity()
+                                                                   .getExternalId()}#\{location}#\{ammoType.getAmmoType()}#\{ammoType.getInternalName()}#\{totalShots}#\{hotloaded}");
     }
 
     @Override

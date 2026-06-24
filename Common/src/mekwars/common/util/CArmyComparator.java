@@ -59,8 +59,8 @@ public class CArmyComparator implements Comparator<CArmy> {
                 return army1ID.compareTo(army2ID);
 
             case ARMY_SORT_TONNAGE: //Total tonnage of the army
-                Float army1Ton = lhs.getTotalTonnage();
-                Float army2Ton = rhs.getTotalTonnage();
+                Double army1Ton = lhs.getTotalTonnage();
+                Double army2Ton = rhs.getTotalTonnage();
                 return army1Ton.compareTo(army2Ton);
 
             case ARMY_SORT_AVG_MP_WALK: //average walk MP for the army

@@ -36,6 +36,9 @@
 
 package mekwars.common.commands;
 
+import java.util.StringTokenizer;
+
+import megamek.codeUtilities.MathUtility;
 import mekwars.common.campaign.CUser;
 import mekwars.common.campaign.clientutils.protocol.IClient;
 
@@ -45,7 +48,7 @@ import mekwars.common.campaign.clientutils.protocol.IClient;
 public class PI extends Command {
 
     /**
-     * @param client
+     *
      */
     public PI(IClient client) {
         super(client);
@@ -56,56 +59,55 @@ public class PI extends Command {
      */
     @Override
     public void execute(String input) {
-
-        java.util.StringTokenizer st = decode(input);
-        String task = st.nextToken();
-        CUser user = null;
+        StringTokenizer stringTokenizer = decode(input);
+        String task = stringTokenizer.nextToken();
+        CUser user;
         switch (task) {
             case "PL" -> {
-                while (st.hasMoreTokens()) {
-                    user = (CUser) client.getUser(st.nextToken());
+                while (stringTokenizer.hasMoreTokens()) {
+                    user = (CUser) client.getUser(stringTokenizer.nextToken());
                     if (user != null) {
-                        user.setCampaignData(client, st.nextToken());
+                        user.setCampaignData(client, stringTokenizer.nextToken());
                     }
                 }
             }
             case "DA" -> {
-                user = (CUser) client.getUser(st.nextToken());
+                user = (CUser) client.getUser(stringTokenizer.nextToken());
                 if (user != null) {
-                    user.setCampaignData(client, st.nextToken());
+                    user.setCampaignData(client, stringTokenizer.nextToken());
                     if (user.getName().equalsIgnoreCase(client.getPlayer().getName())) {
                         client.getMainFrame().enableMenu();
                     }
                 }
             }
             case "ChangeStatusCommand" -> {
-                user = (CUser) client.getUser(st.nextToken());
+                user = (CUser) client.getUser(stringTokenizer.nextToken());
                 if (user != null) {
-                    user.setStatus(Integer.parseInt(st.nextToken()));
+                    user.setStatus(MathUtility.parseInt(stringTokenizer.nextToken(), 0));
                 }
             }
             case "FT" -> {
-                user = (CUser) client.getUser(st.nextToken());
-                if (user != null && st.hasMoreTokens()) {
-                    user.setFluff(st.nextToken());
+                user = (CUser) client.getUser(stringTokenizer.nextToken());
+                if (user != null && stringTokenizer.hasMoreTokens()) {
+                    user.setFluff(stringTokenizer.nextToken());
                 }
             }
             case "SSN" -> {
-                user = (CUser) client.getUser(st.nextToken());
-                if (user != null && st.hasMoreTokens()) {
-                    user.setSubFactionName(st.nextToken());
+                user = (CUser) client.getUser(stringTokenizer.nextToken());
+                if (user != null && stringTokenizer.hasMoreTokens()) {
+                    user.setSubFactionName(stringTokenizer.nextToken());
                 }
             }
             case "EX" -> {
-                user = (CUser) client.getUser(st.nextToken());
-                if (user != null && st.hasMoreTokens()) {
-                    user.setExp(Integer.parseInt(st.nextToken()));
+                user = (CUser) client.getUser(stringTokenizer.nextToken());
+                if (user != null && stringTokenizer.hasMoreTokens()) {
+                    user.setExp(MathUtility.parseInt(stringTokenizer.nextToken(), 0));
                 }
             }
             case "RA" -> {
-                user = (CUser) client.getUser(st.nextToken());
-                if (user != null && st.hasMoreTokens()) {
-                    user.setRating(Float.parseFloat(st.nextToken()));
+                user = (CUser) client.getUser(stringTokenizer.nextToken());
+                if (user != null && stringTokenizer.hasMoreTokens()) {
+                    user.setRating(MathUtility.parseFloat(stringTokenizer.nextToken(), 0.0f));
                 }
             }
         }
@@ -114,7 +116,7 @@ public class PI extends Command {
     }
 
     /**
-     * @param s
+     *
      */
     @Override
     public void parseReplyArgs(String s) {
@@ -122,7 +124,7 @@ public class PI extends Command {
     }
 
     /**
-     * @param s
+     *
      */
     @Override
     public void parseArguments(String s) {

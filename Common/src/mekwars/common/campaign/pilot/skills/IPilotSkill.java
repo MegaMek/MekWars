@@ -35,7 +35,6 @@
 
 package mekwars.common.campaign.pilot.skills;
 
-
 public interface IPilotSkill {
     String getName();
 

@@ -36,6 +36,8 @@
 
 package mekwars.common.commands;
 
+import java.util.StringTokenizer;
+
 import mekwars.common.campaign.CUser;
 import mekwars.common.campaign.clientutils.protocol.IClient;
 
@@ -53,15 +55,16 @@ public class UserColorCommand extends Command {
      */
     @Override
     public void execute(String input) {
-        java.util.StringTokenizer st = decode(input);
-        CUser user = (CUser) client.getUser(st.nextToken());
+        StringTokenizer stringTokenizer = decode(input);
+        CUser user = (CUser) client.getUser(stringTokenizer.nextToken());
+
         if (user != null) {
-            user.setHTMLColor(st.nextToken());
+            user.setHTMLColor(stringTokenizer.nextToken());
         }
     }
 
     /**
-     * @param s
+     *
      */
     @Override
     public void parseReplyArgs(String s) {
@@ -69,7 +72,7 @@ public class UserColorCommand extends Command {
     }
 
     /**
-     * @param s
+     *
      */
     @Override
     public void parseArguments(String s) {

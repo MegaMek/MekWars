@@ -74,30 +74,34 @@ public class PilotSkills {
     /**
      * Add a skill to the pilot's skill list.
      */
-    public void add(PilotSkill p) {
-        if (p != null && !has(p)) {skills.add(p);}
+    public void add(PilotSkill pilotSkill) {
+        if (pilotSkill != null && !has(pilotSkill)) {
+            skills.add(pilotSkill);
+        }
     }
 
     /**
-     * Return whether a pilot obtains a specific skill or not.
+     * Return whether a pilot gets a specific skill or not.
      */
-    public boolean has(PilotSkill p) {
-        if (p == null) {
+    public boolean has(PilotSkill pilotSkill) {
+        if (pilotSkill == null) {
             return false;
         }
 
-        return skills.contains(p);
+        return skills.contains(pilotSkill);
     }
 
     /**
      * Removes a skill from the pilot's skill list
      */
-    public void remove(PilotSkill p) {
-        if (p != null) {skills.remove(p);}
+    public void remove(PilotSkill pilotSkill) {
+        if (pilotSkill != null) {
+            skills.remove(pilotSkill);
+        }
     }
 
     /**
-     * Returns the amount of Skills
+     * Returns the number of Skills
      *
      * @author Helge Richter
      *

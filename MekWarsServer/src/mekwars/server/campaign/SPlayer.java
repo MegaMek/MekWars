@@ -641,7 +641,7 @@ public final class SPlayer extends Player implements Comparable<Object>, IBuyer,
 
                 // proto counting
                 if ((currU.getEntity() instanceof ProtoMek) && !advanceRep) {
-                    if (!currU.getPilot().getSkills().has(PilotSkill.AstechSkillID)) {
+                    if (!currU.getPilot().getSkills().has(PilotSkill.AsTechSkillID)) {
                         totalProtos++;
                     }
                 } else if (currU.getEntity() instanceof ProtoMek) {

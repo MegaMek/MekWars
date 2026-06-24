@@ -41,10 +41,10 @@ package mekwars.common.campaign.pilot.skills;
  *
  * @author Helge Richter and Immanuel Scholz
  */
-public class PilotSkill {
+public class PilotSkill implements IPilotSkill {
 
     public final static int DodgeManeuverSkillID = 1;
-    public final static int AstechSkillID = 2;
+    public final static int AsTechSkillID = 2;
     public final static int MeleeSpecialistSkillID = 3;
     public final static int PainResistanceSkillID = 4;
     public final static int NaturalAptitudeGunnerySkillID = 5;
@@ -108,7 +108,7 @@ public class PilotSkill {
 
 
     /**
-     * Needed for serialization. Creates an unamed skill.
+     * Needed for serialization. Creates an unnamed skill.
      */
     public PilotSkill() {
     }
@@ -155,6 +155,20 @@ public class PilotSkill {
     }
 
     /**
+     * @return Returns the level.
+     */
+    public int getLevel() {
+        return level;
+    }
+
+    /**
+     * @param level The level to set.
+     */
+    public void setLevel(int level) {
+        this.level = level;
+    }
+
+    /**
      * get the Abbreviation of this skill
      *
      */
@@ -167,20 +181,6 @@ public class PilotSkill {
      */
     final public int getId() {
         return id;
-    }
-
-    /**
-     * @return Returns the level.
-     */
-    public int getLevel() {
-        return level;
-    }
-
-    /**
-     * @param level The level to set.
-     */
-    public void setLevel(int level) {
-        this.level = level;
     }
 
     public String getDescription() {

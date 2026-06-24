@@ -1,3 +1,36 @@
+/*
+ * Copyright (C) 2026 The MegaMek Team. All Rights Reserved.
+ *
+ * This file is part of MekWars.
+ *
+ * MekWars is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License (GPL),
+ * version 3 or (at your option) any later version,
+ * as published by the Free Software Foundation.
+ *
+ * MekWars is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty
+ * of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU General Public License for more details.
+ *
+ * A copy of the GPL should have been included with this project;
+ * if not, see <https://www.gnu.org/licenses/>.
+ *
+ * NOTICE: The MegaMek organization is a non-profit group of volunteers
+ * creating free software for the BattleTech community.
+ *
+ * MechWarrior, BattleMech, `Mech and AeroTech are registered trademarks
+ * of The Topps Company, Inc. All Rights Reserved.
+ *
+ * Catalyst Game Labs and the Catalyst Game Labs logo are trademarks of
+ * InMediaRes Productions, LLC.
+ *
+ * MechWarrior Copyright Microsoft Corporation. MekWars was created under
+ * Microsoft's "Game Content Usage Rules"
+ * <https://www.xbox.com/en-US/developers/rules> and it is not endorsed by or
+ * affiliated with Microsoft.
+ */
+
 package mekwars.common.comparators;
 
 import java.util.Comparator;
@@ -16,8 +49,8 @@ public class UserComparator implements Comparator<CUser> {
     }
 
     public int compare(CUser o1, CUser o2) {
-        CUser user1 = null;
-        CUser user2 = null;
+        CUser user1;
+        CUser user2;
         int result = 0;
 
         if (Order == CUserListPanel.SORT_ORDER_DESCENDING) {
@@ -65,10 +98,16 @@ public class UserComparator implements Comparator<CUser> {
     }
 
     public boolean equals(Object o1, Object o2) {
-        return (((CUser) o1).getName().equals(((CUser) o2).getName()));
+        if (!(o1 instanceof CUser user1) || !(o2 instanceof CUser user2)) {
+            return false;
+        }
+
+        return (user1.getName().equals(user2.getName()));
     }
 
-    public int getMode() {return Mode;}
+    public int getMode() {
+        return Mode;
+    }
 
     public void setMode(int mode) {
         if (mode == CUserListPanel.SORT_MODE_NAME || mode == CUserListPanel.SORT_MODE_HOUSE ||

@@ -44,7 +44,7 @@ import mekwars.common.campaign.clientutils.protocol.IClient;
 public class PS extends Command {
 
     /**
-     * @param client
+     *
      */
     public PS(IClient client) {
         super(client);
@@ -63,7 +63,7 @@ public class PS extends Command {
     }
 
     /**
-     * @param s
+     *
      */
     @Override
     public void parseReplyArgs(String s) {
@@ -71,7 +71,7 @@ public class PS extends Command {
     }
 
     /**
-     * @param s
+     *
      */
     @Override
     public void parseArguments(String s) {

@@ -132,7 +132,7 @@ public abstract class GameHost implements GameListener, IGameHost {
 
             /*
              * Reporting phases show deaths - units that try to stand and blow their ammo, units that have ammo
-             * explode from head, etc. This is also an opportune time to correct issues with the gameRemoveEntity
+             * explode from the head, etc. This is also an opportune time to correct issues with the gameRemoveEntity
              * ISU's. Removals happen ASAP, even if the removal condition and final condition of the unit are
              * different (i.e. - remove on Engine crits even when a CT core comes later in the round).
              */

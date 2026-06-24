@@ -39,14 +39,15 @@ package mekwars.common.campaign;
 import java.util.StringTokenizer;
 import java.util.TreeSet;
 
+import megamek.codeUtilities.MathUtility;
 import mekwars.common.Army;
 import mekwars.common.Unit;
 import mekwars.common.campaign.clientutils.protocol.IClient;
 import mekwars.common.util.TokenReader;
 
 /**
- * client-side representation of an Army. The CArmy has, when compared to its server-side counterpart, very few
- * functional methods, and mostly serves as a holder for server data that the client needs in order to represent forces
+ * Client-side representation of an Army. The CArmy has, when compared to its server-side counterpart, very few
+ * functional methods and mostly serves as a holder for server data that the client needs to represent forces
  * graphically, load units into games, etc.
  */
 public class CArmy extends Army {
@@ -138,15 +139,15 @@ public class CArmy extends Army {
     }
 
     /**
-     * Method that returns an amity's legal operations. Used throughout the client to build GUI elements.
+     * Method that returns amity's legal operations. Used throughout the client to build GUI elements.
      */
     public java.util.TreeSet<String> getLegalOperations() {
         return legalOperations;
     }
 
     /**
-     * This method is used to port saved legal ops info to a newly added CArmy, if an army with the same ID previously
-     * existed. This allows the server to send updates (lost 1 type, etc) instead of resending all of an army's ops
+     * This method is used to port saved legal ops info to a newly added CArmy if an army with the same ID previously
+     * existed. This allows the server to send updates (lost 1 type, etc.) instead of resending all of an army's ops
      * whenever data is resent to the client.
      * <p>
      * See CPlayer.setArmyData() for usage details.
@@ -174,23 +175,23 @@ public class CArmy extends Army {
      */
     public float getRawForceSize() {
 
-        // dont recalculate if it isn't necessary
+        // don't recalculate if it isn't necessary
         if (rawForceSize != 0) {return rawForceSize;}
 
         // no break, generate a raw force size
         for (Unit unit : this.getUnits()) {
             if (unit.getType() == Unit.INFANTRY) {
-                rawForceSize += Float.parseFloat(client.getServerConfigs("InfantryOperationsBVMod"));
+                rawForceSize += MathUtility.parseFloat(client.getServerConfigs("InfantryOperationsBVMod"), 0.0f);
             } else if (unit.getType() == Unit.VEHICLE) {
-                rawForceSize += Float.parseFloat(client.getServerConfigs("VehicleOperationsBVMod"));
+                rawForceSize += MathUtility.parseFloat(client.getServerConfigs("VehicleOperationsBVMod"), 0.0f);
             } else if (unit.getType() == Unit.BATTLEARMOR) {
-                rawForceSize += Float.parseFloat(client.getServerConfigs("BAOperationsBVMod"));
+                rawForceSize += MathUtility.parseFloat(client.getServerConfigs("BAOperationsBVMod"), 0.0f);
             } else if (unit.getType() == Unit.AERO) {
-                rawForceSize += Float.parseFloat(client.getServerConfigs("AeroOperationsBVMod"));
+                rawForceSize += MathUtility.parseFloat(client.getServerConfigs("AeroOperationsBVMod"), 0.0f);
             } else if (unit.getType() == Unit.PROTOMEK) {
-                rawForceSize += Float.parseFloat(client.getServerConfigs("ProtoOperationsBVMod"));
+                rawForceSize += MathUtility.parseFloat(client.getServerConfigs("ProtoOperationsBVMod"), 0.0f);
             } else {
-                rawForceSize += Float.parseFloat(client.getServerConfigs("MekOperationsBVMod"));
+                rawForceSize += MathUtility.parseFloat(client.getServerConfigs("MekOperationsBVMod"), 0.0f);
             }
         }
 
@@ -267,7 +268,7 @@ public class CArmy extends Army {
         int minSkill = 99;
         int minGunnery = 99;
         int minPiloting = 99;
-        int numunits = 0;
+        int numUnits = 0;
         int totalGunnery = 0;
         int totalPiloting = 0;
         StringBuilder toReturn = new StringBuilder();
@@ -284,13 +285,13 @@ public class CArmy extends Army {
             minPiloting = Math.min(minPiloting, piloting);
             totalGunnery += gunnery;
             totalPiloting += piloting;
-            numunits++;
+            numUnits++;
         }
         // Need to use a DecimalFormat so we don't get just whole integer averages
 
-        double avgS = (double) (totalGunnery + totalPiloting) / (double) numunits;
-        double avgG = (double) (totalGunnery) / (double) numunits;
-        double avgP = (double) (totalPiloting) / (double) numunits;
+        double avgS = (double) (totalGunnery + totalPiloting) / (double) numUnits;
+        double avgG = (double) (totalGunnery) / (double) numUnits;
+        double avgP = (double) (totalPiloting) / (double) numUnits;
         java.text.DecimalFormat twoDForm = (java.text.DecimalFormat) java.text.NumberFormat.getNumberInstance();
         twoDForm.applyPattern("0.00");
 

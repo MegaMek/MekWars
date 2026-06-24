@@ -54,19 +54,19 @@ public class BM extends Command {
      */
     @Override
     public void execute(String input) {
-        StringTokenizer st = decode(input);
-        String cmd = st.nextToken();
+        StringTokenizer stringTokenizer = decode(input);
+        String command = stringTokenizer.nextToken();
 
-        if (!st.hasMoreTokens()) {
+        if (!stringTokenizer.hasMoreTokens()) {
             return;
-        } else if (cmd.equals("AD")) {
-            client.getCampaign().setBMData(st.nextToken());
-        } else if (cmd.equals("AU")) {
-            client.getCampaign().addBMUnit(st.nextToken());
-        } else if (cmd.equals("RU")) {
-            client.getCampaign().removeBMUnit(st.nextToken());
-        } else if (cmd.equals("CU")) {
-            client.getCampaign().changeBMUnit(st.nextToken());
+        } else if (command.equals("AD")) {
+            client.getCampaign().setBMData(stringTokenizer.nextToken());
+        } else if (command.equals("AU")) {
+            client.getCampaign().addBMUnit(stringTokenizer.nextToken());
+        } else if (command.equals("RU")) {
+            client.getCampaign().removeBMUnit(stringTokenizer.nextToken());
+        } else if (command.equals("CU")) {
+            client.getCampaign().changeBMUnit(stringTokenizer.nextToken());
         }
 
         client.refreshGUI(IClient.REFRESH_HQ_PANEL);
@@ -79,7 +79,7 @@ public class BM extends Command {
      *
      */
     @Override
-    public void parseReplyArgs(String s) {
+    public void parseReplyArgs(String string) {
 
     }
 
@@ -95,7 +95,7 @@ public class BM extends Command {
      *
      */
     @Override
-    public void parseArguments(String s) {
+    public void parseArguments(String string) {
 
     }
 }

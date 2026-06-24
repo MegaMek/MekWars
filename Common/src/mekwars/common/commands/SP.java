@@ -36,6 +36,8 @@
 
 package mekwars.common.commands;
 
+import java.util.StringTokenizer;
+
 import mekwars.common.campaign.clientutils.protocol.IClient;
 import mekwars.common.gui.panels.CCommPanel;
 
@@ -56,14 +58,16 @@ public class SP extends Command {
      */
     @Override
     public void execute(String input) {
-        java.util.StringTokenizer st = decode(input);
-        if (client.getConfig().isParam("POPUPONMESSAGE")) {client.showInfoWindow(st.nextToken());} else {
-            client.addToChat(st.nextToken(), CCommPanel.CHANNEL_MISC);
+        StringTokenizer stringTokenizer = decode(input);
+        if (client.getConfig().isParam("POPUP_ON_MESSAGE")) {
+            client.showInfoWindow(stringTokenizer.nextToken());
+        } else {
+            client.addToChat(stringTokenizer.nextToken(), CCommPanel.CHANNEL_MISC);
         }
     }
 
     /**
-     * @param s
+     *
      */
     @Override
     public void parseReplyArgs(String s) {
@@ -71,7 +75,7 @@ public class SP extends Command {
     }
 
     /**
-     * @param s
+     *
      */
     @Override
     public void parseArguments(String s) {

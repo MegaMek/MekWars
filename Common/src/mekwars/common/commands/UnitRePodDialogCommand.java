@@ -44,7 +44,7 @@ import mekwars.common.campaign.clientutils.protocol.IClient;
 import mekwars.common.gui.dialogs.RePodSelectorDialog;
 
 /**
- * @@author jtighe
+ * @author jtighe
  */
 public class UnitRePodDialogCommand extends Command {
     private static final MMLogger LOGGER = MMLogger.create(UnitRePodDialogCommand.class);
@@ -87,7 +87,7 @@ public class UnitRePodDialogCommand extends Command {
     }
 
     /**
-     * @param s
+     *
      */
     @Override
     public void parseReplyArgs(String s) {
@@ -95,7 +95,7 @@ public class UnitRePodDialogCommand extends Command {
     }
 
     /**
-     * @param s
+     *
      */
     @Override
     public void parseArguments(String s) {

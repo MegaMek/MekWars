@@ -38,7 +38,6 @@ package mekwars.common.commands;
 
 import java.util.StringTokenizer;
 
-import megamek.logging.MMLogger;
 import mekwars.common.campaign.clientutils.protocol.IClient;
 
 /**
@@ -47,7 +46,6 @@ import mekwars.common.campaign.clientutils.protocol.IClient;
  * @author Imi (immanuel.scholz@gmx.de)
  */
 public class FactionStatusScreenUpdateCommand extends Command {
-    private static final MMLogger LOGGER = MMLogger.create(FactionStatusScreenUpdateCommand.class);
 
     /**
      * @see Command#Command(IClient)
@@ -80,7 +78,7 @@ public class FactionStatusScreenUpdateCommand extends Command {
     }
 
     /**
-     * @param string
+     *
      */
     @Override
     public void parseReplyArgs(String string) {
@@ -121,7 +119,7 @@ public class FactionStatusScreenUpdateCommand extends Command {
     }
 
     /**
-     * @param s
+     *
      */
     @Override
     public void parseArguments(String s) {

@@ -53,7 +53,7 @@ public class Pilot {
 
     private final LinkedList<MegaMekPilotOption> megaMekOptions = new LinkedList<>();
     /**
-     * List of skills this pilot has obtained.
+     * List of skills this pilot has got.
      */
     private final PilotSkills skills = new PilotSkills();
     boolean edge_when_tac = true;
@@ -73,8 +73,7 @@ public class Pilot {
     private double bvMod = 0.0;
     private int bayModifier = 0;
     private int kills = 0;
-    private int unitType = 0; //set the units type good for checking stuff
-
+    private int unitType = 0; //set the unit type good for checking stuff
 
     public Pilot(String name, int gunnery, int piloting) {
         setName(name);

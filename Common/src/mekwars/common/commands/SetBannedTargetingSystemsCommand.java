@@ -36,6 +36,10 @@
 
 package mekwars.common.commands;
 
+import java.util.StringTokenizer;
+import java.util.Vector;
+
+import megamek.codeUtilities.MathUtility;
 import mekwars.common.campaign.clientutils.protocol.IClient;
 
 /**
@@ -44,7 +48,7 @@ import mekwars.common.campaign.clientutils.protocol.IClient;
 public class SetBannedTargetingSystemsCommand extends Command {
 
     /**
-     * @see Command#Command(mekwars.common.campaign.clientutils.protocol.IClient)
+     * @see Command#Command(IClient)
      */
     public SetBannedTargetingSystemsCommand(IClient client) {
         super(client);
@@ -55,12 +59,13 @@ public class SetBannedTargetingSystemsCommand extends Command {
      */
     @Override
     public void execute(String input) {
-        java.util.StringTokenizer st = decode(input);
+        StringTokenizer stringTokenizer = decode(input);
         client.getData().getBannedTargetingSystems().clear();
-        java.util.Vector<Integer> bans = new java.util.Vector<>(1, 1);
+        Vector<Integer> bans = new Vector<>(1, 1);
 
-        while (st.hasMoreTokens()) {
-            int ban = Integer.parseInt(st.nextToken());
+        while (stringTokenizer.hasMoreTokens()) {
+            int ban = MathUtility.parseInt(stringTokenizer.nextToken(), 0);
+
             if (ban != 0) {
                 // Don't ban standard TS
                 bans.add(ban);
@@ -71,7 +76,7 @@ public class SetBannedTargetingSystemsCommand extends Command {
     }
 
     /**
-     * @param s
+     *
      */
     @Override
     public void parseReplyArgs(String s) {
@@ -79,7 +84,7 @@ public class SetBannedTargetingSystemsCommand extends Command {
     }
 
     /**
-     * @param s
+     *
      */
     @Override
     public void parseArguments(String s) {

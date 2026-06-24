@@ -55,8 +55,8 @@ public interface IConnectionHandler {
     void sendImmediately(String message);
 
     /**
-     * Shutdown this connection listener.  The notify parameter indicates whether the client (ConnectionListener) should
-     * be notified of the shutdown.  Basically, notify should only be false if the client itself called us.
+     * Shutdown this connection listener.  The notification parameter indicates whether the client (ConnectionListener)
+     * should be notified of the shutdown.  Basically, notify should only be false if the client itself called us.
      *
      * @param notify to notify the ConnectionListener
      */

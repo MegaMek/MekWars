@@ -17,9 +17,10 @@ import javax.swing.JTable;
 import javax.swing.ListSelectionModel;
 import javax.swing.table.DefaultTableModel;
 
-import common.flags.FlagSet;
-import common.flags.PlayerFlags;
-import common.flags.ResultsFlags;
+import mekwars.common.commands.PlayerFlagsCommand;
+import mekwars.common.flags.FlagSet;
+import mekwars.common.flags.PlayerFlags;
+import mekwars.common.flags.ResultsFlags;
 
 public class FlagTable extends JTable implements ActionListener {
 
@@ -27,8 +28,8 @@ public class FlagTable extends JTable implements ActionListener {
      *
      */
     private static final long serialVersionUID = 1674365115046546502L;
-    private PlayerFlags flags;
-    private PlayerFlags availableFlags = new PlayerFlags();
+    private PlayerFlagsCommand flags;
+    private PlayerFlagsCommand availableFlags = new PlayerFlags();
 
     private JPopupMenu popup;
 
@@ -270,7 +271,9 @@ public class FlagTable extends JTable implements ActionListener {
                 return Boolean.class;
             }
             return null;
-        }        public void addRow(Object[] rowData) {
+        }
+
+        public void addRow(Object[] rowData) {
             if (this.getRowCount() == 1 && this.getValueAt(0, 0).equals(" ")) {
                 this.removeInitialRow();
             }

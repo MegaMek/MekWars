@@ -39,12 +39,12 @@ package mekwars.common.commands;
 import mekwars.common.campaign.clientutils.protocol.IClient;
 
 /**
- * @@author jtighe
+ * @author jtighe
  */
 public class SAS extends Command {
 
     /**
-     * @param client
+     *
      */
     public SAS(IClient client) {
         super(client);
@@ -56,11 +56,11 @@ public class SAS extends Command {
     @Override
     public void execute(String input) {
         String line = decode(input).nextToken();
-        client.serverSend("CH|" + line);
+        client.serverSend(STR."CH|\{line}");
     }
 
     /**
-     * @param s
+     *
      */
     @Override
     public void parseReplyArgs(String s) {
@@ -68,7 +68,7 @@ public class SAS extends Command {
     }
 
     /**
-     * @param s
+     *
      */
     @Override
     public void parseArguments(String s) {

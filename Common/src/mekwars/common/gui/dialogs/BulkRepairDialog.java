@@ -246,7 +246,7 @@ public class BulkRepairDialog extends JFrame implements ActionListener, KeyListe
                 int location = Integer.parseInt(command);
                 int techType = ((JComboBox<?>) techBox.getComponent(location)).getSelectedIndex();
                 if (techType == UnitUtils.TECH_PILOT) {
-                    techType = playerUnit.getPilot().getSkills().getPilotSkill(PilotSkill.AstechSkillID).getLevel();
+                    techType = playerUnit.getPilot().getSkills().getPilotSkill(PilotSkill.AsTechSkillID).getLevel();
                 }
                 ((JSpinner) rollBox.getComponent(location)).setValue(UnitUtils.techBaseRoll(techType));
 
@@ -266,7 +266,7 @@ public class BulkRepairDialog extends JFrame implements ActionListener, KeyListe
 
         Pilot pilot = playerUnit.getPilot();
 
-        if (pilot.getSkills().has(PilotSkill.AstechSkillID)) {
+        if (pilot.getSkills().has(PilotSkill.AsTechSkillID)) {
             techList = new String[] { "Green", "Reg", "Vet", "Elite", "Pilot" };
         } else {
             techList = new String[] { "Green", "Reg", "Vet", "Elite" };
@@ -880,7 +880,7 @@ public class BulkRepairDialog extends JFrame implements ActionListener, KeyListe
                   true,
                   client.getData().getHouseByName(client.getPlayer().getHouse()).getTechLevel()) - baseRoll;
         } else {
-            techType = playerUnit.getPilot().getSkills().getPilotSkill(PilotSkill.AstechSkillID).getLevel();
+            techType = playerUnit.getPilot().getSkills().getPilotSkill(PilotSkill.AsTechSkillID).getLevel();
         }
 
         techWorkMod = Math.max(techWorkMod, 0);

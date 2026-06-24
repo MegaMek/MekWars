@@ -67,7 +67,11 @@ public class PongPCmd extends CProtCommand {
     protected void echo(String input) {
         StringTokenizer ST = new StringTokenizer(input, delimiter);
         String sender = ST.nextToken();
-        if (sender.equals("server")) {return;}
+
+        if (sender.equals("server")) {
+            return;
+        }
+
         float time = (float) (System.currentTimeMillis() - Long.parseLong(ST.nextToken())) / 1000;
         client.systemMessage(STR."Ping reply from \{sender}: \{time} s");
     }

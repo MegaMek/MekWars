@@ -46,6 +46,7 @@ import java.util.StringTokenizer;
 import java.util.TreeMap;
 import java.util.Vector;
 
+import megamek.codeUtilities.MathUtility;
 import megamek.logging.MMLogger;
 
 /**
@@ -70,36 +71,31 @@ public class FlagSet {
      * @return Vector<String>
      */
     public Vector<String> getFlagNames() {
-        Vector<String> v = new Vector<>();
+        Vector<String> vector = new Vector<>();
 
         for (int i : flagNames.keySet()) {
-            v.add(flagNames.get(i));
+            vector.add(flagNames.get(i));
         }
 
-        return v;
+        return vector;
     }
 
     /**
      * Gets the boolean status of a named flag
      *
-     * @param name
-     *
-     * @return
      */
     public boolean getFlagStatus(String name) {
         int flag = getFlagKey(name);
         if (flag != -1) {
             return flags.get(flag);
         } else {
-            LOGGER.error("Unknown Flag checked: {}", name);
+            LOGGER.error("Unknown Flag Status: {}", name);
             return false;
         }
     }
 
     /**
      * Returns the integer key for a given name.  Needed to map between a flag name and the actual bitset
-     *
-     * @param name
      *
      * @return integer key ID
      */
@@ -120,23 +116,23 @@ public class FlagSet {
     /**
      * Loads personally set flags from a string.  This should only be called after defaults are set, as any flags that
      * are listed in this string that do not already exist due to defaults will be ignored.  This way, old flags that
-     * may have been deleted by the admins will not continue to hang around, but will be pruned every time a player
+     * may have been deleted by the admins will not continue to hang around but will be pruned every time a player
      * loads.
      *
-     * @param data
      */
     public void loadPersonal(String data) {
         if (data.equalsIgnoreCase(" ")) {
             return;
         }
 
-        StringTokenizer st = new StringTokenizer(data, "$");
-        while (st.hasMoreTokens()) {
-            String element = st.nextToken();
+        StringTokenizer stringTokenizer = new StringTokenizer(data, "$");
+        while (stringTokenizer.hasMoreTokens()) {
+            String element = stringTokenizer.nextToken();
             StringTokenizer elementToken = new StringTokenizer(element, "#");
             String name = elementToken.nextToken();
             elementToken.nextToken();// This isn't needed but is included in the export.  Ignore it.
-            boolean value = Boolean.parseBoolean(elementToken.nextToken());
+            boolean value = MathUtility.parseBoolean(elementToken.nextToken(), false);
+
             if (getFlagKey(name) >= 0) {
                 setFlag(name, value);
             }
@@ -146,8 +142,6 @@ public class FlagSet {
     /**
      * Sets a named flag to true or false
      *
-     * @param name
-     * @param value
      */
     public void setFlag(String name, boolean value) {
         int flag = getFlagKey(name);
@@ -161,14 +155,15 @@ public class FlagSet {
     /**
      * Clears a single flag, removing it from the names and flags
      *
-     * @param name
      */
     public void clearFlag(String name) {
         int id = getFlagKey(name);
+
         if (id == -1) {
             // invalid name
             return;
         }
+
         flagNames.remove(id);
         flags.clear(id);
     }
@@ -201,8 +196,8 @@ public class FlagSet {
     }
 
     /**
-     * Builds the string that is imported by load(String data) above Used server-side only, as I envision it, so I might
-     * move this method to SPlayer
+     * Builds the string that is imported by load (String data) above Used server-side only, as I envision it, so I
+     * might move this method to SPlayer
      *
      * @return String flag settings - name, ID, and value
      */
@@ -222,18 +217,18 @@ public class FlagSet {
     }
 
     /**
-     * Reads data file from disk.  This should be overloaded by any class extending FlagSet to allow for a simple
+     * Reads a data file from disk.  This should be overloaded by any class extending FlagSet to allow for a simple
      * .loadFromDisk() to be sent.
      */
     public void loadFromDisk(File file) {
         try {
-            FileReader fr = new FileReader(file);
-            BufferedReader br = new BufferedReader(fr);
-            String s;
+            FileReader fileReader = new FileReader(file);
+            BufferedReader bufferedReader = new BufferedReader(fileReader);
+            String string;
 
             try {
-                while ((s = br.readLine()) != null) {
-                    loadDefaults(s);
+                while ((string = bufferedReader.readLine()) != null) {
+                    loadDefaults(string);
                 }
             } catch (IOException e) {
                 LOGGER.error(e, "Error reading pFlags.dat");
@@ -248,7 +243,6 @@ public class FlagSet {
      * the defaults so we can make sure all the proper flags exist.  If you're loading personal flags, use
      * loadPersonal() instead
      *
-     * @param data
      */
     public void loadDefaults(String data) {
         if (data.equalsIgnoreCase(" ")) {
@@ -257,9 +251,9 @@ public class FlagSet {
         // clear out the existing flags, just in case
 
         empty();
-        StringTokenizer st = new StringTokenizer(data, "$");
-        while (st.hasMoreTokens()) {
-            String element = st.nextToken();
+        StringTokenizer stringTokenizer = new StringTokenizer(data, "$");
+        while (stringTokenizer.hasMoreTokens()) {
+            String element = stringTokenizer.nextToken();
             StringTokenizer elementToken = new StringTokenizer(element, "#");
             String name = elementToken.nextToken();
             int id = Integer.parseInt(elementToken.nextToken());
@@ -279,9 +273,6 @@ public class FlagSet {
     /**
      * Adds a flag to the list
      *
-     * @param name
-     * @param id
-     * @param value
      */
     public void addFlag(String name, int id, boolean value) {
         setFlagName(id, name);
@@ -292,8 +283,6 @@ public class FlagSet {
      * Adds the flag name to the map.  Used so that the SOs can use flag names that make sense to them, rather than
      * integers
      *
-     * @param key
-     * @param name
      */
     public void setFlagName(int key, String name) {
         flagNames.put(key, name);
@@ -301,11 +290,13 @@ public class FlagSet {
 
     public int getAvailableID() {
         int toReturn = -1;
+
         for (int i = 0; i <= flagNames.size(); i++) {
             if (!flagNames.containsKey(i)) {
                 toReturn = i;
             }
         }
+
         return toReturn;
     }
 

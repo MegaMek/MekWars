@@ -175,16 +175,16 @@ public class CCampaign {
     }
 
     protected boolean setData(String command) {
-        return (true);
+        return true;
     }
 
     protected boolean showMsg(String command) {
-        return (true);
+        return true;
     }
 
     protected boolean showStatus(String command) {
         client.addToChat(command);
-        return (true);
+        return true;
     }
 
     /**

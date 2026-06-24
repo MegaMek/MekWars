@@ -37,6 +37,7 @@
 package mekwars.common.commands;
 
 import java.awt.Dimension;
+import java.util.StringTokenizer;
 
 import mekwars.common.PlanetEnvironment;
 import mekwars.common.campaign.clientutils.protocol.IClient;
@@ -59,20 +60,23 @@ public class PlanetEnvironmentCommand extends Command {
      */
     @Override
     public void execute(String input) {
-        java.util.StringTokenizer st = decode(input);
-        PlanetEnvironment planetEnvironment = new PlanetEnvironment(st.nextToken());
-        int xsize = TokenReader.readInt(st);
-        int ysize = TokenReader.readInt(st);
-        int mapMedium = TokenReader.readInt(st);
+        StringTokenizer stringTokenizer = decode(input);
+        PlanetEnvironment planetEnvironment = new PlanetEnvironment(stringTokenizer.nextToken());
+        int xSize = TokenReader.readInt(stringTokenizer);
+        int ySize = TokenReader.readInt(stringTokenizer);
+        int mapMedium = TokenReader.readInt(stringTokenizer);
+
         if (planetEnvironment.isStaticMap()) {
             client.setEnvironment(planetEnvironment,
                   new Dimension(planetEnvironment.getXSize(), planetEnvironment.getYSize()),
                   mapMedium);
-        } else {client.setEnvironment(planetEnvironment, new Dimension(xsize, ysize), mapMedium);}
+        } else {
+            client.setEnvironment(planetEnvironment, new Dimension(xSize, ySize), mapMedium);
+        }
     }
 
     /**
-     * @param s
+     *
      */
     @Override
     public void parseReplyArgs(String s) {
@@ -80,7 +84,7 @@ public class PlanetEnvironmentCommand extends Command {
     }
 
     /**
-     * @param s
+     *
      */
     @Override
     public void parseArguments(String s) {

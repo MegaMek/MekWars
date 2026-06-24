@@ -67,7 +67,7 @@ public abstract class Command extends Thread implements ClientCommand, ServerCom
     protected String myPrefix;
 
     /**
-     * Construct this Command. Remember that your derivative must have an Constructor taking exact one client as
+     * Construct this Command. Remember that your derivative must have a Constructor taking exactly one client as a
      * parameter too.
      */
     public Command(IClient client) {
@@ -94,7 +94,7 @@ public abstract class Command extends Thread implements ClientCommand, ServerCom
     }
 
     /**
-     * Helper to decode the input string for execute
+     * Helper to decode the input string for executing
      *
      * @param input The input string given to execute
      *

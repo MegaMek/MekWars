@@ -1,6 +1,6 @@
 package mekwars.server.campaign.commands.admin;
 
-import common.flags.PlayerFlags;
+import mekwars.common.flags.PlayerFlags;
 import mekwars.server.campaign.CampaignMain;
 
 

@@ -36,6 +36,8 @@
 
 package mekwars.common.commands;
 
+import java.util.StringTokenizer;
+
 import mekwars.common.campaign.CUser;
 import mekwars.common.campaign.clientutils.protocol.IClient;
 
@@ -46,7 +48,7 @@ import mekwars.common.campaign.clientutils.protocol.IClient;
 public class UsersCommand extends Command {
 
     /**
-     * @param client
+     *
      */
     public UsersCommand(IClient client) {
         super(client);
@@ -57,21 +59,23 @@ public class UsersCommand extends Command {
      */
     @Override
     public void execute(String input) {
-        java.util.StringTokenizer st = decode(input);
-        //UsersCommand = Users (UsersCommand|<MMClientInfo.toString()>|<MMClientInfo.toString()>|..)
-        //This event should only come on Entry to the server, afterwards, NewUserCommand and UserGoneCommand are used.
+        StringTokenizer stringTokenizer = decode(input);
         client.getUsers().clear();
 
         //add all users to the list
-        while (st.hasMoreElements()) {client.getUsers().add(new CUser(st.nextToken()));}
+        while (stringTokenizer.hasMoreElements()) {
+            client.getUsers().add(new CUser(stringTokenizer.nextToken()));
+        }
 
-        if (client.isDedicated()) {return;}
+        if (client.isDedicated()) {
+            return;
+        }
 
         client.refreshGUI(IClient.REFRESH_USERLIST);
     }
 
     /**
-     * @param s
+     *
      */
     @Override
     public void parseReplyArgs(String s) {
@@ -79,7 +83,7 @@ public class UsersCommand extends Command {
     }
 
     /**
-     * @param s
+     *
      */
     @Override
     public void parseArguments(String s) {

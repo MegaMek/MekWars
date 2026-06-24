@@ -421,8 +421,8 @@ public class SPilot extends Pilot {
                     ((EdgeSkill) skillToAdd).setLevel(skillToAdd.getLevel() + 1);
                 }
             } else if (skillToAdd instanceof AstechSkill) {
-                if (getSkills().has(PilotSkill.AstechSkillID)) {
-                    skillToAdd = (SPilotSkill) getSkills().getPilotSkill(PilotSkill.AstechSkillID);
+                if (getSkills().has(PilotSkill.AsTechSkillID)) {
+                    skillToAdd = (SPilotSkill) getSkills().getPilotSkill(PilotSkill.AsTechSkillID);
                     ((AstechSkill) skillToAdd).setLevel(skillToAdd.getLevel() + 1);
                 }
             }
@@ -550,7 +550,7 @@ public class SPilot extends Pilot {
                 SPilotSkill skill = SPilotSkills.getPilotSkill(TokenReader.readInt(stringTokenizer));
                 int level = TokenReader.readInt(stringTokenizer);
                 if (skill instanceof AstechSkill) {
-                    skill = new AstechSkill(PilotSkill.AstechSkillID);
+                    skill = new AstechSkill(PilotSkill.AsTechSkillID);
                 }
 
                 if (skill instanceof WeaponSpecialistSkill) {

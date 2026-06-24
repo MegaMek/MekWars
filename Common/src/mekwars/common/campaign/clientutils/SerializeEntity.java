@@ -165,11 +165,11 @@ public class SerializeEntity {
         }
 
         /*
-         * FullStatus is used when auto reporting. This status, which sends less information, is used for
+         * FullStatus is used when auto-reporting. This status, which sends less information, is used for
          * InProgressUpdates.
          */
         else {
-            // if the entity is a mechwarrior, send an IPU command (InProgressUpdate) to the server.
+            // if the entity is a MekWarrior, send an IPU command (InProgressUpdate) to the server.
             if (entity instanceof MekWarrior mw) {
                 result.append("MW*").append(mw.getOriginalRideExternalId()).append("*");
                 result.append(mw.getPickedUpByExternalId()).append("*");

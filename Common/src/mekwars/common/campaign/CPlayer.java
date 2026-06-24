@@ -146,14 +146,12 @@ public class CPlayer extends Player {
     /**
      * Complete setData command. Called in response to a PS| sent by the server.
      *
-     * @param data
-     *
      * @return success
      */
     public boolean setData(String data) {
         StringTokenizer stringTokenizer;
         String element;
-        CUnit tmek;
+        CUnit targetMek;
         int i, armiesCount, hangerCount;
 
         stringTokenizer = new StringTokenizer(data, "~");
@@ -179,9 +177,9 @@ public class CPlayer extends Player {
         hangerCount = TokenReader.readInt(stringTokenizer);
 
         for (i = 0; i < hangerCount; i++) {
-            tmek = new CUnit(client);
-            if (tmek.setData(TokenReader.readString(stringTokenizer))) {
-                Hangar.add(tmek);
+            targetMek = new CUnit(client);
+            if (targetMek.setData(TokenReader.readString(stringTokenizer))) {
+                Hangar.add(targetMek);
             }
         }
 
@@ -218,7 +216,7 @@ public class CPlayer extends Player {
         LOGGER.info(STR."My Player Flags: \{flags.export()}");
 
         // traps run. sort the HQ. this isn't duplicative, b/c
-        // direct lods (PS instead of PL) don't trigger sorts.
+        // direct loads (PS instead of PL) don't trigger sorts.
         sortHangar();
         return true;
     }
@@ -286,7 +284,7 @@ public class CPlayer extends Player {
         int techsUsingAdditive = Math.min(Techs, techCeiling);
 
         /*
-         * Faster too just to a for loop to determine the number of times the
+         * Faster to just to a for loop to determine the number of times the
          * additive was made (1 + 2 + 3 + 4, and so on) with ints, and THEN
          * multiply by the double additive than do a lot of floating point math
          * by for-in through and multiplying by the additive each time.
@@ -366,7 +364,7 @@ public class CPlayer extends Player {
     /**
      * Method that resorts every unit. Inefficient, but we hate clients. Because we're evil. So there.
      *
-     * @urgru 4.4.05
+     * @author urgru 4.4.05
      */
     public void sortHangar() {
 
@@ -503,7 +501,7 @@ public class CPlayer extends Player {
 
         /*
          * Get the faction configs before starting anything else. I could pause
-         * the client and wait for the configs but I'll let it go. --Torren
+         * the client and wait for the configs, but I'll let it go. --Torren
          */
         client.sendChat(STR."\{IClient.CAMPAIGN_PREFIX}c getfactionconfigs#0\{client.getServerConfigs("TIMESTAMP")}");
 
@@ -655,11 +653,11 @@ public class CPlayer extends Player {
      * Method that creates an autonomy gun emplacement. Takes in a string with weight classes and uses server configs
      * (path, filenames) to construct units of those weights.
      * <p>
-     * Units are added to servers when a player joins a game, same as units from locked armies.
+     * Units are added to servers when a player joins a game, the same as units from locked armies.
      */
     public void setAutoGunEmplacements(StringTokenizer stringTokenizer) {
 
-        // if its a null, this was just a clearing call.
+        // if it's a null, this was just a clearing call.
         if (stringTokenizer == null) {
             return;
         }
@@ -702,7 +700,7 @@ public class CPlayer extends Player {
      * Method that creates an autonomy. Takes in a string with weight classes and uses server configs (path, filenames)
      * to construct units of those weights.
      * <p>
-     * Units are added to servers when a player joins a game, same as units from locked armies.
+     * Units are added to servers when a player joins a game, the same as units from locked armies.
      */
     public void setAutoArmy(StringTokenizer stringTokenizer) {
 
@@ -712,7 +710,7 @@ public class CPlayer extends Player {
          */
         AutoArmy = new ArrayList<>();
 
-        // if its a null, this was just a clearing call.
+        // if it's a null, this was just a clearing call.
         if (stringTokenizer == null) {
             return;
         }
@@ -823,7 +821,7 @@ public class CPlayer extends Player {
     /**
      * Method that resorts every unit. Inefficient, but we hate clients. Because we're evil. So there.
      *
-     * @urgru 4.4.05
+     * @author urgru 4.4.05
      */
     public void sortArmies() {
 
@@ -901,7 +899,7 @@ public class CPlayer extends Player {
             while (i.hasNext()) {
                 if (i.next().getId() == unitId) {
                     i.remove();
-                    getArmy(army).removeCommander(unitId); //Baruk Khazad!  20151108c it is safe to removeCommander regardless of whether isCommander or not
+                    getArmy(army).removeCommander(unitId); //Baruk Khazad!  20151108c it is safe to removeCommander regardless of whether it isCommander or not
                     break;
                 }
             }
@@ -1109,7 +1107,7 @@ public class CPlayer extends Player {
      * Exclude method, called after receipt of PL|AEU| (Admin Exclude Update). Because NP lists are expected to be small
      * (2-5 players), the entire list is sent every time.
      *
-     * @urgru 4.3.05
+     * @author urgru 4.3.05
      */
     public void setAdminExcludes(String buffer, String token) {
         adminExcludes.clear();
@@ -1172,7 +1170,7 @@ public class CPlayer extends Player {
 
             // check types
             boolean isFoot = model.startsWith("Foot");
-            boolean isAMFoot = model.startsWith("Anti-Mech Foot");
+            boolean isAMFoot = model.startsWith("Anti-Mek Foot");
 
             if (isFoot || isAMFoot) {
                 return 0;

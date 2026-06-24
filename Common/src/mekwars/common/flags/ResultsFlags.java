@@ -53,9 +53,6 @@ public class ResultsFlags extends PlayerFlags {
     /**
      * Adds a flag to the list
      *
-     * @param name
-     * @param id
-     * @param value
      */
     public void addFlag(String name, int id, boolean value, boolean appliesToAttacker, boolean appliesToDefender) {
         setFlagName(id, name);
@@ -69,37 +66,43 @@ public class ResultsFlags extends PlayerFlags {
         if (appliesToDefender) {
             appliesTo += ResultsFlags.APPLIES_TO_DEFENDER;
         }
+
         flagsApplyTo.put(id, appliesTo);
         LOGGER.debug("Setting flag {}(id: {}) to value {}", name, id, value);
     }
 
     public boolean flagAppliesToDefender(String name) {
         int id = getFlagKey(name);
+
         if (id == -1) {
             // invalid name
             return false;
         }
+
         int appliesTo = flagsApplyTo.get(id);
+
         return appliesTo > 1;
     }
 
     public boolean flagAppliesToAttacker(String name) {
         int id = getFlagKey(name);
+
         if (id == -1) {
             // invalid name
             return false;
         }
+
         int appliesTo = flagsApplyTo.get(id);
+
         return (appliesTo % 2) == 1;
     }
 
     /**
      * Loads personally set flags from a string.  This should only be called after defaults are set, as any flags that
      * are listed in this string that do not already exist due to defaults will be ignored.  This way, old flags that
-     * may have been deleted by the admins will not continue to hang around, but will be pruned every time a player
+     * may have been deleted by the admins will not continue to hang around but will be pruned every time a player
      * loads.
      *
-     * @param data
      */
     public void loadPersonal(String data) {
         if (data.equalsIgnoreCase(" ")) {
@@ -107,9 +110,9 @@ public class ResultsFlags extends PlayerFlags {
         }
 
         System.out.println(data);
-        StringTokenizer st = new StringTokenizer(data, "$");
-        while (st.hasMoreTokens()) {
-            String element = st.nextToken();
+        StringTokenizer stringTokenizer = new StringTokenizer(data, "$");
+        while (stringTokenizer.hasMoreTokens()) {
+            String element = stringTokenizer.nextToken();
             StringTokenizer elementToken = new StringTokenizer(element, "#");
             String name = elementToken.nextToken();
             elementToken.nextToken();  // This isn't needed but is included in the export (flag id).  Ignore it.
@@ -130,11 +133,10 @@ public class ResultsFlags extends PlayerFlags {
     /**
      * Sets a named flag to true or false
      *
-     * @param name
-     * @param value
      */
     public void setFlag(String name, boolean value) {
         int flag = getFlagKey(name);
+
         if (flag != -1) {
             flags.set(flag, value);
         } else {
@@ -145,7 +147,6 @@ public class ResultsFlags extends PlayerFlags {
     /**
      * Clears a single flag, removing it from the names and flags
      *
-     * @param name
      */
     public void clearFlag(String name) {
         int id = getFlagKey(name);
@@ -161,8 +162,8 @@ public class ResultsFlags extends PlayerFlags {
     }
 
     /**
-     * Builds the string that is imported by load(String data) above Used server-side only, as I envision it, so I might
-     * move this method to SPlayer
+     * Builds the string that is imported by load (String data) above Used server-side only, as I envision it, so I
+     * might move this method to SPlayer
      *
      * @return String flag settings - name, ID, and value
      */

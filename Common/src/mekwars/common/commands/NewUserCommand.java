@@ -59,9 +59,9 @@ public class NewUserCommand extends Command {
     @Override
     public void execute(String input) {
 
-        StringTokenizer st = decode(input);
+        StringTokenizer stringTokenizer = decode(input);
 
-        CUser newUser = new CUser(st.nextToken());
+        CUser newUser = new CUser(stringTokenizer.nextToken());
 
         //Check the Users and remove the User
         CUser user = (CUser) client.getUser(newUser.getName());
@@ -87,7 +87,7 @@ public class NewUserCommand extends Command {
         }
 
         //Print an entry message if the information is followed by NEW (NewUserCommand and UserGoneCommand are used for name changing, too)
-        if (st.hasMoreTokens()) {
+        if (stringTokenizer.hasMoreTokens()) {
 
             String name = newUser.getName();
 
@@ -101,19 +101,19 @@ public class NewUserCommand extends Command {
                 toSend = client.getShortTime() + toSend;
             }
 
-            if (client.getConfig().isParam("SHOWENTERANDEXIT")) {
+            if (client.getConfig().isParam("SHOW_ENTER_AND_EXIT")) {
                 client.addToChat(toSend);
             }
 
             //play join sound if one is configured
-            client.doPlaySound(client.getConfigParam("SOUNDONJOIN"));
+            client.doPlaySound(client.getConfigParam("SOUND_ON_JOIN"));
         }
 
         client.refreshGUI(IClient.REFRESH_USERLIST);
     }
 
     /**
-     * @param s
+     *
      */
     @Override
     public void parseReplyArgs(String s) {
@@ -121,7 +121,7 @@ public class NewUserCommand extends Command {
     }
 
     /**
-     * @param s
+     *
      */
     @Override
     public void parseArguments(String s) {

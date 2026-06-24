@@ -270,8 +270,8 @@ public class Repair {
                     if (levelTech) {
                         if (pilotIsRepairing) {
                             pilot.getSkills()
-                                  .getPilotSkill(PilotSkill.AstechSkillID)
-                                  .setLevel(pilot.getSkills().getPilotSkill(PilotSkill.AstechSkillID).getLevel() + 1);
+                                  .getPilotSkill(PilotSkill.AsTechSkillID)
+                                  .setLevel(pilot.getSkills().getPilotSkill(PilotSkill.AsTechSkillID).getLevel() + 1);
                             CampaignMain.campaignMain.toUser("FSM|"
                                                                    +
                                                                    pilot.getName()
@@ -326,7 +326,7 @@ public class Repair {
 
             if (techType == UnitUtils.TECH_PILOT) {
                 pilot = mek.getPilot();
-                techType = pilot.getSkills().getPilotSkill(PilotSkill.AstechSkillID).getLevel();
+                techType = pilot.getSkills().getPilotSkill(PilotSkill.AsTechSkillID).getLevel();
                 pilotIsRepairing = true;
             }
 
@@ -1039,8 +1039,8 @@ public class Repair {
             if (levelTech) {
                 if (pilotIsRepairing) {
                     pilot.getSkills()
-                          .getPilotSkill(PilotSkill.AstechSkillID)
-                          .setLevel(pilot.getSkills().getPilotSkill(PilotSkill.AstechSkillID).getLevel() + 1);
+                          .getPilotSkill(PilotSkill.AsTechSkillID)
+                          .setLevel(pilot.getSkills().getPilotSkill(PilotSkill.AsTechSkillID).getLevel() + 1);
                     CampaignMain.campaignMain.toUser("FSM|<font color=#C11B17>" +
                                                            pilot.getName() +
                                                            " advanced in skill and is now " +

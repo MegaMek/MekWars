@@ -65,7 +65,7 @@ public class RefreshGUICommand extends Command {
     }
 
     /**
-     * @param s
+     *
      */
     @Override
     public void parseReplyArgs(String s) {
@@ -73,7 +73,7 @@ public class RefreshGUICommand extends Command {
     }
 
     /**
-     * @param s
+     *
      */
     @Override
     public void parseArguments(String s) {

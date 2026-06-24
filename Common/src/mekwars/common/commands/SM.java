@@ -36,6 +36,8 @@
 
 package mekwars.common.commands;
 
+import java.util.StringTokenizer;
+
 import mekwars.common.campaign.clientutils.protocol.IClient;
 import mekwars.common.gui.panels.CCommPanel;
 
@@ -45,7 +47,7 @@ import mekwars.common.gui.panels.CCommPanel;
 public class SM extends Command {
 
     /**
-     * @see Command#Command(mekwars.common.campaign.clientutils.protocol.IClient)
+     * @see Command#Command(IClient)
      */
     public SM(IClient client) {
         super(client);
@@ -56,16 +58,18 @@ public class SM extends Command {
      */
     @Override
     public void execute(String input) {
-        java.util.StringTokenizer st = decode(input);
-        if (st.hasMoreElements()) {
-            if (client.getConfig().isParam("MAINCHANNELMISC")) {client.addToChat(st.nextToken());} else {
-                client.addToChat(st.nextToken(), CCommPanel.CHANNEL_MISC);
+        StringTokenizer stringTokenizer = decode(input);
+        if (stringTokenizer.hasMoreElements()) {
+            if (client.getConfig().isParam("MAIN_CHANNEL_MISC")) {
+                client.addToChat(stringTokenizer.nextToken());
+            } else {
+                client.addToChat(stringTokenizer.nextToken(), CCommPanel.CHANNEL_MISC);
             }
         }
     }
 
     /**
-     * @param s
+     *
      */
     @Override
     public void parseReplyArgs(String s) {
@@ -73,7 +77,7 @@ public class SM extends Command {
     }
 
     /**
-     * @param s
+     *
      */
     @Override
     public void parseArguments(String s) {

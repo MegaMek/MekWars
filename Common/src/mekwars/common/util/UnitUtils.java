@@ -16,10 +16,14 @@
 
 package mekwars.common.util;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
 import megamek.common.CriticalSlot;
 import megamek.common.TechConstants;
+import megamek.common.enums.Gender;
 import megamek.common.equipment.AmmoMounted;
 import megamek.common.equipment.AmmoType;
+import megamek.common.equipment.ArmorType;
 import megamek.common.equipment.Engine;
 import megamek.common.equipment.EquipmentType;
 import megamek.common.equipment.MiscType;
@@ -1123,10 +1127,9 @@ public class UnitUtils {
         if (armor) {
             // External Armor
             if (slot < LOC_INTERNAL_ARMOR) {
-                double points = 16.0 *
-                                      EquipmentType.getArmorPointMultiplier(unit.getArmorType(slot),
-                                            unit.getArmorTechLevel(slot));
-                double costPerTon = EquipmentType.getArmorCost(unit.getArmorType(slot));
+                ArmorType armorType = ArmorType.forEntity(unit);
+                double points = 16.0 * armorType.getArmorPointsMultiplier();
+                double costPerTon = armorType.getCost();
 
                 // just in case
                 if (points == 0) {
@@ -2028,7 +2031,7 @@ public class UnitUtils {
     /**
      * Tries to set UnitEntity from the global MekFileName
      */
-    public static Entity createEntity(String fileName) {
+    public static @Nonnull Entity createEntity(String fileName) {
         Entity unitEntity = null;
 
         try {
@@ -2053,13 +2056,9 @@ public class UnitUtils {
             }
 
         } catch (Exception ex) {
-            try {
                 unitEntity = UnitUtils.createOMG();// new
-            } catch (Exception ex) {
-                MWLogger.errLog("Error unit failed to load. Exiting.");
-                return null;
-            }
         }
+
         return unitEntity;
     }
 
@@ -2202,11 +2201,8 @@ public class UnitUtils {
             pilot = new Crew(CrewType.SINGLE);
             return pilot;
         } else {
-            pilot = new Crew(CrewType.SINGLE,
-                  mek.getPilot().getName(),
-                  1,
-                  mek.getPilot().getGunnery(),
-                  mek.getPilot().getPiloting());
+            pilot = new Crew(CrewType.SINGLE, mek.getPilot().getName(), 1, mek.getPilot().getGunnery(),
+                  mek.getPilot().getPiloting(), Gender.RANDOMIZE, false, null);
         }
         // Hits defaults to 0 so no reason to keep checking over and over again.
         pilot.setHits(mek.getPilot().getHits(), 0);

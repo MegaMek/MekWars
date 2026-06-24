@@ -89,7 +89,7 @@ public class Operation implements MWXmlSerializable {
     //other loads ...
     DefaultOperation opsDefaults;
     String opName;//Name of this op. EG - "Assault"
-    //private ints which hold current state
+    //private ints that hold current state
     private int type_indicator;
     private int mods_indicator;
 
@@ -130,7 +130,7 @@ public class Operation implements MWXmlSerializable {
     }
 
     /**
-     * Method which attempts to look up the value of a given Paramater in an Operation's local Tree. If the value is
+     * Method that attempts to look up the value of a given Parameter in an Operation's local Tree. If the value is
      * unavailable, for any reason (typo, intentionally unset), a default value is checked and returned.
      */
     public String getValue(String valToGet, boolean log) {
@@ -142,7 +142,7 @@ public class Operation implements MWXmlSerializable {
             toReturn = opsDefaults.getDefault(valToGet);
         }
 
-        //catastrophic failure. sysexit.
+        //catastrophic failure. sys exit.
         if (toReturn == null && log) {
             LOGGER.error(STR."Failed getting value \"\{valToGet}\" from \{this.getName()} and DefaultOp. Returning null.");
         }
@@ -151,7 +151,7 @@ public class Operation implements MWXmlSerializable {
     }
 
     /**
-     * Method which returns name of an operation, as drawn from filename.
+     * Method that returns the name of an operation, as drawn from the filename.
      */
     public String getName() {
         return this.opName;
@@ -170,10 +170,10 @@ public class Operation implements MWXmlSerializable {
     }
 
     /**
-     * Method which adds a mod op to this operation's tree of valid mods. Set from OperationManager @ load time, drawn
-     * from modops' target params.
+     * Method that adds mod op to this operation's tree of valid mods. Set from OperationManager @ load time, drawn from
+     * mod ops' target params.
      * <p>
-     * Toggle mods indicator to show that this op does have potential mods to check for @ startup and during
+     * Toggle the mod indicator to show that this op does have potential mods to check for @ startup and during
      * resolution.
      */
     public void addModifyingOperation(ModifyingOperation m) {
@@ -182,7 +182,7 @@ public class Operation implements MWXmlSerializable {
     }
 
     /**
-     * Methods which return and set type info via a boolean (short only, long+short, etc.)
+     * Methods that return and set type info via a boolean (short only, long+short, etc.)
      */
     public int getTypeIndicator() {
         return type_indicator;
@@ -193,7 +193,7 @@ public class Operation implements MWXmlSerializable {
     }
 
     /**
-     * Methods which set and returns modifier status (accepts or no-mods, etc)
+     * Methods that set and returns modifier status (accepts or no-mods, etc.)
      */
     public int getModsIndicator() {
         return mods_indicator;

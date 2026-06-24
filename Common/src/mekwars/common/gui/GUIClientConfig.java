@@ -106,7 +106,7 @@ public class GUIClientConfig implements IClientConfig, Serializable {
                 }
             }
         } catch (Exception ex) {
-            LOGGER.error("File exists but something else happened. {}", ex.getLocalizedMessage());
+            LOGGER.error(ex, "File exists but something else happened. {}", ex.getLocalizedMessage());
         }
 
         // if a -d arg was passed, set dedicated to true
@@ -517,8 +517,7 @@ public class GUIClientConfig implements IClientConfig, Serializable {
             fos.close();
             ps.close();
         } catch (Exception ex) {
-            MWLogger.errLog(ex);
-            MWLogger.errLog("Failed backingup config file");
+            LOGGER.error(ex, "Failed backing up config file");
             return;
         }
         try {
@@ -528,8 +527,7 @@ public class GUIClientConfig implements IClientConfig, Serializable {
             fos.close();
             ps.close();
         } catch (Exception ex) {
-            MWLogger.errLog(ex);
-            MWLogger.errLog("Failed saving config file");
+            LOGGER.error(ex, "Failed saving config file");
         }
     }
 
@@ -596,7 +594,7 @@ public class GUIClientConfig implements IClientConfig, Serializable {
                   new javax.swing.ImageIcon(new javax.swing.ImageIcon(imagename).getImage()
                                                   .getScaledInstance(width, height, java.awt.Image.SCALE_DEFAULT)));
         } catch (Exception ex) {
-            MWLogger.errLog(ex);
+            LOGGER.error(ex, "Unable to load image: {}", imagename);
         }
     }
 

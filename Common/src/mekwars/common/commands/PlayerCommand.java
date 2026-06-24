@@ -66,7 +66,7 @@ public class PlayerCommand extends Command {
      */
     @Override
     public void execute(String input) {
-        java.util.StringTokenizer stringTokenizer = decode(input);
+        StringTokenizer stringTokenizer = decode(input);
 
         String cmd = TokenReader.readString(stringTokenizer);
         CPlayer player = client.getPlayer();
@@ -145,7 +145,7 @@ public class PlayerCommand extends Command {
             case "VUI" -> {
                 StringTokenizer data = new StringTokenizer(TokenReader.readString(stringTokenizer), "#");
                 String filename = TokenReader.readString(data);
-                int BV = TokenReader.readInt(data);
+                int battleValue = TokenReader.readInt(data);
                 int gunnery = TokenReader.readInt(data);
                 int piloting = TokenReader.readInt(data);
                 String damage = "";
@@ -157,7 +157,7 @@ public class PlayerCommand extends Command {
                 client.getMainFrame()
                       .getMainPanel()
                       .getHSPanel()
-                      .showInfoWindow(filename, BV, gunnery, piloting, damage);
+                      .showInfoWindow(filename, battleValue, gunnery, piloting, damage);
             }
             case "VURD" -> {
                 StringTokenizer data = new StringTokenizer(TokenReader.readString(stringTokenizer), "#");
@@ -174,6 +174,7 @@ public class PlayerCommand extends Command {
             case "CPPC" -> client.getPlayer().getPartsCache().clear();
             case "UDAO" -> {
                 client.updateOpData(true);
+
                 if (!client.isDedicated()) {
                     client.getMainFrame().updateAttackMenu();
                 }
@@ -256,7 +257,7 @@ public class PlayerCommand extends Command {
     }
 
     /**
-     * @param s
+     *
      */
     @Override
     public void parseReplyArgs(String s) {
@@ -264,7 +265,7 @@ public class PlayerCommand extends Command {
     }
 
     /**
-     * @param s
+     *
      */
     @Override
     public void parseArguments(String s) {

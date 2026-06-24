@@ -47,7 +47,7 @@ import mekwars.common.campaign.clientutils.protocol.IClient;
 public class UserGoneCommand extends Command {
 
     /**
-     * @param client
+     *
      */
     public UserGoneCommand(IClient client) {
         super(client);
@@ -58,14 +58,14 @@ public class UserGoneCommand extends Command {
      */
     @Override
     public void execute(String input) {
-        StringTokenizer st = decode(input);
-        CUser mmci = new CUser((String) st.nextElement());
+        StringTokenizer stringTokenizer = decode(input);
+        CUser cUser = new CUser((String) stringTokenizer.nextElement());
 
         //Check the Users and remove the User
-        CUser user = (CUser) client.getUser(mmci.getName());
+        CUser user = (CUser) client.getUser(cUser.getName());
         //delete every instance of that user from the list
         while (client.getUsers().remove(user)) {
-            user = (CUser) client.getUser(mmci.getName());
+            user = (CUser) client.getUser(cUser.getName());
         }
 
         client.refreshGUI(IClient.REFRESH_USERLIST);
@@ -74,29 +74,31 @@ public class UserGoneCommand extends Command {
             return;
         }
 
-        if ((mmci.isInvisible() && mmci.getUserLevel() > client.getUserLevel()) ||
-                  mmci.getName().startsWith("[Dedicated]")) {
+        if ((cUser.isInvisible() && cUser.getUserLevel() > client.getUserLevel()) ||
+                  cUser.getName().startsWith("[Dedicated]")) {
             return;
         }
 
         //Since there are more Elements, it'll be a Gone, so the user has left the room.
-        if (st.hasMoreTokens()) {
+        if (stringTokenizer.hasMoreTokens()) {
             //Print the User-gone Info using the Info-Color (Maroon)
-            String toSend = STR."<font color=\"maroon\">>> Exit \{mmci.getName()}</font>";
+            String toSend = STR."<font color=\"maroon\">>> Exit \{cUser.getName()}</font>";
 
-            if (client.getConfig().isParam("TIMESTAMP")) {toSend = client.getShortTime() + toSend;}
+            if (client.getConfig().isParam("TIMESTAMP")) {
+                toSend = client.getShortTime() + toSend;
+            }
 
-            if (client.getConfig().isParam("SHOWENTERANDEXIT") && !mmci.getName().equalsIgnoreCase("Nobody")) {
+            if (client.getConfig().isParam("SHOW_ENTER_AND_EXIT") && !cUser.getName().equalsIgnoreCase("Nobody")) {
                 client.addToChat(toSend);
             }
 
             //Play the sound
-            client.doPlaySound(client.getConfigParam("SOUNDONEXIT"));
+            client.doPlaySound(client.getConfigParam("SOUND_ON_EXIT"));
         }
     }
 
     /**
-     * @param s
+     *
      */
     @Override
     public void parseReplyArgs(String s) {
@@ -104,7 +106,7 @@ public class UserGoneCommand extends Command {
     }
 
     /**
-     * @param s
+     *
      */
     @Override
     public void parseArguments(String s) {

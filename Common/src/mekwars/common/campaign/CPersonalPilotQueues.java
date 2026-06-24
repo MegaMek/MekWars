@@ -148,8 +148,8 @@ public class CPersonalPilotQueues {
     }
 
     /**
-     * Rather than if/else'ing meks and protos throughout the other methods of the class, use a private get method which
-     * returns mek or proto as needed and then work on the arraylist without regard to type.
+     * Rather than if/else'ing meks and ProtoMeks throughout the other methods of the class, use a private get method
+     * which returns mek or proto as needed and then work on the arraylist without regard to type.
      */
     private ArrayList<LinkedList<Pilot>> getUnitTypeQueue(int typeToGet) {
         if (typeToGet == Unit.PROTOMEK) {
@@ -183,20 +183,20 @@ public class CPersonalPilotQueues {
     }
 
     /**
-     * Method that returns a particular class/size queue. Used throughout the client code to fetch queue, which are then
-     * iterated to draw menus, dialog boxes, etc.
+     * Method that returns a particular class/size queue. Used throughout the client code to fetch a queue, which is
+     * then iterated to draw menus, dialog boxes, etc.
      * <p>
-     * Because these queues are always created in the constructor, they will never be null, even if a LIGHTONLY option
-     * for vehs or infantry is enabled.
+     * Because these queues are always created in the constructor, they will never be null, even if a LIGHT_ONLY option
+     * for vehicles or infantry is enabled.
      */
     public LinkedList<Pilot> getPilotQueue(int unitType, int weightClass) {
         return this.getUnitTypeQueue(unitType).get(weightClass);
     }
 
     /**
-     * Convert a server-generated String into usedful data - actual pilots, in proper type and class-based LinkedLists.
+     * Convert a server-generated String into useful data-actual pilots, in proper type and class-based LinkedLists.
      * <p>
-     * NOTE: String send by the server is generated in SPPQueues.java, and delimited with $'s (main) and #'s
+     * NOTE: String send by the server is generated in SPPQueues.java and delimited with $'s (main) and #'s
      * (subtokens).
      */
     public void fromString(String stringFromServer) {

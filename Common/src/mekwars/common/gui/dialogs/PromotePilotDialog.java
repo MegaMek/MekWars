@@ -158,7 +158,7 @@ public class PromotePilotDialog extends javax.swing.JFrame
         if (demoting) {
             if (Integer.parseInt(client.getServerConfigs(STR."chanceforATfor\{Unit.getTypeClassDesc(playerUnit.getType())}")) >
                       0 &&
-                      (pilot.getSkills().has(PilotSkill.AstechSkillID))) {
+                      (pilot.getSkills().has(PilotSkill.AsTechSkillID))) {
                 masterCB = new javax.swing.JCheckBox("Astech");
                 masterCB.setName(STR."chanceforATfor\{Unit.getTypeClassDesc(playerUnit.getType())}");
                 masterCB.addActionListener(this);
@@ -390,8 +390,8 @@ public class PromotePilotDialog extends javax.swing.JFrame
 
             if (Integer.parseInt(client.getServerConfigs("chanceforATfor" +
                                                                Unit.getTypeClassDesc(playerUnit.getType()))) > 0 &&
-                      (!pilot.getSkills().has(PilotSkill.AstechSkillID) ||
-                             pilot.getSkills().getPilotSkill(PilotSkill.AstechSkillID).getLevel() < 2)) {
+                      (!pilot.getSkills().has(PilotSkill.AsTechSkillID) ||
+                             pilot.getSkills().getPilotSkill(PilotSkill.AsTechSkillID).getLevel() < 2)) {
                 masterCB = new javax.swing.JCheckBox("Astech");
                 masterCB.setName("chanceforATfor" + Unit.getTypeClassDesc(playerUnit.getType()));
                 masterCB.addActionListener(this);
@@ -686,8 +686,8 @@ public class PromotePilotDialog extends javax.swing.JFrame
                         pilotCost *= 10 - totalSkill;
 
                     } else if (checkBox.getName().startsWith("chanceforATfor")) {
-                        if (pilot.getSkills().has(PilotSkill.AstechSkillID)) {
-                            int level = pilot.getSkills().getPilotSkill(PilotSkill.AstechSkillID).getLevel();
+                        if (pilot.getSkills().has(PilotSkill.AsTechSkillID)) {
+                            int level = pilot.getSkills().getPilotSkill(PilotSkill.AsTechSkillID).getLevel();
 
                             pilotCost = Integer.parseInt(client.getServerConfigs(checkBox.getName()));
                             pilotCost *= level + 2;

@@ -36,6 +36,8 @@
 
 package mekwars.common.commands;
 
+import java.util.StringTokenizer;
+
 import mekwars.common.campaign.clientutils.protocol.IClient;
 
 /**
@@ -55,15 +57,15 @@ public class FSM extends Command {
      */
     @Override
     public void execute(String input) {
-        java.util.StringTokenizer st = decode(input);
+        StringTokenizer stringTokenizer = decode(input);
 
-        if (st.hasMoreElements()) {
-            client.systemMessage(st.nextToken());
+        if (stringTokenizer.hasMoreElements()) {
+            client.systemMessage(stringTokenizer.nextToken());
         }
     }
 
     /**
-     * @param s
+     *
      */
     @Override
     public void parseReplyArgs(String s) {
@@ -71,7 +73,7 @@ public class FSM extends Command {
     }
 
     /**
-     * @param s
+     *
      */
     @Override
     public void parseArguments(String s) {

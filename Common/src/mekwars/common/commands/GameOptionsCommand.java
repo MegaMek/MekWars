@@ -109,7 +109,7 @@ public class GameOptionsCommand extends Command {
     }//end execute
 
     /**
-     * @param s
+     *
      */
     @Override
     public void parseReplyArgs(String s) {
@@ -117,7 +117,7 @@ public class GameOptionsCommand extends Command {
     }
 
     /**
-     * @param s
+     *
      */
     @Override
     public void parseArguments(String s) {

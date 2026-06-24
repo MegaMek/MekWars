@@ -57,8 +57,8 @@ public abstract class CProtCommand implements IProtCommand {
         return client;
     }
 
-    public void setClient(IClient c) {
-        client = c;
+    public void setClient(IClient client) {
+        this.client = client;
     }
 
     public String getPrefix() {
@@ -85,12 +85,12 @@ public abstract class CProtCommand implements IProtCommand {
         Connector = connector;
     }
 
-    public boolean check(String tname) {
-        if (tname.startsWith(prefix)) {
-            tname = tname.substring(prefix.length());
+    public boolean check(String tokenName) {
+        if (tokenName.startsWith(prefix)) {
+            tokenName = tokenName.substring(prefix.length());
         }
 
-        return (name.equals(tname));
+        return (name.equals(tokenName));
     }
 
     // execute command

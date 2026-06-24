@@ -1,32 +1,38 @@
 package mekwars.common.gui.dialogs;
 
+import java.util.TreeMap;
+
 import megamek.common.loaders.MekFileParser;
 import megamek.common.loaders.MekSummary;
 import megamek.common.loaders.MekSummaryCache;
 import megamek.common.units.Entity;
+import megamek.logging.MMLogger;
 import mekwars.common.campaign.CUnit;
+import mekwars.common.campaign.pilot.Pilot;
+import mekwars.common.util.UnitUtils;
 
 /**
  * TableUnit is a CUnit with added stat-tracking for ongoing frequency calculations. Much like the BMUnit; however, the
  * TableUnit is less complex.
  */
 public class TableUnit extends CUnit {
+    private final static MMLogger LOGGER = MMLogger.create(TableUnit.class);
 
     // IVARS
     double frequency;
     String realFilename;
-    java.util.TreeMap<String, Double> tables;
+    TreeMap<String, Double> tables;
 
     // CONSTRUCTOR
-    public TableUnit(String fn, double f) {
+    public TableUnit(String fileName, double frequency) {
         super();
 
         /*
-         * Since the TableUnit has no data string to set things with,
-         * hardflag necessary values.
+         * Since the TableUnit has no data fileName to set things with,
+         * hard flag necessary values.
          */
-        setUnitFilename(fn.trim());
-        setPilot(new mekwars.common.campaign.pilot.Pilot("Autopilot", 4, 5));
+        setUnitFilename(fileName.trim());
+        setPilot(new Pilot("Autopilot", 4, 5));
 
         /*
          * Try to get an entity from the unit cache, given a filename. This
@@ -37,86 +43,45 @@ public class TableUnit extends CUnit {
         try {
 
             // remove .MTF, .blk, etc.
-            String modfn = fn.trim();
+            String modfn = fileName.trim();
             modfn = modfn.substring(0, modfn.length() - 4);
 
             // get the unit from the summary cache
-            MekSummary ms = MekSummaryCache.getInstance().getMek(modfn);
-            unitEntity = new MekFileParser(ms.getSourceFile(), ms.getEntryName()).getEntity();
-
+            MekSummary mekSummary = MekSummaryCache.getInstance().getMek(modfn);
+            unitEntity = new MekFileParser(mekSummary.getSourceFile(), mekSummary.getEntryName()).getEntity();
         } catch (Exception e) {
-            createEntityFromFileNameWithCache(fn.trim());// make the
+            createEntityFromFileNameWithCache(fileName.trim());// make the
             // entity
         }
 
-        realFilename = fn;
-        frequency = f;
+        realFilename = fileName;
+        this.frequency = frequency;
 
-        tables = new java.util.TreeMap<>();
+        tables = new TreeMap<>();
     }
 
-    private void createEntityFromFileNameWithCache(String fn) {
-
-        unitEntity = mekwars.common.util.UnitUtils.createEntity(fn);
-
-        if (unitEntity == null) {
-            createEntityFromFilename(fn);
-        }
+    private void createEntityFromFileNameWithCache(String fileName) {
+        unitEntity = UnitUtils.createEntity(fileName);
     }
 
-    /**
-     * Tries to setUnitEntity from a filename w/ extension. This used to be the default way of getting units, but CUnit
-     * was changed to use the MegaMek summary cache. Because the table viewer reads the tables the same way the server
-     * does, it needs a server-style loading cascade, ugly as it may be :-(
-     */
-    private void createEntityFromFilename(String fn) {
-
-        unitEntity = null;
-        try {
-            unitEntity = new MekFileParser(new java.io.File("./data/mechfiles/Meks.zip"), fn).getEntity();
-        } catch (Exception e) {
-            try {
-                unitEntity = new MekFileParser(new java.io.File("./data/mechfiles/Vehicles.zip"), fn).getEntity();
-            } catch (Exception ex) {
-                try {
-                    unitEntity = new MekFileParser(new java.io.File("./data/mechfiles/Infantry.zip"),
-                          fn).getEntity();
-                } catch (Exception exc) {
-                    try {
-                        mekwars.common.util.MWLogger.errLog(STR."Error loading unit: \{fn}. Try replacing with OMG.");
-                        unitEntity = mekwars.common.util.UnitUtils.createOMG();// new
-                    } catch (Exception exepe) {
-                        mekwars.common.util.MWLogger.errLog("Error unit failed to load. Exiting.");
-                        System.exit(1);
-                    }
-                }
-            }
-        }
-
-        setType(getEntityType(unitEntity));
-        getC3Type(unitEntity);
-    }
-
-    public TableUnit(Entity en, double f) {
+    public TableUnit(Entity entity, double frequency) {
         super();
 
-        realFilename = mekwars.common.util.UnitUtils.getEntityFileName(en);
-
+        realFilename = UnitUtils.getEntityFileName(entity);
 
         setUnitFilename(realFilename);
-        setPilot(new mekwars.common.campaign.pilot.Pilot("Autopilot", 4, 5));
+        setPilot(new Pilot("Autopilot", 4, 5));
 
         // get the unit from the summary cache
-        unitEntity = en;
+        unitEntity = entity;
 
+        this.frequency = frequency;
 
-        frequency = f;
-
-        tables = new java.util.TreeMap<>();
+        tables = new TreeMap<>();
     }
 
-    public void addFrequencyFrom(mekwars.common.gui.dialogs.TableUnit u) {
-        frequency += u.getFrequency();
+    public void addFrequencyFrom(TableUnit tableUnit) {
+        frequency += tableUnit.getFrequency();
     }
 
     // METHODS
@@ -128,7 +93,7 @@ public class TableUnit extends CUnit {
         return realFilename;
     }
 
-    public java.util.TreeMap<String, Double> getTables() {
+    public TreeMap<String, Double> getTables() {
         return tables;
     }
 

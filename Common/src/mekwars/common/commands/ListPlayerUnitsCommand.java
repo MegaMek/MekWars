@@ -35,6 +35,8 @@
 
 package mekwars.common.commands;
 
+import java.util.StringTokenizer;
+import java.util.TreeSet;
 import javax.swing.JComboBox;
 import javax.swing.JDialog;
 import javax.swing.JOptionPane;
@@ -49,7 +51,7 @@ import mekwars.common.campaign.clientutils.protocol.IClient;
 public class ListPlayerUnitsCommand extends Command {
 
     /**
-     * @param client
+     *
      */
     public ListPlayerUnitsCommand(IClient client) {
         super(client);
@@ -60,17 +62,19 @@ public class ListPlayerUnitsCommand extends Command {
      */
     @Override
     public void execute(String input) {
-        java.util.StringTokenizer command = decode(input);
+        StringTokenizer command = decode(input);
         String commandName = command.nextToken();
         String username = command.nextToken();
         String unitList = command.nextToken();
         String receivingPlayer = null;
 
-        if (command.hasMoreTokens()) {receivingPlayer = command.nextToken();}
+        if (command.hasMoreTokens()) {
+            receivingPlayer = command.nextToken();
+        }
 
-        java.util.StringTokenizer units = new java.util.StringTokenizer(unitList, "#");
+        StringTokenizer units = new StringTokenizer(unitList, "#");
 
-        java.util.TreeSet<String> list = new java.util.TreeSet<>();
+        TreeSet<String> list = new TreeSet<>();
 
         while (units.hasMoreElements()) {
             list.add(STR."#\{units.nextToken()}");
@@ -93,14 +97,14 @@ public class ListPlayerUnitsCommand extends Command {
             unit = unit.substring(0, unit.indexOf(" "));
             int value = (Integer) jop.getValue();
 
-            if (value == javax.swing.JOptionPane.CANCEL_OPTION) {
+            if (value == JOptionPane.CANCEL_OPTION) {
                 return;
             }
 
             if (receivingPlayer != null) {
-                if (commandName.equalsIgnoreCase("admintransfer")) {
+                if (commandName.equalsIgnoreCase("admin_transfer")) {
                     client.sendChat(STR."\{IClient.CAMPAIGN_PREFIX}c \{commandName}#\{username}#\{receivingPlayer}\{unit}");
-                } else if (commandName.equalsIgnoreCase("viewplayerunit")) {
+                } else if (commandName.equalsIgnoreCase("view_player_unit")) {
                     client.sendChat(STR."\{IClient.CAMPAIGN_PREFIX}c \{commandName}#\{username}\{unit}#\{receivingPlayer}");
                 }
             } else {
@@ -110,7 +114,7 @@ public class ListPlayerUnitsCommand extends Command {
     }
 
     /**
-     * @param s
+     *
      */
     @Override
     public void parseReplyArgs(String s) {
@@ -118,7 +122,7 @@ public class ListPlayerUnitsCommand extends Command {
     }
 
     /**
-     * @param s
+     *
      */
     @Override
     public void parseArguments(String s) {

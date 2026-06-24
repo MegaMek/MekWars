@@ -107,7 +107,7 @@ public class CUnit extends Unit {
     }
 
     /**
-     * A method which returns the MU cost of a specified campaign unit.
+     * A method that returns the MU cost of a specified campaign unit.
      *
      * @return int - # of MU it takes to buy a unit of the given weight class
      */
@@ -382,9 +382,9 @@ public class CUnit extends Unit {
             return true;
         }
 
-        // set auto eject if its a Mek
+        // set auto eject if it's a Mek
         if ((unitEntity instanceof Mek mek) && stringTokenizer.hasMoreElements()) {
-            mek.setAutoEject(Boolean.parseBoolean(TokenReader.readString(stringTokenizer)));
+            mek.setAutoEject(MathUtility.parseBoolean(TokenReader.readString(stringTokenizer), false));
         }
 
         // then set up ammo loadout
@@ -435,7 +435,7 @@ public class CUnit extends Unit {
         try {
             targetSystem.setTargetSystem(TokenReader.readInt(stringTokenizer));
         } catch (TargetTypeOutOfBoundsException e) {
-            LOGGER.error("Error setting target system");
+            LOGGER.error("Error setting target system within setData");
         }
 
         int suppUnit = TokenReader.readInt(stringTokenizer);
@@ -452,7 +452,8 @@ public class CUnit extends Unit {
         setChristmasUnit(TokenReader.readBoolean(stringTokenizer));
 
         //@salient Quirks - set unit quirks, or drop data if quirks have been turned off
-        if (stringTokenizer.hasMoreTokens() && Boolean.parseBoolean(client.getServerConfigs("EnableQuirks"))) {
+        if (stringTokenizer.hasMoreTokens() && MathUtility.parseBoolean(client.getServerConfigs("EnableQuirks"),
+              false)) {
             setUnitQuirks(TokenReader.readString(stringTokenizer));
         } else if (stringTokenizer.hasMoreTokens()) {
             TokenReader.readString(stringTokenizer);
@@ -472,17 +473,12 @@ public class CUnit extends Unit {
      */
     public void createEntity() {
         unitEntity = UnitUtils.createEntity(getUnitFilename());
-
-        if (unitEntity == null) {
-            LOGGER.error("Error unit failed to load. Exiting.");
-            System.exit(1);
-        }
-
         unitEntity.setCrew(UnitUtils.createEntityPilot(this));
 
         if (unitEntity.getChassis().equals("Error")) {
             setProducer(STR."Unable to find \{getUnitFilename()} on clients system!");
         }
+
         getC3Type(unitEntity);
     }
 
@@ -538,8 +534,8 @@ public class CUnit extends Unit {
         return quirkList;
     }
 
-    //@salient debug method, i really just used this once to make sure the quirks were being set
-    //but i'll leave it in case one day someone needs it.
+    //@salient debug method, I really just used this once to make sure the quirks were being set,
+    //but I'll leave it in case one day someone needs it.
     public String quirkCheck() {
         StringJoiner quirksList = new StringJoiner("&");
 
@@ -556,6 +552,7 @@ public class CUnit extends Unit {
                 }
             }
         }
+
         return quirksList.toString();
     }
 
@@ -576,10 +573,10 @@ public class CUnit extends Unit {
     }
 
     /**
-     * Method that generates data for an auto unit. Since auto units have no unique properties, this can be assembled
+     * Method that generates data for an auto unit. Since auto units have no unique properties, these can be assembled
      * client side rather than sent from the server.
      *
-     * @urgru 1/4/05
+     * @author urgru 1/4/05
      */
     public void setAutoUnitData(String filename, int distance, OffBoardDirection edge) {
         setUnitFilename(filename);
@@ -610,98 +607,98 @@ public class CUnit extends Unit {
     }
 
     public String getDisplayInfo(String armyText) {
-        String tinfo;
+        String targetInfo;
 
         if ((getType() == Unit.MEK) && !unitEntity.isOmni()) {
-            tinfo = STR."<html><body>#\{getId()} \{unitEntity.getChassis()}, \{getModelName()}";
+            targetInfo = STR."<html><body>#\{getId()} \{unitEntity.getChassis()}, \{getModelName()}";
         } else {
-            tinfo = STR."<html><body>#\{getId()} \{getModelName()}";
+            targetInfo = STR."<html><body>#\{getId()} \{getModelName()}";
         }
 
         if ((getType() == Unit.MEK) || (getType() == Unit.VEHICLE) || (getType() == Unit.AERO)) {
-            tinfo += STR." (\{getPilot().getName()}, \{getPilot().getGunnery()}/\{getPilot().getPiloting()}) <br>";
+            targetInfo += STR." (\{getPilot().getName()}, \{getPilot().getGunnery()}/\{getPilot().getPiloting()}) <br>";
         } else if ((getType() == Unit.BATTLEARMOR) || (getType() == Unit.INFANTRY)) {
             if (((Infantry) unitEntity).canMakeAntiMekAttacks()) {
-                tinfo += STR." (\{getPilot().getName()}, \{getPilot().getGunnery()}/\{getPilot().getPiloting()}) <br>";
+                targetInfo += STR." (\{getPilot().getName()}, \{getPilot().getGunnery()}/\{getPilot().getPiloting()}) <br>";
             } else {
-                tinfo += STR." (\{getPilot().getName()}, \{getPilot().getGunnery()}) <br>";
+                targetInfo += STR." (\{getPilot().getName()}, \{getPilot().getGunnery()}) <br>";
             }
         } else {
-            tinfo += STR." (\{getPilot().getName()}, \{getPilot().getGunnery()}) <br>";
+            targetInfo += STR." (\{getPilot().getName()}, \{getPilot().getGunnery()}) <br>";
         }
 
         if (getType() == Unit.VEHICLE) {
-            tinfo += STR." Movement: \{getEntity().getMovementModeAsString()}<br>";
+            targetInfo += STR." Movement: \{getEntity().getMovementModeAsString()}<br>";
         }
 
-        tinfo += "BV: ";
+        targetInfo += "BV: ";
 
-        if (Boolean.parseBoolean(client.getServerConfigs("UseBaseBVForMatching"))) {
-            tinfo += getBaseBV();
+        if (MathUtility.parseBoolean(client.getServerConfigs("UseBaseBVForMatching"), false)) {
+            targetInfo += getBaseBV();
         } else {
-            tinfo += BV;
+            targetInfo += BV;
         }
 
-        if (Boolean.parseBoolean(client.getConfigParam("ShowUnitBaseBV"))) {
+        if (MathUtility.parseBoolean(client.getConfigParam("ShowUnitBaseBV"), false)) {
             if (getBV() != getBaseBV()) {
-                tinfo += STR." (\{getBaseBV()})";
+                targetInfo += STR." (\{getBaseBV()})";
             }
         }
-        tinfo += STR." // Exp: \{getPilot().getExperience()} // Kills: \{getPilot().getKills()}<br> ";
+        targetInfo += STR." // Exp: \{getPilot().getExperience()} // Kills: \{getPilot().getKills()}<br> ";
 
         if (getPilot().getSkills().size() > 0) {
             House house = client.getData().getHouseByName(client.getPlayer().getHouse());
 
             if (house != null) {
-                tinfo += "Skills: ";
-                tinfo += getPilot().getSkillString(
+                targetInfo += "Skills: ";
+                targetInfo += getPilot().getSkillString(
                       false,
                       house.getBasePilotSkill(getType()));
             }
-            tinfo += "<br>";
+            targetInfo += "<br>";
         }
 
         if (getPilot().getHits() > 0) {
-            tinfo += STR."Hits: \{getPilot().getHits()}<br>";
+            targetInfo += STR."Hits: \{getPilot().getHits()}<br>";
         }
 
         if (!armyText.isEmpty()) {
-            tinfo += STR."\{armyText}<br>";
+            targetInfo += STR."\{armyText}<br>";
         }
 
         String capacity = getEntity().getUnusedString();
 
         if ((capacity != null) && (!capacity.trim().isEmpty())) {
-            if (Boolean.parseBoolean(client.getServerConfigs("UseFullCapacityDescription"))) {
+            if (MathUtility.parseBoolean(client.getServerConfigs("UseFullCapacityDescription"), false)) {
                 if (capacity.endsWith("<br>")) {
                     capacity = capacity.substring(0, capacity.length() - 4);
                 }
 
                 if (capacity.contains("<br>")) {
-                    tinfo += STR."Cargo:<br>\{capacity}<br>";
+                    targetInfo += STR."Cargo:<br>\{capacity}<br>";
                 } else {
-                    tinfo += STR."Cargo: \{capacity}<br>";
+                    targetInfo += STR."Cargo: \{capacity}<br>";
                 }
             } else if (capacity.startsWith("Troops")) {
-                capacity = capacity.substring(9);// strip "Troops - " from
+                capacity = capacity.substring(9);// strip "Troops -" from
                 // string
-                tinfo += STR."Cargo: \{capacity}<br>";
+                targetInfo += STR."Cargo: \{capacity}<br>";
             }
         }
 
         if (getLifeTimeRepairCost() > 0) {
-            tinfo += STR."Repair Costs: \{getCurrentRepairCost()}/\{getLifeTimeRepairCost()}<br>";
+            targetInfo += STR."Repair Costs: \{getCurrentRepairCost()}/\{getLifeTimeRepairCost()}<br>";
         }
-        tinfo += getProducer();
+        targetInfo += getProducer();
 
         if ((scrappableFor > 0)
-                  && !Boolean.parseBoolean(client.getServerConfigs("UseAdvanceRepair"))
-                  && !Boolean.parseBoolean(client.getServerConfigs("UseSimpleRepair"))) {
-            tinfo += STR."<br><br><b>Scrap Value: \{client.moneyOrFluMessage(true, false, scrappableFor)}</b>";
+                  && !MathUtility.parseBoolean(client.getServerConfigs("UseAdvanceRepair"), false)
+                  && !MathUtility.parseBoolean(client.getServerConfigs("UseSimpleRepair"), false)) {
+            targetInfo += STR."<br><br><b>Scrap Value: \{client.moneyOrFluMessage(true, false, scrappableFor)}</b>";
         }
 
-        tinfo += "</body></html>";
-        return (tinfo);
+        targetInfo += "</body></html>";
+        return (targetInfo);
     }
 
     public int getBaseBV() {
@@ -715,7 +712,7 @@ public class CUnit extends Unit {
     }
 
     public int getBVForMatch() {
-        if (Boolean.parseBoolean(client.getServerConfigs("UseBaseBVForMatching"))) {
+        if (MathUtility.parseBoolean(client.getServerConfigs("UseBaseBVForMatching"), false)) {
             return getBaseBV();
         }
         return getBV();

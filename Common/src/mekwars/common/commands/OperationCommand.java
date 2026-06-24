@@ -153,7 +153,7 @@ public class OperationCommand extends Command {
                                 opsToTest.add(opName);
                             }
                         }
-                    } catch (java.io.IOException e) {
+                    } catch (IOException e) {
                         LOGGER.error(e, "Unable to read opsmd5.txt");
                     }
 
@@ -172,7 +172,7 @@ public class OperationCommand extends Command {
                             }
 
                             fileWriter.close();
-                        } catch (java.io.IOException e) {
+                        } catch (IOException e) {
                             LOGGER.error(e, "Unable to write opsmd5.txt");
                         }
                     }
@@ -247,7 +247,7 @@ public class OperationCommand extends Command {
     }
 
     /**
-     * @param s
+     *
      */
     @Override
     public void parseReplyArgs(String s) {
@@ -255,7 +255,7 @@ public class OperationCommand extends Command {
     }
 
     /**
-     * @param s
+     *
      */
     @Override
     public void parseArguments(String s) {

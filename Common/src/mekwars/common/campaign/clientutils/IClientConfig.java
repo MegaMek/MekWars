@@ -41,7 +41,7 @@ public interface IClientConfig {
 
     // Creates a new config file
     /*
-     * All this does ATM is create an empty mwconfig.txt. Lines commented out
+     * All this does ATM is created an empty mwconfig.txt. Lines commented out
      * are old MMNET options that the client code supports, but which are not
      * presented to the user in the MekWars client GUI. The vast majority are
      * totally unused because the players don't know about them. Over time, the

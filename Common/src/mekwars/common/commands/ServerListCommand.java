@@ -35,11 +35,13 @@
 
 package mekwars.common.commands;
 
+import java.util.StringTokenizer;
+
 import mekwars.common.MMGame;
 import mekwars.common.campaign.clientutils.protocol.IClient;
 
 /**
- * Server list commands. All commands relating to servers in the battles tab are processed though ServerListCommand
+ * Server list commands. All commands relating to servers in the battle tab are processed though ServerListCommand
  * subcommands.
  */
 public class ServerListCommand extends Command {
@@ -56,27 +58,27 @@ public class ServerListCommand extends Command {
     //@see client.cmd.Command#execute(java.lang.String)
     @Override
     public void execute(String input) {
-        java.util.StringTokenizer st = decode(input);
-        String cmd = st.nextToken();//ServerListCommand
+        StringTokenizer stringTokenizer = decode(input);
+        String cmd = stringTokenizer.nextToken();//ServerListCommand
 
-        if (!st.hasMoreTokens()) {
+        if (!stringTokenizer.hasMoreTokens()) {
             return;
         } else if (cmd.equals("NG")) { // new server opened, ServerListCommand|NG|<MMGame.toString>
-            MMGame newGame = new MMGame(st.nextToken());
+            MMGame newGame = new MMGame(stringTokenizer.nextToken());
             client.getServers().put(newGame.getHostName(), newGame);
         } else if (cmd.equals("CG")) { // server closed, ServerListCommand|CG|Hostname
-            client.getServers().remove(st.nextToken());
+            client.getServers().remove(stringTokenizer.nextToken());
         } else if (cmd.equals("SHS")) { // set host status, ServerListCommand|SHS|Hostname
-            MMGame toUpdate = client.getServers().get(st.nextToken());
+            MMGame toUpdate = client.getServers().get(stringTokenizer.nextToken());
             if (toUpdate != null) {
-                toUpdate.setStatus(st.nextToken());
+                toUpdate.setStatus(stringTokenizer.nextToken());
             }
-        } else if (cmd.equals("JG")) { //player joined a game, GL|JG|Hostname|Playername
-            MMGame toUpdate = client.getServers().get(st.nextToken());
-            toUpdate.getCurrentPlayers().add(st.nextToken());
-        } else if (cmd.equals("LG")) { //player left a game, GL|LG|Hostname|Playername
-            MMGame toUpdate = client.getServers().get(st.nextToken());
-            toUpdate.getCurrentPlayers().remove(st.nextToken());
+        } else if (cmd.equals("JG")) { //player joined a game, GL|JG|Hostname|PlayerName
+            MMGame toUpdate = client.getServers().get(stringTokenizer.nextToken());
+            toUpdate.getCurrentPlayers().add(stringTokenizer.nextToken());
+        } else if (cmd.equals("LG")) { //player left a game, GL|LG|Hostname|PlayerName
+            MMGame toUpdate = client.getServers().get(stringTokenizer.nextToken());
+            toUpdate.getCurrentPlayers().remove(stringTokenizer.nextToken());
         }
 
         //refresh affected portion of the GUI
@@ -84,7 +86,7 @@ public class ServerListCommand extends Command {
     }
 
     /**
-     * @param s
+     *
      */
     @Override
     public void parseReplyArgs(String s) {
@@ -92,7 +94,7 @@ public class ServerListCommand extends Command {
     }
 
     /**
-     * @param s
+     *
      */
     @Override
     public void parseArguments(String s) {

@@ -68,7 +68,7 @@ public class AcknowledgeSignOnPlayerCommand extends CProtCommand {
                 try {
                     client.startHost(true, false, false);
                 } catch (Exception ex) {
-                    LOGGER.error(ex, "AckSignOnPCmd: Error attempting to start host on sign on.");
+                    LOGGER.error(ex, "AcknowledgeSignOnPlayerCommand: Error attempting to start host on sign on.");
                 }
             }
 

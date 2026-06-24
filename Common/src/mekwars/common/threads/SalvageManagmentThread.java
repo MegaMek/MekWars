@@ -138,7 +138,7 @@ public class SalvageManagmentThread extends Thread {
                     }
 
                     synchronized (unit) {
-                        if (pos == UnitUtils.TECH_PILOT && !unit.getPilot().getSkills().has(PilotSkill.AstechSkillID)) {
+                        if (pos == UnitUtils.TECH_PILOT && !unit.getPilot().getSkills().has(PilotSkill.AsTechSkillID)) {
                             client.systemMessage(STR."Work order found for the pilot of \{unit.getModelName()} however the pilot cannot salvage this unit.<br>The work order has been terminated.");
                             workQueue.remove();
                             continue;

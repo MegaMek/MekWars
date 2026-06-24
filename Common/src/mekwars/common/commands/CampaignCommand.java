@@ -64,7 +64,7 @@ public class CampaignCommand extends Command {
      *
      */
     @Override
-    public void parseReplyArgs(String s) {
+    public void parseReplyArgs(String string) {
 
     }
 
@@ -80,7 +80,7 @@ public class CampaignCommand extends Command {
      *
      */
     @Override
-    public void parseArguments(String s) {
+    public void parseArguments(String string) {
 
     }
 }

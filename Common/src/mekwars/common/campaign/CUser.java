@@ -322,7 +322,7 @@ public class CUser implements Comparable<CUser>, IClientUser {
             info.append("<br>Exp: ");
             info.append(exp);
 
-            // only show the rating if its real. will be 0.0 if server is hiding
+            // only show the rating if it's real. will be 0.0 if server is hiding
             // ELOs.
             if (rating >= 1) {
                 info.append(" Rating: ");
@@ -375,7 +375,7 @@ public class CUser implements Comparable<CUser>, IClientUser {
 
 
     /**
-     * Comparable, for PlayerNameDialog. Don't use elsewhere =)
+     * Comparable, for PlayerNameDialog. Don't use elsewhere
      */
     public int compareTo(@Nonnull CUser rhs) {
         return this.getName().compareTo(rhs.getName());
