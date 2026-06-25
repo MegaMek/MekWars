@@ -1,13 +1,35 @@
 /*
- * MekWars - Copyright (C) 2004
+ * Copyright (C) 2004 Helge Richter (McWizard)
+ * Copyright (C) 2026 The MegaMek Team. All Rights Reserved.
  *
- * Derived from MegaMekNET (http://www.sourceforge.net/projects/megameknet) Original author Helge Richter (McWizard)
+ * This file is part of MekWars.
  *
- * This program is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software
- * Foundation; either version 2 of the License, or (at your option) any later version.
+ * MekWars is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License (GPL),
+ * version 3 or (at your option) any later version,
+ * as published by the Free Software Foundation.
  *
- * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
- * A PARTICULAR PURPOSE. See the GNU General Public License for more details.
+ * MekWars is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty
+ * of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU General Public License for more details.
+ *
+ * A copy of the GPL should have been included with this project;
+ * if not, see <https://www.gnu.org/licenses/>.
+ *
+ * NOTICE: The MegaMek organization is a non-profit group of volunteers
+ * creating free software for the BattleTech community.
+ *
+ * MechWarrior, BattleMech, `Mech and AeroTech are registered trademarks
+ * of The Topps Company, Inc. All Rights Reserved.
+ *
+ * Catalyst Game Labs and the Catalyst Game Labs logo are trademarks of
+ * InMediaRes Productions, LLC.
+ *
+ * MechWarrior Copyright Microsoft Corporation. MekWars was created under
+ * Microsoft's "Game Content Usage Rules"
+ * <https://www.xbox.com/en-US/developers/rules> and it is not endorsed by or
+ * affiliated with Microsoft.
  */
 
 package mekwars.common.threads;
@@ -52,6 +74,7 @@ import megamek.common.units.Entity;
 import megamek.common.util.BuildingTemplate;
 import megamek.logging.MMLogger;
 import mekwars.common.AdvancedTerrain;
+import mekwars.common.I18N.I18NMessages;
 import mekwars.common.PlanetEnvironment;
 import mekwars.common.Unit;
 import mekwars.common.campaign.Buildings;
@@ -62,6 +85,7 @@ import mekwars.common.util.UnitUtils;
 
 public class ClientThread extends Thread implements CloseClientListener {
     private final static MMLogger LOGGER = MMLogger.create(ClientThread.class);
+    private final static I18NMessages MESSAGES = new I18NMessages(ClientThread.class);
 
     final int N = 0;
     final int NE = 1;
@@ -153,7 +177,7 @@ public class ClientThread extends Thread implements CloseClientListener {
         if (client.getGameOptions().isEmpty()) {
             client.setWaiting(true);
 
-            client.sendChat(STR."\{IClient.CAMPAIGN_PREFIX}c RequestOperationSettings");
+            client.sendChat(String.format("%sc RequestOperationSettings", IClient.CAMPAIGN_PREFIX));
             while (client.isWaiting()) {
                 try {
                     client.addToChat("Retrieving Operation Data Please Wait..");
@@ -170,8 +194,8 @@ public class ClientThread extends Thread implements CloseClientListener {
             mmClient.connect();
         } catch (Exception ex) {
             mmClient = null;
-            client.showInfoWindow("Couldn't join this game!");
-            LOGGER.info(STR."\{serverip} \{serverPort}");
+            client.showInfoWindow(MESSAGES.getString("run.CouldNotJoinGame"));
+            LOGGER.info("{}:{}", serverip, serverPort);
             return;
         }
 
@@ -494,12 +518,9 @@ public class ClientThread extends Thread implements CloseClientListener {
                         planetCondition.setWindMin(aTerrain.getWindStrength());
                         planetCondition.setWindMax(aTerrain.getMaxWindStrength());
 
-                        // Check for a night game and set nightGame Variable.
-                        // This is needed to be done since it was possible that
-                        // a slow connection
-                        // would keep the mmClient from getting an update from the
-                        // server before the
-                        // entities where added to the game.
+                        // Check for a night game and set nightGame Variable. This is needed to be done since it was
+                        // possible that a slow connection would keep the mmClient from getting an update from the
+                        // server before the entities where added to the game.
                         nightGame = aTerrain.getLightConditions().ordinal() > Light.DUSK.ordinal();
 
                         mmClient.sendPlanetaryConditions(planetCondition);
@@ -512,7 +533,7 @@ public class ClientThread extends Thread implements CloseClientListener {
              * Add bots, if being used in this game.
              */
             if (client.isUsingBots()) {
-                String name = STR."War Bot\{mmClient.getLocalPlayer().getId()}";
+                String name = MESSAGES.getString("run.WarBotName", mmClient.getLocalPlayer().getId());
                 bot = new Princess(name, mmClient.getHost(), mmClient.getPort());
                 bot.getGame().addGameListener(new BotGUI(new JFrame(), bot));
                 try {
@@ -622,7 +643,7 @@ public class ClientThread extends Thread implements CloseClientListener {
                     // get the entity
                     Entity entity = autoUnit.getEntity();
 
-                    // Set slights based on games light conditions.
+                    // Set slights based on game light conditions.
                     entity.setExternalSearchlight(nightGame);
                     entity.setSearchlightState(nightGame);
 
@@ -702,7 +723,7 @@ public class ClientThread extends Thread implements CloseClientListener {
         BoardDimensions dimension = new BoardDimensions(boardWidth, boardHeight);
         ArrayList<String> boards = new ArrayList<>();
 
-        File boardDir = new File(STR."data/boards/\{folder}");
+        File boardDir = new File("data/boards", folder);
 
         // just a check...
         if (!boardDir.isDirectory()) {
@@ -720,10 +741,10 @@ public class ClientThread extends Thread implements CloseClientListener {
                 }
 
                 if (!folder.trim().isEmpty()) {
-                    path = STR."\{folder}/\{path}";
+                    path = folder + "/" + path;
                 }
 
-                if (Board.boardIsSize(new java.io.File(path), dimension)) {
+                if (Board.boardIsSize(new File(path), dimension)) {
                     tempList.addElement(path.substring(0, path.lastIndexOf(".board")));
                 }
             }
@@ -734,6 +755,7 @@ public class ClientThread extends Thread implements CloseClientListener {
             boards.add(MapSettings.BOARD_SURPRISE);
             boards.add(MapSettings.BOARD_GENERATED);
             tempList.sort(sortComp);
+
             for (int loop = 0; loop < tempList.size(); loop++) {
                 boards.add(tempList.elementAt(loop));
             }
@@ -811,7 +833,7 @@ public class ClientThread extends Thread implements CloseClientListener {
 
                 coord = new Coords(x, y);
 
-                stringCoord = STR."\{x},\{y}";
+                stringCoord = String.format("%d, %d", x, y);
             } while (tempMap.contains(stringCoord));
 
             tempMap.add(stringCoord);
@@ -851,8 +873,6 @@ public class ClientThread extends Thread implements CloseClientListener {
      */
 
     /**
-     * @param army
-     * @param slaveID
      * @param masterID This function goes through and makes sure the slave is linked to the master unit
      *
      * @author jtighe
@@ -864,13 +884,13 @@ public class ClientThread extends Thread implements CloseClientListener {
         while ((c3Unit == null) || (c3Master == null)) {
             try {
 
-                for (Entity en : mmClient.getGame().getEntitiesVector()) {
-                    if ((c3Unit == null) && (en.getExternalId() == slaveID)) {
-                        c3Unit = en;
+                for (Entity entity : mmClient.getGame().getEntitiesVector()) {
+                    if ((c3Unit == null) && (entity.getExternalId() == slaveID)) {
+                        c3Unit = entity;
                     }
 
-                    if ((c3Master == null) && (en.getExternalId() == masterID)) {
-                        c3Master = en;
+                    if ((c3Master == null) && (entity.getExternalId() == masterID)) {
+                        c3Master = entity;
                     }
                 }
                 Thread.sleep(10);// give the queue time to refresh
@@ -881,7 +901,7 @@ public class ClientThread extends Thread implements CloseClientListener {
 
         // catch for some funky stuff
         if ((c3Unit == null) || (c3Master == null)) {
-            LOGGER.debug(STR."Null Units c3Unit: \{c3Unit} C3Master: \{c3Master}");
+            LOGGER.debug("Null Units c3Unit: {} C3Master: {}", c3Unit, c3Master);
             return;
         }
 
