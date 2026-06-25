@@ -1,18 +1,35 @@
 /*
- * MekWars - Copyright (C) 2004
+ * Copyright (C) 2004 Helge Richter (McWizard)
+ * Copyright (C) 2026 The MegaMek Team. All Rights Reserved.
  *
- * Derived from MegaMekNET (http://www.sourceforge.net/projects/megameknet)
- * Original author Helge Richter (McWizard)
+ * This file is part of MekWars.
  *
- * This program is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License as published by the Free
- * Software Foundation; either version 2 of the License, or (at your option)
- * any later version.
+ * MekWars is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License (GPL),
+ * version 3 or (at your option) any later version,
+ * as published by the Free Software Foundation.
  *
- * This program is distributed in the hope that it will be useful, but
- * WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
- * or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License
- * for more details.
+ * MekWars is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty
+ * of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU General Public License for more details.
+ *
+ * A copy of the GPL should have been included with this project;
+ * if not, see <https://www.gnu.org/licenses/>.
+ *
+ * NOTICE: The MegaMek organization is a non-profit group of volunteers
+ * creating free software for the BattleTech community.
+ *
+ * MechWarrior, BattleMech, `Mech and AeroTech are registered trademarks
+ * of The Topps Company, Inc. All Rights Reserved.
+ *
+ * Catalyst Game Labs and the Catalyst Game Labs logo are trademarks of
+ * InMediaRes Productions, LLC.
+ *
+ * MechWarrior Copyright Microsoft Corporation. MekWars was created under
+ * Microsoft's "Game Content Usage Rules"
+ * <https://www.xbox.com/en-US/developers/rules> and it is not endorsed by or
+ * affiliated with Microsoft.
  */
 
 package mekwars.common;
@@ -23,6 +40,7 @@ import java.util.StringTokenizer;
 
 import mekwars.common.persistence.BinReader;
 import mekwars.common.persistence.BinWriter;
+import mekwars.common.util.HTMLHelper;
 
 /**
  * A Planet's Environment.
@@ -160,103 +178,103 @@ final public class PlanetEnvironment {
     public PlanetEnvironment() {
     }
 
-    public PlanetEnvironment(String s) {
-        StringTokenizer ST = new StringTokenizer(s, "$");
+    public PlanetEnvironment(String string) {
+        StringTokenizer stringTokenizer = new StringTokenizer(string, "$");
         //Read the PE$;
-        ST.nextToken();
+        stringTokenizer.nextToken();
         //Read the Data
 
-        Name = ST.nextToken();
-        CraterProb = Integer.parseInt(ST.nextToken());
-        CraterMinNum = Integer.parseInt(ST.nextToken());
-        CraterMaxNum = Integer.parseInt(ST.nextToken());
-        CraterMinRadius = Integer.parseInt(ST.nextToken());
-        CraterMaxRadius = Integer.parseInt(ST.nextToken());
-        Hilliness = Integer.parseInt(ST.nextToken());
-        HillElevationRange = Integer.parseInt(ST.nextToken());
-        HillInvertProb = Integer.parseInt(ST.nextToken());
-        WaterMinSpots = Integer.parseInt(ST.nextToken());
-        WaterMaxSpots = Integer.parseInt(ST.nextToken());
-        WaterMinHexes = Integer.parseInt(ST.nextToken());
-        WaterMaxHexes = Integer.parseInt(ST.nextToken());
-        WaterDeepProb = Integer.parseInt(ST.nextToken());
-        ForestMinSpots = Integer.parseInt(ST.nextToken());
-        ForestMaxSpots = Integer.parseInt(ST.nextToken());
-        ForestMinHexes = Integer.parseInt(ST.nextToken());
-        ForestMaxHexes = Integer.parseInt(ST.nextToken());
-        ForestHeavyProb = Integer.parseInt(ST.nextToken());
-        RoughMinSpots = Integer.parseInt(ST.nextToken());
-        RoughMaxSpots = Integer.parseInt(ST.nextToken());
-        RoughMinHexes = Integer.parseInt(ST.nextToken());
-        RoughMaxHexes = Integer.parseInt(ST.nextToken());
-        RoadProb = Integer.parseInt(ST.nextToken());
-        RiverProb = Integer.parseInt(ST.nextToken());
-        Algorithm = Integer.parseInt(ST.nextToken());
-        if (ST.hasMoreTokens()) {id = Integer.parseInt(ST.nextToken());}
-        if (ST.hasMoreTokens()) {SwampMinSpots = Integer.parseInt(ST.nextToken());}
-        if (ST.hasMoreTokens()) {SwampMaxSpots = Integer.parseInt(ST.nextToken());}
-        if (ST.hasMoreTokens()) {SwampMinHexes = Integer.parseInt(ST.nextToken());}
-        if (ST.hasMoreTokens()) {SwampMaxHexes = Integer.parseInt(ST.nextToken());}
-        if (ST.hasMoreTokens()) {PavementMinSpots = Integer.parseInt(ST.nextToken());}
-        if (ST.hasMoreTokens()) {PavementMaxSpots = Integer.parseInt(ST.nextToken());}
-        if (ST.hasMoreTokens()) {PavementMinHexes = Integer.parseInt(ST.nextToken());}
-        if (ST.hasMoreTokens()) {PavementMaxHexes = Integer.parseInt(ST.nextToken());}
-        if (ST.hasMoreTokens()) {fxMod = Integer.parseInt(ST.nextToken());}
-        if (ST.hasMoreTokens()) {probForestFire = Integer.parseInt(ST.nextToken());}
-        if (ST.hasMoreTokens()) {probFreeze = Integer.parseInt(ST.nextToken());}
-        if (ST.hasMoreTokens()) {probFlood = Integer.parseInt(ST.nextToken());}
-        if (ST.hasMoreTokens()) {probDrought = Integer.parseInt(ST.nextToken());}
-        if (ST.hasMoreTokens()) {Theme = ST.nextToken();}
-        if (ST.hasMoreTokens()) {IceMinSpots = Integer.parseInt(ST.nextToken());}
-        if (ST.hasMoreTokens()) {IceMaxSpots = Integer.parseInt(ST.nextToken());}
-        if (ST.hasMoreTokens()) {IceMinHexes = Integer.parseInt(ST.nextToken());}
-        if (ST.hasMoreTokens()) {IceMaxHexes = Integer.parseInt(ST.nextToken());}
+        Name = stringTokenizer.nextToken();
+        CraterProb = Integer.parseInt(stringTokenizer.nextToken());
+        CraterMinNum = Integer.parseInt(stringTokenizer.nextToken());
+        CraterMaxNum = Integer.parseInt(stringTokenizer.nextToken());
+        CraterMinRadius = Integer.parseInt(stringTokenizer.nextToken());
+        CraterMaxRadius = Integer.parseInt(stringTokenizer.nextToken());
+        Hilliness = Integer.parseInt(stringTokenizer.nextToken());
+        HillElevationRange = Integer.parseInt(stringTokenizer.nextToken());
+        HillInvertProb = Integer.parseInt(stringTokenizer.nextToken());
+        WaterMinSpots = Integer.parseInt(stringTokenizer.nextToken());
+        WaterMaxSpots = Integer.parseInt(stringTokenizer.nextToken());
+        WaterMinHexes = Integer.parseInt(stringTokenizer.nextToken());
+        WaterMaxHexes = Integer.parseInt(stringTokenizer.nextToken());
+        WaterDeepProb = Integer.parseInt(stringTokenizer.nextToken());
+        ForestMinSpots = Integer.parseInt(stringTokenizer.nextToken());
+        ForestMaxSpots = Integer.parseInt(stringTokenizer.nextToken());
+        ForestMinHexes = Integer.parseInt(stringTokenizer.nextToken());
+        ForestMaxHexes = Integer.parseInt(stringTokenizer.nextToken());
+        ForestHeavyProb = Integer.parseInt(stringTokenizer.nextToken());
+        RoughMinSpots = Integer.parseInt(stringTokenizer.nextToken());
+        RoughMaxSpots = Integer.parseInt(stringTokenizer.nextToken());
+        RoughMinHexes = Integer.parseInt(stringTokenizer.nextToken());
+        RoughMaxHexes = Integer.parseInt(stringTokenizer.nextToken());
+        RoadProb = Integer.parseInt(stringTokenizer.nextToken());
+        RiverProb = Integer.parseInt(stringTokenizer.nextToken());
+        Algorithm = Integer.parseInt(stringTokenizer.nextToken());
+        if (stringTokenizer.hasMoreTokens()) {id = Integer.parseInt(stringTokenizer.nextToken());}
+        if (stringTokenizer.hasMoreTokens()) {SwampMinSpots = Integer.parseInt(stringTokenizer.nextToken());}
+        if (stringTokenizer.hasMoreTokens()) {SwampMaxSpots = Integer.parseInt(stringTokenizer.nextToken());}
+        if (stringTokenizer.hasMoreTokens()) {SwampMinHexes = Integer.parseInt(stringTokenizer.nextToken());}
+        if (stringTokenizer.hasMoreTokens()) {SwampMaxHexes = Integer.parseInt(stringTokenizer.nextToken());}
+        if (stringTokenizer.hasMoreTokens()) {PavementMinSpots = Integer.parseInt(stringTokenizer.nextToken());}
+        if (stringTokenizer.hasMoreTokens()) {PavementMaxSpots = Integer.parseInt(stringTokenizer.nextToken());}
+        if (stringTokenizer.hasMoreTokens()) {PavementMinHexes = Integer.parseInt(stringTokenizer.nextToken());}
+        if (stringTokenizer.hasMoreTokens()) {PavementMaxHexes = Integer.parseInt(stringTokenizer.nextToken());}
+        if (stringTokenizer.hasMoreTokens()) {fxMod = Integer.parseInt(stringTokenizer.nextToken());}
+        if (stringTokenizer.hasMoreTokens()) {probForestFire = Integer.parseInt(stringTokenizer.nextToken());}
+        if (stringTokenizer.hasMoreTokens()) {probFreeze = Integer.parseInt(stringTokenizer.nextToken());}
+        if (stringTokenizer.hasMoreTokens()) {probFlood = Integer.parseInt(stringTokenizer.nextToken());}
+        if (stringTokenizer.hasMoreTokens()) {probDrought = Integer.parseInt(stringTokenizer.nextToken());}
+        if (stringTokenizer.hasMoreTokens()) {Theme = stringTokenizer.nextToken();}
+        if (stringTokenizer.hasMoreTokens()) {IceMinSpots = Integer.parseInt(stringTokenizer.nextToken());}
+        if (stringTokenizer.hasMoreTokens()) {IceMaxSpots = Integer.parseInt(stringTokenizer.nextToken());}
+        if (stringTokenizer.hasMoreTokens()) {IceMinHexes = Integer.parseInt(stringTokenizer.nextToken());}
+        if (stringTokenizer.hasMoreTokens()) {IceMaxHexes = Integer.parseInt(stringTokenizer.nextToken());}
 
-        if (ST.hasMoreTokens()) {RubbleMinSpots = Integer.parseInt(ST.nextToken());}
-        if (ST.hasMoreTokens()) {RubbleMaxSpots = Integer.parseInt(ST.nextToken());}
-        if (ST.hasMoreTokens()) {RubbleMinHexes = Integer.parseInt(ST.nextToken());}
-        if (ST.hasMoreTokens()) {RubbleMaxHexes = Integer.parseInt(ST.nextToken());}
+        if (stringTokenizer.hasMoreTokens()) {RubbleMinSpots = Integer.parseInt(stringTokenizer.nextToken());}
+        if (stringTokenizer.hasMoreTokens()) {RubbleMaxSpots = Integer.parseInt(stringTokenizer.nextToken());}
+        if (stringTokenizer.hasMoreTokens()) {RubbleMinHexes = Integer.parseInt(stringTokenizer.nextToken());}
+        if (stringTokenizer.hasMoreTokens()) {RubbleMaxHexes = Integer.parseInt(stringTokenizer.nextToken());}
 
-        if (ST.hasMoreTokens()) {FortifiedMinSpots = Integer.parseInt(ST.nextToken());}
-        if (ST.hasMoreTokens()) {FortifiedMaxSpots = Integer.parseInt(ST.nextToken());}
-        if (ST.hasMoreTokens()) {FortifiedMinHexes = Integer.parseInt(ST.nextToken());}
-        if (ST.hasMoreTokens()) {FortifiedMaxHexes = Integer.parseInt(ST.nextToken());}
+        if (stringTokenizer.hasMoreTokens()) {FortifiedMinSpots = Integer.parseInt(stringTokenizer.nextToken());}
+        if (stringTokenizer.hasMoreTokens()) {FortifiedMaxSpots = Integer.parseInt(stringTokenizer.nextToken());}
+        if (stringTokenizer.hasMoreTokens()) {FortifiedMinHexes = Integer.parseInt(stringTokenizer.nextToken());}
+        if (stringTokenizer.hasMoreTokens()) {FortifiedMaxHexes = Integer.parseInt(stringTokenizer.nextToken());}
 
-        if (ST.hasMoreTokens()) {MinBuildings = Integer.parseInt(ST.nextToken());}
-        if (ST.hasMoreTokens()) {MaxBuildings = Integer.parseInt(ST.nextToken());}
-        if (ST.hasMoreTokens()) {MinCF = Integer.parseInt(ST.nextToken());}
-        if (ST.hasMoreTokens()) {MaxCF = Integer.parseInt(ST.nextToken());}
-        if (ST.hasMoreTokens()) {MinFloors = Integer.parseInt(ST.nextToken());}
-        if (ST.hasMoreTokens()) {MaxFloors = Integer.parseInt(ST.nextToken());}
-        if (ST.hasMoreTokens()) {CityDensity = Integer.parseInt(ST.nextToken());}
-        if (ST.hasMoreTokens()) {CityType = ST.nextToken();}
-        if (ST.hasMoreTokens()) {Roads = Integer.parseInt(ST.nextToken());}
-        if (ST.hasMoreElements()) {CliffProb = Integer.parseInt(ST.nextToken());}
-        if (ST.hasMoreElements()) {InvertNegativeTerrain = Integer.parseInt(ST.nextToken());}
-        if (ST.hasMoreElements()) {TownSize = Integer.parseInt(ST.nextToken());}
-        if (ST.hasMoreElements()) {MountPeaks = Integer.parseInt(ST.nextToken());}
-        if (ST.hasMoreElements()) {MountWidthMin = Integer.parseInt(ST.nextToken());}
-        if (ST.hasMoreElements()) {MountWidthMax = Integer.parseInt(ST.nextToken());}
-        if (ST.hasMoreElements()) {MountHeightMin = Integer.parseInt(ST.nextToken());}
-        if (ST.hasMoreElements()) {MountHeightMax = Integer.parseInt(ST.nextToken());}
-        if (ST.hasMoreElements()) {MountStyle = Integer.parseInt(ST.nextToken());}
-        if (ST.hasMoreElements()) {EnvironmentProb = Integer.parseInt(ST.nextToken());}
-        if (ST.hasMoreElements()) {setStaticMap(Boolean.parseBoolean(ST.nextToken()));}
-        if (ST.hasMoreElements()) {staticMapName = ST.nextToken();}
-        if (ST.hasMoreElements()) {xSize = Integer.parseInt(ST.nextToken());}
-        if (ST.hasMoreElements()) {ySize = Integer.parseInt(ST.nextToken());}
-        if (ST.hasMoreElements()) {xBoardSize = Integer.parseInt(ST.nextToken());}
-        if (ST.hasMoreElements()) {yBoardSize = Integer.parseInt(ST.nextToken());}
+        if (stringTokenizer.hasMoreTokens()) {MinBuildings = Integer.parseInt(stringTokenizer.nextToken());}
+        if (stringTokenizer.hasMoreTokens()) {MaxBuildings = Integer.parseInt(stringTokenizer.nextToken());}
+        if (stringTokenizer.hasMoreTokens()) {MinCF = Integer.parseInt(stringTokenizer.nextToken());}
+        if (stringTokenizer.hasMoreTokens()) {MaxCF = Integer.parseInt(stringTokenizer.nextToken());}
+        if (stringTokenizer.hasMoreTokens()) {MinFloors = Integer.parseInt(stringTokenizer.nextToken());}
+        if (stringTokenizer.hasMoreTokens()) {MaxFloors = Integer.parseInt(stringTokenizer.nextToken());}
+        if (stringTokenizer.hasMoreTokens()) {CityDensity = Integer.parseInt(stringTokenizer.nextToken());}
+        if (stringTokenizer.hasMoreTokens()) {CityType = stringTokenizer.nextToken();}
+        if (stringTokenizer.hasMoreTokens()) {Roads = Integer.parseInt(stringTokenizer.nextToken());}
+        if (stringTokenizer.hasMoreElements()) {CliffProb = Integer.parseInt(stringTokenizer.nextToken());}
+        if (stringTokenizer.hasMoreElements()) {InvertNegativeTerrain = Integer.parseInt(stringTokenizer.nextToken());}
+        if (stringTokenizer.hasMoreElements()) {TownSize = Integer.parseInt(stringTokenizer.nextToken());}
+        if (stringTokenizer.hasMoreElements()) {MountPeaks = Integer.parseInt(stringTokenizer.nextToken());}
+        if (stringTokenizer.hasMoreElements()) {MountWidthMin = Integer.parseInt(stringTokenizer.nextToken());}
+        if (stringTokenizer.hasMoreElements()) {MountWidthMax = Integer.parseInt(stringTokenizer.nextToken());}
+        if (stringTokenizer.hasMoreElements()) {MountHeightMin = Integer.parseInt(stringTokenizer.nextToken());}
+        if (stringTokenizer.hasMoreElements()) {MountHeightMax = Integer.parseInt(stringTokenizer.nextToken());}
+        if (stringTokenizer.hasMoreElements()) {MountStyle = Integer.parseInt(stringTokenizer.nextToken());}
+        if (stringTokenizer.hasMoreElements()) {EnvironmentProb = Integer.parseInt(stringTokenizer.nextToken());}
+        if (stringTokenizer.hasMoreElements()) {setStaticMap(Boolean.parseBoolean(stringTokenizer.nextToken()));}
+        if (stringTokenizer.hasMoreElements()) {staticMapName = stringTokenizer.nextToken();}
+        if (stringTokenizer.hasMoreElements()) {xSize = Integer.parseInt(stringTokenizer.nextToken());}
+        if (stringTokenizer.hasMoreElements()) {ySize = Integer.parseInt(stringTokenizer.nextToken());}
+        if (stringTokenizer.hasMoreElements()) {xBoardSize = Integer.parseInt(stringTokenizer.nextToken());}
+        if (stringTokenizer.hasMoreElements()) {yBoardSize = Integer.parseInt(stringTokenizer.nextToken());}
 
-        if (ST.hasMoreElements()) {SandMinSpots = Integer.parseInt(ST.nextToken());}
-        if (ST.hasMoreElements()) {SandMaxSpots = Integer.parseInt(ST.nextToken());}
-        if (ST.hasMoreElements()) {SandMinHexes = Integer.parseInt(ST.nextToken());}
-        if (ST.hasMoreElements()) {SandMaxHexes = Integer.parseInt(ST.nextToken());}
+        if (stringTokenizer.hasMoreElements()) {SandMinSpots = Integer.parseInt(stringTokenizer.nextToken());}
+        if (stringTokenizer.hasMoreElements()) {SandMaxSpots = Integer.parseInt(stringTokenizer.nextToken());}
+        if (stringTokenizer.hasMoreElements()) {SandMinHexes = Integer.parseInt(stringTokenizer.nextToken());}
+        if (stringTokenizer.hasMoreElements()) {SandMaxHexes = Integer.parseInt(stringTokenizer.nextToken());}
 
-        if (ST.hasMoreElements()) {PlantedFieldMinSpots = Integer.parseInt(ST.nextToken());}
-        if (ST.hasMoreElements()) {PlantedFieldMaxSpots = Integer.parseInt(ST.nextToken());}
-        if (ST.hasMoreElements()) {PlantedFieldMinHexes = Integer.parseInt(ST.nextToken());}
-        if (ST.hasMoreElements()) {PlantedFieldMaxHexes = Integer.parseInt(ST.nextToken());}
+        if (stringTokenizer.hasMoreElements()) {PlantedFieldMinSpots = Integer.parseInt(stringTokenizer.nextToken());}
+        if (stringTokenizer.hasMoreElements()) {PlantedFieldMaxSpots = Integer.parseInt(stringTokenizer.nextToken());}
+        if (stringTokenizer.hasMoreElements()) {PlantedFieldMinHexes = Integer.parseInt(stringTokenizer.nextToken());}
+        if (stringTokenizer.hasMoreElements()) {PlantedFieldMaxHexes = Integer.parseInt(stringTokenizer.nextToken());}
     }
 
     public PlanetEnvironment(StringTokenizer ST) {
@@ -361,57 +379,86 @@ final public class PlanetEnvironment {
     public String toDescription() {
         String result = "";
 
-        int water = (((WaterMaxSpots + WaterMinSpots) / 2) *
-                           (WaterMinHexes + WaterMaxSpots) / 2) + RiverProb / 10;
-        int rough = (((RoughMaxSpots + RoughMinSpots) / 2) *
-                           (RoughMinHexes + RoughMaxSpots) / 2);
-        int forest = (((ForestMaxSpots + ForestMinSpots) / 2) *
-                            (ForestMinHexes + ForestMaxSpots) / 2);
-        /*int swamp=(((SwampMaxSpots+SwampMinSpots)/2)*
-                (SwampMinHexes+SwampMaxSpots)/2);
-        int pavement=(((PavementMaxSpots+PavementMinSpots)/2)*
-                (PavementMinHexes+PavementMaxSpots)/2);
-        */
+        int water = (((WaterMaxSpots + WaterMinSpots) / 2) * (WaterMinHexes + WaterMaxSpots) / 2) + RiverProb / 10;
+        int rough = (((RoughMaxSpots + RoughMinSpots) / 2) * (RoughMinHexes + RoughMaxSpots) / 2);
+        int forest = (((ForestMaxSpots + ForestMinSpots) / 2) * (ForestMinHexes + ForestMaxSpots) / 2);
         /* generate the hilliness/crater description */
         result += "The landscape is ";
-        if (Hilliness < 200) {result += "plain";}
-        if ((Hilliness < 500) && (Hilliness >= 200)) {result += "uneven";}
-        if ((Hilliness >= 500) && (Hilliness <= 800)) {result += "hilly";}
-        if (Hilliness > 800) {result += "mountainous";}
+
+        if (Hilliness < 200) {
+            result += "plain";
+        } else if (Hilliness < 500) {
+            result += "uneven";
+        } else if (Hilliness <= 800) {
+            result += "hilly";
+        } else {
+            result += "mountainous";
+        }
+
         if (CraterProb == 0) {
             result += ". <br> ";
             if (rough > 0) {
                 result += "Through tectonic activity of this continent, rough terrain is appearing";
-                if (rough > 8) {result += " everywhere";} else {result += " sometimes";}
+                if (rough > 8) {
+                    result += " everywhere";
+                } else {
+                    result += " sometimes";
+                }
             }
         } else {
-            if (CraterProb < 30) {result += ", which is seldom coverd with";}
-            if ((CraterProb >= 30) && (CraterProb < 60)) {result += ", which is covered with";}
-            if (CraterProb >= 60) {result += ", often coverd with";}
+            if (CraterProb < 30) {
+                result += ", which is seldom covered with";
+            } else if (CraterProb < 60) {
+                result += ", which is covered with";
+            } else {
+                result += ", often covered with";
+            }
+
             int avgCraterSize = (CraterMinRadius + CraterMaxRadius) / 2;
-            if (avgCraterSize < 4) {result += " small craters";}
-            if ((avgCraterSize >= 4) && (avgCraterSize < 7)) {result += " craters ";}
-            if (avgCraterSize >= 7) {result += " large craters";}
+
+            if (avgCraterSize < 4) {
+                result += " small craters";
+            } else if (avgCraterSize < 7) {
+                result += " craters ";
+            } else {
+                result += " large craters";
+            }
+
             if (rough > 0) {
-                result += ". Another remaing of the ancient meteorid impacts is the rough terrain appearing";
-                if (rough > 8) {result += " everywhere";} else {result += " sometimes";}
+                result += ". Another remaking of the ancient meteor impacts is the rough terrain appearing";
+
+                if (rough > 8) {
+                    result += " everywhere";
+                } else {
+                    result += " sometimes";
+                }
             }
         } // craters
         result += ". <br>";
 
         /* woods */
-        result += "Most facitlities on this continent are lying";
+        result += "Most facilities on this continent are lying";
         if (forest > 50) {
             result += " deep in the ";
             result += (ForestHeavyProb < 30) ? "woods" : "jungle";
-            if (water > 20) {result += " mixed up with much water, because of heavy rain due too monsoon period";}
+
+            if (water > 20) {
+                result += " mixed up with much water, because of heavy rain due too monsoon period";
+            }
+
             result += "";
         } /* jungle */ else {
-            if (water > 20) {result += " close to the coast.";} else if (water < 3) {
+            if (water > 20) {
+                result += " close to the coast.";
+            } else if (water < 3) {
                 if (forest < 15) {
                     result += " in the desert. So dont expect vegetation for cover or water for cooling.";
-                } else {result += " in an area moderatly forested.";}
-            } else {result += " in an area famous for its agriculture.";}
+                } else {
+                    result += " in an area moderately forested.";
+                }
+            } else {
+                result += " in an area famous for its agriculture.";
+            }
         } /* else */
         return result;
     } /* to Description */
@@ -419,38 +466,52 @@ final public class PlanetEnvironment {
 
     public String toImageDescription() {
         String result = "";
-        int water = (((WaterMaxSpots + WaterMinSpots) / 2) *
-                           (WaterMinHexes + WaterMaxSpots) / 2) + RiverProb / 10;
-        int rough = (((RoughMaxSpots + RoughMinSpots) / 2) *
-                           (RoughMinHexes + RoughMaxSpots) / 2);
-        int forest = (((ForestMaxSpots + ForestMinSpots) / 2) *
-                            (ForestMinHexes + ForestMaxSpots) / 2);
-        /*int swamp=(((SwampMaxSpots+SwampMinSpots)/2)*
-                (SwampMinHexes+SwampMaxSpots)/2);
-        int pavement=(((PavementMaxSpots+PavementMinSpots)/2)*
-                (PavementMinHexes+PavementMaxSpots)/2);
-        */
+        int water = (((WaterMaxSpots + WaterMinSpots) / 2) * (WaterMinHexes + WaterMaxSpots) / 2) + RiverProb / 10;
+        int rough = (((RoughMaxSpots + RoughMinSpots) / 2) * (RoughMinHexes + RoughMaxSpots) / 2);
+        int forest = (((ForestMaxSpots + ForestMinSpots) / 2) * (ForestMinHexes + ForestMaxSpots) / 2);
         /* generate the hilliness/crater description */
-        if (Hilliness < 200) {result += "<img src=\"data/images/hill0.gif\">";}
-        if ((Hilliness < 500) && (Hilliness >= 200)) {result += "<img src=\"data/images/hill1.gif\">";}
-        if ((Hilliness >= 500) && (Hilliness <= 800)) {result += "<img src=\"data/images/hill2.gif\">";}
-        if (Hilliness > 800) {result += "<img src=\"data/images/hill3.gif\">";}
-        if (rough > 8) {result += "<img src=\"data/images/roug1.gif\">";}
-        if (CraterProb > 30) {result += "<img src=\"data/images/crtr1.gif\">";}
+
+        if (Hilliness < 200) {
+            result += HTMLHelper.imageTag("data/images/hill0.gif");
+        } else if (Hilliness < 500) {
+            result += HTMLHelper.imageTag("data/images/hill1.gif");
+        } else if (Hilliness <= 800) {
+            result += HTMLHelper.imageTag("data/images/hill2.gif");
+        } else {
+            result += HTMLHelper.imageTag("data/images/hill3.gif");
+        }
+
+        if (rough > 8) {
+            result += HTMLHelper.imageTag("data/images/roug1.gif");
+        }
+
+        if (CraterProb > 30) {
+            result += HTMLHelper.imageTag("data/images/crtr1.gif");
+        }
 
         /* woods */
-        if (forest > 15 && forest < 30) {result += "<img src=\"data/images/wood1.gif\">";} else if (forest >= 30 &&
-                                                                                                          forest < 50) {
-            result += "<img src=\"data/images/wood2.gif\">";
-        } else if (forest >=
-                         50) {result += "<img src=\"data/images/wood3.gif\">";}
+        if (forest > 15 && forest < 30) {
+            result += HTMLHelper.imageTag("data/images/wood1.gif");
+        } else if (forest >= 30 && forest < 50) {
+            result += HTMLHelper.imageTag("data/images/wood2.gif");
+        } else if (forest >= 50) {
+            result += HTMLHelper.imageTag("data/images/wood3.gif");
+        }
 
         /*water */
-        if (water > 5 && water < 20) {result += "<img src=\"data/images/watr1.gif\">";} else if (water >= 20) {
-            result += "<img src=\"data/images/watr2.gif\">";
+        if (water > 5 && water < 20) {
+            result += HTMLHelper.imageTag("data/images/watr1.gif");
+        } else if (water >= 20) {
+            result += HTMLHelper.imageTag("data/images/watr2.gif");
         }
-        if (getRiverProb() > 50) {result += "<img src=\"data/images/rivr1.gif\">";}
-        if (getRoadProb() > 50) {result += "<img src=\"data/images/road1.gif\">";}
+
+        if (getRiverProb() > 50) {
+            result += HTMLHelper.imageTag("data/images/rivr1.gif");
+        }
+
+        if (getRoadProb() > 50) {
+            result += HTMLHelper.imageTag("data/images/road1.gif");
+        }
 
         return result;
 
@@ -477,169 +538,65 @@ final public class PlanetEnvironment {
      */
     public String toImageAbsolutePathDescription() {
         String result = "";
-        int water = (((WaterMaxSpots + WaterMinSpots) / 2) *
-                           (WaterMinHexes + WaterMaxSpots) / 2) + RiverProb / 10;
-        int rough = (((RoughMaxSpots + RoughMinSpots) / 2) *
-                           (RoughMinHexes + RoughMaxSpots) / 2);
-        int forest = (((ForestMaxSpots + ForestMinSpots) / 2) *
-                            (ForestMinHexes + ForestMaxSpots) / 2);
+
+        int water = (((WaterMaxSpots + WaterMinSpots) / 2) * (WaterMinHexes + WaterMaxSpots) / 2) + RiverProb / 10;
+        int rough = (((RoughMaxSpots + RoughMinSpots) / 2) * (RoughMinHexes + RoughMaxSpots) / 2);
+        int forest = (((ForestMaxSpots + ForestMinSpots) / 2) * (ForestMinHexes + ForestMaxSpots) / 2);
+
         /* generate the hilliness/crater description */
-        String path = STR."file:///\{new File("").getAbsolutePath()}";
+        String path = "file:///" + new File("").getAbsolutePath();
 
         if (HillElevationRange < 2) {
-            result += STR."<img src=\"\{path}/data/images/hill0.gif\">";
-        }
-
-        if ((HillElevationRange < 5) && (HillElevationRange >= 2)) {
-            result += STR."<img src=\"\{path}/data/images/hill1.gif\">";
-        }
-
-        if ((HillElevationRange >= 5) && (HillElevationRange <= 8)) {
-            result += STR."<img src=\"\{path}/data/images/hill2.gif\">";
-        }
-
-        if (HillElevationRange > 8) {
-            result += STR."<img src=\"\{path}/data/images/hill3.gif\">";
+            result += HTMLHelper.imageTag(path, "/data/images/hill0.gif");
+        } else if (HillElevationRange < 5) {
+            result += HTMLHelper.imageTag(path, "/data/images/hill1.gif\">");
+        } else if (HillElevationRange <= 8) {
+            result += HTMLHelper.imageTag(path, "/data/images/hill2.gif");
+        } else {
+            result += HTMLHelper.imageTag(path, "/data/images/hill3.gif");
         }
 
         if (rough > 8) {
-            result += STR."<img src=\"\{path}/data/images/roug1.gif\">";
+            result += HTMLHelper.imageTag(path, "/data/images/roug1.gif");
         }
 
         if (CraterProb > 30) {
-            result += STR."<img src=\"\{path}/data/images/crtr1.gif\">";
+            result += HTMLHelper.imageTag(path, "/data/images/crtr1.gif");
         }
 
         /* woods */
         if (forest > 15 && forest < 30) {
-            result += STR."<img src=\"\{path}/data/images/wood1.gif\">";
+            result += HTMLHelper.imageTag(path, "/data/images/wood1.gif");
         } else if (forest >= 30 && forest < 50) {
-            result += STR."<img src=\"\{path}/data/images/wood2.gif\">";
-        } else if (forest >= 50) {result += STR."<img src=\"\{path}/data/images/wood3.gif\">";}
+            result += HTMLHelper.imageTag(path, "/data/images/wood2.gif");
+        } else if (forest >= 50) {
+            result += HTMLHelper.imageTag(path, "/data/images/wood3.gif");
+        }
 
         /*water */
         if (water > 5 && water < 20) {
-            result += STR."<img src=\"\{path}/data/images/watr1.gif\">";
+            result += HTMLHelper.imageTag(path, "/data/images/watr1.gif");
         } else if (water >= 20) {
-            result += STR."<img src=\"\{path}/data/images/watr2.gif\">";
+            result += HTMLHelper.imageTag(path, "/data/images/watr2.gif");
         }
 
         if (getRiverProb() > 50) {
-            result += STR."<img src=\"\{path}/data/images/rivr1.gif\">";
+            result += HTMLHelper.imageTag(path, "/data/images/rivr1.gif");
         }
 
         if (getRoadProb() > 50) {
-            result += STR."<img src=\"\{path}/data/images/road1.gif\">";
+            result += HTMLHelper.imageTag(path, "/data/images/road1.gif");
         }
 
         return result;
 
-    }
-
-    public String toString(String city) {
-        //no city info then use the normal one.
-        if (city.trim().length() <= 1) {
-            return this.toString();
-        }
-
-        //else
-        String result = "PE$";
-        result += STR."\{Name}$";
-        result += STR."\{CraterProb}$";
-        result += STR."\{CraterMinNum}$";
-        result += STR."\{CraterMaxNum}$";
-        result += STR."\{CraterMinRadius}$";
-        result += CraterMaxRadius + "$";
-        result += STR."\{Hilliness}$";
-        result += STR."\{HillElevationRange}$";
-        result += HillInvertProb + "$";
-        result += WaterMinSpots + "$";
-        result += WaterMaxSpots + "$";
-        result += WaterMinHexes + "$";
-        result += WaterMaxHexes + "$";
-        result += WaterDeepProb + "$";
-        result += ForestMinSpots + "$";
-        result += ForestMaxSpots + "$";
-        result += ForestMinHexes + "$";
-        result += ForestMaxHexes + "$";
-        result += ForestHeavyProb + "$";
-        result += RoughMinSpots + "$";
-        result += RoughMaxSpots + "$";
-        result += RoughMinHexes + "$";
-        result += RoughMaxHexes + "$";
-        result += RoadProb + "$";
-        result += RiverProb + "$";
-        result += Algorithm + "$";
-        result += id + "$";
-        result += SwampMinSpots + "$";
-        result += SwampMaxSpots + "$";
-        result += SwampMinHexes + "$";
-        result += SwampMaxHexes + "$";
-        result += PavementMinSpots + "$";
-        result += PavementMaxSpots + "$";
-        result += PavementMinHexes + "$";
-        result += PavementMaxHexes + "$";
-        result += fxMod + "$";
-        result += probForestFire + "$";
-        result += probFreeze + "$";
-        result += probFlood + "$";
-        result += probDrought + "$";
-        result += Theme + "$";
-        result += IceMinSpots + "$";
-        result += IceMaxSpots + "$";
-        result += IceMinHexes + "$";
-        result += IceMaxHexes + "$";
-
-        result += RubbleMinSpots + "$";
-        result += RubbleMaxSpots + "$";
-        result += RubbleMinHexes + "$";
-        result += RubbleMaxHexes + "$";
-
-        result += FortifiedMinSpots + "$";
-        result += FortifiedMaxSpots + "$";
-        result += FortifiedMinHexes + "$";
-        result += FortifiedMaxHexes + "$";
-
-        result += city + "$";
-
-        result += CliffProb + "$";
-        result += InvertNegativeTerrain + "$";
-        result += TownSize + "$";
-        result += MountPeaks + "$";
-        result += MountWidthMin + "$";
-        result += MountWidthMax + "$";
-        result += MountHeightMin + "$";
-        result += MountHeightMax + "$";
-        result += MountStyle + "$";
-        result += EnvironmentProb + "$";
-        result += staticMap;
-        result += "$";
-        result += staticMapName;
-        result += "$";
-        result += xSize;
-        result += "$";
-        result += ySize;
-        result += "$";
-        result += xBoardSize;
-        result += "$";
-        result += yBoardSize;
-        result += "$";
-
-        result += SandMinSpots + "$";
-        result += SandMaxSpots + "$";
-        result += SandMinHexes + "$";
-        result += SandMaxHexes + "$";
-
-
-        result += PlantedFieldMinSpots + "$";
-        result += PlantedFieldMaxSpots + "$";
-        result += PlantedFieldMinHexes + "$";
-        result += PlantedFieldMaxHexes + "$";
-
-        return result;
     }
 
     public String toString() {
+        return this.toString(null);
+    }
+
+    public String toString(String city) {
         String result = "PE$";
         result += Name + "$";
         result += CraterProb + "$";
@@ -706,6 +663,11 @@ final public class PlanetEnvironment {
         result += CityDensity + "$";
         result += CityType + "$";
         result += Roads + "$";
+
+        if (city != null && !city.trim().isEmpty()) {
+            result += city + "$";
+        }
+
         result += CliffProb + "$";
         result += InvertNegativeTerrain + "$";
         result += TownSize + "$";
@@ -739,7 +701,6 @@ final public class PlanetEnvironment {
         result += PlantedFieldMaxSpots + "$";
         result += PlantedFieldMinHexes + "$";
         result += PlantedFieldMaxHexes + "$";
-
 
         return result;
     }

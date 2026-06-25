@@ -21,12 +21,7 @@
  */
 package mekwars.server.campaign.util;
 
-import common.PlanetEnvironment;
-import common.Terrain;
-import common.util.MWLogger;
-import gd.xml.ParseException;
-import gd.xml.XMLParser;
-import gd.xml.XMLResponder;
+import mekwars.common.PlanetEnvironment;
 import mekwars.server.campaign.CampaignMain;
 
 /**

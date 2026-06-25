@@ -43,10 +43,33 @@ public class SubFaction {
     private static final MMLogger LOGGER = MMLogger.create(SubFaction.class);
     private static final Properties defaultSettings = new Properties();
     private final Properties factionSettings;
-    public int DBId = 0;
+    private int DBId = 0;
 
     public SubFaction() {
         factionSettings = new Properties(SubFaction.getDefault());
+    }
+
+    public static Properties getDefault() {
+        defaultSettings.setProperty("Name", "");
+        defaultSettings.setProperty("AccessLevel", "0");
+
+        for (int type = 0; type < Unit.MAX_BUILD; type++) {
+            for (int weight = 0; weight <= Unit.ASSAULT; weight++) {
+                String setting = String.format("CanBuyNew%s", buildUnitWeightAndTypeString(weight, type));
+                defaultSettings.setProperty(setting, "true");
+                setting = String.format("CanBuyUsed%s", buildUnitWeightAndTypeString(weight, type));
+                defaultSettings.setProperty(setting, "true");
+            }
+        }
+
+        defaultSettings.setProperty("MinELO", "0");
+        defaultSettings.setProperty("MinExp", "0");
+
+        return defaultSettings;
+    }
+
+    public static String buildUnitWeightAndTypeString(int weight, int type) {
+        return String.format("%s%s", Unit.getWeightClassDesc(weight), Unit.getTypeClassDesc(type));
     }
 
     public SubFaction(String name) {
@@ -58,25 +81,6 @@ public class SubFaction {
         factionSettings = new Properties(SubFaction.getDefault());
         factionSettings.setProperty("Name", name);
         factionSettings.setProperty("AccessLevel", accessLevel);
-    }
-
-    public static Properties getDefault() {
-        defaultSettings.setProperty("Name", "");
-        defaultSettings.setProperty("AccessLevel", "0");
-
-        for (int type = 0; type < Unit.MAX_BUILD; type++) {
-            for (int weight = 0; weight <= Unit.ASSAULT; weight++) {
-                String setting = STR."CanBuyNew\{Unit.getWeightClassDesc(weight)}\{Unit.getTypeClassDesc(type)}";
-                defaultSettings.setProperty(setting, "true");
-                setting = STR."CanBuyUsed\{Unit.getWeightClassDesc(weight)}\{Unit.getTypeClassDesc(type)}";
-                defaultSettings.setProperty(setting, "true");
-            }
-        }
-
-        defaultSettings.setProperty("MinELO", "0");
-        defaultSettings.setProperty("MinExp", "0");
-
-        return defaultSettings;
     }
 
     public String getConfig(String key) {

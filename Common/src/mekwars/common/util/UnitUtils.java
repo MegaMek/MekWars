@@ -17,7 +17,6 @@
 package mekwars.common.util;
 
 import jakarta.annotation.Nonnull;
-import jakarta.annotation.Nullable;
 import megamek.common.CriticalSlot;
 import megamek.common.TechConstants;
 import megamek.common.enums.Gender;
@@ -39,6 +38,7 @@ import megamek.common.units.Infantry;
 import megamek.common.units.Mek;
 import megamek.common.units.Tank;
 import megamek.logging.MMLogger;
+import mekwars.common.I18N.I18NMessages;
 import mekwars.common.MegaMekPilotOption;
 import mekwars.common.Unit;
 import mekwars.common.campaign.pilot.skills.PilotSkill;
@@ -85,6 +85,7 @@ public class UnitUtils {
     public static final int EQUIPMENT = 4;
     public static final int SYSTEMS = 5;
     public static final int ENGINES = 6;
+    private final static I18NMessages MESSAGES = new I18NMessages(UnitUtils.class);
     private static final MMLogger LOGGER = MMLogger.create(UnitUtils.class);
 
     public static boolean hasArmorDamage(Entity unit) {
@@ -1064,7 +1065,6 @@ public class UnitUtils {
     /**
      * Repairs weapons that are split between locations Used for Meks Only.
      *
-     * @param unit
      */
     public static void removeRepairSplitEquipment(Mounted<?> eq, Entity unit) {
 
@@ -1241,14 +1241,14 @@ public class UnitUtils {
         String repairMessage = "";
 
         if ((unit instanceof Mek) && (unit.getInternal(UnitUtils.LOC_CENTER_TORSO) < 1)) {
-            return "This unit has been cored and cannot be repaired. Either Scrap it or try to salvage it for parts!";
+            return MESSAGES.getString("getRepairMessage.Cored");
         }
 
         if (unit instanceof Tank) {
-            // Turrets can be blown off and you can still repair the unit.
+            // Turrets can be blown off, and you can still repair the unit.
             for (int loc = Tank.LOC_FRONT; loc < Tank.LOC_TURRET; loc++) {
                 if (unit.getInternal(loc) < 1) {
-                    return "This unit has been cored and cannot be repaired. Either Scrap it or try to salvage it for parts!";
+                    return MESSAGES.getString("getRepairMessage.Cored");
                 }
             }
         }
@@ -1258,8 +1258,7 @@ public class UnitUtils {
                   ||
                   ((location == UnitUtils.LOC_LEFT_ARM) &&
                          (unit.getInternal(UnitUtils.LOC_LT) != unit.getOInternal(UnitUtils.LOC_LT)))) {
-            return String.format(
-                  "You may not repair your %s's %s until the adjacent torso's internal structure is fully repaired.",
+            return MESSAGES.getString("getRepairMessage.MustRepairAdjacentInternalStructure",
                   unit.getShortNameRaw(),
                   unit.getLocationName(location));
         }
@@ -1276,31 +1275,35 @@ public class UnitUtils {
 
                 if (armorRepaired == 0) {
                     if (rear) {
-                        repairMessage = STR."All external armor(\{unit.getLocationAbbr(location)}r) has already been repaired.";
+                        repairMessage = MESSAGES.getString("getRepairMessage.ExternalArmorRepairedRear",
+                              unit.getLocationAbbr(location));
                     } else {
-                        repairMessage = STR."All external armor(\{unit.getLocationAbbr(location)}) has already been repaired.";
+                        repairMessage = MESSAGES.getString("getRepairMessage.ExternalArmorRepaired",
+                              unit.getLocationAbbr(location));
                     }
                 }
             } else {
                 armorRepaired = unit.getOInternal(location) - unit.getInternal(location);
 
                 if (armorRepaired == 0) {
-                    repairMessage = STR."All internal structure(\{unit.getLocationAbbr(location)}) has already been repaired.";
+                    repairMessage = MESSAGES.getString("getRepairMessage.InternalStructureRepaired",
+                          unit.getLocationAbbr(location));
                 }
 
             }
 
         } else {// crits
             if (unit.getInternal(location) != unit.getOInternal(location)) {
-                repairMessage = STR."You may not make any repairs to the until the internal structure(\{unit.getLocationAbbr(
-                      location)}) is fully repaired!";
+                repairMessage = MESSAGES.getString("getRepairMessage.InternalStructureRepairRequired",
+                      unit.getLocationAbbr(location));
             }
 
             CriticalSlot criticalSlot = unit.getCritical(location, slot);
             Mounted<?> mount = null;
 
             if (criticalSlot == null) {
-                repairMessage = "There is no critical in that location please select another critical slot to repair!";
+                repairMessage = MESSAGES.getString("getRepairMessage.NoCriticalSlotInThatLocationNeedingRepair",
+                      unit.getLocationAbbr(location));
             } else {
                 if (!UnitUtils.isActuator(criticalSlot)) {
                     mount = criticalSlot.getMount();
@@ -1310,10 +1313,12 @@ public class UnitUtils {
                     if (!mount.isDestroyed() && !mount.isBreached()
                               && !mount.isMissing() && !criticalSlot.isDamaged()
                               && !criticalSlot.isBreached()) {
-                        repairMessage = "That critical is not damaged!?!?";
+                        repairMessage = MESSAGES.getString("getRepairMessage.CriticalSlotIsNotDamaged",
+                              unit.getLocationAbbr(location));
                     }
                 } else if (!criticalSlot.isDamaged() && !criticalSlot.isBreached()) {
-                    repairMessage = "That critical is not damaged?!?!";
+                    repairMessage = MESSAGES.getString("getRepairMessage.CriticalSlotIsNotDamaged",
+                          unit.getLocationAbbr(location));
                 }
             }
         }
@@ -2056,7 +2061,7 @@ public class UnitUtils {
             }
 
         } catch (Exception ex) {
-                unitEntity = UnitUtils.createOMG();// new
+            unitEntity = UnitUtils.createOMG();// new
         }
 
         return unitEntity;

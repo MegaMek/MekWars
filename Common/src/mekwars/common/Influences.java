@@ -1,17 +1,35 @@
 /*
- * MekWars - Copyright (C) 2004
+ * Copyright (C) 2004 MekWars
+ * Copyright (C) 2026 The MegaMek Team. All Rights Reserved.
  *
- * Derived from MegaMekNET (http://www.sourceforge.net/projects/megameknet)
+ * This file is part of MekWars.
  *
- * This program is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License as published by the Free
- * Software Foundation; either version 2 of the License, or (at your option)
- * any later version.
+ * MekWars is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License (GPL),
+ * version 3 or (at your option) any later version,
+ * as published by the Free Software Foundation.
  *
- * This program is distributed in the hope that it will be useful, but
- * WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
- * or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License
- * for more details.
+ * MekWars is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty
+ * of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU General Public License for more details.
+ *
+ * A copy of the GPL should have been included with this project;
+ * if not, see <https://www.gnu.org/licenses/>.
+ *
+ * NOTICE: The MegaMek organization is a non-profit group of volunteers
+ * creating free software for the BattleTech community.
+ *
+ * MechWarrior, BattleMech, `Mech and AeroTech are registered trademarks
+ * of The Topps Company, Inc. All Rights Reserved.
+ *
+ * Catalyst Game Labs and the Catalyst Game Labs logo are trademarks of
+ * InMediaRes Productions, LLC.
+ *
+ * MechWarrior Copyright Microsoft Corporation. MekWars was created under
+ * Microsoft's "Game Content Usage Rules"
+ * <https://www.xbox.com/en-US/developers/rules> and it is not endorsed by or
+ * affiliated with Microsoft.
  */
 
 package mekwars.common;
@@ -73,39 +91,42 @@ public class Influences implements MutableSerializable {
      * Return the faction with the most influence.
      */
     public Integer getOwner() {
-
         try {
             TreeSet<House> houseTreeSet = new TreeSet<>((o1, o2) -> {
-                try {
-                    int i1 = -1;
-                    int i2 = -1;
+                int i1 = -1;
+                int i2 = -1;
 
-                    if (o1 != null) {
-                        i1 = o1.getId();
-                    }
-
-                    if (o2 != null) {
-                        i2 = o2.getId();
-                    }
-
-                    return Integer.compare(i1, i2);
-                } catch (Exception ex) {
-                    return 0;
+                if (o1 != null) {
+                    i1 = o1.getId();
                 }
+
+                if (o2 != null) {
+                    i2 = o2.getId();
+                }
+
+                return Integer.compare(i1, i2);
             });
 
             houseTreeSet.addAll(this.getHouses());
             House[] factions = new House[houseTreeSet.size()];
 
             int i = 0;
-            for (House house : houseTreeSet) {factions[i++] = house;}
+
+            for (House house : houseTreeSet) {
+                factions[i++] = house;
+            }
+
             Arrays.sort(factions, (o1, o2) -> {
                 int h1Id = -1;
                 int h2Id = -2;
 
-                if (o1 != null) {h1Id = o1.getId();}
+                if (o1 != null) {
+                    h1Id = o1.getId();
+                }
 
-                if (o2 != null) {h2Id = o2.getId();}
+                if (o2 != null) {
+                    h2Id = o2.getId();
+                }
 
                 int i1 = getInfluence(h1Id);
                 int i2 = getInfluence(h2Id);
@@ -128,7 +149,9 @@ public class Influences implements MutableSerializable {
 
             House faction2 = factions[1];
 
-            if (faction2 != null && getInfluence((faction2.getId())) == getInfluence((faction.getId()))) {return null;}
+            if (faction2 != null && getInfluence((faction2.getId())) == getInfluence((faction.getId()))) {
+                return null;
+            }
 
             return faction.getId();
         } catch (Exception ex) {
@@ -154,7 +177,6 @@ public class Influences implements MutableSerializable {
      * Return the influence of a specific faction.
      */
     public int getInfluence(int factionID) {
-
         if (!influences.containsKey(factionID)) {
             return 0;
         }
@@ -174,6 +196,7 @@ public class Influences implements MutableSerializable {
             House house = factions.get(i);
             influences.put((house.getId()), (maxInfluence / factions.size()));
         }
+
         if (maxInfluence % factions.size() != 0) {
             int bonus = maxInfluence % factions.size();
             if (influences.containsKey((gainer.getId()))) {
@@ -196,7 +219,9 @@ public class Influences implements MutableSerializable {
      * than 100% and nobody may drop below 0. If you not want to respect to this, use add() instead.
      */
     public int moveInfluence(House winner, House loser, int amount, int maxInfluence) {
-        if (amount == 0) {return 0;}
+        if (amount == 0) {
+            return 0;
+        }
 
         int winnerId = winner.getId();
         int loserId = -1;
@@ -207,7 +232,9 @@ public class Influences implements MutableSerializable {
         oldWinnerInfluence = getInfluence(winnerId);
         oldLoserInfluence = getInfluence(loserId);
 
-        if (oldWinnerInfluence + amount >= maxInfluence) {amount = maxInfluence - oldWinnerInfluence;}
+        if (oldWinnerInfluence + amount >= maxInfluence) {
+            amount = maxInfluence - oldWinnerInfluence;
+        }
 
         if (amount > oldLoserInfluence) {
             influences.remove(loserId);
@@ -216,19 +243,30 @@ public class Influences implements MutableSerializable {
             oldLoserInfluence = getInfluence(loserId);
         }
 
-        if (oldLoserInfluence < amount) {amount = oldLoserInfluence;}
+        if (oldLoserInfluence < amount) {
+            amount = oldLoserInfluence;
+        }
 
         int winnerInfluence = oldWinnerInfluence + amount;
         int loserInfluence = oldLoserInfluence - amount;
 
-        if (winnerInfluence == 0) {influences.remove(winnerId);} else {influences.put(winnerId, (winnerInfluence));}
+        if (winnerInfluence == 0) {
+            influences.remove(winnerId);
+        } else {
+            influences.put(winnerId, (winnerInfluence));
+        }
 
-        if (loserInfluence == 0) {influences.remove(loserId);} else {influences.put(loserId, (loserInfluence));}
+        if (loserInfluence == 0) {
+            influences.remove(loserId);
+        } else {
+            influences.put(loserId, (loserInfluence));
+        }
+
         return amount;
     }
 
     /**
-     * Returns whether the Influence zone belongs to a so called "hot zone", which means, that it is in a critical
+     * Returns whether the Influence zone belongs to a so-called "hot zone", which means, that it is in a critical
      * sector where ownership is not fully clear.
      *
      * @return True, if it is a hotZone Planet.
@@ -240,7 +278,9 @@ public class Influences implements MutableSerializable {
             if (maxflu < flu) {
                 secondmaxflu = maxflu;
                 maxflu = flu;
-            } else if (secondmaxflu < flu) {secondmaxflu = flu;}
+            } else if (secondmaxflu < flu) {
+                secondmaxflu = flu;
+            }
         }
         return (maxflu - secondmaxflu) < 20;
     }
@@ -275,8 +315,8 @@ public class Influences implements MutableSerializable {
         while (inf.hasNext()) {
             House h = inf.next();
             out.println("\t\t<inf>");
-            out.println(STR."\t\t<faction>\{h.getName()}</faction>");
-            out.println(STR."\t\t<amount>\{getInfluence(h.getId())}</amount>");
+            out.println("\t\t<faction>" + h.getName() + "</faction>");
+            out.println("\t\t<amount>" + getInfluence(h.getId()) + "</amount>");
             out.println("\t\t</inf>");
         }
         out.println("\t</influence>");
@@ -293,10 +333,14 @@ public class Influences implements MutableSerializable {
         Collection<House> thisHouse = getHouses();
         for (House house : thisHouse) {
             int d = getInfluence(house.getId()) - infNew.getInfluence(house.getId());
-            if (d != 0) {diff.put(house.getId(), d);}
+            if (d != 0) {
+                diff.put(house.getId(), d);
+            }
         }
         for (House house : other) {
-            if (!thisHouse.contains(house)) {diff.put(house.getId(), (-infNew.getInfluence(house.getId())));}
+            if (!thisHouse.contains(house)) {
+                diff.put(house.getId(), (-infNew.getInfluence(house.getId())));
+            }
         }
         return new Influences(diff);
     }
@@ -309,10 +353,14 @@ public class Influences implements MutableSerializable {
             influences.put((house.getId()), (infNew.getInfluence(house.getId())));
         }
         for (House house : infNew.getHouses()) {
-            if (!getHouses().contains(house)) {influences.put((house.getId()), (infNew.getInfluence(house.getId())));}
+            if (!getHouses().contains(house)) {
+                influences.put((house.getId()), (infNew.getInfluence(house.getId())));
+            }
         }
         for (House house : getHouses()) {
-            if (getInfluence(house.getId()) == 0) {influences.remove((house.getId()));}
+            if (getInfluence(house.getId()) == 0) {
+                influences.remove((house.getId()));
+            }
         }
     }
 

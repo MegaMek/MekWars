@@ -533,8 +533,9 @@ public class UnitViewerDialog extends JFrame
         mekViewLeft.setEditable(false);
         mekViewRight.setEditable(false);
         if (populateTextFields) {
-            mekViewLeft.setText(mekView.getMekReadoutBasic());
-            mekViewRight.setText(mekView.getMekReadoutLoadout());
+            LOGGER.debug("UnitViewDialog Readouts Disabled..");
+            // mekViewLeft.setText(mekView.getMekReadoutBasic());
+            // mekViewRight.setText(mekView.getMekReadoutLoadout());
 
             if ((currEntity.getFluff() != null) && viewFluff) {
                 unitFluff.setEditable(false);

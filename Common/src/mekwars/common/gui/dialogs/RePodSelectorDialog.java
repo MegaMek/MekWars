@@ -239,8 +239,9 @@ public class RePodSelectorDialog extends JFrame
         mechViewRight.setEditable(false);
 
         if (populateTextFields) {
-            mechViewLeft.setText(mekViewPanel.getMechReadoutBasic());
-            mechViewRight.setText(mekViewPanel.getMechReadoutLoadout());
+            LOGGER.debug("RePodSelectorDialog Readouts Disabled");
+            // mechViewLeft.setText(mekViewPanel.getMechReadoutBasic());
+            // mechViewRight.setText(mekViewPanel.getMechReadoutLoadout());
         } else {
             mechViewLeft.setText("No unit selected");
             mechViewRight.setText("No unit selected");
