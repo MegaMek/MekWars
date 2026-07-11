@@ -404,7 +404,7 @@ public class InnerStellarMap extends JComponent
 
             // Information
             JMenuItem info = new JMenuItem("Information");
-            info.addActionListener(_ -> {
+            info.addActionListener(actionEvent -> {
                 JEditorPane label;
                 if (MathUtility.parseBoolean(client.getServerConfigs("UseStaticMaps"), false)) {
                     House house = client.getData().getHouseByName(mapPanel.getPPanel().getPlanet().getOriginalOwner());
@@ -471,7 +471,7 @@ public class InnerStellarMap extends JComponent
 
             // Search, using planet dialog.
             JMenuItem search = new JMenuItem("Find Planet");
-            search.addActionListener(_ -> createPlanetSearchDialog());
+            search.addActionListener(actionEvent -> createPlanetSearchDialog());
             popup.add(search);
 
             // CENTER Menu.
@@ -479,7 +479,7 @@ public class InnerStellarMap extends JComponent
             JMenuItem item = new JMenuItem("On Selected Planet");
 
             if (planet != null) {// only add if there is a planet to center on
-                item.addActionListener(_ -> {
+                item.addActionListener(actionEvent -> {
                     conf.getOffset().setLocation(-planet.getPosition().x * conf.getScale(),
                           planet.getPosition().y * conf.getScale());
                     mapPanel.repaint();
@@ -489,7 +489,7 @@ public class InnerStellarMap extends JComponent
             }
 
             item = new JMenuItem("On Natural Center");
-            item.addActionListener(_ -> {
+            item.addActionListener(actionEvent -> {
                 conf.setOffset(new Point());
                 conf.setScale(1);
                 mapPanel.getSlider().setValue((int) Math.round(50 / conf.getScale()));
@@ -523,7 +523,7 @@ public class InnerStellarMap extends JComponent
             if (client.isLeader() &&
                       client.getUserLevel() >= client.getData().getAccessLevel("PurchaseFactory")) {
                 item = new JMenuItem("Purchase Factory");
-                item.addActionListener(_ -> client.getMainFrame()
+                item.addActionListener(actionEvent -> client.getMainFrame()
                                                   .jMenuLeaderPurchaseFactory_actionPerformed(planet == null ?
                                                                                                     null :
                                                                                                     planet.getName()));
@@ -534,7 +534,7 @@ public class InnerStellarMap extends JComponent
 
             // REFRESH - one button
             item = new JMenuItem("Refresh");
-            item.addActionListener(_ -> {
+            item.addActionListener(actionEvent -> {
                 changesSinceLastRefresh.clear();
                 client.refreshData();
                 mapPanel.repaint();

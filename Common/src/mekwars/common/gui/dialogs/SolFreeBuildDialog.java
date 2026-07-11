@@ -167,16 +167,16 @@ public class SolFreeBuildDialog extends JFrame implements ItemListener {
         JButton closeButton = new JButton("Close");
         closeButton.setAlignmentX(Component.CENTER_ALIGNMENT);
         closeButton.setAlignmentY(Component.CENTER_ALIGNMENT);
-        closeButton.addActionListener(_ -> dispose());
+        closeButton.addActionListener(actionEvent -> dispose());
 
         refreshButton.setAlignmentX(Component.CENTER_ALIGNMENT);
         refreshButton.setAlignmentY(Component.CENTER_ALIGNMENT);
-        refreshButton.addActionListener(_ -> refreshButton_ActionPerformed());
+        refreshButton.addActionListener(actionEvent -> refreshButton_ActionPerformed());
 
         createButton.setAlignmentX(Component.CENTER_ALIGNMENT);
         createButton.setAlignmentY(Component.CENTER_ALIGNMENT);
         createButton.setMnemonic(KeyEvent.VK_C);
-        createButton.addActionListener(_ -> createUnit_ActionPerformed());
+        createButton.addActionListener(actionEvent -> createUnit_ActionPerformed());
 
         // set up the BM-style table
         // sorts generated from the map.

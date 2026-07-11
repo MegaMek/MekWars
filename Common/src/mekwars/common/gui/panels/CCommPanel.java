@@ -1079,7 +1079,7 @@ public class CCommPanel extends JPanel implements ChangeListener, ComponentListe
         if (CommTPane.getSelectedIndex() == CommTPane.indexOfComponent(ErrorLogPanel)) {
             JPopupMenu popup = new JPopupMenu();
             JMenuItem info = new JMenuItem("Close");
-            info.addActionListener(_ -> CommTPane.remove(CommTPane.getSelectedComponent()));
+            info.addActionListener(actionEvent -> CommTPane.remove(CommTPane.getSelectedComponent()));
             popup.add(info);
             popup.show(mouseEvent.getComponent(), mouseEvent.getX(), mouseEvent.getY());
         }
@@ -1090,7 +1090,7 @@ public class CCommPanel extends JPanel implements ChangeListener, ComponentListe
             if (panel.getName().startsWith("Mail Tab ")) {
                 JPopupMenu popup = new JPopupMenu();
                 JMenuItem info = new JMenuItem("Close");
-                info.addActionListener(_ -> CommTPane.remove(CommTPane.getSelectedComponent()));
+                info.addActionListener(actionEvent -> CommTPane.remove(CommTPane.getSelectedComponent()));
                 popup.add(info);
                 popup.show(mouseEvent.getComponent(), mouseEvent.getX(), mouseEvent.getY());
             }
@@ -1101,7 +1101,7 @@ public class CCommPanel extends JPanel implements ChangeListener, ComponentListe
         JPopupMenu clipboard = new JPopupMenu();
         JMenuItem copy = new JMenuItem("Cut");
 
-        copy.addActionListener(_ -> {
+        copy.addActionListener(actionEvent -> {
             StringSelection stringSelection = new StringSelection(chatField.getSelectedText());
             Clipboard clipboard2 = Toolkit.getDefaultToolkit().getSystemClipboard();
             clipboard2.setContents(stringSelection, stringSelection);
@@ -1118,7 +1118,7 @@ public class CCommPanel extends JPanel implements ChangeListener, ComponentListe
         clipboard.add(copy);
 
         copy = new JMenuItem("Copy");
-        copy.addActionListener(_ -> {
+        copy.addActionListener(actionEvent -> {
             StringSelection stringSelection = new StringSelection(chatField.getSelectedText());
             Clipboard clipboard3 = Toolkit.getDefaultToolkit().getSystemClipboard();
             clipboard3.setContents(stringSelection, stringSelection);
@@ -1147,7 +1147,7 @@ public class CCommPanel extends JPanel implements ChangeListener, ComponentListe
         clipboard.add(copy);
 
         copy = new JMenuItem("Delete");
-        copy.addActionListener(_ -> {
+        copy.addActionListener(actionEvent -> {
             try {
                 String newText = chatField.getText(0, chatField.getSelectionStart());
                 newText += chatField.getText(chatField.getSelectionEnd(),
@@ -1163,7 +1163,7 @@ public class CCommPanel extends JPanel implements ChangeListener, ComponentListe
         clipboard.addSeparator();
 
         copy = new JMenuItem("Select All");
-        copy.addActionListener(_ -> chatField.selectAll());
+        copy.addActionListener(actionEvent -> chatField.selectAll());
 
         clipboard.add(copy);
         return clipboard;

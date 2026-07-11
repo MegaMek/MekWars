@@ -264,7 +264,7 @@ public class CUserListPanel extends JPanel implements ActionListener {
         linkButton1.setMinimumSize(new Dimension(30, 30));
         linkButton1.setMaximumSize(new Dimension(30, 30));
 
-        linkButton1.addActionListener(_ -> {
+        linkButton1.addActionListener(actionEvent -> {
             Desktop desktop = Desktop.isDesktopSupported() ? Desktop.getDesktop() : null;
             if (desktop != null && desktop.isSupported(Desktop.Action.BROWSE)) {
                 String uri = client.getServerConfigs("Link1_URL");
@@ -289,7 +289,7 @@ public class CUserListPanel extends JPanel implements ActionListener {
         linkButton2.setMinimumSize(new Dimension(30, 30));
         linkButton2.setMaximumSize(new Dimension(30, 30));
 
-        linkButton2.addActionListener(_ -> {
+        linkButton2.addActionListener(actionEvent -> {
             Desktop desktop = Desktop.isDesktopSupported() ? Desktop.getDesktop() : null;
             if (desktop != null && desktop.isSupported(Desktop.Action.BROWSE)) {
                 String uri = client.getServerConfigs("Link2_URL");
@@ -313,7 +313,7 @@ public class CUserListPanel extends JPanel implements ActionListener {
         linkButton3.setMinimumSize(new Dimension(30, 30));
         linkButton3.setMaximumSize(new Dimension(30, 30));
 
-        linkButton3.addActionListener(_ -> {
+        linkButton3.addActionListener(actionEvent -> {
             Desktop desktop = Desktop.isDesktopSupported() ? Desktop.getDesktop() : null;
             if (desktop != null && desktop.isSupported(Desktop.Action.BROWSE)) {
                 String uri = client.getServerConfigs("Link3_URL");

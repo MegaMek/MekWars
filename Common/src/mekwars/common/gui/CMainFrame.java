@@ -593,119 +593,119 @@ public class CMainFrame extends JFrame {
 
         jMenuCampaignMyStatus.setText("My Status");
         jMenuCampaignMyStatus.setMnemonic('M');
-        jMenuCampaignMyStatus.addActionListener(_ -> client.sendChat(String.format("%sc mystatus", IClient.CAMPAIGN_PREFIX)));
+        jMenuCampaignMyStatus.addActionListener(actionEvent -> client.sendChat(String.format("%sc mystatus", IClient.CAMPAIGN_PREFIX)));
 
         jMenuCampaignCheckAttack.setText("Attack Options");
         jMenuCampaignCheckAttack.setMnemonic('A');
-        jMenuCampaignCheckAttack.addActionListener(_ -> jMenuCommanderCheckAttack_actionPerformed(-1));
+        jMenuCampaignCheckAttack.addActionListener(actionEvent -> jMenuCommanderCheckAttack_actionPerformed(-1));
 
         jMenuCampaignRange.setText("Range Calculator");
         jMenuCampaignRange.setMnemonic('R');
-        jMenuCampaignRange.addActionListener(_ -> jMenuCommanderRange_actionPerformed());
+        jMenuCampaignRange.addActionListener(actionEvent -> jMenuCommanderRange_actionPerformed());
 
         jMenuFindContestedPlanets.setText("Find Contested Planets");
         jMenuFindContestedPlanets.setMnemonic('Z');
-        jMenuFindContestedPlanets.addActionListener(_ -> jMenuFindContestedPlanets_actionPerformed());  //BarukKhazad 20151129 - end 1
+        jMenuFindContestedPlanets.addActionListener(actionEvent -> jMenuFindContestedPlanets_actionPerformed());  //BarukKhazad 20151129 - end 1
 
         jMenuCampaignTransferUnit.setText("Transfer Unit");
         jMenuCampaignTransferUnit.setMnemonic('U');
-        jMenuCampaignTransferUnit.addActionListener(_ -> jMenuCommanderTransferUnit_actionPerformed(null, -1));
+        jMenuCampaignTransferUnit.addActionListener(actionEvent -> jMenuCommanderTransferUnit_actionPerformed(null, -1));
 
         jMenuCampaignTransferMoney.setText(String.format("Transfer %s", client.moneyOrFluMessage(true, true, -2)));
         jMenuCampaignTransferMoney.setMnemonic('C');
-        jMenuCampaignTransferMoney.addActionListener(_ -> jMenuCommanderTransferMoney_actionPerformed(null));
+        jMenuCampaignTransferMoney.addActionListener(actionEvent -> jMenuCommanderTransferMoney_actionPerformed(null));
 
         jMenuCampaignLogo.setText("Set Logo");
         jMenuCampaignLogo.setMnemonic('L');
-        jMenuCampaignLogo.addActionListener(_ -> jMenuCommanderLogo_actionPerformed());
+        jMenuCampaignLogo.addActionListener(actionEvent -> jMenuCommanderLogo_actionPerformed());
 
         jMenuCampaignPersonalPilotQueue.setText("View Pilot Queue");
         jMenuCampaignPersonalPilotQueue.setMnemonic('Q');
-        jMenuCampaignPersonalPilotQueue.addActionListener(_ -> jMenuCommanderPersonalPilotQueue_actionPerformed());
+        jMenuCampaignPersonalPilotQueue.addActionListener(actionEvent -> jMenuCommanderPersonalPilotQueue_actionPerformed());
 
         jMenuCampaignDonatePersonalPilot.setText("Fire Pilot");
         jMenuCampaignDonatePersonalPilot.setMnemonic('o');
-        jMenuCampaignDonatePersonalPilot.addActionListener(_ -> jMenuCommanderDonatePersonalPilot_actionPerformed());
+        jMenuCampaignDonatePersonalPilot.addActionListener(actionEvent -> jMenuCommanderDonatePersonalPilot_actionPerformed());
 
         jMenuCampaignDirectSell.setText("Direct Sell Unit");
         jMenuCampaignDirectSell.setMnemonic('S');
-        jMenuCampaignDirectSell.addActionListener(_ -> jMenuCommanderDirectSell_actionPerformed(null, null));
+        jMenuCampaignDirectSell.addActionListener(actionEvent -> jMenuCommanderDirectSell_actionPerformed(null, null));
 
         jMenuCampaignTransferPilot.setText("Transfer Pilot");
         jMenuCampaignTransferPilot.setMnemonic('T');
-        jMenuCampaignTransferPilot.addActionListener(_ -> jMenuCommanderTransferPilot_actionPerformed(null));
+        jMenuCampaignTransferPilot.addActionListener(actionEvent -> jMenuCommanderTransferPilot_actionPerformed(null));
 
         jMenuCampaignDefect.setText("Defect");
         jMenuCampaignDefect.setMnemonic('D');
-        jMenuCampaignDefect.addActionListener(_ -> jMenuCommanderDefect_actionPerformed());
+        jMenuCampaignDefect.addActionListener(actionEvent -> jMenuCommanderDefect_actionPerformed());
 
         jMenuCampaignSelfPromote.setText("Self Promote"); //@salient
-        jMenuCampaignSelfPromote.addActionListener(_ -> jMenuCommanderSelfPromote_actionPerformed());
+        jMenuCampaignSelfPromote.addActionListener(actionEvent -> jMenuCommanderSelfPromote_actionPerformed());
 
         jMenuCampaignReportStatusMC.setText("Check MiniCampaign Status"); //@salient for mini campaign
-        jMenuCampaignReportStatusMC.addActionListener(_ -> jMenuCommanderReportStatusMC_actionPerformed());
+        jMenuCampaignReportStatusMC.addActionListener(actionEvent -> jMenuCommanderReportStatusMC_actionPerformed());
 
         jMenuCampaignRewardPoints.setText(String.format("Use %s", client.getServerConfigs("RPLongName")));
         jMenuCampaignRewardPoints.setMnemonic('P');
-        jMenuCampaignRewardPoints.addActionListener(_ -> client.rewardPointsDialog());
+        jMenuCampaignRewardPoints.addActionListener(actionEvent -> client.rewardPointsDialog());
 
         //@Salient
         jMenuCampaignInfluencePoints.setText(String.format("Use %s", client.getServerConfigs("FluLongName")));
-        jMenuCampaignInfluencePoints.addActionListener(_ -> client.influencePointsDialog());
+        jMenuCampaignInfluencePoints.addActionListener(actionEvent -> client.influencePointsDialog());
 
         jMenuCampaignPartsCache.setText("View Parts");
         jMenuCampaignPartsCache.setMnemonic('V');
-        jMenuCampaignPartsCache.addActionListener(_ -> jMenuCampaignPartsCache_actionPerformed());
+        jMenuCampaignPartsCache.addActionListener(actionEvent -> jMenuCampaignPartsCache_actionPerformed());
 
         if (useAdvanceRepairs) {
             jMenuSubCampaignBuyBays.setText("Lease Bays");
             jMenuSubCampaignBuyBays.setMnemonic('L');
-            jMenuSubCampaignBuyBays.addActionListener(_ -> jMenuCommanderBuyBays_actionPerformed());
+            jMenuSubCampaignBuyBays.addActionListener(actionEvent -> jMenuCommanderBuyBays_actionPerformed());
 
             jMenuSubCampaignSellBays.setText("Return Bays");
             jMenuSubCampaignSellBays.setMnemonic('R');
-            jMenuSubCampaignSellBays.addActionListener(_ -> jMenuCommanderSellBays_actionPerformed());
+            jMenuSubCampaignSellBays.addActionListener(actionEvent -> jMenuCommanderSellBays_actionPerformed());
         }
 
         if (usePersonalPilotQueues) {
             jMenuCampaignBuyPilots.setText("Hire Pilots");
             jMenuCampaignBuyPilots.setMnemonic('P');
-            jMenuCampaignBuyPilots.addActionListener(_ -> jMenuCampaignSubOtherBuyPilots_actionPerformed());
+            jMenuCampaignBuyPilots.addActionListener(actionEvent -> jMenuCampaignSubOtherBuyPilots_actionPerformed());
         }
 
         jMenuSubCampaignHireTechs.setText("Hire Techs");
         jMenuSubCampaignHireTechs.setMnemonic('H');
-        jMenuSubCampaignHireTechs.addActionListener(_ -> jMenuCommanderHireTechs_actionPerformed());
+        jMenuSubCampaignHireTechs.addActionListener(actionEvent -> jMenuCommanderHireTechs_actionPerformed());
 
         jMenuSubCampaignFireTechs.setText("Fire Techs");
         jMenuSubCampaignFireTechs.setMnemonic('F');
-        jMenuSubCampaignFireTechs.addActionListener(_ -> jMenuCommanderFireTechs_actionPerformed());
+        jMenuSubCampaignFireTechs.addActionListener(actionEvent -> jMenuCommanderFireTechs_actionPerformed());
 
         jMenuCampaignSubMerc.setText("Mercenaries");
         jMenuCampaignSubMerc.setMnemonic('r');
 
         jMenuMercOfferContract.setText("Offer a Mercenary Contract");
         jMenuMercOfferContract.setMnemonic('O');
-        jMenuMercOfferContract.addActionListener(_ -> jMenuMercOfferContract_actionPerformed());
+        jMenuMercOfferContract.addActionListener(actionEvent -> jMenuMercOfferContract_actionPerformed());
 
         jMenuMercStatus.setText("Mercenary Status");
         jMenuMercStatus.setMnemonic('M');
-        jMenuMercStatus.addActionListener(_ -> jMenuMercStatus_actionPerformed());
+        jMenuMercStatus.addActionListener(actionEvent -> jMenuMercStatus_actionPerformed());
 
         jMenuMercUnemployed.setText("Unemployed Mercs");
         jMenuMercUnemployed.setMnemonic('U');
-        jMenuMercUnemployed.addActionListener(_ -> client.sendChat(String.format("%sc unemployedmercs", IClient.CAMPAIGN_PREFIX)));
+        jMenuMercUnemployed.addActionListener(actionEvent -> client.sendChat(String.format("%sc unemployedmercs", IClient.CAMPAIGN_PREFIX)));
 
         jMenuMercContracted.setText("Contracted Mercs");
         jMenuMercContracted.setMnemonic('C');
-        jMenuMercContracted.addActionListener(_ -> client.sendChat(String.format("%sc housecontracts", IClient.CAMPAIGN_PREFIX)));
+        jMenuMercContracted.addActionListener(actionEvent -> client.sendChat(String.format("%sc housecontracts", IClient.CAMPAIGN_PREFIX)));
 
         jMenuHost.setText("Host");
         jMenuHost.setMnemonic('S');
 
         jMenuCSHostAndJoin.setText("Start Hosting (and Join)");
         jMenuCSHostAndJoin.setMnemonic('H');
-        jMenuCSHostAndJoin.addActionListener(_ -> {
+        jMenuCSHostAndJoin.addActionListener(actionEvent -> {
             startHost();
             client.startHost(false, true, false);
         });
@@ -714,7 +714,7 @@ public class CMainFrame extends JFrame {
         jMenuCSHostDedicated.setMnemonic('D');
         jMenuCSHostDedicated.setEnabled(false);
         jMenuCSHostDedicated.setVisible(false);
-        jMenuCSHostDedicated.addActionListener(_ -> {
+        jMenuCSHostDedicated.addActionListener(actionEvent -> {
             startHost();
             client.startHost(true, false, false);
         });
@@ -723,14 +723,14 @@ public class CMainFrame extends JFrame {
         jMenuCSHostLoad.setMnemonic('L');
         jMenuCSHostLoad.setEnabled(false);
         jMenuCSHostLoad.setVisible(false);
-        jMenuCSHostLoad.addActionListener(_ -> {
+        jMenuCSHostLoad.addActionListener(actionEvent -> {
             startHost();
             client.startHost(true, false, true);
         });
 
         jMenuCSHostLoadAndJoin.setText("Start Hosting (Load Savegame and Join)");
         jMenuCSHostLoadAndJoin.setMnemonic('S');
-        jMenuCSHostLoadAndJoin.addActionListener(_ -> {
+        jMenuCSHostLoadAndJoin.addActionListener(actionEvent -> {
             startHost();
             client.startHost(false, false, true);
         });
@@ -739,7 +739,7 @@ public class CMainFrame extends JFrame {
         jMenuCSHostStop.setMnemonic('S');
         jMenuCSHostStop.setEnabled(false);
         jMenuCSHostStop.setVisible(false);
-        jMenuCSHostStop.addActionListener(_ -> {
+        jMenuCSHostStop.addActionListener(actionEvent -> {
             stopHost();
             client.stopHost();
         });
@@ -750,7 +750,7 @@ public class CMainFrame extends JFrame {
         jMenuOptionsAutoScroll.setText("Auto Scroll");
         jMenuOptionsAutoScroll.setMnemonic('A');
         jMenuOptionsAutoScroll.setState(MainPanel.getCommPanel().getAutoTextUpdate());
-        jMenuOptionsAutoScroll.addActionListener(_ -> {
+        jMenuOptionsAutoScroll.addActionListener(actionEvent -> {
             boolean newValue = !MainPanel.getCommPanel().getAutoTextUpdate();
             MainPanel.getCommPanel().setAutoTextUpdate(newValue);
             jMenuOptionsAutoScroll.setState(newValue);
@@ -761,37 +761,37 @@ public class CMainFrame extends JFrame {
 
         jMenuOptionsMute.setText("Mute");
         jMenuOptionsMute.setMnemonic('M');
-        jMenuOptionsMute.addActionListener(_ -> client.setSoundMuted(jMenuOptionsMute.getState()));
+        jMenuOptionsMute.addActionListener(actionEvent -> client.setSoundMuted(jMenuOptionsMute.getState()));
 
         jMenuOptionsReloadAllData.setText("Reload Data");
         jMenuOptionsReloadAllData.setMnemonic('D');
-        jMenuOptionsReloadAllData.addActionListener(_ -> client.reloadData());
+        jMenuOptionsReloadAllData.addActionListener(actionEvent -> client.reloadData());
 
         jMenuLeaderShip.setText("Leadership");
 
         jMenuLeaderPromote.setText("Promote Player");
-        jMenuLeaderPromote.addActionListener(_ -> jMenuLeaderPromote_actionPerformed());
+        jMenuLeaderPromote.addActionListener(actionEvent -> jMenuLeaderPromote_actionPerformed());
 
         jMenuLeaderDemote.setText("Demote Player");
-        jMenuLeaderDemote.addActionListener(_ -> jMenuLeaderDemote_actionPerformed());
+        jMenuLeaderDemote.addActionListener(actionEvent -> jMenuLeaderDemote_actionPerformed());
 
         jMenuLeaderFluff.setText("Fluff Player");
-        jMenuLeaderFluff.addActionListener(_ -> jMenuLeaderFluff_actionPerformed());
+        jMenuLeaderFluff.addActionListener(actionEvent -> jMenuLeaderFluff_actionPerformed());
 
         jMenuLeaderMute.setText("Mute Player");
-        jMenuLeaderMute.addActionListener(_ -> jMenuLeaderMute_actionPerformed());
+        jMenuLeaderMute.addActionListener(actionEvent -> jMenuLeaderMute_actionPerformed());
 
         jMenuLeaderFactionColor.setText("Faction Color");
-        jMenuLeaderFactionColor.addActionListener(_ -> jMenuLeaderFactionColor_actionPerformed());
+        jMenuLeaderFactionColor.addActionListener(actionEvent -> jMenuLeaderFactionColor_actionPerformed());
 
         jMenuLeaderPlayerColor.setText("Player Color");
-        jMenuLeaderPlayerColor.addActionListener(_ -> jMenuLeaderPlayerColor_actionPerformed());
+        jMenuLeaderPlayerColor.addActionListener(actionEvent -> jMenuLeaderPlayerColor_actionPerformed());
 
         jMenuLeaderResearchUnit.setText("Research Unit");
-        jMenuLeaderResearchUnit.addActionListener(_ -> jMenuLeaderResearchUnit_actionPerformed());
+        jMenuLeaderResearchUnit.addActionListener(actionEvent -> jMenuLeaderResearchUnit_actionPerformed());
 
         jMenuLeaderResearchTech.setText("Research Tech");
-        jMenuLeaderResearchTech.addActionListener(_ -> {
+        jMenuLeaderResearchTech.addActionListener(actionEvent -> {
             int option = JOptionPane.showConfirmDialog(client.getMainFrame(),
                   "Do you wish to research tech?",
                   "Research?",
@@ -805,46 +805,46 @@ public class CMainFrame extends JFrame {
         });
 
         jMenuLeaderPurchaseFactory.setText("Purchase Factory");
-        jMenuLeaderPurchaseFactory.addActionListener(_ -> jMenuLeaderPurchaseFactory_actionPerformed(null));
+        jMenuLeaderPurchaseFactory.addActionListener(actionEvent -> jMenuLeaderPurchaseFactory_actionPerformed(null));
 
         jMenuLeaderSetComponentConversion.setText("Set Component Conversion");
-        jMenuLeaderSetComponentConversion.addActionListener(_ -> jMenuLeaderSetComponentConversion_actionPerformed());
+        jMenuLeaderSetComponentConversion.addActionListener(actionEvent -> jMenuLeaderSetComponentConversion_actionPerformed());
 
         jMenuLeaderViewFactionPartsCache.setText("View Faction Cache");
-        jMenuLeaderViewFactionPartsCache.addActionListener(_ -> client.sendChat(String.format("%sc viewfactionpartscache", IClient.CAMPAIGN_PREFIX)));
+        jMenuLeaderViewFactionPartsCache.addActionListener(actionEvent -> client.sendChat(String.format("%sc viewfactionpartscache", IClient.CAMPAIGN_PREFIX)));
 
         jMenuHelp.setText("Help");
         jMenuHelp.setMnemonic('E');
 
         jMenuHelpAbout.setText("About");
         jMenuHelpAbout.setMnemonic('A');
-        jMenuHelpAbout.addActionListener(_ -> jMenuHelpAbout_actionPerformed());
+        jMenuHelpAbout.addActionListener(actionEvent -> jMenuHelpAbout_actionPerformed());
 
         jMenuHelpMemory.setText("Memory");
         jMenuHelpMemory.setMnemonic('M');
-        jMenuHelpMemory.addActionListener(_ -> jMenuHelpMemory_actionPerformed());
+        jMenuHelpMemory.addActionListener(actionEvent -> jMenuHelpMemory_actionPerformed());
 
         jMenuHelpHelp.setText("Online Help");
         jMenuHelpHelp.setMnemonic('H');
-        jMenuHelpHelp.addActionListener(_ -> jMenuHelpHelp_actionPerformed());
+        jMenuHelpHelp.addActionListener(actionEvent -> jMenuHelpHelp_actionPerformed());
 
         jMenuHelpViewUnit.setText("Unit Viewer");
         jMenuHelpViewUnit.setMnemonic('U');
-        jMenuHelpViewUnit.addActionListener(_ -> jMenuHelpViewUnit_actionPerformed());
+        jMenuHelpViewUnit.addActionListener(actionEvent -> jMenuHelpViewUnit_actionPerformed());
 
         jMenuHelpViewBuildTables.setText("Build Table Viewer");
         jMenuHelpViewBuildTables.setMnemonic('B');
-        jMenuHelpViewBuildTables.addActionListener(_ -> jMenuHelpViewBuildTables_actionPerformed());
+        jMenuHelpViewBuildTables.addActionListener(actionEvent -> jMenuHelpViewBuildTables_actionPerformed());
 
         jMenuHelpViewTraits.setText("View Faction Traits");
-        jMenuHelpViewTraits.addActionListener(_ -> new TraitDialog(client, true));
+        jMenuHelpViewTraits.addActionListener(actionEvent -> new TraitDialog(client, true));
 
         jMenuHelpPilotSkills.setText("Pilot Skill Descriptions");
         jMenuHelpPilotSkills.setMnemonic('P');
-        jMenuHelpPilotSkills.addActionListener(_ -> jMenuHelpPilotSkills_actionPerformed());
+        jMenuHelpPilotSkills.addActionListener(actionEvent -> jMenuHelpPilotSkills_actionPerformed());
 
         jMenuHelpOpViewer.setText("Operation Viewer");
-        jMenuHelpOpViewer.addActionListener(_ -> client.sendChat(String.format("%s getops md5", IClient.CAMPAIGN_PREFIX)));
+        jMenuHelpOpViewer.addActionListener(actionEvent -> client.sendChat(String.format("%s getops md5", IClient.CAMPAIGN_PREFIX)));
 
         /*
          * Display Report "MekWars Bug" and "Report MegaMek Bug" links in the Help Menu. Create the actual menu
@@ -885,22 +885,22 @@ public class CMainFrame extends JFrame {
 
         if (Boolean.parseBoolean(client.getServerConfigs("AllowEmoji"))) {
             jMenuEmojiFlip.setText("(╯°□°)╯︵ ┻━┻");
-            jMenuEmojiFlip.addActionListener(_ -> client.sendChat(String.format("%sec#fl", IClient.CAMPAIGN_PREFIX)));
+            jMenuEmojiFlip.addActionListener(actionEvent -> client.sendChat(String.format("%sec#fl", IClient.CAMPAIGN_PREFIX)));
 
             jMenuEmojiShrug.setText("¯\\_(ツ)_/¯");
-            jMenuEmojiShrug.addActionListener(_ -> client.sendChat(String.format("%sec#sh", IClient.CAMPAIGN_PREFIX)));
+            jMenuEmojiShrug.addActionListener(actionEvent -> client.sendChat(String.format("%sec#sh", IClient.CAMPAIGN_PREFIX)));
 
             jMenuEmojiFingers.setText("t(-.-t)");
-            jMenuEmojiFingers.addActionListener(_ -> client.sendChat(String.format("%sec#fi", IClient.CAMPAIGN_PREFIX)));
+            jMenuEmojiFingers.addActionListener(actionEvent -> client.sendChat(String.format("%sec#fi", IClient.CAMPAIGN_PREFIX)));
 
             jMenuEmojiKiss.setText("( ˘ ³˘)♥");
-            jMenuEmojiKiss.addActionListener(_ -> client.sendChat(String.format("%sec#ki", IClient.CAMPAIGN_PREFIX)));
+            jMenuEmojiKiss.addActionListener(actionEvent -> client.sendChat(String.format("%sec#ki", IClient.CAMPAIGN_PREFIX)));
 
             jMenuEmojiSmile.setText("◉‿◉");
-            jMenuEmojiSmile.addActionListener(_ -> client.sendChat(String.format("%sec#sm", IClient.CAMPAIGN_PREFIX)));
+            jMenuEmojiSmile.addActionListener(actionEvent -> client.sendChat(String.format("%sec#sm", IClient.CAMPAIGN_PREFIX)));
 
             jMenuEmojiDeal.setText("•_•) ( •_•)>⌐■-■ (⌐■_■)");
-            jMenuEmojiDeal.addActionListener(_ -> client.sendChat(String.format("%sec#de", IClient.CAMPAIGN_PREFIX)));
+            jMenuEmojiDeal.addActionListener(actionEvent -> client.sendChat(String.format("%sec#de", IClient.CAMPAIGN_PREFIX)));
         }
 
         /*
