@@ -14,15 +14,16 @@ package mekwars.server.campaign.commands;
 
 import common.Unit;
 import common.campaign.operations.Operation;
-import common.util.MWLogger;
 import common.util.UnitUtils;
 import megamek.common.Mech;
+import megamek.logging.MMLogger;
 import mekwars.server.campaign.CampaignMain;
 import server.campaign.util.scheduler.MWScheduler;
 import server.util.SPlayerToJSON;
 import server.util.StringUtil;
 
 public class ActivateCommand implements Command {
+    private static final MMLogger LOGGER = MMLogger.create(ActivateCommand.class);
 
     int accessLevel = 0;
     String syntax = "";
@@ -75,7 +76,7 @@ public class ActivateCommand implements Command {
                 return;
             }
         } catch (Exception ex) {
-            MWLogger.errLog("Error activating player. User reported client verson: " +
+            LOGGER.error("Error activating player. User reported client verson: " +
                                   p.getPlayerClientVersion() +
                                   " --- Stack Trace Follows.");
             // MWLogger.errLog(ex);

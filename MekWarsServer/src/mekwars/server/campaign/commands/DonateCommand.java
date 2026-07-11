@@ -22,9 +22,9 @@
 package mekwars.server.campaign.commands;
 
 import common.Unit;
-import common.util.MWLogger;
 import common.util.StringUtils;
 import common.util.UnitUtils;
+import megamek.logging.MMLogger;
 import mekwars.server.campaign.CampaignMain;
 import server.campaign.pilot.SPilot;
 
@@ -32,6 +32,7 @@ import server.campaign.pilot.SPilot;
  * @author Helge Richter
  */
 public class DonateCommand implements Command {
+    private static final MMLogger LOGGER = MMLogger.create(DonateCommand.class);
 
     int accessLevel = 0;
     String syntax = "";
@@ -101,7 +102,7 @@ public class DonateCommand implements Command {
                   true);
             CampaignMain.campaignMain.doSendModMail("NOTE",
                   Username + " tried to donate an OMG. Unit auto-scrapped. Data: " + m.getProducer());
-            MWLogger.errLog(Username + " tried to donate an OMG. Unit auto-scrapped. Data: " + m.getProducer());
+            LOGGER.error(Username + " tried to donate an OMG. Unit auto-scrapped. Data: " + m.getProducer());
             p.removeUnit(unitid, true);
             return;
         }

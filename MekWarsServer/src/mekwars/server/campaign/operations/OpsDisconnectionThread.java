@@ -17,11 +17,12 @@
 package mekwars.server.campaign.operations;
 
 import common.campaign.operations.Operation;
-import common.util.MWLogger;
+import megamek.logging.MMLogger;
 import mekwars.server.campaign.CampaignMain;
 import server.util.StringUtil;
 
 public class OpsDisconnectionThread extends Thread {
+    private static final MMLogger LOGGER = MMLogger.create(OpsDisconnectionThread.class);
 
     //VARIABLES
     private boolean playerReturned;
@@ -66,12 +67,12 @@ public class OpsDisconnectionThread extends Thread {
                                                ".", winnerName, true);
 
         //add the start to the log
-        MWLogger.gameLog("Disco Thread/Start:" + id + "/" + loserName + ". " + winnerName + " wins in " + timeToReturn);
+        LOGGER.info("Disco Thread/Start:" + id + "/" + loserName + ". " + winnerName + " wins in " + timeToReturn);
 
         try {
             this.wait(timeToReport);
         } catch (Exception ex) {
-            MWLogger.errLog(ex);
+            LOGGER.error(ex, "");
         }
 
         //only report if player is still missing
@@ -84,7 +85,7 @@ public class OpsDisconnectionThread extends Thread {
         Operation o = CampaignMain.campaignMain.getOpsManager().getOperation(so.getName());
 
         //add to log and send to resolver
-        MWLogger.gameLog("Autoreport: " + id + "/" + loserName + ". " + winnerName + " wins by forfeit");
+        LOGGER.info("Autoreport: " + id + "/" + loserName + ". " + winnerName + " wins by forfeit");
         CampaignMain.campaignMain.getOpsManager().resolveShortAttack(o, so, winnerName, loserName);
 
     }//end run()
@@ -96,9 +97,9 @@ public class OpsDisconnectionThread extends Thread {
                         " returned. He was offline for " +
                         StringUtil.readableTimeWithSeconds(timeOffline) +
                         ".", winnerName, true);
-            MWLogger.gameLog("Disco Thread/Stop:" + id + "/" + loserName + ". Player returned.");
+            LOGGER.info("Disco Thread/Stop:" + id + "/" + loserName + ". Player returned.");
         } else {
-            MWLogger.gameLog("Disco Thread/Stop:" + id + "/" + loserName + ". Player threads cleared.");
+            LOGGER.info("Disco Thread/Stop:" + id + "/" + loserName + ". Player threads cleared.");
         }
         playerReturned = true;
     }

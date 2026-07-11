@@ -18,12 +18,13 @@ package mekwars.server.dataProvider.commands;
 
 import common.CampaignData;
 import common.util.BinWriter;
-import common.util.MWLogger;
+import megamek.logging.MMLogger;
 
 /**
  * Retrieve the MD5 of the current campaignconfig file.
  */
 public class BanTargetingTimeStamp implements server.dataProvider.ServerCommand {
+    private static final MMLogger LOGGER = MMLogger.create(BanTargetingTimeStamp.class);
 
     public void execute(java.util.Date timestamp, BinWriter out, CampaignData data) throws Exception {
 
@@ -40,10 +41,10 @@ public class BanTargetingTimeStamp implements server.dataProvider.ServerCommand 
                 in.close();
 
             } catch (Exception e) {
-                MWLogger.infoLog("Error reading first line from bantargeting.dat");
+                LOGGER.info("Error reading first line from bantargeting.dat");
             }
         } else {
-            MWLogger.infoLog("bantargeting.dat didn't exist. returning ficticious timestamp to requesting client.");
+            LOGGER.info("bantargeting.dat didn't exist. returning ficticious timestamp to requesting client.");
         }
 
         out.println(bannedAmmoTimestamp, "BanTargetingTimeStamp");

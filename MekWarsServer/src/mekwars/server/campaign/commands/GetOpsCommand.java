@@ -17,10 +17,11 @@
 package mekwars.server.campaign.commands;
 
 import common.campaign.operations.Operation;
-import common.util.MWLogger;
+import megamek.logging.MMLogger;
 import mekwars.server.campaign.CampaignMain;
 
 public class GetOpsCommand implements Command {
+    private static final MMLogger LOGGER = MMLogger.create(GetOpsCommand.class);
 
     int accessLevel = 2;
     String syntax = "/getops [getall, md5, getsome#list]";
@@ -117,7 +118,7 @@ public class GetOpsCommand implements Command {
                         }
                     } catch (java.io.FileNotFoundException e) {
                         // TODO Auto-generated catch block
-                        MWLogger.errLog(e);
+                        LOGGER.error(e, "");
                     }
                     CampaignMain.campaignMain.toUser("OP|md5|" + toReturn.toString(), Username, false);
 

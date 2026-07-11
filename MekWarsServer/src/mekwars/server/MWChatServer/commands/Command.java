@@ -17,15 +17,15 @@
  */
 package mekwars.server.MWChatServer.commands;
 
-
+import megamek.logging.MMLogger;
 import mekwars.common.campaign.clientutils.protocol.TransportCodec;
-import mekwars.common.util.MWLogger;
 
 /**
  *
  * @author Administrator
  */
 public class Command extends CommandBase implements ICommands {
+    private static final MMLogger LOGGER = MMLogger.create(Command.class);
 
     /**
      * @return true if this message should be distributed to other clients
@@ -35,8 +35,8 @@ public class Command extends CommandBase implements ICommands {
             ((server.ServerWrapper) client.getServer()).processCommand(client.getUserId(),
                   TransportCodec.unescape(args[1]));
         } catch (Exception e) {
-            MWLogger.errLog(e);
-            MWLogger.errLog("Not supposed to happen");
+            LOGGER.error(e, "");
+            LOGGER.error("Not supposed to happen");
         }
         return false;
     }

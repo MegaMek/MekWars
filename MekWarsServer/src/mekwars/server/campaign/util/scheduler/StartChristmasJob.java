@@ -2,8 +2,7 @@ package mekwars.server.campaign.util.scheduler;
 
 import static org.quartz.JobBuilder.newJob;
 import static org.quartz.TriggerBuilder.newTrigger;
-
-import common.util.MWLogger;
+import megamek.logging.MMLogger;
 import mekwars.server.campaign.CampaignMain;
 import org.quartz.Job;
 import org.quartz.JobDetail;
@@ -18,6 +17,7 @@ import org.quartz.TriggerKey;
  * @version 2016.10.26
  */
 public class StartChristmasJob implements Job {
+    private static final MMLogger LOGGER = MMLogger.create(StartChristmasJob.class);
     public StartChristmasJob() {
     }
 
@@ -36,7 +36,7 @@ public class StartChristmasJob implements Job {
         try {
             date = sdf.parse(startDateString);
         } catch (java.text.ParseException e) {
-            MWLogger.errLog(e);
+            LOGGER.error(e, "");
         }
 
         boolean inThePast = false;
@@ -68,7 +68,7 @@ public class StartChristmasJob implements Job {
 
     @Override
     public void execute(JobExecutionContext context) {
-        MWLogger.debugLog("Starting Christmas");
+        LOGGER.debug("Starting Christmas");
         server.campaign.util.ChristmasHandler.getInstance().startChristmas();
     }
 }

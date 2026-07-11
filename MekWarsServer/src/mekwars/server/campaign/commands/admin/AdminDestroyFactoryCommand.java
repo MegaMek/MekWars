@@ -17,10 +17,11 @@
 package mekwars.server.campaign.commands.admin;
 
 import common.UnitFactory;
-import common.util.MWLogger;
+import megamek.logging.MMLogger;
 import mekwars.server.campaign.CampaignMain;
 
 public class AdminDestroyFactoryCommand implements server.campaign.commands.Command {
+    private static final MMLogger LOGGER = MMLogger.create(AdminDestroyFactoryCommand.class);
 
     int accessLevel = server.MWChatServer.auth.IAuthenticator.ADMIN, factoryID;
     String syntax = "Planet Name#Factory Name";
@@ -77,7 +78,7 @@ public class AdminDestroyFactoryCommand implements server.campaign.commands.Comm
             CampaignMain.campaignMain.doSendModMail("NOTE",
                   Username + "  removed " + factoryname + " from " + p.getName() + ".");
         } catch (Exception ex) {
-            MWLogger.errLog(ex);
+            LOGGER.error(ex, "");
         }//end catch
 
     }

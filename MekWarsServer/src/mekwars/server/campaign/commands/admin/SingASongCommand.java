@@ -17,10 +17,11 @@
 package mekwars.server.campaign.commands.admin;
 
 import common.House;
-import common.util.MWLogger;
+import megamek.logging.MMLogger;
 import mekwars.server.campaign.CampaignMain;
 
 public class SingASongCommand implements server.campaign.commands.Command {
+    private static final MMLogger LOGGER = MMLogger.create(SingASongCommand.class);
 
     int accessLevel = server.MWChatServer.auth.IAuthenticator.ADMIN;
     String syntax = "Song Name";
@@ -131,7 +132,7 @@ public class SingASongCommand implements server.campaign.commands.Command {
             try {
                 dis.close();
             } catch (java.io.IOException e) {
-                MWLogger.errLog(e);
+                LOGGER.error(e, "");
             }
         }
 
@@ -160,7 +161,7 @@ public class SingASongCommand implements server.campaign.commands.Command {
             try {
                 dis.close();
             } catch (java.io.IOException e) {
-                MWLogger.errLog(e);
+                LOGGER.error(e, "");
             }
         }
 

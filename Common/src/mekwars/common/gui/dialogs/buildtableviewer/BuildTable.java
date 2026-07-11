@@ -234,7 +234,7 @@ public class BuildTable {
                      .sorted(Map.Entry.comparingByValue())
                      .collect(Collectors.toMap(Map.Entry::getKey,
                            Map.Entry::getValue,
-                           (oldValue, _) -> oldValue,
+                           (oldValue, ignored) -> oldValue,
                            LinkedHashMap::new));
     }
 }

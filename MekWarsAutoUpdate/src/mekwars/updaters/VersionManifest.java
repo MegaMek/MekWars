@@ -6,10 +6,11 @@ import java.util.List;
 import java.util.StringTokenizer;
 import javax.swing.JFileChooser;
 
-import mekwars.common.util.MWLogger;
+import megamek.logging.MMLogger;
 import mekwars.updaters.utils.IOUtil;
 
 public class VersionManifest {
+    private static final MMLogger LOGGER = MMLogger.create(VersionManifest.class);
     public static String separator = "*";
     protected List<FileInfo> fileList_ = new ArrayList<>();
     protected List<String> dirsToCleanUp_ = new ArrayList<>();
@@ -156,7 +157,7 @@ public class VersionManifest {
             out.close();
 
         } catch (IOException e) {
-            MWLogger.errLog(e);
+            LOGGER.error(e, "");
         }
     }
 

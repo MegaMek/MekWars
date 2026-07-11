@@ -17,6 +17,7 @@ package mekwars.server.util.discord;
 
 import java.net.http.HttpClient;
 
+import megamek.logging.MMLogger;
 import mekwars.server.campaign.CampaignMain;
 
 /**
@@ -26,6 +27,7 @@ import mekwars.server.campaign.CampaignMain;
  *
  */
 public class DiscordMessageHandler {
+    private static final MMLogger LOGGER = MMLogger.create(DiscordMessageHandler.class);
     private String webhookAddress = "";
 
     public DiscordMessageHandler() {
@@ -54,13 +56,13 @@ public class DiscordMessageHandler {
         try {
             httppost.setEntity(new UrlEncodedFormEntity(params, "UTF-8"));
         } catch (java.io.UnsupportedEncodingException e) {
-            MWLogger.errLog(e);
+            LOGGER.error(e, "");
         }
 
         try {
             httpclient.execute(httppost);
         } catch (java.io.IOException e) {
-            MWLogger.errLog(e);
+            LOGGER.error(e, "");
         }
     }
 }

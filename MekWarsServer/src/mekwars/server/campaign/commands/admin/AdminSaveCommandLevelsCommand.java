@@ -15,12 +15,12 @@
  */
 
 package mekwars.server.campaign.commands.admin;
-
-import common.util.MWLogger;
+import megamek.logging.MMLogger;
 import mekwars.server.campaign.CampaignMain;
 
 
 public class AdminSaveCommandLevelsCommand implements server.campaign.commands.Command {
+    private static final MMLogger LOGGER = MMLogger.create(AdminSaveCommandLevelsCommand.class);
 
     int accessLevel = server.MWChatServer.auth.IAuthenticator.ADMIN;
     String syntax = "";
@@ -61,8 +61,8 @@ public class AdminSaveCommandLevelsCommand implements server.campaign.commands.C
                 p.println(commandName.toUpperCase() + "#" + commandMethod.getExecutionLevel());
             }
         } catch (Exception ex) {
-            MWLogger.errLog(ex);
-            MWLogger.errLog("Unable to save command levels");
+            LOGGER.error(ex, "");
+            LOGGER.error("Unable to save command levels");
         } finally {
             p.close();
         }

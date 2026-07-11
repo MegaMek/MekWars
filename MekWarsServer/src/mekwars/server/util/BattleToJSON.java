@@ -1,10 +1,11 @@
 package mekwars.server.util;
 
-
+import megamek.logging.MMLogger;
 import mekwars.server.campaign.CampaignMain;
 
 //@salient - so for now this will be basic, it wont handle salvage or draw games.
 public class BattleToJSON {
+    private static final MMLogger LOGGER = MMLogger.create(BattleToJSON.class);
     private static String jsonString = "";
 
     private static boolean skipComma = false;
@@ -16,7 +17,7 @@ public class BattleToJSON {
           boolean gameEndedInDraw) {
         //I could just randomly pick a winner...
         if (gameEndedInDraw) {
-            MWLogger.errLog("BattleToJSON - Draw games are not saved to JSON");
+            LOGGER.error("BattleToJSON - Draw games are not saved to JSON");
             return;
         }
 
@@ -45,7 +46,7 @@ public class BattleToJSON {
              * Not sure if it was ever resolved. Leaving the check here just in case.
              */
             if (owner == null) {
-                MWLogger.errLog("Null _owner_ while processing post-game salvage for "
+                LOGGER.error("Null _owner_ while processing post-game salvage for "
                                       +
                                       " Attack #" +
                                       theOp.getShortID() +
@@ -85,7 +86,7 @@ public class BattleToJSON {
              * Not sure if it was ever resolved. Leaving the check here just in case.
              */
             if (owner == null) {
-                MWLogger.errLog("Null _owner_ while processing BattleToJson "
+                LOGGER.error("Null _owner_ while processing BattleToJson "
                                       +
                                       " Attack #" +
                                       theOp.getShortID() +
@@ -126,7 +127,7 @@ public class BattleToJSON {
         //if the path doesn't exist, create it
         if (pathCheck.exists() == false) {
             if (pathCheck.mkdirs() == false) {
-                MWLogger.errLog("error in BattleToJSON, failed to create directories");
+                LOGGER.error("error in BattleToJSON, failed to create directories");
                 return;
             }
         }
@@ -139,10 +140,10 @@ public class BattleToJSON {
                   java.nio.file.StandardOpenOption.CREATE,
                   java.nio.file.StandardOpenOption.TRUNCATE_EXISTING);
 
-            MWLogger.debugLog("SPlayer to json filewrite completed successfully");
+            LOGGER.debug("SPlayer to json filewrite completed successfully");
         } catch (java.io.IOException e) {
-            MWLogger.debugLog(e);
-            MWLogger.errLog(e);
+            LOGGER.debug(e, "");
+            LOGGER.error(e, "");
         }
 
         jsonString = ""; //clear for next use

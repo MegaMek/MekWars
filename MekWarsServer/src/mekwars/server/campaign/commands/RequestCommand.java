@@ -17,11 +17,12 @@
 package mekwars.server.campaign.commands;
 
 import common.Unit;
-import common.util.MWLogger;
+import megamek.logging.MMLogger;
 import mekwars.server.campaign.CampaignMain;
 import server.campaign.pilot.SPilot;
 
 public class RequestCommand implements Command {
+    private static final MMLogger LOGGER = MMLogger.create(RequestCommand.class);
 
     int accessLevel = 0;
     String syntax = "";
@@ -507,7 +508,7 @@ public class RequestCommand implements Command {
                             " / -" +
                             CampaignMain.campaignMain.moneyOrFluMessage(false, true, mechInfluence) +
                             ")";
-            MWLogger.mainLog(p.getName() +
+            LOGGER.info(p.getName() +
                                    " bought the following " +
                                    results.toString() +
                                    " from " +

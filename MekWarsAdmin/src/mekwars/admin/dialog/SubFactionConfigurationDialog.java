@@ -26,14 +26,15 @@ import java.awt.event.ActionListener;
 import java.util.Hashtable;
 import javax.swing.*;
 
+import megamek.logging.MMLogger;
 import mekwars.common.House;
 import mekwars.common.SubFaction;
 import mekwars.common.campaign.CUnit;
 import mekwars.common.campaign.clientutils.protocol.IClient;
-import mekwars.common.util.MWLogger;
 import mekwars.common.util.SpringLayoutHelper;
 
 public final class SubFactionConfigurationDialog implements ActionListener {
+    private static final MMLogger LOGGER = MMLogger.create(SubFactionConfigurationDialog.class);
 
     private final static String okayCommand = "okay";
     private final static String cancelCommand = "cancel";
@@ -247,7 +248,7 @@ public final class SubFactionConfigurationDialog implements ActionListener {
 
                 key = checkBox.getName();
                 if (key == null) {
-                    MWLogger.errLog(STR."Null Checkbox: \{checkBox.getToolTipText()}");
+                    LOGGER.error(STR."Null Checkbox: \{checkBox.getToolTipText()}");
                     continue;
                 }
                 checkBox.setSelected(Boolean.parseBoolean(this.subFactionConfig.getConfig(key)));
@@ -256,7 +257,7 @@ public final class SubFactionConfigurationDialog implements ActionListener {
 
                 key = radioButton.getName();
                 if (key == null) {
-                    MWLogger.errLog(STR."Null RadioButton: \{radioButton.getToolTipText()}");
+                    LOGGER.error(STR."Null RadioButton: \{radioButton.getToolTipText()}");
                     continue;
                 }
                 radioButton.setSelected(Boolean.parseBoolean(this.subFactionConfig.getConfig(key)));

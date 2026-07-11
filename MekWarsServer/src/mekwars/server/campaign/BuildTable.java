@@ -21,7 +21,7 @@
 package mekwars.server.campaign;
 
 import common.Unit;
-import common.util.MWLogger;
+import megamek.logging.MMLogger;
 
 
 /**
@@ -34,6 +34,7 @@ import common.util.MWLogger;
  */
 
 public class BuildTable {
+    private static final MMLogger LOGGER = MMLogger.create(BuildTable.class);
 
     //VARIABLES
     public static final String STANDARD = "standard";
@@ -92,7 +93,7 @@ public class BuildTable {
         String result = "./data/buildtables/" + dir + "/" + faction + "_" + weightclass + addon + ".txt";
         if (!new java.io.File(result).exists()) {
             if (!result.trim().toLowerCase().endsWith(".txt")) {
-                MWLogger.errLog("Unable to find build table file " +
+                LOGGER.error("Unable to find build table file " +
                                       result +
                                       " using ./data/buildtables/" +
                                       dir +
@@ -164,7 +165,7 @@ public class BuildTable {
             }
             result.trimToSize();
         } catch (Exception ex) {
-            MWLogger.errLog(ex);
+            LOGGER.error(ex, "");
         }
         return result;
     }
@@ -238,7 +239,7 @@ public class BuildTable {
             ps.close();
             fos.close();
         } catch (Exception ex) {
-            MWLogger.errLog(ex);
+            LOGGER.error(ex, "");
         }
 
     }
@@ -279,7 +280,7 @@ public class BuildTable {
             fis.close();
 
         } catch (Exception ex) {
-            MWLogger.errLog(ex);
+            LOGGER.error(ex, "");
         }
         return unitHolder;
     }

@@ -17,11 +17,12 @@
     package mekwars.server.campaign.operations;
 
     import common.Unit;
-    import common.util.MWLogger;
     import megamek.common.IEntityRemovalConditions;
+import megamek.logging.MMLogger;
     import mekwars.server.campaign.CampaignMain;
 
     public class OperationReporter {
+    private static final MMLogger LOGGER = MMLogger.create(OperationReporter.class);
 
         private OperationReportEntry opData = new OperationReportEntry();
         private java.util.Vector<String> winnerSet = new java.util.Vector<String>();
@@ -63,14 +64,14 @@
                         wNames.append(winners.get(name).getName());
                     } catch (Exception e) {
                         if (wNames == null) {
-                            MWLogger.testLog("wNames is null");
+                            LOGGER.info("wNames is null");
                         } else if (winners == null) {
-                            MWLogger.testLog("winners is null");
+                            LOGGER.info("winners is null");
                         } else {
-                            MWLogger.testLog("Winners must have returned a null object");
-                            MWLogger.testLog("looking for: " + name);
-                            MWLogger.testLog("size: " + winners.size());
-                            MWLogger.testLog("conents: " + winners.keySet().toString());
+                            LOGGER.info("Winners must have returned a null object");
+                            LOGGER.info("looking for: " + name);
+                            LOGGER.info("size: " + winners.size());
+                            LOGGER.info("conents: " + winners.keySet().toString());
                         }
                     }
                 }
@@ -112,15 +113,15 @@
         public void commit() {
             opData.setEndTime(System.currentTimeMillis());
 
-            MWLogger.resultsLog("Operation Finished: ");
-            MWLogger.resultsLog("  OpType: " + opData.getOpType());
-            MWLogger.resultsLog("  Planet: " +
+            LOGGER.info("Operation Finished: ");
+            LOGGER.info("  OpType: " + opData.getOpType());
+            LOGGER.info("  Planet: " +
                                       opData.getPlanet() +
                                       ", Terrain: " +
                                       opData.getTerrain() +
                                       ", Theme: " +
                                       opData.getTheme());
-            MWLogger.resultsLog("  Attacker(s): " +
+            LOGGER.info("  Attacker(s): " +
                                       opData.getAttackers() +
                                       " (" +
                                       opData.getAttackerSize() +
@@ -129,7 +130,7 @@
                                       " (" +
                                       opData.getDefenderSize() +
                                       " units)");
-            MWLogger.resultsLog("  BVs: Attacker: " +
+            LOGGER.info("  BVs: Attacker: " +
                                       opData.getAttackerStartBV() +
                                       " / " +
                                       opData.getAttackerEndBV() +
@@ -137,9 +138,9 @@
                                       opData.getDefenderStartBV() +
                                       " / " +
                                       opData.getDefenderEndBV());
-            MWLogger.resultsLog("  Attacker Won: " + Boolean.toString(opData.attackerIsWinner()));
-            MWLogger.resultsLog("  Winner(s): " + opData.getWinners() + "  --  Loser(s): " + opData.getLosers());
-            MWLogger.resultsLog("  Game Length: " + opData.getHumanReadableGameLength());
+            LOGGER.info("  Attacker Won: " + Boolean.toString(opData.attackerIsWinner()));
+            LOGGER.info("  Winner(s): " + opData.getWinners() + "  --  Loser(s): " + opData.getLosers());
+            LOGGER.info("  Game Length: " + opData.getHumanReadableGameLength());
         }
 
         public void closeOperation(boolean draw, boolean attackerWon) {

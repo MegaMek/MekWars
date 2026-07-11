@@ -76,7 +76,7 @@ public class SubFactionNameDialog extends JDialog implements ActionListener {
         //the name field, for user input. caretUpdate
         //does most of the work to update list contents
         nameField = new JTextField();//field for user input
-        nameField.addCaretListener(_ -> new Thread() {
+        nameField.addCaretListener(caretEvent -> new Thread() {
             @Override
             public void run() {
                 String text = nameField.getText();

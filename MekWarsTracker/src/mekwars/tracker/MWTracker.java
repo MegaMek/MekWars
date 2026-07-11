@@ -30,6 +30,7 @@ import java.util.Arrays;
 import java.util.Date;
 import java.util.StringTokenizer;
 import java.util.Vector;
+import megamek.logging.MMLogger;
 
 /**
  * Starts a server which listens for information from running MekWarsServers and periodically generates informational
@@ -39,6 +40,7 @@ import java.util.Vector;
  */
 
 public final class MWTracker {
+    private static final MMLogger LOGGER = MMLogger.create(MWTracker.class);
 
     //VARIABLES
     public static final String VERSION = "0.1.0.4";
@@ -244,7 +246,7 @@ public final class MWTracker {
                 try {
                     server.close();
                 } catch (IOException e) {
-                    MWLogger.errLog(e);
+                    LOGGER.error(e, "");
                 }
             }
 

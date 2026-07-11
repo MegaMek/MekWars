@@ -1,10 +1,10 @@
 package mekwars.server.campaign.commands;
-
-import common.util.MWLogger;
+import megamek.logging.MMLogger;
 import mekwars.server.campaign.CampaignMain;
 
 //@salient a command to make sure hosts are using same quirk files
 public class QuirkCheckCommand implements Command {
+    private static final MMLogger LOGGER = MMLogger.create(QuirkCheckCommand.class);
     int accessLevel = 0;
     String syntax = "/c quirkCheck#canon#custom";
     private server.campaign.SPlayer player;
@@ -65,13 +65,13 @@ public class QuirkCheckCommand implements Command {
     private void compareLengths() {
         if (clientCanonQuirkLength == 0L) {
             player.toSelf("AM: canon quirk file is missing!");
-            MWLogger.modLog(username + " is missing canon quirk file on client!");
+            LOGGER.info(username + " is missing canon quirk file on client!");
             return;
         }
 
         if (clientCustomQuirkLength == 0L) {
             player.toSelf("AM: canon quirk file is missing!");
-            MWLogger.modLog(username + " is missing canon quirk file on client!");
+            LOGGER.info(username + " is missing canon quirk file on client!");
             return;
         }
 
@@ -87,7 +87,7 @@ public class QuirkCheckCommand implements Command {
         if (serverCanonQuirkLength != clientCanonQuirkLength || serverCustomQuirkLength != clientCustomQuirkLength) {
             CampaignMain.campaignMain.doSendModMail(username,
                   " is hosting with quirk files that do not match server!");
-            MWLogger.errLog(username + " is hosting with quirk files that do not match server!");
+            LOGGER.error(username + " is hosting with quirk files that do not match server!");
             CampaignMain.campaignMain.doSendErrLog(username +
                                                          " is hosting with quirk files that do not match server!");
             player.toSelf("AM: Your files do not match the server, run autoupdate before hosting a match!");

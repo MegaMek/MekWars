@@ -24,9 +24,11 @@
 
 package mekwars.server.util;
 
+import megamek.logging.MMLogger;
 import mekwars.server.campaign.CampaignMain;
 
 public class AutomaticBackup extends Thread {
+    private static final MMLogger LOGGER = MMLogger.create(AutomaticBackup.class);
 
 
     String dateTime = "";
@@ -55,7 +57,7 @@ public class AutomaticBackup extends Thread {
 
         if (lastBackup > time - backupHours) {return;}
 
-        MWLogger.mainLog("Archiving Started at " + time);
+        LOGGER.info("Archiving Started at " + time);
         CampaignMain.campaignMain.setArchiving(true);
 
         java.text.SimpleDateFormat sDF = new java.text.SimpleDateFormat(dateTimeFormat);
@@ -78,8 +80,8 @@ public class AutomaticBackup extends Thread {
             zipBackupFactions();
             zipFile.close();
         } catch (Exception ex) {
-            MWLogger.errLog("Unable to create factions zip file");
-            MWLogger.errLog(ex);
+            LOGGER.error("Unable to create factions zip file");
+            LOGGER.error(ex, "");
         }
 
         try {
@@ -88,8 +90,8 @@ public class AutomaticBackup extends Thread {
             zipBackupPlanets();
             zipFile.close();
         } catch (Exception ex) {
-            MWLogger.errLog("Unable to create planets zip file");
-            MWLogger.errLog(ex);
+            LOGGER.error("Unable to create planets zip file");
+            LOGGER.error(ex, "");
         }
         try {
             out = new java.io.FileOutputStream(playerZipFileName);
@@ -97,8 +99,8 @@ public class AutomaticBackup extends Thread {
             zipBackupPlayers();
             zipFile.close();
         } catch (Exception ex) {
-            MWLogger.errLog("Unable to create player zip file");
-            MWLogger.errLog(ex);
+            LOGGER.error("Unable to create player zip file");
+            LOGGER.error(ex, "");
         }
 
         try {
@@ -107,13 +109,13 @@ public class AutomaticBackup extends Thread {
             zipBackupData();
             zipFile.close();
         } catch (Exception ex) {
-            MWLogger.errLog("Unable to create data zip file");
-            MWLogger.errLog(ex);
+            LOGGER.error("Unable to create data zip file");
+            LOGGER.error(ex, "");
         }
         CampaignMain.campaignMain.getConfig().setProperty("LastAutomatedBackup", Long.toString(time));
         server.campaign.CampaignMain.dso.createConfig();
         CampaignMain.campaignMain.setArchiving(false);
-        MWLogger.mainLog("Archiving Ended.");
+        LOGGER.info("Archiving Ended.");
     }
 
     /**
@@ -139,10 +141,10 @@ public class AutomaticBackup extends Thread {
                 zipFile.closeEntry();
                 in.close();
             } catch (java.io.FileNotFoundException fnfe) {
-                MWLogger.errLog("Unable to backup faction file: " + files[i].getName());
+                LOGGER.error("Unable to backup faction file: " + files[i].getName());
             } catch (Exception ex) {
-                MWLogger.errLog("Unable to backup faction files");
-                MWLogger.errLog(ex);
+                LOGGER.error("Unable to backup faction files");
+                LOGGER.error(ex, "");
             }
         }
 
@@ -165,8 +167,8 @@ public class AutomaticBackup extends Thread {
                 in.close();
             }
         } catch (Exception ex) {
-            MWLogger.errLog("Unable to backup planet files");
-            MWLogger.errLog(ex);
+            LOGGER.error("Unable to backup planet files");
+            LOGGER.error(ex, "");
         }
 
     }
@@ -188,8 +190,8 @@ public class AutomaticBackup extends Thread {
                 in.close();
             }
         } catch (Exception ex) {
-            MWLogger.errLog("Unable to backup player files");
-            MWLogger.errLog(ex);
+            LOGGER.error("Unable to backup player files");
+            LOGGER.error(ex, "");
         }
 
     }
@@ -223,8 +225,8 @@ public class AutomaticBackup extends Thread {
                 in.close();
             }
         } catch (Exception ex) {
-            MWLogger.errLog("Unable to backup server data files: " + path);
-            MWLogger.errLog(ex);
+            LOGGER.error("Unable to backup server data files: " + path);
+            LOGGER.error(ex, "");
         }
 
     }

@@ -28,6 +28,7 @@ import megamek.common.CriticalSlot;
 import megamek.common.equipment.Mounted;
 import megamek.common.units.Entity;
 import megamek.common.units.Tank;
+import megamek.logging.MMLogger;
 import mekwars.common.util.UnitUtils;
 import mekwars.server.MWChatServer.auth.AccessRole;
 import mekwars.server.campaign.CampaignMain;
@@ -40,6 +41,7 @@ import mekwars.server.util.RepairTrackingThread;
  *       repair thread
  */
 public class RepairUnitCommand implements Command {
+    private static final MMLogger LOGGER = MMLogger.create(RepairUnitCommand.class);
     AccessRole accessLevel = AccessRole.NONE;
     String syntax = "";
 
@@ -309,8 +311,7 @@ public class RepairUnitCommand implements Command {
                       "FSM|Sorry your repair order could not be processed, and the repair thread terminated. Staff was notified.",
                       Username,
                       false);
-                MWLogger.errLog(
-                      "NOTE: Repair Thread terminated! Use the restartrepairthread command to restart. If all else fails, reboot.");
+                LOGGER.error("NOTE: Repair Thread terminated! Use the restartrepairthread command to restart. If all else fails, reboot.");
                 return;
             }
             if (techType == UnitUtils.TECH_PILOT) {unit.setPilotIsRepairing(true);}
@@ -349,8 +350,8 @@ public class RepairUnitCommand implements Command {
             //call the repair dialog again witht he new unit info set.
             if (sendDialogUpdate) {CampaignMain.campaignMain.toUser("ARD|" + unitID, Username, false);}
         } catch (Exception ex) {
-            MWLogger.errLog("Unable to Process Repair Unit Command!");
-            MWLogger.errLog(ex);
+            LOGGER.error("Unable to Process Repair Unit Command!");
+            LOGGER.error(ex, "");
         }
 
     }//end process()

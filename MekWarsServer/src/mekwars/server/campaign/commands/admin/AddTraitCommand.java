@@ -15,12 +15,12 @@
  */
 
 package mekwars.server.campaign.commands.admin;
-
-import common.util.MWLogger;
+import megamek.logging.MMLogger;
 import mekwars.server.campaign.CampaignMain;
 
 
 public class AddTraitCommand implements server.campaign.commands.Command {
+    private static final MMLogger LOGGER = MMLogger.create(AddTraitCommand.class);
 
     int accessLevel = server.MWChatServer.auth.IAuthenticator.ADMIN;
     String syntax = "Faction#TraitName#Skill$Skill$Skill$Skill";
@@ -55,7 +55,7 @@ public class AddTraitCommand implements server.campaign.commands.Command {
             skillList = command.nextToken();
             confirmString = command.nextToken();
         } catch (Exception ex) {
-            MWLogger.errLog(ex);
+            LOGGER.error(ex, "");
         }
 
         //MWLogger.errLog("faction: "+faction+" Trait: "+traitName+" skills: "+skillList+" Confirm: "+confirmString);

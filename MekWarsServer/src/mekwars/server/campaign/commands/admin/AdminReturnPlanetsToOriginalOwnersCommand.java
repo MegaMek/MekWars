@@ -18,10 +18,11 @@ package mekwars.server.campaign.commands.admin;
 
 import common.House;
 import common.Planet;
-import common.util.MWLogger;
+import megamek.logging.MMLogger;
 import mekwars.server.campaign.CampaignMain;
 
 public class AdminReturnPlanetsToOriginalOwnersCommand implements server.campaign.commands.Command {
+    private static final MMLogger LOGGER = MMLogger.create(AdminReturnPlanetsToOriginalOwnersCommand.class);
 
     int accessLevel = server.MWChatServer.auth.IAuthenticator.ADMIN;
     String syntax = "";
@@ -71,7 +72,7 @@ public class AdminReturnPlanetsToOriginalOwnersCommand implements server.campaig
 
             //cast to planet
             server.campaign.SPlanet p = (server.campaign.SPlanet) currP;
-            MWLogger.mainLog("Returning planet " + p.getName() + " to original owner");
+            LOGGER.info("Returning planet " + p.getName() + " to original owner");
             int totalCP = p.getConquestPoints();
             //get original owner
             server.campaign.SHouse origOwner = CampaignMain.campaignMain.getHouseFromPartialString(p.getOriginalOwner(),

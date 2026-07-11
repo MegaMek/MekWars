@@ -31,13 +31,14 @@ import java.util.Date;
 import javax.swing.*;
 import javax.swing.border.EtchedBorder;
 
+import megamek.logging.MMLogger;
 import mekwars.common.Unit;
 import mekwars.common.VerticalLayout;
 import mekwars.common.campaign.clientutils.protocol.IClient;
-import mekwars.common.util.MWLogger;
 import mekwars.common.util.SpringLayoutHelper;
 
 public final class FactionConfigurationDialog implements ActionListener {
+    private static final MMLogger LOGGER = MMLogger.create(FactionConfigurationDialog.class);
 
     private final static String okayCommand = "okay";
     private final static String cancelCommand = "cancel";
@@ -4476,7 +4477,7 @@ public final class FactionConfigurationDialog implements ActionListener {
 
                 key = checkBox.getName();
                 if (key == null) {
-                    MWLogger.errLog("Null Checkbox: " + checkBox.getToolTipText());
+                    LOGGER.error("Null Checkbox: " + checkBox.getToolTipText());
                     continue;
                 }
                 checkBox.setSelected(Boolean.parseBoolean(client.getServerConfigs(key)));
@@ -4485,7 +4486,7 @@ public final class FactionConfigurationDialog implements ActionListener {
 
                 key = radioButton.getName();
                 if (key == null) {
-                    MWLogger.errLog("Null RadioButton: " + radioButton.getToolTipText());
+                    LOGGER.error("Null RadioButton: " + radioButton.getToolTipText());
                     continue;
                 }
                 radioButton.setSelected(Boolean.parseBoolean(client.getServerConfigs(key)));

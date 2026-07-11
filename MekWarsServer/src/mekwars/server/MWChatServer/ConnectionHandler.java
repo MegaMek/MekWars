@@ -28,9 +28,8 @@
 package mekwars.server.MWChatServer;
 
 import java.io.IOException;
-
-import common.util.MWLogger;
 import common.util.ThreadManager;
+import megamek.logging.MMLogger;
 
 /**
  * The keeper of the Socket on the server side. Spawns a thread for reading from the socket.
@@ -41,6 +40,7 @@ import common.util.ThreadManager;
  * in turn.
  */
 public class ConnectionHandler extends AbstractConnectionHandler {
+    private static final MMLogger LOGGER = MMLogger.create(ConnectionHandler.class);
 
     protected java.net.Socket _socket = null;
     protected java.io.PrintWriter _out = null;
@@ -95,7 +95,7 @@ public class ConnectionHandler extends AbstractConnectionHandler {
             // scheduler.scheduleAtFixedRate(_writer, 0, 20,
             // TimeUnit.MILLISECONDS);
         } catch (OutOfMemoryError OOM) {
-            MWLogger.errLog(OOM.getMessage());
+            LOGGER.error(OOM.getMessage());
             /*
              * OOM usually mean there are no remaining threads or sockets. This
              * is generally not a problem.
@@ -117,11 +117,11 @@ public class ConnectionHandler extends AbstractConnectionHandler {
                 System.gc();
                 shutdown(true);
             } catch (Exception e) {
-                MWLogger.errLog(e);
+                LOGGER.error(e, "");
             }
 
         } catch (Exception ex) {
-            MWLogger.errLog(ex);
+            LOGGER.error(ex, "");
         }
 
     }// end init()
@@ -169,8 +169,8 @@ public class ConnectionHandler extends AbstractConnectionHandler {
             try {
                 _socket.close();
             } catch (java.io.IOException e) {
-                MWLogger.errLog("connection shutdown due to error");
-                MWLogger.errLog(e);
+                LOGGER.error("connection shutdown due to error");
+                LOGGER.error(e, "");
             }
 
             super.shutdown(notify);

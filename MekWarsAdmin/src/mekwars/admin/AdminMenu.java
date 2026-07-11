@@ -34,6 +34,7 @@ import javax.swing.JOptionPane;
 
 import megamek.client.ui.dialogs.UnitLoadingDialog;
 import megamek.common.TechConstants;
+import megamek.logging.MMLogger;
 import mekwars.admin.dialog.BannedAmmoDialog;
 import mekwars.admin.dialog.BannedTargetingDialog;
 import mekwars.admin.dialog.CommandNameDialog;
@@ -53,9 +54,9 @@ import mekwars.common.campaign.clientutils.protocol.IClient;
 import mekwars.common.gui.dialogs.HouseNameDialog;
 import mekwars.common.gui.dialogs.PlanetNameDialog;
 import mekwars.common.gui.dialogs.TraitDialog;
-import mekwars.common.util.MWLogger;
 
 public class AdminMenu extends JMenu {
+    private static final MMLogger LOGGER = MMLogger.create(AdminMenu.class);
     @Serial
     private static final long serialVersionUID = -4734543796361026030L;
     /**
@@ -200,7 +201,7 @@ public class AdminMenu extends JMenu {
                     Thread.sleep(120);
                 }
             } catch (Exception ex) {
-                MWLogger.errLog(ex);
+                LOGGER.error(ex, "");
                 AdminMenu.this.client.setWaiting(false);
             }
 
@@ -239,7 +240,7 @@ public class AdminMenu extends JMenu {
                 try {
                     AdminMenu.this.client.refreshData();
                 } catch (Exception ex) {
-                    MWLogger.errLog(ex);
+                    LOGGER.error(ex, "");
                 }
                 mekwars.common.gui.dialogs.SubFactionNameDialog subFactionDialog = new mekwars.common.gui.dialogs.SubFactionNameDialog(
                       AdminMenu.this.client,
@@ -1360,10 +1361,10 @@ public class AdminMenu extends JMenu {
                     br.close();
                     in.close();
                 } catch (IOException ioex) {
-                    MWLogger.errLog(STR."IOException: \{line.toString()}");
+                    LOGGER.error(STR."IOException: \{line.toString()}");
                 }
             } catch (FileNotFoundException fnfex) {
-                MWLogger.errLog(STR."FileNotFoundException: \{line.toString()}");
+                LOGGER.error(STR."FileNotFoundException: \{line.toString()}");
             }
             line.append("#");
             client.sendChat(line.toString());
@@ -1406,10 +1407,10 @@ public class AdminMenu extends JMenu {
                     br.close();
                     in.close();
                 } catch (IOException ioex) {
-                    MWLogger.errLog(STR."IOException: \{line.toString()}");
+                    LOGGER.error(STR."IOException: \{line.toString()}");
                 }
             } catch (FileNotFoundException fnfex) {
-                MWLogger.errLog(STR."FileNotFoundException: \{line.toString()}");
+                LOGGER.error(STR."FileNotFoundException: \{line.toString()}");
             }
             line.append("#");
             client.sendChat(line.toString());

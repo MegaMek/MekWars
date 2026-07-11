@@ -15,12 +15,12 @@
  */
 
 package mekwars.server.campaign.operations;
-
-import common.util.MWLogger;
+import megamek.logging.MMLogger;
 import mekwars.server.campaign.CampaignMain;
 import server.util.StringUtil;
 
 public class OpsScrapThread extends Thread {
+    private static final MMLogger LOGGER = MMLogger.create(OpsScrapThread.class);
 
     // VARIABLES
     private String playerName;
@@ -203,7 +203,7 @@ public class OpsScrapThread extends Thread {
         try {
             this.wait(waitTime);
         } catch (Exception ex) {
-            MWLogger.errLog(ex);
+            LOGGER.error(ex, "");
         }
 
         /*

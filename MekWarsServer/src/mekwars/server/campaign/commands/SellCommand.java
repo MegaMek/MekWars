@@ -22,8 +22,8 @@
 package mekwars.server.campaign.commands;
 
 import common.Unit;
-import common.util.MWLogger;
 import common.util.UnitUtils;
+import megamek.logging.MMLogger;
 import mekwars.server.campaign.CampaignMain;
 
 /**
@@ -31,6 +31,7 @@ import mekwars.server.campaign.CampaignMain;
  *
  */
 public class SellCommand implements Command {
+    private static final MMLogger LOGGER = MMLogger.create(SellCommand.class);
 
     int accessLevel = 0;
     String syntax = "";
@@ -264,7 +265,7 @@ public class SellCommand implements Command {
                   "NOTE",
                   p.getName() + " added a unit to the market [" + unitToSell.getModelName() + "].");
         }
-        MWLogger.bmLog(p.getName() +
+        LOGGER.info(p.getName() +
                              " added a " +
                              unitToSell.getModelName() +
                              ". Asking: " +

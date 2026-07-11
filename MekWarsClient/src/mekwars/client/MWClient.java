@@ -45,6 +45,7 @@ import megamek.common.preference.PreferenceManager;
 import megamek.common.units.Entity;
 import megamek.common.units.Mek;
 import megamek.common.units.MekWarrior;
+import megamek.logging.MMLogger;
 import megamek.server.Server;
 import mekwars.client.gui.commands.IGUICommand;
 import mekwars.client.gui.commands.MailGCmd;
@@ -77,11 +78,11 @@ import mekwars.common.threads.ClientThread;
 import mekwars.common.threads.RepairManagmentThread;
 import mekwars.common.threads.SalvageManagmentThread;
 import mekwars.common.threads.ThreadManager;
-import mekwars.common.util.MWLogger;
 import mekwars.common.util.TokenReader;
 import mekwars.common.util.UnitUtils;
 
 public final class MWClient extends GameHost implements IClient {
+    private static final MMLogger LOGGER = MMLogger.create(MWClient.class);
     private final HashMap<String, Equipment> blackMarketEquipmentList = new HashMap<>();
 
     CampaignData data = null;
@@ -162,7 +163,7 @@ public final class MWClient extends GameHost implements IClient {
                 runTime.exec(call);
                 System.exit(0);
             } catch (Exception ex) {
-                MWLogger.errLog("Unable to find MekWarsDed.jar");
+                LOGGER.error("Unable to find MekWarsDed.jar");
             }
         } else {
             setLookAndFeel(false);
@@ -173,9 +174,9 @@ public final class MWClient extends GameHost implements IClient {
 
         try {
             java.lang.management.RuntimeMXBean rt = java.lang.management.ManagementFactory.getRuntimeMXBean();
-            MWLogger.errLog("RT Info: " + rt.getName());
+            LOGGER.error("RT Info: " + rt.getName());
         } catch (Exception ex) {
-            MWLogger.errLog(ex);
+            LOGGER.error(ex, "");
         }
 
         Connector = new CConnector(this);
@@ -244,8 +245,7 @@ public final class MWClient extends GameHost implements IClient {
                 dataFetcher.setLastTimestamp(lastTS);
                 dis.close();
             } catch (Throwable t) {
-                MWLogger.infoLog(
-                      "Couldn't read timestamp of last data fetch. Will need to fetch all planet changes since last full update.");
+                LOGGER.info("Couldn't read timestamp of last data fetch. Will need to fetch all planet changes since last full update.");
             }
             dataFetcher.setData(Config.getParam("SERVERIP"), getCacheDir());
 
@@ -284,8 +284,8 @@ public final class MWClient extends GameHost implements IClient {
             try {
                 dataFetcher.getServerConfigData(this);
             } catch (Exception ex) {
-                MWLogger.errLog("Error While getting server config file.");
-                MWLogger.errLog(ex);
+                LOGGER.error("Error While getting server config file.");
+                LOGGER.error(ex, "");
             }
 
             dataFetcher.closeDataConnection();
@@ -301,7 +301,7 @@ public final class MWClient extends GameHost implements IClient {
                     }
                 }
             } catch (Exception ex) {
-                MWLogger.errLog(ex);
+                LOGGER.error(ex, "");
             }
 
         }
@@ -341,7 +341,7 @@ public final class MWClient extends GameHost implements IClient {
         System.err.println("staring PAS Time: " + System.currentTimeMillis());
         System.err.flush();
 
-        MWLogger.infoLog("Starting pAS");
+        LOGGER.info("Starting pAS");
         PurgeAutoSaves pAS = new PurgeAutoSaves();
         new Thread(pAS).start();
 
@@ -365,7 +365,7 @@ public final class MWClient extends GameHost implements IClient {
             chatServerIP = Config.getParam("SERVERIP");
             chatServerPort = Config.getIntParam("SERVERPORT");
         } catch (Exception e) {
-            MWLogger.errLog(e);
+            LOGGER.error(e, "");
             System.exit(1);
         }
 
@@ -383,7 +383,7 @@ public final class MWClient extends GameHost implements IClient {
             try {
                 MainFrame.setIconImage(Config.getImage("LOGOUT").getImage());
             } catch (Exception ex) {
-                MWLogger.errLog(ex);
+                LOGGER.error(ex, "");
             }
 
             System.err.println("Packing/Validating CMainFrame Time: " + System.currentTimeMillis());
@@ -476,8 +476,8 @@ public final class MWClient extends GameHost implements IClient {
                 System.err.println("splash null: " + System.currentTimeMillis());
                 System.err.flush();
             } catch (Exception ex) {
-                MWLogger.errLog(ex);
-                MWLogger.errLog("Error closing splash / opening main frame.");
+                LOGGER.error(ex, "");
+                LOGGER.error("Error closing splash / opening main frame.");
             }
             System.err.println("MainFrame Visible Done Time: " + System.currentTimeMillis());
             System.err.flush();
@@ -519,11 +519,11 @@ public final class MWClient extends GameHost implements IClient {
             while ((Status == STATUS_DISCONNECTED) && (retryCount++ < 20)) {
                 connectToServer(chatServerIP, chatServerPort);
                 if (Status == STATUS_DISCONNECTED) {
-                    MWLogger.infoLog("Couldn't connect to server. Retrying in 90 seconds.");
+                    LOGGER.info("Couldn't connect to server. Retrying in 90 seconds.");
                     try {
                         Thread.sleep(90000);
                     } catch (Exception exe) {
-                        MWLogger.errLog(exe);
+                        LOGGER.error(exe, "");
                         System.exit(2);
                     }
                 }
@@ -561,7 +561,7 @@ public final class MWClient extends GameHost implements IClient {
 
             java.io.File f = new java.io.File(cacheDir + "/OpList.txt");
             if (!f.exists()) {
-                MWLogger.errLog("Error: OpList.txt does not exist.");
+                LOGGER.error("Error: OpList.txt does not exist.");
                 return;
             }
 
@@ -634,8 +634,8 @@ public final class MWClient extends GameHost implements IClient {
             in.close();
 
         } catch (Exception e) {
-            MWLogger.errLog("Error in setupAllOps()");
-            MWLogger.errLog(e);
+            LOGGER.error("Error in setupAllOps()");
+            LOGGER.error(e, "");
         }
     }// end setupAllOps    public static StringBuilder prepareReport(GameInterface myGame, boolean usingAdvancedRepairs,
           Buildings buildingTemplate) {
@@ -650,8 +650,8 @@ public final class MWClient extends GameHost implements IClient {
             List<String> winners = myGame.getWinners();
 
             // TODO: Winners is sometimes coming up empty. Let's see why
-            MWLogger.errLog("Finding winners:");
-            MWLogger.errLog(winners.toString());
+            LOGGER.error("Finding winners:");
+            LOGGER.error(winners.toString());
 
             for (String winner : winners) {
                 java.util.StringTokenizer st = new java.util.StringTokenizer(winner, "~");
@@ -720,7 +720,7 @@ public final class MWClient extends GameHost implements IClient {
         if (buildingTemplate != null) {
             result.append("BL*").append(buildingTemplate);
         }
-        MWLogger.infoLog("CR|" + result);
+        LOGGER.info("CR|" + result);
         return result;
     }
 
@@ -782,12 +782,12 @@ public final class MWClient extends GameHost implements IClient {
             System.setOut(ps);
             System.setErr(ps);
         } catch (Exception ex) {
-            MWLogger.errLog(ex);
-            MWLogger.errLog("Unable to redirect MegaMek output to "
+            LOGGER.error(ex, "");
+            LOGGER.error("Unable to redirect MegaMek output to "
                                   + logFileName);
         }
 
-        MWLogger.infoLog("Starting MekWars client Version: "
+        LOGGER.info("Starting MekWars client Version: "
                                + CLIENT_VERSION);
         try {
             for (i = 0; i < args.length; i++) {
@@ -829,8 +829,8 @@ public final class MWClient extends GameHost implements IClient {
             new mekwars.client.MWClient(config);
 
         } catch (Exception ex) {
-            MWLogger.errLog(ex);
-            MWLogger.errLog("Couldn't create client Object");
+            LOGGER.error(ex, "");
+            LOGGER.error("Couldn't create client Object");
             System.exit(1);
         }
     }
@@ -857,7 +857,7 @@ public final class MWClient extends GameHost implements IClient {
             String task = null;
 
             // debug info
-            MWLogger.infoLog(input);
+            LOGGER.info(input);
 
             // Create a String Tokenizer to parse the elements of the input
             ST = new java.util.StringTokenizer(input, COMMAND_DELIMITER);
@@ -874,14 +874,14 @@ public final class MWClient extends GameHost implements IClient {
                                                   .newInstance(new Object[] { this });
                     commands.put(task, cmd);
                 } catch (Exception e) {
-                    MWLogger.errLog(e);
+                    LOGGER.error(e, "");
                 }
             }
             if (commands.containsKey(task)) {
                 commands.get(task).execute(input);
             }
         } catch (Exception ex) {
-            MWLogger.errLog(ex);
+            LOGGER.error(ex, "");
         }
     }
 
@@ -922,7 +922,7 @@ public final class MWClient extends GameHost implements IClient {
         if (!isDedicated()) {
             javax.swing.JOptionPane.showMessageDialog(MainFrame, message);
         } else {
-            MWLogger.errLog("Error: " + message);
+            LOGGER.error("Error: " + message);
         }
     }
 
@@ -939,14 +939,14 @@ public final class MWClient extends GameHost implements IClient {
             pcommand = getProtCommand(s);
             if ((pcommand != null) && pcommand.check(s)) {
                 if (!pcommand.execute(incoming)) {
-                    MWLogger.infoLog("COMMAND ERROR: wrong protocol command executed or execution failed.");
-                    MWLogger.infoLog("COMMAND RECEIVED: " + incoming);
+                    LOGGER.info("COMMAND ERROR: wrong protocol command executed or execution failed.");
+                    LOGGER.info("COMMAND RECEIVED: " + incoming);
                 }
                 return;
             }
             if (pcommand == null) {
-                MWLogger.infoLog("COMMAND ERROR: unknown protocol command from server.");
-                MWLogger.infoLog("COMMAND RECEIVED: " + incoming);
+                LOGGER.info("COMMAND ERROR: unknown protocol command from server.");
+                LOGGER.info("COMMAND RECEIVED: " + incoming);
                 if (incoming.equalsIgnoreCase("denied	/denied")) {
                     // let them know it's a wrong password
                     javax.swing.JOptionPane.showMessageDialog(getMainFrame(),
@@ -955,8 +955,8 @@ public final class MWClient extends GameHost implements IClient {
                 return;
             }
         } else {
-            MWLogger.infoLog("COMMAND ERROR: received protocol command without protocol prefix.");
-            MWLogger.infoLog("COMMAND RECEIVED: " + incoming);
+            LOGGER.info("COMMAND ERROR: received protocol command without protocol prefix.");
+            LOGGER.info("COMMAND RECEIVED: " + incoming);
             return;
         }
     }
@@ -984,7 +984,7 @@ public final class MWClient extends GameHost implements IClient {
             try {
                 Thread.sleep(90000);
             } catch (Exception ex) {
-                MWLogger.errLog(ex);
+                LOGGER.error(ex, "");
             }
 
             // keep retrying every two minutes after the first 90 sec downtime.
@@ -992,11 +992,11 @@ public final class MWClient extends GameHost implements IClient {
                 connectToServer(Config.getParam("SERVERIP"),
                       Config.getIntParam("SERVERPORT"));
                 if (Status == STATUS_DISCONNECTED) {
-                    MWLogger.infoLog("Couldn't reconnect to server. Retrying in 120 seconds.");
+                    LOGGER.info("Couldn't reconnect to server. Retrying in 120 seconds.");
                     try {
                         Thread.sleep(90000);
                     } catch (Exception exe) {
-                        MWLogger.errLog(exe);
+                        LOGGER.error(exe, "");
                     }
                 }
             }
@@ -1010,7 +1010,7 @@ public final class MWClient extends GameHost implements IClient {
     public void connectionEstablished() {
 
         LastPing = System.currentTimeMillis() / 1000;
-        MWLogger.errLog("Connected. Signing on.");
+        LOGGER.error("Connected. Signing on.");
 
         String VersionSubID = new java.rmi.dgc.VMID().toString();
         java.util.StringTokenizer ST = new java.util.StringTokenizer(VersionSubID, ":");
@@ -1083,7 +1083,7 @@ public final class MWClient extends GameHost implements IClient {
         if (!MMVersion.equals("-1")
                   && !MMVersion.equalsIgnoreCase(megamek.SuiteConstants.VERSION.toString())) {
             if (isDedicated()) {
-                MWLogger.errLog("You are using an invalid version of MegaMek. Please use version "
+                LOGGER.error("You are using an invalid version of MegaMek. Please use version "
                                       + MMVersion);
                 try {
                     stopHost();
@@ -1093,7 +1093,7 @@ public final class MWClient extends GameHost implements IClient {
                                       "DEDICATED" };
                     runtime.exec(call);
                 } catch (Exception ex) {
-                    MWLogger.errLog(ex);
+                    LOGGER.error(ex, "");
                 }
                 System.exit(0);
             } else {
@@ -1105,7 +1105,7 @@ public final class MWClient extends GameHost implements IClient {
 
         if (servers.get(myUsername) != null) {
             if (isDedicated()) {
-                MWLogger.errLog("Attempted to start a second host while host was already running.");
+                LOGGER.error("Attempted to start a second host while host was already running.");
             } else {
                 String toUser = "CH|CLIENT: You already have a host open.";
                 doParseDataInput(toUser);
@@ -1132,17 +1132,17 @@ public final class MWClient extends GameHost implements IClient {
         } catch (Exception ex) {
             try {
                 if (myServer == null) {
-                    MWLogger.errLog("Error opening dedicated server. Result = null host.");
-                    MWLogger.errLog(ex);
+                    LOGGER.error("Error opening dedicated server. Result = null host.");
+                    LOGGER.error(ex, "");
                 } else {
-                    MWLogger.errLog("Error opening dedicated server. Will attempt a .die().");
-                    MWLogger.errLog(ex);
+                    LOGGER.error("Error opening dedicated server. Will attempt a .die().");
+                    LOGGER.error(ex, "");
                     myServer.die();
                     myServer = null;
                 }
             } catch (Exception e) {
-                MWLogger.errLog("Further error while trying to clean up failed host attempt.");
-                MWLogger.errLog(e);
+                LOGGER.error("Further error while trying to clean up failed host attempt.");
+                LOGGER.error(e, "");
             }
             return;
         }
@@ -1162,7 +1162,7 @@ public final class MWClient extends GameHost implements IClient {
                 meks = new java.util.ArrayList<Unit>();
                 autoArmy = new java.util.ArrayList<CUnit>();
             }
-            MWLogger.infoLog("Joining own game!");
+            LOGGER.info("Joining own game!");
 
             ClientThread MMGameThread = new ClientThread(myUsername,
                   myUsername,
@@ -1274,7 +1274,7 @@ public final class MWClient extends GameHost implements IClient {
             return;
         } else if (command.equals("displaymegameklog")) { // display
             // megameklog.txt
-            MWLogger.infoLog("display megameklog command received from " + name);
+            LOGGER.info("display megameklog command received from " + name);
             try {
                 java.io.File logFile = new java.io.File("./logs/megameklog.txt");
                 java.io.FileInputStream fis = new java.io.FileInputStream(logFile);
@@ -1308,7 +1308,7 @@ public final class MWClient extends GameHost implements IClient {
             return;
         } else if (command.equals("displaydederrorlog")) { // display
             // error.0
-            MWLogger.infoLog("display ded error command received from " + name);
+            LOGGER.info("display ded error command received from " + name);
             try {
                 java.io.File logFile = new java.io.File("./logs/errlog.0");
                 java.io.FileInputStream fis = new java.io.FileInputStream(logFile);
@@ -1343,7 +1343,7 @@ public final class MWClient extends GameHost implements IClient {
             return;
         } else if (command.equals("displaydedlog")) { // display
             // log.0
-            MWLogger.infoLog("display ded log command received from "
+            LOGGER.info("display ded log command received from "
                                    + name);
             try {
                 java.io.File logFile = new java.io.File("./logs/infolog.0");
@@ -1403,7 +1403,7 @@ public final class MWClient extends GameHost implements IClient {
                 if (command.equals("restart")) { // Restart the dedicated
                     // server
 
-                    MWLogger.infoLog("Restart command received from "
+                    LOGGER.info("Restart command received from "
                                            + name);
                     stopHost();// kill the host
 
@@ -1418,14 +1418,14 @@ public final class MWClient extends GameHost implements IClient {
                             }
                         }
                     } catch (Exception ex) {
-                        MWLogger.errLog(ex);
+                        LOGGER.error(ex, "");
                     }
 
                     // sleep for a few seconds before restarting
                     try {
                         Thread.sleep(5000);
                     } catch (Exception ex) {
-                        MWLogger.errLog(ex);
+                        LOGGER.error(ex, "");
                     }
                     sendChat(IClient.PROTOCOL_PREFIX + "c mm# " + name
                                    + " used the restart command on " + myUsername);
@@ -1444,14 +1444,14 @@ public final class MWClient extends GameHost implements IClient {
                         System.exit(0);
 
                     } catch (Exception ex) {
-                        MWLogger.errLog("Unable to find MekWarsDed.jar");
+                        LOGGER.error("Unable to find MekWarsDed.jar");
                     }
                     return;
 
                 } else if (command.equals("reset")) { // server reset (like
                     // /reset in MM)
 
-                    MWLogger.infoLog("Reset command received from "
+                    LOGGER.info("Reset command received from "
                                            + name);
                     if (myServer != null) {
                         resetGame();
@@ -1468,7 +1468,7 @@ public final class MWClient extends GameHost implements IClient {
                 } else if (command.equals("start")) { // start hosting a MM
                     // game
 
-                    MWLogger.infoLog("Start command received from "
+                    LOGGER.info("Start command received from "
                                            + name);
                     if (myServer == null) {
                         startHost(true, false, false);
@@ -1482,7 +1482,7 @@ public final class MWClient extends GameHost implements IClient {
                     // connection
 
                     // stop the host
-                    MWLogger.infoLog("Stop command received from "
+                    LOGGER.info("Stop command received from "
                                            + name);
                     if (myServer != null) {
                         stopHost();
@@ -1492,7 +1492,7 @@ public final class MWClient extends GameHost implements IClient {
                     try {
                         Thread.sleep(5000);
                     } catch (Exception ex) {
-                        MWLogger.errLog(ex);
+                        LOGGER.error(ex, "");
                     }
                     sendChat(IClient.PROTOCOL_PREFIX + "c mm# " + name
                                    + " used the stop command on " + myUsername);
@@ -1501,7 +1501,7 @@ public final class MWClient extends GameHost implements IClient {
                 } else if (command.equals("owners")) { // return a list of
                     // owners
 
-                    MWLogger.infoLog("Owners command received from "
+                    LOGGER.info("Owners command received from "
                                            + name);
                     sendChat(IClient.PROTOCOL_PREFIX + "mail " + name + ", My owners: "
                                    + myDedOwners.replace('$', ' '));
@@ -1511,7 +1511,7 @@ public final class MWClient extends GameHost implements IClient {
 
                 } else if (command.startsWith("owner ")) { // add new owner(s)
 
-                    MWLogger.infoLog("Owner command received from "
+                    LOGGER.info("Owner command received from "
                                            + name);
                     if (!myDedOwners.equals("")) {
                         myDedOwners = myDedOwners + "$";
@@ -1530,7 +1530,7 @@ public final class MWClient extends GameHost implements IClient {
                 } else if (command.equals("clearowners")) { // clear owners, and
                     // send feedback.
 
-                    MWLogger.infoLog("Clearowners command received from "
+                    LOGGER.info("Clearowners command received from "
                                            + name);
                     myDedOwners = "";
                     sendChat(IClient.PROTOCOL_PREFIX + "mail " + name + ", My owners: "
@@ -1544,7 +1544,7 @@ public final class MWClient extends GameHost implements IClient {
 
                 } else if (command.equals("port")) {// return the server's port
 
-                    MWLogger.infoLog("Port command received from "
+                    LOGGER.info("Port command received from "
                                            + name);
                     sendChat(IClient.PROTOCOL_PREFIX + "mail " + name + ", My port: "
                                    + myPort);
@@ -1554,12 +1554,12 @@ public final class MWClient extends GameHost implements IClient {
 
                 } else if (command.startsWith("port ")) {// new server port
 
-                    MWLogger.infoLog("Port (set) command received from " + name);
+                    LOGGER.info("Port (set) command received from " + name);
                     try {
                         port = Integer.parseInt(command.substring(
                               ("port ").length()).trim());
                     } catch (Exception ex) {
-                        MWLogger.infoLog("Command error: " + command
+                        LOGGER.info("Command error: " + command
                                                + ": non-numeral port.");
                         return;
                     }
@@ -1568,7 +1568,7 @@ public final class MWClient extends GameHost implements IClient {
                         myPort = port;
                     }// check for legal port range
                     else {
-                        MWLogger.infoLog("Command error: " + command
+                        LOGGER.info("Command error: " + command
                                                + ": port out of valid range.");
                     }
                     String portString = Integer.toString(myPort);
@@ -1583,7 +1583,7 @@ public final class MWClient extends GameHost implements IClient {
                 } else if (command.equals("savegamepurge")) {// server days
                     // to purge
 
-                    MWLogger.infoLog("Save game purge command received from "
+                    LOGGER.info("Save game purge command received from "
                                            + name);
                     sendChat(IClient.PROTOCOL_PREFIX + "mail " + name
                                    + ", I purge saved games that are "
@@ -1601,13 +1601,13 @@ public final class MWClient extends GameHost implements IClient {
                     // called
 
                     int mySavedGamesMaxDays = 7;
-                    MWLogger.infoLog("Savegamepurge command received from "
+                    LOGGER.info("Savegamepurge command received from "
                                            + name);
                     try {
                         mySavedGamesMaxDays = Integer.parseInt(command
                                                                      .substring(("savegamepurge ").length()).trim());
                     } catch (Exception ex) {
-                        MWLogger.infoLog("Command error: " + command
+                        LOGGER.info("Command error: " + command
                                                + ": invalid number.");
                         return;
                     }
@@ -1626,7 +1626,7 @@ public final class MWClient extends GameHost implements IClient {
                     // saved
                     // games
 
-                    MWLogger.infoLog("displaysavedgames command received from "
+                    LOGGER.info("displaysavedgames command received from "
                                            + name);
                     java.io.File[] fileList;
                     String list = "<br><b>Saved files on " + myUsername
@@ -1660,7 +1660,7 @@ public final class MWClient extends GameHost implements IClient {
 
                     sendChat(IClient.PROTOCOL_PREFIX + "c mm# " + name
                                    + " used the update command on " + myUsername);
-                    MWLogger.infoLog("Update command received from "
+                    LOGGER.info("Update command received from "
                                            + name);
                     try {
                         if (myServer != null) {
@@ -1673,14 +1673,14 @@ public final class MWClient extends GameHost implements IClient {
                                           getConfigParam("DEDUPDATECOMMANDFILE") };
                         runtime.exec(call);
                     } catch (Exception ex) {
-                        MWLogger.errLog(ex);
+                        LOGGER.error(ex, "");
                     }
                     System.exit(0);// restart the ded
                     return;
 
                 } else if (command.equals("ping")) { // ping dedicated
 
-                    MWLogger.infoLog("Ping command received from "
+                    LOGGER.info("Ping command received from "
                                            + name);
                     String version = mekwars.client.MWClient.CLIENT_VERSION;
                     sendChat(IClient.PROTOCOL_PREFIX + "mail " + name
@@ -1696,7 +1696,7 @@ public final class MWClient extends GameHost implements IClient {
                     // from
                     // file
 
-                    MWLogger.infoLog("Loadgame command received from " + name);
+                    LOGGER.info("Loadgame command received from " + name);
                     String filename = "";
                     if (command.startsWith("loadgame ")) {
                         filename = command.substring(("loadgame ").length())
@@ -1726,7 +1726,7 @@ public final class MWClient extends GameHost implements IClient {
                     // full
                     // path
 
-                    MWLogger.infoLog("Loadgamewithfullpath command received from "
+                    LOGGER.info("Loadgamewithfullpath command received from "
                                            + name);
                     String filename = "";
                     if (command.startsWith("loadgamewithfullpath ")) {
@@ -1754,7 +1754,7 @@ public final class MWClient extends GameHost implements IClient {
                     // recent auto
                     // save file
 
-                    MWLogger.infoLog("Loadautosave command received from "
+                    LOGGER.info("Loadautosave command received from "
                                            + name);
                     String filename = "autosave.sav";
                     if (myServer != null) {
@@ -1778,7 +1778,7 @@ public final class MWClient extends GameHost implements IClient {
                 } else if (command.startsWith("name ")) { // new command
                     // prefix
 
-                    MWLogger.infoLog("Name command received from "
+                    LOGGER.info("Name command received from "
                                            + name);
                     String myComName = command.substring(("name ").length())
                                              .trim();
@@ -1797,7 +1797,7 @@ public final class MWClient extends GameHost implements IClient {
                 } else if (command.startsWith("comment ")) { // new command
                     // prefix
 
-                    MWLogger.infoLog("Prefix command received from "
+                    LOGGER.info("Prefix command received from "
                                            + name);
                     String myComComment = command.substring(
                           ("comment ").length()).trim();
@@ -1812,7 +1812,7 @@ public final class MWClient extends GameHost implements IClient {
                 } else if (command.startsWith("players ")) { // new command
                     // prefix
 
-                    MWLogger.infoLog("Prefix command received from "
+                    LOGGER.info("Prefix command received from "
                                            + name);
                     try {
                         String numPlayers = command.substring(
@@ -1825,14 +1825,14 @@ public final class MWClient extends GameHost implements IClient {
                                        + numPlayers + " on " + myUsername);
                         return;
                     } catch (Exception ex) {
-                        MWLogger.errLog(ex);
-                        MWLogger.errLog("Unable to convert number of players to int");
+                        LOGGER.error(ex, "");
+                        LOGGER.error("Unable to convert number of players to int");
                         return;
                     }
 
                 } else if (command.equals("restartcount")) { // server port
 
-                    MWLogger.infoLog("Restartcount command received from "
+                    LOGGER.info("Restartcount command received from "
                                            + name);
                     sendChat(IClient.PROTOCOL_PREFIX + "mail " + name
                                    + ", My restart count is set to " + dedRestartAt
@@ -1845,13 +1845,13 @@ public final class MWClient extends GameHost implements IClient {
                     // server
                     // port
 
-                    MWLogger.infoLog("restartcount change command received from "
+                    LOGGER.info("restartcount change command received from "
                                            + name);
                     try {
                         dedRestartAt = Integer.parseInt(command.substring(
                               ("restartcount ").length()).trim());
                     } catch (Exception ex) {
-                        MWLogger.infoLog("Command error: " + command
+                        LOGGER.info("Command error: " + command
                                                + ": bad counter.");
                         return;
                     }
@@ -1868,7 +1868,7 @@ public final class MWClient extends GameHost implements IClient {
                     // the ded is set to
                     // update with
 
-                    MWLogger.infoLog("GetUpdateUrl command received from "
+                    LOGGER.info("GetUpdateUrl command received from "
                                            + name);
                     String updateURL = getConfigParam("UPDATEURL");
                     sendChat(IClient.PROTOCOL_PREFIX + "c mm# " + name
@@ -1879,7 +1879,7 @@ public final class MWClient extends GameHost implements IClient {
 
                 } else if (command.startsWith("setupdateurl ")) {
 
-                    MWLogger.infoLog("setUpdateURL command received from "
+                    LOGGER.info("setUpdateURL command received from "
                                            + name);
                     String myUpdateURL = command.substring(
                           ("setupdateurl ").length()).trim();
@@ -1895,7 +1895,7 @@ public final class MWClient extends GameHost implements IClient {
 
                 }
 
-                MWLogger.infoLog("Command error: " + command
+                LOGGER.info("Command error: " + command
                                        + ": unknown command.");
                 return;
             }
@@ -1906,7 +1906,7 @@ public final class MWClient extends GameHost implements IClient {
                        + ", but does not have ownership.");
         sendChat(IClient.PROTOCOL_PREFIX + "mail " + name
                        + ", You do not have management rights for this host!");
-        MWLogger.infoLog("Command error: " + command
+        LOGGER.info("Command error: " + command
                                + ": access denied for " + name + ".");
     }
 
@@ -1989,7 +1989,7 @@ public final class MWClient extends GameHost implements IClient {
     @Override
     public String getServerConfigs(String key) {
         if (CampaignData.cd.getServerConfigs().getProperty(key) == null) {
-            MWLogger.infoLog("You're missing the config variable: "
+            LOGGER.info("You're missing the config variable: "
                                    + key + " in serverconfig!");
             return "-1";
         }
@@ -2014,7 +2014,7 @@ public final class MWClient extends GameHost implements IClient {
             // then the clients will be able to use the refresh all command via
             // CMainFrame --Torren
             try {
-                MWLogger.infoLog("try to import the planetcache");
+                LOGGER.info("try to import the planetcache");
                 // sanity check
                 dataFetcher.checkServerVersion(this);
                 // data = dataFetcher.getAllData();
@@ -2026,13 +2026,13 @@ public final class MWClient extends GameHost implements IClient {
                 }
                 refreshData();
                 dataFetcher.store();
-                MWLogger.infoLog("cache data loaded");
+                LOGGER.info("cache data loaded");
             } catch (Throwable e) {
 
                 if (!(e instanceof java.io.FileNotFoundException)) {
-                    MWLogger.errLog((Exception) e);
+                    LOGGER.error((Exception) e, "");
                 }
-                MWLogger.infoLog("need to fetch all planet data..");
+                LOGGER.info("need to fetch all planet data..");
                 try {
                     data = dataFetcher.getAllData();
                     dataFetcher.store();
@@ -2040,8 +2040,8 @@ public final class MWClient extends GameHost implements IClient {
                     if (splash != null) {
                         splash.setStatus(splash.STATUS_DATAERROR);
                     }
-                    MWLogger.errLog(e1);
-                    MWLogger.errLog(getCacheDir());
+                    LOGGER.error(e1, "");
+                    LOGGER.error(getCacheDir());
                     Object[] options = { "Exit", "Continue" };
                     int selectedValue = javax.swing.JOptionPane.showOptionDialog(null,
                           "Could not connect to server to fetch map data.",
@@ -2055,7 +2055,7 @@ public final class MWClient extends GameHost implements IClient {
                     if (splash != null) {
                         splash.setStatus(splash.STATUS_DATAERROR);
                     }
-                    MWLogger.errLog(e1);
+                    LOGGER.error(e1, "");
                     javax.swing.JOptionPane
                           .showMessageDialog(null,
                                 "Server is busy while fetching planet data.\nTry again later.");
@@ -2063,7 +2063,7 @@ public final class MWClient extends GameHost implements IClient {
                     if (splash != null) {
                         splash.setStatus(splash.STATUS_DATAERROR);
                     }
-                    MWLogger.errLog((Exception) e1);
+                    LOGGER.error((Exception) e1, "");
                     Object[] options = { "Exit", "Continue" };
                     int selectedValue = javax.swing.JOptionPane
                                               .showOptionDialog(
@@ -2086,15 +2086,15 @@ public final class MWClient extends GameHost implements IClient {
             try {
                 dataFetcher.getServerConfigData(this);
             } catch (Exception ex) {
-                MWLogger.errLog("Unable to fetch Server configs.");
-                MWLogger.errLog(ex);
+                LOGGER.error("Unable to fetch Server configs.");
+                LOGGER.error(ex, "");
             }
 
             try {
                 dataFetcher.getBannedAmmoData(this);
             } catch (Exception ex) {
-                MWLogger.errLog("Unable to fetch server banned ammo data.");
-                MWLogger.errLog(ex);
+                LOGGER.error("Unable to fetch server banned ammo data.");
+                LOGGER.error(ex, "");
             }
 
             // close the connection.a
@@ -2109,8 +2109,8 @@ public final class MWClient extends GameHost implements IClient {
             dataFetcher.getBannedAmmoData(this);
         } catch (Exception ex) {
             if (!(ex instanceof java.net.SocketException)) {
-                MWLogger.errLog("Error loading Server banned ammo file");
-                MWLogger.errLog(ex);
+                LOGGER.error("Error loading Server banned ammo file");
+                LOGGER.error(ex, "");
             }
         }
     }
@@ -2131,8 +2131,8 @@ public final class MWClient extends GameHost implements IClient {
             dataFetcher.getAccessLevels(getData());
         } catch (Exception ex) {
             if (!(ex instanceof java.net.SocketException)) {
-                MWLogger.errLog("Error loading Server Commands files");
-                MWLogger.errLog(ex);
+                LOGGER.error("Error loading Server Commands files");
+                LOGGER.error(ex, "");
             }
         }
     }
@@ -2141,7 +2141,7 @@ public final class MWClient extends GameHost implements IClient {
         try {
             dataFetcher.getBlackMarketSettings(this);
         } catch (Exception ex) {
-            MWLogger.errLog(ex);
+            LOGGER.error(ex, "");
         }
 
     }
@@ -2159,13 +2159,13 @@ public final class MWClient extends GameHost implements IClient {
             data = dataFetcher.getAllData();
         } catch (Exception ex) {
             if (!(ex instanceof java.net.SocketException)) {
-                MWLogger.errLog(ex);
+                LOGGER.error(ex, "");
             }
         }
         try {
             dataFetcher.getServerConfigData(this);
         } catch (java.io.IOException e1) {
-            MWLogger.errLog(e1);
+            LOGGER.error(e1, "");
         }
     }
 
@@ -2174,7 +2174,7 @@ public final class MWClient extends GameHost implements IClient {
             dataFetcher.getServerConfigData(this);
         } catch (Exception ex) {
             if (!(ex instanceof java.net.SocketException)) {
-                MWLogger.errLog(ex);
+                LOGGER.error(ex, "");
             }
         }
     }
@@ -2191,14 +2191,14 @@ public final class MWClient extends GameHost implements IClient {
 
         // if the map isnt visible, skip the refresh. waste of bandwidth.
         if (!getConfig().isParam("MAPTABVISIBLE")) {
-            MWLogger.infoLog("Map visibility disabled. Skipping map data fetch!");
+            LOGGER.info("Map visibility disabled. Skipping map data fetch!");
             return;
         }
 
         if (!dataFetcher.getPlanetsUpdate(data)) {
             // MWLogger.infoLog("MD5 does not match! Retrieve all
             // planet data again.");
-            MWLogger.infoLog("MD5 does not match! But the md5 seems broken anyway...");
+            LOGGER.info("MD5 does not match! But the md5 seems broken anyway...");
             /*
              * try { data = dataFetcher.getAllData(); } catch (IOException e) {
              * MMClient.MWLogger.errLog(e);
@@ -2217,7 +2217,7 @@ public final class MWClient extends GameHost implements IClient {
             getMainFrame().getMainPanel().getMapPanel().getMap()
                   .dataFetched(changesSinceLastRefresh);
         }
-        MWLogger.infoLog("update for new planet data finished");
+        LOGGER.info("update for new planet data finished");
     }
 
     public void addToChat(String s) {
@@ -2267,12 +2267,12 @@ public final class MWClient extends GameHost implements IClient {
 
         tparam = Config.getParam(p);
         if (tparam == null) {
-            MWLogger.errLog("Unable to find param " + p);
+            LOGGER.error("Unable to find param " + p);
             tparam = "";
         }
 
         if (tparam.equals("") && p.equals("NAME") && isDedicated()) {
-            MWLogger.infoLog("Error: no dedicated name set.");
+            LOGGER.info("Error: no dedicated name set.");
             System.exit(1);
         }
         return (tparam);
@@ -2291,7 +2291,7 @@ public final class MWClient extends GameHost implements IClient {
             dataFetcher.checkForMostRecentOpList();
             setupAllOps();
         } catch (Exception ex) {
-            MWLogger.errLog(ex);
+            LOGGER.error(ex, "");
         }
     }
 
@@ -2340,8 +2340,8 @@ public final class MWClient extends GameHost implements IClient {
         } catch (Exception ex) {
             if (!(ex instanceof java.net.SocketException)) {
 
-                MWLogger.errLog("Error loading Server Trait files");
-                MWLogger.errLog(ex);
+                LOGGER.error("Error loading Server Trait files");
+                LOGGER.error(ex, "");
             }
         }
     }
@@ -2355,7 +2355,7 @@ public final class MWClient extends GameHost implements IClient {
                     Thread.sleep(10);
                 }
             } catch (Exception ex) {
-                MWLogger.errLog(ex);
+                LOGGER.error(ex, "");
             }
             GameOptions gameOptions = new GameOptions();
             gameOptions.loadOptions();
@@ -2371,8 +2371,8 @@ public final class MWClient extends GameHost implements IClient {
                 sendGameOptionsToServer();
             }
         } catch (Exception ex) {
-            MWLogger.errLog("Unable to pull server MegaMek Logs");
-            MWLogger.errLog(ex);
+            LOGGER.error("Unable to pull server MegaMek Logs");
+            LOGGER.error(ex, "");
         }
     }
 
@@ -2467,7 +2467,7 @@ public final class MWClient extends GameHost implements IClient {
                 SkinLookAndFeel.setSkin(theSkinToUse);
                 LAF = new SkinLookAndFeel();
             } catch (Exception ex) {
-                MWLogger.errLog(ex);
+                LOGGER.error(ex, "");
                 LAF = javax.swing.UIManager.getLookAndFeel();
             }
         }
@@ -2493,12 +2493,12 @@ public final class MWClient extends GameHost implements IClient {
             }
 
         } catch (Exception ex) {
-            MWLogger.errLog(ex);
+            LOGGER.error(ex, "");
             try {
                 javax.swing.UIManager.setLookAndFeel(javax.swing.UIManager
                                                            .getSystemLookAndFeelClassName());
             } catch (Exception e) {
-                MWLogger.errLog(e);
+                LOGGER.error(e, "");
             }
         }// end catch
 
@@ -2552,9 +2552,9 @@ public final class MWClient extends GameHost implements IClient {
             dialog.setVisible(true);
 
         } else {
-            MWLogger.errLog("-----------");
-            MWLogger.errLog(Text);
-            MWLogger.errLog("-----------");
+            LOGGER.error("-----------");
+            LOGGER.error(Text);
+            LOGGER.error("-----------");
         }
     }
 
@@ -2577,7 +2577,7 @@ public final class MWClient extends GameHost implements IClient {
         try {
             javax.swing.SwingUtilities.invokeLater(new CRefreshGUI(this, mode));
         } catch (Exception ex) {
-            MWLogger.errLog(ex);
+            LOGGER.error(ex, "");
         }
     }
 
@@ -2631,7 +2631,7 @@ public final class MWClient extends GameHost implements IClient {
                 mekwars.client.AePlayWave.AePlayWaveNonThreaded(filename);
             }
         } catch (Exception ex) {
-            MWLogger.errLog(ex);
+            LOGGER.error(ex, "");
         }
     }
 
@@ -2700,8 +2700,8 @@ public final class MWClient extends GameHost implements IClient {
         try {
             myServer.die();
         } catch (Exception ex) {
-            MWLogger.errLog(ex);
-            MWLogger.errLog("Megamek Error:");
+            LOGGER.error(ex, "");
+            LOGGER.error("Megamek Error:");
         }
         myServer = null;
     }
@@ -2822,7 +2822,7 @@ public final class MWClient extends GameHost implements IClient {
             IGUICommand command = getGUICommand(s);
             if ((command != null) && command.check(s)) {
                 if (!command.execute(input)) {
-                    MWLogger.infoLog("COMMAND ERROR: wrong command executed.");
+                    LOGGER.info("COMMAND ERROR: wrong command executed.");
                 }
                 return;
             }
@@ -2908,7 +2908,7 @@ public final class MWClient extends GameHost implements IClient {
         try {
             javax.swing.SwingUtilities.invokeLater(new CAddToChat(this, s, channelMail, tabName));
         } catch (Exception ex) {
-            MWLogger.errLog(ex);
+            LOGGER.error(ex, "");
         }
 
     }
@@ -2930,7 +2930,7 @@ public final class MWClient extends GameHost implements IClient {
             String[] call = { "java", "-jar", "MekWarsAutoUpdate.jar", "PLAYER" };
             runtime.exec(call);
         } catch (Exception ex) {
-            MWLogger.errLog(ex);
+            LOGGER.error(ex, "");
         }
         System.exit(0);
     }
@@ -2957,7 +2957,7 @@ public final class MWClient extends GameHost implements IClient {
             p.close();
             out.close();
         } catch (Exception ex) {
-            MWLogger.errLog(ex);
+            LOGGER.error(ex, "");
         }
 
     }
@@ -2968,7 +2968,7 @@ public final class MWClient extends GameHost implements IClient {
             getConfig().saveConfig();
             setConfig();
         } catch (Exception ex) {
-            MWLogger.errLog(ex);
+            LOGGER.error(ex, "");
         }
     }
 
@@ -3017,8 +3017,8 @@ public final class MWClient extends GameHost implements IClient {
                 }
             } catch (Exception e) {
                 // TODO Auto-generated catch block
-                MWLogger.errLog("Exception in Parts BM");
-                MWLogger.errLog(e.getLocalizedMessage());
+                LOGGER.error("Exception in Parts BM");
+                LOGGER.error(e.getLocalizedMessage());
                 error = true;
             }
 
@@ -3068,7 +3068,7 @@ public final class MWClient extends GameHost implements IClient {
             p.close();
             out.close();
         } catch (Exception ex) {
-            MWLogger.errLog(ex);
+            LOGGER.error(ex, "");
         }
 
     }
@@ -3366,12 +3366,12 @@ public final class MWClient extends GameHost implements IClient {
 
         // else (null server/filename)
         if (myServer == null) {
-            MWLogger.infoLog("MyServer == NULL!");
+            LOGGER.info("MyServer == NULL!");
         }
         if (filename == null) {
-            MWLogger.infoLog("Filename == NULL!");
+            LOGGER.info("Filename == NULL!");
         } else if (filename.equals("")) {
-            MWLogger.infoLog("Filename == \"\"!");
+            LOGGER.info("Filename == \"\"!");
         }
 
         return false;
@@ -3387,12 +3387,12 @@ public final class MWClient extends GameHost implements IClient {
 
         // else (null server/filename)
         if (myServer == null) {
-            MWLogger.infoLog("MyServer == NULL!");
+            LOGGER.info("MyServer == NULL!");
         }
         if (filename == null) {
-            MWLogger.infoLog("Filename == NULL!");
+            LOGGER.info("Filename == NULL!");
         } else if (filename.equals("")) {
-            MWLogger.infoLog("Filename == \"\"!");
+            LOGGER.info("Filename == \"\"!");
         }
 
         return false;
@@ -3401,7 +3401,7 @@ public final class MWClient extends GameHost implements IClient {
     public void closingGame(String hostName) {
 
         // update battles tab for all players, via server
-        MWLogger.infoLog("Leaving " + hostName);
+        LOGGER.info("Leaving " + hostName);
         serverSend("LG|" + hostName);
 
         System.gc();
@@ -3489,14 +3489,14 @@ public final class MWClient extends GameHost implements IClient {
                       && savedFile.isFile()
                       && (lastTime < (System.currentTimeMillis() - daysInSeconds))) {
                 try {
-                    MWLogger.infoLog("Purging File: "
+                    LOGGER.info("Purging File: "
                                            + savedFile.getName() + " Time: " + lastTime
                                            + " purge Time: "
                                            + (System.currentTimeMillis() - daysInSeconds));
                     savedFile.delete();
                 } catch (Exception ex) {
-                    MWLogger.errLog("Error trying to delete these files!");
-                    MWLogger.errLog(ex);
+                    LOGGER.error("Error trying to delete these files!");
+                    LOGGER.error(ex, "");
                 }
             }
         }
@@ -3725,18 +3725,18 @@ public final class MWClient extends GameHost implements IClient {
         }
 
         if (gameCount >= dedRestartAt) {
-            MWLogger.infoLog("System has reached " + gameCount + " games played and is restarting");
+            LOGGER.info("System has reached " + gameCount + " games played and is restarting");
             try {
                 Thread.sleep(5000);
             }// give people time to vacate
             catch (Exception ex) {
-                MWLogger.errLog(ex);
+                LOGGER.error(ex, "");
             }
             stopHost();
             try {
                 Thread.sleep(5000);
             } catch (Exception ex) {
-                MWLogger.errLog(ex);
+                LOGGER.error(ex, "");
             }
             try {
                 Runtime runTime = Runtime.getRuntime();
@@ -3750,7 +3750,7 @@ public final class MWClient extends GameHost implements IClient {
                 System.exit(0);
 
             } catch (Exception ex) {
-                MWLogger.errLog("Unable to find MekWarsDed.jar");
+                LOGGER.error("Unable to find MekWarsDed.jar");
             }
         }
 

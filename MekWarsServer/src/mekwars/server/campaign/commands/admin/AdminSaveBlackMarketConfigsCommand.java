@@ -21,10 +21,11 @@
 package mekwars.server.campaign.commands.admin;
 
 import common.Equipment;
-import common.util.MWLogger;
+import megamek.logging.MMLogger;
 import mekwars.server.campaign.CampaignMain;
 
 public class AdminSaveBlackMarketConfigsCommand implements server.campaign.commands.Command {
+    private static final MMLogger LOGGER = MMLogger.create(AdminSaveBlackMarketConfigsCommand.class);
 
     int accessLevel = server.MWChatServer.auth.IAuthenticator.ADMIN;
     String syntax = "";
@@ -66,9 +67,9 @@ public class AdminSaveBlackMarketConfigsCommand implements server.campaign.comma
             }
             ps.close();
         } catch (java.io.FileNotFoundException fe) {
-            MWLogger.errLog("blackmarketsettings.dat not found");
+            LOGGER.error("blackmarketsettings.dat not found");
         } catch (Exception ex) {
-            MWLogger.errLog(ex);
+            LOGGER.error(ex, "");
         }
 
         CampaignMain.campaignMain.toUser("AM:Black Market Settings saved!", Username, true);

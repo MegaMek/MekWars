@@ -15,12 +15,12 @@
  */
 
 package mekwars.server.campaign.commands.admin;
-
-import common.util.MWLogger;
+import megamek.logging.MMLogger;
 import mekwars.server.campaign.CampaignMain;
 
 
 public class RetrieveAllMulsCommand implements server.campaign.commands.Command {
+    private static final MMLogger LOGGER = MMLogger.create(RetrieveAllMulsCommand.class);
 
     /*
      * This command allows an Admin to upload a single build table
@@ -79,7 +79,7 @@ public class RetrieveAllMulsCommand implements server.campaign.commands.Command 
             try {
                 br.close();
             } catch (java.io.IOException e) {
-                MWLogger.errLog(e);
+                LOGGER.error(e, "");
             }
         }
     }

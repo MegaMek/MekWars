@@ -15,12 +15,12 @@
  */
 
 package mekwars.server.campaign.commands.admin;
-
-import common.util.MWLogger;
+import megamek.logging.MMLogger;
 import mekwars.server.campaign.CampaignMain;
 import server.util.MWPasswd;
 
 public class AdminPasswordCommand implements server.campaign.commands.Command {
+    private static final MMLogger LOGGER = MMLogger.create(AdminPasswordCommand.class);
 
     // conforming methods
     int accessLevel = server.MWChatServer.auth.IAuthenticator.REGISTERED;
@@ -74,7 +74,7 @@ public class AdminPasswordCommand implements server.campaign.commands.Command {
             try {
                 MWPasswd.save();
             } catch (Exception ex) {
-                MWLogger.errLog(ex);
+                LOGGER.error(ex, "");
             }
             CampaignMain.campaignMain.toUser("Password for " + target + " removed!", Username, true);
             CampaignMain.campaignMain.doSendModMail("NOTE", Username + " has removed " + target + "'s password");
@@ -107,7 +107,7 @@ public class AdminPasswordCommand implements server.campaign.commands.Command {
                 }
 
             } catch (Exception ex) {
-                MWLogger.errLog(ex);
+                LOGGER.error(ex, "");
             }
 
             CampaignMain.campaignMain.toUser("Level for " + target + " set to " + level + "!", Username, true);

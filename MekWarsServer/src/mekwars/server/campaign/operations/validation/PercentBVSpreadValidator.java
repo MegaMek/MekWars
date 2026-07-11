@@ -16,7 +16,7 @@
 package mekwars.server.campaign.operations.validation;
 
 import common.campaign.operations.Operation;
-import common.util.MWLogger;
+import megamek.logging.MMLogger;
 
 /**
  * @author Spork
@@ -25,6 +25,7 @@ import common.util.MWLogger;
  */
 public class PercentBVSpreadValidator extends BVSpreadValidator implements
                                                                 I_SpreadValidator {
+    private static final MMLogger LOGGER = MMLogger.create(PercentBVSpreadValidator.class);
 
     protected double percent;
     protected int base;
@@ -50,8 +51,8 @@ public class PercentBVSpreadValidator extends BVSpreadValidator implements
         maximum += spreadPercent;
 
         if (getDebug()) {
-            MWLogger.debugLog("Base = " + base + ", spreadPercent = " + spreadPercent + ", maximum = " + maximum);
-            MWLogger.debugLog("Army BV = " + a.getBV() + ", percent = " + percent);
+            LOGGER.debug("Base = " + base + ", spreadPercent = " + spreadPercent + ", maximum = " + maximum);
+            LOGGER.debug("Army BV = " + a.getBV() + ", percent = " + percent);
         }
 
 

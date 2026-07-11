@@ -1,9 +1,10 @@
 package mekwars.client;
 
+import megamek.logging.MMLogger;
 import mekwars.common.campaign.clientutils.protocol.IClient;
-import mekwars.common.util.MWLogger;
 
 class TimeOutThread extends Thread {
+    private static final MMLogger LOGGER = MMLogger.create(TimeOutThread.class);
 
     private final MWClient mwClient;
     MWClient mwclient;
@@ -19,7 +20,7 @@ class TimeOutThread extends Thread {
             try {
                 Thread.sleep(mwClient.TimeOut * 100);
             } catch (Exception ex) {
-                MWLogger.errLog(ex);
+                LOGGER.error(ex, "");
             }
             if (mwClient.Status != IClient.STATUS_DISCONNECTED) {
                 long timeout = (System.currentTimeMillis() / 1000)

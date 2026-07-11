@@ -21,7 +21,7 @@ import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
 
-import mekwars.common.util.MWLogger;
+import megamek.logging.MMLogger;
 
 /**
  * HPGListenerThread listens for connections from MekWars servers, makes the connections and hands them off to
@@ -33,6 +33,7 @@ import mekwars.common.util.MWLogger;
  *
  */
 public class HPGListenerThread extends Thread {
+    private static final MMLogger LOGGER = MMLogger.create(HPGListenerThread.class);
     //VARIABLES
     HPGNet hpgnet;
 
@@ -73,7 +74,7 @@ public class HPGListenerThread extends Thread {
             try {
                 server.close();
             } catch (IOException e) {
-                MWLogger.errLog(e);
+                LOGGER.error(e, "");
             }
         }
 

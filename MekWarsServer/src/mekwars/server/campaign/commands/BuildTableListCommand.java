@@ -15,13 +15,13 @@
  */
 
 package mekwars.server.campaign.commands;
-
-import common.util.MWLogger;
 import megamek.common.Entity;
+import megamek.logging.MMLogger;
 import mekwars.server.campaign.CampaignMain;
 
 
 public class BuildTableListCommand implements Command {
+    private static final MMLogger LOGGER = MMLogger.create(BuildTableListCommand.class);
 
     int accessLevel = 2;
     String syntax = "";
@@ -71,7 +71,7 @@ public class BuildTableListCommand implements Command {
                         String fileWithOutChance = line.substring(line.indexOf(" ")).trim();
                         Entity ent = server.campaign.SUnit.loadMech(fileWithOutChance);
                         if (ent.getModel().equals("OMG-UR-FD")) {
-                            MWLogger.errLog(fileWithOutChance + " errored in Build Table: " + filePath);
+                            LOGGER.error(fileWithOutChance + " errored in Build Table: " + filePath);
                             results += fileWithOutChance.trim() + "<br>";
                         } else {
                             results += "<a href=\"MEKINFO" +
@@ -108,8 +108,8 @@ public class BuildTableListCommand implements Command {
             CampaignMain.campaignMain.toUser("SM|" + results, Username, false);
         } catch (Exception ex) {
             CampaignMain.campaignMain.toUser("AM:Unknown path try again!", Username, true);
-            MWLogger.errLog("Error with build table list");
-            MWLogger.errLog(ex);
+            LOGGER.error("Error with build table list");
+            LOGGER.error(ex, "");
             return;
         } finally {
             try {
@@ -117,7 +117,7 @@ public class BuildTableListCommand implements Command {
                     dis.close();
                 }
             } catch (java.io.IOException e) {
-                MWLogger.errLog(e);
+                LOGGER.error(e, "");
             }
         }
 

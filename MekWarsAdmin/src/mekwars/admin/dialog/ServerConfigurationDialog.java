@@ -28,12 +28,13 @@ import java.util.Calendar;
 import java.util.Date;
 import javax.swing.*;
 
+import megamek.logging.MMLogger;
 import mekwars.admin.dialog.serverConfigDialogs.*;
 import mekwars.common.campaign.clientutils.protocol.IClient;
-import mekwars.common.util.MWLogger;
 import org.jdatepicker.JDatePicker;
 
 public final class ServerConfigurationDialog implements ActionListener {
+    private static final MMLogger LOGGER = MMLogger.create(ServerConfigurationDialog.class);
 
     private final static String okayCommand = "okay";
     private final static String cancelCommand = "cancel";
@@ -268,7 +269,7 @@ public final class ServerConfigurationDialog implements ActionListener {
 
                 key = checkBox.getName();
                 if (key == null) {
-                    MWLogger.errLog("Null Checkbox: " + checkBox.getToolTipText());
+                    LOGGER.error("Null Checkbox: " + checkBox.getToolTipText());
                     continue;
                 }
                 checkBox.setSelected(Boolean.parseBoolean(client.getServerConfigs(key)));
@@ -278,7 +279,7 @@ public final class ServerConfigurationDialog implements ActionListener {
 
                 key = radioButton.getName();
                 if (key == null) {
-                    MWLogger.errLog("Null RadioButton: " + radioButton.getToolTipText());
+                    LOGGER.error("Null RadioButton: " + radioButton.getToolTipText());
                     continue;
                 }
                 radioButton.setSelected(Boolean.parseBoolean(client.getServerConfigs(key)));
@@ -287,7 +288,7 @@ public final class ServerConfigurationDialog implements ActionListener {
 
                 key = picker.getName();
                 if (key == null) {
-                    MWLogger.errLog("Null JDatePicker: " + picker.getToolTipText());
+                    LOGGER.error("Null JDatePicker: " + picker.getToolTipText());
                     continue;
                 }
                 String s = client.getServerConfigs(key);

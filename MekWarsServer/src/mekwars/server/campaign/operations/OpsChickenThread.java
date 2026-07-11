@@ -19,11 +19,12 @@ package mekwars.server.campaign.operations;
 import common.Unit;
 import common.UnitFactory;
 import common.campaign.operations.Operation;
-import common.util.MWLogger;
 import common.util.StringUtils;
+import megamek.logging.MMLogger;
 import mekwars.server.campaign.CampaignMain;
 
 public class OpsChickenThread extends Thread {
+    private static final MMLogger LOGGER = MMLogger.create(OpsChickenThread.class);
 
     // VARIABLE
     private server.campaign.SPlayer pdefender;
@@ -67,7 +68,7 @@ public class OpsChickenThread extends Thread {
      * means that a thread with a long wait time can stick around for several minutes after it is supposedly "stopped."
      */
     public synchronized void stopChicken() {
-        MWLogger.gameLog("ChickenThread " + opID + "/" + pdefender.getName() + " turned off.");
+        LOGGER.info("ChickenThread " + opID + "/" + pdefender.getName() + " turned off.");
         shouldContinue = false;
     }
 
@@ -99,7 +100,7 @@ public class OpsChickenThread extends Thread {
             try {
                 this.wait(waittime * 1000);// time given in seconds
             } catch (Exception ex) {
-                MWLogger.errLog(ex);
+                LOGGER.error(ex, "");
             }
 
             // if the stop signal was sent while we were
@@ -367,7 +368,7 @@ public class OpsChickenThread extends Thread {
         // get the actual ShortOperation. Catch any nulls.
         ShortOperation parentOp = CampaignMain.campaignMain.getOpsManager().getRunningOps().get(opID);
         if (parentOp == null) {
-            MWLogger.errLog("Tried to do a leech with a null ShortOperation!");
+            LOGGER.error("Tried to do a leech with a null ShortOperation!");
             return;
         }
 
@@ -552,7 +553,7 @@ public class OpsChickenThread extends Thread {
         }
 
         // and add the info to the log
-        MWLogger.gameLog("Leech: " +
+        LOGGER.info("Leech: " +
                                this.opID +
                                "/" +
                                pdefender.getName() +

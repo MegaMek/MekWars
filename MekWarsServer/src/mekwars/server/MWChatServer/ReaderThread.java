@@ -27,14 +27,14 @@
  */
 
 package mekwars.server.MWChatServer;
-
-import common.util.MWLogger;
 import server.MWChatServer.commands.ICommands;
+import megamek.logging.MMLogger;
 
 /**
  * Constantly reads from the BufferedReader. Notifies the MWChatServerLocal via the incomingMessage() method
  */
 public class ReaderThread extends Thread {
+    private static final MMLogger LOGGER = MMLogger.create(ReaderThread.class);
     protected IConnectionListener _connectionListener;
     protected java.io.BufferedReader _in;
     protected java.io.InputStream _inputStream;
@@ -49,7 +49,7 @@ public class ReaderThread extends Thread {
         try {
             _in = new java.io.BufferedReader(new java.io.InputStreamReader(in, "UTF8"));
         } catch (Exception e) {
-            MWLogger.errLog(e);
+            LOGGER.error(e, "");
         }
     }
 
@@ -82,7 +82,7 @@ public class ReaderThread extends Thread {
                 // including but not limited to IOException
                 // -- in particular if the message handler croaks we want to know how/why
                 pleaseStop();//potential fix for MMNET crashing issue? @urgru 4.08.06
-                MWLogger.errLog(ex);
+                LOGGER.error(ex, "");
             }
         }
     }

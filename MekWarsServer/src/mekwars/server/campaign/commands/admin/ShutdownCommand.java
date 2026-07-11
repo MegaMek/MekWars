@@ -15,8 +15,7 @@
  */
 
 package mekwars.server.campaign.commands.admin;
-
-import common.util.MWLogger;
+import megamek.logging.MMLogger;
 import mekwars.server.campaign.CampaignMain;
 import server.campaign.util.scheduler.MWScheduler;
 import server.util.MWPasswd;
@@ -28,6 +27,7 @@ import server.util.MWPasswd;
  * Syntax  /c Shutdown
  */
 public class ShutdownCommand implements server.campaign.commands.Command {
+    private static final MMLogger LOGGER = MMLogger.create(ShutdownCommand.class);
 
     int accessLevel = server.MWChatServer.auth.IAuthenticator.ADMIN;
     String syntax = "";
@@ -55,14 +55,14 @@ public class ShutdownCommand implements server.campaign.commands.Command {
         CampaignMain.campaignMain.saveBannedAmmo();
         CampaignMain.campaignMain.getDefaultPlayerFlags().save();
         CampaignMain.campaignMain.toUser("AM:You halted the server. Have a nice day.", Username, true);
-        MWLogger.infoLog(Username + " halted the server. Have a nice day!");
+        LOGGER.info(Username + " halted the server. Have a nice day!");
         CampaignMain.campaignMain.addToNewsFeed("Server halted!", "Server News", "");
         CampaignMain.campaignMain.postToDiscord("Server halted!");
         try {
             MWPasswd.save();
         } catch (Exception ex) {
-            MWLogger.errLog("Unable to save passwords before shutdown!");
-            MWLogger.errLog(ex);
+            LOGGER.error("Unable to save passwords before shutdown!");
+            LOGGER.error(ex, "");
         }
 
         System.exit(0);

@@ -15,8 +15,7 @@
  */
 
 package mekwars.server.campaign.commands;
-
-import common.util.MWLogger;
+import megamek.logging.MMLogger;
 import mekwars.server.campaign.CampaignMain;
 import server.util.MWPasswd;
 
@@ -27,6 +26,7 @@ import server.util.MWPasswd;
  * Syntax  /c Register#Name,Password
  */
 public class RegisterCommand implements Command {
+    private static final MMLogger LOGGER = MMLogger.create(RegisterCommand.class);
 
     int accessLevel = 0;
     String syntax = "";
@@ -55,7 +55,7 @@ public class RegisterCommand implements Command {
                 regname = str.nextToken().trim().toLowerCase();
                 pw = str.nextToken();
             } catch (Exception ex) {
-                MWLogger.errLog("Failure to register: " + regname);
+                LOGGER.error("Failure to register: " + regname);
                 return;
             }
 
@@ -111,15 +111,15 @@ public class RegisterCommand implements Command {
 
             //acknowledge registration
             CampaignMain.campaignMain.toUser("AM:\"" + regname + "\" successfully registered.", Username);
-            MWLogger.modLog("New nickname registered: " + regname);
+            LOGGER.info("New nickname registered: " + regname);
             CampaignMain.campaignMain.doSendModMail("NOTE",
                   "New nickname registered: " + regname + " by: " + Username);
 
         } catch (Exception e) {
-            MWLogger.errLog(e);
-            MWLogger.errLog("^ Not supposed to happen! ^");
-            MWLogger.errLog(e);
-            MWLogger.errLog("Not supposed to happen");
+            LOGGER.error(e, "");
+            LOGGER.error("^ Not supposed to happen! ^");
+            LOGGER.error(e, "");
+            LOGGER.error("Not supposed to happen");
         }
     }
 

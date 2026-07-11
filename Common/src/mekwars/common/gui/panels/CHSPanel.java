@@ -570,7 +570,7 @@ public class CHSPanel extends JPanel {
         // if there isn't a vector for this type + weight combo already, create
         // one
         Vector<HSMek> weightAndTypeVec = unitsInfo.computeIfAbsent(String.format("%s$%s", weight, type),
-              _ -> new Vector<>(1, 1));
+              ignored -> new Vector<>(1, 1));
 
         // add the unit to the vector
         weightAndTypeVec.add(currHSUnit);
@@ -765,7 +765,7 @@ public class CHSPanel extends JPanel {
         // if there isn't a vector for this type + weight combo already, create
         // one
         TreeMap<String, String> weightAndTypeMap = factoriesInfo.computeIfAbsent(String.format("%s$%s", weight, type),
-              _ -> new TreeMap<>());
+              ignored -> new TreeMap<>());
 
         /*
          * Add the factory to the map. Note that we use a map so the factories

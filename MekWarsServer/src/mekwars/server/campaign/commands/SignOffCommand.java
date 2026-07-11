@@ -15,8 +15,7 @@
  */
 
 package mekwars.server.campaign.commands;
-
-import common.util.MWLogger;
+import megamek.logging.MMLogger;
 import mekwars.server.campaign.CampaignMain;
 
 
@@ -26,12 +25,13 @@ import mekwars.server.campaign.CampaignMain;
  * Syntax  /c SignOff
  */
 public class SignOffCommand implements Command {
+    private static final MMLogger LOGGER = MMLogger.create(SignOffCommand.class);
 
     String syntax = "";
 
     public void process(java.util.StringTokenizer command, String Username) {
 
-        MWLogger.errLog(Username + " has sent signoff command");
+        LOGGER.error(Username + " has sent signoff command");
         CampaignMain.campaignMain.getServer().clientLogout(Username);
     }
 

@@ -22,17 +22,18 @@ package mekwars.server.campaign;
 
 import common.Unit;
 import common.campaign.pilot.skills.PilotSkill;
-import common.util.MWLogger;
 import server.campaign.pilot.SPilot;
 import server.campaign.pilot.SPilotSkills;
 import server.campaign.pilot.skills.SPilotSkill;
 import server.campaign.pilot.skills.TraitSkill;
+import megamek.logging.MMLogger;
 
 /**
  * @author Helge Richter
  */
 
 public class PilotQueues {
+    private static final MMLogger LOGGER = MMLogger.create(PilotQueues.class);
 
     private java.util.Vector<java.util.LinkedList<SPilot>> queues = new java.util.Vector<java.util.LinkedList<SPilot>>(
           Unit.MAXBUILD,
@@ -311,7 +312,7 @@ public class PilotQueues {
             fis.close();
 
         } catch (Exception e) {
-            MWLogger.errLog("A problem occured while retreiving a name from the " +
+            LOGGER.error("A problem occured while retreiving a name from the " +
                                   factionString +
                                   " Pilotnames File! Tried using Pilotnames.txt instead.");
             result = SPilot.getRandomPilotName(CampaignMain.campaignMain.getRandom());

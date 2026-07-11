@@ -22,13 +22,13 @@ package mekwars.server.campaign.commands;
 
 import common.campaign.pilot.Pilot;
 import common.campaign.pilot.skills.PilotSkill;
-import common.util.MWLogger;
 import common.util.UnitUtils;
 import megamek.common.CriticalSlot;
 import megamek.common.Entity;
 import megamek.common.Mech;
 import megamek.common.Mounted;
 import megamek.common.WeaponType;
+import megamek.logging.MMLogger;
 import mekwars.server.campaign.CampaignMain;
 import server.util.RepairTrackingThread;
 
@@ -37,6 +37,7 @@ import server.util.RepairTrackingThread;
  *       repair thread
  */
 public class SimpleRepairCommand implements Command {
+    private static final MMLogger LOGGER = MMLogger.create(SimpleRepairCommand.class);
 
     int accessLevel = 0;
     String syntax = "";
@@ -144,8 +145,7 @@ public class SimpleRepairCommand implements Command {
                       "FSM|Sorry your repair order could not be processed the repair thread has been terminated. Staff has been notified.",
                       Username,
                       false);
-                MWLogger.errLog(
-                      "AM:NOTE: Repair Thread has been terminated! Use the restartrepairthread command to restart it! If all else fails reboot!");
+                LOGGER.error("AM:NOTE: Repair Thread has been terminated! Use the restartrepairthread command to restart it! If all else fails reboot!");
                 return;
             }
 
@@ -156,7 +156,7 @@ public class SimpleRepairCommand implements Command {
             unit.addRepairCost(-1);
             player.setSave();
             time = setWorkHours(rolls, techs, unit.getEntity(), player.getMyHouse());
-            MWLogger.errLog("Repair Time: " + time);
+            LOGGER.error("Repair Time: " + time);
             CampaignMain.campaignMain.getRTT().getRepairList().add(
                   RepairTrackingThread.Repair(player, unitID, techs, time, false));
             CampaignMain.campaignMain.toUser("FSM|Repairs have begone on your " +
@@ -169,8 +169,8 @@ public class SimpleRepairCommand implements Command {
             CampaignMain.campaignMain.toUser("PL|UU|" + unitID + "|" + unit.toString(true), Username, false);
 
         } catch (Exception ex) {
-            MWLogger.errLog("Unable to Process Repair Unit Command!");
-            MWLogger.errLog(ex);
+            LOGGER.error("Unable to Process Repair Unit Command!");
+            LOGGER.error(ex, "");
         }
 
     }//end process()

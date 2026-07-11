@@ -17,13 +17,14 @@
 package mekwars.server.campaign.operations;
 
 import common.Unit;
-import common.util.MWLogger;
 import megamek.common.IEntityRemovalConditions;
 import megamek.common.Mech;
+import megamek.logging.MMLogger;
 import mekwars.server.campaign.CampaignMain;
 
 
 public class OperationEntity {
+    private static final MMLogger LOGGER = MMLogger.create(OperationEntity.class);
 
     //IVARS
     private String ownerName;
@@ -142,8 +143,8 @@ public class OperationEntity {
             //check range. used to determine whether or not arty is overun.
             if (ST.hasMoreElements()) {this.setOffBoardRange(Integer.parseInt(ST.nextToken()));}
         } catch (Exception ex) {
-            MWLogger.errLog("Error while parsing the following String: " + s);
-            MWLogger.errLog(ex);
+            LOGGER.error("Error while parsing the following String: " + s);
+            LOGGER.error(ex, "");
         }
     }//end OperationEntity()
 

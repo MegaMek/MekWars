@@ -30,9 +30,10 @@
 package mekwars.server.campaign;
 
 import common.Unit;
-import common.util.MWLogger;
+import megamek.logging.MMLogger;
 
 public class AutoArmy {
+    private static final MMLogger LOGGER = MMLogger.create(AutoArmy.class);
 
     //VARIABLES
     private java.util.Vector<mekwars.server.campaign.SUnit> theUnits;
@@ -439,7 +440,7 @@ public class AutoArmy {
         try {
             v.elements();
         } catch (Exception e) {
-            MWLogger.mainLog("AUTOARMY UNITS WERE NULL");
+            LOGGER.info("AUTOARMY UNITS WERE NULL");
         }
 
         for (SUnit currU : this.getUnits()) {

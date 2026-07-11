@@ -20,11 +20,10 @@
  * Our thanks to the original authors.
  */
 package mekwars.server.MWChatServer.commands;
-
-import common.util.MWLogger;
 import common.util.StringUtils;
 import server.MWChatServer.auth.IAuthenticator;
 import server.campaign.CampaignMain;
+import megamek.logging.MMLogger;
 
 /**
  * @author Steve Hawkins
@@ -33,6 +32,7 @@ import server.campaign.CampaignMain;
 //sigon name password [protocol_version [chat_color]]
 
 public class SignOn extends CommandBase implements ICommands {
+    private static final MMLogger LOGGER = MMLogger.create(SignOn.class);
 
     private int nobody_id = 0;
 
@@ -135,13 +135,13 @@ public class SignOn extends CommandBase implements ICommands {
             return true;
 
         } catch (NullPointerException NPE) {
-            MWLogger.errLog("Sign On Error");
-            MWLogger.errLog(NPE);
+            LOGGER.error("Sign On Error");
+            LOGGER.error(NPE, "");
         } catch (Exception e) {//even though access is denied, find an acceptable nobody
 
             if (e.getMessage() == null) {
-                MWLogger.errLog("Sign On Error: Null exception message");
-                MWLogger.errLog(e);
+                LOGGER.error("Sign On Error: Null exception message");
+                LOGGER.error(e, "");
             } else if (e.getMessage().equals(ACCESS_DENIED)) {
                 //client.setUserId(null);
                 client.error(ACCESS_DENIED, e.getMessage());
@@ -153,7 +153,7 @@ public class SignOn extends CommandBase implements ICommands {
                 args[1] = key;
                 return this.process(client, args);
             } else {
-                MWLogger.errLog(e);
+                LOGGER.error(e, "");
             }
             String userId = client.getUserId();
             //client.setUserId(null);

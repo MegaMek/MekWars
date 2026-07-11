@@ -15,12 +15,12 @@
  */
 
 package mekwars.server.campaign.commands;
-
-import common.util.MWLogger;
+import megamek.logging.MMLogger;
 import mekwars.server.campaign.CampaignMain;
 import server.campaign.pilot.SPilot;
 
 public class ExchangePilotInUnitCommand implements Command {
+    private static final MMLogger LOGGER = MMLogger.create(ExchangePilotInUnitCommand.class);
 
     int accessLevel = 0;
     String syntax = "";
@@ -129,7 +129,7 @@ public class ExchangePilotInUnitCommand implements Command {
                             return;
                         }
                     } catch (Exception ex) {
-                        MWLogger.errLog(ex);
+                        LOGGER.error(ex, "");
                         CampaignMain.campaignMain.toUser("AM:Invalid Pilot try again!", Username, true);
                         return;
                     }

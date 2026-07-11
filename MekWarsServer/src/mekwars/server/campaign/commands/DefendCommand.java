@@ -15,7 +15,7 @@
 package mekwars.server.campaign.commands;
 
 import common.campaign.operations.Operation;
-import common.util.MWLogger;
+import megamek.logging.MMLogger;
 import mekwars.server.campaign.CampaignMain;
 
 /**
@@ -23,6 +23,7 @@ import mekwars.server.campaign.CampaignMain;
  * defender for an attack.
  */
 public class DefendCommand implements Command {
+    private static final MMLogger LOGGER = MMLogger.create(DefendCommand.class);
 
     int accessLevel = 0;
     String syntax = "attack number#army number#team number";
@@ -293,7 +294,7 @@ public class DefendCommand implements Command {
         if (hasCost) {toSend += ").";} else {toSend += ".";}
 
         // tell the defender that he has successfully joined the attack.
-        MWLogger.gameLog("Defend: " + so.getShortID() + "/" + dp.getName() + " w. Army #" + da.getID());
+        LOGGER.info("Defend: " + so.getShortID() + "/" + dp.getName() + " w. Army #" + da.getID());
         CampaignMain.campaignMain.toUser(toSend, Username, true);
 
         if (o.getBooleanValue("FreeForAllOperation")) {

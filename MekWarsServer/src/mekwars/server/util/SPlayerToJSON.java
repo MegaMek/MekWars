@@ -1,9 +1,11 @@
 package mekwars.server.util;
 
+import megamek.logging.MMLogger;
 
 //@salient - util class saves SPlayer as simple json file
 //			 for use with discord bot
 public class SPlayerToJSON {
+    private static final MMLogger LOGGER = MMLogger.create(SPlayerToJSON.class);
     private static String jsonString = "";
 
     private static boolean jsonStart = false;
@@ -28,7 +30,7 @@ public class SPlayerToJSON {
         //if the path doesn't exist, create it
         if (pathCheck.exists() == false) {
             if (pathCheck.mkdirs() == false) {
-                MWLogger.errLog("error in SPlayerToJSON, failed to create directories");
+                LOGGER.error("error in SPlayerToJSON, failed to create directories");
                 return;
             }
         }
@@ -39,10 +41,10 @@ public class SPlayerToJSON {
                   java.nio.file.StandardOpenOption.CREATE,
                   java.nio.file.StandardOpenOption.TRUNCATE_EXISTING);
 
-            MWLogger.debugLog("SPlayer to json filewrite completed successfully");
+            LOGGER.debug("SPlayer to json filewrite completed successfully");
         } catch (java.io.IOException e) {
-            MWLogger.debugLog(e);
-            MWLogger.errLog(e);
+            LOGGER.debug(e, "");
+            LOGGER.error(e, "");
         }
 
         jsonString = ""; //clear for next use

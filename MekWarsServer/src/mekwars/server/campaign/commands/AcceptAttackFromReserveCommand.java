@@ -16,7 +16,7 @@ package mekwars.server.campaign.commands;
 
 import common.Unit;
 import common.campaign.operations.Operation;
-import common.util.MWLogger;
+import megamek.logging.MMLogger;
 import mekwars.server.campaign.CampaignMain;
 
 /**
@@ -24,6 +24,7 @@ import mekwars.server.campaign.CampaignMain;
  * defender for an attack.
  */
 public class AcceptAttackFromReserveCommand implements Command {
+    private static final MMLogger LOGGER = MMLogger.create(AcceptAttackFromReserveCommand.class);
 
     int accessLevel = 0;
     String syntax = "";
@@ -251,7 +252,7 @@ public class AcceptAttackFromReserveCommand implements Command {
         if (hasCost) {toSend += ").";} else {toSend += ".";}
 
         //tell the defender that he has succesfully joined the attack.
-        MWLogger.gameLog("AcceptAttackFromReserve: " +
+        LOGGER.info("AcceptAttackFromReserve: " +
                                so.getShortID() +
                                "/" +
                                dp.getName() +

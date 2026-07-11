@@ -280,7 +280,7 @@ public class OperationManager extends AbstractOperationManager implements I_Oper
           boolean ignoreStatus) {
 
         if (so == null) {
-            MWLogger.errLog("Attempted to terminate null ShortOperation");
+            LOGGER.error("Attempted to terminate null ShortOperation");
             return;
         }
 
@@ -397,7 +397,7 @@ public class OperationManager extends AbstractOperationManager implements I_Oper
                                                                                                        .firstKey());
                     for (server.campaign.SUnit unit : so.preCapturedUnits) {faction.addUnit(unit, true);}
                 } catch (Exception ex) {
-                    MWLogger.errLog(ex);
+                    LOGGER.error(ex, "");
                 }
 
             }
@@ -414,7 +414,7 @@ public class OperationManager extends AbstractOperationManager implements I_Oper
             try {
                 CampaignMain.campaignMain.getPlayer(currN).lockArmy(-1);
             } catch (Exception ex) {
-                MWLogger.errLog(currN + " had a null army while terminating. Continuing to next player.");
+                LOGGER.error(currN + " had a null army while terminating. Continuing to next player.");
                 continue;
             }
         }
@@ -628,7 +628,7 @@ public class OperationManager extends AbstractOperationManager implements I_Oper
 
         //nullcheck, just in case.
         if (so == null) {
-            MWLogger.errLog("Error: Tried to add a null ShortOperation to the Manager");
+            LOGGER.error("Error: Tried to add a null ShortOperation to the Manager");
             return;
         }
 

@@ -18,12 +18,13 @@ package mekwars.server.campaign.util;
 
 import common.House;
 import common.Unit;
-import common.util.MWLogger;
+import megamek.logging.MMLogger;
 import mekwars.server.campaign.CampaignMain;
 import server.util.StringUtil;
 
 
 public class Statistics {
+    private static final MMLogger LOGGER = MMLogger.create(Statistics.class);
 
     public static String doGetMechStats(int size) {
         java.util.TreeSet<MekStatistics> Sorted = new java.util.TreeSet<MekStatistics>();
@@ -122,8 +123,8 @@ public class Statistics {
                     result.append("</tr>");
                     rank++;
                 } catch (Exception ex) {
-                    MWLogger.errLog("Error while Referencing player: " + p.getName());
-                    MWLogger.errLog(ex);
+                    LOGGER.error("Error while Referencing player: " + p.getName());
+                    LOGGER.error(ex, "");
                 }
             }
             result.append("</table>");
@@ -139,7 +140,7 @@ public class Statistics {
             out.close();
             mekwars.server.campaign.util.Statistics.doEXPRanking();
         } catch (Exception ex) {
-            MWLogger.errLog(ex);
+            LOGGER.error(ex, "");
         }
     }
 

@@ -20,11 +20,11 @@ package mekwars.server.campaign.commands;
 
 import common.House;
 import common.Unit;
-import common.util.MWLogger;
 import common.util.StringUtils;
 import common.util.UnitUtils;
 import megamek.common.Entity;
 import megamek.common.Mech;
+import megamek.logging.MMLogger;
 import mekwars.server.campaign.CampaignMain;
 import server.campaign.pilot.SPilot;
 
@@ -37,6 +37,7 @@ import server.campaign.pilot.SPilot;
  */
 
 public class RepodCommand implements Command {
+    private static final MMLogger LOGGER = MMLogger.create(RepodCommand.class);
 
     int accessLevel = 0;
     String syntax = "";
@@ -333,18 +334,18 @@ public class RepodCommand implements Command {
                                 // chassis.equals(targetChassis)
                             }// end if (Filename.startsWith(targetChassis))
                         } else {
-                            MWLogger.mainLog("File " + prodFile + " has a problem with line:" + l);
+                            LOGGER.info("File " + prodFile + " has a problem with line:" + l);
                         }
                     }// end dis.ready()
                     dis.close();
                     fis.close();
                 } catch (java.io.FileNotFoundException ex) {
-                    MWLogger.mainLog("File " + prodFile + " was not Found");
+                    LOGGER.info("File " + prodFile + " was not Found");
                 } catch (java.io.IOException ex) {
-                    MWLogger.mainLog("File " + prodFile + " had an I/O error");
+                    LOGGER.info("File " + prodFile + " had an I/O error");
                 } catch (Exception ex) {
-                    MWLogger.errLog(ex);
-                    MWLogger.mainLog("File " + prodFile + " has a problem");
+                    LOGGER.error(ex, "");
+                    LOGGER.info("File " + prodFile + " has a problem");
                 } finally {
                     // nothing
                 }

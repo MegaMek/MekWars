@@ -17,11 +17,12 @@
 package mekwars.server.campaign.commands.admin;
 
 import common.Continent;
-import common.util.MWLogger;
+import megamek.logging.MMLogger;
 import mekwars.server.campaign.CampaignMain;
 
 
 public class AdminCreateTerrainCommand implements server.campaign.commands.Command {
+    private static final MMLogger LOGGER = MMLogger.create(AdminCreateTerrainCommand.class);
 
     int accessLevel = server.MWChatServer.auth.IAuthenticator.ADMIN;
     String syntax = "Planet Name#TerrainType#AdvancedTerrain#Chance";
@@ -76,7 +77,7 @@ public class AdminCreateTerrainCommand implements server.campaign.commands.Comma
                         advTerrainType +
                         ").");
         } catch (Exception ex) {
-            MWLogger.errLog(ex);
+            LOGGER.error(ex, "");
         }
     }
 

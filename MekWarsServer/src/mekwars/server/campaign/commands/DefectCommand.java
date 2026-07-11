@@ -38,6 +38,7 @@ package mekwars.server.campaign.commands;
 import java.util.StringTokenizer;
 
 import megamek.common.TechConstants;
+import megamek.logging.MMLogger;
 import mekwars.common.Planet;
 import mekwars.common.UnitFactory;
 import mekwars.common.util.UnitUtils;
@@ -47,6 +48,7 @@ import mekwars.server.campaign.util.HouseRankingHelpContainer;
 import mekwars.server.util.MWPasswd;
 
 public class DefectCommand implements Command {
+    private static final MMLogger LOGGER = MMLogger.create(DefectCommand.class);
 
     int accessLevel = 0;
     String syntax = "";
@@ -791,7 +793,7 @@ public class DefectCommand implements Command {
         }
 
         if (planetList.size() < 1) {
-            MWLogger.errLog("Error Unable to find planet for new faction " + house.getName());
+            LOGGER.error("Error Unable to find planet for new faction " + house.getName());
             CampaignMain.campaignMain.doSendModMail("NOTE",
                   "Error Unable to find planet for new faction " + house.getName());
         }
@@ -872,7 +874,7 @@ public class DefectCommand implements Command {
                     ps.close();
                     out.close();
                 } catch (Exception ex) {
-                    MWLogger.errLog(ex);
+                    LOGGER.error(ex, "");
                 }
             }
         }

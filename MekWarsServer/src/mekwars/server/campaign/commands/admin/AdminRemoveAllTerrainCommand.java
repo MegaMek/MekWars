@@ -15,11 +15,11 @@
 
 
 package mekwars.server.campaign.commands.admin;
-
-import common.util.MWLogger;
+import megamek.logging.MMLogger;
 import mekwars.server.campaign.CampaignMain;
 
 public class AdminRemoveAllTerrainCommand implements server.campaign.commands.Command {
+    private static final MMLogger LOGGER = MMLogger.create(AdminRemoveAllTerrainCommand.class);
 
     int accessLevel = server.MWChatServer.auth.IAuthenticator.ADMIN;
     String syntax = "Planet Name";
@@ -55,7 +55,7 @@ public class AdminRemoveAllTerrainCommand implements server.campaign.commands.Co
             CampaignMain.campaignMain.doSendModMail("NOTE",
                   Username + " removed all terrain from " + p.getName() + ".");
         } catch (Exception ex) {
-            MWLogger.errLog(ex);
+            LOGGER.error(ex, "");
         }
 
     }

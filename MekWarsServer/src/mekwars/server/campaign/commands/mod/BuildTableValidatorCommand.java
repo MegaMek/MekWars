@@ -15,9 +15,8 @@
  */
 
 package mekwars.server.campaign.commands.mod;
-
-import common.util.MWLogger;
 import megamek.common.Entity;
+import megamek.logging.MMLogger;
 import mekwars.server.campaign.CampaignMain;
 
 
@@ -30,6 +29,7 @@ import mekwars.server.campaign.CampaignMain;
  *       Syntax  /c buildtablevalidator#era
  */
 public class BuildTableValidatorCommand implements server.campaign.commands.Command {
+    private static final MMLogger LOGGER = MMLogger.create(BuildTableValidatorCommand.class);
 
     int accessLevel = server.MWChatServer.auth.IAuthenticator.MODERATOR;
     String syntax = "[Standard/Reward/Rare]";
@@ -151,13 +151,13 @@ public class BuildTableValidatorCommand implements server.campaign.commands.Comm
 
                 }
             } catch (Exception e) {
-                MWLogger.errLog(e);
+                LOGGER.error(e, "");
                 return "Error from FileReader of BufferedReader while opening files. Check permissions.";
             } finally {
                 try {
                     dis.close();
                 } catch (java.io.IOException e) {
-                    MWLogger.errLog(e);
+                    LOGGER.error(e, "");
                 }
             }
         }

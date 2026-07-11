@@ -1,11 +1,12 @@
 package mekwars.client;
 
-import mekwars.common.util.MWLogger;
+import megamek.logging.MMLogger;
 
 /**
  * @author http://www.anyexample.com
  */
 class AePlayWave extends Thread {
+    private static final MMLogger LOGGER = MMLogger.create(AePlayWave.class);
 
     private static final int EXTERNAL_BUFFER_SIZE = 524288; // 128Kb
     private String filename;
@@ -27,7 +28,7 @@ class AePlayWave extends Thread {
 
         java.io.File soundFile = new java.io.File(filename);
         if (!soundFile.exists()) {
-            MWLogger.errLog("Wave file not found: " + filename);
+            LOGGER.error("Wave file not found: " + filename);
             return;
         }
 
@@ -35,10 +36,10 @@ class AePlayWave extends Thread {
         try {
             audioInputStream = javax.sound.sampled.AudioSystem.getAudioInputStream(soundFile);
         } catch (javax.sound.sampled.UnsupportedAudioFileException e1) {
-            MWLogger.errLog(e1);
+            LOGGER.error(e1, "");
             return;
         } catch (java.io.IOException e1) {
-            MWLogger.errLog(e1);
+            LOGGER.error(e1, "");
             return;
         }
 
@@ -51,10 +52,10 @@ class AePlayWave extends Thread {
             auline = (javax.sound.sampled.SourceDataLine) javax.sound.sampled.AudioSystem.getLine(info);
             auline.open(format);
         } catch (javax.sound.sampled.LineUnavailableException e) {
-            MWLogger.errLog(e);
+            LOGGER.error(e, "");
             return;
         } catch (Exception e) {
-            MWLogger.errLog(e);
+            LOGGER.error(e, "");
             return;
         }
 
@@ -70,7 +71,7 @@ class AePlayWave extends Thread {
                 }
             }
         } catch (java.io.IOException e) {
-            MWLogger.errLog(e);
+            LOGGER.error(e, "");
             return;
         } finally {
             auline.drain();
@@ -83,7 +84,7 @@ class AePlayWave extends Thread {
 
         java.io.File soundFile = new java.io.File(filename);
         if (!soundFile.exists()) {
-            MWLogger.errLog("Wave file not found: " + filename);
+            LOGGER.error("Wave file not found: " + filename);
             return;
         }
 
@@ -91,10 +92,10 @@ class AePlayWave extends Thread {
         try {
             audioInputStream = javax.sound.sampled.AudioSystem.getAudioInputStream(soundFile);
         } catch (javax.sound.sampled.UnsupportedAudioFileException e1) {
-            MWLogger.errLog(e1);
+            LOGGER.error(e1, "");
             return;
         } catch (java.io.IOException e1) {
-            MWLogger.errLog(e1);
+            LOGGER.error(e1, "");
             return;
         }
 
@@ -107,10 +108,10 @@ class AePlayWave extends Thread {
             auline = (javax.sound.sampled.SourceDataLine) javax.sound.sampled.AudioSystem.getLine(info);
             auline.open(format);
         } catch (javax.sound.sampled.LineUnavailableException e) {
-            MWLogger.errLog(e);
+            LOGGER.error(e, "");
             return;
         } catch (Exception e) {
-            MWLogger.errLog(e);
+            LOGGER.error(e, "");
             return;
         }
 
@@ -136,7 +137,7 @@ class AePlayWave extends Thread {
                 }
             }
         } catch (java.io.IOException e) {
-            MWLogger.errLog(e);
+            LOGGER.error(e, "");
             return;
         } finally {
             auline.drain();

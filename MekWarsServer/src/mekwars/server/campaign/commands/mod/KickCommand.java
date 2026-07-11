@@ -15,8 +15,7 @@
  */
 
 package mekwars.server.campaign.commands.mod;
-
-import common.util.MWLogger;
+import megamek.logging.MMLogger;
 import mekwars.server.campaign.CampaignMain;
 
 
@@ -26,6 +25,7 @@ import mekwars.server.campaign.CampaignMain;
  * Syntax  /c Kick#Player
  */
 public class KickCommand implements server.campaign.commands.Command {
+    private static final MMLogger LOGGER = MMLogger.create(KickCommand.class);
 
     int accessLevel = server.MWChatServer.auth.IAuthenticator.MODERATOR;
     String syntax = "Player Name";
@@ -65,7 +65,7 @@ public class KickCommand implements server.campaign.commands.Command {
         //Use this to kick ghost players from the clients.
         CampaignMain.campaignMain.getServer().sendRemoveUserToAll(toKick, false);
         CampaignMain.campaignMain.getServer().sendChat("AM:" + Username + " kicked " + toKick);
-        MWLogger.modLog(Username + " kicked " + toKick);
+        LOGGER.info(Username + " kicked " + toKick);
 
 		/*try {
 			Thread.sleep(100);//Why do we sleep here? Anyone?
@@ -83,7 +83,7 @@ public class KickCommand implements server.campaign.commands.Command {
             }
 
         } catch (Exception ex) {
-            MWLogger.errLog(ex);
+            LOGGER.error(ex, "");
         }
 
 

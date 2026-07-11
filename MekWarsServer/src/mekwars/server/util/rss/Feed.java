@@ -15,6 +15,7 @@
  */
 package mekwars.server.util.rss;
 
+import megamek.logging.MMLogger;
 import mekwars.server.campaign.CampaignMain;
 
 /**
@@ -26,6 +27,7 @@ import mekwars.server.campaign.CampaignMain;
  * @since 2018-02-18
  */
 public class Feed {
+    private static final MMLogger LOGGER = MMLogger.create(Feed.class);
     private java.util.ArrayList<FeedMessage> messages = new java.util.ArrayList<FeedMessage>();
 
     private String header;
@@ -78,7 +80,7 @@ public class Feed {
         } catch (java.io.FileNotFoundException efnf) {
             // ignore
         } catch (Exception ex) {
-            MWLogger.errLog("Problems writing the news feed");
+            LOGGER.error("Problems writing the news feed");
         }
 
 

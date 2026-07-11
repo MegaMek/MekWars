@@ -21,10 +21,11 @@ import common.House;
 import common.Planet;
 import common.Unit;
 import common.UnitFactory;
-import common.util.MWLogger;
+import megamek.logging.MMLogger;
 import mekwars.server.campaign.CampaignMain;
 
 public class AdminSavePlanetsToXMLCommand implements server.campaign.commands.Command {
+    private static final MMLogger LOGGER = MMLogger.create(AdminSavePlanetsToXMLCommand.class);
     int accessLevel = server.MWChatServer.auth.IAuthenticator.ADMIN;
     String syntax = "";
 
@@ -126,7 +127,7 @@ public class AdminSavePlanetsToXMLCommand implements server.campaign.commands.Co
             p.close();
             out.close();
         } catch (Exception ex) {
-            MWLogger.errLog(ex);
+            LOGGER.error(ex, "");
         }
         CampaignMain.campaignMain.toUser("XML saved!", Username, true);
         CampaignMain.campaignMain.doSendModMail("NOTE", Username + " has saved the universe to XML");

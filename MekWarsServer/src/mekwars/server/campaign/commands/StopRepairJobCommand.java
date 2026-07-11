@@ -19,8 +19,7 @@
  *
  */
 package mekwars.server.campaign.commands;
-
-import common.util.MWLogger;
+import megamek.logging.MMLogger;
 import mekwars.server.campaign.CampaignMain;
 
 /**
@@ -28,6 +27,7 @@ import mekwars.server.campaign.CampaignMain;
  *       repair thread
  */
 public class StopRepairJobCommand implements Command {
+    private static final MMLogger LOGGER = MMLogger.create(StopRepairJobCommand.class);
 
     int accessLevel = 0;
     String syntax = "";
@@ -68,8 +68,7 @@ public class StopRepairJobCommand implements Command {
                       "FSM|Sorry your repair order could not be processed - the repair thread terminated. Staff was notified.",
                       Username,
                       false);
-                MWLogger.errLog(
-                      "NOTE: Repair Thread terminated! Use the restartrepairthread command to restart the thread. If all else fails reboot!");
+                LOGGER.error("NOTE: Repair Thread terminated! Use the restartrepairthread command to restart the thread. If all else fails reboot!");
                 return;
             }
 
@@ -78,8 +77,8 @@ public class StopRepairJobCommand implements Command {
             CampaignMain.campaignMain.toUser("PL|UU|" + unitID + "|" + unit.toString(true), Username, false);
 
         } catch (Exception ex) {
-            MWLogger.errLog("AM:Unable to Process Repair Unit Command!");
-            MWLogger.errLog(ex);
+            LOGGER.error("AM:Unable to Process Repair Unit Command!");
+            LOGGER.error(ex, "");
         }
 
     }//end process()

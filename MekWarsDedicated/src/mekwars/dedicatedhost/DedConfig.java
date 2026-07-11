@@ -28,12 +28,13 @@ import java.util.Properties;
 import javax.swing.JOptionPane;
 
 import common.campaign.clientutils.IClientConfig;
-import common.util.MWLogger;
+import megamek.logging.MMLogger;
 
 /**
  * Class for client's configuration.
  */
 public class DedConfig implements IClientConfig {
+    private static final MMLogger LOGGER = MMLogger.create(DedConfig.class);
 
     public static final String CONFIG_FILE = "./data/mwconfig.txt";
     public static final String CONFIG_BACKUP_FILE = "./data/mwconfig.txt.bak";
@@ -62,11 +63,11 @@ public class DedConfig implements IClientConfig {
                 config.load(fis);
                 fis.close();
             } catch (Exception ex) {
-                MWLogger.errLog(ex);
+                LOGGER.error(ex, "");
                 JOptionPane.showMessageDialog(null, "Unable to load Backup config file");
             }
         } catch (Exception ex) {
-            MWLogger.errLog(ex);
+            LOGGER.error(ex, "");
             JOptionPane.showMessageDialog(null, "Unable to load main config file");
         }
         //check for a serverdata.dat
@@ -80,7 +81,7 @@ public class DedConfig implements IClientConfig {
         } catch (FileNotFoundException fnfe) {
             //Exception simply means serverdata.dat is not present.
         } catch (Exception ex) {
-            MWLogger.errLog(ex);
+            LOGGER.error(ex, "");
         }
 
         setParam("DEDICATED", "TRUE");
@@ -245,8 +246,8 @@ public class DedConfig implements IClientConfig {
             fos.close();
             ps.close();
         } catch (Exception ex) {
-            MWLogger.errLog(ex);
-            MWLogger.errLog("Failed backingup config file");
+            LOGGER.error(ex, "");
+            LOGGER.error("Failed backingup config file");
             return;
         }
         try {
@@ -256,8 +257,8 @@ public class DedConfig implements IClientConfig {
             fos.close();
             ps.close();
         } catch (Exception ex) {
-            MWLogger.errLog(ex);
-            MWLogger.errLog("Failed saving config file");
+            LOGGER.error(ex, "");
+            LOGGER.error("Failed saving config file");
         }
     }
 

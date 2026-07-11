@@ -21,13 +21,14 @@ import common.Continent;
 import common.Influences;
 import common.PlanetEnvironments;
 import common.UnitFactory;
-import common.util.MWLogger;
 import gd.xml.ParseException;
 import gd.xml.XMLParser;
 import gd.xml.XMLResponder;
+import megamek.logging.MMLogger;
 import mekwars.server.campaign.CampaignMain;
 
 public class XMLPlanetDataParser implements XMLResponder {
+    private static final MMLogger LOGGER = MMLogger.create(XMLPlanetDataParser.class);
     public java.util.TreeMap<Integer, AdvancedTerrain> AdvTerrTreeMap = new java.util.TreeMap<Integer, AdvancedTerrain>();
     String lastElement = "";
     String lastInfFaction = "";
@@ -99,7 +100,7 @@ public class XMLPlanetDataParser implements XMLResponder {
             XMLParser xp = new XMLParser();
             xp.parseXML(this);
         } catch (Exception ex) {
-            MWLogger.errLog(ex);
+            LOGGER.error(ex, "");
         }
     }
 
@@ -126,7 +127,7 @@ public class XMLPlanetDataParser implements XMLResponder {
         if (sysID != null) {
             System.out.print("  sysID = " + sysID);
         }
-        MWLogger.mainLog("");
+        LOGGER.info("");
     }
 
     public void recordEntityDeclaration(String name, String value, String pubID, String sysID, String notation)
@@ -144,12 +145,12 @@ public class XMLPlanetDataParser implements XMLResponder {
         if (notation != null) {
             System.out.print("  notation = " + notation);
         }
-        MWLogger.mainLog("");
+        LOGGER.info("");
     }
 
     public void recordElementDeclaration(String name, String content) throws ParseException {
         System.out.print(prefix + "!ELEMENT: " + name);
-        MWLogger.mainLog("  content = " + content);
+        LOGGER.info("  content = " + content);
     }
 
     public void recordAttlistDeclaration(String element, String attr, boolean notation, String type, String defmod,
@@ -158,7 +159,7 @@ public class XMLPlanetDataParser implements XMLResponder {
         System.out.print("  attr = " + attr);
         System.out.print("  type = " + ((notation) ? "NOTATIONS " : "") + type);
         System.out.print("  def. modifier = " + defmod);
-        MWLogger.mainLog((def == null) ? "" : "  def = " + notation);
+        LOGGER.info((def == null) ? "" : "  def = " + notation);
     }
 
     /* DOC METHDODS */
@@ -171,7 +172,7 @@ public class XMLPlanetDataParser implements XMLResponder {
         if (sysID != null) {
             System.out.print("  sysID = " + sysID);
         }
-        MWLogger.mainLog("");
+        LOGGER.info("");
         prefix = "";
     }
 
@@ -179,8 +180,8 @@ public class XMLPlanetDataParser implements XMLResponder {
     }
 
     public void recordDocEnd() {
-        MWLogger.mainLog("");
-        MWLogger.mainLog("Planet Parsing finished without error");
+        LOGGER.info("");
+        LOGGER.info("Planet Parsing finished without error");
     }
 
     public void recordElementStart(String name, java.util.Hashtable attr) throws ParseException {
@@ -205,7 +206,7 @@ public class XMLPlanetDataParser implements XMLResponder {
     public void recordElementEnd(String name) throws ParseException {
 
         if (name.equalsIgnoreCase("TIMEZONE")) {
-            MWLogger.errLog("planets.xml contains TIMEZONE field. No longer necessary!");
+            LOGGER.error("planets.xml contains TIMEZONE field. No longer necessary!");
         }
 
         if (name.equalsIgnoreCase("UNITFACTORY")) {
@@ -238,7 +239,7 @@ public class XMLPlanetDataParser implements XMLResponder {
         }
         if (name.equalsIgnoreCase("CONTINENT")) {
             //TODO remove this later MDR
-            MWLogger.mainLog("continent to try and add is: " +
+            LOGGER.info("continent to try and add is: " +
                                    terrainProb +
                                    "% " +
                                    terrainName +
@@ -271,7 +272,7 @@ public class XMLPlanetDataParser implements XMLResponder {
         }
 
         if (name.equalsIgnoreCase("PLANET")) {
-            MWLogger.mainLog("PLANET READ");
+            LOGGER.info("PLANET READ");
             server.campaign.SPlanet p;
             p = new server.campaign.SPlanet(counter++,
                   Name,
@@ -288,7 +289,7 @@ public class XMLPlanetDataParser implements XMLResponder {
             p.setEnvironments(PlanEnv);
             p.setDescription(Description);
             p.setBaysProvided(Warehousesize);
-            MWLogger.mainLog("Influence: " + Influence);
+            LOGGER.info("Influence: " + Influence);
             // This has to be called last since the Bays provided are added to
             // the faction then for instance
             p.setInfluence(new Influences(Influence));
@@ -360,20 +361,20 @@ public class XMLPlanetDataParser implements XMLResponder {
     }
 
     public void recordPI(String name, String pValue) {
-        MWLogger.mainLog(prefix + "*" + name + " PI: " + pValue);
+        LOGGER.info(prefix + "*" + name + " PI: " + pValue);
     }
 
     public void recordCharData(String charData) {
-        MWLogger.mainLog(prefix + charData);
+        LOGGER.info(prefix + charData);
         if (!charData.equalsIgnoreCase("")) {
-            MWLogger.mainLog(lastElement + " --> " + charData);
+            LOGGER.info(lastElement + " --> " + charData);
         } else {
             lastElement = "";
         }
 
         if (lastElement.equalsIgnoreCase("NAME")) {
             Name = charData;
-            MWLogger.mainLog(Name);
+            LOGGER.info(Name);
         } else if (lastElement.equalsIgnoreCase("INCOME")) {
             Income = Integer.parseInt(charData);
         } else if (lastElement.equalsIgnoreCase("XCOOD")) {
@@ -392,9 +393,9 @@ public class XMLPlanetDataParser implements XMLResponder {
             server.campaign.SHouse h = CampaignMain.campaignMain.getHouseFromPartialString(lastInfFaction, null);
             if (h != null) {
                 Influence.put(h.getId(), Integer.parseInt(charData));
-                MWLogger.mainLog("Parsed: " + h.toString() + " - " + charData);
+                LOGGER.info("Parsed: " + h.toString() + " - " + charData);
             } else {
-                MWLogger.mainLog("ERROR READING FACTION: " + lastInfFaction);
+                LOGGER.info("ERROR READING FACTION: " + lastInfFaction);
             }
         } else if (lastElement.equalsIgnoreCase("FACTORYNAME")) {
             MFName = charData;
@@ -495,7 +496,7 @@ public class XMLPlanetDataParser implements XMLResponder {
     }
 
     public void recordComment(String comment) {
-        MWLogger.mainLog(prefix + "*Comment: " + comment);
+        LOGGER.info(prefix + "*Comment: " + comment);
     }
 
     /* INPUT METHODS */

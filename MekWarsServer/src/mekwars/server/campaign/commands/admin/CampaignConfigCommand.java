@@ -15,11 +15,11 @@
  */
 
 package mekwars.server.campaign.commands.admin;
-
-import common.util.MWLogger;
+import megamek.logging.MMLogger;
 import mekwars.server.campaign.CampaignMain;
 
 public class CampaignConfigCommand implements server.campaign.commands.Command {
+    private static final MMLogger LOGGER = MMLogger.create(CampaignConfigCommand.class);
 
     int accessLevel = server.MWChatServer.auth.IAuthenticator.ADMIN;
     String syntax = "";
@@ -43,7 +43,7 @@ public class CampaignConfigCommand implements server.campaign.commands.Command {
             CampaignMain.campaignMain.getConfig().load(new java.io.FileInputStream(
                   CampaignMain.campaignMain.getServer().getConfigParam("CAMPAIGNCONFIG")));
         } catch (Exception ex) {
-            MWLogger.errLog(ex);
+            LOGGER.error(ex, "");
             CampaignMain.campaignMain.toUser("Failed to read campaign config.", Username, true);
         }
         CampaignMain.campaignMain.toUser("Campaign config reread!", Username, true);

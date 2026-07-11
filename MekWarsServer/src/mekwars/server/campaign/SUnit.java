@@ -279,7 +279,7 @@ public final class SUnit extends Unit implements Comparable<SUnit> {
                      * missing unit. Either way, need to set up and return a
                      * failsafe unit.
                      */
-                    MWLogger.errLog("Error loading: " + Filename);
+                    LOGGER.error("Error loading: " + Filename);
 
                     try {
                         ent = UnitUtils.createOMG();// new MekFileParser(new
@@ -289,8 +289,8 @@ public final class SUnit extends Unit implements Comparable<SUnit> {
                          * Can't even find the default unit file. Are all the
                          * .zip files missing? Misnamed? Read access is denied?
                          */
-                        MWLogger.errLog("Unable to find default unit file. Server Exiting");
-                        MWLogger.errLog(exep);
+                        LOGGER.error("Unable to find default unit file. Server Exiting");
+                        LOGGER.error(exep, "");
                         System.exit(1);
                     }
                 }
@@ -544,8 +544,8 @@ public final class SUnit extends Unit implements Comparable<SUnit> {
             loadedUnits = new MULParser(entityFile, null).getEntities();
             loadedUnits.trimToSize();
         } catch (Exception ex) {
-            MWLogger.errLog("Unable to load file " + entityFile.getName());
-            MWLogger.errLog(ex);
+            LOGGER.error("Unable to load file " + entityFile.getName());
+            LOGGER.error(ex, "");
             return mulUnits;
         }
 
@@ -650,7 +650,7 @@ public final class SUnit extends Unit implements Comparable<SUnit> {
 
         if (refigureWeightClass) {
             cm.setWeightclass(cm.getEntity().getWeightClass());
-            MWLogger.debugLog("Setting " +
+            LOGGER.debug("Setting " +
                                     cm.getEntity().getModel() +
                                     " to weight class " +
                                     cm.getEntity().getWeightClass());
@@ -989,8 +989,8 @@ public final class SUnit extends Unit implements Comparable<SUnit> {
 
             return s;
         } catch (Exception ex) {
-            MWLogger.errLog(ex);
-            MWLogger.errLog("Unable to Load SUnit: " + s);
+            LOGGER.error(ex, "");
+            LOGGER.error("Unable to Load SUnit: " + s);
             // the unit should still be good return what did get set
             return s;
         }

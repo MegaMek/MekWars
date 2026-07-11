@@ -32,12 +32,13 @@ import javax.swing.JPanel;
 import javax.swing.SpringLayout;
 
 import megamek.common.equipment.AmmoType;
+import megamek.logging.MMLogger;
 import mekwars.common.House;
 import mekwars.common.campaign.clientutils.protocol.IClient;
-import mekwars.common.util.MWLogger;
 import mekwars.common.util.SpringLayoutHelper;
 
 public final class BannedAmmoDialog implements ActionListener {
+    private static final MMLogger LOGGER = MMLogger.create(BannedAmmoDialog.class);
 
     private final static String okayCommand = "Add";
     private final static String cancelCommand = "Close";
@@ -134,7 +135,7 @@ public final class BannedAmmoDialog implements ActionListener {
                 String munition = client.getData().getMunitionsByName().get(ammo).toString();
                 return client.getData().getServerBannedAmmo().containsKey(munition);
             } catch (Exception ex) {
-                MWLogger.errLog("Unable to find ammo " + ammo);
+                LOGGER.error("Unable to find ammo " + ammo);
                 return false;
             }
         }
@@ -142,7 +143,7 @@ public final class BannedAmmoDialog implements ActionListener {
             String munition = client.getData().getMunitionsByName().get(ammo).toString();
             return house.getBannedAmmo().containsKey(munition);
         } catch (Exception ex) {
-            MWLogger.errLog("Unable to find ammo " + ammo);
+            LOGGER.error("Unable to find ammo " + ammo);
             return false;
         }
 

@@ -15,12 +15,12 @@
  */
 
 package mekwars.server.campaign.commands.admin;
-
-import common.util.MWLogger;
+import megamek.logging.MMLogger;
 import mekwars.server.campaign.CampaignMain;
 
 
 public class RemoveTraitCommand implements server.campaign.commands.Command {
+    private static final MMLogger LOGGER = MMLogger.create(RemoveTraitCommand.class);
 
     int accessLevel = server.MWChatServer.auth.IAuthenticator.ADMIN;
     String syntax = "Faction Name#Trait Name#CONFIRM";
@@ -53,7 +53,7 @@ public class RemoveTraitCommand implements server.campaign.commands.Command {
             traitName = command.nextToken();
             confirmString = command.nextToken();
         } catch (Exception ex) {
-            MWLogger.errLog(ex);
+            LOGGER.error(ex, "");
         }
 
         if (!confirmString.equals("CONFIRM")) {return;}

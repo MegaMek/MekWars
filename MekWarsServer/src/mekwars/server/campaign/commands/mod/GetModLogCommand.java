@@ -15,11 +15,11 @@
  */
 
 package mekwars.server.campaign.commands.mod;
-
-import common.util.MWLogger;
+import megamek.logging.MMLogger;
 import mekwars.server.campaign.CampaignMain;
 
 public class GetModLogCommand implements server.campaign.commands.Command {
+    private static final MMLogger LOGGER = MMLogger.create(GetModLogCommand.class);
 
     int accessLevel = server.MWChatServer.auth.IAuthenticator.MODERATOR;
     String syntax = "";
@@ -50,12 +50,12 @@ public class GetModLogCommand implements server.campaign.commands.Command {
             CampaignMain.campaignMain.toUser("SM|" + total, Username, false);
             CampaignMain.campaignMain.doSendModMail("NOTE", Username + " read the modlog.");
         } catch (Exception ex) {
-            MWLogger.errLog(ex);
+            LOGGER.error(ex, "");
         } finally {
             try {
                 dis.close();
             } catch (java.io.IOException e) {
-                MWLogger.errLog(e);
+                LOGGER.error(e, "");
             }
         }
 

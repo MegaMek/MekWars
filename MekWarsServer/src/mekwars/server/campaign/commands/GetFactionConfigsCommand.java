@@ -19,9 +19,8 @@
  *
  */
 package mekwars.server.campaign.commands;
-
-import common.util.MWLogger;
 import common.util.TokenReader;
+import megamek.logging.MMLogger;
 import mekwars.server.campaign.CampaignMain;
 
 /**
@@ -29,6 +28,7 @@ import mekwars.server.campaign.CampaignMain;
  *       different factions configs.
  */
 public class GetFactionConfigsCommand implements Command {
+    private static final MMLogger LOGGER = MMLogger.create(GetFactionConfigsCommand.class);
 
     int accessLevel = 0;
     String syntax = "";
@@ -98,7 +98,7 @@ public class GetFactionConfigsCommand implements Command {
             CampaignMain.campaignMain.toUser(result.toString(), Username, false);
         } catch (Exception ex) {
             CampaignMain.campaignMain.toUser("PL|FC|DONE#DONE", Username, false);
-            MWLogger.errLog(ex);
+            LOGGER.error(ex, "");
         }
     }
 

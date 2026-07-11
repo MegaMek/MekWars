@@ -12,10 +12,10 @@
  * for more details.
  */
 package mekwars.server.campaign.commands;
-
-import common.util.MWLogger;
+import megamek.logging.MMLogger;
 
 public class SendClientDataCommand implements Command {
+    private static final MMLogger LOGGER = MMLogger.create(SendClientDataCommand.class);
 
     String syntax = "";
 
@@ -45,8 +45,8 @@ public class SendClientDataCommand implements Command {
                 }
                 count++;
             }
-            MWLogger.ipLog(userData.toString());
-            MWLogger.ipLog(verifyData.toString());
+            LOGGER.info(userData.toString());
+            LOGGER.info(verifyData.toString());
         } catch (Exception ex) {
             //do nothing
         }

@@ -17,7 +17,7 @@
 package mekwars.server.campaign.market;
 
 import common.Unit;
-import common.util.MWLogger;
+import megamek.logging.MMLogger;
 import mekwars.server.campaign.CampaignMain;
 
 /**
@@ -28,6 +28,7 @@ import mekwars.server.campaign.CampaignMain;
  * @author urgru
  */
 public final class MarketListing {
+    private static final MMLogger LOGGER = MMLogger.create(MarketListing.class);
 
     /*
      * Keep some information about the unit being sold (name, chassis, etc)
@@ -202,7 +203,7 @@ public final class MarketListing {
                 bidsReceived.remove(lowerName);
             }
         } catch (Exception ex) {
-            MWLogger.errLog(ex);
+            LOGGER.error(ex, "");
         }
     }
 

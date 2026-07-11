@@ -16,12 +16,13 @@ package mekwars.server.dataProvider.commands;
 
 import common.CampaignData;
 import common.util.BinWriter;
-import common.util.MWLogger;
+import megamek.logging.MMLogger;
 
 /**
  * Command which calcaulates and returns the timestamp of the current OpList.txt file.
  */
 public class OpListTimestamp implements server.dataProvider.ServerCommand {
+    private static final MMLogger LOGGER = MMLogger.create(OpListTimestamp.class);
 
     public void execute(java.util.Date timestamp, BinWriter out, CampaignData data) throws Exception {
 
@@ -38,12 +39,12 @@ public class OpListTimestamp implements server.dataProvider.ServerCommand {
 
                 oplistTimestamp = tempTime.substring(11);//remove "#Timestamp="
             } catch (Exception e) {
-                MWLogger.infoLog("Error reading first line from OpList.txt");
+                LOGGER.info("Error reading first line from OpList.txt");
             }
 
         }//end if(oplist exists)
 
-        else {MWLogger.infoLog("OpList.txt didn't exist. Returning falsified timestamp to requesting client.");}
+        else {LOGGER.info("OpList.txt didn't exist. Returning falsified timestamp to requesting client.");}
 
         out.println(oplistTimestamp, "OpListTimestamp");
         out.flush();

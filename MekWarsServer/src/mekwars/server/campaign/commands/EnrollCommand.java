@@ -18,10 +18,11 @@ package mekwars.server.campaign.commands;
 
 
 import common.House;
-import common.util.MWLogger;
+import megamek.logging.MMLogger;
 import mekwars.server.campaign.CampaignMain;
 
 public class EnrollCommand implements Command {
+    private static final MMLogger LOGGER = MMLogger.create(EnrollCommand.class);
 
     int accessLevel = 0;
     String syntax = "";
@@ -193,7 +194,7 @@ public class EnrollCommand implements Command {
         //tell the mods and add to the IP log
         java.net.InetAddress ip = CampaignMain.campaignMain.getServer().getIP(Username);
         //MWLogger.modLog(Username + " enrolled in the campaign (IP: " + ip + ").");
-        MWLogger.ipLog("ENROLL: " + Username + " IP: " + ip);
+        LOGGER.info("ENROLL: " + Username + " IP: " + ip);
         CampaignMain.campaignMain.doSendModMail("NOTE", Username + " enrolled in the campaign (IP: " + ip + ").");
 
     }//end process()

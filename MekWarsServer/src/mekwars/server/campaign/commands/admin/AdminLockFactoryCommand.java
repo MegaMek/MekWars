@@ -15,12 +15,12 @@
  */
 
 package mekwars.server.campaign.commands.admin;
-
-import common.util.MWLogger;
+import megamek.logging.MMLogger;
 import mekwars.server.campaign.CampaignMain;
 
 // AdminLockPlanet#Planet#factory#true/false
 public class AdminLockFactoryCommand implements server.campaign.commands.Command {
+    private static final MMLogger LOGGER = MMLogger.create(AdminLockFactoryCommand.class);
 
     int accessLevel = server.MWChatServer.auth.IAuthenticator.ADMIN;
     String syntax = "Planet#factory#true/false";
@@ -96,7 +96,7 @@ public class AdminLockFactoryCommand implements server.campaign.commands.Command
                   "Command failed. Make sure format was: /c adminlockfactory#planetname#factoryname",
                   Username,
                   true);
-            MWLogger.errLog(ex);
+            LOGGER.error(ex, "");
         }
 
     }

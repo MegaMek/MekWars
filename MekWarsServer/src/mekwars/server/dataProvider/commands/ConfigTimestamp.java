@@ -18,7 +18,7 @@ package mekwars.server.dataProvider.commands;
 
 import common.CampaignData;
 import common.util.BinWriter;
-import common.util.MWLogger;
+import megamek.logging.MMLogger;
 
 //import java.io.BufferedReader;
 //import java.io.FileInputStream;
@@ -29,6 +29,7 @@ import common.util.MWLogger;
  * Retrieve the MD5 of the current campaignconfig file.
  */
 public class ConfigTimestamp implements server.dataProvider.ServerCommand {
+    private static final MMLogger LOGGER = MMLogger.create(ConfigTimestamp.class);
 
     public void execute(java.util.Date timestamp, BinWriter out, CampaignData data) throws Exception {
 
@@ -46,10 +47,10 @@ public class ConfigTimestamp implements server.dataProvider.ServerCommand {
 
                 serverConfigTimestamp = tempTime.substring(11);//remove "#Timestamp="
             } catch (Exception e) {
-                MWLogger.infoLog("Error reading first line from campaignconfig.txt");
+                LOGGER.info("Error reading first line from campaignconfig.txt");
             }
         } else {
-            MWLogger.infoLog("campaignconfig.txt didn't exist. returning ficticious timestamp to requesting client.");
+            LOGGER.info("campaignconfig.txt didn't exist. returning ficticious timestamp to requesting client.");
         }
 
         out.println(serverConfigTimestamp, "ConfigTimestamp");

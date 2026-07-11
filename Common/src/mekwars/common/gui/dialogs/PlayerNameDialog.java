@@ -105,7 +105,7 @@ public class PlayerNameDialog extends JDialog implements ActionListener {
         //the name field, for user input. caretUpdate
         //does most of the work to update list contents
         nameField = new JTextField();//field for user input
-        nameField.addCaretListener(_ -> new Thread(() -> {
+        nameField.addCaretListener(caretEvent -> new Thread(() -> {
             String text = nameField.getText();
             if (text == null || text.isEmpty()) {
                 matchingPlayersList.setListData(playerNames);

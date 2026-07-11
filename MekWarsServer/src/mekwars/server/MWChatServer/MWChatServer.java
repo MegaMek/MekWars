@@ -48,6 +48,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
 
+import megamek.logging.MMLogger;
 import mekwars.server.MWChatServer.auth.Auth;
 import mekwars.server.MWChatServer.auth.IAuthenticator;
 import mekwars.server.MWChatServer.auth.IRoomAuthenticator;
@@ -56,6 +57,7 @@ import mekwars.server.MWChatServer.auth.PasswdAuthenticator;
 import mekwars.server.MWChatServer.commands.ICommands;
 
 public class MWChatServer implements ICommands {
+    private static final MMLogger LOGGER = MMLogger.create(MWChatServer.class);
 
     protected static Properties _properties;
     protected boolean _asciiRoomNames;
@@ -166,7 +168,7 @@ public class MWChatServer implements ICommands {
         validateUserId(userId);
         Auth auth = _authenticator.authenticate(client, password);
         int access = auth.getAccess();
-        MWLogger.infoLog(client.getUserId() + " signon from "
+        LOGGER.info(client.getUserId() + " signon from "
                                + client.getHost() + ".  Access = " + access
                                + (client.getTunneling() ? " (tunneling)" : ""));
 
@@ -176,12 +178,12 @@ public class MWChatServer implements ICommands {
 
         client.setUserId(auth.getUserId());
         synchronized (_users) {
-            MWLogger.infoLog("signOn: " + client.getUserId());
+            LOGGER.info("signOn: " + client.getUserId());
             // if signed on locally, let new take precedence
             MWChatClient oldC = _users.get(clientKey(client));
             if (oldC != null) {
                 oldC.killed(client.getUserId(), "Terminated by signing on elsewhere");
-                MWLogger.errLog("Terminated by signing on elsewhere");
+                LOGGER.error("Terminated by signing on elsewhere");
                 signOff(oldC);
             }
 
@@ -191,8 +193,8 @@ public class MWChatServer implements ICommands {
             try {
                 this.joinRoom(client, "Main Chat", "");
             } catch (Exception ex) {
-                MWLogger.errLog("Unable to join room");
-                MWLogger.errLog(ex);
+                LOGGER.error("Unable to join room");
+                LOGGER.error(ex, "");
             }
         }
 
@@ -242,7 +244,7 @@ public class MWChatServer implements ICommands {
                 try {
                     _users.remove(clientKey(client));
                 } catch (Exception ex) {
-                    MWLogger.errLog(ex);
+                    LOGGER.error(ex, "");
                 }
             }
 
@@ -263,7 +265,7 @@ public class MWChatServer implements ICommands {
                     RoomServer room = _rooms.get(key);
                     room.part(client, true);
                     if (room.isEmpty()) {
-                        MWLogger.infoLog("Removing empty room: " + key);
+                        LOGGER.info("Removing empty room: " + key);
                         _rooms.remove(key);
                     }
                 }
@@ -289,12 +291,12 @@ public class MWChatServer implements ICommands {
                             int c = roomName.charAt(i);
                             // don't include space or DEL
                             if (c <= 32 && c >= 128) {
-                                MWLogger.infoLog(client.getUserId() + " room creation rejected: " + roomName);
+                                LOGGER.info(client.getUserId() + " room creation rejected: " + roomName);
                                 throw new Exception(ICommands.INVALID_CHARACTER);
                             }
                         }
                     }
-                    MWLogger.infoLog(client.getUserId()
+                    LOGGER.info(client.getUserId()
                                            + " created new room: " + roomName);
                     room = createRoomServer(roomName, password);
                     _rooms.put(roomKey(room), room);
@@ -349,7 +351,7 @@ public class MWChatServer implements ICommands {
                 killedKey = MWChatClient.getKey(victimId);
             }
         } else {
-            MWLogger.infoLog(victim + " kicked off by " + killer._userId);
+            LOGGER.info(victim + " kicked off by " + killer._userId);
             killedKey = c.getKey();
             c.killed(killer.getUserId(), message);
             signOff(c);
@@ -369,7 +371,7 @@ public class MWChatServer implements ICommands {
         try {
             return _users.get(clientKey(target));
         } catch (Exception ex) {
-            MWLogger.errLog(ex);
+            LOGGER.error(ex, "");
             return null;
         }
     }
@@ -386,7 +388,7 @@ public class MWChatServer implements ICommands {
         try {
             return client.toLowerCase();
         } catch (Exception ex) {
-            MWLogger.errLog(ex);
+            LOGGER.error(ex, "");
             return null;
         }
     }
@@ -404,7 +406,7 @@ public class MWChatServer implements ICommands {
                 killedKey = MWChatClient.getKey(victimId);
             }
         } else {
-            MWLogger.infoLog(victim + " kicked off by server.");
+            LOGGER.info(victim + " kicked off by server.");
             killedKey = c.getKey();
             signOff(c);
         }
@@ -424,7 +426,7 @@ public class MWChatServer implements ICommands {
               this);
         pingKeepAlive.start();
 
-        MWLogger.infoLog("Accepting socket connections on port " + _port);
+        LOGGER.info("Accepting socket connections on port " + _port);
         while (true) {
             try {
                 java.net.Socket s = _serverSocket.accept();
@@ -435,18 +437,18 @@ public class MWChatServer implements ICommands {
                 // MWChatClient client =
                 createMWChatClient(s);
             } catch (java.io.IOException e) {
-                MWLogger.errLog(e);
+                LOGGER.error(e, "");
                 try {
                     Thread.sleep(1000);
                 } catch (Exception ex) {
-                    MWLogger.errLog(ex);
+                    LOGGER.error(ex, "");
                 }
             } catch (Exception ex) {
-                MWLogger.errLog(ex);
+                LOGGER.error(ex, "");
                 try {
                     Thread.sleep(1000);
                 } catch (Exception exs) {
-                    MWLogger.errLog(exs);
+                    LOGGER.error(exs, "");
                 }
             }
         }
@@ -476,7 +478,7 @@ public class MWChatServer implements ICommands {
          */
         try {
             synchronized (_users) {
-                MWLogger.infoLog("sendServerPing: " + server);
+                LOGGER.info("sendServerPing: " + server);
                 java.util.Iterator<mekwars.server.MWChatServer.MWChatClient> clients = _users.values().iterator();
                 while (clients.hasNext()) {
                     MWChatClient client = clients.next();
@@ -484,8 +486,8 @@ public class MWChatServer implements ICommands {
                 }
             }
         } catch (Exception ex) {
-            MWLogger.errLog("Error while sending server ping!");
-            MWLogger.errLog(ex);
+            LOGGER.error("Error while sending server ping!");
+            LOGGER.error(ex, "");
         }
     }
 
@@ -510,7 +512,7 @@ public class MWChatServer implements ICommands {
             }
 
             for (MWChatClient client : clientToRemove) {
-                MWLogger.infoLog("RemovalThread sign off: " + client.getUserId());
+                LOGGER.info("RemovalThread sign off: " + client.getUserId());
                 this.signOff(client);
             }
 
@@ -531,7 +533,7 @@ public class MWChatServer implements ICommands {
 
         public PingThread(mekwars.server.MWChatServer.MWChatServer server) {
             super("PingThread");
-            MWLogger.infoLog("Starting PingThread");
+            LOGGER.info("Starting PingThread");
             this.server = server;
         }
 
@@ -550,8 +552,8 @@ public class MWChatServer implements ICommands {
 
                 }
             } catch (Exception ex) {
-                MWLogger.errLog("Error while trying to sleep PingThread");
-                MWLogger.errLog(ex);
+                LOGGER.error("Error while trying to sleep PingThread");
+                LOGGER.error(ex, "");
             }
 
         }

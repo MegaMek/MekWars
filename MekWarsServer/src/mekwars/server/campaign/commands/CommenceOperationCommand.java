@@ -16,13 +16,14 @@
 package mekwars.server.campaign.commands;
 
 import common.campaign.operations.Operation;
-import common.util.MWLogger;
+import megamek.logging.MMLogger;
 import mekwars.server.campaign.CampaignMain;
 
 /**
  * This command is used for multi player opertionas. the attacker will send this command to start an operation
  */
 public class CommenceOperationCommand implements Command {
+    private static final MMLogger LOGGER = MMLogger.create(CommenceOperationCommand.class);
 
     int accessLevel = 0;
     String syntax = "";
@@ -120,7 +121,7 @@ public class CommenceOperationCommand implements Command {
         so.changeStatus(server.campaign.operations.ShortOperation.STATUS_INPROGRESS);
 
         //tell the defender that he has succesfully joined the attack.
-        MWLogger.gameLog("Operation Commenced: " + so.getShortID() + "/" + ap.getName());
+        LOGGER.info("Operation Commenced: " + so.getShortID() + "/" + ap.getName());
         CampaignMain.campaignMain.toUser("AM:Operation Commenced!", Username, true);
 
     }//end process

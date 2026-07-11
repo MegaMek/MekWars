@@ -4,8 +4,8 @@
 package mekwars.server.campaign.util;
 
 import megamek.common.planetaryConditions.EMI;
+import megamek.logging.MMLogger;
 import mekwars.common.AdvancedTerrain;
-import mekwars.common.util.MWLogger;
 import mekwars.server.campaign.CampaignMain;
 
 /**
@@ -13,6 +13,7 @@ import mekwars.server.campaign.CampaignMain;
  *
  */
 public class XMLAdvancedTerrainDataParser implements XMLResponder {
+    private static final MMLogger LOGGER = MMLogger.create(XMLAdvancedTerrainDataParser.class);
     String Name = "";
     String lastElement = "";
     String name;
@@ -73,8 +74,8 @@ public class XMLAdvancedTerrainDataParser implements XMLResponder {
             XMLParser xp = new XMLParser();
             xp.parseXML(this);
         } catch (Exception ex) {
-            MWLogger.errLog("Error parsing " + filename);
-            MWLogger.errLog(ex);
+            LOGGER.error("Error parsing " + filename);
+            LOGGER.error(ex, "");
         }
     }
 
@@ -94,7 +95,7 @@ public class XMLAdvancedTerrainDataParser implements XMLResponder {
         System.out.print(prefix + "!NOTATION: " + name);
         if (pubID != null) {System.out.print("  pubID = " + pubID);}
         if (sysID != null) {System.out.print("  sysID = " + sysID);}
-        MWLogger.mainLog("");
+        LOGGER.info("");
     }
 
     public void recordEntityDeclaration(String name, String value, String pubID, String sysID, String notation)
@@ -104,12 +105,12 @@ public class XMLAdvancedTerrainDataParser implements XMLResponder {
         if (pubID != null) {System.out.print("  pubID = " + pubID);}
         if (sysID != null) {System.out.print("  sysID = " + sysID);}
         if (notation != null) {System.out.print("  notation = " + notation);}
-        MWLogger.mainLog("");
+        LOGGER.info("");
     }
 
     public void recordElementDeclaration(String name, String content) throws ParseException {
         System.out.print(prefix + "!ELEMENT: " + name);
-        MWLogger.mainLog("  content = " + content);
+        LOGGER.info("  content = " + content);
     }
 
     public void recordAttlistDeclaration(String element, String attr, boolean notation, String type, String defmod,
@@ -118,7 +119,7 @@ public class XMLAdvancedTerrainDataParser implements XMLResponder {
         System.out.print("  attr = " + attr);
         System.out.print("  type = " + ((notation) ? "NOTATIONS " : "") + type);
         System.out.print("  def. modifier = " + defmod);
-        MWLogger.mainLog((def == null) ? "" : "  def = " + notation);
+        LOGGER.info((def == null) ? "" : "  def = " + notation);
     }
 
     /* DOC METHDODS */
@@ -127,7 +128,7 @@ public class XMLAdvancedTerrainDataParser implements XMLResponder {
         System.out.print(prefix + "!DOCTYPE: " + name);
         if (pubID != null) {System.out.print("  pubID = " + pubID);}
         if (sysID != null) {System.out.print("  sysID = " + sysID);}
-        MWLogger.mainLog("");
+        LOGGER.info("");
         prefix = "";
     }
 
@@ -135,8 +136,8 @@ public class XMLAdvancedTerrainDataParser implements XMLResponder {
     }
 
     public void recordDocEnd() {
-        MWLogger.mainLog("");
-        MWLogger.mainLog("Parsing finished without error");
+        LOGGER.info("");
+        LOGGER.info("Parsing finished without error");
     }
 
     @SuppressWarnings("rawtypes")
@@ -146,7 +147,7 @@ public class XMLAdvancedTerrainDataParser implements XMLResponder {
     }
 
     public void recordElementEnd(String tagName) throws ParseException {
-        MWLogger.mainLog("Advanced Terrain READ");
+        LOGGER.info("Advanced Terrain READ");
         if (tagName.equals("ADVANCEDTERRAIN")) {
             planetTerrain = new AdvancedTerrain();
             planetTerrain.setAtmosphere(atmo);
@@ -190,7 +191,7 @@ public class XMLAdvancedTerrainDataParser implements XMLResponder {
             planetTerrain.setWindStrength(windStrength);
             planetTerrain.setName(name);
             planetTerrain.setDisplayName(name);
-            MWLogger.mainLog("ADVTERRAIN: adding " + planetTerrain.getName());
+            LOGGER.info("ADVTERRAIN: adding " + planetTerrain.getName());
             CampaignMain.campaignMain.getData().addAdvancedTerrain(planetTerrain);
             name = "reset";
         }
@@ -209,16 +210,16 @@ public class XMLAdvancedTerrainDataParser implements XMLResponder {
 
     @Override
     public void recordCharData(String charData) {
-        MWLogger.mainLog(prefix + charData);
+        LOGGER.info(prefix + charData);
         if (!charData.equalsIgnoreCase("")) {
-            MWLogger.mainLog(lastElement + " --> " + charData);
+            LOGGER.info(lastElement + " --> " + charData);
         } else {
             lastElement = "";
         }
 
         if (lastElement.equalsIgnoreCase("NAME")) {
             name = charData;
-            MWLogger.mainLog(name);
+            LOGGER.info(name);
         } else if (lastElement.equalsIgnoreCase("lowtemp")) {
             lowtemp = Integer.parseInt(charData);
         } else if (lastElement.equalsIgnoreCase("hitemp")) {
@@ -310,13 +311,13 @@ public class XMLAdvancedTerrainDataParser implements XMLResponder {
 
     @Override
     public void recordComment(String comment) {
-        MWLogger.mainLog(prefix + "*Comment: " + comment);
+        LOGGER.info(prefix + "*Comment: " + comment);
     }
 
     @Override
 
     public void recordPI(String name, String pValue) {
-        MWLogger.mainLog(prefix + "*" + name + " PI: " + pValue);
+        LOGGER.info(prefix + "*" + name + " PI: " + pValue);
     }
 
     public java.io.InputStream resolveDTDEntity(String name, String pubID, String sysID) throws ParseException {

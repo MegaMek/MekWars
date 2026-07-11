@@ -17,7 +17,7 @@
 package mekwars.server.campaign.market;
 
 import common.Unit;
-import common.util.MWLogger;
+import megamek.logging.MMLogger;
 import mekwars.server.campaign.CampaignMain;
 
 /**
@@ -29,6 +29,7 @@ import mekwars.server.campaign.CampaignMain;
  * @author urgru
  */
 public final class VickreyAuction implements IAuction {
+    private static final MMLogger LOGGER = MMLogger.create(VickreyAuction.class);
 
     /**
      * Winner is simply the highest offering person who can afford to pay. The amount he pays is adjusted.
@@ -143,8 +144,7 @@ public final class VickreyAuction implements IAuction {
                     // OK, we've got a unit to work with
                     baysNeeded = server.campaign.SUnit.getHangarSpaceRequired(u, sellingFaction);
                 } else {
-                    MWLogger.errLog(
-                          "Spork effed something up.  Unable to find unit in HighestSealedBidAuction.getWinner()");
+                    LOGGER.error("Spork effed something up.  Unable to find unit in HighestSealedBidAuction.getWinner()");
                     CampaignMain.campaignMain.doSendModMail("NOTE",
                           "Spork effed something up.  Unable to find unit in HighestSealedBidAuction.getWinner()");
                     baysNeeded = 0;

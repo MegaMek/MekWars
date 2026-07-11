@@ -1,6 +1,6 @@
 package mekwars.server.campaign.commands;
 
-import mekwars.common.util.MWLogger;
+import megamek.logging.MMLogger;
 import mekwars.server.campaign.CampaignMain;
 
 /**
@@ -9,6 +9,7 @@ import mekwars.server.campaign.CampaignMain;
  *       private thread. simple minactivetime wait which runs a checkattack for the activating player.
  */
 class CheckAttackThread extends Thread {
+    private static final MMLogger LOGGER = MMLogger.create(CheckAttackThread.class);
 
     // vars
     server.campaign.SPlayer p;
@@ -36,7 +37,7 @@ class CheckAttackThread extends Thread {
             // ran once. kill the thread by returning.
             return;
         } catch (Exception ex) {
-            MWLogger.errLog(ex);
+            LOGGER.error(ex, "");
         }
     }// end run()
 }// end CheckAttackThread

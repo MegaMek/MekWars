@@ -14,11 +14,11 @@
  */
 
 package mekwars.server.campaign.commands.admin;
-
-import common.util.MWLogger;
+import megamek.logging.MMLogger;
 import mekwars.server.campaign.CampaignMain;
 
 public class AdminRemoveAllFactoriesCommand implements server.campaign.commands.Command {
+    private static final MMLogger LOGGER = MMLogger.create(AdminRemoveAllFactoriesCommand.class);
 
     int accessLevel = server.MWChatServer.auth.IAuthenticator.ADMIN;
     String syntax = "Planet Name";
@@ -51,7 +51,7 @@ public class AdminRemoveAllFactoriesCommand implements server.campaign.commands.
             CampaignMain.campaignMain.doSendModMail("NOTE",
                   Username + "  removed all factories  from " + p.getName() + ".");
         } catch (Exception ex) {
-            MWLogger.errLog(ex);
+            LOGGER.error(ex, "");
         }//end catch
 
     }

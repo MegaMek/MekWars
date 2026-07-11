@@ -16,7 +16,7 @@
 package mekwars.server.campaign.operations.validation;
 
 import common.campaign.operations.Operation;
-import common.util.MWLogger;
+import megamek.logging.MMLogger;
 
 /**
  * @author Spork
@@ -26,6 +26,7 @@ import common.util.MWLogger;
  *       Abstract class to validate unit spreads based on BV
  */
 public abstract class BVSpreadValidator implements I_SpreadValidator {
+    private static final MMLogger LOGGER = MMLogger.create(BVSpreadValidator.class);
     protected int maxAllowedSpread = 0;
     protected int minAllowedSpread = 99999;
     protected int maxActualBV = 0;
@@ -97,7 +98,7 @@ public abstract class BVSpreadValidator implements I_SpreadValidator {
         s.append("\tMin/Max Actual BV:  " + minActualBV + "/" + maxActualBV + "\n");
         s.append("\tSpread: " + getSpread() + "\n");
         s.append("\tErrorLevel Returned: " + getError());
-        MWLogger.debugLog(s.toString());
+        LOGGER.debug(s.toString());
     }    public void setMaxAllowed(int max) {
         maxAllowedSpread = max;
     }

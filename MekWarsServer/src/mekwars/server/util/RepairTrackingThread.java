@@ -20,6 +20,7 @@ import java.util.Vector;
 
 import megamek.common.CriticalSlot;
 import megamek.common.equipment.Mounted;
+import megamek.logging.MMLogger;
 import mekwars.common.util.UnitUtils;
 import mekwars.server.campaign.CampaignMain;
 import mekwars.server.campaign.SPlayer;
@@ -31,6 +32,7 @@ import mekwars.server.campaign.SPlayer;
  *       Thread use to track all repairs made by all users on the server.
  */
 public class RepairTrackingThread extends Thread {
+    private static final MMLogger LOGGER = MMLogger.create(RepairTrackingThread.class);
 
     private final Vector<Repair> repairList = new Vector<>(1, 1);
     private final long repairTime;
@@ -70,8 +72,8 @@ public class RepairTrackingThread extends Thread {
                 checkRepairs();
             }
         } catch (Exception ex) {
-            MWLogger.errLog("Error while trying to sleep in RepairTrackingThread");
-            MWLogger.errLog(ex);
+            LOGGER.error("Error while trying to sleep in RepairTrackingThread");
+            LOGGER.error(ex, "");
         }
 
     }
@@ -99,20 +101,20 @@ public class RepairTrackingThread extends Thread {
                                 player.checkAndUpdateArmies(player.getUnit(repairOrder.getUnitID()));
                             }
                         } catch (Exception ex) {
-                            MWLogger.errLog("Unable to finish repair for " +
+                            LOGGER.error("Unable to finish repair for " +
                                                   repairOrder.getUsername() +
                                                   " for unit #" +
                                                   repairOrder.getUnitID() +
                                                   " " +
                                                   repairOrder.getUnit().getShortNameRaw());
-                            MWLogger.errLog(ex);
+                            LOGGER.error(ex, "");
                         }
                     }
                 }
             }
         } catch (Exception ex) {
-            MWLogger.errLog("Error while checking repair. Containing and continuing.");
-            MWLogger.errLog(ex);
+            LOGGER.error("Error while checking repair. Containing and continuing.");
+            LOGGER.error(ex, "");
         }
     }
 

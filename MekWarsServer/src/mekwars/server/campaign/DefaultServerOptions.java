@@ -16,8 +16,7 @@
  *       file
  */
 package mekwars.server.campaign;
-
-import common.util.MWLogger;
+import megamek.logging.MMLogger;
 
 /**
  * @author Torren Oct 22, 2004 Loads the default settings for the server config If any configs are added please add them
@@ -25,6 +24,7 @@ import common.util.MWLogger;
  * @version 2016.10.06
  */
 public class DefaultServerOptions {
+    private static final MMLogger LOGGER = MMLogger.create(DefaultServerOptions.class);
     private java.util.Properties defaults; // default server config
 
     protected void createDefaults() {
@@ -1487,9 +1487,9 @@ public class DefaultServerOptions {
             CampaignMain.campaignMain.saveConfigureFile(CampaignMain.campaignMain.getConfig(),
                   CampaignMain.campaignMain.getServer().getConfigParam("CAMPAIGNCONFIG"));
         } catch (Exception ex) {
-            MWLogger.errLog("Unable to save config file.");
-            MWLogger.errLog(ex);
-            MWLogger.errLog(ex.getMessage());
+            LOGGER.error("Unable to save config file.");
+            LOGGER.error(ex, "");
+            LOGGER.error(ex.getMessage());
         }
     }
 

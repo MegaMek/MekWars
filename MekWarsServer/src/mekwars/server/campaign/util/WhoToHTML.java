@@ -1,8 +1,8 @@
 package mekwars.server.campaign.util;
-
-import common.util.MWLogger;
+import megamek.logging.MMLogger;
 
 public class WhoToHTML {
+    private static final MMLogger LOGGER = MMLogger.create(WhoToHTML.class);
     private java.util.HashMap<String, mekwars.server.campaign.util.WhoToHTML.DataEntry> players = null;
     private String outputPath;
 
@@ -49,8 +49,8 @@ public class WhoToHTML {
             fw.close();
         } catch (java.io.IOException e) {
             // TODO Auto-generated catch block
-            MWLogger.errLog("IOException in WhoToHTML");
-            MWLogger.errLog(e);
+            LOGGER.error("IOException in WhoToHTML");
+            LOGGER.error(e, "");
         }
 
         return;

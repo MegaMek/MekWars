@@ -3,9 +3,11 @@ package mekwars.server.util;
 
 import java.lang.ref.Cleaner;
 
+import megamek.logging.MMLogger;
 import mekwars.server.campaign.CampaignMain;
 
 public class StringUtil {
+    private static final MMLogger LOGGER = MMLogger.create(StringUtil.class);
 
     private static Cleaner HTMLCleaner = null;
 
@@ -90,14 +92,14 @@ public class StringUtil {
             fstream.close();
         } catch (java.io.FileNotFoundException e) {
             // TODO Auto-generated catch block
-            MWLogger.errLog("No HTMLSanitizer.cfg found.");
+            LOGGER.error("No HTMLSanitizer.cfg found.");
         } catch (java.io.IOException e) {
             // TODO Auto-generated catch block
             e.printStackTrace();
         }
 
         for (String tag : allowedTags) {
-            MWLogger.errLog("Adding to whitelist: " + tag);
+            LOGGER.error("Adding to whitelist: " + tag);
             whitelist.addTags(tag);
         }
 
@@ -108,7 +110,7 @@ public class StringUtil {
                 whitelist.addAttributes(att, attribute);
             }
         }
-        MWLogger.errLog(whitelist.toString());
+        LOGGER.error(whitelist.toString());
         Cleaner c = new Cleaner(whitelist);
         HTMLCleaner = c;
     }

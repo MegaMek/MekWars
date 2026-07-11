@@ -15,8 +15,7 @@
  */
 
 package mekwars.server.campaign.util;
-
-import common.util.MWLogger;
+import megamek.logging.MMLogger;
 import mekwars.server.campaign.CampaignMain;
 import server.campaign.util.scheduler.EndChristmasJob;
 import server.campaign.util.scheduler.StartChristmasJob;
@@ -29,6 +28,7 @@ import server.campaign.util.scheduler.StartChristmasJob;
  * @version 2016.10.26
  */
 public class ChristmasHandler {
+    private static final MMLogger LOGGER = MMLogger.create(ChristmasHandler.class);
     public static final int UNIT_METHOD_ONEOFEACH = 0;
     public static final int UNIT_METHOD_XOFEACH = 1;
     public static final int UNIT_METHOD_XTOTAL = 2;
@@ -90,7 +90,7 @@ public class ChristmasHandler {
             startDate = sdf.parse(CampaignMain.campaignMain.getConfig("Christmas_StartDate"));
             endDate = sdf.parse(CampaignMain.campaignMain.getConfig("Christmas_EndDate"));
         } catch (java.text.ParseException e) {
-            MWLogger.errLog(e);
+            LOGGER.error(e, "");
         }
         java.util.Date today = new java.util.Date();
         if (today.after(startDate) && today.before(endDate)) {
@@ -156,7 +156,7 @@ public class ChristmasHandler {
                 gifts.put(scanner.nextLine().toLowerCase(), true);
             }
         } catch (java.io.FileNotFoundException e) {
-            MWLogger.errLog(e);
+            LOGGER.error(e, "");
         } finally {
             if (scanner != null) {
                 scanner.close();
@@ -226,7 +226,7 @@ public class ChristmasHandler {
 
             end = sdf.parse(CampaignMain.campaignMain.getConfig("Christmas_EndDate"));
         } catch (java.text.ParseException e) {
-            MWLogger.errLog(e);
+            LOGGER.error(e, "");
         }
         schedule(start, end);
     }
@@ -394,13 +394,13 @@ public class ChristmasHandler {
                 writer.write(s.toLowerCase() + "\n");
             }
         } catch (java.io.IOException e) {
-            MWLogger.errLog(e);
+            LOGGER.error(e, "");
         } finally {
             if (writer != null) {
                 try {
                     writer.close();
                 } catch (java.io.IOException e) {
-                    MWLogger.errLog(e);
+                    LOGGER.error(e, "");
                 }
             }
         }

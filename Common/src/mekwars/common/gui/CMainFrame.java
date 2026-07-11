@@ -853,7 +853,7 @@ public class CMainFrame extends JFrame {
          */
         JMenuItem jMenuMekWarsBug = new JMenuItem("Report Bug/RFE (MekWars)");
         JMenuItem jMenuMegaMekBug = new JMenuItem("Report Bug/REF (MegaMek)");
-        ActionListener mekWarsListener = _ -> {
+        ActionListener mekWarsListener = actionEvent -> {
             if (Desktop.isDesktopSupported() && Desktop.getDesktop().isSupported(Desktop.Action.BROWSE)) {
                 try {
                     Desktop.getDesktop().browse(new URI("https://github.com/MegaMek/MekWars"));
@@ -864,7 +864,7 @@ public class CMainFrame extends JFrame {
                 }
             }
         };
-        ActionListener megaMekListener = _ -> {
+        ActionListener megaMekListener = actionEvent -> {
             if (Desktop.isDesktopSupported() && Desktop.getDesktop().isSupported(Desktop.Action.BROWSE)) {
                 try {
                     Desktop.getDesktop().browse(new URI("https://github.com/MegaMek/megamek"));

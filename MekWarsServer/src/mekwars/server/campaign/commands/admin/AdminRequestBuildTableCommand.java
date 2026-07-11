@@ -15,11 +15,11 @@
  */
 
 package mekwars.server.campaign.commands.admin;
-
-import common.util.MWLogger;
+import megamek.logging.MMLogger;
 import mekwars.server.campaign.CampaignMain;
 
 public class AdminRequestBuildTableCommand implements server.campaign.commands.Command {
+    private static final MMLogger LOGGER = MMLogger.create(AdminRequestBuildTableCommand.class);
 
     /*
      * This command allows an Admin to upload a single build table from a
@@ -129,7 +129,7 @@ public class AdminRequestBuildTableCommand implements server.campaign.commands.C
                 }
             } catch (java.io.FileNotFoundException e) {
                 // TODO Auto-generated catch block
-                MWLogger.errLog(e);
+                LOGGER.error(e, "");
             }
             CampaignMain.campaignMain.toUser("BT|BT|" + folder + "|" + table + toReturn.toString(),
                   Username,

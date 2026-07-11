@@ -89,7 +89,7 @@ public class PasswdAuthenticator extends NullAuthenticator {
             return new Auth(userId, record.access);
 
         } catch (java.io.IOException e) {
-            MWLogger.errLog(e);
+            LOGGER.error(e, "");
             throw new Exception(userId);
         }
     }

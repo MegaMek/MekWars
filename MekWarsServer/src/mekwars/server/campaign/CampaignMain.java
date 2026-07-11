@@ -1124,7 +1124,7 @@ public final class CampaignMain implements Serializable {
              * entering/ban circumventing players. Despite the heinous way we
              * draw the IP, this should work. @urgru 1.29.06 :-(
              */
-            MWLogger.ipLog("Name: " +
+            LOGGER.info("Name: " +
                                  Username +
                                  " IP: " +
                                  mekwars.server.campaign.CampaignMain.campaignMain.getServer().getIP(Username));
@@ -1246,7 +1246,7 @@ public final class CampaignMain implements Serializable {
     }
 
     public void init() {
-        MWLogger.modLog("SERVER STARTED");
+        LOGGER.info("SERVER STARTED");
 
         // Fill the commands Table
         commands.put("ACCEPTATTACKFROMRESERVE", new AcceptAttackFromReserveCommand());
@@ -1660,7 +1660,7 @@ public final class CampaignMain implements Serializable {
             }
             dis.close();
         } catch (Exception ex) {
-            MWLogger.errLog("Unable to find commands.dat. Continuing with defaults in place");
+            LOGGER.error("Unable to find commands.dat. Continuing with defaults in place");
             java.util.TreeMap<String, Command> commandTable = new java.util.TreeMap<String, Command>(campaignMain.getServerCommands());
             java.io.PrintStream p = null;
             try {
@@ -1683,8 +1683,8 @@ public final class CampaignMain implements Serializable {
                     p.println(commandName.toUpperCase() + "#" + commandMethod.getExecutionLevel());
                 }
             } catch (Exception ex1) {
-                MWLogger.errLog(ex1);
-                MWLogger.errLog("Unable to save command levels");
+                LOGGER.error(ex1, "");
+                LOGGER.error("Unable to save command levels");
             } finally {
                 if (p != null) {
                     p.close();
@@ -1705,9 +1705,9 @@ public final class CampaignMain implements Serializable {
                     addHouse(h);
                 }
             } catch (Exception ex) {
-                MWLogger.errLog("Error while reading faction data -- bailing out");
-                MWLogger.errLog(ex);
-                MWLogger.mainLog("Error while reading Faction Data!");
+                LOGGER.error("Error while reading faction data -- bailing out");
+                LOGGER.error(ex, "");
+                LOGGER.info("Error while reading Faction Data!");
                 System.exit(1);
             }
 
@@ -1746,7 +1746,7 @@ public final class CampaignMain implements Serializable {
 
                         SHouse sh = (SHouse) h;
                         if (sh == null) {
-                            MWLogger.errLog("Null faction found while loading Planets.xml. Planet: " + p.getName());
+                            LOGGER.error("Null faction found while loading Planets.xml. Planet: " + p.getName());
                             continue;
                         }
 
@@ -1760,9 +1760,9 @@ public final class CampaignMain implements Serializable {
                     }
                 }
             } catch (Exception ex) {
-                MWLogger.errLog("Error while reading planet data -- bailing out");
-                MWLogger.errLog(ex);
-                MWLogger.mainLog("Error while reading Planet Data!");
+                LOGGER.error("Error while reading planet data -- bailing out");
+                LOGGER.error(ex, "");
+                LOGGER.info("Error while reading Planet Data!");
                 System.exit(1);
             }
 
@@ -1795,7 +1795,7 @@ public final class CampaignMain implements Serializable {
             p.setOriginalOwner(p.getOwner().getName());
         }
         if (CampaignData.cd.getPlanet(p.getId()) != null) {
-            MWLogger.errLog("Duplicate Planet ID: " +
+            LOGGER.error("Duplicate Planet ID: " +
                                   CampaignData.cd.getPlanet(p.getId()).getName() +
                                   " and " +
                                   p.getName());
@@ -1965,9 +1965,9 @@ public final class CampaignMain implements Serializable {
     public synchronized void slice(int sliceID) {
 
         // write log header
-        MWLogger.mainLog("Slice #" + sliceID + " Started");
-        MWLogger.cmdLog("Slice #" + sliceID + " Started");
-        MWLogger.infoLog("Slice #" + sliceID + " Started: " + System.currentTimeMillis());
+        LOGGER.info("Slice #" + sliceID + " Started");
+        LOGGER.error("Slice #" + sliceID + " Started");
+        LOGGER.info("Slice #" + sliceID + " Started: " + System.currentTimeMillis());
 
         WhoToHTML who = new WhoToHTML(mekwars.server.campaign.CampaignMain.campaignMain.getConfig("HTMLWhoPath"));
 
@@ -1975,25 +1975,25 @@ public final class CampaignMain implements Serializable {
         for (House vh : data.getAllHouses()) {
             SHouse currH = (SHouse) vh;
             //fahr
-            MWLogger.infoLog("Slice #" + sliceID + " house: " + currH.getName());
+            LOGGER.info("Slice #" + sliceID + " house: " + currH.getName());
 
             // load max idle time, converted to ms
             long maxIdleTime = Long.parseLong(mekwars.server.campaign.CampaignMain.campaignMain.getConfig("MaxIdleTime")) *
                                      60000;
 
-            MWLogger.infoLog("Slice #" + sliceID + " house: " + currH.getName() + " reservePlayers");
+            LOGGER.info("Slice #" + sliceID + " house: " + currH.getName() + " reservePlayers");
             for (SPlayer currP : currH.getReservePlayers().values()) {
                 if (maxIdleTime > 0) {
                     try {
                         checkAndRemoveIdle(currP, maxIdleTime);
                     } catch (Exception ex) {
-                        MWLogger.infoLog("Slice #" +
+                        LOGGER.info("Slice #" +
                                                sliceID +
                                                " house: " +
                                                currH.getName() +
                                                " reservePlayer: " +
                                                currP.getName());
-                        MWLogger.errLog(ex);
+                        LOGGER.error(ex, "");
                     }
                 }
                 if (!currP.isInvisible()) {
@@ -2005,7 +2005,7 @@ public final class CampaignMain implements Serializable {
              * Active players get the whole shebang - influence addition,
              * maintainance, and an idle check (if enabled).
              */
-            MWLogger.infoLog("Slice #" + sliceID + " house: " + currH.getName() + " ActivePlayers");
+            LOGGER.info("Slice #" + sliceID + " house: " + currH.getName() + " ActivePlayers");
             for (SPlayer currP : currH.getActivePlayers().values()) {
                 try {
                     currP.doMaintainance();
@@ -2016,8 +2016,8 @@ public final class CampaignMain implements Serializable {
                         checkAndRemoveIdle(currP, maxIdleTime);
                     }
                 } catch (Exception ex) {
-                    MWLogger.errLog(ex);
-                    MWLogger.infoLog("Slice #" +
+                    LOGGER.error(ex, "");
+                    LOGGER.info("Slice #" +
                                            sliceID +
                                            " house: " +
                                            currH.getName() +
@@ -2027,7 +2027,7 @@ public final class CampaignMain implements Serializable {
             }
 
             // fighters only have maint. they get influence grants post-game.
-            MWLogger.infoLog("Slice #" + sliceID + " house: " + currH.getName() + " fightingPlayers");
+            LOGGER.info("Slice #" + sliceID + " house: " + currH.getName() + " fightingPlayers");
             for (SPlayer currP : currH.getFightingPlayers().values()) {
                 try {
                     currP.doMaintainance();
@@ -2039,8 +2039,8 @@ public final class CampaignMain implements Serializable {
                         currP.setLastTimeCommandSent(System.currentTimeMillis() + maxIdleTime);
                     }
                 } catch (Exception ex) {
-                    MWLogger.errLog(ex);
-                    MWLogger.infoLog("Slice #" +
+                    LOGGER.error(ex, "");
+                    LOGGER.info("Slice #" +
                                            sliceID +
                                            " house: " +
                                            currH.getName() +
@@ -2061,26 +2061,26 @@ public final class CampaignMain implements Serializable {
             saveOnSlice = 1;
         }
         if (sliceID % saveOnSlice == 0) {
-            MWLogger.infoLog("Slice #" + sliceID + " savePlayers()");
+            LOGGER.info("Slice #" + sliceID + " savePlayers()");
             try {
                 savePlayers();// Once all of the saving is done clear
             } catch (Exception ex) {
-                MWLogger.errLog(ex);
-                MWLogger.infoLog("Slice #" + sliceID + " savePlayers() failed");
+                LOGGER.error(ex, "");
+                LOGGER.info("Slice #" + sliceID + " savePlayers() failed");
             }// everything for the next tick.
-            MWLogger.infoLog("Slice #" + sliceID + " saveTopUnitID()");
+            LOGGER.info("Slice #" + sliceID + " saveTopUnitID()");
             try {
                 saveTopUnitID();
             } catch (Exception ex) {
-                MWLogger.errLog(ex);
-                MWLogger.infoLog("Slice #" + sliceID + " saveTopUnitID() failed");
+                LOGGER.error(ex, "");
+                LOGGER.info("Slice #" + sliceID + " saveTopUnitID() failed");
             }
         }
 
         // write log header
-        MWLogger.mainLog("Slice #" + sliceID + " Finished");
-        MWLogger.cmdLog("Slice #" + sliceID + " Finished");
-        MWLogger.infoLog("Slice #" + sliceID + " Finished: " + System.currentTimeMillis());
+        LOGGER.info("Slice #" + sliceID + " Finished");
+        LOGGER.error("Slice #" + sliceID + " Finished");
+        LOGGER.info("Slice #" + sliceID + " Finished: " + System.currentTimeMillis());
 
     }// end the slice...
 
@@ -2093,9 +2093,9 @@ public final class CampaignMain implements Serializable {
     public synchronized void tick(boolean real, int tickid) {
 
         // add header to log
-        MWLogger.mainLog("Tick #" + tickid + " Started");
-        MWLogger.cmdLog("Tick #" + tickid + " Started");
-        MWLogger.infoLog("Tick #" + tickid + " Started");
+        LOGGER.info("Tick #" + tickid + " Started");
+        LOGGER.error("Tick #" + tickid + " Started");
+        LOGGER.info("Tick #" + tickid + " Started");
 
         // log the number of games underway
         int gameCount = 0;
@@ -2104,7 +2104,7 @@ public final class CampaignMain implements Serializable {
                 gameCount++;
             }
         }
-        MWLogger.tickLog(gameCount + " games in progress.");
+        LOGGER.info(gameCount + " games in progress.");
 
         // tick all houses
         int totalPlayersOnline = 0;
@@ -2119,7 +2119,7 @@ public final class CampaignMain implements Serializable {
             int activePs = currH.getActivePlayers().size();
             int fightingPs = currH.getFightingPlayers().size();
             int totalFactionPlayers = currH.getReservePlayers().size() + activePs + fightingPs;
-            MWLogger.tickLog(currH.getName() +
+            LOGGER.info(currH.getName() +
                                    " has " +
                                    totalFactionPlayers +
                                    " members online (" +
@@ -2135,12 +2135,12 @@ public final class CampaignMain implements Serializable {
 
                 if (!mekwars.server.campaign.CampaignMain.campaignMain.getBooleanConfig("ProcessHouseTicksAtSlice")) {
                     try {
-                        MWLogger.debugLog("Starting Faction Tick");
+                        LOGGER.debug("Starting Faction Tick");
                         houseTickInfo = currH.tick(real, tickid);
-                        MWLogger.debugLog("Finished Faction Tick");
+                        LOGGER.debug("Finished Faction Tick");
                     } catch (Exception e) {
-                        MWLogger.errLog("Problems with faction tick.");
-                        MWLogger.errLog(e);
+                        LOGGER.error("Problems with faction tick.");
+                        LOGGER.error(e, "");
                     }
                 }
                 // do some things (reset scraps, etc) for players
@@ -2149,20 +2149,20 @@ public final class CampaignMain implements Serializable {
                     // Clear up any users that the server still thinks is
                     // connected.
                     if (getServer().getClient(currP.getName()) == null) {
-                        MWLogger.debugLog("Logging out Player " + currP.getName());
+                        LOGGER.debug("Logging out Player " + currP.getName());
                         doLogoutPlayer(currP.getName());
                         continue;
                     }
 
                     totalPlayersOnline++;
-                    MWLogger.debugLog("Setting Scraps This tick for " + currP.getName());
+                    LOGGER.debug("Setting Scraps This tick for " + currP.getName());
                     currP.setScrapsThisTick(0);
-                    MWLogger.debugLog("Setting Donations This tick for " + currP.getName());
+                    LOGGER.debug("Setting Donations This tick for " + currP.getName());
                     currP.setDonatonsThisTick(0);
-                    MWLogger.debugLog("Healing pilots This tick for " + currP.getName());
+                    LOGGER.debug("Healing pilots This tick for " + currP.getName());
                     currP.healPilots();
 
-                    MWLogger.debugLog("Updating faction info for " + currP.getName());
+                    LOGGER.debug("Updating faction info for " + currP.getName());
                     // return the result of the faction tick to everyone, to
                     // misc tab.
                     toUser("SM|" + houseTickInfo, currP.getName(), false);
@@ -2172,7 +2172,7 @@ public final class CampaignMain implements Serializable {
         }// end for(all houses)
 
         // append the total player count to the logs
-        MWLogger.tickLog("Total players: " +
+        LOGGER.info("Total players: " +
                                getServer().userCount(true) +
                                " online, " +
                                totalPlayersOnline +
@@ -2210,28 +2210,28 @@ public final class CampaignMain implements Serializable {
         try {
             market.tick();
         } catch (Exception ex) {
-            MWLogger.errLog(ex);
+            LOGGER.error(ex, "");
         }
 
-        MWLogger.tickLog("Parts Market Tick Started");
+        LOGGER.info("Parts Market Tick Started");
         try {
             partsMarket.tick();
         } catch (Exception ex) {
-            MWLogger.errLog(ex);
+            LOGGER.error(ex, "");
         }
-        MWLogger.tickLog("Parts Market Tick Finished");
+        LOGGER.info("Parts Market Tick Finished");
 
-        MWLogger.tickLog("doRanking");
+        LOGGER.info("doRanking");
         // output player stats to HTML, if enabled.
         if (Boolean.parseBoolean(getConfig("HTMLOUTPUT"))) {
             Statistics.doRanking();
         }
 
-        MWLogger.tickLog("PurgePlayersFiles");
+        LOGGER.info("PurgePlayersFiles");
         // purge old player files
         purgePlayerFiles();
 
-        MWLogger.tickLog("Automated Backup");
+        LOGGER.info("Automated Backup");
         /*
          * finally, check to see if we should back up. note that the thread will
          * die immediately if it is not time to back up (last was written within
@@ -2241,14 +2241,14 @@ public final class CampaignMain implements Serializable {
         // new Thread(aub).start();
         aub.run();
 
-        MWLogger.tickLog("GC");
+        LOGGER.info("GC");
         // force a GC. this may not be necessary anymore?
         System.gc();
 
         // mainlog footer
-        MWLogger.mainLog("Tick #" + tickid + " Finished");
-        MWLogger.cmdLog("Tick #" + tickid + " Finished");
-        MWLogger.infoLog("Tick #" + tickid + " Finished");
+        LOGGER.info("Tick #" + tickid + " Finished");
+        LOGGER.error("Tick #" + tickid + " Finished");
+        LOGGER.info("Tick #" + tickid + " Finished");
     }
 
     /* The Planetary Control Way */
@@ -2572,7 +2572,7 @@ public final class CampaignMain implements Serializable {
 
         // add log header
         java.util.Date d = new java.util.Date(System.currentTimeMillis());
-        MWLogger.infoLog(d + ": Starting Player Saving cycle");
+        LOGGER.info(d + ": Starting Player Saving cycle");
         for (House vh : mekwars.server.campaign.CampaignMain.campaignMain.getData().getAllHouses()) {
             SHouse currH = (SHouse) vh;
             for (SPlayer currP : currH.getAllOnlinePlayers().values()) {
@@ -2582,8 +2582,8 @@ public final class CampaignMain implements Serializable {
 
         // write out log footer
         d = new java.util.Date(System.currentTimeMillis());
-        MWLogger.mainLog(d + ": Player save cycle completed.");
-        MWLogger.infoLog(d + ": Player saves finished.");
+        LOGGER.info(d + ": Player save cycle completed.");
+        LOGGER.info(d + ": Player saves finished.");
 
         /*
          * Everyone in the save pile has been saved. This is nice, but not the
@@ -2653,8 +2653,8 @@ public final class CampaignMain implements Serializable {
             // The proccess is most likely already being used.
             return;
         } catch (Exception ex) {
-            MWLogger.errLog(ex);
-            MWLogger.errLog("Unable to save " + p.getName().toLowerCase());
+            LOGGER.error(ex, "");
+            LOGGER.error("Unable to save " + p.getName().toLowerCase());
         }
     }
 
@@ -2733,7 +2733,7 @@ public final class CampaignMain implements Serializable {
             }
             dis.close();
         } catch (Exception ex) {
-            MWLogger.errLog(ex);
+            LOGGER.error(ex, "");
         }
     }
 
@@ -2749,7 +2749,7 @@ public final class CampaignMain implements Serializable {
             unitIDFile.close();
             pout.close();
         } catch (Exception ex) {
-            MWLogger.errLog(ex);
+            LOGGER.error(ex, "");
         }
     }
 
@@ -2761,9 +2761,9 @@ public final class CampaignMain implements Serializable {
             dis.close();
         } catch (java.io.FileNotFoundException FNFE) {
             // Do nothing.
-            MWLogger.errLog("Unable to fine/open ./campaign/topserverid.dat. moving on.");
+            LOGGER.error("Unable to fine/open ./campaign/topserverid.dat. moving on.");
         } catch (Exception ex) {
-            MWLogger.errLog(ex);
+            LOGGER.error(ex, "");
         }
     }
 
@@ -2816,10 +2816,10 @@ public final class CampaignMain implements Serializable {
             }
             dis.close();
         } catch (java.io.FileNotFoundException nf) {
-            MWLogger.errLog("File Not Found: " + traitNames);
+            LOGGER.error("File Not Found: " + traitNames);
         } catch (Exception ex) {
-            MWLogger.errLog("Error loading Faction Traits: " + faction);
-            MWLogger.errLog(ex);
+            LOGGER.error("Error loading Faction Traits: " + faction);
+            LOGGER.error(ex, "");
         }
 
         traits.trimToSize();
@@ -2847,8 +2847,8 @@ public final class CampaignMain implements Serializable {
             fos.close();
 
         } catch (Exception ex) {
-            MWLogger.errLog("Error while saving trait file for faction: " + faction);
-            MWLogger.errLog(ex);
+            LOGGER.error("Error while saving trait file for faction: " + faction);
+            LOGGER.error(ex, "");
         }
     }
 
@@ -2879,8 +2879,8 @@ public final class CampaignMain implements Serializable {
             p.close();
             out.close();
         } catch (Exception ex) {
-            MWLogger.errLog("Error while saving omnivariantmods.dat");
-            MWLogger.errLog(ex);
+            LOGGER.error("Error while saving omnivariantmods.dat");
+            LOGGER.error(ex, "");
         }
     }
 
@@ -2914,7 +2914,7 @@ public final class CampaignMain implements Serializable {
                 p.addExperience(100, true);
                 Command c = mekwars.server.campaign.CampaignMain.campaignMain.getServerCommands().get("UNENROLL");
                 c.process(new java.util.StringTokenizer("CONFIRM", "#"), playerName);
-                MWLogger.infoLog(playerName + " purged.");
+                LOGGER.info(playerName + " purged.");
             }
         }
     }
@@ -3011,7 +3011,7 @@ public final class CampaignMain implements Serializable {
                     return campaignMain.getConfig("FluLongName");
                 }
             default:
-                MWLogger.errLog(cType + "is not a valid currency");
+                LOGGER.error(cType + "is not a valid currency");
                 return null;
         }
 
@@ -3051,7 +3051,7 @@ public final class CampaignMain implements Serializable {
             try {
                 buff.close();
             } catch (java.io.IOException e) {
-                MWLogger.errLog(e);
+                LOGGER.error(e, "");
             }
         }
 
@@ -3103,9 +3103,9 @@ public final class CampaignMain implements Serializable {
             config.store(ps, "Server Config");
             ps.close();
         } catch (java.io.FileNotFoundException fe) {
-            MWLogger.errLog(fileName + " not found");
+            LOGGER.error(fileName + " not found");
         } catch (Exception ex) {
-            MWLogger.errLog(ex);
+            LOGGER.error(ex, "");
         }
     }// end saveConfigureFile
 
@@ -3606,8 +3606,8 @@ public final class CampaignMain implements Serializable {
             out.close();
 
         } catch (Exception ex) {
-            MWLogger.errLog("Error saving banned ammo.");
-            MWLogger.errLog(ex);
+            LOGGER.error("Error saving banned ammo.");
+            LOGGER.error(ex, "");
         }
     }
 
@@ -3639,7 +3639,7 @@ public final class CampaignMain implements Serializable {
     public void loadPlanetOpFlags() {
         java.io.File configFile = new java.io.File("./campaign/planetOpFlags.dat");
         if (!configFile.exists()) {
-            MWLogger.errLog("No planetOpFlags.dat. Skipping.");
+            LOGGER.error("No planetOpFlags.dat. Skipping.");
             return;
         }
 
@@ -3649,7 +3649,7 @@ public final class CampaignMain implements Serializable {
 
             String nextLine = dis.readLine();
             if (nextLine == null) {
-                MWLogger.errLog("Timestamp-only planetOpFlags.dat. Skipping.");
+                LOGGER.error("Timestamp-only planetOpFlags.dat. Skipping.");
                 return;
             }
 
@@ -3660,8 +3660,8 @@ public final class CampaignMain implements Serializable {
 
             dis.close();
         } catch (Exception ex) {
-            MWLogger.errLog("Error loading Planet Op Flags.");
-            MWLogger.errLog(ex);
+            LOGGER.error("Error loading Planet Op Flags.");
+            LOGGER.error(ex, "");
         }
     }
 
@@ -3680,8 +3680,8 @@ public final class CampaignMain implements Serializable {
             p.close();
             out.close();
         } catch (Exception ex) {
-            MWLogger.errLog("Error saving Planet Op Flags.");
-            MWLogger.errLog(ex);
+            LOGGER.error("Error saving Planet Op Flags.");
+            LOGGER.error(ex, "");
         }
     }
 
@@ -3690,8 +3690,8 @@ public final class CampaignMain implements Serializable {
 
         // Check for new faction save location
         if (!factionFile.exists() || factionFile.listFiles().length < 1) {
-            MWLogger.errLog("Unable to find and load faction data");
-            MWLogger.errLog("Going to create from XML");
+            LOGGER.error("Unable to find and load faction data");
+            LOGGER.error("Going to create from XML");
             return;
         }
 
@@ -3724,7 +3724,7 @@ public final class CampaignMain implements Serializable {
                 addHouse(h);
                 dis.close();
             } catch (Exception ex) {
-                MWLogger.errLog("Unable to load " + faction.getName());
+                LOGGER.error("Unable to load " + faction.getName());
             }
         }
 
@@ -3769,7 +3769,7 @@ public final class CampaignMain implements Serializable {
                 }
                 dis.close();
             } catch (Exception e) {
-                MWLogger.errLog("Unable to load cost modifiers for " + currH.getName());
+                LOGGER.error("Unable to load cost modifiers for " + currH.getName());
             }
         }
     }
@@ -3864,14 +3864,14 @@ public final class CampaignMain implements Serializable {
                         costModout.close();
 
                     } catch (Exception ex) {
-                        MWLogger.errLog("Unable to save Faction: " + saveName + " cost Mods");
-                        MWLogger.errLog(ex);
+                        LOGGER.error("Unable to save Faction: " + saveName + " cost Mods");
+                        LOGGER.error(ex, "");
                     }
                     p.close();
                     out.close();
                 } catch (Exception ex) {
-                    MWLogger.errLog("Unable to save Faction: " + saveName);
-                    MWLogger.errLog(ex);
+                    LOGGER.error("Unable to save Faction: " + saveName);
+                    LOGGER.error(ex, "");
                 }
             }
         }
@@ -3886,8 +3886,8 @@ public final class CampaignMain implements Serializable {
 
         // Check for faction save dir & ensure dat files exist therein
         if (!planetFile.exists() || planetFile.listFiles(filter).length == 0) {
-            MWLogger.errLog("Unable to find and load /planets, or /planets is empty.");
-            MWLogger.errLog("Planets will be read from XML during init().");
+            LOGGER.error("Unable to find and load /planets, or /planets is empty.");
+            LOGGER.error("Planets will be read from XML during init().");
             return;
         }
         // dir and files exist. read them.
@@ -3906,8 +3906,8 @@ public final class CampaignMain implements Serializable {
                 addPlanet(p);
                 dis.close();
             } catch (Exception ex) {
-                MWLogger.errLog("Unable to load " + planet.getName());
-                MWLogger.errLog(ex);
+                LOGGER.error("Unable to load " + planet.getName());
+                LOGGER.error(ex, "");
             }
         }
     }
@@ -4030,8 +4030,8 @@ public final class CampaignMain implements Serializable {
                     ps.close();
                     out.close();
                 } catch (Exception ex) {
-                    MWLogger.errLog("Unable to save planet: " + saveName);
-                    MWLogger.errLog(ex);
+                    LOGGER.error("Unable to save planet: " + saveName);
+                    LOGGER.error(ex, "");
                 }
             }
         }
@@ -4052,8 +4052,8 @@ public final class CampaignMain implements Serializable {
             out.close();
             fops.close();
         } catch (Exception ex) {
-            MWLogger.errLog("Unable to save Mega Mek Game Options!");
-            MWLogger.errLog(ex);
+            LOGGER.error("Unable to save Mega Mek Game Options!");
+            LOGGER.error(ex, "");
         }
 
     }

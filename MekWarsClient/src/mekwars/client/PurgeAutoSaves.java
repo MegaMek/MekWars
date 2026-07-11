@@ -1,8 +1,9 @@
 package mekwars.client;
 
-import mekwars.common.util.MWLogger;
+import megamek.logging.MMLogger;
 
 class PurgeAutoSaves implements Runnable {
+    private static final MMLogger LOGGER = MMLogger.create(PurgeAutoSaves.class);
 
     public PurgeAutoSaves() {
         super();
@@ -25,7 +26,7 @@ class PurgeAutoSaves implements Runnable {
                               && savedFile.isFile()
                               && (lastTime < (System.currentTimeMillis() - twoHours))) {
                         try {
-                            MWLogger.infoLog("Purging File: "
+                            LOGGER.info("Purging File: "
                                                    + savedFile.getName()
                                                    + " Time: "
                                                    + lastTime
@@ -33,8 +34,8 @@ class PurgeAutoSaves implements Runnable {
                                                    + (System.currentTimeMillis() - twoHours));
                             savedFile.delete();
                         } catch (Exception ex) {
-                            MWLogger.errLog("Error trying to delete these files!");
-                            MWLogger.errLog(ex);
+                            LOGGER.error("Error trying to delete these files!");
+                            LOGGER.error(ex, "");
                         }
                     }
                 }

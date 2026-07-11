@@ -7,6 +7,7 @@ import megamek.common.CriticalSlot;
 import megamek.common.equipment.AmmoType;
 import megamek.common.equipment.Mounted;
 import megamek.common.units.Entity;
+import megamek.logging.MMLogger;
 import mekwars.common.campaign.pilot.Pilot;
 import mekwars.common.campaign.pilot.skills.PilotSkill;
 import mekwars.common.util.StringUtils;
@@ -16,6 +17,7 @@ import mekwars.server.campaign.SPlayer;
 import mekwars.server.campaign.SUnit;
 
 public class Repair {
+    private static final MMLogger LOGGER = MMLogger.create(Repair.class);
 
     private final Entity unit;
     private final String Username;
@@ -129,13 +131,13 @@ public class Repair {
 
         server.campaign.SPlayer player = CampaignMain.campaignMain.getPlayer(Username);
         if (player == null) {
-            MWLogger.errLog("Could not find player " + Username + " removing repair job from queue.");
+            LOGGER.error("Could not find player " + Username + " removing repair job from queue.");
             return true;
         }
         server.campaign.SUnit mek = player.getUnit(unitID);
 
         if (mek == null) {
-            MWLogger.errLog("Could not find unit # " +
+            LOGGER.error("Could not find unit # " +
                                   unitID +
                                   " for player " +
                                   player.getName() +
@@ -1089,8 +1091,8 @@ public class Repair {
             player.checkAndUpdateArmies(mek);
             return true;
         } catch (Exception ex) {
-            MWLogger.errLog("Failed to trap the following error removing repair job from queue: ");
-            MWLogger.errLog(ex);
+            LOGGER.error("Failed to trap the following error removing repair job from queue: ");
+            LOGGER.error(ex, "");
             if ((mek != null) && (player != null)) {
                 mek.setEntity(unit);
                 CampaignMain.campaignMain.toUser("PL|UU|" + unitID + "|" + mek.toString(true), Username, false);

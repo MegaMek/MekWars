@@ -99,10 +99,10 @@ public class HSMek {
         //set type
         Entity entity = embeddedUnit.getEntity();
         switch (entity) {
-            case Mek _ -> type = "Mek";
-            case ProtoMek _ -> type = "ProtoMek";
-            case BattleArmor _ -> type = "BattleArmor";
-            case Infantry _ -> type = "Infantry";
+            case Mek ignored -> type = "Mek";
+            case ProtoMek ignored -> type = "ProtoMek";
+            case BattleArmor ignored -> type = "BattleArmor";
+            case Infantry ignored -> type = "Infantry";
             case null, default -> type = "Vehicle";
         }
 

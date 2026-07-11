@@ -171,7 +171,7 @@ public class PartsMarket {
                     bmEquipment.setAmount(Math.abs(bmEquipment.getAmount()));
                 } catch (Exception ex) {
 
-                    MWLogger.errLog(ex);
+                    LOGGER.error(ex, "");
                 }
 
                 bmEquipment.setAmount(Math.max(bmEquipment.getAmount(), masterEq.getMinProduction()));

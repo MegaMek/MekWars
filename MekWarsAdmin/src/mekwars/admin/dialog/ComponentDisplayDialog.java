@@ -32,13 +32,14 @@ import megamek.common.equipment.EquipmentType;
 import megamek.common.equipment.MiscType;
 import megamek.common.equipment.WeaponType;
 import megamek.common.units.Mek;
+import megamek.logging.MMLogger;
 import mekwars.common.Equipment;
 import mekwars.common.campaign.clientutils.protocol.IClient;
-import mekwars.common.util.MWLogger;
 import mekwars.common.util.SpringLayoutHelper;
 import mekwars.common.util.UnitUtils;
 
 public final class ComponentDisplayDialog extends JDialog implements ActionListener {
+    private static final MMLogger LOGGER = MMLogger.create(ComponentDisplayDialog.class);
 
     public final static int WEAPON_TYPE = 0;
     public final static int MISC_TYPE = 1;
@@ -68,7 +69,7 @@ public final class ComponentDisplayDialog extends JDialog implements ActionListe
         // stored values.
         displayType = type;
 
-        MWLogger.errLog("Year: " + this.client.getServerConfigs("CampaignYear"));
+        LOGGER.error("Year: " + this.client.getServerConfigs("CampaignYear"));
         int year = Integer.parseInt(this.client.getServerConfigs("CampaignYear"));
 
 

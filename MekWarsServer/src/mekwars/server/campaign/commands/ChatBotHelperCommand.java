@@ -15,8 +15,7 @@
  */
 
 package mekwars.server.campaign.commands;
-
-import common.util.MWLogger;
+import megamek.logging.MMLogger;
 import mekwars.server.campaign.CampaignMain;
 
 //import java.nio.charset.Charset;
@@ -31,6 +30,7 @@ import mekwars.server.campaign.CampaignMain;
  * used for capturing chat to a file a discord bot can manipulate
  */
 public class ChatBotHelperCommand implements Command {
+    private static final MMLogger LOGGER = MMLogger.create(ChatBotHelperCommand.class);
 
     int accessLevel = 0;
     String syntax = "";
@@ -88,11 +88,11 @@ public class ChatBotHelperCommand implements Command {
             out.println(chatMsg);
 
         } catch (java.io.UnsupportedEncodingException e) {
-            MWLogger.errLog(e);
+            LOGGER.error(e, "");
             //CampaignMain.cm.toUser(e.toString(),Username,true);
 
         } catch (java.io.IOException e) {
-            MWLogger.errLog(e);
+            LOGGER.error(e, "");
             //CampaignMain.cm.toUser(e.toString(),Username,true);
 
         }

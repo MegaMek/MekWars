@@ -101,7 +101,7 @@ public class ServerWrapper extends MWChatServer {
             try {
                 client.sendRaw("/comm" + ICommands.DELIMITER + CConnector.encode(msg));
             } catch (Exception e) {
-                MWLogger.errLog(e);
+                LOGGER.error(e, "");
             }
         }
     }
@@ -111,7 +111,7 @@ public class ServerWrapper extends MWChatServer {
         try {
             MWChatClient c = this.getClient(username);
             if (c == null) {
-                MWLogger.mainLog("WARNING: Tried to get the IP from " + username + ", who is not here.");
+                LOGGER.info("WARNING: Tried to get the IP from " + username + ", who is not here.");
 
                 /*
                  * We don't want to log out player who we can't find - logout uses getIP
@@ -131,13 +131,13 @@ public class ServerWrapper extends MWChatServer {
                 try {
                     return java.net.InetAddress.getLocalHost();
                 } catch (Exception ex) {
-                    MWLogger.errLog(ex);
+                    LOGGER.error(ex, "");
                     return null;
                 }
             }
             return java.net.InetAddress.getByName(c.getHost());
         } catch (Exception e) {
-            MWLogger.errLog(e);
+            LOGGER.error(e, "");
             try {
                 return java.net.InetAddress.getLocalHost();
             } catch (Exception ex) {
@@ -159,7 +159,7 @@ public class ServerWrapper extends MWChatServer {
     @Override
     public boolean signOn(MWChatClient client, String password) throws Exception {
 
-        MWLogger.infoLog(client.getUserId() + " is attempting a signon: ");
+        LOGGER.info(client.getUserId() + " is attempting a signon: ");
         String userId = client.getUserId();
         validateUserId(userId);
 
@@ -182,7 +182,7 @@ public class ServerWrapper extends MWChatServer {
             int access = auth.getAccess();
             client.setAccessLevel(access);
             _users.put(clientKey(client), client);
-            MWLogger.infoLog(client.getUserId() +
+            LOGGER.info(client.getUserId() +
                                    " is authenticated.  Access = " +
                                    access +
                                    (client.getTunneling() ? " (tunneling)" : ""));
@@ -213,7 +213,7 @@ public class ServerWrapper extends MWChatServer {
         try {
             this.myServer.clientLogout(client.getUserId());
         } catch (Exception e) {
-            MWLogger.errLog(e);
+            LOGGER.error(e, "");
         }
     }
 }

@@ -20,10 +20,11 @@
 package mekwars.server.campaign.commands.admin;
 
 import common.Equipment;
-import common.util.MWLogger;
+import megamek.logging.MMLogger;
 import mekwars.server.campaign.CampaignMain;
 
 public class AdminSetBlackMarketSettingCommand implements server.campaign.commands.Command {
+    private static final MMLogger LOGGER = MMLogger.create(AdminSetBlackMarketSettingCommand.class);
 
     int accessLevel = server.MWChatServer.auth.IAuthenticator.ADMIN;
     String syntax = "Item Name#Min Cost#Max Cost#Min Production#Max Production";
@@ -73,7 +74,7 @@ public class AdminSetBlackMarketSettingCommand implements server.campaign.comman
             CampaignMain.campaignMain.getBlackMarketEquipmentTable().put(key, bme);
 
         } catch (Exception ex) {
-            MWLogger.errLog(ex);
+            LOGGER.error(ex, "");
         }
 
         //NOTE:

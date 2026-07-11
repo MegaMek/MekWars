@@ -15,11 +15,11 @@
  */
 
 package mekwars.server.campaign.commands.leader;
-
-import common.util.MWLogger;
+import megamek.logging.MMLogger;
 import mekwars.server.campaign.CampaignMain;
 
 public class FactionLeaderMuteCommand implements server.campaign.commands.Command {
+    private static final MMLogger LOGGER = MMLogger.create(FactionLeaderMuteCommand.class);
 
     int accessLevel = CampaignMain.campaignMain.getIntegerConfig("factionLeaderLevel");
     String syntax = "";
@@ -76,7 +76,7 @@ public class FactionLeaderMuteCommand implements server.campaign.commands.Comman
                   .sendChat(Username + " muted " + p.getName() + " (faction mute).");
         } else { //unmute
             factionIgnores.remove(p.getName());
-            MWLogger.modLog(Username + " faction unmuted " + p.getName());
+            LOGGER.info(Username + " faction unmuted " + p.getName());
             CampaignMain.campaignMain.doSendModMail("NOTE", Username + " faction unmuted " + p.getName());
             CampaignMain.campaignMain.getServer()
                   .sendChat(Username + " unmuted " + p.getName() + " (faction mute).");
