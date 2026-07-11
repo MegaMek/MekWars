@@ -554,7 +554,7 @@ public class ClientThread extends Thread implements CloseClientListener {
 
                 Thread.sleep(125);
 
-                swingGui.getBots().put(name, bot);
+                swingGui.getLocalBots().put(name, bot);
 
                 if (client.isBotsOnSameTeam()) {
                     bot.getLocalPlayer().setTeam(5);
