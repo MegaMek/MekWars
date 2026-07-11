@@ -143,7 +143,7 @@ public abstract class Command extends Thread implements ClientCommand, ServerCom
 
     public String getErrorMessage() {
         if (this.hasError() && this.error_code >= 0 && this.error_code < this.ErrorMessages.size()) {
-            return STR."\{this} \{this.ErrorMessages.elementAt(this.error_code)}";
+            return String.format("%s %s", this, this.ErrorMessages.elementAt(this.error_code));
         }
         return "";
     }

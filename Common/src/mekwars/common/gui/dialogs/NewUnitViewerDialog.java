@@ -463,7 +463,7 @@ public class NewUnitViewerDialog extends JDialog implements Runnable, KeyListene
             return new MekFileParser(mekSummary.getSourceFile(), mekSummary.getEntryName()).getEntity();
         } catch (EntityLoadingException ex) {
             LOGGER.error(ex,
-                  STR."Unable to load mech: \{mekSummary.getSourceFile()}: \{mekSummary.getEntryName()}: \{ex.getMessage()}");
+                  String.format("Unable to load mech: %s: %s: %s", mekSummary.getSourceFile(), mekSummary.getEntryName(), ex.getMessage()));
             return null;
         }
     }
@@ -576,7 +576,7 @@ public class NewUnitViewerDialog extends JDialog implements Runnable, KeyListene
             }
 
             entity.calculateBattleValue();
-            tEditorPane.setText(STR."\{entity.getUseManualBV() ? entity.getManualBV() : entity.getInitialBV()}");
+            tEditorPane.setText(String.format("%s", entity.getUseManualBV() ? entity.getManualBV() : entity.getInitialBV()));
             tEditorPane.setCaretPosition(0);
             JScrollPane tScroll = new JScrollPane(tEditorPane,
                   ScrollPaneConstants.VERTICAL_SCROLLBAR_AS_NEEDED,
@@ -606,7 +606,7 @@ public class NewUnitViewerDialog extends JDialog implements Runnable, KeyListene
                         String unit = selectedMekSummary.getName();
                         setVisible(false);
                         String moneyMod = JOptionPane.showInputDialog(client.getMainFrame(),
-                              STR."Money Mod for \{unit}",
+                              String.format("Money Mod for %s", unit),
                               0);
 
                         if ((moneyMod == null) || (moneyMod.isEmpty())) {
@@ -615,7 +615,7 @@ public class NewUnitViewerDialog extends JDialog implements Runnable, KeyListene
                         }
 
                         String compMod = JOptionPane.showInputDialog(client.getMainFrame(),
-                              STR."Comp Mod for \{unit}",
+                              String.format("Comp Mod for %s", unit),
                               0);
 
                         if ((compMod == null) || (compMod.isEmpty())) {
@@ -624,7 +624,7 @@ public class NewUnitViewerDialog extends JDialog implements Runnable, KeyListene
                         }
 
                         String fluMod = JOptionPane.showInputDialog(client.getMainFrame(),
-                              STR."Flu Mod for \{unit}",
+                              String.format("Flu Mod for %s", unit),
                               0);
 
                         if ((fluMod == null) || (fluMod.isEmpty())) {
@@ -633,7 +633,7 @@ public class NewUnitViewerDialog extends JDialog implements Runnable, KeyListene
                         }
 
                         client.sendChat(
-                              STR."\{IClient.CAMPAIGN_PREFIX}c AddOmniVariantMod#\{unit}#\{moneyMod}$\{compMod}$\{fluMod}");
+                              String.format("%sc AddOmniVariantMod#%s#%s$%s$%s", IClient.CAMPAIGN_PREFIX, unit, moneyMod, compMod, fluMod));
                     }
                     dispose();
                 } catch (Exception ex) {
@@ -656,7 +656,7 @@ public class NewUnitViewerDialog extends JDialog implements Runnable, KeyListene
                         unitFile = UnitUtils.getMekSummaryFileName(selectedMekSummary);
 
 
-                        String fluff = JOptionPane.showInputDialog(client.getMainFrame(), STR."Fluff text for \{unit}");
+                        String fluff = JOptionPane.showInputDialog(client.getMainFrame(), String.format("Fluff text for %s", unit));
 
                         if ((fluff == null) || (fluff.isEmpty())) {
                             dispose();
@@ -664,7 +664,7 @@ public class NewUnitViewerDialog extends JDialog implements Runnable, KeyListene
                         }
 
                         String gunnery = JOptionPane.showInputDialog(client.getMainFrame(),
-                              STR."Gunnery skill for \{unit}",
+                              String.format("Gunnery skill for %s", unit),
                               99);
 
                         if ((gunnery == null) || (gunnery.isEmpty())) {
@@ -673,7 +673,7 @@ public class NewUnitViewerDialog extends JDialog implements Runnable, KeyListene
                         }
 
                         String piloting = JOptionPane.showInputDialog(client.getMainFrame(),
-                              STR."Piloting Mod for \{unit}",
+                              String.format("Piloting Mod for %s", unit),
                               99);
 
                         if ((piloting == null) || (piloting.isEmpty())) {
@@ -683,7 +683,7 @@ public class NewUnitViewerDialog extends JDialog implements Runnable, KeyListene
 
                         String skills;
                         skills = JOptionPane.showInputDialog(client.getMainFrame(),
-                              STR."Skills Mod for \{unit} (comma delimited)");
+                              String.format("Skills Mod for %s (comma delimited)", unit));
 
                         if (skills == null) {
                             dispose();
@@ -691,7 +691,7 @@ public class NewUnitViewerDialog extends JDialog implements Runnable, KeyListene
                         }
 
                         client.sendChat(
-                              STR."\{IClient.CAMPAIGN_PREFIX}c createUnit#\{unitFile}#\{fluff}#\{gunnery}#\{piloting}#\{weightClass}#\{skills}");
+                              String.format("%sc createUnit#%s#%s#%s#%s#%s#%s", IClient.CAMPAIGN_PREFIX, unitFile, fluff, gunnery, piloting, weightClass, skills));
                     }
 
                     dispose();
@@ -707,7 +707,7 @@ public class NewUnitViewerDialog extends JDialog implements Runnable, KeyListene
                     setVisible(false);
 
                     if (!unitFile.equals("null")) {
-                        client.sendChat(STR."\{IClient.CAMPAIGN_PREFIX}c researchunit#\{unitFile}");
+                        client.sendChat(String.format("%sc researchunit#%s", IClient.CAMPAIGN_PREFIX, unitFile));
                     }
                 }
                 dispose();

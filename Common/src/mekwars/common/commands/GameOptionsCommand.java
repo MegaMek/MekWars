@@ -95,7 +95,7 @@ public class GameOptionsCommand extends Command {
                             optionsHash.put(gameOption.getName(), gameOption);
                         }
                     } catch (Exception ex2) {
-                        LOGGER.info(STR."Unknown format: \{option} :: \{value}");
+                        LOGGER.info(String.format("Unknown format: %s :: %s", option, value));
                     }
                 }
             }

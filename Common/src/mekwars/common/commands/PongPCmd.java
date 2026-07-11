@@ -73,7 +73,7 @@ public class PongPCmd extends CProtCommand {
         }
 
         float time = (float) (System.currentTimeMillis() - Long.parseLong(ST.nextToken())) / 1000;
-        client.systemMessage(STR."Ping reply from \{sender}: \{time} s");
+        client.systemMessage(String.format("Ping reply from %s: %s s", sender, time));
     }
 
 }

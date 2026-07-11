@@ -121,7 +121,7 @@ public class MekTableModel extends AbstractTableModel {
                     } else if ((army.getAmountOfUnits() - army.getLowerLimiter()) < 1) {
                         range = "1";
                     } else {
-                        range = STR."\{army.getAmountOfUnits() - army.getLowerLimiter()}";
+                        range = String.format("%s", army.getAmountOfUnits() - army.getLowerLimiter());
                     }
 
                     // divider
@@ -131,7 +131,7 @@ public class MekTableModel extends AbstractTableModel {
                     if (army.getUpperLimiter() == Army.NO_LIMIT) {
                         range += "No Upper";
                     } else {
-                        range += STR."\{army.getAmountOfUnits() + army.getUpperLimiter()}";
+                        range += String.format("%s", army.getAmountOfUnits() + army.getUpperLimiter());
                     }
 
                     // overwrite if there are no limits at all
@@ -145,7 +145,7 @@ public class MekTableModel extends AbstractTableModel {
                     armyName = armyName.substring(0, 11);
                 }
 
-                String toReturn = STR."<html><center><b>Army #\{lid}</b><br>";
+                String toReturn = String.format("<html><center><b>Army #%s</b><br>", lid);
                 if (army.isPlayerLocked()) {
                     toReturn += "(locked)<br>";
                 }
@@ -159,9 +159,9 @@ public class MekTableModel extends AbstractTableModel {
 
                 if (!fakeName) {
                     if (armyName.length() > 10) {
-                        toReturn += STR."\{armyName.subSequence(0, 9)}...<br>";
+                        toReturn += String.format("%s...<br>", armyName.subSequence(0, 9));
                     } else {
-                        toReturn += STR."\{armyName}<br>";
+                        toReturn += String.format("%s<br>", armyName);
                     }
                 }
 
@@ -169,19 +169,19 @@ public class MekTableModel extends AbstractTableModel {
                       false);
                 String modifiedBV = "";
                 if (useOpRule && (army.getOpForceSize() < army.getUnits().size()) && (army.getOpForceSize() > 0)) {
-                    modifiedBV = STR."(\{Math.round((army.getBV() *
-                                                           army.forceSizeModifier(army.getOpForceSize())))})";
+                    modifiedBV = String.format("(%s)", Math.round((army.getBV() *
+                                                           army.forceSizeModifier(army.getOpForceSize()))));
                 }
 
-                toReturn += STR."BV: \{army.getBV()}\{modifiedBV}<br>\{range}</center>";
+                toReturn += String.format("BV: %s%s<br>%s</center>", army.getBV(), modifiedBV, range);
                 if (useOpRule &&
                           (army.getOpForceSize() < army.getUnits().size()) &&
                           (army.getOpForceSize() > 0)) {
-                    toReturn += STR."Force Size: \{army.getOpForceSize()}<br>";
+                    toReturn += String.format("Force Size: %s<br>", army.getOpForceSize());
                 }
 
                 // Put in the tonnage info
-                toReturn += STR."Tons: \{army.getTotalTonnage()}<br>";
+                toReturn += String.format("Tons: %s<br>", army.getTotalTonnage());
                 toReturn += "</HTML>";
                 return toReturn;
             }
@@ -198,10 +198,10 @@ public class MekTableModel extends AbstractTableModel {
                 // first free
                 // cell
                 if (chqPanel.useAdvanceRepairs()) {
-                    return STR."Free Bays: \{chqPanel.getClient().getPlayer().getFreeBays()}";
+                    return String.format("Free Bays: %s", chqPanel.getClient().getPlayer().getFreeBays());
                 }
                 // else
-                return STR."Idle Techs: \{chqPanel.getClient().getPlayer().getFreeBays()}";
+                return String.format("Idle Techs: %s", chqPanel.getClient().getPlayer().getFreeBays());
             }
             // else
             return "";
@@ -275,7 +275,7 @@ public class MekTableModel extends AbstractTableModel {
         if (col == 0) {
             return "Army";
         }
-        return STR."Unit \{col}";
+        return String.format("Unit %s", col);
     }
 
     public CArmy getArmyAt(int row) {

@@ -85,7 +85,7 @@ public final class RewardPointsDialog implements java.awt.event.ActionListener, 
         //save the client
         this.client = client;
         String windowName = this.client.getServerConfigs("RPLongName");
-        amountLabel = new javax.swing.JLabel(STR."\{this.client.getServerConfigs("RPShortName")} to use:",
+        amountLabel = new javax.swing.JLabel(String.format("%s to use:", this.client.getServerConfigs("RPShortName")),
               javax.swing.SwingConstants.TRAILING);
         //COMBO BOXES
         java.util.TreeSet<String> names = new java.util.TreeSet<>();
@@ -147,7 +147,7 @@ public final class RewardPointsDialog implements java.awt.event.ActionListener, 
             repodOptions.clear();
             for (CUnit unit : client.getPlayer().getHangar()) {
                 if (!unit.isOmni()) {continue;}
-                repodOptions.add(STR."#\{unit.getId()} \{unit.getModelName()}");
+                repodOptions.add(String.format("#%s %s", unit.getId(), unit.getModelName()));
             }
             pUnitsComboBox = new javax.swing.JComboBox<>();
             repodOptions.forEach(pUnitsComboBox::addItem);
@@ -157,7 +157,7 @@ public final class RewardPointsDialog implements java.awt.event.ActionListener, 
             java.util.TreeSet<String> damagedUnits = new java.util.TreeSet<>();
             for (CUnit unit : this.client.getPlayer().getHangar()) {
                 if (UnitUtils.hasArmorDamage(unit.getEntity()) || UnitUtils.hasCriticalDamage(unit.getEntity())) {
-                    damagedUnits.add(STR."#\{unit.getId()} \{unit.getModelName()}");
+                    damagedUnits.add(String.format("#%s %s", unit.getId(), unit.getModelName()));
                 }
             }
             repairComboBox = new javax.swing.JComboBox<>();
@@ -174,7 +174,7 @@ public final class RewardPointsDialog implements java.awt.event.ActionListener, 
                 if (!planet.isOwner(faction.getId())) {continue;}
                 for (UnitFactory factory : planet.getUnitFactories()) {
                     if (factory.getTicksUntilRefresh() > 0) {
-                        factories.add(STR."\{planet.getName()}: \{factory.getName()}(\{factory.getTicksUntilRefresh()})");
+                        factories.add(String.format("%s: %s(%s)", planet.getName(), factory.getName(), factory.getTicksUntilRefresh()));
                     }
                 }
             }
@@ -268,7 +268,7 @@ public final class RewardPointsDialog implements java.awt.event.ActionListener, 
         }
 
         comboPanel.add(repairLabel);
-        repairComboBox.setToolTipText(STR."Repair Unit with \{this.client.getServerConfigs("RPShortName")}s");
+        repairComboBox.setToolTipText(String.format("Repair Unit with %ss", this.client.getServerConfigs("RPShortName")));
         comboPanel.add(repairComboBox);
 
         comboPanel.add(amountLabel);
@@ -338,26 +338,26 @@ public final class RewardPointsDialog implements java.awt.event.ActionListener, 
                 if (selection.equals("Techs")) {
                     if (!client.isUsingAdvanceRepairs()) {
                         int total = cost * Integer.parseInt(client.getServerConfigs("TechsForARewardPoint"));
-                        costLabel.setText(STR."Result: Hire \{total} Techs");
+                        costLabel.setText(String.format("Result: Hire %s Techs", total));
                     }
                 } else if (selection.equals("RePod")) {
                     cost = Integer.parseInt(client.getServerConfigs("GlobalRepodWithRPCost"));
                     if (Objects.equals(rePodComboBox.getSelectedItem(), "Random")) {cost /= 2;}
-                    costLabel.setText(STR."\{client.getServerConfigs("RPLongName")} Required: \{cost} \{client.getServerConfigs(
-                          "RPShortName")}");
+                    costLabel.setText(String.format("%s Required: %s %s", client.getServerConfigs("RPLongName"), cost, client.getServerConfigs(
+                          "RPShortName")));
                 } else if (selection.equals(refreshCommand)) {
                     cost = Integer.parseInt(client.getServerConfigs("RewardPointToRefreshFactory"));
-                    costLabel.setText(STR."\{client.getServerConfigs("RPShortName")} Required: \{cost} \{client.getServerConfigs(
-                          "RPShortName")}");
+                    costLabel.setText(String.format("%s Required: %s %s", client.getServerConfigs("RPShortName"), cost, client.getServerConfigs(
+                          "RPShortName")));
                     dialog.repaint();
                 }
                 // @Author Salient (mwosux@gmail.com) , Add RP for CBills
                 else if (selection.equals(client.getServerConfigs("MoneyLongName"))) {
                     int total = cost * Integer.parseInt(client.getServerConfigs("CBillsForARewardPoint"));
-                    costLabel.setText(STR."Result: Gain \{client.moneyOrFluMessage(true, true, total)}");
+                    costLabel.setText(String.format("Result: Gain %s", client.moneyOrFluMessage(true, true, total)));
                 } else {
                     int total = cost * Integer.parseInt(client.getServerConfigs("InfluenceForARewardPoint"));
-                    costLabel.setText(STR."Result: Gain \{client.moneyOrFluMessage(false, true, total)}");
+                    costLabel.setText(String.format("Result: Gain %s", client.moneyOrFluMessage(false, true, total)));
                 }
             }
         }
@@ -375,12 +375,12 @@ public final class RewardPointsDialog implements java.awt.event.ActionListener, 
                     String type = (String) unitComboBox.getSelectedItem();
                     String weight = (String) weightComboBox.getSelectedItem();
                     String faction = (String) factionComboBox.getSelectedItem();
-                    client.sendChat(STR."\{IClient.CAMPAIGN_PREFIX}c userewardpoints#2#\{type}#\{weight}#\{faction}");
+                    client.sendChat(String.format("%sc userewardpoints#2#%s#%s#%s", IClient.CAMPAIGN_PREFIX, type, weight, faction));
                 } else if (selection.equals("Techs")) {
                     if (client.isUsingAdvanceRepairs()) {
-                        client.sendChat(STR."\{IClient.CAMPAIGN_PREFIX}c userewardpoints#0#\{techComboBox.getSelectedIndex()}");
+                        client.sendChat(String.format("%sc userewardpoints#0#%s", IClient.CAMPAIGN_PREFIX, techComboBox.getSelectedIndex()));
                     } else {
-                        client.sendChat(STR."\{IClient.CAMPAIGN_PREFIX}c userewardpoints#0#\{amountText.getText()}");
+                        client.sendChat(String.format("%sc userewardpoints#0#%s", IClient.CAMPAIGN_PREFIX, amountText.getText()));
                     }
                 } else if (selection.equals("RePod")) {
                     if (pUnitsComboBox.getComponentCount() < 1) {dialog.dispose();}
@@ -389,7 +389,7 @@ public final class RewardPointsDialog implements java.awt.event.ActionListener, 
                     java.util.StringTokenizer unitid = new java.util.StringTokenizer((String) Objects.requireNonNull(
                           pUnitsComboBox.getSelectedItem()),
                           " ");
-                    client.sendChat(STR."\{IClient.CAMPAIGN_PREFIX}c repod\{unitid.nextToken()}\{options}");
+                    client.sendChat(String.format("%sc repod%s%s", IClient.CAMPAIGN_PREFIX, unitid.nextToken(), options));
                 } else if (selection.equals(refreshCommand)) {
                     if (refreshComboBox.getComponentCount() < 1) {dialog.dispose();}
                     String factoryInfo = (String) refreshComboBox.getSelectedItem();
@@ -397,20 +397,20 @@ public final class RewardPointsDialog implements java.awt.event.ActionListener, 
                     if (factoryInfo != null) {
                         String planet = factoryInfo.substring(0, factoryInfo.indexOf(":")).trim();
                         String factory = factoryInfo.substring(planet.length() + 2, factoryInfo.indexOf("(")).trim();
-                        client.sendChat(STR."\{IClient.CAMPAIGN_PREFIX}c refreshFactory#\{planet}#\{factory}");
+                        client.sendChat(String.format("%sc refreshFactory#%s#%s", IClient.CAMPAIGN_PREFIX, planet, factory));
                     }
                 } else if (selection.equals(repairCommand)) {
                     String selectionName = (String) repairComboBox.getSelectedItem();
                     if (selectionName != null) {
-                        client.sendChat(STR."\{IClient.CAMPAIGN_PREFIX}c userewardpoints#3#\{selectionName.trim()
+                        client.sendChat(String.format("%sc userewardpoints#3#%s", IClient.CAMPAIGN_PREFIX, selectionName.trim()
                                                                                                    .substring(0,
                                                                                                          selectionName.indexOf(
-                                                                                                               " "))}");
+                                                                                                               " "))));
                     }
                 } else if (selection.equals(client.getServerConfigs("MoneyLongName"))) {
-                    client.sendChat(STR."\{IClient.CAMPAIGN_PREFIX}c userewardpoints#4#\{amountText.getText()}");
+                    client.sendChat(String.format("%sc userewardpoints#4#%s", IClient.CAMPAIGN_PREFIX, amountText.getText()));
                 } else {//flu
-                    client.sendChat(STR."\{IClient.CAMPAIGN_PREFIX}c userewardpoints#1#\{amountText.getText()}");
+                    client.sendChat(String.format("%sc userewardpoints#1#%s", IClient.CAMPAIGN_PREFIX, amountText.getText()));
                 }
 
                 dialog.dispose();
@@ -433,16 +433,16 @@ public final class RewardPointsDialog implements java.awt.event.ActionListener, 
                         }
 
                         cost = getUnitRPCost();
-                        costLabel.setText(STR."\{client.getServerConfigs("RPShortName")} Required: \{cost} \{client.getServerConfigs(
-                              "RPShortName")}");
+                        costLabel.setText(String.format("%s Required: %s %s", client.getServerConfigs("RPShortName"), cost, client.getServerConfigs(
+                              "RPShortName")));
                     } else if (selection.equals("Techs")) {
                         makeVisible(false, false, false);
                         if (client.isUsingAdvanceRepairs()) {
                             int type = techComboBox.getSelectedIndex();
-                            int total = Integer.parseInt(client.getServerConfigs(STR."RewardPointsFor\{UnitUtils.techDescription(
-                                  type)}"));
-                            costLabel.setText(STR."Hire 1 \{UnitUtils.techDescription(type)} tech for \{total} \{client.getServerConfigs(
-                                  "RPShortName")}");
+                            int total = Integer.parseInt(client.getServerConfigs(String.format("RewardPointsFor%s", UnitUtils.techDescription(
+                                  type))));
+                            costLabel.setText(String.format("Hire 1 %s tech for %s %s", UnitUtils.techDescription(type), total, client.getServerConfigs(
+                                  "RPShortName")));
                             techComboBox.setVisible(true);
                             techComboLabel.setVisible(true);
 
@@ -452,27 +452,27 @@ public final class RewardPointsDialog implements java.awt.event.ActionListener, 
                             amountText.setText("0");
                             cost = Integer.parseInt(amountText.getText());
                             int total = cost * Integer.parseInt(client.getServerConfigs("TechsForARewardPoint"));
-                            costLabel.setText(STR."Result: Hire \{total} Techs");
+                            costLabel.setText(String.format("Result: Hire %s Techs", total));
                             costLabel.repaint();
                         }
                     } else if (selection.equals("RePod")) {
                         if (pUnitsComboBox.getItemCount() >= 1) {pUnitsComboBox.setSelectedIndex(0);}
                         cost = Integer.parseInt(client.getServerConfigs("GlobalRepodWithRPCost"));
                         if (Objects.equals(rePodComboBox.getSelectedItem(), "Random")) {cost /= 2;}
-                        costLabel.setText(STR."\{client.getServerConfigs("RPShortName")} Required: \{cost} \{client.getServerConfigs(
-                              "RPShortName")}");
+                        costLabel.setText(String.format("%s Required: %s %s", client.getServerConfigs("RPShortName"), cost, client.getServerConfigs(
+                              "RPShortName")));
                         makeVisible(false, true, false);
                     } else if (selection.equals(refreshCommand)) {
                         if (refreshComboBox.getItemCount() >= 1) {refreshComboBox.setSelectedIndex(0);}
                         cost = Integer.parseInt(client.getServerConfigs("RewardPointToRefreshFactory"));
-                        costLabel.setText(STR."\{client.getServerConfigs("RPShortName")} Required: \{cost} \{client.getServerConfigs(
-                              "RPShortName")}");
+                        costLabel.setText(String.format("%s Required: %s %s", client.getServerConfigs("RPShortName"), cost, client.getServerConfigs(
+                              "RPShortName")));
                         makeVisible(false, false, true);
                     } else if (selection.equals(repairCommand)) {
                         makeVisible(false, false, false);
 
                         if (repairComboBox.getItemCount() > 0) {repairComboBox.setSelectedIndex(0);}
-                        costLabel.setText(STR."Repair Cost: \{client.getServerConfigs("RewardPointsForRepair")}");
+                        costLabel.setText(String.format("Repair Cost: %s", client.getServerConfigs("RewardPointsForRepair")));
                         repairComboBox.setVisible(true);
                         repairLabel.setVisible(true);
 
@@ -482,13 +482,13 @@ public final class RewardPointsDialog implements java.awt.event.ActionListener, 
                         amountText.setText("0");
                         cost = Integer.parseInt(amountText.getText());
                         int total = cost * Integer.parseInt(client.getServerConfigs("CBillsForARewardPoint"));
-                        costLabel.setText(STR."Result: Gain \{client.moneyOrFluMessage(true, true, total)}");
+                        costLabel.setText(String.format("Result: Gain %s", client.moneyOrFluMessage(true, true, total)));
                         makeVisible(false, false, false);
                     } else {
                         amountText.setText("0");
                         cost = Integer.parseInt(amountText.getText());
                         int total = cost * Integer.parseInt(client.getServerConfigs("InfluenceForARewardPoint"));
-                        costLabel.setText(STR."Result: Gain \{client.moneyOrFluMessage(false, true, total)}");
+                        costLabel.setText(String.format("Result: Gain %s", client.moneyOrFluMessage(false, true, total)));
                         makeVisible(false, false, false);
                     }
                 }
@@ -496,22 +496,22 @@ public final class RewardPointsDialog implements java.awt.event.ActionListener, 
             case rePodCommand -> {
                 cost = Integer.parseInt(client.getServerConfigs("GlobalRepodWithRPCost"));
                 if (Objects.equals(rePodComboBox.getSelectedItem(), "Random")) {cost /= 2;}
-                costLabel.setText(STR."\{client.getServerConfigs("RPShortName")} Required: \{cost} \{client.getServerConfigs(
-                      "RPShortName")}");
+                costLabel.setText(String.format("%s Required: %s %s", client.getServerConfigs("RPShortName"), cost, client.getServerConfigs(
+                      "RPShortName")));
             }
             case weightCommand, unitCommand, factionCommand -> {
                 cost = getUnitRPCost();
-                costLabel.setText(STR."\{client.getServerConfigs("RPShortName")} Required: \{cost} \{client.getServerConfigs(
-                      "RPShortName")}");
+                costLabel.setText(String.format("%s Required: %s %s", client.getServerConfigs("RPShortName"), cost, client.getServerConfigs(
+                      "RPShortName")));
             }
             case techComboCommand -> {
                 makeVisible(false, false, false);
 
                 int type = techComboBox.getSelectedIndex();
-                int total = Integer.parseInt(client.getServerConfigs(STR."RewardPointsFor\{UnitUtils.techDescription(
-                      type)}"));
-                costLabel.setText(STR."Hire 1 \{UnitUtils.techDescription(type)} tech for \{total} \{client.getServerConfigs(
-                      "RPShortName")}");
+                int total = Integer.parseInt(client.getServerConfigs(String.format("RewardPointsFor%s", UnitUtils.techDescription(
+                      type))));
+                costLabel.setText(String.format("Hire 1 %s tech for %s %s", UnitUtils.techDescription(type), total, client.getServerConfigs(
+                      "RPShortName")));
                 techComboBox.setVisible(true);
                 techComboLabel.setVisible(true);
 
@@ -521,7 +521,7 @@ public final class RewardPointsDialog implements java.awt.event.ActionListener, 
             case repairCommand -> {
                 makeVisible(false, false, false);
 
-                costLabel.setText(STR."Repair Cost: \{client.getServerConfigs("RewardPointsForRepair")}");
+                costLabel.setText(String.format("Repair Cost: %s", client.getServerConfigs("RewardPointsForRepair")));
                 repairComboBox.setVisible(true);
                 repairLabel.setVisible(true);
 
@@ -574,9 +574,9 @@ public final class RewardPointsDialog implements java.awt.event.ActionListener, 
 
         String configName;
         if (type == Unit.MEK) {
-            configName = STR."\{Unit.getWeightClassDesc(weight)}RP";
+            configName = String.format("%sRP", Unit.getWeightClassDesc(weight));
         } else {
-            configName = STR."\{Unit.getWeightClassDesc(weight)}\{Unit.getTypeClassDesc(type)}RP";
+            configName = String.format("%s%sRP", Unit.getWeightClassDesc(weight), Unit.getTypeClassDesc(type));
         }
         cost = Integer.parseInt(client.getServerConfigs(configName));
 
@@ -584,8 +584,8 @@ public final class RewardPointsDialog implements java.awt.event.ActionListener, 
             if (House.equals("Rare")) {
                 cost *= (int) Double.parseDouble(client.getServerConfigs("RewardPointMultiplierForRare"));
             } else if (!House.equals("Common") && !House.equals(client.getPlayer().getHouse())) {
-                double multiplier = Double.parseDouble(client.getServerConfigs(STR."\{client.getPlayer()
-                                                                                            .getHouse()}To\{House}RewardPointMultiplier"));
+                double multiplier = Double.parseDouble(client.getServerConfigs(String.format("%sTo%sRewardPointMultiplier", client.getPlayer()
+                                                                                            .getHouse(), House)));
 
                 if (multiplier < 0) {
                     multiplier = Double.parseDouble(client.getServerConfigs("RewardPointNonHouseMultiplier"));

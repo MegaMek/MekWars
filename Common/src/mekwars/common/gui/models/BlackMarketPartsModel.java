@@ -157,9 +157,9 @@ public class BlackMarketPartsModel extends AbstractTableModel {
                 if (client.getPlayer().getPartsCache().getPartsCritCount(bme.getEquipmentInternalName()) < 1) {
                     yield bme.getAmount();
                 }
-                yield STR."\{bme.getAmount()}(\{client.getPlayer()
+                yield String.format("%s(%s)", bme.getAmount(), client.getPlayer()
                                                       .getPartsCache()
-                                                      .getPartsCritCount(bme.getEquipmentInternalName())})";
+                                                      .getPartsCritCount(bme.getEquipmentInternalName()));
             }
             case INTERNAL_PART -> bme.getEquipmentInternalName();
             default -> "";
@@ -208,8 +208,8 @@ public class BlackMarketPartsModel extends AbstractTableModel {
             jLabel.setToolTipText("");
 
             BMEquipment bme = components.get(table.getModel().getValueAt(row, BlackMarketPartsModel.INTERNAL_PART));
-            String description = STR."<html><body>\{bme.getEquipmentName()} C:\{bme.getCost()} A:\{bme.getAmount()} T:\{bme.getTech(
-                  year)}<br>";
+            String description = String.format("<html><body>%s C:%s A:%s T:%s<br>", bme.getEquipmentName(), bme.getCost(), bme.getAmount(), bme.getTech(
+                  year));
 
             description += "</body></html>";
             jLabel.setToolTipText(description);

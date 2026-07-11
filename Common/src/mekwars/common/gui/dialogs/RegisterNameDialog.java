@@ -119,15 +119,15 @@ public final class RegisterNameDialog implements java.awt.event.ActionListener {
             }
 
             if (passwordValid) {
-                client.sendChat(STR."\{IClient.CAMPAIGN_PREFIX}register \{usernameField.getText()},\{String.valueOf(
-                      passwordField1.getPassword())}");
+                client.sendChat(String.format("%sregister %s,%s", IClient.CAMPAIGN_PREFIX, usernameField.getText(), String.valueOf(
+                      passwordField1.getPassword())));
             } else {
                 client.doParseDataInput(toUser.toString());
             }
         }
         client.sendChat(
-              STR."\{IClient.CAMPAIGN_PREFIX}c setclientversion#\{client.getUsername()
-                                                                        .trim()}#\{IClient.CLIENT_VERSION}");
+              String.format("%sc setclientversion#%s#%s", IClient.CAMPAIGN_PREFIX, client.getUsername()
+                                                                        .trim(), IClient.CLIENT_VERSION));
 
         dialog.dispose();
     }

@@ -140,7 +140,7 @@ public class BuildTable {
             return;
         }
 
-        String fileName = STR."./data/buildtables/standard/\{name}";
+        String fileName = String.format("./data/buildtables/standard/%s", name);
 
         try {
             Files.lines(Paths.get(fileName)).forEach((line) -> {

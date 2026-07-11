@@ -144,21 +144,21 @@ public class CH extends Command {
                     if (colorSetting.equals("faction_add") || colorSetting.equals("faction_all")) {
                         addon = addon.isEmpty() ?
                                       "" :
-                                      STR." <b><font color=\"\{factioncolor}\" size=\"\{fontSize}\">[\{addon}]</b></font>";
+                                      String.format(" <b><font color=\"%s\" size=\"%s\">[%s]</b></font>", factioncolor, fontSize, addon);
                     } else {
                         addon = addon.isEmpty() ?
                                       "" :
-                                      STR." <b><font color=\"\{usercolor}\" size=\"\{fontSize}\">[\{addon}]</b></font>";
+                                      String.format(" <b><font color=\"%s\" size=\"%s\">[%s]</b></font>", usercolor, fontSize, addon);
                     }
 
                     if (colorSetting.equals("faction_name") || colorSetting.equals("faction_all")) {
                         name = name.isEmpty() ?
                                      "" :
-                                     STR." <b><font color=\"\{factioncolor}\" size=\"\{fontSize}\">\{name}</b></font>";
+                                     String.format(" <b><font color=\"%s\" size=\"%s\">%s</b></font>", factioncolor, fontSize, name);
                     } else {
                         name = name.isEmpty() ?
                                      "" :
-                                     STR." <b><font color=\"\{usercolor}\" size=\"\{fontSize}\">\{name}</b></font>";
+                                     String.format(" <b><font color=\"%s\" size=\"%s\">%s</b></font>", usercolor, fontSize, name);
                     }
 
                     // load the message
@@ -170,17 +170,17 @@ public class CH extends Command {
                     // faction mail emote. [does this work server side? never seen it used.]
                     if (message.toString().startsWith("#me")) {
                         if (client.getConfig().isParam("COLORED_EMOTES")) {
-                            message = new StringBuilder(STR."*** \{name}\{message.substring(3)}");
+                            message = new StringBuilder(String.format("*** %s%s", name, message.substring(3)));
                         } else {
-                            message = new StringBuilder(STR."*** \{uncoloredName}\{message.substring(3)}");
+                            message = new StringBuilder(String.format("*** %s%s", uncoloredName, message.substring(3)));
                         }
-                        message = new StringBuilder(STR."<font size=\"\{fontSize}\">\{message}</font>");
+                        message = new StringBuilder(String.format("<font size=\"%s\">%s</font>", fontSize, message));
                     }
 
                     // normal faction mail message
                     else {
-                        message = new StringBuilder(STR."<font size=\"\{fontSize}\">\{message}</font>");
-                        message = new StringBuilder(STR."\{name}\{addon}<b>:</b> \{message.toString().trim()}");
+                        message = new StringBuilder(String.format("<font size=\"%s\">%s</font>", fontSize, message));
+                        message = new StringBuilder(String.format("%s%s<b>:</b> %s", name, addon, message.toString().trim()));
                     }
 
                     // if the user wants to, remove any img tags
@@ -197,7 +197,7 @@ public class CH extends Command {
                             String firstHalf = message.substring(0, start);
                             String secondHalf = message.substring(finish + 1, message.length());
 
-                            message = new StringBuilder(STR."\{firstHalf}(img blocked)\{secondHalf}");
+                            message = new StringBuilder(String.format("%s(img blocked)%s", firstHalf, secondHalf));
                         }
                     }
 
@@ -210,7 +210,7 @@ public class CH extends Command {
                         client.addToChat(message.toString(), CCommPanel.CHANNEL_MOD);
                         // also add to main, if configured to do so
                         if (client.getConfig().isParam("MAIN_CHANNEL_MM")) {
-                            client.addToChat(STR."<font color=\"red\" size=\"\{fontSize}\"><b>Mod Mail: </b></font>\{message}");
+                            client.addToChat(String.format("<font color=\"red\" size=\"%s\"><b>Mod Mail: </b></font>%s", fontSize, message));
                         }
                     } else {
                         // add message to faction panel
@@ -218,7 +218,7 @@ public class CH extends Command {
 
                         // also add to main, if configured to do so
                         if (client.getConfig().isParam("MAIN_CHANNEL_HM")) {
-                            client.addToChat(STR."<font color=\"red\" size=\"\{fontSize}\"><b>House Mail: </b></font>\{message}");
+                            client.addToChat(String.format("<font color=\"red\" size=\"%s\"><b>House Mail: </b></font>%s", fontSize, message));
                         }
                     }
                 }
@@ -285,21 +285,21 @@ public class CH extends Command {
                     if (colorSetting.equals("faction_add") || colorSetting.equals("faction_all")) {
                         addon = addon.isEmpty() ?
                                       "" :
-                                      STR." <b><font color=\"\{factioncolor}\" size=\"\{fontSize}\">[\{addon}]</b></font>";
+                                      String.format(" <b><font color=\"%s\" size=\"%s\">[%s]</b></font>", factioncolor, fontSize, addon);
                     } else {
                         addon = addon.isEmpty() ?
                                       "" :
-                                      STR." <b><font color=\"\{usercolor}\" size=\"\{fontSize}\">[\{addon}]</b></font>";
+                                      String.format(" <b><font color=\"%s\" size=\"%s\">[%s]</b></font>", usercolor, fontSize, addon);
                     }
 
                     if (colorSetting.equals("faction_name") || colorSetting.equals("faction_all")) {
                         name = name.isEmpty() ?
                                      "" :
-                                     STR." <b><font color=\"\{factioncolor}\" size=\"\{fontSize}\">\{name}</b></font>";
+                                     String.format(" <b><font color=\"%s\" size=\"%s\">%s</b></font>", factioncolor, fontSize, name);
                     } else {
                         name = name.isEmpty() ?
                                      "" :
-                                     STR." <b><font color=\"\{usercolor}\" size=\"\{fontSize}\">\{name}</b></font>";
+                                     String.format(" <b><font color=\"%s\" size=\"%s\">%s</b></font>", usercolor, fontSize, name);
                     }
 
                     // load the message
@@ -315,16 +315,16 @@ public class CH extends Command {
                     // IC emote. [does this work server side? never seen it used.]
                     if (message.toString().startsWith("#me")) {
                         if (client.getConfig().isParam("COLORED_EMOTES")) {
-                            message = new StringBuilder(STR."*** \{name}\{message.substring(3)}");
+                            message = new StringBuilder(String.format("*** %s%s", name, message.substring(3)));
                         } else {
-                            message = new StringBuilder(STR."*** \{uncoloredName}\{message.substring(3)}");
+                            message = new StringBuilder(String.format("*** %s%s", uncoloredName, message.substring(3)));
                         }
-                        message = new StringBuilder(STR."<font size=\"\{fontSize}\">\{message}</font>");
+                        message = new StringBuilder(String.format("<font size=\"%s\">%s</font>", fontSize, message));
 
                     } else {
-                        message = new StringBuilder(STR."<font size=\"\{fontSize}\">\{message}</font>");
+                        message = new StringBuilder(String.format("<font size=\"%s\">%s</font>", fontSize, message));
 
-                        message = new StringBuilder(STR."\{name}\{addon}<b>:</b> \{message.toString().trim()}");
+                        message = new StringBuilder(String.format("%s%s<b>:</b> %s", name, addon, message.toString().trim()));
                     }
 
                     // if the user wants to, remove any img tags
@@ -341,7 +341,7 @@ public class CH extends Command {
                             String firstHalf = message.substring(0, start);
                             String secondHalf = message.substring(finish + 1, message.length());
 
-                            message = new StringBuilder(STR."\{firstHalf}(img blocked)\{secondHalf}");
+                            message = new StringBuilder(String.format("%s(img blocked)%s", firstHalf, secondHalf));
                         }
                     }
 
@@ -354,7 +354,7 @@ public class CH extends Command {
 
                     // also add to main, if configured to do so
                     if (client.getConfig().isParam("MAIN_CHANNEL_RPG")) {
-                        client.addToChat(STR."<font color=\"red\" size=\"\{fontSize}\"><b>In Character: </b></font>\{message}");
+                        client.addToChat(String.format("<font color=\"red\" size=\"%s\"><b>In Character: </b></font>%s", fontSize, message));
                     }
                 }
             }// end In Character
@@ -422,21 +422,21 @@ public class CH extends Command {
                     if (colorSetting.equals("faction_add") || colorSetting.equals("faction_all")) {
                         addon = addon.isEmpty() ?
                                       "" :
-                                      STR." <b><font color=\"\{factioncolor}\" size=\"\{fontSize}\">[\{addon}]</b></font>";
+                                      String.format(" <b><font color=\"%s\" size=\"%s\">[%s]</b></font>", factioncolor, fontSize, addon);
                     } else {
                         addon = addon.isEmpty() ?
                                       "" :
-                                      STR." <b><font color=\"\{usercolor}\" size=\"\{fontSize}\">[\{addon}]</b></font>";
+                                      String.format(" <b><font color=\"%s\" size=\"%s\">[%s]</b></font>", usercolor, fontSize, addon);
                     }
 
                     if (colorSetting.equals("faction_name") || colorSetting.equals("faction_all")) {
                         name = name.isEmpty() ?
                                      "" :
-                                     STR." <b><font color=\"\{factioncolor}\" size=\"\{fontSize}\">\{name}</b></font>";
+                                     String.format(" <b><font color=\"%s\" size=\"%s\">%s</b></font>", factioncolor, fontSize, name);
                     } else {
                         name = name.isEmpty() ?
                                      "" :
-                                     STR." <b><font color=\"\{usercolor}\" size=\"\{fontSize}\">\{name}</b></font>";
+                                     String.format(" <b><font color=\"%s\" size=\"%s\">%s</b></font>", usercolor, fontSize, name);
                     }
 
                     message = new StringBuilder(stringTokenizer.nextToken());
@@ -450,17 +450,17 @@ public class CH extends Command {
                     // handle emote ("me" command) formatting
                     if (message.toString().startsWith("#me")) {
                         if (client.getConfig().isParam("COLORED_EMOTES")) {
-                            message = new StringBuilder(STR."*** \{name}\{message.substring(3)}");
+                            message = new StringBuilder(String.format("*** %s%s", name, message.substring(3)));
                         } else {
-                            message = new StringBuilder(STR."*** \{uncoloredName}\{message.substring(3)}");
+                            message = new StringBuilder(String.format("*** %s%s", uncoloredName, message.substring(3)));
                         }
-                        message = new StringBuilder(STR."<font size=\"\{fontSize}\">\{message}</font>");
+                        message = new StringBuilder(String.format("<font size=\"%s\">%s</font>", fontSize, message));
                     }
 
                     // if not me, its a normal message
                     else {
-                        message = new StringBuilder(STR."<font size=\"\{fontSize}\">\{message}</font>");
-                        message = new StringBuilder(STR."\{name}\{addon}<b>:</b> \{message.toString().trim()}");
+                        message = new StringBuilder(String.format("<font size=\"%s\">%s</font>", fontSize, message));
+                        message = new StringBuilder(String.format("%s%s<b>:</b> %s", name, addon, message.toString().trim()));
                     }
 
                     // add timestamp
@@ -483,7 +483,7 @@ public class CH extends Command {
 
                 if (nextString.startsWith("AM:")) {
                     String sysColour = client.getConfigParam("SYS_MESSAGE_COLOR");
-                    message = new StringBuilder(STR."<font color=\"\{sysColour}\"><b>\{nextString.substring(3)}</b></font>");
+                    message = new StringBuilder(String.format("<font color=\"%s\"><b>%s</b></font>", sysColour, nextString.substring(3)));
                 } else if (nextString.startsWith("ED:")) {
                     message = new StringBuilder(nextString.substring(3));
                     if (client.getConfig().isParam("ENABLE_ENEMY_DETECTED_SOUND")) {

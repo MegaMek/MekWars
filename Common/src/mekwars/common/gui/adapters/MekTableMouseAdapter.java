@@ -226,11 +226,11 @@ public class MekTableMouseAdapter extends MouseInputAdapter implements ActionLis
 
                     menuName = choices[i];
                     if (chqPanel.getClient().getConfigParam("PRIMARY_HQ_SORT_ORDER").equals(choices[i])) {
-                        menuName = STR."<HTML><i>\{menuName}</i></HTML>";
+                        menuName = String.format("<HTML><i>%s</i></HTML>", menuName);
                         // selectionFound = false;
                     }
                     menuItem = new JMenuItem(menuName);
-                    menuItem.setActionCommand(STR."PHQS|\{choices[i]}");
+                    menuItem.setActionCommand(String.format("PHQS|%s", choices[i]));
                     menuItem.addActionListener(this);
                     primeSortMenu.add(menuItem);
 
@@ -245,12 +245,12 @@ public class MekTableMouseAdapter extends MouseInputAdapter implements ActionLis
                     menuName = choices[i];
 
                     if (chqPanel.getClient().getConfigParam("SECONDARY_HQ_SORT_ORDER").equals(choices[i])) {
-                        menuName = STR."<HTML><i>\{menuName}</i></HTML>";
+                        menuName = String.format("<HTML><i>%s</i></HTML>", menuName);
                         // selectionFound = false;
                     }
 
                     menuItem = new JMenuItem(menuName);
-                    menuItem.setActionCommand(STR."SHQS|\{choices[i]}");
+                    menuItem.setActionCommand(String.format("SHQS|%s", choices[i]));
                     menuItem.addActionListener(this);
                     secondarySortMenu.add(menuItem);
 
@@ -265,11 +265,11 @@ public class MekTableMouseAdapter extends MouseInputAdapter implements ActionLis
                     menuName = choices[i];
 
                     if (chqPanel.getClient().getConfigParam("TERTIARY_HQ_SORT_ORDER").equals(choices[i])) {
-                        menuName = STR."<HTML><i>\{menuName}</i></HTML>";
+                        menuName = String.format("<HTML><i>%s</i></HTML>", menuName);
                     }
 
                     menuItem = new JMenuItem(menuName);
-                    menuItem.setActionCommand(STR."THQS|\{choices[i]}");
+                    menuItem.setActionCommand(String.format("THQS|%s", choices[i]));
                     menuItem.addActionListener(this);
                     tertiarySortMenu.add(menuItem);
 
@@ -288,7 +288,7 @@ public class MekTableMouseAdapter extends MouseInputAdapter implements ActionLis
                     if (l.getBV() > 0) {
 
                         menuItem = new JMenuItem("Attack Options");
-                        menuItem.setActionCommand(STR."AO|\{lid}");
+                        menuItem.setActionCommand(String.format("AO|%s", lid));
                         menuItem.addActionListener(this);
                         boolean canCheckFromReserve = MathUtility.parseBoolean(chqPanel.getClient()
                                                                                      .getServerConfigs("ProbeInReserve"),
@@ -299,7 +299,7 @@ public class MekTableMouseAdapter extends MouseInputAdapter implements ActionLis
                         popup.add(menuItem);
 
                         menuItem = new JMenuItem("Check Access");
-                        menuItem.setActionCommand(STR."CAA|\{lid}");
+                        menuItem.setActionCommand(String.format("CAA|%s", lid));
                         menuItem.addActionListener(this);
                         popup.add(menuItem);
 
@@ -312,12 +312,12 @@ public class MekTableMouseAdapter extends MouseInputAdapter implements ActionLis
                             popup.add(limitMenu);
 
                             menuItem = new JMenuItem("Set Lower Unit Limit");
-                            menuItem.setActionCommand(STR."SLUL|\{lid}");
+                            menuItem.setActionCommand(String.format("SLUL|%s", lid));
                             menuItem.addActionListener(this);
                             limitMenu.add(menuItem);
 
                             menuItem = new JMenuItem("Set Upper Unit Limit");
-                            menuItem.setActionCommand(STR."SUUL|\{lid}");
+                            menuItem.setActionCommand(String.format("SUUL|%s", lid));
                             menuItem.addActionListener(this);
                             limitMenu.add(menuItem);
                         }
@@ -327,7 +327,7 @@ public class MekTableMouseAdapter extends MouseInputAdapter implements ActionLis
                               false)) {
                             menuItem = new JMenuItem("Force Size To Face");
                             popup.add(menuItem);
-                            menuItem.setActionCommand(STR."SFS|\{lid}");
+                            menuItem.setActionCommand(String.format("SFS|%s", lid));
                             menuItem.addActionListener(this);
                         }
 
@@ -339,7 +339,7 @@ public class MekTableMouseAdapter extends MouseInputAdapter implements ActionLis
                     }
 
                     menuItem = new JMenuItem("Lock Army");
-                    menuItem.setActionCommand(STR."LA|\{lid}");
+                    menuItem.setActionCommand(String.format("LA|%s", lid));
                     menuItem.addActionListener(this);
                     popup.add(menuItem);
 
@@ -348,7 +348,7 @@ public class MekTableMouseAdapter extends MouseInputAdapter implements ActionLis
                     }
 
                     menuItem = new JMenuItem("Unlock Army");
-                    menuItem.setActionCommand(STR."ULA|\{lid}");
+                    menuItem.setActionCommand(String.format("ULA|%s", lid));
                     menuItem.addActionListener(this);
                     popup.add(menuItem);
 
@@ -357,17 +357,17 @@ public class MekTableMouseAdapter extends MouseInputAdapter implements ActionLis
                     }
 
                     menuItem = new JMenuItem("Remove Army");
-                    menuItem.setActionCommand(STR."RA|\{lid}");
+                    menuItem.setActionCommand(String.format("RA|%s", lid));
                     menuItem.addActionListener(this);
                     popup.add(menuItem);
 
                     menuItem = new JMenuItem("Rename Army");
-                    menuItem.setActionCommand(STR."NA|\{lid}");
+                    menuItem.setActionCommand(String.format("NA|%s", lid));
                     menuItem.addActionListener(this);
                     popup.add(menuItem);
 
                     menuItem = new JMenuItem("Disable Army");
-                    menuItem.setActionCommand(STR."DAA|\{lid}");
+                    menuItem.setActionCommand(String.format("DAA|%s", lid));
                     menuItem.addActionListener(this);
                     popup.add(menuItem);
 
@@ -376,7 +376,7 @@ public class MekTableMouseAdapter extends MouseInputAdapter implements ActionLis
                     }
 
                     menuItem = new JMenuItem("Enable Army");
-                    menuItem.setActionCommand(STR."DAA|\{lid}");
+                    menuItem.setActionCommand(String.format("DAA|%s", lid));
                     menuItem.addActionListener(this);
                     popup.add(menuItem);
 
@@ -401,11 +401,11 @@ public class MekTableMouseAdapter extends MouseInputAdapter implements ActionLis
                         if (chqPanel.getClient()
                                   .getConfigParam("PRIMARY_ARMY_SORT_ORDER")
                                   .equalsIgnoreCase(choices[i])) {
-                            menuName = STR."<HTML><i>\{menuName}</i></HTML>";
+                            menuName = String.format("<HTML><i>%s</i></HTML>", menuName);
                         }
 
                         menuItem = new JMenuItem(menuName);
-                        menuItem.setActionCommand(STR."PAS|\{choices[i]}");
+                        menuItem.setActionCommand(String.format("PAS|%s", choices[i]));
                         menuItem.addActionListener(this);
                         primeSortMenu.add(menuItem);
 
@@ -419,7 +419,7 @@ public class MekTableMouseAdapter extends MouseInputAdapter implements ActionLis
                     popup.addSeparator();
 
                     menuItem = new JMenuItem("Show To Faction");
-                    menuItem.setActionCommand(STR."SATH|\{lid}");
+                    menuItem.setActionCommand(String.format("SATH|%s", lid));
                     menuItem.addActionListener(this);
                     popup.add(menuItem);
 
@@ -449,13 +449,13 @@ public class MekTableMouseAdapter extends MouseInputAdapter implements ActionLis
                     JMenu requestMenu = new JMenu("BV Only");
 
                     menuItem = new JMenuItem("None");
-                    menuItem.setActionCommand(STR."MPC|1|\{lid}|none");
+                    menuItem.setActionCommand(String.format("MPC|1|%s|none", lid));
                     menuItem.addActionListener(this);
                     requestMenu.add(menuItem);
 
                     for (String op : army.getLegalOperations()) {
                         menuItem = new JMenuItem(op);
-                        menuItem.setActionCommand(STR."MPC|1|\{lid}|\{op}");
+                        menuItem.setActionCommand(String.format("MPC|1|%s|%s", lid, op));
                         menuItem.addActionListener(this);
                         requestMenu.add(menuItem);
                     }
@@ -464,13 +464,13 @@ public class MekTableMouseAdapter extends MouseInputAdapter implements ActionLis
 
                     requestMenu = new JMenu("Unit Count and BV");
                     menuItem = new JMenuItem("None");
-                    menuItem.setActionCommand(STR."MPC|2|\{lid}|none");
+                    menuItem.setActionCommand(String.format("MPC|2|%s|none", lid));
                     menuItem.addActionListener(this);
                     requestMenu.add(menuItem);
 
                     for (String operation : army.getLegalOperations()) {
                         menuItem = new JMenuItem(operation);
-                        menuItem.setActionCommand(STR."MPC|2|\{lid}|\{operation}");
+                        menuItem.setActionCommand(String.format("MPC|2|%s|%s", lid, operation));
                         menuItem.addActionListener(this);
                         requestMenu.add(menuItem);
                     }
@@ -479,13 +479,13 @@ public class MekTableMouseAdapter extends MouseInputAdapter implements ActionLis
 
                     requestMenu = new JMenu("Unit Classes and BV");
                     menuItem = new JMenuItem("None");
-                    menuItem.setActionCommand(STR."MPC|3|\{lid}|none");
+                    menuItem.setActionCommand(String.format("MPC|3|%s|none", lid));
                     menuItem.addActionListener(this);
                     requestMenu.add(menuItem);
 
                     for (String operation : army.getLegalOperations()) {
                         menuItem = new JMenuItem(operation);
-                        menuItem.setActionCommand(STR."MPC|3|\{lid}|\{operation}");
+                        menuItem.setActionCommand(String.format("MPC|3|%s|%s", lid, operation));
                         menuItem.addActionListener(this);
                         requestMenu.add(menuItem);
                     }
@@ -496,13 +496,13 @@ public class MekTableMouseAdapter extends MouseInputAdapter implements ActionLis
                     submenu = new JMenu("Total Weight");
                     requestMenu = new JMenu("Total Weight");
                     menuItem = new JMenuItem("None");
-                    menuItem.setActionCommand(STR."MPC|4|\{lid}|none");
+                    menuItem.setActionCommand(String.format("MPC|4|%s|none", lid));
                     menuItem.addActionListener(this);
                     requestMenu.add(menuItem);
 
                     for (String operation : army.getLegalOperations()) {
                         menuItem = new JMenuItem(operation);
-                        menuItem.setActionCommand(STR."MPC|4|\{lid}|\{operation}");
+                        menuItem.setActionCommand(String.format("MPC|4|%s|%s", lid, operation));
                         menuItem.addActionListener(this);
                         requestMenu.add(menuItem);
                     }
@@ -511,13 +511,13 @@ public class MekTableMouseAdapter extends MouseInputAdapter implements ActionLis
 
                     requestMenu = new JMenu("Total Weight with BV");
                     menuItem = new JMenuItem("None");
-                    menuItem.setActionCommand(STR."MPC|5|\{lid}|none");
+                    menuItem.setActionCommand(String.format("MPC|5|%s|none", lid));
                     menuItem.addActionListener(this);
                     requestMenu.add(menuItem);
 
                     for (String operation : army.getLegalOperations()) {
                         menuItem = new JMenuItem(operation);
-                        menuItem.setActionCommand(STR."MPC|5|\{lid}|\{operation}");
+                        menuItem.setActionCommand(String.format("MPC|5|%s|%s", lid, operation));
                         menuItem.addActionListener(this);
                         requestMenu.add(menuItem);
                     }
@@ -526,13 +526,13 @@ public class MekTableMouseAdapter extends MouseInputAdapter implements ActionLis
 
                     requestMenu = new JMenu("Total Weight and Unit Count");
                     menuItem = new JMenuItem("None");
-                    menuItem.setActionCommand(STR."MPC|6|\{lid}|none");
+                    menuItem.setActionCommand(String.format("MPC|6|%s|none", lid));
                     menuItem.addActionListener(this);
                     requestMenu.add(menuItem);
 
                     for (String operation : army.getLegalOperations()) {
                         menuItem = new JMenuItem(operation);
-                        menuItem.setActionCommand(STR."MPC|6|\{lid}|\{operation}");
+                        menuItem.setActionCommand(String.format("MPC|6|%s|%s", lid, operation));
                         menuItem.addActionListener(this);
                         requestMenu.add(menuItem);
                     }
@@ -541,13 +541,13 @@ public class MekTableMouseAdapter extends MouseInputAdapter implements ActionLis
 
                     requestMenu = new JMenu("Total Weight, Unit Count and BV");
                     menuItem = new JMenuItem("None");
-                    menuItem.setActionCommand(STR."MPC|7|\{lid}|none");
+                    menuItem.setActionCommand(String.format("MPC|7|%s|none", lid));
                     menuItem.addActionListener(this);
                     requestMenu.add(menuItem);
 
                     for (String operations : army.getLegalOperations()) {
                         menuItem = new JMenuItem(operations);
-                        menuItem.setActionCommand(STR."MPC|7|\{lid}|\{operations}");
+                        menuItem.setActionCommand(String.format("MPC|7|%s|%s", lid, operations));
                         menuItem.addActionListener(this);
                         requestMenu.add(menuItem);
                     }
@@ -558,13 +558,13 @@ public class MekTableMouseAdapter extends MouseInputAdapter implements ActionLis
                     submenu = new JMenu("Unit Types");
                     requestMenu = new JMenu("Unit Types");
                     menuItem = new JMenuItem("None");
-                    menuItem.setActionCommand(STR."MPC|8|\{lid}|none");
+                    menuItem.setActionCommand(String.format("MPC|8|%s|none", lid));
                     menuItem.addActionListener(this);
                     requestMenu.add(menuItem);
 
                     for (String operations : army.getLegalOperations()) {
                         menuItem = new JMenuItem(operations);
-                        menuItem.setActionCommand(STR."MPC|8|\{lid}|\{operations}");
+                        menuItem.setActionCommand(String.format("MPC|8|%s|%s", lid, operations));
                         menuItem.addActionListener(this);
                         requestMenu.add(menuItem);
                     }
@@ -573,13 +573,13 @@ public class MekTableMouseAdapter extends MouseInputAdapter implements ActionLis
 
                     requestMenu = new JMenu("Unit Types with BV");
                     menuItem = new JMenuItem("None");
-                    menuItem.setActionCommand(STR."MPC|9|\{lid}|none");
+                    menuItem.setActionCommand(String.format("MPC|9|%s|none", lid));
                     menuItem.addActionListener(this);
                     requestMenu.add(menuItem);
 
                     for (String operations : army.getLegalOperations()) {
                         menuItem = new JMenuItem(operations);
-                        menuItem.setActionCommand(STR."MPC|9|\{lid}|\{operations}");
+                        menuItem.setActionCommand(String.format("MPC|9|%s|%s", lid, operations));
                         menuItem.addActionListener(this);
                         requestMenu.add(menuItem);
                     }
@@ -590,13 +590,13 @@ public class MekTableMouseAdapter extends MouseInputAdapter implements ActionLis
                     submenu = new JMenu("Unit Models");
                     requestMenu = new JMenu("Unit Models");
                     menuItem = new JMenuItem("None");
-                    menuItem.setActionCommand(STR."MPC|10|\{lid}|none");
+                    menuItem.setActionCommand(String.format("MPC|10|%s|none", lid));
                     menuItem.addActionListener(this);
                     requestMenu.add(menuItem);
 
                     for (String operations : army.getLegalOperations()) {
                         menuItem = new JMenuItem(operations);
-                        menuItem.setActionCommand(STR."MPC|10|\{lid}|\{operations}");
+                        menuItem.setActionCommand(String.format("MPC|10|%s|%s", lid, operations));
                         menuItem.addActionListener(this);
                         requestMenu.add(menuItem);
                     }
@@ -605,13 +605,13 @@ public class MekTableMouseAdapter extends MouseInputAdapter implements ActionLis
 
                     requestMenu = new JMenu("Unit Models with BV");
                     menuItem = new JMenuItem("None");
-                    menuItem.setActionCommand(STR."MPC|11|\{lid}|none");
+                    menuItem.setActionCommand(String.format("MPC|11|%s|none", lid));
                     menuItem.addActionListener(this);
                     requestMenu.add(menuItem);
 
                     for (String operations : army.getLegalOperations()) {
                         menuItem = new JMenuItem(operations);
-                        menuItem.setActionCommand(STR."MPC|11|\{lid}|\{operations}");
+                        menuItem.setActionCommand(String.format("MPC|11|%s|%s", lid, operations));
                         menuItem.addActionListener(this);
                         requestMenu.add(menuItem);
                     }
@@ -622,13 +622,13 @@ public class MekTableMouseAdapter extends MouseInputAdapter implements ActionLis
                     submenu = new JMenu("Actual Weight");
                     requestMenu = new JMenu("Actual Unit Weights");
                     menuItem = new JMenuItem("None");
-                    menuItem.setActionCommand(STR."MPC|12|\{lid}|none");
+                    menuItem.setActionCommand(String.format("MPC|12|%s|none", lid));
                     menuItem.addActionListener(this);
                     requestMenu.add(menuItem);
 
                     for (String operations : army.getLegalOperations()) {
                         menuItem = new JMenuItem(operations);
-                        menuItem.setActionCommand(STR."MPC|12|\{lid}|\{operations}");
+                        menuItem.setActionCommand(String.format("MPC|12|%s|%s", lid, operations));
                         menuItem.addActionListener(this);
                         requestMenu.add(menuItem);
                     }
@@ -637,13 +637,13 @@ public class MekTableMouseAdapter extends MouseInputAdapter implements ActionLis
 
                     requestMenu = new JMenu("Actual Unit Weights with BV");
                     menuItem = new JMenuItem("None");
-                    menuItem.setActionCommand(STR."MPC|13|\{lid}|none");
+                    menuItem.setActionCommand(String.format("MPC|13|%s|none", lid));
                     menuItem.addActionListener(this);
                     requestMenu.add(menuItem);
 
                     for (String operations : army.getLegalOperations()) {
                         menuItem = new JMenuItem(operations);
-                        menuItem.setActionCommand(STR."MPC|13|\{lid}|\{operations}");
+                        menuItem.setActionCommand(String.format("MPC|13|%s|%s", lid, operations));
                         menuItem.addActionListener(this);
                         requestMenu.add(menuItem);
                     }
@@ -772,24 +772,24 @@ public class MekTableMouseAdapter extends MouseInputAdapter implements ActionLis
                                 if ((element.getType() == Unit.MEK) ||
                                           (element.getType() == Unit.VEHICLE) ||
                                           (element.getType() == Unit.AERO)) {
-                                    menuItem = new JMenuItem(STR."\{element.getModelName()} (\{element.getPilot()
-                                                                                                     .getGunnery()}/\{element.getPilot()
-                                                                                                                            .getPiloting()}) \{element.getBVForMatch()} BV");
+                                    menuItem = new JMenuItem(String.format("%s (%s/%s) %s BV", element.getModelName(), element.getPilot()
+                                                                                                     .getGunnery(), element.getPilot()
+                                                                                                                            .getPiloting(), element.getBVForMatch()));
                                 } else if ((element.getType() == Unit.INFANTRY) ||
                                                  (element.getType() == Unit.BATTLEARMOR)) {
                                     if (((Infantry) element.getEntity()).canMakeAntiMekAttacks()) {
-                                        menuItem = new JMenuItem(STR."\{element.getModelName()} (\{element.getPilot()
-                                                                                                         .getGunnery()}/\{element.getPilot()
-                                                                                                                                .getPiloting()}) \{element.getBVForMatch()} BV");
+                                        menuItem = new JMenuItem(String.format("%s (%s/%s) %s BV", element.getModelName(), element.getPilot()
+                                                                                                         .getGunnery(), element.getPilot()
+                                                                                                                                .getPiloting(), element.getBVForMatch()));
                                     } else {
-                                        menuItem = new JMenuItem(STR."\{element.getModelName()} (\{element.getPilot()
-                                                                                                         .getGunnery()}) \{element.getBVForMatch()} BV");
+                                        menuItem = new JMenuItem(String.format("%s (%s) %s BV", element.getModelName(), element.getPilot()
+                                                                                                         .getGunnery(), element.getBVForMatch()));
                                     }
                                 } else {
-                                    menuItem = new JMenuItem(STR."\{element.getModelName()} (\{element.getPilot()
-                                                                                                     .getGunnery()}) \{element.getBVForMatch()} BV");
+                                    menuItem = new JMenuItem(String.format("%s (%s) %s BV", element.getModelName(), element.getPilot()
+                                                                                                     .getGunnery(), element.getBVForMatch()));
                                 }
-                                menuItem.setActionCommand(STR."EXM|\{lid}|-1|\{element.getId()}");
+                                menuItem.setActionCommand(String.format("EXM|%s|-1|%s", lid, element.getId()));
                                 menuItem.addActionListener(this);
 
                                 if (element.getType() == Unit.PROTOMEK) {
@@ -922,8 +922,8 @@ public class MekTableMouseAdapter extends MouseInputAdapter implements ActionLis
                         for (int i = 0; i < Masters.size(); i++) {
                             CUnit mm = Masters.elementAt(i);
                             if (cArmy.getUnit(mm.getId()) != null) {
-                                menuItem = new JMenuItem(STR."\{mm.getModelName()} \{mm.getBVForMatch()} BV");
-                                menuItem.setActionCommand(STR."LCN|\{lid}|\{cUnit.getId()}|\{mm.getId()}");
+                                menuItem = new JMenuItem(String.format("%s %s BV", mm.getModelName(), mm.getBVForMatch()));
+                                menuItem.setActionCommand(String.format("LCN|%s|%s|%s", lid, cUnit.getId(), mm.getId()));
                                 menuItem.addActionListener(this);
                                 linkMenu.add(menuItem);
                             }
@@ -938,7 +938,7 @@ public class MekTableMouseAdapter extends MouseInputAdapter implements ActionLis
                     if (!cArmy.isLocked()) {
                         String text = "Move To Hangar";
                         menuItem = new JMenuItem(text);
-                        menuItem.setActionCommand(STR."MH|\{lid}|\{mid}");
+                        menuItem.setActionCommand(String.format("MH|%s|%s", lid, mid));
                         menuItem.addActionListener(this);
                         popup.add(menuItem);
                     }
@@ -975,24 +975,24 @@ public class MekTableMouseAdapter extends MouseInputAdapter implements ActionLis
                                     if ((mek.getType() == Unit.MEK) ||
                                               (mek.getType() == Unit.VEHICLE) ||
                                               (mek.getType() == Unit.AERO)) {
-                                        menuItem = new JMenuItem(STR."\{mek.getModelName()} (\{mek.getPilot()
-                                                                                                     .getGunnery()}/\{mek.getPilot()
-                                                                                                                            .getPiloting()}) \{mek.getBVForMatch()} BV");
+                                        menuItem = new JMenuItem(String.format("%s (%s/%s) %s BV", mek.getModelName(), mek.getPilot()
+                                                                                                     .getGunnery(), mek.getPilot()
+                                                                                                                            .getPiloting(), mek.getBVForMatch()));
                                     } else if ((mek.getType() == Unit.INFANTRY) ||
                                                      (mek.getType() == Unit.BATTLEARMOR)) {
                                         if (((Infantry) mek.getEntity()).canMakeAntiMekAttacks()) {
-                                            menuItem = new JMenuItem(STR."\{mek.getModelName()} (\{mek.getPilot()
-                                                                                                         .getGunnery()}/\{mek.getPilot()
-                                                                                                                                .getPiloting()}) \{mek.getBVForMatch()} BV");
+                                            menuItem = new JMenuItem(String.format("%s (%s/%s) %s BV", mek.getModelName(), mek.getPilot()
+                                                                                                         .getGunnery(), mek.getPilot()
+                                                                                                                                .getPiloting(), mek.getBVForMatch()));
                                         } else {
-                                            menuItem = new JMenuItem(STR."\{mek.getModelName()} (\{mek.getPilot()
-                                                                                                         .getGunnery()}) \{mek.getBVForMatch()} BV");
+                                            menuItem = new JMenuItem(String.format("%s (%s) %s BV", mek.getModelName(), mek.getPilot()
+                                                                                                         .getGunnery(), mek.getBVForMatch()));
                                         }
                                     } else {
-                                        menuItem = new JMenuItem(STR."\{mek.getModelName()} (\{mek.getPilot()
-                                                                                                     .getGunnery()}) \{mek.getBVForMatch()} BV");
+                                        menuItem = new JMenuItem(String.format("%s (%s) %s BV", mek.getModelName(), mek.getPilot()
+                                                                                                     .getGunnery(), mek.getBVForMatch()));
                                     }
-                                    menuItem.setActionCommand(STR."EXM|\{lid}|\{cUnit.getId()}|\{mek.getId()}");
+                                    menuItem.setActionCommand(String.format("EXM|%s|%s|%s", lid, cUnit.getId(), mek.getId()));
                                     menuItem.addActionListener(this);
 
                                     if (mek.getType() == Unit.PROTOMEK) {
@@ -1021,11 +1021,11 @@ public class MekTableMouseAdapter extends MouseInputAdapter implements ActionLis
                                         int mekCount = 0;
 
                                         if (i < 4) {
-                                            menuX = new JMenu(STR."\{Unit.getWeightClassDesc(i)} \{j + 1}");
+                                            menuX = new JMenu(String.format("%s %s", Unit.getWeightClassDesc(i), j + 1));
                                         } else if (i == 4) {// proto
-                                            menuX = new JMenu(STR."Proto \{j + 1}");
+                                            menuX = new JMenu(String.format("Proto %s", j + 1));
                                         } else {// BA, assume an i of 5
-                                            menuX = new JMenu(STR."Infantry \{j + 1}");
+                                            menuX = new JMenu(String.format("Infantry %s", j + 1));
                                         }
 
                                         while (!SizeMenu.isEmpty() && (mekCount < 10)) {
@@ -1117,8 +1117,8 @@ public class MekTableMouseAdapter extends MouseInputAdapter implements ActionLis
                             for (Unit unit : cArmy.getUnits()) {
                                 CUnit currUnit = (CUnit) unit;
                                 if (currUnit.getId() != mid) {
-                                    menuItem = new JMenuItem(STR."Move to #\{currPos + 1}");
-                                    menuItem.setActionCommand(STR."RPU|\{lid}|\{cUnit.getId()}|\{currPos}");
+                                    menuItem = new JMenuItem(String.format("Move to #%s", currPos + 1));
+                                    menuItem.setActionCommand(String.format("RPU|%s|%s|%s", lid, cUnit.getId(), currPos));
                                     menuItem.addActionListener(this);
                                     positionMenu.add(menuItem);
                                 }
@@ -1132,7 +1132,7 @@ public class MekTableMouseAdapter extends MouseInputAdapter implements ActionLis
                     }
                     if (cUnit.hasBeenC3LinkedTo(cArmy) || (cArmy.getC3Network().get(cUnit.getId()) != null)) {
                         menuItem = new JMenuItem("Unlink");
-                        menuItem.setActionCommand(STR."LCN|\{lid}|\{cUnit.getId()}|-1");
+                        menuItem.setActionCommand(String.format("LCN|%s|%s|-1", lid, cUnit.getId()));
                         menuItem.addActionListener(this);
                         popup.add(menuItem);
 
@@ -1142,13 +1142,13 @@ public class MekTableMouseAdapter extends MouseInputAdapter implements ActionLis
 
                     // Add Show Mek Option
                     menuItem = new JMenuItem("View Unit");
-                    menuItem.setActionCommand(STR."SM|\{row}|\{col}");
+                    menuItem.setActionCommand(String.format("SM|%s|%s", row, col));
                     menuItem.addActionListener(this);
                     popup.add(menuItem);
 
                     // Add Customize Unit Option
                     menuItem = new JMenuItem("Customize Unit");
-                    menuItem.setActionCommand(STR."CMU|\{row}|\{col}");
+                    menuItem.setActionCommand(String.format("CMU|%s|%s", row, col));
                     menuItem.addActionListener(this);
                     popup.add(menuItem);
 
@@ -1156,10 +1156,10 @@ public class MekTableMouseAdapter extends MouseInputAdapter implements ActionLis
                     if (cUnit.getEntity() instanceof Mek mek) {
                         if (mek.isAutoEject()) {
                             menuItem = new JMenuItem("Disable Auto Eject");
-                            menuItem.setActionCommand(STR."DAE|\{row}|\{col}");
+                            menuItem.setActionCommand(String.format("DAE|%s|%s", row, col));
                         } else {
                             menuItem = new JMenuItem("Enable Auto Eject");
-                            menuItem.setActionCommand(STR."EAE|\{row}|\{col}");
+                            menuItem.setActionCommand(String.format("EAE|%s|%s", row, col));
                         }
                         menuItem.addActionListener(this);
                         popup.add(menuItem);
@@ -1167,10 +1167,10 @@ public class MekTableMouseAdapter extends MouseInputAdapter implements ActionLis
 
                     if (cArmy.isCommander(cUnit.getId())) {
                         menuItem = new JMenuItem("Remove Commander");
-                        menuItem.setActionCommand(STR."REMOVEUNITCOMMANDER|\{row}|\{col}|\{lid}");
+                        menuItem.setActionCommand(String.format("REMOVEUNITCOMMANDER|%s|%s|%s", row, col, lid));
                     } else {
                         menuItem = new JMenuItem("Set Commander");
-                        menuItem.setActionCommand(STR."SETUNITCOMMANDER|\{row}|\{col}|\{lid}");
+                        menuItem.setActionCommand(String.format("SETUNITCOMMANDER|%s|%s|%s", row, col, lid));
                     }
                     menuItem.addActionListener(this);
                     popup.add(menuItem);
@@ -1186,13 +1186,13 @@ public class MekTableMouseAdapter extends MouseInputAdapter implements ActionLis
                 if (cm != null) {
 
                     menuItem = new JMenuItem("View Unit");
-                    menuItem.setActionCommand(STR."SM|\{row}|\{col}");
+                    menuItem.setActionCommand(String.format("SM|%s|%s", row, col));
                     menuItem.addActionListener(this);
                     popup.add(menuItem);
 
                     // Add Customize Unit Option
                     menuItem = new JMenuItem("Customize Unit");
-                    menuItem.setActionCommand(STR."CMU|\{row}|\{col}");
+                    menuItem.setActionCommand(String.format("CMU|%s|%s", row, col));
                     menuItem.addActionListener(this);
                     popup.add(menuItem);
 
@@ -1204,17 +1204,17 @@ public class MekTableMouseAdapter extends MouseInputAdapter implements ActionLis
                             if (!Boolean.parseBoolean(chqPanel.getClient().getServerConfigs("UseSimpleRepair"))) {
                                 // Add repair unit option
                                 menuItem = new JMenuItem("Repair Unit");
-                                menuItem.setActionCommand(STR."ARU|\{row}|\{col}");
+                                menuItem.setActionCommand(String.format("ARU|%s|%s", row, col));
                                 menuItem.addActionListener(this);
                                 repairs.add(menuItem);
 
                                 menuItem = new JMenuItem("Bulk Repair");
-                                menuItem.setActionCommand(STR."BUR|\{row}|\{col}");
+                                menuItem.setActionCommand(String.format("BUR|%s|%s", row, col));
                                 menuItem.addActionListener(this);
                                 repairs.add(menuItem);
                             } else {
                                 menuItem = new JMenuItem("Repair Unit");
-                                menuItem.setActionCommand(STR."SUR|\{row}|\{col}");
+                                menuItem.setActionCommand(String.format("SUR|%s|%s", row, col));
                                 menuItem.addActionListener(this);
                                 repairs.add(menuItem);
                             }
@@ -1224,12 +1224,12 @@ public class MekTableMouseAdapter extends MouseInputAdapter implements ActionLis
                         if (MathUtility.parseBoolean(chqPanel.getClient().getServerConfigs("UsePartsRepair"), false) &&
                                   ((cm.getType() == Unit.MEK) || (cm.getType() == Unit.VEHICLE))) {
                             menuItem = new JMenuItem("Salvage Unit Crits");
-                            menuItem.setActionCommand(STR."SUC|\{row}|\{col}");
+                            menuItem.setActionCommand(String.format("SUC|%s|%s", row, col));
                             menuItem.addActionListener(this);
                             repairs.add(menuItem);
 
                             menuItem = new JMenuItem("Bulk Salvage");
-                            menuItem.setActionCommand(STR."BSU|\{row}|\{col}");
+                            menuItem.setActionCommand(String.format("BSU|%s|%s", row, col));
                             menuItem.addActionListener(this);
                             repairs.add(menuItem);
                         }
@@ -1237,7 +1237,7 @@ public class MekTableMouseAdapter extends MouseInputAdapter implements ActionLis
                         if (UnitUtils.isRepairing(cm.getEntity())) {
                             // Add display repair job option
                             menuItem = new JMenuItem("Display Repair Jobs");
-                            menuItem.setActionCommand(STR."DRJ|\{row}|\{col}");
+                            menuItem.setActionCommand(String.format("DRJ|%s|%s", row, col));
                             menuItem.addActionListener(this);
                             repairs.add(menuItem);
                         }
@@ -1248,20 +1248,20 @@ public class MekTableMouseAdapter extends MouseInputAdapter implements ActionLis
                                          chqPanel.getClient().getSMT().hasQueuedOrders(cm.getId()))) {
                             // Add display pending job option
                             menuItem = new JMenuItem("Display Pending Work Orders");
-                            menuItem.setActionCommand(STR."DPWO|\{row}|\{col}");
+                            menuItem.setActionCommand(String.format("DPWO|%s|%s", row, col));
                             menuItem.addActionListener(this);
                             repairs.add(menuItem);
 
                             // Add stop all pending jobs
                             menuItem = new JMenuItem("Stop All Pending Work Orders");
-                            menuItem.setActionCommand(STR."SAPWO|\{row}|\{col}");
+                            menuItem.setActionCommand(String.format("SAPWO|%s|%s", row, col));
                             menuItem.addActionListener(this);
                             repairs.add(menuItem);
                         }
 
                         if (!UnitUtils.hasAllAmmo(cm.getEntity())) {
                             menuItem = new JMenuItem("Reload All Ammo");
-                            menuItem.setActionCommand(STR."RAA|\{row}|\{col}");
+                            menuItem.setActionCommand(String.format("RAA|%s|%s", row, col));
                             menuItem.addActionListener(this);
                             repairs.add(menuItem);
                         }
@@ -1275,10 +1275,10 @@ public class MekTableMouseAdapter extends MouseInputAdapter implements ActionLis
                     if (cm.getEntity() instanceof Mek mek) {
                         if (mek.isAutoEject()) {
                             menuItem = new JMenuItem("Disable Auto-eject");
-                            menuItem.setActionCommand(STR."DAE|\{row}|\{col}");
+                            menuItem.setActionCommand(String.format("DAE|%s|%s", row, col));
                         } else {
                             menuItem = new JMenuItem("Enable Auto-eject");
-                            menuItem.setActionCommand(STR."EAE|\{row}|\{col}");
+                            menuItem.setActionCommand(String.format("EAE|%s|%s", row, col));
                         }
 
                         menuItem.addActionListener(this);
@@ -1290,10 +1290,10 @@ public class MekTableMouseAdapter extends MouseInputAdapter implements ActionLis
                     if (!chqPanel.useAdvanceRepairs()) {
                         if (cm.getStatus() == Unit.STATUS_UNMAINTAINED) {
                             menuItem = new JMenuItem("Maintain");
-                            menuItem.setActionCommand(STR."MM|\{cm.getId()}");
+                            menuItem.setActionCommand(String.format("MM|%s", cm.getId()));
                         } else {
                             menuItem = new JMenuItem("Unmaintained");
-                            menuItem.setActionCommand(STR."UMM|\{cm.getId()}");
+                            menuItem.setActionCommand(String.format("UMM|%s", cm.getId()));
                         }
 
                         menuItem.addActionListener(this);
@@ -1301,7 +1301,7 @@ public class MekTableMouseAdapter extends MouseInputAdapter implements ActionLis
                     }
                     if (cm.isOmni()) {
                         menuItem = new JMenuItem("RePod Unit");
-                        menuItem.setActionCommand(STR."RM|\{cm.getId()}");
+                        menuItem.setActionCommand(String.format("RM|%s", cm.getId()));
                         menuItem.addActionListener(this);
                         popup.add(menuItem);
                     }
@@ -1312,7 +1312,7 @@ public class MekTableMouseAdapter extends MouseInputAdapter implements ActionLis
                               MathUtility.parseBoolean(chqPanel.getClient().getServerConfigs("Christmas_AllowDonate")
                                     , false)) {
                         menuItem = new JMenuItem("Donate Unit");
-                        menuItem.setActionCommand(STR."DO|\{cm.getId()}");
+                        menuItem.setActionCommand(String.format("DO|%s", cm.getId()));
                         menuItem.addActionListener(this);
                         transactionsMenu.add(menuItem);
                         numItems++;
@@ -1321,7 +1321,7 @@ public class MekTableMouseAdapter extends MouseInputAdapter implements ActionLis
                               MathUtility.parseBoolean(chqPanel.getClient().getServerConfigs("Christmas_AllowScrap"),
                                     false)) {
                         menuItem = new JMenuItem("Scrap Unit");
-                        menuItem.setActionCommand(STR."S|\{cm.getId()}");
+                        menuItem.setActionCommand(String.format("S|%s", cm.getId()));
                         menuItem.addActionListener(this);
                         transactionsMenu.add(menuItem);
                         numItems++;
@@ -1331,7 +1331,7 @@ public class MekTableMouseAdapter extends MouseInputAdapter implements ActionLis
                               .equalsIgnoreCase(chqPanel.getClient().getServerConfigs("NewbieHouseName")) &&
                               MathUtility.parseBoolean(chqPanel.getClient().getServerConfigs("Sol_FreeBuild"), false)) {
                         menuItem = new JMenuItem("Delete Unit");
-                        menuItem.setActionCommand(STR."DL|\{cm.getId()}");
+                        menuItem.setActionCommand(String.format("DL|%s", cm.getId()));
                         menuItem.addActionListener(this);
                         transactionsMenu.add(menuItem);
                         numItems++;
@@ -1341,7 +1341,7 @@ public class MekTableMouseAdapter extends MouseInputAdapter implements ActionLis
                               MathUtility.parseBoolean(chqPanel.getClient().getServerConfigs("Christmas_AllowTransfer"),
                                     false)) {
                         menuItem = new JMenuItem("Transfer Unit");
-                        menuItem.setActionCommand(STR."TM|\{cm.getId()}");
+                        menuItem.setActionCommand(String.format("TM|%s", cm.getId()));
                         menuItem.addActionListener(this);
                         transactionsMenu.add(menuItem);
                         numItems++;
@@ -1400,14 +1400,14 @@ public class MekTableMouseAdapter extends MouseInputAdapter implements ActionLis
 
                     if (canSellUnit && (cm.getStatus() != Unit.STATUS_FOR_SALE)) {
                         menuItem = new JMenuItem("Sell on BM");
-                        menuItem.setActionCommand(STR."AB|\{cm.getId()}");
+                        menuItem.setActionCommand(String.format("AB|%s", cm.getId()));
                         menuItem.addActionListener(this);
                         transactionsMenu.add(menuItem);
                     }
 
                     if (cm.getStatus() == Unit.STATUS_FOR_SALE) {
                         menuItem = new JMenuItem("Recall from BM");
-                        menuItem.setActionCommand(STR."RFM|\{cm.getId()}");
+                        menuItem.setActionCommand(String.format("RFM|%s", cm.getId()));
                         menuItem.addActionListener(this);
                         transactionsMenu.add(menuItem);
                     }
@@ -1415,7 +1415,7 @@ public class MekTableMouseAdapter extends MouseInputAdapter implements ActionLis
                     if (MathUtility.parseBoolean(chqPanel.getClient().getServerConfigs("UseDirectSell"), false) &&
                               (cm.getStatus() != Unit.STATUS_FOR_SALE)) {
                         menuItem = new JMenuItem("Direct Sell Unit");
-                        menuItem.setActionCommand(STR."DSU|\{cm.getId()}");
+                        menuItem.setActionCommand(String.format("DSU|%s", cm.getId()));
                         menuItem.addActionListener(this);
                         transactionsMenu.add(menuItem);
                     }
@@ -1425,19 +1425,19 @@ public class MekTableMouseAdapter extends MouseInputAdapter implements ActionLis
                     // Cannot Retire or rename Vacant pilots.
                     if (!cm.hasVacantPilot()) {
                         menuItem = new JMenuItem("Retire");
-                        menuItem.setActionCommand(STR."RT|\{cm.getId()}");
+                        menuItem.setActionCommand(String.format("RT|%s", cm.getId()));
                         menuItem.addActionListener(this);
                         pilotMenu.add(menuItem);
 
                         menuItem = new JMenuItem("Rename");
-                        menuItem.setActionCommand(STR."RP|\{cm.getId()}");
+                        menuItem.setActionCommand(String.format("RP|%s", cm.getId()));
                         menuItem.addActionListener(this);
                         pilotMenu.add(menuItem);
 
                         if (MathUtility.parseBoolean(chqPanel.getClient().getServerConfigs(
                               "PlayersCanBuyPilotUpgrades"), false)) {
                             menuItem = new JMenuItem("Promote Pilot");
-                            menuItem.setActionCommand(STR."PP|\{cm.getId()}");
+                            menuItem.setActionCommand(String.format("PP|%s", cm.getId()));
                             menuItem.addActionListener(this);
                             pilotMenu.add(menuItem);
 
@@ -1445,7 +1445,7 @@ public class MekTableMouseAdapter extends MouseInputAdapter implements ActionLis
                                                                .getServerConfigs("PlayersCanSellPilotUpgrades"),
                                   false)) {
                                 menuItem = new JMenuItem("Demote Pilot");
-                                menuItem.setActionCommand(STR."DP|\{cm.getId()}");
+                                menuItem.setActionCommand(String.format("DP|%s", cm.getId()));
                                 menuItem.addActionListener(this);
                                 pilotMenu.add(menuItem);
                             }
@@ -1467,7 +1467,7 @@ public class MekTableMouseAdapter extends MouseInputAdapter implements ActionLis
                         if (!cm.hasVacantPilot()) {
                             pilotMenu.addSeparator();
                             menuItem = new JMenuItem("Remove");
-                            menuItem.setActionCommand(STR."EXP|\{cm.getId()}|-1");
+                            menuItem.setActionCommand(String.format("EXP|%s|-1", cm.getId()));
                             menuItem.addActionListener(this);
                             pilotMenu.add(menuItem);
                         } else {
@@ -1490,7 +1490,7 @@ public class MekTableMouseAdapter extends MouseInputAdapter implements ActionLis
                                 String pilotString = getPilotString(cm, pilots.get(i));
                                 menuItem = new JMenuItem(pilotString);
 
-                                menuItem.setActionCommand(STR."EXP|\{cm.getId()}|\{i}");
+                                menuItem.setActionCommand(String.format("EXP|%s|%s", cm.getId(), i));
                                 menuItem.addActionListener(this);
                                 exchangeMenu.add(menuItem);
                             }
@@ -1500,12 +1500,12 @@ public class MekTableMouseAdapter extends MouseInputAdapter implements ActionLis
                     popup.addSeparator();
 
                     menuItem = new JMenuItem("Show To Faction");
-                    menuItem.setActionCommand(STR."SUTH|\{cm.getId()}");
+                    menuItem.setActionCommand(String.format("SUTH|%s", cm.getId()));
                     menuItem.addActionListener(this);
                     popup.add(menuItem);
 
                     menuItem = new JMenuItem("Remove From All");
-                    menuItem.setActionCommand(STR."RFAA|\{cm.getId()}");
+                    menuItem.setActionCommand(String.format("RFAA|%s", cm.getId()));
                     menuItem.addActionListener(this);
                     popup.add(menuItem);
 
@@ -1550,12 +1550,12 @@ public class MekTableMouseAdapter extends MouseInputAdapter implements ActionLis
     private static @NonNull JMenu getMenuX(int i, int j) {
         JMenu menuX;
         if (i < 4) {
-            menuX = new JMenu(STR."\{Unit.getWeightClassDesc(i)} \{j + 1}");
+            menuX = new JMenu(String.format("%s %s", Unit.getWeightClassDesc(i), j + 1));
         } else if (i == 4) {// proto
-            menuX = new JMenu(STR."Proto \{j + 1}");
+            menuX = new JMenu(String.format("Proto %s", j + 1));
         } else {// BA, can assume this is i ==
             // 5.
-            menuX = new JMenu(STR."Infantry \{j + 1}");
+            menuX = new JMenu(String.format("Infantry %s", j + 1));
         }
         return menuX;
     }
@@ -1576,23 +1576,23 @@ public class MekTableMouseAdapter extends MouseInputAdapter implements ActionLis
         String pilotString;
         String skills = pilot.getSkillString(true);
         if (cm.getType() == Unit.MEK) {
-            pilotString = STR."\{pilot.getName()} (\{pilot.getGunnery()}/\{pilot.getPiloting()}";
+            pilotString = String.format("%s (%s/%s", pilot.getName(), pilot.getGunnery(), pilot.getPiloting());
             if (skills.trim().isEmpty()) {
                 pilotString += ")";
             } else {
-                pilotString += STR.", \{skills})";
+                pilotString += String.format(", %s)", skills);
             }
 
             if (pilot.getHits() > 0) {
-                pilotString += STR." Hits: \{pilot.getHits()}";
+                pilotString += String.format(" Hits: %s", pilot.getHits());
             }
 
         } else {
-            pilotString = STR."\{pilot.getName()} (\{pilot.getGunnery()}";
+            pilotString = String.format("%s (%s", pilot.getName(), pilot.getGunnery());
             if (skills.trim().isEmpty()) {
                 pilotString += ")";
             } else {
-                pilotString += STR.", \{skills})";
+                pilotString += String.format(", %s)", skills);
             }
         }
         return pilotString;
@@ -1622,7 +1622,7 @@ public class MekTableMouseAdapter extends MouseInputAdapter implements ActionLis
                 // if the unit is from an army, remove it
                 if (startArmy != null) {
                     chqPanel.getClient()
-                          .sendChat(STR."\{IClient.CAMPAIGN_PREFIX}c EXM#\{startArmy.getID()},\{dragUnit.getId()}");
+                          .sendChat(String.format("%sc EXM#%s,%s", IClient.CAMPAIGN_PREFIX, startArmy.getID(), dragUnit.getId()));
                 }
 
             }// end if (release over hangar)
@@ -1636,10 +1636,10 @@ public class MekTableMouseAdapter extends MouseInputAdapter implements ActionLis
                     // army # or empty space. add the unit.
                     if (exchangeUnit == null) {
                         chqPanel.getClient().sendChat(
-                              STR."\{IClient.CAMPAIGN_PREFIX}c EXM#\{currArmy.getID()},-1#\{dragUnit.getId()}");
+                              String.format("%sc EXM#%s,-1#%s", IClient.CAMPAIGN_PREFIX, currArmy.getID(), dragUnit.getId()));
                     } else if (dragUnit.getId() != exchangeUnit.getId()) {
                         chqPanel.getClient()
-                              .sendChat(STR."\{IClient.CAMPAIGN_PREFIX}c EXM#\{currArmy.getID()},\{exchangeUnit.getId()}#\{dragUnit.getId()}");
+                              .sendChat(String.format("%sc EXM#%s,%s#%s", IClient.CAMPAIGN_PREFIX, currArmy.getID(), exchangeUnit.getId(), dragUnit.getId()));
                     }
                 }
 
@@ -1655,7 +1655,7 @@ public class MekTableMouseAdapter extends MouseInputAdapter implements ActionLis
                         newPosition++;
                     }
                     chqPanel.getClient().sendChat(
-                          STR."\{IClient.CAMPAIGN_PREFIX}c unitposition#\{startArmy.getID()}#\{dragUnit.getId()}#\{newPosition}");
+                          String.format("%sc unitposition#%s#%s#%s", IClient.CAMPAIGN_PREFIX, startArmy.getID(), dragUnit.getId(), newPosition));
                 }
 
             }// end else(target army exists)
@@ -1762,18 +1762,18 @@ public class MekTableMouseAdapter extends MouseInputAdapter implements ActionLis
                 int mid = MathUtility.parseInt(stringTokenizer.nextToken(), 0);
                 int hid = MathUtility.parseInt(stringTokenizer.nextToken(), 0);
                 chqPanel.getClient()
-                      .sendChat(STR."\{IClient.CAMPAIGN_PREFIX}c EXM#\{lid},\{mid}#\{hid}");
+                      .sendChat(String.format("%sc EXM#%s,%s#%s", IClient.CAMPAIGN_PREFIX, lid, mid, hid));
                 // move to hanger
             }
             case "MH" -> {
                 int lid = MathUtility.parseInt(stringTokenizer.nextToken(), 0);
                 int mid = MathUtility.parseInt(stringTokenizer.nextToken(), 0);
-                chqPanel.getClient().sendChat(STR."\{IClient.CAMPAIGN_PREFIX}c EXM#\{lid},\{mid}");
+                chqPanel.getClient().sendChat(String.format("%sc EXM#%s,%s", IClient.CAMPAIGN_PREFIX, lid, mid));
                 // add lance
             }
-            case "AA" -> chqPanel.getClient().sendChat(STR."\{IClient.CAMPAIGN_PREFIX}c cra#\{chqPanel.getClient()
+            case "AA" -> chqPanel.getClient().sendChat(String.format("%sc cra#%s", IClient.CAMPAIGN_PREFIX, chqPanel.getClient()
                                                                                                     .getConfigParam(
-                                                                                                          "DEFAULT_ARMY_NAME")}");
+                                                                                                          "DEFAULT_ARMY_NAME")));
 
             // set lance active
             case "SA" -> {
@@ -1809,7 +1809,7 @@ public class MekTableMouseAdapter extends MouseInputAdapter implements ActionLis
 
                 String attackName = (String) attackCombo.getSelectedItem();
                 chqPanel.getClient()
-                      .sendChat(STR."\{IClient.CAMPAIGN_PREFIX}c checkarmyeligibility#\{armyID}#\{attackName}");
+                      .sendChat(String.format("%sc checkarmyeligibility#%s#%s", IClient.CAMPAIGN_PREFIX, armyID, attackName));
                 // Remove Army
             }
             case "RA" -> {
@@ -1853,7 +1853,7 @@ public class MekTableMouseAdapter extends MouseInputAdapter implements ActionLis
             }
             case "SATH" -> {
                 int lid = MathUtility.parseInt(stringTokenizer.nextToken(), 0);
-                chqPanel.getClient().sendChat(STR."\{IClient.CAMPAIGN_PREFIX}c sth#a#\{lid}");
+                chqPanel.getClient().sendChat(String.format("%sc sth#a#%s", IClient.CAMPAIGN_PREFIX, lid));
                 // make public challenge
             }
             case "MPC" -> {
@@ -1889,10 +1889,10 @@ public class MekTableMouseAdapter extends MouseInputAdapter implements ActionLis
 
                     // BV only
                     if (mode == 1) {
-                        toSend.append(STR." \{Math.round(currArmy.getBV() * forceSizeMod)} BV");
+                        toSend.append(String.format(" %s BV", Math.round(currArmy.getBV() * forceSizeMod)));
 
                         if (forceSizeMod > 1) {
-                            toSend.append(STR." vs \{opForceSize} units");
+                            toSend.append(String.format(" vs %s units", opForceSize));
                         }
 
                         toSend.append(".");
@@ -2034,7 +2034,7 @@ public class MekTableMouseAdapter extends MouseInputAdapter implements ActionLis
 
                         // replace final comma with a period.
                         int sendLength = toSend.lastIndexOf(",");
-                        toSend = new StringBuilder(STR."\{toSend.substring(0, sendLength)}.");
+                        toSend = new StringBuilder(String.format("%s.", toSend.substring(0, sendLength)));
                     } else if (mode == 4) {
                         int Tonnage = 0;
 
@@ -2142,7 +2142,7 @@ public class MekTableMouseAdapter extends MouseInputAdapter implements ActionLis
 
                         // replace final comma with a period.
                         int sendLength = toSend.lastIndexOf(",");
-                        toSend = new StringBuilder(STR."\{toSend.substring(0, sendLength)}.");
+                        toSend = new StringBuilder(String.format("%s.", toSend.substring(0, sendLength)));
                     } else if (mode == 9) {
                         int assault = 0;
                         int heavy = 0;
@@ -2191,7 +2191,7 @@ public class MekTableMouseAdapter extends MouseInputAdapter implements ActionLis
                         }
                         // replace final comma with a period.
                         int sendLength = toSend.lastIndexOf(",");
-                        toSend = new StringBuilder(STR."\{toSend.substring(0, sendLength)}.");
+                        toSend = new StringBuilder(String.format("%s.", toSend.substring(0, sendLength)));
 
                     } else if (mode == 10) {
                         for (Unit unit : currArmy.getUnits()) {
@@ -2211,7 +2211,7 @@ public class MekTableMouseAdapter extends MouseInputAdapter implements ActionLis
                         }
                         // replace final comma with a period.
                         int sendLength = toSend.lastIndexOf(",");
-                        toSend = new StringBuilder(STR."\{toSend.substring(0, sendLength)}.");
+                        toSend = new StringBuilder(String.format("%s.", toSend.substring(0, sendLength)));
                     } else if (mode == 11) {
                         toSend.append(" ").append(Math.round(currArmy.getBV() * forceSizeMod)).append(" BV");
 
@@ -2237,7 +2237,7 @@ public class MekTableMouseAdapter extends MouseInputAdapter implements ActionLis
                         }
                         // replace final comma with a period.
                         int sendLength = toSend.lastIndexOf(",");
-                        toSend = new StringBuilder(STR."\{toSend.substring(0, sendLength)}.");
+                        toSend = new StringBuilder(String.format("%s.", toSend.substring(0, sendLength)));
                     } else if (mode == 12) {
                         TreeMap<Double, Integer> unitWeights = new TreeMap<>();
 
@@ -2261,7 +2261,7 @@ public class MekTableMouseAdapter extends MouseInputAdapter implements ActionLis
                         }
                         // replace final comma with a period.
                         int sendLength = toSend.lastIndexOf(",");
-                        toSend = new StringBuilder(STR."\{toSend.substring(0, sendLength)}.");
+                        toSend = new StringBuilder(String.format("%s.", toSend.substring(0, sendLength)));
                     } else if (mode == 13) {
                         toSend.append(" ").append(currArmy.getBV()).append(" BV,");
                         TreeMap<Double, Integer> unitWeights = new TreeMap<>();
@@ -2286,7 +2286,7 @@ public class MekTableMouseAdapter extends MouseInputAdapter implements ActionLis
                         }
                         // replace final comma with a period.
                         int sendLength = toSend.lastIndexOf(",");
-                        toSend = new StringBuilder(STR."\{toSend.substring(0, sendLength)}.");
+                        toSend = new StringBuilder(String.format("%s.", toSend.substring(0, sendLength)));
                     }
 
                     if (!currArmy.getName().trim().isEmpty()) {
@@ -2308,7 +2308,7 @@ public class MekTableMouseAdapter extends MouseInputAdapter implements ActionLis
             }
             case "SUTH" -> {
                 int mid = MathUtility.parseInt(stringTokenizer.nextToken(), 0);
-                chqPanel.getClient().sendChat(STR."\{IClient.CAMPAIGN_PREFIX}c sth#u#\{mid}");
+                chqPanel.getClient().sendChat(String.format("%sc sth#u#%s", IClient.CAMPAIGN_PREFIX, mid));
                 // rename pilot
             }
             case "RP" -> {
@@ -2328,7 +2328,7 @@ public class MekTableMouseAdapter extends MouseInputAdapter implements ActionLis
             }
             case "RT" -> {
                 int mid = MathUtility.parseInt(stringTokenizer.nextToken(), 0);
-                chqPanel.getClient().sendChat(STR."\{IClient.CAMPAIGN_PREFIX}c retirepilot#\{mid}");// send
+                chqPanel.getClient().sendChat(String.format("%sc retirepilot#%s", IClient.CAMPAIGN_PREFIX, mid));// send
                 // directly
                 // show mek
             }
@@ -2407,7 +2407,7 @@ public class MekTableMouseAdapter extends MouseInputAdapter implements ActionLis
                 int col = MathUtility.parseInt(stringTokenizer.nextToken(), 0);
                 CUnit mek = chqPanel.getMekTable().getMekAt(row, col);
 
-                chqPanel.getClient().sendChat(STR."\{IClient.CAMPAIGN_PREFIX}c DisplayUnitRepairJobs#\{mek.getId()}");
+                chqPanel.getClient().sendChat(String.format("%sc DisplayUnitRepairJobs#%s", IClient.CAMPAIGN_PREFIX, mek.getId()));
             }
             case "DPWO" -> {
                 int row = MathUtility.parseInt(stringTokenizer.nextToken(), 0);
@@ -2442,14 +2442,14 @@ public class MekTableMouseAdapter extends MouseInputAdapter implements ActionLis
                 int col = MathUtility.parseInt(stringTokenizer.nextToken(), 0);
                 CUnit mek = chqPanel.getMekTable().getMekAt(row, col);
                 int result = JOptionPane.showConfirmDialog(chqPanel.getClient().getMainFrame(),
-                      STR."Are you sure you want to reload all the ammo on this unit \{chqPanel.getClient()
+                      String.format("Are you sure you want to reload all the ammo on this unit %s?", chqPanel.getClient()
                                                                                              .getPlayer()
-                                                                                             .getName()}?",
+                                                                                             .getName()),
                       "Reload it?",
                       JOptionPane.YES_NO_OPTION);
                 if (result == JOptionPane.YES_OPTION) {
                     chqPanel.getClient()
-                          .sendChat(STR."\{IClient.CAMPAIGN_PREFIX}c RELOADALLAMMO#\{mek.getId()}");
+                          .sendChat(String.format("%sc RELOADALLAMMO#%s", IClient.CAMPAIGN_PREFIX, mek.getId()));
                 }
             }
 
@@ -2482,60 +2482,60 @@ public class MekTableMouseAdapter extends MouseInputAdapter implements ActionLis
                 String repairEstimate = "It'll cost you at least the following to repair your " +
                                               mek.getModelName() +
                                               "<br>" +
-                                              STR."<table><tr><th>Green Tech:</th><th>\{chqPanel.getClient()
+                                              String.format("<table><tr><th>Green Tech:</th><th>%s", chqPanel.getClient()
                                                                                               .moneyOrFluMessage(true,
                                                                                                     true,
                                                                                                     (int) repairCost,
-                                                                                                    false)}" +
-                                              STR."parts and \{chqPanel.getClient()
+                                                                                                    false)) +
+                                              String.format("parts and %s", chqPanel.getClient()
                                                                      .moneyOrFluMessage(true,
                                                                            true,
                                                                            greenTechCost,
-                                                                           false)}" +
-                                              STR." labor for a total of \{chqPanel.getClient()
+                                                                           false)) +
+                                              String.format(" labor for a total of %s.</th></tr>", chqPanel.getClient()
                                                                                  .moneyOrFluMessage(true,
                                                                                        true,
                                                                                        (int) repairCost + greenTechCost,
-                                                                                       false)}.</th></tr>" +
-                                              STR."<tr><th>Reg Tech: </th>" +
-                                              STR."<th>\{chqPanel.getClient()
+                                                                                       false)) +
+                                              String.format("<tr><th>Reg Tech: </th>") +
+                                              String.format("<th>%s in parts ", chqPanel.getClient()
                                                                .moneyOrFluMessage(true, true, (int) repairCost,
-                                                                     false)} in parts " +
-                                              STR." \{chqPanel.getClient()
+                                                                     false)) +
+                                              String.format(" %s in labor for a total ", chqPanel.getClient()
                                                             .moneyOrFluMessage(true,
                                                                   true,
                                                                   regTechCost,
-                                                                  false)} in labor for a total " +
-                                              STR." \{chqPanel.getClient().moneyOrFluMessage(true, true,
-                                                    (int) repairCost + regTechCost, false)}.</th>" +
-                                              STR."</tr><tr><th>Vet Tech: </th><th>\{chqPanel.getClient()
+                                                                  false)) +
+                                              String.format(" %s.</th>", chqPanel.getClient().moneyOrFluMessage(true, true,
+                                                    (int) repairCost + regTechCost, false)) +
+                                              String.format("</tr><tr><th>Vet Tech: </th><th>%s in parts and", chqPanel.getClient()
                                                                                            .moneyOrFluMessage(true,
                                                                                                  true,
                                                                                                  (int) repairCost,
-                                                                                                 false)} in parts and" +
-                                              STR."\{chqPanel.getClient()
+                                                                                                 false)) +
+                                              String.format("%s in labor for a total of", chqPanel.getClient()
                                                            .moneyOrFluMessage(true,
                                                                  true,
                                                                  vetTechCost,
-                                                                 false)} in labor for a total of" +
-                                              STR."\{chqPanel.getClient().moneyOrFluMessage(true, true,
-                                                    (int) repairCost + vetTechCost, false)}.</th></tr>" +
-                                              STR."<tr><th>Elite Tech: </th><th>\{chqPanel.getClient()
+                                                                 false)) +
+                                              String.format("%s.</th></tr>", chqPanel.getClient().moneyOrFluMessage(true, true,
+                                                    (int) repairCost + vetTechCost, false)) +
+                                              String.format("<tr><th>Elite Tech: </th><th>%s in parts and", chqPanel.getClient()
                                                                                         .moneyOrFluMessage(true
                                                                                               ,
                                                                                               true,
                                                                                               (int) repairCost,
-                                                                                              false)} in parts and" +
-                                              STR."\{chqPanel.getClient()
+                                                                                              false)) +
+                                              String.format("%s in labor for a total of ", chqPanel.getClient()
                                                            .moneyOrFluMessage(true,
                                                                  true,
                                                                  eliteTechCost,
-                                                                 false)} in labor for a total of " +
-                                              STR."\{chqPanel.getClient()
+                                                                 false)) +
+                                              String.format("%s.</th></tr></table>", chqPanel.getClient()
                                                            .moneyOrFluMessage(true,
                                                                  true,
                                                                  (int) repairCost + eliteTechCost,
-                                                                 false)}.</th></tr></table>";
+                                                                 false));
                 chqPanel.getClient().systemMessage(repairEstimate);
             }
             case "RFAA" -> {
@@ -2546,7 +2546,7 @@ public class MekTableMouseAdapter extends MouseInputAdapter implements ActionLis
                 // check all armies for the selected unit
                 for (CArmy currA : chqPanel.getClient().getPlayer().getArmies()) {
                     if (currA.getUnit(mid) != null) {
-                        chqPanel.getClient().sendChat(STR."\{IClient.CAMPAIGN_PREFIX}c EXM#\{currA.getID()},\{mid}");
+                        chqPanel.getClient().sendChat(String.format("%sc EXM#%s,%s", IClient.CAMPAIGN_PREFIX, currA.getID(), mid));
                     }
                 }
 
@@ -2558,7 +2558,7 @@ public class MekTableMouseAdapter extends MouseInputAdapter implements ActionLis
             }
             case "RM" -> {
                 int mid = MathUtility.parseInt(stringTokenizer.nextToken(), 0);
-                chqPanel.getClient().sendChat(STR."\{IClient.CAMPAIGN_PREFIX}c repod#\{mid}");
+                chqPanel.getClient().sendChat(String.format("%sc repod#%s", IClient.CAMPAIGN_PREFIX, mid));
                 // add to bm
             }
             case "AB" -> {
@@ -2572,7 +2572,7 @@ public class MekTableMouseAdapter extends MouseInputAdapter implements ActionLis
 
                 for (CBMUnit currU : marketUnits.values()) {
                     if (currU.getUnitID() == mid) {
-                        chqPanel.getClient().sendChat(STR."\{IClient.CAMPAIGN_PREFIX}c recall#\{currU.getAuctionID()}");
+                        chqPanel.getClient().sendChat(String.format("%sc recall#%s", IClient.CAMPAIGN_PREFIX, currU.getAuctionID()));
                         break;
                     }
                 }
@@ -2590,18 +2590,18 @@ public class MekTableMouseAdapter extends MouseInputAdapter implements ActionLis
                       "Scrap it?",
                       JOptionPane.YES_NO_OPTION);
                 if (result == JOptionPane.YES_OPTION) {
-                    chqPanel.getClient().sendChat(STR."\{IClient.CAMPAIGN_PREFIX}c scrap#\{num}");
+                    chqPanel.getClient().sendChat(String.format("%sc scrap#%s", IClient.CAMPAIGN_PREFIX, num));
                     // Maintain Mek
                 }
                 //@Salient for SOL free build option
             }
             case "DL" -> {
                 int num = MathUtility.parseInt(stringTokenizer.nextToken(), 0);
-                chqPanel.getClient().sendChat(STR."\{IClient.CAMPAIGN_PREFIX}SOLDELETEUNIT \{num}");
+                chqPanel.getClient().sendChat(String.format("%sSOLDELETEUNIT %s", IClient.CAMPAIGN_PREFIX, num));
             }
             case "MM" -> {
                 int num = MathUtility.parseInt(stringTokenizer.nextToken(), 0);
-                chqPanel.getClient().sendChat(STR."\{IClient.CAMPAIGN_PREFIX}c setmaintained#\{num}");
+                chqPanel.getClient().sendChat(String.format("%sc setmaintained#%s", IClient.CAMPAIGN_PREFIX, num));
                 chqPanel.getClient().refreshGUI(IClient.REFRESH_HQ_PANEL);
                 // unmaintained mek
             }
@@ -2613,7 +2613,7 @@ public class MekTableMouseAdapter extends MouseInputAdapter implements ActionLis
                       JOptionPane.YES_NO_OPTION);
                 if (result == JOptionPane.YES_OPTION) {
                     chqPanel.getClient()
-                          .sendChat(STR."\{IClient.CAMPAIGN_PREFIX}c setunmaintained#\{num}");
+                          .sendChat(String.format("%sc setunmaintained#%s", IClient.CAMPAIGN_PREFIX, num));
                 }
                 chqPanel.getClient().refreshGUI(IClient.REFRESH_HQ_PANEL);
                 // donate mek
@@ -2625,7 +2625,7 @@ public class MekTableMouseAdapter extends MouseInputAdapter implements ActionLis
                       "Donate?",
                       JOptionPane.YES_NO_OPTION);
                 if (result == JOptionPane.YES_OPTION) {
-                    chqPanel.getClient().sendChat(STR."\{IClient.CAMPAIGN_PREFIX}c donate#\{mid}");
+                    chqPanel.getClient().sendChat(String.format("%sc donate#%s", IClient.CAMPAIGN_PREFIX, mid));
                     // buy mek
                 }
             }
@@ -2633,7 +2633,7 @@ public class MekTableMouseAdapter extends MouseInputAdapter implements ActionLis
                 int lid = MathUtility.parseInt(stringTokenizer.nextToken(), 0);
                 int mid = MathUtility.parseInt(stringTokenizer.nextToken(), 0);
                 int hid = MathUtility.parseInt(stringTokenizer.nextToken(), 0);
-                chqPanel.getClient().sendChat(STR."\{IClient.CAMPAIGN_PREFIX}c linkunit#\{lid}#\{mid}#\{hid}");
+                chqPanel.getClient().sendChat(String.format("%sc linkunit#%s#%s#%s", IClient.CAMPAIGN_PREFIX, lid, mid, hid));
             }
             case "EAE" -> {
                 int row = MathUtility.parseInt(stringTokenizer.nextToken(), 0);
@@ -2642,7 +2642,7 @@ public class MekTableMouseAdapter extends MouseInputAdapter implements ActionLis
                 Mek mek = (Mek) cUnit.getEntity();
                 mek.setAutoEject(true);
                 chqPanel.getClient()
-                      .sendChat(STR."\{IClient.CAMPAIGN_PREFIX}c setautoeject#\{mek.getExternalId()}#true");
+                      .sendChat(String.format("%sc setautoeject#%s#true", IClient.CAMPAIGN_PREFIX, mek.getExternalId()));
             }
             case "DAE" -> {
                 int row = MathUtility.parseInt(stringTokenizer.nextToken(), 0);
@@ -2651,13 +2651,13 @@ public class MekTableMouseAdapter extends MouseInputAdapter implements ActionLis
                 Mek mek = (Mek) cUnit.getEntity();
                 mek.setAutoEject(false);
                 chqPanel.getClient()
-                      .sendChat(STR."\{IClient.CAMPAIGN_PREFIX}c setautoeject#\{mek.getExternalId()}#false");
+                      .sendChat(String.format("%sc setautoeject#%s#false", IClient.CAMPAIGN_PREFIX, mek.getExternalId()));
                 // exchange pilot
             }
             case "EXP" -> {
                 int uid = MathUtility.parseInt(stringTokenizer.nextToken(), 0);
                 int pid = MathUtility.parseInt(stringTokenizer.nextToken(), 0);
-                chqPanel.getClient().sendChat(STR."\{IClient.CAMPAIGN_PREFIX}c EXP#\{uid}#\{pid}");
+                chqPanel.getClient().sendChat(String.format("%sc EXP#%s#%s", IClient.CAMPAIGN_PREFIX, uid, pid));
             }
             case "FET" -> // fire excess techs
                   chqPanel.getClient().getMainFrame().jMenuCommanderFireTechs_actionPerformed();
@@ -2668,7 +2668,7 @@ public class MekTableMouseAdapter extends MouseInputAdapter implements ActionLis
                 int unitID = MathUtility.parseInt(stringTokenizer.nextToken(), 0);
                 int newPos = MathUtility.parseInt(stringTokenizer.nextToken(), 0);
                 chqPanel.getClient()
-                      .sendChat(STR."\{IClient.CAMPAIGN_PREFIX}c unitposition#\{armyID}#\{unitID}#\{newPos}");
+                      .sendChat(String.format("%sc unitposition#%s#%s#%s", IClient.CAMPAIGN_PREFIX, armyID, unitID, newPos));
             }
             case "PHQS" -> {
                 chqPanel.getClient().getConfig().setParam("PRIMARY_HQ_SORT_ORDER", stringTokenizer.nextToken());
@@ -2706,7 +2706,7 @@ public class MekTableMouseAdapter extends MouseInputAdapter implements ActionLis
                 String armyId = stringTokenizer.nextToken();
                 CUnit mek = chqPanel.getMekTable().getMekAt(row, col);
                 chqPanel.getClient()
-                      .sendChat(STR."\{IClient.CAMPAIGN_PREFIX}c setunitcommander#\{mek.getId()}#\{armyId}#false");
+                      .sendChat(String.format("%sc setunitcommander#%s#%s#false", IClient.CAMPAIGN_PREFIX, mek.getId(), armyId));
                 // exchange pilot
             }
             case "SET_UNIT_COMMANDER" -> {
@@ -2715,7 +2715,7 @@ public class MekTableMouseAdapter extends MouseInputAdapter implements ActionLis
                 String armyId = stringTokenizer.nextToken();
                 CUnit mek = chqPanel.getMekTable().getMekAt(row, col);
                 chqPanel.getClient()
-                      .sendChat(STR."\{IClient.CAMPAIGN_PREFIX}c setunitcommander#\{mek.getId()}#\{armyId}#true");
+                      .sendChat(String.format("%sc setunitcommander#%s#%s#true", IClient.CAMPAIGN_PREFIX, mek.getId(), armyId));
                 // exchange pilot
             }
         }

@@ -22,13 +22,13 @@ public class BuyPopupListener extends MouseAdapter implements ActionListener {
 
         if (command.equalsIgnoreCase("BUY")) {
             chsPanel.getClient()
-                  .sendChat(STR."\{IClient.CAMPAIGN_PREFIX}c request#\{stringTokenizer.nextToken()}#\{stringTokenizer.nextToken()}");
+                  .sendChat(String.format("%sc request#%s#%s", IClient.CAMPAIGN_PREFIX, stringTokenizer.nextToken(), stringTokenizer.nextToken()));
         } else if (command.equalsIgnoreCase("BUYU")) {
             chsPanel.getClient()
-                  .sendChat(STR."\{IClient.CAMPAIGN_PREFIX}c requestdonated#\{stringTokenizer.nextToken()}#\{stringTokenizer.nextToken()}");
+                  .sendChat(String.format("%sc requestdonated#%s#%s", IClient.CAMPAIGN_PREFIX, stringTokenizer.nextToken(), stringTokenizer.nextToken()));
         } else if (command.equalsIgnoreCase("BUYP")) {
             chsPanel.getClient()
-                  .sendChat(STR."\{IClient.CAMPAIGN_PREFIX}c buypilotsfromhouse#\{stringTokenizer.nextToken()}#\{stringTokenizer.nextToken()}");
+                  .sendChat(String.format("%sc buypilotsfromhouse#%s#%s", IClient.CAMPAIGN_PREFIX, stringTokenizer.nextToken(), stringTokenizer.nextToken()));
         }
     }
 }

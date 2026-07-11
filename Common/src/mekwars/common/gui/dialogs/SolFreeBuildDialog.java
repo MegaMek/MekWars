@@ -360,7 +360,7 @@ public class SolFreeBuildDialog extends JFrame implements ItemListener {
         /*
          * Next, determine the weight class.
          */
-        addOnString += STR."_\{weightClassCombo.getSelectedItem()}";
+        addOnString += String.format("_%s", weightClassCombo.getSelectedItem());
 
         /*
          * Finally, determine the type of unit to look at.
@@ -452,14 +452,14 @@ public class SolFreeBuildDialog extends JFrame implements ItemListener {
             // get zip entry for the new file.
             File tableEntry;
             if (commonOverride) {
-                tableEntry = new File(STR."\{buildTablePath.getPath()}\{File.separatorChar}Common\{add}");
+                tableEntry = new File(String.format("%s%sCommon%s", buildTablePath.getPath(), File.separatorChar, add));
             } else {
                 tableEntry = new File(buildTablePath.getPath() + File.separatorChar + currTableName + add);
             }
 
             if (!tableEntry.exists()) {
                 if (commonOverride) {
-                    tableEntry = new File((STR."\{buildTablePath.getPath()}\{File.separatorChar}Common\{add}").toLowerCase());
+                    tableEntry = new File((String.format("%s%sCommon%s", buildTablePath.getPath(), File.separatorChar, add)).toLowerCase());
                 } else {
                     tableEntry = new File((buildTablePath.getPath() +
                                                  File.separatorChar +
@@ -543,7 +543,7 @@ public class SolFreeBuildDialog extends JFrame implements ItemListener {
 
                             if (Filename.toString().toLowerCase().endsWith(".mul")) {
                                 Vector<Entity> loadedUnits;
-                                File entityFile = new File(STR."data/armies/\{Filename}");
+                                File entityFile = new File(String.format("data/armies/%s", Filename));
 
                                 try {
                                     loadedUnits = new MULParser(entityFile, null).getEntities();
@@ -706,9 +706,9 @@ public class SolFreeBuildDialog extends JFrame implements ItemListener {
 
         refreshButton.setEnabled(false);
         if (userLevel >= client.getData().getAccessLevel("AdminRequestBuildTable")) {
-            client.sendChat(STR."\{IClient.CAMPAIGN_PREFIX}c AdminRequestBuildTable#list#true");
+            client.sendChat(String.format("%sc AdminRequestBuildTable#list#true", IClient.CAMPAIGN_PREFIX));
         } else if (userLevel >= client.getData().getAccessLevel("RequestBuildTable")) {
-            client.sendChat(STR."\{IClient.CAMPAIGN_PREFIX}c RequestBuildTable#list#true");
+            client.sendChat(String.format("%sc RequestBuildTable#list#true", IClient.CAMPAIGN_PREFIX));
         }
 
         client.setWaiting(true);
@@ -730,9 +730,9 @@ public class SolFreeBuildDialog extends JFrame implements ItemListener {
 
         refreshButton.setEnabled(false);
         if (userLevel >= client.getData().getAccessLevel("AdminRequestBuildTable")) {
-            client.sendChat(STR."\{IClient.CAMPAIGN_PREFIX}c AdminRequestBuildTable#list#true");
+            client.sendChat(String.format("%sc AdminRequestBuildTable#list#true", IClient.CAMPAIGN_PREFIX));
         } else if (userLevel >= client.getData().getAccessLevel("RequestBuildTable")) {
-            client.sendChat(STR."\{IClient.CAMPAIGN_PREFIX}c RequestBuildTable#list#true");
+            client.sendChat(String.format("%sc RequestBuildTable#list#true", IClient.CAMPAIGN_PREFIX));
         }
 
         client.setWaiting(true);
@@ -767,12 +767,12 @@ public class SolFreeBuildDialog extends JFrame implements ItemListener {
             // postdefection is enabled.
             {
                 client.sendChat(
-                      STR."\{IClient.CAMPAIGN_PREFIX}SOLCREATEUNIT \{selectedUnit.getRealFilename()}#\{TableUnit.getEntityWeight(
-                            tempEntity)}#\{selectedFaction}");
+                      String.format("%sSOLCREATEUNIT %s#%s#%s", IClient.CAMPAIGN_PREFIX, selectedUnit.getRealFilename(), TableUnit.getEntityWeight(
+                            tempEntity), selectedFaction));
             } else {
                 client.sendChat(
-                      STR."\{IClient.CAMPAIGN_PREFIX}SOLCREATEUNIT \{selectedUnit.getRealFilename()}#\{TableUnit.getEntityWeight(
-                            tempEntity)}");
+                      String.format("%sSOLCREATEUNIT %s#%s", IClient.CAMPAIGN_PREFIX, selectedUnit.getRealFilename(), TableUnit.getEntityWeight(
+                            tempEntity)));
             }
 
             createButton.setEnabled(true);

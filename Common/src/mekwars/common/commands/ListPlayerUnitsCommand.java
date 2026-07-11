@@ -77,7 +77,7 @@ public class ListPlayerUnitsCommand extends Command {
         TreeSet<String> list = new TreeSet<>();
 
         while (units.hasMoreElements()) {
-            list.add(STR."#\{units.nextToken()}");
+            list.add(String.format("#%s", units.nextToken()));
         }
 
         JComboBox<String> combo = new JComboBox<>();
@@ -103,12 +103,12 @@ public class ListPlayerUnitsCommand extends Command {
 
             if (receivingPlayer != null) {
                 if (commandName.equalsIgnoreCase("admin_transfer")) {
-                    client.sendChat(STR."\{IClient.CAMPAIGN_PREFIX}c \{commandName}#\{username}#\{receivingPlayer}\{unit}");
+                    client.sendChat(String.format("%sc %s#%s#%s%s", IClient.CAMPAIGN_PREFIX, commandName, username, receivingPlayer, unit));
                 } else if (commandName.equalsIgnoreCase("view_player_unit")) {
-                    client.sendChat(STR."\{IClient.CAMPAIGN_PREFIX}c \{commandName}#\{username}\{unit}#\{receivingPlayer}");
+                    client.sendChat(String.format("%sc %s#%s%s#%s", IClient.CAMPAIGN_PREFIX, commandName, username, unit, receivingPlayer));
                 }
             } else {
-                client.sendChat(STR."\{IClient.CAMPAIGN_PREFIX}c \{commandName}#\{username}\{unit}");
+                client.sendChat(String.format("%sc %s#%s%s", IClient.CAMPAIGN_PREFIX, commandName, username, unit));
             }
         }
     }

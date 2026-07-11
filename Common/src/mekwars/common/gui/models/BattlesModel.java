@@ -83,7 +83,7 @@ public class BattlesModel extends AbstractTableModel {
             case NAME:
                 return aGame.getHostName();
             case PLAYER_COUNT:
-                return STR."\{aGame.getCurrentPlayers().size()}/\{aGame.getMaxPlayers()}";
+                return String.format("%s/%s", aGame.getCurrentPlayers().size(), aGame.getMaxPlayers());
             case VERSION:
                 return aGame.getVersion();
             case COMMENT:

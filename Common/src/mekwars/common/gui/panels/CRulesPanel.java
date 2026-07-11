@@ -49,7 +49,7 @@ public class CRulesPanel extends JPanel {
 
         if (rulesURL != null) {
             try {editorPane.setPage(rulesURL);} catch (java.io.IOException e) {
-                System.err.println(STR."Bad URL: \{rulesURL}");
+                System.err.println(String.format("Bad URL: %s", rulesURL));
             }
         } else {
             System.err.println("Couldn't find: ServerRules.html");

@@ -55,9 +55,9 @@ public class BuildTableViewer extends JDialog implements Runnable {
     @Override
     public void run() {
         if (client.getUserLevel() >= client.getData().getAccessLevel("AdminRequestBuildTable")) {
-            client.sendChat(STR."\{IClient.CAMPAIGN_PREFIX}c AdminRequestBuildTable#list#true");
+            client.sendChat(String.format("%sc AdminRequestBuildTable#list#true", IClient.CAMPAIGN_PREFIX));
         } else if (client.getUserLevel() >= client.getData().getAccessLevel("RequestBuildTable")) {
-            client.sendChat(STR."\{IClient.CAMPAIGN_PREFIX}c RequestBuildTable#list#true");
+            client.sendChat(String.format("%sc RequestBuildTable#list#true", IClient.CAMPAIGN_PREFIX));
         }
         client.setWaiting(true);
         while (client.isWaiting()) {

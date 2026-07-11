@@ -145,14 +145,14 @@ public class CMainPanel extends JPanel implements ChangeListener, ComponentListe
                 addPanelMain(HQPanel,
                       HQSelect,
                       tabText,
-                      STR."Command Center and Hangars (Alt + \{mnemonicText})",
+                      String.format("Command Center and Hangars (Alt + %s)", mnemonicText),
                       mnemonicText,
                       "HQSelect");
             } else {
                 addPanelCComm(HQPanel,
                       HQSelect,
                       tabText,
-                      STR."Command Center and Hangars (Alt + \{mnemonicText})",
+                      String.format("Command Center and Hangars (Alt + %s)", mnemonicText),
                       mnemonicText,
                       "HQSelect",
                       CommPanel);
@@ -169,14 +169,14 @@ public class CMainPanel extends JPanel implements ChangeListener, ComponentListe
                 addPanelMain(BMPanel,
                       BMSelect,
                       tabText,
-                      STR."Buy and Sell Units (Alt + \{mnemonicText})",
+                      String.format("Buy and Sell Units (Alt + %s)", mnemonicText),
                       mnemonicText,
                       "BMSelect");
             } else {
                 addPanelCComm(BMPanel,
                       BMSelect,
                       tabText,
-                      STR."Buy and Sell Units (Alt + \{mnemonicText})",
+                      String.format("Buy and Sell Units (Alt + %s)", mnemonicText),
                       mnemonicText,
                       "BMSelect",
                       CommPanel);
@@ -198,14 +198,14 @@ public class CMainPanel extends JPanel implements ChangeListener, ComponentListe
                 addPanelMain(BMETabbed,
                       BMESelect,
                       tabText,
-                      STR."Buy and Sell Parts (Alt + \{mnemonicText})",
+                      String.format("Buy and Sell Parts (Alt + %s)", mnemonicText),
                       mnemonicText,
                       "BMESelect");
             } else {
                 addPanelCComm(BMETabbed,
                       BMESelect,
                       tabText,
-                      STR."Buy and Sell Parts (Alt + \{mnemonicText})",
+                      String.format("Buy and Sell Parts (Alt + %s)", mnemonicText),
                       mnemonicText,
                       "BMESelect",
                       CommPanel);
@@ -222,14 +222,14 @@ public class CMainPanel extends JPanel implements ChangeListener, ComponentListe
                 addPanelMain(HSPanel,
                       HSSelect,
                       tabText,
-                      STR."Show current House Status (Alt + \{mnemonicText})",
+                      String.format("Show current House Status (Alt + %s)", mnemonicText),
                       mnemonicText,
                       "HSSelect");
             } else {
                 addPanelCComm(HSPanel,
                       HSSelect,
                       tabText,
-                      STR."Show current House Status (Alt + \{mnemonicText})",
+                      String.format("Show current House Status (Alt + %s)", mnemonicText),
                       mnemonicText,
                       "HSSelect",
                       CommPanel);
@@ -246,14 +246,14 @@ public class CMainPanel extends JPanel implements ChangeListener, ComponentListe
                 addPanelMain(BattlePanel,
                       BattleSelect,
                       tabText,
-                      STR."Battles Intelligence Data (Alt + \{mnemonicText})",
+                      String.format("Battles Intelligence Data (Alt + %s)", mnemonicText),
                       mnemonicText,
                       "BattleSelect");
             } else {
                 addPanelCComm(BattlePanel,
                       BattleSelect,
                       tabText,
-                      STR."Battles Intelligence Data (Alt + \{mnemonicText})",
+                      String.format("Battles Intelligence Data (Alt + %s)", mnemonicText),
                       mnemonicText,
                       "BattleSelect",
                       CommPanel);
@@ -270,14 +270,14 @@ public class CMainPanel extends JPanel implements ChangeListener, ComponentListe
                 addPanelMain(MapPanel,
                       MapSelect,
                       tabText,
-                      STR."Star Map (Alt + \{mnemonicText})",
+                      String.format("Star Map (Alt + %s)", mnemonicText),
                       mnemonicText,
                       "MapSelect");
             } else {
                 addPanelCComm(MapPanel,
                       MapSelect,
                       tabText,
-                      STR."Star Map (Alt + \{mnemonicText})",
+                      String.format("Star Map (Alt + %s)", mnemonicText),
                       mnemonicText,
                       "MapSelect",
                       CommPanel);
@@ -294,14 +294,14 @@ public class CMainPanel extends JPanel implements ChangeListener, ComponentListe
                 addPanelMain(RulesPanel,
                       RulesSelect,
                       tabText,
-                      STR."Rules Tab (Alt + \{mnemonicText})",
+                      String.format("Rules Tab (Alt + %s)", mnemonicText),
                       mnemonicText,
                       "RulesSelect");
             } else {
                 addPanelCComm(RulesPanel,
                       RulesSelect,
                       tabText,
-                      STR."Rules Tab (Alt + \{mnemonicText})",
+                      String.format("Rules Tab (Alt + %s)", mnemonicText),
                       mnemonicText,
                       "RulesSelect",
                       CommPanel);
@@ -327,7 +327,7 @@ public class CMainPanel extends JPanel implements ChangeListener, ComponentListe
         }
 
         MainTPane.setDisplayedMnemonicIndexAt(index, mnemo);
-        getInputMap(WHEN_IN_FOCUSED_WINDOW).put(javax.swing.KeyStroke.getKeyStroke(STR."alt \{mnemoStr}"), commandStr);
+        getInputMap(WHEN_IN_FOCUSED_WINDOW).put(javax.swing.KeyStroke.getKeyStroke(String.format("alt %s", mnemoStr)), commandStr);
         getActionMap().put(commandStr, select);
     }
 
@@ -349,7 +349,7 @@ public class CMainPanel extends JPanel implements ChangeListener, ComponentListe
 
         CommPanel.CommTPane.setDisplayedMnemonicIndexAt(index, mnemo);
         CommPanel.CommTPane.getInputMap(WHEN_IN_FOCUSED_WINDOW)
-              .put(javax.swing.KeyStroke.getKeyStroke(STR."alt \{mnemoStr}"), commandStr);
+              .put(javax.swing.KeyStroke.getKeyStroke(String.format("alt %s", mnemoStr)), commandStr);
         CommPanel.CommTPane.getActionMap().put(commandStr, select);
     }
 
@@ -370,7 +370,7 @@ public class CMainPanel extends JPanel implements ChangeListener, ComponentListe
         }
 
         MainTPane.setDisplayedMnemonicIndexAt(index, mnemo);
-        getInputMap(WHEN_IN_FOCUSED_WINDOW).put(KeyStroke.getKeyStroke(STR."alt \{mnemoStr}"), commandStr);
+        getInputMap(WHEN_IN_FOCUSED_WINDOW).put(KeyStroke.getKeyStroke(String.format("alt %s", mnemoStr)), commandStr);
         getActionMap().put(commandStr, select);
     }
 
@@ -391,7 +391,7 @@ public class CMainPanel extends JPanel implements ChangeListener, ComponentListe
 
         CommPanel.CommTPane.setDisplayedMnemonicIndexAt(index, mnemo);
         CommPanel.CommTPane.getInputMap(WHEN_IN_FOCUSED_WINDOW)
-              .put(javax.swing.KeyStroke.getKeyStroke(STR."alt \{mnemoStr}"), commandStr);
+              .put(javax.swing.KeyStroke.getKeyStroke(String.format("alt %s", mnemoStr)), commandStr);
         CommPanel.CommTPane.getActionMap().put(commandStr, select);
     }
 
@@ -579,14 +579,14 @@ public class CMainPanel extends JPanel implements ChangeListener, ComponentListe
                 addPanelMain(HQPanel,
                       HQSelect,
                       tabText,
-                      STR."Command Center and Hangars (Alt + \{mnemonicText})",
+                      String.format("Command Center and Hangars (Alt + %s)", mnemonicText),
                       mnemonicText,
                       "HQSelect");
             } else {
                 addPanelCComm(HQPanel,
                       HQSelect,
                       tabText,
-                      STR."Command Center and Hangars (Alt + \{mnemonicText})",
+                      String.format("Command Center and Hangars (Alt + %s)", mnemonicText),
                       mnemonicText,
                       "HQSelect",
                       CommPanel);
@@ -606,14 +606,14 @@ public class CMainPanel extends JPanel implements ChangeListener, ComponentListe
                 addPanelMain(BMPanel,
                       BMSelect,
                       tabText,
-                      STR."Buy and Sell Units (Alt + \{mnemonicText})",
+                      String.format("Buy and Sell Units (Alt + %s)", mnemonicText),
                       mnemonicText,
                       "BMSelect");
             } else {
                 addPanelCComm(BMPanel,
                       BMSelect,
                       tabText,
-                      STR."Buy and Sell Units (Alt + \{mnemonicText})",
+                      String.format("Buy and Sell Units (Alt + %s)", mnemonicText),
                       mnemonicText,
                       "BMSelect",
                       CommPanel);
@@ -638,14 +638,14 @@ public class CMainPanel extends JPanel implements ChangeListener, ComponentListe
                 addPanelMain(BMETabbed,
                       BMSelect,
                       tabText,
-                      STR."Buy and Sell Parts (Alt + \{mnemonicText})",
+                      String.format("Buy and Sell Parts (Alt + %s)", mnemonicText),
                       mnemonicText,
                       "BMESelect");
             } else {
                 addPanelCComm(BMETabbed,
                       BMSelect,
                       tabText,
-                      STR."Buy and Sell Parts (Alt + \{mnemonicText})",
+                      String.format("Buy and Sell Parts (Alt + %s)", mnemonicText),
                       mnemonicText,
                       "BMESelect",
                       CommPanel);
@@ -667,14 +667,14 @@ public class CMainPanel extends JPanel implements ChangeListener, ComponentListe
                 addPanelMain(HSPanel,
                       HSSelect,
                       tabText,
-                      STR."Show current House Status (Alt + \{mnemonicText})",
+                      String.format("Show current House Status (Alt + %s)", mnemonicText),
                       mnemonicText,
                       "HSSelect");
             } else {
                 addPanelCComm(HSPanel,
                       HSSelect,
                       tabText,
-                      STR."Show current House Status (Alt + \{mnemonicText})",
+                      String.format("Show current House Status (Alt + %s)", mnemonicText),
                       mnemonicText,
                       "HSSelect",
                       CommPanel);
@@ -694,14 +694,14 @@ public class CMainPanel extends JPanel implements ChangeListener, ComponentListe
                 addPanelMain(BattlePanel,
                       BattleSelect,
                       tabText,
-                      STR."Battles Intelligence Data (Alt + \{mnemonicText})",
+                      String.format("Battles Intelligence Data (Alt + %s)", mnemonicText),
                       mnemonicText,
                       "BattleSelect");
             } else {
                 addPanelCComm(BattlePanel,
                       BattleSelect,
                       tabText,
-                      STR."Battles Intelligence Data (Alt + \{mnemonicText})",
+                      String.format("Battles Intelligence Data (Alt + %s)", mnemonicText),
                       mnemonicText,
                       "BattleSelect",
                       CommPanel);
@@ -724,14 +724,14 @@ public class CMainPanel extends JPanel implements ChangeListener, ComponentListe
                 addPanelMain(MapPanel,
                       MapSelect,
                       tabText,
-                      STR."Star Map (Alt + \{mnemonicText})",
+                      String.format("Star Map (Alt + %s)", mnemonicText),
                       mnemonicText,
                       "MapSelect");
             } else {
                 addPanelCComm(MapPanel,
                       MapSelect,
                       tabText,
-                      STR."Star Map (Alt + \{mnemonicText})",
+                      String.format("Star Map (Alt + %s)", mnemonicText),
                       mnemonicText,
                       "MapSelect",
                       CommPanel);
@@ -751,14 +751,14 @@ public class CMainPanel extends JPanel implements ChangeListener, ComponentListe
                 addPanelMain(RulesPanel,
                       RulesSelect,
                       tabText,
-                      STR."Rules Tab (Alt + \{mnemonicText})",
+                      String.format("Rules Tab (Alt + %s)", mnemonicText),
                       mnemonicText,
                       "RulesSelect");
             } else {
                 addPanelCComm(RulesPanel,
                       RulesSelect,
                       tabText,
-                      STR."Rules Tab (Alt + \{mnemonicText})",
+                      String.format("Rules Tab (Alt + %s)", mnemonicText),
                       mnemonicText,
                       "RulesSelect",
                       CommPanel);

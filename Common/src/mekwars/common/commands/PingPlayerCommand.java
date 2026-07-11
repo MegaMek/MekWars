@@ -60,7 +60,7 @@ public class PingPlayerCommand extends CProtCommand {
 
             LOGGER.info("Received server ping.");
 
-            getConnector().send(STR."\{getPrefix()}pong\{getDelimiter()}\{sender}\{getDelimiter()}\{stamp}");
+            getConnector().send(String.format("%spong%s%s%s%s", getPrefix(), getDelimiter(), sender, getDelimiter(), stamp));
 
             if (!sender.equals("server")) {
                 echo(input);
@@ -79,6 +79,6 @@ public class PingPlayerCommand extends CProtCommand {
     protected void echo(String input) {
         StringTokenizer stringTokenizer = new StringTokenizer(input, getDelimiter());
         String sender = stringTokenizer.nextToken();
-        getClient().systemMessage(STR."Ping request from \{sender}");
+        getClient().systemMessage(String.format("Ping request from %s", sender));
     }
 }

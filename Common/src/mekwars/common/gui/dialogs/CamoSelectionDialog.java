@@ -143,7 +143,7 @@ public class CamoSelectionDialog extends JDialog implements ListSelectionListene
         oldPanel.add(oldHeader);
 
         String oldCamoName = client.getConfig().getParam("UNIT_CAMO");
-        Image oldCamoImage = Toolkit.getDefaultToolkit().getImage(STR."./data/images/camo/\{oldCamoName}");
+        Image oldCamoImage = Toolkit.getDefaultToolkit().getImage(String.format("./data/images/camo/%s", oldCamoName));
         oldCamoImage.getScaledInstance(84, 72, Image.SCALE_FAST);
         camos.remove(oldCamoName);// remove the old
         ImageIcon oldCamoIcon = new ImageIcon(oldCamoImage);
@@ -264,7 +264,7 @@ public class CamoSelectionDialog extends JDialog implements ListSelectionListene
                 ImageIcon currCamoIcon;
 
                 if (camos.get(currSelection).equals("filler")) {
-                    Image currCamo = Toolkit.getDefaultToolkit().getImage(STR."./data/images/camo/\{currSelection}");
+                    Image currCamo = Toolkit.getDefaultToolkit().getImage(String.format("./data/images/camo/%s", currSelection));
                     currCamo.getScaledInstance(84, 72, Image.SCALE_FAST);
                     camos.remove(currSelection);// remove the old
                     currCamoIcon = new ImageIcon(currCamo);

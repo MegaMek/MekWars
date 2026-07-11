@@ -92,10 +92,10 @@ public class NewUserCommand extends Command {
             String name = newUser.getName();
 
             if (!newUser.getCountry().equals("unknown")) {
-                name += STR." (\{newUser.getCountry()})";
+                name += String.format(" (%s)", newUser.getCountry());
             }
 
-            String toSend = STR."<font color=\"maroon\">>> Enter \{name}</font>";
+            String toSend = String.format("<font color=\"maroon\">>> Enter %s</font>", name);
 
             if (client.getConfig().isParam("TIMESTAMP")) {
                 toSend = client.getShortTime() + toSend;

@@ -91,7 +91,7 @@ public class BulkRepairDialog extends JFrame implements ActionListener, KeyListe
             unit = playerUnit.getEntity();
         }
 
-        String windowName = STR."\{unit.getShortNameRaw()} Repair Dialog";
+        String windowName = String.format("%s Repair Dialog", unit.getShortNameRaw());
 
         addKeyListener(this);
 
@@ -180,8 +180,8 @@ public class BulkRepairDialog extends JFrame implements ActionListener, KeyListe
             if (isSimple()) {
                 StringBuilder sb = new StringBuilder();
                 for (int type = ARMOR; type <= ENGINES; type++) {
-                    sb.append(STR."#\{((JComboBox<?>) techBox.getComponent(type)).getSelectedIndex()}");
-                    sb.append(STR."#\{((JSpinner) rollBox.getComponent(type)).getValue().toString()}");
+                    sb.append(String.format("#%s", ((JComboBox<?>) techBox.getComponent(type)).getSelectedIndex()));
+                    sb.append(String.format("#%s", ((JSpinner) rollBox.getComponent(type)).getValue().toString()));
                 }
                 if (unitRepairType == mekwars.common.gui.dialogs.BulkRepairDialog.UNIT_TYPE_ALL) {
                     for (CUnit repairUnit : client.getPlayer().getHangar()) {
@@ -189,11 +189,11 @@ public class BulkRepairDialog extends JFrame implements ActionListener, KeyListe
                                   (UnitUtils.hasArmorDamage(unit) ||
                                          UnitUtils.hasCriticalDamage(unit) ||
                                          UnitUtils.hasISDamage(unit))) {
-                            client.sendChat(STR."\{IClient.CAMPAIGN_PREFIX}c simplerepair#\{repairUnit.getId()}\{sb.toString()}");
+                            client.sendChat(String.format("%sc simplerepair#%s%s", IClient.CAMPAIGN_PREFIX, repairUnit.getId(), sb.toString()));
                         }
                     }
                 } else {
-                    client.sendChat(STR."\{IClient.CAMPAIGN_PREFIX}c simplerepair#\{playerUnit.getId()}\{sb.toString()}");
+                    client.sendChat(String.format("%sc simplerepair#%s%s", IClient.CAMPAIGN_PREFIX, playerUnit.getId(), sb.toString()));
                 }
             } else if (isSalvage()) {
                 client.getSMT().removeAllWorkOrders(unit.getExternalId());
@@ -587,21 +587,21 @@ public class BulkRepairDialog extends JFrame implements ActionListener, KeyListe
         for (int location = 0; location < unit.locations(); location++) {
             if (isSalvage()) {
                 if (unit.getArmor(location) > 0) {
-                    String workOrder = STR."\{unit.getExternalId()}#\{location}#\{UnitUtils.LOC_FRONT_ARMOR}";
+                    String workOrder = String.format("%s#%s#%s", unit.getExternalId(), location, UnitUtils.LOC_FRONT_ARMOR);
                     client.getSMT().addWorkOrder(techType, workOrder);
                 }
                 if (unit.hasRearArmor(location) && (unit.getArmor(location, true) > 0)) {
-                    String workOrder = STR."\{unit.getExternalId()}#\{location}#\{UnitUtils.LOC_REAR_ARMOR}";
+                    String workOrder = String.format("%s#%s#%s", unit.getExternalId(), location, UnitUtils.LOC_REAR_ARMOR);
                     client.getSMT().addWorkOrder(techType, workOrder);
                 }
             } else {
                 if (unit.getArmor(location) < unit.getOArmor(location)) {
-                    String workOrder = STR."\{unit.getExternalId()}#\{location}#\{UnitUtils.LOC_FRONT_ARMOR}#\{baseRoll}#999";
+                    String workOrder = String.format("%s#%s#%s#%s#999", unit.getExternalId(), location, UnitUtils.LOC_FRONT_ARMOR, baseRoll);
                     client.getRMT().addWorkOrder(techType, workOrder);
                 }
                 if (unit.hasRearArmor(location) && (unit.getArmor(location, true) < unit.getOArmor(location, true))) {
-                    String workOrder = STR."\{unit.getExternalId()}#\{location +
-                                                                            7}#\{UnitUtils.LOC_REAR_ARMOR}#\{baseRoll}#999";
+                    String workOrder = String.format("%s#%s#%s#%s#999", unit.getExternalId(), location +
+                                                                            7, UnitUtils.LOC_REAR_ARMOR, baseRoll);
                     client.getRMT().addWorkOrder(techType, workOrder);
                 }
             }
@@ -629,11 +629,11 @@ public class BulkRepairDialog extends JFrame implements ActionListener, KeyListe
         for (int location = 0; location < unit.locations(); location++) {
             if (isSalvage()) {
                 if (unit.getInternal(location) > 0) {
-                    String workOrder = STR."\{unit.getExternalId()}#\{location}#\{UnitUtils.LOC_INTERNAL_ARMOR}#";
+                    String workOrder = String.format("%s#%s#%s#", unit.getExternalId(), location, UnitUtils.LOC_INTERNAL_ARMOR);
                     client.getSMT().addWorkOrder(techType, workOrder);
                 }
             } else if (unit.getInternal(location) < unit.getOInternal(location)) {
-                String workOrder = STR."\{unit.getExternalId()}#\{location}#\{UnitUtils.LOC_INTERNAL_ARMOR}#\{baseRoll}#999";
+                String workOrder = String.format("%s#%s#%s#%s#999", unit.getExternalId(), location, UnitUtils.LOC_INTERNAL_ARMOR, baseRoll);
                 client.getRMT().addWorkOrder(techType, workOrder);
             }
         }
@@ -673,7 +673,7 @@ public class BulkRepairDialog extends JFrame implements ActionListener, KeyListe
                 // check its damaged
                 if (isSalvage()) {
                     if (!cs.isDamaged()) {
-                        String workOrder = STR."\{unit.getExternalId()}#\{location}#\{slot}";
+                        String workOrder = String.format("%s#%s#%s", unit.getExternalId(), location, slot);
                         client.getSMT().addWorkOrder(techType, workOrder);
                         return;
                     }
@@ -684,7 +684,7 @@ public class BulkRepairDialog extends JFrame implements ActionListener, KeyListe
 
                     // ok we have a damaged engine slot lets queue up the repair
                     // and exit.
-                    String workOrder = STR."\{unit.getExternalId()}#\{location}#\{slot}#\{baseRoll}#999";
+                    String workOrder = String.format("%s#%s#%s#%s#999", unit.getExternalId(), location, slot, baseRoll);
                     client.getRMT().addWorkOrder(techType, workOrder);
                     return;
                 }
@@ -720,7 +720,7 @@ public class BulkRepairDialog extends JFrame implements ActionListener, KeyListe
                     if (!criticalSlot.isDamaged() &&
                               (criticalSlot.getType() == CriticalSlot.TYPE_SYSTEM) &&
                               (criticalSlot.getIndex() != Mek.SYSTEM_ENGINE)) {
-                        String workOrder = STR."\{unit.getExternalId()}#\{location}#\{slot}";
+                        String workOrder = String.format("%s#%s#%s", unit.getExternalId(), location, slot);
                         client.getSMT().addWorkOrder(techType, workOrder);
                         slot += UnitUtils.getNumberOfCrits(unit, criticalSlot) - 1;
                     }
@@ -730,7 +730,7 @@ public class BulkRepairDialog extends JFrame implements ActionListener, KeyListe
                     }
                     if ((criticalSlot.getType() == CriticalSlot.TYPE_SYSTEM) &&
                               (criticalSlot.getIndex() != Mek.SYSTEM_ENGINE)) {
-                        String workOrder = STR."\{unit.getExternalId()}#\{location}#\{slot}#\{baseRoll}#999";
+                        String workOrder = String.format("%s#%s#%s#%s#999", unit.getExternalId(), location, slot, baseRoll);
                         client.getRMT().addWorkOrder(techType, workOrder);
                         slot += UnitUtils.getNumberOfCrits(unit, criticalSlot) - 1;
                     }
@@ -781,14 +781,14 @@ public class BulkRepairDialog extends JFrame implements ActionListener, KeyListe
                                   !mounted.isMissing() &&
                                   !mounted.equals(lastWeapon)) {
                             lastWeapon = mounted;
-                            String workOrder = STR."\{unit.getExternalId()}#\{location}#\{slot}";
+                            String workOrder = String.format("%s#%s#%s", unit.getExternalId(), location, slot);
                             client.getSMT().addWorkOrder(techType, workOrder);
                         }
                     } else if ((mounted.getType() instanceof WeaponType) &&
                                      (mounted.isDestroyed() || mounted.isMissing()) &&
                                      !mounted.equals(lastWeapon)) {
                         lastWeapon = mounted;
-                        String workOrder = STR."\{unit.getExternalId()}#\{location}#\{slot}#\{baseRoll}#999";
+                        String workOrder = String.format("%s#%s#%s#%s#999", unit.getExternalId(), location, slot, baseRoll);
                         client.getRMT().addWorkOrder(techType, workOrder);
                     }
                 }
@@ -872,7 +872,7 @@ public class BulkRepairDialog extends JFrame implements ActionListener, KeyListe
         }
 
         if (techType != UnitUtils.TECH_PILOT) {
-            techCost = Integer.parseInt(client.getServerConfigs(STR."\{UnitUtils.techDescription(techType)}TechRepairCost"));
+            techCost = Integer.parseInt(client.getServerConfigs(String.format("%sTechRepairCost", UnitUtils.techDescription(techType))));
             techWorkMod = UnitUtils.getTechRoll(unit,
                   0,
                   UnitUtils.LOC_FRONT_ARMOR,

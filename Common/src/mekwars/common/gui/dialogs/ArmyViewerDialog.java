@@ -112,7 +112,7 @@ public class ArmyViewerDialog extends JDialog implements ActionListener, ListSel
         teamBox.setMinimumSize(new Dimension(100, 22));
 
         if (teamNumbers > 1) {
-            for (int team = 1; team <= teamNumbers; team++) {teamBox.addItem(STR."Team #\{team}");}
+            for (int team = 1; team <= teamNumbers; team++) {teamBox.addItem(String.format("Team #%s", team));}
         }
 
         //construct text boxes
@@ -234,15 +234,15 @@ public class ArmyViewerDialog extends JDialog implements ActionListener, ListSel
             StringBuilder armyText = new StringBuilder();
             CArmy army = player.getArmy(armyID);
             for (Unit unit : army.getUnits()) {
-                armyText.append(makeLength(STR."#\{unit.getId()}", 7))
+                armyText.append(makeLength(String.format("#%s", unit.getId()), 7))
                       .append(" ")
                       .append(makeLength(((CUnit) unit).getModelName(), 12))
                       .append(" ");
                 if (unit.getType() == Unit.VEHICLE || unit.getType() == Unit.MEK || unit.getType() == Unit.AERO) {
-                    armyText.append(STR." (\{unit.getPilot().getGunnery()}/\{unit.getPilot().getPiloting()})");
+                    armyText.append(String.format(" (%s/%s)", unit.getPilot().getGunnery(), unit.getPilot().getPiloting()));
                 } else if (unit.getType() == Unit.INFANTRY || unit.getType() == Unit.BATTLEARMOR) {
                     if (((Infantry) ((CUnit) unit).getEntity()).canMakeAntiMekAttacks()) {
-                        armyText.append(STR." (\{unit.getPilot().getGunnery()}/\{unit.getPilot().getPiloting()})");
+                        armyText.append(String.format(" (%s/%s)", unit.getPilot().getGunnery(), unit.getPilot().getPiloting()));
                     } else {armyText.append(" (").append(unit.getPilot().getGunnery()).append(")");}
                 } else {armyText.append(" (").append(unit.getPilot().getGunnery()).append(")");}
                 armyText.append(" BV: ").append(((CUnit) unit).getBVForMatch()).append("\n");
@@ -256,15 +256,15 @@ public class ArmyViewerDialog extends JDialog implements ActionListener, ListSel
     }
 
     private String formatArmy(CArmy army) {
-        return STR."\{makeLength(STR."#\{army.getID()}", 3)} \{makeLength(army.getName(),
-              15)} \{makeLength(STR."BV: \{army.getBV()}", 10)}";
+        return String.format("%s %s %s", makeLength(String.format("#%s", army.getID()), 3), makeLength(army.getName(),
+              15), makeLength(String.format("BV: %s", army.getBV()), 10));
     }
 
     private String makeLength(String s, int nLength) {
         if (s.length() == nLength) {
             return s;
         } else if (s.length() > nLength) {
-            return STR."\{s.substring(0, nLength - 2)}..";
+            return String.format("%s..", s.substring(0, nLength - 2));
         } else {
             return s + SPACES.substring(0, nLength - s.length());
         }
@@ -302,11 +302,11 @@ public class ArmyViewerDialog extends JDialog implements ActionListener, ListSel
                         } else {team++;}
                     }
 
-                    client.sendChat(STR."/c defend#\{opID}#\{armyID}#\{team}");
+                    client.sendChat(String.format("/c defend#%s#%s#%s", opID, armyID, team));
                 } else if (viewerMode == AVD_ATTACK) {
-                    client.sendChat(STR."\{IClient.CAMPAIGN_PREFIX}c attack#\{opName}#\{armyID}#\{planetName}");
+                    client.sendChat(String.format("%sc attack#%s#%s#%s", IClient.CAMPAIGN_PREFIX, opName, armyID, planetName));
                 } else {
-                    client.sendChat(STR."/c attackfromreserve#\{opName}#\{armyID}#\{planetName}#\{defenderName}");
+                    client.sendChat(String.format("/c attackfromreserve#%s#%s#%s#%s", opName, armyID, planetName, defenderName));
                 }
                 this.setVisible(false);
 

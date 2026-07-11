@@ -117,10 +117,10 @@ public class AdvancedRepairDialog extends JFrame implements ActionListener, Mous
         JButton okayButton = new JButton("Repair");
 
         if (this.salvage) {
-            windowName = STR."\{unit.getShortNameRaw()} Salvage Dialog";
+            windowName = String.format("%s Salvage Dialog", unit.getShortNameRaw());
             okayButton.setText("Salvage");
         } else {
-            windowName = STR."\{unit.getShortNameRaw()} Repair Dialog";
+            windowName = String.format("%s Repair Dialog", unit.getShortNameRaw());
         }
 
         addKeyListener(this);
@@ -236,14 +236,14 @@ public class AdvancedRepairDialog extends JFrame implements ActionListener, Mous
 
                 if (unit.getArmor(location) > unit.getOArmor(location)) {
                     UnitUtils.removeArmorRepair(unit, UnitUtils.LOC_FRONT_ARMOR, location);
-                    armorNames.add(STR."!!\{armorName}: \{unit.getArmor(location)}/\{unit.getOArmor(location)}");
+                    armorNames.add(String.format("!!%s: %s/%s", armorName, unit.getArmor(location), unit.getOArmor(location)));
                     UnitUtils.setArmorRepair(unit, UnitUtils.LOC_FRONT_ARMOR, location);
                 } else if (client.getRMT().isQueued(location, UnitUtils.LOC_FRONT_ARMOR, unit.getExternalId())) {
-                    armorNames.add(STR."@@\{armorName}: \{Math.max(0, unit.getArmor(location))}/\{unit.getOArmor(
-                          location)}");
+                    armorNames.add(String.format("@@%s: %s/%s", armorName, Math.max(0, unit.getArmor(location)), unit.getOArmor(
+                          location)));
                 } else {
-                    armorNames.add(STR."\{armorName}: \{Math.max(0,
-                          unit.getArmor(location))}/\{unit.getOArmor(location)}");
+                    armorNames.add(String.format("%s: %s/%s", armorName, Math.max(0,
+                          unit.getArmor(location)), unit.getOArmor(location)));
                 }
 
                 if (unit.getArmor(location) != unit.getOArmor(location)) {
@@ -252,16 +252,16 @@ public class AdvancedRepairDialog extends JFrame implements ActionListener, Mous
                 if (unit.hasRearArmor(location)) {
                     if (unit.getArmor(location, true) > unit.getOArmor(location, true)) {
                         UnitUtils.removeArmorRepair(unit, UnitUtils.LOC_REAR_ARMOR, location);
-                        armorNames.add(STR."!!\{armorName}(r): \{unit.getArmor(location, true)}/\{unit.getOArmor(
+                        armorNames.add(String.format("!!%s(r): %s/%s", armorName, unit.getArmor(location, true), unit.getOArmor(
                               location,
-                              true)}");
+                              true)));
                         UnitUtils.setArmorRepair(unit, UnitUtils.LOC_REAR_ARMOR, location);
                     } else if (client.getRMT().isQueued(location, UnitUtils.LOC_REAR_ARMOR, unit.getExternalId())) {
-                        armorNames.add(STR."@@\{armorName}(r): \{Math.max(0,
-                              unit.getArmor(location, true))}/\{unit.getOArmor(location, true)}");
+                        armorNames.add(String.format("@@%s(r): %s/%s", armorName, Math.max(0,
+                              unit.getArmor(location, true)), unit.getOArmor(location, true)));
                     } else {
-                        armorNames.add(STR."\{armorName}(r): \{Math.max(0,
-                              unit.getArmor(location, true))}/\{unit.getOArmor(location, true)}");
+                        armorNames.add(String.format("%s(r): %s/%s", armorName, Math.max(0,
+                              unit.getArmor(location, true)), unit.getOArmor(location, true)));
                     }
                     if (unit.getArmor(location, true) != unit.getOArmor(location, true)) {
                         armorDamage = true;
@@ -270,14 +270,14 @@ public class AdvancedRepairDialog extends JFrame implements ActionListener, Mous
 
                 if (unit.getInternal(location) > unit.getOInternal(location)) {
                     UnitUtils.removeArmorRepair(unit, UnitUtils.LOC_INTERNAL_ARMOR, location);
-                    armorNames.add(STR."!!\{isName}: \{unit.getInternal(location)}/\{unit.getOInternal(location)}");
+                    armorNames.add(String.format("!!%s: %s/%s", isName, unit.getInternal(location), unit.getOInternal(location)));
                     UnitUtils.setArmorRepair(unit, UnitUtils.LOC_INTERNAL_ARMOR, location);
                 } else if (client.getRMT().isQueued(location, UnitUtils.LOC_INTERNAL_ARMOR, unit.getExternalId())) {
-                    armorNames.add(STR."@@\{isName}: \{Math.max(0, unit.getInternal(location))}/\{unit.getOInternal(
-                          location)}");
+                    armorNames.add(String.format("@@%s: %s/%s", isName, Math.max(0, unit.getInternal(location)), unit.getOInternal(
+                          location)));
                 } else {
-                    armorNames.add(STR."\{isName}: \{Math.max(0, unit.getInternal(location))}/\{unit.getOInternal(
-                          location)}");
+                    armorNames.add(String.format("%s: %s/%s", isName, Math.max(0, unit.getInternal(location)), unit.getOInternal(
+                          location)));
                 }
 
                 if (unit.getInternal(location) != unit.getOInternal(location)) {
@@ -290,7 +290,7 @@ public class AdvancedRepairDialog extends JFrame implements ActionListener, Mous
                 ArmorSlotList.setVisibleRowCount(armorNames.size());
                 ArmorSlotList.setSelectionMode(javax.swing.ListSelectionModel.SINGLE_SELECTION);
                 ArmorSlotList.setFont(new java.awt.Font("Arial", java.awt.Font.PLAIN, 10));
-                ArmorSlotList.setName(STR."armor\{location}");
+                ArmorSlotList.setName(String.format("armor%s", location));
                 switch (location) {
                     case Mek.LOC_HEAD:
                         headArmorPanel.add(ArmorSlotList);
@@ -411,18 +411,18 @@ public class AdvancedRepairDialog extends JFrame implements ActionListener, Mous
                     } else if (cs.getType() == CriticalSlot.TYPE_EQUIPMENT) {
                         Mounted<?> m = cs.getMount();
                         if (cs.isRepairing()) {
-                            critNames.add(STR."!!\{m.getDesc()}");
+                            critNames.add(String.format("!!%s", m.getDesc()));
                         } else if (client.getRMT().isQueued(location, slot, unit.getExternalId())) {
-                            critNames.add(STR."@@\{m.getDesc()}");
+                            critNames.add(String.format("@@%s", m.getDesc()));
                             critDamage = true;
                         } else if (cs.isMissing()) {
-                            critNames.add(STR."# \{m.getDesc()}");
+                            critNames.add(String.format("# %s", m.getDesc()));
                             critDamage = true;
                         } else if (cs.isDamaged()) {
                             critDamage = true;
-                            critNames.add(STR."* \{m.getDesc()}");
+                            critNames.add(String.format("* %s", m.getDesc()));
                         } else if (cs.isBreached()) {
-                            critNames.add(STR."x \{m.getDesc()}");
+                            critNames.add(String.format("x %s", m.getDesc()));
                             critDamage = true;
                         } else {
                             critNames.add(m.getDesc());
@@ -570,10 +570,10 @@ public class AdvancedRepairDialog extends JFrame implements ActionListener, Mous
         techPanel.removeAll();
 
         Vector<String> techString = new Vector<>(4, 1);
-        techString.add(STR."Green - \{techs.elementAt(UnitUtils.TECH_GREEN)}");
-        techString.add(STR."Reg   - \{techs.elementAt(UnitUtils.TECH_REG)}");
-        techString.add(STR."Vet   - \{techs.elementAt(UnitUtils.TECH_VET)}");
-        techString.add(STR."Elite - \{techs.elementAt(UnitUtils.TECH_ELITE)}");
+        techString.add(String.format("Green - %s", techs.elementAt(UnitUtils.TECH_GREEN)));
+        techString.add(String.format("Reg   - %s", techs.elementAt(UnitUtils.TECH_REG)));
+        techString.add(String.format("Vet   - %s", techs.elementAt(UnitUtils.TECH_VET)));
+        techString.add(String.format("Elite - %s", techs.elementAt(UnitUtils.TECH_ELITE)));
 
         Pilot pilot = playerUnit.getPilot();
 
@@ -694,7 +694,7 @@ public class AdvancedRepairDialog extends JFrame implements ActionListener, Mous
                 }
 
                 if (salvage) {
-                    client.sendChat(STR."/c salvageunit#\{unit.getExternalId()}#\{critLocation}#\{critSlot}#\{armor}#\{techType}#true");
+                    client.sendChat(String.format("/c salvageunit#%s#%s#%s#%s#%s#true", unit.getExternalId(), critLocation, critSlot, armor, techType));
                     super.dispose();
                     return;
                 }
@@ -703,7 +703,7 @@ public class AdvancedRepairDialog extends JFrame implements ActionListener, Mous
                           (techType != UnitUtils.TECH_REWARD_POINTS)) {
 
                     if (!client.getRMT().isQueued(critLocation, critSlot, unit.getExternalId())) {
-                        String workOrder = STR."\{unit.getExternalId()}#\{critLocation}#\{critSlot}#\{baseRollField.getText()}#\{retries}";
+                        String workOrder = String.format("%s#%s#%s#%s#%s", unit.getExternalId(), critLocation, critSlot, baseRollField.getText(), retries);
                         client.getRMT().addWorkOrder(techType, workOrder);
                         client.systemMessage("Work placed in queue.");
                     } else {
@@ -721,7 +721,7 @@ public class AdvancedRepairDialog extends JFrame implements ActionListener, Mous
                     loadPanel();
                     loadTechPanel();
                 } else {
-                    client.sendChat(STR."/c repairunit#\{unit.getExternalId()}#\{critLocation}#\{critSlot}#\{armor}#\{techType}#\{retries}#\{techWorkMod}#true");
+                    client.sendChat(String.format("/c repairunit#%s#%s#%s#%s#%s#%s#%s#true", unit.getExternalId(), critLocation, critSlot, armor, techType, retries, techWorkMod));
                     super.dispose();
                 }
             }
@@ -767,7 +767,7 @@ public class AdvancedRepairDialog extends JFrame implements ActionListener, Mous
         critSlot = selectedSlot;
 
         if (techComboBox.getSelectedIndex() < UnitUtils.TECH_PILOT) {
-            techCost = Integer.parseInt(client.getServerConfigs(STR."\{UnitUtils.techDescription(techType)}TechRepairCost"));
+            techCost = Integer.parseInt(client.getServerConfigs(String.format("%sTechRepairCost", UnitUtils.techDescription(techType))));
             techCostWorkMod = techWorkMod;
         }
 
@@ -1115,10 +1115,10 @@ public class AdvancedRepairDialog extends JFrame implements ActionListener, Mous
                                 javax.swing.JMenuItem info = new javax.swing.JMenuItem();
                                 if (mounted.getLocation() == Entity.LOC_NONE) {
                                     cost = (int) ammoCost;
-                                    info.setText(STR."\{atCheck.getName()} (\{mounted.getUsableShotsLeft()}/1) \{client.moneyOrFluMessage(
+                                    info.setText(String.format("%s (%s/1) %s", atCheck.getName(), mounted.getUsableShotsLeft(), client.moneyOrFluMessage(
                                           true,
                                           true,
-                                          cost)}");
+                                          cost)));
                                 } else {
                                     int refillShots = ammoType.getShots();
 
@@ -1140,18 +1140,24 @@ public class AdvancedRepairDialog extends JFrame implements ActionListener, Mous
                                         cost = (int) Math.ceil(ammoCost * refillShots);
                                     }
 
-                                    info.setText(STR."\{atCheck.getName()} (\{mounted.getUsableShotsLeft()}/\{refillShots}) \{client.moneyOrFluMessage(
+                                    info.setText(String.format("%s (%s/%s) %s", atCheck.getName(), mounted.getUsableShotsLeft(), refillShots, client.moneyOrFluMessage(
                                           true,
                                           true,
-                                          cost)}");
+                                          cost)));
                                 }
 
                                 info.addActionListener(new java.awt.event.ActionListener() {
                                     public void actionPerformed(java.awt.event.ActionEvent e) {
-                                        client.sendChat(STR."\{IClient.CAMPAIGN_PREFIX}c setunitammobycrit#\{unit.getExternalId()}#\{critLocation}#\{critSlot}#\{e.getActionCommand()}");
+                                        client.sendChat(
+                                              new StringBuilder(IClient.CAMPAIGN_PREFIX).append("c setunitammobycrit#")
+                                                    .append(unit.getExternalId()).append('#')
+                                                    .append(critLocation).append('#')
+                                                    .append(critSlot).append('#')
+                                                    .append(e.getActionCommand())
+                                                    .toString());
                                     }
                                 });
-                                info.setActionCommand(STR."\{atCheck.getAmmoType()}#\{atCheck.getInternalName()}#\{atCheck.getRackSize()}");
+                                info.setActionCommand(String.format("%s#%s#%s", atCheck.getAmmoType(), atCheck.getInternalName(), atCheck.getRackSize()));
                                 popup.add(info);
                             }
                         }// end for
@@ -1169,7 +1175,7 @@ public class AdvancedRepairDialog extends JFrame implements ActionListener, Mous
             JMenuItem info = new JMenuItem("Enable AutoEject");
             info.addActionListener(e -> {
                 client.sendChat(
-                      STR."\{IClient.CAMPAIGN_PREFIX}c setautoeject#\{unit.getExternalId()}#true");
+                      String.format("%sc setautoeject#%s#true", IClient.CAMPAIGN_PREFIX, unit.getExternalId()));
                 ((Mek) unit).setAutoEject(true);
             });
             popup.add(info);
@@ -1177,7 +1183,7 @@ public class AdvancedRepairDialog extends JFrame implements ActionListener, Mous
             JMenuItem info = new JMenuItem("Disable AutoEject");
             info.addActionListener(e -> {
                 client.sendChat(
-                      STR."\{IClient.CAMPAIGN_PREFIX}c setautoeject#\{unit.getExternalId()}#false");
+                      String.format("%sc setautoeject#%s#false", IClient.CAMPAIGN_PREFIX, unit.getExternalId()));
                 ((Mek) unit).setAutoEject(false);
             });
             popup.add(info);

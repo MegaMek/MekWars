@@ -182,11 +182,11 @@ public final class ComponentConverterDialog implements java.awt.event.ActionList
 
             if (isMod) {
                 client.sendChat(
-                      STR."\{IClient.CAMPAIGN_PREFIX}c Setcomponentconversion#\{crit}#\{weight}#\{type}#\{amount}#\{Objects.requireNonNull(
-                            factionCombo.getSelectedItem()).toString()}");
+                      String.format("%sc Setcomponentconversion#%s#%s#%s#%s#%s", IClient.CAMPAIGN_PREFIX, crit, weight, type, amount, Objects.requireNonNull(
+                            factionCombo.getSelectedItem()).toString()));
             } else {
                 client.sendChat(
-                      STR."\{IClient.CAMPAIGN_PREFIX}c Setcomponentconversion#\{crit}#\{weight}#\{type}#\{amount}");
+                      String.format("%sc Setcomponentconversion#%s#%s#%s#%s", IClient.CAMPAIGN_PREFIX, crit, weight, type, amount));
             }
         }
 
@@ -237,7 +237,7 @@ public final class ComponentConverterDialog implements java.awt.event.ActionList
 
     private void requestComponents(String faction) {
         client.setWaiting(true);
-        client.sendChat(STR."\{IClient.CAMPAIGN_PREFIX}c getcomponentconversion#\{faction}");
+        client.sendChat(String.format("%sc getcomponentconversion#%s", IClient.CAMPAIGN_PREFIX, faction));
         while (client.isWaiting()) {
             try {
                 Thread.sleep(100);

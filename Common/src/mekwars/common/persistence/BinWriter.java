@@ -51,19 +51,19 @@ public class BinWriter {
 
 
     public void println(int v, String debugName) {
-        out.println(STR."\{debugName}=\{v}");
+        out.println(String.format("%s=%s", debugName, v));
     }
 
     public void println(double v, String debugName) {
-        out.print(STR."\{debugName}=\{v}");
+        out.print(String.format("%s=%s", debugName, v));
     }
 
     public void println(String v, String debugName) {
-        out.print(STR."\{debugName}=\{v}");
+        out.print(String.format("%s=%s", debugName, v));
     }
 
     public void println(boolean v, String debugName) {
-        out.print(STR."\{debugName}=\{v}");
+        out.print(String.format("%s=%s", debugName, v));
     }
 
     public void close() {

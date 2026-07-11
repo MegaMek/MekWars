@@ -115,7 +115,7 @@ public abstract class GameHost implements GameListener, IGameHost {
         if (myServer != null) {
 
             if (turn == 0) {
-                serverSend(STR."SHS|\{getUsername()}|Running");
+                serverSend(String.format("SHS|%s|Running", getUsername()));
             } else if ((myServer.getGame().getPhase() != currentPhase) &&
                              myServer.getGame().getOptions().booleanOption("paranoid_autosave")) {
                 sendServerGameUpdate();
@@ -209,7 +209,7 @@ public abstract class GameHost implements GameListener, IGameHost {
         }
 
         String toSend = SerializeEntity.serializeEntity(removedE, true, false, isUsingAdvanceRepairs());
-        serverSend(STR."IPU|\{toSend}");
+        serverSend(String.format("IPU|%s", toSend));
     }
 
     @Override
@@ -234,7 +234,7 @@ public abstract class GameHost implements GameListener, IGameHost {
 
     public void serverSend(String s) {
         try {
-            Connector.send(STR."\{IClient.PROTOCOL_PREFIX}comm\t\{CConnector.encode(s)}");
+            Connector.send(String.format("%scomm\t%s", IClient.PROTOCOL_PREFIX, CConnector.encode(s)));
         } catch (Exception e) {
             LOGGER.error(e, "Error sending to server: {}", e.getMessage());
         }
@@ -289,9 +289,8 @@ public abstract class GameHost implements GameListener, IGameHost {
                           && savedFile.isFile()
                           && (lastTime < (System.currentTimeMillis() - daysInSeconds))) {
                     try {
-                        LOGGER.info(STR."Purging File: \{savedFile.getName()} Time: \{lastTime} purge Time: \{
-                                              System.currentTimeMillis() -
-                                                    daysInSeconds}");
+                        LOGGER.info(String.format("Purging File: %s Time: %s purge Time: %s", savedFile.getName(), lastTime, System.currentTimeMillis() -
+                                                    daysInSeconds));
                         savedFile.delete();
                     } catch (Exception ex) {
                         LOGGER.error(ex, "Error trying to delete these files! {}", savedFile.getName());
@@ -317,7 +316,7 @@ public abstract class GameHost implements GameListener, IGameHost {
             LOGGER.error(ex, "Error sending game options to the server: {}", ex.getLocalizedMessage());
         }
 
-        sendChat(STR."\{IClient.CAMPAIGN_PREFIX}c servergameoptions#\{packet}");
+        sendChat(String.format("%sc servergameoptions#%s", IClient.CAMPAIGN_PREFIX, packet));
     }
 
     public void sendChat(String s) {
@@ -329,7 +328,7 @@ public abstract class GameHost implements GameListener, IGameHost {
             String str = (String) st.nextElement();
             // don't send empty lines
             if (!str.trim().isEmpty()) {
-                serverSend(STR."CH|\{str}");
+                serverSend(String.format("CH|%s", str));
             }
         }
     }

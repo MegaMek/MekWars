@@ -88,21 +88,21 @@ public class BuildTableCommand extends Command {
                     while (listTokenizer.hasMoreTokens()) {
                         String fileName = listTokenizer.nextToken();
                         long time = 0;
-                        File file = new File(STR."./data/buildtables/\{dName}/\{fileName}");
+                        File file = new File(String.format("./data/buildtables/%s/%s", dName, fileName));
 
                         if (file.exists()) {
                             time = file.lastModified();
                         }
 
                         client.sendChat(
-                              STR."\{IClient.CAMPAIGN_PREFIX}AdminRequestBuildTable get#\{dName}#\{fileName}#\{time}");
+                              String.format("%sAdminRequestBuildTable get#%s#%s#%s", IClient.CAMPAIGN_PREFIX, dName, fileName, time));
                     }
                 }
 
             }
 
             if (viewer) {
-                client.sendChat(STR."\{IClient.CAMPAIGN_PREFIX}AdminRequestBuildTable view");
+                client.sendChat(String.format("%sAdminRequestBuildTable view", IClient.CAMPAIGN_PREFIX));
             }
 
         }
@@ -123,18 +123,18 @@ public class BuildTableCommand extends Command {
                     while (listTokenizer.hasMoreTokens()) {
                         String fileName = listTokenizer.nextToken();
                         long time = 0;
-                        File file = new File(STR."./data/buildtables/\{dName}/\{fileName}");
+                        File file = new File(String.format("./data/buildtables/%s/%s", dName, fileName));
 
                         if (file.exists()) {
                             time = file.lastModified();
                         }
-                        client.sendChat(STR."\{IClient.CAMPAIGN_PREFIX}RequestBuildTable get#\{dName}#\{fileName}#\{time}");
+                        client.sendChat(String.format("%sRequestBuildTable get#%s#%s#%s", IClient.CAMPAIGN_PREFIX, dName, fileName, time));
                     }
                 }
 
             }
             if (viewer) {
-                client.sendChat(STR."\{IClient.CAMPAIGN_PREFIX}RequestBuildTable view");
+                client.sendChat(String.format("%sRequestBuildTable view", IClient.CAMPAIGN_PREFIX));
             }
         } else if (cmd.equalsIgnoreCase("BuildTableCommand")) {
             String folder = stringTokenizer.nextToken();
@@ -146,13 +146,13 @@ public class BuildTableCommand extends Command {
                 file.mkdir();
             }
 
-            file = new File(STR."./data/buildtables/\{folder}");
+            file = new File(String.format("./data/buildtables/%s", folder));
 
             if (!file.exists()) {
                 file.mkdir();
             }
 
-            file = new File(STR."./data/buildtables/\{folder}/\{table}");
+            file = new File(String.format("./data/buildtables/%s/%s", folder, table));
 
             try {
                 file.createNewFile();
@@ -169,7 +169,7 @@ public class BuildTableCommand extends Command {
                 }
 
                 if (isMod) {
-                    client.addToChat(STR."Received build table \{folder}/\{table}", CCommPanel.CHANNEL_MISC);
+                    client.addToChat(String.format("Received build table %s/%s", folder, table), CCommPanel.CHANNEL_MISC);
                 }
 
                 printStream.close();

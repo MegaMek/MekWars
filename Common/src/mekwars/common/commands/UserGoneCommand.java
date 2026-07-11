@@ -82,7 +82,7 @@ public class UserGoneCommand extends Command {
         //Since there are more Elements, it'll be a Gone, so the user has left the room.
         if (stringTokenizer.hasMoreTokens()) {
             //Print the User-gone Info using the Info-Color (Maroon)
-            String toSend = STR."<font color=\"maroon\">>> Exit \{cUser.getName()}</font>";
+            String toSend = String.format("<font color=\"maroon\">>> Exit %s</font>", cUser.getName());
 
             if (client.getConfig().isParam("TIMESTAMP")) {
                 toSend = client.getShortTime() + toSend;

@@ -137,14 +137,14 @@ public class PromotePilotDialog extends javax.swing.JFrame
 
         javax.swing.JCheckBox masterCB;
         if (pilot.getGunnery() > Integer.parseInt(client.getServerConfigs("BestGunnerySkill")) && !demoting) {
-            masterCB = new javax.swing.JCheckBox(STR."Gunnery \{pilot.getGunnery() - 1}");
+            masterCB = new javax.swing.JCheckBox(String.format("Gunnery %s", pilot.getGunnery() - 1));
             masterCB.setName("gunnery");
             masterCB.addActionListener(this);
             MasterPanel.add(masterCB);
         }
 
         if (pilot.getPiloting() > Integer.parseInt(client.getServerConfigs("BestPilotingSkill")) && !demoting) {
-            masterCB = new javax.swing.JCheckBox(STR."Piloting \{pilot.getPiloting() - 1}");
+            masterCB = new javax.swing.JCheckBox(String.format("Piloting %s", pilot.getPiloting() - 1));
             masterCB.setName("piloting");
             masterCB.addActionListener(this);
             MasterPanel.add(masterCB);
@@ -156,61 +156,61 @@ public class PromotePilotDialog extends javax.swing.JFrame
         }
 
         if (demoting) {
-            if (Integer.parseInt(client.getServerConfigs(STR."chanceforATfor\{Unit.getTypeClassDesc(playerUnit.getType())}")) >
+            if (Integer.parseInt(client.getServerConfigs(String.format("chanceforATfor%s", Unit.getTypeClassDesc(playerUnit.getType())))) >
                       0 &&
                       (pilot.getSkills().has(PilotSkill.AsTechSkillID))) {
                 masterCB = new javax.swing.JCheckBox("Astech");
-                masterCB.setName(STR."chanceforATfor\{Unit.getTypeClassDesc(playerUnit.getType())}");
+                masterCB.setName(String.format("chanceforATfor%s", Unit.getTypeClassDesc(playerUnit.getType())));
                 masterCB.addActionListener(this);
                 MasterPanel.add(masterCB);
 
             }
 
-            if (Integer.parseInt(client.getServerConfigs(STR."chanceforDMfor\{Unit.getTypeClassDesc(playerUnit.getType())}")) >
+            if (Integer.parseInt(client.getServerConfigs(String.format("chanceforDMfor%s", Unit.getTypeClassDesc(playerUnit.getType())))) >
                       0 &&
                       pilot.getSkills().has(PilotSkill.DodgeManeuverSkillID)) {
                 masterCB = new javax.swing.JCheckBox("Dodge Maneuver");
-                masterCB.setName(STR."chanceforDMfor\{Unit.getTypeClassDesc(playerUnit.getType())}");
+                masterCB.setName(String.format("chanceforDMfor%s", Unit.getTypeClassDesc(playerUnit.getType())));
                 masterCB.addActionListener(this);
                 MasterPanel.add(masterCB);
 
             }
 
-            if (Integer.parseInt(client.getServerConfigs(STR."chanceforMSfor\{Unit.getTypeClassDesc(playerUnit.getType())}")) >
+            if (Integer.parseInt(client.getServerConfigs(String.format("chanceforMSfor%s", Unit.getTypeClassDesc(playerUnit.getType())))) >
                       0 &&
                       pilot.getSkills().has(PilotSkill.MeleeSpecialistSkillID)) {
                 masterCB = new javax.swing.JCheckBox("Melee Specialist");
-                masterCB.setName(STR."chanceforMSfor\{Unit.getTypeClassDesc(playerUnit.getType())}");
+                masterCB.setName(String.format("chanceforMSfor%s", Unit.getTypeClassDesc(playerUnit.getType())));
                 masterCB.addActionListener(this);
                 MasterPanel.add(masterCB);
 
             }
 
-            if (Integer.parseInt(client.getServerConfigs(STR."chanceforPRfor\{Unit.getTypeClassDesc(playerUnit.getType())}")) >
+            if (Integer.parseInt(client.getServerConfigs(String.format("chanceforPRfor%s", Unit.getTypeClassDesc(playerUnit.getType())))) >
                       0 &&
                       pilot.getSkills().has(PilotSkill.PainResistanceSkillID)) {
                 masterCB = new javax.swing.JCheckBox("Pain Resistance");
-                masterCB.setName(STR."chanceforPRfor\{Unit.getTypeClassDesc(playerUnit.getType())}");
+                masterCB.setName(String.format("chanceforPRfor%s", Unit.getTypeClassDesc(playerUnit.getType())));
                 masterCB.addActionListener(this);
                 MasterPanel.add(masterCB);
 
             }
 
-            if (Integer.parseInt(client.getServerConfigs(STR."chanceforSVfor\{Unit.getTypeClassDesc(playerUnit.getType())}")) >
+            if (Integer.parseInt(client.getServerConfigs(String.format("chanceforSVfor%s", Unit.getTypeClassDesc(playerUnit.getType())))) >
                       0 &&
                       pilot.getSkills().has(PilotSkill.SurvivalistSkillID)) {
                 masterCB = new javax.swing.JCheckBox("Survivalist");
-                masterCB.setName(STR."chanceforSVfor\{Unit.getTypeClassDesc(playerUnit.getType())}");
+                masterCB.setName(String.format("chanceforSVfor%s", Unit.getTypeClassDesc(playerUnit.getType())));
                 masterCB.addActionListener(this);
                 MasterPanel.add(masterCB);
 
             }
 
-            if (Integer.parseInt(client.getServerConfigs(STR."chanceforIMfor\{Unit.getTypeClassDesc(playerUnit.getType())}")) >
+            if (Integer.parseInt(client.getServerConfigs(String.format("chanceforIMfor%s", Unit.getTypeClassDesc(playerUnit.getType())))) >
                       0 &&
                       pilot.getSkills().has(PilotSkill.IronManSkillID)) {
                 masterCB = new javax.swing.JCheckBox("Iron Man");
-                masterCB.setName(STR."chanceforIMfor\{Unit.getTypeClassDesc(playerUnit.getType())}");
+                masterCB.setName(String.format("chanceforIMfor%s", Unit.getTypeClassDesc(playerUnit.getType())));
                 masterCB.addActionListener(this);
                 MasterPanel.add(masterCB);
 

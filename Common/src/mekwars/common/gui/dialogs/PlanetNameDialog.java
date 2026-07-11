@@ -184,7 +184,7 @@ public class PlanetNameDialog extends JDialog implements ActionListener {
                         }
 
                         if (!planet.getPlanetFlags().containsKey(key)) {
-                            LOGGER.debug(STR."\{planet.getName()} does not have flag: \{key}");
+                            LOGGER.debug(String.format("%s does not have flag: %s", planet.getName(), key));
                             allowOp = false;
                             break;
                         }

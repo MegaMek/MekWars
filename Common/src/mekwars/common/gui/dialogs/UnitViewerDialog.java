@@ -648,7 +648,7 @@ public class UnitViewerDialog extends JFrame
                 }
             }
         } catch (Exception ex) {
-            LOGGER.error(ex, STR."meks size: \{meks.length}");
+            LOGGER.error(ex, String.format("meks size: %s", meks.length));
         }
         meksCurrent = new MekSummary[vMeks.size()];
         m_count = vMeks.size();
@@ -677,16 +677,16 @@ public class UnitViewerDialog extends JFrame
             setCursor(Cursor.getDefaultCursor());
             mekList.setEnabled(true);
         }
-        m_lCount.setText(STR."\{meksCurrent.length}/\{m_count}");
+        m_lCount.setText(String.format("%s/%s", meksCurrent.length, m_count));
         repaint();
     }
 
     private String formatMek(MekSummary mekSummary) {
         String result =
-              STR."\{makeLength(mekSummary.getModel(), 12)} \{makeLength(mekSummary.getChassis(), 10)} \{makeLength(
+              String.format("%s %s %s %s", makeLength(mekSummary.getModel(), 12), makeLength(mekSummary.getChassis(), 10), makeLength(
                     Double.toString(
                           mekSummary.getTons()),
-                    3)} \{makeLength(Integer.toString(mekSummary.getBV()), 5)}";
+                    3), makeLength(Integer.toString(mekSummary.getBV()), 5));
 
         if (Boolean.parseBoolean(client.getServerConfigs("UseCalculatedCosts"))) {
             result += makeLength(NumberFormat.getInstance().format(mekSummary.getCost()), 10);
@@ -699,7 +699,7 @@ public class UnitViewerDialog extends JFrame
         if (string.length() == nLength) {
             return string;
         } else if (string.length() > nLength) {
-            return STR."\{string.substring(0, nLength - 2)}..";
+            return String.format("%s..", string.substring(0, nLength - 2));
         } else {
             return string + SPACES.substring(0, nLength - string.length());
         }
@@ -737,21 +737,21 @@ public class UnitViewerDialog extends JFrame
                     MekSummary mekSummary = meksCurrent[mekList.getSelectedIndex()];
                     String unit = mekSummary.getName();
                     setVisible(false);
-                    String moneyMod = JOptionPane.showInputDialog(clientGUI, STR."Money Mod for \{unit}", 0);
+                    String moneyMod = JOptionPane.showInputDialog(clientGUI, String.format("Money Mod for %s", unit), 0);
 
                     if ((moneyMod == null) || (moneyMod.isEmpty())) {
                         dispose();
                         return;
                     }
 
-                    String compMod = JOptionPane.showInputDialog(clientGUI, STR."Comp Mod for \{unit}", 0);
+                    String compMod = JOptionPane.showInputDialog(clientGUI, String.format("Comp Mod for %s", unit), 0);
 
                     if ((compMod == null) || (compMod.isEmpty())) {
                         dispose();
                         return;
                     }
 
-                    String fluMod = javax.swing.JOptionPane.showInputDialog(clientGUI, STR."Flu Mod for \{unit}", 0);
+                    String fluMod = javax.swing.JOptionPane.showInputDialog(clientGUI, String.format("Flu Mod for %s", unit), 0);
 
                     if ((fluMod == null) || (fluMod.isEmpty())) {
                         dispose();
@@ -759,7 +759,7 @@ public class UnitViewerDialog extends JFrame
                     }
 
                     client.sendChat(
-                          STR."\{IClient.CAMPAIGN_PREFIX}c AddOmniVariantMod#\{unit}#\{moneyMod}$\{compMod}$\{fluMod}");
+                          String.format("%sc AddOmniVariantMod#%s#%s$%s$%s", IClient.CAMPAIGN_PREFIX, unit, moneyMod, compMod, fluMod));
 
                     dispose();
                 } catch (Exception ex) {
@@ -781,21 +781,21 @@ public class UnitViewerDialog extends JFrame
                     unitFile = UnitUtils.getMekSummaryFileName(mekSummary);
 
 
-                    String fluff = JOptionPane.showInputDialog(clientGUI, STR."Fluff text for \{unit}");
+                    String fluff = JOptionPane.showInputDialog(clientGUI, String.format("Fluff text for %s", unit));
 
                     if ((fluff == null) || (fluff.isEmpty())) {
                         dispose();
                         return;
                     }
 
-                    String gunnery = JOptionPane.showInputDialog(clientGUI, STR."Gunnery skill for \{unit}", 99);
+                    String gunnery = JOptionPane.showInputDialog(clientGUI, String.format("Gunnery skill for %s", unit), 99);
 
                     if ((gunnery == null) || (gunnery.isEmpty())) {
                         dispose();
                         return;
                     }
 
-                    String piloting = JOptionPane.showInputDialog(clientGUI, STR."Piloting Mod for \{unit}", 99);
+                    String piloting = JOptionPane.showInputDialog(clientGUI, String.format("Piloting Mod for %s", unit), 99);
 
                     if ((piloting == null) || (piloting.isEmpty())) {
                         dispose();
@@ -803,7 +803,7 @@ public class UnitViewerDialog extends JFrame
                     }
 
                     String skills = JOptionPane.showInputDialog(clientGUI,
-                          STR."Skills Mod for \{unit} (comma delimited)");
+                          String.format("Skills Mod for %s (comma delimited)", unit));
 
                     if (skills == null) {
                         dispose();
@@ -811,7 +811,7 @@ public class UnitViewerDialog extends JFrame
                     }
 
                     client.sendChat(
-                          STR."\{IClient.CAMPAIGN_PREFIX}c createunit#\{unitFile}#\{fluff}#\{gunnery}#\{piloting}#\{weightClass}#\{skills}");
+                          String.format("%sc createunit#%s#%s#%s#%s#%s#%s", IClient.CAMPAIGN_PREFIX, unitFile, fluff, gunnery, piloting, weightClass, skills));
 
                     dispose();
                 } catch (Exception ex) {
@@ -825,7 +825,7 @@ public class UnitViewerDialog extends JFrame
                 setVisible(false);
 
                 if (!unitFile.equals("null")) {
-                    client.sendChat(STR."\{IClient.CAMPAIGN_PREFIX}c researchunit#\{unitFile}");
+                    client.sendChat(String.format("%sc researchunit#%s", IClient.CAMPAIGN_PREFIX, unitFile));
                 }
 
                 dispose();
@@ -1029,7 +1029,7 @@ public class UnitViewerDialog extends JFrame
             previewMech(entity);
         } catch (EntityLoadingException ex) {
             LOGGER.error(ex,
-                  STR."Unable to load mech: \{mekSummary.getSourceFile()}: \{mekSummary.getEntryName()}: \{ex.getMessage()}");
+                  String.format("Unable to load mech: %s: %s: %s", mekSummary.getSourceFile(), mekSummary.getEntryName(), ex.getMessage()));
             clearMechPreview();
         }
     }

@@ -56,7 +56,7 @@ public class SAS extends Command {
     @Override
     public void execute(String input) {
         String line = decode(input).nextToken();
-        client.serverSend(STR."CH|\{line}");
+        client.serverSend(String.format("CH|%s", line));
     }
 
     /**

@@ -202,18 +202,18 @@ public class SellUnitDialog extends javax.swing.JDialog implements java.awt.even
 
             if (index < 0) {return;}
 
-            String result = STR."\{IClient.CAMPAIGN_PREFIX}c sell#";
+            String result = String.format("%sc sell#", IClient.CAMPAIGN_PREFIX);
             String mms = (String) possibleSaleUnits.getSelectedItem();
 
             if (mms != null) {
                 java.util.StringTokenizer st = new java.util.StringTokenizer(mms);
                 CUnit mm = client.getPlayer().getUnit(Integer.parseInt(st.nextToken()));
                 result += mm.getId();
-                if (!ticksText.getText().equalsIgnoreCase("")) {result += STR."#\{ticksText.getText()}";} else {
-                    result += STR."#\{client.getServerConfigs("MinBMSalesTicks")}";
+                if (!ticksText.getText().equalsIgnoreCase("")) {result += String.format("#%s", ticksText.getText());} else {
+                    result += String.format("#%s", client.getServerConfigs("MinBMSalesTicks"));
                 }
-                if (!minBidText.getText().equalsIgnoreCase("")) {result += STR."#\{minBidText.getText()}";} else {
-                    result += STR."#\{client.getServerConfigs("MinBMSalesPrice")}";
+                if (!minBidText.getText().equalsIgnoreCase("")) {result += String.format("#%s", minBidText.getText());} else {
+                    result += String.format("#%s", client.getServerConfigs("MinBMSalesPrice"));
                 }
             }
 

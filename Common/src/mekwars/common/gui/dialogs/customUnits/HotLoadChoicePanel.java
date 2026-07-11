@@ -32,7 +32,7 @@ public class HotLoadChoicePanel extends javax.swing.JPanel {
         chHotLoad.setSelected(m_mounted.isHotLoaded());
 
         // setup
-        chHotLoad.setText(STR."Hot-Load \{m_mounted.getName()} (\{customUnitDialog.getEntity().getLocationAbbr(loc)})");
+        chHotLoad.setText(String.format("Hot-Load %s (%s)", m_mounted.getName(), customUnitDialog.getEntity().getLocationAbbr(loc)));
         add(chHotLoad);
     }
 
@@ -46,8 +46,8 @@ public class HotLoadChoicePanel extends javax.swing.JPanel {
     public void applyChoice() {
         if (m_mounted.isHotLoaded() != chHotLoad.isSelected()) {
             customUnitDialog.getClient().sendChat(
-                  STR."\{mekwars.common.campaign.clientutils.protocol.IClient.CAMPAIGN_PREFIX}c setunithotload#\{customUnitDialog.getEntity()
-                                                                                                                       .getExternalId()}#\{location}#\{chHotLoad.isSelected()}");
+                  String.format("%sc setunithotload#%s#%s#%s", mekwars.common.campaign.clientutils.protocol.IClient.CAMPAIGN_PREFIX, customUnitDialog.getEntity()
+                                                                                                                       .getExternalId(), location, chHotLoad.isSelected()));
         }
     }
 

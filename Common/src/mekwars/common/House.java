@@ -113,17 +113,17 @@ public class House {
 
         for (int type = 0; type < Unit.MAX_BUILD; type++) {
             for (int weight = 0; weight < 4; weight++) {
-                this.setHouseUnitComponentMod(type, weight, in.readInt(STR."componentMod\{type}\{weight}"));
+                this.setHouseUnitComponentMod(type, weight, in.readInt(String.format("componentMod%s%s", type, weight)));
             }
         }
         for (int type = 0; type < Unit.MAX_BUILD; type++) {
             for (int weight = 0; weight < 4; weight++) {
-                this.setHouseUnitPriceMod(type, weight, in.readInt(STR."priceMod\{type}\{weight}"));
+                this.setHouseUnitPriceMod(type, weight, in.readInt(String.format("priceMod%s%s", type, weight)));
             }
         }
         for (int type = 0; type < Unit.MAX_BUILD; type++) {
             for (int weight = 0; weight < 4; weight++) {
-                this.setHouseUnitFluMod(type, weight, in.readInt(STR."fluMod\{type}\{weight}"));
+                this.setHouseUnitFluMod(type, weight, in.readInt(String.format("fluMod%s%s", type, weight)));
             }
         }
 
@@ -151,9 +151,9 @@ public class House {
             subFaction.setConfig("AccessLevel", in.read("SubFactionAccessLevel"));
             for (int type = 0; type < Unit.MAX_BUILD; type++) {
                 for (int weight = 0; weight <= Unit.ASSAULT; weight++) {
-                    String setting = STR."CanBuyNew\{Unit.getWeightClassDesc(weight)}\{Unit.getTypeClassDesc(type)}";
+                    String setting = String.format("CanBuyNew%s%s", Unit.getWeightClassDesc(weight), Unit.getTypeClassDesc(type));
                     subFaction.setConfig(setting, in.read(setting));
-                    setting = STR."CanBuyUsed\{Unit.getWeightClassDesc(weight)}\{Unit.getTypeClassDesc(type)}";
+                    setting = String.format("CanBuyUsed%s%s", Unit.getWeightClassDesc(weight), Unit.getTypeClassDesc(type));
                     subFaction.setConfig(setting, in.read(setting));
                 }
             }
@@ -339,7 +339,7 @@ public class House {
     }
 
     public String getNameAsLink() {
-        return STR."<a href=\"MEKWARS/c faction#\{name}\">\{name}</a>";
+        return String.format("<a href=\"MEKWARS/c faction#%s\">%s</a>", name, name);
     }
 
     /**
@@ -389,17 +389,17 @@ public class House {
 
         for (int type = 0; type < Unit.MAX_BUILD; type++) {
             for (int weight = 0; weight < 4; weight++) {
-                out.println(this.getHouseUnitComponentMod(type, weight), STR."componentMod\{type}\{weight}");
+                out.println(this.getHouseUnitComponentMod(type, weight), String.format("componentMod%s%s", type, weight));
             }
         }
         for (int type = 0; type < Unit.MAX_BUILD; type++) {
             for (int weight = 0; weight < 4; weight++) {
-                out.println(this.getHouseUnitPriceMod(type, weight), STR."priceMod\{type}\{weight}");
+                out.println(this.getHouseUnitPriceMod(type, weight), String.format("priceMod%s%s", type, weight));
             }
         }
         for (int type = 0; type < Unit.MAX_BUILD; type++) {
             for (int weight = 0; weight < 4; weight++) {
-                out.println(this.getHouseUnitFluMod(type, weight), STR."fluMod\{type}\{weight}");
+                out.println(this.getHouseUnitFluMod(type, weight), String.format("fluMod%s%s", type, weight));
             }
         }
 
@@ -424,9 +424,9 @@ public class House {
             out.println(subFaction.getConfig("AccessLevel"), "SubFactionAccessLevel");
             for (int type = 0; type < Unit.MAX_BUILD; type++) {
                 for (int weight = 0; weight <= Unit.ASSAULT; weight++) {
-                    String setting = STR."CanBuyNew\{Unit.getWeightClassDesc(weight)}\{Unit.getTypeClassDesc(type)}";
+                    String setting = String.format("CanBuyNew%s%s", Unit.getWeightClassDesc(weight), Unit.getTypeClassDesc(type));
                     out.println(subFaction.getConfig(setting), setting);
-                    setting = STR."CanBuyUsed\{Unit.getWeightClassDesc(weight)}\{Unit.getTypeClassDesc(type)}";
+                    setting = String.format("CanBuyUsed%s%s", Unit.getWeightClassDesc(weight), Unit.getTypeClassDesc(type));
                     out.println(subFaction.getConfig(setting), setting);
                 }
             }
@@ -534,7 +534,7 @@ public class House {
         if (factionPlayerColor.startsWith("#")) {
             this.factionPlayerColors = factionPlayerColor;
         } else {
-            this.factionPlayerColors = STR."#\{factionPlayerColor}";
+            this.factionPlayerColors = String.format("#%s", factionPlayerColor);
         }
     }
 

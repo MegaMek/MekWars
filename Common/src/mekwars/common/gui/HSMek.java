@@ -109,7 +109,7 @@ public class HSMek {
         //vehicles and inf prepend chassis
         if (type.equalsIgnoreCase("Mek")) {
             if (entity.isOmni()) {
-                name = STR."\{entity.getChassis()} \{entity.getModel()}";
+                name = String.format("%s %s", entity.getChassis(), entity.getModel());
             } else {
                 if (!entity.getModel().trim().isEmpty()) {
                     name = entity.getModel().trim();

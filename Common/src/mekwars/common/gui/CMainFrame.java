@@ -236,7 +236,7 @@ public class CMainFrame extends JFrame {
         setResizable(true);
         setSize(new java.awt.Dimension(640, 480));
         setExtendedState(java.awt.Frame.MAXIMIZED_BOTH);
-        setTitle(STR."\{client.getConfigParam("CAMPAIGN_SERVER_NAME")} (MekWars client \{IClient.CLIENT_VERSION})");
+        setTitle(String.format("%s (MekWars client %s)", client.getConfigParam("CAMPAIGN_SERVER_NAME"), IClient.CLIENT_VERSION));
         contentPane = (JPanel) getContentPane();
         contentPane.setLayout(new java.awt.BorderLayout());
         useAdvanceRepairs = client.isUsingAdvanceRepairs();
@@ -491,7 +491,7 @@ public class CMainFrame extends JFrame {
 
     private @Nonnull JMenuItem getJMenuItem() {
         JMenuItem item = new JMenuItem("Op Editor");
-        item.addActionListener(_ -> {
+        item.addActionListener(actionEvent -> {
             try {
                 URLClassLoader loader = new URLClassLoader(new URL[] {
                       new File("./MekWarsOpEditor.jar").toURI().toURL() });
@@ -513,63 +513,63 @@ public class CMainFrame extends JFrame {
 
         jMenuFileConnect.setText("Connect");
         jMenuFileConnect.setMnemonic('o');
-        jMenuFileConnect.addActionListener(_ -> jMenuFileConnect_actionPerformed());
+        jMenuFileConnect.addActionListener(actionEvent -> jMenuFileConnect_actionPerformed());
 
         jMenuFileDisconnect.setText("Disconnect");
         jMenuFileDisconnect.setMnemonic('D');
-        jMenuFileDisconnect.addActionListener(_ -> client.getConnector().closeConnection());
+        jMenuFileDisconnect.addActionListener(actionEvent -> client.getConnector().closeConnection());
 
         jMenuFileRegister.setText("Register Nickname");
         jMenuFileRegister.setMnemonic('R');
-        jMenuFileRegister.addActionListener(_ -> jMenuFileRegister_actionPerformed());
+        jMenuFileRegister.addActionListener(actionEvent -> jMenuFileRegister_actionPerformed());
 
         jMenuFileMail.setText("Mail User");
         jMenuFileMail.setMnemonic('M');
-        jMenuFileMail.addActionListener(_ -> jMenuFileMail_actionPerformed(null));
+        jMenuFileMail.addActionListener(actionEvent -> jMenuFileMail_actionPerformed(null));
 
         jMenuFileLastOnline.setText("Last Online");
         jMenuFileLastOnline.setMnemonic('L');
-        jMenuFileLastOnline.addActionListener(_ -> jMenuFileLastOnline_actionPerformed());
+        jMenuFileLastOnline.addActionListener(actionEvent -> jMenuFileLastOnline_actionPerformed());
 
         jMenuFileConfig.setText("Configuration");
         jMenuFileConfig.setMnemonic('C');
-        jMenuFileConfig.addActionListener(_ -> new ConfigurationDialog(client));
+        jMenuFileConfig.addActionListener(actionEvent -> new ConfigurationDialog(client));
 
         jMenuFileExit.setText("Exit");
         jMenuFileExit.setMnemonic('X');
-        jMenuFileExit.addActionListener(_ -> jMenuFileExit_actionPerformed());
+        jMenuFileExit.addActionListener(actionEvent -> jMenuFileExit_actionPerformed());
 
         jMenuCampaign.setText("Campaign");
         jMenuCampaign.setMnemonic('C');
 
         jMenuCampaignLogin.setText("Log in!");
         jMenuCampaignLogin.setMnemonic('I');
-        jMenuCampaignLogin.addActionListener(_ -> client.sendChat(STR."\{IClient.CAMPAIGN_PREFIX}c login"));
+        jMenuCampaignLogin.addActionListener(actionEvent -> client.sendChat(String.format("%sc login", IClient.CAMPAIGN_PREFIX)));
 
         jMenuCampaignActivate.setText("Activate");
-        jMenuCampaignActivate.addActionListener(_ -> client.sendChat(STR."\{IClient.CAMPAIGN_PREFIX}c activate#\{IClient.CLIENT_VERSION}"));
+        jMenuCampaignActivate.addActionListener(actionEvent -> client.sendChat(String.format("%sc activate#%s", IClient.CAMPAIGN_PREFIX, IClient.CLIENT_VERSION)));
 
         jMenuCampaignDeactivate.setText("Deactivate");
-        jMenuCampaignDeactivate.addActionListener(_ -> client.sendChat(STR."\{IClient.CAMPAIGN_PREFIX}c deactivate"));
+        jMenuCampaignDeactivate.addActionListener(actionEvent -> client.sendChat(String.format("%sc deactivate", IClient.CAMPAIGN_PREFIX)));
 
         jMenuCampaignLogout.setText("Log Out");
-        jMenuCampaignLogout.addActionListener(_ -> client.sendChat(STR."\{IClient.CAMPAIGN_PREFIX}c logout"));
+        jMenuCampaignLogout.addActionListener(actionEvent -> client.sendChat(String.format("%sc logout", IClient.CAMPAIGN_PREFIX)));
 
         jMenuCampaignPlayers.setText("Players Status");
         jMenuCampaignPlayers.setMnemonic('P');
-        jMenuCampaignPlayers.addActionListener(_ -> client.sendChat(STR."\{IClient.CAMPAIGN_PREFIX}c players"));
+        jMenuCampaignPlayers.addActionListener(actionEvent -> client.sendChat(String.format("%sc players", IClient.CAMPAIGN_PREFIX)));
 
         jMenuCampaignISStatus.setText("Planetary Control");
         jMenuCampaignISStatus.setMnemonic('C');
-        jMenuCampaignISStatus.addActionListener(_ -> jMenuCampaignISStatus_actionPerformed());
+        jMenuCampaignISStatus.addActionListener(actionEvent -> jMenuCampaignISStatus_actionPerformed());
 
         jMenuCampaignFactionStatus.setText("Faction Status");
         jMenuCampaignFactionStatus.setMnemonic('F');
-        jMenuCampaignFactionStatus.addActionListener(_ -> jMenuCampaignFactionStatus_actionPerformed());
+        jMenuCampaignFactionStatus.addActionListener(actionEvent -> jMenuCampaignFactionStatus_actionPerformed());
 
         jMenuCampaignHouses.setText("Factions List");
         jMenuCampaignHouses.setMnemonic('L');
-        jMenuCampaignHouses.addActionListener(_ -> client.sendChat(STR."\{IClient.CAMPAIGN_PREFIX}c housestatus"));
+        jMenuCampaignHouses.addActionListener(actionEvent -> client.sendChat(String.format("%sc housestatus", IClient.CAMPAIGN_PREFIX)));
 
         if (useAdvanceRepairs) {
             jMenuCampaignSubBays.setText("Bays");
@@ -593,7 +593,7 @@ public class CMainFrame extends JFrame {
 
         jMenuCampaignMyStatus.setText("My Status");
         jMenuCampaignMyStatus.setMnemonic('M');
-        jMenuCampaignMyStatus.addActionListener(_ -> client.sendChat(STR."\{IClient.CAMPAIGN_PREFIX}c mystatus"));
+        jMenuCampaignMyStatus.addActionListener(_ -> client.sendChat(String.format("%sc mystatus", IClient.CAMPAIGN_PREFIX)));
 
         jMenuCampaignCheckAttack.setText("Attack Options");
         jMenuCampaignCheckAttack.setMnemonic('A');
@@ -611,7 +611,7 @@ public class CMainFrame extends JFrame {
         jMenuCampaignTransferUnit.setMnemonic('U');
         jMenuCampaignTransferUnit.addActionListener(_ -> jMenuCommanderTransferUnit_actionPerformed(null, -1));
 
-        jMenuCampaignTransferMoney.setText(STR."Transfer \{client.moneyOrFluMessage(true, true, -2)}");
+        jMenuCampaignTransferMoney.setText(String.format("Transfer %s", client.moneyOrFluMessage(true, true, -2)));
         jMenuCampaignTransferMoney.setMnemonic('C');
         jMenuCampaignTransferMoney.addActionListener(_ -> jMenuCommanderTransferMoney_actionPerformed(null));
 
@@ -645,12 +645,12 @@ public class CMainFrame extends JFrame {
         jMenuCampaignReportStatusMC.setText("Check MiniCampaign Status"); //@salient for mini campaign
         jMenuCampaignReportStatusMC.addActionListener(_ -> jMenuCommanderReportStatusMC_actionPerformed());
 
-        jMenuCampaignRewardPoints.setText(STR."Use \{client.getServerConfigs("RPLongName")}");
+        jMenuCampaignRewardPoints.setText(String.format("Use %s", client.getServerConfigs("RPLongName")));
         jMenuCampaignRewardPoints.setMnemonic('P');
         jMenuCampaignRewardPoints.addActionListener(_ -> client.rewardPointsDialog());
 
         //@Salient
-        jMenuCampaignInfluencePoints.setText(STR."Use \{client.getServerConfigs("FluLongName")}");
+        jMenuCampaignInfluencePoints.setText(String.format("Use %s", client.getServerConfigs("FluLongName")));
         jMenuCampaignInfluencePoints.addActionListener(_ -> client.influencePointsDialog());
 
         jMenuCampaignPartsCache.setText("View Parts");
@@ -694,11 +694,11 @@ public class CMainFrame extends JFrame {
 
         jMenuMercUnemployed.setText("Unemployed Mercs");
         jMenuMercUnemployed.setMnemonic('U');
-        jMenuMercUnemployed.addActionListener(_ -> client.sendChat(STR."\{IClient.CAMPAIGN_PREFIX}c unemployedmercs"));
+        jMenuMercUnemployed.addActionListener(_ -> client.sendChat(String.format("%sc unemployedmercs", IClient.CAMPAIGN_PREFIX)));
 
         jMenuMercContracted.setText("Contracted Mercs");
         jMenuMercContracted.setMnemonic('C');
-        jMenuMercContracted.addActionListener(_ -> client.sendChat(STR."\{IClient.CAMPAIGN_PREFIX}c housecontracts"));
+        jMenuMercContracted.addActionListener(_ -> client.sendChat(String.format("%sc housecontracts", IClient.CAMPAIGN_PREFIX)));
 
         jMenuHost.setText("Host");
         jMenuHost.setMnemonic('S');
@@ -801,7 +801,7 @@ public class CMainFrame extends JFrame {
                 return;
             }
 
-            client.sendChat(STR."\{IClient.CAMPAIGN_PREFIX}c researchtechlevel");
+            client.sendChat(String.format("%sc researchtechlevel", IClient.CAMPAIGN_PREFIX));
         });
 
         jMenuLeaderPurchaseFactory.setText("Purchase Factory");
@@ -811,7 +811,7 @@ public class CMainFrame extends JFrame {
         jMenuLeaderSetComponentConversion.addActionListener(_ -> jMenuLeaderSetComponentConversion_actionPerformed());
 
         jMenuLeaderViewFactionPartsCache.setText("View Faction Cache");
-        jMenuLeaderViewFactionPartsCache.addActionListener(_ -> client.sendChat(STR."\{IClient.CAMPAIGN_PREFIX}c viewfactionpartscache"));
+        jMenuLeaderViewFactionPartsCache.addActionListener(_ -> client.sendChat(String.format("%sc viewfactionpartscache", IClient.CAMPAIGN_PREFIX)));
 
         jMenuHelp.setText("Help");
         jMenuHelp.setMnemonic('E');
@@ -844,7 +844,7 @@ public class CMainFrame extends JFrame {
         jMenuHelpPilotSkills.addActionListener(_ -> jMenuHelpPilotSkills_actionPerformed());
 
         jMenuHelpOpViewer.setText("Operation Viewer");
-        jMenuHelpOpViewer.addActionListener(_ -> client.sendChat(STR."\{IClient.CAMPAIGN_PREFIX} getops md5"));
+        jMenuHelpOpViewer.addActionListener(_ -> client.sendChat(String.format("%s getops md5", IClient.CAMPAIGN_PREFIX)));
 
         /*
          * Display Report "MekWars Bug" and "Report MegaMek Bug" links in the Help Menu. Create the actual menu
@@ -885,22 +885,22 @@ public class CMainFrame extends JFrame {
 
         if (Boolean.parseBoolean(client.getServerConfigs("AllowEmoji"))) {
             jMenuEmojiFlip.setText("(╯°□°)╯︵ ┻━┻");
-            jMenuEmojiFlip.addActionListener(_ -> client.sendChat(STR."\{IClient.CAMPAIGN_PREFIX}ec#fl"));
+            jMenuEmojiFlip.addActionListener(_ -> client.sendChat(String.format("%sec#fl", IClient.CAMPAIGN_PREFIX)));
 
             jMenuEmojiShrug.setText("¯\\_(ツ)_/¯");
-            jMenuEmojiShrug.addActionListener(_ -> client.sendChat(STR."\{IClient.CAMPAIGN_PREFIX}ec#sh"));
+            jMenuEmojiShrug.addActionListener(_ -> client.sendChat(String.format("%sec#sh", IClient.CAMPAIGN_PREFIX)));
 
             jMenuEmojiFingers.setText("t(-.-t)");
-            jMenuEmojiFingers.addActionListener(_ -> client.sendChat(STR."\{IClient.CAMPAIGN_PREFIX}ec#fi"));
+            jMenuEmojiFingers.addActionListener(_ -> client.sendChat(String.format("%sec#fi", IClient.CAMPAIGN_PREFIX)));
 
             jMenuEmojiKiss.setText("( ˘ ³˘)♥");
-            jMenuEmojiKiss.addActionListener(_ -> client.sendChat(STR."\{IClient.CAMPAIGN_PREFIX}ec#ki"));
+            jMenuEmojiKiss.addActionListener(_ -> client.sendChat(String.format("%sec#ki", IClient.CAMPAIGN_PREFIX)));
 
             jMenuEmojiSmile.setText("◉‿◉");
-            jMenuEmojiSmile.addActionListener(_ -> client.sendChat(STR."\{IClient.CAMPAIGN_PREFIX}ec#sm"));
+            jMenuEmojiSmile.addActionListener(_ -> client.sendChat(String.format("%sec#sm", IClient.CAMPAIGN_PREFIX)));
 
             jMenuEmojiDeal.setText("•_•) ( •_•)>⌐■-■ (⌐■_■)");
-            jMenuEmojiDeal.addActionListener(_ -> client.sendChat(STR."\{IClient.CAMPAIGN_PREFIX}ec#de"));
+            jMenuEmojiDeal.addActionListener(_ -> client.sendChat(String.format("%sec#de", IClient.CAMPAIGN_PREFIX)));
         }
 
         /*
@@ -1082,8 +1082,8 @@ public class CMainFrame extends JFrame {
         // Set Version upon reconnection.
         if (!client.getStatus().equals("Not connected")) {
             client.sendChat(
-                  STR."\{IClient.CAMPAIGN_PREFIX}c setclientversion#\{client.getUsername()
-                                                                            .trim()}#\{IClient.CLIENT_VERSION}");
+                  String.format("%sc setclientversion#%s#%s", IClient.CAMPAIGN_PREFIX, client.getUsername()
+                                                                            .trim(), IClient.CLIENT_VERSION));
         }
     }
 
@@ -1104,12 +1104,12 @@ public class CMainFrame extends JFrame {
         }
         message = JOptionPane.showInputDialog(getContentPane(),
               "message",
-              STR."Send mail to \{Nickname}",
+              String.format("Send mail to %s", Nickname),
               JOptionPane.PLAIN_MESSAGE);
         if (message == null) {
             return;
         }
-        client.processGUIInput(STR."\{IClient.GUI_PREFIX}mail \{Nickname},\{message}");
+        client.processGUIInput(String.format("%smail %s,%s", IClient.GUI_PREFIX, Nickname, message));
     }
 
     public void jMenuFileLastOnline_actionPerformed() {
@@ -1118,7 +1118,7 @@ public class CMainFrame extends JFrame {
         if (Nickname == null) {
             return;
         }
-        client.sendChat(STR."\{IClient.CAMPAIGN_PREFIX}c lastonline#\{Nickname}");
+        client.sendChat(String.format("%sc lastonline#%s", IClient.CAMPAIGN_PREFIX, Nickname));
     }
 
     public void jMenuFileExit_actionPerformed() {
@@ -1145,9 +1145,9 @@ public class CMainFrame extends JFrame {
             factionDialog.setVisible(true);
             House2 = factionDialog.getHouseName();
             factionDialog.dispose();
-            client.sendChat(STR."\{IClient.CAMPAIGN_PREFIX}c isstatus#\{House}#\{House2}");
+            client.sendChat(String.format("%sc isstatus#%s#%s", IClient.CAMPAIGN_PREFIX, House, House2));
         } else {
-            client.sendChat(STR."\{IClient.CAMPAIGN_PREFIX}c isstatus");
+            client.sendChat(String.format("%sc isstatus", IClient.CAMPAIGN_PREFIX));
         }
     }
 
@@ -1164,7 +1164,7 @@ public class CMainFrame extends JFrame {
             return;
         }
 
-        client.sendChat(STR."\{IClient.CAMPAIGN_PREFIX}c faction#\{House}");
+        client.sendChat(String.format("%sc faction#%s", IClient.CAMPAIGN_PREFIX, House));
     }
 
     public void jMenuMercStatus_actionPerformed() {
@@ -1179,14 +1179,14 @@ public class CMainFrame extends JFrame {
             return;
         }
 
-        client.sendChat(STR."\{IClient.CAMPAIGN_PREFIX}c mstatus#\{Merc}");
+        client.sendChat(String.format("%sc mstatus#%s", IClient.CAMPAIGN_PREFIX, Merc));
     }
 
     public void jMenuCommanderCheckAttack_actionPerformed(int lid) {
         if (lid == -1) {
-            client.sendChat(STR."\{IClient.CAMPAIGN_PREFIX}c ca");
+            client.sendChat(String.format("%sc ca", IClient.CAMPAIGN_PREFIX));
         } else {
-            client.sendChat(STR."\{IClient.CAMPAIGN_PREFIX}c ca#\{lid}");
+            client.sendChat(String.format("%sc ca#%s", IClient.CAMPAIGN_PREFIX, lid));
         }
     }
 
@@ -1209,7 +1209,7 @@ public class CMainFrame extends JFrame {
             return;
         }
 
-        client.sendChat(STR."\{IClient.CAMPAIGN_PREFIX}c range#\{range}#\{faction}");
+        client.sendChat(String.format("%sc range#%s#%s", IClient.CAMPAIGN_PREFIX, range, faction));
     }
 
     public void jMenuFindContestedPlanets_actionPerformed() { //BarukKhazad 20151129 - start 2
@@ -1242,7 +1242,7 @@ public class CMainFrame extends JFrame {
             return;
         }
 
-        client.sendChat(STR."\{IClient.CAMPAIGN_PREFIX}findcp \{h1}#\{h2}#\{Perc}");
+        client.sendChat(String.format("%sfindcp %s#%s#%s", IClient.CAMPAIGN_PREFIX, h1, h2, Perc));
     }  //BarukKhazad 20151129 - end 2
 
     public void jMenuCommanderTransferMoney_actionPerformed(String name) {
@@ -1265,14 +1265,14 @@ public class CMainFrame extends JFrame {
 
         Amount = JOptionPane.showInputDialog(getContentPane(),
               "Amount",
-              STR."Send \{client.moneyOrFluMessage(true, true, -2)} to \{targetPlayer}",
+              String.format("Send %s to %s", client.moneyOrFluMessage(true, true, -2), targetPlayer),
               JOptionPane.PLAIN_MESSAGE);
 
         if (Amount == null) {
             return;
         }
 
-        client.sendChat(STR."\{IClient.CAMPAIGN_PREFIX}c transfermoney#\{targetPlayer}#\{Amount}");
+        client.sendChat(String.format("%sc transfermoney#%s#%s", IClient.CAMPAIGN_PREFIX, targetPlayer, Amount));
     }
 
     public void jMenuCommanderTransferRewardPoints_actionPerformed(String name) {
@@ -1294,14 +1294,14 @@ public class CMainFrame extends JFrame {
 
         Amount = JOptionPane.showInputDialog(getContentPane(),
               "Amount",
-              STR."Send \{client.getServerConfigs("RPShortName")} to \{targetPlayer}",
+              String.format("Send %s to %s", client.getServerConfigs("RPShortName"), targetPlayer),
               JOptionPane.PLAIN_MESSAGE);
 
         if (Amount == null) {
             return;
         }
 
-        client.sendChat(STR."\{IClient.CAMPAIGN_PREFIX}c transferrewardpoints#\{targetPlayer}#\{Amount}");
+        client.sendChat(String.format("%sc transferrewardpoints#%s#%s", IClient.CAMPAIGN_PREFIX, targetPlayer, Amount));
     }
 
     //@Salient
@@ -1324,14 +1324,14 @@ public class CMainFrame extends JFrame {
 
         Amount = JOptionPane.showInputDialog(getContentPane(),
               "Amount",
-              STR."Send \{client.getServerConfigs("FluShortName")} to \{targetPlayer}",
+              String.format("Send %s to %s", client.getServerConfigs("FluShortName"), targetPlayer),
               JOptionPane.PLAIN_MESSAGE);
 
         if (Amount == null) {
             return;
         }
 
-        client.sendChat(STR."\{IClient.CAMPAIGN_PREFIX}c transferinfluence#\{targetPlayer}#\{Amount}");
+        client.sendChat(String.format("%sc transferinfluence#%s#%s", IClient.CAMPAIGN_PREFIX, targetPlayer, Amount));
     }
 
     public void jMenuCommanderTransferUnit_actionPerformed(String name, int mid) {
@@ -1362,7 +1362,7 @@ public class CMainFrame extends JFrame {
             return;
         }
 
-        client.sendChat(STR."\{IClient.CAMPAIGN_PREFIX}c transferunit#\{targetPlayer}#\{mid}");
+        client.sendChat(String.format("%sc transferunit#%s#%s", IClient.CAMPAIGN_PREFIX, targetPlayer, mid));
     }
 
     public void jMenuCommanderAddToBM_actionPerformed(int mid) {
@@ -1383,7 +1383,7 @@ public class CMainFrame extends JFrame {
             }
             lid = Integer.parseInt(LanceID);
         }
-        client.sendChat(STR."\{IClient.CAMPAIGN_PREFIX}c rma#\{lid}");
+        client.sendChat(String.format("%sc rma#%s", IClient.CAMPAIGN_PREFIX, lid));
     }
 
     /*
@@ -1395,7 +1395,7 @@ public class CMainFrame extends JFrame {
         if (newName == null) {
             return;
         }
-        client.sendChat(STR."\{IClient.CAMPAIGN_PREFIX}c namepilot#\{uid}#\{newName}");
+        client.sendChat(String.format("%sc namepilot#%s#%s", IClient.CAMPAIGN_PREFIX, uid, newName));
     }
 
     /*
@@ -1419,20 +1419,20 @@ public class CMainFrame extends JFrame {
             newName = "clear";
         }
 
-        client.sendChat(STR."\{IClient.CAMPAIGN_PREFIX}c namearmy#\{aid}#\{newName}");
+        client.sendChat(String.format("%sc namearmy#%s#%s", IClient.CAMPAIGN_PREFIX, aid, newName));
     }
 
     public void jMenuCommanderPlayerLockArmy_actionPerformed(int aid) {
-        client.sendChat(STR."\{IClient.CAMPAIGN_PREFIX}c playerlockarmy#\{aid}");
+        client.sendChat(String.format("%sc playerlockarmy#%s", IClient.CAMPAIGN_PREFIX, aid));
     }
 
     public void jMenuCommanderPlayerUnlockArmy_actionPerformed(int aid) {
-        client.sendChat(STR."\{IClient.CAMPAIGN_PREFIX}c playerunlockarmy#\{aid}");
+        client.sendChat(String.format("%sc playerunlockarmy#%s", IClient.CAMPAIGN_PREFIX, aid));
     }
 
     public void jMenuCommanderDisableArmy_actionPerformed(int aid) {
         // Toggle armyDisabled
-        client.sendChat(STR."\{IClient.CAMPAIGN_PREFIX}c togglearmydisabled#\{aid}");
+        client.sendChat(String.format("%sc togglearmydisabled#%s", IClient.CAMPAIGN_PREFIX, aid));
     }
 
     /*
@@ -1454,7 +1454,7 @@ public class CMainFrame extends JFrame {
                                "small number of super heavy/levelled units.";
 
         String limit = JOptionPane.showInputDialog(getContentPane(),
-              STR."<HTML>Lower Limit? [-1 to disable the limit]<i><br><br>\{example}<br></i></HTML>",
+              String.format("<HTML>Lower Limit? [-1 to disable the limit]<i><br><br>%s<br></i></HTML>", example),
               Integer.toString(selectedArmy.getLowerLimiter()),
               JOptionPane.PLAIN_MESSAGE);
 
@@ -1463,7 +1463,7 @@ public class CMainFrame extends JFrame {
         }
 
         newLimit = Integer.parseInt(limit);
-        client.sendChat(STR."\{IClient.CAMPAIGN_PREFIX}c all#\{aid}#\{newLimit}");
+        client.sendChat(String.format("%sc all#%s#%s", IClient.CAMPAIGN_PREFIX, aid, newLimit));
     }
 
     /*
@@ -1486,7 +1486,7 @@ public class CMainFrame extends JFrame {
                                "against swarms";
 
         String limit = JOptionPane.showInputDialog(getContentPane(),
-              STR."<HTML>Upper Limit? [-1 to disable the limit]<i><br><br>\{example}<br></i></HTML>",
+              String.format("<HTML>Upper Limit? [-1 to disable the limit]<i><br><br>%s<br></i></HTML>", example),
               Integer.toString(selectedArmy.getLowerLimiter()),
               JOptionPane.PLAIN_MESSAGE);
 
@@ -1495,7 +1495,7 @@ public class CMainFrame extends JFrame {
         }
 
         newLimit = Integer.parseInt(limit);
-        client.sendChat(STR."\{IClient.CAMPAIGN_PREFIX}c aul#\{aid}#\{newLimit}");
+        client.sendChat(String.format("%sc aul#%s#%s", IClient.CAMPAIGN_PREFIX, aid, newLimit));
     }
 
     /*
@@ -1513,7 +1513,7 @@ public class CMainFrame extends JFrame {
         String example = "This is the force size you expect to face when you request a match";
 
         String force = JOptionPane.showInputDialog(getContentPane(),
-              STR."<HTML>Force Size To Face\t? [-1 to disable the limit]<i><br><br>\{example}<br></i></HTML>",
+              String.format("<HTML>Force Size To Face\t? [-1 to disable the limit]<i><br><br>%s<br></i></HTML>", example),
               Float.toString(selectedArmy.getOpForceSize()),
               JOptionPane.PLAIN_MESSAGE);
 
@@ -1521,7 +1521,7 @@ public class CMainFrame extends JFrame {
             return;
         }
 
-        client.sendChat(STR."\{IClient.CAMPAIGN_PREFIX}c aofs#\{aid}#\{force}");
+        client.sendChat(String.format("%sc aofs#%s#%s", IClient.CAMPAIGN_PREFIX, aid, force));
 
     }
 
@@ -1533,11 +1533,11 @@ public class CMainFrame extends JFrame {
         if (LogoURL == null) {
             return;
         }
-        client.sendChat(STR."\{IClient.CAMPAIGN_PREFIX}c setmylogo#\{LogoURL}");
+        client.sendChat(String.format("%sc setmylogo#%s", IClient.CAMPAIGN_PREFIX, LogoURL));
     }
 
     public void jMenuCommanderPersonalPilotQueue_actionPerformed() {
-        client.sendChat(STR."\{IClient.CAMPAIGN_PREFIX}c displayplayerpersonalpilotqueue");
+        client.sendChat(String.format("%sc displayplayerpersonalpilotqueue", IClient.CAMPAIGN_PREFIX));
     }
 
     public void jMenuCommanderTransferPilot_actionPerformed(String name) {
@@ -1601,8 +1601,8 @@ public class CMainFrame extends JFrame {
 
         if (client.getPlayer().getPersonalPilotQueue().getPilotQueue(unitType, weightClass).isEmpty()) {
             JOptionPane.showMessageDialog(null,
-                  STR."You do not have any pilots for \{StringUtils.aOrAn(pWeightClassString,
-                        true)} \{pUnitTypeString}",
+                  String.format("You do not have any pilots for %s %s", StringUtils.aOrAn(pWeightClassString,
+                        true), pUnitTypeString),
                   "No Pilots!",
                   JOptionPane.PLAIN_MESSAGE);
             return;
@@ -1692,8 +1692,8 @@ public class CMainFrame extends JFrame {
 
         if (client.getPlayer().getPersonalPilotQueue().getPilotQueue(unitType, weightClass).isEmpty()) {
             JOptionPane.showMessageDialog(null,
-                  STR."You do not have any pilots for \{StringUtils.aOrAn(pWeightClassString,
-                        true)} \{pUnitTypeString}.",
+                  String.format("You do not have any pilots for %s %s.", StringUtils.aOrAn(pWeightClassString,
+                        true), pUnitTypeString),
                   "No Pilots!",
                   JOptionPane.PLAIN_MESSAGE);
             return;
@@ -1720,7 +1720,7 @@ public class CMainFrame extends JFrame {
             return;
         }
 
-        client.sendChat(STR."\{IClient.CAMPAIGN_PREFIX}c donatepilot#\{unitType}#\{weightClass}#\{position}");
+        client.sendChat(String.format("%sc donatepilot#%s#%s#%s", IClient.CAMPAIGN_PREFIX, unitType, weightClass, position));
     }
 
     public void jMenuCommanderDirectSell_actionPerformed(String name, String id) {
@@ -1754,21 +1754,21 @@ public class CMainFrame extends JFrame {
 
         CUnit unit = client.getPlayer().getUnit(MathUtility.parseInt(unitID, -1));
 
-        String serviceFee = STR."SellDirect\{Unit.getWeightClassDesc(unit.getWeightClass())}\{Unit.getTypeClassDesc(unit.getType())}Price";
+        String serviceFee = String.format("SellDirect%s%sPrice", Unit.getWeightClassDesc(unit.getWeightClass()), Unit.getTypeClassDesc(unit.getType()));
         price = JOptionPane.showInputDialog(getContentPane(),
-              STR."""
-How much do you wish to offer? (\{client.moneyOrFluMessage(true, true, -2)})
-\rPlease note a service charge of \{client.moneyOrFluMessage(true,
+              String.format("""
+How much do you wish to offer? (%s)
+\rPlease note a service charge of %s will be added.""", client.moneyOrFluMessage(true, true, -2), client.moneyOrFluMessage(true,
                     true,
-                    MathUtility.parseInt(client.getServerConfigs(serviceFee), 0))} will be added.""");
+                    MathUtility.parseInt(client.getServerConfigs(serviceFee), 0))));
 
         if ((price == null) || (price.isEmpty())) {
             return;
         }
 
         client.sendChat(
-              STR."\{IClient.CAMPAIGN_PREFIX}c directsellunit#\{buyer}#\{client.getPlayer()
-                                                                               .getName()}#\{unitID}#\{price}");
+              String.format("%sc directsellunit#%s#%s#%s#%s", IClient.CAMPAIGN_PREFIX, buyer, client.getPlayer()
+                                                                               .getName(), unitID, price));
     }
 
     public void jMenuMercOfferContract_actionPerformed() {
@@ -1786,7 +1786,7 @@ How much do you wish to offer? (\{client.moneyOrFluMessage(true, true, -2)})
         }
 
         Amount = JOptionPane.showInputDialog(getContentPane(),
-              STR."How much do you wish to offer? (\{client.moneyOrFluMessage(true, true, -2)})");
+              String.format("How much do you wish to offer? (%s)", client.moneyOrFluMessage(true, true, -2)));
         if (Amount == null) {
             return;
         }
@@ -1823,7 +1823,7 @@ How much do you wish to offer? (\{client.moneyOrFluMessage(true, true, -2)})
         }
 
         client.sendChat(
-              STR."\{IClient.CAMPAIGN_PREFIX}c offercontract#\{Merc}#\{Amount}#\{Duration}#\{Type}");
+              String.format("%sc offercontract#%s#%s#%s#%s", IClient.CAMPAIGN_PREFIX, Merc, Amount, Duration, Type));
     }
 
     public void jMenuCommanderDefect_actionPerformed() {
@@ -1839,13 +1839,13 @@ How much do you wish to offer? (\{client.moneyOrFluMessage(true, true, -2)})
                 return;
             }
             String shortName = JOptionPane.showInputDialog(getContentPane(),
-                  STR."\{House}'s short name?",
+                  String.format("%s's short name?", House),
                   "Short Name?",
                   JOptionPane.QUESTION_MESSAGE);
             if (shortName == null) {
                 return;
             }
-            client.sendChat(STR."\{IClient.CAMPAIGN_PREFIX}c defect#\{House}#newfaction#\{shortName}");
+            client.sendChat(String.format("%sc defect#%s#newfaction#%s", IClient.CAMPAIGN_PREFIX, House, shortName));
 
             return;
         }
@@ -1860,7 +1860,7 @@ How much do you wish to offer? (\{client.moneyOrFluMessage(true, true, -2)})
         }
 
         // send unconfirmed defection command
-        client.sendChat(STR."\{IClient.CAMPAIGN_PREFIX}c defect#\{House}");
+        client.sendChat(String.format("%sc defect#%s", IClient.CAMPAIGN_PREFIX, House));
     }
 
     public void jMenuCommanderSelfPromote_actionPerformed() {
@@ -1876,11 +1876,11 @@ How much do you wish to offer? (\{client.moneyOrFluMessage(true, true, -2)})
             return;
         }
 
-        client.sendChat(STR."\{IClient.CAMPAIGN_PREFIX}c selfpromote#\{subFactionName}");
+        client.sendChat(String.format("%sc selfpromote#%s", IClient.CAMPAIGN_PREFIX, subFactionName));
     }
 
     public void jMenuCommanderReportStatusMC_actionPerformed() {
-        client.sendChat(STR."\{IClient.CAMPAIGN_PREFIX}c reportstatusmc#");
+        client.sendChat(String.format("%sc reportstatusmc#", IClient.CAMPAIGN_PREFIX));
     }
 
     public void jMenuCommanderFireTechs_actionPerformed() {
@@ -1898,7 +1898,7 @@ How much do you wish to offer? (\{client.moneyOrFluMessage(true, true, -2)})
         }
 
         if (!useAdvanceRepairs && ((techs < 1) || (techs > thePlayer.getTechs()))) {
-            client.addToChat(STR."<b>Try picking a number between 1 and \{thePlayer.getTechs()}<b>");
+            client.addToChat(String.format("<b>Try picking a number between 1 and %s<b>", thePlayer.getTechs()));
             return;
         }
 
@@ -1933,9 +1933,9 @@ How much do you wish to offer? (\{client.moneyOrFluMessage(true, true, -2)})
                 return;
             }
 
-            client.sendChat(STR."\{IClient.CAMPAIGN_PREFIX}c firetechs#\{techs}#\{techType}");
+            client.sendChat(String.format("%sc firetechs#%s#%s", IClient.CAMPAIGN_PREFIX, techs, techType));
         } else {
-            client.sendChat(STR."\{IClient.CAMPAIGN_PREFIX}c firetechs#\{techs}");
+            client.sendChat(String.format("%sc firetechs#%s", IClient.CAMPAIGN_PREFIX, techs));
         }
     }
 
@@ -1946,8 +1946,8 @@ How much do you wish to offer? (\{client.moneyOrFluMessage(true, true, -2)})
 
         if (useAdvanceRepairs && !allowRegTechs) {
             techsToHire = JOptionPane.showInputDialog(getContentPane(),
-                  STR."How many green techs do you want to hire?(\{Integer.parseInt(client.getServerConfigs(
-                        "GreenTechHireCost"))}\{client.moneyOrFluMessage(true, true, -2)})");
+                  String.format("How many green techs do you want to hire?(%s%s)", Integer.parseInt(client.getServerConfigs(
+                        "GreenTechHireCost")), client.moneyOrFluMessage(true, true, -2)));
         } else {
             techsToHire = JOptionPane.showInputDialog(getContentPane(),
                   "How many techs do you want to hire?");
@@ -1966,10 +1966,10 @@ How much do you wish to offer? (\{client.moneyOrFluMessage(true, true, -2)})
         if (useAdvanceRepairs && allowRegTechs) {
 
             java.util.Vector<String> techTypes = new java.util.Vector<>(2, 1);
-            techTypes.add(STR."Green \{MathUtility.parseInt(client.getServerConfigs("GreenTechHireCost"),
-                  0)}\{client.moneyOrFluMessage(true, true, -2)}");
-            techTypes.add(STR."Regular \{MathUtility.parseInt(client.getServerConfigs("RegTechHireCost"),
-                  0)}\{client.moneyOrFluMessage(true, true, -2)}");
+            techTypes.add(String.format("Green %s%s", MathUtility.parseInt(client.getServerConfigs("GreenTechHireCost"),
+                  0), client.moneyOrFluMessage(true, true, -2)));
+            techTypes.add(String.format("Regular %s%s", MathUtility.parseInt(client.getServerConfigs("RegTechHireCost"),
+                  0), client.moneyOrFluMessage(true, true, -2)));
             JComboBox<String> combo = new JComboBox<>(techTypes);
             combo.setEditable(false);
             JOptionPane jop = new JOptionPane(combo,
@@ -1994,9 +1994,9 @@ How much do you wish to offer? (\{client.moneyOrFluMessage(true, true, -2)})
                 return;
             }
 
-            client.sendChat(STR."\{IClient.CAMPAIGN_PREFIX}c hiretechs#\{techs}#\{techType}");
+            client.sendChat(String.format("%sc hiretechs#%s#%s", IClient.CAMPAIGN_PREFIX, techs, techType));
         } else {
-            client.sendChat(STR."\{IClient.CAMPAIGN_PREFIX}c hiretechs#\{techs}");
+            client.sendChat(String.format("%sc hiretechs#%s", IClient.CAMPAIGN_PREFIX, techs));
         }
     }
 
@@ -2057,7 +2057,7 @@ How much do you wish to offer? (\{client.moneyOrFluMessage(true, true, -2)})
             return;
         }
 
-        client.sendChat(STR."\{IClient.CAMPAIGN_PREFIX}c buypilotsfromhouse#\{unitType}#\{unitClass}#\{numberOfPilots}");
+        client.sendChat(String.format("%sc buypilotsfromhouse#%s#%s#%s", IClient.CAMPAIGN_PREFIX, unitType, unitClass, numberOfPilots));
     }
 
     public void jMenuCommanderSellBays_actionPerformed() {
@@ -2074,10 +2074,10 @@ How much do you wish to offer? (\{client.moneyOrFluMessage(true, true, -2)})
             return;
         }
         if ((bays < 1) || (bays > thePlayer.getFreeBays())) {
-            client.addToChat(STR."<b>Try picking a number between 1 and \{thePlayer.getFreeBays()}<b>");
+            client.addToChat(String.format("<b>Try picking a number between 1 and %s<b>", thePlayer.getFreeBays()));
             return;
         }
-        client.sendChat(STR."\{IClient.CAMPAIGN_PREFIX}c sellbays#\{bays}");
+        client.sendChat(String.format("%sc sellbays#%s", IClient.CAMPAIGN_PREFIX, bays));
     }
 
     public void jMenuCampaignPartsCache_actionPerformed() {
@@ -2086,16 +2086,16 @@ How much do you wish to offer? (\{client.moneyOrFluMessage(true, true, -2)})
         int year = Integer.parseInt(client.getServerConfigs("CampaignYear"));
 
         result.append(p.getPartsCache().tableComponents(year));
-        client.doParseDataInput(STR."SM|\{result}");
+        client.doParseDataInput(String.format("SM|%s", result));
     }
 
     public void jMenuCommanderBuyBays_actionPerformed() {
         String baysToHire = JOptionPane.showInputDialog(getContentPane(),
-              STR."How many bays do you want to lease?(\{MathUtility.parseInt(client.getServerConfigs(
-                    "CostToBuyNewBay"), 0)}\{client.moneyOrFluMessage(
+              String.format("How many bays do you want to lease?(%s%s)", MathUtility.parseInt(client.getServerConfigs(
+                    "CostToBuyNewBay"), 0), client.moneyOrFluMessage(
                     true,
                     true,
-                    -2)})");
+                    -2)));
 
         if ((baysToHire == null) || (baysToHire.isEmpty())) {
             return;
@@ -2106,7 +2106,7 @@ How much do you wish to offer? (\{client.moneyOrFluMessage(true, true, -2)})
             client.addToChat("Try picking a number greater then 0");
             return;
         }
-        client.sendChat(STR."\{IClient.CAMPAIGN_PREFIX}c buybays#\{bays}");
+        client.sendChat(String.format("%sc buybays#%s", IClient.CAMPAIGN_PREFIX, bays));
     }
 
     public void jMenuHelpViewBuildTables_actionPerformed() {
@@ -2120,7 +2120,7 @@ How much do you wish to offer? (\{client.moneyOrFluMessage(true, true, -2)})
             BuildTableViewer btv = new BuildTableViewer(this, client);
             btv.run();
         } else {
-            client.sendChat(STR."\{IClient.CAMPAIGN_PREFIX}c buildtablelist");
+            client.sendChat(String.format("%sc buildtablelist", IClient.CAMPAIGN_PREFIX));
         }
 
     }
@@ -2160,7 +2160,7 @@ How much do you wish to offer? (\{client.moneyOrFluMessage(true, true, -2)})
             return;
         }
 
-        client.sendChat(STR."\{IClient.CAMPAIGN_PREFIX}c promoteplayer#\{targetPlayer}#\{subFactionName}");
+        client.sendChat(String.format("%sc promoteplayer#%s#%s", IClient.CAMPAIGN_PREFIX, targetPlayer, subFactionName));
 
     }
 
@@ -2189,7 +2189,7 @@ How much do you wish to offer? (\{client.moneyOrFluMessage(true, true, -2)})
             return;
         }
 
-        client.sendChat(STR."\{IClient.CAMPAIGN_PREFIX}c demoteplayer#\{targetPlayer}#\{subFactionName}");
+        client.sendChat(String.format("%sc demoteplayer#%s#%s", IClient.CAMPAIGN_PREFIX, targetPlayer, subFactionName));
 
     }
 
@@ -2214,7 +2214,7 @@ How much do you wish to offer? (\{client.moneyOrFluMessage(true, true, -2)})
               user.getFluff());
 
         if (newFluff != null) {
-            client.sendChat(STR."\{IClient.CAMPAIGN_PREFIX}c FactionLeaderFluff#\{targetPlayer}#\{newFluff}");
+            client.sendChat(String.format("%sc FactionLeaderFluff#%s#%s", IClient.CAMPAIGN_PREFIX, targetPlayer, newFluff));
         }
     }
 
@@ -2232,7 +2232,7 @@ How much do you wish to offer? (\{client.moneyOrFluMessage(true, true, -2)})
             return;
         }
 
-        client.sendChat(STR."\{IClient.CAMPAIGN_PREFIX}c FactionLeaderMute#\{targetPlayer}");
+        client.sendChat(String.format("%sc FactionLeaderMute#%s", IClient.CAMPAIGN_PREFIX, targetPlayer));
     }
 
     public void jMenuLeaderFactionColor_actionPerformed() {
@@ -2243,7 +2243,7 @@ How much do you wish to offer? (\{client.moneyOrFluMessage(true, true, -2)})
 
         if (newColor != null) {
             client.sendChat(
-                  STR."\{IClient.CAMPAIGN_PREFIX}c ChangeHouseColor#\{client.getPlayer().getHouse()}#\{newColor}");
+                  String.format("%sc ChangeHouseColor#%s#%s", IClient.CAMPAIGN_PREFIX, client.getPlayer().getHouse(), newColor));
         }
     }
 
@@ -2255,8 +2255,8 @@ How much do you wish to offer? (\{client.moneyOrFluMessage(true, true, -2)})
 
         if (newColor != null) {
             client.sendChat(
-                  STR."\{IClient.CAMPAIGN_PREFIX}c AdminSetHousePlayerColor#\{client.getPlayer()
-                                                                                    .getHouse()}#\{newColor}");
+                  String.format("%sc AdminSetHousePlayerColor#%s#%s", IClient.CAMPAIGN_PREFIX, client.getPlayer()
+                                                                                    .getHouse(), newColor));
         }
     }
 
@@ -2352,7 +2352,7 @@ How much do you wish to offer? (\{client.moneyOrFluMessage(true, true, -2)})
         }
 
         client.sendChat(
-              STR."\{IClient.CAMPAIGN_PREFIX}c purchaseFactory#\{factoryName}#\{unitType}#\{unitWeight}#\{planet}");
+              String.format("%sc purchaseFactory#%s#%s#%s#%s", IClient.CAMPAIGN_PREFIX, factoryName, unitType, unitWeight, planet));
     }
 
     // Show data about the mek wars client and server
@@ -2366,8 +2366,8 @@ How much do you wish to offer? (\{client.moneyOrFluMessage(true, true, -2)})
         child.setLayout(new BoxLayout(child, BoxLayout.Y_AXIS));
 
         // set the text up.
-        JLabel mekwars = new JLabel(STR."MekWars client Version: \{IClient.CLIENT_VERSION}");
-        JLabel version = new JLabel(STR."MegaMek Version: \{SuiteConstants.VERSION}");
+        JLabel mekwars = new JLabel(String.format("MekWars client Version: %s", IClient.CLIENT_VERSION));
+        JLabel version = new JLabel(String.format("MegaMek Version: %s", SuiteConstants.VERSION));
         JLabel license1 = new JLabel("MekWars client software is under GPL. See");
         JLabel license2 = new JLabel("LICENSE in the root for details.");
         JLabel license3 = new JLabel("Project Info and Server Packages:");
@@ -2435,13 +2435,13 @@ How much do you wish to offer? (\{client.moneyOrFluMessage(true, true, -2)})
 
         java.text.DecimalFormat myFormatter = new java.text.DecimalFormat("#,### kb");
         // set the text up.
-        JLabel freeMem = new JLabel(STR."Free Memory:          \{myFormatter.format(freeMemory / 1024)}");
-        JLabel allocatedMem = new JLabel(STR."Allocated Memory:  \{myFormatter.format(allocatedMemory / 1024)}");
-        JLabel maxMem = new JLabel(STR."Max Memory:           \{myFormatter.format(maxMemory / 1024)}");
-        JLabel totalFreeMem = new JLabel(STR."Total Free Memory: \{myFormatter.format((freeMemory +
+        JLabel freeMem = new JLabel(String.format("Free Memory:          %s", myFormatter.format(freeMemory / 1024)));
+        JLabel allocatedMem = new JLabel(String.format("Allocated Memory:  %s", myFormatter.format(allocatedMemory / 1024)));
+        JLabel maxMem = new JLabel(String.format("Max Memory:           %s", myFormatter.format(maxMemory / 1024)));
+        JLabel totalFreeMem = new JLabel(String.format("Total Free Memory: %s", myFormatter.format((freeMemory +
                                                                                              (maxMemory -
                                                                                                     allocatedMemory)) /
-                                                                                            1024)}");
+                                                                                            1024)));
 
         // center everything
         freeMem.setAlignmentX(Component.LEFT_ALIGNMENT);
@@ -2490,7 +2490,7 @@ How much do you wish to offer? (\{client.moneyOrFluMessage(true, true, -2)})
 
         int typeamount = Unit.MAX_BUILD;
         for (int type = 0; type < typeamount; type++) {
-            String useIt = STR."Use\{Unit.getTypeClassDesc(type)}";
+            String useIt = String.format("Use%s", Unit.getTypeClassDesc(type));
 
             if (!Boolean.parseBoolean(client.getServerConfigs(useIt))) {
                 continue;
@@ -2551,9 +2551,9 @@ How much do you wish to offer? (\{client.moneyOrFluMessage(true, true, -2)})
         typeamount = 1;
         for (int type = 0; type < typeamount; type++) {
             for (int weight = 0; weight < 4; weight++) {
-                String rePodFlu = STR."RePodFlu\{Unit.getWeightClassDesc(weight)}";
-                String rePodCost = STR."RePodCost\{Unit.getWeightClassDesc(weight)}";
-                String rePodComponents = STR."RePodComp\{Unit.getWeightClassDesc(weight)}";
+                String rePodFlu = String.format("RePodFlu%s", Unit.getWeightClassDesc(weight));
+                String rePodCost = String.format("RePodCost%s", Unit.getWeightClassDesc(weight));
+                String rePodComponents = String.format("RePodComp%s", Unit.getWeightClassDesc(weight));
 
                 int rePodCostInt = MathUtility.parseInt(client.getServerConfigs(rePodCost), 0);
                 int rePodComponentsInt = MathUtility.parseInt(client.getServerConfigs(rePodComponents), 0);
@@ -2685,15 +2685,15 @@ How much do you wish to offer? (\{client.moneyOrFluMessage(true, true, -2)})
          * output is directly to main if misc in main is enabled or players has
          * the misc. tab off.
          */
-        client.doParseDataInput(STR."SM|\{result}");
+        client.doParseDataInput(String.format("SM|%s", result));
     }
 
     private String pilotSkillBVBlurbLine(String a, String b) {//BK added
         // builds help menu's pilot skill bv blurb, wants a and b to build server config lookup and get the value
-        int i = Integer.parseInt(client.getServerConfigs(STR."chancefor\{a}for\{b}"));
+        int i = Integer.parseInt(client.getServerConfigs(String.format("chancefor%sfor%s", a, b)));
 
         if (i > 0) {
-            return STR." \{b} xp cost: \{i}";
+            return String.format(" %s xp cost: %s", b, i);
         } else {
             return "";
         }
@@ -2711,7 +2711,7 @@ How much do you wish to offer? (\{client.moneyOrFluMessage(true, true, -2)})
                    pilotSkillBVBlurbLine(fullName, "BattleArmor") +
                    pilotSkillBVBlurbLine(fullName, "Aero");//not sure where to get skill reiterable list for unit types
         if (s.length() > 1) {
-            s = STR."<tr><td>\{skill}</td><td>\{fullName}</td><td>\{shortName}<br>\{s}</td></tr>";
+            s = String.format("<tr><td>%s</td><td>%s</td><td>%s<br>%s</td></tr>", skill, fullName, shortName, s);
         }
         return s;
     }
@@ -2739,7 +2739,10 @@ How much do you wish to offer? (\{client.moneyOrFluMessage(true, true, -2)})
               "Neural interface to the clan enhanced imaging system<br>-1 To PSR<br>+2 when targeting with TC instead of +3<br>Can Target without TC at +6<br>Reduces all forest and Smoke mods to 1<br>Pilot receives 1 point of damage every time Units IS is hit,<br>If you fail a roll of 7+<br>BA's recieve 1 extra point of damage every time they are hit.");
         result += pilotSkillBlurbLine("Gifted",
               "GT",
-              STR."Pilots receive an extra \{client.getServerConfigs("GiftedPercent")}% chance to gain a skill when they fail<br>to level Piloting or Gunnery after a win.");
+              new StringBuilder("Pilots receive an extra ")
+                    .append(client.getServerConfigs("GiftedPercent"))
+                    .append("% chance to gain a skill when they fail<br>to level Piloting or Gunnery after a win.")
+                    .toString());
         result += pilotSkillBlurbLine("Gunnery Ballistic",
               "GB",
               "NOTE: This is an unofficial rule. Pilot gets a -1 to-hit bonus on all<br>ballistic weapons (MGs, all ACs, Gauss rifles).");
@@ -2798,7 +2801,7 @@ How much do you wish to offer? (\{client.moneyOrFluMessage(true, true, -2)})
          * output is directly to main if misc in main is enabled or player's
          * misc. tab is disabled.
          */
-        client.doParseDataInput(STR."SM|\{result}");
+        client.doParseDataInput(String.format("SM|%s", result));
 
     }
 
@@ -2835,7 +2838,7 @@ How much do you wish to offer? (\{client.moneyOrFluMessage(true, true, -2)})
         }
         String selectedMul = list.elementAt(combo.getSelectedIndex());
 
-        client.sendChat(STR."\{IClient.CAMPAIGN_PREFIX}c retrievemul#\{selectedMul}");
+        client.sendChat(String.format("%sc retrievemul#%s", IClient.CAMPAIGN_PREFIX, selectedMul));
     }
 
     /*
@@ -2986,7 +2989,7 @@ How much do you wish to offer? (\{client.moneyOrFluMessage(true, true, -2)})
             return;
         }
 
-        client.sendChat(STR."\{IClient.CAMPAIGN_PREFIX}createarmyfrommul \{selectedMul}#\{fluff}#\{player}");
+        client.sendChat(String.format("%screatearmyfrommul %s#%s#%s", IClient.CAMPAIGN_PREFIX, selectedMul, fluff, player));
     }
 
     public void jMenuSendAllOperationFiles_actionPerformed(ActionEvent actionEvent) {
@@ -3031,7 +3034,7 @@ How much do you wish to offer? (\{client.moneyOrFluMessage(true, true, -2)})
                     LOGGER.error(ex, "Unable to read file: {}", opFile);
                     return;
                 }
-                client.sendChat(STR."\{IClient.CAMPAIGN_PREFIX}c setoperation#short#\{opData}");
+                client.sendChat(String.format("%sc setoperation#short#%s", IClient.CAMPAIGN_PREFIX, opData));
                 opData.setLength(0);
                 opData.trimToSize();
             }
@@ -3046,7 +3049,7 @@ How much do you wish to offer? (\{client.moneyOrFluMessage(true, true, -2)})
             return;
         }
 
-        File opFile = new File(STR."./data/operations/short/\{opName}.txt");
+        File opFile = new File(String.format("./data/operations/short/%s.txt", opName));
 
         if (!opFile.exists()) {
             return;
@@ -3071,13 +3074,13 @@ How much do you wish to offer? (\{client.moneyOrFluMessage(true, true, -2)})
             return;
         }
 
-        client.sendChat(STR."\{IClient.CAMPAIGN_PREFIX}c setoperation#short#\{opData}");
+        client.sendChat(String.format("%sc setoperation#short#%s", IClient.CAMPAIGN_PREFIX, opData));
     }
 
     public void jMenuUpdateOperations_actionPerformed(ActionEvent e) {
-        client.sendChat(STR."\{IClient.CAMPAIGN_PREFIX}c adminlockcampaign");
-        client.sendChat(STR."\{IClient.CAMPAIGN_PREFIX}c updateoperations");
-        client.sendChat(STR."\{IClient.CAMPAIGN_PREFIX}c adminunlockcampaign");
+        client.sendChat(String.format("%sc adminlockcampaign", IClient.CAMPAIGN_PREFIX));
+        client.sendChat(String.format("%sc updateoperations", IClient.CAMPAIGN_PREFIX));
+        client.sendChat(String.format("%sc adminunlockcampaign", IClient.CAMPAIGN_PREFIX));
 
     }
 
@@ -3102,7 +3105,7 @@ How much do you wish to offer? (\{client.moneyOrFluMessage(true, true, -2)})
 
         String opName = (String) opCombo.getSelectedItem();
 
-        client.sendChat(STR."\{IClient.CAMPAIGN_PREFIX}c RETRIEVEOPERATION#short#\{opName}");
+        client.sendChat(String.format("%sc RETRIEVEOPERATION#short#%s", IClient.CAMPAIGN_PREFIX, opName));
     }
 
     public void jMenuSetOperationFile_actionPerformed(ActionEvent e) {
@@ -3126,7 +3129,7 @@ How much do you wish to offer? (\{client.moneyOrFluMessage(true, true, -2)})
 
         String opName = (String) opCombo.getSelectedItem();
 
-        File opFile = new File(STR."./data/operations/short/\{opName}.txt");
+        File opFile = new File(String.format("./data/operations/short/%s.txt", opName));
 
         if (!opFile.exists()) {
             return;
@@ -3151,7 +3154,7 @@ How much do you wish to offer? (\{client.moneyOrFluMessage(true, true, -2)})
             return;
         }
 
-        client.sendChat(STR."\{IClient.CAMPAIGN_PREFIX}c setoperation#short#\{opData}");
+        client.sendChat(String.format("%sc setoperation#short#%s", IClient.CAMPAIGN_PREFIX, opData));
     }
 
     private void addMenuListener(Object[] components) {

@@ -77,7 +77,7 @@ public class AnimationThread extends Thread {
     }//end run()
 
     private void setLabelText(String s) {
-        splash.getImageLabel().setText(STR."<HTML><CENTER><b>\{s}</b></CENTER></HTML>");
+        splash.getImageLabel().setText(String.format("<HTML><CENTER><b>%s</b></CENTER></HTML>", s));
         splash.getProgressBar().setValue(progress);
     }
 }//end AnimationThread

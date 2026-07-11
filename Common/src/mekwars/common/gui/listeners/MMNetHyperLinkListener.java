@@ -113,9 +113,9 @@ public class MMNetHyperLinkListener implements HyperlinkListener {
                     String command = event.getDescription();
                     command = command.substring(7);
                     StringTokenizer commandStr = new StringTokenizer(command, "*");
-                    command = STR."\{commandStr.nextToken()}, \{commandStr.nextToken()}";
-                    LOGGER.debug(STR."Command \{command}");
-                    client.sendChat(STR."/mail \{command}");
+                    command = String.format("%s, %s", commandStr.nextToken(), commandStr.nextToken());
+                    LOGGER.debug(String.format("Command %s", command));
+                    client.sendChat(String.format("/mail %s", command));
                 } else if (event.getDescription().startsWith("MEK_INFO")) {
                     String command = event.getDescription();
                     command = command.substring(7);

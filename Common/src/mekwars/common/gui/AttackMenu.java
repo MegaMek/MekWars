@@ -114,9 +114,9 @@ public class AttackMenu extends JMenu implements ActionListener {
         String menuItemName;
 
         if (!fullMenu) {
-            menuItemName = STR."<html><font color=\{color}>\{currName}</font></html>";
+            menuItemName = String.format("<html><font color=%s>%s</font></html>", color, currName);
         } else {
-            menuItemName = STR." - \{currName}";
+            menuItemName = String.format(" - %s", currName);
         }
 
         JMenuItem currItem = new JMenuItem(menuItemName);
@@ -192,8 +192,8 @@ public class AttackMenu extends JMenu implements ActionListener {
                     double minOwn = MathUtility.parseDouble(opProps[AttackMenu.OP_MIN_OWN], 0.0);
                     double maxOwn = MathUtility.parseDouble(opProps[AttackMenu.OP_MAX_OWN], 0.0);
                     String legalDefenders = opProps[AttackMenu.OP_LEGAL_DEFENDERS];
-                    String allowPlanetFlags = STR."\{opProps[AttackMenu.OP_ALLOW_ED_PLANET_FLAGS]}^";
-                    String disallowPlanetFlags = STR."\{opProps[AttackMenu.OP_DISALLOW_ED_PLANET_FLAGS]}^";
+                    String allowPlanetFlags = String.format("%s^", opProps[AttackMenu.OP_ALLOW_ED_PLANET_FLAGS]);
+                    String disallowPlanetFlags = String.format("%s^", opProps[AttackMenu.OP_DISALLOW_ED_PLANET_FLAGS]);
                     boolean reserveOnly = MathUtility.parseBoolean(opProps[AttackMenu.OP_AFR], false);
                     int minAccessLevel = MathUtility.parseInt(opProps[AttackMenu.OP_ACCESS_LEVEL], 0);
 
@@ -273,7 +273,7 @@ public class AttackMenu extends JMenu implements ActionListener {
                             }
 
                             if (!tp.getPlanetFlags().containsKey(key)) {
-                                LOGGER.debug(STR."\{tp.getName()} does not have flag: \{key}");
+                                LOGGER.debug(String.format("%s does not have flag: %s", tp.getName(), key));
                                 allowOp = false;
                                 break;
                             }
@@ -304,7 +304,7 @@ public class AttackMenu extends JMenu implements ActionListener {
 
                             if (tp.getPlanetFlags().containsKey(key)) {
                                 allowOp = false;
-                                LOGGER.debug(STR."\{tp.getName()} has flag: \{key}");
+                                LOGGER.debug(String.format("%s has flag: %s", tp.getName(), key));
                                 break;
                             }
                         }
@@ -459,7 +459,7 @@ public class AttackMenu extends JMenu implements ActionListener {
 
     private boolean checkAllOpsMenuItems(TreeMap<String, String[]> allOps, String currName) {
         if (!allOps.containsKey(currName)) {
-            LOGGER.debug(STR."Error in updateMenuItems(): no _\{currName}_ in allOps.");
+            LOGGER.debug(String.format("Error in updateMenuItems(): no _%s_ in allOps.", currName));
 
             StringBuilder allOpsList = new StringBuilder("allOps contains: ");
 
@@ -496,7 +496,7 @@ public class AttackMenu extends JMenu implements ActionListener {
 
         switch (name) {
             case "cmdCancelGames" -> {
-                client.sendChat(STR."\{IClient.CAMPAIGN_PREFIX}c terminate");
+                client.sendChat(String.format("%sc terminate", IClient.CAMPAIGN_PREFIX));
                 return;
             }
 
@@ -516,7 +516,7 @@ public class AttackMenu extends JMenu implements ActionListener {
                 //first, pick an army
                 TreeSet<String> names = new TreeSet<>();
                 for (CArmy currArmy : client.getPlayer().getArmies()) {
-                    names.add(STR."#\{currArmy.getID()} - BV: \{currArmy.getBV()}");
+                    names.add(String.format("#%s - BV: %s", currArmy.getID(), currArmy.getBV()));
                 }
 
                 JComboBox<String> armyCombo = new JComboBox(names.toArray());
@@ -546,7 +546,7 @@ public class AttackMenu extends JMenu implements ActionListener {
                     armyID = Integer.parseInt(armyName.substring(1, armyName.indexOf(" ")).trim());
                 }
 
-                client.sendChat(STR."\{IClient.CAMPAIGN_PREFIX}c checkarmyeligibility#\{armyID}#\{attackName}");
+                client.sendChat(String.format("%sc checkarmyeligibility#%s#%s", IClient.CAMPAIGN_PREFIX, armyID, attackName));
                 return;
             }
 
@@ -555,7 +555,7 @@ public class AttackMenu extends JMenu implements ActionListener {
              * Game status
              */
             case "cmdGamesStatus" -> {
-                client.sendChat(STR."\{IClient.CAMPAIGN_PREFIX}c games");
+                client.sendChat(String.format("%sc games", IClient.CAMPAIGN_PREFIX));
                 return;
             }
 
@@ -663,7 +663,7 @@ public class AttackMenu extends JMenu implements ActionListener {
         if (armyID < 0) {
             new ArmyViewerDialog(client, name, null, ArmyViewerDialog.AVD_ATTACK, planetName, null, -1, -1);
         } else {
-            client.sendChat(STR."\{IClient.CAMPAIGN_PREFIX}c attack#\{name}#\{armyID}#\{planetName}");
+            client.sendChat(String.format("%sc attack#%s#%s#%s", IClient.CAMPAIGN_PREFIX, name, armyID, planetName));
         }
     }
 

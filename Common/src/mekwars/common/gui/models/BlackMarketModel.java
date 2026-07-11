@@ -232,11 +232,11 @@ public class BlackMarketModel extends AbstractTableModel {
         private @NonNull String getDescription(CBMUnit mm) {
             String description = "";
             if (!hiddenUnits) {
-                description = STR."<html><body>#\{mm.getAuctionID()} \{mm.getEmbeddedUnit()
+                description = String.format("<html><body>#%s %s (%s)<br>", mm.getAuctionID(), mm.getEmbeddedUnit()
                                                                              .getEntity()
-                                                                             .getChassis()} (\{mm.getEmbeddedUnit()
+                                                                             .getChassis(), mm.getEmbeddedUnit()
                                                                                                      .getEntity()
-                                                                                                     .getModel()})<br>";
+                                                                                                     .getModel());
 
 
                 if (mm.getEmbeddedUnit().getC3Level() > Unit.C3_NONE) {

@@ -67,7 +67,7 @@ public class UnitRePodDialogCommand extends Command {
             String unitId = stringTokenizer.nextToken();
 
             if (!stringTokenizer.hasMoreTokens()) {
-                String toUser = STR."CH|CLIENT: Your faction has no re-pod options for Unit \{unitId}.";
+                String toUser = String.format("CH|CLIENT: Your faction has no re-pod options for Unit %s.", unitId);
                 client.doParseDataInput(toUser);
             } else {
                 String chassisList = stringTokenizer.nextToken();

@@ -168,7 +168,7 @@ public class InnerStellarMap extends JComponent
                 LOGGER.info("Made cache dir...");
             }
 
-            conf = (InnerStellarMapConfig) xml.fromXML(new FileReader(STR."\{client.getCacheDir()}/mapconf.xml"));
+            conf = (InnerStellarMapConfig) xml.fromXML(new FileReader(String.format("%s/mapconf.xml", client.getCacheDir())));
 
             if (conf.getDisplay().length != displayStr.length) {
                 conf = new InnerStellarMapConfig();
@@ -309,7 +309,7 @@ public class InnerStellarMap extends JComponent
      */
     public void processTick() {
         try {
-            new MMNetXStream().toXML(conf, new FileWriter(STR."\{client.getCacheDir()}/mapconf.xml"));
+            new MMNetXStream().toXML(conf, new FileWriter(String.format("%s/mapconf.xml", client.getCacheDir())));
         } catch (IOException e1) {
             LOGGER.error(e1, "Error loading map conf... {}", e1.getLocalizedMessage());
         }
@@ -364,9 +364,9 @@ public class InnerStellarMap extends JComponent
 
         // save the config
         client.getConfig().setParam("SELECTED_PLANET", planet.getName());
-        client.getConfig().setParam("MAP_ZOOM_LEVEL", STR."\{conf.getScale()}");
-        client.getConfig().setParam("MAP_Y_OFFSET", STR."\{(int) conf.getOffset().getY()}");
-        client.getConfig().setParam("MAP_X_OFFSET", STR."\{(int) conf.getOffset().getX()}");
+        client.getConfig().setParam("MAP_ZOOM_LEVEL", String.format("%s", conf.getScale()));
+        client.getConfig().setParam("MAP_Y_OFFSET", String.format("%s", (int) conf.getOffset().getY()));
+        client.getConfig().setParam("MAP_X_OFFSET", String.format("%s", (int) conf.getOffset().getX()));
 
         client.getConfig().saveConfig();
         client.setConfig();
@@ -417,17 +417,17 @@ public class InnerStellarMap extends JComponent
                     }
 
                     label = new JEditorPane("text/html",
-                          STR."<html>\{mapPanel.getPPanel()
+                          String.format("<html>%s<b>Original Owner:</b><br><font color=%s>%s</font></html>", mapPanel.getPPanel()
                                              .getPlanet()
                                              .getAdvanceDescription(client.getUser(client.getUsername())
-                                                                          .getUserLevel())}<b>Original Owner:</b><br><font color=\{color}>\{name}</font></html>");
+                                                                          .getUserLevel()), color, name));
                     label.setEditable(false);
                     label.setCaretPosition(0);
                     label.setPreferredSize(new java.awt.Dimension(500, 400));
                     JOptionPane.showMessageDialog(
                           InnerStellarMap.this,
                           new JScrollPane(label),
-                          STR."Information for \{mapPanel.getPPanel().getPlanet().getName()}",
+                          String.format("Information for %s", mapPanel.getPPanel().getPlanet().getName()),
                           JOptionPane.INFORMATION_MESSAGE);
                 } else {
                     House houseByName = client.getData()
@@ -441,9 +441,9 @@ public class InnerStellarMap extends JComponent
                     }
 
                     label = new JEditorPane("text/html",
-                          STR."<html>\{mapPanel.getPPanel()
+                          String.format("<html>%s<b>Original Owner:</b><br><font color=%s>%s</font></html>", mapPanel.getPPanel()
                                              .getPlanet()
-                                             .getLongDescription(true)}<b>Original Owner:</b><br><font color=\{color}>\{name}</font></html>");
+                                             .getLongDescription(true), color, name));
                     // client.getData().getHouseByName("hi").getName();
                     label.setEditable(false);
                     label.setCaretPosition(0);
@@ -451,7 +451,7 @@ public class InnerStellarMap extends JComponent
                     JOptionPane.showMessageDialog(
                           InnerStellarMap.this,
                           new JScrollPane(label),
-                          STR."Information for \{mapPanel.getPPanel().getPlanet().getName()}",
+                          String.format("Information for %s", mapPanel.getPPanel().getPlanet().getName()),
                           javax.swing.JOptionPane.INFORMATION_MESSAGE);
                 }
             });
@@ -580,17 +580,17 @@ public class InnerStellarMap extends JComponent
                     }
 
                     label = new JEditorPane("text/html",
-                          STR."<html>\{mapPanel.getPPanel()
+                          String.format("<html>%s<b>Original Owner:</b><br><font color=%s>%s</font></html>", mapPanel.getPPanel()
                                              .getPlanet()
                                              .getAdvanceDescription(client.getUser(client.getUsername())
-                                                                          .getUserLevel())}<b>Original Owner:</b><br><font color=\{color}>\{name}</font></html>");
+                                                                          .getUserLevel()), color, name));
                     label.setEditable(false);
                     label.setCaretPosition(0);
                     label.setPreferredSize(new Dimension(500, 400));
                     JOptionPane.showMessageDialog(
                           InnerStellarMap.this,
                           new JScrollPane(label),
-                          STR."Information for \{mapPanel.getPPanel().getPlanet().getName()}",
+                          String.format("Information for %s", mapPanel.getPPanel().getPlanet().getName()),
                           JOptionPane.INFORMATION_MESSAGE);
                 } else {
                     House houseByName = client.getData()
@@ -604,9 +604,9 @@ public class InnerStellarMap extends JComponent
                     }
 
                     label = new javax.swing.JEditorPane("text/html",
-                          STR."<html>\{mapPanel.getPPanel()
+                          String.format("<html>%s<b>Original Owner:</b><br><font color=%s>%s</font></html>", mapPanel.getPPanel()
                                              .getPlanet()
-                                             .getLongDescription(true)}<b>Original Owner:</b><br><font color=\{color}>\{name}</font></html>");
+                                             .getLongDescription(true), color, name));
                     // client.getData().getHouseByName("hi").getName();
                     label.setEditable(false);
                     label.setCaretPosition(0);
@@ -614,7 +614,7 @@ public class InnerStellarMap extends JComponent
                     javax.swing.JOptionPane.showMessageDialog(
                           mekwars.common.gui.InnerStellarMap.this,
                           new javax.swing.JScrollPane(label),
-                          STR."Information for \{mapPanel.getPPanel().getPlanet().getName()}",
+                          String.format("Information for %s", mapPanel.getPPanel().getPlanet().getName()),
                           javax.swing.JOptionPane.INFORMATION_MESSAGE);
                 }
             }
@@ -815,13 +815,13 @@ public class InnerStellarMap extends JComponent
                 try {
                     white = StringUtils.html2Color(houseColor);
                 } catch (Exception ex) {
-                    LOGGER.error(ex, STR."Bad House for planet: \{p.getName()}");
+                    LOGGER.error(ex, String.format("Bad House for planet: %s", p.getName()));
                 }
             } else {
                 try {
                     white = adjustColor(StringUtils.html2Color(houseColor));
                 } catch (Exception ex) {
-                    LOGGER.error(ex, STR."Bad House for planet: \{p.getName()}");
+                    LOGGER.error(ex, String.format("Bad House for planet: %s", p.getName()));
                 }
             }
 
@@ -1030,7 +1030,7 @@ public class InnerStellarMap extends JComponent
         if (conf.getDisplay()[DISPLAY_TOOLTIPS]) {
 
             Planet planet = nearestNeighbour(scr2mapX(mouseEvent.getX()), scr2mapY(mouseEvent.getY()));
-            StringBuilder result = new StringBuilder(STR."<html><center><b><u>\{planet.getName()}</b></u></center>");
+            StringBuilder result = new StringBuilder(String.format("<html><center><b><u>%s</b></u></center>", planet.getName()));
             result.append("<TABLE CELLPADDING=1 CELLSPACING=1>");
 
             for (House house : planet.getInfluence().getHouses()) {
@@ -1044,11 +1044,11 @@ public class InnerStellarMap extends JComponent
                     id = house.getId();
                 }
 
-                result.append(STR."<TR><TD><font color=\{color}>\{name}</font></TD><TD>\{Math.floor((double) (100 *
+                result.append(String.format("<TR><TD><font color=%s>%s</font></TD><TD>%s%%</TD></TR>", color, name, Math.floor((double) (100 *
                                                                                                                     planet.getInfluence()
                                                                                                                           .getInfluence(
                                                                                                                                 id)) /
-                                                                                                          planet.getConquestPoints())}%</TD></TR>");
+                                                                                                          planet.getConquestPoints())));
             }
             result.append("</TABLE></html>");
 

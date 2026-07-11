@@ -28,7 +28,7 @@ public class MachineGunChoicePanel extends javax.swing.JPanel {
         chBurst.setSelected(m_mounted.isRapidFire());
 
         // setup
-        chBurst.setText(STR."Rapid Fire MG (\{customUnitDialog.getEntity().getLocationAbbr(location)})");
+        chBurst.setText(String.format("Rapid Fire MG (%s)", customUnitDialog.getEntity().getLocationAbbr(location)));
         add(chBurst);
     }
 
@@ -42,8 +42,8 @@ public class MachineGunChoicePanel extends javax.swing.JPanel {
     public void applyChoice() {
         if (m_mounted.isRapidFire() != chBurst.isSelected()) {
             customUnitDialog.getClient().sendChat(
-                  STR."\{mekwars.common.campaign.clientutils.protocol.IClient.CAMPAIGN_PREFIX}c setunitburst#\{customUnitDialog.getEntity()
-                                                                                                                     .getExternalId()}#\{location}#\{slot}#\{chBurst.isSelected()}");
+                  String.format("%sc setunitburst#%s#%s#%s#%s", mekwars.common.campaign.clientutils.protocol.IClient.CAMPAIGN_PREFIX, customUnitDialog.getEntity()
+                                                                                                                     .getExternalId(), location, slot, chBurst.isSelected()));
         }
     }
 

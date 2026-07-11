@@ -81,7 +81,7 @@ public final class InfluencePointsDialog implements java.awt.event.ActionListene
 
                 for (UnitFactory factory : planet.getUnitFactories()) {
                     if (factory.getTicksUntilRefresh() > 0) {
-                        factories.add(STR."\{planet.getName()}: \{factory.getName()}(\{factory.getTicksUntilRefresh()})");
+                        factories.add(String.format("%s: %s(%s)", planet.getName(), factory.getName(), factory.getTicksUntilRefresh()));
                     }
                 }
             }
@@ -188,12 +188,12 @@ public final class InfluencePointsDialog implements java.awt.event.ActionListene
         if (selection != null) {
             if (selection.equals(refreshCommand)) {
                 cost = Integer.parseInt(client.getServerConfigs("FluToRefreshFactory"));
-                costLabel.setText(STR."\{client.getServerConfigs("FluLongName")} Required: \{cost} \{client.getServerConfigs(
-                      "FluShortName")}");
+                costLabel.setText(String.format("%s Required: %s %s", client.getServerConfigs("FluLongName"), cost, client.getServerConfigs(
+                      "FluShortName")));
                 dialog.repaint();
             } else if (selection.equals(client.getServerConfigs("MoneyLongName"))) {
                 int total = cost * Integer.parseInt(client.getServerConfigs("Cbills_Per_Flu"));
-                costLabel.setText(STR."Result: Gain \{client.moneyOrFluMessage(true, true, total)}");
+                costLabel.setText(String.format("Result: Gain %s", client.moneyOrFluMessage(true, true, total)));
             }
         }
     }
@@ -218,12 +218,12 @@ public final class InfluencePointsDialog implements java.awt.event.ActionListene
                             String factory = factoryInfo.substring(planet.length() + 2, factoryInfo.indexOf("("))
                                                    .trim();
                             String useFlu = "true";
-                            client.sendChat(STR."\{IClient.CAMPAIGN_PREFIX}c refreshFactory#\{planet}#\{factory}#\{useFlu}");
+                            client.sendChat(String.format("%sc refreshFactory#%s#%s#%s", IClient.CAMPAIGN_PREFIX, planet, factory, useFlu));
                         }
                     } else if (selection.equals(client.getServerConfigs("MoneyLongName"))) {
-                        client.sendChat(STR."\{IClient.CAMPAIGN_PREFIX}c useinfluence#4#\{amountText.getText()}");
+                        client.sendChat(String.format("%sc useinfluence#4#%s", IClient.CAMPAIGN_PREFIX, amountText.getText()));
                     } else {
-                        client.sendChat(STR."\{IClient.CAMPAIGN_PREFIX}mail \{client.getUsername()}No Influence Spent. Options are disabled on this server.");
+                        client.sendChat(String.format("%smail %sNo Influence Spent. Options are disabled on this server.", IClient.CAMPAIGN_PREFIX, client.getUsername()));
                     }
                 }
 
@@ -240,14 +240,14 @@ public final class InfluencePointsDialog implements java.awt.event.ActionListene
                     if (selection.equals(refreshCommand)) {
                         if (refreshComboBox.getItemCount() >= 1) {refreshComboBox.setSelectedIndex(0);}
                         cost = Integer.parseInt(client.getServerConfigs("FluToRefreshFactory"));
-                        costLabel.setText(STR."\{client.getServerConfigs("FluLongName")} Required: \{cost} \{client.getServerConfigs(
-                              "FluShortName")}");
+                        costLabel.setText(String.format("%s Required: %s %s", client.getServerConfigs("FluLongName"), cost, client.getServerConfigs(
+                              "FluShortName")));
                         makeVisible(false, false, true);
                     } else if (selection.equalsIgnoreCase(client.getServerConfigs("MoneyLongName"))) {
                         amountText.setText("0");
                         cost = Integer.parseInt(amountText.getText());
                         int total = cost * Integer.parseInt(client.getServerConfigs("Cbills_Per_Flu"));
-                        costLabel.setText(STR."Result: Gain \{client.moneyOrFluMessage(true, true, total)}");
+                        costLabel.setText(String.format("Result: Gain %s", client.moneyOrFluMessage(true, true, total)));
                         makeVisible(false, false, false);
                     } else {
                         makeVisible(true, false, false);

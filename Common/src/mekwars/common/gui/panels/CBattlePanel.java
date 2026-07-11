@@ -166,12 +166,12 @@ public class CBattlePanel extends JPanel {
                 if (curGame.getCurrentPlayers().size() < curGame.getMaxPlayers() || client.isMod()) {
 
                     menuItem = new JMenuItem("View game");
-                    menuItem.setActionCommand(STR."V|\{curName}");
+                    menuItem.setActionCommand(String.format("V|%s", curName));
                     menuItem.addActionListener(this);
                     popup.add(menuItem);
                     if (curGame.getStatus().equals("Open")) {
                         menuItem = new javax.swing.JMenuItem("Join game");
-                        menuItem.setActionCommand(STR."J|\{curName}");
+                        menuItem.setActionCommand(String.format("J|%s", curName));
                         menuItem.addActionListener(this);
                         popup.add(menuItem);
                     }
@@ -182,7 +182,7 @@ public class CBattlePanel extends JPanel {
 
                 if (curGame.getHostName().equals(client.getUsername())) {
                     menuItem = new JMenuItem("Stop Hosting");
-                    menuItem.setActionCommand(STR."S|\{curName}");
+                    menuItem.setActionCommand(String.format("S|%s", curName));
                     menuItem.addActionListener(this);
                     popup.add(menuItem);
                 }
@@ -199,130 +199,130 @@ public class CBattlePanel extends JPanel {
 
                     popup.addSeparator();
                     menuItem = new JMenuItem("Restart Dedicated");
-                    menuItem.setActionCommand(STR."RESTART|\{curName}");
+                    menuItem.setActionCommand(String.format("RESTART|%s", curName));
                     menuItem.addActionListener(this);
                     popup.add(menuItem);
                     menuItem = new JMenuItem("Load Autosave");
-                    menuItem.setActionCommand(STR."LOADAUTOSAVE|\{curName}");
+                    menuItem.setActionCommand(String.format("LOADAUTOSAVE|%s", curName));
                     menuItem.addActionListener(this);
                     popup.add(menuItem);
                     popup.addSeparator();
 
                     menuItem = new JMenuItem("Reset Dedicated");
-                    menuItem.setActionCommand(STR."RESET|\{curName}");
+                    menuItem.setActionCommand(String.format("RESET|%s", curName));
                     menuItem.addActionListener(this);
                     serviceMenu.add(menuItem);
                     menuItem = new JMenuItem("Kill Dedicated");
-                    menuItem.setActionCommand(STR."DIE|\{curName}");
+                    menuItem.setActionCommand(String.format("DIE|%s", curName));
                     menuItem.addActionListener(this);
                     serviceMenu.add(menuItem);
                     menuItem = new JMenuItem("Start Dedicated");
-                    menuItem.setActionCommand(STR."START|\{curName}");
+                    menuItem.setActionCommand(String.format("START|%s", curName));
                     menuItem.addActionListener(this);
                     serviceMenu.add(menuItem);
                     menuItem = new JMenuItem("Stop Dedicated");
-                    menuItem.setActionCommand(STR."STOP|\{curName}");
+                    menuItem.setActionCommand(String.format("STOP|%s", curName));
                     menuItem.addActionListener(this);
                     serviceMenu.add(menuItem);
                     menuItem = new JMenuItem("Load Game");
-                    menuItem.setActionCommand(STR."LOADGAME|\{curName}");
+                    menuItem.setActionCommand(String.format("LOADGAME|%s", curName));
                     menuItem.addActionListener(this);
                     serviceMenu.add(menuItem);
 
                     menuItem = new JMenuItem("Display Saved Games");
-                    menuItem.setActionCommand(STR."DSG|\{curName}");
+                    menuItem.setActionCommand(String.format("DSG|%s", curName));
                     menuItem.addActionListener(this);
                     serviceMenu.add(menuItem);
 
                     JMenu logMenu = new JMenu("Logs");
 
                     menuItem = new JMenuItem("Display MegaMek Log");
-                    menuItem.setActionCommand(STR."DMML|\{curName}");
+                    menuItem.setActionCommand(String.format("DMML|%s", curName));
                     menuItem.addActionListener(this);
                     logMenu.add(menuItem);
 
                     menuItem = new JMenuItem("Display Error Log");
-                    menuItem.setActionCommand(STR."DDEL|\{curName}");
+                    menuItem.setActionCommand(String.format("DDEL|%s", curName));
                     menuItem.addActionListener(this);
                     logMenu.add(menuItem);
 
                     menuItem = new JMenuItem("Display Log");
-                    menuItem.setActionCommand(STR."DELL|\{curName}");
+                    menuItem.setActionCommand(String.format("DELL|%s", curName));
                     menuItem.addActionListener(this);
                     logMenu.add(menuItem);
 
                     serviceMenu.add(logMenu);
 
                     menuItem = new JMenuItem("Ping Dedicated");
-                    menuItem.setActionCommand(STR."PING|\{curName}");
+                    menuItem.setActionCommand(String.format("PING|%s", curName));
                     menuItem.addActionListener(this);
                     serviceMenu.add(menuItem);
 
                     menuItem = new JMenuItem("Get Update URL");
-                    menuItem.setActionCommand(STR."GETUPDATEURL|\{curName}");
+                    menuItem.setActionCommand(String.format("GETUPDATEURL|%s", curName));
                     menuItem.addActionListener(this);
                     updateMenu.add(menuItem);
 
                     menuItem = new JMenuItem("Set Update URL");
-                    menuItem.setActionCommand(STR."SETUPDATEURL|\{curName}");
+                    menuItem.setActionCommand(String.format("SETUPDATEURL|%s", curName));
                     menuItem.addActionListener(this);
                     updateMenu.add(menuItem);
 
                     menuItem = new JMenuItem("Update Dedicated");
-                    menuItem.setActionCommand(STR."UPDATE|\{curName}");
+                    menuItem.setActionCommand(String.format("UPDATE|%s", curName));
                     menuItem.addActionListener(this);
                     updateMenu.add(menuItem);
 
                     menuItem = new JMenuItem("Current Owners");
-                    menuItem.setActionCommand(STR."OWNERS|\{curName}");
+                    menuItem.setActionCommand(String.format("OWNERS|%s", curName));
                     menuItem.addActionListener(this);
                     ownersMenu.add(menuItem);
                     menuItem = new JMenuItem("Add Dedicated Owners");
-                    menuItem.setActionCommand(STR."ADDOWNERS|\{curName}");
+                    menuItem.setActionCommand(String.format("ADDOWNERS|%s", curName));
                     menuItem.addActionListener(this);
                     ownersMenu.add(menuItem);
                     menuItem = new JMenuItem("Clear Dedicated Owners");
-                    menuItem.setActionCommand(STR."CLEAROWNERS|\{curName}");
+                    menuItem.setActionCommand(String.format("CLEAROWNERS|%s", curName));
                     menuItem.addActionListener(this);
                     ownersMenu.add(menuItem);
 
                     menuItem = new JMenuItem("Current Port");
-                    menuItem.setActionCommand(STR."GETPORT|\{curName}");
+                    menuItem.setActionCommand(String.format("GETPORT|%s", curName));
                     menuItem.addActionListener(this);
                     portMenu.add(menuItem);
                     menuItem = new JMenuItem("Set Dedicated Port");
-                    menuItem.setActionCommand(STR."SETPORT|\{curName}");
+                    menuItem.setActionCommand(String.format("SETPORT|%s", curName));
                     menuItem.addActionListener(this);
                     portMenu.add(menuItem);
 
                     menuItem = new JMenuItem("Set Dedicated Name");
-                    menuItem.setActionCommand(STR."SETNAME|\{curName}");
+                    menuItem.setActionCommand(String.format("SETNAME|%s", curName));
                     menuItem.addActionListener(this);
                     miscMenu.add(menuItem);
                     menuItem = new JMenuItem("Set Dedicated Comment");
-                    menuItem.setActionCommand(STR."SETCOMMENT|\{curName}");
+                    menuItem.setActionCommand(String.format("SETCOMMENT|%s", curName));
                     menuItem.addActionListener(this);
                     miscMenu.add(menuItem);
                     menuItem = new JMenuItem("Set Dedicated Max Players");
-                    menuItem.setActionCommand(STR."SETPLAYERS|\{curName}");
+                    menuItem.setActionCommand(String.format("SETPLAYERS|%s", curName));
                     menuItem.addActionListener(this);
                     miscMenu.add(menuItem);
 
                     menuItem = new JMenuItem("Current Saved Games Purge Days");
-                    menuItem.setActionCommand(STR."GSGPD|\{curName}");
+                    menuItem.setActionCommand(String.format("GSGPD|%s", curName));
                     menuItem.addActionListener(this);
                     miscMenu.add(menuItem);
                     menuItem = new JMenuItem("Set Saved Games Purge Days");
-                    menuItem.setActionCommand(STR."SSGPD|\{curName}");
+                    menuItem.setActionCommand(String.format("SSGPD|%s", curName));
                     menuItem.addActionListener(this);
                     miscMenu.add(menuItem);
 
                     menuItem = new JMenuItem("Current Restart Count");
-                    menuItem.setActionCommand(STR."CURRENTRESTART|\{curName}");
+                    menuItem.setActionCommand(String.format("CURRENTRESTART|%s", curName));
                     menuItem.addActionListener(this);
                     autoRestartMenu.add(menuItem);
                     menuItem = new JMenuItem("Set Dedicated Restart Count");
-                    menuItem.setActionCommand(STR."SETRESTART|\{curName}");
+                    menuItem.setActionCommand(String.format("SETRESTART|%s", curName));
                     menuItem.addActionListener(this);
                     autoRestartMenu.add(menuItem);
 
@@ -352,216 +352,216 @@ public class CBattlePanel extends JPanel {
             if (actionCommand.startsWith("RESTART|")) {
                 String currName = actionCommand.substring(actionCommand.indexOf('|') + 1);
                 int result = JOptionPane.showConfirmDialog(client.getMainFrame(),
-                      STR."""
+                      String.format("""
 Are you sure you want to restart
-\r\{currName}?""",
+\r%s?""", currName),
                       "Restart?",
                       JOptionPane.YES_NO_OPTION);
                 if (result == JOptionPane.YES_OPTION) {
-                    client.sendChat(STR."\{IClient.CAMPAIGN_PREFIX}mail \{currName},restart");
+                    client.sendChat(String.format("%smail %s,restart", IClient.CAMPAIGN_PREFIX, currName));
                 }
             } else if (actionCommand.startsWith("RESET|")) {
                 String currName = actionCommand.substring(actionCommand.indexOf('|') + 1);
                 int result = JOptionPane.showConfirmDialog(client.getMainFrame(),
-                      STR."""
+                      String.format("""
 Are you sure you want to reset
-\r\{currName}?""",
+\r%s?""", currName),
                       "Reset?",
                       javax.swing.JOptionPane.YES_NO_OPTION);
                 if (result == javax.swing.JOptionPane.YES_OPTION) {
-                    client.sendChat(STR."\{IClient.CAMPAIGN_PREFIX}mail \{currName},reset");
+                    client.sendChat(String.format("%smail %s,reset", IClient.CAMPAIGN_PREFIX, currName));
                 }
             } else if (actionCommand.startsWith("DIE|")) {
                 String currName = actionCommand.substring(actionCommand.indexOf('|') + 1);
                 int result = JOptionPane.showConfirmDialog(client.getMainFrame(),
-                      STR."""
+                      String.format("""
 Are you sure you want to kill
-\r\{currName}?""",
+\r%s?""", currName),
                       "Kill?",
                       JOptionPane.YES_NO_OPTION);
                 if (result == JOptionPane.YES_OPTION) {
-                    client.sendChat(STR."\{IClient.CAMPAIGN_PREFIX}mail \{currName},die");
+                    client.sendChat(String.format("%smail %s,die", IClient.CAMPAIGN_PREFIX, currName));
                 }
             } else if (actionCommand.startsWith("START|")) {
                 String currName = actionCommand.substring(actionCommand.indexOf('|') + 1);
                 int result = JOptionPane.showConfirmDialog(client.getMainFrame(),
-                      STR."""
+                      String.format("""
 Are you sure you want to start
-\r\{currName}?""",
+\r%s?""", currName),
                       "Start?",
                       JOptionPane.YES_NO_OPTION);
                 if (result == JOptionPane.YES_OPTION) {
-                    client.sendChat(STR."\{IClient.CAMPAIGN_PREFIX}mail \{currName},start");
+                    client.sendChat(String.format("%smail %s,start", IClient.CAMPAIGN_PREFIX, currName));
                 }
             } else if (actionCommand.startsWith("STOP|")) {
                 String currName = actionCommand.substring(actionCommand.indexOf('|') + 1);
                 int result = JOptionPane.showConfirmDialog(client.getMainFrame(),
-                      STR."""
+                      String.format("""
 Are you sure you want to stop
-\r\{currName}?""",
+\r%s?""", currName),
                       "Stop?",
                       JOptionPane.YES_NO_OPTION);
                 if (result == JOptionPane.YES_OPTION) {
-                    client.sendChat(STR."\{IClient.CAMPAIGN_PREFIX}mail \{currName},stop");
+                    client.sendChat(String.format("%smail %s,stop", IClient.CAMPAIGN_PREFIX, currName));
                 }
             } else if (actionCommand.startsWith("OWNERS|")) {
                 String currName = actionCommand.substring(actionCommand.indexOf('|') + 1);
-                client.sendChat(STR."\{IClient.CAMPAIGN_PREFIX}mail \{currName},owners");
+                client.sendChat(String.format("%smail %s,owners", IClient.CAMPAIGN_PREFIX, currName));
             } else if (actionCommand.startsWith("CLEAROWNERS|")) {
                 String currName = actionCommand.substring(actionCommand.indexOf('|') + 1);
                 int result = JOptionPane.showConfirmDialog(client.getMainFrame(),
-                      STR."""
+                      String.format("""
 Are you sure you want to clear the owners of
-\r\{currName}?""",
+\r%s?""", currName),
                       "Clear the owners?",
                       JOptionPane.YES_NO_OPTION);
                 if (result == JOptionPane.YES_OPTION) {
-                    client.sendChat(STR."\{IClient.CAMPAIGN_PREFIX}mail \{currName},clearowners");
+                    client.sendChat(String.format("%smail %s,clearowners", IClient.CAMPAIGN_PREFIX, currName));
                 }
             } else if (actionCommand.startsWith("ADDOWNERS|")) {
                 String currName = actionCommand.substring(actionCommand.indexOf('|') + 1);
                 String result = JOptionPane.showInputDialog(client.getMainFrame(),
-                      STR."""
+                      String.format("""
 Enter a list of owners you want to add to
-\r\{currName}
-\r(sperated by $)""",
+\r%s
+\r(sperated by $)""", currName),
                       "Add Owners",
                       JOptionPane.WARNING_MESSAGE);
                 if (result != null && result.length() > 1) {
-                    client.sendChat(STR."\{IClient.CAMPAIGN_PREFIX}mail \{currName},owner \{result}");
+                    client.sendChat(String.format("%smail %s,owner %s", IClient.CAMPAIGN_PREFIX, currName, result));
                 }
             } else if (actionCommand.startsWith("GETPORT|")) {
                 String currName = actionCommand.substring(actionCommand.indexOf('|') + 1);
-                client.sendChat(STR."\{IClient.CAMPAIGN_PREFIX}mail \{currName},port");
+                client.sendChat(String.format("%smail %s,port", IClient.CAMPAIGN_PREFIX, currName));
             } else if (actionCommand.startsWith("SETPORT|")) {
                 String currName = actionCommand.substring(actionCommand.indexOf('|') + 1);
                 String result = JOptionPane.showInputDialog(client.getMainFrame(),
-                      STR."""
+                      String.format("""
 Enter a new port for
-\r\{currName}""",
+\r%s""", currName),
                       "New Port",
                       JOptionPane.WARNING_MESSAGE);
                 if (result != null && result.length() > 1) {
-                    client.sendChat(STR."\{IClient.CAMPAIGN_PREFIX}mail \{currName},port \{result}");
+                    client.sendChat(String.format("%smail %s,port %s", IClient.CAMPAIGN_PREFIX, currName, result));
                 }
             } else if (actionCommand.startsWith("GSGPD|")) {
                 String currName = actionCommand.substring(actionCommand.indexOf('|') + 1);
-                client.sendChat(STR."\{IClient.CAMPAIGN_PREFIX}mail \{currName},savegamepurge");
+                client.sendChat(String.format("%smail %s,savegamepurge", IClient.CAMPAIGN_PREFIX, currName));
             } else if (actionCommand.startsWith("SSGPD|")) {
                 String currName = actionCommand.substring(actionCommand.indexOf('|') + 1);
                 String result = JOptionPane.showInputDialog(client.getMainFrame(),
-                      STR."""
+                      String.format("""
 Enter a new day for
-\r\{currName}""",
+\r%s""", currName),
                       "New days out to purge",
                       JOptionPane.OK_CANCEL_OPTION);
                 if (result != null && !result.isEmpty()) {
-                    client.sendChat(STR."\{IClient.CAMPAIGN_PREFIX}mail \{currName},savegamepurge \{result}");
+                    client.sendChat(String.format("%smail %s,savegamepurge %s", IClient.CAMPAIGN_PREFIX, currName, result));
                 }
             } else if (actionCommand.startsWith("PING|")) {
                 String currName = actionCommand.substring(actionCommand.indexOf('|') + 1);
-                client.sendChat(STR."\{IClient.CAMPAIGN_PREFIX}mail \{currName},ping");
+                client.sendChat(String.format("%smail %s,ping", IClient.CAMPAIGN_PREFIX, currName));
             } else if (actionCommand.startsWith("UPDATE|")) {
                 String currName = actionCommand.substring(actionCommand.indexOf('|') + 1);
-                client.sendChat(STR."\{IClient.CAMPAIGN_PREFIX}mail \{currName},update");
+                client.sendChat(String.format("%smail %s,update", IClient.CAMPAIGN_PREFIX, currName));
             } else if (actionCommand.startsWith("DSG|")) {
                 String currName = actionCommand.substring(actionCommand.indexOf('|') + 1);
-                client.sendChat(STR."\{IClient.CAMPAIGN_PREFIX}mail \{currName},displaysavedgames");
+                client.sendChat(String.format("%smail %s,displaysavedgames", IClient.CAMPAIGN_PREFIX, currName));
             } else if (actionCommand.startsWith("DMML|")) {
                 String currName = actionCommand.substring(actionCommand.indexOf('|') + 1);
-                client.sendChat(STR."\{IClient.CAMPAIGN_PREFIX}mail \{currName},displaymegameklog");
+                client.sendChat(String.format("%smail %s,displaymegameklog", IClient.CAMPAIGN_PREFIX, currName));
             } else if (actionCommand.startsWith("DDEL|")) {
                 String currName = actionCommand.substring(actionCommand.indexOf('|') + 1);
-                client.sendChat(STR."\{IClient.CAMPAIGN_PREFIX}mail \{currName},displaydederrorlog");
+                client.sendChat(String.format("%smail %s,displaydederrorlog", IClient.CAMPAIGN_PREFIX, currName));
             } else if (actionCommand.startsWith("DELL|")) {
                 String currName = actionCommand.substring(actionCommand.indexOf('|') + 1);
-                client.sendChat(STR."\{IClient.CAMPAIGN_PREFIX}mail \{currName},displaydedlog");
+                client.sendChat(String.format("%smail %s,displaydedlog", IClient.CAMPAIGN_PREFIX, currName));
             } else if (actionCommand.startsWith("LOADGAME|")) {
                 String currName = actionCommand.substring(actionCommand.indexOf('|') + 1);
                 String result = null;
                 result = JOptionPane.showInputDialog(client.getMainFrame(),
-                      STR."""
+                      String.format("""
 Enter name of the save file on
-\r\{currName}
-\r(leave blank to load autosave.sav)""",
+\r%s
+\r(leave blank to load autosave.sav)""", currName),
                       "Load Game",
                       JOptionPane.WARNING_MESSAGE);
                 if (result != null) {
-                    client.sendChat(STR."\{IClient.CAMPAIGN_PREFIX}mail \{currName},loadgame \{result}");
+                    client.sendChat(String.format("%smail %s,loadgame %s", IClient.CAMPAIGN_PREFIX, currName, result));
                 }
             } else if (actionCommand.startsWith("LOADAUTOSAVE|")) {
                 String currName = actionCommand.substring(actionCommand.indexOf('|') + 1);
                 int result = JOptionPane.showConfirmDialog(client.getMainFrame(),
-                      STR."""
+                      String.format("""
 Are you sure you want to load the autosave game on
-\r\{currName}?""",
+\r%s?""", currName),
                       "Load Auto Saved Game?",
                       JOptionPane.YES_NO_OPTION);
                 if (result == JOptionPane.YES_OPTION) {
-                    client.sendChat(STR."\{IClient.CAMPAIGN_PREFIX}mail \{currName},loadautosave");
+                    client.sendChat(String.format("%smail %s,loadautosave", IClient.CAMPAIGN_PREFIX, currName));
                 }
             } else if (actionCommand.startsWith("SETNAME|")) {
                 String currName = actionCommand.substring(actionCommand.indexOf('|') + 1);
                 String result = JOptionPane.showInputDialog(client.getMainFrame(),
-                      STR."""
+                      String.format("""
 Enter a new name for
-\r\{currName}
-\rNote: This will kill the Ded. A restart will be required.""",
+\r%s
+\rNote: This will kill the Ded. A restart will be required.""", currName),
                       "New Name",
                       JOptionPane.WARNING_MESSAGE);
                 if (result != null && result.length() > 1) {
-                    client.sendChat(STR."\{IClient.CAMPAIGN_PREFIX}mail \{currName},name \{result}");
-                    client.sendChat(STR."\{IClient.CAMPAIGN_PREFIX}mail \{currName},die");
+                    client.sendChat(String.format("%smail %s,name %s", IClient.CAMPAIGN_PREFIX, currName, result));
+                    client.sendChat(String.format("%smail %s,die", IClient.CAMPAIGN_PREFIX, currName));
                 }
             } else if (actionCommand.startsWith("SETCOMMENT|")) {
                 String currName = actionCommand.substring(actionCommand.indexOf('|') + 1);
                 String result = JOptionPane.showInputDialog(client.getMainFrame(),
-                      STR."""
+                      String.format("""
 Enter a new comment for
-\r\{currName}""",
+\r%s""", currName),
                       "New Comment",
                       JOptionPane.WARNING_MESSAGE);
                 if (result != null && result.length() > 1) {
-                    client.sendChat(STR."\{IClient.CAMPAIGN_PREFIX}mail \{currName},comment \{result}");
+                    client.sendChat(String.format("%smail %s,comment %s", IClient.CAMPAIGN_PREFIX, currName, result));
                 }
             } else if (actionCommand.startsWith("SETPLAYERS|")) {
                 String currName = actionCommand.substring(actionCommand.indexOf('|') + 1);
                 String result = JOptionPane.showInputDialog(client.getMainFrame(),
-                      STR."""
+                      String.format("""
 Enter the max number of players for
-\r\{currName}""",
+\r%s""", currName),
                       "New Players",
                       JOptionPane.WARNING_MESSAGE);
                 if (result != null && !result.isEmpty()) {
-                    client.sendChat(STR."\{IClient.CAMPAIGN_PREFIX}mail \{currName},players \{result}");
+                    client.sendChat(String.format("%smail %s,players %s", IClient.CAMPAIGN_PREFIX, currName, result));
                 }
             } else if (actionCommand.startsWith("CURRENTRESTART|")) {
                 String currName = actionCommand.substring(actionCommand.indexOf('|') + 1);
-                client.sendChat(STR."\{IClient.CAMPAIGN_PREFIX}mail \{currName},restartcount");
+                client.sendChat(String.format("%smail %s,restartcount", IClient.CAMPAIGN_PREFIX, currName));
             } else if (actionCommand.startsWith("SETRESTART|")) {
                 String currName = actionCommand.substring(actionCommand.indexOf('|') + 1);
                 String result = JOptionPane.showInputDialog(client.getMainFrame(),
-                      STR."""
+                      String.format("""
 Enter a new restart count for
-\r\{currName}""",
+\r%s""", currName),
                       "New Restart",
                       JOptionPane.WARNING_MESSAGE);
                 if (result != null && !result.isEmpty()) {
-                    client.sendChat(STR."\{IClient.CAMPAIGN_PREFIX}mail \{currName},restartcount \{result}");
+                    client.sendChat(String.format("%smail %s,restartcount %s", IClient.CAMPAIGN_PREFIX, currName, result));
                 }
             } else if (actionCommand.startsWith("GETUPDATEURL|")) {
                 String currName = actionCommand.substring(actionCommand.indexOf('|') + 1);
-                client.sendChat(STR."\{IClient.CAMPAIGN_PREFIX}mail \{currName},getupdateurl");
+                client.sendChat(String.format("%smail %s,getupdateurl", IClient.CAMPAIGN_PREFIX, currName));
             } else if (actionCommand.startsWith("SETUPDATEURL|")) {
                 String currName = actionCommand.substring(actionCommand.indexOf('|') + 1);
                 String result = JOptionPane.showInputDialog(client.getMainFrame(),
-                      STR."""
+                      String.format("""
 Enter a new update url for
-\r\{currName}""",
+\r%s""", currName),
                       "New Update URL",
                       JOptionPane.WARNING_MESSAGE);
                 if (result != null && !result.isEmpty()) {
-                    client.sendChat(STR."\{IClient.CAMPAIGN_PREFIX}mail \{currName},setupdateurl \{result}");
+                    client.sendChat(String.format("%smail %s,setupdateurl %s", IClient.CAMPAIGN_PREFIX, currName, result));
                 }
             }
         }

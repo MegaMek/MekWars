@@ -122,10 +122,10 @@ public class GUIClientConfig implements IClientConfig, Serializable {
         // not a ded, so fill the images treemap
         images = new TreeMap<>();
 
-        loadImage(STR."\{IMAGE_PATH}logout_colored.gif", "LOGOUT", 20, 20);
-        loadImage(STR."\{IMAGE_PATH}reserve_colored.gif", "RESERVE", 20, 20);
-        loadImage(STR."\{IMAGE_PATH}active_colored.gif", "ACTIVE", 20, 20);
-        loadImage(STR."\{IMAGE_PATH}fighting_colored.gif", "FIGHT", 20, 20);
+        loadImage(String.format("%slogout_colored.gif", IMAGE_PATH), "LOGOUT", 20, 20);
+        loadImage(String.format("%sreserve_colored.gif", IMAGE_PATH), "RESERVE", 20, 20);
+        loadImage(String.format("%sactive_colored.gif", IMAGE_PATH), "ACTIVE", 20, 20);
+        loadImage(String.format("%sfighting_colored.gif", IMAGE_PATH), "FIGHT", 20, 20);
         loadImage(IMAGE_PATH + getParam("LOGO_IMAGE"), "LOGO", 100, 100);
         loadImage(IMAGE_PATH + getParam("TRAY_IMAGE"), "TRAY", 20, 20);
         loadImage(IMAGE_PATH + getParam("REPAIR_IMAGE"), "REPAIR", 100, 100);

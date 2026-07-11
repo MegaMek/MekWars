@@ -281,7 +281,7 @@ public class CustomUnitDialog extends JDialog implements ActionListener {
         panMunitions.setLayout(new SpringLayout());
         MunitionChoicePanel mcp;// replaced repeatedly w/i while loop
         int year = MathUtility.parseInt(client.getServerConfigs("CampaignYear"), 3045);
-        LOGGER.info(STR."Year: \{year}");
+        LOGGER.info(String.format("Year: %s", year));
         int location = -1;// also repeatedly replaced
 
         /*
@@ -429,7 +429,7 @@ public class CustomUnitDialog extends JDialog implements ActionListener {
             }
 
             // add location label
-            panMunitions.add(new JLabel(STR."\{entity.getLocationAbbr(loc)}:", SwingConstants.TRAILING));
+            panMunitions.add(new JLabel(String.format("%s:", entity.getLocationAbbr(loc)), SwingConstants.TRAILING));
 
             panMunitions.add(mcp);
             m_vMunitions.addElement(mcp);
@@ -549,12 +549,18 @@ public class CustomUnitDialog extends JDialog implements ActionListener {
             if (entity instanceof Mek mek) {
                 if (mek.isAutoEject() == autoEject) {
                     mek.setAutoEject(!autoEject);
-                    client.sendChat(STR."\{IClient.CAMPAIGN_PREFIX}c setautoeject#\{mek.getExternalId()}#\{!autoEject}");
+                    client.sendChat(String.format("%sc setautoeject#%s#%s", IClient.CAMPAIGN_PREFIX, mek.getExternalId(), !autoEject));
                 }
 
                 if (pilot.getSkills().has(PilotSkill.EdgeSkillID)) {
                     client.sendChat(
-                          STR."\{IClient.CAMPAIGN_PREFIX}c setedgeSkills#\{mek.getExternalId()}#\{tacCB.isSelected()}#\{koCB.isSelected()}#\{headHitsCB.isSelected()}#\{explosionsCB.isSelected()}");
+                          new StringBuilder(IClient.CAMPAIGN_PREFIX).append("c setedgeSkills#")
+                                .append(mek.getExternalId()).append('#')
+                                .append(tacCB.isSelected()).append('#')
+                                .append(koCB.isSelected()).append('#')
+                                .append(headHitsCB.isSelected()).append('#')
+                                .append(explosionsCB.isSelected())
+                                .toString());
                 }
             }
 
@@ -572,10 +578,10 @@ public class CustomUnitDialog extends JDialog implements ActionListener {
             Object selectedItem = targetSelection.getSelectedItem();
             if (selectedItem instanceof String targetedSystem) {
                 int newTargetSystem = unit.getTargetSystem().getTypeByName(targetedSystem);
-                LOGGER.debug(STR."Targeting Selected: \{newTargetSystem}");
+                LOGGER.debug(String.format("Targeting Selected: %s", newTargetSystem));
                 if (newTargetSystem != unit.getTargetSystem().getCurrentType()) {
                     // Change in targeting - send server notification
-                    client.sendChat(STR."\{IClient.CAMPAIGN_PREFIX}c setTargetSystem#\{unit.getId()}#\{newTargetSystem}");
+                    client.sendChat(String.format("%sc setTargetSystem#%s#%s", IClient.CAMPAIGN_PREFIX, unit.getId(), newTargetSystem));
                 }
             }
         }

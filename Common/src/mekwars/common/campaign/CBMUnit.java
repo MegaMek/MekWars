@@ -167,7 +167,7 @@ public class CBMUnit {
     }
 
     public String getHiddenUnitDescription() {
-        return STR."\{unitWeight} \{unitType}";
+        return String.format("%s %s", unitWeight, unitType);
     }
 
     public boolean playerIsSeller() {

@@ -82,18 +82,18 @@ public class SerializeEntity {
                 result.append(entity.getOwner().getName().trim()).append("*");
                 result.append(entity.getCrew().getHits()).append("*");
 
-                if (forceDevastate) {result.append(STR."\{IEntityRemovalConditions.REMOVE_DEVASTATED}*");} else {
+                if (forceDevastate) {result.append(String.format("%s*", IEntityRemovalConditions.REMOVE_DEVASTATED));} else {
                     result.append(entity.getRemovalCondition()).append("*");
                 }
 
                 switch (entity) {
-                    case BipedMek ignored -> result.append(STR."\{Unit.MEK}*");
-                    case QuadMek ignored -> result.append(STR."\{Unit.QUAD}*");
-                    case Tank ignored -> result.append(STR."\{Unit.VEHICLE}*");
-                    case ProtoMek ignored -> result.append(STR."\{Unit.PROTOMEK}*");
-                    case BattleArmor ignored -> result.append(STR."\{Unit.BATTLEARMOR}*");
-                    case Aero ignored -> result.append(STR."\{Unit.AERO}*");
-                    default -> result.append(STR."\{Unit.INFANTRY}*");
+                    case BipedMek ignored -> result.append(String.format("%s*", Unit.MEK));
+                    case QuadMek ignored -> result.append(String.format("%s*", Unit.QUAD));
+                    case Tank ignored -> result.append(String.format("%s*", Unit.VEHICLE));
+                    case ProtoMek ignored -> result.append(String.format("%s*", Unit.PROTOMEK));
+                    case BattleArmor ignored -> result.append(String.format("%s*", Unit.BATTLEARMOR));
+                    case Aero ignored -> result.append(String.format("%s*", Unit.AERO));
+                    default -> result.append(String.format("%s*", Unit.INFANTRY));
                 }
 
                 //Collect kills
@@ -178,7 +178,7 @@ public class SerializeEntity {
                 result.append(entity.getOwner().getName()).append("*");
                 result.append(externalID).append("*");
 
-                if (forceDevastate) {result.append(STR."\{IEntityRemovalConditions.REMOVE_DEVASTATED}*");} else {
+                if (forceDevastate) {result.append(String.format("%s*", IEntityRemovalConditions.REMOVE_DEVASTATED));} else {
                     result.append(entity.getRemovalCondition()).append("*");
                 }
 

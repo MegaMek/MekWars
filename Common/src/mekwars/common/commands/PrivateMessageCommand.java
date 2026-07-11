@@ -99,10 +99,10 @@ public class PrivateMessageCommand extends Command {
                         int count = client.getMainFrame().getMainPanel().getCommPanel().countMailTabs();
 
                         if (count >= maxTabs) {
-                            client.sendChat(STR."\{IClient.CAMPAIGN_PREFIX}mail \{name}, \{client.getConfigParam(
-                                  "MAX_PM_MESSAGE")}");
+                            client.sendChat(String.format("%smail %s, %s", IClient.CAMPAIGN_PREFIX, name, client.getConfigParam(
+                                  "MAX_PM_MESSAGE")));
                             String sysColour = client.getConfigParam("SYS_MESSAGE_COLOR");
-                            message = STR."<font color=\"\{sysColour}\"><b>\{name} tried to PrivateMessageCommand you while you where busy</b></font>";
+                            message = String.format("<font color=\"%s\"><b>%s tried to PrivateMessageCommand you while you where busy</b></font>", sysColour, name);
                             client.addToChat(message);
                             return;
                         }
@@ -123,28 +123,28 @@ public class PrivateMessageCommand extends Command {
                 if (colorSetting.equals("faction_add") || colorSetting.equals("faction_all")) {
                     addon = addon.isEmpty() ?
                                   "" :
-                                  STR." <b><font color=\"\{factioncolor}\">[\{addon}]</b></font>";
+                                  String.format(" <b><font color=\"%s\">[%s]</b></font>", factioncolor, addon);
                 } else {
-                    addon = addon.isEmpty() ? "" : STR." <b><font color=\"\{usercolor}\">[\{addon}]</b></font>";
+                    addon = addon.isEmpty() ? "" : String.format(" <b><font color=\"%s\">[%s]</b></font>", usercolor, addon);
                 }
 
                 if (colorSetting.equals("faction_name") || colorSetting.equals("faction_all")) {
-                    name = name.isEmpty() ? "" : STR." <b><font color=\"\{factioncolor}\">\{name}</b></font>";
+                    name = name.isEmpty() ? "" : String.format(" <b><font color=\"%s\">%s</b></font>", factioncolor, name);
                 } else {
-                    name = name.isEmpty() ? "" : STR." <b><font color=\"\{usercolor}\">\{name}</b></font>";
+                    name = name.isEmpty() ? "" : String.format(" <b><font color=\"%s\">%s</b></font>", usercolor, name);
                 }
                 //faction mail emote. [does this work server side? never seen it used.]
                 if (message.startsWith("#me")) {
                     if (client.getConfig().isParam("COLORED_EMOTES")) {
-                        message = STR."*** \{name}\{message.substring(3)}";
+                        message = String.format("*** %s%s", name, message.substring(3));
                     } else {
-                        message = STR."*** \{tabName}\{message.substring(3)}";
+                        message = String.format("*** %s%s", tabName, message.substring(3));
                     }
-                    message = STR."<font size=\"\{fontSize}\">\{message}</font>";
+                    message = String.format("<font size=\"%s\">%s</font>", fontSize, message);
                 } else {
                     //load and set chat font colour
-                    message = STR."<font size=\"\{fontSize}\">\{message}</font>";
-                    message = STR."\{name}\{addon}<b>:</b> \{message.trim()}";
+                    message = String.format("<font size=\"%s\">%s</font>", fontSize, message);
+                    message = String.format("%s%s<b>:</b> %s", name, addon, message.trim());
                 }
 
                 //if the user wants to, remove any img tags
@@ -158,7 +158,7 @@ public class PrivateMessageCommand extends Command {
                         String firstHalf = message.substring(0, start);
                         String secondHalf = message.substring(finish + 1);
 
-                        message = STR."\{firstHalf}(img blocked)\{secondHalf}";
+                        message = String.format("%s(img blocked)%s", firstHalf, secondHalf);
                     }
                 }
 
@@ -173,7 +173,7 @@ public class PrivateMessageCommand extends Command {
                 //if PMs show in main, make it red and show there too
                 if (client.getConfig().isParam("MAIN_CHANNEL_PM")) {
                     String sysColour = client.getConfigParam("SYS_MESSAGE_COLOR");
-                    message = STR."<font color=\"\{sysColour}\"><b>Private Mail: </b></font>\{message}";
+                    message = String.format("<font color=\"%s\"><b>Private Mail: </b></font>%s", sysColour, message);
                     client.addToChat(message);
                 }
 

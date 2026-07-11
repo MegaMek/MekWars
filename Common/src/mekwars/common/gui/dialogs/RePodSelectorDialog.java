@@ -309,7 +309,7 @@ public class RePodSelectorDialog extends JFrame
                 }// end if(chassis)
             }// end for(all meks)
         } catch (Exception ex) {
-            LOGGER.error(ex, STR."meks size: \{meks.length} x: \{x}");
+            LOGGER.error(ex, String.format("meks size: %s x: %s", meks.length, x));
         }
 
         meksCurrent = new MekSummary[vMeks.size()];
@@ -336,16 +336,16 @@ public class RePodSelectorDialog extends JFrame
     }
 
     private String formatMek(MekSummary mekSummary) {
-        String result = STR."\{makeLength(mekSummary.getModel(), 12)} \{makeLength(mekSummary.getChassis(),
-              10)} \{makeLength(STR."\{mekSummary.getTons()}",
-              3)} \{makeLength(STR."\{mekSummary.getBV()}", 5)}";
+        String result = String.format("%s %s %s %s", makeLength(mekSummary.getModel(), 12), makeLength(mekSummary.getChassis(),
+              10), makeLength(String.format("%s", mekSummary.getTons()),
+              3), makeLength(String.format("%s", mekSummary.getBV()), 5));
 
         String chassisMods = chassisList.get(UnitUtils.getMekSummaryFileName(mekSummary));
 
         java.util.StringTokenizer mods = new java.util.StringTokenizer(chassisMods, "$");
-        result += STR." \{makeLength(mods.nextToken() + client.moneyOrFluMessage(true, true, -1), 5)}";
-        result += STR." \{makeLength(STR."\{mods.nextToken()}cp", 7)}";
-        result += STR." \{makeLength(mods.nextToken() + client.moneyOrFluMessage(false, true, -1), 5)}";
+        result += String.format(" %s", makeLength(mods.nextToken() + client.moneyOrFluMessage(true, true, -1), 5));
+        result += String.format(" %s", makeLength(String.format("%scp", mods.nextToken()), 7));
+        result += String.format(" %s", makeLength(mods.nextToken() + client.moneyOrFluMessage(false, true, -1), 5));
 
         return result;
     }
@@ -370,7 +370,7 @@ public class RePodSelectorDialog extends JFrame
             previewMek(entity);
         } catch (EntityLoadingException ex) {
             LOGGER.error(ex,
-                  STR."Unable to load mech: \{mekSummary.getSourceFile()}: \{mekSummary.getEntryName()}: \{ex.getMessage()}");
+                  String.format("Unable to load mech: %s: %s: %s", mekSummary.getSourceFile(), mekSummary.getEntryName(), ex.getMessage()));
             clearMechPreview();
         }
     }
@@ -390,7 +390,7 @@ public class RePodSelectorDialog extends JFrame
         if (string.length() == nLength) {
             return string;
         } else if (string.length() > nLength) {
-            return STR."\{string.substring(0, nLength - 2)}..";
+            return String.format("%s..", string.substring(0, nLength - 2));
         } else {
             return string + SPACES.substring(0, nLength - string.length());
         }
@@ -428,9 +428,9 @@ public class RePodSelectorDialog extends JFrame
                 String unitFile = UnitUtils.getMekSummaryFileName(mekSummary);
 
                 if (global) {
-                    client.sendChat(STR."\{IClient.CAMPAIGN_PREFIX}c repod#\{unitId}#GLOBAL#\{unitFile}");
+                    client.sendChat(String.format("%sc repod#%s#GLOBAL#%s", IClient.CAMPAIGN_PREFIX, unitId, unitFile));
                 } else {
-                    client.sendChat(STR."\{IClient.CAMPAIGN_PREFIX}c repod#\{unitId}#\{unitFile}");
+                    client.sendChat(String.format("%sc repod#%s#%s", IClient.CAMPAIGN_PREFIX, unitId, unitFile));
                 }
 
                 Thread.sleep(125);
@@ -443,9 +443,9 @@ public class RePodSelectorDialog extends JFrame
         if (actionEvent.getSource() == bRandom) {
             try {
                 if (global) {
-                    client.sendChat(STR."\{IClient.CAMPAIGN_PREFIX}c repod#\{unitId}#GLOBAL#RANDOM");
+                    client.sendChat(String.format("%sc repod#%s#GLOBAL#RANDOM", IClient.CAMPAIGN_PREFIX, unitId));
                 } else {
-                    client.sendChat(STR."\{IClient.CAMPAIGN_PREFIX}c repod#\{unitId}#RANDOM");
+                    client.sendChat(String.format("%sc repod#%s#RANDOM", IClient.CAMPAIGN_PREFIX, unitId));
                 }
                 Thread.sleep(125);
                 dispose();

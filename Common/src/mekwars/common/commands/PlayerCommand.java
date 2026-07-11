@@ -215,7 +215,7 @@ public class PlayerCommand extends Command {
             case "CCC" -> client.getCampaign().setComponentConverter(stringTokenizer.nextToken());
             case "SUD" -> {
                 try {
-                    StringBuilder userData = new StringBuilder(STR."\{IClient.CAMPAIGN_PREFIX}c sendclientdata#");
+                    StringBuilder userData = new StringBuilder(String.format("%sc sendclientdata#", IClient.CAMPAIGN_PREFIX));
                     String clientMD5 = client.createFilenameChecksum("./MekWarsClient.jar");
                     String mmMD5 = client.createFilenameChecksum("./MegaMek.jar");
                     userData.append(client.getClass().getProtectionDomain().getCodeSource().getLocation().toURI())
@@ -243,8 +243,8 @@ public class PlayerCommand extends Command {
                 int unitID = TokenReader.readInt(stringTokenizer);
                 int targetType = TokenReader.readInt(stringTokenizer);
                 player.getUnit(unitID).setTargetSystem(targetType);
-                client.doParseDataInput(STR."CH|AM: Targeting for unit \{unitID} set to \{player.getUnit(unitID)
-                                                                                                .getTargetSystemTypeDesc()}");
+                client.doParseDataInput(String.format("CH|AM: Targeting for unit %s set to %s", unitID, player.getUnit(unitID)
+                                                                                                .getTargetSystemTypeDesc()));
             }
             default -> {
                 return;

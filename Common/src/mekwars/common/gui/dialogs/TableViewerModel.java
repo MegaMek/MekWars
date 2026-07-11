@@ -82,10 +82,10 @@ class TableViewerModel extends AbstractTableModel {
                     if ((currU.getType() == mekwars.common.Unit.MEK) &&
                               (currU.getEntity() != null) &&
                               !currU.getEntity().isOmni()) {
-                        return STR."<html><body>\{currU.getEntity().getChassis()}, \{currU.getModelName()}";
+                        return String.format("<html><body>%s, %s", currU.getEntity().getChassis(), currU.getModelName());
                     }
                     // else
-                    return STR."<html><body>\{currU.getModelName()}";
+                    return String.format("<html><body>%s", currU.getModelName());
                 } catch (Exception ex) {
                     LOGGER.error(ex, "Error in TableViewerModel.getValueAt for UNIT: {}", ex.getLocalizedMessage());
                     return "";

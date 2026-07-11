@@ -242,7 +242,7 @@ public class CHQPanel extends JPanel {
     }
 
     private void btnAddLanceActionPerformed(ActionEvent evt) {
-        client.sendChat(STR."\{IClient.CAMPAIGN_PREFIX}c cra#\{client.getConfigParam("DEFAULTARMYNAME")}");
+        client.sendChat(String.format("%sc cra#%s", IClient.CAMPAIGN_PREFIX, client.getConfigParam("DEFAULTARMYNAME")));
     }
 
     // try to remove all armies
@@ -266,13 +266,13 @@ public class CHQPanel extends JPanel {
 
         for (CArmy currA : client.getPlayer().getArmies()) {
             if (!currA.isPlayerLocked()) {
-                client.sendChat(STR."\{IClient.CAMPAIGN_PREFIX}c removearmy#\{currA.getID()}");
+                client.sendChat(String.format("%sc removearmy#%s", IClient.CAMPAIGN_PREFIX, currA.getID()));
             }
         }
     }// end btnRemoveAllArmiesActionPerformed
 
     private void newbieResetUnitsButtonActionPerformed(ActionEvent evt) {
-        client.sendChat(STR."\{IClient.CAMPAIGN_PREFIX}c request#resetunits");
+        client.sendChat(String.format("%sc request#resetunits", IClient.CAMPAIGN_PREFIX));
     }
 
     private void repairAllUnitsButtonActionPerformed(ActionEvent evt) {
@@ -294,7 +294,7 @@ public class CHQPanel extends JPanel {
             if (result == JOptionPane.YES_OPTION) {
                 for (CUnit unit : client.getPlayer().getHangar()) {
                     if (!UnitUtils.hasAllAmmo(unit.getEntity())) {
-                        client.sendChat(STR."\{IClient.CAMPAIGN_PREFIX}c RELOADALLAMMO#\{unit.getId()}");
+                        client.sendChat(String.format("%sc RELOADALLAMMO#%s", IClient.CAMPAIGN_PREFIX, unit.getId()));
                     }
                 }
 

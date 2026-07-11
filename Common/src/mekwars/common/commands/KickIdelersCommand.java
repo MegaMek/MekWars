@@ -55,7 +55,7 @@ public class KickIdelersCommand extends Command {
      */
     @Override
     public void execute(String input) {
-        client.sendChat(STR."\{IClient.CAMPAIGN_PREFIX}c logout");
+        client.sendChat(String.format("%sc logout", IClient.CAMPAIGN_PREFIX));
     }
 
     /**

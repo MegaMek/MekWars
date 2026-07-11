@@ -96,7 +96,7 @@ public class CPlayerPanel extends JScrollPane {
     private IClientConfig config;
 
     public CPlayerPanel(IClient client) {
-        PP_REWARD = STR."\{client.getServerConfigs("RPLongName")}:";
+        PP_REWARD = String.format("%s:", client.getServerConfigs("RPLongName"));
 
         Insets insets = new Insets(0, 0, 0, 0);
         int center = GridBagConstraints.CENTER;
@@ -151,7 +151,7 @@ public class CPlayerPanel extends JScrollPane {
         lblStatus.setText(tag + PP_STATUS + endTag);
         lblExp.setText(tag + PP_EXP + endTag);
         lblRating.setText(tag + PP_ELO + endTag);
-        lblMoney.setText(STR."\{tag}\{client.getServerConfigs("MoneyLongName")}: \{endTag}");
+        lblMoney.setText(String.format("%s%s: %s", tag, client.getServerConfigs("MoneyLongName"), endTag));
         lblInfluence.setText(tag + client.getServerConfigs("FluLongName") + endTag);
 
         if (this.client.isUsingAdvanceRepairs()) {
@@ -227,54 +227,54 @@ public class CPlayerPanel extends JScrollPane {
         }
 
         lblName.setText(player.getName());
-        lblStatus.setText(STR."\{PP_STATUS} \{client.getStatus()}");
-        lblExp.setText(STR."\{PP_EXP} \{player.getExp()}");
+        lblStatus.setText(String.format("%s %s", PP_STATUS, client.getStatus()));
+        lblExp.setText(String.format("%s %s", PP_EXP, player.getExp()));
         DecimalFormat myFormatter = new DecimalFormat("###.##");
         String ratingStr = myFormatter.format(player.getRating());
-        lblRating.setText(STR."\{PP_ELO} \{ratingStr}");
+        lblRating.setText(String.format("%s %s", PP_ELO, ratingStr));
 
         if (player.getMoney() == 0) {
-            lblMoney.setText(STR."\{client.moneyOrFluMessage(true, false, -2)}: \{player.getMoney()}");
+            lblMoney.setText(String.format("%s: %s", client.moneyOrFluMessage(true, false, -2), player.getMoney()));
         } else {
-            lblMoney.setText(STR."\{client.moneyOrFluMessage(true,
+            lblMoney.setText(String.format("%s: %s", client.moneyOrFluMessage(true,
                   false,
-                  -player.getMoney())}: \{NumberFormat.getInstance().format(player.getMoney())}");
+                  -player.getMoney()), NumberFormat.getInstance().format(player.getMoney())));
         }
 
         if (player.getInfluence() == 0) {
-            lblInfluence.setText(STR."\{client.moneyOrFluMessage(false, false, -2)}: \{player.getInfluence()}");
+            lblInfluence.setText(String.format("%s: %s", client.moneyOrFluMessage(false, false, -2), player.getInfluence()));
         } else {
-            lblInfluence.setText(STR."\{client.moneyOrFluMessage(false,
+            lblInfluence.setText(String.format("%s: %s", client.moneyOrFluMessage(false,
                   false,
-                  -player.getInfluence())}: \{NumberFormat.getInstance().format(player.getInfluence())}");
+                  -player.getInfluence()), NumberFormat.getInstance().format(player.getInfluence())));
         }
 
         if (client.isUsingAdvanceRepairs()) {
             //when the client first loads, it doesn't have data in the vectors.
             try {
-                lblMekBay.setText(STR."\{PP_BAYS} \{player.getFreeBays()}/\{player.getBays()} (\{client.moneyOrFluMessage(
+                lblMekBay.setText(String.format("%s %s/%s (%s)", PP_BAYS, player.getFreeBays(), player.getBays(), client.moneyOrFluMessage(
                       true,
                       true,
-                      player.getTechCost())})");
-                lblTechs.setText(STR."\{PP_IDLE_TECHS} \{player.getAvailableTechs()
-                                                               .get(UnitUtils.TECH_GREEN)}/\{player.getAvailableTechs()
-                                                                                                   .get(UnitUtils.TECH_REG)}/\{player.getAvailableTechs()
-                                                                                                                                     .get(UnitUtils.TECH_VET)}/\{player.getAvailableTechs()
-                                                                                                                                                                       .get(UnitUtils.TECH_ELITE)}");
+                      player.getTechCost())));
+                lblTechs.setText(String.format("%s %s/%s/%s/%s", PP_IDLE_TECHS, player.getAvailableTechs()
+                                                               .get(UnitUtils.TECH_GREEN), player.getAvailableTechs()
+                                                                                                   .get(UnitUtils.TECH_REG), player.getAvailableTechs()
+                                                                                                                                     .get(UnitUtils.TECH_VET), player.getAvailableTechs()
+                                                                                                                                                                       .get(UnitUtils.TECH_ELITE)));
             } catch (Exception ex) {
                 LOGGER.debug(ex, "Not sure why we're catching the error: {}", ex.getLocalizedMessage());
             }
         } else {
-            lblMekBay.setText(STR."\{PP_TECHS} \{player.getFreeBays()}/\{player.getBays()}");
-            lblTechs.setText(STR."\{PP_PAID_TECHS} \{player.getTechs()} (\{client.moneyOrFluMessage(true,
+            lblMekBay.setText(String.format("%s %s/%s", PP_TECHS, player.getFreeBays(), player.getBays()));
+            lblTechs.setText(String.format("%s %s (%s)", PP_PAID_TECHS, player.getTechs(), client.moneyOrFluMessage(true,
                   true,
-                  player.getTechCost())})");
+                  player.getTechCost())));
         }
 
-        lblRewardPoints.setText(STR."\{PP_REWARD} \{player.getRewardPoints()}/\{client.getServerConfigs("XPRewardCap")}");
-        lblFreeMeks.setText(STR."\{PP_FREE_UNITS} \{Integer.parseInt(client.getServerConfigs("FreeBuild_Limit")) -
+        lblRewardPoints.setText(String.format("%s %s/%s", PP_REWARD, player.getRewardPoints(), client.getServerConfigs("XPRewardCap")));
+        lblFreeMeks.setText(String.format("%s %s Remain", PP_FREE_UNITS, Integer.parseInt(client.getServerConfigs("FreeBuild_Limit")) -
                                                           client.getPlayer()
-                                                                .getMekToken()} Remain"); //@Salient for free build
+                                                                .getMekToken())); //@Salient for free build
     }
 
     public void setNextTick(long nextTick) {
@@ -282,7 +282,7 @@ public class CPlayerPanel extends JScrollPane {
     }
 
     public void updateClock() {
-        lblNextTick.setText(STR."Next Tick: \{(nextTick - System.currentTimeMillis()) / 1000} s");
+        lblNextTick.setText(String.format("Next Tick: %s s", (nextTick - System.currentTimeMillis()) / 1000));
     }
 
     private static class TThread extends Thread {

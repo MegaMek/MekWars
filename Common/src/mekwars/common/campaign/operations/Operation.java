@@ -144,7 +144,7 @@ public class Operation implements MWXmlSerializable {
 
         //catastrophic failure. sys exit.
         if (toReturn == null && log) {
-            LOGGER.error(STR."Failed getting value \"\{valToGet}\" from \{this.getName()} and DefaultOp. Returning null.");
+            LOGGER.error(String.format("Failed getting value \"%s\" from %s and DefaultOp. Returning null.", valToGet, this.getName()));
         }
 
         return toReturn;

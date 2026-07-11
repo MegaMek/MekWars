@@ -151,11 +151,11 @@ public class Renderer extends MekInfo implements TableCellRenderer, Serializable
                 String techCostString = "";
 
                 if (cm.getC3Level() > 0) {
-                    techCostString = STR."\{C3Text}<br>";
+                    techCostString = String.format("%s<br>", C3Text);
                 }
 
-                String techAmount = STR."TechsFor\{Unit.getWeightClassDesc(cm.getWeightClass())}\{Unit.getTypeClassDesc(
-                      cm.getType())}";
+                String techAmount = String.format("TechsFor%s%s", Unit.getWeightClassDesc(cm.getWeightClass()), Unit.getTypeClassDesc(
+                      cm.getType()));
                 int numTechs = (int) (MathUtility.parseInt(mekTableModel.chqPanel.getClient()
                                                                  .getServerConfigs(techAmount), 0) *
                                             (mekTableModel.chqPanel.getClient().getPlayer()
@@ -167,7 +167,7 @@ public class Renderer extends MekInfo implements TableCellRenderer, Serializable
                                                                                       "NonFactionUnitsIncreasedTechs"),
                                                          0.0f)));
 
-                techCostString += STR."Techs required: \{numTechs}";
+                techCostString += String.format("Techs required: %s", numTechs);
                 C3Text.setLength(0);
                 C3Text.append(techCostString);
             }
@@ -193,15 +193,15 @@ public class Renderer extends MekInfo implements TableCellRenderer, Serializable
                   "EXPANDED_UNIT_TOOLTIP"), false)) {
                 C3Text.append("<font color=\"purple\">");
                 C3Text.append("<b>[General]</b><br>");
-                C3Text.append(STR."Weight: \{cm.getEntity().getWeight()} Tons (\{cm.getEntity()
-                                                                                       .getWeightClassName()})<br>");
-                C3Text.append(STR."Armor: \{cm.getEntity().getArmorWeight()} Tons (\{cm.getEntity()
-                                                                                           .getTotalArmor()} Pts)<br>");
+                C3Text.append(String.format("Weight: %s Tons (%s)<br>", cm.getEntity().getWeight(), cm.getEntity()
+                                                                                       .getWeightClassName()));
+                C3Text.append(String.format("Armor: %s Tons (%s Pts)<br>", cm.getEntity().getArmorWeight(), cm.getEntity()
+                                                                                           .getTotalArmor()));
                 int walk = cm.getEntity().getWalkMP();
                 int run = cm.getEntity().getRunMPWithoutMASC();
                 int jump = cm.getEntity().getJumpMP();
                 int masc = cm.getEntity().getRunMP();
-                C3Text.append(STR."Movement: \{walk}/\{run}");
+                C3Text.append(String.format("Movement: %s/%s", walk, run));
 
                 if (cm.getEntity().getMASC() != null) {
                     C3Text.append("(").append(masc).append(")");
@@ -262,10 +262,10 @@ public class Renderer extends MekInfo implements TableCellRenderer, Serializable
                 String armiesText = "";
 
                 if (cm.getC3Level() > 0) {
-                    armiesText = STR."\{C3Text}<br>";
+                    armiesText = String.format("%s<br>", C3Text);
                 }
 
-                armiesText += STR."In armies \{mekTableModel.chqPanel.getPlayer().getArmiesUnitIsIn(cm.getId())}";
+                armiesText += String.format("In armies %s", mekTableModel.chqPanel.getPlayer().getArmiesUnitIsIn(cm.getId()));
                 description = cm.getDisplayInfo(armiesText);
             } else {
                 description = cm.getDisplayInfo(C3Text.toString());

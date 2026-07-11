@@ -382,12 +382,12 @@ public class CampaignData implements TerrainProvider {
         factionID.remove(factionName);
         factions.remove(id);
 
-        File factionFile = new File(STR."./campaign/factions/\{factionName}.dat");
+        File factionFile = new File(String.format("./campaign/factions/%s.dat", factionName));
         if (factionFile.exists()) {
             factionFile.delete();
         }
 
-        factionFile = new File(STR."./campaign/factions/\{factionName}.bak");
+        factionFile = new File(String.format("./campaign/factions/%s.bak", factionName));
         if (factionFile.exists()) {
             factionFile.delete();
         }

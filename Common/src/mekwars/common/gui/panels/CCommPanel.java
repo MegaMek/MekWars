@@ -184,7 +184,7 @@ public class CCommPanel extends JPanel implements ChangeListener, ComponentListe
         CommTPane.addTab(tabText,
               null,
               MChannelPanel,
-              STR."Interfaction Communication Channel (Alt + \{mnemonicText})");
+              String.format("Interfaction Communication Channel (Alt + %s)", mnemonicText));
         index = CommTPane.indexOfComponent(MChannelPanel);
         mnemo = CommTPane.getTitleAt(index).indexOf(mnemonicText.toUpperCase());
 
@@ -194,7 +194,7 @@ public class CCommPanel extends JPanel implements ChangeListener, ComponentListe
 
         CommTPane.setDisplayedMnemonicIndexAt(index, mnemo);
         MChannelSelect = new CCommPanel.CSelectTabAction(MChannelPanel);
-        getInputMap(WHEN_IN_FOCUSED_WINDOW).put(KeyStroke.getKeyStroke(STR."alt \{mnemonicText.toUpperCase()}"),
+        getInputMap(WHEN_IN_FOCUSED_WINDOW).put(KeyStroke.getKeyStroke(String.format("alt %s", mnemonicText.toUpperCase())),
               "MChannelSelect");
         getActionMap().put("MChannelSelect", MChannelSelect);
 
@@ -218,7 +218,7 @@ public class CCommPanel extends JPanel implements ChangeListener, ComponentListe
             CommTPane.addTab(tabText,
                   null,
                   HMailPanel,
-                  STR."House Communication Channel (Alt + \{mnemonicText.toUpperCase()})");
+                  String.format("House Communication Channel (Alt + %s)", mnemonicText.toUpperCase()));
             index = CommTPane.indexOfComponent(HMailPanel);
             mnemo = CommTPane.getTitleAt(index).indexOf(mnemonicText.toUpperCase());
 
@@ -228,7 +228,7 @@ public class CCommPanel extends JPanel implements ChangeListener, ComponentListe
 
             CommTPane.setDisplayedMnemonicIndexAt(index, mnemo);
             HMailSelect = new CCommPanel.CSelectTabAction(HMailPanel);
-            getInputMap(WHEN_IN_FOCUSED_WINDOW).put(KeyStroke.getKeyStroke(STR."alt \{mnemonicText.toUpperCase()}"),
+            getInputMap(WHEN_IN_FOCUSED_WINDOW).put(KeyStroke.getKeyStroke(String.format("alt %s", mnemonicText.toUpperCase())),
                   "HMailSelect");
             getActionMap().put("HMailSelect", HMailSelect);
         }
@@ -251,7 +251,7 @@ public class CCommPanel extends JPanel implements ChangeListener, ComponentListe
             tabText = this.client.getConfig().getParam("RPG_TAB_NAME");
             mnemonicText = this.client.getConfig().getParam("RPG_MNEMONIC");
 
-            CommTPane.addTab(tabText, null, RPGChannelPanel, STR."RP (Alt + \{mnemonicText.toUpperCase()})");
+            CommTPane.addTab(tabText, null, RPGChannelPanel, String.format("RP (Alt + %s)", mnemonicText.toUpperCase()));
             index = CommTPane.indexOfComponent(RPGChannelPanel);
             mnemo = CommTPane.getTitleAt(index).indexOf(mnemonicText.toUpperCase());
 
@@ -261,7 +261,7 @@ public class CCommPanel extends JPanel implements ChangeListener, ComponentListe
 
             CommTPane.setDisplayedMnemonicIndexAt(index, mnemo);
             RPGChannelSelect = new CCommPanel.CSelectTabAction(RPGChannelPanel);
-            getInputMap(WHEN_IN_FOCUSED_WINDOW).put(javax.swing.KeyStroke.getKeyStroke(STR."alt \{mnemonicText.toUpperCase()}"),
+            getInputMap(WHEN_IN_FOCUSED_WINDOW).put(javax.swing.KeyStroke.getKeyStroke(String.format("alt %s", mnemonicText.toUpperCase())),
                   "RPGChannelSelect");
             getActionMap().put("RPGChannelSelect", RPGChannelSelect);
         }
@@ -284,7 +284,7 @@ public class CCommPanel extends JPanel implements ChangeListener, ComponentListe
                 tabText = this.client.getConfig().getParam("PRIVATE_MAIL_TAB_NAME");
                 mnemonicText = this.client.getConfig().getParam("PRIVATE_MAIL_MNEMONIC");
 
-                CommTPane.addTab(tabText, null, PMailPanel, STR."Private Mail (Alt + \{mnemonicText.toUpperCase()})");
+                CommTPane.addTab(tabText, null, PMailPanel, String.format("Private Mail (Alt + %s)", mnemonicText.toUpperCase()));
                 index = CommTPane.indexOfComponent(PMailPanel);
                 mnemo = CommTPane.getTitleAt(index).indexOf(mnemonicText.toUpperCase());
 
@@ -294,7 +294,7 @@ public class CCommPanel extends JPanel implements ChangeListener, ComponentListe
 
                 CommTPane.setDisplayedMnemonicIndexAt(index, mnemo);
                 PMailSelect = new CCommPanel.CSelectTabAction(PMailPanel);
-                getInputMap(WHEN_IN_FOCUSED_WINDOW).put(KeyStroke.getKeyStroke(STR."alt \{mnemonicText.toUpperCase()}"),
+                getInputMap(WHEN_IN_FOCUSED_WINDOW).put(KeyStroke.getKeyStroke(String.format("alt %s", mnemonicText.toUpperCase())),
                       "PMailSelect");
                 getActionMap().put("PMailSelect", PMailSelect);
             }
@@ -316,7 +316,7 @@ public class CCommPanel extends JPanel implements ChangeListener, ComponentListe
             tabText = this.client.getConfig().getParam("PERSONAL_LOG_TAB_NAME");
             mnemonicText = this.client.getConfig().getParam("PERSONAL_LOG_MNEMONIC");
 
-            CommTPane.addTab(tabText, null, PLogPanel, STR."Logged Messages (Alt + \{mnemonicText.toUpperCase()})");
+            CommTPane.addTab(tabText, null, PLogPanel, String.format("Logged Messages (Alt + %s)", mnemonicText.toUpperCase()));
             index = CommTPane.indexOfComponent(PLogPanel);
             mnemo = CommTPane.getTitleAt(index).indexOf(mnemonicText.toUpperCase());
 
@@ -326,8 +326,8 @@ public class CCommPanel extends JPanel implements ChangeListener, ComponentListe
 
             CommTPane.setDisplayedMnemonicIndexAt(index, mnemo);
             PLogSelect = new CCommPanel.CSelectTabAction(PLogPanel);
-            getInputMap(WHEN_IN_FOCUSED_WINDOW).put(KeyStroke.getKeyStroke(STR."alt \{mnemonicText.toUpperCase()}"),
-                  STR."PLogSelect (Alt + \{mnemonicText.toUpperCase()})");
+            getInputMap(WHEN_IN_FOCUSED_WINDOW).put(KeyStroke.getKeyStroke(String.format("alt %s", mnemonicText.toUpperCase())),
+                  String.format("PLogSelect (Alt + %s)", mnemonicText.toUpperCase()));
             getActionMap().put("PLogSelect", PLogSelect);
         }
 
@@ -347,7 +347,7 @@ public class CCommPanel extends JPanel implements ChangeListener, ComponentListe
             tabText = this.client.getConfig().getParam("SYSTEM_LOG_TAB_NAME");
             mnemonicText = this.client.getConfig().getParam("SYSTEM_LOG_MNEMONIC");
 
-            CommTPane.addTab(tabText, null, SLogPanel, STR."System Messages (Alt + \{mnemonicText.toUpperCase()})");
+            CommTPane.addTab(tabText, null, SLogPanel, String.format("System Messages (Alt + %s)", mnemonicText.toUpperCase()));
             index = CommTPane.indexOfComponent(SLogPanel);
             mnemo = CommTPane.getTitleAt(index).indexOf(mnemonicText.toUpperCase());
 
@@ -357,7 +357,7 @@ public class CCommPanel extends JPanel implements ChangeListener, ComponentListe
 
             CommTPane.setDisplayedMnemonicIndexAt(index, mnemo);
             SLogSelect = new CCommPanel.CSelectTabAction(SLogPanel);
-            getInputMap(WHEN_IN_FOCUSED_WINDOW).put(KeyStroke.getKeyStroke(STR."alt \{mnemonicText.toUpperCase()}"),
+            getInputMap(WHEN_IN_FOCUSED_WINDOW).put(KeyStroke.getKeyStroke(String.format("alt %s", mnemonicText.toUpperCase())),
                   "SLogSelect");
             getActionMap().put("SLogSelect", SLogSelect);
         }
@@ -382,7 +382,7 @@ public class CCommPanel extends JPanel implements ChangeListener, ComponentListe
             CommTPane.addTab(tabText,
                   null,
                   MiscChannelPanel,
-                  STR."Miscellaneous Stuff (Alt + \{mnemonicText.toUpperCase()})");
+                  String.format("Miscellaneous Stuff (Alt + %s)", mnemonicText.toUpperCase()));
             index = CommTPane.indexOfComponent(MiscChannelPanel);
             mnemo = CommTPane.getTitleAt(index).indexOf(mnemonicText.toUpperCase());
 
@@ -392,7 +392,7 @@ public class CCommPanel extends JPanel implements ChangeListener, ComponentListe
 
             CommTPane.setDisplayedMnemonicIndexAt(index, mnemo);
             MiscChannelSelect = new CCommPanel.CSelectTabAction(MiscChannelPanel);
-            getInputMap(WHEN_IN_FOCUSED_WINDOW).put(javax.swing.KeyStroke.getKeyStroke(STR."alt \{mnemonicText.toUpperCase()}"),
+            getInputMap(WHEN_IN_FOCUSED_WINDOW).put(javax.swing.KeyStroke.getKeyStroke(String.format("alt %s", mnemonicText.toUpperCase())),
                   "MiscChannelSelect");
             getActionMap().put("MiscChannelSelect", MiscChannelSelect);
         }
@@ -473,15 +473,15 @@ public class CCommPanel extends JPanel implements ChangeListener, ComponentListe
     public boolean sendChat(String s) {
         if (!s.startsWith(IClient.GUI_PREFIX) &&
                   CommTPane.getSelectedIndex() == CommTPane.indexOfComponent(HMailPanel)) {
-            s = STR."\{IClient.GUI_PREFIX}c hm#\{s}";
+            s = String.format("%sc hm#%s", IClient.GUI_PREFIX, s);
         }
         if (!s.startsWith(IClient.GUI_PREFIX) &&
                   CommTPane.getSelectedIndex() == CommTPane.indexOfComponent(ModMailPanel)) {
-            s = STR."\{IClient.GUI_PREFIX}c mm#\{s}";
+            s = String.format("%sc mm#%s", IClient.GUI_PREFIX, s);
         }
         if (!s.startsWith(IClient.GUI_PREFIX) &&
                   CommTPane.getSelectedIndex() == CommTPane.indexOfComponent(RPGChannelPanel)) {
-            s = STR."\{IClient.GUI_PREFIX}c ic#\{s}";
+            s = String.format("%sc ic#%s", IClient.GUI_PREFIX, s);
         }
 
         if (!s.startsWith(IClient.GUI_PREFIX) &&
@@ -489,7 +489,7 @@ public class CCommPanel extends JPanel implements ChangeListener, ComponentListe
                   CommTPane.getSelectedIndex() == CommTPane.indexOfComponent(PMailPanel)) {
             String receiver = client.getLastQuery();
             if (receiver != null && !receiver.isEmpty()) {
-                s = STR."\{IClient.GUI_PREFIX}mail \{receiver},\{s}";
+                s = String.format("%smail %s,%s", IClient.GUI_PREFIX, receiver, s);
             } else {
                 client.showInfoWindow("No receiver set.");
                 chatField.setText(s);
@@ -506,7 +506,7 @@ public class CCommPanel extends JPanel implements ChangeListener, ComponentListe
             String mailTab = "Mail Tab ";
             String receiver = panel.getName().substring(mailTab.length()).trim();
             if (!receiver.isEmpty()) {
-                s = STR."\{IClient.GUI_PREFIX}mail \{receiver},\{s}";
+                s = String.format("%smail %s,%s", IClient.GUI_PREFIX, receiver, s);
             } else {
                 client.showInfoWindow("No receiver set.");
                 chatField.setText(s);
@@ -514,7 +514,7 @@ public class CCommPanel extends JPanel implements ChangeListener, ComponentListe
             }
         }
 
-        if (s.startsWith(STR."\{IClient.GUI_PREFIX}me") || s.startsWith(STR."\{IClient.GUI_PREFIX}c me")) {
+        if (s.startsWith(String.format("%sme", IClient.GUI_PREFIX)) || s.startsWith(String.format("%sc me", IClient.GUI_PREFIX))) {
             if (CommTPane.getSelectedIndex() == CommTPane.indexOfComponent(RPGChannelPanel)) {
                 s += "|ic";
             } else if (CommTPane.getSelectedIndex() == CommTPane.indexOfComponent(ModMailPanel)) {
@@ -526,7 +526,7 @@ public class CCommPanel extends JPanel implements ChangeListener, ComponentListe
                 s += "|mail";
                 String receiver = client.getLastQuery();
                 if (receiver != null && !receiver.isEmpty()) {
-                    s += STR."|\{receiver}";
+                    s += String.format("|%s", receiver);
                 } else {
                     client.showInfoWindow("No receiver set.");
                     chatField.setText(s);
@@ -539,7 +539,7 @@ public class CCommPanel extends JPanel implements ChangeListener, ComponentListe
                 JPanel panel = ((JPanel) CommTPane.getComponent(CommTPane.getSelectedIndex()));
                 String mailTab = "Mail Tab ";
                 String receiver = panel.getName().substring(mailTab.length()).trim();
-                if (!receiver.isEmpty()) {s += STR."|\{receiver}";} else {
+                if (!receiver.isEmpty()) {s += String.format("|%s", receiver);} else {
                     client.showInfoWindow("No receiver set.");
                     chatField.setText(s);
                     return false;
@@ -583,13 +583,13 @@ public class CCommPanel extends JPanel implements ChangeListener, ComponentListe
         newPanel.setLayout(new BorderLayout());
         newPanel.add(newSTab, BorderLayout.CENTER);
 
-        newPanel.setName(STR."Mail Tab \{tabName}");
+        newPanel.setName(String.format("Mail Tab %s", tabName));
         newETab.addMouseListener(this);
 
-        CommTPane.addTab(STR."\{mnemonic}. \{tabName}",
+        CommTPane.addTab(String.format("%s. %s", mnemonic, tabName),
               null,
               newPanel,
-              STR."Mail From \{tabName} (Alt + \{mnemonic})");
+              String.format("Mail From %s (Alt + %s)", tabName, mnemonic));
 
         int index = CommTPane.indexOfComponent(newPanel);
         int mnemo = CommTPane.getTitleAt(index).indexOf(mnemonic.toUpperCase());
@@ -601,9 +601,9 @@ public class CCommPanel extends JPanel implements ChangeListener, ComponentListe
         CommTPane.setDisplayedMnemonicIndexAt(index, mnemo);
         CCommPanel.CSelectTabAction LogSelect = new CCommPanel.CSelectTabAction(
               newPanel);
-        getInputMap(WHEN_IN_FOCUSED_WINDOW).put(KeyStroke.getKeyStroke(STR."alt \{mnemonic.toUpperCase()}"),
-              STR."Mail From \{tabName}");
-        getActionMap().put(STR."Mail From \{tabName}", LogSelect);
+        getInputMap(WHEN_IN_FOCUSED_WINDOW).put(KeyStroke.getKeyStroke(String.format("alt %s", mnemonic.toUpperCase())),
+              String.format("Mail From %s", tabName));
+        getActionMap().put(String.format("Mail From %s", tabName), LogSelect);
     }
 
     public int getNextMailTabNumber() {
@@ -735,7 +735,7 @@ public class CCommPanel extends JPanel implements ChangeListener, ComponentListe
             if (!title.startsWith("*")) {
                 int mnemo = CommTPane.getDisplayedMnemonicIndexAt(tabChannel);
                 mnemo++;
-                CommTPane.setTitleAt(tabChannel, STR."*\{title}");
+                CommTPane.setTitleAt(tabChannel, String.format("*%s", title));
                 CommTPane.setDisplayedMnemonicIndexAt(tabChannel, mnemo);
                 if (CommTPane.getComponentAt(tabChannel) != PLogPanel &&
                           CommTPane.getComponentAt(tabChannel) != SLogPanel) {
@@ -803,7 +803,7 @@ public class CCommPanel extends JPanel implements ChangeListener, ComponentListe
         try {
             java.io.FileOutputStream fos = new java.io.FileOutputStream(filePath, true);
             java.io.PrintWriter ps = new java.io.PrintWriter(fos);
-            ps.print(STR."\{s}<br>");
+            ps.print(String.format("%s<br>", s));
             ps.close();
             fos.close();
         } catch (Exception e) {
@@ -817,7 +817,7 @@ public class CCommPanel extends JPanel implements ChangeListener, ComponentListe
         for (int pos = 0; pos < CommTPane.getTabCount(); pos++) {
             if (CommTPane.getComponent(pos) instanceof JPanel) {
                 panel = (JPanel) CommTPane.getComponent(pos);
-                if (panel != null && panel.getName() != null && panel.getName().equals(STR."Mail Tab \{tabName}")) {
+                if (panel != null && panel.getName() != null && panel.getName().equals(String.format("Mail Tab %s", tabName))) {
                     return panel;
                 }
             }
@@ -1193,7 +1193,7 @@ public class CCommPanel extends JPanel implements ChangeListener, ComponentListe
         CommTPane.addTab(tabText,
               null,
               MChannelPanel,
-              STR."Interfaction Communication Channel (Alt + \{mnemonicText})");
+              String.format("Interfaction Communication Channel (Alt + %s)", mnemonicText));
         index = CommTPane.indexOfComponent(MChannelPanel);
         mnemo = CommTPane.getTitleAt(index).indexOf(mnemonicText.toUpperCase());
 
@@ -1203,7 +1203,7 @@ public class CCommPanel extends JPanel implements ChangeListener, ComponentListe
 
         CommTPane.setDisplayedMnemonicIndexAt(index, mnemo);
 
-        getInputMap(WHEN_IN_FOCUSED_WINDOW).put(KeyStroke.getKeyStroke(STR."alt \{mnemonicText.toUpperCase()}"),
+        getInputMap(WHEN_IN_FOCUSED_WINDOW).put(KeyStroke.getKeyStroke(String.format("alt %s", mnemonicText.toUpperCase())),
               "MChannelSelect");
         getActionMap().put("MChannelSelect", MChannelSelect);
 
@@ -1214,7 +1214,7 @@ public class CCommPanel extends JPanel implements ChangeListener, ComponentListe
             CommTPane.addTab(tabText,
                   null,
                   HMailPanel,
-                  STR."House Communication Channel (Alt + \{mnemonicText.toUpperCase()})");
+                  String.format("House Communication Channel (Alt + %s)", mnemonicText.toUpperCase()));
             index = CommTPane.indexOfComponent(HMailPanel);
             mnemo = CommTPane.getTitleAt(index).indexOf(mnemonicText.toUpperCase());
 
@@ -1228,7 +1228,7 @@ public class CCommPanel extends JPanel implements ChangeListener, ComponentListe
                 HMailSelect = new CCommPanel.CSelectTabAction(HMailPanel);
             }
 
-            getInputMap(WHEN_IN_FOCUSED_WINDOW).put(KeyStroke.getKeyStroke(STR."alt \{mnemonicText.toUpperCase()}"),
+            getInputMap(WHEN_IN_FOCUSED_WINDOW).put(KeyStroke.getKeyStroke(String.format("alt %s", mnemonicText.toUpperCase())),
                   "HMailSelect");
             getActionMap().put("HMailSelect", HMailSelect);
         }
@@ -1239,7 +1239,7 @@ public class CCommPanel extends JPanel implements ChangeListener, ComponentListe
                 tabText = client.getConfig().getParam("PRIVATE_MAIL_TAB_NAME");
                 mnemonicText = client.getConfig().getParam("PRIVATE_MAIL_MNEMONIC");
 
-                CommTPane.addTab(tabText, null, PMailPanel, STR."Private Mail (Alt + \{mnemonicText.toUpperCase()})");
+                CommTPane.addTab(tabText, null, PMailPanel, String.format("Private Mail (Alt + %s)", mnemonicText.toUpperCase()));
                 index = CommTPane.indexOfComponent(PMailPanel);
                 mnemo = CommTPane.getTitleAt(index).indexOf(mnemonicText.toUpperCase());
 
@@ -1252,7 +1252,7 @@ public class CCommPanel extends JPanel implements ChangeListener, ComponentListe
                     PMailSelect = new CCommPanel.CSelectTabAction(PMailPanel);
                 }
 
-                getInputMap(WHEN_IN_FOCUSED_WINDOW).put(KeyStroke.getKeyStroke(STR."alt \{mnemonicText.toUpperCase()}"),
+                getInputMap(WHEN_IN_FOCUSED_WINDOW).put(KeyStroke.getKeyStroke(String.format("alt %s", mnemonicText.toUpperCase())),
                       "PMailSelect");
                 getActionMap().put("PMailSelect", PMailSelect);
 
@@ -1264,7 +1264,7 @@ public class CCommPanel extends JPanel implements ChangeListener, ComponentListe
             tabText = client.getConfig().getParam("PERSONAL_LOG_TAB_NAME");
             mnemonicText = client.getConfig().getParam("PERSONAL_LOG_MNEMONIC");
 
-            CommTPane.addTab(tabText, null, PLogPanel, STR."Logged Messages (Alt + \{mnemonicText.toUpperCase()})");
+            CommTPane.addTab(tabText, null, PLogPanel, String.format("Logged Messages (Alt + %s)", mnemonicText.toUpperCase()));
             index = CommTPane.indexOfComponent(PLogPanel);
             mnemo = CommTPane.getTitleAt(index).indexOf(mnemonicText.toUpperCase());
 
@@ -1278,8 +1278,8 @@ public class CCommPanel extends JPanel implements ChangeListener, ComponentListe
                 PLogSelect = new CCommPanel.CSelectTabAction(PLogPanel);
             }
 
-            getInputMap(WHEN_IN_FOCUSED_WINDOW).put(javax.swing.KeyStroke.getKeyStroke(STR."alt \{mnemonicText.toUpperCase()}"),
-                  STR."PLogSelect (Alt + \{mnemonicText.toUpperCase()})");
+            getInputMap(WHEN_IN_FOCUSED_WINDOW).put(javax.swing.KeyStroke.getKeyStroke(String.format("alt %s", mnemonicText.toUpperCase())),
+                  String.format("PLogSelect (Alt + %s)", mnemonicText.toUpperCase()));
             getActionMap().put("PLogSelect", PLogSelect);
         }
 
@@ -1287,7 +1287,7 @@ public class CCommPanel extends JPanel implements ChangeListener, ComponentListe
             tabText = client.getConfig().getParam("SYSTEM_LOG_TAB_NAME");
             mnemonicText = client.getConfig().getParam("SYSTEM_LOG_MNEMONIC");
 
-            CommTPane.addTab(tabText, null, SLogPanel, STR."System Messages (Alt + \{mnemonicText.toUpperCase()})");
+            CommTPane.addTab(tabText, null, SLogPanel, String.format("System Messages (Alt + %s)", mnemonicText.toUpperCase()));
             index = CommTPane.indexOfComponent(SLogPanel);
             mnemo = CommTPane.getTitleAt(index).indexOf(mnemonicText.toUpperCase());
 
@@ -1301,7 +1301,7 @@ public class CCommPanel extends JPanel implements ChangeListener, ComponentListe
                 SLogSelect = new CCommPanel.CSelectTabAction(SLogPanel);
             }
 
-            getInputMap(WHEN_IN_FOCUSED_WINDOW).put(javax.swing.KeyStroke.getKeyStroke(STR."alt \{mnemonicText.toUpperCase()}"),
+            getInputMap(WHEN_IN_FOCUSED_WINDOW).put(javax.swing.KeyStroke.getKeyStroke(String.format("alt %s", mnemonicText.toUpperCase())),
                   "SLogSelect");
             getActionMap().put("SLogSelect", SLogSelect);
         }
@@ -1315,7 +1315,7 @@ public class CCommPanel extends JPanel implements ChangeListener, ComponentListe
             CommTPane.addTab(tabText,
                   null,
                   MiscChannelPanel,
-                  STR."Miscellaneous Stuff (Alt + \{mnemonicText.toUpperCase()})");
+                  String.format("Miscellaneous Stuff (Alt + %s)", mnemonicText.toUpperCase()));
             index = CommTPane.indexOfComponent(MiscChannelPanel);
             mnemo = CommTPane.getTitleAt(index).indexOf(mnemonicText.toUpperCase());
 
@@ -1329,7 +1329,7 @@ public class CCommPanel extends JPanel implements ChangeListener, ComponentListe
                 MiscChannelSelect = new CCommPanel.CSelectTabAction(MiscChannelPanel);
             }
 
-            getInputMap(WHEN_IN_FOCUSED_WINDOW).put(javax.swing.KeyStroke.getKeyStroke(STR."alt \{mnemonicText.toUpperCase()}"),
+            getInputMap(WHEN_IN_FOCUSED_WINDOW).put(javax.swing.KeyStroke.getKeyStroke(String.format("alt %s", mnemonicText.toUpperCase())),
                   "MiscChannelSelect");
             getActionMap().put("MiscChannelSelect", MiscChannelSelect);
         }
@@ -1339,7 +1339,7 @@ public class CCommPanel extends JPanel implements ChangeListener, ComponentListe
             tabText = client.getConfig().getParam("RPG_TAB_NAME");
             mnemonicText = client.getConfig().getParam("RPG_MNEMONIC");
 
-            CommTPane.addTab(tabText, null, RPGChannelPanel, STR."RP (Alt + \{mnemonicText.toUpperCase()})");
+            CommTPane.addTab(tabText, null, RPGChannelPanel, String.format("RP (Alt + %s)", mnemonicText.toUpperCase()));
             index = CommTPane.indexOfComponent(RPGChannelPanel);
             mnemo = CommTPane.getTitleAt(index).indexOf(mnemonicText.toUpperCase());
 
@@ -1349,7 +1349,7 @@ public class CCommPanel extends JPanel implements ChangeListener, ComponentListe
 
             CommTPane.setDisplayedMnemonicIndexAt(index, mnemo);
             RPGChannelSelect = new CCommPanel.CSelectTabAction(RPGChannelPanel);
-            getInputMap(WHEN_IN_FOCUSED_WINDOW).put(javax.swing.KeyStroke.getKeyStroke(STR."alt \{mnemonicText.toUpperCase()}"),
+            getInputMap(WHEN_IN_FOCUSED_WINDOW).put(javax.swing.KeyStroke.getKeyStroke(String.format("alt %s", mnemonicText.toUpperCase())),
                   "RPGChannelSelect");
             getActionMap().put("RPGChannelSelect", RPGChannelSelect);
         }
@@ -1359,7 +1359,7 @@ public class CCommPanel extends JPanel implements ChangeListener, ComponentListe
         StringTokenizer commands = new StringTokenizer(command, ";");
 
         while (commands.hasMoreTokens()) {
-            client.sendChat(STR."\{IClient.CAMPAIGN_PREFIX}c \{commands.nextToken()}");
+            client.sendChat(String.format("%sc %s", IClient.CAMPAIGN_PREFIX, commands.nextToken()));
         }
     }
 

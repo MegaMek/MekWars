@@ -388,7 +388,7 @@ public class MyImageView extends View implements ImageObserver, MouseListener, M
         return switch (axis) {
             case View.X_AXIS -> fWidth + extra;
             case View.Y_AXIS -> fHeight + extra;
-            default -> throw new IllegalArgumentException(STR."Invalid axis: \{axis}");
+            default -> throw new IllegalArgumentException(String.format("Invalid axis: %s", axis));
         };
     }
 

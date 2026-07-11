@@ -196,7 +196,7 @@ public class CBMPartsPanel extends JPanel {
 
             //generate a new option dialog
             String playerAmountString = JOptionPane.showInputDialog(client.getMainFrame(),
-                  STR."<HTML><center>How many units of \{bme.getEquipmentName()} would you like to buy?",
+                  String.format("<HTML><center>How many units of %s would you like to buy?", bme.getEquipmentName()),
                   "Amount to Buy",
                   JOptionPane.PLAIN_MESSAGE);
 
@@ -210,13 +210,13 @@ public class CBMPartsPanel extends JPanel {
 
                 if (amount > bme.getAmount()) {
                     JOptionPane.showMessageDialog(this,
-                          STR."There are only \{bme.getAmount()} \{bme.getEquipmentName()} parts available.");
+                          String.format("There are only %s %s parts available.", bme.getAmount(), bme.getEquipmentName()));
                     return;
                 }
 
                 if (amount * bme.getCost() > client.getPlayer().getMoney()) {
                     JOptionPane.showMessageDialog(this,
-                          STR."You only have \{client.moneyOrFluMessage(true, true, client.getPlayer().getMoney())}");
+                          String.format("You only have %s", client.moneyOrFluMessage(true, true, client.getPlayer().getMoney())));
                     return;
                 }
 
@@ -225,7 +225,7 @@ public class CBMPartsPanel extends JPanel {
                 JOptionPane.showConfirmDialog(client.getMainFrame(), "Invalid Syntax Try Again.");
                 return;
             }
-            client.sendChat(STR."\{IClient.CAMPAIGN_PREFIX}c buyparts#\{bme.getEquipmentInternalName()}#\{playerAmountString}");
+            client.sendChat(String.format("%sc buyparts#%s#%s", IClient.CAMPAIGN_PREFIX, bme.getEquipmentInternalName(), playerAmountString));
 
         }
     }//end btnBuyPartsPerformed

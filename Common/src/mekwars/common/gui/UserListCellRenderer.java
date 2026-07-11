@@ -135,15 +135,15 @@ public class UserListCellRenderer extends javax.swing.JLabel implements ListCell
         }
 
         if (userLevel >= 30 && userLevel < 100) {
-            setText(STR."^\{invisFlag}\{user.getName()}");
+            setText(String.format("^%s%s", invisFlag, user.getName()));
         }
 
         if (userLevel >= 100 && userLevel < 200) {
-            setText(STR."*\{invisFlag}\{user.getName()}");
+            setText(String.format("*%s%s", invisFlag, user.getName()));
         }
 
         if (userLevel >= 200) {
-            setText(STR."@\{invisFlag}\{user.getName()}");
+            setText(String.format("@%s%s", invisFlag, user.getName()));
         }
 
         //check users No-Play status
@@ -198,11 +198,11 @@ public class UserListCellRenderer extends javax.swing.JLabel implements ListCell
         muteUps.repeat("+", Math.max(0, isMuted - 1));
 
         if (isMuted > 0 && isOnNoPlay) {
-            setText(STR."\{getText()} [muted\{muteUps}, np]");
+            setText(String.format("%s [muted%s, np]", getText(), muteUps));
         } else if (isMuted > 0) {
-            setText(STR."\{getText()} [muted\{muteUps}]");
+            setText(String.format("%s [muted%s]", getText(), muteUps));
         } else if (isOnNoPlay) {
-            setText(STR."\{getText()} [np]");
+            setText(String.format("%s [np]", getText()));
         }
 
 

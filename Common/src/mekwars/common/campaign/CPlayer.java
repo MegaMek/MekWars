@@ -213,7 +213,7 @@ public class CPlayer extends Player {
 
         setAutoReorder(TokenReader.readBoolean(stringTokenizer));
 
-        LOGGER.info(STR."My Player Flags: \{flags.export()}");
+        LOGGER.info(String.format("My Player Flags: %s", flags.export()));
 
         // traps run. sort the HQ. this isn't duplicative, b/c
         // direct loads (PS instead of PL) don't trigger sorts.
@@ -503,7 +503,7 @@ public class CPlayer extends Player {
          * Get the faction configs before starting anything else. I could pause
          * the client and wait for the configs, but I'll let it go. --Torren
          */
-        client.sendChat(STR."\{IClient.CAMPAIGN_PREFIX}c getfactionconfigs#0\{client.getServerConfigs("TIMESTAMP")}");
+        client.sendChat(String.format("%sc getfactionconfigs#0%s", IClient.CAMPAIGN_PREFIX, client.getServerConfigs("TIMESTAMP")));
 
         /*
          * Now that we have a house set, we can check for BM access properly. Do
@@ -531,7 +531,7 @@ public class CPlayer extends Player {
     }
 
     public String getLogo() {
-        return STR."<img height='140' width='130' src ='\{myLogo}'>";
+        return String.format("<img height='140' width='130' src ='%s'>", myLogo);
     }
 
     public void setLogo(String logo) {
@@ -1046,7 +1046,7 @@ public class CPlayer extends Player {
             if (getArmy(army) != null) {
                 getArmy(army).setBV(TokenReader.readInt(stringTokenizer));
             } else {
-                LOGGER.debug(STR."Bad Army id: \{army}");
+                LOGGER.debug(String.format("Bad Army id: %s", army));
             }
         }
     }
@@ -1178,7 +1178,7 @@ public class CPlayer extends Player {
         }
 
         int result;
-        String techAmount = STR."TechsFor\{Unit.getWeightClassDesc(weightClass)}\{Unit.getTypeClassDesc(typeID)}";
+        String techAmount = String.format("TechsFor%s%s", Unit.getWeightClassDesc(weightClass), Unit.getTypeClassDesc(typeID));
         result = MathUtility.parseInt(client.getServerConfigs(techAmount), 0);
 
         // Apply Pilot Mods (AsTech skill)

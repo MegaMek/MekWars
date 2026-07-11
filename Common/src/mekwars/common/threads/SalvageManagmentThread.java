@@ -98,7 +98,7 @@ public class SalvageManagmentThread extends Thread {
 
                 //No techs for this type what so ever! buy more!
                 if (pos != UnitUtils.TECH_PILOT && client.getPlayer().getTotalTechs().get(pos) <= 0) {
-                    client.systemMessage(STR."You have pending work orders for \{UnitUtils.techDescription(pos)} techs, but have none on your pay roll.");
+                    client.systemMessage(String.format("You have pending work orders for %s techs, but have none on your pay roll.", UnitUtils.techDescription(pos)));
                     continue;
                 }
 
@@ -139,7 +139,10 @@ public class SalvageManagmentThread extends Thread {
 
                     synchronized (unit) {
                         if (pos == UnitUtils.TECH_PILOT && !unit.getPilot().getSkills().has(PilotSkill.AsTechSkillID)) {
-                            client.systemMessage(STR."Work order found for the pilot of \{unit.getModelName()} however the pilot cannot salvage this unit.<br>The work order has been terminated.");
+                            client.systemMessage(new StringBuilder("Work order found for the pilot of ")
+                                  .append(unit.getModelName())
+                                  .append(" however the pilot cannot salvage this unit.<br>The work order has been terminated.")
+                                  .toString());
                             workQueue.remove();
                             continue;
                         }
@@ -154,13 +157,13 @@ public class SalvageManagmentThread extends Thread {
                             CriticalSlot criticalSlot = unit.getEntity().getCritical(location, slot);
 
                             if (criticalSlot == null) {
-                                client.systemMessage(STR."\{UnitUtils.techDescription(pos)} tech work order canceled because the critical doesn't exist.");
+                                client.systemMessage(String.format("%s tech work order canceled because the critical doesn't exist.", UnitUtils.techDescription(pos)));
                                 workQueue.remove();
                                 continue;
                             }
 
                             if (criticalSlot.isDamaged()) {
-                                client.systemMessage(STR."\{UnitUtils.techDescription(pos)} tech work order canceled because the critical was damaged.");
+                                client.systemMessage(String.format("%s tech work order canceled because the critical was damaged.", UnitUtils.techDescription(pos)));
                                 workQueue.remove();
                                 continue;
                             }
@@ -172,7 +175,9 @@ public class SalvageManagmentThread extends Thread {
                                 }
 
                                 if (unit.getEntity().getArmor(tempLocation) <= 0) {
-                                    client.systemMessage(STR."\{UnitUtils.techDescription(pos)} tech work order canceled, that sections armor has already been salvaged.");
+                                    client.systemMessage(new StringBuilder(UnitUtils.techDescription(pos))
+                                          .append(" tech work order canceled, that sections armor has already been salvaged.")
+                                          .toString());
                                     workQueue.remove();
                                     continue;
                                 }
@@ -183,7 +188,9 @@ public class SalvageManagmentThread extends Thread {
                                 }
 
                                 if (unit.getEntity().getArmor(location, true) <= 0) {
-                                    client.systemMessage(STR."\{UnitUtils.techDescription(pos)} tech work order canceled, that sections armor has already been salvaged.");
+                                    client.systemMessage(new StringBuilder(UnitUtils.techDescription(pos))
+                                          .append(" tech work order canceled, that sections armor has already been salvaged.")
+                                          .toString());
                                     workQueue.remove();
                                     continue;
                                 }
@@ -194,14 +201,16 @@ public class SalvageManagmentThread extends Thread {
                                 }
 
                                 if (unit.getEntity().getInternal(location) <= 0) {
-                                    client.systemMessage(STR."\{UnitUtils.techDescription(pos)} tech work order canceled, that sections Internal Structure has already been salvaged.");
+                                    client.systemMessage(new StringBuilder(UnitUtils.techDescription(pos))
+                                          .append(" tech work order canceled, that sections Internal Structure has already been salvaged.")
+                                          .toString());
                                     workQueue.remove();
                                     continue;
                                 }
                             }
                         }
 
-                        client.sendChat(STR."/c salvageunit#\{unit.getId()}#\{location}#\{slot}#\{armor}#\{pos}#false");
+                        client.sendChat(String.format("/c salvageunit#%s#%s#%s#%s#%s#false", unit.getId(), location, slot, armor, pos));
                         workQueue.remove();
                         availableTechs--;
                     }
@@ -219,7 +228,7 @@ public class SalvageManagmentThread extends Thread {
         String id = Integer.toString(unitID);
 
         for (int tech = UnitUtils.TECH_GREEN; tech <= UnitUtils.TECH_PILOT; tech++) {
-            workOrders.elementAt(tech).removeIf(repair -> repair.startsWith(STR."\{id}#"));
+            workOrders.elementAt(tech).removeIf(repair -> repair.startsWith(String.format("%s#", id)));
         }
     }
 
@@ -232,7 +241,7 @@ public class SalvageManagmentThread extends Thread {
                 break;
             }
         }
-        client.systemMessage(STR."Removed work orders for for \{UnitUtils.techDescription(techType)} techs.");
+        client.systemMessage(String.format("Removed work orders for for %s techs.", UnitUtils.techDescription(techType)));
     }
 
     public boolean isQueued(int Location, int slot, int unitId) {
@@ -264,7 +273,7 @@ public class SalvageManagmentThread extends Thread {
 
         for (int tech = UnitUtils.TECH_GREEN; tech <= UnitUtils.TECH_PILOT; tech++) {
             for (String repair : workOrders.elementAt(tech)) {
-                if (repair.startsWith(STR."\{id}#")) {
+                if (repair.startsWith(String.format("%s#", id))) {
                     return true;
                 }
             }
@@ -290,9 +299,9 @@ public class SalvageManagmentThread extends Thread {
                     }
 
                     if (slotID == UnitUtils.LOC_FRONT_ARMOR) {
-                        data.append(STR."\{UnitUtils.techDescription(tech)} tech queued for external armor salavage \{unit.getEntity()
+                        data.append(String.format("%s tech queued for external armor salavage %s.", UnitUtils.techDescription(tech), unit.getEntity()
                                                                                                                             .getLocationAbbr(
-                                                                                                                                  locationID)}.");
+                                                                                                                                  locationID)));
                     } else if (slotID == UnitUtils.LOC_REAR_ARMOR) {
                         data.append(UnitUtils.techDescription(tech))
                               .append(" tech queued for external armor salvage ")

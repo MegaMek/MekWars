@@ -36,7 +36,7 @@ public class UserListPopupListener extends MouseAdapter implements ActionListene
             if (row > -1 && row < cUserListPanel.getcUserListModelJList().getModel().getSize()) {
                 //don't show mail/money/mute/noplay for player himself
                 CUser user = cUserListPanel.getcUserListModel().getUser(row);
-                String input = STR."\{IClient.GUI_PREFIX}mail \{user.getName()}, ";
+                String input = String.format("%smail %s, ", IClient.GUI_PREFIX, user.getName());
                 input = input + cUserListPanel.getClient().getMainFrame().getMainPanel().getCommPanel().getInput();
                 cUserListPanel.getClient().getMainFrame().getMainPanel().getCommPanel().setInput(input);
                 cUserListPanel.getClient().getMainFrame().getMainPanel().getCommPanel().focusInputField();
@@ -108,46 +108,46 @@ public class UserListPopupListener extends MouseAdapter implements ActionListene
                 IClient panelClient = cUserListPanel.getClient();
 
                 if (!userName.equalsIgnoreCase(panelClient.getPlayer().getName())) {
-                    item = new JMenuItem(STR."<HTML>Mail \{userName}</b></HTML>");
-                    item.setActionCommand(STR."MA|\{userName}");
+                    item = new JMenuItem(String.format("<HTML>Mail %s</b></HTML>", userName));
+                    item.setActionCommand(String.format("MA|%s", userName));
                     item.addActionListener(this);
                     popup.add(item);
 
                     if (cUserListPanel.isLoggedIn() && user.getStatus() != IClient.STATUS_LOGGED_OUT) {
                         JMenu sendMen = new JMenu("Send");
 
-                        item = new JMenuItem(STR."Send \{panelClient.moneyOrFluMessage(true,
+                        item = new JMenuItem(String.format("Send %s", panelClient.moneyOrFluMessage(true,
                               false,
-                              -2)}");
-                        item.setActionCommand(STR."MO|\{userName}");
+                              -2)));
+                        item.setActionCommand(String.format("MO|%s", userName));
                         item.addActionListener(this);
                         sendMen.add(item);
 
-                        item = new JMenuItem(STR."Send \{panelClient.getServerConfigs("RPLongName")}");
-                        item.setActionCommand(STR."MR|\{userName}");
+                        item = new JMenuItem(String.format("Send %s", panelClient.getServerConfigs("RPLongName")));
+                        item.setActionCommand(String.format("MR|%s", userName));
                         item.addActionListener(this);
                         sendMen.add(item);
 
-                        item = new JMenuItem(STR."Send \{panelClient.getServerConfigs("FluLongName")}"); //@salient
-                        item.setActionCommand(STR."MI|\{userName}");
+                        item = new JMenuItem(String.format("Send %s", panelClient.getServerConfigs("FluLongName"))); //@salient
+                        item.setActionCommand(String.format("MI|%s", userName));
                         item.addActionListener(this);
                         sendMen.add(item);
 
                         item = new JMenuItem("Send Unit");
-                        item.setActionCommand(STR."TU|\{userName}");
+                        item.setActionCommand(String.format("TU|%s", userName));
                         item.addActionListener(this);
                         sendMen.add(item);
 
                         if (MathUtility.parseBoolean(panelClient.getServerConfigs("AllowPersonalPilotQueues"), false)) {
                             item = new JMenuItem("Send Pilot");
-                            item.setActionCommand(STR."TP|\{userName}");
+                            item.setActionCommand(String.format("TP|%s", userName));
                             item.addActionListener(this);
                             sendMen.add(item);
                         }
 
                         if (MathUtility.parseBoolean(panelClient.getServerConfigs("UseDirectSell"), false)) {
                             item = new JMenuItem("Direct Sell Unit");
-                            item.setActionCommand(STR."DSU|\{userName}");
+                            item.setActionCommand(String.format("DSU|%s", userName));
                             item.addActionListener(this);
                             sendMen.add(item);
                         }
@@ -177,12 +177,12 @@ public class UserListPopupListener extends MouseAdapter implements ActionListene
 
                     if (!matched) {
                         item = new JMenuItem("Mute (Main)");
-                        item.setActionCommand(STR."MU|\{userName}|PUBLIC");
+                        item.setActionCommand(String.format("MU|%s|PUBLIC", userName));
                         item.addActionListener(this);
                         blockMen.add(item);
                     } else {
                         item = new JMenuItem("Unmute (Main)");
-                        item.setActionCommand(STR."UMU|\{userName}|PUBLIC");
+                        item.setActionCommand(String.format("UMU|%s|PUBLIC", userName));
                         item.addActionListener(this);
                         blockMen.add(item);
                     }
@@ -203,12 +203,12 @@ public class UserListPopupListener extends MouseAdapter implements ActionListene
 
                     if (!matched) {
                         item = new JMenuItem("Mute (Private)");
-                        item.setActionCommand(STR."MU|\{userName}|PRIVATE");
+                        item.setActionCommand(String.format("MU|%s|PRIVATE", userName));
                         item.addActionListener(this);
                         blockMen.add(item);
                     } else {
                         item = new JMenuItem("Unmute (Private)");
-                        item.setActionCommand(STR."UMU|\{userName}|PRIVATE");
+                        item.setActionCommand(String.format("UMU|%s|PRIVATE", userName));
                         item.addActionListener(this);
                         blockMen.add(item);
                     }
@@ -229,12 +229,12 @@ public class UserListPopupListener extends MouseAdapter implements ActionListene
 
                         if (!matched) {
                             item = new JMenuItem("Mute (House)");
-                            item.setActionCommand(STR."MU|\{userName}|HOUSE");
+                            item.setActionCommand(String.format("MU|%s|HOUSE", userName));
                             item.addActionListener(this);
                             blockMen.add(item);
                         } else {
                             item = new JMenuItem("Unmute (House)");
-                            item.setActionCommand(STR."UMU|\{userName}|HOUSE");
+                            item.setActionCommand(String.format("UMU|%s|HOUSE", userName));
                             item.addActionListener(this);
                             blockMen.add(item);
                         }
@@ -258,10 +258,10 @@ public class UserListPopupListener extends MouseAdapter implements ActionListene
 
                             if (isOnNoPlay) {
                                 item = new JMenuItem("Remove from No-Play");
-                                item.setActionCommand(STR."RNP|\{userName}");
+                                item.setActionCommand(String.format("RNP|%s", userName));
                             } else {
                                 item = new JMenuItem("Add to No-Play");
-                                item.setActionCommand(STR."ANP|\{userName}");
+                                item.setActionCommand(String.format("ANP|%s", userName));
                             }
 
                             item.addActionListener(this);
@@ -340,21 +340,21 @@ public class UserListPopupListener extends MouseAdapter implements ActionListene
 
                 item.setSelected(panelClient.getConfig().isParam("USER_LIST_ACTIVITY_BUTTON"));
 
-                item.setActionCommand(STR."ULA|\{!item.isSelected()}");
+                item.setActionCommand(String.format("ULA|%s", !item.isSelected()));
                 item.addActionListener(this);
                 settingSub.add(item);
 
                 //bold names
                 item = new JCheckBoxMenuItem("Bold Names");
                 item.setSelected(panelClient.getConfig().isParam("USER_LIST_BOLD"));
-                item.setActionCommand(STR."ULB|\{!item.isSelected()}");
+                item.setActionCommand(String.format("ULB|%s", !item.isSelected()));
                 item.addActionListener(this);
                 settingSub.add(item);
 
                 //color
                 item = new JCheckBoxMenuItem("Colored Names");
                 item.setSelected(panelClient.getConfig().isParam("USER_LIST_COLOR"));
-                item.setActionCommand(STR."ULC|\{!item.isSelected()}");
+                item.setActionCommand(String.format("ULC|%s", !item.isSelected()));
                 item.addActionListener(this);
                 settingSub.add(item);
 
@@ -368,14 +368,14 @@ public class UserListPopupListener extends MouseAdapter implements ActionListene
                 //player count
                 item = new JCheckBoxMenuItem("Player Count");
                 item.setSelected(panelClient.getConfig().isParam("USER_LIST_COUNT"));
-                item.setActionCommand(STR."ULN|\{!item.isSelected()}");
+                item.setActionCommand(String.format("ULN|%s", !item.isSelected()));
                 item.addActionListener(this);
                 settingSub.add(item);
 
                 //images
                 item = new JCheckBoxMenuItem("Status Images");
                 item.setSelected(panelClient.getConfig().isParam("USER_LIST_IMAGE"));
-                item.setActionCommand(STR."ULI|\{!item.isSelected()}");
+                item.setActionCommand(String.format("ULI|%s", !item.isSelected()));
                 item.addActionListener(this);
                 settingSub.add(item);
 
@@ -438,7 +438,7 @@ public class UserListPopupListener extends MouseAdapter implements ActionListene
             userName = stringTokenizer.nextToken();
             String mode = stringTokenizer.nextToken();
             String searchString = userName;
-            String ignoreList = cUserListPanel.getClient().getConfig().getParam(STR."IGNORE\{mode}");
+            String ignoreList = cUserListPanel.getClient().getConfig().getParam(String.format("IGNORE%s", mode));
             StringBuilder newList = new StringBuilder();
             StringTokenizer tokenizer = new StringTokenizer(ignoreList, ",");
             boolean matched = false;
@@ -457,12 +457,12 @@ public class UserListPopupListener extends MouseAdapter implements ActionListene
                 newList.append(searchString).append(",");
             }
 
-            cUserListPanel.getClient().getConfig().setParam(STR."IGNORE\{mode}", newList.toString());
+            cUserListPanel.getClient().getConfig().setParam(String.format("IGNORE%s", mode), newList.toString());
             cUserListPanel.getClient().setIgnorePublic();
             cUserListPanel.getClient().setIgnoreHouse();
             cUserListPanel.getClient().setIgnorePrivate();
             cUserListPanel.getClient().getConfig().saveConfig();
-            String toUser = STR."CH|CLIENT: You muted \{searchString} (\{mode}).";
+            String toUser = String.format("CH|CLIENT: You muted %s (%s).", searchString, mode);
             cUserListPanel.getClient().doParseDataInput(toUser);
             cUserListPanel.getcUserListModelJList().repaint();
         }//end mute
@@ -471,7 +471,7 @@ public class UserListPopupListener extends MouseAdapter implements ActionListene
             userName = stringTokenizer.nextToken();
             String mode = stringTokenizer.nextToken();
             String searchString = userName;
-            String ignoreList = cUserListPanel.getClient().getConfig().getParam(STR."IGNORE\{mode}");
+            String ignoreList = cUserListPanel.getClient().getConfig().getParam(String.format("IGNORE%s", mode));
             StringBuilder newList = new StringBuilder();
             StringTokenizer tokenizer = new StringTokenizer(ignoreList, ",");
 
@@ -485,25 +485,25 @@ public class UserListPopupListener extends MouseAdapter implements ActionListene
 
             }//end while(more ignore tokens)
 
-            cUserListPanel.getClient().getConfig().setParam(STR."IGNORE\{mode}", newList.toString());
+            cUserListPanel.getClient().getConfig().setParam(String.format("IGNORE%s", mode), newList.toString());
             cUserListPanel.getClient().setIgnorePublic();
             cUserListPanel.getClient().setIgnoreHouse();
             cUserListPanel.getClient().setIgnorePrivate();
             cUserListPanel.getClient().getConfig().saveConfig();
 
-            String toUser = STR."CH|CLIENT: You unmuted \{searchString} (\{mode}).";
+            String toUser = String.format("CH|CLIENT: You unmuted %s (%s).", searchString, mode);
             cUserListPanel.getClient().doParseDataInput(toUser);
             cUserListPanel.getcUserListModelJList().repaint();
         }//end unmute
 
         if (command.equals("RNP") && stringTokenizer.hasMoreElements()) {
             userName = stringTokenizer.nextToken();
-            cUserListPanel.getClient().sendChat(STR."\{IClient.CAMPAIGN_PREFIX}c noplay#remove#\{userName}");
+            cUserListPanel.getClient().sendChat(String.format("%sc noplay#remove#%s", IClient.CAMPAIGN_PREFIX, userName));
         }
 
         if (command.equals("ANP") && stringTokenizer.hasMoreElements()) {
             userName = stringTokenizer.nextToken();
-            cUserListPanel.getClient().sendChat(STR."\{IClient.CAMPAIGN_PREFIX}c noplay#add#\{userName}");
+            cUserListPanel.getClient().sendChat(String.format("%sc noplay#add#%s", IClient.CAMPAIGN_PREFIX, userName));
         }
 
         //change sort mode

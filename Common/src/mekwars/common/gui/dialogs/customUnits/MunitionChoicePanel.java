@@ -75,13 +75,13 @@ public class MunitionChoicePanel extends JPanel {
             }
             if (mounted.getLocation() == megamek.common.units.Entity.LOC_NONE) {
                 if (customUnitDialog.isUsingCrits()) {
-                    m_choice.addItem(STR."\{ammoType.getName()} (\{shotsLeft}/1/\{client.getPlayer()
+                    m_choice.addItem(String.format("%s (%s/1/%s)", ammoType.getName(), shotsLeft, client.getPlayer()
                                                                                         .getPartsCache()
-                                                                                        .getPartsCritCount(ammoType.getInternalName())})");
+                                                                                        .getPartsCritCount(ammoType.getInternalName())));
                 } else {
-                    m_choice.addItem(STR."\{ammoType.getName()} (\{shotsLeft}/1) \{client.moneyOrFluMessage(true,
+                    m_choice.addItem(String.format("%s (%s/1) %s", ammoType.getName(), shotsLeft, client.moneyOrFluMessage(true,
                           true,
-                          (int) ammoCost)}");
+                          (int) ammoCost)));
                 }
             } else {
                 int refillShots = ammoType.getShots();
@@ -102,15 +102,15 @@ public class MunitionChoicePanel extends JPanel {
                 }
 
                 if (customUnitDialog.isUsingCrits()) {
-                    m_choice.addItem(STR."\{ammoType.getName()} (\{shotsLeft}/\{refillShots}/\{client.getPlayer()
+                    m_choice.addItem(String.format("%s (%s/%s/%s)", ammoType.getName(), shotsLeft, refillShots, client.getPlayer()
                                                                                                      .getPartsCache()
                                                                                                      .getPartsCritCount(
-                                                                                                           ammoType.getInternalName())})");
+                                                                                                           ammoType.getInternalName())));
                 } else {
-                    m_choice.addItem(STR."\{ammoType.getName()} (\{shotsLeft}/\{refillShots}) \{client.moneyOrFluMessage(
+                    m_choice.addItem(String.format("%s (%s/%s) %s", ammoType.getName(), shotsLeft, refillShots, client.moneyOrFluMessage(
                           true,
                           true,
-                          cost)}");
+                          cost)));
                 }
 
             }
@@ -177,8 +177,8 @@ public class MunitionChoicePanel extends JPanel {
 
         // m_mounted.setShotsLeft(totalShots);
         client.sendChat(
-              STR."\{IClient.CAMPAIGN_PREFIX}c setunitammo#\{customUnitDialog.getEntity()
-                                                                   .getExternalId()}#\{location}#\{ammoType.getAmmoType()}#\{ammoType.getInternalName()}#\{totalShots}#\{hotloaded}");
+              String.format("%sc setunitammo#%s#%s#%s#%s#%s#%s", IClient.CAMPAIGN_PREFIX, customUnitDialog.getEntity()
+                                                                   .getExternalId(), location, ammoType.getAmmoType(), ammoType.getInternalName(), totalShots, hotloaded));
     }
 
     @Override

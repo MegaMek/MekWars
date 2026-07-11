@@ -755,7 +755,23 @@ final public class AdvancedTerrain {
     }
 
     public String toImageDescription() {
-        return STR."<table><TR><TD>lightConditions</TD><TD>weatherConditions</TD><TD>windStrength</TD><TD>windDirection</TD><TD>shiftWindDirection</TD><TD>shiftWindStrength</TD><TD>fog</TD><TD>temperature</TD><TD>emi</TD><TD>terrainAffected</TD><TD>maxWindStrength</TD></TR><TR><TD>\{lightConditions}</TD><TD>\{weatherConditions}</TD><TD>\{windStrength}</TD><TD>\{windDirection}</TD><TD>\{shiftWindDirection}</TD><TD>\{shiftWindStrength}</TD><TD>\{fog}</TD><TD>\{temperature}</TD><TD>\{emi}</TD><TD>\{terrainAffected}</TD><TD>\{maxWindStrength}</TR><table>";
+        StringBuilder sb = new StringBuilder();
+        sb.append("<table><TR>");
+        sb.append("<TD>lightConditions</TD><TD>weatherConditions</TD><TD>windStrength</TD><TD>windDirection</TD>");
+        sb.append("<TD>shiftWindDirection</TD><TD>shiftWindStrength</TD><TD>fog</TD><TD>temperature</TD>");
+        sb.append("<TD>emi</TD><TD>terrainAffected</TD><TD>maxWindStrength</TD></TR><TR>");
+        sb.append("<TD>").append(lightConditions).append("</TD>");
+        sb.append("<TD>").append(weatherConditions).append("</TD>");
+        sb.append("<TD>").append(windStrength).append("</TD>");
+        sb.append("<TD>").append(windDirection).append("</TD>");
+        sb.append("<TD>").append(shiftWindDirection).append("</TD>");
+        sb.append("<TD>").append(shiftWindStrength).append("</TD>");
+        sb.append("<TD>").append(fog).append("</TD>");
+        sb.append("<TD>").append(temperature).append("</TD>");
+        sb.append("<TD>").append(emi).append("</TD>");
+        sb.append("<TD>").append(terrainAffected).append("</TD>");
+        sb.append("<TD>").append(maxWindStrength).append("</TR><table>");
+        return sb.toString();
     }
 
     public String WeatherForecast() {

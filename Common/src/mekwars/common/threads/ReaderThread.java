@@ -116,7 +116,7 @@ public class ReaderThread extends Thread {
                     _listener.incomingMessage(newLine);
 
                 } else {
-                    LOGGER.debug(STR."Null listener: \{newLine}");
+                    LOGGER.debug(String.format("Null listener: %s", newLine));
                 }
             }
 
@@ -179,7 +179,7 @@ public class ReaderThread extends Thread {
 
         while (totalRead < size) {
             totalRead += _sis.read(compressedBytes, totalRead, size - totalRead);
-            LOGGER.debug(STR."< Read \{totalRead} of \{size}");
+            LOGGER.debug(String.format("< Read %s of %s", totalRead, size));
         }
 
         inflater.reset();
@@ -189,7 +189,7 @@ public class ReaderThread extends Thread {
         BufferedReader br = new BufferedReader(new InputStreamReader(new ByteArrayInputStream(rawBytes, 0, textLength),
               StandardCharsets.UTF_8));
         while ((command = br.readLine()) != null) {
-            LOGGER.debug(STR."< inflated: \{command}");
+            LOGGER.debug(String.format("< inflated: %s", command));
             _listener.incomingMessage(command);
         }
     }

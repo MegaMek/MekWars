@@ -133,7 +133,7 @@ public class CUserListPanel extends JPanel implements ActionListener {
         countLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
         countLabel.setAlignmentY(Component.CENTER_ALIGNMENT);
         countLabel.setBorder(BorderFactory.createEmptyBorder(3, 2, 2, 2));
-        countLabel.setText(STR."Player Count: \{cUserListModelJList.getModel().getSize()}");
+        countLabel.setText(String.format("Player Count: %s", cUserListModelJList.getModel().getSize()));
         countLabel.setVisible(this.client.getConfig().isParam("USER_LIST_COUNT"));
 
         if (new File("./data/images/activatebutton.png").exists()) {
@@ -379,7 +379,7 @@ public class CUserListPanel extends JPanel implements ActionListener {
         } catch (Exception ex) {
             LOGGER.error(ex, "Unable to refresh the model. {}", ex.getLocalizedMessage());
         }
-        countLabel.setText(STR."Player Count: \{cUserListModelJList.getModel().getSize()}");
+        countLabel.setText(String.format("Player Count: %s", cUserListModelJList.getModel().getSize()));
     }
 
     public boolean isLoggedIn() {
@@ -450,7 +450,7 @@ public class CUserListPanel extends JPanel implements ActionListener {
         if (e.getSource() == activityButton) {
             if (client.getMyStatus() == IClient.STATUS_RESERVE)//is reserve
             {
-                client.sendChat(STR."\{IClient.CAMPAIGN_PREFIX}c activate#\{IClient.CLIENT_VERSION}");
+                client.sendChat(String.format("%sc activate#%s", IClient.CAMPAIGN_PREFIX, IClient.CLIENT_VERSION));
             } else if (client.getMyStatus() == IClient.STATUS_ACTIVE) {
                 client.sendChat("/c deactivate");
             } else if (client.getMyStatus() == IClient.STATUS_LOGGED_OUT) {

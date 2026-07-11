@@ -332,7 +332,7 @@ public final class TraitDialog implements ActionListener, KeyListener {
     }
 
     private void loadFactionTraits(String faction) {
-        File traitFile = new File(STR."\{client.getCacheDir()}/\{faction.toLowerCase()}traitnames.txt");
+        File traitFile = new File(String.format("%s/%straitnames.txt", client.getCacheDir(), faction.toLowerCase()));
         TreeSet<String> names = new TreeSet<>();
 
         if (traitComboBox.getItemCount() > 0) {
@@ -352,7 +352,7 @@ public final class TraitDialog implements ActionListener, KeyListener {
 
             names.forEach(traitComboBox::addItem);
         } catch (Exception ex) {
-            LOGGER.error(ex, STR."Unable to load faction \{faction}");
+            LOGGER.error(ex, String.format("Unable to load faction %s", faction));
         } finally {
             try {
                 dis.close();
@@ -368,7 +368,7 @@ public final class TraitDialog implements ActionListener, KeyListener {
     }
 
     private void populateTraits(String faction, String trait) {
-        File traitFile = new File(STR."\{client.getCacheDir()}/\{faction.toLowerCase()}traitnames.txt");
+        File traitFile = new File(String.format("%s/%straitnames.txt", client.getCacheDir(), faction.toLowerCase()));
 
         gunneryLaserText.setText("0");
         gunneryBallisticText.setText("0");
@@ -470,7 +470,7 @@ public final class TraitDialog implements ActionListener, KeyListener {
                     }
 
                     String result = getResults(faction, trait.trim());
-                    client.sendChat(STR."\{IClient.CAMPAIGN_PREFIX}c addtrait#\{result}");
+                    client.sendChat(String.format("%sc addtrait#%s", IClient.CAMPAIGN_PREFIX, result));
                     loadAllFiles();
                     loadFactionTraits(faction);
                 }
@@ -494,7 +494,7 @@ public final class TraitDialog implements ActionListener, KeyListener {
                           "Remove it?",
                           JOptionPane.YES_NO_OPTION);
                     if (choice == JOptionPane.OK_OPTION) {
-                        client.sendChat(STR."\{IClient.CAMPAIGN_PREFIX}c removetrait#\{faction}#\{trait.trim()}#CONFIRM");
+                        client.sendChat(String.format("%sc removetrait#%s#%s#CONFIRM", IClient.CAMPAIGN_PREFIX, faction, trait.trim()));
                         loadAllFiles();
                         loadFactionTraits(faction);
                     }
@@ -523,7 +523,7 @@ public final class TraitDialog implements ActionListener, KeyListener {
     }
 
     public String getResults(String faction, String trait) {
-        String result = STR."\{faction}#\{trait}#";
+        String result = String.format("%s#%s#", faction, trait);
 
         if (MathUtility.parseInt(gunneryBallisticText.getText(), 0) != 0) {
             result += PilotSkill.GunneryBallisticSkillID;

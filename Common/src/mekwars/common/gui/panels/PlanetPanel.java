@@ -72,7 +72,7 @@ public class PlanetPanel extends JPanel {
 
     public void update(Planet planet) {
         this.planet = planet;
-        name.setText(STR."Name: \{planet.getName()}");
+        name.setText(String.format("Name: %s", planet.getName()));
         // influence
         StringBuilder stringBuilder = new StringBuilder("<html><body>Owner: ");
 
@@ -97,7 +97,7 @@ public class PlanetPanel extends JPanel {
         stringBuilder.append(StringUtils.color2html(map.getMap().adjustColor(color))).append(">");
         stringBuilder.append("<b>").append(planetOwner).append("</b></font></body></html>");
         this.influence.setText(stringBuilder.toString());
-        unitFactories.setText(STR."Factories: \{planet.getFactoryCount()}");
+        unitFactories.setText(String.format("Factories: %s", planet.getFactoryCount()));
 
         map.getMapControl().setBounds(0, 0, 2000, 2000);
     }

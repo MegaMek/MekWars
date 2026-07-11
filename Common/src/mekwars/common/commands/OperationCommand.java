@@ -81,7 +81,7 @@ public class OperationCommand extends Command {
                 Properties properties = (Properties) xml.fromXML(stringTokenizer.nextToken());
                 Operation operation = new Operation(name, new DefaultOperation(), properties);
                 String folder = "./data/operations/xml";
-                String fileName = STR."\{name}.xml";
+                String fileName = String.format("%s.xml", name);
                 operation.writeToXmlFile(folder, fileName);
                 break;
             case "view":
@@ -110,7 +110,7 @@ public class OperationCommand extends Command {
                         fileWriter = new FileWriter(md5File);
 
                         for (String key : serverMd5s.keySet()) {
-                            fileWriter.write(STR."\{key}#\{serverMd5s.get(key)}\n");
+                            fileWriter.write(String.format("%s#%s\n", key, serverMd5s.get(key)));
                         }
 
                         fileWriter.close();
@@ -126,14 +126,14 @@ public class OperationCommand extends Command {
                         if (fileList != null) {
                             for (String string : fileList) {
                                 if (string.endsWith(".xml")) {
-                                    File file = new File(STR."\{dir}/\{string}");
+                                    File file = new File(String.format("%s/%s", dir, string));
                                     file.delete();
                                 }
                             }
                         }
                     }
 
-                    client.sendChat(STR."\{IClient.CAMPAIGN_PREFIX}getops getall");
+                    client.sendChat(String.format("%sgetops getall", IClient.CAMPAIGN_PREFIX));
                     return;
                 } else {
                     // We *do* have the file.  Check the contents.
@@ -166,9 +166,9 @@ public class OperationCommand extends Command {
                             fileWriter = new FileWriter(md5File);
 
                             for (String key : serverMd5s.keySet()) {
-                                fileWriter.write(STR."""
-\{key}#\{serverMd5s.get(key)}
-""");
+                                fileWriter.write(String.format("""
+%s#%s
+""", key, serverMd5s.get(key)));
                             }
 
                             fileWriter.close();
@@ -186,7 +186,7 @@ public class OperationCommand extends Command {
                             for (String string : fileList) {
                                 if (string.endsWith(".xml")) {
                                     if (!opsToTest.contains(string.replace(".xml", ""))) {
-                                        File file = new File(STR."\{dir}/\{string}");
+                                        File file = new File(String.format("%s/%s", dir, string));
                                         file.delete();
                                     }
                                 }
@@ -197,11 +197,11 @@ public class OperationCommand extends Command {
                     // Now, check that files that should exist do
                     if (!dir.exists()) {
                         // The xml dir doesn't exist.  Obviously we need to get everything
-                        client.sendChat(STR."\{IClient.CAMPAIGN_PREFIX}getops getall");
+                        client.sendChat(String.format("%sgetops getall", IClient.CAMPAIGN_PREFIX));
                         return;
                     } else {
                         for (String opName : opsToTest) {
-                            File file = new File(STR."\{dir}/\{opName}.xml");
+                            File file = new File(String.format("%s/%s.xml", dir, opName));
 
                             if (!file.exists()) {
                                 opsToGet.add(opName);
@@ -231,7 +231,7 @@ public class OperationCommand extends Command {
                         }
 
                         // Now, request these
-                        client.sendChat(STR."\{IClient.CAMPAIGN_PREFIX}getops getsome#\{sb.toString()}");
+                        client.sendChat(String.format("%sgetops getsome#%s", IClient.CAMPAIGN_PREFIX, sb.toString()));
                     } else {
                         // Our ops are good
                         operationViewerDialog = new OperationViewerDialog(client.getMainFrame(), client);

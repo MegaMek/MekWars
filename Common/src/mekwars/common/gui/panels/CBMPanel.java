@@ -353,10 +353,10 @@ public class CBMPanel extends JPanel {
 
                 //generate a new option dialog
                 String playerBidString = JOptionPane.showInputDialog(client.getMainFrame(),
-                      STR."<HTML><center>How much would you like to bid on the \{cbmUnit.getModelName()}?<BR>Minimum is \{client.moneyOrFluMessage(
+                      String.format("<HTML><center>How much would you like to bid on the %s?<BR>Minimum is %s.</center></HTML>", cbmUnit.getModelName(), client.moneyOrFluMessage(
                             true,
                             true,
-                            cbmUnit.getMinBid())}.</center></HTML>",
+                            cbmUnit.getMinBid())),
                       "Amount to Bid",
                       JOptionPane.PLAIN_MESSAGE);
 
@@ -369,15 +369,17 @@ public class CBMPanel extends JPanel {
                     int playerBid = MathUtility.parseInt(playerBidString, -1);
 
                     if (playerBid < cbmUnit.getMinBid()) {
-                        String toUser = STR."CH|CLIENT: You tried to bid less than the minimum your contacts are willing to accept for the \{cbmUnit.getModelName()}. Try bidding \{client.moneyOrFluMessage(
-                              true,
-                              false,
-                              cbmUnit.getMinBid())} or more.";
+                        String toUser = new StringBuilder("CH|CLIENT: You tried to bid less than the minimum your contacts are willing to accept for the ")
+                              .append(cbmUnit.getModelName())
+                              .append(". Try bidding ")
+                              .append(client.moneyOrFluMessage(true, false, cbmUnit.getMinBid()))
+                              .append(" or more.")
+                              .toString();
                         client.doParseDataInput(toUser);
                         return;
                     }
 
-                    client.sendChat(STR."\{IClient.CAMPAIGN_PREFIX}c bid#\{auctionID}#\{playerBid}");
+                    client.sendChat(String.format("%sc bid#%s#%s", IClient.CAMPAIGN_PREFIX, auctionID, playerBid));
 
                     //this clears the selection, so unhighlight the bid button. sometimes the
                     //bid and retract buttons will be active simultaneously, so disable both
@@ -408,7 +410,7 @@ public class CBMPanel extends JPanel {
         }
 
         //returns passed. send the recall command and deselect the buttons.
-        client.sendChat(STR."\{IClient.CAMPAIGN_PREFIX}c recallbid#\{cbmUnit.getAuctionID()}");
+        client.sendChat(String.format("%sc recallbid#%s", IClient.CAMPAIGN_PREFIX, cbmUnit.getAuctionID()));
         btnRecallBid.setEnabled(false);
         btnRecallUnit.setEnabled(false);
         btnBid.setEnabled(false);
@@ -433,7 +435,7 @@ public class CBMPanel extends JPanel {
         }
 
         //returns passed. send the recall command and deselect the buttons.
-        client.sendChat(STR."\{IClient.CAMPAIGN_PREFIX}c recall#\{cbmUnit.getAuctionID()}");
+        client.sendChat(String.format("%sc recall#%s", IClient.CAMPAIGN_PREFIX, cbmUnit.getAuctionID()));
         btnRecallBid.setEnabled(false);
         btnRecallUnit.setEnabled(false);
         btnBid.setEnabled(false);

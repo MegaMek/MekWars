@@ -114,10 +114,10 @@ public class CUnit extends Unit {
     public static int getPriceForUnit(IClient client, int weightClass, int type_id, House producer) {
         int result;
 
-        String classType = STR."\{Unit.getWeightClassDesc(weightClass)}\{Unit.getTypeClassDesc(type_id)}Price";
+        String classType = String.format("%s%sPrice", Unit.getWeightClassDesc(weightClass), Unit.getTypeClassDesc(type_id));
 
         if (type_id == Unit.MEK) {
-            result = MathUtility.parseInt(client.getServerConfigs(STR."\{Unit.getWeightClassDesc(weightClass)}Price"),
+            result = MathUtility.parseInt(client.getServerConfigs(String.format("%sPrice", Unit.getWeightClassDesc(weightClass))),
                   0);
         } else {
             result = MathUtility.parseInt(client.getServerConfigs(classType), 0);
@@ -140,10 +140,10 @@ public class CUnit extends Unit {
      */
     public static int getInfluenceForUnit(IClient client, int weightClass, int type_id, House producer) {
         int result;
-        String classType = STR."\{Unit.getWeightClassDesc(weightClass)}\{Unit.getTypeClassDesc(type_id)}Inf";
+        String classType = String.format("%s%sInf", Unit.getWeightClassDesc(weightClass), Unit.getTypeClassDesc(type_id));
 
         if (type_id == Unit.MEK) {
-            result = MathUtility.parseInt(client.getServerConfigs(STR."\{Unit.getWeightClassDesc(weightClass)}Inf"), 0);
+            result = MathUtility.parseInt(client.getServerConfigs(String.format("%sInf", Unit.getWeightClassDesc(weightClass))), 0);
         } else {
             result = MathUtility.parseInt(client.getServerConfigs(classType), 0);
         }
@@ -167,10 +167,10 @@ public class CUnit extends Unit {
      */
     public static int getPPForUnit(IClient client, int weightClass, int type_id, House producer) {
         int result;
-        String classType = STR."\{Unit.getWeightClassDesc(weightClass)}\{Unit.getTypeClassDesc(type_id)}PP";
+        String classType = String.format("%s%sPP", Unit.getWeightClassDesc(weightClass), Unit.getTypeClassDesc(type_id));
 
         if (type_id == Unit.MEK) {
-            result = MathUtility.parseInt(client.getServerConfigs(STR."\{Unit.getWeightClassDesc(weightClass)}PP"), 0);
+            result = MathUtility.parseInt(client.getServerConfigs(String.format("%sPP", Unit.getWeightClassDesc(weightClass))), 0);
         } else {
             result = MathUtility.parseInt(client.getServerConfigs(classType), 0);
         }
@@ -193,7 +193,7 @@ public class CUnit extends Unit {
             return 0;
         }
 
-        String armorCost = STR."CostPoint\{UnitUtils.getArmorShortName(unit, location)}";
+        String armorCost = String.format("CostPoint%s", UnitUtils.getArmorShortName(unit, location));
         cost = MathUtility.parseDouble(client.getServerConfigs(armorCost), 0.0);
 
         return cost;
@@ -206,7 +206,7 @@ public class CUnit extends Unit {
             return 0;
         }
 
-        String armorCost = STR."CostPoint\{UnitUtils.getInternalShortName(unit)}IS";
+        String armorCost = String.format("CostPoint%sIS", UnitUtils.getInternalShortName(unit));
         cost = MathUtility.parseDouble(client.getServerConfigs(armorCost), 0.0);
 
         return cost;
@@ -290,7 +290,7 @@ public class CUnit extends Unit {
         StringTokenizer stringTokenizer;
         String element;
         String unitDamage;
-        LOGGER.info(STR."PDATA: \{data}");
+        LOGGER.info(String.format("PDATA: %s", data));
 
         stringTokenizer = new StringTokenizer(data, "$");
         element = TokenReader.readString(stringTokenizer);
@@ -476,7 +476,7 @@ public class CUnit extends Unit {
         unitEntity.setCrew(UnitUtils.createEntityPilot(this));
 
         if (unitEntity.getChassis().equals("Error")) {
-            setProducer(STR."Unable to find \{getUnitFilename()} on clients system!");
+            setProducer(String.format("Unable to find %s on clients system!", getUnitFilename()));
         }
 
         getC3Type(unitEntity);
@@ -485,11 +485,11 @@ public class CUnit extends Unit {
     public String getModelName() {
 
         if (getType() != MEK) {
-            return (STR."\{getEntity().getChassis()} \{getEntity().getModel()}").trim();
+            return (String.format("%s %s", getEntity().getChassis(), getEntity().getModel())).trim();
         }
 
         if (getEntity().isOmni()) {
-            return (STR."\{getEntity().getChassis()} \{getEntity().getModel()}").trim();
+            return (String.format("%s %s", getEntity().getChassis(), getEntity().getModel())).trim();
         }
 
         if (!getEntity().getModel().trim().isEmpty()) {
@@ -594,41 +594,41 @@ public class CUnit extends Unit {
      */
     public String getSmallDescription() {
         if ((getType() == Unit.MEK) || (getType() == Unit.VEHICLE) || (getType() == Unit.AERO)) {
-            return STR."\{getModelName()} [\{getPilot().getGunnery()}/\{getPilot().getPiloting()}]";
+            return String.format("%s [%s/%s]", getModelName(), getPilot().getGunnery(), getPilot().getPiloting());
         }
 
         if ((getType() == Unit.INFANTRY) || (getType() == Unit.BATTLEARMOR)) {
             if (((Infantry) unitEntity).canMakeAntiMekAttacks()) {
-                return STR."\{getModelName()} [\{getPilot().getGunnery()}/\{getPilot().getPiloting()}]";
+                return String.format("%s [%s/%s]", getModelName(), getPilot().getGunnery(), getPilot().getPiloting());
             }
-            return STR."\{getModelName()} [\{getPilot().getGunnery()}]";
+            return String.format("%s [%s]", getModelName(), getPilot().getGunnery());
         }
-        return STR."\{getModelName()} [\{getPilot().getGunnery()}]";
+        return String.format("%s [%s]", getModelName(), getPilot().getGunnery());
     }
 
     public String getDisplayInfo(String armyText) {
         String targetInfo;
 
         if ((getType() == Unit.MEK) && !unitEntity.isOmni()) {
-            targetInfo = STR."<html><body>#\{getId()} \{unitEntity.getChassis()}, \{getModelName()}";
+            targetInfo = String.format("<html><body>#%s %s, %s", getId(), unitEntity.getChassis(), getModelName());
         } else {
-            targetInfo = STR."<html><body>#\{getId()} \{getModelName()}";
+            targetInfo = String.format("<html><body>#%s %s", getId(), getModelName());
         }
 
         if ((getType() == Unit.MEK) || (getType() == Unit.VEHICLE) || (getType() == Unit.AERO)) {
-            targetInfo += STR." (\{getPilot().getName()}, \{getPilot().getGunnery()}/\{getPilot().getPiloting()}) <br>";
+            targetInfo += String.format(" (%s, %s/%s) <br>", getPilot().getName(), getPilot().getGunnery(), getPilot().getPiloting());
         } else if ((getType() == Unit.BATTLEARMOR) || (getType() == Unit.INFANTRY)) {
             if (((Infantry) unitEntity).canMakeAntiMekAttacks()) {
-                targetInfo += STR." (\{getPilot().getName()}, \{getPilot().getGunnery()}/\{getPilot().getPiloting()}) <br>";
+                targetInfo += String.format(" (%s, %s/%s) <br>", getPilot().getName(), getPilot().getGunnery(), getPilot().getPiloting());
             } else {
-                targetInfo += STR." (\{getPilot().getName()}, \{getPilot().getGunnery()}) <br>";
+                targetInfo += String.format(" (%s, %s) <br>", getPilot().getName(), getPilot().getGunnery());
             }
         } else {
-            targetInfo += STR." (\{getPilot().getName()}, \{getPilot().getGunnery()}) <br>";
+            targetInfo += String.format(" (%s, %s) <br>", getPilot().getName(), getPilot().getGunnery());
         }
 
         if (getType() == Unit.VEHICLE) {
-            targetInfo += STR." Movement: \{getEntity().getMovementModeAsString()}<br>";
+            targetInfo += String.format(" Movement: %s<br>", getEntity().getMovementModeAsString());
         }
 
         targetInfo += "BV: ";
@@ -641,10 +641,10 @@ public class CUnit extends Unit {
 
         if (MathUtility.parseBoolean(client.getConfigParam("ShowUnitBaseBV"), false)) {
             if (getBV() != getBaseBV()) {
-                targetInfo += STR." (\{getBaseBV()})";
+                targetInfo += String.format(" (%s)", getBaseBV());
             }
         }
-        targetInfo += STR." // Exp: \{getPilot().getExperience()} // Kills: \{getPilot().getKills()}<br> ";
+        targetInfo += String.format(" // Exp: %s // Kills: %s<br> ", getPilot().getExperience(), getPilot().getKills());
 
         if (getPilot().getSkills().size() > 0) {
             House house = client.getData().getHouseByName(client.getPlayer().getHouse());
@@ -659,11 +659,11 @@ public class CUnit extends Unit {
         }
 
         if (getPilot().getHits() > 0) {
-            targetInfo += STR."Hits: \{getPilot().getHits()}<br>";
+            targetInfo += String.format("Hits: %s<br>", getPilot().getHits());
         }
 
         if (!armyText.isEmpty()) {
-            targetInfo += STR."\{armyText}<br>";
+            targetInfo += String.format("%s<br>", armyText);
         }
 
         String capacity = getEntity().getUnusedString();
@@ -675,26 +675,26 @@ public class CUnit extends Unit {
                 }
 
                 if (capacity.contains("<br>")) {
-                    targetInfo += STR."Cargo:<br>\{capacity}<br>";
+                    targetInfo += String.format("Cargo:<br>%s<br>", capacity);
                 } else {
-                    targetInfo += STR."Cargo: \{capacity}<br>";
+                    targetInfo += String.format("Cargo: %s<br>", capacity);
                 }
             } else if (capacity.startsWith("Troops")) {
                 capacity = capacity.substring(9);// strip "Troops -" from
                 // string
-                targetInfo += STR."Cargo: \{capacity}<br>";
+                targetInfo += String.format("Cargo: %s<br>", capacity);
             }
         }
 
         if (getLifeTimeRepairCost() > 0) {
-            targetInfo += STR."Repair Costs: \{getCurrentRepairCost()}/\{getLifeTimeRepairCost()}<br>";
+            targetInfo += String.format("Repair Costs: %s/%s<br>", getCurrentRepairCost(), getLifeTimeRepairCost());
         }
         targetInfo += getProducer();
 
         if ((scrappableFor > 0)
                   && !MathUtility.parseBoolean(client.getServerConfigs("UseAdvanceRepair"), false)
                   && !MathUtility.parseBoolean(client.getServerConfigs("UseSimpleRepair"), false)) {
-            targetInfo += STR."<br><br><b>Scrap Value: \{client.moneyOrFluMessage(true, false, scrappableFor)}</b>";
+            targetInfo += String.format("<br><br><b>Scrap Value: %s</b>", client.moneyOrFluMessage(true, false, scrappableFor));
         }
 
         targetInfo += "</body></html>";
