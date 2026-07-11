@@ -637,7 +637,8 @@ public final class MWClient extends GameHost implements IClient {
             LOGGER.error("Error in setupAllOps()");
             LOGGER.error(e, "");
         }
-    }// end setupAllOps    public static StringBuilder prepareReport(GameInterface myGame, boolean usingAdvancedRepairs,
+    }// end setupAllOps
+    public static StringBuilder prepareReport(GameInterface myGame, boolean usingAdvancedRepairs,
           Buildings buildingTemplate) {
         StringBuilder result = new StringBuilder();
         String name = "";
