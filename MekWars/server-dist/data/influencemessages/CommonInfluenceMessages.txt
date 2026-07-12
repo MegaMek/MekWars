@@ -18,7 +18,7 @@ A mercenary unit arrives to take over your garrison duties
 Your new aerospace jock is a duke's son.
 Mom and dad are out of town! Keg party at the PLAYER family estates.
 The planet's duke enjoys your company, and speaks well of you to your superiors
-Local technicians offer to overhaul several of your mechs
+Local technicians offer to overhaul several of your meks
 You attended the same martial academy as your new regional commander
 PILOT has won a local tourney in his/her UNIT
 You return an escaped prisoner back to justice!
@@ -34,4 +34,3 @@ On your last raid you turned loose a colony of rabid squirrels on your enemy's h
 You successfully conceal any evidence about your latest experiments with squirrels!
 You successfully teach cows how to pilot meks. MOOOO
 You intercept a message from beyond the outer rim about a pending attack. However Comstar quickly covers it up.
-             

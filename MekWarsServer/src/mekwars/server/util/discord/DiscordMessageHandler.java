@@ -1,0 +1,68 @@
+/*
+ * MekWars - Copyright (C) 2018
+ *
+ * Original author - Bob Eldred (spork@mekwars.org)
+ *
+ * This program is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU General Public License as published by the Free
+ * Software Foundation; either version 2 of the License, or (at your option)
+ * any later version.
+ *
+ * This program is distributed in the hope that it will be useful, but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
+ * or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License
+ * for more details.
+ */
+package mekwars.server.util.discord;
+
+import java.net.http.HttpClient;
+
+import megamek.logging.MMLogger;
+import mekwars.server.campaign.CampaignMain;
+
+/**
+ * Provides integration with a Discord webhook.  Status messages and Operation outcome can be sent to the webhook.
+ *
+ * @author Spork
+ *
+ */
+public class DiscordMessageHandler {
+    private static final MMLogger LOGGER = MMLogger.create(DiscordMessageHandler.class);
+    private String webhookAddress = "";
+
+    public DiscordMessageHandler() {
+        if (!CampaignMain.campaignMain.getBooleanConfig("DiscordEnable")) {
+            return;
+        }
+        webhookAddress = CampaignMain.campaignMain.getConfig("DiscordWebHookAddress");
+    }
+
+    /**
+     * Post a message to the webhook
+     *
+     * @param message the message to send
+     */
+    public void post(String message) {
+        if (webhookAddress.equalsIgnoreCase("") || webhookAddress.length() < 1 || webhookAddress == null) {
+            return;
+        }
+
+        HttpClient httpclient = HttpClients.createDefault();
+        HttpPost httppost = new HttpPost(webhookAddress);
+
+        // Request parameters and other properties.
+        java.util.List<NameValuePair> params = new java.util.ArrayList<NameValuePair>(2);
+        params.add(new BasicNameValuePair("content", message));
+        try {
+            httppost.setEntity(new UrlEncodedFormEntity(params, "UTF-8"));
+        } catch (java.io.UnsupportedEncodingException e) {
+            LOGGER.error(e, "");
+        }
+
+        try {
+            httpclient.execute(httppost);
+        } catch (java.io.IOException e) {
+            LOGGER.error(e, "");
+        }
+    }
+}

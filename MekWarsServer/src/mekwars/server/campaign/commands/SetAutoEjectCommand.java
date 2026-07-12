@@ -1,0 +1,84 @@
+/*
+ * MekWars - Copyright (C) 2004
+ *
+ * Derived from MegaMekNET (http://www.sourceforge.net/projects/megameknet)
+ *
+ * This program is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU General Public License as published by the Free
+ * Software Foundation; either version 2 of the License, or (at your option)
+ * any later version.
+ *
+ * This program is distributed in the hope that it will be useful, but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
+ * or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License
+ * for more details.
+ */
+
+package mekwars.server.campaign.commands;
+
+
+import megamek.common.Entity;
+import megamek.common.Mech;
+import mekwars.server.campaign.CampaignMain;
+
+public class SetAutoEjectCommand implements Command {
+
+    int accessLevel = 0;
+    String syntax = "";
+
+    public void process(java.util.StringTokenizer command, String Username) {
+
+        if (accessLevel != 0) {
+            int userLevel = CampaignMain.campaignMain.getServer().getUserLevel(Username);
+            if (userLevel < getExecutionLevel()) {
+                CampaignMain.campaignMain.toUser("AM:Insufficient access level for command. Level: " +
+                                                       userLevel +
+                                                       ". Required: " +
+                                                       accessLevel +
+                                                       ".", Username, true);
+                return;
+            }
+        }
+
+        server.campaign.SPlayer p = CampaignMain.campaignMain.getPlayer(Username);
+
+        int unitid = 0;//ID# of the mech which is to set autoeject;
+        boolean autoEject = false;
+
+        try {
+            unitid = Integer.parseInt(command.nextToken());
+        }//end try
+        catch (NumberFormatException ex) {
+            CampaignMain.campaignMain.toUser(
+                  "AM:SetAutoEject command failed. Check your input. It should be something like this: /c setAutoEject#unitid#true/false",
+                  Username,
+                  true);
+            return;
+        }//end catch
+
+        try {
+            autoEject = Boolean.parseBoolean(command.nextToken());
+        }//end try
+        catch (Exception ex) {
+            CampaignMain.campaignMain.toUser(
+                  "AM:SetAutoEject Command failed. Check your input. It should be something like this: /c setAutoEject#unitid#true/false",
+                  Username,
+                  true);
+            return;
+        }//end catch
+
+        server.campaign.SUnit unit = p.getUnit(unitid);
+        Entity en = unit.getEntity();
+        ((Mech) en).setAutoEject(autoEject);
+        unit.setEntity(en);
+        CampaignMain.campaignMain.toUser("AM:AutoEject set for " + unit.getModelName(), Username, true);
+
+    }//end process()
+
+    public int getExecutionLevel() {return accessLevel;}
+
+    public void setExecutionLevel(int i) {accessLevel = i;}
+
+    public String getSyntax() {return syntax;}
+}//end SetAutoEjectCommand class
+

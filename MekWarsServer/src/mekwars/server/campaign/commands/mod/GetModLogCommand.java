@@ -1,0 +1,68 @@
+/*
+ * MekWars - Copyright (C) 2004
+ *
+ * Derived from MegaMekNET (http://www.sourceforge.net/projects/megameknet)
+ *
+ * This program is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU General Public License as published by the Free
+ * Software Foundation; either version 2 of the License, or (at your option)
+ * any later version.
+ *
+ * This program is distributed in the hope that it will be useful, but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
+ * or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License
+ * for more details.
+ */
+
+package mekwars.server.campaign.commands.mod;
+import megamek.logging.MMLogger;
+import mekwars.server.campaign.CampaignMain;
+
+public class GetModLogCommand implements server.campaign.commands.Command {
+    private static final MMLogger LOGGER = MMLogger.create(GetModLogCommand.class);
+
+    int accessLevel = server.MWChatServer.auth.IAuthenticator.MODERATOR;
+    String syntax = "";
+
+    public String getSyntax() {return syntax;}
+
+    public void process(java.util.StringTokenizer command, String Username) {
+
+        int userLevel = CampaignMain.campaignMain.getServer().getUserLevel(Username);
+        if (userLevel < getExecutionLevel()) {
+            CampaignMain.campaignMain.toUser("AM:Insufficient access level for command. Level: " +
+                                                   userLevel +
+                                                   ". Required: " +
+                                                   accessLevel +
+                                                   ".", Username, true);
+            return;
+        }
+        java.io.BufferedReader dis = null;
+        try {
+            java.io.File configFile = new java.io.File("./logs/modlog.0");
+            java.io.FileInputStream fis = new java.io.FileInputStream(configFile);
+            dis = new java.io.BufferedReader(new java.io.InputStreamReader(fis));
+            String total = "";
+            while (dis.ready()) {
+                String line = dis.readLine();
+                total += line + "<br>";
+            }
+            CampaignMain.campaignMain.toUser("SM|" + total, Username, false);
+            CampaignMain.campaignMain.doSendModMail("NOTE", Username + " read the modlog.");
+        } catch (Exception ex) {
+            LOGGER.error(ex, "");
+        } finally {
+            try {
+                dis.close();
+            } catch (java.io.IOException e) {
+                LOGGER.error(e, "");
+            }
+        }
+
+
+    }
+
+    public int getExecutionLevel() {return accessLevel;}
+
+    public void setExecutionLevel(int i) {accessLevel = i;}
+}

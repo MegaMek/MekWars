@@ -3,7 +3,7 @@ How to enable Non-Faction Units costing more techs
 Server Configuration
 	- In the Advanced Repairs tab, select "Use Techs" and check "Non-Faction Units cost extra techs"
 	- In the Techs tab, enter a value in the "Non-House Unit Increased Techs" field.
-		- This is a multiplier, so if you have medium mechs costing 4 techs, and want non-house units to cost 6, enter 1.5 in this field
+		- This is a multiplier, so if you have medium meks costing 4 techs, and want non-house units to cost 6, enter 1.5 in this field
 
 File System
 	- Create a directory under ./campaign/factions called "support"
@@ -31,7 +31,7 @@ Support files
 	- In the support files, units are laid out one-per-line, with no file extension
 		- Just lop the file extension off the name of the file
 			- So, if your build tables contain "Catapult CPLT-C4.mtf", you'd enter "Catapult CPLT-C4" on one line
-			- An example, on my local server, for the Capellan Confederation heavy mechs:
+			- An example, on my local server, for the Capellan Confederation heavy meks:
 				- Capellan Confederation_heavy_mek.txt:
 					Ostroc OSR-2L
 					Catapult CPLT-A1

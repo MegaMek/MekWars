@@ -1,0 +1,202 @@
+/*
+ * MekWars - Copyright (C) 2004
+ *
+ * Derived from MegaMekNET (http://www.sourceforge.net/projects/megameknet)
+ * Original author Helge Richter (McWizard)
+ *
+ * This program is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU General Public License as published by the Free
+ * Software Foundation; either version 2 of the License, or (at your option)
+ * any later version.
+ *
+ * This program is distributed in the hope that it will be useful, but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
+ * or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License
+ * for more details.
+ */
+
+package mekwars.admin.dialog;
+
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.util.ArrayList;
+import java.util.EnumSet;
+import java.util.Hashtable;
+import java.util.TreeSet;
+
+import javax.swing.BoxLayout;
+import javax.swing.JButton;
+import javax.swing.JCheckBox;
+import javax.swing.JDialog;
+import javax.swing.JOptionPane;
+import javax.swing.JPanel;
+import javax.swing.SpringLayout;
+
+import megamek.common.equipment.AmmoType;
+import megamek.logging.MMLogger;
+import mekwars.common.House;
+import mekwars.common.campaign.clientutils.protocol.IClient;
+import mekwars.common.util.SpringLayoutHelper;
+
+public final class BannedAmmoDialog implements ActionListener {
+    private static final MMLogger LOGGER = MMLogger.create(BannedAmmoDialog.class);
+
+    private final static String okayCommand = "Add";
+    private final static String cancelCommand = "Close";
+    //store the client backlink for other things to use
+    private final IClient client;
+    private final House house;
+    private final ArrayList<JCheckBox> cBoxArrayList = new ArrayList<>();
+    //STOCK DIALOG AND PANE
+    private final JDialog dialog;
+    private String windowName = "Server Banned Ammo Editor";
+
+    public BannedAmmoDialog(IClient client, House house) {
+
+        //save the client
+        this.client = client;
+        this.house = house;
+
+        //stored values.
+
+        //Set the tooltips and actions for dialogue buttons
+        //
+        JButton okayButton = new JButton("Save");
+        okayButton.setActionCommand(okayCommand);
+        JButton cancelButton = new JButton("Close");
+        cancelButton.setActionCommand(cancelCommand);
+
+        okayButton.addActionListener(this);
+        cancelButton.addActionListener(this);
+        okayButton.setToolTipText("Save");
+        cancelButton.setToolTipText("Exit without saving changes");
+
+
+        //CREATE THE PANELS
+        JPanel banPanel = new JPanel();//player name, etc
+
+        /*
+         * Format the Reward Points panel. Spring layout.
+         */
+        banPanel.setLayout(new BoxLayout(banPanel, BoxLayout.Y_AXIS));
+
+        JPanel ammoPanel = new JPanel(new SpringLayout());
+
+        loadBannedAmmo();
+
+        TreeSet<String> munitions = new TreeSet<>(this.client.getData().getMunitionsByName().keySet());
+        for (String munitionName : munitions) {
+            JCheckBox cBox = new JCheckBox();
+            cBox.setText(munitionName);
+            cBox.setSelected(checkAmmoBan(munitionName));
+            ammoPanel.add(cBox);
+            cBoxArrayList.add(cBox);
+        }
+
+        SpringLayoutHelper.setupSpringGrid(ammoPanel, 2);
+
+        banPanel.add(ammoPanel);
+
+        // Set the user's options
+        Object[] options = { okayButton, cancelButton };
+
+        // Create the pane containing the buttons
+        JOptionPane pane = new JOptionPane(banPanel,
+              JOptionPane.PLAIN_MESSAGE,
+              JOptionPane.DEFAULT_OPTION,
+              null,
+              options,
+              null);
+
+        if (house != null) {windowName = this.house.getName() + " Banned Ammo Dialog";}
+        // Create the main dialog and set the default button
+        dialog = pane.createDialog(ammoPanel, windowName);
+        dialog.getRootPane().setDefaultButton(cancelButton);
+
+
+        //Show the dialog and get the user's input
+        dialog.setModal(true);
+        dialog.pack();
+        dialog.setVisible(true);
+
+    }
+
+    public void loadBannedAmmo() {
+        client.loadBannedAmmo();
+    }
+
+    public boolean checkAmmoBan(String ammo) {
+
+        if (house == null) {
+            try {
+
+                //I did this for some silly reason. and now I'm paying for it.
+                //But I don't want to change all the code to long,string hashes
+                //Generics would make it easy but I'm lazy and it works. --Torren.
+                AmmoType.Munitions munition = client.getData().getMunitionsByName().get(ammo);
+                return client.getData().getServerBannedAmmo().contains(munition);
+            } catch (Exception ex) {
+                LOGGER.error("Unable to find ammo " + ammo);
+                return false;
+            }
+        }
+        try {
+            AmmoType.Munitions munition = client.getData().getMunitionsByName().get(ammo);
+            return house.getBannedAmmo().contains(munition);
+        } catch (Exception ex) {
+            LOGGER.error("Unable to find ammo " + ammo);
+            return false;
+        }
+
+    }
+
+    public void actionPerformed(ActionEvent e) {
+        String command = e.getActionCommand();
+        Hashtable<String, AmmoType.Munitions> munitionTypes = client.getData().getMunitionsByName();
+
+        if (command.equals(okayCommand)) {
+            if (house == null) {
+                EnumSet<AmmoType.Munitions> bannedAmmo = client.getData().getServerBannedAmmo();
+                for (JCheckBox tempBox : cBoxArrayList) {
+                    AmmoType.Munitions ammo = munitionTypes.get(tempBox.getText());
+
+                    //Check box has been selected and should be updated to the server
+                    if (tempBox.isSelected() && !bannedAmmo.contains(ammo)) {
+                        client.sendChat("%sc adminsetserverammoban#%s".formatted(IClient.CAMPAIGN_PREFIX,
+                              munitionTypes.get(tempBox.getText())));
+                    }
+                    //Checkbox has been unselected and should be updated to the server
+                    else if (!tempBox.isSelected() && bannedAmmo.contains(ammo)) {
+                        client.sendChat("%sc adminsetserverammoban#%s".formatted(IClient.CAMPAIGN_PREFIX,
+                              munitionTypes.get(tempBox.getText())));
+                    }
+                }
+            } else {
+                EnumSet<AmmoType.Munitions> bannedAmmo = house.getBannedAmmo();
+                for (JCheckBox tempBox : cBoxArrayList) {
+                    AmmoType.Munitions ammo = munitionTypes.get(tempBox.getText());
+
+                    //Check box has been selected and should be updated to the server
+                    if (tempBox.isSelected() && !bannedAmmo.contains(ammo)) {
+                        client.sendChat("%sc adminsethouseammoban#%s#%s".formatted(IClient.CAMPAIGN_PREFIX,
+                              house.getName(),
+                              munitionTypes.get(tempBox.getText())));
+                    }
+                    //Checkbox has been unselected and should be updated to the server
+                    else if (!tempBox.isSelected() && bannedAmmo.contains(ammo)) {
+                        client.sendChat("%sc adminsethouseammoban#%s#%s".formatted(IClient.CAMPAIGN_PREFIX,
+                              house.getName(),
+                              munitionTypes.get(tempBox.getText())));
+                    }
+
+                }
+            }
+
+            dialog.dispose();
+        } else if (command.equals(cancelCommand)) {
+            dialog.dispose();
+        }
+
+    }
+
+}//end BannedAmmoDialog.java

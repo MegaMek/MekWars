@@ -1,12 +1,16 @@
 rootProject.name = 'MekWarsRoot'
 
-include 'mekwars'
+includeBuild("../megamek")
 
-
-includeBuild('../megamek')
-includeBuild('../megameklab')
-includeBuild('../mekhq')
-
+include "Common"
+include "HPGNet"
+include "MekWarsAdmin"
+include "MekWarsAutoUpdate"
+include "MekWarsClient"
+include "MekWarsDedicated"
+include "MekWarsOpEditor"
+include "MekWarsServer"
+include "MekWarsTracker"
 
 def localSettings = file('settings_local.gradle')
 if (localSettings.exists()) {

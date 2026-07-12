@@ -1,0 +1,31 @@
+/*
+ * MekWars - Copyright (C) 2004
+ *
+ * Original Author: nmorris (urgru@users.sourceforge.net)
+ *
+ * This program is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU General Public License as published by the Free
+ * Software Foundation; either version 2 of the License, or (at your option)
+ * any later version.
+ *
+ * This program is distributed in the hope that it will be useful, but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
+ * or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License
+ * for more details.
+ */
+
+package mekwars.server.dataProvider.commands;
+
+import common.CampaignData;
+import common.util.BinWriter;
+import server.MWServ;
+
+/**
+ * Retrieve the current server version. Used to ensure the connecting clients are point compatible before they initiate
+ * a chat connection.
+ */
+public class ServerVersion implements server.dataProvider.ServerCommand {
+    public void execute(java.util.Date timestamp, BinWriter out, CampaignData data) throws Exception {
+        out.println(MWServ.SERVER_VERSION, "ServerVersion");
+    }
+}

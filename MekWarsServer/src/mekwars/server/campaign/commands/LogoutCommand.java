@@ -1,0 +1,54 @@
+/*
+ * MekWars - Copyright (C) 2004
+ *
+ * Derived from MegaMekNET (http://www.sourceforge.net/projects/megameknet)
+ *
+ * This program is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU General Public License as published by the Free
+ * Software Foundation; either version 2 of the License, or (at your option)
+ * any later version.
+ *
+ * This program is distributed in the hope that it will be useful, but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
+ * or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License
+ * for more details.
+ */
+
+package mekwars.server.campaign.commands;
+
+
+import mekwars.server.campaign.CampaignMain;
+
+public class LogoutCommand implements Command {
+
+    String syntax = "";
+
+    public void process(java.util.StringTokenizer command, String Username) {
+
+        server.campaign.SPlayer p = CampaignMain.campaignMain.getPlayer(Username);
+
+        if (p.getDutyStatus() == server.campaign.SPlayer.STATUS_ACTIVE
+                  &&
+                  System.currentTimeMillis() - p.getActiveSince() <
+                        Long.parseLong(CampaignMain.campaignMain.getConfig("MinActiveTime")) * 1000) {
+            CampaignMain.campaignMain.toUser("AM:You can't log out yet (must meet minimum activity time).",
+                  Username,
+                  true);
+            return;
+        }
+
+        if (p.getDutyStatus() == server.campaign.SPlayer.STATUS_FIGHTING) {
+            CampaignMain.campaignMain.toUser("AM:You cannot log out until your game is over.", Username, true);
+            return;
+        }
+
+        CampaignMain.campaignMain.doLogoutPlayer(Username);
+    }
+
+    //conforming methods
+    public int getExecutionLevel() {return 0;}
+
+    public void setExecutionLevel(int i) {}
+
+    public String getSyntax() {return syntax;}
+}

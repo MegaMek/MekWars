@@ -1,0 +1,463 @@
+/*
+ * MekWars - Copyright (C) 2005
+ *
+ * Original author - Torren (torren@users.sourceforge.net)
+ *
+ * This program is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU General Public License as published by the Free
+ * Software Foundation; either version 2 of the License, or (at your option)
+ * any later version.
+ *
+ * This program is distributed in the hope that it will be useful, but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
+ * or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License
+ * for more details.
+ */
+
+package mekwars.common.threads;
+
+import java.util.Iterator;
+import java.util.StringTokenizer;
+import java.util.Vector;
+import java.util.concurrent.ConcurrentLinkedQueue;
+
+import megamek.codeUtilities.MathUtility;
+import megamek.common.CriticalSlot;
+import megamek.common.equipment.Mounted;
+import megamek.common.units.Mek;
+import megamek.logging.MMLogger;
+import mekwars.common.campaign.CUnit;
+import mekwars.common.campaign.clientutils.protocol.IClient;
+import mekwars.common.campaign.pilot.skills.PilotSkill;
+import mekwars.common.util.UnitUtils;
+
+/**
+ * Client-side background thread that periodically processes a queue of pending unit repair "work
+ * orders" (one queue per tech skill level, see {@link UnitUtils#TECH_GREEN} through
+ * {@link UnitUtils#TECH_PILOT}), simulating techs/pilots working through repairs at a fixed cadence
+ * and sending completed repair attempts to the server via {@link IClient#sendChat(String)} (as a
+ * {@code /c repairunit#...} campaign command).
+ * <p>
+ * Work orders are queued by other client code via {@link #addWorkOrder(int, String)} (each order is
+ * a "#"-delimited string encoding unit id, critical location, slot, target roll, and retry count),
+ * and this thread wakes up roughly every {@link #averageRepairTime} milliseconds to pop and validate
+ * as many orders as there are available techs of that type, skipping/canceling orders that are no
+ * longer valid (e.g. the unit vanished, the critical/armor/internal is no longer damaged, or there
+ * are no techs of that type on the payroll).
+ * <p>
+ * This class does not itself talk to a socket; all its interaction with the server happens by
+ * calling out to {@link IClient}, whose own reader/writer threads own the actual connection. It has
+ * a near-identical counterpart, {@link SalvageManagmentThread}, which manages salvage (rather than
+ * repair) work orders using the same queue/threading pattern.
+ */
+public class RepairManagmentThread extends Thread {
+    private final static MMLogger LOGGER = MMLogger.create(RepairManagmentThread.class);
+    /**
+     * One {@link ConcurrentLinkedQueue} per tech type, indexed by tech level constant (e.g.
+     * {@link UnitUtils#TECH_GREEN}..{@link UnitUtils#TECH_PILOT}); each queue holds pending
+     * "#"-delimited repair work order strings for that tech type.
+     */
+    private final Vector<ConcurrentLinkedQueue<String>> workOrders = new Vector<>(5, 1);
+    private final IClient client;
+    /** Milliseconds between processing passes; defaults to 1000ms unless overridden by the constructor. */
+    private long averageRepairTime = 1000;
+
+    /**
+     * Sets the repair-processing cadence (only if it's greater than 1000ms; otherwise the default
+     * of 1000ms is kept) and initializes one empty work order queue for every tech type from
+     * {@link UnitUtils#TECH_GREEN} through {@link UnitUtils#TECH_PILOT}.
+     *
+     * @param repairTime desired delay in milliseconds between processing passes (ignored, keeping
+     *                   the 1000ms default, if not greater than 1000)
+     * @param client     client used to look up the player's units/techs and to send repair commands
+     *                   to the server
+     */
+    public RepairManagmentThread(Long repairTime, IClient client) {
+        if (repairTime > 1000) {
+            averageRepairTime = repairTime;
+        }
+
+        this.client = client;
+
+        for (int x = 0; x <= UnitUtils.TECH_PILOT; x++) {
+            ConcurrentLinkedQueue<String> tempVector = new ConcurrentLinkedQueue<>();
+            workOrders.add(tempVector);
+        }
+
+    }
+
+    /**
+     * Infinite loop (there is no stop/shutdown mechanism — this thread runs for the lifetime of the
+     * JVM) that waits {@link #averageRepairTime} milliseconds (via {@link Object#wait(long)} on this
+     * thread's own monitor, since the method is {@code synchronized}) and then processes all queued
+     * work orders via {@link #processWorkOrders()}. Note nothing ever calls {@code notify()} on this
+     * object, so the wait always times out naturally rather than being interrupted early. Any
+     * exception during a processing pass is caught, reported to the player via
+     * {@link IClient#systemMessage(String)}, and logged — the loop itself is never aborted by an
+     * error.
+     */
+    @Override
+    public synchronized void run() {
+        while (true) {
+            try {
+                this.wait(averageRepairTime);
+                processWorkOrders();
+            } catch (Exception ex) {
+                client.systemMessage(
+                      "Error processing Repair Management queue. Alert an SO and check your ./logs/error.0 for the error");
+                LOGGER.error(ex, "Error in Repair Management Queue");
+            }
+        }
+    }
+
+    /**
+     * Walks each tech-type queue in {@link #workOrders} (from {@link UnitUtils#TECH_GREEN} to
+     * {@link UnitUtils#TECH_PILOT}) and, for each one that has pending orders and at least one
+     * available tech of that type, pops orders off the queue and either cancels them (removing them
+     * outright) if they're no longer valid — e.g. the target unit can't be found, the pilot lacks
+     * the AsTech skill, the pilot is already busy repairing, or the targeted critical/armor/internal
+     * is no longer damaged — or, if still valid but not yet actionable (e.g. dependent repairs not
+     * finished, tech busy), leaves them in the queue for a future pass. Valid, actionable orders are
+     * completed by sending a {@code /c repairunit#...} chat command to the server and removing the
+     * order, decrementing the count of available techs for that pass so each tech only performs
+     * one repair per invocation.
+     * <p>
+     * The whole method holds a lock on {@link #workOrders} (a coarser lock than the per-queue
+     * {@link ConcurrentLinkedQueue}s themselves) and additionally synchronizes per-unit on the
+     * {@link CUnit} being repaired while validating/consuming its order, guarding against concurrent
+     * modification of that unit's state from elsewhere.
+     */
+    private void processWorkOrders() {
+        int availableTechs = 1;
+
+        synchronized (workOrders) {
+            for (int pos = UnitUtils.TECH_GREEN; pos <= UnitUtils.TECH_PILOT; pos++) {
+
+                //no work orders for these techs on to the next one
+                if (workOrders.elementAt(pos).isEmpty()) {
+                    continue;
+                }
+
+                //No techs for this type whatsoever! buy more!
+                if (pos != UnitUtils.TECH_PILOT && client.getPlayer().getTotalTechs().get(pos) <= 0) {
+                    client.systemMessage(String.format("You have pending work orders for %s techs, but have none on your pay roll.", UnitUtils.techDescription(pos)));
+                    continue;
+                }
+
+                if (pos != UnitUtils.TECH_PILOT) {
+                    availableTechs = client.getPlayer().getAvailableTechs().get(pos);
+                }
+
+                //all techs are busy to keep it moving.
+                if (availableTechs <= 0) {
+                    continue;
+                }
+
+                //Lets start to process work orders.
+                Iterator<String> workQueue = workOrders.elementAt(pos).iterator();
+
+                while (workQueue.hasNext()) {
+                    //no more techs, can't continue;
+                    if (availableTechs <= 0) {
+                        break;
+                    }
+
+                    StringTokenizer order = new StringTokenizer(workQueue.next(), "#");
+
+                    CUnit unit = client.getPlayer().getUnit(MathUtility.parseInt(order.nextToken(), -1));
+                    int location = MathUtility.parseInt(order.nextToken(), -1);
+                    int slot = MathUtility.parseInt(order.nextToken(), -1);
+                    int roll = MathUtility.parseInt(order.nextToken(), -1);
+                    int retries = MathUtility.parseInt(order.nextToken(), -1);
+
+                    boolean armor = (slot >= UnitUtils.LOC_FRONT_ARMOR);
+
+                    if (unit == null) {
+                        LOGGER.debug("Unable to find unit to repair. removing repair job");
+                        client.systemMessage("Unable to find unit to repair. removing repair job");
+                        workQueue.remove();
+                        continue;
+                    }
+
+                    synchronized (unit) {
+                        if (pos == UnitUtils.TECH_PILOT && !unit.getPilot().getSkills().has(PilotSkill.AsTechSkillID)) {
+                            client.systemMessage(new StringBuilder("Work order found for the pilot of ")
+                                  .append(unit.getModelName())
+                                  .append(" however the pilot cannot repair this unit.<br>The work order has been terminated.")
+                                  .toString());
+                            workQueue.remove();
+                            continue;
+                        }
+
+                        //Pilot is busy repairing wait for the next round.
+                        if (pos == UnitUtils.TECH_PILOT && unit.getPilotIsRepairing()) {
+                            continue;
+                        }
+
+                        //check to see if CS are viable before anything else.
+                        if (!armor) {
+                            CriticalSlot criticalSlot = unit.getEntity().getCritical(location, slot);
+
+                            if (criticalSlot == null) {
+                                client.systemMessage(String.format("%s tech work order canceled because the critical doesn't exist.", UnitUtils.techDescription(pos)));
+                                workQueue.remove();
+                                continue;
+                            }
+
+                            if (!criticalSlot.isDamaged() && !criticalSlot.isBreached()) {
+                                client.systemMessage(String.format("%s tech work order canceled because the critical was not damaged.", UnitUtils.techDescription(pos)));
+                                workQueue.remove();
+                                continue;
+                            }
+                        } else {
+                            if (slot == UnitUtils.LOC_FRONT_ARMOR) {
+                                int tempLocation = location;
+
+                                if (location >= UnitUtils.LOC_CENTER_TORSOR) {
+                                    tempLocation -= 7;
+                                }
+
+                                if (unit.getEntity().getArmor(tempLocation) ==
+                                          unit.getEntity().getOArmor(tempLocation)) {
+                                    client.systemMessage(String.format("%s tech work order canceled due to an already repaired Armor.", UnitUtils.techDescription(pos)));
+                                    workQueue.remove();
+                                    continue;
+                                }
+
+                            } else if (slot == UnitUtils.LOC_REAR_ARMOR) {
+                                int tempLocation = location;
+                                if (location >= UnitUtils.LOC_CENTER_TORSOR) {
+                                    tempLocation -= 7;
+                                }
+
+                                if (unit.getEntity().getArmor(tempLocation, true) ==
+                                          unit.getEntity().getOArmor(tempLocation, true)) {
+                                    client.systemMessage(String.format("%s tech work order canceled due to an already repaired Rear Armor.", UnitUtils.techDescription(pos)));
+                                    workQueue.remove();
+                                    continue;
+                                }
+                            } else {//Internal!
+                                if (unit.getEntity().getInternal(location) == unit.getEntity().getOInternal(location)) {
+                                    client.systemMessage(new StringBuilder(UnitUtils.techDescription(pos))
+                                          .append(" tech work order canceled due to an already repaired Internal Structure.")
+                                          .toString());
+                                    workQueue.remove();
+                                    continue;
+                                }
+                            }
+                        }
+                        //check to see if we are able to process this repair if not continue to the next if so great!
+                        if (!UnitUtils.isRepairViabile(unit.getEntity(), location, slot, armor)) {
+                            continue;
+                        }
+                    }
+
+                    int techWorkMod = roll - UnitUtils.getTechRoll(unit.getEntity(), location, slot, pos, armor,
+                          this.client.getData().getHouseByName(client.getPlayer().getHouse()).getTechLevel());
+
+                    if (pos == UnitUtils.TECH_PILOT) {
+                        techWorkMod = roll - UnitUtils.getTechRoll(unit.getEntity(),
+                              location,
+                              slot,
+                              unit.getPilot()
+                                    .getSkills()
+                                    .getPilotSkill(PilotSkill.AsTechSkillID)
+                                    .getLevel(),
+                              armor,
+                              this.client.getData()
+                                    .getHouseByName(client.getPlayer().getHouse())
+                                    .getTechLevel());
+                    }
+
+                    client.sendChat(String.format("/c repairunit#%s#%s#%s#%s#%s#%s#%s#false", unit.getId(), location, slot, armor, pos, retries, techWorkMod));
+                    workQueue.remove();
+                    availableTechs--;
+                }
+            }
+
+        }
+    }
+
+    /**
+     * Enqueues a new repair work order (a "#"-delimited string of unit id, location, slot, roll,
+     * and retries) onto the queue for the given tech type, to be picked up on a future
+     * {@link #processWorkOrders()} pass.
+     *
+     * @param techType tech level queue to add to (e.g. {@link UnitUtils#TECH_GREEN}..
+     *                 {@link UnitUtils#TECH_PILOT})
+     * @param workOrder the encoded work order string
+     */
+    public void addWorkOrder(int techType, String workOrder) {
+        workOrders.elementAt(techType).add(workOrder);
+    }
+
+    /**
+     * Removes every queued repair work order (across all tech types) belonging to the given unit,
+     * matched by its id prefix (e.g. {@code "42#"}) at the start of the encoded work order string.
+     *
+     * @param unitID id of the unit whose pending work orders should all be discarded
+     */
+    public void removeAllWorkOrders(int unitID) {
+        String id = Integer.toString(unitID);
+
+        for (int tech = UnitUtils.TECH_GREEN; tech <= UnitUtils.TECH_PILOT; tech++) {
+            workOrders.elementAt(tech).removeIf(repair -> repair.startsWith(String.format("%s#", id)));
+        }
+    }
+
+    /**
+     * Removes a single specific work order (matched by an exact string equality) from the given
+     * tech type's queue, and notifies the player via {@link IClient#systemMessage(String)}. Note
+     * the confirmation message is sent whether or not a matching order was actually found and
+     * removed.
+     *
+     * @param techType tech level queue to remove from
+     * @param data     the exact encoded work order string to remove
+     */
+    public void removeWorkOrder(int techType, String data) {
+        Iterator<String> repairs = workOrders.elementAt(techType).iterator();
+        while (repairs.hasNext()) {
+            String repair = repairs.next();
+
+            if (repair.equals(data)) {
+                repairs.remove();
+                break;
+            }
+        }
+
+        client.systemMessage(String.format("Removed work orders for for %s techs.", UnitUtils.techDescription(techType)));
+    }
+
+    /**
+     * Checks whether a repair work order already exists for the given unit at the given location
+     * and slot, across all tech-type queues. Rear-armor slots are normalized (-7) before comparing
+     * against the stored location, mirroring the location adjustment used elsewhere for rear armor.
+     * <p>
+     * Note the match on unit id uses {@link String#indexOf(String)} {@code == 0} against the raw
+     * work order string, so this could in principle also match if a different unit id happened to
+     * be numerically prefixed by this one followed immediately by more digits before the "#" — in
+     * practice the encoding always has "#" right after the id so this isn't an issue, but it's a
+     * looser check than the {@code startsWith(id + "#")} used elsewhere in this class.
+     *
+     * @param Location target internal/armor location
+     * @param slot     target critical slot, or one of the armor/internal slot constants
+     * @param unitID   unit id to check
+     * @return true if a matching pending work order exists
+     */
+    public boolean isQueued(int Location, int slot, int unitID) {
+        for (int tech = UnitUtils.TECH_GREEN; tech <= UnitUtils.TECH_PILOT; tech++) {
+            for (String repair : workOrders.elementAt(tech)) {
+                if (repair.indexOf(Integer.toString(unitID)) == 0) {
+                    java.util.StringTokenizer order = new StringTokenizer(repair, "#");
+                    order.nextToken();//unit id Already Verified it.
+
+                    int locationid = MathUtility.parseInt(order.nextToken(), -1);
+                    int slotID = MathUtility.parseInt(order.nextToken(), -1);
+
+                    if (slotID == UnitUtils.LOC_REAR_ARMOR) {
+                        locationid -= 7;
+                    }
+
+                    if (locationid == Location && slotID == slot) {
+                        return true;
+                    }
+                }
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * @param unitID unit id to check
+     * @return true if the given unit has at least one pending repair work order in any tech queue
+     */
+    public boolean hasQueuedOrders(int unitID) {
+        String id = Integer.toString(unitID);
+
+        for (int tech = UnitUtils.TECH_GREEN; tech <= UnitUtils.TECH_PILOT; tech++) {
+            for (String repair : workOrders.elementAt(tech)) {
+                if (repair.startsWith(String.format("%s#", id))) {
+                    return true;
+                }
+
+            }
+        }
+        return false;
+    }
+
+    /**
+     * Builds a human-readable (HTML-formatted) summary of every pending repair work order for the
+     * given unit, one line per order, each with a "click here to remove" link encoding the tech
+     * type and raw work order string for later removal (see {@link #removeWorkOrder(int, String)}).
+     *
+     * @param unitID unit id to summarize
+     * @return {@code "None."} if there are no pending orders for this unit, otherwise an HTML
+     *         fragment describing each pending order
+     */
+    public String getRepairQueue(int unitID) {
+        StringBuilder data = new StringBuilder("None.");
+        CUnit unit = client.getPlayer().getUnit(unitID);
+
+        for (int tech = UnitUtils.TECH_GREEN; tech <= UnitUtils.TECH_PILOT; tech++) {
+            for (String repair : workOrders.elementAt(tech)) {
+                if (repair.indexOf(Integer.toString(unitID)) == 0) {
+                    StringTokenizer order = new StringTokenizer(repair, "#");
+                    order.nextToken();//unit id Already Verified it.
+                    int locationID = MathUtility.parseInt(order.nextToken(), -1);
+                    int slotID = MathUtility.parseInt(order.nextToken(), -1);
+
+                    if (data.toString().equals("None.")) {
+                        data = new StringBuilder();
+                    }
+
+                    if (slotID == UnitUtils.LOC_FRONT_ARMOR) {
+                        data.append(UnitUtils.techDescription(tech))
+                              .append(" tech queued for external armor repair ")
+                              .append(unit.getEntity().getLocationAbbr(locationID))
+                              .append(".");
+                    } else if (slotID == UnitUtils.LOC_REAR_ARMOR) {
+                        data.append(UnitUtils.techDescription(tech))
+                              .append(" tech queued for external armor repair ")
+                              .append(unit.getEntity().getLocationAbbr(locationID - 7))
+                              .append("(r).");
+                    } else if (slotID == UnitUtils.LOC_INTERNAL_ARMOR) {
+                        data.append(UnitUtils.techDescription(tech))
+                              .append(" tech queued for internal structure repair ")
+                              .append(unit.getEntity().getLocationAbbr(locationID))
+                              .append(".");
+                    } else {
+                        CriticalSlot criticalSlot = unit.getEntity().getCritical(locationID, slotID);
+
+                        if (criticalSlot.getType() == CriticalSlot.TYPE_EQUIPMENT) {
+                            Mounted<?> mounted = criticalSlot.getMount();
+                            data.append(UnitUtils.techDescription(tech))
+                                  .append(" tech queued for repair of ")
+                                  .append(mounted.getName())
+                                  .append("(")
+                                  .append(unit.getEntity().getLocationAbbr(locationID))
+                                  .append(").");
+                        } else {
+                            if (unit.getEntity() instanceof Mek mek) {
+                                data.append(UnitUtils.techDescription(tech))
+                                      .append(" tech queued for repair of ")
+                                      .append(mek.getSystemName(criticalSlot.getIndex()))
+                                      .append("(")
+                                      .append(unit.getEntity().getLocationAbbr(locationID))
+                                      .append(").");
+                            }
+                        }//end CS type else
+
+                    }
+                    data.append(" <a href=\"REMOVEQUEUEDWORKORDER|")
+                          .append(tech)
+                          .append("|")
+                          .append(repair)
+                          .append("\">click here to remove work order</a>.<br>");
+                }
+
+            }
+        }
+        return data.toString();
+    }
+}
