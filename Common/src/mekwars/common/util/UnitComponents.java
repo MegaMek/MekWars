@@ -29,14 +29,46 @@ import megamek.common.equipment.Mounted;
 import megamek.common.units.Entity;
 import megamek.logging.MMLogger;
 
+/**
+ * Tracks a bag of salvaged/available unit "components" (armor, internal structure, individual pieces of
+ * equipment, ammo, etc., keyed by their internal MegaMek name) together with a count of how many of each are on
+ * hand, and provides operations to accumulate, spend, and report on them. Used by the campaign salvage/repair
+ * system: components are harvested from a destroyed/salvaged {@link Entity} (see {@link #repoUnit}/
+ * {@link #canRepoUnit}), stored here as a simple name-to-count table, and later consumed when repairing another
+ * unit. Also provides HTML table rendering ({@link #tableComponents}) and pipe/token-delimited
+ * serialization ({@link #toString(String)}/{@link #fromString}) for persisting this data.
+ */
 public class UnitComponents {
     private final static MMLogger LOGGER = MMLogger.create(UnitComponents.class);
+    /** Component name (MegaMek internal equipment name, or a synthetic name like "Armor"/"IS") to count on hand. */
     private final Hashtable<String, Integer> components = new Hashtable<>();
 
+    /**
+     * Renders this instance's own {@link #components} table as an HTML table. See
+     * {@link #tableComponents(Hashtable, int)}.
+     *
+     * @param year the in-universe year, used to determine each component's tech base (IS/Clan/All) for display
+     * @return an HTML {@code <table>} listing every component and its count/tech base
+     */
     public String tableComponents(int year) {
         return tableComponents(components, year);
     }
 
+    /**
+     * Builds an HTML table listing each component's display name, count, and tech base, laid out two
+     * name/count/tech groups per row. Components are grouped by their resolved display name (via
+     * {@link #getName(String)}) - if two different internal keys resolve to the same display name they end up
+     * under a single {@code keys} entry, so one of the two counts silently overwrites the other in the
+     * {@code keys} map (the returned counts come from {@code parts}, keyed by the original names, so counts
+     * themselves are not lost, but the sort/iteration order only has one row per display name).
+     *
+     * @param parts the component name-to-count table to render (typically {@link #components}, but callers may
+     *              pass an arbitrary table)
+     * @param year  the in-universe year, used to resolve each component's tech base (IS/Clan/All) via
+     *              {@link #getTech(String, int)}
+     * @return an HTML {@code <table>} string; rows alternate between opening a new {@code <tr>} every second
+     *     component
+     */
     public String tableComponents(Hashtable<String, Integer> parts, int year) {
 
         StringBuilder result = new StringBuilder();
@@ -75,6 +107,11 @@ public class UnitComponents {
         return result.toString();
     }
 
+    /**
+     * @return a case-insensitive natural-order string comparator (compares by {@code toLowerCase()}), typed as a
+     *     raw {@code Comparator<Object>} unsafely cast to {@code Comparator<? super Object>}; callers must only
+     *     use it to compare {@link String} instances or a {@link ClassCastException} will result.
+     */
     public static Comparator<? super Object> stringComparator() {
         return (Comparator<Object>) (o1, o2) -> {
             String s1 = ((String) o1).toLowerCase();
@@ -83,6 +120,16 @@ public class UnitComponents {
         };
     }
 
+    /**
+     * Resolves a component key to its human-readable display name.
+     *
+     * @param crit the component key: either a MegaMek internal equipment name (resolvable via
+     *             {@link EquipmentType#get(String)}) or a synthetic name for things that aren't real
+     *             {@link EquipmentType}s in MegaMek (e.g. "Armor", "IS", "Engines", "Actuators", "Cockpit",
+     *             "Sensors")
+     * @return the equipment's display name if {@code crit} resolves to a known {@link EquipmentType}; otherwise
+     *     {@code crit} itself is returned unchanged (used for the synthetic non-equipment names above)
+     */
     public static String getName(String crit) {
         EquipmentType eq = EquipmentType.get(crit);
         //Armor,IS,Engines,Actuators,Cockpit,Sensors anything that doesn't
@@ -94,6 +141,16 @@ public class UnitComponents {
         return eq.getName();
     }
 
+    /**
+     * Determines the tech base label to display for a component in the given in-universe year.
+     *
+     * @param crit the component key (see {@link #getName(String)} for the two kinds of key this accepts)
+     * @param year the in-universe year used to evaluate tech level/Clan status
+     * @return {@code "All"} if {@code crit} does not resolve to a known {@link EquipmentType} (synthetic
+     *     component names), or if it resolves but its tech level in {@code year} is {@link TechConstants#T_ALL}
+     *     or at/below {@link TechConstants#T_TW_ALL}; {@code "Clan"} if {@link UnitUtils#isClanEQ} reports it as
+     *     Clan tech for {@code year}; otherwise {@code "IS"}
+     */
     public static String getTech(String crit, int year) {
         EquipmentType eq = EquipmentType.get(crit);
 
@@ -119,6 +176,15 @@ public class UnitComponents {
 
     }
 
+    /**
+     * Serializes the current {@link #components} table to a flat delimited string, in undefined (hashtable
+     * iteration) order, as repeating {@code <key><token><count><token>} groups. Components with a count less
+     * than 1 are skipped.
+     *
+     * @param token the delimiter to place after each key and after each count
+     * @return the delimited string, or {@code "<token> <token>"} (token, a space, then token again) if
+     *     {@link #components} is empty
+     */
     public String toString(String token) {
         StringBuilder result = new StringBuilder();
 
@@ -139,6 +205,15 @@ public class UnitComponents {
 
     }
 
+    /**
+     * Replaces the contents of {@link #components} by parsing {@code data} as a sequence of
+     * {@code key<token>count<token>} pairs, the inverse of {@link #toString(String)}. Clears any existing
+     * contents first, so on parse failure the table may be left partially populated (whatever was parsed before
+     * the exception) rather than restored to its prior state.
+     *
+     * @param data  the delimited string to parse
+     * @param token the delimiter string used to split {@code data} into tokens
+     */
     public void fromString(String data, String token) {
 
         StringTokenizer stringTokenizer = new StringTokenizer(data, token);
@@ -159,6 +234,14 @@ public class UnitComponents {
 
     }
 
+    /**
+     * Replaces the contents of {@link #components} by consuming key/value token pairs directly from an
+     * already-constructed {@link StringTokenizer} (as opposed to {@link #fromString(String, String)}, which
+     * builds its own tokenizer from a raw string and delimiter). Clears any existing contents first, so on parse
+     * failure (e.g. an odd number of remaining tokens) the table may be left partially populated.
+     *
+     * @param stringTokenizer tokenizer positioned at the start of the key/value pairs to read
+     */
     public void fromString(StringTokenizer stringTokenizer) {
 
         try {
@@ -173,6 +256,11 @@ public class UnitComponents {
 
     }
 
+    /**
+     * Merges another name-to-count table into {@link #components}, summing counts for keys present in both.
+     *
+     * @param parts the components to add in
+     */
     public void add(Hashtable<String, Integer> parts) {
 
         for (String part : parts.keySet()) {
@@ -185,6 +273,34 @@ public class UnitComponents {
         }
     }
 
+    /**
+     * Checks (without mutating anything) whether repairing {@code repoUnit} using parts drawn from
+     * {@code mainUnit}'s intact/undamaged critical slots plus this instance's stored {@link #components} would
+     * supply everything {@code repoUnit} needs, and reports any shortfall as an HTML fragment.
+     * <p>
+     * Builds a per-part inventory of {@code mainUnit} (one entry per undamaged critical slot, with ammo bins
+     * additionally tallying remaining shots under the ammo's internal name, plus separate front/rear armor and
+     * internal-structure totals) and a similar "needed" inventory for {@code repoUnit} (this one does not skip
+     * damaged slots, since a damaged slot on the unit being repaired is exactly what needs replacing), then for
+     * each part {@code repoUnit} needs, compares the amount available (this instance's stockpile plus
+     * {@code mainUnit}'s matching parts) against the amount required.
+     *
+     * <p><b>Note:</b> the armor-total key for {@code mainUnit} is computed via
+     * {@code UnitUtils.getCritName(mainUnit, UnitUtils.LOC_CENTER_TORSO, 0, true)} while the corresponding key for
+     * {@code repoUnit} uses {@code UnitUtils.getCritName(repoUnit, UnitUtils.LOC_FRONT_ARMOR, 0, true)} — different
+     * "slot" constants. This happens to still line up today because {@code getCritName}'s armor branch only
+     * special-cases {@code slot == LOC_INTERNAL_ARMOR}, treating every other slot value (including both
+     * {@code LOC_CENTER_TORSO} and {@code LOC_FRONT_ARMOR}) identically; both calls end up deriving the key purely
+     * from {@code getArmorType(location)}. It is fragile, since it silently relies on those two constants both
+     * falling into the same "not internal armor" bucket in {@code getCritName} rather than being intentionally
+     * unified.
+     *
+     * @param mainUnit the donor unit whose intact parts are treated as available inventory
+     * @param repoUnit the unit being evaluated for repair; its required parts are computed from all of its
+     *                 critical slots (including damaged ones) plus its armor/internal structure
+     * @return {@code ""} if every part {@code repoUnit} needs is fully covered; otherwise an HTML
+     *     {@code <table>} fragment listing each shortfall as "{@code <missing amount> of <part name>}"
+     */
     public String canRepoUnit(Entity mainUnit, Entity repoUnit) {
 
         Hashtable<String, Integer> mainUnitParts = new Hashtable<>();
@@ -336,6 +452,30 @@ public class UnitComponents {
         return result.toString();
     }
 
+    /**
+     * Scraps {@code mainUnit} into this instance's {@link #components} stockpile (unconditionally, via
+     * {@link #add}), then computes what {@code repoUnit} needs and consumes (removes) that amount from the
+     * (now-augmented) stockpile.
+     * <p>
+     * Mirrors the "needed parts" computation in {@link #canRepoUnit} but does not check first whether enough is
+     * available: this method always returns {@code true} regardless of whether the stockpile actually covered
+     * everything {@code repoUnit} required. {@link #remove(String, int)} clamps at zero rather than reporting a
+     * shortfall, so if the stockpile does not have enough of a part, that part's count simply drops to (or stays
+     * at) zero and no error/signal is raised. Callers wanting to know in advance whether a repair is fully
+     * covered should check with {@link #canRepoUnit} first.
+     * <p><b>Bug:</b> the second loop, which tallies {@code repoUnit}'s required parts (internal structure, armor,
+     * critical slot contents), iterates {@code location} from {@code 0} to {@code mainUnit.locations()} (not
+     * {@code repoUnit.locations()}) while reading from {@code repoUnit} inside the loop body
+     * (e.g. {@code repoUnit.getInternal(location)}, {@code repoUnit.getNumberOfCriticalSlots(location)}). If
+     * {@code repoUnit} has more locations than {@code mainUnit}, some of {@code repoUnit}'s locations are never
+     * accounted for; if {@code repoUnit} has fewer locations than {@code mainUnit}, this will index into
+     * locations that do not exist on {@code repoUnit}.
+     *
+     * @param mainUnit the unit being scrapped for parts
+     * @param repoUnit the unit being repaired using those parts (plus this instance's existing stockpile)
+     * @return always {@code true} (see note above; the return value does not reflect whether the repair was
+     *     actually fully supplied)
+     */
     public boolean repoUnit(Entity mainUnit, Entity repoUnit) {
 
         Hashtable<String, Integer> repoUnitParts = new Hashtable<>();
@@ -428,6 +568,13 @@ public class UnitComponents {
         return true;
     }
 
+    /**
+     * Adds {@code amount} of {@code part} to the stockpile. No-op if {@code amount} is less than 1 (so this
+     * cannot be used to subtract via a negative amount; use {@link #remove(String, int)} for that).
+     *
+     * @param part   the component key to credit
+     * @param amount the quantity to add; ignored if less than 1
+     */
     public void add(String part, int amount) {
 
         if (amount < 1) {
@@ -442,6 +589,15 @@ public class UnitComponents {
 
     }
 
+    /**
+     * Removes up to {@code amount} of {@code part} from the stockpile, clamped at zero: if fewer than
+     * {@code amount} are on hand, the entry is simply removed entirely rather than going negative, and no
+     * indication is given that the requested amount exceeded what was available.
+     *
+     * @param key    the component key to debit
+     * @param amount the quantity to remove; the sign is ignored ({@link Math#abs(int)} is applied), so passing a
+     *               negative amount still subtracts
+     */
     public void remove(String key, int amount) {
 
         if (components.get(key) == null) {
@@ -460,6 +616,10 @@ public class UnitComponents {
 
     }
 
+    /**
+     * @param key the component key to look up
+     * @return the number of {@code key} currently on hand, or {@code 0} if none are stored
+     */
     public int getPartsCritCount(String key) {
 
         if (components.get(key) == null) {
@@ -468,6 +628,12 @@ public class UnitComponents {
         return components.get(key);
     }
 
+    /**
+     * @param crit   the component key to check
+     * @param amount the quantity needed
+     * @return {@code true} if at least {@code amount} of {@code crit} are on hand, {@code false} otherwise
+     *     (including if none are stored at all)
+     */
     public boolean hasEnoughCrits(String crit, int amount) {
 
         if (components.get(crit) == null) {
@@ -477,6 +643,9 @@ public class UnitComponents {
         return components.get(crit) >= amount;
     }
 
+    /**
+     * Removes all stockpiled components, emptying {@link #components}.
+     */
     public void clear() {
         components.clear();
     }

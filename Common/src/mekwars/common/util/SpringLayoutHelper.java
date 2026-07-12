@@ -22,17 +22,31 @@ import javax.swing.JPanel;
 import javax.swing.Spring;
 import javax.swing.SpringLayout;
 
-/*
- * Helper which loops through container components in order
- * to set up springs. Uses fixed buffers of 4 pixels between
- * components and frame border.
+/**
+ * Swing UI helper which arranges the existing children of a {@link JPanel} using {@link SpringLayout} into a
+ * uniform grid: it loops through the panel's components in row-major order and wires up {@link Spring} constraints
+ * so that every cell in a given row shares that row's tallest component's height, every cell in a given column
+ * shares that column's widest component's width, and a fixed 4-pixel gap is kept between adjacent cells and around
+ * the panel border. The panel passed in must already use a {@link SpringLayout} and already contain its child
+ * components (added in the desired left-to-right, top-to-bottom order) before calling {@code setupSpringGrid}.
  *
  * @urgru
  */
 public class SpringLayoutHelper {
 
+    /**
+     * Unused static holder field; not referenced anywhere in this class. Presumably intended at some point as a
+     * shared/singleton instance, but this class is used purely through its static methods.
+     */
     public static SpringLayoutHelper slh;
 
+    /**
+     * Arranges {@code panel}'s components into a grid with the given number of columns, computing the number of
+     * rows automatically as {@code ceil(componentCount / columns)}. See {@link #setupSpringGrid(JPanel, int, int)}.
+     *
+     * @param panel   the panel (already using {@link SpringLayout}) whose children should be arranged
+     * @param columns number of columns in the grid
+     */
     public static void setupSpringGrid(JPanel panel, int columns) {
         int count = panel.getComponentCount();
 
@@ -41,6 +55,23 @@ public class SpringLayoutHelper {
         setupSpringGrid(panel, rows, columns);
     }
 
+    /**
+     * Arranges {@code panel}'s existing components into a {@code rows} x {@code columns} grid using
+     * {@link SpringLayout} constraints, with a fixed 4-pixel gap between cells and around the panel's edges.
+     * <p>
+     * If the panel currently has fewer than {@code rows * columns} components, blank {@link JLabel} placeholders
+     * (a single space) are appended until the count matches, so that every grid cell maps to a real component.
+     * Components are assumed to already be present in row-major order (row 0 first, then row 1, etc.).
+     * <p>
+     * The algorithm makes two passes: first it computes each row's height (the max preferred height of any
+     * component in that row) and assigns a common Y position and height to every component in the row; then it
+     * does the same per column for X position and width. Finally, the panel's own {@code SOUTH} and {@code EAST}
+     * constraints are set to the accumulated total height/width so the panel sizes itself to fit the grid.
+     *
+     * @param panel   the panel (already using {@link SpringLayout}) whose children should be arranged
+     * @param rows    number of rows in the grid
+     * @param columns number of columns in the grid
+     */
     public static void setupSpringGrid(JPanel panel, int rows, int columns) {
 
         //setup new layout.

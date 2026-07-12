@@ -22,19 +22,29 @@ import java.io.Writer;
 import jakarta.annotation.Nonnull;
 
 /**
- * Splits a stream into two.
+ * Splits a stream into two: a {@link Writer} decorator that forwards every {@code write}/{@code flush}/{@code close}
+ * call to two underlying writers, so output written to this "tee" is duplicated to both destinations (e.g. writing
+ * simultaneously to a log file and to the console). Named after the Unix {@code tee} command.
  *
  * @author Imi (immanuel.scholz@gmx.de)
  */
 public final class TeePrinter extends Writer {
+    /** The two underlying writers that every write on this instance is forwarded to, in order. */
     Writer tee, too;
 
+    /**
+     * @param tee the first destination writer
+     * @param too the second destination writer
+     */
     public TeePrinter(Writer tee, Writer too) {
         this.tee = tee;
         this.too = too;
     }
 
     /**
+     * Writes the given character range to both underlying writers, {@code tee} first then {@code too}. Note: if
+     * writing to {@code tee} throws, {@code too} is never written to for this call.
+     *
      * @see java.io.Writer#write(char[], int, int)
      */
     @Override
@@ -44,6 +54,9 @@ public final class TeePrinter extends Writer {
     }
 
     /**
+     * Flushes both underlying writers, {@code tee} first then {@code too}. Note: if flushing {@code tee} throws,
+     * {@code too} is never flushed for this call.
+     *
      * @see java.io.Writer#flush()
      */
     @Override
@@ -53,6 +66,9 @@ public final class TeePrinter extends Writer {
     }
 
     /**
+     * Closes both underlying writers, {@code tee} first then {@code too}. Note: if closing {@code tee} throws,
+     * {@code too} is never closed for this call.
+     *
      * @see java.io.Writer#close()
      */
     @Override
