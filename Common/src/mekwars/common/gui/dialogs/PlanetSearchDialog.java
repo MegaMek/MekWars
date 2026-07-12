@@ -27,12 +27,20 @@ import mekwars.common.campaign.clientutils.protocol.IClient;
 import mekwars.common.gui.InnerStellarMap;
 import mekwars.common.util.SpringLayoutHelper;
 
-/*
+/**
  * Base dialog, derived from MMNET's SearchPlanetListener, allows players
  * to search for planets using partial strings. Eventually, I'd like to
  * expand this to allow searching in other modes (selectable via combo box),
  * like "Active Operations" and "Contested Worlds," w/ appropriate fields
  * for selection input.
+ * <p>
+ * The dialog shows a text field and a live-filtered {@code JList} of every known planet name.
+ * As the player types, a background {@link Thread} is spawned on every caret update to
+ * recompute the matching subset and auto-select the best prefix match (see the caret listener
+ * in the constructor for details, including a documented "hacky but functional" selection
+ * heuristic). Pressing OK jumps the given {@link InnerStellarMap} to the selected/typed planet
+ * (activating and remembering it as the map's current selection) and closes the dialog;
+ * pressing Cancel (or any non-OK action) just disposes the dialog without changing the map.
  *
  * @urgru 5.2.05
  */
@@ -45,15 +53,27 @@ public class PlanetSearchDialog extends javax.swing.JDialog implements java.awt.
     @Serial
     private static final long serialVersionUID = -7897295866660184584L;
     //variables
+    /** The star map view to jump to the selected planet on. */
     private final InnerStellarMap map;
+    /** All planets known to the client, used both to build the name list and resolve a name back to a Planet. */
     private final java.util.Collection<Planet> planets;
+    /** Alphabetically-sorted set of all planet names, the unfiltered source for the search list. */
     private final java.util.TreeSet<String> planetNames;
 
+    /** List box showing the planet names currently matching the search text. */
     private final javax.swing.JList<String> matchingPlanetsList;
+    /** Text field the player types a partial planet name into to filter {@link #matchingPlanetsList}. */
     private final javax.swing.JTextField nameField;//input field
+    /** Action command identifying the OK button in {@link #actionPerformed}. */
     private final String okayCommand = "Okay";
 
-    //constructor
+    /**
+     * Builds the search dialog: a text field, a live-filtered list of planet names, and OK/Cancel
+     * buttons, then packs, sizes, and centers it. Does not show the dialog automatically.
+     *
+     * @param map    the stellar map to update with the chosen planet on OK
+     * @param client the client, used to obtain the main frame (as owner) and the full planet list
+     */
     public PlanetSearchDialog(InnerStellarMap map, IClient client) {
 
         /*
@@ -79,6 +99,10 @@ public class PlanetSearchDialog extends javax.swing.JDialog implements java.awt.
         //the name field, for user input. caretUpdate
         //does most of the work to update list contents
         nameField = new javax.swing.JTextField();//field for user input
+        // Every caret movement (including each keystroke) spawns a brand-new background Thread
+        // that recomputes the filtered planet list and picks a default selection. Note: since
+        // this touches Swing components (matchingPlanetsList) off the Event Dispatch Thread,
+        // it is not strictly EDT-safe, though in practice it tends to work due to timing.
         nameField.addCaretListener(caretEvent -> new Thread() {
             @Override
             public void run() {
@@ -161,6 +185,10 @@ public class PlanetSearchDialog extends javax.swing.JDialog implements java.awt.
 
     }
 
+    /**
+     * Ensures the dialog is not shrunk below a usable minimum size (300x300) after packing.
+     * Resizes the dialog only if the current size is smaller than the minimum in either dimension.
+     */
     private void checkMinimumSize() {
 
         java.awt.Dimension curDim = this.getSize();
@@ -187,6 +215,17 @@ public class PlanetSearchDialog extends javax.swing.JDialog implements java.awt.
 
     /**
      * OK or CANCEL buttons pressed. Handle any changes and then close the dialouge.
+     * <p>
+     * On OK: prefers the list selection; if nothing is selected in the list, falls back to the
+     * raw text field contents. If that is still empty, the dialog stays open and does nothing.
+     * If exactly one planet remains in the filtered list, that single planet is used regardless
+     * of what's typed/selected. The chosen name is then matched (exact, case-sensitive) against
+     * the full {@link #planets} collection; on a match, the planet becomes the map's selection
+     * (selected, activated, and saved) and the dialog closes. If no planet matches the typed
+     * name, an "Unknown Planet" message dialog is shown and then the dialog is disposed anyway
+     * (falls through to the trailing {@code dispose()} below).
+     * <p>
+     * Any other action command (i.e. Cancel) just disposes the dialog without touching the map.
      */
     public void actionPerformed(java.awt.event.ActionEvent event) {
 

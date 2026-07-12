@@ -39,26 +39,60 @@ import mekwars.common.gui.GUIClientConfig;
 import mekwars.common.gui.MekInfo;
 import mekwars.common.util.UnitUtils;
 
-/*
- *
- * @author urgru
- *
- * inner class which sets up a camo selection dialog.
+/**
+ * Modal dialog that lets a player choose their client-wide unit camouflage pattern (stored in the client config
+ * under {@code UNIT_CAMO}).
+ * <p>
+ * Presents a scrollable list of every image file (png/jpeg/jpg/gif) found in {@code ./data/images/camo}, plus a
+ * "no camouflage" entry, alongside a live side-by-side preview: the "Old Camo" panel shows a representative unit
+ * (a random unit from the player's hangar, or a freshly-generated placeholder if the hangar is empty) rendered
+ * with the player's current camo, and the "New Camo" panel re-renders the same unit with whatever pattern is
+ * currently highlighted in the list. Loaded/scaled camo images are cached in {@link #camos} so re-selecting a
+ * pattern doesn't reload it from disk.
+ * <p>
+ * Pressing OK (only if a different pattern than the original was chosen) persists the new camo to the client
+ * config, reloads the relevant image resource, and refreshes the main window's HQ panel so the change is
+ * reflected immediately; pressing Cancel (or re-selecting the original camo) simply disposes the dialog with no
+ * changes applied.
  */
 public class CamoSelectionDialog extends JDialog implements ListSelectionListener, ActionListener {
     private final static MMLogger LOGGER = MMLogger.create(CamoSelectionDialog.class);
 
+    /**
+     * Serialization id for this {@link JDialog} subclass.
+     */
     @Serial
     private static final long serialVersionUID = 491308053668750747L;
+    /** The camo pattern in effect when the dialog was opened; used to detect whether OK actually changed anything. */
     private final String originalCamo;
+    /** Back-link to the client used to read/write config, and to refresh the GUI after a change is applied. */
     private final IClient client;
+    /** Action command string used by the OK button so {@link #actionPerformed} can identify it. */
     private final String okayCommand = "Okay";
+    /** Cache of camo file name to loaded {@link ImageIcon} (or the placeholder string {@code "filler"} until
+     *  the image has actually been loaded and scaled on first selection). */
     private TreeMap<String, Object> camos;
+    /** List box of available camo file names (plus the "no camouflage" entry). */
     private JList<String> camoList;
+    /** Preview widget showing the sample unit rendered with the currently-highlighted camo pattern. */
     private MekInfo newCamo;
+    /** The sample unit entity used to render both the "old" and "new" camo previews. */
     private Entity newEntity;
 
     // CONSTRUCTOR
+    /**
+     * Builds and displays the camo selection dialog, loading the camo file list from disk and setting up the
+     * old/new preview panels.
+     * <p>
+     * If a representative unit entity cannot be obtained (see {@link UnitUtils#createOMG()} as the fallback
+     * when the player's hangar is empty), an error is logged and the dialog disposes itself immediately without
+     * finishing construction of the rest of the UI.
+     *
+     * @param parent owning frame, used for centering the dialog (though {@code setLocationRelativeTo(null)} is
+     *               actually used at the end of construction, centering on the screen rather than the parent).
+     * @param client active client connection; supplies the player's hangar/current camo config and applies the
+     *               chosen camo back to the client on OK.
+     */
     public CamoSelectionDialog(JFrame parent, IClient client) {
 
         // init superclass
@@ -70,7 +104,7 @@ public class CamoSelectionDialog extends JDialog implements ListSelectionListene
         // save the original camo
         originalCamo = client.getConfigParam("UNIT_CAMO");
 
-        // set up entities
+        // set up entities used to render the "before"/"after" camo previews
         Entity oldEntity;
 
         try {
@@ -144,6 +178,9 @@ public class CamoSelectionDialog extends JDialog implements ListSelectionListene
 
         String oldCamoName = client.getConfig().getParam("UNIT_CAMO");
         Image oldCamoImage = Toolkit.getDefaultToolkit().getImage(String.format("./data/images/camo/%s", oldCamoName));
+        // QUIRK: getScaledInstance's return value (the actual scaled image) is discarded here, so this call has
+        // no effect - oldCamoImage below is still the original, unscaled image. The same pattern recurs in
+        // valueChanged(). The 84x72 target size is instead only enforced by the MekInfo/JPanel's minimum size.
         oldCamoImage.getScaledInstance(84, 72, Image.SCALE_FAST);
         camos.remove(oldCamoName);// remove the old
         ImageIcon oldCamoIcon = new ImageIcon(oldCamoImage);
@@ -219,7 +256,13 @@ public class CamoSelectionDialog extends JDialog implements ListSelectionListene
     }
 
     /**
-     * OK or CANCEL buttons pressed. Handle any changes and then close the dialog.
+     * Handles both the OK and Cancel buttons (Cancel has no action command set, so it falls through to the
+     * final {@code dispose()} without applying anything).
+     * <p>
+     * On OK, only if the currently-selected camo differs from {@link #originalCamo}: persists the new pattern
+     * to the client config, reloads the camo image resource, and refreshes the main window (re-selects its
+     * first tab and reinitializes the HQ panel) so the change is visible immediately. If the selection matches
+     * the original camo, nothing is applied - the dialog simply closes.
      */
     public void actionPerformed(ActionEvent event) {
         String command = event.getActionCommand();
@@ -244,9 +287,12 @@ public class CamoSelectionDialog extends JDialog implements ListSelectionListene
     }// end actionPerformed
 
     /**
-     * Update the "new camo" icon whenever a list item is selected.
+     * Updates the "New Camo" preview whenever the player selects a different entry in {@link #camoList}.
+     * Lazily loads and caches each camo image the first time it's selected (subsequent selections of the same
+     * pattern reuse the cached {@link ImageIcon} from {@link #camos} instead of reading the file again).
      *
-     * @param event - ItemEvent from the list.
+     * @param event selection-change event from {@link #camoList}; ignored while {@link ListSelectionEvent#getValueIsAdjusting()}
+     *              is true so this only fires once the user settles on a final selection.
      */
     public void valueChanged(ListSelectionEvent event) {
 
@@ -265,6 +311,8 @@ public class CamoSelectionDialog extends JDialog implements ListSelectionListene
 
                 if (camos.get(currSelection).equals("filler")) {
                     Image currCamo = Toolkit.getDefaultToolkit().getImage(String.format("./data/images/camo/%s", currSelection));
+                    // QUIRK: as in the constructor, getScaledInstance's result is discarded, so this scaling
+                    // call has no actual effect - the full-size image is what gets wrapped and cached below.
                     currCamo.getScaledInstance(84, 72, Image.SCALE_FAST);
                     camos.remove(currSelection);// remove the old
                     currCamoIcon = new ImageIcon(currCamo);

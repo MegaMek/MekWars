@@ -19,8 +19,24 @@ package mekwars.common.gui.dialogs;
 
 import mekwars.common.campaign.clientutils.protocol.IClient;
 
+/**
+ * The MekWars client "Login" dialog — the modal prompt shown when connecting to a server that asks for a
+ * username/password and (re)confirms the server's IP address and chat/data ports. This is typically the very
+ * first dialog a player sees when starting the client.
+ * <p>
+ * Like the other simple dialogs in this package ({@link RegisterNameDialog}, {@link ConfigurationDialog}), all
+ * of its behavior lives in the constructor: it builds the form, pre-fills it from the client's saved config,
+ * shows it modally, and on completion either saves the entered values back into the config (OK) or terminates
+ * the entire JVM via {@link System#exit(int)} (Cancel) -- there is no "just close the login dialog and keep
+ * running" option.
+ * <p>
+ * Pressing Enter in any field advances focus to the next field via {@link #actionPerformed(java.awt.event.ActionEvent)};
+ * pressing Enter in the last field (Data Port) automatically triggers the OK button.
+ */
 public final class SignOnDialog implements java.awt.event.ActionListener {
 
+    // Action-command strings identifying which field/button fired an ActionEvent; used only to decide which
+    // field to move focus to next (see actionPerformed).
     private final String usernameCommand = "user";
     private final String passwordCommand = "password";
     private final String okayCommand = "okay";
@@ -40,6 +56,21 @@ public final class SignOnDialog implements java.awt.event.ActionListener {
     private final javax.swing.JDialog dialog;
     private final javax.swing.JOptionPane pane;
 
+    /**
+     * Builds and shows the sign-on/login dialog modally, pre-filled with the username, password, server IP,
+     * chat port, and data port currently stored in the client's config. Blocks until the user presses OK or
+     * Cancel (or triggers OK by pressing Enter in the Data Port field).
+     * <p>
+     * If OK is pressed, the entered username, IP address, and ports are written back into the client's config
+     * and the client's in-memory username/password are updated; the password itself is <b>not</b> persisted to
+     * config here (only the username is saved via {@code setParam("NAME", ...)}).
+     * <p>
+     * If Cancel is pressed, the entire application is terminated immediately via {@code System.exit(0)} --
+     * there is no way to dismiss this dialog and continue running without signing on.
+     *
+     * @param client the client whose config supplies the pre-filled defaults and which receives the entered
+     *               username/password/connection settings on OK
+     */
     public SignOnDialog(IClient client) {
 
         // Create the labels and buttons
@@ -132,6 +163,14 @@ public final class SignOnDialog implements java.awt.event.ActionListener {
         else {System.exit(0);}
     }
 
+    /**
+     * Advances keyboard focus from one field to the next when Enter is pressed in a text field, mimicking Tab
+     * navigation; reaching the last field (Data Port) instead auto-clicks OK and closes the dialog. Also
+     * handles the OK/Cancel buttons themselves by recording the chosen value and disposing the dialog so the
+     * blocking {@code dialog.setVisible(true)} call in the constructor can return.
+     *
+     * @param e the event fired by one of the text fields or the OK/Cancel buttons
+     */
     public void actionPerformed(java.awt.event.ActionEvent e) {
         String command = e.getActionCommand();
         switch (command) {

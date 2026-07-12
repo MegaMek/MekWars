@@ -64,10 +64,23 @@ import mekwars.common.gui.MekInfo;
 import mekwars.common.util.SpringLayoutHelper;
 import mekwars.common.util.UnitUtils;
 
-/*
- * Allows a user to sort through a list of MechSummaries and select one
+/**
+ * Dialog that lets a player pick which chassis/variant to "repod" an owned OmniMek into — i.e.
+ * swap out its pod-mounted equipment for a different stock/variant loadout drawn from a
+ * server-supplied whitelist of allowed chassis. It is opened either from a hangar unit's context
+ * menu (a specific {@link #unitId}) or, in "global" mode, from {@link RewardPointsDialog}'s RePod
+ * reward (letting the player pick any of their eligible OmniMeks first, then any allowed chassis
+ * here). The dialog shows a searchable, sortable, columnar list of eligible {@link MekSummary}
+ * entries (name/chassis/tonnage/BV plus repod cost figures) next to a small unit-image preview,
+ * with "RePod" (apply the highlighted selection), "Random" (let the server pick), and "Close"
+ * buttons.
+ * <p>
+ * Loading and filtering the (potentially large) master mek cache down to just the allowed
+ * chassis list is done off the Swing event thread: this class implements {@link Runnable} and is
+ * expected to be started on a background thread while a {@link UnitLoadingDialog} "please wait"
+ * dialog is shown, with {@link #run()} hiding that dialog and revealing this frame once loading
+ * completes.
  */
-
 public class RePodSelectorDialog extends JFrame
       implements ActionListener, KeyListener, ListSelectionListener, Runnable, WindowListener, ItemListener {
     private final static MMLogger LOGGER = MMLogger.create(RePodSelectorDialog.class);
@@ -76,27 +89,56 @@ public class RePodSelectorDialog extends JFrame
     private static final long serialVersionUID = -6467246609231845514L;
 
     // how long after a key is typed does a new search begin
+    /** Milliseconds of inactivity after which the incremental type-to-search buffer ({@link #m_sbSearch}) is reset rather than appended to. */
     private final static int KEY_TIMEOUT = 1000;
+    /** Blank-padding source string used by {@link #makeLength(String, int)} to right-pad list columns to a fixed width. */
     private static final String SPACES = "                        ";
     // frame which owns the dialog
+    /** Back-reference to the main client window; used only to parent the {@link UnitFailureDialog} shown for units that failed to load. */
     private final CMainFrame cMainFrame;
+    /** The modal "please wait" dialog shown while meks are filtered/sorted on a background thread; hidden once {@link #run()} finishes. */
     private final UnitLoadingDialog unitLoadingDialog;
     private final JButton bRePod = new JButton("RePod");
     private final JButton bCancel = new JButton("Close");
     private final JButton bRandom = new JButton("Random");
+    /** Intended to show the selected mek's basic readout (chassis/armor/etc.); currently always shows a placeholder rather than real data — see {@link #previewMek(Entity)}. */
     private final JTextPane mechViewLeft;
+    /** Intended to show the selected mek's loadout readout (weapons/equipment); currently always shows a placeholder rather than real data — see {@link #previewMek(Entity)}. */
     private final JTextPane mechViewRight;
+    /** Client back-link used for currency-message formatting and sending the resulting repod chat command. */
     private final IClient client;
+    /** Maps each allowed chassis's internal mek-summary filename to its "$"-delimited repod cost modifier string (see {@link #formatMek(MekSummary)}), as parsed from the constructor's {@code chassisList} parameter. */
     private final TreeMap<String, String> chassisList = new TreeMap<>();
+    /** The hangar unit being repodded; ignored server-side when {@link #global} repodding is requested for a unit chosen via reward points. */
     private final String unitId;
     private final DefaultListModel<String> defaultModel;
     private final JList<String> mekList;
+    /** Filtered, sorted array of {@link MekSummary} entries matching {@link #chassisList}; index-parallel with {@link #defaultModel}/{@link #mekList}. */
     private MekSummary[] meksCurrent;
+    /** Accumulates recently typed characters for incremental type-ahead search; reset after {@link #KEY_TIMEOUT} ms of inactivity. */
     private StringBuilder m_sbSearch = new StringBuilder();
+    /** Timestamp (ms) of the last keystroke, used to detect a pause longer than {@link #KEY_TIMEOUT}. */
     private long m_nLastSearch = 0;
+    /** Small image-preview panel for the currently selected/previewed unit. */
     private JPanel pPreview = new JPanel();
+    /** Whether this dialog was opened in "global" repod mode (parsed from a {@code "GLOBAL"} token in the constructor's chassis-list string), meaning the target unit can be any eligible owned OmniMek rather than one fixed hangar unit. */
     private boolean global = false;
 
+    /**
+     * Builds the RePod selector UI (list + preview panes + buttons) but does not populate the
+     * mek list or show the frame — that happens later when this instance is run (see
+     * {@link #run()}), typically on a background thread.
+     *
+     * @param cMainFrame  the main client window, used to parent the failed-unit-load dialog
+     * @param uld         the "please wait" dialog to hide once mek filtering/sorting finishes
+     * @param client      client back-link for currency formatting and sending the repod command
+     * @param chassisList a {@code "#"}-delimited encoded string describing which chassis are
+     *                    allowed for this repod: a bare {@code "GLOBAL"} token enables
+     *                    {@link #global} mode, and any token containing a {@code "."} is treated
+     *                    as an allowed chassis filename, immediately followed by its
+     *                    {@code "$"}-delimited cost-modifier token
+     * @param unitId      the hangar unit being repodded (server-side identifier)
+     */
     public RePodSelectorDialog(CMainFrame cMainFrame, UnitLoadingDialog uld, IClient client,
           String chassisList, String unitId) {
         super("RePod Selector");
@@ -205,6 +247,7 @@ public class RePodSelectorDialog extends JFrame
         addWindowListener(this);
     }
 
+    /** Blanks both readout text panes and clears the image preview (delegates to {@link #previewMek(Entity)} with a {@code null} entity). */
     void clearMechPreview() {
         mechViewLeft.setEditable(false);
         mechViewRight.setEditable(false);
@@ -216,6 +259,20 @@ public class RePodSelectorDialog extends JFrame
 
     }
 
+    /**
+     * Updates the image preview and (nominally) the text readouts for the given unit.
+     * <p>
+     * If {@code entity} is {@code null}, a default placeholder unit is built via
+     * {@link UnitUtils#createOMG()} purely so a {@link ConfigurableMekViewPanel} can be
+     * constructed without error, and the text panes are set to "No unit selected" instead of a
+     * readout. Note that even when a real, non-null {@code entity} successfully loads, the two
+     * lines that would populate {@link #mechViewLeft}/{@link #mechViewRight} with the actual
+     * basic/loadout readout text are commented out (replaced by a debug log line), so in practice
+     * these panes never show real equipment/armor detail in the current build — only the preview
+     * image panel ({@link #pPreview}) is meaningfully updated.
+     *
+     * @param entity the unit to preview, or {@code null} to clear the preview
+     */
     void previewMek(Entity entity) {
         Entity currEntity = entity;
         boolean populateTextFields = true;
@@ -260,6 +317,13 @@ public class RePodSelectorDialog extends JFrame
         }
     }
 
+    /**
+     * {@link Runnable} entry point intended to run on a background thread while
+     * {@link #unitLoadingDialog} is shown to the user. Filters and sorts the master mek cache
+     * down to just the allowed chassis list, hides the loading dialog, pops up a
+     * {@link UnitFailureDialog} if any unit files failed to parse, selects the first row of the
+     * resulting list (if any), and finally reveals this frame.
+     */
     public void run() {
 
         // Loading meks can take a while, so it will have its own thread.
@@ -288,6 +352,12 @@ public class RePodSelectorDialog extends JFrame
         mekList.requestFocus();
     }
 
+    /**
+     * Scans the entire {@link MekSummaryCache} for mek summaries whose internal filename is a
+     * key of {@link #chassisList} and copies the matches into {@link #meksCurrent}. Also
+     * (redundantly, since callers already call it separately) re-invokes {@link #sortMeks()} at
+     * the end.
+     */
     private void filterMeks() {
         Vector<MekSummary> vMeks = new Vector<>(1, 1);
         MekSummary[] meks = MekSummaryCache.getInstance().getAllMeks();
@@ -317,6 +387,7 @@ public class RePodSelectorDialog extends JFrame
         sortMeks();
     }
 
+    /** Sorts {@link #meksCurrent} by chassis name and rebuilds the visible list model from the formatted rows produced by {@link #formatMek(MekSummary)}. */
     private void sortMeks() {
         Arrays.sort(meksCurrent, new MekSummaryComparator(MekSummaryComparator.T_CHASSIS));
         defaultModel.clear();
@@ -328,6 +399,12 @@ public class RePodSelectorDialog extends JFrame
         repaint();
     }
 
+    /**
+     * Re-centers the frame on screen and repacks it every time visibility is toggled, in
+     * addition to the normal {@link JFrame#setVisible(boolean)} behavior.
+     *
+     * @param show the new visibility state
+     */
     @Override
     public void setVisible(boolean show) {
         setLocationRelativeTo(null);
@@ -335,6 +412,16 @@ public class RePodSelectorDialog extends JFrame
         pack();
     }
 
+    /**
+     * Builds one fixed-width, column-aligned display row for the mek list: model name, chassis
+     * name, tonnage, and Battle Value, followed by three repod cost figures parsed (in order)
+     * from this chassis's {@code "$"}-delimited entry in {@link #chassisList} — a C-bill (or
+     * equivalent currency) cost, a "cp" (campaign/tech point?) cost, and an Influence (or
+     * equivalent) cost — each rendered via {@link IClient#moneyOrFluMessage}.
+     *
+     * @param mekSummary the mek to format
+     * @return the padded/truncated single-line row text for display in {@link #mekList}
+     */
     private String formatMek(MekSummary mekSummary) {
         String result = String.format("%s %s %s %s", makeLength(mekSummary.getModel(), 12), makeLength(mekSummary.getChassis(),
               10), makeLength(String.format("%s", mekSummary.getTons()),
@@ -375,6 +462,14 @@ public class RePodSelectorDialog extends JFrame
         }
     }
 
+    /**
+     * {@link ItemListener} callback: re-filters and re-sorts the mek list, then attempts to
+     * restore whatever was previously selected (reverting to "no selection" automatically if it
+     * can no longer be found). Note: no component in this class appears to actually register an
+     * {@code ItemListener} on itself in the constructor, so this handler may currently be
+     * unreachable/vestigial — {@link #itemStateChanged} exists to satisfy the {@link ItemListener}
+     * interface this class declares but doesn't appear to be wired to anything.
+     */
     public void itemStateChanged(ItemEvent itemEvent) {
         Object currSelection = mekList.getSelectedValue();
 
@@ -386,6 +481,15 @@ public class RePodSelectorDialog extends JFrame
         mekList.setSelectedValue(currSelection, true);
     }
 
+    /**
+     * Pads or truncates {@code string} to exactly {@code nLength} characters for fixed-width
+     * column alignment in the mek list: truncates with a {@code ".."} suffix if too long, or
+     * right-pads with spaces (from {@link #SPACES}) if too short.
+     *
+     * @param string  the text to fit
+     * @param nLength the exact target character width
+     * @return the fitted string, exactly {@code nLength} characters long
+     */
     private String makeLength(String string, int nLength) {
         if (string.length() == nLength) {
             return string;
@@ -396,9 +500,18 @@ public class RePodSelectorDialog extends JFrame
         }
     }
 
+    /** No-op; required by {@link KeyListener} but this dialog only reacts to key-press events. */
     public void keyTyped(KeyEvent keyEvent) {
     }
 
+    /**
+     * Treats Enter as equivalent to clicking "Close" (synthesizes and dispatches a matching
+     * {@link ActionEvent} for {@link #bCancel}), and otherwise feeds every keystroke into an
+     * incremental type-ahead search over the mek list: the search buffer is reset if more than
+     * {@link #KEY_TIMEOUT} ms have elapsed since the previous keystroke, the new character is
+     * appended, and {@link #searchFor(String)} is invoked with the accumulated (lower-cased)
+     * buffer.
+     */
     public void keyPressed(KeyEvent keyEvent) {
         if (keyEvent.getKeyCode() == KeyEvent.VK_ENTER) {
             ActionEvent event = new ActionEvent(bCancel, ActionEvent.ACTION_PERFORMED, "");
@@ -416,6 +529,20 @@ public class RePodSelectorDialog extends JFrame
         searchFor(m_sbSearch.toString().toLowerCase());
     }
 
+    /**
+     * Handles the three dialog buttons:
+     * <ul>
+     *   <li>{@link #bCancel} — simply disposes the frame.</li>
+     *   <li>{@link #bRePod} — sends a {@code repod} chat command for the currently selected mek's
+     *       filename (either a {@code GLOBAL}-prefixed form using {@link #unitId}, or the plain
+     *       per-unit form, depending on {@link #global}), briefly sleeps, then disposes.</li>
+     *   <li>{@link #bRandom} — sends a {@code repod} chat command with a {@code RANDOM} marker
+     *       instead of a chosen chassis, letting the server pick, then disposes similarly.</li>
+     * </ul>
+     * The short {@code Thread.sleep(125)} calls run on the Swing event dispatch thread and exist
+     * to give the outgoing chat message time to flush before the window is torn down; this
+     * briefly blocks UI redraws while it runs.
+     */
     public void actionPerformed(ActionEvent actionEvent) {
         if (actionEvent.getSource() == bCancel) {
             dispose();
@@ -455,6 +582,13 @@ public class RePodSelectorDialog extends JFrame
         }
     }
 
+    /**
+     * Linear scan for the first mek in {@link #meksCurrent} whose name starts with {@code search}
+     * (case-insensitively, since the caller lower-cases the buffer); selects and scrolls to it if
+     * found.
+     *
+     * @param search the lower-cased, accumulated type-ahead search text
+     */
     private void searchFor(String search) {
         for (int i = 0; i < meksCurrent.length; i++) {
             if (meksCurrent[i].getName().toLowerCase().startsWith(search)) {
@@ -465,30 +599,38 @@ public class RePodSelectorDialog extends JFrame
         }
     }
 
+    /** No-op; required by {@link KeyListener} but this dialog only reacts to key-press events. */
     public void keyReleased(KeyEvent keyEvent) {
         // no action on release
     }
 
+    /** No-op; required by {@link WindowListener}. */
     public void windowOpened(WindowEvent windowEvent) {
     }
 
+    /** Disposes the frame when the user closes it via the window manager (e.g. the title-bar close button). */
     public void windowClosing(WindowEvent windowEvent) {
         dispose();
     }
 
+    /** No-op; required by {@link WindowListener}. */
     public void windowClosed(WindowEvent windowEvent) {
     }
 
+    /** No-op; required by {@link WindowListener}. */
     public void windowIconified(WindowEvent windowEvent) {
     }
 
+    /** No-op; required by {@link WindowListener}. */
     public void windowDeiconified(WindowEvent windowEvent) {
     }
 
     // WindowListener
+    /** No-op; required by {@link WindowListener}. */
     public void windowActivated(WindowEvent windowEvent) {
     }
 
+    /** No-op; required by {@link WindowListener}. */
     public void windowDeactivated(WindowEvent windowEvent) {
     }
 }

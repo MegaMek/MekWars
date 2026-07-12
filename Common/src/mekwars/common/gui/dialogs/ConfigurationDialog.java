@@ -21,8 +21,25 @@ import mekwars.common.VerticalLayout;
 import mekwars.common.campaign.clientutils.protocol.IClient;
 import mekwars.common.util.SpringLayoutHelper;
 
+/**
+ * The MekWars client "Configuration" dialog — the main preferences/settings screen a player uses to change how their
+ * client looks and behaves (chat colors, sounds, tab names/visibility, function-key binds, HUD layout, dedicated
+ * host setup, etc).
+ * <p>
+ * Unlike most dialogs in this package, {@code ConfigurationDialog} does essentially all of its work inside its
+ * constructor: it builds every tab of Swing widgets, pre-populates them from the current {@link IClient}'s
+ * {@code GUIClientConfig} (via {@code client.getConfig()}), shows the dialog modally, blocks until the user presses
+ * OK or Cancel, and — if OK was pressed — writes every field back into the config, saves it, and triggers whatever
+ * UI refreshes (look and feel, HQ layout, map repaint, etc.) are needed for the changed settings to take effect.
+ * There is no separate "load" or "save" method; reading this class means reading the constructor from top to
+ * bottom.
+ * <p>
+ * Usage: {@code new ConfigurationDialog(client);} — the dialog is shown and fully processed as a side effect of
+ * construction, so simply constructing the object is enough to display it and (on OK) persist the user's changes.
+ */
 public final class ConfigurationDialog implements java.awt.event.ActionListener {
 
+    // Action-command strings used to identify which button/combo box fired an ActionEvent in actionPerformed().
     private final static String okayCommand = "Okay";
     private final static String cancelCommand = "Cancel";
     private final static String camoCommand = "Camo";
@@ -36,7 +53,7 @@ public final class ConfigurationDialog implements java.awt.event.ActionListener 
     private final javax.swing.JButton camoButton = new javax.swing.JButton("Select Camo");
 
     // TEXT FIELDS
-    // tab names
+    // tab names -- user-customizable display names shown on each tab of the main client window
     private final javax.swing.JTextField hqTabNameField = new javax.swing.JTextField(10);
     private final javax.swing.JTextField rulesTabNameField = new javax.swing.JTextField(10); //@salient
     private final javax.swing.JTextField bmTabNameField = new javax.swing.JTextField(10);
@@ -52,7 +69,7 @@ public final class ConfigurationDialog implements java.awt.event.ActionListener 
     private final javax.swing.JTextField miscTabNameField = new javax.swing.JTextField(10);
     private final javax.swing.JTextField RPGTabNameField = new javax.swing.JTextField(10);
 
-    // tab mnemonic
+    // tab mnemonic -- single-character keyboard-shortcut letter (Alt+letter) for jumping to each tab
     private final javax.swing.JTextField hqTabMnemonicField = new javax.swing.JTextField(1);
     private final javax.swing.JTextField rulesTabMnemonicField = new javax.swing.JTextField(1); //@salient
     private final javax.swing.JTextField bmTabMnemonicField = new javax.swing.JTextField(1);
@@ -68,7 +85,7 @@ public final class ConfigurationDialog implements java.awt.event.ActionListener 
     private final javax.swing.JTextField miscTabMnemonicField = new javax.swing.JTextField(1);
     private final javax.swing.JTextField RPGTabMnemonicField = new javax.swing.JTextField(1);
 
-    // user config pane text fields
+    // user config pane text fields -- account/chat display settings on the "User" tab
     private final javax.swing.JTextField uNameField = new javax.swing.JTextField(11);
     private final javax.swing.JPasswordField passwordField = new javax.swing.JPasswordField();
     private final javax.swing.JTextField chatNameColorField = new javax.swing.JTextField();
@@ -82,10 +99,10 @@ public final class ConfigurationDialog implements java.awt.event.ActionListener 
     private final javax.swing.JTextField hqColumnsField = new javax.swing.JTextField(3);
     private final javax.swing.JCheckBox showUnitTechBaseCheckBox = new javax.swing.JCheckBox();
     private final javax.swing.JCheckBox showUnitBaseBVCheckBox = new javax.swing.JCheckBox();
-    // keywords
+    // keywords -- comma-delimited words/phrases that trigger a "keyword" ping/sound when seen in chat
     private final javax.swing.JTextField keywordsField = new javax.swing.JTextField();
 
-    // ignore list fields, etc.
+    // ignore list fields, etc. -- comma-delimited names/patterns to suppress in each chat scope, plus related chat text options
     private final javax.swing.JTextField ignorePublicField = new javax.swing.JTextField();
     private final javax.swing.JTextField ignoreHouseField = new javax.swing.JTextField();
     private final javax.swing.JTextField ignorePrivateField = new javax.swing.JTextField();
@@ -106,11 +123,11 @@ public final class ConfigurationDialog implements java.awt.event.ActionListener 
     private final javax.swing.JTextField soundOnMenuPopupField = new javax.swing.JTextField();
     private final javax.swing.JTextField soundOnMenuField = new javax.swing.JTextField();
 
-    // host options
+    // host options -- shown on the "Host Setup" tab whether or not this client is running as a dedicated host
     private final javax.swing.JTextField maxPlayersField = new javax.swing.JTextField(11);
     private final javax.swing.JTextField hostCommentsField = new javax.swing.JTextField(11);
 
-    // function keys
+    // function keys -- command strings bound to F1-F5; "/client" is prepended when the key is pressed
     private final javax.swing.JTextField f1Field = new javax.swing.JTextField(30);
     private final javax.swing.JTextField f2Field = new javax.swing.JTextField(30);
     private final javax.swing.JTextField f3Field = new javax.swing.JTextField(30);
@@ -118,6 +135,8 @@ public final class ConfigurationDialog implements java.awt.event.ActionListener 
     private final javax.swing.JTextField f5Field = new javax.swing.JTextField(30);
 
     // COMBO BOXES
+    // Index of the selected item in each of these boxes is translated to/from a config string value by hand
+    // (via if/else chains further down in the constructor) -- there is no enum backing these, just position.
     private final String[] schemeChoices = { "Grey", "Tan", "Classic" };
     private final javax.swing.JComboBox schemeComboBox = new javax.swing.JComboBox(schemeChoices);
 
@@ -136,7 +155,7 @@ public final class ConfigurationDialog implements java.awt.event.ActionListener 
     private final String[] playerMessageTabChoices = { "Main", "Misc", "System", "Personal" };
     private final javax.swing.JComboBox playerMessageTabComboBox = new javax.swing.JComboBox(playerMessageTabChoices);
     // CHECK BOXEN
-    // tab visibility
+    // tab visibility -- whether each tab is shown at all in the main window
     private final javax.swing.JCheckBox hqTabVisBox = new javax.swing.JCheckBox();
     private final javax.swing.JCheckBox rulesTabVisBox = new javax.swing.JCheckBox(); //@salient , top only?
     private final javax.swing.JCheckBox bmTabVisBox = new javax.swing.JCheckBox();
@@ -150,7 +169,7 @@ public final class ConfigurationDialog implements java.awt.event.ActionListener 
     private final javax.swing.JCheckBox sysLogTabVisBox = new javax.swing.JCheckBox();// bottom only
     private final javax.swing.JCheckBox miscTabVisBox = new javax.swing.JCheckBox();// bottom only
     private final javax.swing.JCheckBox RPGTabVisBox = new javax.swing.JCheckBox();// bottom only
-    // tab location
+    // tab location -- checked means the tab is grouped in the top row rather than the bottom row of tabs
     private final javax.swing.JCheckBox hqTabonTopBox = new javax.swing.JCheckBox();
     private final javax.swing.JCheckBox rulesTabonTopBox = new javax.swing.JCheckBox();
     private final javax.swing.JCheckBox bmTabonTopBox = new javax.swing.JCheckBox();
@@ -197,7 +216,7 @@ public final class ConfigurationDialog implements java.awt.event.ActionListener 
     private final javax.swing.JCheckBox enableSoundOnMenu = new javax.swing.JCheckBox();
     private final javax.swing.JCheckBox systemMessageKeyword = new javax.swing.JCheckBox();
     private final javax.swing.JCheckBox invertChatColors = new javax.swing.JCheckBox("Invert Chat Colors");
-    // Dedicated Setup Tab
+    // Dedicated Setup Tab -- converts/configures this client to run as an unattended dedicated game host
     private final javax.swing.JCheckBox enableDedicatedServerCB = new javax.swing.JCheckBox();
     private final javax.swing.JTextField portField = new javax.swing.JTextField();
     private final javax.swing.JTextField nameField = new javax.swing.JTextField();
@@ -205,7 +224,7 @@ public final class ConfigurationDialog implements java.awt.event.ActionListener 
     private final javax.swing.JTextField ownersField = new javax.swing.JTextField();
     private final javax.swing.JTextField memoryField = new javax.swing.JTextField();
     private final javax.swing.JTextField socketTimeOutField = new javax.swing.JTextField();
-    // Unit Status Icons
+    // Unit Status Icons -- which status indicator icons appear in the left/right HUD columns of the unit display
     private final javax.swing.JCheckBox leftColumnDynamicCB = new javax.swing.JCheckBox();
     private final javax.swing.JCheckBox leftPilotEjectCB = new javax.swing.JCheckBox();
     private final javax.swing.JCheckBox leftRepairCB = new javax.swing.JCheckBox();
@@ -222,18 +241,45 @@ public final class ConfigurationDialog implements java.awt.event.ActionListener 
     private final javax.swing.JCheckBox rightArmorCB = new javax.swing.JCheckBox();
     private final javax.swing.JCheckBox rightAmmoCB = new javax.swing.JCheckBox();
     private final javax.swing.JCheckBox rightCommanderCB = new javax.swing.JCheckBox();
+    // package-visible (not private) tabbed pane holding one tab per settings category built in the constructor
     javax.swing.JTabbedPane ConfigPane = new javax.swing.JTabbedPane(javax.swing.SwingConstants.TOP);
+    // combo box listing the contents of ./data/skins; only enabled when "Skins" look-and-feel is selected
     private javax.swing.JComboBox skinComboBox = null;
     // STOCK DIALOG AND PANE
     private javax.swing.JDialog dialog;
     private javax.swing.JOptionPane pane;
 
+    /**
+     * Builds the entire Configuration dialog, populates every field from the client's current configuration, and
+     * shows it modally -- all as part of construction. Execution does not return from this constructor until the
+     * user has closed the dialog (either OK or Cancel).
+     * <p>
+     * Flow:
+     * <ol>
+     *   <li>Snapshot a handful of "before" values (column count, unit-hex flag, color scheme, look and feel, skin,
+     *       BM preview flag) so that, after the dialog closes, it can tell whether anything requiring a UI refresh
+     *       actually changed.</li>
+     *   <li>Build each settings tab (Player/User, Chat, Sounds, HUD Layout, Tab Visibility, Tab Naming, Function
+     *       Keys, Host Setup, Miscellaneous, Developer Options) as a Swing panel and add it to {@link #ConfigPane}.
+     *       Several tabs/fields are only added when the corresponding server feature or tab is enabled (e.g. the
+     *       "Parts Market" fields only appear if the server config reports {@code UsePartsBlackMarket}).</li>
+     *   <li>Copy every current config value from {@code client.getConfig()} into the newly built widgets.</li>
+     *   <li>Show the dialog modally via a {@link javax.swing.JOptionPane}.</li>
+     *   <li>If the user pressed OK, write every widget's value back into the config, save it, and ask the main
+     *       client window to refresh whichever parts of the UI depend on settings that actually changed. If the
+     *       user pressed Cancel, simply dispose the dialog and discard all edits.</li>
+     * </ol>
+     *
+     * @param client the connected client instance whose {@code GUIClientConfig} is read from and written to, and
+     *               whose main window/panels are refreshed after a successful save
+     */
     public ConfigurationDialog(IClient client) {
 
         // save the client
         this.client = client;
 
-        // stored values.
+        // stored "before" values, used at the end of the constructor to decide which parts of the main UI need to
+        // be refreshed after a successful save (see the "columnsChanged"/"schemeChanged"/etc. checks below).
         int originalColumns = Integer.parseInt(this.client.getConfigParam("UNITAMOUNT"));
         String originalUnitHex = this.client.getConfigParam("UNITHEX");
         String originalScheme = this.client.getConfigParam("HQCOLORSCHEME").toLowerCase();
@@ -1416,6 +1462,10 @@ public final class ConfigurationDialog implements java.awt.event.ActionListener 
 
         pLogTabNameField.setText(this.client.getConfig().getParam("PERSONALLOGTABNAME"));
         pLogTabVisBox.setSelected(this.client.getConfig().isParam("PERSONALLOGVISIBLE"));
+        // NOTE: apparent bug -- this loads the Private Mail tab's mnemonic ("PRIVATEMAILMNEMONIC") into the
+        // Personal Log mnemonic field, rather than "PERSONALLOGMNEMONIC" (which is what the save logic below
+        // writes this field's value back out to). The field displays the wrong initial value on open, though
+        // it saves under the correct key.
         pLogTabMnemonicField.setText(this.client.getConfig().getParam("PRIVATEMAILMNEMONIC"));
 
         sysLogTabNameField.setText(this.client.getConfig().getParam("SYSTEMLOGTABNAME"));
@@ -1495,8 +1545,12 @@ public final class ConfigurationDialog implements java.awt.event.ActionListener 
         dialog.setLocationRelativeTo(this.client.getMainFrame());
         dialog.setVisible(true);
 
+        // The dialog has now closed. pane.getValue() is only set to okayButton/cancelButton by actionPerformed()
+        // below; if the user closed the window via the OS close box instead, pane.getValue() remains whatever
+        // JOptionPane's default is, which is treated the same as Cancel (falls through to the else branch).
         if (pane.getValue() == okayButton) {
 
+            // OK was pressed: copy every widget's current value back into the client's GUIClientConfig.
             this.client.getConfig().setParam("UNITHEX", Boolean.toString(showHexinHQBox.isSelected()));
             this.client.getConfig().setParam("STATUSINTRAYICON", Boolean.toString(useStatusForIconBox.isSelected()));
             this.client.getConfig()
@@ -1822,6 +1876,11 @@ public final class ConfigurationDialog implements java.awt.event.ActionListener 
                 schemeChanged = true;
             }
 
+            // NOTE: apparent bug -- this compares the new "DARKERMAP" value against "originalScheme" (the
+            // color scheme captured at dialog-open time), not against the map brightness setting's own
+            // original value. A commented-out "originalMapBrightness" capture near the top of this
+            // constructor suggests that was the intent. As written, mapBrightnessChanged is effectively
+            // driven by comparing two unrelated settings and may not reflect an actual brightness change.
             if (!this.client.getConfigParam("DARKERMAP").equalsIgnoreCase(originalScheme)) {
                 mapBrightnessChanged = true;
             }
@@ -1852,22 +1911,38 @@ public final class ConfigurationDialog implements java.awt.event.ActionListener 
                                         this.client.getConfig().getParam("BACKGROUNDCOLOR") +
                                         "\"></BODY>");
         } else {
+            // Cancel (or window closed without pressing OK): discard all edits, nothing is written to config.
             dialog.dispose();
         }
     }
 
+    /**
+     * Handles button/combo-box events fired from inside this dialog while it is on screen. Because the actual
+     * save/discard logic lives in the constructor (gated on {@code pane.getValue()}), this method's job is just
+     * to record which button was pressed and close the dialog window, or to react immediately to a couple of
+     * live UI interactions ({@code camoCommand}, {@code lookAndFeelCommand}) that don't require closing the
+     * dialog.
+     *
+     * @param e the event fired by the OK button, Cancel button, Camo button, or the look-and-feel combo box
+     */
     public void actionPerformed(java.awt.event.ActionEvent e) {
         String command = e.getActionCommand();
         if (command.equals(okayCommand)) {
+            // Record that the user chose OK; the constructor's blocking dialog.setVisible(true) call will then
+            // return and proceed to save the settings.
             pane.setValue(okayButton);
             dialog.dispose();
         } else if (command.equals(cancelCommand)) {
+            // Record that the user chose Cancel; the constructor will then discard all edits.
             pane.setValue(cancelButton);
             dialog.dispose();
         } else if (command.equals(camoCommand)) {
+            // Opens the separate Camo selection dialog on top of this one; does not close this dialog.
             CamoSelectionDialog camoDialog = new CamoSelectionDialog(client.getMainFrame(), client);
             camoDialog.setVisible(true);
         } else if (command.equals(lookAndFeelCommand)) {
+            // The skin picker is only meaningful (and only enabled) when "Skins" (index 9) is the selected
+            // look and feel; otherwise it is disabled/grayed out.
             if (lookandfeelComboBox.getSelectedIndex() == 9) {
                 skinComboBox.setEnabled(true);
             } else {

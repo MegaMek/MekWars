@@ -29,6 +29,19 @@ import mekwars.common.campaign.CUnit;
 import mekwars.common.campaign.clientutils.protocol.IClient;
 import mekwars.common.util.SpringLayoutHelper;
 
+/**
+ * Modal dialog that lets a player pick a single unit from their own hangar via a combo box.
+ * <p>
+ * The combo box is populated directly from {@code client.getPlayer().getHangar()}, so the
+ * choices always reflect the current player's unit roster. The combo box's items are
+ * {@link CUnit} instances but {@link #actionPerformed(java.awt.event.ActionEvent)} reads the
+ * selection back as a {@code String} and tokenizes it to extract the leading unit ID, so the
+ * displayed unit's {@code toString()} is expected to start with its ID token.
+ * <p>
+ * Show the dialog (e.g. via {@code setVisible(true)}), then after it closes call
+ * {@link #getUnitID()} to retrieve the chosen unit's ID, or {@code "-1"} if the user
+ * cancelled or closed the dialog without picking anything.
+ */
 public class UnitSelectionDialog extends javax.swing.JDialog implements java.awt.event.ActionListener {
 
     //variables
@@ -36,15 +49,25 @@ public class UnitSelectionDialog extends javax.swing.JDialog implements java.awt
     @Serial
     private static final long serialVersionUID = 16880146524838545L;
 
-    //combo box to pick unit from
+    /** Combo box listing the units in the player's hangar to choose from. */
     private final javax.swing.JComboBox<CUnit> possibleUnits = new javax.swing.JComboBox<>();
 
+    /** Action command string used to identify the OK button in {@link #actionPerformed}. */
     private final String okayCommand = "Okay";
 
+    /** ID of the selected unit, or "-1" if none has been chosen yet (default/cancelled state). */
     private String toReturn = "-1";
     //private boolean factionOnly = false;
 
-    //constructor
+    /**
+     * Builds and lays out the dialog: a label, a combo box of the player's hangar units, and
+     * OK/Cancel buttons. The dialog is packed, resized to a sensible minimum, and centered
+     * over the client's main frame, but is not shown automatically.
+     *
+     * @param client    the client whose player's hangar supplies the selectable units
+     * @param boxText   text used as the dialog's title
+     * @param labelText text shown in the label above the combo box, describing what to pick
+     */
     public UnitSelectionDialog(IClient client, String boxText, String labelText) {
 
         //super, and variable saves
@@ -104,6 +127,10 @@ public class UnitSelectionDialog extends javax.swing.JDialog implements java.awt
 
     }
 
+    /**
+     * Ensures the dialog is not shrunk below a usable minimum size (275x200) after packing.
+     * Resizes the dialog only if the current size is smaller than the minimum in either dimension.
+     */
     private void checkMinimumSize() {
 
         java.awt.Dimension curDim = this.getSize();
@@ -130,6 +157,16 @@ public class UnitSelectionDialog extends javax.swing.JDialog implements java.awt
 
     /**
      * OK or CANCEL buttons pressed. Handle any changes and then close the dialouge.
+     * <p>
+     * On OK: if nothing is selected in the combo box, does nothing (dialog stays open). Otherwise,
+     * the selected combo box item is cast to a {@code String} (note: the model's element type is
+     * {@link CUnit}, so this relies on the combo box rendering/returning the unit's string form),
+     * tokenizes it on whitespace, and treats the first token as the unit ID, which is stored via
+     * {@link #setUnitID(String)}. The dialog is then hidden (not disposed) so callers can still
+     * read {@link #getUnitID()} afterward.
+     * <p>
+     * Any other action command (i.e. Cancel) disposes of the dialog without setting a unit ID,
+     * leaving {@link #getUnitID()} at its default of "-1".
      */
     public void actionPerformed(java.awt.event.ActionEvent event) {
 
@@ -158,10 +195,19 @@ public class UnitSelectionDialog extends javax.swing.JDialog implements java.awt
 
     }//end actionPerformed
 
+    /**
+     * @return the ID of the unit selected via OK, or "-1" if the dialog was cancelled/closed
+     *         without a selection.
+     */
     public String getUnitID() {
         return this.toReturn;
     }
 
+    /**
+     * Stores the ID of the unit chosen by the user.
+     *
+     * @param id the selected unit's ID
+     */
     private void setUnitID(String id) {
         this.toReturn = id;
     }

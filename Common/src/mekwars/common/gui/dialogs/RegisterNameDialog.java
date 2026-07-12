@@ -19,6 +19,19 @@ package mekwars.common.gui.dialogs;
 import mekwars.common.campaign.clientutils.protocol.IClient;
 import mekwars.common.util.StringUtils;
 
+/**
+ * Modal dialog that lets a connected player register their current in-game nickname with a permanent
+ * username/password, so that name can no longer be used by an unregistered player and can be signed into from
+ * other clients. Prompts for a username (pre-filled with the player's current name), a password, and a password
+ * confirmation.
+ * <p>
+ * Like {@link SignOnDialog} and {@link ConfigurationDialog}, all of the dialog's work happens inside the
+ * constructor: it builds the UI, shows it modally, validates the entered passwords, and -- if valid -- sends a
+ * {@code register} chat command to the server. There is no separate show()/getResult() step; simply constructing
+ * this class displays the dialog and processes its result as a side effect.
+ * <p>
+ * Note the on-screen disclaimer: the password is transmitted and stored in plain text, not hashed or encrypted.
+ */
 public final class RegisterNameDialog implements java.awt.event.ActionListener {
 
     private final String okayCommand = "okay";
@@ -30,6 +43,23 @@ public final class RegisterNameDialog implements java.awt.event.ActionListener {
     private final javax.swing.JDialog dialog;
     private final javax.swing.JOptionPane pane;
 
+    /**
+     * Builds and shows the registration dialog modally, pre-filled with the player's current username. Blocks
+     * until the user presses OK or Cancel.
+     * <p>
+     * If OK is pressed: the two password fields are compared and checked for invalid characters via
+     * {@link StringUtils#hasBadChars(String)}. If they match and contain no bad characters, a
+     * {@code /campaign register <username>,<password>} chat command is sent to the server; otherwise an error
+     * message describing the problem is routed to the client via {@link IClient#doParseDataInput(String)}
+     * instead of being sent to the server. Regardless of whether registration was attempted, a
+     * {@code setclientversion} chat command is always sent afterward, and the dialog is disposed.
+     * <p>
+     * If Cancel is pressed, no chat commands related to registration are sent, but the trailing
+     * {@code setclientversion} call still fires before the dialog is disposed.
+     *
+     * @param client the connected client used to read the current player/username, send chat commands, and
+     *               report validation errors to the user
+     */
     public RegisterNameDialog(IClient client) {
 
         // Set the actions to generate

@@ -42,44 +42,134 @@ import mekwars.common.campaign.pilot.skills.PilotSkill;
 import mekwars.common.util.SpringLayoutHelper;
 import mekwars.common.util.UnitUtils;
 
+/**
+ * Window that lets a player configure and kick off unit repairs (or salvage) in bulk, without
+ * having to open the full {@code AdvancedRepairDialog} and assign techs crit-by-crit.
+ * <p>
+ * Despite extending {@link JFrame} rather than {@link JDialog}, this window functions like a
+ * modal dialog: its content is a single {@link JOptionPane} (with "Start Repairs"/"Start
+ * Salvage" and "Close" buttons) embedded in the frame's content pane, shown via
+ * {@code setVisible(true)} at the end of the constructor.
+ * <p>
+ * The dialog operates in one of three mutually-exclusive modes, selected by the
+ * {@code repairType} constructor argument:
+ * <ul>
+ *   <li>{@link #TYPE_BULK} - queue up "real" repair work orders (submitted to the client's
+ *       Repair Master Table via {@code client.getRMT()}) for all damaged locations/crits on the
+ *       unit(s), using per-category tech skill + target roll choices.</li>
+ *   <li>{@link #TYPE_SIMPLE} - a lighter-weight variant that doesn't queue individual work
+ *       orders; instead it sends a single {@code "simplerepair"} chat/campaign command per unit,
+ *       and additionally estimates completion time (not just cost) per category.</li>
+ *   <li>{@link #TYPE_SALVAGE} - queue up salvage work orders (via {@code client.getSMT()}, the
+ *       Salvage Master Table) to strip/recover parts from a wrecked/destroyed unit rather than
+ *       repair it; roll-based cost/time modifiers are not applied since salvage isn't a
+ *       pass/fail roll in the same sense as a repair.</li>
+ * </ul>
+ * Independently of the repair type, {@code unitRepairType} selects whether the settings chosen
+ * in this dialog apply to just the single unit passed to the constructor
+ * ({@link #UNIT_TYPE_SINGLE}) or to every eligible (Mek/Vehicle, damaged) unit currently in the
+ * player's hangar ({@link #UNIT_TYPE_ALL}). In the "all units" case, per-category cost/time
+ * estimates cannot be computed in advance (since they depend on each unit's actual damage) and
+ * are simply displayed as "?????".
+ * <p>
+ * For each of six repair categories - Armor, (Internal) Structure, Weapons, Equipment, Systems,
+ * and Engines - the dialog shows a row with: a checkbox to include/exclude that category (Bulk
+ * mode only; Simple/Salvage always act on everything), a combo box to pick the repairing tech's
+ * skill level, a spinner for the target roll needed to succeed, and a computed cost (plus, in
+ * Simple mode, an estimated time). A running total across all six categories is shown at the
+ * bottom.
+ */
 public class BulkRepairDialog extends JFrame implements ActionListener, KeyListener, ChangeListener {
 
     @Serial
     private static final long serialVersionUID = 2053155152906533410L;
+    /** Action command for the "Start Repairs"/"Start Salvage" button. */
     private final static String okayCommand = "Add";
+    /** Action command for the "Close" button. */
     private final static String cancelCommand = "Close";
+    /** Repair mode: queue individual work orders on the Repair Master Table for damaged parts. */
     public static int TYPE_BULK = 0;
+    /** Repair mode: send a single "simplerepair" command per unit; also estimates repair time. */
     public static int TYPE_SIMPLE = 1;
+    /** Repair mode: queue salvage work orders on the Salvage Master Table to recover parts. */
     public static int TYPE_SALVAGE = 2;
+    /** Apply the chosen settings to only the single unit passed into the constructor. */
     public static int UNIT_TYPE_SINGLE = 0;
+    /** Apply the chosen settings to every eligible damaged unit in the player's hangar. */
     public static int UNIT_TYPE_ALL = 1;
     // store the client backlink for other things to use
+    /** Client connection, used to read/write config, server settings, and submit work orders/chat. */
     private final IClient client;
+    /** The CUnit wrapper for the unit this dialog was opened for (used for pilot/AsTech skill lookups). */
     private final CUnit playerUnit;
+    /**
+     * Category index for Armor. Doubles as the child-component index (via
+     * {@code getComponent(ARMOR)}) into each of {@link #repairBox}, {@link #techBox},
+     * {@link #rollBox}, {@link #costBox}, and {@link #timeBox} — this only works because
+     * {@link #loadPanel()} adds a header label first (index 0) and then adds the six category
+     * rows in the same ARMOR..ENGINES order, so the indices below must stay in sync with the
+     * add order in {@link #loadPanel()}.
+     */
     private final int ARMOR = 1;
+    /** Category/component index for (internal) Structure. See {@link #ARMOR} for how indices work. */
     private final int INTERNAL = 2;
 
     // BUTTONS
+    /** Category/component index for Weapons. See {@link #ARMOR} for how indices work. */
     private final int WEAPONS = 3;
+    /** Category/component index for Equipment (non-weapon gear). See {@link #ARMOR} for how indices work. */
     private final int EQUIPMENT = 4;
+    /** Category/component index for Systems (non-engine system crits). See {@link #ARMOR} for how indices work. */
     private final int SYSTEMS = 5;
+    /** Category/component index for Engines. See {@link #ARMOR} for how indices work. */
     private final int ENGINES = 6;
+    /** Outermost panel stacking the option grid inside the {@link JOptionPane}. */
     private final JPanel masterPanel = new JPanel();
+    /** Grid (SpringLayout) panel arranging the per-category columns side by side. */
     private final JPanel masterBox = new JPanel(new SpringLayout());
+    /** Column of "include this category" checkboxes (Bulk mode) plus its header label. */
     private final JPanel repairBox = new JPanel();
+    /** Column of tech-skill-level combo boxes, one per category, plus its header label. */
     private final JPanel techBox = new JPanel();
+    /** Column of target-roll spinners, one per category, plus its header label. */
     private final JPanel rollBox = new JPanel();
+    /** Column of computed cost labels, one per category, plus its header label. */
     private final JPanel costBox = new JPanel();
+    /** Column of computed time-estimate labels (Simple mode only), plus its header label. */
     private final JPanel timeBox = new JPanel();
+    /** Spacer panel used purely for grid layout padding. */
     private final JPanel blankPanel1 = new JPanel();
+    /** Spacer panel used purely for grid layout padding. */
     private final JPanel blankPanel2 = new JPanel();
+    /** Holds the "Estimated Total:" caption label. */
     private final JPanel totalTextPanel = new JPanel();
+    /** Holds the running total cost label. */
     private final JPanel totalPanel = new JPanel();
+    /** Holds the running total time label (Simple mode only). */
     private final JPanel timePanel = new JPanel();
+    /** Which of {@link #TYPE_BULK}, {@link #TYPE_SIMPLE}, {@link #TYPE_SALVAGE} this dialog is running as. */
     private final int repairType;
+    /** Which of {@link #UNIT_TYPE_SINGLE}, {@link #UNIT_TYPE_ALL} the chosen settings apply to. */
     private final int unitRepairType;
+    /** The MegaMek {@link Entity} currently being repaired/costed; reassigned per-unit when iterating "all" units. */
     private Entity unit;
 
+    /**
+     * Builds and immediately displays the repair dialog for a given unit.
+     * <p>
+     * Looks up the target unit from the player's hangar, snapshots its {@link Entity} (under a
+     * lock on the entity, presumably to avoid racing with concurrent combat/repair updates),
+     * builds the category grid via {@link #loadPanel()}, sizes the window differently depending
+     * on whether this is Bulk mode (narrower, since the per-category checkboxes are hidden) or
+     * not, wires up key listeners for the Escape-to-close shortcut, and finally calls
+     * {@link #setRepair()} to auto-populate sensible tech/roll defaults based on the unit's
+     * actual damage before showing itself.
+     *
+     * @param client         the client connection (used for player/hangar/config/server-setting access)
+     * @param unitID         ID of the unit (within the player's hangar) to repair
+     * @param repairType     one of {@link #TYPE_BULK}, {@link #TYPE_SIMPLE}, {@link #TYPE_SALVAGE}
+     * @param unitRepairType one of {@link #UNIT_TYPE_SINGLE}, {@link #UNIT_TYPE_ALL}
+     */
     public BulkRepairDialog(IClient client, int unitID, int repairType, int unitRepairType) {
         // save the client
         this.client = client;
@@ -173,6 +263,32 @@ public class BulkRepairDialog extends JFrame implements ActionListener, KeyListe
         setRepair();
     }
 
+    /**
+     * Central handler for every button and tech-combo-box event in this dialog.
+     * <ul>
+     *   <li>{@link #okayCommand} ("Add"/"Start Repairs"/"Start Salvage"): dispatches based on
+     *       {@link #repairType}. Simple mode builds a "#techIndex#roll" segment for each of the
+     *       six categories and sends one {@code "simplerepair"} campaign chat command per
+     *       affected unit (either just {@link #playerUnit} or every damaged Mek/Vehicle in the
+     *       hangar, depending on {@link #unitRepairType}). Salvage mode clears any existing work
+     *       orders for the unit on the Salvage Master Table and then calls each
+     *       {@code checkXxx()} method to (re-)queue salvage work orders. Bulk mode does the same
+     *       against the Repair Master Table, but for the "all units" case, iterates every
+     *       damaged Mek/Vehicle in the hangar, clearing and re-queuing work orders per unit.
+     *       In all cases, the client config is saved and this window is disposed afterward.</li>
+     *   <li>{@link #cancelCommand} ("Close"): simply disposes the window, discarding any
+     *       selections.</li>
+     *   <li>Anything else: assumed to be a per-category tech combo box, whose action command was
+     *       set (in {@link #loadPanel()}) to the category's component index as a string. Parsing
+     *       that index, this re-rolls a fresh default target roll for the newly selected tech
+     *       (via {@link UnitUtils#techBaseRoll}, special-cased when the "Pilot/AsTech" option is
+     *       chosen), and if that category's checkbox is checked, recomputes its cost; otherwise
+     *       resets its displayed cost to "0". Any exception here (e.g. the command wasn't a
+     *       parseable integer) is silently swallowed.</li>
+     * </ul>
+     *
+     * @param e the button click or combo-box selection event
+     */
     public void actionPerformed(ActionEvent e) {
         String command = e.getActionCommand();
 
@@ -261,6 +377,25 @@ public class BulkRepairDialog extends JFrame implements ActionListener, KeyListe
         }
     }
 
+    /**
+     * Builds the six-column category grid ({@link #repairBox}, {@link #techBox},
+     * {@link #rollBox}, {@link #costBox}, and, in Simple mode, {@link #timeBox}) and assembles
+     * it into {@link #masterBox}/{@link #masterPanel}.
+     * <p>
+     * For each of the six repair categories (added in fixed order: Armor, Structure, Weapons,
+     * Equipment, Systems, Engines — matching {@link #ARMOR} through {@link #ENGINES}) this adds:
+     * a tech-level combo box (including a "Pilot" option if the pilot has the AsTech skill,
+     * letting the pilot fix their own unit), a target-roll spinner (3-12, default 8, disabled
+     * only for Salvage mode since salvage has no roll to pick), a cost label, and (Simple mode
+     * only) a time label. A checkbox per category is also added to {@link #repairBox}: it starts
+     * unchecked in Bulk mode (the player opts categories in) and checked in Simple/Salvage mode
+     * (defaulting to "act on everything"), and is only user-editable outside of Simple mode
+     * (Simple mode shows the checkboxes but disables them, since Simple repair always acts on
+     * every category regardless of checkbox state).
+     * <p>
+     * Finally, if this is Simple mode, immediately computes and displays the initial cost for
+     * every category and the running total.
+     */
     private void loadPanel() {
         String[] techList;
 
@@ -406,6 +541,24 @@ public class BulkRepairDialog extends JFrame implements ActionListener, KeyListe
         }
     }
 
+    /**
+     * Populates the dialog's default selections and cost estimates based on the actual damage
+     * state of {@link #unit}, so the player doesn't have to manually enable every category.
+     * <p>
+     * In Salvage mode, every category's tech level is restored from the client's saved
+     * "SALVAGE&lt;CATEGORY&gt;TECH" config parameters (there is no roll for salvage) and every
+     * category's cost is (re)computed unconditionally, since salvage always considers every
+     * salvageable part.
+     * <p>
+     * Otherwise (Bulk/Simple mode): if the unit has armor damage, the Armor checkbox is checked
+     * and its tech/roll are restored from the saved "REPAIRARMORTECH"/"REPAIRARMORROLL" config
+     * params; similarly for internal structure damage. Then every critical slot on the unit is
+     * scanned once: damaged/breached equipment slots enable Weapons or Equipment (depending on
+     * whether the mounted item is a {@link WeaponType}) with their respective saved tech/roll;
+     * damaged/breached non-engine system slots enable Systems; and damaged engine slots
+     * (detected via {@link UnitUtils#isEngineCrit}) enable Engines. Finally, the running total
+     * cost is recomputed.
+     */
     public void setRepair() {
 
         int tech;
@@ -510,7 +663,13 @@ public class BulkRepairDialog extends JFrame implements ActionListener, KeyListe
 
     /**
      * This method sets the cost field with the cost of the repair based on the crit and the tech doing the job.
+     * Dispatches to the appropriate {@code setXxxCost()} helper based on the category, or does
+     * nothing if {@code repairType} matches none of the known category constants.
      *
+     * @param repairType one of {@link #ARMOR}, {@link #INTERNAL}, {@link #SYSTEMS},
+     *                    {@link #ENGINES}, {@link #WEAPONS}, {@link #EQUIPMENT} (despite the
+     *                    parameter's name, this is a category index, not a {@link #TYPE_BULK}
+     *                    style repair-mode constant)
      */
     public void setCost(int repairType) {
 
@@ -545,12 +704,19 @@ public class BulkRepairDialog extends JFrame implements ActionListener, KeyListe
 
     }
 
+    /** Unused; part of {@link KeyListener}. */
     public void keyTyped(KeyEvent arg0) {
     }
 
+    /** Unused; part of {@link KeyListener}. */
     public void keyPressed(KeyEvent arg0) {
     }
 
+    /**
+     * Closes the dialog without saving anything when the player presses Escape.
+     *
+     * @param arg0 the key-release event; only {@link KeyEvent#VK_ESCAPE} is handled
+     */
     public void keyReleased(KeyEvent arg0) {
 
         if (arg0.getKeyCode() == KeyEvent.VK_ESCAPE) {
@@ -558,6 +724,13 @@ public class BulkRepairDialog extends JFrame implements ActionListener, KeyListe
         }
     }
 
+    /**
+     * Fired when a target-roll spinner's value changes. The spinner's component name (set in
+     * {@link #loadPanel()}) encodes which category it belongs to; if that category's checkbox is
+     * currently checked, its cost (and the grand total) is recomputed to reflect the new roll.
+     *
+     * @param arg0 the spinner change event
+     */
     public void stateChanged(ChangeEvent arg0) {
 
         int location = Integer.parseInt(((JSpinner) arg0.getSource()).getName());
@@ -568,6 +741,20 @@ public class BulkRepairDialog extends JFrame implements ActionListener, KeyListe
         }
     }
 
+    /**
+     * Queues repair (Bulk/Simple mode) or salvage (Salvage mode) work orders for every armor
+     * facet (front, and rear where applicable) on {@link #unit} that needs it, using the Armor
+     * row's currently-selected tech level and target roll. Does nothing if the Armor checkbox is
+     * unchecked. Also persists the chosen tech/roll back into the client config for next time
+     * (skipped when the "Pilot/AsTech" tech option is selected, and using separate
+     * "SALVAGEARMORTECH" vs "REPAIRARMORTECH"/"REPAIRARMORROLL" keys depending on mode).
+     * <p>
+     * In Salvage mode, any location with remaining front or rear armor gets a work order; in
+     * Repair mode, only locations where current armor is below the original ({@code getOArmor})
+     * get one, and the work order string additionally encodes the target roll and a trailing
+     * literal "999" field (format shared with the other {@code checkXxx} methods; meaning defined
+     * by the server-side work order parser, not this class).
+     */
     private void checkArmor() {
         // check to see if the checked the box
         if (!((JCheckBox) repairBox.getComponent(ARMOR)).isSelected()) {
@@ -610,6 +797,12 @@ public class BulkRepairDialog extends JFrame implements ActionListener, KeyListe
 
     }
 
+    /**
+     * Queues repair/salvage work orders for internal structure on every location of {@link #unit}
+     * that needs it (below original structure for repair; any remaining structure for salvage),
+     * using the Structure row's tech/roll. Does nothing if the Structure checkbox is unchecked.
+     * See {@link #checkArmor()} for the shared persistence and work-order string conventions.
+     */
     private void checkInternal() {
         // check to see if the checked the box
         if (!((JCheckBox) repairBox.getComponent(INTERNAL)).isSelected()) {
@@ -639,6 +832,18 @@ public class BulkRepairDialog extends JFrame implements ActionListener, KeyListe
         }
     }
 
+    /**
+     * Queues a single repair/salvage work order for the unit's engine, using the Engines row's
+     * tech/roll. Does nothing if the Engines checkbox is unchecked, or (repair mode only) if the
+     * unit has no damaged engine crits at all.
+     * <p>
+     * Unlike the other {@code checkXxx} methods, this only ever queues one work order: it scans
+     * torso locations (center/side torsos, per {@link UnitUtils#LOC_CENTER_TORSO}..
+     * {@link UnitUtils#LOC_LT}) for engine crit slots and, in Salvage mode, queues the first
+     * intact engine crit found and returns immediately; in Repair mode, queues the first
+     * damaged/breached engine crit found and returns immediately — it does not continue to queue
+     * additional engine crits beyond the first match.
+     */
     private void checkEngines() {
         // check to see if the checked the box
         if (!((JCheckBox) repairBox.getComponent(ENGINES)).isSelected()) {
@@ -659,6 +864,12 @@ public class BulkRepairDialog extends JFrame implements ActionListener, KeyListe
         } else if (isSalvage()) {
             client.getConfig().setParam("SALVAGEENGINESTECH", Integer.toString(techType));
         }
+        // Likely bug: the inner loop bounds slot by unit.locations() (the unit's total number of
+        // locations, e.g. 8 for a Mek) rather than the number of critical slots in this location
+        // (as every other checkXxx()/setXxxCost() method does via getNumberOfCriticalSlots).
+        // Since a location typically has 12 critical slots, this can under-scan and miss engine
+        // crits in higher slot indices; it happens to work often enough in practice because
+        // engine crits are conventionally placed in low slot numbers.
         for (int location = UnitUtils.LOC_CENTER_TORSO; location <= UnitUtils.LOC_LT; location++) {
             for (int slot = 0; slot < unit.locations(); slot++) {
                 CriticalSlot cs = unit.getCritical(location, slot);
@@ -692,6 +903,15 @@ public class BulkRepairDialog extends JFrame implements ActionListener, KeyListe
         }
     }
 
+    /**
+     * Queues repair/salvage work orders for every non-engine system critical slot on
+     * {@link #unit} that is damaged/breached (repair mode) or intact (salvage mode), using the
+     * Systems row's tech/roll. Does nothing if the Systems checkbox is unchecked. Skips crits
+     * deemed non-repairable via {@link UnitUtils#isNonRepairableCrit} and engine crits (handled
+     * separately by {@link #checkEngines()}). When a multi-slot system crit is found, the slot
+     * cursor is advanced past its remaining slots via {@link UnitUtils#getNumberOfCrits} to avoid
+     * re-processing the same system multiple times.
+     */
     private void checkSystems() {
         // check to see if the checked the box
         if (!((JCheckBox) repairBox.getComponent(SYSTEMS)).isSelected()) {
@@ -739,6 +959,15 @@ public class BulkRepairDialog extends JFrame implements ActionListener, KeyListe
         }
     }
 
+    /**
+     * Queues repair/salvage work orders for damaged/intact weapons on {@link #unit}, using the
+     * Weapons row's tech/roll. Does nothing if the Weapons checkbox is unchecked. Iterates every
+     * critical slot per location; for equipment crits whose mounted item is a {@link WeaponType},
+     * queues at most one work order per distinct {@link Mounted} instance per location (tracked
+     * via {@code lastWeapon}) to avoid submitting duplicate orders for a weapon that occupies
+     * multiple critical slots. In salvage mode, only intact (not destroyed/missing) weapons are
+     * considered; in repair mode, only destroyed/missing ones are.
+     */
     private void checkWeapons() {
         // check to see if the checked the box
         if (!((JCheckBox) repairBox.getComponent(WEAPONS)).isSelected()) {
@@ -796,6 +1025,12 @@ public class BulkRepairDialog extends JFrame implements ActionListener, KeyListe
         }
     }
 
+    /**
+     * Queues repair/salvage work orders for damaged/intact non-weapon equipment on {@link #unit},
+     * using the Equipment row's tech/roll. Does nothing if the Equipment checkbox is unchecked.
+     * Mirror image of {@link #checkWeapons()}: same per-location, per-slot, dedupe-by-Mounted
+     * logic, but selects equipment crits whose mounted item is <em>not</em> a {@link WeaponType}.
+     */
     private void checkEquipment() {
         // check to see if the checked the box
         if (!((JCheckBox) repairBox.getComponent(EQUIPMENT)).isSelected()) {
@@ -855,6 +1090,38 @@ public class BulkRepairDialog extends JFrame implements ActionListener, KeyListe
         }
     }
 
+    /**
+     * Recomputes and displays the estimated C-bill cost of repairing/salvaging armor.
+     * <p>
+     * If {@link #unitRepairType} is {@link #UNIT_TYPE_ALL}, the exact cost can't be known ahead
+     * of time (it depends on each unit's actual damage), so the label is set to "?????" and the
+     * method returns early.
+     * <p>
+     * Otherwise: for a non-pilot tech, looks up that tech grade's flat per-job cost from server
+     * config ("&lt;TechGrade&gt;TechRepairCost") and how far its typical roll would fall short of
+     * the player's chosen target roll ({@code techWorkMod}, via {@link UnitUtils#getTechRoll},
+     * floored at 0). For the "Pilot/AsTech" option, the tech type is instead resolved to the
+     * pilot's actual AsTech skill level (no roll-shortfall premium is computed for that case,
+     * so {@code techWorkMod} stays 0). In Salvage mode, every location with remaining front/rear
+     * armor adds a flat per-job tech cost. In Repair mode, each location's under-armor deficit
+     * (front and rear separately) adds: per-point armor material cost, an extra charge scaled by
+     * how far short of the target roll the tech is expected to be, and a flat per-job tech cost;
+     * work-hour estimates are also accumulated via {@link #setWorkHours}. Repair-mode totals are
+     * finally scaled up by {@link #payOutIncreaseBasedOnRoll} to price in the risk of a failed
+     * roll, then floored at 0 and displayed as a whole number of C-bills.
+     * <p>
+     * Likely bugs in the repair-mode loop below: {@code pointsToRepair} is declared once outside
+     * the per-location loop and is never reset to 0 between locations, so it accumulates the
+     * total damaged-armor-point count seen so far across all locations; each subsequent
+     * {@code cost += armorCost * pointsToRepair} therefore multiplies the per-point armor cost by
+     * an ever-growing cumulative total rather than just that location's own deficit, inflating
+     * the estimate for any unit damaged in more than one location. Separately, the front-armor
+     * branch uses {@code armorCost}, but that variable is only ever assigned (via
+     * {@link CUnit#getArmorCost}) inside the rear-armor branch below it — so the very first
+     * front-armor cost computed in the loop uses the initial value 0.0 (and subsequent ones use
+     * whatever the previous location's rear-armor cost happened to be) rather than that
+     * location's own front-armor unit cost.
+     */
     private void setArmorCost() {
 
         int techType = ((javax.swing.JComboBox<?>) techBox.getComponent(ARMOR)).getSelectedIndex();
@@ -932,6 +1199,16 @@ public class BulkRepairDialog extends JFrame implements ActionListener, KeyListe
         ((javax.swing.JLabel) costBox.getComponent(ARMOR)).setText(Integer.toString((int) cost));
     }
 
+    /**
+     * Recomputes and displays the estimated cost of repairing/salvaging internal structure,
+     * following the same overall approach as {@link #setArmorCost()} (early-out to "?????" for
+     * whole-hangar mode; flat per-location tech cost in Salvage mode; per-point structure cost +
+     * roll-shortfall premium + flat tech cost per damaged location in Repair mode; final scaling
+     * via {@link #payOutIncreaseBasedOnRoll}). Unlike {@link #setArmorCost()}, the per-point
+     * structure cost ({@link CUnit#getStructureCost}) is computed once outside the loop (it does
+     * not vary by location) and {@code pointsToRepair} is reassigned (not accumulated) each
+     * location, so this method does not exhibit the cumulative-points bug noted there.
+     */
     private void setInternalCost() {
 
         int techType = ((javax.swing.JComboBox<?>) techBox.getComponent(INTERNAL)).getSelectedIndex();
@@ -994,6 +1271,18 @@ public class BulkRepairDialog extends JFrame implements ActionListener, KeyListe
         ((javax.swing.JLabel) costBox.getComponent(INTERNAL)).setText(Integer.toString((int) cost));
     }
 
+    /**
+     * Recomputes and displays the estimated cost of repairing/salvaging non-engine system crits,
+     * following the same "?????" early-out for whole-hangar mode as the other cost methods.
+     * Walks every critical slot per location (skipping non-repairable crits via
+     * {@link UnitUtils#isNonRepairableCrit} and engine crits, which are costed separately by
+     * {@link #setEngineCost()}); for each qualifying system crit, adds a per-crit cost
+     * ({@link CUnit#getCritCost}) times the number of slots it occupies, plus a roll-shortfall
+     * premium and flat tech fee (repair mode only — salvage mode just charges a flat fee per
+     * remaining undamaged crit), and advances the slot cursor past a multi-slot crit's remaining
+     * slots so it isn't double-counted. Repair-mode totals are scaled by
+     * {@link #payOutIncreaseBasedOnRoll} before display.
+     */
     private void setSystemCost() {
 
         int techType = ((JComboBox<?>) techBox.getComponent(SYSTEMS)).getSelectedIndex();
@@ -1079,6 +1368,15 @@ public class BulkRepairDialog extends JFrame implements ActionListener, KeyListe
         ((javax.swing.JLabel) costBox.getComponent(SYSTEMS)).setText(Integer.toString((int) cost));
     }
 
+    /**
+     * Recomputes and displays the estimated cost of repairing/salvaging weapons, mirroring
+     * {@link #setSystemCost()}'s per-crit costing approach but restricted to equipment crits
+     * whose mounted item is a {@link WeaponType}, and deduplicated per distinct {@link Mounted}
+     * instance per location (via {@code lastWeapon}) so a multi-crit weapon is only priced once.
+     * Salvage mode only considers intact, unmounted-but-present weapons (not destroyed/missing);
+     * repair mode only considers destroyed/missing ones. Repair-mode totals are scaled by
+     * {@link #payOutIncreaseBasedOnRoll} before display.
+     */
     private void setWeaponCost() {
 
         int techType = ((javax.swing.JComboBox<?>) techBox.getComponent(WEAPONS)).getSelectedIndex();
@@ -1169,6 +1467,12 @@ public class BulkRepairDialog extends JFrame implements ActionListener, KeyListe
         ((javax.swing.JLabel) costBox.getComponent(WEAPONS)).setText(Integer.toString((int) cost));
     }
 
+    /**
+     * Recomputes and displays the estimated cost of repairing/salvaging non-weapon equipment.
+     * Mirror image of {@link #setWeaponCost()}: identical per-crit costing, dedupe-by-Mounted,
+     * and salvage/repair intact-vs-destroyed selection logic, but for equipment crits whose
+     * mounted item is <em>not</em> a {@link WeaponType}.
+     */
     private void setEquipmentCost() {
 
         int techType = ((javax.swing.JComboBox<?>) techBox.getComponent(EQUIPMENT)).getSelectedIndex();
@@ -1258,6 +1562,26 @@ public class BulkRepairDialog extends JFrame implements ActionListener, KeyListe
         ((javax.swing.JLabel) costBox.getComponent(EQUIPMENT)).setText(Integer.toString((int) cost));
     }
 
+    /**
+     * Recomputes and displays the estimated cost (and, in Simple mode, resets the time estimate)
+     * of repairing/salvaging the engine.
+     * <p>
+     * In Salvage mode: as soon as the labeled {@code top_loop} finds any intact engine crit, the
+     * cost is computed unit-wide from {@link UnitUtils#getNumberOfEngineCrits} minus
+     * {@link UnitUtils#getNumberOfDamagedEngineCrits} (i.e. how many engine crits remain to
+     * salvage) times the flat per-crit tech cost, and the method returns immediately — the loop
+     * is really just being used to confirm the unit has at least one engine crit at all.
+     * <p>
+     * In Repair mode: the {@code top_loop} instead searches for the first damaged/breached engine
+     * crit and records its location/slot, then (outside the loop) computes a roll-shortfall
+     * premium, per-crit cost, and flat tech fee for that single slot, scaled by
+     * {@link #payOutIncreaseBasedOnRoll}. If no damaged engine crit was found ({@code found}
+     * stays false), the cost is zeroed out afterward — but note this happens <em>after</em> the
+     * cost formula already runs using whatever {@code cs}/{@code location}/{@code slot} were last
+     * left by the search loop (potentially a null {@code CriticalSlot} if the very last slot
+     * checked was empty), so {@link CUnit#getCritCost} could theoretically be invoked with a null
+     * critical slot in that edge case rather than skipping the calculation outright.
+     */
     private void setEngineCost() {
 
         int techType = ((javax.swing.JComboBox<?>) techBox.getComponent(ENGINES)).getSelectedIndex();
@@ -1352,6 +1676,18 @@ public class BulkRepairDialog extends JFrame implements ActionListener, KeyListe
         ((javax.swing.JLabel) costBox.getComponent(ENGINES)).setText(Integer.toString((int) cost));
     }
 
+    /**
+     * Converts a chosen target roll into a price multiplier: the easier the player sets the roll
+     * (i.e. the lower the target number a tech needs to hit), the more the repair costs, since an
+     * easy roll is far more likely to succeed and thus is priced at a premium; a hard roll (near
+     * the 2d6 maximum of 12) is cheap because it is unlikely to succeed. Values below 2 or above
+     * 12 are clamped to the array's first/last entries (1.0 and 36.0 respectively) since 2d6 only
+     * produces results in [2, 12] and the backing {@code payout} array has exactly 13 entries
+     * (indices 0-12).
+     *
+     * @param roll the player-chosen target roll (nominally 2-12)
+     * @return a multiplier applied to the base repair cost
+     */
     private double payOutIncreaseBasedOnRoll(int roll) {
         if (roll <= 2) {
             return 1.0;
@@ -1362,6 +1698,23 @@ public class BulkRepairDialog extends JFrame implements ActionListener, KeyListe
         return payout[roll];
     }
 
+    /**
+     * Estimates and displays elapsed repair time (in seconds, before {@link #setTotalCost()}
+     * later converts the total into h/m/s) for a given category, used only in Simple mode. Starts
+     * from a server-configured baseline ("TimeForEachRepairPoint"), multiplied by the number of
+     * crit slots involved when repairing a non-armor crit, then doubled once per roll of shortfall
+     * between the tech's expected roll and the player's chosen target roll (i.e. an easier target
+     * roll costs more time in exchange for a better success chance), then scaled again by
+     * {@link #payOutIncreaseBasedOnRoll}. Unless {@code clear} is true, the newly computed time is
+     * added on top of whatever the category's time label already showed, allowing multiple
+     * locations' work-hour estimates to accumulate across repeated calls within one cost pass.
+     *
+     * @param type         the repair category (one of {@link #ARMOR}..{@link #ENGINES})
+     * @param critLocation the location index being priced, or a negative value to skip entirely
+     * @param critSlot     the critical slot index within that location, or a negative value to skip
+     * @param armor        true when pricing an armor facet (no crit-slot count multiplier applies)
+     * @param clear        true to overwrite the displayed time, false to add to it
+     */
     private void setWorkHours(int type, int critLocation, int critSlot, boolean armor, boolean clear) {
 
         int techType = ((javax.swing.JComboBox<?>) techBox.getComponent(type)).getSelectedIndex();
@@ -1400,6 +1753,13 @@ public class BulkRepairDialog extends JFrame implements ActionListener, KeyListe
 
     }
 
+    /**
+     * Sums the six per-category cost labels into the displayed grand total, and (Simple mode
+     * only) sums the per-category time labels into an "Xh Ym Zs" total with a matching tooltip.
+     * If {@link #unitRepairType} is {@link #UNIT_TYPE_ALL}, per-category costs/times are already
+     * "?????" placeholders, so the total is likewise displayed as "?????" and the method returns
+     * before attempting to parse those labels as numbers.
+     */
     private void setTotalCost() {
 
         int cost = 0;
@@ -1452,14 +1812,17 @@ public class BulkRepairDialog extends JFrame implements ActionListener, KeyListe
         ((javax.swing.JLabel) totalPanel.getComponent(0)).setText(Integer.toString(cost));
     }
 
+    /** @return true if this dialog is running in {@link #TYPE_SIMPLE} mode. */
     private boolean isSimple() {
         return repairType == mekwars.common.gui.dialogs.BulkRepairDialog.TYPE_SIMPLE;
     }
 
+    /** @return true if this dialog is running in {@link #TYPE_BULK} mode. */
     private boolean isBulk() {
         return repairType == mekwars.common.gui.dialogs.BulkRepairDialog.TYPE_BULK;
     }
 
+    /** @return true if this dialog is running in {@link #TYPE_SALVAGE} mode. */
     private boolean isSalvage() {
         return repairType == mekwars.common.gui.dialogs.BulkRepairDialog.TYPE_SALVAGE;
     }

@@ -61,22 +61,61 @@ import mekwars.common.Planet;
 import mekwars.common.campaign.clientutils.protocol.IClient;
 import mekwars.common.util.SpringLayoutHelper;
 
+/**
+ * Modal dialog that lets a user pick a planet by name, with live type-ahead filtering as they
+ * type. Used wherever a command needs a planet-name argument — most commonly an admin/GM action,
+ * or an "Operation" step that requires the player to choose an eligible target world.
+ * <p>
+ * When {@code opProps} is {@code null}, every known planet is selectable (a general-purpose planet
+ * picker). When {@code opProps} is supplied, the constructor pre-filters the candidate list down
+ * to only those planets that satisfy a fairly involved set of Operation-specific eligibility rules
+ * (faction ownership thresholds, home world restrictions, factory presence, required/forbidden
+ * planet flags, and reachability from an existing friendly world within a given range) — see the
+ * constructor for details on each rule.
+ * <p>
+ * The user narrows the candidate list by typing into {@link #nameField}; {@link #matchingPlanetsList}
+ * updates on every keystroke. Clicking OK (or Cancel) closes the dialog; the caller retrieves the
+ * result afterward via {@link #getPlanetName()}, which is {@code null} if the dialog was cancelled
+ * or no match could be resolved.
+ */
 public class PlanetNameDialog extends JDialog implements ActionListener {
     private static final MMLogger LOGGER = MMLogger.create(PlanetNameDialog.class);
 
     @Serial
     private static final long serialVersionUID = 3344329118582475184L;
     //variables
+    /** Alphabetically-sorted names of all planets currently eligible for selection. */
     private final TreeSet<String> planetNames;
+    /** All planets known to the client; used to resolve a chosen name back to a {@link Planet}. */
     private final Collection<Planet> planets;
 
+    /** Live-filtered list of planet names matching the current search text. */
     private final JList<String> matchingPlanetsList;
     private final JTextField nameField;//input field
     private final String okayCommand = "Okay";
 
+    /** Result of the dialog: the chosen planet's name, or {@code null} if cancelled / unresolved. */
     private String planetName = null;
 
     //constructor
+    /**
+     * Builds and lays out the dialog, computing the eligible planet list up front.
+     *
+     * @param client   connection used to read the full planet list and the local player's house/influence
+     * @param boxText  title of the dialog window
+     * @param opProps  {@code null} for an unfiltered planet picker, otherwise an Operation's
+     *                 property array; the indices actually consulted here are: {@code [0]} range,
+     *                 {@code [3]} factory-presence filter ("none"/"only"/anything else = don't
+     *                 care), {@code [4]} home-world filter ("none"/"only"), {@code [5]} minimum
+     *                 on-planet influence to auto-qualify, {@code [6]} minimum influence on a
+     *                 launch-point planet, {@code [7]}/{@code [8]} min/max percentage ownership,
+     *                 {@code [9]} '$'-delimited legal defender house names (or {@code "allFactions"}
+     *                 to skip the check), {@code [10]}/{@code [11]} '^'-delimited required/forbidden
+     *                 planet flags. Indices {@code [1]} and {@code [2]} are not read by this
+     *                 constructor at all — they may be used by the caller before building this
+     *                 array, or may simply be unused placeholders; worth double-checking at the
+     *                 call site if this ever looks like a bug.
+     */
     public PlanetNameDialog(IClient client, String boxText, String[] opProps) {
 
         /*
@@ -100,6 +139,10 @@ public class PlanetNameDialog extends JDialog implements ActionListener {
                 planetNames.add(planet.getName());
             }
         } else {//we need to filter. ugh.
+            // For each known planet, evaluate a chain of eligibility checks (any failed check
+            // skips the planet via `continue`); a planet that passes every check that applies to
+            // it is added to planetNames. Note opProps is re-read on every loop iteration even
+            // though its values don't change per-planet -- harmless but wasteful.
             for (Planet planet : planets) {
                 //get the planet
                 //load relevant properties.
@@ -153,6 +196,7 @@ public class PlanetNameDialog extends JDialog implements ActionListener {
                 //save our player's house ID, since we'll be using it frequently.
                 int houseID = client.getPlayer().getMyHouse().getId();
 
+                // percentage of the planet's total conquest points currently held by the player's house
                 double tpOwned = (double) 100 *
                                        ((double) planet.getInfluence().getInfluence(houseID) /
                                               (double) planet.getConquestPoints());
@@ -165,7 +209,9 @@ public class PlanetNameDialog extends JDialog implements ActionListener {
                     continue;
                 }
 
-                //check the on-planet launch
+                // Shortcut: if the player's own influence on this planet already meets the
+                // "launch on" threshold, it qualifies outright and none of the flag/launch-range
+                // checks below need to run.
                 if (planet.getInfluence().getInfluence(houseID) >= launchOn) {
                     planetNames.add(planet.getName());
                     continue;
@@ -222,6 +268,10 @@ public class PlanetNameDialog extends JDialog implements ActionListener {
                 // alas, we now devolve into O^2 and check all planets for possible launchpads to the target world.
                 // Better to do this client side and verify once on the server than to force the server to repeatedly
                 // make this loop, but my skin still crawls. @urgru 10.10.05
+                // (i.e.: for every candidate target planet, scan every other planet looking for one
+                // held strongly enough by the player's house, within `range` of the target, to serve
+                // as a launch point. This is quadratic in planet count by design/necessity per the
+                // comment above -- not something this documentation pass changes.)
                 Iterator<Planet> i2 = planets.iterator();
                 boolean launchFound = false;
                 while (i2.hasNext() && !launchFound) {
@@ -251,6 +301,12 @@ public class PlanetNameDialog extends JDialog implements ActionListener {
         //the name field, for user input. caretUpdate
         //does most of the work to update list contents
         nameField = new JTextField();//field for user input
+        // Live type-ahead filter: every caret event (i.e. every keystroke/edit) in nameField spawns
+        // a brand-new background Thread that recomputes the filtered list and mutates
+        // matchingPlanetsList directly. Note this touches Swing components off the Event Dispatch
+        // Thread, which is not thread-safe in general, and creates a new Thread per keystroke rather
+        // than reusing one worker -- both are pre-existing quirks of this implementation, not
+        // something this documentation pass changes.
         nameField.addCaretListener(e -> new Thread() {
             @Override
             public void run() {
@@ -307,6 +363,10 @@ public class PlanetNameDialog extends JDialog implements ActionListener {
         okayButton.setActionCommand(okayCommand);
         okayButton.addActionListener(this);
         JButton cancelButton = new JButton("Cancel");
+        // No explicit action command is set here, so Swing falls back to the button's label
+        // ("Cancel") as its action command -- which deliberately never equals okayCommand
+        // ("Okay"), so actionPerformed() below treats any Cancel click as "not OK" and just
+        // disposes the dialog without resolving a planet.
         cancelButton.addActionListener(this);
 
         //do some formatting. rawr.
@@ -337,6 +397,7 @@ public class PlanetNameDialog extends JDialog implements ActionListener {
 
     }
 
+    /** Enforces a minimum dialog size of 300x300 pixels, resizing only if the current size is smaller in either dimension. */
     private void checkMinimumSize() {
         Dimension curDim = this.getSize();
 
@@ -366,6 +427,24 @@ public class PlanetNameDialog extends JDialog implements ActionListener {
 
     /**
      * OK or CANCEL buttons pressed. Handle any changes and then close the dialouge.
+     * <p>
+     * Only the OK path ({@code command.equals(okayCommand)}) does anything before disposing;
+     * Cancel (whose action command is its own label, not {@link #okayCommand} — see where
+     * {@code cancelButton} is built) falls straight through to {@link #dispose()}.
+     * <p>
+     * On OK: prefers the highlighted list entry, falling back to the raw text field contents if
+     * nothing is selected; if either is empty, the click is silently ignored and the dialog stays
+     * open (note this early {@code return} skips the {@code dispose()} call at the bottom, unlike
+     * every other path through this method). If exactly one planet remains in the filtered list,
+     * that one is used regardless of whether it was actually highlighted (auto-resolves the
+     * common "typed enough to be unambiguous but didn't click the list" case). The matched name is
+     * then looked up against {@link #planets} to resolve the actual {@link Planet}; on a match,
+     * {@link #planetName} is set and the dialog is hidden via {@code setVisible(false)} and the
+     * method returns immediately -- notably <em>without</em> reaching the {@code dispose()} call
+     * at the end, unlike the "no match found" and Cancel paths, both of which do dispose. This
+     * asymmetry (successful selection only hides; every other outcome disposes) is existing
+     * behavior and not changed here. If no planet matches the resolved name, {@link #planetName}
+     * is explicitly cleared to {@code null} before falling through to {@code dispose()}.
      */
     public void actionPerformed(ActionEvent event) {
 
@@ -389,7 +468,7 @@ public class PlanetNameDialog extends JDialog implements ActionListener {
                     return;
                 }
             }
-            
+
             this.setPlanetName(null);
         }
 
@@ -398,10 +477,12 @@ public class PlanetNameDialog extends JDialog implements ActionListener {
 
     }//end actionPerformed
 
+    /** @return the planet name chosen by the user, or {@code null} if cancelled / no match resolved */
     public String getPlanetName() {
         return this.planetName;
     }
 
+    /** Sets the dialog's result; {@code null} means "no valid planet chosen". */
     private void setPlanetName(String name) {
         this.planetName = name;
     }

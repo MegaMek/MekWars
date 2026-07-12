@@ -34,25 +34,49 @@ import mekwars.common.campaign.clientutils.protocol.IClient;
 import mekwars.common.gui.WholeNumberField;
 import mekwars.common.util.SpringLayoutHelper;
 
+/**
+ * Modal dialog that lets a player list one of their units for sale on the Black Market.
+ * <p>
+ * The player picks a unit from a combo box (either a caller-supplied set, or - if none is supplied - every unit
+ * in their hangar that is legal to sell under the current server configuration), and enters a minimum acceptable
+ * bid and the number of "ticks" the auction should remain open. Pressing OK sends a {@code sell} campaign chat
+ * command to the server; pressing Cancel (or closing) simply disposes the dialog without side effects.
+ */
 public class SellUnitDialog extends javax.swing.JDialog implements java.awt.event.ActionListener {
 
     /**
-     *
+     * Serialization id for this {@link javax.swing.JDialog} subclass.
      */
     @Serial
     private static final long serialVersionUID = 7292249744702852873L;
     //IVARS
+    /** Back-link to the client used to read server configs, the player's hangar, and to send the sell command. */
     private final IClient client;
+    /** Action command string used by the OK button so {@link #actionPerformed} can identify it. */
     private final String okayCommand = "Okay";
 
     //text fields ...
+    /** User-entered minimum bid the seller will accept; pre-filled from the server's default minimum sale price. */
     private final javax.swing.JTextField minBidText = new WholeNumberField(0, 5);
+    /** User-entered number of ticks the sale listing should remain active; pre-filled from the server default. */
     private final javax.swing.JTextField ticksText = new WholeNumberField(0, 5);
 
     //combo box to pick unit from
+    /** Combo box listing the candidate units the player may put up for sale. */
     private final javax.swing.JComboBox<CUnit> possibleSaleUnits = new javax.swing.JComboBox<>();
 
     //CONSTRUCTOR
+    /**
+     * Builds and displays the sell-unit dialog.
+     *
+     * @param parent owning frame, used for centering the dialog.
+     * @param client active client connection; supplies the player's hangar, server configs, and sends the
+     *               resulting sell command.
+     * @param toSell explicit set of units to offer for sale; if {@code null} or empty, the dialog instead builds
+     *               the list itself from every unit in the player's hangar that passes the server's per-unit-type
+     *               "may be sold on Black Market" checks, is not already for sale, and (if the server restricts
+     *               it) is not Clan tech.
+     */
     public SellUnitDialog(JFrame parent, IClient client, Vector<CUnit> toSell) {
 
         //init superclass
@@ -106,6 +130,8 @@ public class SellUnitDialog extends javax.swing.JDialog implements java.awt.even
         }
 
         //populate the combo box
+        // NOTE: the model holds CUnit instances (not Strings). getElementAt() is overridden here as a no-op
+        // (it just delegates to the superclass), so the override currently has no observable effect.
         possibleSaleUnits.setModel(new DefaultComboBoxModel<>(toSell) {
             @Serial
             private static final long serialVersionUID = 2012355422040841647L;
@@ -166,6 +192,9 @@ public class SellUnitDialog extends javax.swing.JDialog implements java.awt.even
         this.setLocationRelativeTo(client.getMainFrame());
     }
 
+    /**
+     * Enforces a minimum dialog size of 220x220, resizing the dialog if the packed layout ended up smaller.
+     */
     private void checkMinimumSize() {
 
         java.awt.Dimension curDim = this.getSize();
@@ -191,7 +220,17 @@ public class SellUnitDialog extends javax.swing.JDialog implements java.awt.even
     }//end checkMinimumSize
 
     /**
-     * OK or CANCEL buttons pressed. Handle any changes and then close the dialouge.
+     * Handles both the OK and Cancel buttons (Cancel has no action command set, so it falls through to the
+     * final {@code dispose()} without sending anything).
+     * <p>
+     * On OK: builds a {@code sell#<unitId>#<ticks>#<minBid>} campaign chat command from the selected unit and the
+     * tick/bid text fields (falling back to the server-configured defaults when those fields are blank), sends it
+     * to the server, then closes the dialog.
+     * <p>
+     * QUIRK: {@code possibleSaleUnits.getSelectedItem()} is cast directly to {@code String}, but the combo box's
+     * model actually holds {@link CUnit} objects (see the constructor). This cast will throw a
+     * {@link ClassCastException} whenever a unit is actually selected, so in practice the OK path likely never
+     * completes the intended tokenizing-by-unit-id logic below without an exception.
      */
     public void actionPerformed(java.awt.event.ActionEvent event) {
 
@@ -206,6 +245,7 @@ public class SellUnitDialog extends javax.swing.JDialog implements java.awt.even
             String mms = (String) possibleSaleUnits.getSelectedItem();
 
             if (mms != null) {
+                //expects the selected item's string form to start with the unit's numeric id
                 java.util.StringTokenizer st = new java.util.StringTokenizer(mms);
                 CUnit mm = client.getPlayer().getUnit(Integer.parseInt(st.nextToken()));
                 result += mm.getId();

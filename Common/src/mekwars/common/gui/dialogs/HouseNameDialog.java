@@ -44,24 +44,53 @@ import mekwars.common.House;
 import mekwars.common.campaign.clientutils.protocol.IClient;
 import mekwars.common.util.SpringLayoutHelper;
 
+/**
+ * Modal "type-ahead" picker dialog used to select a {@link House} (faction) by name.
+ * <p>
+ * The dialog shows a text field and a list of all known faction names; as the player types, the list is
+ * filtered (via a caret listener) down to the faction names containing the typed substring, with the first
+ * name that starts with the typed text auto-selected. Used anywhere a command needs a faction name as input
+ * (e.g. admin/GM commands that operate on a House), so the caller doesn't have to make players type an exact,
+ * correctly-cased faction name.
+ * <p>
+ * After the dialog is closed via OK, callers should call {@link #getHouseName()} to retrieve the chosen faction
+ * name (or {@code null}/blank if none was resolved, depending on {@code addBlank}).
+ */
 public class HouseNameDialog extends JDialog implements ActionListener {
 
     /**
-     *
+     * Serialization id for this {@link JDialog} subclass.
      */
     @Serial
     private static final long serialVersionUID = -1908461615647395978L;
     //variables
+    /** All factions known to the client, used to validate the final selection and resolve it back to a House. */
     private final Collection<House> factions;
+    /** Alphabetically-sorted (TreeSet) set of all candidate faction names shown/filtered in the list. */
     private final TreeSet<String> factionNames;
 
+    /** List box showing the faction names currently matching the text field's filter. */
     private final JList<String> matchingHousesList;
     private final JTextField nameField;//input field
+    /** Action command string used by the OK button so {@link #actionPerformed} can identify it. */
     private final String okayCommand = "Okay";
+    /** If true, allows the dialog to accept an empty/blank selection as a valid result (e.g. "no faction"). */
     private final boolean addBlank;
+    /** Result of the dialog once OK is pressed and a valid faction is resolved; null otherwise. */
     private String factionName = null;
 
     //constructor
+    /**
+     * Builds and displays the faction-name search dialog.
+     *
+     * @param client          active client connection; supplies the full list of known Houses and the owning
+     *                        frame used to center the dialog.
+     * @param boxText         title text shown on the dialog's title bar.
+     * @param addBlank        if true, an empty selection/typed value is accepted as a valid (blank) result rather
+     *                        than being rejected by {@link #actionPerformed}.
+     * @param showCanDefectTo if true, restricts the candidate list to only those factions players are allowed to
+     *                        defect to (see {@link House#getHouseDefectionTo()}); if false, all factions are shown.
+     */
     public HouseNameDialog(IClient client, String boxText, boolean addBlank, boolean showCanDefectTo) {
 
         /*
@@ -90,6 +119,10 @@ public class HouseNameDialog extends JDialog implements ActionListener {
         //the name field, for user input. caretUpdate
         //does most of the work to update list contents
         nameField = new javax.swing.JTextField();//field for user input
+        // Every caret movement (including typed characters) spawns a new background Thread that
+        // re-filters factionNames against the current text and refreshes the JList.
+        // QUIRK: this mutates Swing components (matchingHousesList) off the Event Dispatch Thread,
+        // which is not thread-safe per Swing's threading rules; it "works" in practice but is technically unsafe.
         nameField.addCaretListener(caretEvent -> new Thread() {
             @Override
             public void run() {
@@ -172,6 +205,9 @@ public class HouseNameDialog extends JDialog implements ActionListener {
 
     }
 
+    /**
+     * Enforces a minimum dialog size of 300x150, resizing the dialog if the packed layout ended up smaller.
+     */
     private void checkMinimumSize() {
 
         Dimension curDim = this.getSize();
@@ -197,7 +233,17 @@ public class HouseNameDialog extends JDialog implements ActionListener {
     }//end checkMinimumSize
 
     /**
-     * OK or CANCEL buttons pressed. Handle any changes and then close the dialouge.
+     * Handles both the OK and Cancel buttons (Cancel has no action command set, so it falls through to the
+     * final {@code dispose()} without resolving a faction).
+     * <p>
+     * On OK: prefers the currently-selected list item, falling back to the raw text field contents if nothing
+     * is selected; if the filtered list contains exactly one entry, that entry wins regardless of what was
+     * selected/typed. The resolved name is matched (exact, case-sensitive) against the known factions; on a
+     * match the result is stored via {@link #setHouseName(String)} and the dialog is hidden (but not disposed,
+     * so {@link #getHouseName()} still returns a value after {@code setVisible(false)} returns). On no match, an
+     * "Unknown House" message dialog is shown and the dialog falls through to {@code dispose()} without setting
+     * a result. If {@code addBlank} is false, an empty resolved name simply returns without doing anything
+     * (leaving the dialog open).
      */
     public void actionPerformed(ActionEvent event) {
 
@@ -227,10 +273,19 @@ public class HouseNameDialog extends JDialog implements ActionListener {
 
     }//end actionPerformed
 
+    /**
+     * @return the faction name chosen by the player, or {@code null} if the dialog was cancelled or closed
+     *       without resolving a valid faction.
+     */
     public String getHouseName() {
         return this.factionName;
     }
 
+    /**
+     * Stores the resolved faction name so {@link #getHouseName()} can return it after the dialog closes.
+     *
+     * @param name the matched faction's name.
+     */
     private void setHouseName(String name) {
         this.factionName = name;
     }

@@ -48,7 +48,18 @@ import mekwars.common.gui.dialogs.buildtableviewer.BuildTableViewer;
 import mekwars.common.gui.dialogs.buildtableviewer.SelectorPanel;
 
 /**
- * A JPanel containing a JTable representing a BuildTable
+ * A JPanel containing a JTable representing a BuildTable.
+ * <p>
+ * This panel is the display half of the "build table viewer" tool: it works together with a
+ * {@link SelectorPanel} (which lets the user pick a faction/weight/type combination) and a
+ * {@link BuildTableViewer} (the parent container) to show which units can be randomly rolled
+ * for a given faction/weight/unit-type build table, and lets the user drill into an individual
+ * unit's stats by double-clicking a row.
+ * <p>
+ * Build tables are pre-loaded eagerly for every known faction (plus a synthetic "Common" faction)
+ * across every weight class and unit type in {@link #prepTables()}, and cached in {@link #tables}
+ * keyed by file name so that switching selections in the {@link SelectorPanel} is just a map
+ * lookup rather than a re-parse of the table file.
  *
  * @author Spork
  *
@@ -58,12 +69,17 @@ public class TablePanel extends JPanel implements ActionListener {
 
     @Serial
     private static final long serialVersionUID = 1348587767892438630L;
+    /** Combo boxes for choosing faction/weight class/unit type; this panel listens to it. */
     private final SelectorPanel selector;
+    /** The parent viewer, refreshed after the displayed table changes. */
     private final BuildTableViewer viewer;
+    /** The client, used to look up known factions and to show unit-detail windows. */
     private final IClient client;
 
+    /** Cache of every loaded build table, keyed by its generated file name (e.g. "Faction_Light.txt"). */
     private final HashMap<String, BuildTable> tables = new HashMap<>();
 
+    /** Panel that currently holds the visible table/unit view; swapped out on each selection change. */
     private JPanel displayPanel = new JPanel();
 
     /**
@@ -84,6 +100,19 @@ public class TablePanel extends JPanel implements ActionListener {
         selector.setDefaultSelectedFaction(client.getPlayer().getHouse());
     }
 
+    /**
+     * Loads a single build table for the given faction, weight class, and unit type. The file
+     * name is derived as {@code <factionName>_<WeightClassDesc>[<TypeClassDesc>].txt}, e.g.
+     * "FactionName_Light.txt" for Meks (Mek is the implicit/default type so its type descriptor
+     * is omitted) or "FactionName_LightVehicle.txt" for a non-Mek type.
+     *
+     * @param factionName name of the faction the table belongs to (or "Common")
+     * @param unitWeight  one of the {@code Unit} weight class constants (e.g. LIGHT..ASSAULT)
+     * @param unitType    one of the {@code Unit} type constants (e.g. MEK); appended to the file
+     *                    name only when not MEK
+     * @return the loaded {@link BuildTable} (never null; loading failures are handled internally
+     *         by {@link BuildTable#loadTable()})
+     */
     private static @Nonnull BuildTable getBuildTable(String factionName, int unitWeight, int unitType) {
         BuildTable buildTable = new BuildTable();
 
@@ -134,7 +163,14 @@ public class TablePanel extends JPanel implements ActionListener {
     }
 
     /**
-     * The Selector changed, so display the new table
+     * The Selector changed, so display the new table.
+     * <p>
+     * Looks up the currently selected faction/weight/type combination's cached
+     * {@link BuildTable}, swaps out {@link #displayPanel} for a fresh panel containing that
+     * table, and wires up a double-click listener on the table (if it's a {@link JTable}) so the
+     * user can drill into a specific row via {@link #actOnCell(String)}. Non-JTable components
+     * (e.g. an error/placeholder component) are added directly without scroll pane or listener.
+     * Finally asks the parent {@link BuildTableViewer} to refresh.
      */
     @Override
     public void actionPerformed(ActionEvent actionEvent) {
@@ -170,9 +206,23 @@ public class TablePanel extends JPanel implements ActionListener {
     }
 
     /**
-     * The user double-clicked a cell. Either display the selected table or the selected unit
+     * The user double-clicked a cell. Either display the selected table or the selected unit.
+     * <p>
+     * Distinguishes the two cases by whether {@code cellContents} contains a '.': a bare faction
+     * name (no dot) is treated as a nested table reference and selects that faction in the
+     * {@link SelectorPanel}; a string containing a dot is treated as a unit file name (e.g.
+     * "SomeUnit.mtf"), whose last 4 characters (the extension) are stripped before looking the
+     * unit up in {@link MekSummaryCache} and opening a standalone {@link JFrame} with a
+     * {@link MWUnitDisplay} showing its stat sheet.
+     * <p>
+     * Quirk: a brand new {@code JFrame} is created every time a unit row is double-clicked and
+     * is never tracked or disposed by this class, so repeated double-clicks accumulate detached
+     * windows. Also, if {@code MekSummaryCache.getInstance().getMek(fileName)} returns null (unit
+     * not found in the cache), the subsequent {@code mekSummary.getSourceFile()} call will throw
+     * an unhandled {@code NullPointerException} rather than being caught by the
+     * {@code EntityLoadingException} handler below.
      *
-     * @param cellContents A string indicating either a table or a unit
+     * @param cellContents A string indicating either a table (faction name) or a unit (file name)
      */
     private void actOnCell(String cellContents) {
         Entity entity;

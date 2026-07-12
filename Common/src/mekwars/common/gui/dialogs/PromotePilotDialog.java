@@ -21,25 +21,61 @@ import mekwars.common.campaign.pilot.Pilot;
 import mekwars.common.campaign.pilot.skills.PilotSkill;
 import mekwars.common.util.SpringLayoutHelper;
 
+/**
+ * "Pilot Promotion Dialog" &mdash; lets the player spend (or, in demoting mode, sell back) experience points to
+ * buy incremental Gunnery/Piloting improvements and a large catalog of special pilot abilities (Astech, Edge,
+ * Dodge Maneuver, Melee Specialist, Tactical Genius, VDNI, etc; see {@link PilotSkill}) for a single unit's pilot.
+ * <p>
+ * On construction it inspects the given unit's {@link Pilot} and, for each possible skill upgrade (or, when
+ * {@link #demoting} is {@code true}, downgrade/sell-back), adds a checkbox if the server config indicates that
+ * skill has a non-zero purchase "chance"/cost for this unit type and the pilot is eligible (doesn't already have
+ * it, or has it below its max level). Checking boxes recalculates a running experience-point cost
+ * (see {@link #calculateExpCost()}); pressing the "Buy"/"Sell" button sends the corresponding
+ * {@code promotepilot}/{@code demotepilot} campaign commands for every checked box.
+ * <p>
+ * Note the trailing file comment "end BulkRepairDialog.java" suggests this class began life as a copy-paste of
+ * {@code BulkRepairDialog} that was never fully renamed/cleaned up.
+ */
 public class PromotePilotDialog extends javax.swing.JFrame
       implements java.awt.event.ActionListener, java.awt.event.KeyListener {
 
     /**
-     *
+     * Required by {@link java.io.Serializable}; this dialog is never actually serialized over the wire.
      */
     @Serial
     private static final long serialVersionUID = -8988175448434842033L;
+    /** Action command string for the "Buy"/"Sell" confirm button. */
     private final static String okayCommand = "Ok";
+    /** Action command string for the "Close" cancel button. */
     private final static String cancelCommand = "Close";
     // store the client backlink for other things to use
     private final IClient client;
+    /** The player's in-campaign unit whose pilot is being promoted or demoted. */
     private final CUnit playerUnit;
+    /** {@code true} if this dialog is selling back/removing pilot skills rather than purchasing them. */
     private final boolean demoting;
+    /** Panel holding the exp labels and one checkbox per purchasable/sellable skill, laid out in a spring grid. */
     private final javax.swing.JPanel MasterPanel = new javax.swing.JPanel(new javax.swing.SpringLayout());
+    /** Read-only field displaying the pilot's current experience point total. */
     private final javax.swing.JTextField currentExp = new javax.swing.JTextField();
+    /** Read-only field displaying the running experience cost of the currently checked skill upgrades/sell-backs. */
     private final javax.swing.JTextField expCost = new javax.swing.JTextField();
+    /** The pilot being promoted/demoted; resolved from {@link #playerUnit} in {@link #loadPanel()}. */
     private Pilot pilot = null;
 
+    /**
+     * Builds and displays the pilot promotion/demotion dialog for a single unit's pilot.
+     * <p>
+     * Wires up the Buy/Sell and Close buttons (with tooltip/mnemonic text depending on {@code demoting}),
+     * populates {@link #MasterPanel} with the current-exp/exp-cost fields and one checkbox per eligible skill via
+     * {@link #loadPanel()}, wraps everything in a {@link javax.swing.JOptionPane}, and shows the dialog centered
+     * on the client's main frame.
+     *
+     * @param client   the campaign client, used to read server configs (costs/eligibility) and send commands
+     * @param unitID   ID of the player's unit whose pilot is being promoted/demoted
+     * @param demoting {@code true} to sell back/remove skills (Sell button), {@code false} to purchase new ones
+     *                 (Buy button)
+     */
     public PromotePilotDialog(IClient client, int unitID, boolean demoting) {
 
         // save the client
@@ -114,6 +150,30 @@ public class PromotePilotDialog extends javax.swing.JFrame
         setVisible(true);
     }
 
+    /**
+     * Populates {@link #MasterPanel} with the current-exp/exp-cost display fields and one checkbox per eligible
+     * pilot skill purchase (or, when {@link #demoting}, sell-back).
+     * <p>
+     * Gunnery and Piloting improvements are offered first (when not demoting) if the pilot's current skill is
+     * still worse than the server's configured {@code BestGunnerySkill}/{@code BestPilotingSkill} floor.
+     * <p>
+     * Then, unless the pilot has already hit the server's {@code MaxPilotUpgrades} cap (checked only when buying,
+     * not demoting &mdash; note Gunnery/Piloting checkboxes above are added before this cap check and so are never
+     * blocked by it), a checkbox is added for each special pilot skill (Astech, Dodge Maneuver, Melee Specialist,
+     * Pain Resistance, Survivalist, Iron Man, Edge, Maneuvering Ace, Natural Aptitude Piloting/Gunnery, Weapon
+     * Specialist, Tactical Genius, Gunnery Missile/Ballistic/Laser, Trait, Enhanced Interface, Gifted, Quick
+     * Study, Med Tech, VDNI, Buffered VDNI, Pain Shunt) whenever:
+     * <ul>
+     *     <li>the server config {@code chancefor<ABBR>for<UnitType>} for that skill is greater than zero
+     *     (i.e. the skill is enabled/purchasable for this unit type at all), and</li>
+     *     <li>when demoting: the pilot currently has the skill (so it can be sold back); when buying: the pilot
+     *     either doesn't have the skill yet, or (for the handful of skills with levels, like Edge and Astech)
+     *     is below its configured maximum level.</li>
+     * </ul>
+     * Each checkbox's Swing "name" is set to the server config key itself (e.g. {@code "chanceforEDforMek"}), which
+     * {@link #sendPromoteCommands()} later parses back out to build the campaign command, and its action listener
+     * triggers {@link #calculateExpCost()} to keep the running total in {@link #expCost} up to date.
+     */
     private void loadPanel() {
 
         pilot = playerUnit.getPilot();
@@ -623,6 +683,13 @@ public class PromotePilotDialog extends javax.swing.JFrame
         }
     }
 
+    /**
+     * Handles the Buy/Sell button ({@link #sendPromoteCommands()} then closes the dialog), the Close button (just
+     * closes the dialog without sending anything), and any checkbox toggle (recomputes the running experience
+     * cost via {@link #calculateExpCost()}).
+     *
+     * @param e the triggering button click or checkbox toggle event
+     */
     public void actionPerformed(java.awt.event.ActionEvent e) {
         String command = e.getActionCommand();
 
@@ -637,6 +704,15 @@ public class PromotePilotDialog extends javax.swing.JFrame
 
     }
 
+    /**
+     * Sends one {@code promotepilot} (or, when {@link #demoting}, {@code demotepilot}) campaign command per
+     * checked skill checkbox in {@link #MasterPanel}.
+     * <p>
+     * For the special-skill checkboxes, the checkbox's name (a server config key of the form
+     * {@code "chancefor<ABBR>for<UnitType>"}) is trimmed down to just the {@code <ABBR>} skill abbreviation before
+     * being appended to the base command; the plain "gunnery"/"piloting" checkboxes are sent as-is since their
+     * names don't start with {@code "chancefor"}.
+     */
     private void sendPromoteCommands() {
 
         String baseCommand = IClient.CAMPAIGN_PREFIX + "c promotepilot#" + playerUnit.getId() + "#";
@@ -661,6 +737,15 @@ public class PromotePilotDialog extends javax.swing.JFrame
 
     }
 
+    /**
+     * Recomputes the total experience point cost of every currently-checked skill checkbox and writes it into
+     * {@link #expCost}. Effective Gunnery/Piloting (bumped up by one if the pilot already has the corresponding
+     * Natural Aptitude skill) is used to look up the base Gunnery/Piloting upgrade price via the server's
+     * {@code BaseRollToLevel} and {@code MultiplierPerPreviousLevel} configs. Astech and Edge costs additionally
+     * scale with the pilot's current level in that skill. When {@link #demoting}, every individual cost is then
+     * scaled down by the server's {@code PilotUpgradeSellBackPercent}. Finally, if the pilot has the Gifted skill
+     * and this is a purchase (not a sell-back), the total is reduced according to the server's {@code GiftedPercent}.
+     */
     private void calculateExpCost() {
 
         int cost = 0;
@@ -718,12 +803,22 @@ public class PromotePilotDialog extends javax.swing.JFrame
         }
 
         if (pilot.getSkills().has(PilotSkill.GiftedID) && !demoting) {
+            // BUG: (1 - GiftedPercent) is cast to int before multiplying. For any GiftedPercent strictly between
+            // 0 and 1 (the intended "discount fraction" range) this truncates to 0, zeroing out the entire cost
+            // rather than applying a partial discount. Only GiftedPercent <= 0 (multiplier truncates to 1, i.e.
+            // no discount) avoids this. Documenting actual behavior, not fixing it here.
             cost *= (int) (1 - Double.parseDouble(client.getServerConfigs("GiftedPercent")));
         }
 
         expCost.setText(Integer.toString(cost));
     }
 
+    /**
+     * Escape closes the dialog without buying/selling anything; Enter sends the promote/demote commands for all
+     * currently-checked skills (note: unlike the Buy/Sell button, this does not also close the dialog afterward).
+     *
+     * @param arg0 the key-typed event for this window
+     */
     public void keyTyped(java.awt.event.KeyEvent arg0) {
 
         if (arg0.getKeyCode() == java.awt.event.KeyEvent.VK_ESCAPE) {
@@ -734,9 +829,11 @@ public class PromotePilotDialog extends javax.swing.JFrame
 
     }
 
+    /** Unused; required by {@link java.awt.event.KeyListener}. */
     public void keyPressed(java.awt.event.KeyEvent arg0) {
     }
 
+    /** Unused; required by {@link java.awt.event.KeyListener}. */
     public void keyReleased(java.awt.event.KeyEvent arg0) {
     }
 }// end BulkRepairDialog.java

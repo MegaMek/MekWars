@@ -13,18 +13,36 @@ import mekwars.common.campaign.clientutils.protocol.IClient;
 import mekwars.common.util.CUnitComparator;
 
 // inner classes
-/*
- * TableViewerModel is a model extension which sets up proper table viewer
- * sorting columns - name, weight, model, % frequency, etc. Modeled along
- * the BlackMarketModel from client.gui
+/**
+ * Table model backing the "build table" viewer, which lists the units contained in a
+ * random-unit assignment table (RAT/build table) along with their weight, battle value, and
+ * how frequently they appear in the table. Modeled on the {@code BlackMarketModel} from
+ * {@code client.gui}.
+ * <p>
+ * The model wraps two parallel views of the same data: {@link #currentUnits}, a lookup keyed
+ * by unit filename, and {@link #sortedUnits}, a flat array in the current display order.
+ * Sorting is triggered by calling {@link #setSortMode(int)} followed by {@link #refreshModel()},
+ * which re-sorts {@link #sortedUnits} from {@link #currentUnits} according to
+ * {@link #currentSortMode} and fires a table-data-changed event.
+ * <p>
+ * Note: {@link #columnNames} only declares 3 header labels ("Unit", "Weight", "BV") while
+ * {@link #getColumnCount()} exposes {@link #columnNames}.length columns and {@link #getValueAt}
+ * has cases for a 4th (FREQUENCY) and 5th (FILENAME) column index; those extra columns exist in
+ * the sorting logic but are not actually rendered as table columns since the column count is
+ * driven by the (shorter) {@code columnNames} array.
  */
 class TableViewerModel extends AbstractTableModel {
     // IVARS
     // static ints
+    /** Column/sort-mode constant for the unit name/model column. */
     public final static int UNIT = 0;// model/name
+    /** Column/sort-mode constant for the unit weight (tons) column. */
     public final static int WEIGHT = 1;
+    /** Column/sort-mode constant for the Battle Value column. */
     public final static int BATTLEVALUE = 2;
+    /** Column/sort-mode constant for the table-appearance frequency column. */
     public final static int FREQUENCY = 3;
+    /** Column/sort-mode constant for the underlying unit filename (not shown as a header). */
     public final static int FILENAME = 4;
     private final static MMLogger LOGGER = MMLogger.create(TableViewerModel.class);
     /**
@@ -32,17 +50,30 @@ class TableViewerModel extends AbstractTableModel {
      */
     @Serial
     private static final long serialVersionUID = 4544599978221999391L;
+    /** Master lookup of every unit in the table, keyed by filename (or other unique key). */
     java.util.TreeMap<Object, TableUnit> currentUnits;
+    /** Flattened, currently-sorted view of {@link #currentUnits} used to back table rows. */
     TableUnit[] sortedUnits;
 
+    /** Which column/criterion {@link #sortedUnits} is currently sorted by; defaults to frequency. */
     int currentSortMode = TableViewerModel.FREQUENCY;
 
     // column name array
+    /** Visible column headers, in display order. */
     String[] columnNames = { "Unit", "Weight", "BV" };
     // client reference
+    /** Reference to the owning client; currently unused within this class beyond storage. */
     IClient client;
 
     // CONSTRUCTOR
+    /**
+     * Creates the table model over an existing set of units.
+     *
+     * @param client  the owning client (kept for potential future use)
+     * @param current master unit lookup keyed by filename
+     * @param sorted  initial sorted array of units to display (should be consistent with
+     *                {@code current} and {@link #currentSortMode})
+     */
     public TableViewerModel(IClient client, TreeMap<Object, TableUnit> current, TableUnit[] sorted) {
         this.client = client;
         currentUnits = current;
@@ -61,7 +92,27 @@ class TableViewerModel extends AbstractTableModel {
         return columnNames.length;
     }
 
-    // getValueAt, for AbstractModel
+    /**
+     * Returns the display value for a given cell. Row is looked up in {@link #sortedUnits};
+     * the column determines which unit attribute is returned:
+     * <ul>
+     *   <li>{@link #UNIT}: an HTML string with "Chassis, Model" for non-omni Meks, or just the
+     *       model name otherwise</li>
+     *   <li>{@link #WEIGHT}: the unit's weight in tons, truncated to an int</li>
+     *   <li>{@link #BATTLEVALUE}: the unit's calculated Battle Value</li>
+     *   <li>{@link #FREQUENCY}: the unit's table-appearance frequency, rounded to 2 decimal
+     *       places and then reparsed back into a double</li>
+     *   <li>{@link #FILENAME}: the unit's real underlying filename</li>
+     * </ul>
+     * Returns an empty string for an out-of-range row, a null unit at that row, or an
+     * unrecognized column index; also returns an empty string (and logs) if an exception is
+     * thrown while formatting the UNIT column.
+     *
+     * @param row row index into {@link #sortedUnits}
+     * @param col one of {@link #UNIT}, {@link #WEIGHT}, {@link #BATTLEVALUE}, {@link #FREQUENCY},
+     *            {@link #FILENAME}
+     * @return the formatted cell value, or "" if unavailable
+     */
     @Override
     public Object getValueAt(int row, int col) {
 
@@ -115,6 +166,15 @@ class TableViewerModel extends AbstractTableModel {
         return (columnNames[column]);
     }
 
+    /**
+     * Determines a column's runtime class by sampling the value from row 0 and calling
+     * {@code getClass()} on it. Note: this will throw a {@link NullPointerException} if there
+     * are zero rows, since {@link #getValueAt(int, int)} returns the string {@code ""} (not
+     * null) for an out-of-range row only when the row index itself is invalid relative to
+     * {@link #sortedUnits}.length — with zero rows, row 0 is out of range and this still
+     * returns "" safely, so in practice this only NPEs if a case is added to
+     * {@code getValueAt} that can return null.
+     */
     @Override
     public Class<?> getColumnClass(int columnIndex) {
         return getValueAt(0, columnIndex).getClass();
@@ -126,21 +186,31 @@ class TableViewerModel extends AbstractTableModel {
         return false;
     }
 
+    /**
+     * Changes which criterion future sorts (via {@link #refreshModel()}) will use. Does not
+     * itself re-sort or repaint; call {@link #refreshModel()} afterward to apply it.
+     *
+     * @param sortMode one of {@link #UNIT}, {@link #WEIGHT}, {@link #BATTLEVALUE},
+     *                  {@link #FREQUENCY}
+     */
     public void setSortMode(int sortMode) {
         currentSortMode = sortMode;
     }
 
-    /*
-     * getRenderer, overridden from AbstractModel to use custom
-     * renderer.
+    /**
+     * Builds a fresh {@link TableViewerRenderer} bound to this model, used to render cells with
+     * unit-specific tooltips (source table breakdown, chassis/model formatting).
+     *
+     * @return a new renderer instance for this model
      */
     public TableViewerRenderer getRenderer() {
         return new TableViewerRenderer(this);
     }
 
-    /*
-     * refresh model to draw new contents, reorder existing
-     * contents.
+    /**
+     * Re-sorts {@link #sortedUnits} from {@link #currentUnits} using {@link #currentSortMode}
+     * and notifies listeners (e.g. the JTable) that the table data has changed, causing a
+     * repaint with the new order.
      */
     public void refreshModel() {
         sortedUnits = new TableUnit[] {};
@@ -148,8 +218,17 @@ class TableViewerModel extends AbstractTableModel {
         fireTableDataChanged();
     }
 
-    /*
-     * Method which sorts the units in currentUnits.
+    /**
+     * Sorts all units in {@link #currentUnits} according to the given mode and returns the
+     * resulting array (also stored back into {@link #sortedUnits} as a side effect for the
+     * first three modes, since {@link Arrays#sort} mutates the array in place).
+     *
+     * @param sortMode one of {@link #UNIT} (alphabetical by name), {@link #WEIGHT} (ascending
+     *                  tonnage), {@link #BATTLEVALUE} (ascending BV), or {@link #FREQUENCY}
+     *                  (ascending table-appearance frequency, via an inline comparator that
+     *                  treats a null unit as frequency 0.0)
+     * @return the sorted array of units, or an empty array if {@code sortMode} matches none of
+     *         the known constants (failsafe case)
      */
     public TableUnit[] sortUnits(int sortMode) {
 

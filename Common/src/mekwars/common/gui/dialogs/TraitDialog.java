@@ -36,45 +36,105 @@ import mekwars.common.campaign.clientutils.protocol.IClient;
 import mekwars.common.campaign.pilot.skills.PilotSkill;
 import mekwars.common.util.SpringLayoutHelper;
 
+/**
+ * Dialog for viewing (players) or authoring (GMs/admins) "Traits".
+ * <p>
+ * A Trait in MekWars is a named, per-faction bundle of chance modifiers applied to the
+ * pilot skills defined in {@link PilotSkill} (Gunnery specialties, Iron Man, Pain Resistance,
+ * Natural Aptitude, Edge-related skills, AsTech, MedTech, etc.). Each modifier changes the odds
+ * that a newly generated pilot for that faction will roll the corresponding skill. Traits are
+ * persisted server-side as flat, "*"-delimited text files (one per faction, named
+ * {@code <faction>traitnames.txt}) and are cached locally in the client's cache directory.
+ * <p>
+ * When opened in "player" mode ({@code player == true}) the dialog is read-only: the user can
+ * browse factions/traits and see the configured modifiers, but cannot add, edit or remove
+ * entries, and the window is titled "Trait Viewer". When opened in GM/admin mode
+ * ({@code player == false}) the trait name field and all modifier fields become editable, the
+ * "Add" and "Remove" buttons are shown, and edits are sent to the server as chat commands
+ * (see {@link #getResults(String, String)} and {@link #actionPerformed(ActionEvent)}).
+ */
 public final class TraitDialog implements ActionListener, KeyListener {
     private final static MMLogger LOGGER = MMLogger.create(TraitDialog.class);
 
+    /** Action command for the "Add" button: submit the currently edited trait to the server. */
     private final static String okayCommand = "Add";
+    /** Action command for the "Close"/"Exit" button: dismiss the dialog without further changes. */
     private final static String cancelCommand = "Close";
+    /** Action command for the "Remove" button: delete the currently selected trait (with confirmation). */
     private final static String removeCommand = "Remove";
+    /** Action command used by the trait combo box. */
     private final static String traitCommand = "Trait";
+    /** Action command used by the faction combo box. */
     private final static String factionCommand = "Faction";
+    /** Field/token separator used both in the on-disk trait files and in the server chat protocol strings built by {@link #getResults(String, String)}. */
     private final static String delimiter = "*";
     //store the client backlink for other things to use
     private final IClient client;
     private final JButton cancelButton = new JButton("Close");
 
+    // One 3-column numeric text field per PilotSkill this dialog can modify. Each field holds the
+    // chance modifier for that skill (as a plain integer; "0" means "no effect"/unset) and is
+    // editable only when the dialog is opened in GM/admin mode. See the tooltip set on each field
+    // below for the human-readable meaning of its abbreviation.
+    /** Modifier for Gunnery/Laser specialty (see {@link PilotSkill#GunneryLaserSkillID}). */
     private final JTextField gunneryLaserText = new JTextField(3);
+    /** Modifier for Gunnery/Ballistic specialty (see {@link PilotSkill#GunneryBallisticSkillID}). */
     private final JTextField gunneryBallisticText = new JTextField(3);
+    /** Modifier for Gunnery/Missile specialty (see {@link PilotSkill#GunneryMissileSkillID}). */
     private final JTextField gunneryMissileText = new JTextField(3);
+    /** Modifier for the AsTech skill (see {@link PilotSkill#AsTechSkillID}). */
     private final JTextField asTechText = new JTextField(3);
+    /** Modifier for Tactical Genius (see {@link PilotSkill#TacticalGeniusSkillID}). */
     private final JTextField tacticalGeniusText = new JTextField(3);
+    /** Modifier for Weapon Specialist (see {@link PilotSkill#WeaponSpecialistSkillID}). */
     private final JTextField weaponSpecialistText = new JTextField(3);
+    /** Modifier for Melee Specialist (see {@link PilotSkill#MeleeSpecialistSkillID}). */
     private final JTextField meleeSpecialistText = new JTextField(3);
+    /** Modifier for Dodge Maneuver (see {@link PilotSkill#DodgeManeuverSkillID}). */
     private final JTextField dodgeManeuverText = new JTextField(3);
+    /** Modifier for Iron Man (see {@link PilotSkill#IronManSkillID}). */
     private final JTextField ironManText = new JTextField(3);
+    /** Modifier for Maneuvering Ace (see {@link PilotSkill#ManeuveringAceSkillID}). */
     private final JTextField maneuveringAceText = new JTextField(3);
+    /** Modifier for Natural Aptitude: Gunnery (see {@link PilotSkill#NaturalAptitudeGunnerySkillID}). */
     private final JTextField NAGText = new JTextField(3);
+    /** Modifier for Natural Aptitude: Piloting (see {@link PilotSkill#NaturalAptitudePilotingSkillID}). */
     private final JTextField NAPText = new JTextField(3);
+    /** Modifier for Pain Resistance (see {@link PilotSkill#PainResistanceSkillID}). */
     private final JTextField painResistanceText = new JTextField(3);
+    /** Modifier for Survivalist (see {@link PilotSkill#SurvivalistSkillID}). */
     private final JTextField survivalistSkillText = new JTextField(3);
+    /** Modifier for Enhanced Interface (see {@link PilotSkill#EnhancedInterfaceID}). */
     private final JTextField enhancedInterfaceText = new JTextField(3);
+    /** Modifier for Quick Study (see {@link PilotSkill#QuickStudyID}). */
     private final JTextField quickStudyText = new JTextField(3);
+    /** Modifier for Gifted (see {@link PilotSkill#GiftedID}). */
     private final JTextField giftedText = new JTextField(3);
+    /** Modifier for MedTech (see {@link PilotSkill#MedTechID}). */
     private final JTextField medtechText = new JTextField(3);
 
+    /** Faction ("House") whose trait file is currently being browsed/edited; always includes a synthetic "Common" entry. */
     private final JComboBox<String> factionComboBox;
+    /** Trait name selector; editable (free text entry allowed) only in GM/admin mode so a brand-new trait name can be typed in. */
     private final JComboBox<String> traitComboBox = new JComboBox<>();
 
     //STOCK DIALOG AND PANE
+    /** The modal Swing dialog window hosting {@link #pane}. */
     private final JDialog dialog;
+    /** The JOptionPane that supplies the Add/Remove/Close buttons and wraps the trait editor panel. */
     private final JOptionPane pane;
 
+    /**
+     * Builds and immediately displays the modal Trait dialog. Construction blocks (via
+     * {@code dialog.setVisible(true)} at the end of this constructor) until the user closes the
+     * dialog.
+     *
+     * @param client the client back-link, used to look up factions, load trait files from the
+     *               server cache, and send chat commands for any add/remove edits
+     * @param player {@code true} to open a read-only viewer (all fields disabled, no Add/Remove
+     *               buttons, trait name not editable); {@code false} to open the full GM/admin
+     *               editor where trait modifiers can be created, changed and removed
+     */
     public TraitDialog(IClient client, boolean player) {
 
         //save the client
@@ -307,16 +367,29 @@ public final class TraitDialog implements ActionListener, KeyListener {
         }
     }
 
+    /** Tells the client to (re)load the server's trait files into the local cache before this dialog reads them. */
     private void loadAllFiles() {
         client.loadServerTraitFiles();
     }
 
+    /** No-op; required by {@link KeyListener} but this dialog only reacts to key-release events. */
     public void keyTyped(KeyEvent keyEvent) {
     }
 
+    /** No-op; required by {@link KeyListener} but this dialog only reacts to key-release events. */
     public void keyPressed(KeyEvent keyEvent) {
     }
 
+    /**
+     * Reacts to keyboard-driven navigation of the faction/trait combo boxes (e.g. arrow keys).
+     * Note this dialog uses {@link KeyListener#keyReleased(KeyEvent)} rather than the more usual
+     * {@code ItemListener}/{@code ActionListener} combo-box change notification, so changing a
+     * selection purely via mouse click may not reliably trigger this refresh in all look-and-feels.
+     * <p>
+     * If the faction combo box was the source, reloads that faction's trait name list
+     * ({@link #loadFactionTraits(String)}); otherwise (the trait combo box changed) reloads the
+     * modifier fields for the newly selected trait ({@link #populateTraits(String, String)}).
+     */
     public void keyReleased(KeyEvent keyEvent) {
 
         String faction = (String) factionComboBox.getSelectedItem();
@@ -331,6 +404,21 @@ public final class TraitDialog implements ActionListener, KeyListener {
         }
     }
 
+    /**
+     * Reloads the trait-name combo box for the given faction by reading
+     * {@code <cacheDir>/<faction>traitnames.txt} (one trait per line, first "*"-delimited token is
+     * the trait name) from the client's cache directory. Any {@link Exception} while reading is
+     * logged and swallowed, leaving the combo box empty. Selects the first entry (if any) once
+     * loaded.
+     * <p>
+     * Note: if the file cannot be opened at all, {@code dis} stays {@code null} and the
+     * {@code finally} block's {@code dis.close()} will throw a {@link NullPointerException}
+     * that is not caught here (only {@link java.io.IOException} is handled) — a pre-existing
+     * quirk in this error path.
+     *
+     * @param faction the faction name whose trait file should be loaded (case-insensitive; the
+     *                filename is lower-cased)
+     */
     private void loadFactionTraits(String faction) {
         File traitFile = new File(String.format("%s/%straitnames.txt", client.getCacheDir(), faction.toLowerCase()));
         TreeSet<String> names = new TreeSet<>();
@@ -367,6 +455,16 @@ public final class TraitDialog implements ActionListener, KeyListener {
         traitComboBox.revalidate();
     }
 
+    /**
+     * Resets every skill-modifier text field to "0", then re-reads the faction's trait file
+     * looking for the line whose name matches {@code trait} (case-insensitive) and, for each
+     * {@code <skillId>*<modifier>} pair on that line, writes the modifier into the matching
+     * field (matched by comparing against the {@link PilotSkill} ID constants). Any parsing
+     * exception is logged and swallowed, leaving fields at whatever state they reached.
+     *
+     * @param faction the faction whose trait file to read
+     * @param trait   the trait name to look up within that file
+     */
     private void populateTraits(String faction, String trait) {
         File traitFile = new File(String.format("%s/%straitnames.txt", client.getCacheDir(), faction.toLowerCase()));
 
@@ -455,6 +553,22 @@ public final class TraitDialog implements ActionListener, KeyListener {
         }
     }
 
+    /**
+     * Central button/combo-box handler for this dialog (GM/admin mode only performs real edits;
+     * the buttons themselves are hidden in player/view-only mode). Dispatches on the Swing action
+     * command string:
+     * <ul>
+     *   <li>{@code okayCommand} ("Add") — validates a trait name was chosen/typed, serializes the
+     *       current modifier fields via {@link #getResults(String, String)} and sends an
+     *       {@code addtrait} chat command to the server, then reloads the trait files/list.</li>
+     *   <li>{@code cancelCommand} ("Close") — records the cancel button as the pane's value and
+     *       disposes the dialog.</li>
+     *   <li>{@code removeCommand} ("Remove") — asks for confirmation, then sends a
+     *       {@code removetrait} chat command for the selected faction/trait and reloads.</li>
+     *   <li>{@code factionCommand} — a new faction was chosen; reloads that faction's trait list.</li>
+     *   <li>{@code traitCommand} — a new trait was chosen; repopulates the modifier fields for it.</li>
+     * </ul>
+     */
     public void actionPerformed(ActionEvent actionEvent) {
         String command = actionEvent.getActionCommand();
 
@@ -522,6 +636,18 @@ public final class TraitDialog implements ActionListener, KeyListener {
         }
     }
 
+    /**
+     * Serializes the currently entered skill modifiers into the delimited protocol string sent
+     * to the server for an add/edit trait request. The format is
+     * {@code <faction>#<trait>#(<skillId>*<modifier>*)*#CONFIRM} — each skill whose text field
+     * currently parses to a non-zero integer (via {@link MathUtility#parseInt}) contributes one
+     * {@code <skillId>*<modifier>*} triple; skills left at "0" (the default) are omitted entirely,
+     * so a modifier of 0 cannot be explicitly saved/distinguished from "not set".
+     *
+     * @param faction the faction the trait belongs to
+     * @param trait   the trait's name
+     * @return the fully built, "#CONFIRM"-terminated command payload describing this trait
+     */
     public String getResults(String faction, String trait) {
         String result = String.format("%s#%s#", faction, trait);
 

@@ -51,33 +51,64 @@ import mekwars.common.gui.TableSorter;
 import mekwars.common.util.SpringLayoutHelper;
 
 /**
- * SolFreeBuildDialog
+ * "Free Unit Browser" dialog used by the SoL (Society of Lost) newbie house (and, when configured, other houses
+ * post-defection) to build units off of a fixed, server-defined "build table" rather than paying full market price.
  * <p>
  * August 2017 Duplicated and modified TableViewerDialog in an attempt to create a new dialog for SOL players to create
  * any mek/vee on a pre-defined build table. This is part of a Larger system to change how SOL works in general.
+ * <p>
+ * On construction the dialog reads a handful of server config options (e.g. {@code Sol_FreeBuild_UseAll},
+ * {@code Sol_FreeBuild_BuildTable}, {@code FreeBuild_PostDefection}, {@code NewbieHouseName}) to decide which
+ * faction-named build tables the player is allowed to browse, then loads weighted unit-selection tables from
+ * {@code ./data/buildtables/standard} (see {@link #loadTables()}). The user narrows the table by faction, unit
+ * type, and weight class via combo boxes, picks a row in the resulting table, and presses "Create" to ask the
+ * server to spawn that unit for their house (see {@link #createUnit_ActionPerformed()}).
  *
  * @author Salient (mwosux@gmail.com)
  */
 public class SolFreeBuildDialog extends JFrame implements ItemListener {
     private static final MMLogger LOGGER = MMLogger.create(SolFreeBuildDialog.class);
 
+    /** Required by {@link java.io.Serializable}; this dialog is never actually serialized over the wire. */
     @Serial
     private static final long serialVersionUID = -5449999786199993020L;
+    /** Table model backing {@link #generalTable}; wraps {@link #currentUnits} for display in the JTable. */
     private final TableViewerModel tvModel;
+    /** All units currently loaded from the active build table(s), keyed by filename (or MUL entity key). */
     private final TreeMap<Object, TableUnit> currentUnits;
+    /** Back-link to the campaign client, used to read server configs, send build commands, and access the player. */
     private final IClient client;
+    /** Sortable table listing the units available for construction from the currently selected build table. */
     private final JTable generalTable = new JTable();
+    /** Re-requests the build table data from the server (see {@link #refreshButton_ActionPerformed()}). */
     private final JButton refreshButton = new JButton("Reload Data");
+    /** Triggers construction of the currently selected unit (see {@link #createUnit_ActionPerformed()}). */
     private final JButton createButton = new JButton("Create (ALT+C)");
+    /** Filters the build table by weight class: Light/Medium/Heavy/Assault. */
     private final JComboBox<String> weightClassCombo;
+    /** Filters the build table by house/faction name (which build table file is read). */
     private final JComboBox<String> factionCombo;
+    /** Filters the build table by unit type (Mek, Vehicle, BattleArmor, Infantry, ProtoMek, Aero). */
     private final JComboBox<String> unitTypeCombo;
+    /** Unused leftover array of unit type labels; {@link #unitTypeCombo} is actually populated from {@link Unit} constants. */
     private String[] unitTypeArray = { "Mek", "Vehicle", "BattleArmor", "Infantry", "ProtoMek", "Aero" };
+    /** Last-selected index of {@link #factionCombo}, used to detect no-op selection events in {@link #itemStateChanged}. */
     private int factionSort = 0;
+    /** Last-selected index of {@link #unitTypeCombo}, used to detect no-op selection events in {@link #itemStateChanged}. */
     private int unitSort = 0;
+    /** Last-selected index of {@link #weightClassCombo}, used to detect no-op selection events in {@link #itemStateChanged}. */
     private int weightSort = 0;
 
-    // constructor
+    /**
+     * Builds and immediately displays the Free Unit Browser dialog.
+     * <p>
+     * Determines which faction build tables the player may browse (based on server configs and whether the
+     * player's house is the newbie/SoL house or has defected), lays out the combo boxes/table/buttons, wires up
+     * listeners, and loads the initial build table before making the window visible.
+     *
+     * @param client the campaign client used to read server configuration, the current player/house, and to send
+     *               build commands to the server
+     */
     public SolFreeBuildDialog(IClient client) {
         super("Free Unit Browser");
 
@@ -277,7 +308,12 @@ public class SolFreeBuildDialog extends JFrame implements ItemListener {
         setVisible(true);
     }
 
-    // Override show to center on screen.
+    /**
+     * Overridden so that every time the dialog is shown it re-packs, re-centers over the main client window, and
+     * forces a fixed 720x575 non-resizable size, regardless of the size requested by the caller.
+     *
+     * @param show {@code true} to show the dialog, {@code false} to hide it
+     */
     @Override
     public void setVisible(boolean show) {
 
@@ -290,7 +326,13 @@ public class SolFreeBuildDialog extends JFrame implements ItemListener {
         super.setVisible(show);
     }
 
-    // methods
+    /**
+     * Looks up the {@link TableUnit} backing a given row of {@link #generalTable}.
+     *
+     * @param row view row index (as displayed, post-sort) to resolve
+     * @return the {@link TableUnit} for that row, or {@code null} if the row has no filename (e.g. an invalid/out of
+     *         range selection)
+     */
     public @Nullable TableUnit getUnitAtRow(int row) {
         String filename = (String) generalTable.getModel().getValueAt(row, TableViewerModel.FILENAME);
 
@@ -304,6 +346,12 @@ public class SolFreeBuildDialog extends JFrame implements ItemListener {
 
     /**
      * Method to conform with ItemListener. Takes item events from the combo boxes and triggers table loads.
+     * <p>
+     * Ignores events that don't represent an actual change from the last-applied faction/type/weight selection
+     * (tracked via {@link #factionSort}, {@link #unitSort}, {@link #weightSort}), then reloads the build table,
+     * persists the new selections into the client's local config, and refreshes the display.
+     *
+     * @param itemEvent the combo box selection change event
      */
     @Override
     public void itemStateChanged(ItemEvent itemEvent) {
@@ -347,6 +395,12 @@ public class SolFreeBuildDialog extends JFrame implements ItemListener {
 
     /**
      * Method that loads tables and TableUnits, based on current ComboBox selections. This is the beef of the class ...
+     * <p>
+     * Builds the base build-table filename from the selected faction, weight class and unit type (e.g.
+     * {@code "<Faction>_<Weight><Type>.txt"}, with the "Mek" type omitted from the filename), verifies
+     * {@code ./data/buildtables/standard} exists, clears {@link #currentUnits}, then delegates to
+     * {@link #doTableLayer} to read the base table and follow any cross-linked ("chained") tables it references,
+     * up to a few hops deep, weighting resulting units by how a table was reached.
      */
     public void loadTables() {
         String factionString = "";
@@ -428,7 +482,10 @@ public class SolFreeBuildDialog extends JFrame implements ItemListener {
         }
     }
 
-    // refresh
+    /**
+     * Refreshes the table model/view after {@link #loadTables()} has repopulated {@link #currentUnits}: rebuilds
+     * the model's row data, resizes the table to fit all rows, and forces a Swing revalidate/repaint.
+     */
     public void refresh() {
         tvModel.refreshModel();
         generalTable.setPreferredSize(new Dimension(generalTable.getWidth(),
@@ -440,6 +497,22 @@ public class SolFreeBuildDialog extends JFrame implements ItemListener {
      * Helper method which reads a given layer of tables. Extracted from loadTables to reduce repetition; however, doing
      * do actually makes each check (in particular, the first and last map levels) more complex than they would
      * otherwise.
+     * <p>
+     * For each table name in {@code curr} (weighted by its entry in the map), opens the corresponding build-table
+     * file (falling back to a lower-cased filename, and optionally overridden to the "Common" table when
+     * {@code commonOverride} is set), and reads it line by line. Each line is {@code "<weight> <name>"}: if
+     * {@code name} ends in a known unit extension ({@code .blk}/{@code .mtf}/{@code .mul}) it is treated as an
+     * actual unit and added/merged into {@link #currentUnits} with a frequency proportional to
+     * {@code weight / totalWeightForTable * tableMultiplier}; otherwise it is treated as a cross-linked table name
+     * and merged into {@code next} for the following recursion pass in {@link #loadTables()}.
+     *
+     * @param curr           table name -&gt; relative weight map for the layer currently being processed
+     * @param next           table name -&gt; relative weight map to populate with any cross-linked tables discovered
+     *                       in this layer, for the next recursion pass (may be a fresh, empty map)
+     * @param add            filename suffix identifying weight class/unit type (e.g. {@code "_LightVehicle.txt"})
+     * @param buildTablePath directory containing the build table files
+     * @param commonOverride if {@code true}, ignore {@code curr}'s table names and always read the "Common" table
+     *                       instead (used to force the base table onto the shared/common build list)
      */
     public void doTableLayer(TreeMap<String, Double> curr, TreeMap<String, Double> next, String add,
           File buildTablePath, boolean commonOverride) {
@@ -618,6 +691,10 @@ public class SolFreeBuildDialog extends JFrame implements ItemListener {
                              * which means sorting would be a waste of time.
                              */
                             if (next != null) {
+                                // BUG: this checks the literal string "crossTableName" rather than
+                                // crossTableName.toString(), so this branch can never be taken; as a result
+                                // repeated cross-links to the same table are never summed and each occurrence
+                                // simply overwrites the previous weight via the put() call below.
                                 if (next.containsKey("crossTableName")) {
                                     Double aDouble = next.get(crossTableName.toString());
                                     double newTableWeight = aDouble +
@@ -644,6 +721,13 @@ public class SolFreeBuildDialog extends JFrame implements ItemListener {
     /**
      * Helper that loops through a table, ignoring filenames and table names. Returns total table weighting for use when
      * analyzing names.
+     * <p>
+     * Sums the leading integer weight value of every non-blank line in the file (the name/filename portion of
+     * each line is ignored). Used by {@link #doTableLayer} to normalize each entry's weight into a fraction of the
+     * table's total.
+     *
+     * @param file the build table file to scan
+     * @return the sum of all per-line weights in the file, or {@code 0} if the file cannot be read
      */
     public int getTotalWeightForTable(File file) {
         int totalweight = 0;
@@ -681,6 +765,9 @@ public class SolFreeBuildDialog extends JFrame implements ItemListener {
     /**
      * Helper that takes a File entry and returns an input stream. Handles errors, etc. to reduce clutter in
      * loadTables().
+     *
+     * @param file the build table file to open
+     * @return an open {@link InputStream} for the file, or {@code null} if it could not be opened
      */
     public @Nullable InputStream getEntryInputStream(File file) {
         InputStream inputStream;
@@ -695,12 +782,25 @@ public class SolFreeBuildDialog extends JFrame implements ItemListener {
 
     /**
      * Helper that checks strings to see if they end with a known-good unit file extension.
+     *
+     * @param line a build-table line (the whole line, not just a filename); only the suffix is examined
+     * @return {@code true} if the line ends with {@code .blk}, {@code .mtf}, or {@code .mul} (case-insensitive),
+     *         meaning it should be treated as a unit reference rather than a cross-linked table name
      */
     public boolean hasValidExtension(String line) {
         String lowerCase = line.toLowerCase();
         return lowerCase.endsWith(".blk") || lowerCase.endsWith(".mtf") || lowerCase.endsWith(".mul");
     }
 
+    /**
+     * Handler for the "Reload Data" button. Asks the server to recheck/regenerate the build table data (using
+     * whichever admin/user-level command the player is authorized for), blocks the UI thread (via polling
+     * {@link IClient#isWaiting()} every 100ms) until the server responds, then reloads and redisplays the local
+     * tables.
+     * <p>
+     * Note: this polling loop runs on whatever thread invoked it (typically the Swing event dispatch thread), so
+     * while waiting for the server the dialog itself will not repaint or respond to input.
+     */
     public void refreshButton_ActionPerformed() {
         int userLevel = client.getUserLevel();
 
@@ -725,6 +825,12 @@ public class SolFreeBuildDialog extends JFrame implements ItemListener {
         refreshButton.setEnabled(true);
     }
 
+    /**
+     * Behaviorally identical to {@link #refreshButton_ActionPerformed()} (re-requests build table data from the
+     * server and reloads/redisplays it). Despite the name, this is <b>not</b> wired to {@link #createButton}'s
+     * action listener in the constructor &mdash; that button actually invokes {@link #createUnit_ActionPerformed()}.
+     * This method currently appears to be dead code left over from refactoring.
+     */
     public void createButton_ActionPerformed() {
         int userLevel = client.getUserLevel();
 
@@ -748,6 +854,15 @@ public class SolFreeBuildDialog extends JFrame implements ItemListener {
         refreshButton.setEnabled(true);
     }
 
+    /**
+     * Handler for the "Create" button. Looks up the {@link TableUnit} selected in {@link #generalTable} and sends
+     * a {@code SOLCREATEUNIT} chat/campaign command to the server requesting it be built for the player's house.
+     * <p>
+     * When free-build-for-all or post-defection building is enabled, the currently selected faction from
+     * {@link #factionCombo} is included in the command so the server knows which house's build table/pricing to
+     * apply; otherwise the server is left to infer the house from context. After sending the command the local
+     * table is reloaded and refreshed to reflect any resulting server-side state changes.
+     */
     //@Salient
     public void createUnit_ActionPerformed() {
 

@@ -35,19 +35,52 @@ import mekwars.common.House;
 import mekwars.common.campaign.clientutils.protocol.IClient;
 import mekwars.common.util.SpringLayoutHelper;
 
+/**
+ * Dialog for selecting an existing sub-faction of a given faction, or typing a brand-new
+ * sub-faction name to create one. Derived from MMNET's SearchHouseActionListener, it reuses
+ * the same "type to filter a list" pattern as {@link PlanetSearchDialog}: the player types into
+ * a text field and a {@code JList} of matching sub-faction names is filtered live.
+ * <p>
+ * Unlike the planet/unit search dialogs, if the typed text does not match any existing
+ * sub-faction, OK still succeeds and treats the typed text as the name of a new sub-faction to
+ * create (see {@link #actionPerformed(java.awt.event.ActionEvent)}). If the {@code factionName}
+ * passed to the constructor does not resolve to a known {@link House}, the dialog is left in a
+ * partially-constructed state (its UI is never built) — see the constructor for details.
+ * <p>
+ * After the dialog closes, call {@link #getSubFactionName()} to retrieve the chosen or newly
+ * typed name, or {@code null} if the dialog was cancelled or never fully initialized.
+ */
 public class SubFactionNameDialog extends JDialog implements ActionListener {
     /**
      *
      */
     @Serial
     private static final long serialVersionUID = 3552906075410667280L;
+    /** The parent faction whose sub-faction list is being browsed/extended. */
     private final House faction;
+    /** Action command identifying the OK button in {@link #actionPerformed}. */
     private final String okayCommand = "Okay";
+    /** List box showing the sub-faction names currently matching the search text. */
     private JList<String> matchingHousesList;
+    /** Text field the player types a partial (or brand-new) sub-faction name into. */
     private JTextField nameField;//input field
+    /** The chosen (or newly-entered) sub-faction name; null until OK is pressed successfully. */
     private String subFactionName = null;
 
-    //constructor
+    /**
+     * Builds the sub-faction picker: a text field, a live-filtered list of the faction's existing
+     * sub-faction names, and OK/Cancel buttons, then packs, sizes, and centers it. Does not show
+     * the dialog automatically.
+     * <p>
+     * Note: if {@code factionName} does not resolve to a known {@link House} via
+     * {@code client.getData().getHouseByName(factionName)}, the constructor returns immediately
+     * after that lookup, leaving {@link #faction} null and none of the UI fields/components
+     * initialized (a bare, empty {@code JDialog}).
+     *
+     * @param client      the client, used to obtain the main frame (as owner) and faction data
+     * @param boxText     text used as the dialog's title
+     * @param factionName name of the parent faction whose sub-factions are being listed
+     */
     public SubFactionNameDialog(IClient client, String boxText, String factionName) {
 
         /*
@@ -76,6 +109,9 @@ public class SubFactionNameDialog extends JDialog implements ActionListener {
         //the name field, for user input. caretUpdate
         //does most of the work to update list contents
         nameField = new JTextField();//field for user input
+        // Every caret movement (including each keystroke) spawns a brand-new background Thread
+        // that recomputes the filtered sub-faction list and picks a default selection. As in
+        // PlanetSearchDialog, this mutates a Swing component off the Event Dispatch Thread.
         nameField.addCaretListener(caretEvent -> new Thread() {
             @Override
             public void run() {
@@ -157,6 +193,10 @@ public class SubFactionNameDialog extends JDialog implements ActionListener {
         this.setLocationRelativeTo(client.getMainFrame());
     }
 
+    /**
+     * Ensures the dialog is not shrunk below a usable minimum size (300x150) after packing.
+     * Resizes the dialog only if the current size is smaller than the minimum in either dimension.
+     */
     private void checkMinimumSize() {
 
         java.awt.Dimension curDim = this.getSize();
@@ -183,6 +223,19 @@ public class SubFactionNameDialog extends JDialog implements ActionListener {
 
     /**
      * OK or CANCEL buttons pressed. Handle any changes and then close the dialouge.
+     * <p>
+     * On OK: prefers the list selection; if nothing is selected, falls back to the raw text
+     * field contents. The unused local {@code addBlank} is hard-coded false, so an empty
+     * selected/typed name always aborts (dialog stays open). If exactly one sub-faction remains
+     * in the filtered list, that single sub-faction is used regardless of what's typed/selected.
+     * The resulting name is compared against the faction's existing sub-faction names; on a
+     * match, that existing name is stored via {@link #setSubFactionName(String)} and the dialog
+     * is hidden (not disposed). If there is no match, the raw text field contents are stored
+     * instead — i.e. the dialog treats it as a request to create a brand-new sub-faction with
+     * that name — and the dialog is likewise hidden.
+     * <p>
+     * Any other action command (i.e. Cancel) disposes of the dialog, leaving
+     * {@link #getSubFactionName()} at its default of {@code null}.
      */
     public void actionPerformed(java.awt.event.ActionEvent event) {
 
@@ -214,10 +267,19 @@ public class SubFactionNameDialog extends JDialog implements ActionListener {
 
     }//end actionPerformed
 
+    /**
+     * @return the sub-faction name chosen (existing or newly typed) via OK, or {@code null} if
+     *         the dialog was cancelled/closed or never fully initialized (invalid faction name).
+     */
     public String getSubFactionName() {
         return this.subFactionName;
     }
 
+    /**
+     * Stores the resulting sub-faction name.
+     *
+     * @param name the existing or newly-created sub-faction name
+     */
     private void setSubFactionName(String name) {
         this.subFactionName = name;
     }

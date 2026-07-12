@@ -87,14 +87,43 @@ import mekwars.common.util.UnitUtils;
  * Allows a user to sort through a list of MechSummaries and select one
  */
 
+/**
+ * Multi-purpose unit browser window built on top of {@link MekSummaryCache} (MegaMek's cache of
+ * every loadable unit file). Despite its name and the "dialog" package, this is a top-level
+ * {@link JFrame}, not a modal dialog. Depending on the {@code viewer} mode passed to the
+ * constructor, the same UI serves four different purposes (see the {@code UNIT_*}/
+ * {@code OMNI_VARIANT_SELECTOR} constants below):
+ * <ul>
+ * <li>{@link #UNIT_VIEWER} — pure browsing, no "Select" button.</li>
+ * <li>{@link #OMNI_VARIANT_SELECTOR} — picking a base chassis to register an OmniMech variant
+ * cost/BV/fluff modifier against.</li>
+ * <li>{@link #UNIT_SELECTOR} — picking a unit file to spawn as a new in-campaign unit, prompting
+ * for fluff text and pilot skills.</li>
+ * <li>{@link #UNIT_RESEARCH} — picking a unit to submit as a "research" request.</li>
+ * </ul>
+ * The window shows a fixed-width text list of matching units (see {@link #formatMek(MekSummary)})
+ * alongside basic filters (weight class, tech level, unit type, sort order) and a togglable
+ * "Advanced Search" panel (movement, armor percentage, weapon counts, required equipment). It also
+ * hosts a small preview image and (largely disabled — see {@link #previewMech(Entity)}) unit
+ * readout panes, plus an optional fluff/history pane.
+ * <p>
+ * Because populating {@link #meksCurrent} from {@link MekSummaryCache} can be slow the first time
+ * it runs, this class implements {@link Runnable}: callers are expected to construct the dialog,
+ * show an owning {@link UnitLoadingDialog} "please wait" indicator, and invoke {@link #run()} on a
+ * background thread, which performs the initial filter pass and then makes this frame visible.
+ */
 public class UnitViewerDialog extends JFrame
       implements ActionListener, KeyListener, ListSelectionListener, Runnable, WindowListener, ItemListener {
 
     public static final MMLogger LOGGER = MMLogger.create(UnitViewerDialog.class);
 
+    /** Viewer mode: plain unit browser with no "Select" action. */
     public static final int UNIT_VIEWER = 0;
+    /** Viewer mode: pick a chassis to attach an OmniMech variant cost/BV/fluff modifier to. */
     public static final int OMNI_VARIANT_SELECTOR = 1;
+    /** Viewer mode: pick a unit file to spawn as a new campaign unit (prompts for fluff/skills). */
     public static final int UNIT_SELECTOR = 2;
+    /** Viewer mode: pick a unit to submit a "research unit" request for. */
     public static final int UNIT_RESEARCH = 3;
     /**
      *
@@ -102,65 +131,122 @@ public class UnitViewerDialog extends JFrame
     @Serial
     private static final long serialVersionUID = -7210333306969855153L;
     // how long after a key is typed does a new search begin
+    /** Max gap, in milliseconds, between keystrokes for the type-ahead list search to be treated as a continuation rather than a new search. */
     private final static int KEY_TIMEOUT = 1000;
+    /** Padding used by {@link #makeLength(String, int)} to right-pad fixed-width list columns. */
     private static final String SPACES = "                        ";
     // };
     // these indices should match up with the static values in the
     // MekSummaryComparator
+    /** Labels for the sort combo box; "Year" is commented out/unused, a leftover from an earlier version. */
     private final String[] saSorts = { "Name", "Ref", "Weight", "BV" };// , "Year"
     // frame which owns the dialog
+    /** Owning main frame; used to anchor other dialogs spawned from here (e.g. failure/input dialogs). */
     private final CMainFrame clientGUI;
+    /** "Please wait" indicator shown by the caller while units load; hidden once {@link #run()} finishes filtering. */
     private final UnitLoadingDialog unitLoadingDialog;
+    /** Tech level filter combo (see {@link #populateChoices()}). */
     private final JComboBox<String> chType = new JComboBox<>();
+    /** Unit type filter combo (Mek, Tank, etc., plus "All"). */
     private final JComboBox<String> chUnitType = new JComboBox<>();
+    /** Weight class filter combo, plus "All". */
     private final JComboBox<String> chWeightClass = new JComboBox<>();
+    /** Sort order combo; indices correspond to {@link #saSorts} and to {@code MekSummaryComparator}'s sort constants. */
     private final JComboBox<String> chSort = new JComboBox<>();
+    /** SpringLayout container for the list + readout pane(s); rebuilt on every {@link #paintScreen(boolean)} call. */
     private final JPanel textBoxSpring = new JPanel(new SpringLayout());
+    /** Top-level SpringLayout container for the whole window's contents; rebuilt on every {@link #paintScreen(boolean)} call. */
     private final JPanel springHolder = new JPanel(new SpringLayout());
+    /** SpringLayout container for the fluff pane, shown only when fluff is being displayed. */
     private final JPanel fluffBoxSpring = new JPanel(new SpringLayout());
     private final JButton bCancel = new JButton("Close");
+    /** "Select" button; only shown when {@link #viewerType} != {@link #UNIT_VIEWER} (see {@link #paintScreen(boolean)}). */
     private final JButton bSelect = new JButton("Select");
+    /** HTML pane intended to show the unit's basic readout; population is currently disabled (see {@link #previewMech(Entity)}), so this pane is effectively always blank. */
     private final JTextPane mekViewLeft;
+    /** HTML pane intended to show the unit's loadout readout; population is currently disabled (see {@link #previewMech(Entity)}), so this pane is effectively always blank. */
     private final JTextPane mekViewRight;
+    /** HTML pane showing the selected unit's fluff/history text, when {@link #viewFluff} is enabled and the unit has fluff. */
     private final JTextPane unitFluff;
+    /** Top panel: filter combos, preview image, and (when expanded) the advanced search rows. */
     private final JPanel pUpper = new JPanel();
     private final IClient client;
+    /** Which of {@link #UNIT_VIEWER}, {@link #OMNI_VARIANT_SELECTOR}, {@link #UNIT_SELECTOR}, {@link #UNIT_RESEARCH} this instance is running as. */
     private final int viewerType;
+    /** Whether the fluff pane should be shown; sourced from the {@code VIEW_FLUFF} client config parameter. */
     private final boolean viewFluff;
+    /** Small panel holding just {@link #m_bToggleAdvanced}. */
     private final JPanel m_pOpenAdvanced = new JPanel();
+    /** Button toggling the advanced search panel's visibility; its own label text doubles as the collapsed/expanded state flag (see {@link #toggleAdvanced()}). */
     private final JButton m_bToggleAdvanced = new JButton("< Show Advanced Search >");
+    /** Comparison mode ("At Least"/"Equal To"/"No More Than") for the walk MP advanced-search filter. */
     private final JComboBox<String> m_cWalk = new JComboBox<>();
+    /** Walk MP value for the advanced-search filter. */
     private final JTextField m_tWalk = new JTextField(2);
+    /** Comparison mode for the jump MP advanced-search filter. */
     private final JComboBox<String> m_cJump = new JComboBox<>();
+    /** Jump MP value for the advanced-search filter. */
     private final JTextField m_tJump = new JTextField(2);
+    /** Armor threshold combo (Any/25%/50%/75%/90% of theoretical max armor) for the advanced-search filter. */
     private final JComboBox<String> m_cArmor = new JComboBox<>();
+    /** Minimum count for the first "must carry weapon X" advanced-search row. */
     private final JTextField m_tWeapons1 = new JTextField(2);
 
     // private String selectedUnit = null;
+    /** Weapon choice for the first "must carry weapon X" advanced-search row. */
     private final JComboBox<String> m_cWeapons1 = new JComboBox<>();
+    /** Combines the two weapon-count rows: "or" (either sufficient) vs "and" (both required). */
     private final JComboBox<String> m_cOrAnd = new JComboBox<>();
+    /** Minimum count for the second "must carry weapon X" advanced-search row. */
     private final JTextField m_tWeapons2 = new JTextField(2);
+    /** Weapon choice for the second "must carry weapon X" advanced-search row. */
     private final JComboBox<String> m_cWeapons2 = new JComboBox<>();
+    /** Whether the "must carry equipment X" advanced-search filter is active. */
     private final JCheckBox m_chkEquipment = new JCheckBox();
+    /** Equipment choice for the "must carry equipment X" advanced-search filter. */
     private final JComboBox<String> m_cEquipment = new JComboBox<>();
     private final JButton m_bSearch = new JButton("Search");
     private final JButton m_bReset = new JButton("Reset");
+    /** Shows "filtered/total" unit counts after a basic or advanced search. */
     private final JLabel m_lCount = new JLabel();
+    /** Backing model for {@link #mekList}; one formatted line (see {@link #formatMek(MekSummary)}) per unit currently passing the active filters. */
     private final DefaultListModel<String> defaultModel;
+    /** List widget showing the currently-filtered/sorted units; rows are index-aligned with {@link #meksCurrent}. */
     private final JList<String> mekList;
     private JScrollPane listScrollPane = null;
     private JScrollPane leftScrollPane = null;
     private JScrollPane rightScrollPane = null;
     private JScrollPane fluffScrollPane = null;
+    /** The units currently passing the active basic (and, if run, advanced) filters, in sorted order; index-aligned with {@link #mekList}'s rows. */
     private MekSummary[] meksCurrent;
+    /** Accumulates keystrokes for the type-ahead "jump to unit starting with..." search in {@link #keyPressed(KeyEvent)}. */
     private StringBuilder m_sbSearch = new StringBuilder();
+    /** Timestamp (ms) of the last keystroke fed into {@link #m_sbSearch}; used to detect a stale/expired search via {@link #KEY_TIMEOUT}. */
     private long m_nLastSearch = 0;
+    /** Small preview-image panel for the currently-selected unit; actually a {@link MekInfo} instance (cast where used). */
     private JPanel pPreview = new JPanel();
+    /** Panel holding the basic/advanced search rows below the filter combos; rebuilt each time {@link #buildSouthParams(boolean)} runs. */
     private JPanel m_pSouthParams = new JPanel();
+    /** Total number of units passing the basic filters (before any advanced search), used for the "n/total" count label. */
     private int m_count;
+    /** Tech level filter index as of the last {@link #filterMeks(boolean)} call; used to detect when the weapon/equipment combos need repopulating. */
     private int m_old_nType;
+    /** Unit type filter index as of the last {@link #filterMeks(boolean)} call; used to detect when the weapon/equipment combos need repopulating. */
     private int m_old_nUnitType;
 
+    /**
+     * Builds the unit viewer frame: sets the title according to {@code viewer}, wires up all the
+     * filter/preview components, restores previously-saved filter selections from
+     * {@code client}'s config, and registers this instance as the listener for every interactive
+     * component. Does not make the frame visible — callers typically invoke {@link #run()} (on a
+     * background thread, since it performs the first, potentially slow, unit filter pass) to do
+     * that once units are ready.
+     *
+     * @param cMainFrame owning main client frame
+     * @param uld        "please wait" dialog the caller is showing while units load; hidden by {@link #run()}
+     * @param client     connection used to read config/server settings and send resulting chat commands
+     * @param viewer     one of {@link #UNIT_VIEWER}, {@link #OMNI_VARIANT_SELECTOR}, {@link #UNIT_SELECTOR}, {@link #UNIT_RESEARCH}
+     */
     public UnitViewerDialog(CMainFrame cMainFrame, UnitLoadingDialog uld, IClient client, int viewer) {
         super("Unit Viewer");
 
@@ -278,6 +364,13 @@ public class UnitViewerDialog extends JFrame
         addWindowListener(this);
     }
 
+    /**
+     * Fills the basic filter combos (weight class, tech level, unit type — each gaining a
+     * trailing "All" entry) from MegaMek's constant tables, plus the static option lists for the
+     * advanced-search movement/armor/or-and combos, then delegates to
+     * {@link #populateWeaponsAndEquipmentChoices()} for the tech/type-dependent weapon and
+     * equipment lists.
+     */
     private void populateChoices() {
         for (int i = 0; i < EntityWeightClass.SIZE; i++) {
             chWeightClass.addItem(EntityWeightClass.getClassName(i));
@@ -315,6 +408,10 @@ public class UnitViewerDialog extends JFrame
         populateWeaponsAndEquipmentChoices();
     }
 
+    /**
+     * Restores the user's previously-saved weight/tech/unit-type filter selections from
+     * {@code client}'s config (persisted by {@link #saveComboBoxSettings()}), if any.
+     */
     private void populateJComboBoxes() {
 
         /*
@@ -331,6 +428,14 @@ public class UnitViewerDialog extends JFrame
         chUnitType.setSelectedItem(type);
     }
 
+    /**
+     * (Re)builds the search panel below the filter combos. When collapsed, only the toggle
+     * button is shown; when expanded, adds 4 rows: movement filters (walk/jump/armor), weapon
+     * filters, the equipment filter, and the search/reset buttons plus count label. Always
+     * finishes by re-laying-out the whole window via {@link #paintScreen(boolean)}.
+     *
+     * @param showAdvanced whether to build the expanded (advanced) layout or the collapsed one
+     */
     private void buildSouthParams(boolean showAdvanced) {
         if (showAdvanced) {
             m_bToggleAdvanced.setText("> Hide Advanced Search <");
@@ -386,6 +491,7 @@ public class UnitViewerDialog extends JFrame
 
     }
 
+    /** Blanks all 3 preview text panes and clears the small preview image (equivalent to no unit selected). */
     void clearMechPreview() {
         mekViewLeft.setEditable(false);
         mekViewRight.setEditable(false);
@@ -399,6 +505,14 @@ public class UnitViewerDialog extends JFrame
 
     }
 
+    /**
+     * Rebuilds the weapon1/weapon2/equipment advanced-search combo contents to match the
+     * currently-selected tech level and unit type filters (resetting the associated count fields
+     * and the equipment checkbox in the process). Iterates every {@link EquipmentType} known to
+     * MegaMek, applying tech-level-compatibility rules that mirror {@link #filterMeks(boolean)}'s
+     * own tech-level logic, and — for weapons specifically — excluding infantry-only weapons when
+     * the unit type filter is Mek or Tank (since those unit types can't mount them).
+     */
     private void populateWeaponsAndEquipmentChoices() {
         int year = MathUtility.parseInt(client.getServerConfigs("CampaignYear"), 2045);
         m_cWeapons1.removeAllItems();
@@ -460,6 +574,15 @@ public class UnitViewerDialog extends JFrame
         m_cEquipment.invalidate();
     }
 
+    /**
+     * Tears down and rebuilds the window's overall SpringLayout. With {@code fluff} true, adds a
+     * 4th column (the fluff pane) alongside the list/left-readout/right-readout columns; with it
+     * false, only the 3-column layout is built. Also conditionally includes the "Select" button
+     * (omitted for pure {@link #UNIT_VIEWER} mode). Finishes by packing/repainting the window and
+     * returning keyboard focus to {@link #mekList}.
+     *
+     * @param fluff whether the fluff/history column should be part of the layout
+     */
     private void paintScreen(boolean fluff) {
 
         springHolder.removeAll();
@@ -509,6 +632,21 @@ public class UnitViewerDialog extends JFrame
 
     }
 
+    /**
+     * Populates (or clears) the unit preview area for {@code entity}. When {@code entity} is
+     * {@code null}, substitutes a placeholder unit from {@link UnitUtils#createOMG()} purely so
+     * the layout has something valid to lay out, while suppressing actual readout text
+     * ({@code populateTextFields} is forced false in that case).
+     * <p>
+     * Note: a {@link ConfigurableMekViewPanel} is constructed here mainly to verify the unit
+     * loads without throwing; its actual readout text is <b>not</b> currently written into
+     * {@link #mekViewLeft}/{@link #mekViewRight} — those two calls are commented out (see the
+     * "Readouts Disabled" debug log below) — so those two panes are effectively always blank in
+     * the current build regardless of which unit is selected. The fluff pane and preview image
+     * are still populated normally.
+     *
+     * @param entity the unit to preview, or {@code null} to clear the preview
+     */
     void previewMech(Entity entity) {
         Entity currEntity = entity;
         boolean populateTextFields = true;
@@ -561,6 +699,15 @@ public class UnitViewerDialog extends JFrame
         }
     }
 
+    /**
+     * {@link Runnable} entry point, intended to be executed on a background thread after the
+     * caller has already made {@link #unitLoadingDialog} visible. Performs the (potentially slow)
+     * initial basic filter pass via {@link #filterMeks()}, hides the loading dialog, surfaces any
+     * per-file load failures encountered by {@link MekSummaryCache} via a self-showing
+     * {@link UnitFailureDialog}, attempts to restore whichever unit was previously selected
+     * (falling back to no selection if that unit no longer exists or config lookup fails), then
+     * finally shows the preview panel and this frame itself.
+     */
     public void run() {
 
         // Loading meks can take a while, so it will have its own thread.
@@ -588,10 +735,16 @@ public class UnitViewerDialog extends JFrame
         mekList.requestFocus();
     }
 
+    /** Convenience overload: runs the basic filter pass without the "called from advanced search" flag. */
     private void filterMeks() {
         filterMeks(false);
     }
 
+    /**
+     * Overridden so every visibility change re-centers the window on screen and re-packs it; as a
+     * side effect, the window will always snap back to the center of the screen rather than
+     * respecting any position the user may have manually moved it to.
+     */
     @Override
     public void setVisible(boolean show) {
         setLocationRelativeTo(null);
@@ -599,6 +752,21 @@ public class UnitViewerDialog extends JFrame
         pack();
     }
 
+    /**
+     * The "basic" filter pass across every {@link MekSummary} in {@link MekSummaryCache}. Skips
+     * entries whose name starts with "Error" (a hacky guard, per the comment below, against
+     * corrupt/failed unit files leaking into the list). Applies the weight class / tech level /
+     * unit type combo selections, including several special-cased "ALL"/"TW_ALL" branches that
+     * mirror MegaMek's {@link TechConstants} groupings. On completion, updates
+     * {@link #meksCurrent}/{@link #m_count}, refreshes the weapon/equipment combos only if the
+     * tech or unit-type filter actually changed since the previous call (skipped when invoked
+     * from the advanced search, since that reuses the current basic-filtered set), and re-sorts
+     * the results via {@link #sortMeks()}.
+     *
+     * @param calledByAdvancedSearch true when re-run as part of {@link #advancedSearch()} resetting
+     *                               to the full basic-filtered set, to avoid needlessly repopulating
+     *                               the weapon/equipment combos
+     */
     private void filterMeks(boolean calledByAdvancedSearch) {
         Vector<MekSummary> vMeks = new Vector<>(1, 1);
 
@@ -663,6 +831,13 @@ public class UnitViewerDialog extends JFrame
         sortMeks();
     }
 
+    /**
+     * Sorts {@link #meksCurrent} in place using {@code MekSummaryComparator} keyed by the selected
+     * sort combo index (see the project-wide deprecation note on that comparator), then rebuilds
+     * {@link #mekList}'s model from the sorted array via {@link #formatMek(MekSummary)}. Briefly
+     * disables the list and shows a wait cursor while doing so (defensive against larger unit
+     * caches, though typically fast) and refreshes the "n/total" count label.
+     */
     private void sortMeks() {
         Arrays.sort(meksCurrent, new MekSummaryComparator(chSort.getSelectedIndex()));
         defaultModel.clear();
@@ -681,6 +856,11 @@ public class UnitViewerDialog extends JFrame
         repaint();
     }
 
+    /**
+     * Builds one fixed-width display row for {@code mekSummary}: model, chassis, tonnage, BV,
+     * and — only when the server config {@code UseCalculatedCosts} is enabled — a formatted cost
+     * column. Column widths/padding are enforced via {@link #makeLength(String, int)}.
+     */
     private String formatMek(MekSummary mekSummary) {
         String result =
               String.format("%s %s %s %s", makeLength(mekSummary.getModel(), 12), makeLength(mekSummary.getChassis(), 10), makeLength(
@@ -695,6 +875,11 @@ public class UnitViewerDialog extends JFrame
         return result;
     }
 
+    /**
+     * Pads {@code string} with trailing spaces to exactly {@code nLength} characters, or truncates
+     * and appends ".." if longer. (An equivalent private method exists in {@code ArmyViewerDialog};
+     * they are not shared, just independently duplicated.)
+     */
     private String makeLength(String string, int nLength) {
         if (string.length() == nLength) {
             return string;
@@ -705,6 +890,12 @@ public class UnitViewerDialog extends JFrame
         }
     }
 
+    /**
+     * Swaps {@link #m_pSouthParams} for a freshly-built panel in the opposite (basic/advanced)
+     * state. Determines the current state by comparing {@link #m_bToggleAdvanced}'s label text to
+     * the literal collapsed-state string, rather than tracking a boolean flag — a somewhat
+     * fragile mechanism should that label text ever be changed without updating this check.
+     */
     private void toggleAdvanced() {
         pUpper.remove(m_pSouthParams);
         m_pSouthParams = new JPanel();
@@ -715,6 +906,11 @@ public class UnitViewerDialog extends JFrame
         repaint();
     }
 
+    /**
+     * Implements the incremental type-ahead behavior for {@link #mekList}: jumps the list
+     * selection to the first currently-visible unit whose name starts with {@code search}
+     * (case-insensitive), scrolling it into view. No-op if nothing matches.
+     */
     private void searchFor(String search) {
         for (int i = 0; i < meksCurrent.length; i++) {
             if (meksCurrent[i].getName().toLowerCase().startsWith(search)) {
@@ -725,6 +921,29 @@ public class UnitViewerDialog extends JFrame
         }
     }
 
+    /**
+     * Central command dispatcher for every button in this window.
+     * <ul>
+     * <li><b>Cancel</b>: persists the current filter/sort selections then disposes the window.</li>
+     * <li><b>Select</b>: persists filter/sort selections, then branches on {@link #viewerType}:
+     * <ul>
+     * <li>{@link #OMNI_VARIANT_SELECTOR}: prompts, via a sequence of blocking
+     * {@link JOptionPane#showInputDialog} calls on the EDT, for money/comp/fluff modifiers, then
+     * sends an {@code AddOmniVariantMod} chat command. Backing out (cancel/empty) of any prompt
+     * aborts the whole flow via early {@code dispose()} with no chat sent.</li>
+     * <li>{@link #UNIT_SELECTOR}: similarly prompts for fluff text / gunnery / piloting / skills,
+     * computes a weight-class index shifted down by 1 (since index 0 in {@link #chWeightClass} is
+     * "All" — see the comment inline), then sends a {@code createunit} chat command.</li>
+     * <li>{@link #UNIT_RESEARCH}: sends a {@code researchunit} chat command for the selected
+     * unit's summary file, unless that file resolves to the literal string {@code "null"}.</li>
+     * <li>otherwise ({@link #UNIT_VIEWER}): just disposes (this branch is normally unreachable
+     * since the Select button isn't shown in that mode — see {@link #paintScreen(boolean)}).</li>
+     * </ul>
+     * </li>
+     * <li><b>Search / Reset / Toggle Advanced</b>: delegate to {@link #advancedSearch()},
+     * {@link #resetSearch()}, {@link #toggleAdvanced()} respectively.</li>
+     * </ul>
+     */
     public void actionPerformed(ActionEvent actionEvent) {
         if (actionEvent.getSource() == bCancel) {
             saveComboBoxSettings();
@@ -842,6 +1061,19 @@ public class UnitViewerDialog extends JFrame
         }
     }
 
+    /**
+     * Runs the advanced-search predicate ({@link #isMatch(Entity)}) across the current candidate
+     * set. Determines whether a previous advanced search already narrowed the list by parsing the
+     * "n/total" text out of {@link #m_lCount} (rather than comparing {@link #meksCurrent}.length
+     * to {@link #m_count} directly) and, if so, re-runs the basic filter first to reset back to
+     * the full basic-filtered set before narrowing again.
+     * <p>
+     * For every remaining candidate, actually loads the full {@link Entity} from disk via
+     * {@link MekFileParser} — this can be slow for a large candidate set, since it parses every
+     * candidate's unit file rather than relying on the lighter-weight {@link MekSummary} data —
+     * and keeps only those for which {@link #isMatch(Entity)} returns true. Replaces
+     * {@link #meksCurrent} with the matches, clears the preview, and re-sorts/repaints.
+     */
     private void advancedSearch() {
         String s = m_lCount.getText();
         int first = MathUtility.parseInt(s.substring(0, s.indexOf('/')), 0);
@@ -869,6 +1101,30 @@ public class UnitViewerDialog extends JFrame
         paintScreen(false);
     }
 
+    /**
+     * Evaluates the advanced-search predicate against a fully-loaded {@code entity}. Each filter
+     * section below is only checked if the corresponding field/checkbox is actually populated;
+     * every section can independently veto the match by returning {@code false}.
+     * <ul>
+     * <li><b>Walk/Jump MP</b>: only checked if the text field parses to a non-negative int;
+     * compared using "at least" / "equal to" / "no more than" per the paired combo selection.</li>
+     * <li><b>Armor</b>: only checked if the combo selection isn't "Any"; compares the entity's
+     * total armor against a percentage of a theoretical max armor computed as
+     * {@code 2 * totalInternal + 3} — an approximation, not an exact rules-accurate max armor
+     * value.</li>
+     * <li><b>Weapons</b>: two independent "at least N copies of weapon X" conditions. If only one
+     * row is active, it alone must match. If both are active, they're combined via
+     * {@link #m_cOrAnd} ("or" = either sufficient, "and" = both required).</li>
+     * <li><b>Equipment</b>: if {@link #m_chkEquipment} is checked, requires at least one matching
+     * {@link MiscType} and returns that result immediately — meaning when this checkbox is
+     * checked, the equipment check is evaluated last and its outcome is the method's final
+     * answer (a mismatch here can override an otherwise-passing walk/jump/armor/weapon match).
+     * If unchecked, execution falls through to the trailing {@code return true}.</li>
+     * </ul>
+     *
+     * @param entity the fully-loaded unit to test
+     * @return true if {@code entity} satisfies every active advanced-search filter
+     */
     private boolean isMatch(Entity entity) {
 
         int walk = MathUtility.parseInt(m_tWalk.getText(), -1);
@@ -998,6 +1254,11 @@ public class UnitViewerDialog extends JFrame
         return true;
     }
 
+    /**
+     * Clears every advanced-search field back to its default index/blank state, repopulates the
+     * weapon/equipment combos, and re-runs the basic filter — discarding any advanced-search
+     * narrowing currently in effect.
+     */
     private void resetSearch() {
         m_cWalk.setSelectedIndex(0);
         m_tWalk.setText("");
@@ -1013,7 +1274,10 @@ public class UnitViewerDialog extends JFrame
     }
 
     /**
-     * for compliance with ListSelectionListener
+     * ListSelectionListener callback: whenever the highlighted unit in {@link #mekList} changes,
+     * loads the full {@link Entity} for the newly-selected {@link MekSummary} (via
+     * {@link MekFileParser}, so this happens once per click) and refreshes the preview via
+     * {@link #previewMech(Entity)}. Clears the preview if nothing is selected or the load fails.
      */
     public void valueChanged(ListSelectionEvent event) {
 
@@ -1034,6 +1298,13 @@ public class UnitViewerDialog extends JFrame
         }
     }
 
+    /**
+     * ItemListener callback shared by {@link #chSort}, {@link #chWeightClass}, {@link #chType},
+     * and {@link #chUnitType}: re-sorts if the sort combo changed, or re-filters if any of the 3
+     * basic filter combos changed. Afterward, always attempts to restore whichever list entry was
+     * previously selected by value; if that entry no longer exists after the filter/sort change,
+     * the list automatically reverts to no selection.
+     */
     public void itemStateChanged(ItemEvent itemEvent) {
 
         Object currSelection = mekList.getSelectedValue();
@@ -1051,9 +1322,16 @@ public class UnitViewerDialog extends JFrame
         mekList.setSelectedValue(currSelection, true);
     }
 
+    /** KeyListener callback; intentionally unused. */
     public void keyTyped(KeyEvent keyEvent) {
     }
 
+    /**
+     * KeyListener callback. Enter or Escape synthesize a click on {@link #bCancel} (so either key
+     * closes the window the same way Close would). Every keypress also feeds the type-ahead
+     * search buffer {@link #m_sbSearch} — resetting it first if more than {@link #KEY_TIMEOUT} ms
+     * have elapsed since the previous keystroke — and re-runs {@link #searchFor(String)}.
+     */
     public void keyPressed(KeyEvent keyEvent) {
         if ((keyEvent.getKeyCode() == KeyEvent.VK_ENTER) || (keyEvent.getKeyCode() == KeyEvent.VK_ESCAPE)) {
             ActionEvent event = new ActionEvent(bCancel, ActionEvent.ACTION_PERFORMED, "");
@@ -1071,18 +1349,29 @@ public class UnitViewerDialog extends JFrame
         searchFor(m_sbSearch.toString().toLowerCase());
     }
 
+    /** KeyListener callback; intentionally unused. */
     public void keyReleased(KeyEvent keyEvent) {
         // no action on release
     }
 
+    /** WindowListener callback; intentionally unused. */
     public void windowOpened(WindowEvent windowEvent) {
     }
 
+    /**
+     * WindowListener callback: handles the OS window-close ("X") button by persisting the current
+     * filter/sort selections and disposing, mirroring the same path taken by the Close button in
+     * {@link #actionPerformed(ActionEvent)}.
+     */
     public void windowClosing(WindowEvent windowEvent) {
         saveComboBoxSettings();
         dispose();
     }
 
+    /**
+     * Persists the current weight/tech/type/sort filter selections, and (if any) the currently
+     * selected unit's list label, into {@code client}'s config, then saves and pushes the config.
+     */
     private void saveComboBoxSettings() {
         client.getConfig().setParam("UNIT_VIEWER_WEIGHT", (String) chWeightClass.getSelectedItem());
         client.getConfig().setParam("UNIT_VIEWER_TECH", (String) chType.getSelectedItem());
@@ -1097,19 +1386,24 @@ public class UnitViewerDialog extends JFrame
         client.setConfig();
     }
 
+    /** WindowListener callback; intentionally unused. */
     public void windowClosed(WindowEvent windowEvent) {
     }
 
+    /** WindowListener callback; intentionally unused. */
     public void windowIconified(WindowEvent windowEvent) {
     }
 
+    /** WindowListener callback; intentionally unused. */
     public void windowDeiconified(WindowEvent windowEvent) {
     }
 
     // WindowListener
+    /** WindowListener callback; intentionally unused. */
     public void windowActivated(WindowEvent windowEvent) {
     }
 
+    /** WindowListener callback; intentionally unused. */
     public void windowDeactivated(WindowEvent windowEvent) {
     }
 }

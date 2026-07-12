@@ -28,17 +28,52 @@ import mekwars.common.campaign.clientutils.protocol.IClient;
 import mekwars.common.util.SpringLayoutHelper;
 import mekwars.common.util.UnitUtils;
 
+/**
+ * Dialog that lets a player spend "Reward Points" (RP) — a MekWars meta-currency awarded for
+ * completing campaign objectives, whose display name is customizable via the server configs
+ * {@code RPLongName}/{@code RPShortName} — on one of several reward types. Which reward types are
+ * actually offered is controlled entirely by server config booleans checked in the constructor
+ * (e.g. {@code AllowUnitsForRewards}, {@code AllowTechsForRewards},
+ * {@code AllowInfluenceForRewards}, {@code AllowCBillsForRewards}, {@code GlobalRepodAllowed},
+ * {@code AllowRepairsForRewards}, {@code AllowFactoryRefreshForRewards}). Supported reward types:
+ * <ul>
+ *   <li><b>Units</b> — request a new stock unit of a chosen type/weight class/faction build
+ *       table.</li>
+ *   <li><b>Techs</b> — hire additional AsTechs/techs, either a flat quantity or (with advanced
+ *       repairs enabled) a specific experience tier (Green/Reg/Vet/Elite).</li>
+ *   <li><b>RePod</b> — re-roll or hand-pick a new pod-mounted equipment configuration for an
+ *       owned OmniMek, either at random (half cost) or via {@link RePodSelectorDialog}.</li>
+ *   <li><b>Refresh</b> — reduce/refresh the production queue delay on one of the player's
+ *       faction's unit factories.</li>
+ *   <li><b>Repair</b> — repair armor/critical damage on a selected damaged hangar unit.</li>
+ *   <li>Convert RP directly into C-Bills or Influence (whichever server-configured currency
+ *       names apply).</li>
+ * </ul>
+ * The constructor builds and immediately displays a modal {@link javax.swing.JOptionPane}-based
+ * dialog; confirming with "Okay" sends the corresponding {@code userewardpoints}/{@code repod}/
+ * {@code refreshFactory} chat command to the server.
+ */
 public final class RewardPointsDialog implements java.awt.event.ActionListener, java.awt.event.KeyListener {
 
+    /** Action command for the "OK" button. */
     private final static String okayCommand = "Okay";
+    /** Action command for the "Cancel" button. */
     private final static String cancelCommand = "Cancel";
+    /** Action/reward-type command for requesting a new unit as a reward. */
     private final static String unitCommand = "Units";
+    /** Action command for the unit weight-class combo box. */
     private final static String weightCommand = "Weight";
+    /** Action command for the top-level reward-type combo box. */
     private final static String rewardCommand = "Reward";
+    /** Action command for the faction/house build-table combo box. */
     private final static String factionCommand = "House";
+    /** Action/reward-type command for the RePod reward option. */
     private final static String rePodCommand = "RePod";
+    /** Action/reward-type command for the factory-refresh reward option. */
     private final static String refreshCommand = "Refresh";
+    /** Action command for the tech-tier (Green/Reg/Vet/Elite) combo box. */
     private final static String techComboCommand = "TechCombo";
+    /** Action/reward-type command for the unit-repair reward option. */
     private final static String repairCommand = "Repair";
     //store the client backlink for other things to use
     private final IClient client;
@@ -46,6 +81,7 @@ public final class RewardPointsDialog implements java.awt.event.ActionListener, 
 
     //TEXT FIELDS
     //tab names
+    /** Displays the computed cost/result preview for the currently selected reward configuration; updated by nearly every handler in this class. */
     private final javax.swing.JLabel costLabel = new javax.swing.JLabel();
     private final javax.swing.JLabel factionLabel = new javax.swing.JLabel("House Table:",
           javax.swing.SwingConstants.TRAILING);
@@ -62,24 +98,45 @@ public final class RewardPointsDialog implements java.awt.event.ActionListener, 
           javax.swing.SwingConstants.TRAILING);
     private final javax.swing.JLabel repairLabel = new javax.swing.JLabel("Repair:",
           javax.swing.SwingConstants.TRAILING);
+    /** Weight-class choices offered for the "Units" reward type. */
     private final String[] weightChoices = { "Light", "Medium", "Heavy", "Assault" };
     private final javax.swing.JComboBox<String> weightComboBox = new javax.swing.JComboBox<>(weightChoices);
+    /** Top-level reward-type selector; its available entries depend on which "AllowXForRewards" server configs are enabled. */
     private final javax.swing.JComboBox<String> rewardsComboBox;
+    /** Faction/house build table to draw a requested unit from; includes "Common" and, if enabled, "Rare". */
     private final javax.swing.JComboBox<String> factionComboBox;
+    /** Tech experience tier choices, in ascending order, corresponding by index to {@code techComboBox.getSelectedIndex()}. */
     private final String[] techChoices = { "Green", "Reg", "Vet", "Elite" };
     private final javax.swing.JComboBox<String> techComboBox = new javax.swing.JComboBox<>(techChoices);
+    /** Free-form RP quantity/amount input used by several generic reward types (tech hiring without advanced repairs, C-Bills, Influence). */
     private final javax.swing.JTextField amountText = new javax.swing.JTextField(5);
     private final javax.swing.JLabel amountLabel;
     //STOCK DIALOG AND PANE
     private final javax.swing.JDialog dialog;
     private final javax.swing.JOptionPane pane;
+    /** RP cost (or, for currency-conversion rewards, RP amount) computed for the currently selected reward configuration; sent to the server on confirm. */
     int cost;
+    /** Unit type selector ("Mek", and any of Vehicle/Infantry/ProtoMek/BattleArmor/Aero enabled server-side) for the "Units" reward. */
     private javax.swing.JComboBox<String> unitComboBox = new javax.swing.JComboBox<>();
+    /** Chooses between a "Random" (half-cost, server-picked) or "Select" (opens {@link RePodSelectorDialog}) repod. */
     private javax.swing.JComboBox<String> rePodComboBox = new javax.swing.JComboBox<>();
+    /** Lists the player's owned OmniMeks eligible for repodding, formatted as {@code "#<id> <model>"}. */
     private javax.swing.JComboBox<String> pUnitsComboBox = new javax.swing.JComboBox<>();
+    /** Lists the player's faction's unit factories that currently have a nonzero refresh-timer, formatted as {@code "<planet>: <factory>(<ticks>)"}. */
     private javax.swing.JComboBox<String> refreshComboBox = new javax.swing.JComboBox<>();
+    /** Lists the player's hangar units that currently have armor or critical damage, formatted as {@code "#<id> <model>"}. */
     private javax.swing.JComboBox<String> repairComboBox = new javax.swing.JComboBox<>();
 
+    /**
+     * Builds and immediately displays the modal Reward Points dialog. Construction reads a large
+     * number of server config flags to decide which reward categories/sub-options to offer
+     * (see the class Javadoc), populates the corresponding combo boxes, wires up listeners, and
+     * blocks (via {@code dialog.setVisible(true)} at the end of this constructor) until the user
+     * confirms or cancels.
+     *
+     * @param client the client back-link used to read server configs, the player's hangar/house,
+     *               and to send the resulting reward request to the server
+     */
     public RewardPointsDialog(IClient client) {
 
         //save the client
@@ -324,12 +381,21 @@ public final class RewardPointsDialog implements java.awt.event.ActionListener, 
         }
     }
 
+    /** No-op; required by {@link java.awt.event.KeyListener} but this dialog only reacts to key-release events on {@link #amountText}. */
     public void keyTyped(java.awt.event.KeyEvent e) {
     }
 
+    /** No-op; required by {@link java.awt.event.KeyListener} but this dialog only reacts to key-release events on {@link #amountText}. */
     public void keyPressed(java.awt.event.KeyEvent e) {
     }
 
+    /**
+     * Recomputes and redisplays the cost/result preview in {@link #costLabel} whenever the user
+     * types into {@link #amountText}, for the reward types that use a free-form RP amount
+     * (Techs without advanced repairs, RePod, Refresh, C-Bills, Influence). Note there is no
+     * input validation here: if {@code amountText} is empty or non-numeric,
+     * {@link Integer#parseInt(String)} will throw an uncaught {@link NumberFormatException}.
+     */
     public void keyReleased(java.awt.event.KeyEvent e) {
         String selection = (String) rewardsComboBox.getSelectedItem();
         cost = Integer.parseInt(amountText.getText());
@@ -363,6 +429,25 @@ public final class RewardPointsDialog implements java.awt.event.ActionListener, 
         }
     }
 
+    /**
+     * Central handler for every button/combo box in this dialog. Dispatches on the Swing action
+     * command:
+     * <ul>
+     *   <li>{@code okayCommand} — reads the currently selected reward type and sends the matching
+     *       chat command to the server ({@code userewardpoints#<type>#...}, {@code repod...}, or
+     *       {@code refreshFactory...}), then disposes the dialog.</li>
+     *   <li>{@code cancelCommand} — records the cancel button as the pane value and disposes.</li>
+     *   <li>{@code rewardCommand} — the top-level reward type changed; shows/hides the relevant
+     *       sub-panel via {@link #makeVisible(boolean, boolean, boolean)} and recomputes the cost
+     *       preview for the newly selected type.</li>
+     *   <li>{@code rePodCommand} — recomputes the repod cost (halved if "Random" is selected).</li>
+     *   <li>{@code weightCommand}, {@code unitCommand}, {@code factionCommand} — recompute the
+     *       unit-reward RP cost via {@link #getUnitRPCost()}.</li>
+     *   <li>{@code techComboCommand} — recomputes the cost of hiring one tech at the selected
+     *       tier.</li>
+     *   <li>{@code repairCommand} — shows the fixed repair cost from server config.</li>
+     * </ul>
+     */
     public void actionPerformed(java.awt.event.ActionEvent e) {
         String command = e.getActionCommand();
 
@@ -531,6 +616,17 @@ public final class RewardPointsDialog implements java.awt.event.ActionListener, 
         }
     }
 
+    /**
+     * Shows/hides the three mutually-exclusive reward sub-panels according to which reward type
+     * is currently selected, always hiding the tech-tier and repair combo boxes unconditionally
+     * (callers that need those visible — the "Techs" and "Repair" branches of
+     * {@link #actionPerformed(java.awt.event.ActionEvent)} — re-show them immediately afterward,
+     * so call-order matters here).
+     *
+     * @param visible show the unit-type/weight/faction controls (the "Units" reward)
+     * @param repod   show the repod-selection and target-unit controls (the "RePod" reward)
+     * @param refresh show the factory-refresh selection control (the "Refresh" reward)
+     */
     private void makeVisible(boolean visible, boolean repod, boolean refresh) {
         unitComboBox.setVisible(visible);
         weightComboBox.setVisible(visible);
@@ -562,6 +658,24 @@ public final class RewardPointsDialog implements java.awt.event.ActionListener, 
 
     }
 
+    /**
+     * Computes the RP cost of requesting a new unit of the currently selected type/weight class
+     * from the currently selected faction build table. Looks up a base cost from server config
+     * under a key derived from weight class and unit type (e.g. {@code "LightMekRP"} or
+     * {@code "LightVehicleRP"}), then applies a faction multiplier: {@code "Rare"} uses
+     * {@code RewardPointMultiplierForRare}; any other faction that isn't "Common" and isn't the
+     * player's own house uses a per-house-pair multiplier
+     * ({@code "<playerHouse>To<selectedHouse>RewardPointMultiplier"}), falling back to
+     * {@code RewardPointNonHouseMultiplier} if that pair-specific config is a negative sentinel
+     * (i.e. not configured).
+     * <p>
+     * Note the multiplier — a {@code double} server config — is cast to {@code (int)} before
+     * being multiplied into the cost, truncating any fractional multiplier (e.g. a configured
+     * 1.5x effectively becomes 1x/no bonus) unless it is 2.0 or greater. This looks like it may
+     * not match the intended behavior of a fractional multiplier, but is left as-is here.
+     *
+     * @return {@code 0} if unit rewards aren't enabled server-side at all; otherwise the computed RP cost
+     */
     private int getUnitRPCost() {
 
         if (!Boolean.parseBoolean(client.getServerConfigs("AllowUnitsForRewards"))) {return 0;}

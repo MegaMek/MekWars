@@ -67,7 +67,26 @@ import mekwars.common.gui.dialogs.customUnits.ProtoMekMunitionChoicePanel;
 import mekwars.common.util.SpringLayoutHelper;
 
 /**
- * A dialog that a player can use to customize his mech before battle. Currently, only changing pilots is supported.
+ * Dialog that lets a player customize a single unit ({@link #entity}/{@link #unit}) before it is
+ * deployed into battle. Despite the class-level summary this originally shipped with ("only
+ * changing pilots is supported"), pilots are not actually edited here; the panels this dialog
+ * actually builds — conditionally, based on the unit's type and the server's configured game
+ * options — are:
+ * <ul>
+ *   <li>Auto-eject toggle (Meks only).</li>
+ *   <li>Edge-skill reroll preferences (TAC, KO, Head Hit, Explosion), if the pilot has the
+ *       Edge skill.</li>
+ *   <li>Off-board artillery deployment and distance (if the unit carries artillery weapons).</li>
+ *   <li>Per-ammo-bin munition selection (for non-Infantry units, or BattleArmor), respecting
+ *       tech level, faction/server ammo bans, mixed-tech and Clan equipment rules, and the
+ *       server's parts/crit-based repair economy if enabled.</li>
+ *   <li>Machine gun burst-fire settings, if the "tacops_burst" option is enabled (Meks/Vehicles
+ *       only).</li>
+ *   <li>Targeting system selection.</li>
+ * </ul>
+ * Confirming with "Okay" applies all selections directly to the {@link Entity} and sends the
+ * corresponding change(s) to the server as chat commands; "Cancel" simply hides the dialog
+ * without applying anything (see {@link #actionPerformed(ActionEvent)}).
  *
  * @author Ben
  */
@@ -77,35 +96,68 @@ public class CustomUnitDialog extends JDialog implements ActionListener {
 
     @Serial
     private static final long serialVersionUID = 4035217132830883530L;
+    /** "Disable Auto-eject" checkbox for Meks; note the checkbox's meaning is the logical inverse of {@link Mek#isAutoEject()}. */
     private final JCheckBox chAutoEject = new JCheckBox();
+    /** "Deploy Offboard" checkbox, only shown when the unit carries at least one artillery weapon. */
     private final JCheckBox chOffBoard = new JCheckBox();
+    /** Offboard deployment distance in hexes; must be at least 17 (one map sheet) or the change is rejected. */
     private final JTextField fldOffBoardDistance = new JTextField(4);
 
     private final JButton butCancel = new JButton("Cancel");
 
+    /** One {@link MunitionChoicePanel} (or {@link ProtoMekMunitionChoicePanel}) per ammo bin mounted on the unit. */
     private final Vector<MunitionChoicePanel> m_vMunitions = new Vector<>(1, 1);
+    /** Container panel holding all entries of {@link #m_vMunitions}. */
     private final JPanel panMunitions = new JPanel();
 
+    /** One {@link MachineGunChoicePanel} per machine gun critical slot found on the unit. */
     private final Vector<MachineGunChoicePanel> m_vMachineGuns = new Vector<>(1, 1);
+    /** Container panel holding all entries of {@link #m_vMachineGuns}. */
     private final JPanel panMachineGuns = new JPanel();
 
+    /** Panel of Edge-skill reroll-category checkboxes; only populated/shown if the pilot has the Edge skill. */
     private final JPanel panEdgeSkills = new JPanel();
+    /** Whether an available Edge point may be spent to reroll a "Through Armor Critical" (TAC) result. */
     private final JCheckBox tacCB = new JCheckBox("TAC Rolls");
+    /** Whether an available Edge point may be spent to reroll a pilot knockout (KO) roll. */
     private final JCheckBox koCB = new JCheckBox("KO Rolls");
+    /** Whether an available Edge point may be spent to reroll a head-hit result. */
     private final JCheckBox headHitsCB = new JCheckBox("Head Hit Rolls");
+    /** Whether an available Edge point may be spent to reroll an ammo/equipment explosion. */
     private final JCheckBox explosionsCB = new JCheckBox("Explosion Rolls");
+    /** Panel holding the targeting-system selector built by {@link #setupTargetSystems()}. */
     private final JPanel panTargeting = new JPanel();
+    /** The MegaMek unit (Mek, Vehicle, Aero, ProtoMek, Infantry, etc.) being customized. */
     private final Entity entity;
+    /** Client back-link used to query server configs/bans and to send chat commands applying the user's choices. */
     private final IClient client;
+    /** A throwaway, never-connected MegaMek {@link Client} instance created solely so this dialog can read the shared {@code GameOptions} (tech level, house rules like "tacops_burst", "clan_ignore_eq_limits", etc.); it is not attached to any real game session. */
     private final Client mmClient = new Client("temp", "None", 0);
+    /** The pilot assigned to {@link #entity}, consulted for existing Edge preferences and whether Edge is available at all. */
     private final Pilot pilot;
+    /** Whether the server uses the parts/critical-based repair economy ("UsePartsRepair"); affects which munitions are offered as legal choices. */
     private final boolean usingCrits;
+    /** The MekWars campaign wrapper for {@link #entity}, used for target-system lookups and reporting the change back to the server. */
     private final CUnit unit;
+    /** Combo box of legal (non-banned) targeting systems for {@link #unit}. */
     private JComboBox<String> targetSelection = new JComboBox<>();
+    /** Set to {@code true} once the user confirms the dialog via the "Okay" button; queried by {@link #isOkay()}. */
     private boolean okay = false;
+    /** Whether the server allows dumping ammo from the lobby ("lobby_ammo_dump"); recomputed (redundantly, to the same value) on every ammo bin processed in {@link #setupMunitions()}. */
     private boolean canDump = false;
 
-    /** Creates new CustomMechDialog */
+    /**
+     * Builds (but does not by itself show) the customize-unit dialog for a specific unit/pilot
+     * pair. Loads the server's banned-ammo list, then conditionally constructs each sub-panel
+     * (checkboxes, munitions, machine guns, targeting system) depending on the unit's type and
+     * the server's configured game options, laying them out in a scrollable vertical stack above
+     * an Okay/Cancel button row.
+     *
+     * @param client the client back-link (server configs, chat commands, banned ammo/targeting)
+     * @param entity the MegaMek entity being customized
+     * @param pilot  the pilot currently assigned to {@code entity}
+     * @param unit   the MekWars campaign-unit wrapper for {@code entity}
+     */
     public CustomUnitDialog(IClient client, Entity entity, Pilot pilot, CUnit unit) {
         super(client.getMainFrame());
 
@@ -255,10 +307,15 @@ public class CustomUnitDialog extends JDialog implements ActionListener {
         setLocationRelativeTo(null);
     }
 
+    /** Tells the client to (re)load the server's banned-ammo list before munition choices are computed. */
     private void loadAmmo() {
         client.loadBannedAmmo();
     }
 
+    /**
+     * Builds the Edge reroll-category checkbox panel (TAC/KO/Head Hit/Explosion), pre-checking
+     * each box according to the pilot's currently stored Edge preferences.
+     */
     private void setupEdgeSkills() {
 
         panEdgeSkills.setLayout(new SpringLayout());
@@ -276,6 +333,24 @@ public class CustomUnitDialog extends JDialog implements ActionListener {
         SpringLayoutHelper.setupSpringGrid(panEdgeSkills, 4);
     }
 
+    /**
+     * Builds one munition-choice row per ammo bin mounted on {@link #entity}. For each bin, the
+     * full set of munition types sharing its rack size/tonnage is filtered down to the choices
+     * that are actually legal to load, applying (in order): tech-level legality for the
+     * configured campaign year and tech level; server-wide and faction-specific ammo bans;
+     * black-market/parts-cache availability when the crit-based repair economy
+     * ({@link #usingCrits}) is active (unless the munition is already loaded); special-case
+     * exceptions allowing IS units to use certain legacy Level 1 ammo and allowing mixed-tech
+     * units to mix IS/Clan ammo; a Clan restriction on IS-only ordnance
+     * (semi-guided/Thunder-family munitions) unless "clan_ignore_eq_limits" is set; a
+     * "minefields" option check for minefield-delivering munitions; ProtoMek-only and
+     * ProtoMek-machine-gun-only ammo restrictions; and an Aero restriction to ATM ammo only.
+     * <p>
+     * ProtoMeks get a {@link ProtoMekMunitionChoicePanel}; all other unit types (including, per
+     * an inline TODO-style comment in this method, Aero units) get a plain
+     * {@link MunitionChoicePanel}. The resulting panels are laid out in 2 columns, or 4 columns
+     * if there are more than 10 ammo bins.
+     */
     private void setupMunitions() {
         int munitionsRows = 0;
         panMunitions.setLayout(new SpringLayout());
@@ -450,6 +525,12 @@ public class CustomUnitDialog extends JDialog implements ActionListener {
         }
     }
 
+    /**
+     * Scans every critical slot of the unit for mounted machine guns and creates a
+     * {@link MachineGunChoicePanel} (burst-fire setting) for each one found. Only invoked when
+     * the server's "tacops_burst" option is enabled and the unit is not Infantry or Aero. Panels
+     * are laid out in 1 column, or 2 columns if there are 6 or more machine guns.
+     */
     private void setupMachineGuns() {
         int mgRows = 0;
         panMachineGuns.setLayout(new SpringLayout());
@@ -495,6 +576,11 @@ public class CustomUnitDialog extends JDialog implements ActionListener {
         }
     }
 
+    /**
+     * Populates {@link #targetSelection} with the names of targeting systems that are legal for
+     * this unit (i.e. not on the server's banned-targeting-systems list) and pre-selects the
+     * unit's currently equipped targeting system, if found in the list.
+     */
     private void setupTargetSystems() {
         String[] names = unit.getTargetSystem().getNonBannedNameArray(client.getData().getBannedTargetingSystems());
 
@@ -509,6 +595,12 @@ public class CustomUnitDialog extends JDialog implements ActionListener {
         panTargeting.add(targetSelection);
     }
 
+    /**
+     * @param ammo the munition type to check
+     * @return {@code true} if {@code entity} already has this exact ammo type loaded in some bin
+     * (used to still allow re-selecting an already-mounted munition even when the crit-based
+     * repair economy would otherwise disqualify it for lack of available parts).
+     */
     private boolean ammoAlreadyLoaded(AmmoType ammo) {
         for (AmmoMounted mounted : entity.getAmmo()) {
             AmmoType currAmmo = mounted.getType();
@@ -521,10 +613,24 @@ public class CustomUnitDialog extends JDialog implements ActionListener {
         return false;
     }
 
+    /** @return {@code true} if the user confirmed the dialog via "Okay" (as opposed to "Cancel" or closing the window). */
     public boolean isOkay() {
         return okay;
     }
 
+    /**
+     * Handles both the "Okay" and "Cancel" buttons (both register this dialog itself as their
+     * {@link ActionListener}, so the two are distinguished purely by checking the event source).
+     * <p>
+     * On "Cancel" (source == {@link #butCancel}), does nothing but hide the dialog. On any other
+     * source (i.e. "Okay"), applies every pending change directly to {@link #entity}/{@link #unit}
+     * and notifies the server via chat commands: offboard deployment (validating a minimum
+     * distance of 17 hexes, one map sheet), the auto-eject toggle (only sent if it actually
+     * differs from the mek's current setting), Edge reroll preferences, every munition/machine-gun
+     * choice panel's selection (via their {@code applyChoice()} methods), and a targeting-system
+     * change (only sent if the selection differs from the unit's current targeting system). Sets
+     * {@link #okay} to {@code true} before hiding the dialog.
+     */
     public void actionPerformed(ActionEvent actionEvent) {
         if (actionEvent.getSource() != butCancel) {
             // get values
@@ -589,22 +695,27 @@ public class CustomUnitDialog extends JDialog implements ActionListener {
         setVisible(false);
     }
 
+    /** @return the unit being customized; used by child choice panels (e.g. {@link MunitionChoicePanel}) to query mounts/location. */
     public Entity getEntity() {
         return entity;
     }
 
+    /** @return the client back-link, exposed so child choice panels can query server configs/bans. */
     public IClient getClient() {
         return client;
     }
 
+    /** @return whether the server's parts/crit-based repair economy is active; affects which munitions choice panels allow selecting. */
     public boolean isUsingCrits() {
         return usingCrits;
     }
 
+    /** @return whether the server allows ammo dumping from the lobby ("lobby_ammo_dump"). */
     public boolean canDump() {
         return canDump;
     }
 
+    /** @return the throwaway {@link Client} instance used purely to access shared MegaMek game options. */
     public Client getMMClient() {
         return mmClient;
     }
