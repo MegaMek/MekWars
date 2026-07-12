@@ -65,7 +65,18 @@ import mekwars.common.threads.ActivationThread;
 import mekwars.common.util.StringUtils;
 
 /**
- * User List panel
+ * Backs the connected-users list shown in the lower half of {@link CMainPanel}'s side column (below
+ * {@link CPlayerPanel}). Displays every player currently connected to the server — sourced from
+ * {@link CUserListModel}, rendered in a single {@link JList} — sorted/ordered according to whichever mode the
+ * player last chose (persisted via {@code SORT_MODE} / {@code SORT_ORDER} config params and restored in the
+ * constructor). Right-clicking an entry opens {@link UserListPopupListener}'s context menu (e.g. to challenge,
+ * message, or view info about that player).
+ * <p>
+ * Below the list sits a player-count label and an "activity" toggle button that lets the player switch between
+ * Active/Reserve/Login states (delegating to {@link #actionPerformed} which sends the appropriate {@code /c}
+ * chat command). If the server enables a configurable "link area" ({@code Enable_Link_Area}), up to three
+ * clickable link buttons (opening URLs in the system browser) are shown at the very bottom instead of the count
+ * panel alone.
  */
 
 public class CUserListPanel extends JPanel implements ActionListener {
@@ -73,37 +84,74 @@ public class CUserListPanel extends JPanel implements ActionListener {
 
     @Serial
     private static final long serialVersionUID = 6676029823454849117L;
+    /** Sort key: alphabetical by player name. */
     public static int SORT_MODE_NAME = 0;
+    /** Sort key: grouped by house/faction. */
     public static int SORT_MODE_HOUSE = 1;
+    /** Sort key: by experience level. */
     public static int SORT_MODE_EXP = 2;
+    /** Sort key: by player rating/ELO (only used when the server hasn't hidden ratings via {@code HideELO}). */
     public static int SORT_MODE_RATING = 3;
+    /** Sort key: by online status (active/reserve/etc.). */
     public static int SORT_MODE_STATUS = 4;
+    /** Sort key: by user permission level. */
     public static int SORT_MODE_USER_LEVEL = 5;
+    /** Sort key: by player's country. */
     public static int SORT_MODE_COUNTRY = 6;
 
+    /** Sort order: ascending. */
     public static int SORT_ORDER_ASCENDING = 1;
+    /** Sort order: descending. */
     public static int SORT_ORDER_DESCENDING = 2;
+    /** Icon for the activity button when the player is inactive/reserve (invites them to activate). Loaded from {@code ./data/images/activatebutton.(png|jpg)}, or {@code null} if neither file exists. */
     private final Icon activateIcon;
+    /** Icon for the activity button when the player is active (invites them to deactivate). Loaded from {@code ./data/images/deactivatebutton.(png|jpg)}, or {@code null} if neither file exists. */
     private final Icon deactivateIcon;
+    /** Rollover (mouse-over) variant of {@link #activateIcon}. */
     private final Icon mouseActivateIcon;
+    /** Rollover (mouse-over) variant of {@link #deactivateIcon}. */
     private final Icon mouseDeactivateIcon;
+    /** Transient "flash" icon shown briefly by {@link ActivationThread} while transitioning into the activate state. */
     private final Icon activateFlashIcon;
+    /** Transient "flash" icon shown briefly by {@link ActivationThread} while transitioning into the deactivate state. */
     private final Icon deactivateFlashIcon;
+    /** Container for {@link #activityButton} and {@link #countLabel}, stacked vertically. */
     private final JPanel countPanel = new JPanel();
+    /** Displays the current connected-player count (visible only when {@code USER_LIST_COUNT} is set). */
     private final JLabel countLabel = new JLabel();
+    /** Label for the optional server-configured link area (its text comes from {@code Link_Area_Label}). */
     private final JLabel linksLabel = new JLabel();
+    /** Toggle button used to switch the player's active/reserve/login status; see {@link #actionPerformed}. */
     private final JButton activityButton = new JButton();
+    /** First of up to three optional server-configured external link buttons (see {@link #createLinkArea()}). */
     private final JButton linkButton1 = new JButton();
+    /** Second optional server-configured external link button. */
     private final JButton linkButton2 = new JButton();
+    /** Third optional server-configured external link button. */
     private final JButton linkButton3 = new JButton();
+    /** Holds the (up to three) link buttons plus {@link #linksLabel}, shown only when {@code Enable_Link_Area} is true. */
     private final JPanel linksPanel = new JPanel();
+    /** Bottom strip combining {@link #countPanel} and {@link #linksPanel}; only built/used when the link area is enabled. */
     private final JPanel bottomPanel = new JPanel();
+    /** Client session, used for config lookups and to send activity/status chat commands. */
     private final IClient client;
+    /** The visible list widget rendering {@link #cUserListModel}'s entries. */
     private final JList<CUserListModel> cUserListModelJList;
+    /** Backing model listing every connected player and providing the cell renderer/sort state. */
     private final CUserListModel cUserListModel;
+    /** Whether the local player is currently logged in; toggles visibility of player-related UI elsewhere. */
     private boolean isLoggedIn = false;
+    /** Whether this client is running as a dedicated (headless/server-hosting) instance. */
     private boolean isDedicated = false;
 
+    /**
+     * Builds the user list widget and its surrounding chrome: loads the activity-button icon set from disk (if
+     * present under {@code ./data/images/}), sets up the count label and activity toggle button, optionally builds
+     * the server-configured link area (see {@link #createLinkArea()}), and restores the previously-used sort mode
+     * and order from client config ({@code SORT_MODE} / {@code SORT_ORDER}).
+     *
+     * @param client the active client session
+     */
     public CUserListPanel(IClient client) {
         this.client = client;
         setLayout(new BorderLayout());
@@ -238,6 +286,11 @@ public class CUserListPanel extends JPanel implements ActionListener {
 
     }
 
+    /**
+     * Strips the activity button down to a plain, borderless, unfilled image button (no margin/insets), but only
+     * if a custom activate icon image was actually found on disk; otherwise the button keeps the platform's
+     * default look and just shows text (see {@link #setActivateButtonText(String)}).
+     */
     public void resetActivityButton() {
         if (activateIcon != null) {
             activityButton.setUI(new BasicButtonUI());
@@ -250,6 +303,15 @@ public class CUserListPanel extends JPanel implements ActionListener {
         }
     }
 
+    /**
+     * Builds the optional server-configured "link area": up to three small icon buttons (each independently shown
+     * via its own {@code Enable_LinkN_Button} flag) that open a server-configured URL ({@code LinkN_URL}) in the
+     * system's default browser via {@link Desktop#browse}, plus a label ({@code Link_Area_Label}). Assembles
+     * {@link #linksPanel} and {@link #bottomPanel} (count panel above, links below) and adds {@link #bottomPanel}
+     * to this panel. Only called when the server enables {@code Enable_Link_Area}; otherwise {@link #countPanel}
+     * is added directly instead. Browse failures (e.g. malformed URL, unsupported platform) are caught and logged
+     * rather than shown to the user.
+     */
     private void createLinkArea() {
         linksLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
         linksLabel.setAlignmentY(Component.CENTER_ALIGNMENT);
@@ -345,34 +407,47 @@ public class CUserListPanel extends JPanel implements ActionListener {
         add(bottomPanel, BorderLayout.SOUTH);
     }
 
+    /** @return the backing model listing connected players. */
     public CUserListModel getcUserListModel() {
         return cUserListModel;
     }
 
+    /** @return the activity toggle button (Login/Activate/Deactivate). */
     public JButton getActivateButton() {
         return activityButton;
     }
 
+    /** @return the label showing the current connected-player count. */
     public JLabel getCountLabel() {
         return countLabel;
     }
 
+    /** @return whether this client instance is running as a dedicated server host. */
     public boolean isDedicated() {
         return isDedicated;
     }
 
+    /** Marks whether this client instance is running as a dedicated server host. */
     public void setDedicated(boolean isDedicated) {
         this.isDedicated = isDedicated;
     }
 
+    /** @return the client session this panel was built with. */
     public IClient getClient() {
         return client;
     }
 
+    /** @return the {@link JList} widget rendering the user list. */
     public JList<CUserListModel> getcUserListModelJList() {
         return cUserListModelJList;
     }
 
+    /**
+     * Reloads the underlying model (re-fetching/re-sorting the connected-player list) and updates the visible
+     * player-count label to match. Synchronized to avoid concurrent refreshes racing on {@link #cUserListModel}
+     * (this can be invoked both from network-message handling and from UI actions). Any exception during the
+     * model refresh is caught and logged rather than propagated, so the count label update still runs afterward.
+     */
     public synchronized void refresh() {
         try {
             getcUserListModel().refreshModel();
@@ -382,10 +457,16 @@ public class CUserListPanel extends JPanel implements ActionListener {
         countLabel.setText(String.format("Player Count: %s", cUserListModelJList.getModel().getSize()));
     }
 
+    /** @return whether the local player is currently logged in. */
     public boolean isLoggedIn() {
         return isLoggedIn;
     }
 
+    /**
+     * Updates the logged-in flag and relabels the activity button accordingly: "Activate" once logged in (the
+     * player starts in reserve/inactive status after logging in, so the button invites them to activate), or
+     * "Login" once logged out. In both branches the button itself is (re-)enabled.
+     */
     public void setLoggedIn(boolean loggedIn) {
         isLoggedIn = loggedIn;
 
@@ -398,6 +479,13 @@ public class CUserListPanel extends JPanel implements ActionListener {
         }
     }
 
+    /**
+     * Sets the activity button's visible label, but only if no icon image is currently set on the button — when
+     * an icon is present, the text is cleared instead so the icon alone represents the state (see
+     * {@link #resetActivityButton()}/{@link #setActivityButton(Boolean)} for how icons get attached).
+     *
+     * @param s the label to show when the button is text-only (no icon)
+     */
     public void setActivateButtonText(String s) {
         if (activityButton.getIcon() == null) {
             activityButton.setText(s);
@@ -406,6 +494,19 @@ public class CUserListPanel extends JPanel implements ActionListener {
         }
     }
 
+    /**
+     * Flips the activity button between its two active-session states and plays an optional flash animation via
+     * {@link ActivationThread} plus an optional sound cue.
+     * <p>
+     * <b>Naming note:</b> {@code activate == true} means the button should now prompt the player to
+     * <em>activate</em> — i.e. the player has just gone inactive/reserve, so this plays the "deactivate" sound
+     * and flashes from the deactivate icon into the activate icon. Conversely {@code activate == false} means the
+     * player just activated, so the button now prompts "Deactivate". The parameter therefore describes the
+     * button's next prompt/target state, not the player's current status.
+     *
+     * @param activate {@code true} to show the "Activate" prompt (player just went inactive); {@code false} to
+     *                 show the "Deactivate" prompt (player just went active)
+     */
     public void setActivityButton(Boolean activate) {
         if (activate) {
             setActivateButtonText("Activate");
@@ -437,6 +538,7 @@ public class CUserListPanel extends JPanel implements ActionListener {
         }
     }
 
+    /** Enables or disables the activity toggle button without changing its label/icon. */
     public void setActivityButtonEnabled(boolean activityButtonEnabled) {
         activityButton.setEnabled(activityButtonEnabled);
     }
@@ -444,7 +546,11 @@ public class CUserListPanel extends JPanel implements ActionListener {
     /**
      * ActionPerformed method, to comply with ActionListener.
      * <p>
-     * If activityButton is pressed, look at client's current login/activity status and act accordingly.
+     * If activityButton is pressed, look at client's current login/activity status and act accordingly: sends a
+     * {@code /c activate#<clientVersion>} chat command when reserve (moving the player to active status), a
+     * {@code /c deactivate} when active, or a {@code /c login} when logged out. Ignores the event entirely if it
+     * didn't come from {@link #activityButton} (this class only ever registers itself as a listener on that one
+     * button, so in practice the source check always passes).
      */
     public void actionPerformed(java.awt.event.ActionEvent e) {
         if (e.getSource() == activityButton) {

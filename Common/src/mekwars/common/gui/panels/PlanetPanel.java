@@ -30,27 +30,39 @@ import mekwars.common.campaign.clientutils.protocol.IClient;
 import mekwars.common.util.StringUtils;
 
 /**
- * Draws statistic for a specific CPlanet in the stellar map
+ * A small info box, shown in the corner of the stellar map ({@link CMapPanel}), that displays summary statistics
+ * (name, owning faction, and factory count) for whichever {@link Planet} is currently selected on the map.
  *
  * @author Imi
  */
 
 public class PlanetPanel extends JPanel {
 
-    /**
-     *
-     */
+    /** Serialization version identifier. */
     @Serial
     private static final long serialVersionUID = -2092699724451823560L;
+    /** The map this panel is attached to; used to look up the {@link mekwars.common.gui.InnerStellarMap}. */
     private final CMapPanel map;
+    /** Connection/session handle used to resolve the owning house of the displayed planet. */
     private final IClient client;
+    /** Displays the planet's name. */
     private final JLabel name;
     //private JLabel position;
+    /** Displays the owning faction (or "Disputed"), colored to match that faction's map color. */
     private final JLabel influence;
     //private JLabel terrain;
+    /** Displays the planet's factory count. */
     private final JLabel unitFactories;
+    /** The planet currently being displayed; {@code null} (or stale) until {@link #update(Planet)} is called. */
     private Planet planet;
 
+    /**
+     * Builds the panel with placeholder ("???") labels; call {@link #update(Planet)} to populate real data once a
+     * planet has been selected on the map.
+     *
+     * @param panel  the owning map panel, used to resolve map coloring
+     * @param client used to resolve house/faction data when displaying ownership
+     */
     PlanetPanel(CMapPanel panel, IClient client) {
         this.client = client;
 
@@ -70,6 +82,17 @@ public class PlanetPanel extends JPanel {
     }
     //private JLabel warehouses;
 
+    /**
+     * Refreshes all displayed labels to reflect the given planet: name, factory count, and ownership. Ownership is
+     * shown as "Disputed" (in the server-configured disputed color) if there is no owning house, or if the owning
+     * house's influence on the planet is below {@link IClient#getMinPlanetOwnerShip(Planet)}; otherwise the owning
+     * faction's name is shown in that faction's map color.
+     * <p>
+     * As a side effect, this also resets the map control panel's bounds to a fixed 2000x2000 box (unrelated to
+     * planet display, presumably to ensure the control panel stays large enough to lay out its children).
+     *
+     * @param planet the planet to display; must be non-null (its name/influence/factory count are read directly)
+     */
     public void update(Planet planet) {
         this.planet = planet;
         name.setText(String.format("Name: %s", planet.getName()));
@@ -116,13 +139,15 @@ public class PlanetPanel extends JPanel {
         this.planet = planet;
     }
 
+    /** A non-opaque {@link JLabel} with white foreground text, used so labels blend into the map's dark background. */
     private static class WhiteLabel extends JLabel {
-        /**
-         *
-         */
+        /** Serialization version identifier. */
         @Serial
         private static final long serialVersionUID = -8911863558331233209L;
 
+        /**
+         * @param name the initial label text
+         */
         WhiteLabel(String name) {
             super(name);
             setOpaque(false);

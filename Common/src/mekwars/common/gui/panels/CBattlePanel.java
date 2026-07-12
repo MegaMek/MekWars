@@ -34,7 +34,16 @@ import mekwars.common.gui.TableSorter;
 import mekwars.common.gui.models.BattlesModel;
 
 /**
- * The panel where all currently active battles are shown
+ * Backs the "Battles" tab of the main client window (added to {@link CMainPanel} when {@code BATTLE_TAB_VISIBLE} is
+ * set). Shows a sortable table of every currently-hosted game the player's client knows about — host name, player
+ * count, MegaMek version, host comment, and joined player names — sourced from {@link BattlesModel} (via a
+ * {@link TableSorter} wrapper for click-to-sort column headers).
+ * <p>
+ * From this tab a player can double-click a row to join/view that game ({@link IClient#startClient}), or
+ * right-click for a context menu offering "View game" / "Join game" (or "Game is full" if applicable), "Stop
+ * Hosting" (if the player is the host), and — for servers whose host name starts with {@code "[Dedicated]"} — an
+ * extensive set of remote-administration commands (restart, kill, load/save games, change port, manage owners,
+ * view logs, etc.) sent to the dedicated server host as chat-borne "mail" commands.
  *
  * @author Imi (immanuel.scholz@gmx.de)
  */
@@ -43,18 +52,28 @@ import mekwars.common.gui.models.BattlesModel;
 public class CBattlePanel extends JPanel {
 
     /**
-     *
+     * Swing serialization id. No further documentation was provided for this field by the original author.
      */
     @Serial
     private static final long serialVersionUID = -1556406945897698254L;
+    /** Client session, used to look up hosted games and send chat/mail commands to dedicated hosts. */
     private final IClient client;
+    /** The visible table of active battles/games. Its model is actually {@link #battleSorter}, not {@link #battleTableModel} directly. */
     private final JTable BattleTable;
+    /** The underlying (unsorted) table model listing all known active games; wrapped by {@link #battleSorter} for display. */
     private final BattlesModel battleTableModel;
+    /** Scroll pane wrapping {@link #BattleTable}. */
     private final JScrollPane battleScrollPane;
+    /** Sortable wrapper around {@link #battleTableModel} that provides click-to-sort column headers. */
     private final TableSorter battleSorter;
 
     /**
-     * Construct a new battle panel
+     * Builds the battles table: wraps {@link BattlesModel} in a {@link TableSorter} for sortable columns, sets
+     * fixed column widths for host name/player count/version/comment/player names, wires a double-click handler
+     * that joins the clicked game (equivalent to the popup menu's "Join game" — {@code startClient(name, true)}),
+     * and attaches the right-click context menu via {@link BattlePopupListener}.
+     *
+     * @param client the active client session used to query hosted games and send commands
      */
     public CBattlePanel(IClient client) {
         this.client = client;
@@ -87,6 +106,9 @@ public class CBattlePanel extends JPanel {
         BattleTable.getColumnModel().getColumn(4).setMinWidth(10);
         BattleTable.getColumnModel().getColumn(4).setPreferredWidth(300);
 
+        //Double-clicking a row always attempts to join that game. Unlike the right-click "Join game" menu item,
+        //this does not check whether the game is full or whether the player is a moderator first -- the join
+        //attempt is simply sent, and any rejection is presumably handled server-side.
         BattleTable.addMouseListener(new MouseAdapter() {
             @Override
             public void mouseClicked(MouseEvent event) {
@@ -114,10 +136,12 @@ public class CBattlePanel extends JPanel {
         return battleScrollPane;
     }
 
+    /** @return the client session this panel was built with. */
     public IClient getClient() {
         return client;
     }
 
+    /** @return the sortable table model wrapper actually bound to {@link #BattleTable}. */
     public TableSorter getBattleSorter() {
         return battleSorter;
     }
@@ -136,18 +160,36 @@ public class CBattlePanel extends JPanel {
         return BattleTable;
     }
 
+    /**
+     * Right-click context menu for a row in the battles table. Offers actions appropriate to the clicked game:
+     * "View game" / "Join game" (the latter only if the game's status is "Open") when the player can join (game
+     * isn't full, or the player is a moderator per {@link IClient#isMod()}) — otherwise a disabled-looking
+     * "Game is full" placeholder item; "Stop Hosting" if the current player is the game's host; and, if the host
+     * name starts with {@code "[Dedicated]"}, a full "Maintenance" sub-menu of dedicated-server admin commands
+     * (restart/reset/kill/start/stop, load/save game management, log viewing, port/owner/comment/name/max-players
+     * configuration, auto-restart count, and update-URL management). All admin actions are sent as chat "mail"
+     * commands to the dedicated host via {@link #actionPerformed(ActionEvent)}; destructive ones prompt for
+     * confirmation first via {@link JOptionPane}.
+     */
     class BattlePopupListener extends MouseAdapter implements ActionListener {
 
+        /** Shows the popup on mouse-press if this is the platform's popup-trigger event (e.g. right mouse button). */
         @Override
         public void mousePressed(MouseEvent event) {
             maybeShowPopup(event);
         }
 
+        /** Shows the popup on mouse-release if this is the platform's popup-trigger event (some platforms trigger on release rather than press). */
         @Override
         public void mouseReleased(MouseEvent event) {
             maybeShowPopup(event);
         }
 
+        /**
+         * Builds and displays the context menu described in the {@link BattlePopupListener} class comment for the
+         * row under the mouse, if the event is a popup trigger. Silently does nothing if the row's host name no
+         * longer maps to a known {@link MMGame} (e.g. the game disappeared between hover and click).
+         */
         private void maybeShowPopup(MouseEvent event) {
 
             JPopupMenu popup = new JPopupMenu();
@@ -340,6 +382,18 @@ public class CBattlePanel extends JPanel {
             }
         }
 
+        /**
+         * Dispatches every context-menu action built in {@link #maybeShowPopup(MouseEvent)}. Each menu item's action
+         * command is a {@code "PREFIX|hostName"} string; this method matches the prefix and either calls straight
+         * into {@link IClient} ("V"/"J" view/join, "S" stop hosting) or, for the dedicated-server admin commands,
+         * prompts the player (via {@link JOptionPane}, a confirmation dialog for destructive actions or an input
+         * dialog when a value is needed) and then sends the corresponding {@code /c mail <host>,<command> [args]}
+         * chat command to the server, which the dedicated host is expected to interpret. Cancelling any dialog
+         * (returning null / not YES_OPTION) aborts that particular action.
+         * <p>
+         * Note: the "V|" and "J|" checks use independent {@code if} statements rather than {@code else if}, but
+         * since the prefixes are mutually exclusive this has no observable effect.
+         */
         public void actionPerformed(ActionEvent actionEvent) {
             String actionCommand = actionEvent.getActionCommand();
             if (actionCommand.startsWith("V|")) {client.startClient(actionCommand.substring(2), false);}

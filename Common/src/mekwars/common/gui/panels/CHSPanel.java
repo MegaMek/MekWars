@@ -71,25 +71,72 @@ import mekwars.common.util.SpringLayoutHelper;
 import mekwars.common.util.UnitUtils;
 
 /**
- * SHouse Status Panel
+ * The (sub-)House Status panel shown in the MekWars client's main window. It renders, as a single scrollable block
+ * of server-styled HTML, the player's faction's production status: for each unit weight class and unit-type
+ * category the server has enabled (Mek, Vehicle, Infantry, ProtoMek, Battle Armor, Aero), it shows the number of
+ * available production components, clickable open/closed factory icons (with refresh-timer countdowns) that let the
+ * player request a freshly-built unit, and a list of "Bays" containing already-built/donated units sitting in the
+ * hangar that can be requested instead. A "Buy New" / "Buy Used" button row at the bottom opens popup menus so the
+ * player can directly request a new-production or used/salvage unit (and, if the server allows it, queue a personal
+ * pilot) without needing to click through the factory/bay HTML links.
+ * <p>
+ * The panel does not talk to the server directly to fetch this data; instead it is populated incrementally by
+ * {@code FactionStatusScreenUpdateCommand} pushes from the server, which call {@link #addFactionUnit(String)},
+ * {@link #removeFactionUnit(String)}, {@link #addFactionFactory(String)}, {@link #removeFactionFactory(String)},
+ * {@link #changeFactionFactory(String)} and {@link #changeFactionComponents(String)} to keep the in-memory maps
+ * up to date, after which {@link #updateDisplay()} is expected to be called (by the owner of this panel) to
+ * re-render the HTML from the current state of those maps.
  */
-
 public class CHSPanel extends JPanel {
     private static final MMLogger LOGGER = MMLogger.create(CHSPanel.class);
 
     @Serial
     private static final long serialVersionUID = -6985292870326367798L;
+    /** Panel holding the "Buy New" / "Buy Used" buttons, laid out via {@link SpringLayoutHelper}; hidden while {@link #lblInfo} is showing rollover text (see {@link #setInfoText(String)}). */
     private final JPanel hsButtonSpringPanel;
+    /**
+     * Label used in place of the buy-button row to show contextual rollover/status text (e.g. hovering over a
+     * factory icon). Its minimum size is captured lazily from {@link #hsButtonSpringPanel}'s size the first time
+     * it's shown, so the label and button row occupy the same footprint when swapped via {@link #setInfoText(String)}.
+     */
     private final JLabel lblInfo = new JLabel();
+    /**
+     * Component ("mini-tick") counts per weight/type combo. Keyed by {@code "<weight>$<type>"} (both as their
+     * integer string forms), value is {@code "<currentComponents>$<producibleUnits>"}. Populated/replaced wholesale
+     * by {@link #changeFactionComponents(String)}.
+     */
     private final TreeMap<String, String> componentsInfo;
+    /**
+     * Known factories, keyed by {@code "<weight>$<type>"}, each mapping to a nested {@link TreeMap} keyed by
+     * {@code "<planet>$<factoryName>"} (sorted alphabetically by world) whose value encodes
+     * {@code "<founder>$<planet>$<factoryName>$<timeToRefresh>$<accessLevel>$<factoryID>"}. Maintained by
+     * {@link #addFactionFactory(String)}, {@link #removeFactionFactory(String)} and {@link #changeFactionFactory(String)}.
+     */
     private final TreeMap<String, TreeMap<String, String>> factoriesInfo;
+    /**
+     * Units currently sitting in the hangar/donation bays, keyed by {@code "<weight>$<type>"} to a {@link Vector} of
+     * {@link HSMek} wrappers. Maintained by {@link #addFactionUnit(String)} and {@link #removeFactionUnit(String)}.
+     */
     private final TreeMap<String, Vector<HSMek>> unitsInfo;
+    /** Single shared listener for every "Buy New"/"Buy Used" popup menu item; parses the action command and issues the actual purchase/queue request. */
     private final BuyPopupListener myPopup;
+    /** The client/campaign connection supplying server config values and the active player/campaign data. */
     private final IClient client;
+    /** The local player, cached once at construction time from {@code client.getCampaign().getPlayer()}. */
     private final CPlayer thePlayer;
+    /** Read-only HTML pane that renders the status table/bays built by {@link #updateDisplay()}. */
     private final JEditorPane mainPane = new JEditorPane();
+    /** Display name of the (sub-)faction this panel is showing status for; set via {@link #setFactionName(String)} and used as the status table's header. */
     private String HouseName;
 
+    /**
+     * Builds the panel layout: a scrollable {@link #mainPane} on top (via {@link GridBagLayout}) and a bottom row
+     * containing the "Buy New"/"Buy Used" buttons (or, alternately, {@link #lblInfo} when rollover text is being
+     * shown). Also initializes the empty {@link #componentsInfo}/{@link #factoriesInfo}/{@link #unitsInfo} maps that
+     * later get populated by the {@code addFaction*}/{@code changeFaction*} methods as server updates arrive.
+     *
+     * @param client the client/campaign connection this panel reads player/config data from
+     */
     public CHSPanel(IClient client) {
         setLayout(new GridBagLayout());
         this.client = client;
@@ -166,23 +213,49 @@ public class CHSPanel extends JPanel {
     }
 
     // BUY MENU METHODS AND LISTENERS
+    /**
+     * Intentionally empty {@link ActionListener} for the "Buy New" button. The button also has a
+     * {@link MouseAdapter#mousePressed(MouseEvent)} handler ({@link #buyNewUnitMouseEvent(MouseEvent)}) that opens
+     * the popup menu on mouse-down; this action-performed handler exists only to satisfy the method-reference
+     * listener registration and does nothing. Quirk: because popup opening lives in {@code mousePressed} rather
+     * than {@code actionPerformed}, activating the button via keyboard (Enter/Space while focused) fires this
+     * empty handler and will not open the buy menu — the button is effectively mouse-only.
+     */
     private void buyNewButtonActionPerformed(ActionEvent event) {
     }// do nothing on action
 
-    // make popup on press or release of New button
+    /** Opens the "Buy New" popup menu at the mouse-press location on the Buy New button. */
     private void buyNewUnitMouseEvent(MouseEvent event) {
         JPopupMenu buy = createBuyNewPopupMenu();
         buy.show(event.getComponent(), event.getX(), event.getY());
     }
 
+    /**
+     * Intentionally empty {@link ActionListener} for the "Buy Used" button; see
+     * {@link #buyNewButtonActionPerformed(ActionEvent)} for why this is a deliberate no-op and the resulting
+     * keyboard-activation quirk.
+     */
     private void buyUsedButtonActionPerformed(ActionEvent event) {
     }// do nothing
 
+    /** Opens the "Buy Used" popup menu at the mouse-press location on the Buy Used button. */
     private void buyUsedUnitMouseEvent(MouseEvent event) {
         JPopupMenu buy = createBuyUsedPopupMenu();
         buy.show(event.getComponent(), event.getX(), event.getY());
     }
 
+    /**
+     * Builds the "Buy New" popup menu: one submenu per unit-type category the server has enabled (Mek always
+     * present; Vehicle/Infantry/ProtoMek/Battle Armor/Aero gated by the corresponding {@code Use<Type>} server
+     * config flag), each containing four weight-class items (Light/Medium/Heavy/Assault) whose action command is
+     * {@code "BUY|<WEIGHT>|<unitTypeConstant>"}. If the server allows personal pilot queues
+     * ({@code AllowPersonalPilotQueues}), an additional "Pilots" submenu is added with per-unit-type,
+     * per-weight-class items using action command {@code "BUYP|<unitTypeConstant>|<weightConstant>"} (note the
+     * argument order is swapped relative to the unit-buying commands). Every item shares the single
+     * {@link #myPopup} listener, which is responsible for interpreting the action command and issuing the request.
+     *
+     * @return a freshly-built popup menu reflecting the server's currently enabled unit types
+     */
     private JPopupMenu createBuyNewPopupMenu() {
         JMenu tmenu;
         JPopupMenu buy = new JPopupMenu();
@@ -383,6 +456,14 @@ public class CHSPanel extends JPanel {
         return buy;
     }
 
+    /**
+     * Builds the "Buy Used" popup menu: same per-unit-type/weight-class structure as
+     * {@link #createBuyNewPopupMenu()}, gated by the same server config flags, but action commands use the
+     * {@code "BUYU|<WEIGHT>|<unitTypeConstant>"} prefix instead of {@code "BUY|..."} and there is no pilot-queue
+     * submenu (used units come with their own existing crew).
+     *
+     * @return a freshly-built popup menu reflecting the server's currently enabled unit types
+     */
     private JPopupMenu createBuyUsedPopupMenu() {
         JMenu tmenu;
         JPopupMenu buy = new JPopupMenu();
@@ -533,19 +614,25 @@ public class CHSPanel extends JPanel {
         return buy;
     }
 
+    /** @return the client/campaign connection this panel is bound to. */
     public IClient getClient() {
         return client;
     }
 
     /**
      * Set the faction name. Called in response to FactionStatusScreenUpdateCommand|FN| command.
+     *
+     * @param name the display name to show as the status table's header
      */
     public void setFactionName(String name) {
         HouseName = name;
     }
 
     /**
-     * Clear all faction data.
+     * Clear all faction data. Empties {@link #componentsInfo}, {@link #factoriesInfo} and {@link #unitsInfo};
+     * typically called before repopulating this panel for a different (sub-)faction or on reconnect. Does not
+     * itself trigger a re-render — callers must invoke {@link #updateDisplay()} afterward to reflect the cleared
+     * state in the HTML view.
      */
     public void clearHouseStatusData() {
         componentsInfo.clear();
@@ -556,6 +643,9 @@ public class CHSPanel extends JPanel {
     /**
      * Add a unit to the units' hash. Called from FactionStatusScreenUpdateCommand.java when the client receives
      * FactionStatusScreenUpdateCommand|AU|data command.
+     *
+     * @param unitData {@code "<weight>$<type>$..."} where the remaining {@code $}-delimited tokens are consumed by
+     *                 the {@link HSMek#HSMek(StringTokenizer)} constructor
      */
     public void addFactionUnit(String unitData) {
 
@@ -578,7 +668,10 @@ public class CHSPanel extends JPanel {
 
     /**
      * Remove a unit from the units' hash+vector sets. Called from FactionStatusScreenUpdateCommand.java when client
-     * receives FactionStatusScreenUpdateCommand|RU| command.
+     * receives FactionStatusScreenUpdateCommand|RU| command. If no bucket exists for the given weight/type, or no
+     * unit with the given id is found in it, this is a silent no-op.
+     *
+     * @param unitData {@code "<weight>$<type>$<unitID>"}
      */
     public void removeFactionUnit(String unitData) {
 
@@ -610,6 +703,8 @@ public class CHSPanel extends JPanel {
      * Change the component display for a given weight & type combo. Called from FactionStatusScreenUpdateCommand.java
      * when client receives FactionStatusScreenUpdateCommand|CC| command. Because components are so simple, change is
      * always used and there are no adds/removes.
+     *
+     * @param componentData {@code "<weight>$<type>$<currentPP>$<producibleUnits>"}
      */
     public void changeFactionComponents(String componentData) {
 
@@ -628,7 +723,11 @@ public class CHSPanel extends JPanel {
 
     /**
      * Add a factory. Called from FactionStatusScreenUpdateCommand.java when FactionStatusScreenUpdateCommand|AF|
-     * command received.
+     * command received. A single factory can be a "multi-production" facility capable of building several unit-type
+     * categories at once (encoded as a bitmask in {@code type}, see {@link #canProduce(int, int)}); this method adds
+     * the same factory listing under every unit-type bucket it can build for, via {@link #addFactoryHelper}.
+     *
+     * @param factoryData {@code "<weight>$<typeBitmask>$<founder>$<planet>$<factoryName>$<timeToRefresh>$<accessLevel>$<factoryID>"}
      */
     public void addFactionFactory(String factoryData) {
 
@@ -702,7 +801,15 @@ public class CHSPanel extends JPanel {
     }
 
     /**
-     * Helper used to determine which unit types a multi-fac can produce.
+     * Helper used to determine which unit types a multi-fac can produce. {@code productionCapabilities} is a
+     * bitmask built from the {@code UnitFactory.BUILD_*} flag constants; this decodes it by repeatedly subtracting
+     * the largest-remaining flag value that still fits, checking at each step whether the subtracted flag
+     * corresponds to {@code type_id}. {@code UnitFactory.BUILD_ALL} (0) is special-cased up front to mean "can
+     * build everything".
+     *
+     * @param type_id                the {@code Unit.*} type constant being tested
+     * @param productionCapabilities the factory's raw production-capability bitmask
+     * @return {@code true} if the factory can build unit type {@code type_id}
      */
     private boolean canProduce(int type_id, int productionCapabilities) {
 
@@ -758,6 +865,15 @@ public class CHSPanel extends JPanel {
     /**
      * Private method called only from addFactionFactory. Abstracts out some repetitive code that checks for factory
      * vectors and creates missing listings.
+     *
+     * @param weight        weight class index (0..3)
+     * @param type          the specific {@code Unit.*} type this listing is being recorded under
+     * @param timeToRefresh turns/time remaining until the factory produces its next unit (0 = ready now)
+     * @param founder       the house/faction that originally built the factory
+     * @param planet        the world the factory is located on
+     * @param factoryName   the factory's display name
+     * @param accessLevel   minimum sub-faction access level required to see/use this factory
+     * @param factoryID     server-side identifier for this factory, echoed back in purchase requests
      */
     private void addFactoryHelper(int weight, int type, int timeToRefresh, String founder, String planet,
           String factoryName, int accessLevel, String factoryID) {
@@ -780,6 +896,8 @@ public class CHSPanel extends JPanel {
      * Usually after a world changes hands.
      * <p>
      * Format: FactionStatusScreenUpdateCommand|RF|weight$metatype$planet$name|
+     *
+     * @param factoryData {@code "<weight>$<typeBitmask>$<planet>$<factoryName>"}
      */
     public void removeFactionFactory(String factoryData) {
 
@@ -823,6 +941,11 @@ public class CHSPanel extends JPanel {
 
     /**
      * Helper that abstracts out some repetitive checks from removeFactionFactory.
+     *
+     * @param weight      weight class index (0..3)
+     * @param type        the specific {@code Unit.*} type bucket to remove the factory from
+     * @param planet      the world the factory is located on
+     * @param factoryName the factory's display name
      */
     private void removeFactoryHelper(int weight, int type, String planet, String factoryName) {
 
@@ -841,6 +964,8 @@ public class CHSPanel extends JPanel {
     /**
      * Change a factory's information. Used to update refresh times. Format:
      * FactionStatusScreenUpdateCommand|CF|weight$metatype$name$planet$timetorefresh|
+     *
+     * @param factoryData {@code "<weight>$<typeBitmask>$<planet>$<factoryName>$<timeToRefresh>$<accessLevel>$<factoryID>"}
      */
     public void changeFactionFactory(String factoryData) {
 
@@ -889,7 +1014,18 @@ public class CHSPanel extends JPanel {
     }
 
     /**
-     * Helper that abstracts out some repetitive checks from checkFactionFactory.
+     * Helper that abstracts out some repetitive checks from checkFactionFactory. Looks up the existing entry
+     * (logging a debug message and bailing out if the weight/type bucket or the specific factory can't be found)
+     * purely to recover its {@code founder} value, which isn't part of the incoming change data, then overwrites
+     * the entry with the new refresh time/access level/factory id.
+     *
+     * @param weight        weight class index (0..3)
+     * @param type          the specific {@code Unit.*} type bucket to update
+     * @param planet        the world the factory is located on
+     * @param factoryName   the factory's display name
+     * @param timeToRefresh new turns/time remaining until next production
+     * @param accessLevel   new minimum sub-faction access level required to use this factory
+     * @param factoryID     new server-side identifier for this factory
      */
     private void changeFactoryHelper(int weight, int type, String planet, String factoryName, int timeToRefresh,
           int accessLevel, String factoryID) {
@@ -919,6 +1055,36 @@ public class CHSPanel extends JPanel {
               String.format("%s$%s$%s$%s$%s$%s", founder, planet, factoryName, timeToRefresh, accessLevel, factoryID));
     }
 
+    /**
+     * Rebuilds and pushes the full HTML content of {@link #mainPane} from the current contents of
+     * {@link #componentsInfo}, {@link #factoriesInfo} and {@link #unitsInfo}. This is the panel's main "render"
+     * step and should be called after any of the {@code addFaction*}/{@code removeFaction*}/{@code changeFaction*}
+     * methods (or {@link #clearHouseStatusData()}) mutate that state.
+     * <p>
+     * Structure of the generated HTML:
+     * <ol>
+     * <li>A header table with one column per weight class (Light/Medium/Heavy/Assault) and one row per enabled
+     * unit-type category that has at least one known factory ({@link #hasFactories(int)}); unit types the server
+     * doesn't use ({@code Use<Type>} config flag) are skipped entirely.</li>
+     * <li>Each cell shows the component ("mini-tick") count and producible-unit count for that weight/type, then,
+     * if the player's sub-faction is allowed to buy new units of that weight/type, either: a countdown icon if every
+     * factory of that weight/type is still refreshing, or one clickable open/closed factory icon per factory
+     * (open = ready to buy now, linking to a {@code MEKWARS/c request#...} command with computed C-bill/Influence/
+     * component costs; closed = still refreshing, showing its refresh time). Factories the player's access level
+     * doesn't permit are skipped (their existence still counts toward "has open factories" bookkeeping).
+     * Non-owning-house purchases get their costs scaled by the {@code NonOriginal*Multiplier} server configs.</li>
+     * <li>A second pass renders "Bays" sections per unit-type/weight listing already-built units available for
+     * donation request (if the player's sub-faction is allowed to buy used units of that type/weight). Units are
+     * sorted alphabetically by name, with ties broken by gunnery, then piloting, then battle-damage string; runs of
+     * otherwise-identical units are collapsed into a single "N x Name (gunnery/piloting)" entry. Each entry links to
+     * a {@code MEKINFO...} URL (handled elsewhere to open {@link #showInfoWindow}) and, when Advanced Repairs is in
+     * use, is colored based on damage severity (blue = destroyed/can't start up, red = critical damage, yellow =
+     * armor damage only).</li>
+     * </ol>
+     * The resulting HTML string entirely replaces {@code mainPane}'s previous content (cleared to {@code ""} first)
+     * rather than being incrementally patched, which is simple but means the whole status screen re-renders on
+     * every single incoming update.
+     */
     public void updateDisplay() {
 
         // Returns the Private Status for Members only
@@ -1271,6 +1437,12 @@ public class CHSPanel extends JPanel {
         mainPane.repaint();
     }
 
+    /**
+     * @param type the {@code Unit.*} type to check
+     * @return {@code true} if at least one weight class (0..{@link Unit#ASSAULT}) has any known factory entry for
+     *         this unit type, used by {@link #updateDisplay()} to decide whether to render that type's status row
+     *         at all.
+     */
     private boolean hasFactories(int type) {
 
         for (int weight = 0; weight <= Unit.ASSAULT; weight++) {
@@ -1281,6 +1453,21 @@ public class CHSPanel extends JPanel {
         return false;
     }
 
+    /**
+     * Shows or hides the contextual rollover-info label ({@link #lblInfo}) in place of the Buy New/Buy Used button
+     * row ({@link #hsButtonSpringPanel}); presumably wired up elsewhere (e.g. a hyperlink hover listener over the
+     * status HTML) to surface details about whatever the mouse is currently over.
+     * <p>
+     * Passing {@code null} or an empty string hides the label and restores the button row. Passing non-empty text
+     * shows the label with that text and hides the buttons; the label's minimum size is captured from the button
+     * row's current size the very first time this happens (when {@link #lblInfo} still has zero width/height), so
+     * that swapping between the two doesn't change the panel's overall footprint. If the button row hasn't been
+     * laid out yet (size still zero) on that first call, the captured minimum size will itself be zero, and later
+     * calls will never re-capture it since the check only looks at {@link #lblInfo}'s own size, not the button
+     * row's.
+     *
+     * @param s the text to show in the info label, or {@code null}/empty to show the buy buttons instead
+     */
     public void setInfoText(String s) {
         lblInfo.setText(s);
         if (s == null) {
@@ -1305,6 +1492,21 @@ public class CHSPanel extends JPanel {
         }
     }
 
+    /**
+     * Opens a standalone preview window (a plain {@link javax.swing.JFrame}, not a modal dialog) showing a unit's
+     * loadout/stats via {@link MWUnitDisplay}, used when the user clicks one of the {@code MEKINFO...} hyperlinks
+     * embedded in the status HTML built by {@link #updateDisplay()}. Builds a throwaway single-person {@link Crew}
+     * with the given gunnery/piloting skills (the same gunnery value is used for all three weapon-skill slots) purely
+     * to drive the stat display, and applies the supplied battle-damage string if non-trivial. The {@code bv}
+     * parameter is accepted but not used by this method.
+     *
+     * @param mekFile      unit definition file identifying which unit to load/display
+     * @param bv           battle value of the unit (currently unused here)
+     * @param gunnery      gunnery skill to assign the preview crew (applied to all weapon-skill slots)
+     * @param piloting     piloting skill to assign the preview crew
+     * @param battleDamage encoded battle-damage string (see {@link UnitUtils#applyBattleDamage}); ignored if it
+     *                     trims down to length &lt;= 1
+     */
     public void showInfoWindow(String mekFile, int bv, int gunnery, int piloting, String battleDamage) {
         Entity unitEntity;
         CUnit embeddedUnit = new CUnit();

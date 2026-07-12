@@ -58,24 +58,40 @@ import mekwars.common.gui.models.BlackMarketPartsModel;
 import mekwars.common.util.SpringLayoutHelper;
 
 /**
- * Black Market Parts Panel
+ * A sub-tab of the black market UI that lists spare/replacement parts (as opposed to whole units) available for
+ * purchase, backed by a {@link BlackMarketPartsModel}. Displays a sortable table of parts and a single "Buy"
+ * button; double-clicking a row is equivalent to selecting it and clicking Buy. Buying prompts for a quantity,
+ * validates it against availability and the player's money, then sends a {@code buyparts} campaign command to the
+ * server — the server is the source of truth, so no local inventory/money state is mutated here.
  */
 
 public class CBMPartsPanel extends JPanel {
 
-    /**
-     *
-     */
+    /** Serialization version identifier. */
     @Serial
     private static final long serialVersionUID = -5553918525846016147L;
+    /** The sortable table of available black-market parts. */
     private final JTable tblMarket = new JTable();
+    /** Connection/session handle used to send buy commands and read player/money state. */
     private final IClient client;
+    /** Triggers the buy flow for the currently-selected part; disabled until a valid row is selected. */
     private final JButton btnBuy = new JButton("Buy");
+    /** Container that lays out {@link #btnBuy} (and any future buttons) in a spring layout. */
     private final JPanel pnlBuyButtons = new JPanel();
+    /** The player's campaign, used to resolve a table row's internal part name to a real {@link BMEquipment}. */
     private final CCampaign theCampaign;
+    /** Table model providing the black-market part listing and column metadata for this parts type. */
     private final BlackMarketPartsModel blackMarketPartsModel;
+    /** The equipment corresponding to the currently-selected table row; {@code null} if nothing valid is selected. */
     private BMEquipment bme;
 
+    /**
+     * Builds the parts table (with sorting, custom cell rendering, and row-selection/double-click handling) and the
+     * Buy button, then performs an initial {@link #refresh()} to populate the table from the model.
+     *
+     * @param client the client used to reach campaign/player state and send buy requests
+     * @param type   the black-market part category this panel lists, passed through to {@link BlackMarketPartsModel}
+     */
     public CBMPartsPanel(IClient client, String type) {
         setLayout(new java.awt.GridBagLayout());
         this.client = client;
@@ -87,6 +103,7 @@ public class CBMPartsPanel extends JPanel {
 
         btnBuy.addActionListener(this::btnBuyPartsPerformed);
 
+        // Double-clicking a row is a shortcut for selecting it and clicking Buy.
         tblMarket.addMouseListener(new MouseAdapter() {
             @Override
             public void mouseClicked(MouseEvent mouseEvent) {
@@ -106,6 +123,9 @@ public class CBMPartsPanel extends JPanel {
         sorter.addMouseListenerToHeaderInTable(tblMarket);
         tblMarket.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         ListSelectionModel rowSM = tblMarket.getSelectionModel();
+        // Enables/disables the Buy button based on whether the newly-selected row resolves to real equipment.
+        // NOTE: if the "part" cell value is null, this leaves btnBuy in whatever enabled state it already had
+        // rather than disabling it, since setEnabled() is only called inside the `part != null` branch.
         rowSM.addListSelectionListener(listSelectionEvent -> {
             //ignore dragging
             if (listSelectionEvent.getValueIsAdjusting()) {
@@ -176,10 +196,14 @@ public class CBMPartsPanel extends JPanel {
     }
 
     /**
-     * Called from an action listener. Opens a dialo for input, checks the input, and places a bid with the server if
-     * the bid is sufficient.
+     * Called from an action listener. Opens a dialog asking how many units of the selected part to buy, validates
+     * the entered amount against both the available stock ({@link BMEquipment#getAmount()}) and the player's
+     * current money, and — if valid — sends a {@code buyparts} campaign chat command to the server. Does not
+     * update any local state itself; the server response drives the eventual UI refresh. Silently returns (no
+     * dialog) if nothing is selected, the input is empty/cancelled, or parsing the amount throws (in which case an
+     * error dialog is shown instead).
      *
-     * @param evt
+     * @param evt the triggering action event; only its source semantics matter, not its contents
      */
     private void btnBuyPartsPerformed(ActionEvent evt) {
         int row = tblMarket.getSelectedRow();
@@ -230,6 +254,14 @@ public class CBMPartsPanel extends JPanel {
         }
     }//end btnBuyPartsPerformed
 
+    /**
+     * Resolves a table row to the actual {@link BMEquipment} it represents by reading the row's internal (unlocalized)
+     * part-name column and looking it up in the campaign's black-market parts map.
+     *
+     * @param row the table row index (post-sort view index, as used by {@code tblMarket})
+     *
+     * @return the matching equipment, or {@code null} if the row has no internal part name or no match is found
+     */
     public BMEquipment getPartsAtRow(int row) {
         bme = null;
         String part = (String) tblMarket.getModel().getValueAt(row, BlackMarketPartsModel.INTERNAL_PART);
@@ -241,6 +273,10 @@ public class CBMPartsPanel extends JPanel {
         return bme;
     }
 
+    /**
+     * Rebuilds and re-lays-out {@link #pnlBuyButtons} (currently just {@link #btnBuy}) using a centered spring
+     * layout. Safe to call repeatedly; clears existing children first.
+     */
     public void resetButtonBar() {
 
         /*
@@ -256,10 +292,15 @@ public class CBMPartsPanel extends JPanel {
         this.repaint();
     }
 
+    /** Reloads the parts listing from the server/campaign state; delegates to {@link #fireMarketChanged()}. */
     public void refresh() {
         fireMarketChanged();
     }
 
+    /**
+     * Re-pulls the black-market parts data into {@link #blackMarketPartsModel} and resizes the table to exactly
+     * fit its (possibly changed) row count.
+     */
     public void fireMarketChanged() {
         //here's a problem MyBlackMarket has to be created somehow (by parsing BM or from Player data)
         blackMarketPartsModel.refreshModel();

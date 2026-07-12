@@ -48,7 +48,10 @@ import mekwars.common.gui.CMainFrame;
 import mekwars.common.gui.InnerStellarMap;
 
 /**
- * Class used to display Stellar InnerStellarMap in GUI
+ * The "Map" tab of the MekWars client: hosts the interactive stellar map ({@link InnerStellarMap}), a zoom slider,
+ * and an overlay panel showing stats for the currently-selected planet ({@link PlanetPanel}). This class itself
+ * does no drawing; it lays out and wires together those three sub-components using absolute positioning
+ * (a {@code null} layout manager), with bounds recalculated on resize via a {@link ComponentAdapter}.
  * <p>
  * The map is drawn online at demand. Hope the speed is ok.
  *
@@ -81,6 +84,17 @@ public class CMapPanel extends JPanel {
      */
     private final IClient client;
 
+    /**
+     * Assembles the map control overlay (containing {@link #planetPanel} and {@link #slider}) plus the
+     * {@link InnerStellarMap} itself, wires a resize listener that keeps the map and slider bounds in sync with
+     * this panel's size, and — if the map tab is configured as initially visible — activates (selects) the
+     * previously-remembered planet from client config.
+     *
+     * @param client    used to read map/planet configuration and data
+     * @param mainFrame the top-level client window, passed through to the map for dialog parenting etc.
+     * @param xsize     unused; the panel uses a {@code null} layout and is sized by its container instead
+     * @param ysize     unused; the panel uses a {@code null} layout and is sized by its container instead
+     */
     public CMapPanel(IClient client, CMainFrame mainFrame, int xsize, int ysize) {
         this.client = client;
         setLayout(null);
@@ -112,6 +126,8 @@ public class CMapPanel extends JPanel {
         add(slider);
         add(map);
 
+        // Keep the map filling this panel and the slider pinned to the top-right corner as the panel is resized
+        // or first shown.
         addComponentListener(new ComponentAdapter() {
             @Override
             public void componentResized(ComponentEvent componentEvent) {
@@ -178,13 +194,17 @@ public class CMapPanel extends JPanel {
         return map;
     }
 
+    /**
+     * A {@link JSlider} that controls the stellar map's zoom level. Slider values are inversely related to the
+     * map's scale factor (higher slider value = more zoomed in), via {@code scale = 50 / value}; range and default
+     * value/midpoint come from the map's configuration ({@code getReverseScaleMin()}/{@code getReverseScaleMax()}).
+     */
     private class ZoomSlider extends JSlider implements ChangeListener {
-        /**
-         *
-         */
+        /** Serialization version identifier. */
         @Serial
         private static final long serialVersionUID = -2214264904474265394L;
 
+        /** Builds the slider with range and initial value derived from the map's configured zoom limits. */
         ZoomSlider() {
             super(HORIZONTAL, map.getConf().getReverseScaleMin(), map.getConf().getReverseScaleMax(),
                   map.getConf().getReverseScaleMin() +
@@ -192,6 +212,12 @@ public class CMapPanel extends JPanel {
             addChangeListener(this);
         }
 
+        /**
+         * Applies the slider's current value to the map's scale (inversely: {@code 50 / value}) and repaints the
+         * enclosing {@link CMapPanel}.
+         *
+         * @param e the slider change event (unused; current value is read via {@link #getValue()})
+         */
         public void stateChanged(javax.swing.event.ChangeEvent e) {
             map.setScale(50 / (double) getValue());
             CMapPanel.this.repaint();

@@ -58,7 +58,11 @@ import mekwars.common.gui.listeners.MMNetHyperLinkListener;
 import mekwars.common.util.UnitUtils;
 
 /**
- * Player panel
+ * The compact sidebar/summary panel that shows the logged-in player's key stats at a glance: name, status,
+ * experience, rating (Elo), money, influence, tech bay/tech counts (in either "simple" or "advance repairs" style),
+ * reward points, free-build units remaining, and a live countdown to the next campaign "tick". Optionally shows
+ * the player's custom logo image/HTML above the stats. Values are populated on construction and refreshed on
+ * demand via {@link #refresh()}; the tick countdown updates itself once per second via a background thread.
  */
 
 public class CPlayerPanel extends JScrollPane {
@@ -70,16 +74,26 @@ public class CPlayerPanel extends JScrollPane {
     private static final String PP_STATUS = "Status:";
     private static final String PP_EXP = "Experience:";
     private static final String PP_ELO = "Rating:";
+    /** Label used when advance-repairs mode is off: total paid-for tech slots. */
     private static final String PP_TECHS = "Techs:";
+    /** Label used when advance-repairs mode is off: techs the player has paid to hire. */
     private static final String PP_PAID_TECHS = "Paid Techs:";
+    /** Label used when advance-repairs mode is on: repair bay counts. */
     private static final String PP_BAYS = "Bays:";
+    /** Label used when advance-repairs mode is on: techs available but not currently assigned to a repair. */
     private static final String PP_IDLE_TECHS = "Idle Techs:";
     private static final String PP_FREE_UNITS = "Free Units:"; //@Salient for free build
+    /** Built in the constructor from the server-configured reward-point currency name (e.g. "Reward Points:"). */
     private static String PP_REWARD;
+    /** Connection/session handle used to read server configuration and player-facing formatting helpers. */
     private final IClient client;
+    /** The player whose stats this panel displays; captured once at construction time. */
     private final CPlayer player;
+    /** The scrollable content panel (logo + info) set as this {@link JScrollPane}'s viewport view. */
     protected JPanel PlayerPanel = new JPanel();
+    /** Displays the player's custom logo, if the "LOGO" config option is enabled. */
     protected JEditorPane lblLogo = new JEditorPane("text/html", "");
+    /** Vertical stack of stat labels (name, status, exp, etc.). */
     protected JPanel InfoPanel = new JPanel();
     protected JLabel lblName = new JLabel();
     protected JLabel lblStatus = new JLabel();
@@ -87,14 +101,27 @@ public class CPlayerPanel extends JScrollPane {
     protected JLabel lblRating = new JLabel();
     protected JLabel lblMoney = new JLabel();
     protected JLabel lblInfluence = new JLabel();
+    /** Shows either "Techs:" (simple) or "Bays:" (advance repairs) counts, depending on server mode. */
     protected JLabel lblMekBay = new JLabel();
+    /** Shows either "Paid Techs:" (simple) or "Idle Techs:" (advance repairs) counts, depending on server mode. */
     protected JLabel lblTechs = new JLabel();
     protected JLabel lblRewardPoints = new JLabel();
+    /** Live countdown to the next campaign tick, updated once per second by {@link TThread}. */
     protected JLabel lblNextTick = new JLabel();
     protected JLabel lblFreeMeks = new JLabel(); //@Salient for free build
+    /** Epoch-millis timestamp of the next campaign tick; updated externally via {@link #setNextTick(long)}. */
     protected long nextTick = System.currentTimeMillis();
+    /** Client-side configuration (layout sizes, feature toggles) read during layout. */
     private IClientConfig config;
 
+    /**
+     * Lays out the panel: builds the (optional) logo area and the vertical stack of stat labels, sizes everything
+     * according to the {@code PLAYER_PANEL_HEIGHT} and {@code LOGO} client-config values, and starts a background
+     * {@link TThread} that ticks {@link #lblNextTick} once per second for the rest of the panel's (and JVM's)
+     * lifetime — note this thread is never stopped, including when the panel itself is discarded.
+     *
+     * @param client the client providing player data and configuration for this panel
+     */
     public CPlayerPanel(IClient client) {
         PP_REWARD = String.format("%s:", client.getServerConfigs("RPLongName"));
 
@@ -214,6 +241,15 @@ public class CPlayerPanel extends JScrollPane {
         clockT.start();
     }
 
+    /**
+     * Re-reads current player/client state and updates every stat label (name, status, exp, rating, money,
+     * influence, tech/bay counts, reward points, free-build units) and, if enabled, reloads the player's logo
+     * HTML. Money and influence labels special-case a value of exactly 0 (passing {@code -2} instead of the
+     * negated value) to select an appropriate display message via {@link IClient#moneyOrFluMessage}. Tech/bay
+     * counts are formatted differently depending on whether the server uses "advance repairs" mode; failures while
+     * reading advance-repair tech-level counts are logged and swallowed (e.g. during initial client load before
+     * data has arrived).
+     */
     public void refresh() {
         if (client.getConfig().isParam("LOGO")) {
             try {
@@ -277,21 +313,38 @@ public class CPlayerPanel extends JScrollPane {
                                                                 .getMekToken())); //@Salient for free build
     }
 
+    /**
+     * Sets the epoch-millis timestamp of the next campaign tick, used by {@link #updateClock()} to compute the
+     * displayed countdown. Called externally whenever the server informs the client of the next tick time.
+     *
+     * @param nextTick epoch-millis timestamp of the next tick
+     */
     public void setNextTick(long nextTick) {
         this.nextTick = nextTick;
     }
 
+    /** Recomputes and displays the seconds remaining until {@link #nextTick}; may show a negative value if overdue. */
     public void updateClock() {
         lblNextTick.setText(String.format("Next Tick: %s s", (nextTick - System.currentTimeMillis()) / 1000));
     }
 
+    /**
+     * Background thread that calls {@link CPlayerPanel#updateClock()} once per second for the life of the JVM.
+     * NOTE: the loop has no exit condition and the thread is never stopped/interrupted, so one such thread leaks
+     * for every {@link CPlayerPanel} constructed; {@code wait(1000)} is called without a corresponding
+     * notify/lock contention scenario, so it functions purely as a sleep here (using the thread's own monitor).
+     */
     private static class TThread extends Thread {
         CPlayerPanel myPanel;
 
+        /**
+         * @param panel the panel whose clock label this thread will keep updated
+         */
         public TThread(CPlayerPanel panel) {
             myPanel = panel;
         }
 
+        /** Updates the clock, then sleeps ~1 second (via {@code wait}), forever; logs and continues on interruption. */
         @Override
         public synchronized void run() {
             while (true) {

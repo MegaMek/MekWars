@@ -67,7 +67,15 @@ import mekwars.common.gui.models.BlackMarketModel;
 import mekwars.common.util.SpringLayoutHelper;
 
 /**
- * Black Market Panel
+ * Backs the "Black Market" tab of the main client window (added to {@link CMainPanel} when {@code BM_TAB_VISIBLE}
+ * is set). Shows a sortable table of units currently listed on the in-campaign black market — sourced from
+ * {@link BlackMarketModel} (via a {@link TableSorter} wrapper) — and a row of buttons for the actions a player can
+ * take on the selected listing: view the unit's details ("Show Unit"), bid on someone else's listing ("Place Bid"),
+ * retract the player's own bid ("Retract Bid"), pull the player's own unit off the market ("Remove Unit"), or list
+ * a new unit for sale ("Sell Unit", which opens {@link SellUnitDialog}). Each button's enabled state is recomputed
+ * whenever the table selection changes, based on whether the selected listing belongs to the player, whether they
+ * already have a bid on it, and whether their faction is currently permitted to buy/sell (see
+ * {@link #checkFactionAccess()}).
  */
 
 public class CBMPanel extends JPanel {
@@ -75,25 +83,50 @@ public class CBMPanel extends JPanel {
 
     @Serial
     private static final long serialVersionUID = -432087180209544906L;
+    /** The visible black-market listings table; its model is the {@link TableSorter}-wrapped {@link #BlackMarketInfo}. */
     private final JTable tblMarket = new JTable();
+    /** Opens a detail viewer for the selected unit. Disabled entirely when {@link #hideBMUnits} is true. */
     private final JButton btnShowMek = new JButton();
+    /** Retracts the player's bid on the selected listing. */
     private final JButton btnRecallBid = new JButton();
+    /** Pulls the player's own unit off the market (only enabled when the player is the seller of the selection). */
     private final JButton btnRecallUnit = new JButton();
+    /** Opens {@link SellUnitDialog} to list a new unit for sale. */
     private final JButton btnSellUnit = new JButton();
+    /** Places a bid on the selected listing (only enabled when the player is not the seller and faction bidding is allowed). */
     private final JButton btnBid = new JButton();
+    /** Container holding the button row (and, optionally, the unit preview icon); its contents are rebuilt by {@link #resetButtonBar()}. */
     private final JPanel pnlBuyButtons = new JPanel();
+    /** Fixed-width spacer placed between the "Show Unit" and "Place Bid" buttons. */
     private final JPanel spacingPanel1;
+    /** Fixed-width spacer placed between the "Retract Bid" and "Remove Unit" buttons. */
     private final JPanel spacingPanel2;
+    /** Wraps {@link #pnlMekIcon} so the preview image can be swapped out via {@link #resetCamo()}. */
     private final JPanel pnlMekIconHolder;
+    /** Server config flag ({@code HiddenBMUnits}): when true, unit identities/camo are hidden and "Show Unit" is disabled entirely. */
     private final boolean hideBMUnits;
+    /** The player's campaign, used to resolve auction ids to {@link CBMUnit} listings. */
     private final CCampaign theCampaign;
+    /** Client session, used for config lookups, server config lookups, and sending market chat commands. */
     private final IClient client;
+    /** The local player, used to check faction restrictions on buying/selling. */
     private final CPlayer Player;
+    /** Table model backing the market listings; sourced from the server's current black-market state. */
     public BlackMarketModel BlackMarketInfo;
+    /** Unit preview icon (camo/mech silhouette) shown for the selected listing, when {@code BM_PREVIEW_IMAGE} is enabled and units aren't hidden. */
     private JPanel pnlMekIcon;
+    /** Cached result of the faction buy-restriction check from {@link #checkFactionAccess()}; re-applied to {@link #btnBid} on each new selection so bidding stays correctly disabled after a faction change (e.g. defection). */
     private boolean factionBidsAllowed = true;
+    /** The market listing currently under the mouse/selection; {@code null} when nothing usable is selected. */
     private CBMUnit cbmUnit;
 
+    /**
+     * Builds the market table (sortable via {@link TableSorter}), the row-selection listener that enables/disables
+     * the action buttons based on the selected listing, and the button bar itself (via {@link #resetButtonBar()}).
+     * Also creates the initial unit-preview icon and triggers a first {@link #refresh()} of the listings.
+     *
+     * @param client the active client session
+     */
     public CBMPanel(IClient client) {
         setLayout(new GridBagLayout());
         this.client = client;
@@ -114,6 +147,7 @@ public class CBMPanel extends JPanel {
         TableSorter sorter = new TableSorter(BlackMarketInfo, client, TableSorter.SORTER_BM);
         tblMarket.setModel(sorter);
 
+        //double-clicking a listing opens the same unit-detail viewer as pressing "Show Unit"
         tblMarket.addMouseListener(new MouseAdapter() {
             @Override
             public void mouseClicked(MouseEvent mouseEvent) {
@@ -132,6 +166,13 @@ public class CBMPanel extends JPanel {
         sorter.addMouseListenerToHeaderInTable(tblMarket);
         tblMarket.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         ListSelectionModel rowSM = tblMarket.getSelectionModel();
+        //Recomputes which action buttons are enabled whenever the row selection changes; fires again after the
+        //drag-in-progress adjustment settles. NOTE: when the selection becomes empty, this hides the preview
+        //image but does NOT return early -- it falls through to getMinSelectionIndex() (-1) and then
+        //tblMarket.getModel().getValueAt(-1, ...) below, which throws an ArrayIndexOutOfBoundsException. Since
+        //this is a ListSelectionListener callback, the exception is caught and reported by Swing's default
+        //uncaught-exception handler rather than crashing the client, but the button-enable/disable logic is
+        //simply skipped in that case.
         rowSM.addListSelectionListener(event -> {
 
             //ignore dragging
@@ -169,6 +210,9 @@ public class CBMPanel extends JPanel {
                     }
 
                     //refresh the camo ... may have changed.
+                    //Note: this reaches back through client -> main frame -> main panel -> BM panel instead of
+                    //just calling CBMPanel.this.resetCamo() directly; in normal operation that chain resolves
+                    //back to this same panel instance, so the roundabout call is equivalent to a direct one.
                     CBMPanel.this.client.getMainFrame().getMainPanel().getBMPanel().resetCamo();
 
                 } else {//dim them all
@@ -255,9 +299,13 @@ public class CBMPanel extends JPanel {
     }
 
     /**
-     * Called from an action listener. Opens a MechDetailDisplay for the unit at the currently selected row.
+     * Called from the "Show Unit" button (and from the table's double-click handler). Opens a standalone,
+     * fixed-size, non-resizable {@link JFrame} containing a {@link MWUnitDisplay} showing the full details
+     * (weapons, armor, etc.) of the unit at the currently selected row. Loads the entity's weapons first since the
+     * embedded unit data may not have them pre-loaded. Does nothing if {@link #hideBMUnits} is set (server-hidden
+     * market) or if the selected row has no resolvable unit.
      *
-     * @param evt
+     * @param evt the triggering action event (its source is unused; the selection is re-read from {@link #tblMarket})
      */
     private void btnShowMekActionPerformed(ActionEvent evt) {
         if (hideBMUnits) {
@@ -286,6 +334,13 @@ public class CBMPanel extends JPanel {
         unitDisplay.displayEntity(theEntity);
     }
 
+    /**
+     * Resolves the market listing ({@link CBMUnit}) for a given table row by reading its auction id column and
+     * looking it up in the campaign's black market. Also updates {@link #cbmUnit} as a side effect.
+     *
+     * @param row the table row index (as displayed, i.e. sorted order)
+     * @return the listing at that row, or {@code null} if the row has no auction id or it isn't found in the campaign's market
+     */
     public CBMUnit getMarketMechAtRow(int row) {
         cbmUnit = null;
         Integer auctionId = (Integer) tblMarket.getModel().getValueAt(row, BlackMarketModel.AUCTION_ID);
@@ -297,6 +352,13 @@ public class CBMPanel extends JPanel {
         return cbmUnit;
     }
 
+    /**
+     * Rebuilds the unit preview icon ({@link #pnlMekIcon}) to reflect the currently selected listing's camo/unit
+     * appearance, or hides the preview entirely if units are hidden or the preview feature is disabled. Called
+     * whenever the selection changes and whenever the market data (and thus available camo) might have changed.
+     * If no unit is currently selected, {@link MekInfo#setUnit} throws and is caught/logged at debug level — this
+     * is the normal, expected path immediately after construction or when nothing is selected.
+     */
     //refresh preview image
     public void resetCamo() {
 
@@ -326,10 +388,18 @@ public class CBMPanel extends JPanel {
     }
 
     /**
-     * Called from an action listener. Opens a dialo for input, checks the input, and places a bid with the server if
-     * the bid is enough.
+     * Called from the "Place Bid" button. Prompts the player (via {@link JOptionPane#showInputDialog}) for a bid
+     * amount on the selected listing, validates it against the listing's minimum bid, and if valid sends a
+     * {@code /c bid#<auctionId>#<amount>} chat command to the server. On success (or on invalid input that isn't a
+     * parse failure), disables the bid/retract buttons since the selection state is about to change. Cancelling
+     * the dialog (blank/cancelled input) silently aborts.
+     * <p>
+     * <b>Quirk:</b> {@code cbmUnit.playerIsSeller()} is called before the {@code cbmUnit != null} check just below
+     * it, so if {@link #getMarketMechAtRow} somehow returns {@code null} for a non-negative selected row (e.g. a
+     * race with the market refreshing), this throws a {@link NullPointerException} instead of returning quietly
+     * like the row-check above does.
      *
-     * @param evt
+     * @param evt the triggering action event (unused; the selection is re-read from {@link #tblMarket})
      */
     private void btnBidActionPerformed(ActionEvent evt) {
         int row = tblMarket.getSelectedRow();
@@ -418,7 +488,11 @@ public class CBMPanel extends JPanel {
     }
 
     /**
-     * Called by action listener. Rebinds a unit sale.
+     * Called from the "Remove Unit" button. Pulls the player's own unit listing off the market by sending a
+     * {@code /c recall#<auctionId>} chat command, but only if the selected listing actually belongs to the player.
+     * Disables the bid-related buttons afterward since the selection state is about to change.
+     *
+     * @param evt the triggering action event (unused; the selection is re-read from {@link #tblMarket})
      */
     private void btnRecallUnitActionPerformed(ActionEvent evt) {
 
@@ -449,6 +523,20 @@ public class CBMPanel extends JPanel {
         sud.setVisible(true);
     }
 
+    /**
+     * Rebuilds the button bar layout, in one of two forms depending on whether {@code BM_PREVIEW_IMAGE} is enabled:
+     * with the preview form, buttons go in their own {@code SpringLayout} panel alongside the unit-preview icon
+     * (via {@link #resetCamo()}); without it, the buttons alone fill {@link #pnlBuyButtons} directly. Called once
+     * from the constructor and again any time the preview-image config might have changed.
+     * <p>
+     * <b>Bug:</b> in both branches, {@code btnBid} is added to the layout twice in a row (once, then again after
+     * the spacer) instead of the second call adding a different, presumably-intended component. Because a
+     * {@link javax.swing.JComponent} can only have one parent, the second {@code add} call simply re-parents
+     * {@code btnBid} to its later position rather than creating a duplicate, so this doesn't crash — but it means
+     * the button bar ends up with only 6 or 7 distinct children even though
+     * {@link SpringLayoutHelper#setupSpringGrid} is told to lay out a fixed 1x8 grid, leaving one grid cell
+     * effectively empty/misaligned.
+     */
     public void resetButtonBar() {
 
         if (client.getConfig().isParam("BM_PREVIEW_IMAGE")) {
@@ -518,10 +606,15 @@ public class CBMPanel extends JPanel {
         this.repaint();
     }
 
+    /** Public entry point to refresh the market listings; simply delegates to {@link #fireMarketChanged()}. */
     public void refresh() {
         fireMarketChanged();
     }
 
+    /**
+     * Reloads the market table's underlying model from the campaign's current black-market state and resizes the
+     * table to exactly fit its (possibly changed) row count.
+     */
     public void fireMarketChanged() {
         //here's a problem MyBlackMarket has to be created somehow (by parsing BM or from Player data)
         BlackMarketInfo.refreshModel();

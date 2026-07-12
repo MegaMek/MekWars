@@ -40,19 +40,29 @@ import mekwars.common.util.SpringLayoutHelper;
 import mekwars.common.util.UnitUtils;
 
 /**
- * Headquarters Panel
+ * The "Headquarters" (HQ) tab of the MekWars client: shows the player's owned units/armies in a table
+ * ({@link MekTableModel}), with a row of action buttons below it for managing the player's forces — creating a
+ * new army, removing all armies, changing camo, repairing/reloading all units, and (conditionally, depending on
+ * server config and the player's faction) resetting units for newbies or building a free unit. Most buttons send
+ * a campaign chat command to the server rather than mutating local state directly; the server's response is what
+ * ultimately updates the displayed data via {@link #refresh()}.
  */
 
 public class CHQPanel extends JPanel {
 
     @Serial
     private static final long serialVersionUID = -5137503055464771160L;
+    /** Connection/session handle used to read player state and send campaign commands. */
     private final IClient client;
+    /** Mouse handler for the units table (handles clicks/drags for unit selection, drag-and-drop into armies, etc). */
     protected MekTableMouseAdapter mouseAdapter;
+    /** Table model backing {@link #tblMeks}; holds the player's units/armies. */
     private MekTableModel MekTable;
+    /** The player whose HQ this panel displays. */
     private CPlayer Player;
 
     // graphical components
+    /** Scratch/reused constraints object for GridBagLayout calls; reassigned repeatedly during layout. */
     private GridBagConstraints gridBagConstraints;
 
     private JPanel pnlMeks;
@@ -62,15 +72,25 @@ public class CHQPanel extends JPanel {
     private JButton btnAddLance;
     private JButton btnRemoveAllArmies;
     private JButton setCamoButton;
+    /** Only shown to players in the server's configured "newbie" house; resets their starting units. */
     private JButton newbieResetUnitsButton;
     private JButton repairAllUnitsButton;
     private JButton reloadAllUnitsButton;
 
     //@Salient (mwosux@gmail.com) added for SolFreeBuild option
+    /** Only shown when a free-build option applies to the player; opens the free-unit-creation dialog. */
     private JButton solFreeBuildButton;
+    /** Whether the server is using "advance repairs" mode; gates the repair/reload-all buttons. Kept in sync via {@link #refresh()}. */
     private boolean useAdvanceRepairs = false;
+    /** Whether unit locking is in effect for this panel; toggled externally via {@link #setUseUnitLocking(boolean)}. */
     private boolean useUnitLocking = false;
 
+    /**
+     * Captures the current player and builds a fresh {@link MekTableModel} and {@link MekTableMouseAdapter}, then
+     * lays out the panel via {@link #init()} and populates it via {@link #refresh()}.
+     *
+     * @param client the client providing player/campaign state
+     */
     public CHQPanel(IClient client) {
         this.client = client;
         Player = this.client.getPlayer();
@@ -89,6 +109,10 @@ public class CHQPanel extends JPanel {
         refresh();
     }
 
+    /**
+     * Instantiates all child components and lays out the units panel via {@link #createMeksPanel()}, then
+     * captures the server's current advance-repairs setting.
+     */
     private void init() {
         pnlMeks = new JPanel();
         spMeks = new JScrollPane();
@@ -117,6 +141,10 @@ public class CHQPanel extends JPanel {
         useAdvanceRepairs = client.isUsingAdvanceRepairs();
     }
 
+    /**
+     * Re-syncs the advance-repairs flag from the client, reloads the units table model, resizes the table to fit
+     * its (possibly changed) row count, and re-sorts the player's armies for display.
+     */
     public void refresh() {
         useAdvanceRepairs = client.isUsingAdvanceRepairs();
         MekTable.refreshModel();
@@ -125,6 +153,7 @@ public class CHQPanel extends JPanel {
         client.getPlayer().sortArmies();
     }
 
+    /** Builds and lays out the scrollable units table and the button row beneath it, both inside {@link #pnlMeks}. */
     private void createMeksPanel() {
         pnlMeks.setLayout(new GridBagLayout());
         spMeks.setPreferredSize(new Dimension(300, 400));
@@ -172,6 +201,14 @@ public class CHQPanel extends JPanel {
         pnlMeks.add(pnlMeksButtons, gridBagConstraints);
     }
 
+    /**
+     * (Re)builds the row of action buttons under the units table (clearing any previous ones first). Which
+     * buttons appear is conditional: "Reset Units" only shows for players in the server's configured newbie
+     * house; "Repair/Reload All Units" only show when advance-repairs mode is active; "Create Unit" (free build)
+     * shows either for newbie-house players when {@code Sol_FreeBuild} is enabled, or for non-newbie players when
+     * {@code FreeBuild_PostDefection} is enabled. "Create New Army", "Remove All Armies", and "Change Camo" are
+     * always shown.
+     */
     public void makeButtons() {
 
         JPanel hqButtonSpring = new JPanel(new SpringLayout());
@@ -240,12 +277,21 @@ public class CHQPanel extends JPanel {
         pnlMeksButtons.validate();
         pnlMeksButtons.repaint();
     }
+    // NOTE: makeButtons() is public and re-adds action listeners to the shared button fields (btnAddLance,
+    // solFreeBuildButton, etc.) without removing previously-added ones first; calling it more than once on the
+    // same CHQPanel instance (its only current caller is createMeksPanel(), invoked once per init()/reinitialize()
+    // cycle) would stack duplicate listeners and fire handlers multiple times per click.
 
+    /** Sends the "create army" campaign command using the configured default army name. */
     private void btnAddLanceActionPerformed(ActionEvent evt) {
         client.sendChat(String.format("%sc cra#%s", IClient.CAMPAIGN_PREFIX, client.getConfigParam("DEFAULTARMYNAME")));
     }
 
-    // try to remove all armies
+    /**
+     * Confirms with the user, then sends a "remove army" campaign command for every one of the player's armies
+     * that is not player-locked. No-ops if the player has no armies, the user declines the confirmation, or the
+     * player's status is anything other than {@link IClient#STATUS_RESERVE} (i.e. not actively fighting).
+     */
     private void btnRemoveAllArmiesActionPerformed(ActionEvent evt) {
         //no armies... don't bother   		//Baruk Khazad! 20151204 - start block 1
         if (client.getPlayer().getArmies().isEmpty()) {
@@ -271,10 +317,15 @@ public class CHQPanel extends JPanel {
         }
     }// end btnRemoveAllArmiesActionPerformed
 
+    /** Sends the "resetunits" campaign request, used to reset a newbie-house player's starting units. */
     private void newbieResetUnitsButtonActionPerformed(ActionEvent evt) {
         client.sendChat(String.format("%sc request#resetunits", IClient.CAMPAIGN_PREFIX));
     }
 
+    /**
+     * Opens a bulk repair dialog for all units, seeded with the first unit in the player's hangar. Does nothing if
+     * the hangar is empty.
+     */
     private void repairAllUnitsButtonActionPerformed(ActionEvent evt) {
         if (!client.getPlayer().getHangar().isEmpty()) {
             new BulkRepairDialog(client,
@@ -284,6 +335,10 @@ public class CHQPanel extends JPanel {
         }
     }
 
+    /**
+     * After confirmation, sends a "reload all ammo" campaign command for every unit in the player's hangar that is
+     * not already fully loaded, then refreshes the panel. Does nothing if the hangar is empty or the user declines.
+     */
     private void reloadAllUnitsButtonActionPerformed(ActionEvent evt) {
         if (!client.getPlayer().getHangar().isEmpty()) {
             int result = JOptionPane.showConfirmDialog(client.getMainFrame(),
@@ -303,48 +358,71 @@ public class CHQPanel extends JPanel {
         }
     }
 
+    /** Opens the modal camo-selection dialog for the player's units. */
     private void setCamoButtonActionPerformed(ActionEvent evt) {
         CamoSelectionDialog camoDialog = new CamoSelectionDialog(client.getMainFrame(), client);
         camoDialog.setVisible(true);
     }
 
     //@Salient (mwosux@gmail.com) added for SolFreeBuild option
+    /** Opens the modal free-unit-build dialog (shown only under the newbie/post-defection free-build conditions). */
     private void solFreeBuildButtonActionPerformed(ActionEvent evt) {
         SolFreeBuildDialog solDialog = new SolFreeBuildDialog(client);
         solDialog.setVisible(true);
     }
 
+    /**
+     * @return whether unit locking is currently enabled for this panel
+     */
     public boolean isUseUnitLocking() {
         return useUnitLocking;
     }
 
+    /**
+     * @param useUnitLocking whether unit locking should be enabled for this panel
+     */
     public void setUseUnitLocking(boolean useUnitLocking) {
         this.useUnitLocking = useUnitLocking;
     }
 
+    // NOTE: stray empty statement (leftover no-op); harmless but has no effect.
     ;
 
+    /**
+     * @return whether the server is currently using "advance repairs" mode, as last synced by {@link #refresh()}
+     */
     public boolean useAdvanceRepairs() {
         return useAdvanceRepairs;
     }
 
+    // NOTE: stray empty statement (leftover no-op); harmless but has no effect.
     ;
 
+    /**
+     * @return the table model backing the units table
+     */
     public MekTableModel getMekTable() {
         return MekTable;
     }
 
+    /**
+     * @return the client this panel is bound to
+     */
     public IClient getClient() {
         return client;
     }
 
+    /**
+     * @return the Swing table component displaying the player's units
+     */
     public JTable getTableMeks() {
         return tblMeks;
     }
 
     /**
      * Public calls that reinitialize the HQ panel. Hacky and evil, but lets camo and # columns in HQ display get
-     * updated on the fly.
+     * updated on the fly. Discards and rebuilds every child component (table, model, mouse adapter, buttons) from
+     * scratch by calling {@link #removeAll()} followed by {@link #init()} and {@link #refresh()}.
      */
     public void reinitialize() {
 
@@ -367,10 +445,16 @@ public class CHQPanel extends JPanel {
         refresh();
     }
 
+    /**
+     * @return the player currently displayed by this HQ panel
+     */
     public CPlayer getPlayer() {
         return Player;
     }
 
+    /**
+     * @param player the player to associate with this panel (does not itself trigger a refresh)
+     */
     public void setPlayer(CPlayer player) {
         Player = player;
     }
