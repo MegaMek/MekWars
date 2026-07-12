@@ -82,26 +82,73 @@ import mekwars.common.gui.panels.CHQPanel;
 import mekwars.common.util.UnitUtils;
 import org.jspecify.annotations.NonNull;
 
+/**
+ * Mouse/action handler attached to the unit ("Mek") table shown on the {@link CHQPanel} (the player's
+ * hangar/HQ screen). This single class is responsible for three distinct jobs on that table:
+ * <ol>
+ *   <li><b>Drag-and-drop</b> of units between the hangar and the player's armies (lances), and repositioning
+ *   units within an army, implemented via {@link #mousePressed}, {@link #mouseDragged} and
+ *   {@link #mouseReleased}. A custom cursor image is swapped in during the drag to indicate whether the
+ *   drop target would add, exchange, reposition, or reject the unit (see the cursor fields below).</li>
+ *   <li><b>Right-click (popup trigger) context menu construction</b> via {@link #maybeShowPopup}, which
+ *   dynamically builds a {@link JPopupMenu} whose contents depend on which table cell was clicked (an army
+ *   sort-order header, an army/lance row, a unit cell inside an army, a hangar-only unit cell, or an empty
+ *   hangar bay) and on the current unit/army/player state and server configuration (e.g. whether advanced
+ *   repairs, the black market, or pilot queues are enabled).</li>
+ *   <li><b>Dispatch of the resulting menu actions</b> via {@link #actionPerformed}, which decodes the
+ *   pipe-delimited {@code actionCommand} string set on each {@link JMenuItem} and either calls a handler
+ *   method on {@link CHQPanel}'s client/main frame, or sends a raw campaign chat command to the server via
+ *   {@code chqPanel.getClient().sendChat(...)} using the {@code IClient.CAMPAIGN_PREFIX} protocol.</li>
+ * </ol>
+ * Double-clicking a unit cell (see {@link #mouseClicked}) instead opens a read-only {@link MWUnitDisplay}
+ * window showing the unit's full record sheet.
+ * <p>
+ * This class holds no persistent server-side state; all mutations are performed by sending chat/campaign
+ * commands to the server and relying on a subsequent GUI refresh to reflect the new state.
+ */
 public class MekTableMouseAdapter extends MouseInputAdapter implements ActionListener {
 
+    /** The HQ panel that owns the unit table this adapter is attached to; provides access to the client, player, and table model. */
     private final CHQPanel chqPanel;
+    /** Custom drag cursor shown when dropping a dragged unit onto a different unit already in an army (swaps positions). */
     private final Cursor exchangeCursor;
+    /** Custom drag cursor shown when dragging a unit to a new position within the same army. */
     private final Cursor positionCursor;
+    /** Custom drag cursor shown when a drop would add the dragged unit to an army (target cell is empty). */
     private final Cursor addCursor;
+    /** Custom drag cursor shown when a drop would remove the dragged unit from its army (dropped back on the hangar). */
     private final Cursor removeCursor;
+    /** Custom drag cursor shown when the current drop target is not a legal destination for the drag (e.g. wrong player status). */
     private final Cursor notAllowedCursor;
+    /** Custom drag cursor shown when the dragged unit already exists elsewhere in the target army (duplicate not allowed). */
     private final Cursor dupeCursor;
+    /** Custom drag cursor shown when the target army has already reached its allowed unit-in-multiple-armies limit. */
     private final Cursor maxCursor;
     // VARS
+    /** True while a left-button drag of a unit is in progress (set in {@link #mousePressed}, cleared in {@link #mouseReleased}). */
     private boolean isDrag;
+    /** Snapshot image of the dragged unit's table cell rendering, drawn under the cursor while dragging. */
     private Image dragImage;
+    /** Screen rectangle currently occupied by {@link #dragImage}; repainted to erase the drag image on each move/release. */
     private Rectangle2D dragRect;
+    /** Fixed pixel offset from the mouse position used to position {@link #dragImage} (currently a hard-coded re-centering value, not a true grab offset). */
     private Point offset;
+    /** The unit currently being dragged, captured on {@link #mousePressed}; null if no drag is active. */
     private CUnit dragUnit = null;
+    /** The army (or null for the hangar) the drag began from, captured on {@link #mousePressed}. */
     private CArmy startArmy = null;
+    /** The army (or null for the hangar) currently under the mouse during a drag; recomputed continuously in {@link #mouseDragged}/{@link #mouseReleased}. */
     private CArmy currArmy = null;
 
     // CONSTRUCTOR
+    /**
+     * Creates the adapter for a given HQ panel and pre-loads the custom drag cursors from the
+     * {@code ./data/images/} asset directory (add/remove/exchange/position/not-allowed/duplicate/max icons).
+     * These cursors are swapped onto the Mek table during drag-and-drop in {@link #mouseDragged} to give the
+     * user visual feedback about the outcome of dropping at the current location.
+     *
+     * @param chqPanel the HQ panel whose Mek table this adapter will listen to and build popup menus for
+     */
     public MekTableMouseAdapter(CHQPanel chqPanel) {
         super();
         this.chqPanel = chqPanel;
@@ -123,6 +170,15 @@ public class MekTableMouseAdapter extends MouseInputAdapter implements ActionLis
         maxCursor = Toolkit.getDefaultToolkit().createCustomCursor(maxI, new Point(0, 0), "max_cursor");
     }
 
+    /**
+     * Handles double-clicks on the Mek table: opens a read-only {@link MWUnitDisplay} record-sheet window
+     * for the unit under the cursor. Single clicks (and any click on an empty cell) do nothing but trigger a
+     * repaint of the table. Note this method does not check {@link MouseEvent#isPopupTrigger()}; the
+     * context-menu logic lives separately in {@link #maybeShowPopup}, invoked from {@link #mousePressed}/
+     * {@link #mouseReleased}.
+     *
+     * @param mouseEvent the originating Swing mouse event
+     */
     @Override
     public void mouseClicked(MouseEvent mouseEvent) {
         if (mouseEvent.getClickCount() == 2) {
@@ -148,6 +204,20 @@ public class MekTableMouseAdapter extends MouseInputAdapter implements ActionLis
     }
 
     // METHODS
+    /**
+     * Handles mouse-button-down on the Mek table. Two independent things can happen here:
+     * <ol>
+     *   <li>If the press was with the left mouse button on a cell containing a unit, drag state is armed
+     *   ({@link #isDrag} = true): the origin unit/army are captured, and a semi-transparent snapshot image
+     *   of that cell's rendering (obtained by invoking the table's own cell renderer, a {@link MekInfo}) is
+     *   prepared for use as the drag-under image in {@link #mouseDragged}.</li>
+     *   <li>Regardless of button, {@link #maybeShowPopup} is called so that on platforms where the popup
+     *   trigger fires on press (e.g. most non-Windows look-and-feels) the right-click context menu appears
+     *   immediately.</li>
+     * </ol>
+     *
+     * @param mouseEvent the originating Swing mouse event
+     */
     @Override
     public void mousePressed(MouseEvent mouseEvent) {
         int row = chqPanel.getTableMeks().rowAtPoint(mouseEvent.getPoint());
@@ -194,6 +264,29 @@ public class MekTableMouseAdapter extends MouseInputAdapter implements ActionLis
     /**
      * Private method called on click and release. Checks to see if a mouse event should open a contextual menu (right
      * click, OS X control+click, etc.) and shows a popup menu if appropriate.
+     * <p>
+     * When {@link MouseEvent#isPopupTrigger()} is true, the table cell under the pointer determines which of
+     * five distinct menus gets built and shown (each branch below constructs its own {@link JPopupMenu}
+     * contents and immediately calls {@code popup.show(...)} at the end of its branch):
+     * <ol>
+     *   <li>Column 0, on a row below the army rows: the hangar's "Sort (1st/2nd/3rd)" column-header menu,
+     *   letting the player choose the hangar unit sort criteria.</li>
+     *   <li>Row &lt; 0, or column 0 on an army row: the army/lance context menu (Attack Options, Check
+     *   Access, Limits, Force Size To Face, Lock/Unlock/Remove/Rename/Disable/Enable Army, army sort order,
+     *   Show To Faction, and the large "Request Match" challenge-message submenu tree).</li>
+     *   <li>Row within the army rows, on a unit column: the in-army unit context menu (Add/Exchange/Position
+     *   unit, C3 link/unlink, View/Customize Unit, Auto Eject toggle, Set/Remove Commander).</li>
+     *   <li>Otherwise (a hangar-only unit cell, below the army rows): the hangar unit context menu (View/
+     *   Customize Unit, Repairs submenu, Auto Eject toggle, Maintain/Unmaintained, RePod, Transactions
+     *   submenu, Pilot submenu, Show To Faction, Remove From All).</li>
+     *   <li>An empty hangar bay cell (only the first free bay): "Sell Excess Bays" (advanced repairs) or
+     *   "Fire Excess Techs" (simple repairs).</li>
+     * </ol>
+     * Every {@link JMenuItem} built here has {@code this} added as its {@link ActionListener} and an
+     * {@code actionCommand} string encoding, pipe-delimited, the command mnemonic dispatched by
+     * {@link #actionPerformed}.
+     *
+     * @param mouseEvent the originating Swing mouse event, tested for {@link MouseEvent#isPopupTrigger()}
      */
     private void maybeShowPopup(MouseEvent mouseEvent) {
         JPopupMenu popup = new JPopupMenu();
@@ -202,6 +295,7 @@ public class MekTableMouseAdapter extends MouseInputAdapter implements ActionLis
             int col = chqPanel.getTableMeks().columnAtPoint(mouseEvent.getPoint());
             JMenuItem menuItem;
 
+            // --- Branch 1: hangar column-header cell -> hangar sort-order submenus ("PHQS"/"SHQS"/"THQS" commands) ---
             if ((col == 0) && (row >= chqPanel.getMekTable().getRowsForArmies())) {
                 JMenu primeSortMenu = new JMenu("Sort (1st)");
                 JMenu secondarySortMenu = new JMenu("Sort (2nd)");
@@ -280,13 +374,20 @@ public class MekTableMouseAdapter extends MouseInputAdapter implements ActionLis
 
                 popup.show(mouseEvent.getComponent(), mouseEvent.getX(), mouseEvent.getY());
 
+            // --- Branch 2: click was over an army/lance row (row header or negative row) -> army context menu ---
             } else if ((row < 0) || (col == 0)) {
                 CArmy l = chqPanel.getMekTable().getArmyAt(row);
                 if (l != null) {
 
                     int lid = l.getID();
+                    // The following block (Attack Options / Check Access / Limits / Force Size To Face /
+                    // per-operation Attack submenu) is only shown when the army has a non-zero total BV,
+                    // i.e. it actually contains units that could fight.
                     if (l.getBV() > 0) {
 
+                        // "Attack Options" opens the commander's attack-check dialog for this army; disabled
+                        // unless the player is STATUS_ACTIVE, unless the server config "ProbeInReserve" allows
+                        // checking eligibility while in reserve.
                         menuItem = new JMenuItem("Attack Options");
                         menuItem.setActionCommand(String.format("AO|%s", lid));
                         menuItem.addActionListener(this);
@@ -298,12 +399,16 @@ public class MekTableMouseAdapter extends MouseInputAdapter implements ActionLis
                         }
                         popup.add(menuItem);
 
+                        // "Check Access" prompts (via CAA handler) for an operation name and asks the server
+                        // whether this army is eligible to participate in it.
                         menuItem = new JMenuItem("Check Access");
                         menuItem.setActionCommand(String.format("CAA|%s", lid));
                         menuItem.addActionListener(this);
                         popup.add(menuItem);
 
                         // only show "Limits" option if limits allowed
+                        // "Limits" submenu (Set Lower/Upper Unit Limit) only appears when the server config
+                        // "AllowLimiters" is enabled; lets the player cap how many units this army can field.
                         boolean limitsAllowed = MathUtility.parseBoolean(chqPanel.getClient()
                                                                                .getServerConfigs("AllowLimiters"),
                               false);
@@ -322,6 +427,8 @@ public class MekTableMouseAdapter extends MouseInputAdapter implements ActionLis
                             limitMenu.add(menuItem);
                         }
 
+                        // "Force Size To Face" is only shown under the "Operations" force-size rule; lets
+                        // the player declare the expected opposing force size (used to scale BV/force mods).
                         // Only show when Force Size is used.
                         if (MathUtility.parseBoolean(chqPanel.getClient().getServerConfigs("UseOperationsRule"),
                               false)) {
@@ -331,6 +438,7 @@ public class MekTableMouseAdapter extends MouseInputAdapter implements ActionLis
                             menuItem.addActionListener(this);
                         }
 
+                        // Per-operation "attack" submenu (checks/starts a match for a specific ruleset op).
                         AttackMenu aMenu = new AttackMenu(chqPanel.getClient(), lid, "-1");
                         aMenu.updateMenuItems(false);
                         popup.add(aMenu);
@@ -338,6 +446,9 @@ public class MekTableMouseAdapter extends MouseInputAdapter implements ActionLis
                         popup.addSeparator();
                     }
 
+                    // The Lock/Unlock Army items are always both added, but only one is ever visible: whichever
+                    // state (locked/unlocked) is NOT the army's current state is hidden via setVisible(false)
+                    // immediately below its add() call.
                     menuItem = new JMenuItem("Lock Army");
                     menuItem.setActionCommand(String.format("LA|%s", lid));
                     menuItem.addActionListener(this);
@@ -356,16 +467,22 @@ public class MekTableMouseAdapter extends MouseInputAdapter implements ActionLis
                         menuItem.setVisible(false);
                     }
 
+                    // Deletes the army outright (after confirmation in the main-frame handler).
                     menuItem = new JMenuItem("Remove Army");
                     menuItem.setActionCommand(String.format("RA|%s", lid));
                     menuItem.addActionListener(this);
                     popup.add(menuItem);
 
+                    // Prompts for a new name for this army.
                     menuItem = new JMenuItem("Rename Army");
                     menuItem.setActionCommand(String.format("NA|%s", lid));
                     menuItem.addActionListener(this);
                     popup.add(menuItem);
 
+                    // As with Lock/Unlock above, Disable/Enable Army are both added but only one is left
+                    // visible depending on current disabled state. NOTE: both items share the SAME action
+                    // command ("DAA|<lid>"), so both dispatch to the identical DAA case in actionPerformed
+                    // (jMenuCommanderDisableArmy_actionPerformed), which must itself toggle the state.
                     menuItem = new JMenuItem("Disable Army");
                     menuItem.setActionCommand(String.format("DAA|%s", lid));
                     menuItem.addActionListener(this);
@@ -384,6 +501,11 @@ public class MekTableMouseAdapter extends MouseInputAdapter implements ActionLis
                         menuItem.setVisible(false);
                     }
 
+                    // Army-level "Sort (1st)" menu: choose the primary criterion armies are listed by.
+                    // NOTE: unlike the hangar sort menu built above (which has 1st/2nd/3rd), only a primary
+                    // sort submenu is constructed here; the "SAS"/"TAS" (secondary/tertiary army sort) cases
+                    // handled in actionPerformed have no corresponding menu item and are effectively dead
+                    // code from the UI's perspective.
                     JMenu primeSortMenu = new JMenu("Sort (1st)");
 
                     popup.add(primeSortMenu);
@@ -395,7 +517,8 @@ public class MekTableMouseAdapter extends MouseInputAdapter implements ActionLis
                     // indicate current selections w/ Italics
                     String menuName;
 
-                    // prime sort menu construction
+                    // prime sort menu construction: build one item per sort choice, italicizing (via inline
+                    // HTML) whichever choice matches the player's current PRIMARY_ARMY_SORT_ORDER config.
                     for (int i = 0; i < choices.length; i++) {
                         menuName = choices[i];
                         if (chqPanel.getClient()
@@ -418,6 +541,8 @@ public class MekTableMouseAdapter extends MouseInputAdapter implements ActionLis
 
                     popup.addSeparator();
 
+                    // "Show To Faction" broadcasts this army's roster to the player's faction chat channel
+                    // (server command "sth#a#<armyId>"); disabled when the army has no units.
                     menuItem = new JMenuItem("Show To Faction");
                     menuItem.setActionCommand(String.format("SATH|%s", lid));
                     menuItem.addActionListener(this);
@@ -430,6 +555,20 @@ public class MekTableMouseAdapter extends MouseInputAdapter implements ActionLis
 
                     CArmy army = chqPanel.getClient().getPlayer().getArmy(lid);
 
+                    /*
+                     * "Request Match" builds a large tree of pre-formatted chat challenge messages ("Looking
+                     * for a game at ..."), all dispatched through the single "MPC" (Make Public Challenge)
+                     * action command in the form "MPC|<mode>|<armyId or -1>|<operationName or 'none'>". The
+                     * numeric mode (1-13) selects which stats get embedded in the outgoing chat text -- BV
+                     * only, unit count + BV, unit weight-class breakdown, total tonnage, unit type counts,
+                     * per-unit hyperlinked model names, etc. (see the MPC case in actionPerformed for exactly
+                     * what each mode formats). The tree is split into two top-level branches:
+                     *   - "This Army" (singleArmy): one leaf per mode/operation combo, scoped to this army's
+                     *     ID (lid), plus a leaf per legal operation reported by CArmy.getLegalOperations().
+                     *   - "All Armies" (allArmies): the same modes but with armyId=-1, meaning actionPerformed
+                     *     iterates and sends a challenge message for every one of the player's armies.
+                     * Both branches are disabled entirely if this army currently has no units.
+                     */
                     JMenu challengeMenu = new JMenu("Request Match");
                     popup.add(challengeMenu);
 
@@ -444,6 +583,7 @@ public class MekTableMouseAdapter extends MouseInputAdapter implements ActionLis
                         challengeMenu.setEnabled(false);
                     }
 
+                    // Mode 1: "BV Only" -- one "None" (no operation filter) entry plus one entry per legal operation.
                     JMenu submenu = new JMenu("Unit");
 
                     JMenu requestMenu = new JMenu("BV Only");
@@ -651,6 +791,9 @@ public class MekTableMouseAdapter extends MouseInputAdapter implements ActionLis
                     submenu.add(requestMenu);
                     singleArmy.add(submenu);
 
+                    // --- "All Armies" branch: same MPC modes, but with operation always "none" and
+                    // armyId hard-coded to -1 so actionPerformed's MPC case loops over every army the
+                    // player owns instead of scoping to a single lid. ---
                     submenu = new JMenu("Unit");
 
                     menuItem = new JMenuItem("BV Only");
@@ -731,6 +874,7 @@ public class MekTableMouseAdapter extends MouseInputAdapter implements ActionLis
                 }
 
                 popup.show(mouseEvent.getComponent(), mouseEvent.getX(), mouseEvent.getY());
+            // --- Branch 3: click was on a unit column within one of the army rows -> in-army unit menu ---
             } else if (row < chqPanel.getMekTable().getRowsForArmies()) {
                 CUnit cUnit;
                 CArmy cArmy = chqPanel.getMekTable().getArmyAt(row);
@@ -741,6 +885,15 @@ public class MekTableMouseAdapter extends MouseInputAdapter implements ActionLis
 
                 /*
                  * CONSTRUCT the ADD menu here. It will be added to the actual format later. @urgru 12/7/04
+                 *
+                 * "Add" lets the player add an eligible hangar unit into this army/lance. Only built when the
+                 * hangar is non-empty and the army isn't locked. Eligible hangar units exclude those that are
+                 * unmaintained, for sale, already in this army, or that have already hit the
+                 * "UnitsInMultipleArmiesAmount" cap for how many armies a single unit may simultaneously
+                 * belong to. Each eligible unit becomes one "EXM|<lid>|-1|<hangarUnitId>" menu item (the "-1"
+                 * signals "no unit is being replaced, just add"), grouped into per-weight-class (and
+                 * ProtoMek/Infantry) submenus, further split into chunks of 10 if a class has more than 10
+                 * candidates. The whole Add menu is disabled if no eligible units were found (hasUnitsFree).
                  */
                 JMenu addMenu = new JMenu("Add");
                 if ((!chqPanel.getClient().getPlayer().getHangar().isEmpty()) && !cArmy.isLocked()) {
@@ -896,6 +1049,12 @@ public class MekTableMouseAdapter extends MouseInputAdapter implements ActionLis
 
                     /*
                      * the unit isn't null, so construct the link menu here. It will be added to the actual format later. @Torren 12/19/04
+                     *
+                     * "Link" offers C3/C3i network masters this unit could join. It scans every other unit in
+                     * the army for a compatible, non-full C3 (standard/master) or C3i network relative to
+                     * cUnit's own C3 level, and adds one "LCN|<lid>|<thisUnitId>|<masterUnitId>" item per
+                     * candidate master found. The menu itself is only shown later if cUnit actually has some
+                     * C3 equipment (see the `if (cUnit.getC3Level() != Unit.C3_NONE)` check further below).
                      */
                     JMenu linkMenu = new JMenu("Link");
                     if ((!cArmy.getUnits().isEmpty()) && !cArmy.isLocked()) {
@@ -934,7 +1093,9 @@ public class MekTableMouseAdapter extends MouseInputAdapter implements ActionLis
                     // bits.
                     mid = cUnit.getId();
 
-                    // move to hangar
+                    // "Move To Hangar" pulls this unit out of the army back into the general hangar pool
+                    // (only offered while the army is unlocked). Reuses the "EXM" exchange command with
+                    // hangarUnitId=-1, meaning "no hangar unit takes its place."
                     if (!cArmy.isLocked()) {
                         String text = "Move To Hangar";
                         menuItem = new JMenuItem(text);
@@ -945,6 +1106,12 @@ public class MekTableMouseAdapter extends MouseInputAdapter implements ActionLis
 
                     /*
                      * EXCHANGE. Derived from ADD. Same, but returns clicked unit to hangar.
+                     *
+                     * Builds the same weight-class/ProtoMek/Infantry-grouped submenu tree as the "Add" menu
+                     * above (same eligibility filters: not unmaintained/for-sale, not already in this army,
+                     * under the multi-army cap), but each item's action command is "EXM|<lid>|<clickedUnitId>|
+                     * <hangarUnitId>" -- i.e. the currently-clicked in-army unit (cUnit) is swapped out to the
+                     * hangar and replaced by the chosen hangar unit, in one operation.
                      */
                     if ((!chqPanel.getClient().getPlayer().getHangar().isEmpty()) && !cArmy.isLocked()) {
                         JMenu jm = new JMenu("Exchange");
@@ -1109,6 +1276,8 @@ public class MekTableMouseAdapter extends MouseInputAdapter implements ActionLis
 
                         /*
                          * The POSITION menu. Moves units around -within- the army. Only shown if there are enough units to warrant movement (>1).
+                         * One "Move to #N" item per other unit slot in the army (skipping the clicked unit's
+                         * own slot); dispatches "RPU|<lid>|<unitId>|<targetIndex>" to reorder the army roster.
                          */
                         if (cArmy.getAmountOfUnits() > 1) {
                             JMenu positionMenu = new JMenu("Position");
@@ -1127,9 +1296,13 @@ public class MekTableMouseAdapter extends MouseInputAdapter implements ActionLis
                         }// end position menu construction
 
                     }// end code black for Exchange AND Add AND Position
+                    // "Link" submenu (built earlier) is only attached to the popup if this unit actually
+                    // carries some form of C3 equipment.
                     if (cUnit.getC3Level() != Unit.C3_NONE) {
                         popup.add(linkMenu);
                     }
+                    // "Unlink" appears only if this unit is currently part of a C3/C3i network; sends
+                    // "LCN|<lid>|<unitId>|-1" (master id -1 signals disconnect).
                     if (cUnit.hasBeenC3LinkedTo(cArmy) || (cArmy.getC3Network().get(cUnit.getId()) != null)) {
                         menuItem = new JMenuItem("Unlink");
                         menuItem.setActionCommand(String.format("LCN|%s|%s|-1", lid, cUnit.getId()));
@@ -1141,18 +1314,22 @@ public class MekTableMouseAdapter extends MouseInputAdapter implements ActionLis
                     popup.addSeparator();
 
                     // Add Show Mek Option
+                    // "View Unit" opens the read-only MWUnitDisplay record sheet for this unit/entity.
                     menuItem = new JMenuItem("View Unit");
                     menuItem.setActionCommand(String.format("SM|%s|%s", row, col));
                     menuItem.addActionListener(this);
                     popup.add(menuItem);
 
                     // Add Customize Unit Option
+                    // "Customize Unit" opens the CustomUnitDialog editor (loadout/equipment changes).
                     menuItem = new JMenuItem("Customize Unit");
                     menuItem.setActionCommand(String.format("CMU|%s|%s", row, col));
                     menuItem.addActionListener(this);
                     popup.add(menuItem);
 
                     // Add Auto Eject Option
+                    // Auto-eject toggle only applies to `Mek` entities; label/command flips based on the
+                    // unit's current isAutoEject() state.
                     if (cUnit.getEntity() instanceof Mek mek) {
                         if (mek.isAutoEject()) {
                             menuItem = new JMenuItem("Disable Auto Eject");
@@ -1165,6 +1342,12 @@ public class MekTableMouseAdapter extends MouseInputAdapter implements ActionLis
                         popup.add(menuItem);
                     }
 
+                    // Toggles whether this unit is the army's commander. NOTE (apparent bug): the action
+                    // commands generated here are "REMOVEUNITCOMMANDER|..." and "SETUNITCOMMANDER|..." (no
+                    // underscores), but the corresponding cases in actionPerformed's switch are named
+                    // "REMOVE_UNIT_COMMANDER" and "SET_UNIT_COMMANDER" (with underscores). Since the switch
+                    // matches on the exact command token, neither menu item's command ever matches a case,
+                    // so clicking "Set Commander"/"Remove Commander" currently does nothing.
                     if (cArmy.isCommander(cUnit.getId())) {
                         menuItem = new JMenuItem("Remove Commander");
                         menuItem.setActionCommand(String.format("REMOVEUNITCOMMANDER|%s|%s|%s", row, col, lid));
@@ -1181,9 +1364,11 @@ public class MekTableMouseAdapter extends MouseInputAdapter implements ActionLis
                 }
 
                 popup.show(mouseEvent.getComponent(), mouseEvent.getX(), mouseEvent.getY());
+            // --- Branch 4/5: click was below the army rows, i.e. a hangar-only cell ---
             } else {
                 CUnit cm = chqPanel.getMekTable().getMekAt(row, col);
                 if (cm != null) {
+                    // Branch 4: the hangar cell contains a unit -> full hangar-unit context menu.
 
                     menuItem = new JMenuItem("View Unit");
                     menuItem.setActionCommand(String.format("SM|%s|%s", row, col));
@@ -1196,9 +1381,12 @@ public class MekTableMouseAdapter extends MouseInputAdapter implements ActionLis
                     menuItem.addActionListener(this);
                     popup.add(menuItem);
 
+                    // "Repairs" submenu only appears under the advanced-repairs ruleset (chqPanel.useAdvanceRepairs()).
                     if (chqPanel.useAdvanceRepairs()) {
 
                         JMenu repairs = new JMenu("Repairs");
+                        // Repair/Bulk Repair (or, under "UseSimpleRepair", a single simplified "Repair
+                        // Unit" item) only appear if the unit actually has armor or critical damage.
                         if (UnitUtils.hasArmorDamage(cm.getEntity()) ||
                                   UnitUtils.hasCriticalDamage(cm.getEntity())) {
                             if (!Boolean.parseBoolean(chqPanel.getClient().getServerConfigs("UseSimpleRepair"))) {
@@ -1221,6 +1409,8 @@ public class MekTableMouseAdapter extends MouseInputAdapter implements ActionLis
 
                         }
 
+                        // Salvage options only appear under the "UsePartsRepair" ruleset and only for
+                        // Meks/Vehicles.
                         if (MathUtility.parseBoolean(chqPanel.getClient().getServerConfigs("UsePartsRepair"), false) &&
                                   ((cm.getType() == Unit.MEK) || (cm.getType() == Unit.VEHICLE))) {
                             menuItem = new JMenuItem("Salvage Unit Crits");
@@ -1234,6 +1424,7 @@ public class MekTableMouseAdapter extends MouseInputAdapter implements ActionLis
                             repairs.add(menuItem);
                         }
 
+                        // Shown only if this unit currently has an active repair job in progress.
                         if (UnitUtils.isRepairing(cm.getEntity())) {
                             // Add display repair job option
                             menuItem = new JMenuItem("Display Repair Jobs");
@@ -1242,6 +1433,8 @@ public class MekTableMouseAdapter extends MouseInputAdapter implements ActionLis
                             repairs.add(menuItem);
                         }
 
+                        // Shown only if the repair (RMT) or salvage (SMT) work-order trackers report queued
+                        // orders for this unit; lets the player view or cancel all pending work.
                         if (((chqPanel.getClient().getRMT() != null) &&
                                    chqPanel.getClient().getRMT().hasQueuedOrders(cm.getId())) ||
                                   ((chqPanel.getClient().getSMT() != null) &&
@@ -1259,6 +1452,7 @@ public class MekTableMouseAdapter extends MouseInputAdapter implements ActionLis
                             repairs.add(menuItem);
                         }
 
+                        // Shown only if the unit is missing some ammo (not fully loaded on all ammo bins).
                         if (!UnitUtils.hasAllAmmo(cm.getEntity())) {
                             menuItem = new JMenuItem("Reload All Ammo");
                             menuItem.setActionCommand(String.format("RAA|%s|%s", row, col));
@@ -1266,12 +1460,15 @@ public class MekTableMouseAdapter extends MouseInputAdapter implements ActionLis
                             repairs.add(menuItem);
                         }
 
+                        // Only attach the Repairs submenu at all if at least one of the above populated it;
+                        // an empty "Repairs" menu is never shown.
                         if (repairs.getItemCount() > 0) {
                             popup.add(repairs);
                         }
                     }
 
-                    // Add Auto eject Option
+                    // Add Auto eject Option (identical toggle logic to the in-army branch above, duplicated here
+                    // for hangar units).
                     if (cm.getEntity() instanceof Mek mek) {
                         if (mek.isAutoEject()) {
                             menuItem = new JMenuItem("Disable Auto-eject");
@@ -1287,6 +1484,9 @@ public class MekTableMouseAdapter extends MouseInputAdapter implements ActionLis
 
                     popup.addSeparator();
 
+                    // Maintain/Unmaintained toggle is only offered under the SIMPLE repair ruleset (i.e. not
+                    // useAdvanceRepairs()); under advanced repairs, maintenance status is presumably managed
+                    // elsewhere.
                     if (!chqPanel.useAdvanceRepairs()) {
                         if (cm.getStatus() == Unit.STATUS_UNMAINTAINED) {
                             menuItem = new JMenuItem("Maintain");
@@ -1299,6 +1499,7 @@ public class MekTableMouseAdapter extends MouseInputAdapter implements ActionLis
                         menuItem.addActionListener(this);
                         popup.add(menuItem);
                     }
+                    // "RePod Unit" only appears for OmniMeks/OmniVehicles; re-rolls/reassigns the unit's pod-mounted equipment.
                     if (cm.isOmni()) {
                         menuItem = new JMenuItem("RePod Unit");
                         menuItem.setActionCommand(String.format("RM|%s", cm.getId()));
@@ -1306,6 +1507,13 @@ public class MekTableMouseAdapter extends MouseInputAdapter implements ActionLis
                         popup.add(menuItem);
                     }
 
+                    /*
+                     * "Transactions" submenu: Donate/Scrap/Delete/Transfer/black-market sell-recall/direct-sell,
+                     * each independently gated by server "Christmas_Allow*" configs (for units flagged as
+                     * "Christmas" event units, each transaction type can be individually disabled) plus other
+                     * per-transaction rules (e.g. black market unit-type/faction/clan restrictions below). The
+                     * submenu itself is only attached to the popup if numItems ends up > 0.
+                     */
                     JMenu transactionsMenu = new JMenu("Transactions");
                     int numItems = 0;
                     if (!cm.isChristmasUnit() ||
@@ -1347,11 +1555,21 @@ public class MekTableMouseAdapter extends MouseInputAdapter implements ActionLis
                         numItems++;
                     }
 
+                    // NOTE (apparent bug): whether the Transactions submenu is attached to the popup at all is
+                    // decided HERE, based only on whether Donate/Scrap/Delete/Transfer added anything
+                    // (numItems). The black-market "Sell on BM"/"Recall from BM"/"Direct Sell Unit" items
+                    // computed below are added to transactionsMenu regardless, but if numItems is still 0 at
+                    // this point the menu was never popup.add()-ed, so those market items end up built into an
+                    // orphaned JMenu that is never shown to the user.
                     if (numItems > 0) {
                         popup.add(transactionsMenu);
                     }
 
                     // Test unit for BM access
+                    // Determine black-market sell eligibility: starts allowed unless this is a "Christmas"
+                    // unit and Christmas_AllowBM forbids it, then is further restricted per unit-type config
+                    // flags (MeksMayBeSoldOnBM, VehiclesMayBeSoldOnBM, etc.), a clan-unit ban (BMNoClan), and
+                    // finally a per-faction ban list (BMNoSell, '$'-delimited) checked just below.
                     boolean canSellUnit = !cm.isChristmasUnit() ||
                                                 MathUtility.parseBoolean(chqPanel.getClient()
                                                                                .getServerConfigs("Christmas_AllowBM"),
@@ -1420,6 +1638,8 @@ public class MekTableMouseAdapter extends MouseInputAdapter implements ActionLis
                         transactionsMenu.add(menuItem);
                     }
 
+                    // "Pilot" submenu: retire/rename/promote/demote the unit's assigned pilot, plus (further
+                    // below) the personal pilot-queue exchange/assign feature.
                     JMenu pilotMenu = new JMenu("Pilot");
                     popup.add(pilotMenu);
                     // Cannot Retire or rename Vacant pilots.
@@ -1434,6 +1654,8 @@ public class MekTableMouseAdapter extends MouseInputAdapter implements ActionLis
                         menuItem.addActionListener(this);
                         pilotMenu.add(menuItem);
 
+                        // Promote/Demote only offered when the server allows buying/selling pilot skill
+                        // upgrades; Demote further requires selling upgrades to be allowed on top of buying.
                         if (MathUtility.parseBoolean(chqPanel.getClient().getServerConfigs(
                               "PlayersCanBuyPilotUpgrades"), false)) {
                             menuItem = new JMenuItem("Promote Pilot");
@@ -1453,6 +1675,10 @@ public class MekTableMouseAdapter extends MouseInputAdapter implements ActionLis
                     }
 
                     // Pilot Queues Block
+                    // Only relevant when the server allows "personal pilot queues" (a per-player pool of
+                    // spare pilots by unit type/weight class) and the unit takes a single pilot. Builds a
+                    // pilot-assignment/exchange menu ("Assign" if currently vacant, "Exchange" plus a
+                    // "Remove" item otherwise) populated from chqPanel.getPlayer().getPersonalPilotQueue().
                     boolean personalPilotQueuesEnabled = MathUtility.parseBoolean(chqPanel.getClient().getServerConfigs(
                           "AllowPersonalPilotQueues"), false);
                     if (personalPilotQueuesEnabled && (cm.isSinglePilotUnit())) {
@@ -1499,11 +1725,14 @@ public class MekTableMouseAdapter extends MouseInputAdapter implements ActionLis
 
                     popup.addSeparator();
 
+                    // Broadcasts this unit's stats to the player's faction chat channel (server command "sth#u#<id>").
                     menuItem = new JMenuItem("Show To Faction");
                     menuItem.setActionCommand(String.format("SUTH|%s", cm.getId()));
                     menuItem.addActionListener(this);
                     popup.add(menuItem);
 
+                    // "Remove From All" (RFAA) pulls this unit out of every army it currently sits in,
+                    // returning it to hangar-only status.
                     menuItem = new JMenuItem("Remove From All");
                     menuItem.setActionCommand(String.format("RFAA|%s", cm.getId()));
                     menuItem.addActionListener(this);
@@ -1525,6 +1754,9 @@ public class MekTableMouseAdapter extends MouseInputAdapter implements ActionLis
                     }
 
                     popup.show(mouseEvent.getComponent(), mouseEvent.getX(), mouseEvent.getY());
+                // Branch 5: hangar cell is empty AND the player still has at least one free bay -> offer to
+                // pare down unused bay capacity, but only from the single cell that represents the very
+                // first free (unoccupied) bay slot, to avoid repeating the option on every empty cell.
                 } else if (chqPanel.getPlayer().getFreeBays() > 0) {
                     int hangerNum = (((row - chqPanel.getMekTable().getRowsForArmies()) *
                                             (chqPanel.getMekTable().getColumnCount() - 1)) +
@@ -1547,6 +1779,16 @@ public class MekTableMouseAdapter extends MouseInputAdapter implements ActionLis
         }
     }
 
+    /**
+     * Builds an empty numbered {@link JMenu} label for the Nth overflow page of a weight-class/ProtoMek/
+     * Infantry group in the Add/Exchange menus, used when a single category has more than 10 candidate units
+     * and must be split across multiple submenus (e.g. "Heavy 2", "Proto 3", "Infantry 1").
+     *
+     * @param i weight-class/category index: 0-3 are the four weight classes (see {@link Unit#getWeightClassDesc}),
+     *          4 is ProtoMek, 5 (or anything else) is treated as Infantry/BattleArmor
+     * @param j zero-based page index within the category; displayed as {@code j + 1}
+     * @return a new, empty {@link JMenu} with the appropriate numbered label
+     */
     private static @NonNull JMenu getMenuX(int i, int j) {
         JMenu menuX;
         if (i < 4) {
@@ -1560,6 +1802,15 @@ public class MekTableMouseAdapter extends MouseInputAdapter implements ActionLis
         return menuX;
     }
 
+    /**
+     * Scans an array of already-added menu components (typically {@code addMenu.getMenuComponents()} or
+     * {@code jm.getMenuComponents()}) for any {@link JMenu} whose label starts with "Proto", used to decide
+     * whether a separator is needed before the Infantry group so ProtoMek and Infantry submenus aren't
+     * visually run together.
+     *
+     * @param components the current top-level children of the Add/Exchange menu being built
+     * @return true if at least one child menu's text starts with "Proto"
+     */
     private static boolean isProtoMenu(Component[] components) {
         boolean hasProtoMenu = false;
         for (Component currComponent : components) {
@@ -1572,6 +1823,17 @@ public class MekTableMouseAdapter extends MouseInputAdapter implements ActionLis
         return hasProtoMenu;
     }
 
+    /**
+     * Formats a display label for one candidate pilot in the personal-pilot-queue "Assign"/"Exchange"
+     * submenu, showing the pilot's name plus their relevant skill(s), and (for Mek pilots only) any
+     * accumulated hit/injury count.
+     *
+     * @param cm    the unit the pilot would be assigned to (its type determines whether a piloting skill
+     *              is shown alongside gunnery)
+     * @param pilot the candidate pilot from the personal pilot queue
+     * @return a formatted label such as {@code "Jenny Doe (4/5, Small Arms) Hits: 1"} for a Mek pilot, or
+     *         {@code "Jenny Doe (4)"} for non-Mek crew
+     */
     private static @NonNull String getPilotString(CUnit cm, Pilot pilot) {
         String pilotString;
         String skills = pilot.getSkillString(true);
@@ -1598,6 +1860,25 @@ public class MekTableMouseAdapter extends MouseInputAdapter implements ActionLis
         return pilotString;
     }
 
+    /**
+     * Handles mouse-button-up: if a drag was in progress ({@link #isDrag}), completes the drag-and-drop
+     * operation and sends the corresponding campaign chat command to the server based on where the mouse was
+     * released:
+     * <ul>
+     *   <li>Released over the hangar area (no target army) while the unit came from an army: sends an
+     *   "EXM" command with hangarUnitId=-1, removing the unit from its origin army.</li>
+     *   <li>Released over an army coming from the hangar: adds the dragged unit to that army (optionally
+     *   swapping out whatever unit was already in the target cell).</li>
+     *   <li>Released over a different cell within the SAME origin army: reorders the unit to the new
+     *   position via a "unitposition" command.</li>
+     * </ul>
+     * In every case the drag image is erased by repainting {@link #dragRect}, the cursor is reset to
+     * default, {@link #isDrag} is cleared, and finally {@link #maybeShowPopup} is invoked (so that on
+     * platforms where the popup trigger fires on release rather than press, e.g. Windows, the context menu
+     * still appears).
+     *
+     * @param mouseEvent the originating Swing mouse event
+     */
     @Override
     public void mouseReleased(MouseEvent mouseEvent) {
 
@@ -1669,6 +1950,18 @@ public class MekTableMouseAdapter extends MouseInputAdapter implements ActionLis
         maybeShowPopup(mouseEvent);
     }
 
+    /**
+     * Handles mouse movement while a button is held during an active drag ({@link #isDrag}): redraws the
+     * semi-transparent {@link #dragImage} at the new cursor position (erasing the old image first), and
+     * updates the table's cursor to preview the outcome of dropping at the current location -- e.g. an "add"
+     * icon over an empty army slot, a "duplicate" icon if the unit is already in that army, a "max" icon if
+     * the multi-army unit cap has been reached, a "reposition" icon when reordering within the same army, or
+     * a "not allowed" icon when the current player status forbids the action (see the per-branch comments
+     * below for the exact cursor-selection rules, which largely mirror the drop logic in
+     * {@link #mouseReleased}).
+     *
+     * @param mouseEvent the originating Swing mouse event
+     */
     @Override
     public void mouseDragged(MouseEvent mouseEvent) {
 
@@ -1749,6 +2042,35 @@ public class MekTableMouseAdapter extends MouseInputAdapter implements ActionLis
 
     }
 
+    /**
+     * Central dispatch point for every context-menu item built in {@link #maybeShowPopup} (all of which use
+     * {@code this} as their {@link ActionListener}). The {@link ActionEvent}'s action command is a
+     * pipe ({@code |})-delimited string whose first token (upper-cased) is the command mnemonic and whose
+     * remaining tokens are its parameters, e.g. {@code "EXM|<armyId>|<unitId>|<hangarUnitId>"}. Most cases
+     * either:
+     * <ul>
+     *   <li>forward directly to an existing handler method on {@code chqPanel.getClient().getMainFrame()}
+     *   (typically opening a dialog or performing validation before sending a command), or</li>
+     *   <li>build and send a raw campaign command string to the server via
+     *   {@code chqPanel.getClient().sendChat(IClient.CAMPAIGN_PREFIX + "c " + ...)}, relying on the server's
+     *   response/subsequent state push to update the GUI, or</li>
+     *   <li>open a client-side dialog/window directly (e.g. unit display, repair dialogs, pilot promotion).</li>
+     * </ul>
+     * The table is repainted unconditionally at the end of the method, after the switch, regardless of which
+     * case matched (or if none did).
+     * <p>
+     * Several cases here have no corresponding menu item anywhere in {@link #maybeShowPopup} and so cannot
+     * currently be triggered by the popup menus in this class (they may be dead/legacy code, or invoked from
+     * elsewhere): {@code AA} ("add army", sends a create-army command), {@code SA}/{@code SI} (empty
+     * no-op placeholders, apparently vestigial "set active"/"set inactive" stubs), {@code EUR} ("Estimate
+     * Unit Repairs", fully implemented but never wired to a menu item), and {@code SAS}/{@code TAS}
+     * (secondary/tertiary army sort -- only a primary army sort submenu is ever built). Additionally, the
+     * "Set Commander"/"Remove Commander" menu items built above send {@code SETUNITCOMMANDER}/
+     * {@code REMOVEUNITCOMMANDER} (no underscores), which do not match the {@code SET_UNIT_COMMANDER}/
+     * {@code REMOVE_UNIT_COMMANDER} case labels below, so those two menu items are currently no-ops.
+     *
+     * @param actionEvent the Swing action event carrying the pipe-delimited command string
+     */
     public void actionPerformed(ActionEvent actionEvent) {
 
         String actionCommand = actionEvent.getActionCommand();
@@ -1757,6 +2079,9 @@ public class MekTableMouseAdapter extends MouseInputAdapter implements ActionLis
 
         // exchange mek
         switch (command) {
+            // EXM: swap the unit currently in army <lid>'s slot occupied by hangar-unit-turned-army-unit
+            // <hid> for hangar unit <hid> (or add if the slot -1 sentinel is used, or remove to hangar when
+            // hid is -1); this single command backs Add, Exchange, and Move-To-Hangar menu items.
             case "EXM" -> {
                 int lid = MathUtility.parseInt(stringTokenizer.nextToken(), 0);
                 int mid = MathUtility.parseInt(stringTokenizer.nextToken(), 0);
@@ -1765,26 +2090,34 @@ public class MekTableMouseAdapter extends MouseInputAdapter implements ActionLis
                       .sendChat(String.format("%sc EXM#%s,%s#%s", IClient.CAMPAIGN_PREFIX, lid, mid, hid));
                 // move to hanger
             }
+            // MH ("Move To Hangar"): removes unit <mid> from army <lid> without replacement (reuses the "EXM" server command with no hangar-unit id).
             case "MH" -> {
                 int lid = MathUtility.parseInt(stringTokenizer.nextToken(), 0);
                 int mid = MathUtility.parseInt(stringTokenizer.nextToken(), 0);
                 chqPanel.getClient().sendChat(String.format("%sc EXM#%s,%s", IClient.CAMPAIGN_PREFIX, lid, mid));
                 // add lance
             }
+            // AA: creates a new army/lance using the configured default army name. Not currently reachable
+            // from any menu item built in this file (see class-level note on dead cases above).
             case "AA" -> chqPanel.getClient().sendChat(String.format("%sc cra#%s", IClient.CAMPAIGN_PREFIX, chqPanel.getClient()
                                                                                                     .getConfigParam(
                                                                                                           "DEFAULT_ARMY_NAME")));
 
             // set lance active
+            // SA/SI: empty no-op cases; not reachable from any menu item built in this file.
             case "SA" -> {
             }
             case "SI" -> {
             }
+            // AO ("Attack Options"): opens the commander's attack-eligibility check dialog for army <lid>.
             case "AO" -> {
                 int lid = MathUtility.parseInt(stringTokenizer.nextToken(), 0);
                 chqPanel.getClient().getMainFrame().jMenuCommanderCheckAttack_actionPerformed(lid);
                 // check access
             }
+            // CAA ("Check Access"): prompts the player, via a JComboBox embedded in a JOptionPane, to pick
+            // one of the server's known operations, then asks the server whether army <armyID> is eligible
+            // to participate in it. Cancelling the dialog returns immediately without sending anything.
             case "CAA" -> {
                 int armyID = MathUtility.parseInt(stringTokenizer.nextToken(), 0);
                 JComboBox<String> attackCombo = new JComboBox<>(); //Barukkhazad! 2015-11-08 removed castings
@@ -1827,6 +2160,9 @@ public class MekTableMouseAdapter extends MouseInputAdapter implements ActionLis
                 chqPanel.getClient().getMainFrame().jMenuCommanderPlayerUnlockArmy_actionPerformed(lid);
                 // unlock army
             }
+            // DAA: toggles army <lid>'s disabled state; shared by both the "Disable Army" and "Enable Army"
+            // menu items (see note at their construction site), so jMenuCommanderDisableArmy_actionPerformed
+            // must itself flip the current state rather than unconditionally disabling.
             case "DAA" -> {
                 int lid = MathUtility.parseInt(stringTokenizer.nextToken(), 0);
                 chqPanel.getClient().getMainFrame().jMenuCommanderDisableArmy_actionPerformed(lid);
@@ -1856,6 +2192,14 @@ public class MekTableMouseAdapter extends MouseInputAdapter implements ActionLis
                 chqPanel.getClient().sendChat(String.format("%sc sth#a#%s", IClient.CAMPAIGN_PREFIX, lid));
                 // make public challenge
             }
+            // MPC ("Make Public Challenge"): builds and sends one formatted "Looking for a game at ..." chat
+            // message per matching army (only army <lid> if lid != -1, otherwise every army the player owns
+            // -- see the `if (lid != -1) break;` at the end of the loop body). `mode` (1-13) selects which
+            // combination of stats gets embedded in the message; each `mode == N` branch below builds a
+            // different summary (BV only, unit count, weight-class breakdown, tonnage, unit type counts,
+            // hyperlinked per-unit model names, or per-tonnage groupings), optionally scaled/annotated by the
+            // "Operations" force-size rule (opForceSize/forceSizeMod) when that ruleset is active. The chosen
+            // `operation` name (or the literal "none") is appended in parentheses at the end if non-trivial.
             case "MPC" -> {
                 int mode = MathUtility.parseInt(stringTokenizer.nextToken(), 0);
                 int lid = MathUtility.parseInt(stringTokenizer.nextToken(), 0);
@@ -1906,6 +2250,12 @@ public class MekTableMouseAdapter extends MouseInputAdapter implements ActionLis
 
                         toSend.append(", with  ").append(armySize).append(" unit");
 
+                        // BUG: when armySize > 1 this appends the literal text "actionCommand." instead of
+                        // the intended plural suffix (e.g. "s."). This looks like an accidental artifact of a
+                        // find/replace that renamed a local variable to `actionCommand` and clobbered a
+                        // string literal in the process (see also the "BA'actionCommand" comment typo a few
+                        // lines below in the mode == 3 branch). The outgoing chat message will literally read
+                        // "...with 3 unitactionCommand." for armies with more than one unit.
                         if (armySize > 1) {
                             toSend.append("actionCommand.");
                         } else {
@@ -2004,6 +2354,10 @@ public class MekTableMouseAdapter extends MouseInputAdapter implements ActionLis
                             toSend.append(" ").append(ba).append(" BAs,");
                         }
 
+                        // BUG: this condition checks `ba > 0` again (copy-paste from the block above) instead
+                        // of `aero > 0`. As written, the Aerospace count is only appended to the challenge
+                        // message when the army also has at least one BattleArmor unit; an army with
+                        // Aerospace units but no BA never gets its aero count mentioned.
                         if (ba > 0) {
                             toSend.append(" ").append(aero).append(" Aerospace,");
                         }
@@ -2316,6 +2670,8 @@ public class MekTableMouseAdapter extends MouseInputAdapter implements ActionLis
                 chqPanel.getClient().getMainFrame().jMenuCommanderNamePilot_actionPerformed(mid);
                 // Promote Pilot
             }
+            // PP/DP: both open the same PromotePilotDialog for unit <mid>'s pilot; the boolean flag selects
+            // demote (true) vs promote (false) mode.
             case "PP" -> {
                 int mid = MathUtility.parseInt(stringTokenizer.nextToken(), 0);
                 new PromotePilotDialog(chqPanel.getClient(), mid, false);
@@ -2363,12 +2719,14 @@ public class MekTableMouseAdapter extends MouseInputAdapter implements ActionLis
                       mek);
                 customizeUnit.setVisible(true);
             }
+            // ARU ("Repair Unit", advanced-repair ruleset): opens AdvancedRepairDialog in repair mode (salvage=false).
             case "ARU" -> {
                 int row = MathUtility.parseInt(stringTokenizer.nextToken(), 0);
                 int col = MathUtility.parseInt(stringTokenizer.nextToken(), 0);
                 CUnit mek = chqPanel.getMekTable().getMekAt(row, col);
                 new AdvancedRepairDialog(chqPanel.getClient(), mek.getId(), false);
             }
+            // BUR ("Bulk Repair"): opens BulkRepairDialog configured for a full (non-salvage) repair of a single unit.
             case "BUR" -> {
                 int row = MathUtility.parseInt(stringTokenizer.nextToken(), 0);
                 int col = MathUtility.parseInt(stringTokenizer.nextToken(), 0);
@@ -2378,6 +2736,7 @@ public class MekTableMouseAdapter extends MouseInputAdapter implements ActionLis
                       BulkRepairDialog.TYPE_BULK,
                       BulkRepairDialog.UNIT_TYPE_SINGLE);
             }
+            // SUR ("Repair Unit", simple-repair ruleset): same dialog as BUR but in TYPE_SIMPLE mode.
             case "SUR" -> {
                 int row = MathUtility.parseInt(stringTokenizer.nextToken(), 0);
                 int col = MathUtility.parseInt(stringTokenizer.nextToken(), 0);
@@ -2387,6 +2746,7 @@ public class MekTableMouseAdapter extends MouseInputAdapter implements ActionLis
                       BulkRepairDialog.TYPE_SIMPLE,
                       BulkRepairDialog.UNIT_TYPE_SINGLE);
             }
+            // BSU ("Bulk Salvage"): BulkRepairDialog in TYPE_SALVAGE mode, used to strip/salvage critical slots.
             case "BSU" -> {
                 int row = MathUtility.parseInt(stringTokenizer.nextToken(), 0);
                 int col = MathUtility.parseInt(stringTokenizer.nextToken(), 0);
@@ -2396,6 +2756,7 @@ public class MekTableMouseAdapter extends MouseInputAdapter implements ActionLis
                       BulkRepairDialog.TYPE_SALVAGE,
                       BulkRepairDialog.UNIT_TYPE_SINGLE);
             }
+            // SUC ("Salvage Unit Crits"): AdvancedRepairDialog in salvage mode (salvage=true).
             case "SUC" -> {
                 int row = MathUtility.parseInt(stringTokenizer.nextToken(), 0);
                 int col = MathUtility.parseInt(stringTokenizer.nextToken(), 0);
@@ -2454,6 +2815,10 @@ public class MekTableMouseAdapter extends MouseInputAdapter implements ActionLis
             }
 
             // Estimate Unit Repairs
+            // EUR: fully implemented handler that composes an HTML table estimating repair cost at each tech
+            // skill level (Green/Regular/Veteran/Elite) for the clicked unit and posts it as a system
+            // message. As noted at the top of this method, no menu item anywhere in maybeShowPopup currently
+            // sets this action command, so this case is unreachable from the popup menus built here.
             case "EUR" -> {
                 int row = MathUtility.parseInt(stringTokenizer.nextToken(), 0);
                 int col = MathUtility.parseInt(stringTokenizer.nextToken(), 0);
@@ -2629,6 +2994,8 @@ public class MekTableMouseAdapter extends MouseInputAdapter implements ActionLis
                     // buy mek
                 }
             }
+            // LCN ("Link"/"Unlink" C3 network): links unit <mid> to C3 master <hid> within army <lid>; a
+            // master id of -1 (as sent by the "Unlink" menu item) disconnects the unit from its current network.
             case "LCN" -> {
                 int lid = MathUtility.parseInt(stringTokenizer.nextToken(), 0);
                 int mid = MathUtility.parseInt(stringTokenizer.nextToken(), 0);
@@ -2654,6 +3021,9 @@ public class MekTableMouseAdapter extends MouseInputAdapter implements ActionLis
                       .sendChat(String.format("%sc setautoeject#%s#false", IClient.CAMPAIGN_PREFIX, mek.getExternalId()));
                 // exchange pilot
             }
+            // EXP ("Exchange"/"Assign"/"Remove" pilot from the personal pilot queue): assigns queue index
+            // <pid> to unit <uid>'s cockpit; a pilot index of -1 (as sent by the "Remove" menu item) vacates
+            // the unit's current pilot instead.
             case "EXP" -> {
                 int uid = MathUtility.parseInt(stringTokenizer.nextToken(), 0);
                 int pid = MathUtility.parseInt(stringTokenizer.nextToken(), 0);
@@ -2663,6 +3033,7 @@ public class MekTableMouseAdapter extends MouseInputAdapter implements ActionLis
                   chqPanel.getClient().getMainFrame().jMenuCommanderFireTechs_actionPerformed();
             case "SEB" -> // sell excess bays
                   chqPanel.getClient().getMainFrame().jMenuCommanderSellBays_actionPerformed();
+            // RPU ("Move to #N" in the Position menu): reorders unit <unitID> within army <armyID> to roster index <newPos>.
             case "RPU" -> {
                 int armyID = MathUtility.parseInt(stringTokenizer.nextToken(), 0);
                 int unitID = MathUtility.parseInt(stringTokenizer.nextToken(), 0);
@@ -2670,6 +3041,8 @@ public class MekTableMouseAdapter extends MouseInputAdapter implements ActionLis
                 chqPanel.getClient()
                       .sendChat(String.format("%sc unitposition#%s#%s#%s", IClient.CAMPAIGN_PREFIX, armyID, unitID, newPos));
             }
+            // PHQS/SHQS/THQS: persist the chosen primary/secondary/tertiary hangar sort criterion to the
+            // client config and immediately re-sort the hangar table.
             case "PHQS" -> {
                 chqPanel.getClient().getConfig().setParam("PRIMARY_HQ_SORT_ORDER", stringTokenizer.nextToken());
                 chqPanel.getClient().getConfig().saveConfig();
@@ -2685,6 +3058,9 @@ public class MekTableMouseAdapter extends MouseInputAdapter implements ActionLis
                 chqPanel.getClient().getConfig().saveConfig();
                 chqPanel.getClient().getPlayer().sortHangar();
             }
+            // PAS/SAS/TAS: same idea as PHQS/SHQS/THQS but for the army list's sort order. Only PAS is
+            // reachable from the popup menus in this file (see the note at the top of this method); SAS/TAS
+            // remain fully functional here but currently have no menu item to trigger them.
             case "PAS" -> {
                 chqPanel.getClient().getConfig().setParam("PRIMARY_ARMY_SORT_ORDER", stringTokenizer.nextToken());
                 chqPanel.getClient().getConfig().saveConfig();
@@ -2700,6 +3076,11 @@ public class MekTableMouseAdapter extends MouseInputAdapter implements ActionLis
                 chqPanel.getClient().getConfig().saveConfig();
                 chqPanel.getClient().getPlayer().sortArmies();
             }
+            // REMOVE_UNIT_COMMANDER / SET_UNIT_COMMANDER: intended to toggle whether the clicked unit is set
+            // as its army's commander. As documented at the top of this method, the "Remove Commander"/"Set
+            // Commander" menu items actually send "REMOVEUNITCOMMANDER"/"SETUNITCOMMANDER" (no underscores),
+            // which never match these case labels -- these two cases are therefore currently unreachable
+            // dead code from the popup menu's perspective.
             case "REMOVE_UNIT_COMMANDER" -> {
                 int row = MathUtility.parseInt(stringTokenizer.nextToken(), 0);
                 int col = MathUtility.parseInt(stringTokenizer.nextToken(), 0);
@@ -2720,6 +3101,8 @@ public class MekTableMouseAdapter extends MouseInputAdapter implements ActionLis
             }
         }
 
+        // Table is repainted unconditionally after the switch, whether or not a case matched, so any
+        // GUI-visible state changes made above (or by the server's async response) are reflected promptly.
         chqPanel.getTableMeks().repaint();
     }
 }

@@ -75,29 +75,72 @@ import mekwars.common.gui.dialogs.PlayerNameDialog;
 public class AttackMenu extends JMenu implements ActionListener {
     private static final MMLogger LOGGER = MMLogger.create(AttackMenu.class);
 
+    /**
+     * Serialization version identifier for this {@link JMenu}.
+     */
     @Serial
     private static final long serialVersionUID = 7420602115238025725L;
     //Statics
+    /*
+     * Indexes into the per-operation {@code String[]} properties array returned by
+     * {@link IClient#getAllOps()} (keyed by operation/game-type name). These describe an "Op" (a type of
+     * attack/game a player can launch), as streamed from the server's OpList data. Note the indices are not
+     * contiguous with index 2 (there is no {@code OP_*} constant for array slot 2) - whatever property lives
+     * there is unused/unnamed by this class.
+     */
+    /** Index of the operation's maximum range property (distance an attacker may launch from). */
     private static final int OP_RANGE = 0;
+    /** Index of the operation's menu-item color (HTML color name/hex) property. */
     private static final int OP_COLOR = 1;
+    /** Index of the operation's "faction info" property: "none"/"only"/other, gating on target factory presence. */
     private static final int OP_FACTION_INFO = 3;
+    /** Index of the operation's "home info" property: "none"/"only"/other, gating on target being a homeworld. */
     private static final int OP_HOME_INFO = 4;
+    /** Index of the influence percentage at/above which the operation may be launched directly on the target. */
     private static final int OP_LAUNCH_ON = 5;
+    /** Index of the influence percentage a friendly planet must have to be used as a launch point for the op. */
     private static final int OP_LAUNCH_FROM = 6;
+    /** Index of the minimum-ownership percentage (of the target planet) required to use this operation. */
     private static final int OP_MIN_OWN = 7;
+    /** Index of the maximum-ownership percentage (of the target planet) allowed to use this operation. */
     private static final int OP_MAX_OWN = 8;
+    /** Index of the "$"-delimited list of house names allowed to defend against this operation. */
     private static final int OP_LEGAL_DEFENDERS = 9;
+    /** Index of the "^"-delimited list of planet flags the target planet must have for the op to be allowed. */
     private static final int OP_ALLOW_ED_PLANET_FLAGS = 10;
+    /** Index of the "^"-delimited list of planet flags that disqualify the target planet from this operation. */
     private static final int OP_DISALLOW_ED_PLANET_FLAGS = 11;
+    /** Index of the boolean flag indicating this operation is only launchable from reserve status (AFR). */
     private static final int OP_AFR = 12;
+    /** Index of the boolean flag indicating this operation is only launchable while the player is active. */
     private static final int OP_ACTIVE = 13;
+    /** Index of the minimum sub-faction access level required to use this operation. */
     private static final int OP_ACCESS_LEVEL = 14;
     //VARS
+    /** The client this menu queries for army/operation/planet data and through which chat commands are sent. */
     private final IClient client;
+    /**
+     * The army this menu was built for, or a negative value if it was built generically (e.g. from the main
+     * menu bar or the star map) rather than for one specific army right-clicked in the HQ panel.
+     */
     private int armyID;
+    /**
+     * The planet this menu's operations target, {@code "-1"} if unset/unspecified (in which case selecting an
+     * operation will prompt the player to choose a planet), or {@code null} in some generic-menu construction
+     * paths.
+     */
     private String planetName;
 
     //CONSTRUCTOR
+    /**
+     * Creates an Attack menu for the given context.
+     *
+     * @param client     the client used to query available operations/armies/planets and send attack commands
+     * @param armyID     the specific army this menu is for, or a negative number to build a generic menu covering
+     *                   all of the player's armies (filtered by planet eligibility if {@code planetName} is given)
+     * @param planetName the target planet name, {@code "-1"}/empty/{@code null} to defer planet selection to a
+     *                   dialog shown when an operation is chosen
+     */
     public AttackMenu(IClient client, int armyID, String planetName) {
         super("Attack");
         this.client = client;
@@ -105,6 +148,19 @@ public class AttackMenu extends JMenu implements ActionListener {
         this.planetName = planetName;
     }
 
+    /**
+     * Builds a single {@link JMenuItem} for one operation, with its label formatted differently depending on
+     * whether this is the compact popup-style menu ({@code fullMenu == false}, colored HTML text) or the full
+     * "Games" menu bar entry ({@code fullMenu == true}, plain " - name" text prefixed by the "Attacks:" header
+     * item added later in {@link #updateMenuItems(boolean)}). Despite the parameter name {@code settings}, only
+     * the operation's color (a single value, not the full settings array) is passed in and used here.
+     *
+     * @param fullMenu whether this item is for the full "Games" menu (plain text) vs. the compact popup (colored)
+     * @param currName the operation name to display
+     * @param settings the operation's HTML color string (e.g. {@code "#FF0000"} or a color name)
+     *
+     * @return a new, unwired {@link JMenuItem} (the caller is responsible for attaching an action listener/command)
+     */
     private static @org.jspecify.annotations.NonNull JMenuItem getJMenuItem(boolean fullMenu,
           String currName, String settings) {
         String color = settings;
@@ -127,6 +183,38 @@ public class AttackMenu extends JMenu implements ActionListener {
     /*
      * Most important method in the AttackMenu class. Rebuilds all of the
      * JMenuItems in the menu by getting army and ops data from the client.
+     */
+    /**
+     * Clears and rebuilds this menu's items based on the current army/planet context and the operations data known
+     * to the client. Behavior differs by construction context:
+     * <ul>
+     *   <li>If {@link #armyID} is negative (menu built generically, e.g. main menu bar or star map): computes the
+     *   set of operations legal for <em>any</em> of the player's armies, then, if a specific {@link #planetName}
+     *   was supplied, further filters that set down to operations that are actually eligible against that planet -
+     *   checking sub-faction access level, legal-defender house list, factory/homeworld requirements, ownership
+     *   percentage bounds (scaled by the planet's conquest points), required/disallowed planet flags, reserve-only
+     *   ("AFR") exclusion, and finally range from any planet the player's house currently controls at or above the
+     *   operation's launch-from influence threshold. If no operations are found eligible, a single disabled-looking
+     *   "None" item is added instead.</li>
+     *   <li>If {@link #armyID} is non-negative (menu built for one specific army, e.g. right-click in the HQ
+     *   panel): simply lists that army's own legal operations (via {@link mekwars.common.campaign.CArmy#getLegalOperations()}),
+     *   skipping any that are reserve-only ("AFR"), since these menus can only be used while the player is active.</li>
+     * </ul>
+     * Each resulting operation becomes a {@link JMenuItem} (built by {@link #getJMenuItem}) wired to fire
+     * {@link #actionPerformed(ActionEvent)} with the operation name as its action command.
+     * <p>
+     * When {@code fullMenu} is {@code true}, this method also relabels the menu itself to "Games" (mnemonic 'G'),
+     * inserts a non-interactive "Attacks:" header item at the top (its listeners are stripped immediately after
+     * creation so it behaves as a label rather than a clickable entry), and appends fixed utility items: an
+     * "Attack From Reserve" item (only if the server config {@code AllowAttackFromReserve} is enabled and the
+     * player is currently in reserve status), "Check Access", "Games Status", and (only if the player is active or
+     * beyond) "Cancel Game".
+     * <p>
+     * TODO (from the original source): operations are not currently sorted by color then name, which would let
+     * server operators visually group similar game types together.
+     *
+     * @param fullMenu {@code true} to build the full "Games" menu (with header/utility items), {@code false} to
+     *                 build just the compact list of attack options (e.g. for a popup menu)
      */
     public void updateMenuItems(boolean fullMenu) {
 
@@ -402,6 +490,9 @@ public class AttackMenu extends JMenu implements ActionListener {
             this.setText("Games");
             this.setMnemonic('G');
 
+            // Build a plain, non-interactive "Attacks:" header item by stripping every listener a fresh
+            // JMenuItem/JComponent normally has, so it behaves like a label rather than a clickable/focusable
+            // menu entry.
             JMenuItem toAdd = new JMenuItem("Attacks:");
             MouseListener[] mouse = toAdd.getMouseListeners();
             FocusListener[] focus = toAdd.getFocusListeners();
@@ -416,6 +507,10 @@ public class AttackMenu extends JMenu implements ActionListener {
                 toAdd.removeFocusListener(focusListener);
             }
 
+            // Likely bug: this loop is sized to menuKey.length (the menu-key listeners) but removes from the
+            // `focus` array a second time instead of calling removeMenuKeyListener(menuKey[i]); the menu-key
+            // listeners captured above are therefore never actually removed, and if menuKey has more entries
+            // than focus this would throw ArrayIndexOutOfBoundsException.
             for (int i = 0; i < menuKey.length; i++) {
                 toAdd.removeFocusListener(focus[i]);
             }
@@ -457,6 +552,20 @@ public class AttackMenu extends JMenu implements ActionListener {
         }
     }
 
+    /**
+     * Guards against building a menu item for an operation name that has no corresponding entry in {@code allOps}
+     * (i.e. the client's cached operations data is out of sync with the legal-operations names reported by an
+     * army/planet). Logs a debug message (including a dump of every key currently in {@code allOps}) when this
+     * happens, but otherwise does not attempt to recover the missing data itself - the caller in
+     * {@link #updateMenuItems(boolean)} is expected to skip that one operation (via {@code continue}) rather than
+     * fail the whole menu build.
+     *
+     * @param allOps   the full operations map keyed by operation name, as returned by {@link IClient#getAllOps()}
+     * @param currName the operation name to check for
+     *
+     * @return {@code true} if {@code currName} is missing from {@code allOps} (caller should skip it),
+     *       {@code false} if it is present and safe to use
+     */
     private boolean checkAllOpsMenuItems(TreeMap<String, String[]> allOps, String currName) {
         if (!allOps.containsKey(currName)) {
             LOGGER.debug(String.format("Error in updateMenuItems(): no _%s_ in allOps.", currName));
@@ -487,6 +596,29 @@ public class AttackMenu extends JMenu implements ActionListener {
      * cmd is the command and one of those:
      * <p>
      * if arg0 == "multi" arg1: max attackers arg2: min attackers arg3: max defenders arg4: min defenders
+     * <p>
+     * NOTE: the "aid|pid|..." description above does not match this method's actual implementation below (there is
+     * no parsing of a pipe-delimited action command here) - it looks like it describes either an older version of
+     * this class or the format of a related server command, and is left as-is since it may still be useful
+     * historical/protocol context, but should not be relied on to understand the current code. The actual behavior
+     * is:
+     * <ul>
+     *   <li>Fixed utility commands ("cmdCancelGames", "cmdCheckAccess", "cmdGamesStatus",
+     *   "cmdAttackFromReserve") are dispatched by exact action-command match in the {@code switch} below, each
+     *   sending an appropriate campaign chat command (see {@link IClient#sendChat}) or opening a picker dialog.</li>
+     *   <li>Any other action command is treated as an operation/game-type name (as set by
+     *   {@link #getJMenuItem}/{@link #updateMenuItems(boolean)}). Before acting on it, the player's status is
+     *   checked: must be at least {@code STATUS_ACTIVE} and not {@code STATUS_FIGHTING}, otherwise an in-client
+     *   chat message explains why the attack can't proceed and the method returns early.</li>
+     *   <li>If {@link #planetName} is unset (i.e. {@code "-1"}), a {@link mekwars.common.gui.dialogs.PlanetNameDialog}
+     *   is shown to let the player pick a target planet; if the player cancels/leaves it blank, the method returns
+     *   without doing anything further.</li>
+     *   <li>Finally, either an {@link ArmyViewerDialog} is opened (letting the player pick which army attacks, when
+     *   {@link #armyID} is negative) or an attack chat command is sent directly for the specific army (when
+     *   {@link #armyID} is already known).</li>
+     * </ul>
+     *
+     * @param actionEvent the Swing action event carrying the action command to dispatch
      *
      * @see ActionListener#actionPerformed
      */
@@ -542,6 +674,9 @@ public class AttackMenu extends JMenu implements ActionListener {
 
                 String attackName = (String) attackCombo.getSelectedItem();
                 String armyName = (String) armyCombo.getSelectedItem();
+                // Note: this overwrites the AttackMenu's own armyID field (not just a local variable) with the
+                // army chosen in this dialog, permanently changing which army later menu rebuilds/attacks will
+                // apply to for the remainder of this menu instance's lifetime.
                 if (armyName != null) {
                     armyID = Integer.parseInt(armyName.substring(1, armyName.indexOf(" ")).trim());
                 }

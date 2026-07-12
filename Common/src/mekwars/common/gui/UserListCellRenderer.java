@@ -48,22 +48,52 @@ import mekwars.common.campaign.CUser;
 import mekwars.common.campaign.clientutils.protocol.IClient;
 import mekwars.common.gui.models.CUserListModel;
 
+/**
+ * A {@link ListCellRenderer} used to draw each row of the online/user list (see {@code CUserListPanel}/
+ * {@code CUserListModel}). For each visible {@link CUser}, this renderer builds up a label that reflects: user
+ * level (via a leading marker character and, for higher levels, a different marker), invisibility (an "(I)"
+ * marker, shown to viewers with sufficient privilege to see invisible users), mute state relative to the viewing
+ * player (public/private/faction ignore lists), no-play/admin-exclude status, bold/color/logged-in status, and a
+ * status icon (logged out/reserve/active/fighting) drawn from images cached in the client config. This renderer is
+ * intentionally reused across all list cells (the standard {@link ListCellRenderer} pattern) rather than one
+ * instance per row.
+ */
 public class UserListCellRenderer extends javax.swing.JLabel implements ListCellRenderer<CUserListModel> {
     private static final MMLogger LOGGER = MMLogger.create(UserListCellRenderer.class);
 
+    /**
+     * Serialization version identifier for this {@link javax.swing.JLabel}.
+     */
     @Serial
     private static final long serialVersionUID = 4400213401819469963L;
+    /** The client used to read config/display preferences and to resolve the viewing player's own data. */
     private final IClient client;
+    /** The list model this renderer belongs to; used to look up the {@link CUser} for a given row index. */
     private final CUserListModel Owner;
+    /** Whether the user list currently being rendered represents logged-in users (vs. a logged-out/offline list). */
     private boolean LoggedIn = false;
+    /** Cached copy of the "USER_LIST_BOLD" config preference (bold names for active/reserve users). */
     private boolean TextBold;
+    /** Cached copy of the "USER_LIST_COLOR" config preference (color names by the user's chosen color). */
     private boolean TextColor;
+    /** Cached copy of the "USER_LIST_IMAGE" config preference (show status icons). */
     private boolean TextImage;
+    /** Cached status icon shown for logged-out users. */
     private ImageIcon LogoutImage;
+    /** Cached status icon shown for users in reserve status. */
     private ImageIcon ReserveImage;
+    /** Cached status icon shown for active users. */
     private ImageIcon ActiveImage;
+    /** Cached status icon shown for users currently in a game/battle. */
     private ImageIcon FightImage;
 
+    /**
+     * Creates a renderer bound to the given list model, caching the current display preferences and status icons
+     * from the client config at construction time. Note these cached values are not automatically kept in sync
+     * with later config changes; see {@link #refreshParams()}.
+     *
+     * @param towner the list model this renderer will render cells for
+     */
     public UserListCellRenderer(CUserListModel towner) {
         Owner = towner;
         client = towner.getClient();
@@ -77,10 +107,19 @@ public class UserListCellRenderer extends javax.swing.JLabel implements ListCell
         setOpaque(true);
     }
 
+    /**
+     * Sets whether this renderer should treat rows as belonging to the logged-in user list (affects bolding,
+     * status icons, and tooltip verbosity in {@link #getListCellRendererComponent}).
+     */
     public void setLoggedIn(boolean loggedIn) {
         LoggedIn = loggedIn;
     }
 
+    /**
+     * Re-reads the display preference flags and status icons from the client config. Must be called explicitly
+     * after a relevant config change (e.g. the user toggles "bold names" in options) since the constructor only
+     * caches these values once.
+     */
     public void refreshParams() {
         TextBold = client.getConfig().isParam("USER_LIST_BOLD");
         TextColor = client.getConfig().isParam("USER_LIST_COLOR");
@@ -96,6 +135,30 @@ public class UserListCellRenderer extends javax.swing.JLabel implements ListCell
      * method is then called to "render" the cell.  If it is necessary to compute the dimensions of a list because the
      * list cells do not have a fixed size, this method is called to generate a component on which
      * <code>getPreferredSize</code> can be invoked.
+     * <p>
+     * MekWars-specific behavior: looks up the {@link CUser} for {@code index} via the owning {@link CUserListModel}
+     * (ignoring the {@code value} parameter), then builds up this label's text/color/font/icon/tooltip based on:
+     * <ul>
+     *   <li>User level tiers, each with a distinct leading marker: {@code < 30} no marker, {@code [30,100)} "^",
+     *   {@code [100,200)} "*", {@code >= 200} "@" - followed by an "(I) " marker if the user is invisible (and thus
+     *   only visible to viewers with sufficient privilege to begin with).</li>
+     *   <li>Mute status relative to the viewing player: checks the public, private, and (if same house) faction
+     *   ignore lists and appends "[muted+++]"-style suffixes (one "+" per extra list matched beyond the first) -
+     *   this lookup re-tokenizes the ignore-list config strings on every single row render, which is noted in the
+     *   source as "sickeningly inefficient" and a candidate for rewrite. Also note the ignore-list config keys read
+     *   here ({@code IGNORE_PUBLIC}, {@code IGNORE_PRIVATE}, {@code IGNORE_HOUSE}) use underscores, while
+     *   {@link GUIClientConfig}'s defaults define them without underscores ({@code IGNOREPUBLIC}, etc.) - this
+     *   mismatch means the underscored lookups here likely never find the persisted values.</li>
+     *   <li>No-play/admin-exclude status: appends "[np]" if the viewing player has this user on their admin- or
+     *   player-exclude list.</li>
+     *   <li>Logged-in vs. logged-out rendering: logged-out users are always shown in plain (non-bold) font with no
+     *   status icon; logged-in users are bold/plain per the {@code TextBold} preference and get a status icon
+     *   (logout/reserve/active/fighting) per the {@code TextImage} preference.</li>
+     * </ul>
+     * Note: if the model has no user at {@code index} (e.g. a stale/out-of-range index), this method returns
+     * {@code null} rather than a component - which is unusual for a {@link ListCellRenderer} (callers such as
+     * {@link JList}'s UI delegate generally expect a non-null component) and could cause a
+     * {@link NullPointerException} downstream if triggered.
      *
      * @param list         The JList we're painting.
      * @param value        The value returned by list.getModel().getElementAt(index).
@@ -103,7 +166,8 @@ public class UserListCellRenderer extends javax.swing.JLabel implements ListCell
      * @param isSelected   True if the specified cell was selected.
      * @param cellHasFocus True if the specified cell has the focus.
      *
-     * @return A component whose paint() method will render the specified value.
+     * @return A component whose paint() method will render the specified value; {@code null} if there is no
+     *       corresponding {@link CUser} at {@code index}.
      *
      * @see JList
      * @see ListSelectionModel

@@ -80,13 +80,52 @@ import mekwars.common.util.StringUtils;
 
 //import client.gui.dialog.TableViewerDialog;
 
+/**
+ * The main application window of the MekWars client (a {@link JFrame}).
+ * <p>
+ * This class owns the top-level menu bar and every menu item's action handler
+ * (methods named like {@code jMenuXyz_actionPerformed}), and hosts the tabbed
+ * UI in its content pane via {@link CMainPanel} (see {@code gui.panels}). It
+ * is the primary bridge between the Swing UI and the {@link IClient}
+ * interface: nearly every action handler in this class either calls a method
+ * directly on {@link #client} or builds a campaign command string (prefixed
+ * with {@link IClient#CAMPAIGN_PREFIX}) and sends it via
+ * {@link IClient#sendChat(String)} for the server to process.
+ * <p>
+ * Responsibilities of this class include:
+ * <ul>
+ * <li>Building the entire {@link JMenuBar} (File, Campaign, Attack/Game, Host,
+ * Options, Leadership, Help, Emoji, and the dynamically-loaded Mod/Admin/Operations
+ * menus) in {@link #createMenu()}.</li>
+ * <li>Showing/hiding and enabling/disabling menu items based on the player's
+ * current connection/login status and access level, in {@link #enableMenu()}.</li>
+ * <li>Handling menu item clicks, most of which pop up a small input dialog
+ * (e.g. {@link PlayerNameDialog}, {@link HouseNameDialog}) and then forward a
+ * campaign command to the server.</li>
+ * <li>Dynamically loading optional admin/moderator/operations-editor menus from
+ * external jars ({@code MekWarsAdmin.jar}, {@code MekWarsOpEditor.jar}) via
+ * reflection, when present on disk, so that server operators can distribute
+ * privileged tooling without shipping it to every client.</li>
+ * <li>Window lifecycle: confirming exit while hosting a game, and toggling
+ * MegaMek key-press handling based on window focus.</li>
+ * </ul>
+ * Most Swing component fields below are {@link JMenu}/{@link JMenuItem}
+ * instances whose purpose is self-explanatory from their name; only
+ * non-obvious state/caches/listeners are individually documented.
+ */
 public class CMainFrame extends JFrame {
     private static final MMLogger LOGGER = MMLogger.create(CMainFrame.class);
 
     @Serial
     private static final long serialVersionUID = -1198882220815512476L;
+
+    /** Plays a sound whenever a top-level menu is opened; wired up in {@link #addMenuListener}. */
     private final MenuSound sound;
+
+    /** Plays a (typically different) sound whenever a submenu/popup menu is opened; wired up in {@link #addMenuItemListener}. */
     private final MenuPopupSound popupSound;
+
+    /** The client-side facade to the campaign server/session that this window is displaying; set once in the constructor. */
     public IClient client;
     JPanel contentPane;
     JMenuBar jMenuBar1 = new JMenuBar();
@@ -149,6 +188,7 @@ public class CMainFrame extends JFrame {
     /*
      * ATTACK/GAME Menu is a class unto itself and needs constant update calls.
      */
+    /** The dynamically-populated Attack/Game menu; a separate component class since its contents change with game state. */
     AttackMenu jMenuAttackMenu;
     // HOST Menu
     JMenu jMenuHost = new JMenu();
@@ -204,15 +244,45 @@ public class CMainFrame extends JFrame {
     JMenu jMenuAdmin = new JMenu();
     JMenu jMenuOperations = new JMenu();
 
+    /** The tabbed content panel (chat, HQ, map, etc.) that fills this frame's content pane; see {@code gui.panels.CMainPanel}. */
     CMainPanel MainPanel;
+
+    /** Cached reference to the client's campaign data, captured once at construction time. */
     CCampaign theCampaign;
+
+    /** Cached reference to the locally-controlled player, captured once at construction time. */
     CPlayer thePlayer;
+
+    /** Whether the server is using the "Advance Repairs" ruleset (bays/techs by type rather than a flat tech count); drives visibility of several menu items. */
     boolean useAdvanceRepairs;
+
+    /** Whether the server allows personal pilot queues (per-player pilot hiring/firing/transfer); drives visibility of several menu items. */
     boolean usePersonalPilotQueues;
+
+    /** The player's current access level, refreshed each time {@link #enableMenu()} runs; used to gate visibility of leader/operations menu items. */
     private int userLevel = 0;
+
+    /** Set once the optional admin/mod/operations menus have been (attempted to be) built, so {@link #enableMenu()} does not repeat the reflective jar-loading work on every call. */
     private boolean hasAdminMenus = false;
 
-    // CONSTRUCTOR
+    /**
+     * Builds the main window: caches campaign/player references from the client,
+     * constructs the tabbed {@link CMainPanel}, reads a handful of server config
+     * flags that gate menu visibility, builds the menu bar (via {@link #createMenu()}),
+     * and installs a window listener that intercepts the close button so a
+     * confirmation is required while this client is hosting a game.
+     * <p>
+     * Also wires MegaMek's key-press handling to this window's focus state:
+     * whenever this campaign-client frame GAINS focus, every embedded MegaMek
+     * client's controller is told to ignore key presses (since the user is
+     * interacting with this frame, not a MegaMek game window), and whenever
+     * this frame LOSES focus (presumably to a MegaMek game window), those
+     * controllers are told to stop ignoring key presses again. This avoids
+     * this frame's own key handling (e.g. text fields) leaking into any
+     * concurrently open MegaMek game windows.
+     *
+     * @param myC the client facade this window will display and act upon
+     */
     public CMainFrame(IClient myC) {
         client = myC;
         theCampaign = client.getCampaign();
@@ -239,6 +309,8 @@ public class CMainFrame extends JFrame {
         setTitle(String.format("%s (MekWars client %s)", client.getConfigParam("CAMPAIGN_SERVER_NAME"), IClient.CLIENT_VERSION));
         contentPane = (JPanel) getContentPane();
         contentPane.setLayout(new java.awt.BorderLayout());
+        // NOTE: redundant re-assignment — useAdvanceRepairs/usePersonalPilotQueues were already
+        // set to the same values a few lines above; harmless, but likely leftover from a refactor.
         useAdvanceRepairs = client.isUsingAdvanceRepairs();
         usePersonalPilotQueues = Boolean.parseBoolean(client.getServerConfigs("AllowPersonalPilotQueues"));
         try {
@@ -253,6 +325,9 @@ public class CMainFrame extends JFrame {
         contentPane.add(MainPanel, BorderLayout.CENTER);
         setDefaultCloseOperation(WindowConstants.DO_NOTHING_ON_CLOSE);
         addWindowListener(new WindowAdapter() {
+            // Intercepts the OS close button (X). Since setDefaultCloseOperation is
+            // DO_NOTHING_ON_CLOSE, this is the ONLY path that can close the window;
+            // if this client is currently hosting a game, the user must confirm first.
             @Override
             public void windowClosing(java.awt.event.WindowEvent evt) {
                 if (client.isServerRunning()) {
@@ -271,6 +346,8 @@ public class CMainFrame extends JFrame {
             }
 
 
+            // This frame gained focus: any embedded MegaMek clients should ignore
+            // key presses since input is going to this frame instead.
             @Override
             public void windowGainedFocus(java.awt.event.WindowEvent evt) {
                 for (ClientThread mmClient : client.getMMClients()) {
@@ -279,6 +356,8 @@ public class CMainFrame extends JFrame {
             }
 
 
+            // This frame lost focus (presumably to a MegaMek game window): let
+            // embedded MegaMek clients resume handling key presses.
             @Override
             public void windowLostFocus(java.awt.event.WindowEvent evt) {
                 for (ClientThread mmClient : client.getMMClients()) {
@@ -288,6 +367,18 @@ public class CMainFrame extends JFrame {
         });
     }
 
+    /**
+     * Builds a non-editable combo box listing pilots, formatted for display in a
+     * pilot-selection dialog (e.g. transfer/donate personal pilot).
+     * Each entry shows the pilot's name and skill numbers: for a {@link Unit#MEK}
+     * this is "Name (Gunnery/Piloting)[skills]", otherwise "Name (Gunnery)[skills]".
+     *
+     * @param pilots   an array of {@link Pilot} objects to list (untyped so callers
+     *                 can pass a {@code Vector.toArray()} result directly)
+     * @param unitType one of the {@link Unit} type constants; only {@link Unit#MEK}
+     *                 changes the formatting (adds the piloting skill)
+     * @return a populated, non-editable combo box ready to embed in a {@link JOptionPane}
+     */
     private static @org.jspecify.annotations.NonNull JComboBox<String> getStringJComboBox(Object[] pilots,
           int unitType) {
         JComboBox<String> combo = new JComboBox<>();
@@ -312,10 +403,31 @@ public class CMainFrame extends JFrame {
         return combo;
     }
 
+    /** @return the tabbed content panel hosted by this frame. */
     public CMainPanel getMainPanel() {
         return MainPanel;
     }
 
+    /**
+     * Refreshes which menu items are visible/enabled based on the player's
+     * current connection status ({@link IClient#getMyStatus()}) and access
+     * level, and lazily builds the optional Mod/Admin/Operations menus the
+     * first time this player is detected as a mod or admin.
+     * <p>
+     * The Mod and Admin menus are loaded reflectively from an external
+     * {@code ./MekWarsAdmin.jar} (classes {@code admin.ModeratorMenu} and
+     * {@code admin.AdminMenu}), and the Operations menu is built inline if
+     * {@code ./MekWarsOpEditor.jar} is present on disk. This indirection lets
+     * server operators distribute privileged tooling only to trusted clients
+     * without bundling it into the base MekWars client. If neither jar is
+     * present, the corresponding menu(s) are simply skipped (with a log
+     * message for the admin jar) and never appear.
+     * <p>
+     * This method also reloads server commands ({@link IClient#loadServerCommands()})
+     * and repaints the frame every time it runs, so it is relatively heavyweight
+     * and is only expected to be called on status/permission changes rather than
+     * on every UI tick.
+     */
     // Initializing Components
     public void enableMenu() {
         boolean disconnected = false;
@@ -489,6 +601,15 @@ public class CMainFrame extends JFrame {
         this.repaint();
     }
 
+    /**
+     * Builds the "Op Editor" menu item that launches the external Operations
+     * Editor application (from {@code ./MekWarsOpEditor.jar}) via reflection,
+     * invoking {@code OperationsEditor.MainOperations.main(Object)} on a freshly
+     * loaded class. Used only within the Operations menu construction in
+     * {@link #enableMenu()} when that jar is present.
+     *
+     * @return a ready-to-add "Op Editor" menu item with its action listener attached
+     */
     private @Nonnull JMenuItem getJMenuItem() {
         JMenuItem item = new JMenuItem("Op Editor");
         item.addActionListener(actionEvent -> {
@@ -506,6 +627,23 @@ public class CMainFrame extends JFrame {
         return item;
     }
 
+    /**
+     * Constructs every static menu (File, Campaign and its submenus, Host,
+     * Options, Leadership, Help, Emoji) and assembles them into {@link #jMenuBar1}.
+     * This is invoked once from the constructor. Each menu item's text, mnemonic,
+     * and {@link ActionListener} (usually delegating to a
+     * {@code jMenuXyz_actionPerformed} method on this class) are set up here, and
+     * a handful of items/submenus are only added when relevant server config
+     * flags are enabled (e.g. advance repairs bays, personal pilot queues, emoji,
+     * mini-campaigns, direct sell). The dynamic Attack/Game menu
+     * ({@link #jMenuAttackMenu}) and the optional Mod/Admin/Operations menus are
+     * NOT built here; the latter are built lazily in {@link #enableMenu()}.
+     *
+     * @throws Exception declared broadly on the original signature; in practice
+     *                    no checked exception is thrown by the body, and the
+     *                    constructor already wraps calls to this method in a
+     *                    try/catch that merely logs any failure.
+     */
     protected void createMenu() throws Exception {
 
         jMenuFile.setText("File");
@@ -1077,6 +1215,12 @@ public class CMainFrame extends JFrame {
         jMenuBar1.add(jMenuOperations);
     }
 
+    /**
+     * Handles File &gt; Connect: asks the client to connect to the configured
+     * server, then, if the connection succeeded (status no longer the literal
+     * string {@code "Not connected"}), announces this client's version to the
+     * server so it can be recorded/validated server-side.
+     */
     public void jMenuFileConnect_actionPerformed() {
         client.connectToServer();
         // Set Version upon reconnection.
@@ -1087,10 +1231,18 @@ public class CMainFrame extends JFrame {
         }
     }
 
+    /** Handles File &gt; Register Nickname: opens the {@link RegisterNameDialog} to register the player's chosen nickname. */
     public void jMenuFileRegister_actionPerformed() {
         new RegisterNameDialog(client);
     }
 
+    /**
+     * Handles File &gt; Mail User: prompts for a recipient nickname (unless one
+     * is supplied) and a message body, then sends it via
+     * {@link IClient#processGUIInput(String)} as a GUI-prefixed {@code mail} command.
+     *
+     * @param Nickname the recipient's name, or {@code null}/blank to prompt the user for one
+     */
     public void jMenuFileMail_actionPerformed(String Nickname) {
         String message;
         if (Nickname == null) {
@@ -1112,6 +1264,7 @@ public class CMainFrame extends JFrame {
         client.processGUIInput(String.format("%smail %s,%s", IClient.GUI_PREFIX, Nickname, message));
     }
 
+    /** Handles File &gt; Last Online: prompts for a player name and asks the server when they were last online. */
     public void jMenuFileLastOnline_actionPerformed() {
         String Nickname;
         Nickname = JOptionPane.showInputDialog(getContentPane(), "Player name?");
@@ -1121,11 +1274,19 @@ public class CMainFrame extends JFrame {
         client.sendChat(String.format("%sc lastonline#%s", IClient.CAMPAIGN_PREFIX, Nickname));
     }
 
+    /** Handles File &gt; Exit: tells the client to disconnect/clean up, then immediately terminates the JVM. */
     public void jMenuFileExit_actionPerformed() {
         client.goodbye();
         System.exit(0);
     }
 
+    /**
+     * Handles Campaign &gt; Status &gt; Planetary Control: prompts for a faction
+     * name and, if given a non-empty faction, an optional second ("secondary")
+     * faction, then asks the server for the interstellar/planetary control
+     * status filtered accordingly. If the first faction prompt is left blank,
+     * an unfiltered {@code isstatus} request is sent instead.
+     */
     public void jMenuCampaignISStatus_actionPerformed() {
 
         String House;
@@ -1151,6 +1312,7 @@ public class CMainFrame extends JFrame {
         }
     }
 
+    /** Handles Campaign &gt; Status &gt; Faction Status: prompts for a faction name and requests its status from the server. */
     public void jMenuCampaignFactionStatus_actionPerformed() {
 
         String House;
@@ -1167,6 +1329,7 @@ public class CMainFrame extends JFrame {
         client.sendChat(String.format("%sc faction#%s", IClient.CAMPAIGN_PREFIX, House));
     }
 
+    /** Handles Campaign &gt; Mercenaries &gt; Mercenary Status: prompts for a mercenary player name (via a mercs-only picker) and requests their status. */
     public void jMenuMercStatus_actionPerformed() {
         PlayerNameDialog playerDialog = new PlayerNameDialog(client,
               "Which Merc do you want info on?",
@@ -1182,6 +1345,15 @@ public class CMainFrame extends JFrame {
         client.sendChat(String.format("%sc mstatus#%s", IClient.CAMPAIGN_PREFIX, Merc));
     }
 
+    /**
+     * Handles Campaign &gt; Front Line &gt; Attack Options: requests attack
+     * option checks for a specific lance/army id, or for all of the player's
+     * armies when {@code lid} is {@code -1} (the value used by the top-level
+     * menu item; a specific id is passed when invoked contextually, e.g. from
+     * a table's right-click menu).
+     *
+     * @param lid the army/lance id to check, or {@code -1} for all armies
+     */
     public void jMenuCommanderCheckAttack_actionPerformed(int lid) {
         if (lid == -1) {
             client.sendChat(String.format("%sc ca", IClient.CAMPAIGN_PREFIX));
@@ -1190,6 +1362,11 @@ public class CMainFrame extends JFrame {
         }
     }
 
+    /**
+     * Handles Campaign &gt; Front Line &gt; Range Calculator: prompts for a
+     * maximum range (light years) and a target faction, then asks the server
+     * to list planets/targets within that range of the given faction.
+     */
     public void jMenuCommanderRange_actionPerformed() {
         String range;
         String faction;
@@ -1212,6 +1389,13 @@ public class CMainFrame extends JFrame {
         client.sendChat(String.format("%sc range#%s#%s", IClient.CAMPAIGN_PREFIX, range, faction));
     }
 
+    /**
+     * Handles Campaign &gt; Front Line &gt; Find Contested Planets: prompts for
+     * a minimum attacker-planet percentage threshold and a target faction, then
+     * requests a list of contested planets between the player's own faction
+     * (from {@link #thePlayer}) and the chosen target faction. Refuses (with a
+     * chat message) if the target faction is the same as the player's own.
+     */
     public void jMenuFindContestedPlanets_actionPerformed() { //BarukKhazad 20151129 - start 2
         String h1 = thePlayer.getHouse();
         String h2;
@@ -1245,6 +1429,14 @@ public class CMainFrame extends JFrame {
         client.sendChat(String.format("%sfindcp %s#%s#%s", IClient.CAMPAIGN_PREFIX, h1, h2, Perc));
     }  //BarukKhazad 20151129 - end 2
 
+    /**
+     * Handles Campaign &gt; Transfer &gt; Transfer Money (also invoked with a
+     * pre-supplied recipient from context menus): prompts for a recipient
+     * (unless one is supplied) restricted to same-faction players, then an
+     * amount, and sends a {@code transfermoney} campaign command.
+     *
+     * @param name recipient player name, or {@code null}/blank to prompt via {@link PlayerNameDialog}
+     */
     public void jMenuCommanderTransferMoney_actionPerformed(String name) {
 
         String targetPlayer;
@@ -1275,6 +1467,14 @@ public class CMainFrame extends JFrame {
         client.sendChat(String.format("%sc transfermoney#%s#%s", IClient.CAMPAIGN_PREFIX, targetPlayer, Amount));
     }
 
+    /**
+     * Transfers Reward Points to another same-faction player: prompts for a
+     * recipient (unless supplied) and an amount, then sends a
+     * {@code transferrewardpoints} campaign command. Not wired to a static menu
+     * item text label directly (the label uses the server-configured "RP" name).
+     *
+     * @param name recipient player name, or {@code null}/blank to prompt via {@link PlayerNameDialog}
+     */
     public void jMenuCommanderTransferRewardPoints_actionPerformed(String name) {
         String targetPlayer;
         String Amount;
@@ -1304,6 +1504,13 @@ public class CMainFrame extends JFrame {
         client.sendChat(String.format("%sc transferrewardpoints#%s#%s", IClient.CAMPAIGN_PREFIX, targetPlayer, Amount));
     }
 
+    /**
+     * Transfers Influence Points to another same-faction player: prompts for a
+     * recipient (unless supplied) and an amount, then sends a
+     * {@code transferinfluence} campaign command.
+     *
+     * @param name recipient player name, or {@code null}/blank to prompt via {@link PlayerNameDialog}
+     */
     //@Salient
     public void jMenuCommanderTransferInfluence_actionPerformed(String name) {
         String targetPlayer;
@@ -1334,6 +1541,15 @@ public class CMainFrame extends JFrame {
         client.sendChat(String.format("%sc transferinfluence#%s#%s", IClient.CAMPAIGN_PREFIX, targetPlayer, Amount));
     }
 
+    /**
+     * Handles Campaign &gt; Transfer &gt; Transfer Unit: prompts for a recipient
+     * (unless supplied) and a unit to transfer (via {@link UnitSelectionDialog},
+     * unless a unit id is supplied), then sends a {@code transferunit} campaign
+     * command.
+     *
+     * @param name recipient player name, or {@code null}/blank to prompt
+     * @param mid  the unit id to transfer, or {@code -1} to prompt for one
+     */
     public void jMenuCommanderTransferUnit_actionPerformed(String name, int mid) {
 
         String targetPlayer;
@@ -1365,6 +1581,13 @@ public class CMainFrame extends JFrame {
         client.sendChat(String.format("%sc transferunit#%s#%s", IClient.CAMPAIGN_PREFIX, targetPlayer, mid));
     }
 
+    /**
+     * Opens the {@link SellUnitDialog} to list a single unit for sale on the
+     * black market. Not wired to a static menu item; invoked contextually
+     * (e.g. from a unit table's right-click menu) with a specific unit id.
+     *
+     * @param mid the id of the unit (owned by {@link #thePlayer}) to sell
+     */
     public void jMenuCommanderAddToBM_actionPerformed(int mid) {
 
         Vector<CUnit> toSell = new Vector<>(1, 1);
@@ -1374,6 +1597,12 @@ public class CMainFrame extends JFrame {
         sud.setVisible(true);
     }
 
+    /**
+     * Disbands/removes an army (lance): prompts for an army id (unless
+     * supplied) and sends a {@code rma} (remove army) campaign command.
+     *
+     * @param lid the army id to remove, or {@code -1} to prompt for one
+     */
     public void jMenuCommanderRemoveLance_actionPerformed(int lid) {
         String LanceID;
         if (lid == -1) {
@@ -1386,9 +1615,14 @@ public class CMainFrame extends JFrame {
         client.sendChat(String.format("%sc rma#%s", IClient.CAMPAIGN_PREFIX, lid));
     }
 
-    /*
+    /**
+     * Renames a pilot: prompts for a new name and sends a {@code namepilot}
+     * campaign command.
+     * <p>
      * Only called from HQ, via MechTableMouseAdapter. Will always have valid
      * unit id.
+     *
+     * @param uid the id of the unit whose pilot is being renamed
      */
     public void jMenuCommanderNamePilot_actionPerformed(int uid) {
         String newName = JOptionPane.showInputDialog(getContentPane(), "Pilot's Name?");
@@ -1398,9 +1632,17 @@ public class CMainFrame extends JFrame {
         client.sendChat(String.format("%sc namepilot#%s#%s", IClient.CAMPAIGN_PREFIX, uid, newName));
     }
 
-    /*
+    /**
+     * Renames an army (lance): prompts for a new name, pre-filled with the
+     * army's current name. Entering a blank name sends the literal string
+     * {@code "clear"} as the new name (server-side convention for clearing a
+     * custom army name back to its default).
+     * <p>
      * Only called from HQ, via MechTableMouseAdapter. Will always have valid
      * army id.
+     *
+     * @param aid the army id to rename; if it does not resolve to an army owned
+     *            by the current player, this method silently does nothing
      */
     public void jMenuCommanderNameArmy_actionPerformed(int aid) {
         CArmy selectedArmy = client.getPlayer().getArmy(aid);
@@ -1422,22 +1664,47 @@ public class CMainFrame extends JFrame {
         client.sendChat(String.format("%sc namearmy#%s#%s", IClient.CAMPAIGN_PREFIX, aid, newName));
     }
 
+    /**
+     * Locks an army so that only its owning player can command it (server-side
+     * "playerlockarmy" toggle). No confirmation dialog is shown.
+     *
+     * @param aid the army id to lock
+     */
     public void jMenuCommanderPlayerLockArmy_actionPerformed(int aid) {
         client.sendChat(String.format("%sc playerlockarmy#%s", IClient.CAMPAIGN_PREFIX, aid));
     }
 
+    /**
+     * Unlocks a previously player-locked army (server-side "playerunlockarmy" toggle).
+     * No confirmation dialog is shown.
+     *
+     * @param aid the army id to unlock
+     */
     public void jMenuCommanderPlayerUnlockArmy_actionPerformed(int aid) {
         client.sendChat(String.format("%sc playerunlockarmy#%s", IClient.CAMPAIGN_PREFIX, aid));
     }
 
+    /**
+     * Toggles whether an army is disabled/available for play (server-side
+     * "togglearmydisabled" flag flip). No confirmation dialog is shown.
+     *
+     * @param aid the army id to toggle
+     */
     public void jMenuCommanderDisableArmy_actionPerformed(int aid) {
         // Toggle armyDisabled
         client.sendChat(String.format("%sc togglearmydisabled#%s", IClient.CAMPAIGN_PREFIX, aid));
     }
 
-    /*
+    /**
+     * Sets an army's lower unit-count limiter: opponents fielding fewer units
+     * than this limit will not be matched against this army. Prompts with an
+     * explanatory example and the current lower limit pre-filled.
+     * <p>
      * Only called from HQ, via MechTableMouseAdapter. Will always have valid
      * army id.
+     *
+     * @param aid the army id to configure; if it does not resolve to an army
+     *            owned by the current player, this method silently does nothing
      */
     public void jMenuCommanderSetLowerUnitLimit_actionPerformed(int aid) {
 
@@ -1466,9 +1733,24 @@ public class CMainFrame extends JFrame {
         client.sendChat(String.format("%sc all#%s#%s", IClient.CAMPAIGN_PREFIX, aid, newLimit));
     }
 
-    /*
+    /**
+     * Sets an army's upper unit-count limiter: opponents fielding more units
+     * than this limit will not be matched against this army. Prompts with an
+     * explanatory example and a "current value" pre-filled in the dialog.
+     * <p>
+     * NOTE (pre-existing quirk): the dialog's pre-filled default is populated
+     * from {@code selectedArmy.getLowerLimiter()} rather than an upper-limit
+     * getter, so the value shown as the "current" upper limit is actually the
+     * army's lower limit. This looks like a copy/paste bug from
+     * {@link #jMenuCommanderSetLowerUnitLimit_actionPerformed(int)}; the value
+     * the user types in is still sent as the upper limit ("aul" command), so
+     * only the displayed default is affected, not the value ultimately applied.
+     * <p>
      * Only called from HQ, via MechTableMouseAdapter. Will always have valid
      * army id.
+     *
+     * @param aid the army id to configure; if it does not resolve to an army
+     *            owned by the current player, this method silently does nothing
      */
     public void jMenuCommanderSetUpperUnitLimit_actionPerformed(int aid) {
 
@@ -1487,6 +1769,7 @@ public class CMainFrame extends JFrame {
 
         String limit = JOptionPane.showInputDialog(getContentPane(),
               String.format("<HTML>Upper Limit? [-1 to disable the limit]<i><br><br>%s<br></i></HTML>", example),
+              // NOTE: pre-fills with the LOWER limiter's value; see class-level note above (likely a copy/paste bug).
               Integer.toString(selectedArmy.getLowerLimiter()),
               JOptionPane.PLAIN_MESSAGE);
 
@@ -1498,9 +1781,18 @@ public class CMainFrame extends JFrame {
         client.sendChat(String.format("%sc aul#%s#%s", IClient.CAMPAIGN_PREFIX, aid, newLimit));
     }
 
-    /*
+    /**
+     * Sets an army's "opposing force size to face" preference: the force size
+     * this army expects/prefers to be matched against when requesting a match.
+     * Prompts with the current value (from {@link CArmy#getOpForceSize()})
+     * pre-filled, and sends an {@code aofs} campaign command. Note the input is
+     * taken as a raw string and forwarded without numeric validation here.
+     * <p>
      * Only called from HQ, via MechTableMouseAdapter. Will always have valid
      * army id.
+     *
+     * @param aid the army id to configure; if it does not resolve to an army
+     *            owned by the current player, this method silently does nothing
      */
     public void jMenuCommanderSetForceSizeToFace_actionPerformed(int aid) {
 
@@ -1525,6 +1817,11 @@ public class CMainFrame extends JFrame {
 
     }
 
+    /**
+     * Handles Campaign &gt; Other &gt; Set Logo: prompts for a logo image URL
+     * (pre-filled with the player's current logo) and sends a
+     * {@code setmylogo} campaign command.
+     */
     public void jMenuCommanderLogo_actionPerformed() {
         String LogoURL;
         LogoURL = JOptionPane.showInputDialog(getContentPane(),
@@ -1536,10 +1833,23 @@ public class CMainFrame extends JFrame {
         client.sendChat(String.format("%sc setmylogo#%s", IClient.CAMPAIGN_PREFIX, LogoURL));
     }
 
+    /** Handles Campaign &gt; Personnel &gt; Pilots &gt; View Pilot Queue: requests display of the player's personal pilot queue. */
     public void jMenuCommanderPersonalPilotQueue_actionPerformed() {
         client.sendChat(String.format("%sc displayplayerpersonalpilotqueue", IClient.CAMPAIGN_PREFIX));
     }
 
+    /**
+     * Handles Campaign &gt; Transfer &gt; Transfer Pilot: prompts for a
+     * recipient (unless supplied), then walks the user through selecting a
+     * unit type, weight class, and a specific pilot from the player's personal
+     * pilot queue for that type/weight (via a combo box built by
+     * {@link #getStringJComboBox}), and finally sends a {@code transferpilot}
+     * campaign command identifying the pilot by its position in that queue.
+     * Shows an error dialog and aborts if no pilots exist for the chosen
+     * type/weight combination.
+     *
+     * @param name recipient player name, or {@code null}/blank to prompt via {@link PlayerNameDialog}
+     */
     public void jMenuCommanderTransferPilot_actionPerformed(String name) {
 
         // get player
@@ -1641,6 +1951,14 @@ public class CMainFrame extends JFrame {
                     position);
     }
 
+    /**
+     * Handles Campaign &gt; Personnel &gt; Pilots &gt; Fire Pilot: walks the user
+     * through selecting a unit type, weight class, and a specific pilot from
+     * the player's personal pilot queue (mirroring
+     * {@link #jMenuCommanderTransferPilot_actionPerformed}, but with no
+     * recipient), then sends a {@code donatepilot} campaign command
+     * (server-side, "donating"/firing a personal pilot back to the general pool).
+     */
     public void jMenuCommanderDonatePersonalPilot_actionPerformed() {
         boolean allowProto = Boolean.parseBoolean(client.getServerConfigs("UseProtoMek"));
 
@@ -1723,6 +2041,17 @@ public class CMainFrame extends JFrame {
         client.sendChat(String.format("%sc donatepilot#%s#%s#%s", IClient.CAMPAIGN_PREFIX, unitType, weightClass, position));
     }
 
+    /**
+     * Handles Campaign &gt; Other &gt; Direct Sell Unit: prompts for a buyer
+     * (unless supplied) and a unit to sell (via {@link UnitSelectionDialog},
+     * unless a unit id is supplied), computes and displays the applicable
+     * service fee (looked up from server config as
+     * {@code SellDirect<Weight><Type>Price}), prompts for an asking price, and
+     * sends a {@code directsellunit} campaign command.
+     *
+     * @param name buyer player name, or {@code null}/blank to prompt (any player allowed)
+     * @param id   the unit id to sell, or {@code null}/blank to prompt for one
+     */
     public void jMenuCommanderDirectSell_actionPerformed(String name, String id) {
 
         // get player
@@ -1771,6 +2100,12 @@ How much do you wish to offer? (%s)
                                                                                .getName(), unitID, price));
     }
 
+    /**
+     * Handles Campaign &gt; Mercenaries &gt; Offer a Mercenary Contract: prompts
+     * for a mercenary player, an amount, a contract type (Exp/Land/Units/Components/Delay,
+     * picked from a fixed combo box), and a duration, then sends an
+     * {@code offercontract} campaign command.
+     */
     public void jMenuMercOfferContract_actionPerformed() {
         String Amount;
         String Duration;
@@ -1826,6 +2161,14 @@ How much do you wish to offer? (%s)
               String.format("%sc offercontract#%s#%s#%s#%s", IClient.CAMPAIGN_PREFIX, Merc, Amount, Duration, Type));
     }
 
+    /**
+     * Handles Campaign &gt; Other &gt; Defect: if the server allows single-player
+     * factions, prompts for a brand-new faction name and short name and sends
+     * a {@code defect#<name>#newfaction#<shortName>} command (creating and
+     * defecting to a new one-player faction). Otherwise, prompts for an
+     * existing faction (via {@link HouseNameDialog}, excluding new-faction
+     * creation) and sends a plain {@code defect#<house>} command.
+     */
     public void jMenuCommanderDefect_actionPerformed() {
         // String Confirmation;
         String House;
@@ -1863,6 +2206,11 @@ How much do you wish to offer? (%s)
         client.sendChat(String.format("%sc defect#%s", IClient.CAMPAIGN_PREFIX, House));
     }
 
+    /**
+     * Handles Campaign &gt; Other &gt; Self Promote (shown only when the server
+     * config {@code Self_Promote_Subfaction} is enabled): prompts for a
+     * sub-faction name and sends a {@code selfpromote} campaign command.
+     */
     public void jMenuCommanderSelfPromote_actionPerformed() {
 
         SubFactionNameDialog subFactionDialog = new SubFactionNameDialog(client,
@@ -1879,10 +2227,18 @@ How much do you wish to offer? (%s)
         client.sendChat(String.format("%sc selfpromote#%s", IClient.CAMPAIGN_PREFIX, subFactionName));
     }
 
+    /** Handles Campaign &gt; Other &gt; Check MiniCampaign Status (shown only when {@code Enable_MiniCampaign} is set): requests mini-campaign status. */
     public void jMenuCommanderReportStatusMC_actionPerformed() {
         client.sendChat(String.format("%sc reportstatusmc#", IClient.CAMPAIGN_PREFIX));
     }
 
+    /**
+     * Handles Campaign &gt; Personnel &gt; Techs &gt; Fire Techs: prompts for a
+     * count of techs to fire, validating against the player's current tech
+     * count when not using advance repairs. Under advance repairs, additionally
+     * prompts for a tech quality tier (Green/Regular/Vet/Elite) and sends
+     * {@code firetechs#<count>#<tier>}; otherwise sends {@code firetechs#<count>}.
+     */
     public void jMenuCommanderFireTechs_actionPerformed() {
 
         String techsToFire = JOptionPane.showInputDialog(getContentPane(),
@@ -1939,6 +2295,15 @@ How much do you wish to offer? (%s)
         }
     }
 
+    /**
+     * Handles Campaign &gt; Personnel &gt; Techs &gt; Hire Techs: prompts for a
+     * count of techs to hire (showing the green-tech unit cost in the prompt
+     * when advance repairs is on and regular techs are not hireable). When
+     * advance repairs AND regular-tech hiring are both enabled, additionally
+     * prompts to choose Green vs. Regular tech quality (with costs shown) and
+     * sends {@code hiretechs#<count>#<tier>}; otherwise sends
+     * {@code hiretechs#<count>}.
+     */
     public void jMenuCommanderHireTechs_actionPerformed() {
         boolean allowRegTechs = Boolean.parseBoolean(client.getServerConfigs("AllowRegTechsToBeHired"));
 
@@ -2000,6 +2365,13 @@ How much do you wish to offer? (%s)
         }
     }
 
+    /**
+     * Handles Campaign &gt; Personnel &gt; Pilots &gt; Hire Pilots (shown only
+     * when personal pilot queues are enabled): walks the user through
+     * selecting a unit type (Mek, and Proto/Aero if the server allows them), a
+     * weight class, and a quantity to hire, then sends a
+     * {@code buypilotsfromhouse} campaign command.
+     */
     public void jMenuCampaignSubOtherBuyPilots_actionPerformed() {
         boolean allowProto = MathUtility.parseBoolean(client.getServerConfigs("UseProtoMek"), false);
         boolean allowAero = MathUtility.parseBoolean(client.getServerConfigs("UseAero"), false);
@@ -2060,6 +2432,11 @@ How much do you wish to offer? (%s)
         client.sendChat(String.format("%sc buypilotsfromhouse#%s#%s#%s", IClient.CAMPAIGN_PREFIX, unitType, unitClass, numberOfPilots));
     }
 
+    /**
+     * Handles Campaign &gt; Bays &gt; Return Bays: prompts for a count of bays
+     * to return, validated against the player's current free bay count, then
+     * sends a {@code sellbays} campaign command.
+     */
     public void jMenuCommanderSellBays_actionPerformed() {
         String baysToFire = JOptionPane.showInputDialog(getContentPane(),
               "How many bays do you want to return??");
@@ -2080,6 +2457,12 @@ How much do you wish to offer? (%s)
         client.sendChat(String.format("%sc sellbays#%s", IClient.CAMPAIGN_PREFIX, bays));
     }
 
+    /**
+     * Handles Campaign &gt; Other &gt; View Parts (shown only when
+     * {@code UsePartsBlackMarket} is set): builds an HTML table of the
+     * player's black-market parts cache contents and routes it to the misc
+     * chat output via {@link IClient#doParseDataInput(String)}.
+     */
     public void jMenuCampaignPartsCache_actionPerformed() {
         CPlayer p = client.getPlayer();
         StringBuilder result = new StringBuilder();
@@ -2089,6 +2472,11 @@ How much do you wish to offer? (%s)
         client.doParseDataInput(String.format("SM|%s", result));
     }
 
+    /**
+     * Handles Campaign &gt; Bays &gt; Lease Bays: prompts for a count of bays to
+     * lease (showing the per-bay cost), validates the count is positive, and
+     * sends a {@code buybays} campaign command.
+     */
     public void jMenuCommanderBuyBays_actionPerformed() {
         String baysToHire = JOptionPane.showInputDialog(getContentPane(),
               String.format("How many bays do you want to lease?(%s%s)", MathUtility.parseInt(client.getServerConfigs(
@@ -2109,6 +2497,12 @@ How much do you wish to offer? (%s)
         client.sendChat(String.format("%sc buybays#%s", IClient.CAMPAIGN_PREFIX, bays));
     }
 
+    /**
+     * Handles Help &gt; Build Table Viewer: if the player's access level is high
+     * enough (either the admin or the regular "request build table" level),
+     * opens the client-side {@link BuildTableViewer} GUI directly; otherwise
+     * falls back to requesting the build table list via a server command.
+     */
     public void jMenuHelpViewBuildTables_actionPerformed() {
         /*
          * Show the client side GUI if the requisite file is available.
@@ -2125,6 +2519,12 @@ How much do you wish to offer? (%s)
 
     }
 
+    /**
+     * Handles Help &gt; Unit Viewer: shows a {@link UnitLoadingDialog} while
+     * MegaMek unit data loads, then opens a {@link NewUnitViewerDialog} in
+     * plain "view units" mode, running the loader on a background thread so
+     * the EDT is not blocked while unit data is read from disk.
+     */
     public void jMenuHelpViewUnit_actionPerformed() {
 
         UnitLoadingDialog unitLoadingDialog = new UnitLoadingDialog(client.getMainFrame());
@@ -2135,6 +2535,11 @@ How much do you wish to offer? (%s)
         new Thread(unitSelector).start();
     }
 
+    /**
+     * Handles Leadership &gt; Promote Player: prompts for a target player
+     * (scoped to the current faction unless the requester is a mod/admin) and
+     * a destination sub-faction, then sends a {@code promoteplayer} campaign command.
+     */
     public void jMenuLeaderPromote_actionPerformed() {
         String targetPlayer;
 
@@ -2164,6 +2569,11 @@ How much do you wish to offer? (%s)
 
     }
 
+    /**
+     * Handles Leadership &gt; Demote Player: prompts for a target player and a
+     * destination sub-faction ("None" removes them entirely), then sends a
+     * {@code demoteplayer} campaign command.
+     */
     public void jMenuLeaderDemote_actionPerformed() {
         String targetPlayer;
 
@@ -2193,6 +2603,12 @@ How much do you wish to offer? (%s)
 
     }
 
+    /**
+     * Handles Leadership &gt; Fluff Player: prompts for a same-faction target
+     * player, shows their current fluff text pre-filled for editing, and sends
+     * a {@code FactionLeaderFluff} campaign command with the new text (unless
+     * the dialog is cancelled).
+     */
     public void jMenuLeaderFluff_actionPerformed() {
         String targetPlayer;
 
@@ -2218,6 +2634,11 @@ How much do you wish to offer? (%s)
         }
     }
 
+    /**
+     * Handles Leadership &gt; Mute Player: prompts for a same-faction target
+     * player and sends a {@code FactionLeaderMute} campaign command
+     * (server-side, presumably toggles that player's chat mute state).
+     */
     public void jMenuLeaderMute_actionPerformed() {
         String targetPlayer;
 
@@ -2235,6 +2656,10 @@ How much do you wish to offer? (%s)
         client.sendChat(String.format("%sc FactionLeaderMute#%s", IClient.CAMPAIGN_PREFIX, targetPlayer));
     }
 
+    /**
+     * Handles Leadership &gt; Faction Color: prompts for a new color value and
+     * sends a {@code ChangeHouseColor} campaign command for the player's own house.
+     */
     public void jMenuLeaderFactionColor_actionPerformed() {
         String newColor = JOptionPane.showInputDialog(this,
               "Faction Color?",
@@ -2247,6 +2672,11 @@ How much do you wish to offer? (%s)
         }
     }
 
+    /**
+     * Handles Leadership &gt; Player Color: prompts for a new color value and
+     * sends an {@code AdminSetHousePlayerColor} campaign command for the
+     * player's own house.
+     */
     public void jMenuLeaderPlayerColor_actionPerformed() {
         String newColor = JOptionPane.showInputDialog(this,
               "Player Color?",
@@ -2260,6 +2690,14 @@ How much do you wish to offer? (%s)
         }
     }
 
+    /**
+     * Handles Leadership &gt; Research Unit: shows a {@link UnitLoadingDialog}
+     * while MegaMek unit data loads, then opens a {@link NewUnitViewerDialog}
+     * (named "Unit Selector") in plain "view units" mode on a background
+     * thread. Note this handler does not appear to differ functionally from
+     * {@link #jMenuHelpViewUnit_actionPerformed()} beyond the thread's name;
+     * unit research itself is presumably driven from within that dialog.
+     */
     public void jMenuLeaderResearchUnit_actionPerformed() {
         UnitLoadingDialog unitLoadingDialog = new UnitLoadingDialog(client.getMainFrame());
         NewUnitViewerDialog unitSelector = new NewUnitViewerDialog(this,
@@ -2270,10 +2708,21 @@ How much do you wish to offer? (%s)
         new Thread(unitSelector).start();
     }
 
+    /** Handles Leadership &gt; Set Component Conversion: opens the {@link ComponentConverterDialog}. */
     public void jMenuLeaderSetComponentConversion_actionPerformed() {
         new ComponentConverterDialog(client);
     }
 
+    /**
+     * Handles Leadership &gt; Purchase Factory: prompts for a factory name, a
+     * unit type, and a weight class (each via a combo box in a
+     * {@link JOptionPane}), then, unless a target planet is already supplied,
+     * prompts for a planet (defaulting to the player's own house and a set of
+     * placeholder option values), and finally sends a {@code purchaseFactory}
+     * campaign command.
+     *
+     * @param planet the target planet name, or {@code null} to prompt for one via {@link PlanetNameDialog}
+     */
     public void jMenuLeaderPurchaseFactory_actionPerformed(String planet) {
         String[] units = { Unit.getTypeClassDesc(Unit.MEK), Unit.getTypeClassDesc(Unit.VEHICLE),
                            Unit.getTypeClassDesc(Unit.INFANTRY), Unit.getTypeClassDesc(Unit.PROTOMEK),
@@ -2355,6 +2804,11 @@ How much do you wish to offer? (%s)
               String.format("%sc purchaseFactory#%s#%s#%s#%s", IClient.CAMPAIGN_PREFIX, factoryName, unitType, unitWeight, planet));
     }
 
+    /**
+     * Handles Help &gt; About: builds and shows a small modal dialog listing
+     * the MekWars client and MegaMek versions, license info, and a link to
+     * the project's GitHub page, centered over this frame.
+     */
     // Show data about the mek wars client and server
     public void jMenuHelpAbout_actionPerformed() {
 
@@ -2417,6 +2871,11 @@ How much do you wish to offer? (%s)
         dlg.setVisible(true);
     }
 
+    /**
+     * Handles Help &gt; Memory: builds and shows a small non-modal dialog
+     * reporting the JVM's current free/allocated/max memory (via
+     * {@link Runtime}), formatted in kilobytes.
+     */
     // Show data about the mek wars client memory usage
     public void jMenuHelpMemory_actionPerformed() {
 
@@ -2469,6 +2928,16 @@ How much do you wish to offer? (%s)
 
     }
 
+    /**
+     * Handles Help &gt; Online Help: builds a large HTML reference table
+     * covering unit purchase/re-podding/tech-hire/bay costs, per-weight-class
+     * experience requirements, black-market experience thresholds, defection
+     * experience requirements, and the meaning of every unit status icon shown
+     * elsewhere in the UI, all derived live from current server config values
+     * so it reflects this particular server's rules. Also lists any
+     * server-wide or house-specific banned ammunition types. The final HTML is
+     * routed to the misc chat output via {@link IClient#doParseDataInput(String)}.
+     */
     public void jMenuHelpHelp_actionPerformed() {
         CPlayer player = client.getPlayer();
         boolean trueCost = Boolean.parseBoolean(client.getServerConfigs("UseCalculatedCosts"));
@@ -2688,6 +3157,17 @@ How much do you wish to offer? (%s)
         client.doParseDataInput(String.format("SM|%s", result));
     }
 
+    /**
+     * Looks up the server-configured XP cost for gaining a given pilot skill
+     * on a given unit type (config key {@code chancefor<skillFullName>for<unitType>})
+     * and, if it is enabled (cost &gt; 0), formats a short "{unitType} xp cost: {cost}"
+     * fragment for use in the pilot skills help blurb; used by
+     * {@link #pilotSkillBlurbLine}.
+     *
+     * @param a the skill's full name, used to build the config key
+     * @param b the unit type name (e.g. "Mek", "Vehicle"), used to build the config key
+     * @return a short descriptive fragment, or an empty string if the config value is not positive
+     */
     private String pilotSkillBVBlurbLine(String a, String b) {//BK added
         // builds help menu's pilot skill bv blurb, wants a and b to build server config lookup and get the value
         int i = Integer.parseInt(client.getServerConfigs(String.format("chancefor%sfor%s", a, b)));
@@ -2699,6 +3179,20 @@ How much do you wish to offer? (%s)
         }
     }
 
+    /**
+     * Builds one HTML table row for the pilot skills help table (see
+     * {@link #jMenuHelpPilotSkills_actionPerformed()}), combining the skill's
+     * name/abbreviation/description with a per-unit-type XP cost breakdown
+     * assembled from repeated calls to {@link #pilotSkillBVBlurbLine} (Mek,
+     * Vehicle, Infantry, ProtoMek, BattleArmor, Aero). If none of those calls
+     * produced a cost fragment, an empty/near-empty row (just the leading
+     * space) is returned so the skill is effectively omitted from the table.
+     *
+     * @param skill     the skill's short display name for the "Name" column
+     * @param fullName  the skill's full name, used to build server config lookup keys
+     * @param shortName the skill's abbreviation, used for the "Abbreviation" column
+     * @return a complete {@code <tr>...</tr>} row of HTML, or a near-empty string if no unit type has a configured cost for this skill
+     */
     private String pilotSkillBlurbLine(String skill, String fullName, String shortName) {//BK added
         // builds help menu's pilot skill blurb line, wants skill and fullName and shortName as skill, full name and skill shortname and
         // description, e.g. "AsTech" and "AT" and "does this..."
@@ -2716,6 +3210,14 @@ How much do you wish to offer? (%s)
         return s;
     }
 
+    /**
+     * Handles Help &gt; Pilot Skill Descriptions: builds an HTML table
+     * describing every special pilot skill in the game (AsTech, Edge,
+     * Maneuvering Ace, etc.), including per-unit-type XP costs pulled live
+     * from server config via {@link #pilotSkillBlurbLine}, and routes the
+     * result to the misc chat output via {@link IClient#doParseDataInput(String)}.
+     * The skill descriptions themselves are hardcoded text (not server-configurable).
+     */
     public void jMenuHelpPilotSkills_actionPerformed() {
         //BK; would prefer to have this Help Menu list built using a reiteration of the pilot skills by pulling the
         // info from those classes step one was adding pilot xp costs to the help menu, step two will be adding bv
@@ -2805,6 +3307,13 @@ How much do you wish to offer? (%s)
 
     }
 
+    /**
+     * Shows a picker dialog for a list of MUL (MegaMek Unit List) file names
+     * received from the server, and, once the user selects one and confirms,
+     * sends a {@code retrievemul} campaign command for that file.
+     *
+     * @param data a {@code '#'}-delimited list of MUL file names, as sent by the server
+     */
     public void showMulFileList(String data) {
 
         java.util.StringTokenizer mulList = new java.util.StringTokenizer(data, "#");
@@ -2851,14 +3360,28 @@ How much do you wish to offer? (%s)
      * into a separate .jar file. @urgru
      */
 
+    /** Delegates to {@link CMainPanel#refreshBattleTable()} to refresh the battle/game list display. */
     public void refreshBattleTable() {
         MainPanel.refreshBattleTable();
     }
 
+    /**
+     * Synchronizes the Options &gt; Mute checkbox item's checked state with an
+     * externally-driven mute setting (e.g. loaded from config at startup), without
+     * re-triggering the mute logic itself.
+     *
+     * @param b {@code true} if sound should show as muted
+     */
     public void setSoundMuted(boolean b) {
         jMenuOptionsMute.setState(b);
     }
 
+    /**
+     * Refreshes the dynamic Attack/Game menu's contents. Guards against the
+     * menu not existing yet: during login, this can be invoked before
+     * {@link #jMenuAttackMenu} has been constructed, so a null check with a
+     * warning log avoids a {@link NullPointerException} in that window.
+     */
     public void updateAttackMenu() {
 
         // the login call of UOE occurs before the menu is
@@ -2871,6 +3394,12 @@ How much do you wish to offer? (%s)
         jMenuAttackMenu.updateMenuItems(true);
     }
 
+    /**
+     * Updates the Host menu's visual/enabled state to reflect that this client
+     * is now hosting a game: turns the menu label red, disables the "start"
+     * options, and swaps visibility so only "Stop Hosting" is shown. Does not
+     * itself start the host process; called alongside {@link IClient#startHost}.
+     */
     public void startHost() {
         jMenuHost.setForeground(java.awt.Color.red);
         jMenuCSHostAndJoin.setEnabled(false);
@@ -2883,6 +3412,12 @@ How much do you wish to offer? (%s)
         jMenuCSHostStop.setVisible(true);
     }
 
+    /**
+     * Reverts the Host menu's visual/enabled state after this client stops
+     * hosting a game: restores the label color, re-enables the "start"
+     * options, and swaps visibility so the various "start hosting" options
+     * are shown again instead of "Stop Hosting". Called alongside {@link IClient#stopHost}.
+     */
     public void stopHost() {
         jMenuHost.setForeground(java.awt.Color.black);
         jMenuCSHostAndJoin.setEnabled(true);
@@ -2895,6 +3430,17 @@ How much do you wish to offer? (%s)
         jMenuCSHostStop.setVisible(false);
     }
 
+    /**
+     * Reacts to a player status change (e.g. going active, reserve, fighting,
+     * or logging out): if the "status in tray icon" config option is set,
+     * swaps the window's title-bar/taskbar icon to reflect the new status
+     * (falling back to a generic tray icon image otherwise), then forwards the
+     * status change to {@link CMainPanel#changeStatus} and refreshes the menu
+     * bar via {@link #enableMenu()} to update visibility for the new status.
+     *
+     * @param status     the new {@code IClient.STATUS_*} value
+     * @param lastStatus the previous {@code IClient.STATUS_*} value
+     */
     public void changeStatus(int status, int lastStatus) {
 
         if (client.getConfig().isParam("STATUS_INT_RAY_ICON")) {
@@ -2939,6 +3485,15 @@ How much do you wish to offer? (%s)
         repaint();
     }
 
+    /**
+     * Creates a new army by importing units from a MUL (MegaMek Unit List)
+     * file: prompts for the owning player (any player is eligible; an empty
+     * string is used if the dialog is cancelled), lets the user pick which MUL
+     * file from a supplied list, prompts for an army name, and sends a
+     * {@code createarmyfrommul} campaign command.
+     *
+     * @param data a {@code '#'}-delimited list of MUL file names, as sent by the server
+     */
     public void createArmyFromMul(String data) {
         PlayerNameDialog playerDialog = new PlayerNameDialog(client, "Choose a Player.", PlayerNameDialog.ANY_PLAYER);
         playerDialog.setVisible(true);
@@ -2992,6 +3547,18 @@ How much do you wish to offer? (%s)
         client.sendChat(String.format("%screatearmyfrommul %s#%s#%s", IClient.CAMPAIGN_PREFIX, selectedMul, fluff, player));
     }
 
+    /**
+     * Handles Operations &gt; Send All Local Op Files (available only in the
+     * dynamically-built Operations menu, when {@code ./MekWarsOpEditor.jar} is
+     * present and the player has sufficient access): after confirmation,
+     * reads every {@code .txt} file under {@code ./data/operations/short/},
+     * escapes any {@code '#'} characters in each line (replaced with the
+     * literal text {@code "(pound)"} to avoid colliding with the
+     * {@code '#'}-delimited campaign command protocol), and sends a
+     * {@code setoperation} campaign command per file to upload it to the server.
+     *
+     * @param actionEvent unused; present only to match the {@link ActionListener} signature
+     */
     public void jMenuSendAllOperationFiles_actionPerformed(ActionEvent actionEvent) {
 
         int result = JOptionPane.showConfirmDialog(null,
@@ -3041,6 +3608,15 @@ How much do you wish to offer? (%s)
         }
     }
 
+    /**
+     * Handles Operations &gt; Set New Operation File: prompts for an operation
+     * name, reads the matching local file from
+     * {@code ./data/operations/short/<name>.txt} (silently doing nothing if it
+     * does not exist), escapes {@code '#'} characters, and sends a
+     * {@code setoperation} campaign command to upload it to the server.
+     *
+     * @param e unused; present only to match the {@link ActionListener} signature
+     */
     public void jMenuSetNewOperationFile_actionPerformed(ActionEvent e) {
 
         String opName = JOptionPane.showInputDialog(client.getMainFrame().getContentPane(), "New Op Name?");
@@ -3077,6 +3653,16 @@ How much do you wish to offer? (%s)
         client.sendChat(String.format("%sc setoperation#short#%s", IClient.CAMPAIGN_PREFIX, opData));
     }
 
+    /**
+     * Handles Operations &gt; Update Operations: locks the campaign, triggers a
+     * server-side operations update, then unlocks the campaign again, via
+     * three sequential campaign commands. No user prompt is shown. Note the
+     * three commands are all fired immediately back-to-back with no
+     * acknowledgement wait between them, relying on the server to process
+     * them strictly in order.
+     *
+     * @param e unused; present only to match the {@link ActionListener} signature
+     */
     public void jMenuUpdateOperations_actionPerformed(ActionEvent e) {
         client.sendChat(String.format("%sc adminlockcampaign", IClient.CAMPAIGN_PREFIX));
         client.sendChat(String.format("%sc updateoperations", IClient.CAMPAIGN_PREFIX));
@@ -3084,6 +3670,14 @@ How much do you wish to offer? (%s)
 
     }
 
+    /**
+     * Handles Operations &gt; Retrieve Operation File: lets the user pick an
+     * operation from {@link IClient#getAllOps()} and sends a
+     * {@code RETRIEVEOPERATION} campaign command to fetch its definition from
+     * the server.
+     *
+     * @param e unused; present only to match the {@link ActionListener} signature
+     */
     public void jMenuRetrieveOperationFile_actionPerformed(ActionEvent e) {
         JComboBox<String> opCombo = new JComboBox<>(client.getAllOps()
                                                           .keySet()
@@ -3108,6 +3702,15 @@ How much do you wish to offer? (%s)
         client.sendChat(String.format("%sc RETRIEVEOPERATION#short#%s", IClient.CAMPAIGN_PREFIX, opName));
     }
 
+    /**
+     * Handles Operations &gt; Set Operation File: lets the user pick a known
+     * operation name (from {@link IClient#getAllOps()}), reads the matching
+     * local file from {@code ./data/operations/short/<name>.txt} (silently
+     * doing nothing if it does not exist), escapes {@code '#'} characters, and
+     * sends a {@code setoperation} campaign command to upload it to the server.
+     *
+     * @param e unused; present only to match the {@link ActionListener} signature
+     */
     public void jMenuSetOperationFile_actionPerformed(ActionEvent e) {
 
         JComboBox<String> opCombo = new JComboBox<>();
@@ -3157,6 +3760,15 @@ How much do you wish to offer? (%s)
         client.sendChat(String.format("%sc setoperation#short#%s", IClient.CAMPAIGN_PREFIX, opData));
     }
 
+    /**
+     * Attaches {@link #sound} as a {@code MenuListener} to every top-level
+     * {@link JMenu} in the given array of menu bar components (removing any
+     * existing registration first to avoid duplicate listeners on repeated
+     * calls to {@link #enableMenu()}), then recurses into each menu's submenus
+     * via {@link #addMenuItemListener}.
+     *
+     * @param components the top-level components of {@link #jMenuBar1} (a mix of {@link JMenu} and other component types)
+     */
     private void addMenuListener(Object[] components) {
         for (Object menu : components) {
             if (menu instanceof JMenu jmenu) {
@@ -3167,6 +3779,15 @@ How much do you wish to offer? (%s)
         }
     }
 
+    /**
+     * Recursively attaches {@link #popupSound} as a {@code MenuListener} to
+     * every nested submenu ({@link JMenu} items) within the given menu,
+     * removing any existing registration first to avoid duplicates on repeated
+     * calls. Ordinary {@link JMenuItem}s (which aren't themselves menus) are
+     * left untouched since they cannot open a popup.
+     *
+     * @param menu the menu whose item tree should be walked
+     */
     private void addMenuItemListener(JMenu menu) {
         for (int pos = 0; pos < menu.getItemCount(); pos++) {
             JMenuItem item = menu.getItem(pos);

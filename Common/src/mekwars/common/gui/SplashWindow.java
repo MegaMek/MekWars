@@ -35,21 +35,50 @@ import javax.swing.SwingConstants;
 
 import mekwars.common.threads.AnimationThread;
 
+/**
+ * The MekWars client's startup splash/loading screen: an undecorated {@link JFrame} showing the client logo/splash
+ * image, a status label, and a progress bar, displayed while the client fetches data, connects to the server, and
+ * builds its main GUI. Progress is driven externally (via {@link #setStatus(int)}/{@link #getProgressBar()}) by the
+ * client bootstrap code, while a background {@link AnimationThread} animates the window (e.g. pulsing/cycling
+ * the display) for as long as {@link #shouldAnimate()} returns {@code true}.
+ * <p>
+ * Note: the {@code STATUS_*} constants are declared as non-static instance fields, so distinct status values are
+ * only guaranteed to be internally consistent between {@link #getStatus()}/{@link #setStatus(int)} calls on the
+ * same instance; they behave like an enum in practice since only one {@code SplashWindow} is normally created.
+ */
 public class SplashWindow {
 
+    /** Status code: client is starting up. */
     public final int STATUS_INITIALIZING = 0;
+    /** Status code: client is retrieving campaign/game data from the server. */
     public final int STATUS_FETCHING_DATA = 1;
+    /** Status code: client is building its main Swing GUI. */
     public final int STATUS_CONSTRUCTING_GUI = 2;
+    /** Status code: client is connecting to the server. */
     public final int STATUS_CONNECTING = 3;
+    /** Status code: client is waiting on user input (e.g. login credentials). */
     public final int STATUS_INPUT_WAIT = 4;
+    /** Status code: an error occurred while fetching data. */
     public final int STATUS_DATA_ERROR = 5;
+    /** Status code: the connection attempt to the server failed. */
     public final int STATUS_CONNECT_FAILED = 6;
+    /** Label showing the current status text (despite the name, it doubles as the status message label). */
     private final JLabel versionLabel;
+    /** Progress bar shown at the bottom of the splash window. */
     private final JProgressBar progressBar;
+    /** The undecorated top-level frame that hosts the splash content. */
     public JFrame splashWindow;
+    /** Whether the background {@link AnimationThread} should keep animating; cleared by {@link #dispose()}. */
     private boolean continueAnimating;
+    /** The current status code, one of the {@code STATUS_*} constants. */
     private int currentStatus;
 
+    /**
+     * Builds and displays the splash window: loads and scales the splash image (preferring a JPG over a GIF if
+     * both/either exists at the hardcoded {@code data/images/} paths), lays out the image, a separator, and a
+     * status label in a bordered panel alongside a progress bar, centers the window on screen, makes it visible,
+     * and starts a background {@link AnimationThread} to animate it.
+     */
     public SplashWindow() {
 
         continueAnimating = true;
@@ -126,28 +155,50 @@ public class SplashWindow {
         animator.start();
     }
 
+    /**
+     * Stops the background animation thread (by clearing the flag checked by {@link #shouldAnimate()}), hides the
+     * splash window, and releases its native resources.
+     */
     public void dispose() {
         continueAnimating = false;
         splashWindow.setVisible(false);
         splashWindow.dispose();
     }
 
+    /**
+     * @return {@code true} if the {@link AnimationThread} started in the constructor should keep running.
+     */
     public boolean shouldAnimate() {
         return continueAnimating;
     }
 
+    /**
+     * @return the status label. Despite the method name ("image label"), this returns the text status label
+     *       ({@link #versionLabel}), not the image/logo label built locally in the constructor.
+     */
     public javax.swing.JLabel getImageLabel() {
         return versionLabel;
     }
 
+    /**
+     * @return the progress bar shown in the splash window, so external bootstrap code can drive its value.
+     */
     public javax.swing.JProgressBar getProgressBar() {
         return progressBar;
     }
 
+    /**
+     * @return the current status code, one of the {@code STATUS_*} constants.
+     */
     public int getStatus() {
         return currentStatus;
     }
 
+    /**
+     * Sets the current status code (one of the {@code STATUS_*} constants). Note this only updates the stored
+     * value - it does not update the displayed label text; callers are expected to also update the label (e.g. via
+     * {@link #getImageLabel()}) separately.
+     */
     public void setStatus(int i) {
         currentStatus = i;
     }

@@ -22,14 +22,26 @@ import java.io.Serial;
 import javax.swing.text.ViewFactory;
 import javax.swing.text.html.HTMLEditorKit;
 
+/**
+ * A custom {@link HTMLEditorKit} used throughout the MekWars client wherever HTML content is rendered in Swing
+ * text components (e.g. chat displays, unit tooltips, informational panes). The only customization it provides is
+ * swapping in {@link HTMLFactoryX} as the view factory, which in turn renders {@code <img>} tags using
+ * {@link MyImageView} instead of Swing's default image view.
+ */
 public class MyHTMLEditorKit extends HTMLEditorKit {
 
     /**
-     *
+     * Serialization version identifier for this {@link javax.swing.text.EditorKit}.
      */
     @Serial
     private static final long serialVersionUID = -891227318566572289L;
 
+    /**
+     * Supplies the custom view factory ({@link HTMLFactoryX}) so that this editor kit renders images via
+     * {@link MyImageView}.
+     *
+     * @return a new {@link HTMLFactoryX} instance
+     */
     @Override
     public ViewFactory getViewFactory() {
         return new HTMLFactoryX();

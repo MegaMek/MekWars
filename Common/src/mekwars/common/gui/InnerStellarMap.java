@@ -80,7 +80,26 @@ import mekwars.common.util.Position;
 import mekwars.common.util.StringUtils;
 
 /**
- * Draws the main map component.
+ * The actual drawing/interaction surface for the MekWars stellar (star) map, embedded inside {@link CMapPanel}.
+ * <p>
+ * This {@link JComponent} owns the full lifecycle of the map view: it loads/saves its display and filter
+ * preferences (an {@link InnerStellarMapConfig}, persisted to {@code mapconf.xml} via {@link MMNetXStream}), reads
+ * an optional overlay line file ({@code data/mapoverlay.txt}), and renders every visible {@link Planet} as a dot
+ * scaled and positioned according to the current zoom/pan ("scale"/"offset") state.
+ * <p>
+ * User interaction is handled directly by this class, which implements the AWT/Swing mouse and action listener
+ * interfaces itself (rather than delegating to separate adapter classes):
+ * <ul>
+ * <li>Left-click selects (activates) the nearest planet to the click.</li>
+ * <li>Left-drag pans the map (see {@link #mouseDragged}).</li>
+ * <li>Right-click opens a context menu with information, search, centering, display/filter toggles, and
+ * (for privileged users) admin/leader actions.</li>
+ * <li>The mouse wheel zooms in/out via the map panel's zoom slider.</li>
+ * <li>Hovering over a planet can show an influence-breakdown tooltip.</li>
+ * </ul>
+ * Screen-space and map-space (world) coordinates are related through {@link #scr2mapX}/{@link #scr2mapY} and their
+ * inverses {@link #map2scrX}/{@link #map2scrY}, which apply the current scale and pan offset and account for the
+ * component being centered on screen.
  *
  * @author Imi
  */
@@ -92,30 +111,49 @@ public class InnerStellarMap extends JComponent
 
     @Serial
     private static final long serialVersionUID = 8655078955521790260L;
+    /** Human-readable labels for each display toggle, in the same order as the {@code DISPLAY_*} indices. */
     private static final String[] displayStr = { "Planet Names", "Planet Control", "Factories", "Warehouses",
                                                  "Attack Ranges", "Recent Changes", "Overlay", "Tooltips" };
+    /** Index into {@link #display}/{@link InnerStellarMapConfig#getDisplay()}: show planet name labels. */
     private static final int DISPLAY_NAMES = 0;
+    /** Index: draw the influence/ownership percentage bar under each planet. */
     private static final int DISPLAY_INFLUENCE = 1;
+    /** Index: draw the factory (unit production) star icon on planets that have factories. */
     private static final int DISPLAY_UNITS = 2;
+    /** Index: draw the warehouse/bay count next to planets that provide storage bays. */
     private static final int DISPLAY_WAREHOUSES = 3;
+    /** Index: draw attack-range circles around the currently selected planet. */
     private static final int DISPLAY_RANGES = 4;
+    /** Index: blink planets that appear in {@link #changesSinceLastRefresh} (recently changed). */
     private static final int DISPLAY_LAST_CHANGED = 5;
+    /** Index: draw the background as user-defined overlay lines instead of the static map image. */
     private static final int DISPLAY_OVERLAY = 6;
+    /** Index: show a mouse-hover tooltip with planet influence info. */
     private static final int DISPLAY_TOOLTIPS = 7;
+    /** Human-readable labels for each filter toggle, in the same order as the {@code FILTER_*} indices. */
     private static final String[] filterStr = { "All", "", "Factories", "Facilities", "Faction", "Disputed",
                                                 "Contested" };
+    /** Index: show all planets, ignoring the other filter toggles. */
     private static final int FILTER_ALL = 0;
+    /** Index: unused placeholder entry (rendered as a menu separator; label is intentionally blank). */
     private static final int FILTER_SEP = 1;
+    /** Index: show planets that have at least one factory. */
     private static final int FILTER_FACTORIES = 2;
+    /** Index: show planets that provide at least one storage bay/facility. */
     private static final int FILTER_FACILITIES = 3;
+    /** Index: show planets the local player's house has any influence on. */
     private static final int FILTER_FACTION = 4;
+    /** Index: show planets with no clear/majority owner (disputed ownership). */
     private static final int FILTER_DISPUTED = 5;
+    /** Index: show planets with more than one house holding influence (contested). */
     private static final int FILTER_CONTESTED = 6;
+    /** The enclosing panel that hosts this map component (provides the zoom slider, selected-planet panel, etc). */
     private final CMapPanel mapPanel;
     /**
      * The main client to access
      */
     private final IClient client;
+    /** Lazily-populated, never-evicted cache of loaded {@link ImageIcon}s keyed by file path. */
     private final IconProvider iconCache = new IconProvider();
     /**
      * Various display options
@@ -123,6 +161,7 @@ public class InnerStellarMap extends JComponent
      * @see InnerStellarMapConfig
      */
     private final JCheckBoxMenuItem[] display = new JCheckBoxMenuItem[displayStr.length];
+    /** Checkbox menu items backing the "Filter" submenu, parallel to {@link #filterSettings}. */
     private final JCheckBoxMenuItem[] filter = new JCheckBoxMenuItem[filterStr.length];
     /**
      * A data structure to hold all planets marked as "changed" since last update. - see
@@ -133,13 +172,18 @@ public class InnerStellarMap extends JComponent
      * The current configuration & filtration options.
      */
     InnerStellarMapConfig conf = new InnerStellarMapConfig();
+    /** Polylines loaded from the optional {@code data/mapoverlay.txt} file, drawn when overlay display is on. */
     ArrayList<ArrayList<Position>> overlayLines = new ArrayList<>();
     /**
      * Map filtering options ; ALL, _FILLER_, Factories, Facilities, Disputed, Contested
      */
     boolean[] filterSettings = new boolean[] { true, false, true, true, true, true, true };
+    /** Last known mouse position within this component, used to compute drag deltas; {@code null} when the mouse
+     *  has left the component. */
     Point lastMousePos = null;
+    /** The mouse button held down during the current drag, as an {@link MouseEvent} button constant, or 0 if none. */
     int mouseMod = 0;
+    /** The planet most recently selected by a left-click, used to keep the view centered on it while zooming. */
     private Planet selectedPlanet = null;
     /**
      * Used to indicate the blinking of a planet. If true, the planets are drawn white.
@@ -147,9 +191,15 @@ public class InnerStellarMap extends JComponent
     private boolean blinkPhase = false;
 
     /**
-     * Constructs the ISMap.
+     * Constructs the ISMap, wiring up mouse/wheel listeners, loading persisted map configuration (zoom, pan,
+     * display/filter toggles, last-selected planet) from disk, parsing the optional overlay-line file, and starting
+     * a background "blink" thread that toggles {@link #blinkPhase} once per second so recently-changed planets can
+     * flash on screen.
      *
-     * @param panel - The panel it belongs to.
+     * @param panel     - The panel it belongs to.
+     * @param client    the client used to read/write config, server settings, and campaign data
+     * @param mainFrame the main application window; a window-closing listener is added to it so the map config is
+     *                  saved on shutdown (see {@link #processTick()})
      */
     public InnerStellarMap(CMapPanel panel, IClient client, CMainFrame mainFrame) {
         this.client = client;
@@ -190,6 +240,10 @@ public class InnerStellarMap extends JComponent
         }
 
         // read in map filter settings
+        // NOTE: the loop condition allows the body to execute even once the tokenizer is exhausted
+        // (currFilter < filterStr.length can still be true); in that case nextToken() below will throw
+        // NoSuchElementException. In practice this only happens if the "$"-delimited MAP_FILTER_1 config
+        // value has fewer tokens than filterStr.length entries.
         StringTokenizer tokenizer = new StringTokenizer(this.client.getConfigParam("MAP_FILTER_1"), "$");
         int currFilter = FILTER_ALL;
         while (tokenizer.hasMoreElements() || currFilter < filterStr.length) {
@@ -265,6 +319,16 @@ public class InnerStellarMap extends JComponent
 
     }
 
+    /**
+     * Reads {@code data/mapoverlay.txt} (if present) and populates {@link #overlayLines} with the polylines it
+     * describes. The tiny file format, tokenized with {@link StreamTokenizer}: numeric token pairs are
+     * {@code x y} map-coordinate points appended to the current line; the word token {@code LINE} closes off the
+     * current (non-empty) line and starts a new one; a word token starting with {@code COLOR} (e.g.
+     * {@code COLORff0000}) changes the color applied to subsequently-read points; {@code #} starts a comment.
+     * Any trailing points not terminated by a final {@code LINE} token are still added as a line.
+     *
+     * @throws Exception if the overlay file cannot be opened/read
+     */
     private void parseOverlayFile() throws Exception {
         File file = new File("data/mapoverlay.txt");
         BufferedReader bufferedReader = new BufferedReader(new FileReader(file));
@@ -316,7 +380,12 @@ public class InnerStellarMap extends JComponent
     }
 
     /**
-     * Activate and Center
+     * Activates (selects) the given planet via {@link #activate(Planet)} and, if {@code center} is true, also
+     * re-centers the map view on it by adjusting the pan offset in {@link #conf}. Does nothing if {@code planet} is
+     * {@code null}.
+     *
+     * @param planet the planet to select and possibly center on
+     * @param center whether to recenter the map view on the planet's position
      */
     public void activate(Planet planet, boolean center) {
 
@@ -336,7 +405,12 @@ public class InnerStellarMap extends JComponent
     }// end activate(planet,center)
 
     /**
-     * Activate a specific planet
+     * Activate a specific planet.
+     * <p>
+     * Updates the map panel's planet-detail sub-panel, records the planet's id as the persisted selection, repaints
+     * the map, and saves the map selection to config. Note: the update only happens if the planet panel's currently
+     * displayed planet is a different object reference than {@code planet} (identity comparison, not
+     * {@code equals}) — re-activating the already-selected planet is a no-op.
      *
      * @param planet This planet becomes the selected one.
      */
@@ -373,6 +447,7 @@ public class InnerStellarMap extends JComponent
 
     }
 
+    /** @return the current map display/filter/zoom/pan configuration. */
     public InnerStellarMapConfig getConf() {
         return conf;
     }
@@ -385,7 +460,19 @@ public class InnerStellarMap extends JComponent
     }
 
     /**
-     * If right button clicked, open the popup menu
+     * Handles left- and right-clicks on the map.
+     * <p>
+     * Right-click (BUTTON3): activates the nearest planet under the cursor (if any), then builds and shows a
+     * context menu offering: planet information (an HTML dialog describing the planet, using either the
+     * "static maps" advance-description format or the long-description format depending on server config), an
+     * attack menu (when a planet is selected), a "Find Planet" search dialog, "Center Map" actions, the
+     * Display/Filter toggle submenus, a leader-only "Purchase Factory" item, a "Refresh" item that clears the
+     * recent-changes set and re-fetches campaign data, and (for mods, if present) a dynamically loaded
+     * {@code admin.AdminMapPopupMenu} from an optional {@code MekWarsAdmin.jar} plugin, loaded via reflection so
+     * this module has no compile-time dependency on the admin package.
+     * <p>
+     * Left-click (BUTTON1) double-click: shows the same kind of planet-information dialog directly, without a
+     * context menu.
      *
      * @see MouseListener#mouseClicked(MouseEvent)
      */
@@ -625,6 +712,15 @@ public class InnerStellarMap extends JComponent
      * Calculate the nearest neighbour for the given point If anyone has a better algorithm than this stupid kind of
      * shit, please, feel free to exchange my brute force thing... An good idea would be an voronoi diagram and the
      * sweep algorithm from Steven Fortune.
+     * <p>
+     * Implementation: brute-force O(n) linear scan over every planet in the campaign data, comparing squared
+     * distance ({@link Position#distanceSq}) to avoid a sqrt per candidate, skipping any planet currently hidden by
+     * {@link #planetIsVisible}. Used to translate a mouse click/hover position into "the planet the user meant".
+     *
+     * @param x map-space x coordinate (see {@link #scr2mapX})
+     * @param y map-space y coordinate (see {@link #scr2mapY})
+     *
+     * @return the closest visible planet to (x, y), or {@code null} if no planet is visible
      */
     private Planet nearestNeighbour(double x, double y) {
         Iterator<Planet> it = mapPanel.getData().getAllPlanets().iterator();
@@ -646,11 +742,26 @@ public class InnerStellarMap extends JComponent
 
     /**
      * Computes the map-coordinate from the screen coordinate system
+     * <p>
+     * Inverts {@link #map2scrX}: undoes the component-centering, pan offset, and zoom scale that were applied when
+     * converting a map x-coordinate to a screen pixel x-coordinate.
+     *
+     * @param x screen-space (pixel) x coordinate, e.g. from a {@link MouseEvent}
+     *
+     * @return the corresponding map-space x coordinate
      */
     private double scr2mapX(int x) {
         return Math.round((x - (double) getWidth() / 2 - conf.getOffset().x) / conf.getScale());
     }
 
+    /**
+     * Computes the map-coordinate from the screen coordinate system. Note the y-axis is flipped relative to screen
+     * space (map "up"/positive-y is screen "up", i.e. smaller pixel y), matching {@link #map2scrY}.
+     *
+     * @param y screen-space (pixel) y coordinate, e.g. from a {@link MouseEvent}
+     *
+     * @return the corresponding map-space y coordinate
+     */
     private double scr2mapY(int y) {
         return Math.round(((double) getHeight() / 2 - (y - conf.getOffset().y)) / conf.getScale());
     }
@@ -658,6 +769,7 @@ public class InnerStellarMap extends JComponent
     /*
      * Called from action listeners, or stand alone from a button on a non-map panel.
      */
+    /** Opens the {@link PlanetSearchDialog} used to jump the map to a planet by name. */
     public void createPlanetSearchDialog() {
         PlanetSearchDialog searchDialog = new PlanetSearchDialog(this, client);
         searchDialog.setVisible(true);
@@ -665,7 +777,15 @@ public class InnerStellarMap extends JComponent
 
     /**
      * Utility method that checks the visibility of a given planet.
+     * <p>
+     * A {@code null} planet is never visible. Otherwise, a planet is visible if the "All" filter is on, or if any
+     * one of the enabled filter toggles ({@code FACTORIES}, {@code FACILITIES}, {@code DISPUTED}, {@code CONTESTED},
+     * {@code FACTION}) matches the planet's current state. The checks are evaluated as an OR chain and return as
+     * soon as one matches; a planet not matching any enabled filter is considered not visible.
      *
+     * @param planet the planet to test, may be {@code null}
+     *
+     * @return {@code true} if the planet should currently be drawn/selectable on the map
      */
     private boolean planetIsVisible(Planet planet) {
 
@@ -714,6 +834,12 @@ public class InnerStellarMap extends JComponent
         // no qualifiers. we shouldn't see the world.
     }
 
+    /**
+     * Records which mouse button is currently down (used by {@link #mouseDragged} to distinguish panning from other
+     * drags) and, on a left-button (BUTTON1) press, selects the nearest planet under the cursor and activates it.
+     *
+     * @see MouseListener#mousePressed(MouseEvent)
+     */
     public void mousePressed(MouseEvent mouseEvent) {
         mouseMod = mouseEvent.getButton();
 
@@ -725,21 +851,38 @@ public class InnerStellarMap extends JComponent
         activate(selectedPlanet);
     }
 
+    /** Clears the tracked mouse button state, ending any in-progress pan drag. */
     public void mouseReleased(MouseEvent mouseEvent) {
         mouseMod = 0;
     }
 
+    /** Tracks the mouse entering the component so drag deltas have a valid starting point. */
     public void mouseEntered(MouseEvent mouseEvent) {
         // mp.requestFocus();
         lastMousePos = new Point(mouseEvent.getX(), mouseEvent.getY());
     }
 
+    /** Clears the tracked mouse position when the cursor leaves the component. */
     public void mouseExited(MouseEvent mouseEvent) {
         lastMousePos = null;
     }
 
     /**
-     * Actually does the drawing of the map.
+     * Actually does the drawing of the map. Overrides {@link JComponent#paint} directly (rather than
+     * {@code paintComponent}) to do all rendering itself, including the background.
+     * <p>
+     * Rendering order: (1) fill the background with the configured background color; (2) either draw the overlay
+     * polylines from {@link #overlayLines} (if the overlay display option is on) or draw the static map background
+     * image ({@code data/images/mekwarsmap.jpg} if present, else the {@code .gif} variant), scaled by the current
+     * zoom; (3) iterate every planet known to the campaign data, skipping ones hidden by {@link #planetIsVisible},
+     * and for each visible one draw: a highlight ring if it is the currently-selected planet, the planet's dot
+     * (colored by owning house, or "disputed" color if unowned/contested — brightened via {@link #adjustColor}
+     * unless "darker map" is configured, and drawn white/enlarged while blinking if it recently changed), its name
+     * label, an influence percentage bar, a factory star icon, a warehouse bay count, and a homeworld icon; (4) if
+     * the "Attack Ranges" display option is on, draw a circle around the selected planet for each legal operation
+     * type the player's armies can perform, sized by that operation's range.
+     *
+     * @param graphics the graphics context to paint into
      */
     @Override
     public void paint(Graphics graphics) {
@@ -968,16 +1111,37 @@ public class InnerStellarMap extends JComponent
 
     }
 
+    /**
+     * Converts a map-space x coordinate to a screen-space (pixel) x coordinate, centering the origin in the
+     * component and applying the current zoom scale and pan offset. Inverse of {@link #scr2mapX}.
+     *
+     * @param x map-space x coordinate
+     *
+     * @return the corresponding screen pixel x coordinate
+     */
     private int map2scrX(double x) {
         return (int) Math.round((double) getWidth() / 2 + x * conf.getScale()) + conf.getOffset().x;
     }
 
+    /**
+     * Converts a map-space y coordinate to a screen-space (pixel) y coordinate. Note the sign flip on {@code y}:
+     * increasing map-space y moves up the screen (decreasing pixel y), matching conventional 2D star-map
+     * orientation rather than AWT's top-down pixel space. Inverse of {@link #scr2mapY}.
+     *
+     * @param y map-space y coordinate
+     *
+     * @return the corresponding screen pixel y coordinate
+     */
     private int map2scrY(double y) {
         return (int) Math.round((double) getHeight() / 2 - y * conf.getScale()) + conf.getOffset().y;
     }
 
     /**
      * Adjust the color according to the current colorAdjustment...
+     *
+     * @param color the house/faction color to brighten
+     *
+     * @return a new {@link Color} with each channel passed through {@link #adj}
      */
     public Color adjustColor(Color color) {
         return new Color(adj(color.getRed()), adj(color.getGreen()), adj(color.getBlue()));
@@ -986,6 +1150,14 @@ public class InnerStellarMap extends JComponent
     /**
      * What we NOT want, is to wash out the color tone by adding simple gray to the color. I preferre the code from
      * Color.brighter() which simple looks good. (But it had to be adjusted a bit) Imi
+     * <p>
+     * {@code conf.getColorAdjustment()} of 0 leaves the channel unchanged; 1 forces full brightness (255);
+     * otherwise the channel is floored at {@code 1/adjustment} and then scaled up by {@code 1/(1-adjustment)},
+     * clamped to 255 — brightening dim colors more than already-bright ones.
+     *
+     * @param r a single color channel value (0-255)
+     *
+     * @return the brightness-adjusted channel value (0-255)
      */
     private int adj(int r) {
         if (conf.getColorAdjustment() == 0) {
@@ -1004,6 +1176,14 @@ public class InnerStellarMap extends JComponent
         return Math.min((int) (r / (1 - conf.getColorAdjustment())), 255);
     }
 
+    /**
+     * Pans the map when the user drags with the right mouse button held down (see {@link #mouseMod}, set in
+     * {@link #mousePressed}): shifts the pan offset by the delta between the last recorded mouse position and the
+     * current one, then delegates to {@link #mouseMoved} to refresh the tooltip/hover state and repaints. Dragging
+     * with any other button is ignored.
+     *
+     * @see MouseMotionListener#mouseDragged(MouseEvent)
+     */
     public void mouseDragged(MouseEvent mouseEvent) {
         if (mouseMod != java.awt.event.MouseEvent.BUTTON3) {
             return;
@@ -1018,6 +1198,16 @@ public class InnerStellarMap extends JComponent
         mapPanel.repaint();
     }
 
+    /**
+     * Updates the last-known mouse position and, when the "Tooltips" display option is enabled, builds and sets an
+     * HTML tooltip showing the influence breakdown (house name/color and percentage of conquest points) for the
+     * planet nearest the cursor. Otherwise clears the tooltip.
+     * <p>
+     * Note: if no planet is currently visible under any filter, {@link #nearestNeighbour} returns {@code null} and
+     * {@code planet.getName()} below will throw a {@link NullPointerException}.
+     *
+     * @see MouseMotionListener#mouseMoved(MouseEvent)
+     */
     public void mouseMoved(MouseEvent mouseEvent) {
 
         if (lastMousePos == null) {
@@ -1058,7 +1248,17 @@ public class InnerStellarMap extends JComponent
         }
     }
 
-    /** Handle the key pressed event from the text field. */
+    /**
+     * Handle the key pressed event from the text field.
+     * <p>
+     * Nudges the pan offset by one scale-unit per arrow key press. NOTE (apparent quirk): the axes look crossed —
+     * left/right arrow (key codes 37/39) adjust {@code conf.getOffset().y} while up/down arrow (38/40) adjust
+     * {@code conf.getOffset().x} — rather than left/right moving x and up/down moving y as would normally be
+     * expected. Any other key code is ignored (no repaint).
+     *
+     * @param keyEvent the key event; only {@code VK_LEFT}/{@code VK_UP}/{@code VK_RIGHT}/{@code VK_DOWN}
+     *                 (codes 37-40) have any effect
+     */
     public void keyPressed(KeyEvent keyEvent) {
         int keyCode = keyEvent.getKeyCode();
 
@@ -1080,6 +1280,13 @@ public class InnerStellarMap extends JComponent
         mapPanel.repaint();
     }
 
+    /**
+     * Zooms the map in/out by adjusting the map panel's zoom slider by 3 units per wheel-rotation "click", then, if
+     * a planet is currently selected, re-centers the view on it at the new scale so zooming keeps the selection
+     * centered.
+     *
+     * @see MouseWheelListener#mouseWheelMoved(MouseWheelEvent)
+     */
     public void mouseWheelMoved(MouseWheelEvent mouseWheelEvent) {
         mapPanel.getSlider().setValue(mapPanel.getSlider().getValue() + mouseWheelEvent.getWheelRotation() * 3);
         if (selectedPlanet != null) {
@@ -1091,6 +1298,8 @@ public class InnerStellarMap extends JComponent
     }
 
     /**
+     * Sets the zoom scale and, if a planet is selected, re-centers the pan offset on it at the new scale.
+     *
      * @param scale The scale to set.
      */
     public void setScale(double scale) {
@@ -1117,6 +1326,9 @@ public class InnerStellarMap extends JComponent
 
     /**
      * Method to set the selected world. - Called by the HyperLinkListener
+     *
+     * @param planet the planet to mark as selected, without triggering any of the side effects of
+     *               {@link #activate(Planet)} (no repaint, no panel update, no config save)
      */
     public void setSelectedPlanet(Planet planet) {
         selectedPlanet = planet;
@@ -1124,6 +1336,15 @@ public class InnerStellarMap extends JComponent
 
     /**
      * The event listener for all the display options...
+     * <p>
+     * Shared handler registered on every {@link #display} and {@link #filter} checkbox menu item. On any toggle, it
+     * repaints the map, copies every display checkbox's selected state back into {@code conf.getDisplay()}, and
+     * copies every filter checkbox's selected state back into {@link #filterSettings} while rebuilding a
+     * {@code "$"}-delimited string of those settings.
+     * <p>
+     * NOTE (apparent bug): the rebuilt filter string is saved under the config key {@code "MAP_FILTER"}, but the
+     * constructor reads filter settings back from the differently-named key {@code "MAP_FILTER_1"} — so filter
+     * changes made here are saved to a config key that is never read back on the next load.
      *
      * @see ActionListener#actionPerformed(ActionEvent)
      */
@@ -1155,6 +1376,12 @@ public class InnerStellarMap extends JComponent
 
     /**
      * Solves events of data fetches by adding the changes to the current change set.
+     * <p>
+     * For each planet id in {@code changes}, merges the newly-fetched {@link Influences} into any already-pending
+     * entry in {@link #changesSinceLastRefresh} (summing them via {@link Influences#add}) and repaints the map so
+     * newly-changed planets can start blinking.
+     *
+     * @param changes map of planet id to the influence delta fetched from the server
      */
     public void dataFetched(Map<Integer, Influences> changes) {
         for (int id : changes.keySet()) {
@@ -1194,6 +1421,14 @@ public class InnerStellarMap extends JComponent
         @Serial
         private static final long serialVersionUID = 4594828039895948331L;
 
+        /**
+         * Returns the cached icon for the given file path, loading and caching it via {@code new ImageIcon(key)} on
+         * first request. The cache is never evicted, so every unique path loaded during the session stays in memory.
+         *
+         * @param key the icon's file path, also used as the cache key
+         *
+         * @return the (possibly newly-loaded) icon for that path
+         */
         public ImageIcon get(String key) {
             if (!containsKey(key)) {
                 put(key, new ImageIcon(key));

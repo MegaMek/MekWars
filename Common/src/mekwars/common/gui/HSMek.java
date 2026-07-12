@@ -32,17 +32,45 @@ import mekwars.common.campaign.CUnit;
 import mekwars.common.campaign.pilot.Pilot;
 import mekwars.common.util.TokenReader;
 
+/**
+ * Lightweight, read-only summary of a single unit belonging to a faction/house, used by the House Status screen
+ * (see {@code CHSPanel}) to display a faction's roster (name, type, battle value, damage state) without needing
+ * the full army/pilot data the server holds. Instances are constructed directly from a tokenized network message
+ * (see {@link #HSMek(StringTokenizer)}), and internally wrap a {@link CUnit} built from the referenced unit file so
+ * that MegaMek's own battle-value calculation ({@link Entity#calculateBattleValue()}) can be reused instead of
+ * relying on a BV value serialized by the server.
+ */
 public class HSMek {
 
+    /** Filename (relative unit data file) describing the unit's chassis/loadout. */
     String MekFile;
+    /** Server-assigned unique ID of this unit. */
     int unitID;
 
+    /** Display name derived from the unit (chassis/model, or short name for non-Mek unit types). */
     String name;
+    /** Coarse unit-type label: one of "Mek", "ProtoMek", "BattleArmor", "Infantry", or "Vehicle" (the default). */
     String type;
+    /** Free-form battle damage description, if the server supplied one; empty string if not. */
     String battleDamage = "";
 
+    /** The actual MegaMek entity, wrapped in a {@link CUnit}, used to answer BV/entity queries. Buried here the
+     * same way BMUnit embeds a CUnit elsewhere in the codebase. */
     CUnit embeddedUnit;//bury a CUnit in HSMek, a la BMUnit
 
+    /**
+     * Parses one unit's worth of House Status data out of a tokenized network message, builds the corresponding
+     * {@link CUnit}/{@link Entity}, and assigns it a generic single-person crew using the faction's default
+     * gunnery/piloting skill values (the server does not send per-pilot data for this screen). Also derives the
+     * display {@link #name} and {@link #type} from the resulting entity.
+     * <p>
+     * Skill handling: ProtoMeks always get piloting skill 5 regardless of the supplied {@code factionPiloting}.
+     * Infantry get the supplied piloting skill only if the unit {@link Infantry#canMakeAntiMekAttacks()}; otherwise
+     * they too are forced to piloting skill 5. All other unit types use the supplied gunnery/piloting values as-is.
+     *
+     * @param tokenizer tokenized message containing, in order: unit filename, unit ID, faction gunnery skill,
+     *                  faction piloting skill, and optionally (if more tokens remain) a battle-damage description
+     */
     public HSMek(StringTokenizer tokenizer) {
 
         MekFile = TokenReader.readString(tokenizer);
@@ -107,6 +135,9 @@ public class HSMek {
         }
 
         //vehicles and inf prepend chassis
+        // NOTE: despite the comment above, this branch actually only special-cases Meks (chassis+model for
+        // omni units, otherwise model-or-chassis); everything else (including vehicles/infantry) falls through
+        // to the else branch and uses getShortNameRaw() instead. The comment appears stale/inaccurate.
         if (type.equalsIgnoreCase("Mek")) {
             if (entity.isOmni()) {
                 name = String.format("%s %s", entity.getChassis(), entity.getModel());
@@ -122,30 +153,54 @@ public class HSMek {
         }
     }
 
+    /**
+     * @return the underlying MegaMek {@link Entity} constructed from this unit's data file.
+     */
     public Entity getEntity() {
         return embeddedUnit.getEntity();
     }
 
+    /**
+     * @return the relative unit data filename this summary was built from.
+     */
     public String getMekFile() {
         return MekFile;
     }
 
+    /**
+     * @return the display name for this unit (see constructor for derivation rules).
+     */
     public String getName() {
         return name;
     }
 
+    /**
+     * @return the coarse unit-type label ("Mek", "ProtoMek", "BattleArmor", "Infantry", or "Vehicle").
+     */
     public String getType() {
         return type;
     }
 
+    /**
+     * @return the server-assigned unique ID of this unit.
+     */
     public int getUnitID() {
         return unitID;
     }
 
+    /**
+     * @return a free-form description of battle damage sustained, or an empty string if none was supplied.
+     */
     public String getBattleDamage() {
         return battleDamage;
     }
 
+    /**
+     * Computes the unit's battle value on demand using MegaMek's own calculation (rather than trusting any BV
+     * value the server might have sent), based on the generic faction-default crew assigned in the constructor.
+     *
+     * @return the calculated battle value of the underlying entity
+     */
     public int getBV() {
         return embeddedUnit.getEntity().calculateBattleValue();
     }

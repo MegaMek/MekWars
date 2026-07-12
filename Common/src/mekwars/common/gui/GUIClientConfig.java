@@ -50,19 +50,55 @@ import megamek.logging.MMLogger;
 import mekwars.common.campaign.clientutils.IClientConfig;
 
 /**
- * Class for client's configuration.
+ * Concrete {@link IClientConfig} implementation for the MekWars GUI client. Owns the client's persisted key/value
+ * preferences ({@link #config}, backed by a flat {@code mwconfig.txt} file) as well as a small cache of
+ * pre-scaled {@link ImageIcon}s used by the GUI (status icons, logo, camo, etc.). Defaults for every recognized
+ * config key are seeded by {@link #setDefaults()} before the on-disk file (if any) is loaded over them, so new
+ * config keys added over time automatically get sane defaults for players with an older config file. Not used at
+ * all for dedicated (headless) server processes beyond the plain key/value store - image loading is skipped
+ * entirely when running dedicated (see the constructor).
  */
 public class GUIClientConfig implements IClientConfig, Serializable {
     // VARIABLES
+    /** Base directory (relative to the working directory) where GUI image assets are loaded from. */
     public static final String IMAGE_PATH = "data/images/";
+    /** Base directory (relative to the working directory) where camouflage images are loaded from. */
     public static final String CAMO_PATH = "data/images/camo/";
     private static final MMLogger LOGGER = MMLogger.create(GUIClientConfig.class);
+    /**
+     * Serialization version identifier for this {@link IClientConfig} implementation.
+     */
     @Serial
     private static final long serialVersionUID = 415432969624634387L;
     private final Properties config; // config. player values.
     private TreeMap<String, ImageIcon> images; // treemap with images
 
     // CONSTRUCTOR
+    /**
+     * Loads (or creates, if missing) the client's configuration file and, unless running dedicated, the fixed set
+     * of GUI status/logo/tray/repair/camo images referenced by the config.
+     * <p>
+     * Loading order/fallbacks:
+     * <ol>
+     *   <li>{@link #setDefaults()} seeds every known key with a hardcoded default.</li>
+     *   <li>If neither {@code CONFIG_FILE} nor {@code CONFIG_BACKUP_FILE} exists on disk yet, an empty
+     *   {@code CONFIG_FILE} is created via {@link #createConfig()}.</li>
+     *   <li>The primary config file is loaded if present, otherwise the backup file is loaded instead; if neither
+     *   exists an error is logged and a dialog is shown to the user (the defaults from step 1 remain in effect).
+     *   Any other exception during this step is likewise logged with a dialog shown, and the defaults remain in
+     *   effect.</li>
+     *   <li>A legacy {@code serverdata.dat} file, if present in the working directory, is merged in on top of the
+     *   already-loaded config, immediately saved via {@link #saveConfig()}, and then deleted - this looks like a
+     *   one-time migration path for a config format used by an older client version.</li>
+     * </ol>
+     * If {@code dedicated} is {@code true}, the {@code "DEDICATED"} config key is forced to {@code "TRUE"}
+     * regardless of what was loaded from disk. Then, if the (possibly just-forced) config says this is a
+     * dedicated instance, the constructor returns immediately without loading any images - the {@link #images} map
+     * is left as the empty map assigned at the top of the constructor in that case.
+     *
+     * @param dedicated whether this client is running in dedicated (headless server) mode; if {@code true}, forces
+     *                  the {@code DEDICATED} config flag on and skips image loading
+     */
     public GUIClientConfig(boolean dedicated) {
         config = setDefaults();
         images = new TreeMap<>();
@@ -436,9 +472,14 @@ public class GUIClientConfig implements IClientConfig, Serializable {
     }
 
     /**
-     * All this does ATM is created an empty mwconfig.txt. Lines commented out are old MMNET options that the client
-     * code supports, but which are not presented to the user in the MekWars client GUI. The vast majority are totally
-     * unused because the players don't know about them. Over time, the options will be made public or removed.
+     * Creates an empty {@code mwconfig.txt} file on disk at {@code CONFIG_FILE} (relying on {@link #setDefaults()}
+     * plus subsequent {@link #setParam} calls to populate in-memory values; nothing is actually written to the
+     * file here beyond opening/immediately closing the stream). If the file cannot be created (e.g. due to folder
+     * permissions), an error dialog is shown and the entire client process is terminated via {@code System.exit(0)}.
+     * <p>
+     * Note: the Javadoc this method previously carried claimed it wrote "commented-out old MMNET options" into the
+     * file, but the implementation below does not write anything to the file at all - that description does not
+     * match the current code and appears stale.
      */
     @Override
     public void createConfig() {
@@ -455,8 +496,16 @@ public class GUIClientConfig implements IClientConfig, Serializable {
         }
     }
 
-    /* (non-Javadoc)
-     * @see client.IClientConfig#getParam(java.lang.String)
+    /**
+     * Looks up a config value by key. If {@code param} ends with a colon, the trailing colon is stripped before
+     * lookup (accommodating callers that pass keys in a "label:" form). Never returns {@code null}: an unknown key
+     * yields an empty string rather than {@code null} or a thrown exception.
+     *
+     * @param param the config key to look up (a trailing ":" is ignored)
+     *
+     * @return the associated value, or an empty string if the key is not set
+     *
+     * @see IClientConfig#getParam(String)
      */
     @Override
     public String getParam(String param) {
@@ -472,16 +521,27 @@ public class GUIClientConfig implements IClientConfig, Serializable {
         return tparam;
     }
 
-    /* (non-Javadoc)
-     * @see client.IClientConfig#setParam(java.lang.String, java.lang.String)
+    /**
+     * Sets (or overwrites) a config key's value in memory. Does not persist to disk by itself - call
+     * {@link #saveConfig()} separately to write changes out.
+     *
+     * @see IClientConfig#setParam(String, String)
      */
     @Override
     public void setParam(String param, String value) {
         config.setProperty(param, value);
     }
 
-    /* (non-Javadoc)
-     * @see client.IClientConfig#isParam(java.lang.String)
+    /**
+     * Interprets a config value as a boolean. Accepts (case-insensitively) {@code "YES"}, {@code "TRUE"}, or
+     * {@code "ON"} as truthy; any other value (including an unset key, which {@link #getParam} resolves to an
+     * empty string) is treated as {@code false}.
+     *
+     * @param param the config key to look up
+     *
+     * @return {@code true} if the value is one of the recognized truthy strings, {@code false} otherwise
+     *
+     * @see IClientConfig#isParam(String)
      */
     @Override
     public boolean isParam(String param) {
@@ -489,8 +549,15 @@ public class GUIClientConfig implements IClientConfig, Serializable {
         return tparam.equalsIgnoreCase("YES") || tparam.equalsIgnoreCase("TRUE") || tparam.equalsIgnoreCase("ON");
     }
 
-    /* (non-Javadoc)
-     * @see client.IClientConfig#getIntParam(java.lang.String)
+    /**
+     * Interprets a config value as an integer, returning {@code 0} (rather than throwing) if the value is missing
+     * or not a valid integer.
+     *
+     * @param param the config key to look up
+     *
+     * @return the parsed integer value, or {@code 0} if it could not be parsed
+     *
+     * @see IClientConfig#getIntParam(String)
      */
     @Override
     public int getIntParam(String param) {
@@ -503,8 +570,14 @@ public class GUIClientConfig implements IClientConfig, Serializable {
         return toReturn;
     }
 
-    /* (non-Javadoc)
-     * @see client.IClientConfig#saveConfig()
+    /**
+     * Persists the in-memory config to disk in two steps: first writes a full copy to {@code CONFIG_BACKUP_FILE}
+     * (as a backup), then writes the same data to the primary {@code CONFIG_FILE}. If the backup write fails, an
+     * error is logged and the method returns early without attempting the primary write (leaving the previous
+     * on-disk primary config untouched). If the primary write then fails, an error is logged but no further
+     * recovery is attempted.
+     *
+     * @see IClientConfig#saveConfig()
      */
     @Override
     public void saveConfig() {
@@ -542,6 +615,18 @@ public class GUIClientConfig implements IClientConfig, Serializable {
         return images.get(image);
     }
 
+    /**
+     * Checks whether the player has enabled any of the per-column "unit status" indicator options (used by the
+     * unit status display to decide whether to draw the right/left icon columns at all). Returns {@code true} as
+     * soon as any one of the individual right- or left-column status toggles (pilot-eject, repair, engine,
+     * equipment, armor, ammo) is enabled.
+     * <p>
+     * Possible oversight: {@code RIGHTCOMMANDER}/{@code LEFTCOMMANDER} are defined as config keys (see
+     * {@link #setDefaults()}) but are not checked here alongside the other five per-column options, so enabling
+     * only the "commander" indicator would not cause this method to report {@code true}.
+     *
+     * @return {@code true} if at least one right/left status-icon option (other than "commander") is enabled
+     */
     public boolean isUsingStatusIcons() {
 
         if (Boolean.parseBoolean(getParam("RIGHTPILOTEJECT"))) {
@@ -582,8 +667,22 @@ public class GUIClientConfig implements IClientConfig, Serializable {
     }
 
     /**
-     * Load an image. Used by the CConfig constructor to load client images (eg - player list icons). Only external call
-     * is from the camo dialog and is used to replace the UNITCAMO image with the newly selected imageicon.
+     * Loads an image file from disk, scales it to the given dimensions, and stores it in the in-memory
+     * {@link #images} cache under the given key (overwriting any previous entry for that key). Used by this
+     * constructor to load the fixed set of GUI status/logo/tray/repair/camo images (see {@link #GUIClientConfig});
+     * the only external caller elsewhere in the client is the camo-selection dialog, which uses this to swap in a
+     * newly-chosen camo image under the {@code "CAMO"} key at runtime. A no-op if {@code imagename} is empty; any
+     * other failure to load/scale the image (e.g. missing file) is logged and swallowed rather than propagated -
+     * the map simply keeps whatever was previously cached under {@code image} (or nothing, if this was the first
+     * attempt).
+     * <p>
+     * (Note: the Javadoc previously attached to this method referred to "the CConfig constructor" - {@code CConfig}
+     * appears to be an older name for this class, presumably renamed to {@code GUIClientConfig} at some point.)
+     *
+     * @param imagename path to the image file to load (relative to the working directory); no-op if empty
+     * @param image     the cache key to store the scaled image under (e.g. {@code "LOGOUT"}, {@code "CAMO"})
+     * @param width     target width, in pixels, to scale the image to
+     * @param height    target height, in pixels, to scale the image to
      */
     public void loadImage(String imagename, String image, int width, int height) {
         if (imagename.isEmpty()) {

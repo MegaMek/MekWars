@@ -45,20 +45,49 @@ import jakarta.annotation.Nullable;
 import megamek.codeUtilities.MathUtility;
 import megamek.logging.MMLogger;
 
+/**
+ * Custom Swing {@link View} implementation that renders {@code <IMG>} elements inside a {@link JEditorPane}'s
+ * HTML document (used by MekWars' chat/info panes, e.g. planet descriptions and other HTML-formatted text that
+ * embeds images). It is registered with a matching {@code ViewFactory}/{@code MyHTMLEditorKit} elsewhere in this
+ * package so that {@code img} tags produce instances of this class instead of Swing's default {@code ImageView}.
+ * <p>
+ * This is derived from (and closely mirrors) the JDK's package-private {@code javax.swing.text.html.ImageView},
+ * reimplemented here as a public class so MekWars' HTML editor kit can use it directly. Responsibilities include:
+ * loading the image referenced by the element's {@code SRC} attribute (from a URL or from the local filesystem),
+ * honoring explicit {@code WIDTH}/{@code HEIGHT}/{@code BORDER}/{@code ALIGN}/{@code HSPACE}/{@code VSPACE}
+ * attributes or falling back to the image's natural size/defaults, showing a "pending" or "broken image" icon
+ * while the image loads or if it fails to load, repainting incrementally as image data streams in (see
+ * {@link #imageUpdate}), and supporting basic mouse-driven selection/resize interaction when embedded in an
+ * editable document (click to select; drag the bottom-right corner of a selected image to resize it, optionally
+ * holding shift to preserve aspect ratio).
+ *
+ * @see #paint(Graphics, Shape)
+ * @see #imageUpdate(Image, int, int, int, int, int)
+ */
 public class MyImageView extends View implements ImageObserver, MouseListener, MouseMotionListener {
+    /** {@code ALIGN} attribute value: align the image's top with the tallest element on the line. */
     public static final String TOP = "top";
 
+    /** {@code ALIGN} attribute value: align the image's top with the top of the surrounding text. */
     public static final String TEXT_TOP = "text_top";
+    /** {@code ALIGN} attribute value: align the image's vertical middle with the baseline. */
     public static final String MIDDLE = "middle";
+    /** {@code ALIGN} attribute value: align the image's vertical middle with the middle of the surrounding text. */
     public static final String ABS_MIDDLE = "abs_middle";
+    /** {@code ALIGN} attribute value: same vertical alignment handling as {@link #MIDDLE} in {@link #getVerticalAlignment()}. */
     public static final String CENTER = "center";
+    /** {@code ALIGN} attribute value: align the image's bottom with the baseline (the default). */
     public static final String BOTTOM = "bottom";
     private static final MMLogger LOGGER = MMLogger.create(MyImageView.class);
+    /** Document property key under which a {@code Dictionary<URL, Image>} pre-populated image cache may be stored. */
     private static final String IMAGE_CACHE_PROPERTY = "imageCache";
+    /** Classpath-relative resource path for the "image is still loading" placeholder icon. */
     private static final String PENDING_IMAGE_SRC = "icons/image-delayed.gif";
+    /** Classpath-relative resource path for the "image failed to load" placeholder icon. */
     private static final String MISSING_IMAGE_SRC = "icons/image-failed.gif";
     private static final int DEFAULT_WIDTH = 32;
     private static final int DEFAULT_HEIGHT = 32;
+    /** Default border thickness (in pixels) drawn around images that are links, when no explicit BORDER is set. */
     private static final int DEFAULT_BORDER = 2;
     /**
      * Static properties for incremental drawing. Swiped from Component.java
@@ -66,15 +95,35 @@ public class MyImageView extends View implements ImageObserver, MouseListener, M
      * @see #imageUpdate
      */
     private static boolean sIsInc = true;
+    /** Minimum delay (ms) between incremental repaints while an image is still streaming in, when {@link #sIsInc} is true. */
     private static int sIncRate = 100;
+    /** Shared, lazily-loaded icon shown in place of an image that has not finished loading yet. */
     private static Icon sPendingImageIcon;
+    /** Shared, lazily-loaded icon shown in place of an image that failed to load. */
     private static Icon sMissingImageIcon;
+    /** This view's resolved attribute set (element attributes merged with the document's style sheet). */
     private final AttributeSet attr;
+    /** The document element (the {@code <IMG>} tag) this view renders. */
     private Element fElement;
+    /** The loaded (or still-loading) image to render; {@code null} if loading has not started or has failed. */
     private Image fImage;
+    /** Current rendered height/width of the image, in pixels (may reflect a custom attribute, the image's natural
+     *  size, or {@link #DEFAULT_WIDTH}/{@link #DEFAULT_HEIGHT}). */
     private int fHeight, fWidth;
+    /** The AWT container (usually the {@link JEditorPane}) this view is ultimately rendered within. */
     private Container fContainer;
+    /** The last allocated on-screen bounds for this view, cached so {@link #repaint(long)} knows what to invalidate. */
     private Rectangle fBounds;
+    /**
+     * An on-screen component associated with this view, used for grow-box drag coordinates.
+     * <p>
+     * NOTE (apparent bug): nowhere in this class is {@code fComponent} ever assigned a non-null value — it is only
+     * read (in {@link #mousePressed} and {@link #mouseDragged}) and nulled out (in {@link #setParent}). As written,
+     * it is always {@code null}, so {@link #mousePressed}/{@link #mouseDragged} will throw a
+     * {@link NullPointerException} as soon as they dereference it, meaning the grow-box resize interaction is
+     * effectively non-functional unless something outside this class sets {@code fComponent} via reflection or a
+     * subclass.
+     */
     private Component fComponent;
     private Point fGrowBase;        // base of drag while growing image
     /**
@@ -88,6 +137,9 @@ public class MyImageView extends View implements ImageObserver, MouseListener, M
 
     /**
      * Creates a new view that represents an IMG element.
+     * <p>
+     * Delegates to {@link #initialize(Element)} to kick off image loading and size resolution, then resolves this
+     * view's attribute set from the document's style sheet.
      *
      * @param elem the element to create a view for
      */
@@ -98,6 +150,26 @@ public class MyImageView extends View implements ImageObserver, MouseListener, M
         attr = sheet.getViewAttributes(this);
     }
 
+    /**
+     * (Re-)loads the image for {@code elem} and computes this view's rendered {@link #fWidth}/{@link #fHeight}.
+     * Called both from the constructor and from {@link #changedUpdate} when the element's attributes change.
+     * <p>
+     * If the element's {@code SRC} looks like a URL (see {@link #isURL()}), the image is fetched via an optional
+     * per-document image cache ({@link #IMAGE_CACHE_PROPERTY}) or {@link Toolkit#getImage(URL)}; if the source
+     * cannot be resolved to a valid {@link URL} (an {@link IllegalArgumentException} or
+     * {@link MalformedURLException}), this method returns early with {@code fImage} left {@code null} — the
+     * {@code finally} block below still runs and falls back to the default width/height in that case. Otherwise
+     * (a local/relative path) the image is loaded synchronously via {@link Toolkit#createImage(String)} and
+     * {@link #waitForImage()} is used to block until it either finishes loading or errors, since local images
+     * aren't already cached/streamed the way URL-backed ones can be.
+     * <p>
+     * Size resolution: explicit {@code HEIGHT}/{@code WIDTH} attributes win; otherwise the loaded image's natural
+     * size is used; otherwise {@link #DEFAULT_HEIGHT}/{@link #DEFAULT_WIDTH}. Finally, {@link Toolkit#prepareImage}
+     * is called to ensure asynchronous loading/decoding proceeds (feeding {@link #imageUpdate} callbacks) even
+     * though a rough size is already known.
+     *
+     * @param elem the {@code <IMG>} element to (re)initialize this view from
+     */
     private void initialize(Element elem) {
         synchronized (this) {
             loading = true;
@@ -186,12 +258,22 @@ public class MyImageView extends View implements ImageObserver, MouseListener, M
         }
     }
 
+    /** @return the style sheet of the enclosing {@link HTMLDocument}, used to resolve this view's attributes. */
     protected StyleSheet getStyleSheet() {
         HTMLDocument doc = (HTMLDocument) getDocument();
         return doc.getStyleSheet();
     }
 
-    /** Determines if path is in the form of a URL */
+    /**
+     * Determines if path is in the form of a URL
+     * <p>
+     * NOTE (potential bug): this reads the element's {@code SRC} attribute and calls {@code src.toLowerCase()}
+     * without a null check; if an {@code <IMG>} element somehow has no {@code SRC} attribute, this throws a
+     * {@link NullPointerException} rather than treating it as "not a URL".
+     *
+     * @return {@code true} if the {@code SRC} attribute starts with {@code "file"} or {@code "http"} (case
+     *       insensitive)
+     */
     private boolean isURL() {
         String src = (String) fElement.getAttributes().getAttribute(HTML.Attribute.SRC);
         return src.toLowerCase().startsWith("file") || src.toLowerCase().startsWith("http");
@@ -199,6 +281,11 @@ public class MyImageView extends View implements ImageObserver, MouseListener, M
 
     /**
      * Return a URL for the image source, or null if it could not be determined.
+     * <p>
+     * Resolves the element's {@code SRC} attribute against the document's base URL ({@link HTMLDocument#getBase()})
+     * by naive string concatenation of the base URL and the parsed {@code SRC} {@link URI}.
+     *
+     * @return the resolved absolute source {@link URI}, or {@code null} if {@code SRC} is missing or malformed
      */
     private @Nullable URI getSourceURL() {
         String src = (String) fElement.getAttributes().getAttribute(HTML.Attribute.SRC);
@@ -223,6 +310,14 @@ public class MyImageView extends View implements ImageObserver, MouseListener, M
     /**
      * Checks to see if the absolute path is availabe thru an application global static variable or thru a system
      * variable. If so, appends the relative path to the absolute path and returns the String.
+     * <p>
+     * NOTE (apparent dead code): both branches currently return {@code src} unchanged — whether or not
+     * {@code imageFile.isAbsolute()} is true, the method is a no-op passthrough. Despite the doc comment's
+     * description, no absolute-path lookup or path-joining actually happens here.
+     *
+     * @param src the raw {@code SRC} attribute value (relative or absolute path)
+     *
+     * @return {@code src}, unchanged
      */
     private String processSrcPath(String src) {
         File imageFile = new File(src);
@@ -238,6 +333,13 @@ public class MyImageView extends View implements ImageObserver, MouseListener, M
      * Added this guy to make sure an image is loaded - ie no broken images. So far its used only for images loaded off
      * the disk (non-URL). It seems to work marvelously. By the way, it does the same thing as MediaTracker, but you
      * dont need to know the component its being rendered on. Rob
+     * <p>
+     * Busy-polls {@link Toolkit#checkImage} every 10ms until the image reports an error/abort (in which case this
+     * throws {@link InterruptedException} to signal failure to the caller) or has at least one full frame decoded
+     * ({@code ALLBITS}/{@code FRAMEBITS}), at which point it returns normally.
+     *
+     * @throws InterruptedException if the image fails to load (used here as a "loading failed" signal, not
+     *       necessarily actual thread interruption) or if {@link Thread#sleep} is interrupted
      */
     private void waitForImage() throws InterruptedException {
         int w;
@@ -259,7 +361,14 @@ public class MyImageView extends View implements ImageObserver, MouseListener, M
         }
     }
 
-    /** Look up an integer-valued attribute. <b>Not</b> recursive. */
+    /**
+     * Look up an integer-valued attribute. <b>Not</b> recursive.
+     *
+     * @param name         the HTML attribute to look up (checked only on this element, not inherited from parents)
+     * @param defaultValue value to use if the attribute is undefined, has no value, or fails to parse as an integer
+     *
+     * @return the attribute's non-negative integer value, or {@code defaultValue}
+     */
     private int getIntAttr(HTML.Attribute name, int defaultValue) {
         AttributeSet attr = fElement.getAttributes();
 
@@ -282,7 +391,12 @@ public class MyImageView extends View implements ImageObserver, MouseListener, M
 
     // --- Layout ----------------------------------------------------------
 
-    /** Returns the text editor's highlight color. */
+    /**
+     * Returns the text editor's highlight color.
+     *
+     * @return the selection color of the {@link JTextComponent} this view is rendered in (assumes {@link #fContainer}
+     *       is a {@link JTextComponent}; will throw {@link ClassCastException} otherwise)
+     */
     protected Color getHighlightColor() {
         JTextComponent textComp = (JTextComponent) fContainer;
         return textComp.getSelectionColor();
@@ -293,6 +407,28 @@ public class MyImageView extends View implements ImageObserver, MouseListener, M
     // preference changed, or repaint, we just reset the fWidth/fHeight as
     // necessary and return. This is ok as we know when loading finishes
     // it will pick up the new height/width, if necessary.
+    /**
+     * {@link ImageObserver} callback invoked (possibly on any thread, e.g. the image-fetcher thread) as the image
+     * referenced by this view loads. Ignores callbacks for images other than the currently tracked {@link #fImage}.
+     * On an error/abort, drops the image (renders as "missing" thereafter) and repaints. Otherwise, if the
+     * {@code HEIGHT}/{@code WIDTH} flags are set (and the element doesn't pin an explicit HTML attribute for that
+     * dimension), updates {@link #fWidth}/{@link #fHeight} from the new size and, once loading has fully finished
+     * (i.e. {@link #loading} is false — while still loading, the resize is deferred to when {@link #initialize}
+     * completes), notifies the parent view via {@link #preferenceChanged} so the layout can adjust. Finally
+     * schedules a repaint, either immediately (image fully/partially rendered: {@code FRAMEBITS}/{@code ALLBITS})
+     * or throttled (partial data: {@code SOMEBITS}, subject to {@link #sIncRate} if {@link #sIsInc} is enabled).
+     * <p>
+     * NOTE (apparent bug): the bit used to gate the {@link #fWidth} update is set from the {@code HEIGHT} observer
+     * flag, and the bit gating the {@link #fHeight} update is set from the {@code WIDTH} flag — i.e. the two are
+     * swapped relative to what the variable names suggest. In practice this is usually harmless because real
+     * image-loading callbacks tend to report both flags together with the current width and height, but a callback
+     * reporting only one of {@code HEIGHT}/{@code WIDTH} would update the wrong dimension.
+     *
+     * @return {@code true} if more updates are needed (image not yet fully loaded), {@code false} once loading is
+     *       complete, aborted, or this callback is for a stale/foreign image
+     *
+     * @see ImageObserver#imageUpdate(Image, int, int, int, int, int)
+     */
     public boolean imageUpdate(Image img, int flags, int x, int y, int width, int height) {
         if (fImage == null || fImage != img) {
             return false;
@@ -509,10 +645,21 @@ public class MyImageView extends View implements ImageObserver, MouseListener, M
         return 0;
     }
 
+    /**
+     * @param imageObserver observer to pass through to {@link Image#getHeight}/{@link Image#getWidth} (dimensions
+     *                      may not be known yet without one)
+     *
+     * @return {@code true} if {@link #fImage} is non-null and has known, positive width and height (i.e. at least
+     *       one frame of pixel data is available to draw)
+     */
     boolean hasPixels(ImageObserver imageObserver) {
         return fImage != null && fImage.getHeight(imageObserver) > 0 && fImage.getWidth(imageObserver) > 0;
     }
 
+    /**
+     * Lazily loads the shared static "pending" and "missing" image placeholder icons (see {@link #makeIcon}) the
+     * first time they're needed; subsequent calls are no-ops once both are cached.
+     */
     private void loadIcons() {
         try {
             if (sPendingImageIcon == null) {
@@ -532,10 +679,24 @@ public class MyImageView extends View implements ImageObserver, MouseListener, M
         return doc.getForeground(getAttributes());
     }
 
+    /** @return {@code true} if this view is inside an editable {@link JEditorPane} (enables exclusive selection/resize). */
     protected boolean isEditable() {
         return fContainer instanceof JEditorPane && ((JEditorPane) fContainer).isEditable();
     }
 
+    /**
+     * Loads a small GIF icon bundled as a classpath resource next to this class (used for the pending/missing image
+     * placeholders). Reads the resource fully into a byte array first (rather than handing a URL/stream directly to
+     * {@link ImageIcon}) because, per the inline comment, some browsers/sandboxes treat {@code Class.getResource}
+     * as a security risk since it can be used to load additional classes, whereas
+     * {@code Class.getResourceAsStream} only exposes raw bytes.
+     *
+     * @param gifFile classpath-relative path to the GIF resource
+     *
+     * @return the loaded icon, or {@code null} if the resource is missing or empty
+     *
+     * @throws IOException if reading the resource stream fails
+     */
     private Icon makeIcon(final String gifFile) throws IOException {
         /*
          * Copy a resource into a byte array.  This is necessary because several browsers consider Class.getResource
@@ -640,7 +801,13 @@ public class MyImageView extends View implements ImageObserver, MouseListener, M
         return getEndOffset();
     }
 
-    /** My attributes may have changed. */
+    /**
+     * My attributes may have changed.
+     * <p>
+     * Re-runs {@link #initialize(Element)} to reload the image/re-resolve size from the (possibly changed) element
+     * attributes, then compares the old and new width/height/vertical-alignment to decide whether to notify the
+     * parent view via {@link View#preferenceChanged} that a re-layout is needed.
+     */
     @Override
     public void changedUpdate(DocumentEvent documentEvent, Shape shape, ViewFactory viewFactory) {
         LOGGER.debug("ImageView: changedUpdate begin...");
@@ -673,7 +840,13 @@ public class MyImageView extends View implements ImageObserver, MouseListener, M
         return attr;
     }
 
-    /** Returns the image's vertical alignment. */
+    /**
+     * Returns the image's vertical alignment, derived from the {@code ALIGN} HTML attribute (case-insensitive):
+     * {@code top}/{@code text_top} align to 0.0 (top of the line), {@code center}/{@code middle}/{@code abs_middle}
+     * align to 0.5, and anything else (including no {@code ALIGN} attribute) defaults to 1.0 (bottom/baseline).
+     *
+     * @return a value in {@code [0.0, 1.0]} as used by {@link #getAlignment(int)}
+     */
     float getVerticalAlignment() {
         String align = (String) fElement.getAttributes().getAttribute(HTML.Attribute.ALIGN);
 
@@ -688,17 +861,27 @@ public class MyImageView extends View implements ImageObserver, MouseListener, M
         return 1.0f;        // default alignment is bottom
     }
 
-    /** Returns the size of the border to use. */
+    /** Returns the size of the border to use: the explicit {@code BORDER} attribute if set, else {@link #DEFAULT_BORDER} for links or 0 otherwise. */
     int getBorder() {
         return getIntAttr(HTML.Attribute.BORDER, isLink() ? DEFAULT_BORDER : 0);
     }
 
-    /** Returns the amount of extra space to add along an axis. */
+    /**
+     * Returns the amount of extra space to add along an axis, from the {@code HSPACE} ({@link #X_AXIS}) or
+     * {@code VSPACE} ({@link #Y_AXIS}) HTML attribute, defaulting to 0.
+     */
     int getSpace(int axis) {
         return getIntAttr(axis == X_AXIS ? HTML.Attribute.HSPACE : HTML.Attribute.VSPACE, 0);
     }
 
-    /** Is this image within a link? */
+    /**
+     * Is this image within a link?
+     * <p>
+     * Checked by looking for an enclosing {@code <A>} tag attribute set with a defined {@code HREF}. Deliberately
+     * not cached (per the inline comment) since the surrounding markup can change in an editor.
+     *
+     * @return {@code true} if this image is wrapped in an {@code <a href="...">} anchor
+     */
     boolean isLink() {
         //! It would be nice to cache this but in an editor it can change
         // See if I have an HREF attribute courtesy of the enclosing A tag:
@@ -711,7 +894,16 @@ public class MyImageView extends View implements ImageObserver, MouseListener, M
         return false;
     }
 
-    /** Resize image if initial click was in grow-box: */
+    /**
+     * Resize image if initial click was in grow-box:
+     * <p>
+     * If a grow-drag was started (see {@link #mousePressed}, which sets {@link #fGrowBase}), computes a new
+     * width/height from how far the mouse has moved from the grow-box's screen-space anchor point, optionally
+     * constraining the new size to the image's original aspect ratio when Shift is held, then applies it via
+     * {@link #resize(int, int)}. No-op if no grow-drag is in progress.
+     *
+     * @see MouseMotionListener#mouseDragged(MouseEvent)
+     */
     public void mouseDragged(MouseEvent mouseEvent) {
         if (fGrowBase != null) {
             Point loc = fComponent.getLocationOnScreen();
@@ -742,6 +934,13 @@ public class MyImageView extends View implements ImageObserver, MouseListener, M
     /**
      * Change the size of this image. This alters the HEIGHT and WIDTH attributes of the Element and causes a
      * re-layout.
+     * <p>
+     * No-ops if the requested size matches the current size. Otherwise updates {@link #fWidth}/{@link #fHeight}
+     * immediately and writes new {@code WIDTH}/{@code HEIGHT} character attributes onto the underlying document
+     * element, which will in turn trigger {@link #changedUpdate} to fire a layout preference change.
+     *
+     * @param width  new width in pixels
+     * @param height new height in pixels
      */
     protected void resize(int width, int height) {
         if (width == fWidth && height == fHeight) {
@@ -761,17 +960,31 @@ public class MyImageView extends View implements ImageObserver, MouseListener, M
               false);
     }
 
+    /** No-op; mouse-move (hover, as opposed to drag) events are not currently handled by this view. */
     public void mouseMoved(MouseEvent mouseEvent) {
     }
 
     // --- constants and static stuff --------------------------------
 
-    /** On double-click, open image properties dialog. */
+    /** On double-click, open image properties dialog. Currently unimplemented (see the {@code $ IMPLEMENT} marker below). */
     public void mouseClicked(MouseEvent mouseEvent) {
         //$ IMPLEMENT
     }
 
-    /** Select or grow image when clicked. */
+    /**
+     * Select or grow image when clicked.
+     * <p>
+     * If the click lands within 7 pixels of the bottom-right corner while the image is exclusively selected (see
+     * {@link #getSelectionState()}), begins a grow-box resize drag by recording the screen-space anchor point in
+     * {@link #fGrowBase} (consumed by {@link #mouseDragged}). Otherwise, clears any grow drag and instead adjusts
+     * the enclosing text component's selection/caret to cover this image element, extending the existing selection
+     * if Shift is held.
+     * <p>
+     * NOTE: see the caveat on {@link #fComponent} — {@code fComponent.getSize()} below will throw a
+     * {@link NullPointerException} given the field is never populated elsewhere in this class.
+     *
+     * @see MouseListener#mousePressed(MouseEvent)
+     */
     public void mousePressed(MouseEvent mouseEvent) {
         Dimension size = fComponent.getSize();
 
@@ -810,14 +1023,17 @@ public class MyImageView extends View implements ImageObserver, MouseListener, M
         }
     }
 
+    /** Ends any in-progress grow-box resize drag. Per the inline TODO, a resize is not posted as an undoable edit. */
     public void mouseReleased(MouseEvent mouseEvent) {
         fGrowBase = null;
         //! Should post some command to make the action undo-able
     }
 
+    /** No-op; entering the image's bounds requires no state change. */
     public void mouseEntered(MouseEvent mouseEvent) {
     }
 
+    /** No-op; leaving the image's bounds requires no state change. */
     public void mouseExited(MouseEvent mouseEvent) {
     }
 }
