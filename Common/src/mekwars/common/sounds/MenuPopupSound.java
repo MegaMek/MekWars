@@ -18,23 +18,38 @@ package mekwars.common.sounds;
 
 import mekwars.common.campaign.clientutils.protocol.IClient;
 
+/**
+ * Swing {@link javax.swing.event.MenuListener} that plays a UI sound effect whenever the popup menu it's attached
+ * to is opened, if the user has sound enabled in their client configuration.
+ * <p>
+ * This is the popup-menu counterpart to {@link MenuSound}; the two are kept as separate classes because popup
+ * menus and regular menus are toggled and configured independently ({@code ENABLEMENUPOPUPSOUND} /
+ * {@code SOUNDONMENUPOPUP} here vs. {@code ENABLEMENUSOUND} / {@code SOUNDONMENU} there).
+ */
 public class MenuPopupSound implements javax.swing.event.MenuListener {
 
     IClient client;
 
+    /**
+     * @param client the client whose configuration (sound enabled flag, sound file choice) and audio playback are
+     *               used
+     */
     public MenuPopupSound(IClient client) {
         this.client = client;
     }
 
+    /** Plays the configured "popup menu opened" sound if {@code ENABLEMENUPOPUPSOUND} is set in the client config. */
     public void menuSelected(javax.swing.event.MenuEvent arg0) {
         if (client.getConfig().isParam("ENABLEMENUPOPUPSOUND")) {
             client.doPlaySound(client.getConfigParam("SOUNDONMENUPOPUP"));
         }
     }
 
+    /** No sound is played on menu close. */
     public void menuDeselected(javax.swing.event.MenuEvent arg0) {
     }
 
+    /** No sound is played when menu selection is cancelled. */
     public void menuCanceled(javax.swing.event.MenuEvent arg0) {
     }
 

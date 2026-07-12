@@ -25,9 +25,13 @@ import megamek.codeUtilities.MathUtility;
 import megamek.logging.MMLogger;
 
 /**
- * Helper to encode and decode typical fields of classes
+ * Reads the simple {@code name=value} line-oriented text format written by {@link BinWriter}, used to persist
+ * fields of common data classes (e.g. save-game / campaign state) to disk.
  * <p>
- * currently handled types are: - boolean - int - String - double
+ * Currently handled value types are: boolean, int, String, and double. Each read call consumes exactly one line
+ * from the underlying stream and expects that line's key (the text before {@code '='}) to match the
+ * {@code debugName} passed in, which acts both as a field identifier and a sanity check that the reader and writer
+ * agree on field order.
  *
  * @author Imi (immanuel.scholz@gmx.de)
  */
@@ -37,19 +41,33 @@ public class BinReader {
     private final BufferedReader in;
 
     /**
-     * Construct an BinReader
+     * Wraps {@code in} in a {@link BufferedReader} for line-based reading.
+     *
+     * @param in the underlying character stream to read {@code name=value} lines from
      */
     public BinReader(Reader in) {
         this.in = new BufferedReader(in);
     }
 
     /**
-     * Reads an integer
+     * Reads the next line as an integer field.
+     *
+     * @param debugName expected field name; must match the key on the next line
+     *
+     * @return the parsed integer, or {@code 0} if the line is missing, malformed, or the key does not match
      */
     public int readInt(String debugName) {
         return MathUtility.parseInt(read(debugName), 0);
     }
 
+    /**
+     * Reads the next line from the stream and validates that its {@code key=value} key matches {@code debugName}.
+     *
+     * @param debugName expected field name; must match the key on the next line
+     *
+     * @return the raw value portion of the line (everything after the first {@code '='}), or {@code null} if the
+     *         key does not match {@code debugName} or the line could not be read
+     */
     @Nullable
     public String read(String debugName) {
         try {
@@ -68,14 +86,23 @@ public class BinReader {
     }
 
     /**
-     * Reads an double
+     * Reads the next line as a double field.
+     *
+     * @param debugName expected field name; must match the key on the next line
+     *
+     * @return the parsed double, or {@code 0.0} if the line is missing, malformed, or the key does not match
      */
     public double readDouble(String debugName) {
         return MathUtility.parseDouble(read(debugName), 0.0);
     }
 
     /**
-     * Reads an boolean
+     * Reads the next line as a boolean field. Any value other than {@code "false"} (case-insensitive), {@code "0"},
+     * or empty is treated as {@code true}.
+     *
+     * @param debugName expected field name; must match the key on the next line
+     *
+     * @return the parsed boolean, or {@code false} if the line is missing or the key does not match
      */
     public boolean readBoolean(String debugName) {
         String string = read(debugName);
@@ -88,7 +115,7 @@ public class BinReader {
     }
 
     /**
-     * Closes the input.
+     * Closes the underlying input stream.
      */
     public void close() throws IOException {
         in.close();

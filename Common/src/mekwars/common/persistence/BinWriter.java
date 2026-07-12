@@ -24,7 +24,11 @@ import megamek.logging.MMLogger;
 import mekwars.common.util.TeePrinter;
 
 /**
- * Used to write the data fields of common data classes
+ * Writes the simple {@code name=value} line-oriented text format read back by {@link BinReader}, used to persist
+ * the data fields of common data classes (e.g. save-game / campaign state) to disk.
+ * <p>
+ * Field order matters: {@link BinReader} validates each line's key against the name it expects next, so fields
+ * must be written in the same order the corresponding {@code BinReader} calls will read them.
  *
  * @author Imi (immanuel.scholz@gmx.de)
  */
@@ -32,13 +36,29 @@ public class BinWriter {
     private final static MMLogger LOGGER = MMLogger.create(BinWriter.class);
 
     private PrintWriter out;
+
+    /** Tracks a nested data block opened via {@link #newBlock(String)} so it can be closed before this writer is. */
     private BinWriter dataBlock = null;
+
+    /** Whether this writer is still open; used by a parent writer to decide whether a child block needs closing. */
     private boolean open = true;
 
+    /**
+     * Wraps an already-open {@link PrintWriter} for plain (non-debug) writing.
+     *
+     * @param out the destination to write {@code name=value} lines to
+     */
     public BinWriter(PrintWriter out) {
         this.out = out;
     }
 
+    /**
+     * Wraps {@code out} but also tees every line to {@code debugFilename} on disk, for troubleshooting what was
+     * written. If the debug file cannot be opened, falls back to writing only to {@code out} and logs the error.
+     *
+     * @param out           the primary destination to write {@code name=value} lines to
+     * @param debugFilename path of a file to additionally mirror all output into
+     */
     public BinWriter(PrintWriter out, String debugFilename) {
         try {
             this.out = new PrintWriter(new TeePrinter(out, new FileWriter(debugFilename)));
@@ -49,23 +69,39 @@ public class BinWriter {
         this.out.println("###DEBUG_ON###");
     }
 
-
+    /** Writes an integer field as {@code debugName=v}, terminated with a newline. */
     public void println(int v, String debugName) {
         out.println(String.format("%s=%s", debugName, v));
     }
 
+    /**
+     * Writes a double field as {@code debugName=v}. Unlike the other {@code println} overloads, this does not
+     * append a newline itself ({@link PrintWriter#print} is used rather than {@code println}).
+     */
     public void println(double v, String debugName) {
         out.print(String.format("%s=%s", debugName, v));
     }
 
+    /**
+     * Writes a String field as {@code debugName=v}. Unlike {@link #println(int, String)}, this does not append a
+     * newline itself.
+     */
     public void println(String v, String debugName) {
         out.print(String.format("%s=%s", debugName, v));
     }
 
+    /**
+     * Writes a boolean field as {@code debugName=v}. Unlike {@link #println(int, String)}, this does not append a
+     * newline itself.
+     */
     public void println(boolean v, String debugName) {
         out.print(String.format("%s=%s", debugName, v));
     }
 
+    /**
+     * Closes any still-open nested data block, then closes the underlying stream. After calling this, the writer
+     * must not be used again.
+     */
     public void close() {
         if (dataBlock != null && dataBlock.open) {
             dataBlock.close();
@@ -75,6 +111,11 @@ public class BinWriter {
         open = false;
     }
 
+    /**
+     * Closes (not merely flushes) any still-open nested data block, then flushes the underlying stream. The nested
+     * block is closed rather than flushed because, per {@link #newBlock(String)}, writing again to a stale block
+     * reference after its parent has moved on is not supported.
+     */
     public void flush() {
         if (dataBlock != null && dataBlock.open) {
             dataBlock.close(); // yes, close it, not flush it.

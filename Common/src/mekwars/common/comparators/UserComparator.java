@@ -38,16 +38,33 @@ import java.util.Comparator;
 import mekwars.common.campaign.CUser;
 import mekwars.common.gui.panels.CUserListPanel;
 
+/**
+ * Comparator used to sort {@link CUser} entries in the user list UI (see {@link CUserListPanel}).
+ * <p>
+ * Both the sort key ({@link #Mode}) and the sort direction ({@link #Order}) are mutable so the same comparator
+ * instance can be reused across re-sorts triggered by clicking different column headers, rather than constructing a
+ * new comparator every time. Valid values for both fields are defined as {@code SORT_MODE_*} and {@code SORT_ORDER_*}
+ * constants on {@link CUserListPanel}.
+ */
 public class UserComparator implements Comparator<CUser> {
 
+    /** Which {@code CUser} field to sort by; one of {@link CUserListPanel}'s {@code SORT_MODE_*} constants. */
     int Mode;
+
+    /** Sort direction; one of {@link CUserListPanel}'s {@code SORT_ORDER_*} constants. */
     int Order;
 
+    /** Creates a comparator defaulting to ascending sort by name. */
     public UserComparator() {
         Mode = CUserListPanel.SORT_MODE_NAME;
         Order = CUserListPanel.SORT_ORDER_ASCENDING;
     }
 
+    /**
+     * Compares two users according to the current {@link #Mode} and {@link #Order}. When the primary field compares
+     * equal (or the mode is unrecognized), falls back to comparing by name so the resulting order is always
+     * deterministic.
+     */
     public int compare(CUser o1, CUser o2) {
         CUser user1;
         CUser user2;
@@ -97,6 +114,10 @@ public class UserComparator implements Comparator<CUser> {
         return result;
     }
 
+    /**
+     * Two users are considered equal for this comparator's purposes when they have the same name, regardless of the
+     * current {@link #Mode}/{@link #Order}.
+     */
     public boolean equals(Object o1, Object o2) {
         if (!(o1 instanceof CUser user1) || !(o2 instanceof CUser user2)) {
             return false;
@@ -105,10 +126,15 @@ public class UserComparator implements Comparator<CUser> {
         return (user1.getName().equals(user2.getName()));
     }
 
+    /** @return the current sort key, one of {@link CUserListPanel}'s {@code SORT_MODE_*} constants. */
     public int getMode() {
         return Mode;
     }
 
+    /**
+     * Sets the sort key. Silently ignored if {@code mode} is not one of the recognized
+     * {@code CUserListPanel.SORT_MODE_*} constants, leaving the previous mode in place.
+     */
     public void setMode(int mode) {
         if (mode == CUserListPanel.SORT_MODE_NAME || mode == CUserListPanel.SORT_MODE_HOUSE ||
                   mode == CUserListPanel.SORT_MODE_EXP || mode == CUserListPanel.SORT_MODE_RATING ||
@@ -116,10 +142,15 @@ public class UserComparator implements Comparator<CUser> {
                   mode == CUserListPanel.SORT_MODE_COUNTRY) {Mode = mode;}
     }
 
+    /** @return the current sort direction, one of {@link CUserListPanel}'s {@code SORT_ORDER_*} constants. */
     public int getOrder() {
         return Order;
     }
 
+    /**
+     * Sets the sort direction. Silently ignored if {@code order} is not one of the recognized
+     * {@code CUserListPanel.SORT_ORDER_*} constants, leaving the previous order in place.
+     */
     public void setOrder(int order) {
         if (order == CUserListPanel.SORT_ORDER_ASCENDING || order == CUserListPanel.SORT_ORDER_DESCENDING) {
             Order = order;
