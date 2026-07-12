@@ -39,18 +39,27 @@ package mekwars.common.commands;
 import mekwars.common.campaign.clientutils.protocol.IClient;
 
 /**
+ * "Send As Self"-style client-side command: takes a server-provided line of text and immediately re-sends it back
+ * to the server wrapped as a {@code CH} (chat) command. This is effectively a server-triggered echo/relay, letting
+ * the server instruct a client to speak a given line of chat as if the client had typed it.
+ *
  * @author jtighe
  */
 public class SAS extends Command {
 
     /**
+     * Creates the command bound to the given client.
      *
+     * @param client the client that will relay the chat line
      */
     public SAS(IClient client) {
         super(client);
     }
 
     /**
+     * Decodes {@code input} (stripping the command prefix token) to obtain the line of text to relay, then sends it
+     * back to the server as a {@code CH|<line>} chat command.
+     *
      * @see Command#execute(String)
      */
     @Override
@@ -60,7 +69,7 @@ public class SAS extends Command {
     }
 
     /**
-     *
+     * No reply-argument parsing is needed for this command; intentionally a no-op.
      */
     @Override
     public void parseReplyArgs(String s) {
@@ -68,7 +77,7 @@ public class SAS extends Command {
     }
 
     /**
-     *
+     * This command is never sent by a client to the server, so server-side argument parsing is a no-op.
      */
     @Override
     public void parseArguments(String s) {

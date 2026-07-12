@@ -40,6 +40,11 @@ import mekwars.common.campaign.Buildings;
 import mekwars.common.campaign.clientutils.protocol.IClient;
 
 /**
+ * Client-side command that delivers a building placement template used for randomly-generated maps (RMGs —
+ * Random Map Generator). Builds a {@link Buildings} instance from the encoded token stream and installs it as the
+ * client's current building template, so subsequently placed/rendered buildings on the map match what the server
+ * decided.
+ *
  * @author Torren (Jason Tighe)
  *       <p>
  *       Used for Randomn Building Placement on RMG's
@@ -56,6 +61,9 @@ public class RandomBuildingPlacementCommand extends Command {
     }
 
     /**
+     * Decodes {@code input}, constructs a new {@link Buildings} and populates it from the remaining tokens via
+     * {@link Buildings#fromString(StringTokenizer)}, then sets it as the client's building template.
+     *
      * @see Command#execute(String)
      */
     @Override
@@ -69,7 +77,7 @@ public class RandomBuildingPlacementCommand extends Command {
     }
 
     /**
-     *
+     * No reply-argument parsing is needed for this command; intentionally a no-op.
      */
     @Override
     public void parseReplyArgs(String s) {
@@ -77,7 +85,7 @@ public class RandomBuildingPlacementCommand extends Command {
     }
 
     /**
-     *
+     * This command is never sent by a client to the server, so server-side argument parsing is a no-op.
      */
     @Override
     public void parseArguments(String s) {

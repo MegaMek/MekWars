@@ -42,6 +42,11 @@ import mekwars.common.campaign.CUser;
 import mekwars.common.campaign.clientutils.protocol.IClient;
 
 /**
+ * Client-side handler for the {@code UserGoneCommand} protocol message, sent by the server whenever a user
+ * disconnects, leaves the chat room, or (per the comment below) is being renamed. Executing it removes all
+ * matching entries for that username from the client's local user list, refreshes the user list GUI, and
+ * optionally prints a "user left" notice with a sound effect.
+ *
  * @author Imi (immanuel.scholz@gmx.de)
  */
 public class UserGoneCommand extends Command {
@@ -54,6 +59,25 @@ public class UserGoneCommand extends Command {
     }
 
     /**
+     * Parses the departing user's name (and constructs a throwaway {@link CUser} from it purely to reuse its
+     * name/invisibility/level accessors) and removes every user list entry matching that name.
+     * <p>
+     * After the local list is updated and the user-list GUI refreshed, this method decides whether to announce
+     * the departure in chat:
+     * <ul>
+     *     <li>Dedicated (headless) clients always return early — no chat/sound handling.</li>
+     *     <li>Invisible users with a higher user level than the local client, and any user whose name starts with
+     *     {@code "[Dedicated]"}, are never announced.</li>
+     *     <li>Whether a "leave" announcement happens at all is gated on the presence of one more token after
+     *     the username in the payload — the comment in the code explains this token distinguishes a genuine
+     *     "Gone" (user left) event from a same-payload rename, though this method does not otherwise use the
+     *     token's value.</li>
+     * </ul>
+     * When an announcement fires, an HTML-colored "Exit" message is optionally timestamped (per client config),
+     * added to chat (gated on the {@code SHOW_ENTER_AND_EXIT} config flag and on the name not being
+     * {@code "Nobody"}), and an exit sound is played via the {@code SOUND_ON_EXIT} config parameter.
+     *
+     * @param input the raw, delimited protocol line for this command; see {@link Command#decode(String)}
      * @see Command#execute(String)
      */
     @Override
@@ -98,7 +122,7 @@ public class UserGoneCommand extends Command {
     }
 
     /**
-     *
+     * Unused on the client side; this command has no reply-argument parsing behavior.
      */
     @Override
     public void parseReplyArgs(String s) {
@@ -106,7 +130,7 @@ public class UserGoneCommand extends Command {
     }
 
     /**
-     *
+     * Unused on the client side; this command is never parsed as server-bound arguments.
      */
     @Override
     public void parseArguments(String s) {

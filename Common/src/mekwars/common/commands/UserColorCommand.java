@@ -42,15 +42,28 @@ import mekwars.common.campaign.CUser;
 import mekwars.common.campaign.clientutils.protocol.IClient;
 
 /**
+ * Client-side command that sets the display/chat text color for a named user, as pushed by the server (e.g. after
+ * another user changes their color preference or a moderator assigns one). Looks up the local {@link CUser} for
+ * the given username and, if known to this client, applies the given HTML color string.
+ *
  * @author Imi (immanuel.scholz@gmx.de)
  */
 public class UserColorCommand extends Command {
 
+    /**
+     * Creates the command bound to the given client.
+     *
+     * @param client the client whose user list will be updated
+     */
     public UserColorCommand(IClient client) {
         super(client);
     }
 
     /**
+     * Decodes {@code input} to obtain the username and the new HTML color, then applies the color to the matching
+     * {@link CUser} if that user is known to this client. Silently does nothing if the user is not found (e.g. not
+     * yet in the client's user list).
+     *
      * @see Command#execute(String)
      */
     @Override
@@ -64,7 +77,7 @@ public class UserColorCommand extends Command {
     }
 
     /**
-     *
+     * No reply-argument parsing is needed for this command; intentionally a no-op.
      */
     @Override
     public void parseReplyArgs(String s) {
@@ -72,7 +85,7 @@ public class UserColorCommand extends Command {
     }
 
     /**
-     *
+     * This command is never sent by a client to the server, so server-side argument parsing is a no-op.
      */
     @Override
     public void parseArguments(String s) {

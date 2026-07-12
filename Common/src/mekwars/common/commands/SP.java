@@ -42,6 +42,10 @@ import mekwars.common.campaign.clientutils.protocol.IClient;
 import mekwars.common.gui.panels.CCommPanel;
 
 /**
+ * Client-side command ("Server message to Player") that delivers a private/system message from the server to this
+ * client. Depending on the {@code POPUP_ON_MESSAGE} client config option, the message is either shown in a pop-up
+ * info window or appended to the misc chat channel.
+ *
  * @author Imi (immanuel.scholz@gmx.de)
  */
 public class SP extends Command {
@@ -54,6 +58,9 @@ public class SP extends Command {
     }
 
     /**
+     * Decodes {@code input} to obtain the message text, then either pops up an info window with it or adds it to
+     * the misc chat channel, depending on whether the {@code POPUP_ON_MESSAGE} client config parameter is set.
+     *
      * @see Command#execute(String)
      */
     @Override
@@ -67,7 +74,7 @@ public class SP extends Command {
     }
 
     /**
-     *
+     * No reply-argument parsing is needed for this command; intentionally a no-op.
      */
     @Override
     public void parseReplyArgs(String s) {
@@ -75,7 +82,7 @@ public class SP extends Command {
     }
 
     /**
-     *
+     * This command is never sent by a client to the server, so server-side argument parsing is a no-op.
      */
     @Override
     public void parseArguments(String s) {

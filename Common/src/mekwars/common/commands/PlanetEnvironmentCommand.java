@@ -44,6 +44,10 @@ import mekwars.common.campaign.clientutils.protocol.IClient;
 import mekwars.common.util.TokenReader;
 
 /**
+ * Client-side handler for the {@code PlanetEnvironmentCommand} protocol message, sent by the server to tell the
+ * client which planetary environment (terrain/map type) and battle-map dimensions apply to an upcoming or current
+ * game. Executing it updates the client's environment state used to generate or select the battle map.
+ *
  * @author Imi (immanuel.scholz@gmx.de)
  */
 public class PlanetEnvironmentCommand extends Command {
@@ -56,6 +60,15 @@ public class PlanetEnvironmentCommand extends Command {
     }
 
     /**
+     * Parses the environment name plus the desired map's x-size, y-size, and "map medium" (a numeric code
+     * describing the terrain/medium, e.g. ground vs space) from the command payload, then pushes the resulting
+     * environment onto the client.
+     * <p>
+     * If the named {@link PlanetEnvironment} reports itself as a static (fixed-size) map, the sizes parsed from the
+     * wire are discarded in favor of the environment's own built-in dimensions; otherwise the parsed x/y sizes are
+     * used as-is. The map medium value is always taken from the wire regardless of static/non-static.
+     *
+     * @param input the raw, delimited protocol line for this command; see {@link Command#decode(String)}
      * @see Command#execute(String)
      */
     @Override
@@ -76,7 +89,7 @@ public class PlanetEnvironmentCommand extends Command {
     }
 
     /**
-     *
+     * Unused on the client side; this command has no reply-argument parsing behavior.
      */
     @Override
     public void parseReplyArgs(String s) {
@@ -84,7 +97,7 @@ public class PlanetEnvironmentCommand extends Command {
     }
 
     /**
-     *
+     * Unused on the client side; this command is never parsed as server-bound arguments.
      */
     @Override
     public void parseArguments(String s) {

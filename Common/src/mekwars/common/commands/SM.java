@@ -42,6 +42,10 @@ import mekwars.common.campaign.clientutils.protocol.IClient;
 import mekwars.common.gui.panels.CCommPanel;
 
 /**
+ * Client-side command ("Server Message" / broadcast chat) that delivers a chat line from the server to this
+ * client's chat display. If the {@code MAIN_CHANNEL_MISC} client config option is set, the message is added to the
+ * client's default/main chat destination; otherwise it is explicitly routed to the misc chat channel.
+ *
  * @author Imi (immanuel.scholz@gmx.de)
  */
 public class SM extends Command {
@@ -54,6 +58,10 @@ public class SM extends Command {
     }
 
     /**
+     * Decodes {@code input} and, if a message token is present, adds it to chat — using the single-argument
+     * {@code addToChat} overload (implied default channel) when {@code MAIN_CHANNEL_MISC} is set, or explicitly
+     * targeting {@link CCommPanel#CHANNEL_MISC} otherwise.
+     *
      * @see Command#execute(String)
      */
     @Override
@@ -69,7 +77,7 @@ public class SM extends Command {
     }
 
     /**
-     *
+     * No reply-argument parsing is needed for this command; intentionally a no-op.
      */
     @Override
     public void parseReplyArgs(String s) {
@@ -77,7 +85,7 @@ public class SM extends Command {
     }
 
     /**
-     *
+     * This command is never sent by a client to the server, so server-side argument parsing is a no-op.
      */
     @Override
     public void parseArguments(String s) {

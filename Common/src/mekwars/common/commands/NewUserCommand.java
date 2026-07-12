@@ -42,6 +42,11 @@ import mekwars.common.campaign.CUser;
 import mekwars.common.campaign.clientutils.protocol.IClient;
 
 /**
+ * Client-side handler for the {@code NewUserCommand} protocol message, sent by the server whenever a user
+ * connects, joins the chat room, or (per the in-method comment) is being renamed. Executing it (re)adds the user
+ * to the client's local user list, refreshes the user-list GUI, and optionally prints a "user joined" notice with
+ * a sound effect.
+ *
  * @author Imi (immanuel.scholz@gmx.de)
  */
 public class NewUserCommand extends Command {
@@ -54,6 +59,22 @@ public class NewUserCommand extends Command {
     }
 
     /**
+     * Parses the new/changed user's serialized data into a {@link CUser}, then removes any existing entries for
+     * that username from the client's user list before adding the freshly parsed one back in — ensuring there is
+     * always exactly one up-to-date entry per name (this same command is reused both for a genuine new
+     * connection and for reflecting a username change, per the in-line comment).
+     * <p>
+     * Dedicated (headless) clients return immediately after the list update, skipping all GUI/chat/sound work.
+     * For interactive clients: if the new user is invisible and outranks (has a higher user level than) the
+     * local client's own user, the user-list GUI is still refreshed but no join announcement follows. Users whose
+     * name starts with {@code "[Dedicated]"} are skipped entirely (not even a GUI refresh in that branch).
+     * Otherwise, if the payload has an extra token beyond the user data (again, distinguishing a true "new user"
+     * event from a rename), a "user joined" chat line is built (optionally annotated with country and a
+     * timestamp per client config), added to chat if {@code SHOW_ENTER_AND_EXIT} is enabled, and a join sound is
+     * played via the {@code SOUND_ON_JOIN} config parameter. The user-list GUI is refreshed at the very end of
+     * this path.
+     *
+     * @param input the raw, delimited protocol line for this command; see {@link Command#decode(String)}
      * @see Command#execute(String)
      */
     @Override
@@ -113,7 +134,7 @@ public class NewUserCommand extends Command {
     }
 
     /**
-     *
+     * Unused on the client side; this command has no reply-argument parsing behavior.
      */
     @Override
     public void parseReplyArgs(String s) {
@@ -121,7 +142,7 @@ public class NewUserCommand extends Command {
     }
 
     /**
-     *
+     * Unused on the client side; this command is never parsed as server-bound arguments.
      */
     @Override
     public void parseArguments(String s) {

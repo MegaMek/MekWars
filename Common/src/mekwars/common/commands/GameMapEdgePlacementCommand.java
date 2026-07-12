@@ -39,6 +39,10 @@ import megamek.codeUtilities.MathUtility;
 import mekwars.common.campaign.clientutils.protocol.IClient;
 
 /**
+ * Client-side command that tells the client which board edge its forces should start deploying from for the
+ * upcoming battle. Normally used when buildings are being placed on the map and the defender should start near
+ * them, so the server dictates a specific starting edge instead of letting the client pick its own.
+ *
  * @author Torren (Jason Tighe)
  *       <p>
  *       Used for Game Map Edge Placement Normally used when you have buildings being placed on the map and want the
@@ -56,6 +60,9 @@ public class GameMapEdgePlacementCommand extends Command {
     }
 
     /**
+     * Decodes {@code input} to obtain the edge token, parses it as an integer (defaulting to {@code 0} if the
+     * token is not a valid number), and sets it as the client's player starting edge.
+     *
      * @see Command#execute(String)
      */
     @Override
@@ -66,7 +73,7 @@ public class GameMapEdgePlacementCommand extends Command {
     }
 
     /**
-     *
+     * No reply-argument parsing is needed for this command; intentionally a no-op.
      */
     @Override
     public void parseReplyArgs(String s) {
@@ -74,7 +81,7 @@ public class GameMapEdgePlacementCommand extends Command {
     }
 
     /**
-     *
+     * This command is never sent by a client to the server, so server-side argument parsing is a no-op.
      */
     @Override
     public void parseArguments(String s) {

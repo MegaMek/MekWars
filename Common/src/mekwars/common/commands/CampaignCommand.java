@@ -38,18 +38,27 @@ package mekwars.common.commands;
 import mekwars.common.campaign.clientutils.protocol.IClient;
 
 /**
+ * Client-side command that delivers a generic campaign-layer update from the server to the client's
+ * {@code Campaign} object, then refreshes the HQ, player, and BM (battle-mek) GUI panels so they reflect the
+ * newly applied state. Similar in shape to {@link PS}, but does not additionally refresh the status panel.
+ *
  * @author Imi (immanuel.scholz@gmx.de)
  */
 public class CampaignCommand extends Command {
 
     /**
+     * Creates the command bound to the given client.
      *
+     * @param client the client whose campaign state will be updated
      */
     public CampaignCommand(IClient client) {
         super(client);
     }
 
     /**
+     * Passes the full raw {@code input} (unmodified, including this command's own prefix) straight to the client's
+     * {@code Campaign} for decoding, then triggers a refresh of the HQ, player, and BM GUI panels.
+     *
      * @see Command#execute(String)
      */
     @Override
@@ -61,7 +70,7 @@ public class CampaignCommand extends Command {
     }
 
     /**
-     *
+     * No reply-argument parsing is needed for this command; intentionally a no-op.
      */
     @Override
     public void parseReplyArgs(String string) {
@@ -69,7 +78,8 @@ public class CampaignCommand extends Command {
     }
 
     /**
-     *
+     * Overridden to intentionally do nothing: this command instance's client binding is fixed at construction and
+     * is never reassigned.
      */
     @Override
     public void setClient(IClient client) {
@@ -77,7 +87,7 @@ public class CampaignCommand extends Command {
     }
 
     /**
-     *
+     * This command is never sent by a client to the server, so server-side argument parsing is a no-op.
      */
     @Override
     public void parseArguments(String string) {

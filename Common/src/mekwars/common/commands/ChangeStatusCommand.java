@@ -39,18 +39,28 @@ package mekwars.common.commands;
 import mekwars.common.campaign.clientutils.protocol.IClient;
 
 /**
+ * Client-side command that changes the client's own status code (e.g. away/busy/ready — the exact meaning of each
+ * integer status is defined by {@code IClient.changeStatus}), as pushed by the server.
+ *
  * @author Imi (immanuel.scholz@gmx.de)
  */
 public class ChangeStatusCommand extends Command {
 
     /**
+     * Creates the command bound to the given client.
      *
+     * @param client the client whose status will be changed
      */
     public ChangeStatusCommand(IClient client) {
         super(client);
     }
 
     /**
+     * Decodes {@code input} and parses the single remaining token as an integer status code, then applies it via
+     * {@code client.changeStatus}. Note: unlike most commands in this package, this uses
+     * {@link Integer#parseInt(String)} directly rather than a defaulting parse helper, so a non-numeric token will
+     * throw a {@link NumberFormatException} instead of falling back to a default value.
+     *
      * @see Command#execute(String)
      */
     @Override
@@ -59,7 +69,7 @@ public class ChangeStatusCommand extends Command {
     }
 
     /**
-     *
+     * No reply-argument parsing is needed for this command; intentionally a no-op.
      */
     @Override
     public void parseReplyArgs(String s) {
@@ -67,7 +77,8 @@ public class ChangeStatusCommand extends Command {
     }
 
     /**
-     *
+     * Overridden to intentionally do nothing: this command instance's client binding is fixed at construction and
+     * is never reassigned.
      */
     @Override
     public void setClient(IClient mwClient) {
@@ -75,7 +86,7 @@ public class ChangeStatusCommand extends Command {
     }
 
     /**
-     *
+     * This command is never sent by a client to the server, so server-side argument parsing is a no-op.
      */
     @Override
     public void parseArguments(String s) {

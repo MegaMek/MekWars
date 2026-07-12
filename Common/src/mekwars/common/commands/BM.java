@@ -41,6 +41,11 @@ import java.util.StringTokenizer;
 import mekwars.common.campaign.clientutils.protocol.IClient;
 
 /**
+ * Client-side handler for the {@code BM} ("Black Market", based on the campaign methods it delegates to) protocol
+ * message. The server uses it to push updates about black-market data/units, and executing it dispatches a
+ * sub-command that mutates the client's campaign black-market state, then refreshes the HQ, player, and black
+ * market GUI panels.
+ *
  * @author Imi (immanuel.scholz@gmx.de)
  */
 public class BM extends Command {
@@ -50,6 +55,20 @@ public class BM extends Command {
     }
 
     /**
+     * Reads a sub-command code followed by its single string argument and dispatches to the matching
+     * {@code Campaign} black-market mutator:
+     * <ul>
+     *     <li>{@code AD} - replace the black market data ({@link mekwars.common.campaign clientutils.protocol
+     *     IClient#getCampaign() campaign}{@code .setBMData})</li>
+     *     <li>{@code AU} - add a unit to the black market</li>
+     *     <li>{@code RU} - remove a unit from the black market</li>
+     *     <li>{@code CU} - change/update an existing black market unit entry</li>
+     * </ul>
+     * If the sub-command has no following argument token, the method returns immediately without dispatching or
+     * refreshing the GUI. Any sub-command code other than the four above is silently ignored, but the GUI panels
+     * are still refreshed afterward as long as an argument token was present.
+     *
+     * @param input the raw, delimited protocol line for this command; see {@link Command#decode(String)}
      * @see Command#execute(String)
      */
     @Override
@@ -76,7 +95,7 @@ public class BM extends Command {
     }
 
     /**
-     *
+     * Unused on the client side; this command has no reply-argument parsing behavior.
      */
     @Override
     public void parseReplyArgs(String string) {
@@ -84,7 +103,7 @@ public class BM extends Command {
     }
 
     /**
-     *
+     * No-op override; this command does not support having its bound client changed after construction.
      */
     @Override
     public void setClient(IClient client) {
@@ -92,7 +111,7 @@ public class BM extends Command {
     }
 
     /**
-     *
+     * Unused on the client side; this command is never parsed as server-bound arguments.
      */
     @Override
     public void parseArguments(String string) {

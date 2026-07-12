@@ -39,18 +39,26 @@ package mekwars.common.commands;
 import mekwars.common.campaign.clientutils.protocol.IClient;
 
 /**
- * @author jtighe command to kick idlers
+ * Client-side command that reacts to a server notification telling an idle client it is being kicked. Executing it
+ * simply sends a {@code "/c logout"} campaign chat command back to the server on the client's behalf, causing the
+ * client to log itself out in response to the server's idle-kick notice.
+ *
+ * @author jtighe
  */
 public class KickIdelersCommand extends Command {
 
     /**
+     * Creates the command bound to the given client.
      *
+     * @param client the client that will be logged out
      */
     public KickIdelersCommand(IClient client) {
         super(client);
     }
 
     /**
+     * Ignores the (unused) {@code input} argument and sends a campaign {@code logout} chat command to the server.
+     *
      * @see Command#execute(String)
      */
     @Override
@@ -59,7 +67,7 @@ public class KickIdelersCommand extends Command {
     }
 
     /**
-     *
+     * No reply-argument parsing is needed for this command; intentionally a no-op.
      */
     @Override
     public void parseReplyArgs(String s) {
@@ -67,7 +75,7 @@ public class KickIdelersCommand extends Command {
     }
 
     /**
-     *
+     * This command is never sent by a client to the server, so server-side argument parsing is a no-op.
      */
     @Override
     public void parseArguments(String s) {

@@ -46,6 +46,28 @@ import mekwars.common.campaign.clientutils.protocol.IClient;
 import mekwars.common.gui.panels.CCommPanel;
 
 /**
+ * Handles the {@code "BuildTableCommand"}-prefixed protocol messages used to distribute admin/moderator "build
+ * table" files (unit-availability/build lists stored under {@code ./data/buildtables/}) from server to client.
+ * {@link #execute(String)} multiplexes on a sub-command token immediately following the prefix:
+ * <ul>
+ * <li>{@code "LS"} — for each {@code folder}/list-of-file-names pair encoded in the payload, look up each named
+ * file's last-modified timestamp on disk (0 if it doesn't exist) and ask the server for it via an
+ * {@code AdminRequestBuildTable get#...} chat command; if the {@code viewer} flag token is {@code true}, also
+ * request that the build table viewer be opened server-side.</li>
+ * <li>{@code "PLS"} — the same listing/timestamp logic as {@code "LS"}, but requesting via
+ * {@code RequestBuildTable get#...} (the non-admin/player-facing variant) instead.</li>
+ * <li>{@code "BuildTableCommand"} — receives the actual file content: creates
+ * {@code ./data/buildtables/<folder>/<table>} (creating parent directories as needed) and writes each remaining
+ * token as one line of the file; notifies moderators in chat once written.</li>
+ * <li>{@code "VS"} — clears the client's "waiting" flag ({@code client.setWaiting(false)}).</li>
+ * </ul>
+ * Note the {@code if}/{@code else if} structure: the {@code "LS"} branch is a standalone {@code if}, so if
+ * {@code cmd} is {@code "LS"} the subsequent {@code "PLS"}/{@code "BuildTableCommand"}/{@code "VS"} branches are
+ * still evaluated in sequence as a separate {@code if}/{@code else if} chain (though none of their conditions can
+ * also match {@code "LS"}, so this has no practical effect).
+ * This class is client-inbound only: {@link #parseReplyArgs(String)}, {@link #setClient(IClient)} and
+ * {@link #parseArguments(String)} are all overridden with empty bodies.
+ *
  * @author Spork
  *       <p>
  *       Handles Build Table up/downloading for admins/mods
@@ -55,13 +77,17 @@ public class BuildTableCommand extends Command {
     private final static MMLogger LOGGER = MMLogger.create(BuildTableCommand.class);
 
     /**
-     *
+     * Constructs a client-side instance bound to {@code client}, as required by the {@link Command} contract.
      */
     public BuildTableCommand(IClient client) {
         super(client);
     }
 
     /**
+     * Dispatches on the sub-command token ({@code "LS"}, {@code "PLS"}, {@code "BuildTableCommand"}, or
+     * {@code "VS"}) following the prefix; see the class-level docs for what each sub-command does.
+     *
+     * @param input the full raw protocol line, prefix included
      * @see Command#execute(String)
      */
     @Override
@@ -188,7 +214,7 @@ public class BuildTableCommand extends Command {
     }
 
     /**
-     *
+     * No-op. This command is client-inbound only; it is never sent as a request awaiting a coded reply.
      */
     @Override
     public void parseReplyArgs(String string) {
@@ -196,7 +222,9 @@ public class BuildTableCommand extends Command {
     }
 
     /**
-     *
+     * No-op. Overrides {@link Command#setClient(IClient)} but does not update {@link #client} — calling this on an
+     * existing instance silently has no effect, unlike the inherited base-class behavior other {@code Command}
+     * subclasses rely on.
      */
     @Override
     public void setClient(IClient client) {
@@ -204,7 +232,8 @@ public class BuildTableCommand extends Command {
     }
 
     /**
-     *
+     * No-op. This command is never dispatched server-side through the {@link ServerCommand} path (see
+     * {@link Command} class-level docs), so there are no server-bound arguments to parse.
      */
     @Override
     public void parseArguments(String string) {

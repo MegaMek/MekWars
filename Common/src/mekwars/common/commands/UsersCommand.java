@@ -42,19 +42,33 @@ import mekwars.common.campaign.CUser;
 import mekwars.common.campaign.clientutils.protocol.IClient;
 
 /**
+ * Client-side handler for the {@code UsersCommand} protocol message, which the server sends to push a full
+ * snapshot of the currently connected user list (e.g. right after login). Executing it replaces the client's
+ * entire local user list with the users named in the message and refreshes the user-list GUI panel.
+ *
  * @author Imi (immanuel.scholz@gmx.de)
  */
 
 public class UsersCommand extends Command {
 
     /**
+     * Creates the command bound to the given client, as required by {@link Command#Command(IClient)}.
      *
+     * @param client the client instance that will receive the parsed user list
      */
     public UsersCommand(IClient client) {
         super(client);
     }
 
     /**
+     * Parses the {@code UsersCommand} payload, where every remaining token after the command prefix is a single
+     * username, and rebuilds the client's user list from scratch.
+     * <p>
+     * Note: the entire list is cleared before repopulating, so this command always represents a full replace, never
+     * an incremental update. For dedicated (headless) clients, the GUI refresh is skipped since there is no user
+     * list panel to update.
+     *
+     * @param input the raw, delimited protocol line for this command; see {@link Command#decode(String)}
      * @see Command#execute(String)
      */
     @Override
@@ -75,7 +89,7 @@ public class UsersCommand extends Command {
     }
 
     /**
-     *
+     * Unused on the client side; this command has no reply-argument parsing behavior.
      */
     @Override
     public void parseReplyArgs(String s) {
@@ -83,7 +97,7 @@ public class UsersCommand extends Command {
     }
 
     /**
-     *
+     * Unused on the client side; this command is never parsed as server-bound arguments.
      */
     @Override
     public void parseArguments(String s) {

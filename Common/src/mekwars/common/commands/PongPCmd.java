@@ -37,17 +37,32 @@ import java.util.StringTokenizer;
 import mekwars.common.campaign.clientutils.protocol.IClient;
 
 /**
- * Pong command
+ * Low-level protocol command (name {@code "pong"}) that handles the reply half of the ping/pong keepalive exchange
+ * started by {@link PingPlayerCommand}. Receiving a "pong" means some peer responded to a ping this client sent;
+ * the round-trip time is computed and reported to the user.
  */
 
 public class PongPCmd extends CProtCommand {
 
+    /**
+     * Creates the command bound to the given client and registers its protocol name as {@code "pong"}.
+     *
+     * @param client the client that will report ping round-trip times
+     */
     public PongPCmd(IClient client) {
         super(client);
         name = "pong";
     }
 
-    // execute command
+    /**
+     * Validates that {@code input}'s first token matches this command's name/prefix, then strips the
+     * prefix/name (via {@link CProtCommand#decompose(String)}) and passes the remainder to {@link #echo(String)}
+     * for reporting.
+     *
+     * @param input the raw tab-delimited protocol line, e.g. {@code "/pong<TAB>sender<TAB>timestamp"}
+     *
+     * @return {@code true} if the input matched this command and was handled; {@code false} otherwise
+     */
     @Override
     public boolean execute(String input) {
 
@@ -62,7 +77,13 @@ public class PongPCmd extends CProtCommand {
         return false;
     }
 
-    // echo command in GUI
+    /**
+     * Reports the ping round-trip time to the user via a system message, unless the sender is {@code "server"} (in
+     * which case the pong is silently absorbed and no message is shown). The elapsed time is computed as the
+     * difference between the current time and the timestamp echoed back by the sender, in seconds.
+     *
+     * @param input the decomposed pong payload: sender name followed by the original ping timestamp (millis)
+     */
     @Override
     protected void echo(String input) {
         StringTokenizer ST = new StringTokenizer(input, delimiter);

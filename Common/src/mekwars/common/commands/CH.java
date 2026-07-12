@@ -46,16 +46,70 @@ import mekwars.common.gui.panels.CCommPanel;
 import mekwars.common.util.StringUtils;
 
 /**
+ * Handles the {@code "CH"} protocol prefix — the main chat-broadcast command the server uses to deliver every
+ * kind of textual chat message to this client: normal public chat, {@code /me} emotes, house (faction) mail,
+ * moderator mail, in-character (RPG) chat, error-log notices, and plain system/server messages. This is the
+ * largest and most branch-heavy command handler in the package; {@link #execute(String)} inspects the first
+ * argument token after the prefix and, based on its leading text, routes to one of five largely independent
+ * formatting blocks (see the method docs below for the exact routing order and conditions). Each block
+ * independently: resolves the sending user's/faction's preferred colors (inverting them if
+ * {@code INVERT_CHAT_COLOR} is set), applies the configured name/addon color scheme
+ * ({@code PLAYER_CHAT_COLOR_MODE}: normal / faction_add / faction_name / faction_all), reassembles the message
+ * (re-joining any tokens that were split by an embedded {@code "|"} in the original text), handles the
+ * {@code "#me"} emote convention, optionally strips {@code <img>} tags, optionally prepends a timestamp, and
+ * appends the formatted HTML to the appropriate chat channel via {@code client.addToChat(...)}. Messages from
+ * invisible/ignored users are suppressed per the relevant ignore-list check ({@code IGNORE_HOUSE},
+ * {@code IGNORE_PUBLIC}) and per-user "invisible" flag (which only hides the sender from users of equal or lower
+ * privilege level). After formatting, a shared block at the end of the method checks the message for the
+ * player's own name or configured keywords and triggers the corresponding notification sound (name-call takes
+ * priority over keyword), unless the message came from a system branch and {@code SOUNDS_FROM_SYS_MESSAGES} is
+ * off, or it was an in-character message being globally suppressed via {@code RPG_VISIBLE}/{@code MAIN_CHANNEL_RPG}.
+ * <p>
+ * Several inline comments in the original source flag the color-handling code as "extremely duplicative" (repeated
+ * near-identically in each branch) and note uncertainty about whether the {@code "#me"} emote actually works when
+ * triggered from server-originated faction/house mail. This class is client-inbound only:
+ * {@link #parseReplyArgs(String)}, {@link #setClient(IClient)} and {@link #parseArguments(String)} are all empty
+ * stubs (and {@link #setClient(IClient)} silently does not update {@link #client}, unlike the base-class
+ * implementation).
+ *
  * @author Imi (immanuel.scholz@gmx.de)
  */
 public class CH extends Command {
     private static final MMLogger LOGGER = MMLogger.create(CH.class);
 
+    /**
+     * Constructs a client-side instance bound to {@code client}, as required by the {@link Command} contract.
+     */
     public CH(IClient client) {
         super(client);
     }
 
     /**
+     * Formats and displays one incoming chat/mail/system message. {@code input} is the full raw {@code "CH"}
+     * line; {@link Command#decode(String)} strips the prefix, leaving the message payload tokenized on
+     * {@code IClient.COMMAND_DELIMITER}. The very first remaining token is inspected to decide which of the
+     * following mutually-exclusive branches handles the message (checked in this order):
+     * <ol>
+     * <li>Starts with {@code "(House Mail)"} or {@code "(Moderator Mail)"} — faction/moderator mail; extracts the
+     * sender name from a fixed-offset substring before the first {@code ":"}, applies house/moderator mail
+     * formatting, and posts to the mod-mail or house-mail channel (mirroring to the main channel if configured).</li>
+     * <li>Starts with {@code "(Error Log):"} — a server error notice; posted verbatim (with timestamp) to the
+     * error channel with no color/name formatting.</li>
+     * <li>Starts with {@code "(In Character)"} — RPG/in-character chat; extracts the sender name, formats and
+     * posts to the RPG channel (mirroring to the main channel if {@code MAIN_CHANNEL_RPG} is set). Message text is
+     * additionally run through {@code client.doEscape(...)} to neutralize embedded HTML/script content.</li>
+     * <li>None of the above, but there is another token remaining — treated as ordinary public chat: the first
+     * token is the sender's name, the next is the message. Also escaped via {@code client.doEscape(...)} before
+     * formatting. Suppressed entirely if the sender is on the {@code IGNORE_PUBLIC} list.</li>
+     * <li>Otherwise (no further token) — treated as a system/server message with no sender: {@code "AM:"} and
+     * {@code "ED:"} (enemy-detected, optionally with its own sound) prefixes get special coloring/handling; any
+     * other text is posted as-is.</li>
+     * </ol>
+     * Note that branches 1-3 test the leading token with {@code startsWith(...)}, so any ordinary chat message
+     * whose sender name happens to literally begin with one of those special markers would be misrouted into the
+     * corresponding special-format branch instead of being treated as normal chat.
+     *
+     * @param input the full raw {@code "CH"} protocol line
      * @see Command#execute(String)
      */
     @Override
@@ -534,7 +588,9 @@ public class CH extends Command {
     }// end execute
 
     /**
-     * @param s
+     * No-op. This command is client-inbound only; it is never sent as a request awaiting a coded reply.
+     *
+     * @param s unused
      */
     @Override
     public void parseReplyArgs(String s) {
@@ -542,7 +598,9 @@ public class CH extends Command {
     }
 
     /**
-     *
+     * No-op. Overrides {@link Command#setClient(IClient)} but does not update {@link #client} — calling this on an
+     * existing instance silently has no effect, unlike the inherited base-class behavior other {@code Command}
+     * subclasses rely on.
      */
     @Override
     public void setClient(IClient mwClient) {
@@ -550,7 +608,8 @@ public class CH extends Command {
     }
 
     /**
-     *
+     * No-op. This command is never dispatched server-side through the {@link ServerCommand} path (see
+     * {@link Command} class-level docs), so there are no server-bound arguments to parse.
      */
     @Override
     public void parseArguments(String s) {

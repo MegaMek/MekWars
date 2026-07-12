@@ -55,6 +55,25 @@ import mekwars.common.gui.dialogs.opviewer.OperationViewerDialog;
 import mekwars.common.util.MMNetXStream;
 
 /**
+ * Handles protocol commands related to the "Operation Viewer" (custom scenario/operation definitions synced from
+ * server to client and displayed in {@link OperationViewerDialog}). {@link #execute(String)} dispatches on a
+ * sub-command token following the prefix:
+ * <ul>
+ * <li>{@code "add"} — deserializes an XML-encoded {@link java.util.Properties} payload (via {@link MMNetXStream})
+ * into a new {@link Operation} and writes it to {@code ./data/operations/xml/<name>.xml}.</li>
+ * <li>{@code "view"} — opens an {@link OperationViewerDialog} on a new background thread.</li>
+ * <li>{@code "md5"} — reconciles this client's local operation XML cache against a table of
+ * {@code opName#md5} pairs sent by the server: if no local {@code opsmd5.txt} checksum file exists yet, every
+ * local operation XML is deleted and a full re-download is requested (server round-trip via
+ * {@code getops getall}); otherwise the existing checksums are compared, any mismatched or missing operations are
+ * collected, stale XML files no longer referenced are deleted, the (possibly updated) checksum file is rewritten,
+ * and either a follow-up {@code getops getsome#<names>} request is sent for the outdated/missing operations, or —
+ * if everything is already in sync — the operation viewer is opened directly.</li>
+ * </ul>
+ * The class comment on this last branch is self-aware about a known limitation: MD5 mismatches caused by a
+ * hand-edited or manually-updated local file are not proactively re-synced ("meh, I can't account for player
+ * stupidity"). This class is client-inbound only — {@link #parseReplyArgs(String)} and
+ * {@link #parseArguments(String)} are empty stubs.
  *
  * @author Spork
  *       <p>
@@ -64,10 +83,20 @@ import mekwars.common.util.MMNetXStream;
 public class OperationCommand extends Command {
     private final static MMLogger LOGGER = MMLogger.create(OperationCommand.class);
 
+    /**
+     * Constructs a client-side instance bound to {@code client}, as required by the {@link Command} contract.
+     */
     public OperationCommand(IClient client) {
         super(client);
     }
 
+    /**
+     * Dispatches on the sub-command token ({@code "add"}, {@code "view"}, or {@code "md5"}) following the prefix;
+     * see the class-level docs for what each sub-command does. Any other token falls through to the
+     * {@code default} case, which only logs at debug level and does nothing.
+     *
+     * @param input the full raw protocol line, prefix included
+     */
     @Override
     public void execute(String input) {
         OperationViewerDialog operationViewerDialog;
@@ -247,7 +276,7 @@ public class OperationCommand extends Command {
     }
 
     /**
-     *
+     * No-op. This command is client-inbound only; it is never sent as a request awaiting a coded reply.
      */
     @Override
     public void parseReplyArgs(String s) {
@@ -255,7 +284,8 @@ public class OperationCommand extends Command {
     }
 
     /**
-     *
+     * No-op. This command is never dispatched server-side through the {@link ServerCommand} path (see
+     * {@link Command} class-level docs), so there are no server-bound arguments to parse.
      */
     @Override
     public void parseArguments(String s) {

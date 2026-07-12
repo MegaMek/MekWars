@@ -43,6 +43,12 @@ import mekwars.common.campaign.clientutils.protocol.IClient;
 /**
  * Server list commands. All commands relating to servers in the battle tab are processed though ServerListCommand
  * subcommands.
+ * <p>
+ * This is a client-side handler for the {@code ServerListCommand} protocol message: the master/lobby server uses
+ * it to keep the client's "battle tab" list of known MegaMek game servers ({@link MMGame} entries, keyed by
+ * hostname) in sync — announcing new servers, removing closed ones, updating a server's status text, and tracking
+ * which players are currently in which server. Every successfully handled sub-command triggers a refresh of the
+ * battle table GUI.
  */
 public class ServerListCommand extends Command {
 
@@ -56,6 +62,27 @@ public class ServerListCommand extends Command {
 
     //METHODS
     //@see client.cmd.Command#execute(java.lang.String)
+    /**
+     * Dispatches on a sub-command code to update the client's known-server map ({@link IClient#getServers()}):
+     * <ul>
+     *     <li>{@code NG} - a new server opened; the remaining token is fed straight into the {@link MMGame}
+     *     string constructor and the resulting game is added, keyed by its host name.</li>
+     *     <li>{@code CG} - a server closed; removes the entry for the given hostname.</li>
+     *     <li>{@code SHS} - set host status; looks up the server by hostname and, if found, updates its status
+     *     text from the next token. Silently does nothing if the hostname isn't known.</li>
+     *     <li>{@code JG} - a player joined a game; looks up the server by hostname and adds the player name to
+     *     its current-players list. Note: unlike {@code SHS}, this does NOT null-check the lookup result, so an
+     *     unknown hostname here will throw a {@link NullPointerException}.</li>
+     *     <li>{@code LG} - a player left a game; same lookup-then-mutate pattern (and same missing null-check)
+     *     as {@code JG}, but removes the player name instead.</li>
+     * </ul>
+     * If there is no token after the sub-command code, the method returns without doing anything (and without
+     * refreshing the GUI). Any unrecognized sub-command code falls through without action, but the GUI is still
+     * refreshed afterward.
+     *
+     * @param input the raw, delimited protocol line for this command; see {@link Command#decode(String)}
+     * @see Command#execute(String)
+     */
     @Override
     public void execute(String input) {
         StringTokenizer stringTokenizer = decode(input);
@@ -86,7 +113,7 @@ public class ServerListCommand extends Command {
     }
 
     /**
-     *
+     * Unused on the client side; this command has no reply-argument parsing behavior.
      */
     @Override
     public void parseReplyArgs(String s) {
@@ -94,7 +121,7 @@ public class ServerListCommand extends Command {
     }
 
     /**
-     *
+     * Unused on the client side; this command is never parsed as server-bound arguments.
      */
     @Override
     public void parseArguments(String s) {

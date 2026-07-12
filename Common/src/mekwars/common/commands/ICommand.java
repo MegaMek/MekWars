@@ -37,17 +37,38 @@
 package mekwars.common.commands;
 
 /**
+ * Minimal contract shared by both directions of the {@link Command} pattern used throughout this package:
+ * {@link ClientCommand} (execute/reply handling on the client) and {@link ServerCommand} (argument handling on
+ * the server) both extend this interface. It defines just the two things every command needs regardless of which
+ * side it runs on: a dispatch key ("prefix") used to route protocol lines to the right handler, and a simple
+ * error-state protocol for the request/reply flavor of commands (see {@link Command} class-level docs for how the
+ * prefix is used on the wire and how the error state is populated).
  *
  * @author Administrator
  */
 public interface ICommand {
 
+    /**
+     * @return the short dispatch code (e.g. {@code "CH"}) that identifies this command's position in a
+     *         {@link Command.Table}, or {@code null} if it was never assigned (see {@link Command#Command(IClient)}
+     *         vs {@link Command#Command(String)}).
+     */
     String getPrefix();
 
+    /**
+     * @return {@code true} if this command instance currently holds an error/timeout/malformed condition.
+     */
     boolean hasError();
 
+    /**
+     * @return a human-readable description of the current error condition, or an empty string if there is none
+     *         (see {@link Command#getErrorMessage()} for the base-class caveats around when this is populated).
+     */
     String getErrorMessage();
 
+    /**
+     * Clears any recorded error state, preparing the instance to be reused for another exchange.
+     */
     void reset();
 
 }

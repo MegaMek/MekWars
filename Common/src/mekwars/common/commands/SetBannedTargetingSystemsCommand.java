@@ -43,6 +43,11 @@ import megamek.codeUtilities.MathUtility;
 import mekwars.common.campaign.clientutils.protocol.IClient;
 
 /**
+ * Client-side handler for the {@code SetBannedTargetingSystemsCommand} protocol message, sent by the server to
+ * tell the client which targeting-system types (e.g. advanced TS variants configured as disallowed by the campaign
+ * rules) are currently banned. Executing it replaces the client's local banned-targeting-systems list with the
+ * set received from the server.
+ *
  * @author Spork (billypinhead@users.sourceforge.net)
  */
 public class SetBannedTargetingSystemsCommand extends Command {
@@ -55,6 +60,15 @@ public class SetBannedTargetingSystemsCommand extends Command {
     }
 
     /**
+     * Parses a list of integer targeting-system codes from the command payload and stores it as the client's
+     * banned-targeting-systems list, discarding whatever was previously banned.
+     * <p>
+     * Each token is parsed with {@link MathUtility#parseInt(String, int)} using a default of {@code 0} on
+     * failure; a parsed value of {@code 0} is treated as meaning "standard targeting system" and is deliberately
+     * skipped so the standard TS can never end up banned, even if the token was unparsable garbage that fell back
+     * to {@code 0}.
+     *
+     * @param input the raw, delimited protocol line for this command; see {@link Command#decode(String)}
      * @see Command#execute(String)
      */
     @Override
@@ -76,7 +90,7 @@ public class SetBannedTargetingSystemsCommand extends Command {
     }
 
     /**
-     *
+     * Unused on the client side; this command has no reply-argument parsing behavior.
      */
     @Override
     public void parseReplyArgs(String s) {
@@ -84,7 +98,7 @@ public class SetBannedTargetingSystemsCommand extends Command {
     }
 
     /**
-     *
+     * Unused on the client side; this command is never parsed as server-bound arguments.
      */
     @Override
     public void parseArguments(String s) {

@@ -38,17 +38,35 @@ import megamek.logging.MMLogger;
 import mekwars.common.campaign.clientutils.protocol.IClient;
 
 /**
- * Ping command
+ * Low-level protocol command (name {@code "ping"}) that handles an incoming ping request over the tab-delimited
+ * protocol sub-layer (see {@link CProtCommand}) and immediately answers it with a {@code pong} carrying the same
+ * sender and timestamp, so the sender (or the connection code, if the sender is the server itself) can measure
+ * round-trip time via {@link PongPCmd}.
  */
 public class PingPlayerCommand extends CProtCommand {
     private final static MMLogger LOGGER = MMLogger.create(PingPlayerCommand.class);
 
+    /**
+     * Creates the command bound to the given client and registers its protocol name as {@code "ping"}.
+     *
+     * @param client the client that will reply to pings
+     */
     public PingPlayerCommand(IClient client) {
         super(client);
         setName("ping");
     }
 
-    // execute command
+    /**
+     * Validates that {@code input}'s first token matches this command's name/prefix, then extracts the sender name
+     * and original timestamp and immediately replies with a {@code pong} message echoing both, via the raw
+     * connector. If the ping did not come from {@code "server"}, the request is also echoed to the user via
+     * {@link #echo(String)}; if it did come from the server, the client instead records the current time as its
+     * last-ping timestamp (used for connection keepalive/liveness tracking) without showing a message.
+     *
+     * @param input the raw tab-delimited protocol line, e.g. {@code "/ping<TAB>sender<TAB>timestamp"}
+     *
+     * @return {@code true} if the input matched this command and was handled; {@code false} otherwise
+     */
     @Override
     public boolean execute(String input) {
         StringTokenizer stringTokenizer = new StringTokenizer(input, getDelimiter());
@@ -74,7 +92,11 @@ public class PingPlayerCommand extends CProtCommand {
         return false;
     }
 
-    // echo command in GUI
+    /**
+     * Reports the incoming ping request to the user via a system message, showing who sent it.
+     *
+     * @param input the decomposed ping payload: sender name followed by the ping timestamp
+     */
     @Override
     protected void echo(String input) {
         StringTokenizer stringTokenizer = new StringTokenizer(input, getDelimiter());

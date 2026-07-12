@@ -38,6 +38,12 @@ import java.util.StringTokenizer;
 import megamek.codeUtilities.MathUtility;
 import mekwars.common.campaign.clientutils.protocol.IClient;
 
+/**
+ * Client-side handler for the {@code PlayerFlagsCommand} protocol message, used by the server to synchronize a
+ * player's "player flags" (arbitrary named boolean settings tracked per-player, with an associated default set).
+ * Executing it dispatches on a sub-action code to add, remove, or update entries in the player's personal flag set
+ * and/or the shared default flag set, and finishes by re-sorting the player's hangar.
+ */
 public class PlayerFlagsCommand extends Command {
     public PlayerFlagsCommand(IClient client) {
         super(client);
@@ -47,7 +53,23 @@ public class PlayerFlagsCommand extends Command {
      * input should be one of the following: SDF|<PlayerFlags.export()>  to set all default flags AF|name|id|value to
      * add a flag to both defaults and personal DF|name to delete a flag from both defaults and personal SF|name|value
      * to set a personal flag SSDF|name|value to set a new value for a default flag
+     * <p>
+     * Sub-action reference:
+     * <ul>
+     *     <li>{@code SDF} - bulk-load the entire default flag set from an exported blob and persist it.</li>
+     *     <li>{@code AF} - add a flag (name/id/value) to both the personal flag set and the default flag set.</li>
+     *     <li>{@code DF} - clear a flag (by name) from both the personal flag set and the default flag set.</li>
+     *     <li>{@code SF} - set a personal flag's value only (defaults untouched).</li>
+     *     <li>{@code SSDF} - set a single default flag's value only, without touching the personal flag of the
+     *     same name.</li>
+     * </ul>
+     * An unrecognized action code is silently ignored (falls through with no match). Regardless of which branch
+     * ran (or whether any branch matched), the method unconditionally calls
+     * {@code client.getPlayer().sortHangar()} at the end; the surrounding comment notes this piggybacks on the
+     * fact that this command is the last one sent during login, as a convenient hook to sort the hangar once
+     * post-login.
      *
+     * @param input the raw, delimited protocol line for this command; see {@link Command#decode(String)}
      * @see Command#execute(String)
      */
     @Override
@@ -94,7 +116,7 @@ public class PlayerFlagsCommand extends Command {
     }
 
     /**
-     *
+     * Unused on the client side; this command has no reply-argument parsing behavior.
      */
     @Override
     public void parseReplyArgs(String s) {
@@ -102,7 +124,7 @@ public class PlayerFlagsCommand extends Command {
     }
 
     /**
-     *
+     * Unused on the client side; this command is never parsed as server-bound arguments.
      */
     @Override
     public void parseArguments(String s) {

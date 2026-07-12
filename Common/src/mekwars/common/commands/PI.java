@@ -43,6 +43,12 @@ import mekwars.common.campaign.CUser;
 import mekwars.common.campaign.clientutils.protocol.IClient;
 
 /**
+ * Client-side handler for the {@code PI} ("Player Info") protocol message, sent by the server to push
+ * incremental updates about one or more users' campaign-related info (campaign data blob, status, fluff text,
+ * sub-faction name, experience, or rating). Executing it dispatches on a sub-command code to update the matching
+ * {@link CUser} entries in the client's user list, then refreshes the user-list GUI exactly once regardless of
+ * how many users/fields were touched.
+ *
  * @author Imi (immanuel.scholz@gmx.de)
  */
 public class PI extends Command {
@@ -55,6 +61,31 @@ public class PI extends Command {
     }
 
     /**
+     * Reads a sub-command code and then, per code, one or more {@code username, value} pairs, looking up each
+     * named user via {@link IClient#getUser(String)} and applying the update if the user is found (unknown
+     * usernames are silently skipped):
+     * <ul>
+     *     <li>{@code PL} - "Player List": loops over <em>all remaining</em> username/campaign-data pairs in the
+     *     payload, calling {@link CUser#setCampaignData(IClient, String)} for each — the only sub-command that
+     *     processes more than one user per message.</li>
+     *     <li>{@code DA} - "Data": sets a single user's campaign data; if that user happens to be the local
+     *     player, also re-enables the main frame's menu (e.g. because campaign data becoming available unlocks
+     *     menu actions).</li>
+     *     <li>{@code ChangeStatusCommand} - sets a single user's numeric status, parsed with
+     *     {@link MathUtility#parseInt(String, int)} defaulting to {@code 0} on failure.</li>
+     *     <li>{@code FT} - "Fluff Text": sets a single user's fluff text, only if a value token is actually
+     *     present.</li>
+     *     <li>{@code SSN} - "Set Sub-faction Name": sets a single user's sub-faction name, only if a value token
+     *     is present.</li>
+     *     <li>{@code EX} - "Experience": sets a single user's experience, parsed as an int (default {@code 0}),
+     *     only if a value token is present.</li>
+     *     <li>{@code RA} - "Rating": sets a single user's rating, parsed as a float (default {@code 0.0f}), only
+     *     if a value token is present.</li>
+     * </ul>
+     * An unrecognized sub-command code is silently ignored. In every case (including an unrecognized code), the
+     * user-list GUI is refreshed once at the end of the method.
+     *
+     * @param input the raw, delimited protocol line for this command; see {@link Command#decode(String)}
      * @see Command#execute(String)
      */
     @Override
@@ -116,7 +147,7 @@ public class PI extends Command {
     }
 
     /**
-     *
+     * Unused on the client side; this command has no reply-argument parsing behavior.
      */
     @Override
     public void parseReplyArgs(String s) {
@@ -124,7 +155,7 @@ public class PI extends Command {
     }
 
     /**
-     *
+     * Unused on the client side; this command is never parsed as server-bound arguments.
      */
     @Override
     public void parseArguments(String s) {

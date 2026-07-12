@@ -44,7 +44,10 @@ import mekwars.common.gui.dialogs.AdvancedRepairDialog;
 /**
  * @author Torren (Jason Tighe)
  *       <p>
- *       Used for Advanced Repair Dialog.
+ *       Client-side handler for the {@code AdvancedRepairDialogCommand} protocol message. The server sends this
+ *       after a unit's repair-relevant data has been updated (e.g. after a repair job completes or unit state
+ *       changes), and executing it pops open a new {@link AdvancedRepairDialog} for that unit so the player sees
+ *       the refreshed repair options.
  *       <p>
  *       This command creates a new repair dialog once the unit has been updated.
  */
@@ -59,6 +62,12 @@ public class AdvancedRepairDialogCommand extends Command {
     }
 
     /**
+     * Parses the unit ID from the command payload and opens an {@link AdvancedRepairDialog} for it. A second,
+     * optional token in the payload (its value is never inspected, only its presence matters) flips the dialog into
+     * a different mode: present means the dialog is opened with the boolean flag {@code true} (e.g. "read-only" /
+     * "post-repair" display), absent means it's opened with {@code false}.
+     *
+     * @param input the raw, delimited protocol line for this command; see {@link Command#decode(String)}
      * @see Command#execute(String)
      */
     @Override
@@ -74,7 +83,7 @@ public class AdvancedRepairDialogCommand extends Command {
     }
 
     /**
-     *
+     * Unused on the client side; this command has no reply-argument parsing behavior.
      */
     @Override
     public void parseReplyArgs(String string) {
@@ -82,7 +91,8 @@ public class AdvancedRepairDialogCommand extends Command {
     }
 
     /**
-     *
+     * No-op override. Unlike most other client commands, this class does not store the passed-in client on
+     * {@link Command#client}; the client reference set at construction time (via the constructor) remains in use.
      */
     @Override
     public void setClient(IClient client) {
@@ -90,7 +100,7 @@ public class AdvancedRepairDialogCommand extends Command {
     }
 
     /**
-     *
+     * Unused on the client side; this command is never parsed as server-bound arguments.
      */
     @Override
     public void parseArguments(String string) {

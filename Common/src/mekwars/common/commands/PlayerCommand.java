@@ -48,6 +48,30 @@ import mekwars.common.util.TokenReader;
 import mekwars.common.util.UnitUtils;
 
 /**
+ * Handles the {@code "PL"} protocol prefix (confirmed on the server side, e.g. {@code SPlayer} sends
+ * {@code "PL|UPPC|<part>#<amount>"}), which the server uses to push fine-grained state updates about the local
+ * player — army composition, unit/hangar data, currency/experience/influence/rating totals, faction/house
+ * membership, various UI-relevant flags, and more — down to this client. {@link #execute(String)} dispatches on a
+ * short (2-5 letter) sub-command code immediately following the prefix; almost every case forwards straight to a
+ * single {@link CPlayer} or {@link IClient} mutator method whose name documents its own effect (e.g. {@code "RA"}
+ * calls {@link CPlayer#removeArmy}, {@code "SM"} calls {@link CPlayer#setMoney}). A few cases do more than a single
+ * call:
+ * <ul>
+ * <li>{@code "FCU"} — triggers a full client update and returns immediately, skipping the trailing GUI refresh
+ * calls described below.</li>
+ * <li>{@code "VUI"}/{@code "VURD"} — build a unit from a sub-tokenized payload (delimited by {@code "#"}) to show
+ * a battle-damage info window or an {@link AdvancedRepairDialog}.</li>
+ * <li>{@code "SUD"} — gathers client/JVM diagnostic data (JAR checksums, OS/JVM system properties) and sends it
+ * back to the server as {@code "c sendclientdata#..."}.</li>
+ * <li>{@code "STS"} — sets a unit's targeting system and echoes a synthetic {@code "CH|AM: ..."} chat line so the
+ * change is visible in the chat log.</li>
+ * <li>{@code "USU"}/{@code "CSU"} — add/remove/clear the player's house's list of supported unit types.</li>
+ * </ul>
+ * For any sub-command not recognized, the {@code default} case returns immediately. Otherwise, after the switch,
+ * three GUI panels ({@code REFRESH_HQ_PANEL}, {@code REFRESH_PLAYER_PANEL}, {@code REFRESH_BM_PANEL}) are always
+ * refreshed — this happens even for cases whose own effect is unrelated to those panels. This class is
+ * client-inbound only: {@link #parseReplyArgs(String)} and {@link #parseArguments(String)} are empty stubs.
+ *
  * @author Imi (immanuel.scholz@gmx.de)
  */
 
@@ -55,13 +79,19 @@ public class PlayerCommand extends Command {
     private final static MMLogger LOGGER = MMLogger.create(PlayerCommand.class);
 
     /**
-     *
+     * Constructs a client-side instance bound to {@code client}, as required by the {@link Command} contract.
      */
     public PlayerCommand(IClient client) {
         super(client);
     }
 
     /**
+     * Dispatches on the sub-command code following the {@code "PL"} prefix; see the class-level docs for the
+     * dispatch table and notable special cases. Returns early (without the trailing GUI refresh) if there are no
+     * more tokens after the sub-command code, or if the sub-command is unrecognized ({@code default} case), or
+     * for {@code "FCU"} (which triggers its own full client update instead).
+     *
+     * @param input the full raw protocol line, prefix included
      * @see Command#execute(String)
      */
     @Override
@@ -257,7 +287,7 @@ public class PlayerCommand extends Command {
     }
 
     /**
-     *
+     * No-op. This command is client-inbound only; it is never sent as a request awaiting a coded reply.
      */
     @Override
     public void parseReplyArgs(String s) {
@@ -265,7 +295,8 @@ public class PlayerCommand extends Command {
     }
 
     /**
-     *
+     * No-op. This command is never dispatched server-side through the {@link ServerCommand} path (see
+     * {@link Command} class-level docs), so there are no server-bound arguments to parse.
      */
     @Override
     public void parseArguments(String s) {

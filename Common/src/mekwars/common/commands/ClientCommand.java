@@ -39,16 +39,43 @@ package mekwars.common.commands;
 import mekwars.common.campaign.clientutils.protocol.IClient;
 
 /**
+ * Contract for the client-side half of a {@code Command}: the behavior needed when a command is used to receive
+ * and react to a message sent from the server to a MekWars client (as opposed to the server-side behavior declared
+ * in {@link ServerCommand}). Concrete command classes (e.g. those in this package) typically implement both
+ * {@code ClientCommand} and {@code ServerCommand} via the abstract {@code Command} base class, since the same
+ * protocol prefix may be interpreted on either side of the connection.
  *
  * @author Administrator
  */
 public interface ClientCommand extends ICommand {
 
+    /**
+     * Parses a raw, pipe-delimited reply line received from the server for this command and updates this command's
+     * internal state (including error state) accordingly.
+     *
+     * @param s the raw reply text, including the command prefix
+     */
     void parseReply(String s);
 
+    /**
+     * Marks this command as having timed out (no reply received in time). Sets the error state so
+     * {@link ICommand#hasError()} / {@link ICommand#getErrorMessage()} report the timeout.
+     */
     void timeout();
 
+    /**
+     * Sends this command to the server.
+     *
+     * @param blocking if {@code true}, the call should block until a reply is received; if {@code false} it should
+     *       return immediately
+     */
     void send(boolean blocking);
 
+    /**
+     * Associates this command instance with the client that will use it (e.g. to call back into client GUI/state
+     * methods while executing).
+     *
+     * @param mwClient the owning client
+     */
     void setClient(IClient mwClient);
 }

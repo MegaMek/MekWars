@@ -37,16 +37,32 @@ import java.util.StringTokenizer;
 import mekwars.common.campaign.clientutils.protocol.IClient;
 
 /**
- * Comm command
+ * Low-level protocol command (name {@code "comm"}) that wraps a nested campaign/chat payload so it can travel over
+ * the tab-delimited protocol sub-layer (see {@link CProtCommand}) alongside control commands like ping/pong and
+ * sign-on acknowledgement. Received "comm" messages are unwrapped and forwarded into the normal client data-input
+ * pipeline for further parsing.
  */
 
 public class CommPCmd extends CProtCommand {
+    /**
+     * Creates the command bound to the given client and registers its protocol name as {@code "comm"}.
+     *
+     * @param client the client that will receive dispatched payloads
+     */
     public CommPCmd(IClient client) {
         super(client);
         name = "comm";
     }
 
-    // execute command
+    /**
+     * Validates that {@code input}'s first token matches this command's name/prefix, then extracts the next token
+     * (the nested payload) and hands it off to the client for parsing: {@code doParseDataInput} for a normal GUI
+     * client, or {@code parseDedDataInput} when running as a dedicated (headless) host.
+     *
+     * @param input the raw tab-delimited protocol line, e.g. {@code "/comm<TAB>payload"}
+     *
+     * @return {@code true} if the input matched this command and was dispatched; {@code false} otherwise
+     */
     @Override
     public boolean execute(String input) {
 

@@ -42,6 +42,11 @@ import mekwars.common.AdvancedTerrain;
 import mekwars.common.campaign.clientutils.protocol.IClient;
 
 /**
+ * Client-side command that delivers the server's "advanced terrain"/planet environment description for the
+ * upcoming battle map (e.g. atmosphere, gravity, or weather effects), constructing an {@link AdvancedTerrain} from
+ * the encoded token and applying it to the client so the local map/battle setup reflects those environmental
+ * conditions.
+ *
  * @author Torren (Jason Tighe)
  *       <p>
  *       Used for Advanced Planet Environments.
@@ -58,6 +63,9 @@ public class AdvancedPlanetEnvironmentsCommand extends Command {
     }
 
     /**
+     * Decodes {@code input} to obtain the single encoded terrain token, builds an {@link AdvancedTerrain} from it,
+     * and sets it as the client's active advanced terrain.
+     *
      * @see Command#execute(String)
      */
     @Override
@@ -68,16 +76,26 @@ public class AdvancedPlanetEnvironmentsCommand extends Command {
         client.setAdvancedTerrain(aTerrain);
     }
 
+    /**
+     * No reply-argument parsing is needed for this command; intentionally a no-op.
+     */
     @Override
     public void parseReplyArgs(String string) {
 
     }
 
+    /**
+     * Overridden to intentionally do nothing: this command instance's client binding is fixed at construction and
+     * is never reassigned.
+     */
     @Override
     public void setClient(IClient mwClient) {
 
     }
 
+    /**
+     * This command is never sent by a client to the server, so server-side argument parsing is a no-op.
+     */
     @Override
     public void parseArguments(String string) {
 

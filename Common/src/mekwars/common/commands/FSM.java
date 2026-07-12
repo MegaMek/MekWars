@@ -41,6 +41,9 @@ import java.util.StringTokenizer;
 import mekwars.common.campaign.clientutils.protocol.IClient;
 
 /**
+ * Client-side command ("From Server Message" / system message) that displays a single line of text sent by the
+ * server as a client system message (e.g. shown in a status/log area rather than a chat channel).
+ *
  * @author Imi (immanuel.scholz@gmx.de)
  */
 public class FSM extends Command {
@@ -53,6 +56,9 @@ public class FSM extends Command {
     }
 
     /**
+     * Decodes {@code input} (stripping the command prefix token) and, if a message token is present, displays it
+     * to the user via {@link IClient#systemMessage(String)}.
+     *
      * @see Command#execute(String)
      */
     @Override
@@ -65,7 +71,7 @@ public class FSM extends Command {
     }
 
     /**
-     *
+     * No reply-argument parsing is needed for this command; intentionally a no-op.
      */
     @Override
     public void parseReplyArgs(String s) {
@@ -73,7 +79,7 @@ public class FSM extends Command {
     }
 
     /**
-     *
+     * This command is never sent by a client to the server, so server-side argument parsing is a no-op.
      */
     @Override
     public void parseArguments(String s) {

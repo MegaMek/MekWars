@@ -39,19 +39,27 @@ package mekwars.common.commands;
 import mekwars.common.campaign.clientutils.protocol.IClient;
 
 /**
+ * Client-side command that forces a full GUI refresh: unconditionally triggers a refresh of every known panel
+ * (HQ, player, BM/battle-mek, status, battle table, and user list), regardless of {@code input}. Used by the
+ * server as a blunt "tell the client to redraw everything" signal rather than a targeted single-panel update.
+ *
  * @author Salient RefreshGUICommand = Refresh GUI just a command that makes the client refresh I'm sure there was some
  *       preexisting way of doing this but I looked, and got tired of looking So...
  */
 public class RefreshGUICommand extends Command {
 
     /**
+     * Creates the command bound to the given client.
      *
+     * @param client the client whose GUI panels will be refreshed
      */
     public RefreshGUICommand(IClient client) {
         super(client);
     }
 
     /**
+     * Ignores {@code input} entirely and refreshes every GUI panel the client exposes.
+     *
      * @see Command#execute(String)
      */
     @Override
@@ -65,7 +73,7 @@ public class RefreshGUICommand extends Command {
     }
 
     /**
-     *
+     * No reply-argument parsing is needed for this command; intentionally a no-op.
      */
     @Override
     public void parseReplyArgs(String s) {
@@ -73,7 +81,7 @@ public class RefreshGUICommand extends Command {
     }
 
     /**
-     *
+     * This command is never sent by a client to the server, so server-side argument parsing is a no-op.
      */
     @Override
     public void parseArguments(String s) {

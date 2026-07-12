@@ -45,6 +45,12 @@ import mekwars.common.campaign.clientutils.protocol.IClient;
 
 /**
  * Command that sends a player's unit list.
+ * <p>
+ * Client-side handler for the {@code ListPlayerUnitsCommand} protocol message. The server sends this in response
+ * to a request that needs the user to pick one specific unit out of a given player's hangar (e.g. an admin
+ * transferring a unit, or viewing another player's unit). Executing it pops up a modal unit-picker dialog and,
+ * once the player chooses a unit and confirms, sends a follow-up chat/campaign command back to the server
+ * encoding that choice.
  *
  * @author Imi (immanuel.scholz@gmx.de)
  */
@@ -58,6 +64,32 @@ public class ListPlayerUnitsCommand extends Command {
     }
 
     /**
+     * Parses, in order: the original command name that triggered this unit list (e.g. {@code admin_transfer} or
+     * {@code view_player_unit}), the target username whose hangar is being listed, a {@code '#'}-delimited list of
+     * unit entries, and an optional trailing "receiving player" name (present only for commands that move a unit
+     * to a second player).
+     * <p>
+     * The unit entries are split on {@code '#'}, each re-prefixed with {@code '#'}, and loaded into a
+     * {@link TreeSet} (which both de-duplicates and alphabetizes them) to populate a non-editable
+     * {@link JComboBox}. That combo box is shown in a modal {@link JOptionPane} with OK/Cancel options.
+     * <p>
+     * If the dialog is cancelled, or no item is selected, nothing is sent back to the server. On a confirmed
+     * selection, the selected combo entry's text before its first space is taken as the unit identifier (i.e. any
+     * descriptive text after a unit ID is discarded), and a reply is sent via {@link IClient#sendChat(String)}
+     * using the {@code IClient.CAMPAIGN_PREFIX + "c "} chat-command convention:
+     * <ul>
+     *     <li>if a receiving player is present and {@code commandName} is {@code "admin_transfer"}, the reply
+     *     encodes {@code commandName#username#receivingPlayer<unit>};</li>
+     *     <li>if a receiving player is present and {@code commandName} is {@code "view_player_unit"}, the reply
+     *     encodes {@code commandName#username<unit>#receivingPlayer} (note the different token order versus the
+     *     transfer case);</li>
+     *     <li>if there is no receiving player at all, the reply encodes {@code commandName#username<unit>},
+     *     regardless of what {@code commandName} is.</li>
+     * </ul>
+     * Note: if a receiving player is present but {@code commandName} is something other than the two names
+     * checked above, no reply is sent at all — the dialog result is silently dropped.
+     *
+     * @param input the raw, delimited protocol line for this command; see {@link Command#decode(String)}
      * @see Command#execute(String)
      */
     @Override
@@ -114,7 +146,7 @@ public class ListPlayerUnitsCommand extends Command {
     }
 
     /**
-     *
+     * Unused on the client side; this command has no reply-argument parsing behavior.
      */
     @Override
     public void parseReplyArgs(String s) {
@@ -122,7 +154,7 @@ public class ListPlayerUnitsCommand extends Command {
     }
 
     /**
-     *
+     * Unused on the client side; this command is never parsed as server-bound arguments.
      */
     @Override
     public void parseArguments(String s) {

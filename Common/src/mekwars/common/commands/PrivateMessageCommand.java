@@ -48,11 +48,23 @@ import mekwars.common.gui.panels.CCommPanel;
 import mekwars.common.util.StringUtils;
 
 /**
+ * Handles the {@code "PM"} protocol command sent by the server to deliver a private (whisper) message to this
+ * client from another user. {@link #execute(String)} does all the work: it parses the sender name and message
+ * text, applies the user's chat-color/faction-color/font preferences, optionally opens or routes to a per-sender
+ * mail tab (if multi-tab PMs are enabled and the tab limit hasn't been reached), strips {@code <img>} tags if
+ * configured, timestamps the message, appends it to the private-mail chat channel (and optionally mirrors it into
+ * the main channel), and finally plays a notification sound (message/name-call/keyword sound, in that priority
+ * order). This class is client-inbound only — {@link #parseReplyArgs(String)} and {@link #parseArguments(String)}
+ * are empty stubs, since a {@code PM} command sent this way is never expected to elicit a coded reply nor be
+ * parsed server-side through this class.
+ *
  * @author Imi (immanuel.scholz@gmx.de)
  */
 public class PrivateMessageCommand extends Command {
 
     /**
+     * Constructs a client-side instance bound to {@code client}, as required by the {@link Command} contract.
+     *
      * @see Command#Command(IClient)
      */
     public PrivateMessageCommand(IClient client) {
@@ -61,6 +73,12 @@ public class PrivateMessageCommand extends Command {
     }
 
     /**
+     * Parses and displays an incoming private message. {@code input} is the raw line including the {@code "PM"}
+     * prefix; {@link Command#decode(String)} strips it. Expected tokens after the prefix are the sender's
+     * username and the message text. If the sender is on this client's private-message ignore list, or there is
+     * no message token, nothing happens.
+     *
+     * @param input the full raw {@code "PM"} protocol line
      * @see Command#execute(String)
      */
     @Override
@@ -195,7 +213,8 @@ public class PrivateMessageCommand extends Command {
     }
 
     /**
-     *
+     * No-op. This command is client-inbound only; it is never sent as a request awaiting a coded reply, so there
+     * is nothing to parse here.
      */
     @Override
     public void parseReplyArgs(String s) {
@@ -203,7 +222,8 @@ public class PrivateMessageCommand extends Command {
     }
 
     /**
-     *
+     * No-op. This command is never dispatched server-side through the {@link ServerCommand} path (see
+     * {@link Command} class-level docs), so there are no server-bound arguments to parse.
      */
     @Override
     public void parseArguments(String s) {

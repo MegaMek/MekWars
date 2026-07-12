@@ -39,18 +39,37 @@ import megamek.logging.MMLogger;
 import mekwars.common.campaign.clientutils.protocol.IClient;
 
 /**
- * AckSignOn command
+ * Low-level protocol command (name {@code "ack_sign_on"}) that handles the server's acknowledgement of a client's
+ * sign-on/login handshake. Records the confirmed username on the client and, when running as a dedicated
+ * (headless) host, automatically starts hosting a game after a short delay.
  */
 
 public class AcknowledgeSignOnPlayerCommand extends CProtCommand {
     static private final MMLogger LOGGER = MMLogger.create(AcknowledgeSignOnPlayerCommand.class);
 
+    /**
+     * Creates the command bound to the given client and registers its protocol name as {@code "ack_sign_on"}.
+     *
+     * @param client the client being signed on
+     */
     public AcknowledgeSignOnPlayerCommand(IClient client) {
         super(client);
         name = "ack_sign_on";
     }
 
-    // execute command
+    /**
+     * Validates that {@code input}'s first token matches this command's name/prefix, then extracts the
+     * acknowledged username and applies it to the client via {@code setUsername}, logging the message. If this
+     * client is running as a dedicated host, it then blocks the current thread for 5 seconds (a fixed delay,
+     * presumably to let the sign-on settle before hosting starts) and calls {@code client.startHost(true, false,
+     * false)} to automatically start hosting a game; any exception from either the sleep or the host start is
+     * caught and only logged, not propagated. Note the blocking {@code Thread.sleep(5000)} runs on whatever thread
+     * invokes {@code execute}, which will stall that thread (e.g. a network/dispatch thread) for the duration.
+     *
+     * @param input the raw tab-delimited protocol line, e.g. {@code "/ack_sign_on<TAB>username"}
+     *
+     * @return {@code true} if the input matched this command and was handled; {@code false} otherwise
+     */
     @Override
     public boolean execute(String input) {
         StringTokenizer ST = new StringTokenizer(input, delimiter);
@@ -78,7 +97,11 @@ public class AcknowledgeSignOnPlayerCommand extends CProtCommand {
         return false;
     }
 
-    // echo command in GUI
+    /**
+     * Logs the sign-on acknowledgement payload at info level (no GUI display for this command).
+     *
+     * @param input the decomposed acknowledgement payload
+     */
     @Override
     protected void echo(String input) {
         LOGGER.info("Message from server: {}", input);
