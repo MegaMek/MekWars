@@ -53,30 +53,65 @@ import mekwars.common.campaign.CCampaign;
 import mekwars.common.campaign.clientutils.protocol.IClient;
 
 /**
+ * Table model backing the black-market equipment/parts JTable — a sibling of
+ * {@link BlackMarketModel} but for individual pieces of equipment ({@link BMEquipment}, e.g.
+ * weapons, ammo, or components) rather than whole units. Each instance is scoped to a single
+ * equipment {@code type} (see constructor), so separate instances back separate tabs/panels for
+ * different equipment categories (weapons, ammo, etc.). Columns show the part name, tech
+ * level/rating, cost, and quantity available; a fifth pseudo-column carries the internal equipment
+ * name used to look parts back up in {@link #components}.
+ * <p>
  * Adapted from BlackMarketModel by Steve Hawkins
  */
 
 public class BlackMarketPartsModel extends AbstractTableModel {
 
+    /** Column index: display name of the equipment/part. */
     public final static int PART = 0;
+    /** Column index: technology level/rating for the current campaign year. */
     public final static int TECH = 1;
+    /** Column index: formatted market cost. */
     public final static int COST = 2;
+    /** Column index: quantity available (optionally annotated with the player's cached crit count). */
     public final static int AMOUNT = 3;
+    /**
+     * Pseudo-column carrying the part's internal equipment name, used to re-look-up the
+     * {@link BMEquipment} for a row (e.g. from the {@link Renderer}). Not a real table column:
+     * {@link #columnNames} only has 4 entries, so this index is never exposed via
+     * {@link #getColumnCount()}, but {@link #getValueAt(int, int)} still handles it when called
+     * directly.
+     */
     public final static int INTERNAL_PART = 4;
 
     @Serial
     private static final long serialVersionUID = -4312857440681697117L;
+    /** Header labels; note there is no header for {@link #INTERNAL_PART} since it isn't a real column. */
     final String[] columnNames = { "Part", "Tech", "Cost", "Amount", };
+    /**
+     * Dummy "wide" strings used only to measure preferred column widths in
+     * {@link #initColumnSizes(JTable)}; never displayed.
+     */
     final String[] longValues = { "XXXXXX-XXXX-XXXXXX", "XXXXXXXXX", "XXXXXXXXX", "XXXXXXXXX", };
+    /** Client connection used to reach the campaign, player, and server configuration. */
     public IClient client;
     public TreeMap<String, BMEquipment> components; // this collection is backed
     // by the main map, so it
     // should always be good
+    /** Row-order snapshot containing only the {@link #components} entries matching {@link #type},
+     *  rebuilt by {@link #filter()}. Despite the name, not actually kept sorted here — see comment
+     *  below. */
     public List<BMEquipment> sortedComponents = new ArrayList<>(); // not really though, sort is
+    /** The active campaign, used to reach the black-market parts map. */
     CCampaign theCampaign;
     // handled elsewhere...
+    /** The equipment type this instance filters to (e.g. a weapon/ammo/component category); set once
+     *  in the constructor. */
     private String type = "";
 
+    /**
+     * @param client client connection providing access to the campaign, player, and config
+     * @param type   the equipment type this model instance should filter {@link #components} down to
+     */
     public BlackMarketPartsModel(IClient client, String type) {
         this.client = client;
         theCampaign = this.client.getCampaign();
@@ -86,6 +121,15 @@ public class BlackMarketPartsModel extends AbstractTableModel {
         filter();
     }
 
+    /**
+     * Rebuilds {@link #sortedComponents} from {@link #components}, keeping only entries whose
+     * {@link BMEquipment#getEquipmentType()} matches {@link #type}.
+     * <p>
+     * Quirk: if the filtered result ({@code tempTree}) is empty, {@link #sortedComponents} is left
+     * untouched rather than cleared — so if every part of this type is sold or removed from the
+     * black market, the table keeps showing the previous (now stale) list of parts instead of
+     * becoming empty.
+     */
     private void filter() {
         TreeMap<String, BMEquipment> tempTree = new TreeMap<>();
 
@@ -103,11 +147,19 @@ public class BlackMarketPartsModel extends AbstractTableModel {
         }
     }
 
+    /** Re-filters {@link #components} into {@link #sortedComponents} and notifies listeners that the
+     *  entire table changed. */
     public void refreshModel() {
         filter();
         fireTableDataChanged();
     }
 
+    /**
+     * Sizes each column to fit the wider of its header and a representative dummy value
+     * ({@link #longValues}).
+     *
+     * @param table the JTable this model is installed on
+     */
     public void initColumnSizes(JTable table) {
         TableColumn column;
         Component comp;
@@ -136,6 +188,21 @@ public class BlackMarketPartsModel extends AbstractTableModel {
         return columnNames.length;
     }
 
+    /**
+     * Returns the display value for a given cell, or {@code ""} for out-of-range rows. Behavior per
+     * column:
+     * <ul>
+     *   <li>{@link #PART} — the part's display name</li>
+     *   <li>{@link #COST} — cost formatted as {@code #,###,###,##0.00}</li>
+     *   <li>{@link #TECH} — tech level/rating computed for the current "CampaignYear" server
+     *       config (defaults to year 0 if unparsable/unset)</li>
+     *   <li>{@link #AMOUNT} — the raw quantity available, or {@code "amount(critCount)"} if the
+     *       player has one or more of this part already reserved/cached in
+     *       {@code getPartsCache().getPartsCritCount(...)}</li>
+     *   <li>{@link #INTERNAL_PART} — internal equipment name; only reachable when called directly
+     *       (not through the JTable, since it isn't a real column — see {@link #INTERNAL_PART})</li>
+     * </ul>
+     */
     public Object getValueAt(int row, int col) {
         if (row < 0) {
             return "";
@@ -171,6 +238,7 @@ public class BlackMarketPartsModel extends AbstractTableModel {
         return (columnNames[col]);
     }
 
+    /** @return a fresh cell renderer bound to this model's live data. */
     public BlackMarketPartsModel.Renderer getRenderer() {
         return new BlackMarketPartsModel.Renderer();
     }
@@ -178,10 +246,21 @@ public class BlackMarketPartsModel extends AbstractTableModel {
     /*
      * Rendered cannot be static because it uses parent data structs.
      */
+    /**
+     * Cell renderer for the black-market parts table. Builds a tooltip summarizing the part's name,
+     * cost, amount, and tech level; alternates row background (zebra striping: light gray on even
+     * rows, white on odd) rather than using selection/ownership-based coloring; and colors the cell
+     * text red when {@link BMEquipment#isCostUp()} (price trending up) or green otherwise (price
+     * flat/trending down) as a simple buy-signal indicator.
+     */
     public class Renderer extends DefaultTableCellRenderer {
         @Serial
         private static final long serialVersionUID = 5506902358006897558L;
 
+        /**
+         * Guards against an out-of-range or already-removed row/part before building the label;
+         * returns a blank {@link JLabel} in that case.
+         */
         @Override
         public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus,
               int row, int column) {

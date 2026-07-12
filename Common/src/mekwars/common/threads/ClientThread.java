@@ -83,10 +83,33 @@ import mekwars.common.campaign.CUnit;
 import mekwars.common.campaign.clientutils.protocol.IClient;
 import mekwars.common.util.UnitUtils;
 
+/**
+ * Client-side background thread that bridges a MekWars campaign game (a {@link IClient} connected
+ * to a MekWars server) into an actual MegaMek battle: it launches and drives an embedded MegaMek
+ * {@link Client} (and its {@link ClientGUI}), connects it to the MegaMek game host for the battle
+ * that the MekWars server just set up, configures the game's map/board and planetary conditions
+ * from the campaign's current {@link PlanetEnvironment}/{@link AdvancedTerrain}, adds the player's
+ * units ({@link #meks}) and any server-generated auto-army units ({@link #autoArmy}) as MegaMek
+ * {@link Entity} objects, wires up C3 networks, and optionally spins up a {@link Princess} bot
+ * client if the campaign is configured to use bots.
+ * <p>
+ * This is distinct from the socket reader/writer threads elsewhere in this package: those move raw
+ * MekWars campaign protocol text between client and server, whereas this thread drives an entirely
+ * separate MegaMek network connection (a second socket, to the MegaMek game host) used only for
+ * the actual tabletop battle simulation. All communication back to the MekWars campaign server (for
+ * example the {@code RequestOperationSettings} handshake) still goes through the {@link IClient}.
+ * <p>
+ * The thread is started once (per battle) and its {@link #run()} method does not loop — it performs
+ * one-time setup of the MegaMek client/game and then returns, after which the MegaMek client's own
+ * threads/UI drive the rest of the battle. This class also implements {@link CloseClientListener} so
+ * it's notified ({@link #clientClosed()}) when the embedded MegaMek {@link Client} connection closes,
+ * so it can tear down the bot (if any) and notify the {@link IClient} that the game is over.
+ */
 public class ClientThread extends Thread implements CloseClientListener {
     private final static MMLogger LOGGER = MMLogger.create(ClientThread.class);
     private final static I18NMessages MESSAGES = new I18NMessages(ClientThread.class);
 
+    /** Board starting-edge/compass direction constants used when picking off-board deployment direction. Unused directly (see the switch in {@link #run()}, which uses raw literals instead of these constants). */
     final int N = 0;
     final int NE = 1;
     final int SE = 2;
@@ -95,19 +118,44 @@ public class ClientThread extends Thread implements CloseClientListener {
     final int NW = 5;
 
     // VARIABLES
+    /** Player/pilot name this MegaMek client connects as; trimmed of surrounding whitespace. */
     private final String myName;
+    /** Name of the MekWars campaign server/game, used later when reporting the game as closed. */
     private final String serverName;
+    /** TCP port of the MegaMek game host to connect the embedded {@link Client} to. */
     private final int serverPort;
+    /** The MekWars campaign client this battle was launched from; used to read campaign/environment state and to report status back to the server. */
     private final IClient client;
+    /** Keybinding dispatcher installed on the AWT {@link KeyboardFocusManager} for the embedded MegaMek GUI. */
     private final MegaMekController controller;
+    /** The player's own units to add to the MegaMek game as entities. */
     private final ArrayList<Unit> meks;
+    /** Server-generated auxiliary/artillery units (e.g. from AutoArmy) to add alongside {@link #meks}. */
     private final ArrayList<CUnit> autoArmy;// from server's
+    /** Optional Princess bot client spun up when the campaign is configured to use bots; null otherwise. */
     BotClient bot = null;
+    /** Hostname/IP of the MegaMek game host; normalized to the literal "127.0.0.1" if it merely contains that substring. */
     private String serverip;
+    /** The embedded MegaMek network client for this battle; null before {@link #run()} connects, and explicitly nulled again in {@link #clientClosed()}. */
     private Client mmClient;
+    /** The embedded MegaMek Swing GUI for this battle; created in {@link #run()} and nulled out once run() completes. */
     private ClientGUI swingGui;
 
     // CONSTRUCTOR
+    /**
+     * Captures all the state needed to later connect to and set up a MegaMek battle, and installs a
+     * fresh {@link MegaMekController} as the current AWT key event dispatcher (parsing key bindings
+     * for it immediately). Does not itself connect to anything or start the thread — call
+     * {@link #start()} separately to run {@link #run()} on a new thread.
+     *
+     * @param name       player/pilot name to connect to the MegaMek host as (trimmed)
+     * @param servername name of the MekWars server/game, used when reporting the game as closed
+     * @param ip         MegaMek game host address; normalized to "127.0.0.1" if it contains that substring
+     * @param port       MegaMek game host port
+     * @param client     the MekWars campaign client this battle belongs to
+     * @param meks       the player's own units to add to the battle
+     * @param autoArmy   server-generated auxiliary units to add to the battle
+     */
     public ClientThread(String name, String servername, String ip, int port, IClient client, ArrayList<Unit> meks,
           ArrayList<CUnit> autoArmy) {
         super(name);
@@ -130,14 +178,60 @@ public class ClientThread extends Thread implements CloseClientListener {
         KeyBindParser.parseKeyBindings(controller);
     }
 
+    /**
+     * @return the embedded MegaMek network client for this battle, or {@code null} before
+     *         {@link #run()} has connected (or after {@link #clientClosed()} has run)
+     */
     public Client getMMClient() {
         return mmClient;
     }
 
+    /**
+     * @return the MegaMek keybinding controller created for this battle's embedded GUI
+     */
     public MegaMekController getMegaMekController() {
         return controller;
     }
 
+    /**
+     * One-shot setup routine (not a loop) that stands up the embedded MegaMek battle for this
+     * thread's target game and returns once the battle has been initialized. In order, it:
+     * <ol>
+     *     <li>resets per-game campaign state on {@link #client} (mine counts, bot usage flag,
+     *     environment/terrain, starting edge, game options) and tears down any previous
+     *     {@link #swingGui}'s local bots;</li>
+     *     <li>creates a fresh embedded MegaMek {@link Client} and {@link ClientGUI}
+     *     ({@link #swingGui}) and registers this thread as its {@link CloseClientListener};</li>
+     *     <li>if the campaign hasn't yet fetched game/operation options from the server, sends a
+     *     {@code RequestOperationSettings} campaign command and busy-waits (polling every second)
+     *     until {@link IClient#isWaiting()} clears;</li>
+     *     <li>connects the embedded {@link Client} to the MegaMek game host at {@link #serverip}:
+     *     {@link #serverPort}; if the connection attempt throws, this method aborts by nulling
+     *     {@link #mmClient}, showing an info dialog, logging, and returning early;</li>
+     *     <li>busy-waits for the local player and game phase to become available/known;</li>
+     *     <li>while still in the lobby phase, if a campaign environment is set, builds
+     *     {@link MapSettings} (board size, terrain generation parameters or a fixed static board,
+     *     buildings, city params) and {@link PlanetaryConditions} from the current
+     *     {@link PlanetEnvironment}/{@link AdvancedTerrain} and sends them to the MegaMek host;</li>
+     *     <li>if the campaign is configured to use bots, creates and connects a {@link Princess}
+     *     bot client, busy-waiting for it to come up the same way as the human client;</li>
+     *     <li>still in the lobby phase: loads game options, applies client log/camo preferences,
+     *     sets minefield allowances, adds every unit in {@link #meks} and {@link #autoArmy} to the
+     *     game as MegaMek {@link Entity} objects (assigning owner, external id, commander flag,
+     *     searchlight state for night games, off-board deployment edge, and pilot/crew), links up
+     *     any C3 networks declared on the player's locked {@link CArmy}, and sets team/starting
+     *     position — sending a single player-info update at the end if anything changed.</li>
+     * </ol>
+     * Any exception anywhere in this sequence (after the client successfully connects) is caught,
+     * logged, and swallowed — the method does not rethrow. In all cases, {@link #swingGui} is set
+     * back to {@code null} before returning (the comment above that line notes this is deliberate:
+     * the GUI object continues to live and operate on the MegaMek client's own thread, so this
+     * thread only needs to release its reference to it). Several busy-wait polling loops here
+     * (waiting for local player / game phase / bot readiness) use fixed {@link Thread#sleep} polls
+     * rather than a blocking/event-driven approach, and are capped at 1000 iterations of 50ms
+     * (~50 seconds) for the phase-detection loops but are otherwise unbounded (e.g. waiting for
+     * {@code mmClient.getLocalPlayer()} to become non-null has no timeout at all).
+     */
     @Override
     public void run() {
         boolean playerUpdate = false;
@@ -717,7 +811,18 @@ public class ClientThread extends Thread implements CloseClientListener {
     }
 
     /**
-     * Scans the boards directory for map boards of the appropriate size and returns them.
+     * Scans the {@code data/boards} directory (optionally a subfolder of it) for {@code .board}
+     * files matching the given dimensions and returns the list of available board names (without
+     * the {@code .board} extension), prefixed with the special {@link MapSettings#BOARD_SURPRISE}
+     * and {@link MapSettings#BOARD_GENERATED} pseudo-board entries when at least one real board was
+     * found, sorted case-insensitively.
+     *
+     * @param boardWidth  required board width in hexes
+     * @param boardHeight required board height in hexes
+     * @param folder      subfolder of {@code data/boards} to scan (empty string for the top level)
+     * @return list of selectable board name entries; if no matching boards exist, contains only
+     *         {@link MapSettings#BOARD_GENERATED}; if {@code folder} doesn't exist as a directory,
+     *         returns an empty list instead
      */
     private ArrayList<String> scanForBoards(int boardWidth, int boardHeight, String folder) {
         BoardDimensions dimension = new BoardDimensions(boardWidth, boardHeight);
@@ -766,6 +871,24 @@ public class ClientThread extends Thread implements CloseClientListener {
         return boards;
     }
 
+    /**
+     * Randomly places the number of buildings specified by {@code buildingTemplate} onto the board,
+     * restricting placement to a 5-hex-wide/tall strip near the appropriate map edge when the
+     * template specifies a starting edge (north/south/east/west), and picking random,
+     * non-duplicate coordinates (retrying up to 100 times per building before giving up and
+     * doubling the construction factor as a fallback — see the {@code CFx2} flag below). Each
+     * building's floor count and construction factor (CF) are randomized within the template's
+     * min/max range (or fixed at the min if max &lt;= min).
+     * <p>
+     * Note: if a spot can't be found after 100 attempts for a given building, the loop just breaks
+     * out and uses whatever coordinate was last generated (which may duplicate another building's
+     * location, since {@code tempMap.add(stringCoord)} is called unconditionally afterward) — it
+     * does not skip the building or retry with a fresh strategy; it only doubles that building's CF.
+     *
+     * @param mapSettings      the board's settings, used to read/clamp against actual board width/height
+     * @param buildingTemplate describes how many buildings to place, their type, and floor/CF ranges
+     * @return the list of randomly-placed {@link BuildingTemplate} entries to apply to the board
+     */
     private ArrayList<BuildingTemplate> generateRandomBuildings(MapSettings mapSettings, Buildings buildingTemplate) {
         ArrayList<BuildingTemplate> buildingList = new ArrayList<>();
         ArrayList<BuildingType> buildingTypes = new ArrayList<>();
@@ -873,8 +996,20 @@ public class ClientThread extends Thread implements CloseClientListener {
      */
 
     /**
-     * @param masterID This function goes through and makes sure the slave is linked to the master unit
+     * Finds the MegaMek {@link Entity} objects (by external id) corresponding to a C3 slave/master
+     * pair declared in the campaign army's C3 network map, and wires up the actual MegaMek C3 link
+     * between them (powering on and setting {@code setC3Master} on both sides as needed, then
+     * pushing the update to the server via {@code sendUpdateEntity}).
+     * <p>
+     * Because entities are added to the MegaMek game asynchronously (see the {@code sendAddEntity}
+     * calls in {@link #run()}), this method busy-waits in a loop — sleeping 10ms between
+     * attempts, with no timeout/retry limit — re-scanning {@code mmClient.getGame().getEntitiesVector()}
+     * until both the slave and master entities are found by external id. Any exception while
+     * scanning is logged and the loop simply retries (it does not exit early on error).
      *
+     * @param army    the campaign army whose C3 network mapping (slave id -> master id) is being applied
+     * @param slaveID external id of the C3 slave unit
+     * @param masterID external id of the C3 master unit
      * @author jtighe
      */
     public void linkMegaMekC3Units(CArmy army, Integer slaveID, Integer masterID) {
@@ -929,6 +1064,14 @@ public class ClientThread extends Thread implements CloseClientListener {
         }
     }
 
+    /**
+     * Case-insensitive string comparator used to sort board names in {@link #scanForBoards(int, int, String)}.
+     * The raw type ({@code Object} rather than {@code String}) means a {@link ClassCastException}
+     * will be thrown at comparison time if used against a collection containing non-{@code String}
+     * elements.
+     *
+     * @return a comparator that lower-cases both operands before comparing them
+     */
     public static Comparator<? super Object> stringComparator() {
         return (Comparator<Object>) (o1, o2) -> {
             String s1 = ((String) o1).toLowerCase();
@@ -940,6 +1083,18 @@ public class ClientThread extends Thread implements CloseClientListener {
     /*
      * from megamek.mmClient.CloseClientListener clientClosed() Thanks to MM for
      * adding the listener. And to MMNet for the poorly documented code change.
+     */
+    /**
+     * Callback invoked by the embedded MegaMek {@link Client} (registered as a
+     * {@link CloseClientListener} in {@link #run()}) when the MegaMek connection/game closes —
+     * i.e. when the battle ends or the connection drops. Saves MegaMek's client preferences, kills
+     * and clears any running {@link #bot}, explicitly drops the reference to {@link #mmClient} (the
+     * comment on that line notes it wasn't reliably being garbage collected otherwise), notifies the
+     * MekWars campaign client that this game has closed via {@link IClient#closingGame(String)}, and
+     * then explicitly requests a GC. Note {@code mmClient.die()} itself is commented out here — only
+     * the local reference is cleared, the client object's own shutdown is presumably handled
+     * elsewhere (or relies on this listener callback having originated from that shutdown already
+     * happening).
      */
     @Override
     public void clientClosed() {

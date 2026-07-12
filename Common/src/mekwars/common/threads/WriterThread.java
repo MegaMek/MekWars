@@ -38,21 +38,44 @@ import java.util.Vector;
 import megamek.logging.MMLogger;
 
 /**
- * Write the messages in the queue to the socket's output stream
+ * Background thread that owns the outgoing side of a socket connection: callers enqueue outbound
+ * protocol message strings via {@link #queueMessage(String)}, and this thread drains the queue and
+ * writes each message as a line to the socket's {@link PrintStream}.
+ * <p>
+ * This is the write half of the client/server connection; the corresponding read half is
+ * {@link ReaderThread}. Producers (e.g. connection handler code building protocol commands) never
+ * write to the socket directly — they only ever call {@link #queueMessage(String)}, keeping all
+ * actual socket writes on this single thread.
  */
 public class WriterThread extends Thread {
     private final static MMLogger LOGGER = MMLogger.create(WriterThread.class);
 
+    /** FIFO queue of not-yet-sent message strings; access is synchronized via this thread's monitor. */
     private final Vector<String> outgoingMessages;
+    /** The socket's output stream that messages are ultimately written (and flushed) to. */
     private final PrintStream _out;
+    /** Checked each loop iteration in {@link #run()}; cleared by {@link #pleaseStop()} to end the thread. */
     private boolean keepGoing = true;
 
+    /**
+     * @param out the print stream wrapping the socket's output stream that queued messages will be
+     *            written to
+     */
     public WriterThread(PrintStream out) {
         super("ConnectionHandler$WriterThread");
         _out = out;
         outgoingMessages = new Vector<>(1, 1);
     }
 
+    /**
+     * Main write loop: flushes any currently queued messages to the socket, then waits (via
+     * {@link Object#wait(long)} on this thread's own monitor, since the method is
+     * {@code synchronized}) for up to 1 second before checking again. {@link #queueMessage(String)}
+     * calls {@code notify()} to wake this loop early as soon as a new message is enqueued, so the
+     * 1-second wait is just a safety-net poll interval rather than the only trigger. Runs until
+     * {@link #pleaseStop()} clears {@link #keepGoing}; an {@link InterruptedException} during the
+     * wait is logged and ends the thread (it is not otherwise retried).
+     */
     @Override
     public synchronized void run() {
         try {
@@ -67,6 +90,12 @@ public class WriterThread extends Thread {
         }
     }
 
+    /**
+     * Dequeues and writes every currently pending message (in FIFO order) to {@link #_out}, then
+     * flushes the stream once at the end. Not synchronized itself — it is only ever invoked from
+     * within the {@code synchronized} {@link #run()} method, so removals from {@link #outgoingMessages}
+     * are safe with respect to {@link #queueMessage(String)} (which is separately synchronized).
+     */
     public void flushOutputQueue() {
         while (!outgoingMessages.isEmpty()) {
             String message = outgoingMessages.elementAt(0);
@@ -78,12 +107,22 @@ public class WriterThread extends Thread {
     }
 
 
+    /**
+     * Appends a message to the outgoing queue and wakes up the writer loop (via {@code notify()})
+     * so it doesn't have to wait out the rest of its poll interval before sending it.
+     *
+     * @param s the raw protocol message line to send
+     */
     synchronized public void queueMessage(String s) {
         outgoingMessages.addElement(s);
         // notify the writer thread that there is at least one new message
         notify();
     }
 
+    /**
+     * Signals the write loop in {@link #run()} to exit after its current wait/flush cycle. Any
+     * messages queued after this call but before the thread actually exits may not be sent.
+     */
     public void pleaseStop() {
         keepGoing = false;
     }

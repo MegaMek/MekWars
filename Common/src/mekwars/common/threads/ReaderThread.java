@@ -59,21 +59,46 @@ import mekwars.common.campaign.clientutils.protocol.IConnectionHandler;
 import mekwars.common.campaign.clientutils.protocol.IConnectionListener;
 
 /**
- * Constantly read from the socket's input stream
+ * Background thread that continuously reads line-oriented protocol messages from a socket's
+ * {@link InputStream} and hands each one off to an {@link IConnectionListener} (typically the
+ * client-side or server-side connection handler that interprets the MekWars text protocol).
+ * <p>
+ * This is the read half of the client/server connection; the corresponding write half is
+ * {@link WriterThread}. Both threads are normally owned by an {@link IConnectionHandler}, which is
+ * notified (via {@link IConnectionHandler#shutdown(boolean)}) if the read loop dies unexpectedly.
+ * <p>
+ * Messages are read one line at a time (delimited by a raw {@code '\n'} byte, not a full line
+ * terminator abstraction) and decoded as UTF-8. Messages that start with the {@link IClient#DEFLATED}
+ * marker are treated specially: they carry a zlib/deflate-compressed payload (used to cut down
+ * bandwidth for large messages) which is decompressed via {@link #inflate(String)} and delivered to
+ * the listener as one or more decompressed lines instead of the raw compressed line itself.
  */
 public class ReaderThread extends Thread {
     private final static MMLogger LOGGER = MMLogger.create(ReaderThread.class);
 
     private static final int NL = 10; // "\n" in ASCII and UTF8
+    /** Handler notified with {@code shutdown(true)} if the read loop terminates due to an I/O error. */
     private final IConnectionHandler _connectionHandler;
+    /** Reused zlib inflater for decompressing {@link IClient#DEFLATED}-prefixed messages. */
     private final Inflater inflater = new Inflater();
+    /** Scratch buffer used by {@link #readLine()} to accumulate bytes of the current line; reused across reads. */
     private final byte[] rlBuffer = new byte[256 * 256];
+    /** Flag checked each loop iteration in {@link #run()}; set to false by {@link #pleaseStop()} to end the thread gracefully. */
     private boolean keepGoing = true;
 
     //private Checksum checksum = new CRC32();
     private InputStream _sis;
+    /** Recipient of every decoded (and, where applicable, decompressed) incoming message line. */
     private IConnectionListener _listener;
 
+    /**
+     * Creates the reader thread and immediately obtains the socket's input stream (any failure to
+     * do so is logged, leaving {@link #_sis} {@code null} and {@link #run()} likely to throw a
+     * {@link NullPointerException} on first read — the constructor does not fail fast).
+     *
+     * @param handler connection handler to notify if the read loop exits due to an I/O error
+     * @param s       the connected socket to read from
+     */
     public ReaderThread(IConnectionHandler handler, Socket s) {
         super("ConnectionHandler$ReaderThread");
 
@@ -86,10 +111,27 @@ public class ReaderThread extends Thread {
         _connectionHandler = handler;
     }
 
+    /**
+     * Sets (or replaces) the listener that receives incoming messages. Until this is called, lines
+     * read from the socket are simply logged at debug level and discarded (see {@link #run()}).
+     *
+     * @param listener callback to receive each incoming protocol message line
+     */
     public void setListener(IConnectionListener listener) {
         _listener = listener;
     }
 
+    /**
+     * Main read loop: repeatedly blocks in {@link #readLine()} until a full line is available,
+     * then either decompresses it (if it is a {@link IClient#DEFLATED}-prefixed message) and
+     * forwards the decompressed lines to the listener, or forwards the raw line directly.
+     * Continues until {@link #keepGoing} is cleared via {@link #pleaseStop()} or an
+     * {@link IOException} occurs (e.g. the peer closed the socket). On an unexpected IOException
+     * while still supposed to be running, this calls {@link #pleaseStop()}, logs the error, and
+     * tells the connection handler to {@link IConnectionHandler#shutdown(boolean) shutdown(true)}.
+     * If the socket was closed deliberately via {@link #pleaseStop()} first, the IOException (if
+     * any) from the in-flight read is swallowed without notifying the handler.
+     */
     @Override
     public void run() {
         try {
@@ -130,6 +172,19 @@ public class ReaderThread extends Thread {
         }
     }
 
+    /**
+     * Blocks reading single bytes from the socket's input stream into {@link #rlBuffer} until a
+     * {@code '\n'} ({@link #NL}) byte is encountered, then returns everything read before it
+     * (excluding the newline) decoded as UTF-8.
+     * <p>
+     * Note: {@link #rlBuffer} is sized at 256*256 (64KB) and there is no bounds check on the
+     * accumulating index {@code n} — a line longer than that (e.g. a malformed or malicious
+     * message without a timely newline) would overflow the buffer with an
+     * {@link ArrayIndexOutOfBoundsException}.
+     *
+     * @return the next newline-delimited line from the stream, decoded as UTF-8
+     * @throws IOException if the underlying socket read fails or the stream is closed
+     */
     private String readLine() throws IOException {
         int n = 0;
         int i;
@@ -160,6 +215,26 @@ public class ReaderThread extends Thread {
         return args;
     }
 
+    /**
+     * Handles a {@link IClient#DEFLATED}-prefixed message: parses the compressed payload size (and
+     * optional uncompressed size hint) out of the message header, reads exactly that many
+     * compressed bytes directly from the socket (blocking/looping until all are received), inflates
+     * them with zlib, and delivers each resulting decompressed line to {@link #_listener} as if it
+     * had been received normally.
+     * <p>
+     * An {@link megamek.common.util.Inflater} instance is reused (via {@link #inflater}, reset each
+     * call) rather than wrapping the stream in an {@code InflaterInputStream}, specifically so the
+     * inflate step doesn't consume/buffer extra bytes from {@link #_sis} beyond the exact compressed
+     * payload, which would desync the stream position used by subsequent {@link #readLine()} calls.
+     * <p>
+     * The uncompressed buffer defaults to 29999 bytes if the message doesn't specify a larger size;
+     * if the actual decompressed content exceeds that (or the declared size), data would be
+     * truncated or an exception thrown by {@link Inflater#inflate(byte[])}.
+     *
+     * @param command the raw {@link IClient#DEFLATED}-prefixed line (used only to extract the size
+     *                arguments; the compressed bytes themselves are read separately from the stream)
+     * @throws Exception if the header cannot be parsed or inflation fails
+     */
     private void inflate(String command) throws Exception {
         String[] args = decompose(command);
         int size = Integer.parseInt(args[1]);
@@ -194,6 +269,12 @@ public class ReaderThread extends Thread {
         }
     }
 
+    /**
+     * Signals the read loop in {@link #run()} to stop after its current blocking read completes (or
+     * immediately if it's between reads). Does not interrupt an in-progress blocking socket read —
+     * the thread only actually exits once {@link #readLine()} returns or throws, so closing the
+     * underlying socket separately is typically required to unblock a thread stuck reading.
+     */
     public void pleaseStop() {
         keepGoing = false;
     }

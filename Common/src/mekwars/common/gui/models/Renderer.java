@@ -53,17 +53,53 @@ import mekwars.common.campaign.CUnit;
 import mekwars.common.campaign.clientutils.protocol.IClient;
 import mekwars.common.gui.MekInfo;
 
+/**
+ * Cell renderer for the HQ hangar/army grid backed by {@link MekTableModel}. Extends
+ * {@link MekInfo} (a component capable of showing a unit's portrait image and rich tooltip) rather
+ * than the more common {@link javax.swing.table.DefaultTableCellRenderer}, and renders itself
+ * directly as the returned component.
+ * <p>
+ * Per cell, this renderer:
+ * <ul>
+ *   <li>for column 0 on an army row, hides the unit image and shows the army's skill summary as a
+ *       tooltip, highlighting locked armies in yellow;</li>
+ *   <li>for column 0 on a hangar row, shades the cell a pale purple "hangar header" color;</li>
+ *   <li>for unit cells, builds an extensive HTML tooltip (C3 network role, tech cost when
+ *       non-faction units cost more, tech base, and — when the "EXPANDED_UNIT_TOOLTIP" config is
+ *       enabled — weight/armor/movement/heat stats, weapon list, and quirks), and picks a
+ *       background color reflecting the unit's state: green for units for sale, orange for
+ *       unmaintained units, purple for locked units, and otherwise (when the client is not using
+ *       icon-based status indicators) a cascade of checks for vacant pilot, in-repair, queued
+ *       repair orders, critical damage, armor damage, and missing ammo, each with its own color;
+ *       failing all of those, cells fall back to a weight-class-based background gradient chosen
+ *       by the "HQ_COLOR_SCHEME" config ("tan", "grey", or the default "classic" palette).</li>
+ * </ul>
+ * <p>
+ * Note: the weight-class gradient switch (tan/grey/classic) appears twice in
+ * {@link #getTableCellRendererComponent}: once inside the "not using status icons" branch and once
+ * in the parallel branch used when status icons ARE enabled. The two copies are effectively
+ * identical, which is a maintenance duplication worth consolidating in a future cleanup pass.
+ */
 public class Renderer extends MekInfo implements TableCellRenderer, Serializable {
     private static final MMLogger LOGGER = MMLogger.create(Renderer.class);
     @Serial
     private static final long serialVersionUID = -300922977373422309L;
 
+    /** The model being rendered; used to resolve which {@link CArmy}/unit occupies each cell. */
     private final MekTableModel mekTableModel;
+    /** Scratch field holding the last computed flat hangar-slot index (see the hangar branch of
+     *  {@link #getTableCellRendererComponent}); not read elsewhere in this class beyond that use. */
     int mekNum;
 
+    /** Loads unit silhouette/portrait mappings used by the inherited {@link MekInfo} image display. */
     MekTileset mekTileset = new MekTileset(new File("data/images/units/"));
+    /** Base neutral-gray background color used as the anchor for weight-class color gradients. */
     Color dcolor = new Color(220, 220, 220);
 
+    /**
+     * @param mekTableModel the model this renderer will draw cells for
+     * @param client        client used to resolve unit/tileset image data (passed up to {@link MekInfo})
+     */
     public Renderer(MekTableModel mekTableModel, IClient client) {
         super(client);
         this.mekTableModel = mekTableModel;
@@ -75,6 +111,23 @@ public class Renderer extends MekInfo implements TableCellRenderer, Serializable
         }
     }
 
+    /**
+     * Renders one HQ grid cell. See the class-level Javadoc for the full color/tooltip decision
+     * logic; this method resolves the owning army via {@link MekTableModel#getArmyAt(int)} and the
+     * cell's unit (if any) via {@link MekTableModel#getMekAt(int, int)}, then applies tooltip text
+     * and background color accordingly.
+     * <p>
+     * Possible bug: in the hangar branch (reached when {@code armyAt == null}, i.e. this cell is
+     * past all army rows), {@code mekNum} is computed as
+     * {@code (row - mekTableModel.getRowsForArmies()) * mekTableModel.getColumnCount() - 1 + column}
+     * — using the model's full {@code getColumnCount()} (which includes the leading army/label
+     * column). This differs from the equivalent hangar-index calculation in
+     * {@link MekTableModel#getMekAt(int, int)}, which instead multiplies by
+     * {@code getColumnCount() - 1}. Because the two formulas disagree by a factor tied to
+     * {@code getColumnCount()}, the "blank out text past the last real hangar slot" check that
+     * relies on {@code mekNum} here can diverge from the row/column mapping the model itself uses,
+     * potentially blanking the wrong cells as the hangar grows across multiple rows.
+     */
     public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus,
           int row, int column) {
         Component component = this;
@@ -86,6 +139,8 @@ public class Renderer extends MekInfo implements TableCellRenderer, Serializable
         CArmy armyAt = mekTableModel.getArmyAt(row);
 
         if (armyAt != null) {
+            // Army label column: show the army's skill summary as a tooltip instead of a unit
+            // image, and flag locked armies with a yellow-ish highlight.
             if (column == 0) {
                 setImageVisible(false);
                 mekTableModel.chqPanel.setToolTipText(armyAt.getSkillInfoForDisplay());
@@ -104,6 +159,9 @@ public class Renderer extends MekInfo implements TableCellRenderer, Serializable
         CUnit cm = mekTableModel.getMekAt(row, column);
         if (cm != null) {
             int inNumberOfArmies = mekTableModel.chqPanel.getPlayer().getAmountOfTimesUnitExistsInArmies(cm.getId());
+            // C3Text accumulates the HTML tooltip body for this unit cell: C3 network role first,
+            // then (depending on config) tech-cost info, tech base, targeting system, support-unit
+            // flag, and the optional "expanded" block (general stats/weapons/quirks) appended below.
             StringBuilder C3Text = new StringBuilder();
             String description;
 
@@ -147,6 +205,10 @@ public class Renderer extends MekInfo implements TableCellRenderer, Serializable
 
                 }
             }
+            // When the player's house charges extra techs for units outside their faction, the
+            // tooltip switches from showing raw C3 text to showing a "Techs required" line — the
+            // C3 text built above is preserved as a prefix (via techCostString) only if it was
+            // non-empty, then C3Text is entirely replaced with this new content.
             if (mekTableModel.chqPanel.getClient().getPlayer().getMyHouse().getNonFactionUnitsCostMore()) {
                 String techCostString = "";
 
@@ -189,6 +251,10 @@ public class Renderer extends MekInfo implements TableCellRenderer, Serializable
             }
 
             //@salient EXPANDEDUNITTOOLTIP
+            // When enabled, appends a much richer tooltip section: a purple "[General]" block
+            // (weight, armor, movement including MASC/jump, heat capacity, arm-flip capability),
+            // a blue "[Weapons]" block listing each weapon and its mounting location, and
+            // (if quirks are enabled server-side) a teal "[Quirks]" block listing the unit's quirks.
             if (MathUtility.parseBoolean(mekTableModel.chqPanel.getClient().getConfig().getParam(
                   "EXPANDED_UNIT_TOOLTIP"), false)) {
                 C3Text.append("<font color=\"purple\">");
@@ -275,6 +341,14 @@ public class Renderer extends MekInfo implements TableCellRenderer, Serializable
             setUnit(cm, armyAt);
             setImageVisible(true);
 
+            // Background color priority, highest first: for-sale (green) > unmaintained (orange) >
+            // locked (purple). If none apply and the client is NOT using icon-based status
+            // indicators, a further cascade checks vacant pilot / in-repair / queued repair orders /
+            // critical damage / armor damage / missing ammo, each with a distinct color, before
+            // falling back to the weight-class gradient (tan/grey/classic scheme). If the client IS
+            // using icon-based status indicators, those per-condition checks are skipped entirely
+            // (presumably because an icon elsewhere already conveys them) and cells go straight to
+            // the "in multiple armies" highlight / weight-class gradient fallback below.
             if (cm.getStatus() == mekwars.common.Unit.STATUS_FOR_SALE) {
                 // a mild green for units that are on sale
                 component.setBackground(new java.awt.Color(50, 170, 35));
@@ -475,6 +549,13 @@ public class Renderer extends MekInfo implements TableCellRenderer, Serializable
                 }
             }// end else(should fill by weight)
         } else {
+            // cm == null: this cell is in the hangar section but has no unit assigned to it (either
+            // an empty trailing slot, or the "Free Bays"/"Idle Techs" summary cell already rendered
+            // as text by MekTableModel.getValueAt). Blank out any leftover text once we're past the
+            // last slot that could plausibly hold a hangar unit or the free-bays summary.
+            // See the class-level Javadoc note: this mekNum formula uses getColumnCount() (not
+            // getColumnCount() - 1 as MekTableModel.getMekAt/getRowsForHangar do), so it does not
+            // necessarily line up with the model's own hangar-slot numbering.
             setImageVisible(false);
             mekNum = (((row - mekTableModel.getRowsForArmies()) * mekTableModel.getColumnCount()) - 1) + column;
             int freebays = mekTableModel.chqPanel.getPlayer().getFreeBays();
@@ -482,7 +563,7 @@ public class Renderer extends MekInfo implements TableCellRenderer, Serializable
             if (freebays < 0) {
                 freebays = 0;
             }
-            
+
             if (mekNum > (freebays + mekTableModel.chqPanel.getPlayer().getHangar().size())) {
                 setText("");
             }

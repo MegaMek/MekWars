@@ -43,22 +43,42 @@ import mekwars.common.campaign.clientutils.protocol.IClient;
 import org.jspecify.annotations.NonNull;
 
 /**
+ * Table model backing the black-market unit auction JTable. Each row represents one
+ * {@link CBMUnit} (a unit consigned to the campaign's black market, whether by another player or
+ * an NPC seller) that can be bid on; columns show the unit's identity, stock battle value, minimum
+ * bid, remaining auction ticks, and the current player's own bid (if any).
+ * <p>
+ * When {@code hiddenUnits} is set (a "blind auction" mode), the unit's real identity and battle
+ * value are withheld from the player and a generic {@link CBMUnit#getHiddenUnitDescription()} is
+ * shown instead — see {@link #initColumnSizes(JTable)} and {@link #getValueAt(int, int)}.
  *
  * @author Steve Hawkins
  */
 public class BlackMarketModel extends AbstractTableModel {
 
+    /** Column index: unit chassis/model name (or hidden-unit placeholder text). */
     public final static int MECH = 0;
+    /** Column index: the unit's stock battle value. */
     public final static int BV = 1;
+    /** Column index: minimum acceptable bid. */
     public final static int MIN = 2;
+    /** Column index: number of auction "ticks" (time units) remaining before the auction closes. */
     public final static int TICKS = 3;
+    /** Column index: the current player's own bid on this unit, if one has been placed. */
     public final static int BID = 4;
+    /**
+     * Pseudo-column used internally to look up a row's underlying {@link CBMUnit} by auction ID
+     * (e.g. from the {@link Renderer}). Not a real table column: {@link #columnNames} only has 5
+     * entries, so {@link #getColumnCount()} never exposes this index to the JTable itself, but
+     * {@link #getValueAt(int, int)} still handles it when called directly.
+     */
     public final static int AUCTION_ID = 5; //not shown in table
     /**
      *
      */
     @Serial
     private static final long serialVersionUID = -783116408720137035L;
+    /** Header labels; note there is no header for {@link #AUCTION_ID} since it isn't a real column. */
     final String[] columnNames = {
           "Unit",
           "Stock BV",
@@ -66,6 +86,10 @@ public class BlackMarketModel extends AbstractTableModel {
           "Ticks",
           "Your Bid",
           };
+    /**
+     * Dummy "wide" strings used only to measure preferred column widths in
+     * {@link #initColumnSizes(JTable)}; never displayed.
+     */
     final String[] longValues = {
           "XXXXXX-XXXX-XXXXXX",
           "XXXXXXXXX",
@@ -73,14 +97,25 @@ public class BlackMarketModel extends AbstractTableModel {
           "XXXXXXXXX",
           "XXXXXXXXX",
           };
+    /** Client connection used to reach the campaign and the current player's data. */
     public IClient client;
 
+    /** Live map of all black-market units, keyed by auction ID; sourced from the campaign. */
     public TreeMap<Integer, CBMUnit> meks;
     //public TreeMap bids;
+    /** Row-order snapshot of {@link #meks}'s values. Despite the name, not actually kept sorted
+     *  here — see comment below. */
     public List<CBMUnit> sortedMeks; //not really though, sort is handled elsewhere...
+    /** The active campaign, used to reach the black-market unit map. */
     CCampaign theCampaign;
+    /** When true, unit identity/BV are hidden from the viewing player (blind auction mode). */
     private boolean hiddenUnits = false;
 
+    /**
+     * @param client      client connection providing access to the campaign and player
+     * @param hideBMUnits if true, unit identity and battle value are withheld from display
+     *                    (blind-auction mode)
+     */
     public BlackMarketModel(IClient client, boolean hideBMUnits) {
         this.client = client;
         theCampaign = this.client.getCampaign();
@@ -91,12 +126,26 @@ public class BlackMarketModel extends AbstractTableModel {
         this.sortedMeks = new ArrayList<>(this.meks.values());
     }
 
+    /**
+     * Re-snapshots {@link #sortedMeks} from the live {@link #meks} map and notifies listeners that
+     * the entire table changed.
+     */
     public void refreshModel() {
         //do a resort
         this.sortedMeks = new ArrayList<>(this.meks.values());
         this.fireTableDataChanged();
     }
 
+    /**
+     * Sizes each column to fit the wider of its header and a representative dummy value
+     * ({@link #longValues}).
+     * <p>
+     * Hack: when {@code hiddenUnits} is active, the {@link #BV} column is additionally collapsed to
+     * zero width (min/max/preferred all 0) to effectively hide it, since {@code removeColumn()} was
+     * found to throw errors when attempted instead (see inline comment).
+     *
+     * @param table the JTable this model is installed on
+     */
     public void initColumnSizes(JTable table) {
         TableColumn column;
         Component comp;
@@ -130,6 +179,21 @@ public class BlackMarketModel extends AbstractTableModel {
         return this.columnNames.length;
     }
 
+    /**
+     * Returns the display value for a given cell, or {@code ""} for out-of-range rows. Behavior per
+     * column:
+     * <ul>
+     *   <li>{@link #MECH} — hidden-unit placeholder text or the real model name, depending on
+     *       {@code hiddenUnits}</li>
+     *   <li>{@link #BV} — a single space when hidden, otherwise the battle value is recalculated
+     *       from the embedded entity on every call (not cached)</li>
+     *   <li>{@link #MIN}, {@link #TICKS} — passed straight through</li>
+     *   <li>{@link #BID} — {@code null} (not zero) when the player has no active bid, so the cell
+     *       renders blank rather than "0"</li>
+     *   <li>{@link #AUCTION_ID} — the raw auction ID; only reachable when called directly (not
+     *       through the JTable, since it isn't a real column — see {@link #AUCTION_ID})</li>
+     * </ul>
+     */
     public Object getValueAt(int row, int col) {
         if (row < 0) {
             return "";
@@ -172,12 +236,23 @@ public class BlackMarketModel extends AbstractTableModel {
         return (columnNames[col]);
     }
 
+    /** @return a fresh cell renderer bound to this model's live data. */
     public Renderer getRenderer() {
         return new Renderer();
     }
 
     /*
      * Rendered cannot be static because it uses parent data structs.
+     */
+    /**
+     * Cell renderer for the black-market table. Builds a tooltip describing the unit (auction ID,
+     * chassis/model, C3 equipment) and colors the row: light gray if the viewing player is the
+     * seller of this lot, green if the player currently has an active bid on it, otherwise white.
+     * Selected rows keep the look-and-feel's selection colors instead.
+     * <p>
+     * A brand new {@link JLabel} is created on every render call rather than reusing/configuring
+     * the {@code super}-provided component (see inline comment acknowledging this should be
+     * improved).
      */
     public class Renderer extends DefaultTableCellRenderer {
 
@@ -187,6 +262,13 @@ public class BlackMarketModel extends AbstractTableModel {
         @Serial
         private static final long serialVersionUID = 5506902358006897558L;
 
+        /**
+         * Note the bounds check uses {@code meks.size()} (the full live map) rather than
+         * {@code sortedMeks.size()} (the row-order snapshot actually indexed by {@code row}); if the
+         * two ever differ in size this guard does not perfectly match the data actually rendered,
+         * though {@link #getValueAt(int, int)} still guards against an out-of-range {@code row}
+         * itself.
+         */
         @Override
         public Component getTableCellRendererComponent(JTable table, Object value,
               boolean isSelected, boolean hasFocus, int row, int column) {
@@ -209,6 +291,9 @@ public class BlackMarketModel extends AbstractTableModel {
 
             label.setToolTipText("");
 
+            // Looks up the row's unit by auction ID via the AUCTION_ID pseudo-column, bypassing
+            // the JTable's column model entirely (AUCTION_ID has no header and is out of range
+            // of getColumnCount()).
             CBMUnit mm = meks.get(table.getModel().getValueAt(row, BlackMarketModel.AUCTION_ID));
             String description = getDescription(mm);
             label.setToolTipText(description);
@@ -229,6 +314,14 @@ public class BlackMarketModel extends AbstractTableModel {
             return label;
         }
 
+        /**
+         * Builds the HTML tooltip text for a black-market unit: auction ID, chassis/model, and any
+         * C3 equipment level. Returns an empty string when {@code hiddenUnits} is active, so blind
+         * auctions don't leak identity via the tooltip either.
+         *
+         * @param mm the unit to describe
+         * @return HTML tooltip markup, or {@code ""} if units are currently hidden
+         */
         private @NonNull String getDescription(CBMUnit mm) {
             String description = "";
             if (!hiddenUnits) {

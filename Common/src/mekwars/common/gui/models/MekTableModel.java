@@ -45,18 +45,40 @@ import mekwars.common.campaign.CArmy;
 import mekwars.common.campaign.CUnit;
 import mekwars.common.gui.panels.CHQPanel;
 
+/**
+ * Table model backing the unit/army grid in {@link CHQPanel} (the player's "HQ" hangar screen).
+ * This is not a conventional row-per-entity table: it lays out a fixed number of unit "slots" per
+ * row (driven by the {@code UNIT_AMOUNT} server config), with column 0 reserved for an army
+ * summary card and the remaining columns holding one unit each.
+ * <p>
+ * Rows are packed in blocks: each {@link CArmy} the player owns occupies
+ * {@code ceil(unitCount / unitColumns)} rows (minimum 1, so even an empty army still shows a row),
+ * one after another, followed by a block of "hangar" rows listing units not currently assigned to
+ * any army plus a trailing indicator cell showing free repair bays or idle technicians. Column 0
+ * shows the owning army's summary (name, BV, tonnage, locked/disabled state, unit-count limiter
+ * range) on only the first row of that army's block, and simply "Hangar" once past all army rows.
+ * Use {@link #getArmyAt(int)} and {@link #getMekAt(int, int)} to translate a grid cell back into
+ * the {@link CArmy}/{@link CUnit} it represents.
+ */
 public class MekTableModel extends AbstractTableModel {
     private static final MMLogger LOGGER = MMLogger.create(MekTableModel.class);
 
     @Serial
     private static final long serialVersionUID = -7918520064078379615L;
 
+    /** Owning HQ panel; supplies the client, player, armies, and hangar this model displays. */
     final CHQPanel chqPanel;
 
+    /** @param chqPanel the HQ panel this model backs */
     public MekTableModel(CHQPanel chqPanel) {
         this.chqPanel = chqPanel;
     }
 
+    /**
+     * @return true if {@code armyName} is one of the recognized "no real name set" placeholder
+     * values (blank, a single space, or case-insensitively "no name"/"none"/"clear"/"untitled"), in
+     * which case {@link #getValueAt(int, int)} skips displaying it as a custom army name.
+     */
     private static boolean isFakeName(String armyName) {
         boolean fakeName = false;
 
@@ -75,16 +97,42 @@ public class MekTableModel extends AbstractTableModel {
     }
 
     // should be based on the number of meks you can own
+    /** @return total grid rows: all army blocks ({@link #getRowsForArmies()}) followed by the
+     *  hangar block ({@link #getRowsForHangar()}). */
     public int getRowCount() {
         int hangarRows = getRowsForHangar();
         int armyRows = getRowsForArmies();
         return hangarRows + armyRows;
     }
 
+    /** @return number of unit columns (from the {@code UNIT_AMOUNT} server config) plus one for the
+     *  leading army/label column. */
     public int getColumnCount() {
         return Integer.parseInt(chqPanel.getClient().getConfigParam("UNIT_AMOUNT")) + 1;
     }
 
+    /**
+     * Builds the display text for a single grid cell.
+     * <p>
+     * For {@code col == 0}: while still within an army's row block, returns an HTML "army card"
+     * (army number, locked/disabled flags, custom name if not a {@link #isFakeName(String) fake
+     * name}, BV (and operations-rule-adjusted BV in parentheses when applicable), unit-count
+     * limiter range, and total tonnage) — but only on the first physical row of that army's block;
+     * subsequent rows of a multi-row army return {@code ""} for column 0. Once past all army rows,
+     * returns the literal string {@code "Hangar"}.
+     * <p>
+     * For other columns: resolves the {@link CUnit} at this cell via {@link #getMekAt(int, int)}.
+     * If there is no unit there but the row still belongs to an army, returns {@code " - "}
+     * (empty slot placeholder). If in the hangar section, the first empty slot immediately after
+     * the last real hangar unit instead shows a "Free Bays: N" or "Idle Techs: N" summary
+     * (depending on whether advanced repairs are enabled); all other empty hangar slots return
+     * {@code ""}. When a unit is present, the returned text is the unit's model name plus:
+     * one {@code *} per pilot skill listed in its skill string, a {@code |M|}/{@code |L|} suffix if
+     * the unit is a C3 master/linked member of its army's network, and a trailing {@code " Cmdr"}
+     * suffix if the unit is the army's commander and neither the "RIGHT_COMMANDER" nor
+     * "LEFT_COMMANDER" icon-based indicator config is enabled (i.e. this text marker is only a
+     * fallback for when no icon already conveys commander status).
+     */
     public String getValueAt(int row, int col) {
         if (row < 0) {
             return "";
@@ -237,6 +285,13 @@ public class MekTableModel extends AbstractTableModel {
     }
 
     // number of rows consumed by hangar
+    /**
+     * @return number of grid rows needed for the hangar block: the player's unassigned units plus
+     * at most one extra "slot" representing free repair bays / idle technicians. Regardless of how
+     * many free bays the player actually has, at most 1 is added here (that single cell later shows
+     * the "Free Bays"/"Idle Techs" count as text) and negative bay counts are floored to 0 so they
+     * never shrink the row count.
+     */
     public int getRowsForHangar() {
 
         /*
@@ -254,6 +309,8 @@ public class MekTableModel extends AbstractTableModel {
         return (int) Math.ceil((double) (freebays + chqPanel.getPlayer().getHangar().size()) / (getColumnCount() - 1));
     }
 
+    /** @return total grid rows consumed by all of the player's armies, summing
+     *  {@link #getRowsForArmy(CArmy)} over each. */
     public int getRowsForArmies() {
 
         int total = 0;
@@ -265,6 +322,8 @@ public class MekTableModel extends AbstractTableModel {
     }
 
     // number of rows consumed by given army
+    /** @return rows needed to lay out {@code army}'s units at {@code getColumnCount() - 1} units
+     *  per row, always at least 1 (so an empty army still occupies a labeled row). */
     public int getRowsForArmy(CArmy army) {
         int toReturn = (int) Math.ceil((double) army.getAmountOfUnits() / (double) (getColumnCount() - 1));
         return Math.max(toReturn, 1);
@@ -278,6 +337,14 @@ public class MekTableModel extends AbstractTableModel {
         return String.format("Unit %s", col);
     }
 
+    /**
+     * Walks the player's armies in order, subtracting each one's {@link #getRowsForArmy(CArmy)}
+     * from {@code row} until the remainder falls within an army's block.
+     *
+     * @param row grid row to resolve
+     * @return the {@link CArmy} occupying that row, or {@code null} if the row is past all army
+     * blocks (i.e. it's in the hangar section)
+     */
     public CArmy getArmyAt(int row) {
 
         for (CArmy currA : chqPanel.getPlayer().getArmies()) {
@@ -291,6 +358,15 @@ public class MekTableModel extends AbstractTableModel {
         return null;
     }
 
+    /**
+     * Computes the starting unit-index offset for the army block row that {@code row} falls into
+     * (the number of unit slots consumed by the earlier rows of that same army), for use by
+     * {@link #getMekAt(int, int)} when indexing into that army's unit vector.
+     *
+     * @param row grid row to resolve
+     * @return unit-index offset within the owning army's units, or {@code 0} if {@code row} is past
+     * all army blocks
+     */
     public int getOffset(int row) {
 
         for (CArmy currA : chqPanel.getPlayer().getArmies()) {
@@ -306,6 +382,14 @@ public class MekTableModel extends AbstractTableModel {
         return 0;
     }
 
+    /**
+     * Resolves the actual {@link CUnit} occupying a grid cell, or {@code null} if the cell is
+     * column 0 (army/label column, never a unit), empty, or out of range. For rows within an
+     * army's block, indexes into a snapshot {@link Vector} of that army's units at
+     * {@code getOffset(row) + col - 1}. For hangar rows, computes a flat hangar index
+     * ({@code (row - getRowsForArmies()) * (getColumnCount() - 1) + col - 1}) into the player's
+     * hangar list.
+     */
     public CUnit getMekAt(int row, int col) {
         if (row < 0) {
             return null;
@@ -332,10 +416,13 @@ public class MekTableModel extends AbstractTableModel {
         return null;
     }
 
+    /** Notifies listeners that the entire grid's contents may have changed (e.g. after a unit is
+     *  bought/sold/moved between army and hangar). */
     public void refreshModel() {
         fireTableDataChanged();
     }
 
+    /** @return a fresh {@link Renderer} bound to this model and the HQ panel's client. */
     public Renderer getRenderer() {
         return new Renderer(this, chqPanel.getClient());
     }

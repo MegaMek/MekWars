@@ -31,13 +31,47 @@ import mekwars.common.campaign.clientutils.protocol.IClient;
 import mekwars.common.campaign.pilot.skills.PilotSkill;
 import mekwars.common.util.UnitUtils;
 
+/**
+ * Client-side background thread that periodically processes a queue of pending unit repair "work
+ * orders" (one queue per tech skill level, see {@link UnitUtils#TECH_GREEN} through
+ * {@link UnitUtils#TECH_PILOT}), simulating techs/pilots working through repairs at a fixed cadence
+ * and sending completed repair attempts to the server via {@link IClient#sendChat(String)} (as a
+ * {@code /c repairunit#...} campaign command).
+ * <p>
+ * Work orders are queued by other client code via {@link #addWorkOrder(int, String)} (each order is
+ * a "#"-delimited string encoding unit id, critical location, slot, target roll, and retry count),
+ * and this thread wakes up roughly every {@link #averageRepairTime} milliseconds to pop and validate
+ * as many orders as there are available techs of that type, skipping/canceling orders that are no
+ * longer valid (e.g. the unit vanished, the critical/armor/internal is no longer damaged, or there
+ * are no techs of that type on the payroll).
+ * <p>
+ * This class does not itself talk to a socket; all its interaction with the server happens by
+ * calling out to {@link IClient}, whose own reader/writer threads own the actual connection. It has
+ * a near-identical counterpart, {@link SalvageManagmentThread}, which manages salvage (rather than
+ * repair) work orders using the same queue/threading pattern.
+ */
 public class RepairManagmentThread extends Thread {
     private final static MMLogger LOGGER = MMLogger.create(RepairManagmentThread.class);
+    /**
+     * One {@link ConcurrentLinkedQueue} per tech type, indexed by tech level constant (e.g.
+     * {@link UnitUtils#TECH_GREEN}..{@link UnitUtils#TECH_PILOT}); each queue holds pending
+     * "#"-delimited repair work order strings for that tech type.
+     */
     private final Vector<ConcurrentLinkedQueue<String>> workOrders = new Vector<>(5, 1);
     private final IClient client;
+    /** Milliseconds between processing passes; defaults to 1000ms unless overridden by the constructor. */
     private long averageRepairTime = 1000;
 
-    //Set the repair time and init the work order queue
+    /**
+     * Sets the repair-processing cadence (only if it's greater than 1000ms; otherwise the default
+     * of 1000ms is kept) and initializes one empty work order queue for every tech type from
+     * {@link UnitUtils#TECH_GREEN} through {@link UnitUtils#TECH_PILOT}.
+     *
+     * @param repairTime desired delay in milliseconds between processing passes (ignored, keeping
+     *                   the 1000ms default, if not greater than 1000)
+     * @param client     client used to look up the player's units/techs and to send repair commands
+     *                   to the server
+     */
     public RepairManagmentThread(Long repairTime, IClient client) {
         if (repairTime > 1000) {
             averageRepairTime = repairTime;
@@ -52,6 +86,16 @@ public class RepairManagmentThread extends Thread {
 
     }
 
+    /**
+     * Infinite loop (there is no stop/shutdown mechanism — this thread runs for the lifetime of the
+     * JVM) that waits {@link #averageRepairTime} milliseconds (via {@link Object#wait(long)} on this
+     * thread's own monitor, since the method is {@code synchronized}) and then processes all queued
+     * work orders via {@link #processWorkOrders()}. Note nothing ever calls {@code notify()} on this
+     * object, so the wait always times out naturally rather than being interrupted early. Any
+     * exception during a processing pass is caught, reported to the player via
+     * {@link IClient#systemMessage(String)}, and logged — the loop itself is never aborted by an
+     * error.
+     */
     @Override
     public synchronized void run() {
         while (true) {
@@ -66,6 +110,23 @@ public class RepairManagmentThread extends Thread {
         }
     }
 
+    /**
+     * Walks each tech-type queue in {@link #workOrders} (from {@link UnitUtils#TECH_GREEN} to
+     * {@link UnitUtils#TECH_PILOT}) and, for each one that has pending orders and at least one
+     * available tech of that type, pops orders off the queue and either cancels them (removing them
+     * outright) if they're no longer valid — e.g. the target unit can't be found, the pilot lacks
+     * the AsTech skill, the pilot is already busy repairing, or the targeted critical/armor/internal
+     * is no longer damaged — or, if still valid but not yet actionable (e.g. dependent repairs not
+     * finished, tech busy), leaves them in the queue for a future pass. Valid, actionable orders are
+     * completed by sending a {@code /c repairunit#...} chat command to the server and removing the
+     * order, decrementing the count of available techs for that pass so each tech only performs
+     * one repair per invocation.
+     * <p>
+     * The whole method holds a lock on {@link #workOrders} (a coarser lock than the per-queue
+     * {@link ConcurrentLinkedQueue}s themselves) and additionally synchronizes per-unit on the
+     * {@link CUnit} being repaired while validating/consuming its order, guarding against concurrent
+     * modification of that unit's state from elsewhere.
+     */
     private void processWorkOrders() {
         int availableTechs = 1;
 
@@ -217,10 +278,25 @@ public class RepairManagmentThread extends Thread {
         }
     }
 
+    /**
+     * Enqueues a new repair work order (a "#"-delimited string of unit id, location, slot, roll,
+     * and retries) onto the queue for the given tech type, to be picked up on a future
+     * {@link #processWorkOrders()} pass.
+     *
+     * @param techType tech level queue to add to (e.g. {@link UnitUtils#TECH_GREEN}..
+     *                 {@link UnitUtils#TECH_PILOT})
+     * @param workOrder the encoded work order string
+     */
     public void addWorkOrder(int techType, String workOrder) {
         workOrders.elementAt(techType).add(workOrder);
     }
 
+    /**
+     * Removes every queued repair work order (across all tech types) belonging to the given unit,
+     * matched by its id prefix (e.g. {@code "42#"}) at the start of the encoded work order string.
+     *
+     * @param unitID id of the unit whose pending work orders should all be discarded
+     */
     public void removeAllWorkOrders(int unitID) {
         String id = Integer.toString(unitID);
 
@@ -229,6 +305,15 @@ public class RepairManagmentThread extends Thread {
         }
     }
 
+    /**
+     * Removes a single specific work order (matched by an exact string equality) from the given
+     * tech type's queue, and notifies the player via {@link IClient#systemMessage(String)}. Note
+     * the confirmation message is sent whether or not a matching order was actually found and
+     * removed.
+     *
+     * @param techType tech level queue to remove from
+     * @param data     the exact encoded work order string to remove
+     */
     public void removeWorkOrder(int techType, String data) {
         Iterator<String> repairs = workOrders.elementAt(techType).iterator();
         while (repairs.hasNext()) {
@@ -243,6 +328,22 @@ public class RepairManagmentThread extends Thread {
         client.systemMessage(String.format("Removed work orders for for %s techs.", UnitUtils.techDescription(techType)));
     }
 
+    /**
+     * Checks whether a repair work order already exists for the given unit at the given location
+     * and slot, across all tech-type queues. Rear-armor slots are normalized (-7) before comparing
+     * against the stored location, mirroring the location adjustment used elsewhere for rear armor.
+     * <p>
+     * Note the match on unit id uses {@link String#indexOf(String)} {@code == 0} against the raw
+     * work order string, so this could in principle also match if a different unit id happened to
+     * be numerically prefixed by this one followed immediately by more digits before the "#" — in
+     * practice the encoding always has "#" right after the id so this isn't an issue, but it's a
+     * looser check than the {@code startsWith(id + "#")} used elsewhere in this class.
+     *
+     * @param Location target internal/armor location
+     * @param slot     target critical slot, or one of the armor/internal slot constants
+     * @param unitID   unit id to check
+     * @return true if a matching pending work order exists
+     */
     public boolean isQueued(int Location, int slot, int unitID) {
         for (int tech = UnitUtils.TECH_GREEN; tech <= UnitUtils.TECH_PILOT; tech++) {
             for (String repair : workOrders.elementAt(tech)) {
@@ -267,6 +368,10 @@ public class RepairManagmentThread extends Thread {
         return false;
     }
 
+    /**
+     * @param unitID unit id to check
+     * @return true if the given unit has at least one pending repair work order in any tech queue
+     */
     public boolean hasQueuedOrders(int unitID) {
         String id = Integer.toString(unitID);
 
@@ -281,6 +386,15 @@ public class RepairManagmentThread extends Thread {
         return false;
     }
 
+    /**
+     * Builds a human-readable (HTML-formatted) summary of every pending repair work order for the
+     * given unit, one line per order, each with a "click here to remove" link encoding the tech
+     * type and raw work order string for later removal (see {@link #removeWorkOrder(int, String)}).
+     *
+     * @param unitID unit id to summarize
+     * @return {@code "None."} if there are no pending orders for this unit, otherwise an HTML
+     *         fragment describing each pending order
+     */
     public String getRepairQueue(int unitID) {
         StringBuilder data = new StringBuilder("None.");
         CUnit unit = client.getPlayer().getUnit(unitID);
