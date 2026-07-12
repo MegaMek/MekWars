@@ -46,25 +46,42 @@ import mekwars.common.campaign.pilot.Pilot;
 import mekwars.common.util.TokenReader;
 
 /**
- * Client-side market unit. The market uses the filenames and other data from the CBMUnit to generate temporary CUnits
- * (to determine BV, etc.).
+ * Client-side market unit. Represents a single lot on the "Black Market" auction/trading system: a unit listed for
+ * sale (either by the server/faction or by another {@link CPlayer}) that this client can view and bid on. The market
+ * uses the filenames and other data from the CBMUnit to generate temporary CUnits (to determine BV, etc.).
  * <p>
  * In the past, this class extended CUnit. This is no longer the case. Using minimal data (not sending ammo settings and
  * complete unit strings) saves bandwidth. Instead, we build a temporary CUnit and store it w/i the BMUnit.
+ * <p>
+ * Instances are owned/collected by {@link CCampaign} in its Black Market map (see {@link CCampaign#setBMData},
+ * {@link CCampaign#addBMUnit}, {@link CCampaign#changeBMUnit}), keyed by auction ID. CBMUnit objects are immutable
+ * value snapshots aside from the sales-tick countdown: whenever the server sends updated listing data, the old
+ * CBMUnit is discarded and a new one built from the fresh string (see the class comment on the getters below).
  */
 public class CBMUnit {
 
     //IVARS
+    /** Whether this listing was put up for sale by another player (true) or is a server/faction-generated listing (false). */
     private final boolean soldByPlayer;
     private final String modelName;
     private final String fileName;
+    /** Unique ID of this auction listing (used as the key in {@link CCampaign}'s Black Market map). */
     private final int auctionID;
+    /** ID of the underlying unit being auctioned. */
     private final int unitID;
     private final int minBid;
+    /** The current player's own bid amount on this listing, if any. */
     private final int playersBid;
     private final String unitWeight;
     private final String unitType;
+    /**
+     * A locally-constructed, throwaway {@link CUnit} built from this listing's filename, used purely to compute
+     * derived display data (BV, weight class, etc.) via MegaMek's Entity APIs. Will be {@code null} whenever
+     * {@code hiddenUnits} was {@code true} at construction time (server config hides BM unit identities), so callers
+     * of {@link #getEmbeddedUnit()} must handle a null result.
+     */
     CUnit embeddedUnit = null;
+    /** Number of campaign ticks remaining before this auction closes; decremented externally via {@link #decrementSalesTicks()}. */
     private int salesTicksRemaining;
 
     //CONSTRUCTOR
@@ -74,6 +91,19 @@ public class CBMUnit {
      * method.
      * <p>
      * Be sure that the token read-in order always matches the market's write-out order.
+     * <p>
+     * When {@code hiddenUnits} is {@code false}, this also builds a throwaway {@link CUnit} from the listing's
+     * filename (to compute BV/weight/etc. for display) and assigns it a generic pilot using the current player's
+     * faction base gunnery/piloting skills ({@code getMyHouse().getBaseGunner()/getBasePilot()}); non-Mek,
+     * non-Vehicle units (e.g. infantry, ProtoMeks) get a hardcoded piloting skill of 5 since it is not meaningful for
+     * them. A matching MegaMek {@link Crew} is then attached to the embedded unit's Entity so that
+     * {@code calculateBV()} can be used downstream (see BlackMarketModel.java) instead of trusting a stale
+     * server-sent BV string, since the server's listed BV reflects the seller's actual pilot, not a generic one.
+     * When {@code hiddenUnits} is {@code true}, none of this happens and {@link #embeddedUnit} stays {@code null}.
+     *
+     * @param listingData a single unit's "*"-delimited listing fields, extracted from the larger market status string.
+     * @param campaign the client's campaign, used to look up the current player's faction base skills.
+     * @param hiddenUnits if true, suppresses building the embedded CUnit/Entity/Crew (server is configured to hide unit identities on the BM).
      */
     public CBMUnit(String listingData, CCampaign campaign, boolean hiddenUnits) {
 
@@ -138,46 +168,63 @@ public class CBMUnit {
      * BMUnits are completely replaced whenever data is refreshed. No need for setters or any way to change the
      * stored values.
      */
+    /** @return the unique ID of this auction listing. */
     public int getAuctionID() {
         return auctionID;
     }
 
+    /** @return the ID of the underlying unit being auctioned. */
     public int getUnitID() {
         return unitID;
     }
 
+    /** @return the unit's data/blueprint filename, used to build the embedded temporary CUnit. */
     public String getFileName() {
         return fileName;
     }
 
+    /** @return the display model name of the unit (e.g. chassis/model). */
     public String getModelName() {
         return modelName;
     }
 
+    /** @return the number of campaign ticks remaining before this auction closes. */
     public int getTicks() {
         return salesTicksRemaining;
     }
 
+    /** Decrements the remaining sales-tick countdown by one; called once per campaign tick from {@link CCampaign}. */
     public void decrementSalesTicks() {
         salesTicksRemaining--;
     }
 
+    /** @return the minimum bid required for this listing. */
     public int getMinBid() {
         return minBid;
     }
 
+    /**
+     * @return a human-readable weight/type description (e.g. "Heavy Mek") for use when unit identities are hidden
+     *       by server config and the full embedded unit isn't available.
+     */
     public String getHiddenUnitDescription() {
         return String.format("%s %s", unitWeight, unitType);
     }
 
+    /** @return true if this listing was put up for sale by another player rather than the server/faction. */
     public boolean playerIsSeller() {
         return soldByPlayer;
     }
 
+    /** @return the current player's own bid amount on this listing (0/undefined semantics defined by the server). */
     public int getBid() {
         return playersBid;
     }
 
+    /**
+     * @return the throwaway {@link CUnit} built from this listing's filename for BV/stat display purposes, or
+     *       {@code null} if this listing was constructed with {@code hiddenUnits == true}.
+     */
     public CUnit getEmbeddedUnit() {
         return embeddedUnit;
     }

@@ -49,29 +49,52 @@ import mekwars.common.util.StringUtils;
 
 /*
  * Class for User objects held in userlist
+ *
+ * Represents a connected account/identity in the client's global user list (the server's roster of everyone
+ * currently connected), as distinct from CPlayer, which is the local player's own in-campaign game state. A CUser
+ * tracks lightweight, display-oriented account/session info: display name, connection status, moderator/admin
+ * level, chosen house/faction and sub-faction (once they've joined a campaign), campaign exp/rating, and free-text
+ * "fluff" bio text — everything the userlist and comm panels need to render other users, but none of a player's
+ * actual units/army/personnel data (which lives on CPlayer instead, only for the locally-controlled account).
  */
 
 public class CUser implements Comparable<CUser>, IClientUser {
     private final static MMLogger LOGGER = MMLogger.create(CUser.class);
 
+    /** Display name / login handle of this user. */
     protected String name;
+    /** House abbreviation tag appended to the display name while logged in and affiliated with a house; derived from {@link House#getAbbreviation()}. */
     protected String addon;
+    /** Permission tier: &lt;100 = regular user, [100,200) = moderator, &gt;=200 = admin (see {@link #getShortInfo()}/{@link #getInfo(boolean)}). */
     protected int userLevel = 0;
+    /** Name of the House/faction this user currently fights for, or empty if unaffiliated. */
     protected String playerHouse;
+    /** Free-text biography/description the user has set for themselves; may contain HTML including images. */
     protected String fluff;
+    /** Campaign experience points. */
     protected int exp;
+    /** Campaign skill rating (e.g. ELO-style); a value below 1 is treated as "hidden by server" and not displayed. */
     protected float rating;
+    /** Current connection/session status; one of the {@code IClient.STATUS_*} constants. */
     protected int status;
+    /** House player color as an HTML color string. */
     protected String htmlColor;
+    /** House player color as an AWT {@link Color}, parsed from {@link #htmlColor} or the house's configured color. */
     protected Color rgbColor;
+    /** User's reported country (for display), or "unknown". */
     protected String country;
+    /** Derived convenience flag: true whenever {@link #status} corresponds to an actively-connected-to-a-campaign state. */
     protected boolean loggedIn = false;
+    /** Whether this user is currently flagged as a mercenary (rather than a fixed house regular). */
     protected boolean merc = false;
+    /** Whether this user is hidden from normal userlist displays. */
     protected boolean invisible = false;
+    /** Name of the sub-faction (within {@link #playerHouse}) this user belongs to, if any. */
     protected String subFaction = "";
 
     /**
-     * Empty CUser.
+     * Empty CUser. Fields are set to blank/zero/default values; {@link #status} starts at
+     * {@code IClient.STATUS_LOGGED_OUT}.
      */
     public CUser() {
         name = "";
@@ -90,6 +113,14 @@ public class CUser implements Comparable<CUser>, IClientUser {
 
     /**
      * New CUser w/ data. Called NU|MWDedHostInfo.toString()|NEW/NONE command.
+     * <p>
+     * Parses a "~"-delimited string containing, in order: name, HTML color, country, user level, and invisible
+     * flag. This only covers the "who's online" roster info; campaign-specific fields (exp, rating, house, etc.)
+     * are populated later, separately, via {@link #setCampaignData(IClient, String)}. Parsing failures are caught
+     * and logged, potentially leaving the object partially initialized (later fields left at their pre-parse
+     * defaults).
+     *
+     * @param data the "~"-delimited roster entry payload from the server.
      */
     public CUser(String data) {
 
@@ -116,78 +147,112 @@ public class CUser implements Comparable<CUser>, IClientUser {
         }
     }
 
+    /** @return the house-abbreviation tag shown next to this user's name while logged in and affiliated. */
     public String getAddon() {
         return addon;
     }
 
+    /** Sets the house-abbreviation display tag directly. */
     public void setAddon(String addon) {
         this.addon = addon;
     }
 
+    /** Sets the house player color as an HTML color string (does not update {@link #rgbColor}). */
     public void setHTMLColor(String color) {
         this.htmlColor = color;
     }
 
+    /** @return the house player color as an HTML color string. */
     public String getHtmlColor() {
         return htmlColor;
     }
 
+    /** @return the permission tier (regular/moderator/admin — see field doc). */
     public int getUserLevel() {
         return userLevel;
     }
 
+    /** Sets the permission tier. */
     public void setUserLevel(int level) {
         this.userLevel = level;
     }
 
+    /** @return the name of the House/faction this user fights for, or empty if unaffiliated. */
     public String getHouse() {
         return playerHouse;
     }
 
+    /** @return the user's free-text biography/description. */
     public String getFluff() {
         return this.fluff;
     }
 
+    /** Sets the user's free-text biography/description. */
     public void setFluff(String fluff) {
         this.fluff = fluff;
     }
 
+    /** @return the user's campaign experience points. */
     public int getExp() {
         return exp;
     }
 
+    /** Sets the user's campaign experience points. */
     public void setExp(int exp) {
         this.exp = exp;
     }
 
+    /** @return the user's campaign skill rating; below 1 means the server is hiding ratings. */
     public float getRating() {
         return rating;
     }
 
+    /** Sets the user's campaign skill rating. */
     public void setRating(float rating) {
         this.rating = rating;
     }
 
+    /** @return true if this user is hidden from normal userlist displays. */
     public boolean isInvisible() {
         return invisible;
     }
 
+    /** Sets whether this user is currently flagged as a mercenary. */
     public void setMercStatus(boolean merc) {
         this.merc = merc;
     }
 
+    /** @return true if this user is currently flagged as a mercenary. */
     public boolean isMerc() {
         return merc;
     }
 
+    /** @return the house player color as an AWT {@link Color}. */
     public Color getRGBColor() {
         return rgbColor;
     }
 
+    /** Sets the name of the sub-faction (within the current house) this user belongs to. */
     public void setSubFactionName(String subFaction) {
         this.subFaction = subFaction;
     }
 
+    /**
+     * Parses a "#"-delimited server payload of per-user campaign data: experience, rating, status (via
+     * {@link #setStatus(int)}, which also derives {@link #loggedIn}), optional fluff bio text, optional house name,
+     * optional mercenary flag, and optional sub-faction name — later fields are only read if present, allowing
+     * shorter payloads for less-detailed updates.
+     * <p>
+     * If fluff comes back as a single space or the literal string {@code "0"} (server placeholder values meaning
+     * "no fluff set"), it is normalized to an empty string. Once the house name is known, this looks up the
+     * matching {@link House} via {@code client.getData().getHouseByName(...)} to derive {@link #addon} (house
+     * abbreviation) and {@link #rgbColor} (house player color); if no matching house is found, {@link #rgbColor}
+     * falls back to black and {@link #addon} is left at its previous value (not reset). Any parsing exception is
+     * caught and logged, potentially leaving the object partially updated.
+     *
+     * @param client the client connection, used to resolve the user's house data.
+     * @param data the "#"-delimited campaign data payload.
+     */
     public void setCampaignData(IClient client, String data) {
         StringTokenizer stringTokenizer = new StringTokenizer(data, "#");
 
@@ -224,6 +289,7 @@ public class CUser implements Comparable<CUser>, IClientUser {
         }
     }
 
+    /** Resets all campaign-derived fields (house affiliation, fluff, exp, rating, color) back to their defaults, and status to logged-out. */
     public void clearCampaignData() {
         addon = "";
         playerHouse = "";
@@ -234,10 +300,22 @@ public class CUser implements Comparable<CUser>, IClientUser {
         rgbColor = java.awt.Color.black;
     }
 
+    /** @return the current connection/session status ({@code IClient.STATUS_*} constant). */
     public int getStatus() {
         return status;
     }
 
+    /**
+     * Sets the connection/session status and derives {@link #loggedIn} from it. Setting status to
+     * {@code STATUS_LOGGED_OUT} also wipes all campaign data via {@link #clearCampaignData()}.
+     * <p>
+     * Quirk: {@link #loggedIn} is only ever explicitly set to {@code true} for
+     * {@code STATUS_RESERVE}/{@code STATUS_ACTIVE}/{@code STATUS_FIGHTING}. Any other non-logged-out status value
+     * (e.g. an "away" or other intermediate state, if one exists) leaves {@link #loggedIn} at whatever it was
+     * before this call — it is not explicitly set to {@code false} in that branch.
+     *
+     * @param status the new status ({@code IClient.STATUS_*} constant) to apply.
+     */
     public void setStatus(int status) {
         this.status = status;
 
@@ -253,10 +331,18 @@ public class CUser implements Comparable<CUser>, IClientUser {
         }
     }
 
+    /** @return true if this user is currently considered logged in to a campaign (see {@link #setStatus(int)}). */
     public boolean isLoggedIn() {
         return loggedIn;
     }
 
+    /**
+     * Builds a compact HTML snippet suitable for a userlist row: name, optional "(Moderator)"/"(Admin)" suffix
+     * based on {@link #userLevel}, and optional "(country)" suffix (omitted when country is "unknown"). Does not
+     * include house affiliation, fluff, or exp/rating — see {@link #getInfo(boolean)} for the fuller version.
+     *
+     * @return an HTML string for compact display.
+     */
     public String getShortInfo() {
         StringBuilder info = new StringBuilder("<html><body>");
         info.append(getName());
@@ -280,22 +366,39 @@ public class CUser implements Comparable<CUser>, IClientUser {
         return info.toString();
     }
 
+    /** @return this user's display name / login handle. */
     public String getName() {
         return name;
     }
 
+    /** Sets this user's display name / login handle. */
     public void setName(String name) {
         this.name = name;
     }
 
+    /** @return this user's reported country, or "unknown". */
     public String getCountry() {
         return country;
     }
 
+    /** Sets this user's reported country. */
     public void setCountry(String country) {
         this.country = country;
     }
 
+    /**
+     * Builds a full HTML info block for this user (e.g. for a tooltip or profile popup): name, optional house-tag
+     * suffix (only while {@link #loggedIn}), moderator/admin suffix, country, and — only while logged in — exp,
+     * rating (only if &gt;= 1, i.e. not hidden), house affiliation and sub-faction, and fluff bio text.
+     * <p>
+     * When {@code removeImages} is true and the fluff text contains an {@code <img} tag, the region from that tag's
+     * start through its next {@code >} character is stripped out and replaced with the literal text
+     * "(img blocked)". Quirk: only the *first* {@code <img...>} tag found is removed this way — if the fluff
+     * contains multiple image tags, any additional ones after the first remain in the output untouched.
+     *
+     * @param removeImages if true, strip (the first) embedded image tag out of the fluff text before display.
+     * @return an HTML string with this user's full display info.
+     */
     public String getInfo(boolean removeImages) {
 
         StringBuilder info = new StringBuilder("<html><body>");
@@ -375,7 +478,11 @@ public class CUser implements Comparable<CUser>, IClientUser {
 
 
     /**
-     * Comparable, for PlayerNameDialog. Don't use elsewhere
+     * Comparable, for PlayerNameDialog. Don't use elsewhere. Orders users purely by case-sensitive name comparison
+     * (delegates to {@link String#compareTo(String)}); ignores every other field.
+     *
+     * @param rhs the other user to compare against.
+     * @return negative/zero/positive per {@link String#compareTo(String)} on the two users' names.
      */
     public int compareTo(@Nonnull CUser rhs) {
         return this.getName().compareTo(rhs.getName());

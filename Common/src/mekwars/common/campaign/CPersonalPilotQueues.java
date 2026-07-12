@@ -50,6 +50,12 @@ import mekwars.common.util.TokenReader;
  *       client-side holder of Personal Pilot Queue information. The queue is a collection of pilots, managed by a
  *       player, which may be moved between eligible units (restricted by type and weightclass). This client-side
  *       representation is necessary in order to draw menus and controls in the CHQPanel.
+ *       <p>
+ *       Conceptually this is a per-{@link CPlayer} "reserve bench" of {@link Pilot}s that aren't currently piloting
+ *       any {@link CUnit}: pilots wait here (organized by unit type and weight class) until the player assigns them
+ *       to a unit, or they're pulled in automatically to replace a casualty. It never holds a reference to the
+ *       owning player; it is simply a field the player/HQ data model owns and keeps in sync with the server via
+ *       {@link #fromString}, {@link #addPilot}, and {@link #removePilot}.
  */
 
 public class CPersonalPilotQueues {
@@ -59,14 +65,19 @@ public class CPersonalPilotQueues {
      * Don't need to synchronize on the client side. Two threads won't WRITE to
      * these, although multiple threads may read.
      */
+    /** Waiting BattleMek pilots, indexed by weight class ({@link Unit#LIGHT}..{@link Unit#ASSAULT}). */
     private final ArrayList<LinkedList<Pilot>> mekPilots = new ArrayList<>();
+    /** Waiting ProtoMek pilots, indexed by weight class. */
     private final ArrayList<LinkedList<Pilot>> protoPilots = new ArrayList<>();
+    /** Waiting Aerospace pilots, indexed by weight class. */
     private final ArrayList<LinkedList<Pilot>> aeroPilots = new ArrayList<>();
 
     // CONSTRUCTOR
 
     /**
      * Simple param-free constructor that creates pilot-holding LinkedLists, in multiple weight classes (L -> A).
+     * All three type-specific ArrayLists (mek/proto/aero) end up with one empty {@link LinkedList} per weight class
+     * from {@link Unit#LIGHT} through {@link Unit#ASSAULT}, so queue lookups never need a null-check.
      */
     public CPersonalPilotQueues() {
 
@@ -86,6 +97,12 @@ public class CPersonalPilotQueues {
      * new pilot is hired, etc.
      * <p>
      * Format: PL|AP2PPQ|Unit Type|Unit Weight Class|Pilot Data
+     * <p>
+     * Appends the parsed pilot to the tail (last position) of the queue matching the given unit type and weight
+     * class. Any exception while parsing/adding (malformed tokens, bad indices) is caught and logged rather than
+     * propagated, so a malformed server message will silently fail to add the pilot.
+     *
+     * @param ST tokenizer positioned at the unit-type token of a single addPilot payload.
      */
     public void addPilot(StringTokenizer ST) {
         try {
@@ -101,8 +118,17 @@ public class CPersonalPilotQueues {
     }
 
     /**
-     * Private method that reads SPilot data from a PPQ string. Eliminates duplicative code in formString's multiple
-     * loops through the full data.
+     * Private method that reads Pilot data from a "#"-delimited PPQ sub-string. Eliminates duplicative code in
+     * {@link #fromString}'s multiple loops through the full data, and is also used by {@link #addPilot}.
+     * <p>
+     * Reads name, experience, gunnery, and piloting skill, then a skill count followed by that many
+     * {@link PilotSkill} entries. Certain named skills carry extra payload beyond the base PilotSkill fields and are
+     * special-cased here: "Weapon Specialist" reads an extra weapon-name token, "Trait" reads an extra
+     * current-faction token, and "Edge" reads four extra booleans (TAC/KO/head-hit/explosion re-roll flags). Finally
+     * reads a kill count.
+     *
+     * @param pilotData the "#"-delimited fields describing a single pilot.
+     * @return the fully reconstructed {@link Pilot}.
      */
     private Pilot getPilotFromString(String pilotData) {
         StringTokenizer subTokenizer = new StringTokenizer(pilotData, "#");
@@ -150,6 +176,12 @@ public class CPersonalPilotQueues {
     /**
      * Rather than if/else'ing meks and ProtoMeks throughout the other methods of the class, use a private get method
      * which returns mek or proto as needed and then work on the arraylist without regard to type.
+     * <p>
+     * Note: any unit type other than {@link Unit#PROTOMEK} or {@link Unit#AERO} falls through to the mek queue —
+     * this includes vehicles, infantry, and battle armor, which do not have their own dedicated queues in this class.
+     *
+     * @param typeToGet one of the {@link Unit} type constants.
+     * @return the per-weight-class queue list appropriate for that unit type.
      */
     private ArrayList<LinkedList<Pilot>> getUnitTypeQueue(int typeToGet) {
         if (typeToGet == Unit.PROTOMEK) {
@@ -168,6 +200,12 @@ public class CPersonalPilotQueues {
      * to send the entire hangar to the player when a pilot is removed.
      * <p>
      * Format: PL|RPPPQ|Unit Type|Unit Weight|Position
+     * <p>
+     * Removes the pilot at the given list index (not by identity/name) from the matching type/weight-class queue.
+     * Any exception (e.g. index out of bounds if client/server queues have drifted out of sync) is caught and
+     * logged rather than propagated.
+     *
+     * @param stringTokenizer tokenizer positioned at the unit-type token of a single removePilot payload.
      */
     public void removePilot(StringTokenizer stringTokenizer) {
 
@@ -188,6 +226,10 @@ public class CPersonalPilotQueues {
      * <p>
      * Because these queues are always created in the constructor, they will never be null, even if a LIGHT_ONLY option
      * for vehicles or infantry is enabled.
+     *
+     * @param unitType one of the {@link Unit} type constants (non-ProtoMek/Aero types map to the mek queue).
+     * @param weightClass one of the {@link Unit} weight-class constants ({@link Unit#LIGHT}..{@link Unit#ASSAULT}).
+     * @return the live queue of waiting pilots for that type/weight-class combination.
      */
     public LinkedList<Pilot> getPilotQueue(int unitType, int weightClass) {
         return this.getUnitTypeQueue(unitType).get(weightClass);
@@ -198,6 +240,13 @@ public class CPersonalPilotQueues {
      * <p>
      * NOTE: String send by the server is generated in SPPQueues.java and delimited with $'s (main) and #'s
      * (subtokens).
+     * <p>
+     * Performs a full replace of all queue contents: first clears every mek/proto/aero weight-class list, then
+     * reads, in order, four weight-class-worth of mek pilot lists (light through assault), then four for ProtoMeks,
+     * then four for Aeros — each list preceded by a token giving its size. This is a wholesale resync (as opposed to
+     * {@link #addPilot}/{@link #removePilot}'s discrete updates), typically used on initial connect/login.
+     *
+     * @param stringFromServer the full "$"-delimited PPQ payload for this player.
      */
     public void fromString(String stringFromServer) {
         StringTokenizer mainTokenizer = new StringTokenizer(stringFromServer, "$");
