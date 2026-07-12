@@ -2235,7 +2235,7 @@ public final class SPlayer extends Player implements Comparable<Object>, IBuyer,
             QuirkHandler.getInstance().setQuirks(sUnit);
         } catch (Exception e) {
             LOGGER.error(e,
-                  STR."\{sUnit.getUnitFilename()} \{sUnit.getVerboseModelName()} quirk error, check the XML files for this unit, likely xml error");
+                  String.format("%s %s quirk error, check the XML files for this unit, likely xml error", sUnit.getUnitFilename(), sUnit.getVerboseModelName()));
         }
 
 
@@ -3333,8 +3333,8 @@ public final class SPlayer extends Player implements Comparable<Object>, IBuyer,
     public String getReadableMercStatus() {
         String s = "";
         if (myHouse.isMercHouse()) {// if a merc
-            s = STR."Mercenary information for \{getName()}: <br>";// list name
-            s += STR."Currently fighting for: \{(((MercHouse) myHouse).getHouseFightingFor(this)).getName()}<br>";// list
+            s = String.format("Mercenary information for %s: <br>", getName());// list name
+            s += String.format("Currently fighting for: %s<br>", (((MercHouse) myHouse).getHouseFightingFor(this)).getName());// list
             // employing
             // faction
             ContractInfo contract = (((MercHouse) myHouse).getContractInfo(this));

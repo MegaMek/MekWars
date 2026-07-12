@@ -184,7 +184,7 @@ public final class CampaignMain implements Serializable {
             for (Object key : config.keySet()) {
                 if (!defaultServerOptions.getServerDefaults().containsKey(key) &&
                           !((String) key).endsWith("RewardPointMultiplier")) {
-                    LOGGER.debug(STR."Key \{(String) key} does not exist in DefaultServerConfig.  Pruning from configs.");
+                    LOGGER.debug(String.format("Key %s does not exist in DefaultServerConfig.  Pruning from configs.", (String) key));
                     keysToRemove.add((String) key);
                 }
             }
@@ -518,7 +518,7 @@ public final class CampaignMain implements Serializable {
                     command.process(stringTokenizer, Username);
                 } catch (Exception ex) {
                     LOGGER.error(ex, "Invalid Syntax: {}", ex.getLocalizedMessage());
-                    CampaignMain.campaignMain.toUser(STR."AM:Invalid Syntax: /\{task} \{command.getSyntax()}",
+                    CampaignMain.campaignMain.toUser(String.format("AM:Invalid Syntax: /%s %s", task, command.getSyntax()),
                           Username);
                 }
                 return;
@@ -562,7 +562,7 @@ public final class CampaignMain implements Serializable {
 
     public void toUser(String txt, String Username, boolean isChat) {
         if (isChat) {
-            serv.fromCampaignMod(STR."CH|\{txt}", Username);
+            serv.fromCampaignMod(String.format("CH|%s", txt), Username);
         } else {
             serv.fromCampaignMod(txt, Username);
         }
@@ -636,9 +636,9 @@ public final class CampaignMain implements Serializable {
 
                 File pFile;
                 if (explicitName) {
-                    pFile = new File(STR."./campaign/players/\{name}");
+                    pFile = new File(String.format("./campaign/players/%s", name));
                 } else {
-                    pFile = new File(STR."./campaign/players/\{name.toLowerCase()}.dat");
+                    pFile = new File(String.format("./campaign/players/%s.dat", name.toLowerCase()));
                 }
 
                 if (!pFile.exists()) {
@@ -713,7 +713,7 @@ public final class CampaignMain implements Serializable {
         // too many matches
         if (numMatches > 1) {
             if (username != null) {
-                toUser(STR."\"\{planetName}\" is not unique [\{numMatches} matches]. Please be more specific.",
+                toUser(String.format("\"%s\" is not unique [%s matches]. Please be more specific.", planetName, numMatches),
                       username);
             }
 
@@ -722,7 +722,7 @@ public final class CampaignMain implements Serializable {
 
         if (numMatches == 0) {
             if (username != null) {
-                toUser(STR."Couldn't find a planet whose name begins with \"\{planetName}\". Try again.",
+                toUser(String.format("Couldn't find a planet whose name begins with \"%s\". Try again.", planetName),
                       username,
                       true);
             }
@@ -736,7 +736,7 @@ public final class CampaignMain implements Serializable {
     public void doSendHouseMail(SHouse sHouse, String username, String text) {
 
         // send the text to all logged-in players
-        text = STR."(Housemail)\{username}:\{text}";
+        text = String.format("(Housemail)%s:%s", username, text);
         this.doSendToAllOnlinePlayers(sHouse, text, true);
 
         // then add it to the faction's log
@@ -780,7 +780,7 @@ public final class CampaignMain implements Serializable {
 
         // Note it to the logs
         LOGGER.info("{}: {}", username, text);
-        text = STR."(Moderator Mail) \{username}: \{text}";
+        text = String.format("(Moderator Mail) %s: %s", username, text);
 
         for (House house : data.getAllHouses()) {
             SHouse sHouse = (SHouse) house;
@@ -815,7 +815,7 @@ public final class CampaignMain implements Serializable {
      * After an error, loop through all online players and send text of the error to anyone who has modmail access.
      */
     public void doSendErrLog(String text) {
-        text = STR."(Error Log): \{text}";
+        text = String.format("(Error Log): %s", text);
         for (House house : data.getAllHouses()) {
             SHouse sHouse = (SHouse) house;
 

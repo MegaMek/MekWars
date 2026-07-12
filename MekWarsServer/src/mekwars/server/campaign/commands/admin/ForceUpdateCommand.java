@@ -65,7 +65,7 @@ public class ForceUpdateCommand implements Command {
         if (accessLevel != 0) {
             int userLevel = CampaignMain.campaignMain.getServer().getUserLevel(Username);
             if (userLevel < getExecutionLevel()) {
-                CampaignMain.campaignMain.toUser(STR."AM:Insufficient access level for command. Level: \{userLevel}. Required: \{accessLevel}.",
+                CampaignMain.campaignMain.toUser(String.format("AM:Insufficient access level for command. Level: %s. Required: %s.", userLevel, accessLevel),
                       Username,
                       true);
                 return;
@@ -93,13 +93,13 @@ public class ForceUpdateCommand implements Command {
         DefaultServerOptions defaultServerOptions = new DefaultServerOptions();
         defaultServerOptions.createConfig();
 
-        CampaignMain.campaignMain.doSendModMail("NOTE", STR."\{Username} set the Force Update Key");
-        CampaignMain.campaignMain.toUser(STR."Make sure to add UPDATEKEY=\{updateKey}<br>To the serverdata.dat",
+        CampaignMain.campaignMain.doSendModMail("NOTE", String.format("%s set the Force Update Key", Username));
+        CampaignMain.campaignMain.toUser(String.format("Make sure to add UPDATEKEY=%s<br>To the serverdata.dat", updateKey),
               Username);
 
         if (command.hasMoreTokens()) {
             whoToKick = command.nextToken();
-            CampaignMain.campaignMain.doSendModMail("NOTE", STR."\{Username} is kicking \{whoToKick}");
+            CampaignMain.campaignMain.doSendModMail("NOTE", String.format("%s is kicking %s", Username, whoToKick));
             boolean players = false;
             boolean deds = false;
 
@@ -121,11 +121,11 @@ public class ForceUpdateCommand implements Command {
                 }
 
                 if (players && !toKick.toLowerCase().startsWith("[dedicated]")) {
-                    CampaignMain.campaignMain.toUser(STR."You have been forced to update by \{Username}!", toKick);
+                    CampaignMain.campaignMain.toUser(String.format("You have been forced to update by %s!", Username), toKick);
                     CampaignMain.campaignMain.toUser("PL|FCU|Bye Bye", toKick, false);
                 } else if (deds && toKick.toLowerCase().startsWith("[dedicated]")) {
                     try {
-                        CampaignMain.campaignMain.getServer().doStoreMail(STR."\{toKick},update", Username);
+                        CampaignMain.campaignMain.getServer().doStoreMail(String.format("%s,update", toKick), Username);
                         Thread.sleep(120);
                     } catch (Exception ex) {
                         LOGGER.error(ex, "Thread interruption. Probably harmless. {}", ex.getLocalizedMessage());

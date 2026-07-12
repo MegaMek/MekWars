@@ -194,7 +194,7 @@ public class AdminMenu extends JMenu {
                 AdminMenu.this.client.getServerConfigData();
                 // Give the server configs a head start.
                 Thread.sleep(1000);
-                AdminMenu.this.client.sendChat(STR."\{IClient.CAMPAIGN_PREFIX}c GetFactionConfigs#-1#\{faction}");
+                AdminMenu.this.client.sendChat(String.format("%sc GetFactionConfigs#-1#%s", IClient.CAMPAIGN_PREFIX, faction));
                 AdminMenu.this.client.setWaiting(true);
 
                 while (AdminMenu.this.client.isWaiting()) {
@@ -279,7 +279,7 @@ public class AdminMenu extends JMenu {
         jMenuAdminSavePlanetsToXML.addActionListener(this::jMenuAdminSavePlanetsToXML_actionPerformed);
 
         jMenuAdminRemoveOMG.setText("List and Remove OMG Units");
-        jMenuAdminRemoveOMG.addActionListener(e -> AdminMenu.this.client.sendChat(STR."\{IClient.CAMPAIGN_PREFIX}c adminlistandremoveomg"));
+        jMenuAdminRemoveOMG.addActionListener(e -> AdminMenu.this.client.sendChat(String.format("%sc adminlistandremoveomg", IClient.CAMPAIGN_PREFIX)));
 
         jMenuAdminGrantComponents.setText("Grant Components");
         jMenuAdminGrantComponents.addActionListener(this::jMenuAdminGrantComponents_actionPerformed);
@@ -292,12 +292,12 @@ public class AdminMenu extends JMenu {
 
         jMenuAdminSaveServerConfigs.setText("Save Server Configuration");
         jMenuAdminSaveServerConfigs.addActionListener(e -> {
-            AdminMenu.this.client.sendChat(STR."\{IClient.CAMPAIGN_PREFIX}c AdminSaveServerConfigs");
+            AdminMenu.this.client.sendChat(String.format("%sc AdminSaveServerConfigs", IClient.CAMPAIGN_PREFIX));
             AdminMenu.this.client.reloadData();
         });
 
         jMenuAdminSaveCommandLevels.setText("Save Command Levels");
-        jMenuAdminSaveCommandLevels.addActionListener(e -> AdminMenu.this.client.sendChat(STR."\{IClient.CAMPAIGN_PREFIX}c AdminSaveCommandLevels"));
+        jMenuAdminSaveCommandLevels.addActionListener(e -> AdminMenu.this.client.sendChat(String.format("%sc AdminSaveCommandLevels", IClient.CAMPAIGN_PREFIX)));
 
         jMenuAdminSetPlanetMapSize.setText("Set Planet Map Size");
         jMenuAdminSetPlanetMapSize.addActionListener(this::jMenuAdminSetPlanetMapSize_actionPerformed);
@@ -313,7 +313,7 @@ public class AdminMenu extends JMenu {
 
         jMenuAdminSetPlanetVacuum.setText("Set Planet Vacuum");
         jMenuAdminSetPlanetVacuum.addActionListener(e -> {
-            AdminMenu.this.client.sendChat(STR."\{IClient.CAMPAIGN_PREFIX}c AdminSetPlanetVacuum");
+            AdminMenu.this.client.sendChat(String.format("%sc AdminSetPlanetVacuum", IClient.CAMPAIGN_PREFIX));
             AdminMenu.this.client.reloadData();
         });
 
@@ -648,7 +648,7 @@ public class AdminMenu extends JMenu {
             return;
         }
 
-        client.sendChat(STR."\{IClient.CAMPAIGN_PREFIX}c admincreateplanet#\{planetName}#\{xCord}#\{yCord}#");
+        client.sendChat(String.format("%sc admincreateplanet#%s#%s#%s#", IClient.CAMPAIGN_PREFIX, planetName, xCord, yCord));
         client.reloadData();
         int id = CampaignData.cd.getPlanetByName(planetName).getId();
         new PlanetEditorDialog(client, planetName, id);
@@ -665,7 +665,7 @@ public class AdminMenu extends JMenu {
         if ((planetName == null) || (planetName.isEmpty())) {
             return;
         }
-        client.sendChat(STR."\{IClient.CAMPAIGN_PREFIX}c admindestroyplanet#\{planetName}");
+        client.sendChat(String.format("%sc admindestroyplanet#%s", IClient.CAMPAIGN_PREFIX, planetName));
         client.reloadData();
     }
 
@@ -755,9 +755,9 @@ public class AdminMenu extends JMenu {
             return;
         }
 
-        String sendCommand = STR."\{planetName.trim()}#\{factoryName.trim()}#\{factorySizestr.trim()}#\{factionName.trim()}#\{factoryTypeId}#\{factoryBuildTable}#\{factoryAccessLevel}";
+        String sendCommand = String.format("%s#%s#%s#%s#%s#%s#%s", planetName.trim(), factoryName.trim(), factorySizestr.trim(), factionName.trim(), factoryTypeId, factoryBuildTable, factoryAccessLevel);
 
-        client.sendChat(STR."\{IClient.CAMPAIGN_PREFIX}c admincreatefactory#\{sendCommand}");
+        client.sendChat(String.format("%sc admincreatefactory#%s", IClient.CAMPAIGN_PREFIX, sendCommand));
         client.reloadData();
 
     }
@@ -804,7 +804,7 @@ public class AdminMenu extends JMenu {
             return;
         }
 
-        client.sendChat(STR."\{IClient.CAMPAIGN_PREFIX}c admindestroyfactory#\{planetNamestr}#\{factoryName}");
+        client.sendChat(String.format("%sc admindestroyfactory#%s#%s", IClient.CAMPAIGN_PREFIX, planetNamestr, factoryName));
         client.reloadData();
 
     }
@@ -851,7 +851,7 @@ public class AdminMenu extends JMenu {
             return;
         }
 
-        client.sendChat(STR."\{IClient.CAMPAIGN_PREFIX}c admincreateterrain#\{planetNamestr}#\{terrainType}#\{terrainChance}");
+        client.sendChat(String.format("%sc admincreateterrain#%s#%s#%s", IClient.CAMPAIGN_PREFIX, planetNamestr, terrainType, terrainChance));
         client.reloadData();
 
     }
@@ -873,7 +873,7 @@ public class AdminMenu extends JMenu {
             return;
         }
 
-        client.sendChat(STR."\{IClient.CAMPAIGN_PREFIX}c admindestroyterrain#\{planetNamestr}#\{terrainType}");
+        client.sendChat(String.format("%sc admindestroyterrain#%s#%s", IClient.CAMPAIGN_PREFIX, planetNamestr, terrainType));
         client.reloadData();
 
     }
@@ -913,7 +913,7 @@ public class AdminMenu extends JMenu {
             return;
         }
 
-        client.sendChat(STR."\{IClient.CAMPAIGN_PREFIX}c adminchangeplanetowner#\{planetNamestr}#\{newOwner}");
+        client.sendChat(String.format("%sc adminchangeplanetowner#%s#%s", IClient.CAMPAIGN_PREFIX, planetNamestr, newOwner));
         client.reloadData();
 
     }
@@ -924,7 +924,7 @@ public class AdminMenu extends JMenu {
         if (confirm != JOptionPane.YES_OPTION) {
             return;
         }
-        client.sendChat(STR."\{IClient.CAMPAIGN_PREFIX}c adminterminateall");
+        client.sendChat(String.format("%sc adminterminateall", IClient.CAMPAIGN_PREFIX));
     }
 
     public void jMenuAdminSetFactionTechPoints_actionPerformed(ActionEvent e) {
@@ -945,7 +945,7 @@ public class AdminMenu extends JMenu {
             return;
         }
 
-        client.sendChat(STR."\{IClient.CAMPAIGN_PREFIX}c GrantTechPoints#\{factionName}#\{points}");
+        client.sendChat(String.format("%sc GrantTechPoints#%s#%s", IClient.CAMPAIGN_PREFIX, factionName, points));
 
     }
 
@@ -961,13 +961,13 @@ public class AdminMenu extends JMenu {
         }
 
         String fluFilePrefix = JOptionPane.showInputDialog(client.getMainFrame(),
-              STR."\{client.moneyOrFluMessage(false, true, -1)} File Prefix:");
+              String.format("%s File Prefix:", client.moneyOrFluMessage(false, true, -1)));
 
         if ((fluFilePrefix == null) || (fluFilePrefix.isEmpty())) {
             return;
         }
 
-        client.sendChat(STR."\{IClient.CAMPAIGN_PREFIX}c adminsethouseflufile#\{factionName}#\{fluFilePrefix}");
+        client.sendChat(String.format("%sc adminsethouseflufile#%s#%s", IClient.CAMPAIGN_PREFIX, factionName, fluFilePrefix));
     }
 
     public void jMenuAdminSetHouseTechLevel_actionPerformed(ActionEvent e) {
@@ -998,19 +998,19 @@ public class AdminMenu extends JMenu {
             return;
         }
 
-        client.sendChat(STR."\{IClient.CAMPAIGN_PREFIX}c adminsethousetechlevel#\{factionName}#\{techCombo.getSelectedIndex()}");
+        client.sendChat(String.format("%sc adminsethousetechlevel#%s#%s", IClient.CAMPAIGN_PREFIX, factionName, techCombo.getSelectedIndex()));
     }
 
     public void jMenuAdminSaveTheUniverse_actionPerformed(ActionEvent e) {
-        client.sendChat(STR."\{IClient.CAMPAIGN_PREFIX}c adminsave");
+        client.sendChat(String.format("%sc adminsave", IClient.CAMPAIGN_PREFIX));
     }
 
     public void jMenuAdminSaveBlackMarketSettings_actionPerformed(ActionEvent e) {
-        client.sendChat(STR."\{IClient.CAMPAIGN_PREFIX}c adminsaveblackmarketconfigs");
+        client.sendChat(String.format("%sc adminsaveblackmarketconfigs", IClient.CAMPAIGN_PREFIX));
     }
 
     public void jMenuAdminSavePlanetsToXML_actionPerformed(ActionEvent e) {
-        client.sendChat(STR."\{IClient.CAMPAIGN_PREFIX}c adminsaveplanetstoxml");
+        client.sendChat(String.format("%sc adminsaveplanetstoxml", IClient.CAMPAIGN_PREFIX));
     }
 
     public void jMenuAdminGrantComponents_actionPerformed(ActionEvent e) {
@@ -1059,7 +1059,7 @@ public class AdminMenu extends JMenu {
             return;
         }
 
-        client.sendChat(STR."\{IClient.CAMPAIGN_PREFIX}c admingrantcomponents#\{factionName}#\{Typestr}#\{Sizestr}#\{components}");
+        client.sendChat(String.format("%sc admingrantcomponents#%s#%s#%s#%s", IClient.CAMPAIGN_PREFIX, factionName, Typestr, Sizestr, components));
     }
 
     public void jMenuAdminExchangePlanetOwnership_actionPerformed(ActionEvent e) {
@@ -1099,7 +1099,7 @@ public class AdminMenu extends JMenu {
             return;
         }
 
-        client.sendChat(STR."\{IClient.CAMPAIGN_PREFIX}c adminexchangeplanetownership#\{planetName}#\{winningHouseName}#\{losingHouseName}#\{amount}");
+        client.sendChat(String.format("%sc adminexchangeplanetownership#%s#%s#%s#%s", IClient.CAMPAIGN_PREFIX, planetName, winningHouseName, losingHouseName, amount));
     }
 
     public void jMenuAdminLockFactory_actionPerformed(ActionEvent e) {
@@ -1139,7 +1139,7 @@ public class AdminMenu extends JMenu {
             return;
         }
 
-        client.sendChat(STR."\{IClient.CAMPAIGN_PREFIX}c adminlockfactory#\{planetNamestr}#\{factoryName}");
+        client.sendChat(String.format("%sc adminlockfactory#%s#%s", IClient.CAMPAIGN_PREFIX, planetNamestr, factoryName));
         client.reloadData();
 
     }
@@ -1169,7 +1169,7 @@ public class AdminMenu extends JMenu {
             return;
         }
 
-        client.sendChat(STR."\{IClient.CAMPAIGN_PREFIX}c adminsetplanetmapsize#\{planetNamestr}#\{xSize}#\{ySize}");
+        client.sendChat(String.format("%sc adminsetplanetmapsize#%s#%s#%s", IClient.CAMPAIGN_PREFIX, planetNamestr, xSize, ySize));
         client.reloadData();
     }
 
@@ -1198,7 +1198,7 @@ public class AdminMenu extends JMenu {
             return;
         }
 
-        client.sendChat(STR."\{IClient.CAMPAIGN_PREFIX}c adminsetplanetboardsize#\{planetNamestr}#\{xSize}#\{ySize}");
+        client.sendChat(String.format("%sc adminsetplanetboardsize#%s#%s#%s", IClient.CAMPAIGN_PREFIX, planetNamestr, xSize, ySize));
         client.reloadData();
     }
 
@@ -1227,7 +1227,7 @@ public class AdminMenu extends JMenu {
             return;
         }
 
-        client.sendChat(STR."\{IClient.CAMPAIGN_PREFIX}c adminsetplanettemperature#\{planetNamestr}#\{lowTemp}#\{hiTemp}");
+        client.sendChat(String.format("%sc adminsetplanettemperature#%s#%s#%s", IClient.CAMPAIGN_PREFIX, planetNamestr, lowTemp, hiTemp));
         client.reloadData();
     }
 
@@ -1250,7 +1250,7 @@ public class AdminMenu extends JMenu {
             return;
         }
 
-        client.sendChat(STR."\{IClient.CAMPAIGN_PREFIX}c adminsetplanetgravity#\{planetNamestr}#\{grav}");
+        client.sendChat(String.format("%sc adminsetplanetgravity#%s#%s", IClient.CAMPAIGN_PREFIX, planetNamestr, grav));
         client.reloadData();
     }
 
@@ -1281,7 +1281,7 @@ public class AdminMenu extends JMenu {
             homeworld = true;
         }
 
-        client.sendChat(STR."\{IClient.CAMPAIGN_PREFIX}c adminsethomeworld#\{planetNamestr}#\{homeworld}");
+        client.sendChat(String.format("%sc adminsethomeworld#%s#%s", IClient.CAMPAIGN_PREFIX, planetNamestr, homeworld));
         client.reloadData();
 
     }
@@ -1312,7 +1312,7 @@ public class AdminMenu extends JMenu {
             return;
         }
 
-        client.sendChat(STR."\{IClient.CAMPAIGN_PREFIX}c adminsetplanetoriginalowner#\{planetNamestr}#\{owner}");
+        client.sendChat(String.format("%sc adminsetplanetoriginalowner#%s#%s", IClient.CAMPAIGN_PREFIX, planetNamestr, owner));
         client.reloadData();
     }
 
@@ -1325,11 +1325,11 @@ public class AdminMenu extends JMenu {
     }
 
     private void jMenuAdminReloadSupportUnits_actionPerformed(ActionEvent e) {
-        client.sendChat(STR."\{IClient.CAMPAIGN_PREFIX}adminReloadSupportUnits");
+        client.sendChat(String.format("%sadminReloadSupportUnits", IClient.CAMPAIGN_PREFIX));
     }
 
     private void jMenuAdminReloadSanitizer_actionPerformed(ActionEvent e) {
-        client.sendChat(STR."\{IClient.CAMPAIGN_PREFIX}adminReloadHTMLSanitizerConfigs");
+        client.sendChat(String.format("%sadminReloadHTMLSanitizerConfigs", IClient.CAMPAIGN_PREFIX));
     }
 
     public void jMenuAdminUploadBuildTable_actionPerformed(ActionEvent e) {
@@ -1341,14 +1341,14 @@ public class AdminMenu extends JMenu {
         if (returnVal == JFileChooser.APPROVE_OPTION) {
             File file = chooser.getSelectedFile();
             StringBuilder line = new StringBuilder();
-            line.append(STR."\{IClient.CAMPAIGN_PREFIX}AdminUploadBuildTable ");
+            line.append(String.format("%sAdminUploadBuildTable ", IClient.CAMPAIGN_PREFIX));
             String path = file.getPath();
             if (path.contains("rare")) {
-                path = STR."rare/\{file.getName()}";
+                path = String.format("rare/%s", file.getName());
             } else if (path.contains("standard")) {
-                path = STR."standard/\{file.getName()}";
+                path = String.format("standard/%s", file.getName());
             } else if (path.contains("reward")) {
-                path = STR."reward/\{file.getName()}";
+                path = String.format("reward/%s", file.getName());
             }
             line.append(path);
             try {
@@ -1361,10 +1361,10 @@ public class AdminMenu extends JMenu {
                     br.close();
                     in.close();
                 } catch (IOException ioex) {
-                    LOGGER.error(STR."IOException: \{line.toString()}");
+                    LOGGER.error(String.format("IOException: %s", line.toString()));
                 }
             } catch (FileNotFoundException fnfex) {
-                LOGGER.error(STR."FileNotFoundException: \{line.toString()}");
+                LOGGER.error(String.format("FileNotFoundException: %s", line.toString()));
             }
             line.append("#");
             client.sendChat(line.toString());
@@ -1373,11 +1373,11 @@ public class AdminMenu extends JMenu {
     }
 
     public void jMenuAdminRequestBuildTable_actionPerformed(ActionEvent e) {
-        client.sendChat(STR."\{IClient.CAMPAIGN_PREFIX}AdminRequestBuildTable list");
+        client.sendChat(String.format("%sAdminRequestBuildTable list", IClient.CAMPAIGN_PREFIX));
     }
 
     public void jMenuAdminPruneBuildTable_actionPerformed(ActionEvent e) {
-        client.sendChat(STR."\{IClient.CAMPAIGN_PREFIX}AdminRequestBuildTable prune");
+        client.sendChat(String.format("%sAdminRequestBuildTable prune", IClient.CAMPAIGN_PREFIX));
     }
 
     public void jMenuAdminUploadMul_actionPerformed(ActionEvent e) {
@@ -1395,7 +1395,7 @@ public class AdminMenu extends JMenu {
         if (returnVal == JFileChooser.APPROVE_OPTION) {
             File file = chooser.getSelectedFile();
             StringBuilder line = new StringBuilder();
-            line.append(STR."\{IClient.CAMPAIGN_PREFIX}UploadMul ");
+            line.append(String.format("%sUploadMul ", IClient.CAMPAIGN_PREFIX));
             line.append(file.getName());
             try {
                 FileInputStream in = new FileInputStream(file);
@@ -1407,10 +1407,10 @@ public class AdminMenu extends JMenu {
                     br.close();
                     in.close();
                 } catch (IOException ioex) {
-                    LOGGER.error(STR."IOException: \{line.toString()}");
+                    LOGGER.error(String.format("IOException: %s", line.toString()));
                 }
             } catch (FileNotFoundException fnfex) {
-                LOGGER.error(STR."FileNotFoundException: \{line.toString()}");
+                LOGGER.error(String.format("FileNotFoundException: %s", line.toString()));
             }
             line.append("#");
             client.sendChat(line.toString());
@@ -1431,7 +1431,7 @@ public class AdminMenu extends JMenu {
     }
 
     public void jMenuAdminCreateMulArmy_actionPerformed(ActionEvent e) {
-        client.sendChat(STR."\{IClient.CAMPAIGN_PREFIX}listmuls CAFM");
+        client.sendChat(String.format("%slistmuls CAFM", IClient.CAMPAIGN_PREFIX));
     }
 
     public void jMenuAdminComponentList_actionPerformed(ActionEvent e) {
@@ -1469,7 +1469,7 @@ public class AdminMenu extends JMenu {
             return;
         }
 
-        client.sendChat(STR."\{IClient.CAMPAIGN_PREFIX}c adminsetCommandLevel#\{commandNamestr}#\{level}");
+        client.sendChat(String.format("%sc adminsetCommandLevel#%s#%s", IClient.CAMPAIGN_PREFIX, commandNamestr, level));
     }
 
     public void jMenuAdminSetHouseBasePilotSkills_actionPerformed(ActionEvent e) {
@@ -1513,9 +1513,9 @@ public class AdminMenu extends JMenu {
             return;
         }
 
-        String sendCommand = STR."\{factionName}#\{unitTypeint}#\{gunnery}#\{piloting}";
+        String sendCommand = String.format("%s#%s#%s#%s", factionName, unitTypeint, gunnery, piloting);
 
-        client.sendChat(STR."\{IClient.CAMPAIGN_PREFIX}c sethousebasepilotskills#\{sendCommand}");
+        client.sendChat(String.format("%sc sethousebasepilotskills#%s", IClient.CAMPAIGN_PREFIX, sendCommand));
     }
 
     public void jMenuAdminCommandLists_actionPerformed(ActionEvent e) {
@@ -1577,7 +1577,7 @@ public class AdminMenu extends JMenu {
             return;
         }
 
-        client.sendChat(STR."\{IClient.CAMPAIGN_PREFIX}c adminsethousepricemod#\{factionName}#\{unitTypestr}#\{unitClassstr}#\{priceMod}");
+        client.sendChat(String.format("%sc adminsethousepricemod#%s#%s#%s#%s", IClient.CAMPAIGN_PREFIX, factionName, unitTypestr, unitClassstr, priceMod));
     }
 
     public void jMenuAdminSetHouseFluMod_actionPerformed(ActionEvent e) {
@@ -1626,7 +1626,7 @@ public class AdminMenu extends JMenu {
             return;
         }
 
-        client.sendChat(STR."\{IClient.CAMPAIGN_PREFIX}c adminsethouseflumod#\{factionName}#\{unitTypestr}#\{unitClassstr}#\{fluMod}");
+        client.sendChat(String.format("%sc adminsethouseflumod#%s#%s#%s#%s", IClient.CAMPAIGN_PREFIX, factionName, unitTypestr, unitClassstr, fluMod));
     }
 
 }// end AdminMenu class

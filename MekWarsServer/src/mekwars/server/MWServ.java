@@ -106,7 +106,7 @@ public class MWServ {
     MWServ(String[] argv) {
         LOGGER.info("Server Start up");
 
-        LOGGER.info(STR."----- MekWars Server V \{SERVER_VERSION} is starting up... -----");
+        LOGGER.info(String.format("----- MekWars Server V %s is starting up... -----", SERVER_VERSION));
         LOGGER.info("Loading configuration...");
         loadConfig();
         LOGGER.info("Configuration loaded.");
@@ -194,7 +194,7 @@ public class MWServ {
                     out.close();
                 }
             } catch (Exception e) {
-                LOGGER.error(e, STR."No file named \{filename} was found and cannot create one!");
+                LOGGER.error(e, String.format("No file named %s was found and cannot create one!", filename));
                 System.exit(1);
             }
         }
@@ -351,7 +351,7 @@ public class MWServ {
                     if (stringTokenizer.hasMoreElements()) {
                         String mail = (String) stringTokenizer.nextElement();
                         if (result.get(name) != null) {
-                            result.put(name, STR."\{mails.get(name)}<br>\{mail}");
+                            result.put(name, String.format("%s<br>%s", mails.get(name), mail));
                         } else {
                             result.put(name, mail);
                         }
@@ -389,7 +389,7 @@ public class MWServ {
         MWChatClient client = myCommunicator.getClient(name);
 
 
-        LOGGER.info(STR."Connection from \{getIP(name)} (\{name})");
+        LOGGER.info(String.format("Connection from %s (%s)", getIP(name), name));
         // Double account check
         // Don't worry about dedicated or nobodies.
         if (!originalName.startsWith("[Dedicated]") && !originalName.startsWith("Nobody")) {
@@ -401,24 +401,24 @@ public class MWServ {
 
                     SPlayer player = getCampaign().getPlayer(name);
                     if (player != null) {
-                        nametmp += STR." \{getCampaign().getPlayer(name).getMyHouse().getAbbreviation()}";
+                        nametmp += String.format(" %s", getCampaign().getPlayer(name).getMyHouse().getAbbreviation());
                     }
 
                     SPlayer playerWithLogName = getCampaign().getPlayer(logname);
 
                     if (playerWithLogName != null) {
-                        logname += STR." \{getCampaign().getPlayer(logname).getMyHouse().getAbbreviation()}";
+                        logname += String.format(" %s", getCampaign().getPlayer(logname).getMyHouse().getAbbreviation());
                     }
 
                     if ((player != null) && (playerWithLogName != null)) {
                         if (player.getGroupAllowance() != 0 &&
                                   player.getGroupAllowance() != playerWithLogName.getGroupAllowance()) {
                             getCampaign().doSendModMail("NOTE:",
-                                  STR."Double Accounting: \{nametmp} Group: \{player.getGroupAllowance()} and \{logname} Group: \{playerWithLogName.getGroupAllowance()} IP: \{userIP}");
+                                  String.format("Double Accounting: %s Group: %s and %s Group: %s IP: %s", nametmp, player.getGroupAllowance(), logname, playerWithLogName.getGroupAllowance(), userIP));
                         }
                     } else {
                         getCampaign().doSendModMail("NOTE:",
-                              STR."Double Accounting: \{nametmp} and \{logname} IP: \{userIP}");
+                              String.format("Double Accounting: %s and %s IP: %s", nametmp, logname, userIP));
                     }
                 }
             }
@@ -430,10 +430,10 @@ public class MWServ {
             Long until = bannedIPs.get(userIP);
             if (until > System.currentTimeMillis() || until == 0) {
                 if (until != 0) {
-                    clientSend(STR."CH|You are banned. You may not join this server until \{new Date(until).toString()}",
+                    clientSend(String.format("CH|You are banned. You may not join this server until %s", new Date(until).toString()),
                           name);
                     getCampaign().doSendModMail("NOTE:",
-                          STR."\{name} (IP: \{userIP}) tried to gain access to the server");
+                          String.format("%s (IP: %s) tried to gain access to the server", name, userIP));
                 }
 
                 myCommunicator.kill(name, "");
@@ -450,10 +450,10 @@ public class MWServ {
 
             if (until > System.currentTimeMillis() || until == 0) {
                 if (until != 0) {
-                    clientSend(STR."CH|You are banned. You may not join this server until \{new Date(until.longValue()).toString()}",
+                    clientSend(String.format("CH|You are banned. You may not join this server until %s", new Date(until.longValue()).toString()),
                           name);
                     getCampaign().doSendModMail("NOTE:",
-                          STR."\{name} (IP: \{userIP}) tried to gain access to the server");
+                          String.format("%s (IP: %s) tried to gain access to the server", name, userIP));
                 }
 
                 myCommunicator.kill(name, "");
@@ -469,10 +469,10 @@ public class MWServ {
             Long until = ISPLog.get(client.getClientVersion());
             if (until > System.currentTimeMillis() || until == 0) {
                 if (until != 0) {
-                    clientSend(STR."CH|You have been banned. You may not join this server until \{new Date(until).toString()}",
+                    clientSend(String.format("CH|You have been banned. You may not join this server until %s", new Date(until).toString()),
                           name);
                     getCampaign().doSendModMail("NOTE:",
-                          STR."\{name} (IP: \{userIP}) tried to gain access to the server");
+                          String.format("%s (IP: %s) tried to gain access to the server", name, userIP));
                 }
 
                 myCommunicator.kill(name, "");

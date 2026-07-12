@@ -51,7 +51,7 @@ public class VoteCommand implements Command {
         if (accessLevel != 0) {
             int userLevel = CampaignMain.campaignMain.getServer().getUserLevel(Username);
             if (userLevel < getExecutionLevel()) {
-                CampaignMain.campaignMain.toUser(STR."AM:Insufficient access level for command. Level: \{userLevel}. Required: \{accessLevel}.",
+                CampaignMain.campaignMain.toUser(String.format("AM:Insufficient access level for command. Level: %s. Required: %s.", userLevel, accessLevel),
                       Username,
                       true);
                 return;
@@ -90,7 +90,7 @@ public class VoteCommand implements Command {
 
         //break out on unknown vote type
         if (type < Vote.ABSTAIN_VOTE || type > Vote.NEGATIVE_VOTE) {
-            CampaignMain.campaignMain.toUser(STR."AM:You tried to use an illegal vote type. Types are:<br> Positive: \{Vote.POSITIVE_VOTE}<br> Negative: \{Vote.NEGATIVE_VOTE}<br> Abstain: \{Vote.ABSTAIN_VOTE}",
+            CampaignMain.campaignMain.toUser(String.format("AM:You tried to use an illegal vote type. Types are:<br> Positive: %s<br> Negative: %s<br> Abstain: %s", Vote.POSITIVE_VOTE, Vote.NEGATIVE_VOTE, Vote.ABSTAIN_VOTE),
                   Username,
                   true);
             return;
@@ -149,7 +149,7 @@ public class VoteCommand implements Command {
         }
 
         //vote was added properly
-        CampaignMain.campaignMain.toUser(STR."AM:You have cast a vote for \{recipientName}", Username, true);
+        CampaignMain.campaignMain.toUser(String.format("AM:You have cast a vote for %s", recipientName), Username, true);
         return;
 
     }

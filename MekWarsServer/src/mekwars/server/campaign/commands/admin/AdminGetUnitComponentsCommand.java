@@ -44,7 +44,7 @@ public class AdminGetUnitComponentsCommand implements Command {
         int userLevel = CampaignMain.campaignMain.getServer().getUserLevel(Username);
         if (userLevel < getExecutionLevel()) {
             CampaignMain.campaignMain.toUser(
-                  STR."AM:Insufficient access level for command. Level: \{userLevel}. Required: \{accessLevel}.",
+                  String.format("AM:Insufficient access level for command. Level: %s. Required: %s.", userLevel, accessLevel),
                   Username, true);
             return;
         }
@@ -84,10 +84,10 @@ public class AdminGetUnitComponentsCommand implements Command {
                     }
 
                     CampaignMain.campaignMain.toUser(
-                          STR."All useable parts from \{unit.getModelName()} where added to \{target.getName()}'s parts stockpile",
+                          String.format("All useable parts from %s where added to %s's parts stockpile", unit.getModelName(), target.getName()),
                           Username);
                     CampaignMain.campaignMain.toUser(
-                          STR."All useable parts from \{unit.getModelName()} where added to your parts stockpile",
+                          String.format("All useable parts from %s where added to your parts stockpile", unit.getModelName()),
                           target.getName());
                 }
             } else {
@@ -98,7 +98,7 @@ public class AdminGetUnitComponentsCommand implements Command {
                 // break out if the player doesn't have a unit with that id
                 if (unit == null) {
                     CampaignMain.campaignMain.toUser(
-                          STR."Target player doesn't have a unit with ID# \{unitID}.", Username, true);
+                          String.format("Target player doesn't have a unit with ID# %s.", unitID), Username, true);
                     return;
                 }
                 Entity ent = unit.getEntity();
@@ -177,11 +177,11 @@ public class AdminGetUnitComponentsCommand implements Command {
                 }
             }
             components.put(
-                  STR."Armor: \{EquipmentType.getArmorTypeName(ent.getArmorType(location))}", armor + rear);
+                  String.format("Armor: %s", EquipmentType.getArmorTypeName(ent.getArmorType(location))), armor + rear);
         }
 
         components.put(
-              STR."IS: \{EquipmentType.getStructureTypeName(ent.getStructureType())}", IS);
+              String.format("IS: %s", EquipmentType.getStructureTypeName(ent.getStructureType())), IS);
 
         return components;
 

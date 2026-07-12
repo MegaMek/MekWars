@@ -59,7 +59,7 @@ public class AdminSaveServerConfigsCommand implements Command {
         //access level check
         int userLevel = CampaignMain.campaignMain.getServer().getUserLevel(Username);
         if (userLevel < getExecutionLevel()) {
-            CampaignMain.campaignMain.toUser(STR."AM:Insufficient access level for command. Level: \{userLevel}. Required: \{accessLevel}.",
+            CampaignMain.campaignMain.toUser(String.format("AM:Insufficient access level for command. Level: %s. Required: %s.", userLevel, accessLevel),
                   Username,
                   true);
             return;
@@ -68,7 +68,7 @@ public class AdminSaveServerConfigsCommand implements Command {
         DefaultServerOptions defaultServerOptions = new DefaultServerOptions();
         defaultServerOptions.createConfig();
         CampaignMain.campaignMain.toUser("AM:Status saved!", Username, true);
-        CampaignMain.campaignMain.doSendModMail("NOTE", STR."\{Username} has saved the server configs");
+        CampaignMain.campaignMain.doSendModMail("NOTE", String.format("%s has saved the server configs", Username));
 
     }//end process
 

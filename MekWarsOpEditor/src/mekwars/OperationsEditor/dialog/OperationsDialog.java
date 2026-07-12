@@ -240,7 +240,7 @@ public class OperationsDialog extends JFrame implements ActionListener, KeyListe
         setSize(new Dimension(640, 480));
         setExtendedState(Frame.NORMAL);
         if (mwclient != null) {
-            setTitle(STR."\{windowName}(Integrated)");
+            setTitle(String.format("%s(Integrated)", windowName));
         } else {
             setTitle(windowName);
         }
@@ -315,7 +315,7 @@ public class OperationsDialog extends JFrame implements ActionListener, KeyListe
     public void actionPerformed(ActionEvent e) {
         changesMade = true;
         if (!getTitle().contains("*")) {
-            setTitle(STR."\{getTitle()}*");
+            setTitle(String.format("%s*", getTitle()));
         }
     }
 
@@ -355,8 +355,8 @@ public class OperationsDialog extends JFrame implements ActionListener, KeyListe
         defaultOperationInfo = new DefaultOperation();
         initShortOpVars();
         currentOpType = OperationsDialog.SHORT_OP;
-        setTitle(STR."\{windowName} (\{taskName})");
-        filePathName = STR."./data/operations/short/\{taskName}.txt";
+        setTitle(String.format("%s (%s)", windowName, taskName));
+        filePathName = String.format("./data/operations/short/%s.txt", taskName);
 
     }
 
@@ -382,7 +382,7 @@ public class OperationsDialog extends JFrame implements ActionListener, KeyListe
                 saveShortOperations();
             }
 
-            setTitle(STR."\{windowName} (\{taskName})");
+            setTitle(String.format("%s (%s)", windowName, taskName));
             changesMade = false;
         }
     }
@@ -4281,11 +4281,11 @@ public class OperationsDialog extends JFrame implements ActionListener, KeyListe
             out.close();
 
             JOptionPane.showMessageDialog(null,
-                  STR."\{taskName} saved to \{filePathName}",
+                  String.format("%s saved to %s", taskName, filePathName),
                   "File Saved",
                   JOptionPane.INFORMATION_MESSAGE);
             changesMade = false;
-            setTitle(STR."\{windowName} (\{taskName})");
+            setTitle(String.format("%s (%s)", windowName, taskName));
         } catch (Exception ex) {
             LOGGER.error(ex, "Unable to save file. {}", ex.getLocalizedMessage());
         }
@@ -4297,7 +4297,7 @@ public class OperationsDialog extends JFrame implements ActionListener, KeyListe
         opValues = new BackedTreeMap(defaultOperationInfo);
         FileDialog fDialog = new FileDialog(this, "Load Short Op File", FileDialog.LOAD);
 
-        fDialog.setDirectory(STR."\{System.getProperty("user.dir")}/data/operations/short");
+        fDialog.setDirectory(String.format("%s/data/operations/short", System.getProperty("user.dir")));
         fDialog.setVisible(true);
 
         if (fDialog.getFile() == null) {
@@ -4309,7 +4309,7 @@ public class OperationsDialog extends JFrame implements ActionListener, KeyListe
         filePathName = fDialog.getDirectory() + fDialog.getFile();
         taskName = fDialog.getFile().substring(0, fDialog.getFile().indexOf(".txt"));
 
-        setTitle(STR."\{windowName} (\{taskName})");
+        setTitle(String.format("%s (%s)", windowName, taskName));
 
         // clear out the Flag Tables, just in case
         afTable.clear();
@@ -4358,7 +4358,7 @@ public class OperationsDialog extends JFrame implements ActionListener, KeyListe
         if ((arg0.getKeyCode() >= 32) && (arg0.getKeyCode() <= 126)) {
             changesMade = true;
             if (!getTitle().contains("*")) {
-                setTitle(STR."\{getTitle()}*");
+                setTitle(String.format("%s*", getTitle()));
             }
         }
     }
@@ -4367,7 +4367,7 @@ public class OperationsDialog extends JFrame implements ActionListener, KeyListe
         if ((arg0.getKeyCode() >= 32) && (arg0.getKeyCode() <= 126)) {
             changesMade = true;
             if (!getTitle().contains("*")) {
-                setTitle(STR."\{getTitle()}*");
+                setTitle(String.format("%s*", getTitle()));
             }
         }
     }
@@ -4376,7 +4376,7 @@ public class OperationsDialog extends JFrame implements ActionListener, KeyListe
         if ((arg0.getKeyCode() >= 32) && (arg0.getKeyCode() <= 126)) {
             changesMade = true;
             if (!getTitle().contains("*")) {
-                setTitle(STR."\{getTitle()}*");
+                setTitle(String.format("%s*", getTitle()));
             }
         }
     }
@@ -4415,7 +4415,7 @@ public class OperationsDialog extends JFrame implements ActionListener, KeyListe
 
                 key = checkBox.getName();
                 if (key == null) {
-                    System.err.println(STR."Null Checkbox: \{checkBox.getToolTipText()}");
+                    System.err.println(String.format("Null Checkbox: %s", checkBox.getToolTipText()));
                     continue;
                 }
                 checkBox.setSelected(Boolean.parseBoolean(defaultOperationInfo.getDefault(key)));
@@ -4424,7 +4424,7 @@ public class OperationsDialog extends JFrame implements ActionListener, KeyListe
                 key = combo.getName();
 
                 if (key == null) {
-                    System.err.println(STR."Null Checkbox: \{combo.getToolTipText()}");
+                    System.err.println(String.format("Null Checkbox: %s", combo.getToolTipText()));
                     continue;
                 }
                 combo.setSelectedIndex(Integer.parseInt(defaultOperationInfo.getDefault(key)));
@@ -4470,7 +4470,7 @@ public class OperationsDialog extends JFrame implements ActionListener, KeyListe
                 key = checkBox.getName();
 
                 if (key == null) {
-                    System.err.println(STR."Null Checkbox: \{checkBox.getToolTipText()}");
+                    System.err.println(String.format("Null Checkbox: %s", checkBox.getToolTipText()));
                     continue;
                 }
                 checkBox.setSelected(Boolean.parseBoolean(OperationInfo.getV(key)));
@@ -4479,7 +4479,7 @@ public class OperationsDialog extends JFrame implements ActionListener, KeyListe
                 key = combo.getName();
 
                 if (key == null) {
-                    System.err.println(STR."Null Checkbox: \{combo.getToolTipText()}");
+                    System.err.println(String.format("Null Checkbox: %s", combo.getToolTipText()));
                     continue;
                 }
                 combo.setSelectedIndex(Integer.parseInt(OperationInfo.getV(key)));
@@ -4524,7 +4524,7 @@ public class OperationsDialog extends JFrame implements ActionListener, KeyListe
 
                 // only save to file if the key does not match default.
                 if (!value.equals(defaultOperationInfo.getDefault(key)) && (!value.isEmpty())) {
-                    p.println(STR."\{key}=\{value}");
+                    p.println(String.format("%s=%s", key, value));
                 }
             } else if (field instanceof JCheckBox checkBox) {
 
@@ -4535,7 +4535,7 @@ public class OperationsDialog extends JFrame implements ActionListener, KeyListe
                     continue;
                 }
                 if (Boolean.parseBoolean(value) != Boolean.parseBoolean(defaultOperationInfo.getDefault(key))) {
-                    p.println(STR."\{key}=\{value}");
+                    p.println(String.format("%s=%s", key, value));
                 }
             } else if (field instanceof JComboBox combo) {
                 value = Integer.toString(combo.getSelectedIndex());
@@ -4545,13 +4545,13 @@ public class OperationsDialog extends JFrame implements ActionListener, KeyListe
                     continue;
                 }
                 if (Integer.parseInt(value) != Integer.parseInt(defaultOperationInfo.getDefault(key))) {
-                    p.println(STR."\{key}=\{value}");
+                    p.println(String.format("%s=%s", key, value));
                 }
             } else if (field instanceof FlagTable table) {
                 value = table.exportFlagString();
                 key = table.getName();
                 if (!value.equalsIgnoreCase(defaultOperationInfo.getDefault(key))) {
-                    p.println(STR."\{key}=\{value}");
+                    p.println(String.format("%s=%s", key, value));
                 }
             }// else continue
         }
@@ -4616,7 +4616,7 @@ public class OperationsDialog extends JFrame implements ActionListener, KeyListe
             saveShortOperations();
         }
 
-        File opFile = new File(STR."./data/operations/short/\{taskName}.txt");
+        File opFile = new File(String.format("./data/operations/short/%s.txt", taskName));
         if (!opFile.exists()) {
             return;
         }
@@ -4638,7 +4638,7 @@ public class OperationsDialog extends JFrame implements ActionListener, KeyListe
             return;
         }
 
-        mwclient.sendChat(STR."\{IClient.CAMPAIGN_PREFIX}c setoperation#short#\{opData.toString()}");
+        mwclient.sendChat(String.format("%sc setoperation#short#%s", IClient.CAMPAIGN_PREFIX, opData.toString()));
     }
 
     public void mouseClicked(MouseEvent arg0) {

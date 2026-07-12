@@ -362,7 +362,7 @@ public class SPilot extends Pilot {
             // been untouched because of caps)
             if (levelGunnery || levelPiloting) {
                 unit.setPilot(this);// refresh pilot! HACKY! CHANGE!
-                return STR." and advanced a level. \{getName()} is now \{getGunnery()}/\{getPiloting()} [Old BV: \{oldBV}/New BV: \{unit.getBVForMatch()}]";
+                return String.format(" and advanced a level. %s is now %s/%s [Old BV: %s/New BV: %s]", getName(), getGunnery(), getPiloting(), oldBV, unit.getBVForMatch());
             }
         }
 
@@ -382,30 +382,30 @@ public class SPilot extends Pilot {
             // Age the pilot. Odds of someone getting beyond a 10th generation
             // elite are so slim that we need not worry.
             if (oldName.endsWith("Jr.")) {
-                setName(STR."\{oldName.substring(0, oldName.lastIndexOf("Jr."))}III");
+                setName(String.format("%sIII", oldName.substring(0, oldName.lastIndexOf("Jr."))));
             } else if (oldName.endsWith("III")) {
-                setName(STR."\{oldName.substring(0, oldName.lastIndexOf("III"))}IV");
+                setName(String.format("%sIV", oldName.substring(0, oldName.lastIndexOf("III"))));
             } else if (oldName.endsWith("IV")) {
-                setName(STR."\{oldName.substring(0, oldName.lastIndexOf("IV"))}V");
+                setName(String.format("%sV", oldName.substring(0, oldName.lastIndexOf("IV"))));
             } else if (oldName.endsWith("V")) {
-                setName(STR."\{oldName}I");
+                setName(String.format("%sI", oldName));
             } else if (oldName.endsWith("VI")) {
-                setName(STR."\{oldName}I");
+                setName(String.format("%sI", oldName));
             } else if (oldName.endsWith("VII")) {
-                setName(STR."\{oldName}I");
+                setName(String.format("%sI", oldName));
             } else if (oldName.endsWith("VIII")) {
-                setName(STR."\{oldName.substring(0, oldName.lastIndexOf("VIII"))}IX");
+                setName(String.format("%sIX", oldName.substring(0, oldName.lastIndexOf("VIII"))));
             } else if (oldName.endsWith("IX")) {
-                setName(STR."\{oldName.substring(0, oldName.lastIndexOf("IX"))}X");
+                setName(String.format("%sX", oldName.substring(0, oldName.lastIndexOf("IX"))));
             } else {
-                setName(STR."\{oldName} Jr.");
+                setName(String.format("%s Jr.", oldName));
             }
 
             // New pilots are getting old injuries
             super.setHits(0);
 
             unit.setPilot(this);// refresh pilot! HACKY! CHANGE!
-            return STR.". \{oldName} grew weary of war and retired from active duty. The unit was passed on to \{getName()} [\{getGunnery()}/\{getPiloting()}, Old BV: \{oldBV}/New BV: \{unit.getBVForMatch()}]";
+            return String.format(". %s grew weary of war and retired from active duty. The unit was passed on to %s [%s/%s, Old BV: %s/New BV: %s]", oldName, getName(), getGunnery(), getPiloting(), oldBV, unit.getBVForMatch());
         }
 
         if (skillToAdd != null) {
@@ -434,13 +434,13 @@ public class SPilot extends Pilot {
             int newBV = unit.getBVForMatch();
 
             if (skillToAdd instanceof AstechSkill && !CampaignMain.campaignMain.isUsingAdvanceRepair()) {
-                CampaignMain.campaignMain.toUser(STR."PL|SF|\{owner.getFreeBays()}", owner.getName(), false);
+                CampaignMain.campaignMain.toUser(String.format("PL|SF|%s", owner.getFreeBays()), owner.getName(), false);
             }
 
-            String toSend = STR.". \{getName()} gained the \{skillToAdd.getName()} skill";
+            String toSend = String.format(". %s gained the %s skill", getName(), skillToAdd.getName());
 
             if (newBV != oldBV) {
-                toSend += STR." [Old BV: \{oldBV}/New BV: \{newBV}]";
+                toSend += String.format(" [Old BV: %s/New BV: %s]", oldBV, newBV);
             }
 
             return toSend;
@@ -453,7 +453,7 @@ public class SPilot extends Pilot {
          * update the ShortResovler as well.
          */
         if (pilotIsElite) {
-            return STR." but could not level up because \{getName()} is elite";
+            return String.format(" but could not level up because %s is elite", getName());
         }
         // else
         return "";
@@ -602,7 +602,7 @@ public class SPilot extends Pilot {
                 setPilotId(CampaignMain.campaignMain.getAndUpdateCurrentPilotID());
             }
         } catch (Exception ex) {
-            LOGGER.error(ex, STR."Error loading Pilot \{getName()}");
+            LOGGER.error(ex, String.format("Error loading Pilot %s", getName()));
         }
     }
 
@@ -684,10 +684,10 @@ public class SPilot extends Pilot {
             return scrapMessageWithPilot.replaceAll("UNIT", unit.getModelName());
 
         } catch (FileNotFoundException fnfn) {
-            return STR."\{getName()} was captured by enemy forces after fleeing the \{unit.getModelName()}.";
+            return String.format("%s was captured by enemy forces after fleeing the %s.", getName(), unit.getModelName());
         } catch (Exception e) {
             LOGGER.error(e, "A problem occurred with your pilot capture messages to owner File!");
-            return STR."\{getName()} was captured by enemy forces after fleeing the \{unit.getModelName()}.";
+            return String.format("%s was captured by enemy forces after fleeing the %s.", getName(), unit.getModelName());
         } finally {
             if (dis != null) {
                 try {
@@ -736,10 +736,10 @@ public class SPilot extends Pilot {
             return scrapMessageWithHouse.replaceAll("UNIT", unit.getModelName());
 
         } catch (FileNotFoundException fnfn) {
-            return STR."\{getName()} was rescued from his unit by our infantry and has decided to join \{house.getColoredNameAsLink()}.";
+            return String.format("%s was rescued from his unit by our infantry and has decided to join %s.", getName(), house.getColoredNameAsLink());
         } catch (Exception e) {
             LOGGER.error(e, "A problem occurred with your pilot capture messages defect File!");
-            return STR."\{getName()} was rescued from his unit by our infantry and has decided to join \{house.getColoredNameAsLink()}.";
+            return String.format("%s was rescued from his unit by our infantry and has decided to join %s.", getName(), house.getColoredNameAsLink());
         } finally {
             if (dis != null) {
                 try {
@@ -789,10 +789,10 @@ public class SPilot extends Pilot {
             return scrapMessageWithPilot.replaceAll("UNIT", unit.getModelName());
 
         } catch (FileNotFoundException fnfn) {
-            return STR."\{getName()} captured by our infantry transferred to HQ for interrogation.";
+            return String.format("%s captured by our infantry transferred to HQ for interrogation.", getName());
         } catch (Exception e) {
             LOGGER.error(e, "A problem occurred with your pilot capture messages defect File!");
-            return STR."\{getName()} captured by our infantry transferred to HQ for interrogation.";
+            return String.format("%s captured by our infantry transferred to HQ for interrogation.", getName());
         } finally {
             if (dis != null) {
                 try {
@@ -843,10 +843,10 @@ public class SPilot extends Pilot {
             return scrapMessageWithPilot.replaceAll("UNIT", unit.getModelName());
 
         } catch (FileNotFoundException fnfn) {
-            return STR."\{getName()} hiked back to base.";
+            return String.format("%s hiked back to base.", getName());
         } catch (Exception e) {
             LOGGER.error(e, "A problem occurred with your pilot capture messages File!");
-            return STR."\{getName()} hiked back to base.";
+            return String.format("%s hiked back to base.", getName());
         } finally {
             if (dis != null) {
                 try {

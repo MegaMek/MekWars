@@ -45,7 +45,7 @@ public class TraitSkill extends SPilotSkill {
             return 0;
         }
 
-        String chance = STR."chancefor\{getAbbreviation()}for\{Unit.getTypeClassDesc(unitType)}";
+        String chance = String.format("chancefor%sfor%s", getAbbreviation(), Unit.getTypeClassDesc(unitType));
 
         SHouse house = CampaignMain.campaignMain.getHouseFromPartialString(pilot.getCurrentFaction());
 

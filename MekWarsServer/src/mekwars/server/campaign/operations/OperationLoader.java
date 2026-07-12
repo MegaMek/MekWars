@@ -93,7 +93,7 @@ public class OperationLoader {
         Properties opValues = new Properties();
 
         //attempt to load short vals
-        String shortFilename = STR."./data/operations/short/\{opName}";
+        String shortFilename = String.format("./data/operations/short/%s", opName);
         try {
             opValues.load(new FileInputStream(shortFilename));
         } catch (Exception e) {
@@ -101,7 +101,7 @@ public class OperationLoader {
         }
 
         //attempt to load long vals
-        String longFilename = STR."./data/operations/long/\{opName}";
+        String longFilename = String.format("./data/operations/long/%s", opName);
         try {
             opValues.load(new FileInputStream(longFilename));
         } catch (Exception e) {
@@ -130,11 +130,11 @@ public class OperationLoader {
         java.util.Properties modValues = new java.util.Properties();
 
         //attempt load
-        String modFilename = STR."./data/operations/modifiers/\{opName}";
+        String modFilename = String.format("./data/operations/modifiers/%s", opName);
         try {
             modValues.load(new java.io.FileInputStream(modFilename));
         } catch (Exception e) {
-            LOGGER.error(e, STR."Problems loading mod op: \{opName}");
+            LOGGER.error(e, String.format("Problems loading mod op: %s", opName));
         }
 
         opName = opName.substring(0, opName.length() - 5);//remove ".txt"

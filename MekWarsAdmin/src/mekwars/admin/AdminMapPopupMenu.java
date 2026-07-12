@@ -73,9 +73,9 @@ public class AdminMapPopupMenu extends JMenu {
         item = new JMenuItem("Rename Planet");
         item.addActionListener(ex -> {
             Planet cPlanet = pplanet;
-            String newName = JOptionPane.showInputDialog(STR."Rename \{cPlanet.getName()} to:");
+            String newName = JOptionPane.showInputDialog(String.format("Rename %s to:", cPlanet.getName()));
             if (newName != null && !newName.trim().isEmpty()) {
-                AdminMapPopupMenu.this.client.sendChat(STR."\{IClient.CAMPAIGN_PREFIX}adminrenameplanet \{cPlanet.getId()}#\{cPlanet.getName()}#\{newName}");
+                AdminMapPopupMenu.this.client.sendChat(String.format("%sadminrenameplanet %s#%s#%s", IClient.CAMPAIGN_PREFIX, cPlanet.getId(), cPlanet.getName(), newName));
                 AdminMapPopupMenu.this.client.refreshData();
                 mp.repaint();
             }
@@ -114,7 +114,7 @@ public class AdminMapPopupMenu extends JMenu {
             String planet = pnd.getPlanetName();
 
             if (planet != null) {
-                AdminMapPopupMenu.this.client.sendChat(STR."\{IClient.CAMPAIGN_PREFIX}c adminmoveplanet#\{planet}#\{AdminMapPopupMenu.this.xCord}#\{AdminMapPopupMenu.this.yCord}");
+                AdminMapPopupMenu.this.client.sendChat(String.format("%sc adminmoveplanet#%s#%s#%s", IClient.CAMPAIGN_PREFIX, planet, AdminMapPopupMenu.this.xCord, AdminMapPopupMenu.this.yCord));
                 AdminMapPopupMenu.this.client.refreshData();
                 mp.repaint();
             }
@@ -130,7 +130,7 @@ public class AdminMapPopupMenu extends JMenu {
                       "Planet Name?");
                 if (planetName == null || planetName.isEmpty()) {return;}
 
-                AdminMapPopupMenu.this.client.sendChat(STR."\{IClient.CAMPAIGN_PREFIX}c admincreateplanet#\{planetName}#\{AdminMapPopupMenu.this.xCord}#\{AdminMapPopupMenu.this.yCord}");
+                AdminMapPopupMenu.this.client.sendChat(String.format("%sc admincreateplanet#%s#%s#%s", IClient.CAMPAIGN_PREFIX, planetName, AdminMapPopupMenu.this.xCord, AdminMapPopupMenu.this.yCord));
                 AdminMapPopupMenu.this.client.refreshData();
                 mp.repaint();
                 int id = CampaignData.cd.getPlanetByName(planetName).getId();
@@ -144,7 +144,7 @@ public class AdminMapPopupMenu extends JMenu {
             int result = JOptionPane.showConfirmDialog(new JFrame(),
                   "Are you Sure you want to Destroy this planet?");
             if (result == JOptionPane.YES_OPTION) {
-                AdminMapPopupMenu.this.client.sendChat(STR."\{IClient.CAMPAIGN_PREFIX}c admindestroyplanet#\{pname}");
+                AdminMapPopupMenu.this.client.sendChat(String.format("%sc admindestroyplanet#%s", IClient.CAMPAIGN_PREFIX, pname));
                 AdminMapPopupMenu.this.client.refreshData();
                 mp.repaint();
             }
@@ -175,7 +175,7 @@ public class AdminMapPopupMenu extends JMenu {
                     }
                 }
             }
-            AdminMapPopupMenu.this.client.sendChat(STR."\{IClient.CAMPAIGN_PREFIX}c AdminSetPlanetOpFlags#\{pname}#\{results.toString()}");
+            AdminMapPopupMenu.this.client.sendChat(String.format("%sc AdminSetPlanetOpFlags#%s#%s", IClient.CAMPAIGN_PREFIX, pname, results.toString()));
             AdminMapPopupMenu.this.client.refreshData();
             mp.repaint();
         });

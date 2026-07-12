@@ -167,7 +167,7 @@ public class SPlanet extends TimeUpdatePlanet implements Serializable, Comparabl
             setTimestamp(simpleDateFormat.parse(TokenReader.readString(stringTokenizer)));
         } catch (Exception ex) {
             LOGGER.error(ex,
-                  STR."The following excepion on planet \{getName()} is not critical, but will cause useless bandwith usage: please fix!");
+                  String.format("The following excepion on planet %s is not critical, but will cause useless bandwith usage: please fix!", getName()));
             setTimestamp(new Date(System.currentTimeMillis()));
         }
 
@@ -304,12 +304,12 @@ public class SPlanet extends TimeUpdatePlanet implements Serializable, Comparabl
         // length > 0 (real updates)
         if (oldOwner != null && !oldOwnerHSUpdates.isEmpty()) {
             CampaignMain.campaignMain.doSendToAllOnlinePlayers(oldOwner,
-                  STR."HS|\{oldOwnerHSUpdates.toString()}",
+                  String.format("HS|%s", oldOwnerHSUpdates.toString()),
                   false);
         }
         if (newOwner != null && !newOwnerHSUpdates.isEmpty()) {
             CampaignMain.campaignMain.doSendToAllOnlinePlayers(newOwner,
-                  STR."HS|\{newOwnerHSUpdates.toString()}",
+                  String.format("HS|%s", newOwnerHSUpdates.toString()),
                   false);
         }
 
@@ -467,7 +467,7 @@ public class SPlanet extends TimeUpdatePlanet implements Serializable, Comparabl
 
         if (!this.getPlanetFlags().isEmpty()) {
             for (String key : this.getPlanetFlags().keySet()) {
-                result.append(STR."\{key}^");
+                result.append(String.format("%s^", key));
             }
         } else {
             result.append("^^");
@@ -575,7 +575,7 @@ public class SPlanet extends TimeUpdatePlanet implements Serializable, Comparabl
             colorString = owner.getHouseColor();
         }
 
-        return STR."<font color=\"\{colorString}\">\{getNameAsLink()}</font>";
+        return String.format("<font color=\"%s\">%s</font>", colorString, getNameAsLink());
     }
 
     public @Nullable SHouse getOwner() {

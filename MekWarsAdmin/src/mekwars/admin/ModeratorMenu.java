@@ -90,10 +90,10 @@ public class ModeratorMenu extends JMenu {
         jMenuModGrantEXP.setText("Grant EXP");
         jMenuModGrantEXP.addActionListener(e -> jMenuModGrantEXP_actionPerformed(e, null));
 
-        jMenuModGrantInfluence.setText(STR."Grant \{client.moneyOrFluMessage(false, true, -1)}");
+        jMenuModGrantInfluence.setText(String.format("Grant %s", client.moneyOrFluMessage(false, true, -1)));
         jMenuModGrantInfluence.addActionListener(e -> jMenuModGrantInfluence_actionPerformed(e, null));
 
-        jMenuModGrantMoney.setText(STR."Grant \{client.moneyOrFluMessage(true, true, -1)}");
+        jMenuModGrantMoney.setText(String.format("Grant %s", client.moneyOrFluMessage(true, true, -1)));
         jMenuModGrantMoney.addActionListener(e -> jMenuModGrantMoney_actionPerformed(e, null));
 
         jMenuModGrantReward.setText("Grant Reward");
@@ -272,15 +272,15 @@ public class ModeratorMenu extends JMenu {
             return;
         }
 
-        mwclient.sendChat(STR."\{IClient.CAMPAIGN_PREFIX}c check#\{name}");
+        mwclient.sendChat(String.format("%sc check#%s", IClient.CAMPAIGN_PREFIX, name));
     }
 
     public void jMenuModGames_actionPerformed(ActionEvent e) {
-        mwclient.sendChat(STR."\{IClient.CAMPAIGN_PREFIX}c modgames");
+        mwclient.sendChat(String.format("%sc modgames", IClient.CAMPAIGN_PREFIX));
     }
 
     public void jMenuModGetModLog_actionPerformed(ActionEvent e) {
-        mwclient.sendChat(STR."\{IClient.CAMPAIGN_PREFIX}c getmodlog");
+        mwclient.sendChat(String.format("%sc getmodlog", IClient.CAMPAIGN_PREFIX));
     }
 
     public void jMenuModGrantEXP_actionPerformed(ActionEvent e, String player) {
@@ -305,7 +305,7 @@ public class ModeratorMenu extends JMenu {
             return;
         }
 
-        mwclient.sendChat(STR."\{IClient.CAMPAIGN_PREFIX}c grantexp#\{name}#\{exp}");
+        mwclient.sendChat(String.format("%sc grantexp#%s#%s", IClient.CAMPAIGN_PREFIX, name, exp));
     }
 
     public void jMenuModGrantInfluence_actionPerformed(ActionEvent e, String player) {
@@ -325,12 +325,12 @@ public class ModeratorMenu extends JMenu {
             return;
         }
         String exp = JOptionPane.showInputDialog(mwclient.getMainFrame(),
-              STR."\{mwclient.moneyOrFluMessage(false, true, -1)} Amount,- to remove");
+              String.format("%s Amount,- to remove", mwclient.moneyOrFluMessage(false, true, -1)));
         if ((exp == null) || (exp.isEmpty())) {
             return;
         }
 
-        mwclient.sendChat(STR."\{IClient.CAMPAIGN_PREFIX}c grantinfluence#\{name}#\{exp}");
+        mwclient.sendChat(String.format("%sc grantinfluence#%s#%s", IClient.CAMPAIGN_PREFIX, name, exp));
     }
 
     public void jMenuModGrantMoney_actionPerformed(ActionEvent e, String player) {
@@ -351,12 +351,12 @@ public class ModeratorMenu extends JMenu {
             return;
         }
         String exp = JOptionPane.showInputDialog(mwclient.getMainFrame(),
-              STR."\{mwclient.moneyOrFluMessage(true, true, -1)} Amount,- to remove");
+              String.format("%s Amount,- to remove", mwclient.moneyOrFluMessage(true, true, -1)));
         if ((exp == null) || (exp.isEmpty())) {
             return;
         }
 
-        mwclient.sendChat(STR."\{IClient.CAMPAIGN_PREFIX}c grantmoney#\{name}#\{exp}");
+        mwclient.sendChat(String.format("%sc grantmoney#%s#%s", IClient.CAMPAIGN_PREFIX, name, exp));
     }
 
     public void jMenuModGrantReward_actionPerformed(ActionEvent e, String player) {
@@ -377,7 +377,7 @@ public class ModeratorMenu extends JMenu {
             return;
         }
 
-        mwclient.sendChat(STR."\{IClient.CAMPAIGN_PREFIX}c grantreward#\{name}#\{exp}");
+        mwclient.sendChat(String.format("%sc grantreward#%s#%s", IClient.CAMPAIGN_PREFIX, name, exp));
     }
 
     public void jMenuModListCommands_actionPerformed(ActionEvent e) {
@@ -385,11 +385,11 @@ public class ModeratorMenu extends JMenu {
         if (name == null) {
             return;
         }
-        mwclient.sendChat(STR."\{IClient.CAMPAIGN_PREFIX}c listcommands#\{name}");
+        mwclient.sendChat(String.format("%sc listcommands#%s", IClient.CAMPAIGN_PREFIX, name));
     }
 
     public void jMenuModListMultiPlayerGroups_actionPerformed(ActionEvent e) {
-        mwclient.sendChat(STR."\{IClient.CAMPAIGN_PREFIX}c listmultiplayergroups");
+        mwclient.sendChat(String.format("%sc listmultiplayergroups", IClient.CAMPAIGN_PREFIX));
     }
 
     public void jMenuModTerminate_actionPerformed(ActionEvent e) {
@@ -397,7 +397,7 @@ public class ModeratorMenu extends JMenu {
         if ((id == null) || (id.isEmpty())) {
             return;
         }
-        mwclient.sendChat(STR."\{IClient.CAMPAIGN_PREFIX}c modterminate#\{id}");
+        mwclient.sendChat(String.format("%sc modterminate#%s", IClient.CAMPAIGN_PREFIX, id));
     }
 
     public void jMenuModDeactivate_actionPerformed(ActionEvent e) {
@@ -411,7 +411,7 @@ public class ModeratorMenu extends JMenu {
         if ((name == null) || (name.isEmpty())) {
             return;
         }
-        mwclient.sendChat(STR."\{IClient.CAMPAIGN_PREFIX}c moddeactivate#\{name}");
+        mwclient.sendChat(String.format("%sc moddeactivate#%s", IClient.CAMPAIGN_PREFIX, name));
     }
 
     public void jMenuModLog_actionPerformed(ActionEvent e) {
@@ -420,7 +420,7 @@ public class ModeratorMenu extends JMenu {
         if ((name == null) || (name.isEmpty())) {
             return;
         }
-        mwclient.sendChat(STR."\{IClient.CAMPAIGN_PREFIX}c modlog#\{name}");
+        mwclient.sendChat(String.format("%sc modlog#%s", IClient.CAMPAIGN_PREFIX, name));
     }
 
     public void jMenuModNoPlay_actionPerformed(ActionEvent e) {
@@ -444,7 +444,7 @@ public class ModeratorMenu extends JMenu {
             return;
         }
 
-        mwclient.sendChat(STR."\{IClient.CAMPAIGN_PREFIX}c modnoplay#\{mode}#\{name}#\{offender}");
+        mwclient.sendChat(String.format("%sc modnoplay#%s#%s#%s", IClient.CAMPAIGN_PREFIX, mode, name, offender));
     }
 
     public void jMenuModSetElo_actionPerformed(ActionEvent e) {
@@ -462,7 +462,7 @@ public class ModeratorMenu extends JMenu {
             return;
         }
 
-        mwclient.sendChat(STR."\{IClient.CAMPAIGN_PREFIX}c setelo#\{name}#\{elo}");
+        mwclient.sendChat(String.format("%sc setelo#%s#%s", IClient.CAMPAIGN_PREFIX, name, elo));
     }
 
     public void jMenuModSetPriceMod_actionPerformed(ActionEvent e) {
@@ -480,7 +480,7 @@ public class ModeratorMenu extends JMenu {
             return;
         }
 
-        mwclient.sendChat(STR."\{IClient.CAMPAIGN_PREFIX}c setpricemod#\{name}#\{elo}");
+        mwclient.sendChat(String.format("%sc setpricemod#%s#%s", IClient.CAMPAIGN_PREFIX, name, elo));
     }
 
     public void jMenuModTerminateContract_actionPerformed(ActionEvent e) {
@@ -493,7 +493,7 @@ public class ModeratorMenu extends JMenu {
             return;
         }
 
-        mwclient.sendChat(STR."\{IClient.CAMPAIGN_PREFIX}c terminatecontract#\{name}");
+        mwclient.sendChat(String.format("%sc terminatecontract#%s", IClient.CAMPAIGN_PREFIX, name));
     }
 
     public void jMenuModTouch_actionPerformed(ActionEvent e) {
@@ -506,7 +506,7 @@ public class ModeratorMenu extends JMenu {
             return;
         }
 
-        mwclient.sendChat(STR."\{IClient.CAMPAIGN_PREFIX}c touch#\{name}");
+        mwclient.sendChat(String.format("%sc touch#%s", IClient.CAMPAIGN_PREFIX, name));
     }
 
     public void jMenuModUnlockLances_actionPerformed(ActionEvent e) {
@@ -519,7 +519,7 @@ public class ModeratorMenu extends JMenu {
             return;
         }
 
-        mwclient.sendChat(STR."\{IClient.CAMPAIGN_PREFIX}c unlocklances#\{name}");
+        mwclient.sendChat(String.format("%sc unlocklances#%s", IClient.CAMPAIGN_PREFIX, name));
     }
 
     public void jMenuModCreateUnit_actionPerformed(ActionEvent e) {
@@ -564,8 +564,8 @@ public class ModeratorMenu extends JMenu {
             return;
         }
 
-        mwclient.sendChat(STR."\{IClient.CAMPAIGN_PREFIX}c modrefreshFactory#\{planetNamestr}#\{Objects.requireNonNull(
-              combo.getSelectedItem()).toString()}");
+        mwclient.sendChat(String.format("%sc modrefreshFactory#%s#%s", IClient.CAMPAIGN_PREFIX, planetNamestr, Objects.requireNonNull(
+              combo.getSelectedItem()).toString()));
     }
 
     public void jMenuModCheckVersion_actionPerformed(ActionEvent e) {
@@ -576,7 +576,7 @@ public class ModeratorMenu extends JMenu {
         if ((name == null) || (name.isEmpty())) {
             return;
         }
-        mwclient.sendChat(STR."\{IClient.CAMPAIGN_PREFIX}c checkversion#\{name}");
+        mwclient.sendChat(String.format("%sc checkversion#%s", IClient.CAMPAIGN_PREFIX, name));
     }
 
 }// end AdminMenu class

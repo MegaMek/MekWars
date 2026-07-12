@@ -84,21 +84,21 @@ public class OperationWriter {
         //construct a new file
         try {
             PrintStream printStream = new PrintStream(new FileOutputStream(path));
-            printStream.println(STR."#Timestamp=\{System.currentTimeMillis()}");
+            printStream.println(String.format("#Timestamp=%s", System.currentTimeMillis()));
 
             for (Operation currO : ops.values()) {
-                String name = STR."\{currO.getName()}*";
-                String range = STR."\{currO.getValue("OperationRange")}*";
-                String color = STR."\{currO.getValue("OperationColor")}*";
-                String hasLong = STR."\{currO.getTypeIndicator()}*";//actually an INT. 0 == short. 1 == long.
-                String launchOn = STR."\{currO.getValue("PercentageToAttackOnWorld")}*";
-                String launchFrom = STR."\{currO.getValue("PercentageToAttackOffWorld")}*";
-                String minOwn = STR."\{currO.getValue("MinPlanetOwnership")}*";
-                String minOwnIBD = STR."\{currO.getValue("MinPlanetOwnershipIgnoredByDefender")}*"; //Baruk Khazad! - 20151003
-                String maxOwn = STR."\{currO.getValue("MaxPlanetOwnership")}*";
-                String reserveOnly = STR."\{currO.getValue("OnlyAllowedFromReserve")}*";
-                String activeOnly = STR."\{currO.getValue("OnlyAllowedFromActive")}*";
-                String minSubFactionLevel = STR."\{currO.getValue("MinSubFactionAccessLevel")}*";
+                String name = String.format("%s*", currO.getName());
+                String range = String.format("%s*", currO.getValue("OperationRange"));
+                String color = String.format("%s*", currO.getValue("OperationColor"));
+                String hasLong = String.format("%s*", currO.getTypeIndicator());//actually an INT. 0 == short. 1 == long.
+                String launchOn = String.format("%s*", currO.getValue("PercentageToAttackOnWorld"));
+                String launchFrom = String.format("%s*", currO.getValue("PercentageToAttackOffWorld"));
+                String minOwn = String.format("%s*", currO.getValue("MinPlanetOwnership"));
+                String minOwnIBD = String.format("%s*", currO.getValue("MinPlanetOwnershipIgnoredByDefender")); //Baruk Khazad! - 20151003
+                String maxOwn = String.format("%s*", currO.getValue("MaxPlanetOwnership"));
+                String reserveOnly = String.format("%s*", currO.getValue("OnlyAllowedFromReserve"));
+                String activeOnly = String.format("%s*", currO.getValue("OnlyAllowedFromActive"));
+                String minSubFactionLevel = String.format("%s*", currO.getValue("MinSubFactionAccessLevel"));
 
                 String facInfo = "any*";
 

@@ -24,7 +24,7 @@ public class ShortOpPlayers {
      */
     public void reportTeams() {
         for (int id : teams.keySet()) {
-            LOGGER.debug(STR."SOP Reporting: TeamID \{id}");
+            LOGGER.debug(String.format("SOP Reporting: TeamID %s", id));
             Team t = getTeam(id);
             for (SPlayer p : t.getPlayers()) {
                 LOGGER.debug("==> {}", p.getName());

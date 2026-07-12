@@ -445,7 +445,7 @@ public class SArmy extends Army {
             toReturn.append(" / BV: ").append(getBV()).append(")");
             return toReturn.toString();
         } else {
-            return STR."(Units: \{getAmountOfUnits()} / BV: \{getBV()})";
+            return String.format("(Units: %s / BV: %s)", getAmountOfUnits(), getBV());
         }
     }
 
@@ -457,9 +457,9 @@ public class SArmy extends Army {
 
         if (accurate) {
             if (showID && !idShouldLink) {
-                toReturn += STR."#\{getID()}";
+                toReturn += String.format("#%s", getID());
             } else if (showID) {
-                toReturn += STR."<a href=\"MEKWARS/c sth#a#\{getID()}\">#\{getID()}</a>";
+                toReturn += String.format("<a href=\"MEKWARS/c sth#a#%s\">#%s</a>", getID(), getID());
             }
 
             if (isDisabled()) {
@@ -589,7 +589,7 @@ public class SArmy extends Army {
     public void setName(String name) {
         super.setName(name);
 
-        CampaignMain.campaignMain.toUser(STR."PL|RNA|\{getID()}#\{name}", getPlayerName(), false);
+        CampaignMain.campaignMain.toUser(String.format("PL|RNA|%s#%s", getID(), name), getPlayerName(), false);
     }
 
     @Override
@@ -597,10 +597,10 @@ public class SArmy extends Army {
         int buffer = CampaignMain.campaignMain.getIntegerConfig("LowerLimitBuffer");
         if (lowerLimit < buffer && lowerLimit != Army.NO_LIMIT) {
             lowerLimit = buffer;
-            CampaignMain.campaignMain.toUser(STR."Army \{getID()}'s lower limit set to \{buffer}.",
+            CampaignMain.campaignMain.toUser(String.format("Army %s's lower limit set to %s.", getID(), buffer),
                   getPlayerName(),
                   true);
-            CampaignMain.campaignMain.toUser(STR."PL|SAB|\{getID()}#\{getLowerLimiter()}#\{getUpperLimiter()}",
+            CampaignMain.campaignMain.toUser(String.format("PL|SAB|%s#%s#%s", getID(), getLowerLimiter(), getUpperLimiter()),
                   getPlayerName(),
                   false);
         }
@@ -613,10 +613,10 @@ public class SArmy extends Army {
         int buffer = CampaignMain.campaignMain.getIntegerConfig("UpperLimitBuffer");
         if (upperLimit < buffer && upperLimit != Army.NO_LIMIT) {
             upperLimit = buffer;
-            CampaignMain.campaignMain.toUser(STR."Army \{getID()}'s upper limit set to \{buffer}.",
+            CampaignMain.campaignMain.toUser(String.format("Army %s's upper limit set to %s.", getID(), buffer),
                   getPlayerName(),
                   true);
-            CampaignMain.campaignMain.toUser(STR."PL|SAB|\{getID()}#\{getLowerLimiter()}#\{getUpperLimiter()}",
+            CampaignMain.campaignMain.toUser(String.format("PL|SAB|%s#%s#%s", getID(), getLowerLimiter(), getUpperLimiter()),
                   getPlayerName(),
                   false);
 
@@ -695,17 +695,17 @@ public class SArmy extends Army {
     public void setPlayerLock(int aid, boolean lock) {
         if (lock) {
             super.playerLockArmy();
-            CampaignMain.campaignMain.toUser(STR."PL|LA|\{getID()}", getPlayerName(), false);
+            CampaignMain.campaignMain.toUser(String.format("PL|LA|%s", getID()), getPlayerName(), false);
         } else {
             super.playerUnlockArmy();
-            CampaignMain.campaignMain.toUser(STR."PL|ULA|\{getID()}", getPlayerName(), false);
+            CampaignMain.campaignMain.toUser(String.format("PL|ULA|%s", getID()), getPlayerName(), false);
         }
     }
 
     @Override
     public void toggleArmyDisabled() {
         super.toggleArmyDisabled();
-        CampaignMain.campaignMain.toUser(STR."PL|TAD|\{getID()}", getPlayerName(), false);
+        CampaignMain.campaignMain.toUser(String.format("PL|TAD|%s", getID()), getPlayerName(), false);
     }
 
     /**

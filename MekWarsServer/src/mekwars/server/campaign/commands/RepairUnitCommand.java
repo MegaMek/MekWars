@@ -49,7 +49,7 @@ public class RepairUnitCommand implements Command {
         if (accessLevel != AccessRole.NONE) {
             int userLevel = CampaignMain.campaignMain.getServer().getUserLevel(Username);
             if (userLevel < getExecutionLevel()) {
-                CampaignMain.campaignMain.toUser(STR."AM:Insufficient access level for command. Level: \{userLevel}. Required: \{accessLevel}.",
+                CampaignMain.campaignMain.toUser(String.format("AM:Insufficient access level for command. Level: %s. Required: %s.", userLevel, accessLevel),
                       Username,
                       true);
                 return;
@@ -73,14 +73,14 @@ public class RepairUnitCommand implements Command {
             SUnit unit = player.getUnit(unitID);
 
             if (unit == null) {
-                CampaignMain.campaignMain.toUser(STR."FSM|You do not have a unit with ID#\{unitID}.", Username, false);
+                CampaignMain.campaignMain.toUser(String.format("FSM|You do not have a unit with ID#%s.", unitID), Username, false);
                 return;
             }
 
             Entity entity = unit.getEntity();
 
             if (entity == null) {
-                CampaignMain.campaignMain.toUser(STR."FSM|You do not have a unit with an Entity \{unitID}.",
+                CampaignMain.campaignMain.toUser(String.format("FSM|You do not have a unit with an Entity %s.", unitID),
                       Username,
                       false);
                 return;

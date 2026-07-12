@@ -109,7 +109,7 @@ public class SPilotSkills {
             return skillBuilder.elementAt(CampaignMain.campaignMain.getRandomNumber(skillBuilder.size()));
         } catch (Exception ex) {
             LOGGER.error(ex,
-                  STR."Problems during skill earning! Skill Table Size = \{skillBuilder.size()} total = \{total}");
+                  String.format("Problems during skill earning! Skill Table Size = %s total = %s", skillBuilder.size(), total));
             return null;
         }
     }

@@ -31,7 +31,7 @@ public class QuirkHandler {
 
     public void setQuirks(SUnit unit) {
         if (CampaignMain.campaignMain.getBooleanConfig("EnableQuirks")) {
-            LOGGER.debug(STR."\{unit.getModelName()} \{unit.getId()} Quirks: \{returnQuirkList(unit)}");
+            LOGGER.debug(String.format("%s %s Quirks: %s", unit.getModelName(), unit.getId(), returnQuirkList(unit)));
         }
     }
 
@@ -71,7 +71,7 @@ public class QuirkHandler {
             quirksList.add(returnHtmlQuirkList(unit));
             quirksList.add(returnQuirkList(unit));
 
-            LOGGER.debug(STR."\{unit.getVerboseModelName()}: \{quirksList.toString()}");
+            LOGGER.debug(String.format("%s: %s", unit.getVerboseModelName(), quirksList.toString()));
 
             return quirksList.toString(); // if a unit has no quirks, it will return a "!"
         }

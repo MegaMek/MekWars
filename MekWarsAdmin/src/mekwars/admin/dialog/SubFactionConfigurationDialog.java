@@ -125,22 +125,22 @@ public final class SubFactionConfigurationDialog implements ActionListener {
         JCheckBox baseCheckBox = new JCheckBox();
         for (int type = 0; type < mekwars.common.campaign.CUnit.MAX_BUILD; type++) {
             for (int weight = 0; weight <= mekwars.common.campaign.CUnit.ASSAULT; weight++) {
-                baseCheckBox = new JCheckBox(STR."Can buy new \{CUnit.getWeightClassDesc(weight)} \{CUnit.getTypeClassDesc(
-                      type)}");
-                baseCheckBox.setToolTipText(STR."<html>Check to allow subfaction memebers to buy new<br>\{CUnit.getWeightClassDesc(
-                      weight)} \{CUnit.getTypeClassDesc(type)}</html>");
-                baseCheckBox.setName(STR."CanBuyNew\{CUnit.getWeightClassDesc(weight)}\{CUnit.getTypeClassDesc(type)}");
+                baseCheckBox = new JCheckBox(String.format("Can buy new %s %s", CUnit.getWeightClassDesc(weight), CUnit.getTypeClassDesc(
+                      type)));
+                baseCheckBox.setToolTipText(String.format("<html>Check to allow subfaction memebers to buy new<br>%s %s</html>", CUnit.getWeightClassDesc(
+                      weight), CUnit.getTypeClassDesc(type)));
+                baseCheckBox.setName(String.format("CanBuyNew%s%s", CUnit.getWeightClassDesc(weight), CUnit.getTypeClassDesc(type)));
                 mainCBoxGridPanel.add(baseCheckBox);
             }
         }
 
         for (int type = 0; type < mekwars.common.campaign.CUnit.MAX_BUILD; type++) {
             for (int weight = 0; weight <= mekwars.common.campaign.CUnit.ASSAULT; weight++) {
-                baseCheckBox = new JCheckBox(STR."Can buy used \{CUnit.getWeightClassDesc(weight)} \{CUnit.getTypeClassDesc(
-                      type)}");
-                baseCheckBox.setToolTipText(STR."<html>Check to allow subfaction memebers to buy used<br>\{CUnit.getWeightClassDesc(
-                      weight)} \{CUnit.getTypeClassDesc(type)}</html>");
-                baseCheckBox.setName(STR."CanBuyUsed\{CUnit.getWeightClassDesc(weight)}\{CUnit.getTypeClassDesc(type)}");
+                baseCheckBox = new JCheckBox(String.format("Can buy used %s %s", CUnit.getWeightClassDesc(weight), CUnit.getTypeClassDesc(
+                      type)));
+                baseCheckBox.setToolTipText(String.format("<html>Check to allow subfaction memebers to buy used<br>%s %s</html>", CUnit.getWeightClassDesc(
+                      weight), CUnit.getTypeClassDesc(type)));
+                baseCheckBox.setName(String.format("CanBuyUsed%s%s", CUnit.getWeightClassDesc(weight), CUnit.getTypeClassDesc(type)));
                 mainCBoxGridPanel.add(baseCheckBox);
             }
         }
@@ -213,10 +213,10 @@ public final class SubFactionConfigurationDialog implements ActionListener {
                     configPairs.append("#");
                 }
 
-                client.sendChat(STR."\{IClient.CAMPAIGN_PREFIX}c SetSubFactionConfig#\{this.subFactionConfig.getConfig(
-                      "Name")}#\{houseName}#\{configPairs.toString()}");
+                client.sendChat(String.format("%sc SetSubFactionConfig#%s#%s#%s", IClient.CAMPAIGN_PREFIX, this.subFactionConfig.getConfig(
+                      "Name"), houseName, configPairs.toString()));
             }
-            client.sendChat(STR."\{IClient.CAMPAIGN_PREFIX}c adminsave");
+            client.sendChat(String.format("%sc adminsave", IClient.CAMPAIGN_PREFIX));
             client.refreshData();
 
         } else {dialog.dispose();}
@@ -248,7 +248,7 @@ public final class SubFactionConfigurationDialog implements ActionListener {
 
                 key = checkBox.getName();
                 if (key == null) {
-                    LOGGER.error(STR."Null Checkbox: \{checkBox.getToolTipText()}");
+                    LOGGER.error(String.format("Null Checkbox: %s", checkBox.getToolTipText()));
                     continue;
                 }
                 checkBox.setSelected(Boolean.parseBoolean(this.subFactionConfig.getConfig(key)));
@@ -257,7 +257,7 @@ public final class SubFactionConfigurationDialog implements ActionListener {
 
                 key = radioButton.getName();
                 if (key == null) {
-                    LOGGER.error(STR."Null RadioButton: \{radioButton.getToolTipText()}");
+                    LOGGER.error(String.format("Null RadioButton: %s", radioButton.getToolTipText()));
                     continue;
                 }
                 radioButton.setSelected(Boolean.parseBoolean(this.subFactionConfig.getConfig(key)));

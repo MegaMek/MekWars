@@ -87,7 +87,7 @@ public class ServerWrapper extends MWChatServer {
     //this is a hack...
     //there should be comm objects
     public void broadcastComm(String command) {
-        LOGGER.debug(STR."Sending Broadcast Message: \{command}");
+        LOGGER.debug(String.format("Sending Broadcast Message: %s", command));
         synchronized (_users) {
             for (MWChatClient cc : _users.values()) {
                 this.sendServerMessage(command, MWChatServer.clientKey(cc));

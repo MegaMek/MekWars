@@ -36,7 +36,7 @@ public class ViewPlayerPartsCommand implements Command {
         if (accessLevel != AccessRole.NONE) {
             int userLevel = CampaignMain.campaignMain.getServer().getUserLevel(Username);
             if (userLevel < getExecutionLevel()) {
-                CampaignMain.campaignMain.toUser(STR."AM:Insufficient access level for command. Level: \{userLevel}. Required: \{accessLevel}.",
+                CampaignMain.campaignMain.toUser(String.format("AM:Insufficient access level for command. Level: %s. Required: %s.", userLevel, accessLevel),
                       Username,
                       true);
                 return;
@@ -56,14 +56,14 @@ public class ViewPlayerPartsCommand implements Command {
 
         SPlayer player = CampaignMain.campaignMain.getPlayer(command.nextToken());
 
-        String toReturn = STR."Parts cache for \{player.getName()}.<br>" + player.getUnitParts()
+        String toReturn = String.format("Parts cache for %s.<br>", player.getName()) + player.getUnitParts()
                                                                                  .tableComponents(CampaignMain.campaignMain.getIntegerConfig(
                                                                                        "CampaignYear"));
 
-        CampaignMain.campaignMain.toUser(STR."SM|\{toReturn}", Username, false);
+        CampaignMain.campaignMain.toUser(String.format("SM|%s", toReturn), Username, false);
 
         CampaignMain.campaignMain.doSendModMail("NOTE",
-              STR."\{Username} has viewed \{player.getName()}'s parts cache.");
+              String.format("%s has viewed %s's parts cache.", Username, player.getName()));
     }
 
     public AccessRole getExecutionLevel() {

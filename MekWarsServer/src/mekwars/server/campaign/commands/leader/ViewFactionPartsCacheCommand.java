@@ -31,7 +31,7 @@ public class ViewFactionPartsCacheCommand implements Command {
         if (accessLevel != 0) {
             int userLevel = CampaignMain.campaignMain.getServer().getUserLevel(Username);
             if (userLevel < getExecutionLevel()) {
-                CampaignMain.campaignMain.toUser(STR."AM:Insufficient access level for command. Level: \{userLevel}. Required: \{accessLevel}.",
+                CampaignMain.campaignMain.toUser(String.format("AM:Insufficient access level for command. Level: %s. Required: %s.", userLevel, accessLevel),
                       Username,
                       true);
                 return;
@@ -51,7 +51,7 @@ public class ViewFactionPartsCacheCommand implements Command {
             return;
         }
 
-        String results = STR."SM|\{house.getUnitParts().tableComponents(year)}";
+        String results = String.format("SM|%s", house.getUnitParts().tableComponents(year));
 
         CampaignMain.campaignMain.toUser(results, Username, false);
     }

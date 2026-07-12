@@ -80,7 +80,7 @@ public class TrackerThread extends Thread {
         //ip of tracker
         //String trackerAddress = serv.getConfigParam("TRACKERADDRESS");
         String trackerAddress = serv.getCampaign().getConfig("TrackerAddress");
-        LOGGER.info(STR."\{name} \{link} \{desc} \{trackerAddress}");
+        LOGGER.info(String.format("%s %s %s %s", name, link, desc, trackerAddress));
 
         /*
          * Immediately send core info to tracker.
@@ -92,7 +92,7 @@ public class TrackerThread extends Thread {
             sock = new Socket(trackerAddress, 13731);//fixed port
             PrintWriter printWriter = new PrintWriter(sock.getOutputStream());
 
-            printWriter.println(STR."SS%\{name}%\{link}%\{MWServ.SERVER_VERSION}%\{desc}");
+            printWriter.println(String.format("SS%%%s%%%s%%%s%%%s", name, link, MWServ.SERVER_VERSION, desc));
             printWriter.flush();
             printWriter.close();
             LOGGER.info("TrackerThread sent server start information.");
@@ -168,6 +168,6 @@ public class TrackerThread extends Thread {
         }
 
         //string to send to tracker
-        return STR."PH%\{name}%\{playersOnline}%\{gamesInProgress}%\{gamesCompleted}";
+        return String.format("PH%%%s%%%s%%%s%%%s", name, playersOnline, gamesInProgress, gamesCompleted);
     }
 }

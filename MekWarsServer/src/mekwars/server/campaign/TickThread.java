@@ -68,7 +68,7 @@ public class TickThread extends Thread {
                 this.extendedWait(duration);  //15 mins by default
 
                 tickID++;
-                LOGGER.info(STR."Tick (\{tickID}) Started");
+                LOGGER.info(String.format("Tick (%s) Started", tickID));
 
                 try {
                     myCampaign.tick(true, tickID);
@@ -102,8 +102,8 @@ public class TickThread extends Thread {
                     }
                 }
 
-                LOGGER.info(STR."Tick (\{tickID}) Finished");
-                myCampaign.doSendToAllOnlinePlayers(STR."CC|NT|\{this.duration}|true", false);
+                LOGGER.info(String.format("Tick (%s) Finished", tickID));
+                myCampaign.doSendToAllOnlinePlayers(String.format("CC|NT|%s|true", this.duration), false);
             }
         } catch (Exception ex) {
             LOGGER.error(ex, "Error during run: {}", ex.getLocalizedMessage());

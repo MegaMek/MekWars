@@ -285,7 +285,7 @@ public class OpponentListHelper {
                     if (lastComma >= 0) {
                         String front = output.substring(0, lastComma);
                         String back = output.substring(lastComma + 2, output.length());
-                        output = new StringBuilder(STR."\{front} and \{back}");
+                        output = new StringBuilder(String.format("%s and %s", front, back));
                     }
 
                 } else { // we can assume size == 1

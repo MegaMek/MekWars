@@ -84,8 +84,8 @@ public class SPersonalPilotQueues implements Serializable {
     public void checkQueueAndWarn(String playerName, int unitType, int weightClass) {
         int size = this.getPilotQueue(unitType, weightClass).size();
         if (size > CampaignMain.campaignMain.getIntegerConfig("MaxAllowedPilotsInQueueToBuyFromHouse")) {
-            CampaignMain.campaignMain.toUser(STR."WARNING: You have more \{Unit.getWeightClassDesc(weightClass)} \{Unit.getTypeClassDesc(
-                        unitType)} pilots than allowed. HQ will randomly reassign some of them, if you do not.",
+            CampaignMain.campaignMain.toUser(String.format("WARNING: You have more %s %s pilots than allowed. HQ will randomly reassign some of them, if you do not.",
+                        Unit.getWeightClassDesc(weightClass), Unit.getTypeClassDesc(unitType)),
                   playerName);
         }
     }

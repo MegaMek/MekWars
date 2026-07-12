@@ -110,7 +110,7 @@ public class CommandTaskThread extends Thread {
                 Class<?> cmdClass;
                 ServerCommand cmd;
                 try {
-                    cmdClass = Class.forName(STR."server.dataProvider.commands.\{cmdStr}");
+                    cmdClass = Class.forName(String.format("server.dataProvider.commands.%s", cmdStr));
                     cmd = (ServerCommand) cmdClass.getDeclaredConstructor().newInstance();
                 } catch (Exception e) {
                     bufferedReader.close();

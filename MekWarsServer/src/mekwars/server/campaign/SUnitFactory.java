@@ -82,7 +82,7 @@ public class SUnitFactory extends UnitFactory implements Serializable {
         result.append(getTicksUntilRefresh());
         result.append(getRefreshSpeed());
 
-        String buildTableFolder = getBuildTableFolder().replaceAll(STR."\{BuildTable.STANDARD}\{File.separatorChar}",
+        String buildTableFolder = getBuildTableFolder().replaceAll(String.format("%s%s", BuildTable.STANDARD, File.separatorChar),
               "");
 
         if (buildTableFolder.trim().isEmpty() || buildTableFolder.equals(BuildTable.STANDARD)) {
@@ -160,7 +160,7 @@ public class SUnitFactory extends UnitFactory implements Serializable {
             sizeid += "ae";
         }
 
-        result += STR."<img src=\"data/images/\{sizeid}.gif\">";
+        result += String.format("<img src=\"data/images/%s.gif\">", sizeid);
         return result;
     }
 
@@ -187,7 +187,7 @@ public class SUnitFactory extends UnitFactory implements Serializable {
          *  production.
          */
         if (this.getPlanet().getName() != null) {
-            producer += STR." on \{this.getPlanet().getName()}";
+            producer += String.format(" on %s", this.getPlanet().getName());
         }
 
         String unitSize = getSize();
@@ -198,18 +198,18 @@ public class SUnitFactory extends UnitFactory implements Serializable {
 
         filename = BuildTable.getUnitFilename(this.getFounder(), unitSize, type_id, getBuildTableFolder());
         // log the creation
-        String buildtableName = STR."\{this.getFounder()}_\{this.getSize()}";
+        String buildtableName = String.format("%s_%s", this.getFounder(), this.getSize());
 
         if (type_id != Unit.MEK) {
             buildtableName += Unit.getTypeClassDesc(type_id);
         }
 
         if (this.getPlanet().getOwner() != null) {
-            LOGGER.info(STR."New unit for \{this.getPlanet().getOwner().getName()} on \{this.getPlanet()
-                                                                                              .getName()}: \{filename}(Table: \{buildtableName})");
+            LOGGER.info(String.format("New unit for %s on %s: %s(Table: %s)", this.getPlanet().getOwner().getName(), this.getPlanet()
+                                                                                              .getName(), filename, buildtableName));
         } else {
-            LOGGER.info(STR."New unit for \{this.getFounder()} on \{this.getPlanet()
-                                                                          .getName()}: \{filename}(Table: \{buildtableName})");
+            LOGGER.info(String.format("New unit for %s on %s: %s(Table: %s)", this.getFounder(), this.getPlanet()
+                                                                          .getName(), filename, buildtableName));
         }
 
         if (filename.toLowerCase().trim().endsWith(".mul")) {
@@ -260,13 +260,13 @@ public class SUnitFactory extends UnitFactory implements Serializable {
          * Change the factory's information (refresh time) Format:
          * HS|CF|weight$metatype$planet$name$timetorefresh$accessLevel|
          */
-        String hsUpdate = STR."CF|\{getWeightclass()}$\{getType()}$\{getPlanet().getName()}$\{getName()}$\{getTicksUntilRefresh()}$\{getAccessLevel()}|";
+        String hsUpdate = String.format("CF|%s$%s$%s$%s$%s$%s|", getWeightclass(), getType(), getPlanet().getName(), getName(), getTicksUntilRefresh(), getAccessLevel());
 
         if (sendHSUpdate) {
             SHouse owner = getPlanet().getOwner();
 
             if (owner != null) {
-                CampaignMain.campaignMain.doSendToAllOnlinePlayers(owner, STR."HS|\{hsUpdate}", false);
+                CampaignMain.campaignMain.doSendToAllOnlinePlayers(owner, String.format("HS|%s", hsUpdate), false);
             }
         }
 

@@ -38,7 +38,7 @@ public class UnenrollCommand implements Command {
         if (accessLevel != 0) {
             int userLevel = CampaignMain.campaignMain.getServer().getUserLevel(Username);
             if (userLevel < getExecutionLevel()) {
-                CampaignMain.campaignMain.toUser(STR."AM:Insufficient access level for command. Level: \{userLevel}. Required: \{accessLevel}.",
+                CampaignMain.campaignMain.toUser(String.format("AM:Insufficient access level for command. Level: %s. Required: %s.", userLevel, accessLevel),
                       Username,
                       true);
                 return;
@@ -127,7 +127,7 @@ public class UnenrollCommand implements Command {
         removeFaction(playerFaction);
 
         //delete the player's saved info if a pfile exists
-        File fp = new File(STR."./campaign/players/\{player.getName().toLowerCase()}.dat");
+        File fp = new File(String.format("./campaign/players/%s.dat", player.getName().toLowerCase()));
         if (fp.exists()) {
             fp.delete();
         }
@@ -135,9 +135,9 @@ public class UnenrollCommand implements Command {
         //tell the mods and add to iplog.0
         java.net.InetAddress ip = CampaignMain.campaignMain.getServer().getIP(Username);
         //MWLogger.modLog(Username + " unenrolled from the campaign (IP: " + ip + ").");
-        LOGGER.info(STR."UNENROLL: \{Username} IP: \{ip}");
+        LOGGER.info(String.format("UNENROLL: %s IP: %s", Username, ip));
         CampaignMain.campaignMain.doSendModMail("NOTE",
-              STR."\{Username} unenrolled from the campaign (IP: \{ip}).");
+              String.format("%s unenrolled from the campaign (IP: %s).", Username, ip));
     }//end process
 
     public int getExecutionLevel() {

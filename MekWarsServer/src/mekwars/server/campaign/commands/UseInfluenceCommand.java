@@ -54,7 +54,7 @@ public class UseInfluenceCommand implements Command {
         if (accessLevel != AccessRole.NONE) {
             int userLevel = CampaignMain.campaignMain.getServer().getUserLevel(Username);
             if (userLevel < getExecutionLevel()) {
-                CampaignMain.campaignMain.toUser(STR."AM:Insufficient access level for command. Level: \{userLevel}. Required: \{accessLevel}.",
+                CampaignMain.campaignMain.toUser(String.format("AM:Insufficient access level for command. Level: %s. Required: %s.", userLevel, accessLevel),
                       Username,
                       true);
                 return;
@@ -94,35 +94,35 @@ public class UseInfluenceCommand implements Command {
                 rewardPoints = MathUtility.parseInt(command.nextToken(), -1);
 
                 if (rewardPoints < 0) {
-                    CampaignMain.campaignMain.toUser(STR."AM:Invalid input - negative \{CampaignMain.campaignMain.getConfig(
-                          "RPLongName")}.", Username, true);
+                    CampaignMain.campaignMain.toUser(String.format("AM:Invalid input - negative %s.", CampaignMain.campaignMain.getConfig(
+                          "RPLongName")), Username, true);
                     return;
                 }
 
                 if (!(MathUtility.parseBoolean(house.getConfig("AllowTechsForRewards"), false))) {
-                    CampaignMain.campaignMain.toUser(STR."AM:Sorry but you are not allowed to buy techs with \{CampaignMain.campaignMain.getConfig(
-                          "RPLongName")}.", Username, true);
+                    CampaignMain.campaignMain.toUser(String.format("AM:Sorry but you are not allowed to buy techs with %s.", CampaignMain.campaignMain.getConfig(
+                          "RPLongName")), Username, true);
                     return;
                 }
 
                 if (rewardPoints > player.getReward()) {
                     if (player.getReward() == 1) {
-                        CampaignMain.campaignMain.toUser(STR."AM:You only have 1 \{CampaignMain.campaignMain.getConfig(
-                              "RPShortName")}. Try again later.", Username, true);
+                        CampaignMain.campaignMain.toUser(String.format("AM:You only have 1 %s. Try again later.", CampaignMain.campaignMain.getConfig(
+                              "RPShortName")), Username, true);
                     } else {
-                        CampaignMain.campaignMain.toUser(STR."AM:You only have \{player.getReward()} \{CampaignMain.campaignMain.getConfig(
-                              "RPShortName")} . Try again later.", Username, true);
+                        CampaignMain.campaignMain.toUser(String.format("AM:You only have %s %s . Try again later.", player.getReward(), CampaignMain.campaignMain.getConfig(
+                              "RPShortName")), Username, true);
                     }
                     return;
                 }
                 if (CampaignMain.campaignMain.isUsingAdvanceRepair()) {
                     int techCost =
-                          MathUtility.parseInt(house.getConfig(STR."RewardPointsFor\{UnitUtils.techDescription(
-                                rewardPoints)}"), 0);
+                          MathUtility.parseInt(house.getConfig(String.format("RewardPointsFor%s", UnitUtils.techDescription(
+                                rewardPoints))), 0);
 
                     if (player.getReward() < techCost) {
-                        CampaignMain.campaignMain.toUser(STR."AM:You do not have enough \{CampaignMain.campaignMain.getConfig(
-                              "RPLongName")} to buy this tech. You need \{techCost}", Username, true);
+                        CampaignMain.campaignMain.toUser(String.format("AM:You do not have enough %s to buy this tech. You need %s", CampaignMain.campaignMain.getConfig(
+                              "RPLongName"), techCost), Username, true);
                         return;
                     }
 
@@ -134,8 +134,8 @@ public class UseInfluenceCommand implements Command {
                         rewards = "s";
                     }
 
-                    CampaignMain.campaignMain.toUser(STR."AM:You hired \{StringUtils.aOrAn(UnitUtils.techDescription(
-                          rewardPoints), true)} tech for \{techCost}RP\{rewards}.", Username, true);
+                    CampaignMain.campaignMain.toUser(String.format("AM:You hired %s tech for %sRP%s.", StringUtils.aOrAn(UnitUtils.techDescription(
+                          rewardPoints), true), techCost, rewards), Username, true);
 
                 } else {
                     int numOfTechBought = MathUtility.parseInt(house.getConfig("TechsForARewardPoint"), 0);
@@ -149,8 +149,8 @@ public class UseInfluenceCommand implements Command {
                         rewards = "s";
                     }
 
-                    CampaignMain.campaignMain.toUser(STR."AM:You hired \{numOfTechBought} tech\{techs} for \{rewardPoints} \{CampaignMain.campaignMain.getConfig(
-                          "RPLongName")}\{rewards}.", Username, true);
+                    CampaignMain.campaignMain.toUser(String.format("AM:You hired %s tech%s for %s %s%s.", numOfTechBought, techs, rewardPoints, CampaignMain.campaignMain.getConfig(
+                          "RPLongName"), rewards), Username, true);
                     player.addReward(-rewardPoints);
                     player.addTechnicians(numOfTechBought);
                 }
@@ -160,24 +160,24 @@ public class UseInfluenceCommand implements Command {
                 rewardPoints = MathUtility.parseInt(command.nextToken(), -1);
 
                 if (rewardPoints < 0) {
-                    CampaignMain.campaignMain.toUser(STR."AM:Invalid input - negative \{CampaignMain.campaignMain.getConfig(
-                          "RPLongName")}.", Username, true);
+                    CampaignMain.campaignMain.toUser(String.format("AM:Invalid input - negative %s.", CampaignMain.campaignMain.getConfig(
+                          "RPLongName")), Username, true);
                     return;
                 }
 
                 if (!(MathUtility.parseBoolean(house.getConfig("AllowInfluenceForRewards"), false))) {
-                    CampaignMain.campaignMain.toUser(STR."Sorry but you are not allowed to buy influence with \{CampaignMain.campaignMain.getConfig(
-                          "RPLongName")}.", Username, true);
+                    CampaignMain.campaignMain.toUser(String.format("Sorry but you are not allowed to buy influence with %s.", CampaignMain.campaignMain.getConfig(
+                          "RPLongName")), Username, true);
                     return;
                 }
 
                 if (rewardPoints > player.getReward()) {
                     if (player.getReward() == 0) {
-                        CampaignMain.campaignMain.toUser(STR."AM:You don't have any \{CampaignMain.campaignMain.getConfig(
-                              "RPLongName")}. Purchase fails.", Username, true);
+                        CampaignMain.campaignMain.toUser(String.format("AM:You don't have any %s. Purchase fails.", CampaignMain.campaignMain.getConfig(
+                              "RPLongName")), Username, true);
                     } else {
-                        String toSend = STR."AM:You only have \{player.getReward()}\{CampaignMain.campaignMain.getConfig(
-                              "RPLongName")}\{StringUtils.addAnS(player.getReward())}. Try again.";
+                        String toSend = String.format("AM:You only have %s%s%s. Try again.", player.getReward(), CampaignMain.campaignMain.getConfig(
+                              "RPLongName"), StringUtils.addAnS(player.getReward()));
                         CampaignMain.campaignMain.toUser(toSend, Username, true);
                     }
 
@@ -186,11 +186,11 @@ public class UseInfluenceCommand implements Command {
 
                 int amountOfInfluenceBought = MathUtility.parseInt(house.getConfig("InfluenceForARewardPoint"), 0);
                 amountOfInfluenceBought *= rewardPoints;
-                CampaignMain.campaignMain.toUser(STR."AM:You've bought \{CampaignMain.campaignMain.moneyOrFluMessage(
+                CampaignMain.campaignMain.toUser(String.format("AM:You've bought %s for %s %s%s.", CampaignMain.campaignMain.moneyOrFluMessage(
                       false,
                       true,
-                      amountOfInfluenceBought)} for \{rewardPoints} \{CampaignMain.campaignMain.getConfig("RPLongName")}\{StringUtils.addAnS(
-                      rewardPoints)}.", Username, true);
+                      amountOfInfluenceBought), rewardPoints, CampaignMain.campaignMain.getConfig("RPLongName"), StringUtils.addAnS(
+                      rewardPoints)), Username, true);
 
                 player.addReward(-rewardPoints);
                 player.addInfluence(amountOfInfluenceBought);
@@ -198,8 +198,8 @@ public class UseInfluenceCommand implements Command {
 
             case 2: //buying units
                 if (!(MathUtility.parseBoolean(house.getConfig("AllowUnitsForRewards"), false))) {
-                    CampaignMain.campaignMain.toUser(STR."AM:Sorry but you are not allowed to buy units with \{CampaignMain.campaignMain.getConfig(
-                          "RPLongName")}.", Username, true);
+                    CampaignMain.campaignMain.toUser(String.format("AM:Sorry but you are not allowed to buy units with %s.", CampaignMain.campaignMain.getConfig(
+                          "RPLongName")), Username, true);
                     return;
                 }
 
@@ -231,8 +231,8 @@ public class UseInfluenceCommand implements Command {
 
                         if (!(MathUtility.parseBoolean(house.getConfig("AllowRareUnitsForRewards"), false))) {
                             CampaignMain.campaignMain.toUser(
-                                  STR."AM:Sorry. You are not allowed to buy rare units with your \{CampaignMain.campaignMain.getConfig(
-                                        "RPLongName")}.",
+                                  String.format("AM:Sorry. You are not allowed to buy rare units with your %s.", CampaignMain.campaignMain.getConfig(
+                                        "RPLongName")),
                                   Username,
                                   true);
                             return;
@@ -256,16 +256,16 @@ public class UseInfluenceCommand implements Command {
 
                 String configName = "";
                 if (unitType == Unit.MEK) {
-                    configName = STR."\{Unit.getWeightClassDesc(unitWeight)}RP";
+                    configName = String.format("%sRP", Unit.getWeightClassDesc(unitWeight));
                 } else {
-                    configName = STR."\{Unit.getWeightClassDesc(unitWeight)}\{Unit.getTypeClassDesc(unitType)}RP";
+                    configName = String.format("%s%sRP", Unit.getWeightClassDesc(unitWeight), Unit.getTypeClassDesc(unitType));
                 }
                 unitTotalRewardPointCost = MathUtility.parseInt(house.getConfig(configName), 0);
                 //unitTotalRewardPointCost = weightCost + typeCost;
 
                 if (faction != null && !player.getHouseFightingFor().equals(faction)) {
-                    double nonHouseUnitMod = MathUtility.parseDouble(house.getConfig(STR."\{player.getHouseFightingFor()
-                                                                                                  .getName()}To\{faction.getName()}RewardPointMultiplier"),
+                    double nonHouseUnitMod = MathUtility.parseDouble(house.getConfig(String.format("%sTo%sRewardPointMultiplier", player.getHouseFightingFor()
+                                                                                                  .getName(), faction.getName())),
                           0.0);
                     if (nonHouseUnitMod < 0) {
                         nonHouseUnitMod = Double.parseDouble(house.getConfig("RewardPointNonHouseMultiplier"));
@@ -280,8 +280,8 @@ public class UseInfluenceCommand implements Command {
                 }
 
                 if (unitTotalRewardPointCost > rewardPointsAvailable) {
-                    CampaignMain.campaignMain.toUser(STR."AM:Sorry. You need more \{CampaignMain.campaignMain.getConfig(
-                          "RPLongName")} to buy that kind of unit.", Username, true);
+                    CampaignMain.campaignMain.toUser(String.format("AM:Sorry. You need more %s to buy that kind of unit.", CampaignMain.campaignMain.getConfig(
+                          "RPLongName")), Username, true);
                     return;
                 }
 
@@ -302,16 +302,16 @@ public class UseInfluenceCommand implements Command {
 
                     for (SUnit newUnit : newUnits) {
                         player.addUnit(newUnit, true);
-                        CampaignMain.campaignMain.toUser(STR."AM:You've bought a \{newUnit.getModelName()} for \{unitTotalRewardPointCost} \{CampaignMain.campaignMain.getConfig(
-                              "RPLongName")}.", Username, true);
+                        CampaignMain.campaignMain.toUser(String.format("AM:You've bought a %s for %s %s.", newUnit.getModelName(), unitTotalRewardPointCost, CampaignMain.campaignMain.getConfig(
+                              "RPLongName")), Username, true);
                     }
                     player.addReward(-unitTotalRewardPointCost);
                 } catch (Exception ex) {
                     CampaignMain.campaignMain.toUser(
-                          STR."AM:An error has occured while trying to create your requested unit. Please contact an admin. Faction: \{factionstring} Type: \{unitType} Class: \{unitWeight}",
+                          String.format("AM:An error has occured while trying to create your requested unit. Please contact an admin. Faction: %s Type: %s Class: %s", factionstring, unitType, unitWeight),
                           Username,
                           true);
-                    LOGGER.error(ex, STR."Error creating unit in \{this.getClass().getName()}");
+                    LOGGER.error(ex, String.format("Error creating unit in %s", this.getClass().getName()));
                 }
                 break;
 
@@ -319,8 +319,8 @@ public class UseInfluenceCommand implements Command {
                 rewardPoints = MathUtility.parseInt(house.getConfig("RewardPointsForRepair"), 0);
 
                 if (rewardPoints > player.getReward()) {
-                    CampaignMain.campaignMain.toUser(STR."AM:You need more \{CampaignMain.campaignMain.getConfig(
-                          "RPLongName")} to repair this unit (requires \{rewardPoints} RP)", Username, true);
+                    CampaignMain.campaignMain.toUser(String.format("AM:You need more %s to repair this unit (requires %s RP)", CampaignMain.campaignMain.getConfig(
+                          "RPLongName"), rewardPoints), Username, true);
                     return;
                 }
 
@@ -329,7 +329,7 @@ public class UseInfluenceCommand implements Command {
 
                 //break out if the player doesn't have a unit with that id
                 if (unit == null) {
-                    CampaignMain.campaignMain.toUser(STR."AM:You don't have a unit with ID# \{unitID}.",
+                    CampaignMain.campaignMain.toUser(String.format("AM:You don't have a unit with ID# %s.", unitID),
                           Username,
                           true);
                     return;
@@ -338,8 +338,8 @@ public class UseInfluenceCommand implements Command {
                 Entity entity = unit.getEntity();
 
                 if (entity.getInternal(Mek.LOC_CENTER_TORSO) < 1) {
-                    CampaignMain.campaignMain.toUser(STR."AM:Sorry but cored units cannot be repaired with \{CampaignMain.campaignMain.getConfig(
-                          "RPLongName")}!", Username);
+                    CampaignMain.campaignMain.toUser(String.format("AM:Sorry but cored units cannot be repaired with %s!", CampaignMain.campaignMain.getConfig(
+                          "RPLongName")), Username);
                     return;
                 }
 
@@ -383,10 +383,10 @@ public class UseInfluenceCommand implements Command {
                     }
                 }
 
-                CampaignMain.campaignMain.toUser(STR."AM:Unit #\{unitID} \{unit.getModelName()} is now fully repaired.",
+                CampaignMain.campaignMain.toUser(String.format("AM:Unit #%s %s is now fully repaired.", unitID, unit.getModelName()),
                       Username,
                       true);
-                CampaignMain.campaignMain.toUser(STR."PL|UU|\{unit.getId()}|\{unit.toString(true)}", Username, false);
+                CampaignMain.campaignMain.toUser(String.format("PL|UU|%s|%s", unit.getId(), unit.toString(true)), Username, false);
                 player.addReward(-rewardPoints);
                 player.checkAndUpdateArmies(unit);
                 player.setSave();
@@ -397,24 +397,24 @@ public class UseInfluenceCommand implements Command {
                 influence = MathUtility.parseInt(command.nextToken(), -1);
 
                 if (influence < 0) {
-                    CampaignMain.campaignMain.toUser(STR."AM:Invalid input - negative \{CampaignMain.campaignMain.getConfig(
-                          "FluLongName")}.", Username, true);
+                    CampaignMain.campaignMain.toUser(String.format("AM:Invalid input - negative %s.", CampaignMain.campaignMain.getConfig(
+                          "FluLongName")), Username, true);
                     return;
                 }
 
                 if ((MathUtility.parseInt(house.getConfig("C_bills_Per_Flu"), -1)) <= 0) {
-                    CampaignMain.campaignMain.toUser(STR."Sorry but you are not allowed to buy CBills with \{CampaignMain.campaignMain.getConfig(
-                          "FluLongName")}.", Username, true);
+                    CampaignMain.campaignMain.toUser(String.format("Sorry but you are not allowed to buy CBills with %s.", CampaignMain.campaignMain.getConfig(
+                          "FluLongName")), Username, true);
                     return;
                 }
 
                 if (influence > player.getInfluence()) {
                     if (player.getInfluence() == 0) {
-                        CampaignMain.campaignMain.toUser(STR."AM:You don't have any \{CampaignMain.campaignMain.getConfig(
-                              "FluLongName")}. Purchase fails.", Username, true);
+                        CampaignMain.campaignMain.toUser(String.format("AM:You don't have any %s. Purchase fails.", CampaignMain.campaignMain.getConfig(
+                              "FluLongName")), Username, true);
                     } else {
-                        String toSend = STR."AM:You only have \{player.getInfluence()}\{CampaignMain.campaignMain.getConfig(
-                              "FluLongName")}\{StringUtils.addAnS(player.getInfluence())}. Try again.";
+                        String toSend = String.format("AM:You only have %s%s%s. Try again.", player.getInfluence(), CampaignMain.campaignMain.getConfig(
+                              "FluLongName"), StringUtils.addAnS(player.getInfluence()));
                         CampaignMain.campaignMain.toUser(toSend, Username, true);
                     }
 
@@ -423,10 +423,10 @@ public class UseInfluenceCommand implements Command {
 
                 int amountOfCBillsBought = MathUtility.parseInt(house.getConfig("Cbills_Per_Flu"), 0);
                 amountOfCBillsBought *= influence;
-                CampaignMain.campaignMain.toUser(STR."AM:You've bought \{CampaignMain.campaignMain.moneyOrFluMessage(
+                CampaignMain.campaignMain.toUser(String.format("AM:You've bought %s for %s %s.", CampaignMain.campaignMain.moneyOrFluMessage(
                             true,
                             false,
-                            amountOfCBillsBought)} for \{influence} \{CampaignMain.campaignMain.getConfig("FluLongName")}.",
+                            amountOfCBillsBought), influence, CampaignMain.campaignMain.getConfig("FluLongName")),
                       Username,
                       true);
 

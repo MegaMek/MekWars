@@ -61,7 +61,7 @@ public final class ImmunityThread extends Thread {//no extension
         }
 
         //inform player. also, if newbie, tell him about potential unit resets
-        CampaignMain.campaignMain.toUser(STR."You are immune to attack for \{immunitySeconds} seconds. [<a href=\"MEKWARS/c deactivate\">Deactivate</a>]",
+        CampaignMain.campaignMain.toUser(String.format("You are immune to attack for %s seconds. [<a href=\"MEKWARS/c deactivate\">Deactivate</a>]", immunitySeconds),
               sPlayer.getName(),
               true);
         if (sPlayer.getMyHouse().isNewbieHouse()) {
@@ -77,10 +77,10 @@ public final class ImmunityThread extends Thread {//no extension
                 if (numResets == 1) {
                     toSend += " once";
                 } else {
-                    toSend += STR."\{numResets} times";
+                    toSend += String.format("%s times", numResets);
                 }
 
-                CampaignMain.campaignMain.toUser(STR."\{toSend} while immune by selecting \"Reset Units\" in the HQ. You may only reset while in reserve.",
+                CampaignMain.campaignMain.toUser(String.format("%s while immune by selecting \"Reset Units\" in the HQ. You may only reset while in reserve.", toSend),
                       sPlayer.getName(),
                       true);
 

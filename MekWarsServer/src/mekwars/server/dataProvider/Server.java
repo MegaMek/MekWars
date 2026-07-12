@@ -84,7 +84,7 @@ public class Server extends Thread {
             return;
         }
 
-        LOGGER.info(STR."DataProvider: server created at port \{dataPort}. Address \{IpAddress}. Waiting for calls...");
+        LOGGER.info(String.format("DataProvider: server created at port %s. Address %s. Waiting for calls...", dataPort, IpAddress));
 
         //listen for new data requests until an error occurs, or forever.
         while (true) {

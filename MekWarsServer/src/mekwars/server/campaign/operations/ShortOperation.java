@@ -249,7 +249,7 @@ public class ShortOperation implements Comparable<Object> {
         gameOptions.append(CampaignMain.campaignMain.getMegaMekOptionsToString());
 
         // add to game log
-        StringBuilder toLog = new StringBuilder(STR."Attack: #\{shortID}/\{initiator.getName()}/\{opName}/\{target.getName()}.<br> - Potential Defenders: ");
+        StringBuilder toLog = new StringBuilder(String.format("Attack: #%s/%s/%s/%s.<br> - Potential Defenders: ", shortID, initiator.getName(), opName, target.getName()));
 
         for (SArmy currA : possibleDefenders) {
             toLog.append(currA.getName()).append("/").append(currA.getID()).append(" ");
@@ -531,21 +531,21 @@ public class ShortOperation implements Comparable<Object> {
             if (isBuildingOperation) {
                 totalBuildings = operation.getIntValue("TotalBuildings");
                 minBuildings = operation.getIntValue("MinBuildingsForOp");
-                buildingOptions = STR."RBP|\{totalBuildings}";
-                buildingOptions += STR."|\{minBuildings}";
-                buildingOptions += STR."|\{operation.getValue("MinFloors")}";
-                buildingOptions += STR."|\{operation.getValue("MaxFloors")}";
-                buildingOptions += STR."|\{operation.getValue("MinCF")}";
-                buildingOptions += STR."|\{operation.getValue("MaxCF")}";
-                buildingOptions += STR."|\{operation.getValue("BuildingType")}";
+                buildingOptions = String.format("RBP|%s", totalBuildings);
+                buildingOptions += String.format("|%s", minBuildings);
+                buildingOptions += String.format("|%s", operation.getValue("MinFloors"));
+                buildingOptions += String.format("|%s", operation.getValue("MaxFloors"));
+                buildingOptions += String.format("|%s", operation.getValue("MinCF"));
+                buildingOptions += String.format("|%s", operation.getValue("MaxCF"));
+                buildingOptions += String.format("|%s", operation.getValue("BuildingType"));
 
                 if (operation.getBooleanValue("BuildingsStartOnMapEdge")) {
                     int pos = CampaignMain.campaignMain.getRandomNumber(mapEdge.length);
                     defenderEdge = mapEdge[pos];
                     attackerEdge = mapEdgeReverse[pos];
-                    buildingOptions += STR."|\{defenderEdge}";
+                    buildingOptions += String.format("|%s", defenderEdge);
                 } else {
-                    buildingOptions += STR."|\{Buildings.EDGE_UNKNOWN}";
+                    buildingOptions += String.format("|%s", Buildings.EDGE_UNKNOWN);
                 }
             }
 
@@ -567,7 +567,7 @@ public class ShortOperation implements Comparable<Object> {
             if (operation.getBooleanValue("TeamOperation")) {
                 for (String currN : getAllPlayerNames()) {
                     SPlayer cPlayer = CampaignMain.campaignMain.getPlayer(currN);
-                    String edge = STR."GMEP|\{teamEdge[cPlayer.getTeamNumber() - 1]}";
+                    String edge = String.format("GMEP|%s", teamEdge[cPlayer.getTeamNumber() - 1]);
                     CampaignMain.campaignMain.toUser(edge, currN, false);
                 }
             }
@@ -608,7 +608,7 @@ public class ShortOperation implements Comparable<Object> {
                         pos++;
                     }
 
-                    String edge = STR."GMEP|\{pos}";
+                    String edge = String.format("GMEP|%s", pos);
                     CampaignMain.campaignMain.toUser(edge, currN, false);
 
                     if (countDown <= 0) {
@@ -629,14 +629,14 @@ public class ShortOperation implements Comparable<Object> {
             else {
                 if (defenderEdge != -1) {
                     for (String currN : defenders.keySet()) {
-                        String edge = STR."GMEP|\{defenderEdge}";
+                        String edge = String.format("GMEP|%s", defenderEdge);
                         CampaignMain.campaignMain.toUser(edge, currN, false);
                     }
                 }
 
                 if (attackerEdge != -1) {
                     for (String currN : attackers.keySet()) {
-                        String edge = STR."GMEP|\{attackerEdge}";
+                        String edge = String.format("GMEP|%s", attackerEdge);
                         CampaignMain.campaignMain.toUser(edge, currN, false);
                     }
                 }
@@ -730,9 +730,9 @@ public class ShortOperation implements Comparable<Object> {
             if (attackArtBV > 0) {
                 // all attackers will have same autonomy
                 AutoArmy currAutoArmy = new AutoArmy(attackArtBV, false);
-                attackerAutoString = STR."PL|AAA|\{currAutoArmy.toString("|")}";
-                attackArtDesc = STR."[Bonus Arty: \{currAutoArmy.getUnits()
-                                                          .size()} pieces, \{currAutoArmy.getBV()}BV]<br>";
+                attackerAutoString = String.format("PL|AAA|%s", currAutoArmy.toString("|"));
+                attackArtDesc = String.format("[Bonus Arty: %s pieces, %sBV]<br>", currAutoArmy.getUnits()
+                                                          .size(), currAutoArmy.getBV());
 
                 // so send it to each attacker ...
                 for (String currP : attackers.keySet()) {
@@ -750,9 +750,9 @@ public class ShortOperation implements Comparable<Object> {
             if (defendArtBV > 0) {
                 // all defenders will have same autoarmy
                 AutoArmy currAutoArmy = new AutoArmy(defendArtBV, false);
-                defenderAutoString = STR."PL|AAA|\{currAutoArmy.toString("|")}";
-                defendArtDesc = STR."[Bonus Arty: \{currAutoArmy.getUnits()
-                                                          .size()} pieces, \{currAutoArmy.getBV()}BV]<br>";
+                defenderAutoString = String.format("PL|AAA|%s", currAutoArmy.toString("|"));
+                defendArtDesc = String.format("[Bonus Arty: %s pieces, %sBV]<br>", currAutoArmy.getUnits()
+                                                          .size(), currAutoArmy.getBV());
 
                 // so send it to each defender ...
                 for (String currP : defenders.keySet()) {
@@ -852,9 +852,9 @@ public class ShortOperation implements Comparable<Object> {
 
                 // all attackers will have same autoarmy
                 AutoArmy currAutoArmy = new AutoArmy(attackGunBV, true);
-                attackerAutoEmplacementsString = STR."PL|GEA|\{currAutoArmy.toString("|")}";
-                attackArtDesc += STR."[Bonus Gun Emplacements: \{currAutoArmy.getUnits()
-                                                                       .size()} pieces, \{currAutoArmy.getBV()}BV]<br>";
+                attackerAutoEmplacementsString = String.format("PL|GEA|%s", currAutoArmy.toString("|"));
+                attackArtDesc += String.format("[Bonus Gun Emplacements: %s pieces, %sBV]<br>", currAutoArmy.getUnits()
+                                                                       .size(), currAutoArmy.getBV());
 
                 // so send it to each attacker ...
                 for (String currP : attackers.keySet()) {
@@ -872,9 +872,9 @@ public class ShortOperation implements Comparable<Object> {
 
                 // all defenders will have same autoarmy
                 AutoArmy currAutoArmy = new AutoArmy(defendGunBV, true);
-                defenderAutoEmplacementsString = STR."PL|GEA|\{currAutoArmy.toString("|")}";
-                defendArtDesc += STR."[Bonus Gun Emplacements: \{currAutoArmy.getUnits()
-                                                                       .size()} pieces, \{currAutoArmy.getBV()}BV]<br>";
+                defenderAutoEmplacementsString = String.format("PL|GEA|%s", currAutoArmy.toString("|"));
+                defendArtDesc += String.format("[Bonus Gun Emplacements: %s pieces, %sBV]<br>", currAutoArmy.getUnits()
+                                                                       .size(), currAutoArmy.getBV());
 
                 // so send it to each defender ...
                 for (String currP : defenders.keySet()) {
@@ -986,8 +986,8 @@ public class ShortOperation implements Comparable<Object> {
             if ((attackerConventionalMines > 0) || (attackerVibraMines > 0)) {
 
                 // all attackers will have same number of mines
-                attackerAutoMinesString = STR."PL|AAM|\{attackerConventionalMines}|\{attackerVibraMines}";
-                attackArtDesc += STR."[Bonus Mines: Conventional: \{attackerConventionalMines} Vibra: \{attackerVibraMines}]<br>";
+                attackerAutoMinesString = String.format("PL|AAM|%s|%s", attackerConventionalMines, attackerVibraMines);
+                attackArtDesc += String.format("[Bonus Mines: Conventional: %s Vibra: %s]<br>", attackerConventionalMines, attackerVibraMines);
 
                 // so send it to each attacker ...
                 for (String currP : attackers.keySet()) {
@@ -1005,8 +1005,8 @@ public class ShortOperation implements Comparable<Object> {
             if ((defenderConventionalMines > 0) || (defenderVibraMines > 0)) {
 
                 // all defenders will have same autoarmy
-                defenderAutoMinesString = STR."PL|AAM|\{defenderConventionalMines}|\{defenderVibraMines}";
-                defendArtDesc += STR."[Bonus Mines: Conventional: \{defenderConventionalMines} Vibra: \{defenderVibraMines}]<br>";
+                defenderAutoMinesString = String.format("PL|AAM|%s|%s", defenderConventionalMines, defenderVibraMines);
+                defendArtDesc += String.format("[Bonus Mines: Conventional: %s Vibra: %s]<br>", defenderConventionalMines, defenderVibraMines);
 
                 // so send it to each defender ...
                 for (String currP : defenders.keySet()) {
@@ -1020,8 +1020,8 @@ public class ShortOperation implements Comparable<Object> {
                 }
             }
 
-            bots = STR."PL|UB|\{operation.getBooleanValue("BotControlsAll")}";
-            botTeams = STR."PL|BOST|\{operation.getBooleanValue("BotsAllOnSameTeam")}";
+            bots = String.format("PL|UB|%s", operation.getBooleanValue("BotControlsAll"));
+            botTeams = String.format("PL|BOST|%s", operation.getBooleanValue("BotsAllOnSameTeam"));
 
             for (String currN : defenders.keySet()) {
                 CampaignMain.campaignMain.toUser(bots, currN, false);
