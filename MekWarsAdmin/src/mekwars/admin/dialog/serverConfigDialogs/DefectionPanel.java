@@ -35,7 +35,7 @@ public class DefectionPanel extends JPanel {
     public DefectionPanel() {
         super();
         /*
-         * DEFECTION PANEL CONSTRUCTION Panel which controls most defection-related matter. Some SOL-specific things handled in Newbie panel.
+         * DEFECTION PANEL CONSTRUCTION Panel which controls most defection-related matter. Some SOL-specific things are handled in a Newbie panel.
          */
         JPanel defectionTextPanel1 = new JPanel(new SpringLayout());
         JPanel defectionTextPanel2 = new JPanel(new SpringLayout());
@@ -112,7 +112,7 @@ public class DefectionPanel extends JPanel {
         SpringLayoutHelper.setupSpringGrid(defectionTextPanel1, 5, 2);
         SpringLayoutHelper.setupSpringGrid(defectionTextPanel2, 5, 2);
 
-        // set up checkboxen
+        // set up checkboxes
         JCheckBox baseCheckBox = new JCheckBox("Merc Penalty");
 
         baseCheckBox.setToolTipText("Check to penalize players joining Mercenary factions.");
@@ -138,7 +138,7 @@ public class DefectionPanel extends JPanel {
         baseCheckBox.setName("FactionUnitsLeavingSOL");
         defectionBoxPanel.add(baseCheckBox);
 
-        // set up the springs for the check boxes
+        // set up the springs for the checkboxes
         SpringLayoutHelper.setupSpringGrid(defectionBoxPanel, 4);
 
         // finalize layout

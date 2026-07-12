@@ -185,11 +185,12 @@ public class DefaultPlayerFlagListDialog extends JDialog implements ActionListen
         return -1;
     }
 
-    private class PFTableModel extends DefaultTableModel {
+    private static class PFTableModel extends DefaultTableModel {
 
         /**
          *
          */
+        @Serial
         private static final long serialVersionUID = -4242279250379540474L;
 
         public PFTableModel(String[] columnNames) {
@@ -198,20 +199,15 @@ public class DefaultPlayerFlagListDialog extends JDialog implements ActionListen
         }
 
         public boolean isCellEditable(int row, int col) {
-            if (col == 0) {
-                return false;
-            } else {
-                return true;
-            }
+            return col != 0;
         }
 
-        @SuppressWarnings("unchecked")
         public Class getColumnClass(int c) {
             return getValueAt(0, c).getClass();
         }
     }
 
-    private class PFTableChangeListener implements TableModelListener {
+    private static class PFTableChangeListener implements TableModelListener {
         JTable table;
         Vector<String> pendingFlags;
 

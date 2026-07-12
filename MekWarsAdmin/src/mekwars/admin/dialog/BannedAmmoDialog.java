@@ -20,6 +20,7 @@ package mekwars.admin.dialog;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.ArrayList;
+import java.util.EnumSet;
 import java.util.Hashtable;
 import java.util.TreeSet;
 
@@ -132,16 +133,16 @@ public final class BannedAmmoDialog implements ActionListener {
                 //I did this for some silly reason. and now I'm paying for it.
                 //But I don't want to change all the code to long,string hashes
                 //Generics would make it easy but I'm lazy and it works. --Torren.
-                String munition = client.getData().getMunitionsByName().get(ammo).toString();
-                return client.getData().getServerBannedAmmo().containsKey(munition);
+                AmmoType.Munitions munition = client.getData().getMunitionsByName().get(ammo);
+                return client.getData().getServerBannedAmmo().contains(munition);
             } catch (Exception ex) {
                 LOGGER.error("Unable to find ammo " + ammo);
                 return false;
             }
         }
         try {
-            String munition = client.getData().getMunitionsByName().get(ammo).toString();
-            return house.getBannedAmmo().containsKey(munition);
+            AmmoType.Munitions munition = client.getData().getMunitionsByName().get(ammo);
+            return house.getBannedAmmo().contains(munition);
         } catch (Exception ex) {
             LOGGER.error("Unable to find ammo " + ammo);
             return false;
@@ -155,35 +156,37 @@ public final class BannedAmmoDialog implements ActionListener {
 
         if (command.equals(okayCommand)) {
             if (house == null) {
-                Hashtable<String, String> bannedAmmo = client.getData().getServerBannedAmmo();
+                EnumSet<AmmoType.Munitions> bannedAmmo = client.getData().getServerBannedAmmo();
                 for (JCheckBox tempBox : cBoxArrayList) {
-                    String ammo = munitionTypes.get(tempBox.getText()).toString();
+                    AmmoType.Munitions ammo = munitionTypes.get(tempBox.getText());
 
                     //Check box has been selected and should be updated to the server
-                    if (tempBox.isSelected() && !bannedAmmo.containsKey(ammo)) {
-                        client.sendChat(IClient.CAMPAIGN_PREFIX + "c adminsetserverammoban#"
-                                              + munitionTypes.get(tempBox.getText()));
+                    if (tempBox.isSelected() && !bannedAmmo.contains(ammo)) {
+                        client.sendChat("%sc adminsetserverammoban#%s".formatted(IClient.CAMPAIGN_PREFIX,
+                              munitionTypes.get(tempBox.getText())));
                     }
                     //Checkbox has been unselected and should be updated to the server
-                    else if (!tempBox.isSelected() && bannedAmmo.containsKey(ammo)) {
-                        client.sendChat(IClient.CAMPAIGN_PREFIX + "c adminsetserverammoban#"
-                                              + munitionTypes.get(tempBox.getText()));
+                    else if (!tempBox.isSelected() && bannedAmmo.contains(ammo)) {
+                        client.sendChat("%sc adminsetserverammoban#%s".formatted(IClient.CAMPAIGN_PREFIX,
+                              munitionTypes.get(tempBox.getText())));
                     }
                 }
             } else {
-                Hashtable<String, String> bannedAmmo = house.getBannedAmmo();
+                EnumSet<AmmoType.Munitions> bannedAmmo = house.getBannedAmmo();
                 for (JCheckBox tempBox : cBoxArrayList) {
-                    String ammo = munitionTypes.get(tempBox.getText()).toString();
+                    AmmoType.Munitions ammo = munitionTypes.get(tempBox.getText());
 
                     //Check box has been selected and should be updated to the server
-                    if (tempBox.isSelected() && !bannedAmmo.containsKey(ammo)) {
-                        client.sendChat(IClient.CAMPAIGN_PREFIX + "c adminsethouseammoban#"
-                                              + house.getName() + "#" + munitionTypes.get(tempBox.getText()));
+                    if (tempBox.isSelected() && !bannedAmmo.contains(ammo)) {
+                        client.sendChat("%sc adminsethouseammoban#%s#%s".formatted(IClient.CAMPAIGN_PREFIX,
+                              house.getName(),
+                              munitionTypes.get(tempBox.getText())));
                     }
                     //Checkbox has been unselected and should be updated to the server
-                    else if (!tempBox.isSelected() && bannedAmmo.containsKey(ammo)) {
-                        client.sendChat(IClient.CAMPAIGN_PREFIX + "c adminsethouseammoban#"
-                                              + house.getName() + "#" + munitionTypes.get(tempBox.getText()));
+                    else if (!tempBox.isSelected() && bannedAmmo.contains(ammo)) {
+                        client.sendChat("%sc adminsethouseammoban#%s#%s".formatted(IClient.CAMPAIGN_PREFIX,
+                              house.getName(),
+                              munitionTypes.get(tempBox.getText())));
                     }
 
                 }

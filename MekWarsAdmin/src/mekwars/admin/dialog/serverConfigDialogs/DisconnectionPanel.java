@@ -43,7 +43,7 @@ public class DisconnectionPanel extends JPanel {
         JTextField baseTextField = new JTextField(5);
         discoSpring.add(new JLabel("Additional Units Destroyed:", SwingConstants.TRAILING));
         baseTextField.setToolTipText("<html>" +
-                                           "Number of disconnecting players' units destoyed,<br>" +
+                                           "Number of disconnecting players' units destroyed,<br>" +
                                            "in addition to those already dead from IPUs.</html>");
         baseTextField.setName("DisconnectionAddUnitsDestroyed");
         discoSpring.add(baseTextField);
@@ -61,7 +61,7 @@ public class DisconnectionPanel extends JPanel {
         discoSpring.add(new JLabel("Time Before Report:", SwingConstants.TRAILING));
         baseTextField.setToolTipText("<html>" +
                                            "Amount of time, in seconds, disconnecting player<br>" +
-                                           "has to return before games is autoresolved.</html>");
+                                           "has to return before games is auto resolved.</html>");
         baseTextField.setName("DisconnectionTimeToReport");
         discoSpring.add(baseTextField);
 
@@ -74,7 +74,7 @@ public class DisconnectionPanel extends JPanel {
                                            "who leaves for 6 minutes and then returns will have 6 minutes<br>" +
                                            "(10m to report - 6 minutes offline + 2 min grace period = 6 min)<br>" +
                                            "to return if he leaves the server a second time. This keeps<br>" +
-                                           "players who need to leave/recon because of a crach from being<br>" +
+                                           "players who need to leave/recon because of a crash from being<br>" +
                                            "penalized but prevents people from repeatedly disconnecting for<br>" +
                                            "long periods of time as a delaying tactic.");
         baseTextField.setName("DisconnectionGracePeriod");

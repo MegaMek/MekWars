@@ -14,16 +14,10 @@
  * for more details.
  */
 
-/**
- * @author Torren (Jason Tighe)
- *       <p>
- *       Seperate app to create operations from. This files will then have to be loaded to the server.
- *
- */
 package mekwars.OperationsEditor;
 
 
-import OperationsEditor.dialog.OperationsDialog;
+import mekwars.OperationsEditor.dialog.OperationsDialog;
 
 public class MainOperations {
 

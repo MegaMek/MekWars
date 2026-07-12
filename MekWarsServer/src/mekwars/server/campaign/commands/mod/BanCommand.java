@@ -122,12 +122,10 @@ public class BanCommand implements server.campaign.commands.Command {
             } catch (Exception ex) {}
 
             if (banip != null) {CampaignMain.campaignMain.getServer().getBanIps().put(banip, until);}
-            CampaignMain.campaignMain.getServer()
-                  .getBanAccounts()
-                  .put(toKill.toLowerCase(), Long.toString(until));
+            CampaignMain.campaignMain.getServer().getBanAccounts().put(toKill.toLowerCase(), Long.toString(until));
 
             //CampaignMain.cm.getServer().ISPlog.put(CampaignMain.cm.getServer().myCommunicator.getMmClient(toKill).getClientVersion(),until);
-            //retreiveISPS(until,toKill);
+            //retrieveISPS(until,toKill);
             CampaignMain.campaignMain.getServer().bansUpdate();
             //MWLogger.modLog(Username + " banned " + toKill + " " +timeName+".");
             CampaignMain.campaignMain.getServer()

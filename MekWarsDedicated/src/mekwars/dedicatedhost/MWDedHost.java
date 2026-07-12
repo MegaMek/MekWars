@@ -38,14 +38,24 @@ import megamek.common.game.Game;
 import megamek.common.options.IOption;
 import megamek.common.preference.ClientPreferences;
 import megamek.common.preference.PreferenceManager;
+import megamek.common.units.Entity;
 import megamek.logging.MMLogger;
 import megamek.server.Server;
+import mekwars.common.AdvancedTerrain;
+import mekwars.common.CampaignData;
+import mekwars.common.Equipment;
 import mekwars.common.GameInterface;
 import mekwars.common.GameWrapper;
+import mekwars.common.Influences;
 import mekwars.common.MMGame;
+import mekwars.common.Planet;
+import mekwars.common.PlanetEnvironment;
 import mekwars.common.campaign.Buildings;
+import mekwars.common.campaign.CCampaign;
+import mekwars.common.campaign.CPlayer;
 import mekwars.common.campaign.CUser;
 import mekwars.common.campaign.clientutils.GameHost;
+import mekwars.common.campaign.clientutils.IClientUser;
 import mekwars.common.campaign.clientutils.SerializeEntity;
 import mekwars.common.campaign.clientutils.protocol.CConnector;
 import mekwars.common.campaign.clientutils.protocol.IClient;
@@ -54,6 +64,10 @@ import mekwars.common.commands.Command;
 import mekwars.common.commands.IProtCommand;
 import mekwars.common.commands.PingPlayerCommand;
 import mekwars.common.commands.PongPCmd;
+import mekwars.common.gui.CMainFrame;
+import mekwars.common.threads.ClientThread;
+import mekwars.common.threads.RepairManagmentThread;
+import mekwars.common.threads.SalvageManagmentThread;
 import mekwars.common.util.UnitUtils;
 import mekwars.dedicatedhost.protocol.DataFetchClient;
 
@@ -62,9 +76,8 @@ import mekwars.dedicatedhost.protocol.DataFetchClient;
 // @Author: Helge Richter (McWizard@gmx.de)
 
 public final class MWDedHost extends GameHost implements IClient {
-    private static final MMLogger LOGGER = MMLogger.create(MWDedHost.class);
-
     public static final String CLIENT_VERSION = "0.8.0.0"; // change this with
+    private static final MMLogger LOGGER = MMLogger.create(MWDedHost.class);
     // all client
     // changes @Torren
     /**
@@ -396,15 +409,6 @@ public final class MWDedHost extends GameHost implements IClient {
         return false;
     }
 
-    public void closingGame(String hostName) {
-
-        // update battles tab for all players, via server
-        LOGGER.info("Leaving " + hostName);
-        serverSend("LG|" + hostName);
-
-        System.gc();
-    }
-
     public Dimension getBoardSize() {
         return BoardSize;
     }
@@ -441,11 +445,11 @@ public final class MWDedHost extends GameHost implements IClient {
             if (savedFile.exists() && savedFile.isFile() && (lastTime < (System.currentTimeMillis() - daysInSeconds))) {
                 try {
                     LOGGER.info("Purging File: " +
-                                           savedFile.getName() +
-                                           " Time: " +
-                                           lastTime +
-                                           " purge Time: " +
-                                           (System.currentTimeMillis() - daysInSeconds));
+                                      savedFile.getName() +
+                                      " Time: " +
+                                      lastTime +
+                                      " purge Time: " +
+                                      (System.currentTimeMillis() - daysInSeconds));
                     savedFile.delete();
                 } catch (Exception ex) {
                     LOGGER.error("Error trying to delete these files!");
@@ -1338,6 +1342,128 @@ public final class MWDedHost extends GameHost implements IClient {
         LastPing = lastping;
     }
 
+    /**
+     * @return the {@link CPlayer} representing the locally logged-in player.
+     */
+    @Override
+    public CPlayer getPlayer() {
+        return null;
+    }
+
+    /**
+     * Builds a formatted string describing an amount of money or "flu" (an in-campaign currency/resource), depending on
+     * campaign settings.
+     *
+     * @param b  implementation-specific flag (e.g. whether to abbreviate)
+     * @param b1 implementation-specific flag (e.g. whether to show a sign)
+     * @param i  the amount to format
+     *
+     * @return the formatted money/flu message
+     */
+    @Override
+    public String moneyOrFluMessage(boolean b, boolean b1, int i) {
+        return "";
+    }
+
+    /**
+     * Overload of {@link #moneyOrFluMessage(boolean, boolean, int)} with an additional formatting flag.
+     */
+    @Override
+    public String moneyOrFluMessage(boolean b, boolean b1, int i, boolean b2) {
+        return "";
+    }
+
+    /**
+     * Looks up a cached server-side configuration value by key.
+     *
+     * @param rpShortName the config key to look up
+     *
+     * @return the cached value for that key
+     */
+    @Override
+    public String getServerConfigs(String rpShortName) {
+        return "";
+    }
+
+    /**
+     * Sets/caches a server-side configuration value locally.
+     *
+     * @param rpShortName the config key to set
+     * @param rpValue     the value to store
+     */
+    @Override
+    public void setServerConfigs(String rpShortName, String rpValue) {
+
+    }
+
+    /**
+     * @return the {@link CampaignData} holding the static rules/reference data for the current campaign.
+     */
+    @Override
+    public CampaignData getData() {
+        return null;
+    }
+
+    /**
+     * Loads the list of banned ammo types from disk/config into memory.
+     */
+    @Override
+    public void loadBannedAmmo() {
+
+    }
+
+    /**
+     * Checks whether a given (target-)system type is currently banned by this server's rules.
+     *
+     * @param type the system/equipment type identifier to check
+     *
+     * @return true if that type is banned
+     */
+    @Override
+    public boolean getTargetSystemBanStatus(int type) {
+        return false;
+    }
+
+    /**
+     * @return the client's main GUI window ({@link CMainFrame}). May not be meaningful for headless implementations.
+     */
+    @Override
+    public CMainFrame getMainFrame() {
+        return null;
+    }
+
+    /**
+     * Loads the set of chat/protocol commands supported by the connected server.
+     */
+    @Override
+    public void loadServerCommands() {
+
+    }
+
+    /**
+     * Requests/loads the current black market settings from the server.
+     */
+    @Override
+    public void getBlackMarketSettings() {
+
+    }
+
+    /**
+     * @return the map of internal equipment name to {@link Equipment} available on the black market.
+     */
+    @Override
+    public Map<String, Equipment> getBlackMarketEquipmentList() {
+        return Map.of();
+    }
+
+    /**
+     * Reloads the client's campaign data from disk/server.
+     */
+    @Override
+    public void reloadData() {
+
+    }
+
     public void getServerConfigData() {
         try {
             dataFetcher.getServerConfigData(this);
@@ -1345,8 +1471,74 @@ public final class MWDedHost extends GameHost implements IClient {
         }
     }
 
+    /**
+     * Sends a single server configuration key/value pair up to the server.
+     *
+     * @param config the config key
+     * @param text   the value to set
+     */
+    @Override
+    public void putServerConfigs(String config, String text) {
+
+    }
+
+    /**
+     * Refreshes locally cached data from the server/campaign state.
+     */
+    @Override
+    public void refreshData() {
+
+    }
+
+    /**
+     * Appends a line to the default chat display.
+     */
+    @Override
+    public void addToChat(String s) {
+
+    }
+
+    /**
+     * Appends a line to a specific chat channel's display.
+     *
+     * @param s       the text to append
+     * @param channel the channel identifier to append to
+     */
+    @Override
+    public void addToChat(String s, int channel) {
+
+    }
+
     public DedConfig getConfig() {
         return (DedConfig) (Config);
+    }
+
+    /**
+     * Advances any time-based client-side processing by the given tick amount (e.g. countdown timers).
+     *
+     * @param time the elapsed time, in an implementation-defined unit (commonly milliseconds or seconds)
+     */
+    @Override
+    public void processTick(int time) {
+
+    }
+
+    /**
+     * @return the board edge the player's forces should start deployment from.
+     */
+    @Override
+    public int getPlayerStartingEdge() {
+        return 0;
+    }
+
+    /**
+     * Sets the board edge the player's forces should start deployment from.
+     *
+     * @param edge the edge identifier (implementation/MegaMek-defined constant)
+     */
+    @Override
+    public void setPlayerStartingEdge(int edge) {
+
     }
 
     public String getConfigParam(String p) {
@@ -1378,12 +1570,49 @@ public final class MWDedHost extends GameHost implements IClient {
         myUsername = s.trim();
     }
 
+    /**
+     * Refreshes cached operations/faction ("Op") data, optionally forcing a full reload.
+     *
+     * @param b true to force a full refresh rather than an incremental one
+     */
+    @Override
+    public void updateOpData(boolean b) {
+
+    }
+
     public int getMyStatus() {
         return Status;
     }
 
     public synchronized Collection<CUser> getUsers() {
         return Users;
+    }
+
+    /**
+     * @return a map of operation ("Op") short name to its associated data array.
+     */
+    @Override
+    public TreeMap<String, String[]> getAllOps() {
+        return null;
+    }
+
+    /**
+     * @return true if the client is currently blocked waiting on a server response (see {@link #setWaiting(boolean)}).
+     */
+    @Override
+    public boolean isWaiting() {
+        return false;
+    }
+
+    /**
+     * Sets whether the client is blocked waiting on a server response. Callers elsewhere in the codebase (e.g.
+     * {@code BuildTableViewer.run()}) busy-wait in a sleep loop checking {@link #isWaiting()} until this is cleared.
+     *
+     * @param b true to enter the waiting state, false to clear it
+     */
+    @Override
+    public void setWaiting(boolean b) {
+
     }
 
     /**
@@ -1401,12 +1630,162 @@ public final class MWDedHost extends GameHost implements IClient {
         return cacheDir;
     }
 
+    /**
+     * Loads server-defined "trait" files used by the campaign rules.
+     */
+    @Override
+    public void loadServerTraitFiles() {
+
+    }
+
+    /**
+     * Loads/initializes the embedded MegaMek game client used to actually play battles.
+     */
+    @Override
+    public void loadMegaMekClient() {
+
+    }
+
     public void setConfig() {
         Config = new DedConfig(false);
     }
 
+    /**
+     * @return the permission/access level of the currently logged-in user (see {@link IClientUser#getUserLevel()}).
+     */
+    @Override
+    public int getUserLevel() {
+        return 0;
+    }
+
+    /**
+     * @return the {@link RepairManagmentThread} that processes background repair-queue work for this client.
+     */
+    @Override
+    public RepairManagmentThread getRMT() {
+        return null;
+    }
+
+    /**
+     * Looks up the campaign-adjusted cost of a piece of ammunition by its internal MegaMek name.
+     *
+     * @param internalName the ammo's internal MegaMek identifier
+     *
+     * @return the computed cost
+     */
+    @Override
+    public double getAmmoCost(String internalName) {
+        return 0;
+    }
+
+    /**
+     * @return the {@link SalvageManagmentThread} that processes background salvage-queue work for this client.
+     */
+    @Override
+    public SalvageManagmentThread getSMT() {
+        return null;
+    }
+
+    /**
+     * @return the {@link CCampaign} representing the overall campaign state.
+     */
+    @Override
+    public CCampaign getCampaign() {
+        return null;
+    }
+
     public void setPassword(String s) {
         password = s;
+    }
+
+    /**
+     * Sets the chat ignore-list scope to "house" (see {@link #IGNORE_HOUSE}).
+     */
+    @Override
+    public void setIgnoreHouse() {
+
+    }
+
+    /**
+     * Sets the chat ignore-list scope to "private" (see {@link #IGNORE_PRIVATE}).
+     */
+    @Override
+    public void setIgnorePrivate() {
+
+    }
+
+    /**
+     * Sets the chat ignore-list scope to "public" (see {@link #IGNORE_PUBLIC}).
+     */
+    @Override
+    public void setIgnorePublic() {
+
+    }
+
+    /**
+     * (Re)loads the set of chat keyword filters this client watches for (see {@link #hasKeyWords(String)}).
+     */
+    @Override
+    public void setKeyWords() {
+
+    }
+
+    /**
+     * Switches the GUI's look-and-feel.
+     *
+     * @param b implementation-defined flag selecting which look-and-feel to use (e.g. native vs. cross-platform)
+     */
+    @Override
+    public void setLookAndFeel(boolean b) {
+
+    }
+
+    /**
+     * Displays a modal/non-modal informational window with the given text.
+     */
+    @Override
+    public void showInfoWindow(String s) {
+
+    }
+
+    /**
+     * @return the MegaMek {@link Game} currently associated with this client (rules/board/entity state).
+     */
+    @Override
+    public Game getGame() {
+        return null;
+    }
+
+    /**
+     * Sets the advanced terrain configuration used for the current/next map.
+     */
+    @Override
+    public void setAdvancedTerrain(AdvancedTerrain aTerrain) {
+
+    }
+
+    /**
+     * Requests a GUI refresh of the given panel/section (one of the {@code REFRESH_*} constants).
+     *
+     * @param refreshHqPanel the refresh code identifying what to redraw
+     */
+    @Override
+    public void refreshGUI(int refreshHqPanel) {
+
+    }
+
+    /**
+     * Checks whether a given user is on this client's ignore list for the given scope.
+     *
+     * @param name        the username to check
+     * @param ignoreHouse the ignore scope (one of the {@code IGNORE_*} constants, despite the parameter name always
+     *                    referring to "house")
+     *
+     * @return true if messages from that user in that scope should be ignored
+     */
+    @Override
+    public boolean isIgnored(String name, int ignoreHouse) {
+        return false;
     }
 
     public String getShortTime() {
@@ -1421,8 +1800,39 @@ public final class MWDedHost extends GameHost implements IClient {
         return result;
     }
 
+    /**
+     * Plays a named sound effect, if sound is enabled and not muted.
+     */
+    @Override
+    public void doPlaySound(String soundName) {
+
+    }
+
     public Vector<IOption> getGameOptions() {
         return GameOptions;
+    }
+
+    /**
+     * Sets the current planetary environment and map dimensions/medium for the game about to be played.
+     *
+     * @param planetEnvironment the environmental conditions (weather, light, etc.) to apply
+     * @param dimension         the board size
+     * @param mapMedium         the map medium/terrain type identifier
+     */
+    @Override
+    public void setEnvironment(PlanetEnvironment planetEnvironment, Dimension dimension, int mapMedium) {
+
+    }
+
+    /**
+     * Starts (or reconnects) the embedded MegaMek game client under the given player name.
+     *
+     * @param curName the player name to connect as
+     * @param b       implementation-specific flag (e.g. whether this is a reconnect)
+     */
+    @Override
+    public void startClient(String curName, boolean b) {
+
     }
 
     // Stop & send the close game event to the Server
@@ -1455,6 +1865,46 @@ public final class MWDedHost extends GameHost implements IClient {
 
     }
 
+    /**
+     * @return the list of active {@link ClientThread}s connecting this client to in-progress MegaMek games.
+     */
+    @Override
+    public List<ClientThread> getMMClients() {
+        return List.of();
+    }
+
+    /**
+     * @return true if the local player is the leader/host of the current game/lobby.
+     */
+    @Override
+    public boolean isLeader() {
+        return false;
+    }
+
+    /**
+     * Shows the dialog for spending/viewing reward points.
+     */
+    @Override
+    public void rewardPointsDialog() {
+
+    }
+
+    /**
+     * Shows the dialog for spending/viewing influence points.
+     */
+    @Override
+    public void influencePointsDialog() {
+
+    }
+
+    /**
+     * Mutes or unmutes all client sound effects.
+     */
+    @Override
+    public void setSoundMuted(boolean state) {
+
+    }
+
     // IClient interface
     public void connectToServer() {
         connectToServer(Config.getParam("SERVERIP"), Config.getIntParam("SERVERPORT"));
@@ -1480,8 +1930,25 @@ public final class MWDedHost extends GameHost implements IClient {
         return ("");
     }
 
+    /**
+     * Processes a line of input typed by the user into the GUI (chat box or command line), dispatching it as a command
+     * or plain chat as appropriate.
+     */
+    @Override
+    public void processGUIInput(String s) {
+
+    }
+
     public Dimension getMapSize() {
         return MapSize;
+    }
+
+    /**
+     * @return the {@link PlanetEnvironment} currently in effect for the game being set up/played.
+     */
+    @Override
+    public PlanetEnvironment getCurrentEnvironment() {
+        return null;
     }
 
     @Override
@@ -1491,6 +1958,67 @@ public final class MWDedHost extends GameHost implements IClient {
 
     public void setBuildingTemplate(Buildings buildingTemplate) {
         this.buildingTemplate = buildingTemplate;
+    }
+
+    /**
+     * @return the identifier of the current map medium/terrain type.
+     */
+    @Override
+    public int getMapMedium() {
+        return 0;
+    }
+
+    /**
+     * @return the {@link AdvancedTerrain} configuration currently in effect.
+     */
+    @Override
+    public AdvancedTerrain getCurrentAdvancedTerrain() {
+        return null;
+    }
+
+    /**
+     * @return true if bot-controlled forces are enabled for this client's games.
+     */
+    @Override
+    public boolean isUsingBots() {
+        return false;
+    }
+
+    /**
+     * Enables or disables bot-controlled forces for this client's games.
+     */
+    @Override
+    public void setUsingBots(boolean b) {
+
+    }
+
+    /**
+     * Appends a line to a chat channel, tagging it with the originating server name (used in multi-server displays).
+     *
+     * @param s           the text to append
+     * @param channelMail the channel identifier to append to
+     * @param server      the name of the server the message originated from
+     */
+    @Override
+    public void addToChat(String s, int channelMail, String server) {
+
+    }
+
+    /**
+     * Checks whether a string contains any of this client's configured chat keyword filters (see
+     * {@link #setKeyWords()}).
+     */
+    @Override
+    public boolean hasKeyWords(String string) {
+        return false;
+    }
+
+    /**
+     * Applies any pending client-side updates (e.g. after downloading a new version's data).
+     */
+    @Override
+    public void updateClient() {
+
     }
 
     public void retrieveOpData(String type, String data) {
@@ -1530,6 +2058,33 @@ public final class MWDedHost extends GameHost implements IClient {
         }
     }
 
+    /**
+     * Applies incoming server operation-flag settings, parsed from the given tokenizer.
+     */
+    @Override
+    public void setServerOpFlags(StringTokenizer st) {
+
+    }
+
+    /**
+     * Updates the cached black-market parts listing for a given campaign year.
+     *
+     * @param s            implementation-defined update payload
+     * @param campaignYear the in-campaign year the update applies to
+     */
+    @Override
+    public void updatePartsBlackMarket(String s, int campaignYear) {
+
+    }
+
+    /**
+     * Updates the locally cached player parts inventory from an incoming update payload.
+     */
+    @Override
+    public void updatePlayerPartsCache(String s) {
+
+    }
+
     public void retrieveMul(String data) {
 
         StringTokenizer st = new StringTokenizer(data, "#");
@@ -1557,12 +2112,112 @@ public final class MWDedHost extends GameHost implements IClient {
 
     }
 
+    /**
+     * Applies an incoming "create new house" (faction) protocol command, parsed from the given tokenizer.
+     */
+    @Override
+    public void createNewHouse(StringTokenizer st) {
+
+    }
+
+    /**
+     * Computes a checksum for a filename/string, used to validate file transfers/caches.
+     *
+     * @param s the input to checksum
+     *
+     * @return the computed checksum string
+     *
+     * @throws Exception if the checksum cannot be computed (e.g. algorithm unavailable, I/O error)
+     */
+    @Override
+    public String createFilenameChecksum(String s) throws Exception {
+        return "";
+    }
+
     public String getLastQuery() {
         return LastQuery;
     }
 
     public void setLastQuery(String name) {
         LastQuery = name;
+    }
+
+    /**
+     * Finds usernames that partially match the given text, for chat auto-completion.
+     *
+     * @param text the partial username typed so far
+     *
+     * @return the list of matching usernames
+     */
+    @Override
+    public ArrayList<String> getPartialUser(String text) {
+        return null;
+    }
+
+    /**
+     * @return the map of house/faction ID to {@link Influences} changes accumulated since the last GUI refresh.
+     */
+    @Override
+    public Map<Integer, Influences> getChangesSinceLastRefresh() {
+        return Map.of();
+    }
+
+    /**
+     * @return the minimum ownership percentage/threshold required to be considered an owner of the given planet.
+     */
+    @Override
+    public int getMinPlanetOwnerShip(Planet planet) {
+        return 0;
+    }
+
+    /**
+     * Computes the technician labor cost (in hours or points, implementation-defined) to repair/build the given entity
+     * at the given tech skill level.
+     *
+     * @param entity    the unit being worked on
+     * @param techGreen the technician's skill level (name suggests a "green"/rookie skill constant, but the actual
+     *                  meaning is defined by the implementation)
+     *
+     * @return the computed labor cost
+     */
+    @Override
+    public int getTechLaborCosts(Entity entity, int techGreen) {
+        return 0;
+    }
+
+    /**
+     * Computes the total monetary cost to fully repair the given entity.
+     */
+    @Override
+    public double getTotalRepairCosts(Entity entity) {
+        return 0;
+    }
+
+    /**
+     * @return true if bot-controlled forces are configured to be placed on the same team as their controlling player,
+     *       rather than as a separate opposing side.
+     */
+    @Override
+    public boolean isBotsOnSameTeam() {
+        return false;
+    }
+
+    /**
+     * Sets whether bot-controlled forces are placed on the same team as their controlling player. Takes a boxed
+     * {@link Boolean} rather than a primitive {@code boolean}.
+     */
+    @Override
+    public void setBotsOnSameTeam(Boolean aBoolean) {
+
+    }
+
+    public void closingGame(String hostName) {
+
+        // update battles tab for all players, via server
+        LOGGER.info("Leaving " + hostName);
+        serverSend("LG|" + hostName);
+
+        System.gc();
     }
 
     public Properties getServerConfigs() {
@@ -1933,11 +2588,11 @@ public final class MWDedHost extends GameHost implements IClient {
                                   (lastTime < (System.currentTimeMillis() - twoHours))) {
                             try {
                                 LOGGER.info("Purging File: " +
-                                                       savedFile.getName() +
-                                                       " Time: " +
-                                                       lastTime +
-                                                       " purge Time: " +
-                                                       (System.currentTimeMillis() - twoHours));
+                                                  savedFile.getName() +
+                                                  " Time: " +
+                                                  lastTime +
+                                                  " purge Time: " +
+                                                  (System.currentTimeMillis() - twoHours));
                                 savedFile.delete();
                             } catch (Exception ex) {
                                 LOGGER.error("Error trying to delete these files!");

@@ -9,13 +9,6 @@
  * A PARTICULAR PURPOSE. See the GNU General Public License for more details.
  */
 
-/**
- * @author jtighe
- * @author Spork
- *       <p>
- *       Server Configuration Page. All new Server Options need to be added to this page or subPanels as well.
- */
-
 package mekwars.admin.dialog;
 
 import java.awt.Dimension;
@@ -403,6 +396,7 @@ public final class ServerConfigurationDialog implements ActionListener {
                                           "#CONFIRM");
                 }
             } else if (field instanceof JDatePicker picker) {
+                
                 value = picker.getJFormattedTextField().getText();
                 key = picker.getName();
                 // reduce bandwidth only send things that have changed.

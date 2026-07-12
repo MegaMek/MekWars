@@ -36,7 +36,7 @@ public class DirectSellPanel extends JPanel {
         super();
 
         /*
-         * CONSTRUCT MEZZO/Pricemod PANEL
+         * CONSTRUCT MEZZO/PriceMod PANEL
          */
         JPanel MekSpring = new JPanel(new SpringLayout());
         JPanel VehicleSpring = new JPanel(new SpringLayout());
@@ -48,156 +48,156 @@ public class DirectSellPanel extends JPanel {
         JPanel buySellSpring = new JPanel(new SpringLayout());
 
         JTextField baseTextField = new JTextField(5);
-        MekSpring.add(new JLabel("Light Mek Pricemod:", SwingConstants.TRAILING));
-        baseTextField.setToolTipText("Amount added to pricemod to direct sell a Mek.");
+        MekSpring.add(new JLabel("Light Mek PriceMod:", SwingConstants.TRAILING));
+        baseTextField.setToolTipText("Amount added to PriceMod to direct sell a Mek.");
         baseTextField.setName("SellDirectLightMekPrice");
         MekSpring.add(baseTextField);
 
         baseTextField = new JTextField(5);
-        MekSpring.add(new JLabel("Medium Mek Pricemod:", SwingConstants.TRAILING));
-        baseTextField.setToolTipText("Amount added to pricemod to direct sell a Mek.");
+        MekSpring.add(new JLabel("Medium Mek PriceMod:", SwingConstants.TRAILING));
+        baseTextField.setToolTipText("Amount added to PriceMod to direct sell a Mek.");
         baseTextField.setName("SellDirectMediumMekPrice");
         MekSpring.add(baseTextField);
 
         baseTextField = new JTextField(5);
-        MekSpring.add(new JLabel("Heavy Mek Pricemod:", SwingConstants.TRAILING));
-        baseTextField.setToolTipText("Amount added to pricemod to direct sell a Mek.");
+        MekSpring.add(new JLabel("Heavy Mek PriceMod:", SwingConstants.TRAILING));
+        baseTextField.setToolTipText("Amount added to PriceMod to direct sell a Mek.");
         baseTextField.setName("SellDirectHeavyMekPrice");
         MekSpring.add(baseTextField);
 
         baseTextField = new JTextField(5);
-        MekSpring.add(new JLabel("Assault Mek Pricemod:", SwingConstants.TRAILING));
-        baseTextField.setToolTipText("Amount added to pricemod to direct sell a Mek.");
+        MekSpring.add(new JLabel("Assault Mek PriceMod:", SwingConstants.TRAILING));
+        baseTextField.setToolTipText("Amount added to PriceMod to direct sell a Mek.");
         baseTextField.setName("SellDirectAssaultMekPrice");
         MekSpring.add(baseTextField);
 
         SpringLayoutHelper.setupSpringGrid(MekSpring, 4, 2);
 
         baseTextField = new JTextField(5);
-        VehicleSpring.add(new JLabel("Light Vehicle Pricemod:", SwingConstants.TRAILING));
-        baseTextField.setToolTipText("Amount added to pricemod to direct sell a Vehicle.");
+        VehicleSpring.add(new JLabel("Light Vehicle PriceMod:", SwingConstants.TRAILING));
+        baseTextField.setToolTipText("Amount added to PriceMod to direct sell a Vehicle.");
         baseTextField.setName("SellDirectLightVehiclePrice");
         VehicleSpring.add(baseTextField);
 
         baseTextField = new JTextField(5);
-        VehicleSpring.add(new JLabel("Medium Vehicle Pricemod:", SwingConstants.TRAILING));
-        baseTextField.setToolTipText("Amount added to pricemod to direct sell a Vehicle.");
+        VehicleSpring.add(new JLabel("Medium Vehicle PriceMod:", SwingConstants.TRAILING));
+        baseTextField.setToolTipText("Amount added to PriceMod to direct sell a Vehicle.");
         baseTextField.setName("SellDirectMediumVehiclePrice");
         VehicleSpring.add(baseTextField);
 
         baseTextField = new JTextField(5);
-        VehicleSpring.add(new JLabel("Heavy Vehicle Pricemod:", SwingConstants.TRAILING));
-        baseTextField.setToolTipText("Amount added to pricemod to direct sell a Vehicle.");
+        VehicleSpring.add(new JLabel("Heavy Vehicle PriceMod:", SwingConstants.TRAILING));
+        baseTextField.setToolTipText("Amount added to PriceMod to direct sell a Vehicle.");
         baseTextField.setName("SellDirectHeavyVehiclePrice");
         VehicleSpring.add(baseTextField);
 
         baseTextField = new JTextField(5);
-        VehicleSpring.add(new JLabel("Assault Vehicle Pricemod:", SwingConstants.TRAILING));
-        baseTextField.setToolTipText("Amount added to pricemod to direct sell a Vehicle.");
+        VehicleSpring.add(new JLabel("Assault Vehicle PriceMod:", SwingConstants.TRAILING));
+        baseTextField.setToolTipText("Amount added to PriceMod to direct sell a Vehicle.");
         baseTextField.setName("SellDirectAssaultVehiclePrice");
         VehicleSpring.add(baseTextField);
 
         SpringLayoutHelper.setupSpringGrid(VehicleSpring, 4, 2);
 
         baseTextField = new JTextField(5);
-        InfantrySpring.add(new JLabel("Light Infantry Pricemod:", SwingConstants.TRAILING));
-        baseTextField.setToolTipText("Amount added to pricemod to direct sell a Infantry.");
+        InfantrySpring.add(new JLabel("Light Infantry PriceMod:", SwingConstants.TRAILING));
+        baseTextField.setToolTipText("Amount added to PriceMod to direct sell a Infantry.");
         baseTextField.setName("SellDirectLightInfantryPrice");
         InfantrySpring.add(baseTextField);
 
         baseTextField = new JTextField(5);
-        InfantrySpring.add(new JLabel("Medium Infantry Pricemod:", SwingConstants.TRAILING));
-        baseTextField.setToolTipText("Amount added to pricemod to direct sell a Infantry.");
+        InfantrySpring.add(new JLabel("Medium Infantry PriceMod:", SwingConstants.TRAILING));
+        baseTextField.setToolTipText("Amount added to PriceMod to direct sell a Infantry.");
         baseTextField.setName("SellDirectMediumInfantryPrice");
         InfantrySpring.add(baseTextField);
 
         baseTextField = new JTextField(5);
-        InfantrySpring.add(new JLabel("Heavy Infantry Pricemod:", SwingConstants.TRAILING));
-        baseTextField.setToolTipText("Amount added to pricemod to direct sell a Infantry.");
+        InfantrySpring.add(new JLabel("Heavy Infantry PriceMod:", SwingConstants.TRAILING));
+        baseTextField.setToolTipText("Amount added to PriceMod to direct sell a Infantry.");
         baseTextField.setName("SellDirectHeavyInfantryPrice");
         InfantrySpring.add(baseTextField);
 
         baseTextField = new JTextField(5);
-        InfantrySpring.add(new JLabel("Assault Infantry Pricemod:", SwingConstants.TRAILING));
-        baseTextField.setToolTipText("Amount added to pricemod to direct sell a Infantry.");
+        InfantrySpring.add(new JLabel("Assault Infantry PriceMod:", SwingConstants.TRAILING));
+        baseTextField.setToolTipText("Amount added to PriceMod to direct sell a Infantry.");
         baseTextField.setName("SellDirectAssaultInfantryPrice");
         InfantrySpring.add(baseTextField);
 
         SpringLayoutHelper.setupSpringGrid(InfantrySpring, 4, 2);
 
         baseTextField = new JTextField(5);
-        BattleArmorSpring.add(new JLabel("Light BattleArmor Pricemod:", SwingConstants.TRAILING));
-        baseTextField.setToolTipText("Amount added to pricemod to direct sell a BattleArmor.");
+        BattleArmorSpring.add(new JLabel("Light BattleArmor PriceMod:", SwingConstants.TRAILING));
+        baseTextField.setToolTipText("Amount added to PriceMod to direct sell a BattleArmor.");
         baseTextField.setName("SellDirectLightBattleArmorPrice");
         BattleArmorSpring.add(baseTextField);
 
         baseTextField = new JTextField(5);
-        BattleArmorSpring.add(new JLabel("Medium BattleArmor Pricemod:", SwingConstants.TRAILING));
-        baseTextField.setToolTipText("Amount added to pricemod to direct sell a BattleArmor.");
+        BattleArmorSpring.add(new JLabel("Medium BattleArmor PriceMod:", SwingConstants.TRAILING));
+        baseTextField.setToolTipText("Amount added to PriceMod to direct sell a BattleArmor.");
         baseTextField.setName("SellDirectMediumBattleArmorPrice");
         BattleArmorSpring.add(baseTextField);
 
         baseTextField = new JTextField(5);
-        BattleArmorSpring.add(new JLabel("Heavy BattleArmor Pricemod:", SwingConstants.TRAILING));
-        baseTextField.setToolTipText("Amount added to pricemod to direct sell a BattleArmor.");
+        BattleArmorSpring.add(new JLabel("Heavy BattleArmor PriceMod:", SwingConstants.TRAILING));
+        baseTextField.setToolTipText("Amount added to PriceMod to direct sell a BattleArmor.");
         baseTextField.setName("SellDirectHeavyBattleArmorPrice");
         BattleArmorSpring.add(baseTextField);
 
         baseTextField = new JTextField(5);
-        BattleArmorSpring.add(new JLabel("Assault BattleArmor Pricemod:", SwingConstants.TRAILING));
-        baseTextField.setToolTipText("Amount added to pricemod to direct sell a BattleArmor.");
+        BattleArmorSpring.add(new JLabel("Assault BattleArmor PriceMod:", SwingConstants.TRAILING));
+        baseTextField.setToolTipText("Amount added to PriceMod to direct sell a BattleArmor.");
         baseTextField.setName("SellDirectAssaultBattleArmorPrice");
         BattleArmorSpring.add(baseTextField);
 
         SpringLayoutHelper.setupSpringGrid(BattleArmorSpring, 4, 2);
 
         baseTextField = new JTextField(5);
-        AeroSpring.add(new JLabel("Light Aero Pricemod:", SwingConstants.TRAILING));
-        baseTextField.setToolTipText("Amount added to pricemod to direct sell a Aero.");
+        AeroSpring.add(new JLabel("Light Aero PriceMod:", SwingConstants.TRAILING));
+        baseTextField.setToolTipText("Amount added to PriceMod to direct sell a Aero.");
         baseTextField.setName("SellDirectLightAeroPrice");
         AeroSpring.add(baseTextField);
 
         baseTextField = new JTextField(5);
-        AeroSpring.add(new JLabel("Medium Aero Pricemod:", SwingConstants.TRAILING));
-        baseTextField.setToolTipText("Amount added to pricemod to direct sell a Aero.");
+        AeroSpring.add(new JLabel("Medium Aero PriceMod:", SwingConstants.TRAILING));
+        baseTextField.setToolTipText("Amount added to PriceMod to direct sell a Aero.");
         baseTextField.setName("SellDirectMediumAeroPrice");
         AeroSpring.add(baseTextField);
 
         baseTextField = new JTextField(5);
-        AeroSpring.add(new JLabel("Heavy Aero Pricemod:", SwingConstants.TRAILING));
-        baseTextField.setToolTipText("Amount added to pricemod to direct sell a Aero.");
+        AeroSpring.add(new JLabel("Heavy Aero PriceMod:", SwingConstants.TRAILING));
+        baseTextField.setToolTipText("Amount added to PriceMod to direct sell a Aero.");
         baseTextField.setName("SellDirectHeavyAeroPrice");
         AeroSpring.add(baseTextField);
 
         baseTextField = new JTextField(5);
-        AeroSpring.add(new JLabel("Assault Aero Pricemod:", SwingConstants.TRAILING));
-        baseTextField.setToolTipText("Amount added to pricemod to direct sell a Aero.");
+        AeroSpring.add(new JLabel("Assault Aero PriceMod:", SwingConstants.TRAILING));
+        baseTextField.setToolTipText("Amount added to PriceMod to direct sell a Aero.");
         baseTextField.setName("SellDirectAssaultAeroPrice");
         AeroSpring.add(baseTextField);
 
         SpringLayoutHelper.setupSpringGrid(AeroSpring, 4, 2);
 
         baseTextField = new JTextField(5);
-        ProtoMekSpring.add(new JLabel("Light ProtoMek Pricemod:", SwingConstants.TRAILING));
-        baseTextField.setToolTipText("Amount added to pricemod to direct sell a ProtoMek.");
+        ProtoMekSpring.add(new JLabel("Light ProtoMek PriceMod:", SwingConstants.TRAILING));
+        baseTextField.setToolTipText("Amount added to PriceMod to direct sell a ProtoMek.");
         baseTextField.setName("SellDirectLightProtoMekPrice");
         ProtoMekSpring.add(baseTextField);
 
         baseTextField = new JTextField(5);
-        ProtoMekSpring.add(new JLabel("Medium ProtoMek Pricemod:", SwingConstants.TRAILING));
-        baseTextField.setToolTipText("Amount added to pricemod to direct sell a ProtoMek.");
+        ProtoMekSpring.add(new JLabel("Medium ProtoMek PriceMod:", SwingConstants.TRAILING));
+        baseTextField.setToolTipText("Amount added to PriceMod to direct sell a ProtoMek.");
         baseTextField.setName("SellDirectMediumProtoMekPrice");
         ProtoMekSpring.add(baseTextField);
 
         baseTextField = new JTextField(5);
-        ProtoMekSpring.add(new JLabel("Heavy ProtoMek Pricemod:", SwingConstants.TRAILING));
-        baseTextField.setToolTipText("Amount added to pricemod to direct sell a ProtoMek.");
+        ProtoMekSpring.add(new JLabel("Heavy ProtoMek PriceMod:", SwingConstants.TRAILING));
+        baseTextField.setToolTipText("Amount added to PriceMod to direct sell a ProtoMek.");
         baseTextField.setName("SellDirectHeavyProtoMekPrice");
         ProtoMekSpring.add(baseTextField);
 
         baseTextField = new JTextField(5);
-        ProtoMekSpring.add(new JLabel("Assault ProtoMek Pricemod:", SwingConstants.TRAILING));
-        baseTextField.setToolTipText("Amount added to pricemod to direct sell a ProtoMek.");
+        ProtoMekSpring.add(new JLabel("Assault ProtoMek PriceMod:", SwingConstants.TRAILING));
+        baseTextField.setToolTipText("Amount added to PriceMod to direct sell a ProtoMek.");
         baseTextField.setName("SellDirectAssaultProtoMekPrice");
         ProtoMekSpring.add(baseTextField);
 

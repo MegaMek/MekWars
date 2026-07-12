@@ -54,7 +54,7 @@ public class AdvancedRepairPanel extends JPanel {
         repairTypes.add(baseRadioButton);
         repairSpring.add(baseRadioButton);
 
-        baseRadioButton = new JRadioButton("Use Statistcal Repair");
+        baseRadioButton = new JRadioButton("Use Statistical Repair");
 
         baseRadioButton.setToolTipText(
               "<html>Units Get damaged but they are repair all at once if the player chooses so.<br>NOTE: Save all player files and reboot<br>When turning on or off.</html>");
@@ -361,8 +361,8 @@ public class AdvancedRepairPanel extends JPanel {
         equipmentPanel.add(baseTextField);
 
         baseTextField = new JTextField(5);
-        equipmentPanel.add(new JLabel("Missle:", SwingConstants.TRAILING));
-        baseTextField.setToolTipText("<html>Cost to repair each missle weapon crit.<br>Note Double Field</html>");
+        equipmentPanel.add(new JLabel("Missile:", SwingConstants.TRAILING));
+        baseTextField.setToolTipText("<html>Cost to repair each missile weapon crit.<br>Note Double Field</html>");
         baseTextField.setName("MissileCritRepairCost");
         equipmentPanel.add(baseTextField);
         SpringLayoutHelper.setupSpringGrid(equipmentPanel, 6);
@@ -395,8 +395,8 @@ public class AdvancedRepairPanel extends JPanel {
         replacementPanel.add(baseTextField);
 
         baseTextField = new JTextField(5);
-        replacementPanel.add(new JLabel("Missle:", SwingConstants.TRAILING));
-        baseTextField.setToolTipText("<html>Cost to replace each missle weapon crit.<br>Note Double Field</html>");
+        replacementPanel.add(new JLabel("Missile:", SwingConstants.TRAILING));
+        baseTextField.setToolTipText("<html>Cost to replace each missile weapon crit.<br>Note Double Field</html>");
         baseTextField.setName("MissileCritReplaceCost");
         replacementPanel.add(baseTextField);
         SpringLayoutHelper.setupSpringGrid(replacementPanel, 6);

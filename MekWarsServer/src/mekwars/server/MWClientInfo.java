@@ -21,6 +21,8 @@ package mekwars.server;
 //@Version 0.1
 
 
+import mekwars.server.MWChatServer.auth.AccessRole;
+
 /*
  * TODO: As of 7.9.06, this class is referenced only by the server. Can
  *       probably be safely repackaged as a server.* class.
@@ -36,7 +38,7 @@ public class MWClientInfo implements java.io.Serializable, Comparable<MWClientIn
     String color = "black";
     String country = "unknown";
 
-    int level = 2;
+    AccessRole level = AccessRole.REGISTERED;
     long Checktime;
 
     boolean isInvis = false;
@@ -48,7 +50,7 @@ public class MWClientInfo implements java.io.Serializable, Comparable<MWClientIn
     public MWClientInfo() {
     }
 
-    public MWClientInfo(String name, java.net.InetAddress Adr, long time, int level, boolean invis) {
+    public MWClientInfo(String name, java.net.InetAddress Adr, long time, AccessRole level, boolean invis) {
         this.name = name;
         this.Adr = Adr;
         Checktime = time;
@@ -132,11 +134,11 @@ public class MWClientInfo implements java.io.Serializable, Comparable<MWClientIn
         return this.name.compareTo(info.getName());
     }
 
-    public int getLevel() {
+    public AccessRole getLevel() {
         return level;
     }
 
-    public void setLevel(int level) {
+    public void setLevel(AccessRole level) {
         this.level = level;
     }
 

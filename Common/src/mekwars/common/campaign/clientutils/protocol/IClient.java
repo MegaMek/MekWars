@@ -63,10 +63,10 @@ import mekwars.common.threads.SalvageManagmentThread;
 
 /**
  * Central contract for a MekWars client: the single largest interface in the client/server architecture, and the
- * primary way the rest of the MekWars client-side code (GUI panels, dialogs, protocol handlers, campaign objects)
- * talks to "the client" without depending on a concrete implementation. It is implemented by the main GUI client
- * class ({@code mekwars.client.MWClient}) and by the headless dedicated host ({@code mekwars.dedicatedhost.MWDedHost}),
- * both of which also extend {@link mekwars.common.campaign.clientutils.GameHost}.
+ * primary way the rest of the MekWars client-side code (GUI panels, dialogs, protocol handlers, campaign objects) talks
+ * to "the client" without depending on a concrete implementation. It is implemented by the main GUI client class
+ * ({@code mekwars.client.MWClient}) and by the headless dedicated host ({@code mekwars.dedicatedhost.MWDedHost}), both
+ * of which also extend {@link mekwars.common.campaign.clientutils.GameHost}.
  * <p>
  * Broadly, an {@code IClient} implementation is responsible for:
  * <ul>
@@ -158,8 +158,8 @@ public interface IClient {
     void errorMessage(String message);
 
     /**
-     * Called (typically by {@link CConnector}) when there's server input to process — a raw incoming protocol
-     * line, not yet split into command/arguments.
+     * Called (typically by {@link CConnector}) when there's server input to process — a raw incoming protocol line, not
+     * yet split into command/arguments.
      */
     void processIncoming(String incoming);
 
@@ -220,12 +220,13 @@ public interface IClient {
     CPlayer getPlayer();
 
     /**
-     * Builds a formatted string describing an amount of money or "flu" (an in-campaign currency/resource),
-     * depending on campaign settings.
+     * Builds a formatted string describing an amount of money or "flu" (an in-campaign currency/resource), depending on
+     * campaign settings.
      *
      * @param b  implementation-specific flag (e.g. whether to abbreviate)
      * @param b1 implementation-specific flag (e.g. whether to show a sign)
      * @param i  the amount to format
+     *
      * @return the formatted money/flu message
      */
     String moneyOrFluMessage(boolean b, boolean b1, int i);
@@ -239,6 +240,7 @@ public interface IClient {
      * Looks up a cached server-side configuration value by key.
      *
      * @param rpShortName the config key to look up
+     *
      * @return the cached value for that key
      */
     String getServerConfigs(String rpShortName);
@@ -265,6 +267,7 @@ public interface IClient {
      * Checks whether a given (target-)system type is currently banned by this server's rules.
      *
      * @param type the system/equipment type identifier to check
+     *
      * @return true if that type is banned
      */
     boolean getTargetSystemBanStatus(int type);
@@ -283,6 +286,7 @@ public interface IClient {
      * Looks up a user (account) by name.
      *
      * @param name the username to look up
+     *
      * @return the matching {@link IClientUser}, or an implementation-defined result (e.g. null) if not found
      */
     IClientUser getUser(String name);
@@ -359,7 +363,8 @@ public interface IClient {
 
     /**
      * @return true if this client's campaign uses the "advance repairs" ruleset (affects repair cost/detail
-     *         calculations and entity-status serialization; see {@link mekwars.common.campaign.clientutils.SerializeEntity}).
+     *       calculations and entity-status serialization; see
+     *       {@link mekwars.common.campaign.clientutils.SerializeEntity}).
      */
     boolean isUsingAdvanceRepairs();
 
@@ -367,6 +372,7 @@ public interface IClient {
      * Looks up a named client-side config parameter (delegates to {@link IClientConfig#getParam(String)}).
      *
      * @param primaryHQSortOrder the config key to look up (name reflects a common caller, not a fixed key)
+     *
      * @return the config value
      */
     String getConfigParam(String primaryHQSortOrder);
@@ -409,9 +415,8 @@ public interface IClient {
     boolean isWaiting();
 
     /**
-     * Sets whether the client is blocked waiting on a server response. Callers elsewhere in the codebase
-     * (e.g. {@code BuildTableViewer.run()}) busy-wait in a sleep loop checking {@link #isWaiting()} until this is
-     * cleared.
+     * Sets whether the client is blocked waiting on a server response. Callers elsewhere in the codebase (e.g.
+     * {@code BuildTableViewer.run()}) busy-wait in a sleep loop checking {@link #isWaiting()} until this is cleared.
      *
      * @param b true to enter the waiting state, false to clear it
      */
@@ -451,6 +456,7 @@ public interface IClient {
      * Looks up the campaign-adjusted cost of a piece of ammunition by its internal MegaMek name.
      *
      * @param internalName the ammo's internal MegaMek identifier
+     *
      * @return the computed cost
      */
     double getAmmoCost(String internalName);
@@ -462,13 +468,13 @@ public interface IClient {
 
     /**
      * @return true if the current user has at least moderator-level permissions (see
-     *         {@link mekwars.common.campaign.clientutils.GameHost#isMod()}).
+     *       {@link mekwars.common.campaign.clientutils.GameHost#isMod()}).
      */
     boolean isMod();
 
     /**
      * @return true if the current user has administrator-level permissions (see
-     *         {@link mekwars.common.campaign.clientutils.GameHost#isAdmin()}).
+     *       {@link mekwars.common.campaign.clientutils.GameHost#isAdmin()}).
      */
     boolean isAdmin();
 
@@ -537,6 +543,7 @@ public interface IClient {
      * @param name        the username to check
      * @param ignoreHouse the ignore scope (one of the {@code IGNORE_*} constants, despite the parameter name always
      *                    referring to "house")
+     *
      * @return true if messages from that user in that scope should be ignored
      */
     boolean isIgnored(String name, int ignoreHouse);
@@ -552,8 +559,8 @@ public interface IClient {
     void doPlaySound(String soundName);
 
     /**
-     * Changes this client's published status to the given code (one of the {@code STATUS_*} constants) and notifies
-     * the server.
+     * Changes this client's published status to the given code (one of the {@code STATUS_*} constants) and notifies the
+     * server.
      */
     void changeStatus(int i);
 
@@ -646,8 +653,8 @@ public interface IClient {
     String getStatus();
 
     /**
-     * Processes a line of input typed by the user into the GUI (chat box or command line), dispatching it as a
-     * command or plain chat as appropriate.
+     * Processes a line of input typed by the user into the GUI (chat box or command line), dispatching it as a command
+     * or plain chat as appropriate.
      */
     void processGUIInput(String s);
 
@@ -692,19 +699,18 @@ public interface IClient {
     void setUsingBots(boolean b);
 
     /**
-     * HTML-escapes a string (see
-     * {@link mekwars.common.campaign.clientutils.GameHost#doEscape(String)} for the typical string-returning
-     * counterpart). Note the unusual {@code int} return type for what is conceptually a string-transforming
-     * operation — check the implementation for what value is actually returned.
+     * HTML-escapes a string (see {@link mekwars.common.campaign.clientutils.GameHost#doEscape(String)} for the typical
+     * string-returning counterpart). Note the unusual {@code int} return type for what is conceptually a
+     * string-transforming operation — check the implementation for what value is actually returned.
      *
      * @param string the string to escape
+     *
      * @return an implementation-defined integer result
      */
-    int doEscape(String string);
+    String doEscape(String string);
 
     /**
-     * Appends a line to a chat channel, tagging it with the originating server name (used in multi-server
-     * displays).
+     * Appends a line to a chat channel, tagging it with the originating server name (used in multi-server displays).
      *
      * @param s           the text to append
      * @param channelMail the channel identifier to append to
@@ -768,7 +774,9 @@ public interface IClient {
      * Computes a checksum for a filename/string, used to validate file transfers/caches.
      *
      * @param s the input to checksum
+     *
      * @return the computed checksum string
+     *
      * @throws Exception if the checksum cannot be computed (e.g. algorithm unavailable, I/O error)
      */
     String createFilenameChecksum(String s) throws Exception;
@@ -787,6 +795,7 @@ public interface IClient {
      * Finds usernames that partially match the given text, for chat auto-completion.
      *
      * @param text the partial username typed so far
+     *
      * @return the list of matching usernames
      */
     ArrayList<String> getPartialUser(String text);
@@ -802,12 +811,13 @@ public interface IClient {
     int getMinPlanetOwnerShip(Planet planet);
 
     /**
-     * Computes the technician labor cost (in hours or points, implementation-defined) to repair/build the given
-     * entity at the given tech skill level.
+     * Computes the technician labor cost (in hours or points, implementation-defined) to repair/build the given entity
+     * at the given tech skill level.
      *
      * @param entity    the unit being worked on
      * @param techGreen the technician's skill level (name suggests a "green"/rookie skill constant, but the actual
      *                  meaning is defined by the implementation)
+     *
      * @return the computed labor cost
      */
     int getTechLaborCosts(Entity entity, int techGreen);
@@ -818,8 +828,8 @@ public interface IClient {
     double getTotalRepairCosts(Entity entity);
 
     /**
-     * @return true if bot-controlled forces are configured to be placed on the same team as their controlling
-     *         player, rather than as a separate opposing side.
+     * @return true if bot-controlled forces are configured to be placed on the same team as their controlling player,
+     *       rather than as a separate opposing side.
      */
     boolean isBotsOnSameTeam();
 

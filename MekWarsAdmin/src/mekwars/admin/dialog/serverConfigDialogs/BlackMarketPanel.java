@@ -19,6 +19,7 @@ import mekwars.common.Unit;
 import mekwars.common.VerticalLayout;
 import mekwars.common.campaign.clientutils.protocol.IClient;
 import mekwars.common.util.SpringLayoutHelper;
+import org.jspecify.annotations.NonNull;
 
 
 /**
@@ -83,27 +84,31 @@ public class BlackMarketPanel extends JPanel {
         bmTextSpring.add(baseTextField);
 
         baseTextField = new JTextField(10);
-        bmTextSpring.add(new JLabel("BM Bid " + client.moneyOrFluMessage(false, true, -1) + " Cost:",
+        bmTextSpring.add(new JLabel("BM Bid %s Cost:".formatted(client.moneyOrFluMessage(false, true, -1)),
               SwingConstants.TRAILING));
-        baseTextField.setToolTipText(client.moneyOrFluMessage(false, false, -1) + " charge for bidding on the BM.");
+        baseTextField.setToolTipText("%s charge for bidding on the BM.".formatted(client.moneyOrFluMessage(false,
+              false,
+              -1)));
         baseTextField.setName("BMBidFlu");
         bmTextSpring.add(baseTextField);
 
         baseTextField = new JTextField(10);
-        bmTextSpring.add(new JLabel("BM Sale " + client.moneyOrFluMessage(false, true, -1) + " Cost:",
+        bmTextSpring.add(new JLabel("BM Sale %s Cost:".formatted(client.moneyOrFluMessage(false, true, -1)),
               SwingConstants.TRAILING));
-        baseTextField.setToolTipText("Base " +
-                                           client.moneyOrFluMessage(false, true, -1) +
-                                           " cost for a BM sale. Modified by weight.");
+        baseTextField.setToolTipText("Base %s cost for a BM sale. Modified by weight.".formatted(client.moneyOrFluMessage(
+              false,
+              true,
+              -1)));
         baseTextField.setName("BMSellFlu");
         bmTextSpring.add(baseTextField);
 
         baseTextField = new JTextField(10);
-        bmTextSpring.add(new JLabel("BM Size " + client.moneyOrFluMessage(false, true, -1) + " Cost:",
+        bmTextSpring.add(new JLabel("BM Size %s Cost:".formatted(client.moneyOrFluMessage(false, true, -1)),
               SwingConstants.TRAILING));
-        baseTextField.setToolTipText("[SizeCost] * [Unit WeightClass] added to " +
-                                           client.moneyOrFluMessage(false, true, -1) +
-                                           " cost of a BM sale.");
+        baseTextField.setToolTipText("[SizeCost] * [Unit WeightClass] added to %s cost of a BM sale.".formatted(client.moneyOrFluMessage(
+              false,
+              true,
+              -1)));
         baseTextField.setName("BMFluSizeCost");
         bmTextSpring.add(baseTextField);
 
@@ -220,34 +225,7 @@ public class BlackMarketPanel extends JPanel {
 
         SpringLayoutHelper.setupSpringGrid(bmCBoxSpring, 5);
 
-        JPanel bmButtonSpring = new JPanel(new SpringLayout());
-        bmButtonSpring.setBorder(BorderFactory.createEtchedBorder());
-
-        ButtonGroup auctionTypes = new ButtonGroup();
-
-        JRadioButton baseRadioButton = new JRadioButton("Vickery");
-
-        baseRadioButton.setName("UseVickeryAuctionType");
-        baseRadioButton.setToolTipText("<html>Victory auction is a modified highest sealed bid auction. Winner<br>" +
-                                             "determination is the same (highest bid, earliest placement in the<br>" +
-                                             "event of a tie), but the winner pays 2nd highest bid, plus one, in<br>" +
-                                             "lieu of the amount he offered.<br>" +
-                                             "NOTE: you must restart the server for this to take effect!</html");
-
-        auctionTypes.add(baseRadioButton);
-        bmButtonSpring.add(baseRadioButton);
-
-        baseRadioButton = new JRadioButton("Highest Sealed Bid");
-
-        baseRadioButton.setName("UseHighestSealedBidAuctionType");
-        baseRadioButton.setToolTipText("<html>Winner is simply the highest offering person who can<br>" +
-                                             "afford to pay. This, codewise, is a truncated Victory<br>" +
-                                             "Auction. Same mechanism to find highest bidder, but no<br>" +
-                                             "downward adjustment.<br>" +
-                                             "NOTE: You must restart the server for this to take effect!</html>");
-
-        auctionTypes.add(baseRadioButton);
-        bmButtonSpring.add(baseRadioButton);
+        JPanel bmButtonSpring = getBmButtonSpring();
 
         SpringLayoutHelper.setupSpringGrid(bmButtonSpring, 2);
 
@@ -306,14 +284,11 @@ public class BlackMarketPanel extends JPanel {
             BMPMPanel.add(new JLabel(Unit.getTypeClassDesc(type)));
             for (int weight = Unit.LIGHT; weight <= Unit.ASSAULT; weight++) {
                 baseTextField = new JTextField(5);
-                baseTextField.setName("BMPriceMultiplier_" +
-                                            Unit.getWeightClassDesc(weight) +
-                                            Unit.getTypeClassDesc(type));
-                baseTextField.setToolTipText("Multiplier for faction bay " +
-                                                   Unit.getWeightClassDesc(weight) +
-                                                   " " +
-                                                   Unit.getTypeClassDesc(type) +
-                                                   " units sent to the BM.  (float value)");
+                baseTextField.setName("BMPriceMultiplier_%s%s".formatted(Unit.getWeightClassDesc(weight),
+                      Unit.getTypeClassDesc(type)));
+                baseTextField.setToolTipText("Multiplier for faction bay %s %s units sent to the BM.  (float value)".formatted(
+                      Unit.getWeightClassDesc(weight),
+                      Unit.getTypeClassDesc(type)));
                 BMPMPanel.add(baseTextField);
             }
         }
@@ -327,5 +302,37 @@ public class BlackMarketPanel extends JPanel {
         bmBox.add(BMPriceModPanel);
 
         add(bmBox);
+    }
+
+    private static @NonNull JPanel getBmButtonSpring() {
+        JPanel bmButtonSpring = new JPanel(new SpringLayout());
+        bmButtonSpring.setBorder(BorderFactory.createEtchedBorder());
+
+        ButtonGroup auctionTypes = new ButtonGroup();
+
+        JRadioButton baseRadioButton = new JRadioButton("Vickery");
+
+        baseRadioButton.setName("UseVickeryAuctionType");
+        baseRadioButton.setToolTipText("<html>Victory auction is a modified highest sealed bid auction. Winner<br>" +
+                                             "determination is the same (highest bid, earliest placement in the<br>" +
+                                             "event of a tie), but the winner pays 2nd highest bid, plus one, in<br>" +
+                                             "lieu of the amount he offered.<br>" +
+                                             "NOTE: you must restart the server for this to take effect!</html");
+
+        auctionTypes.add(baseRadioButton);
+        bmButtonSpring.add(baseRadioButton);
+
+        baseRadioButton = new JRadioButton("Highest Sealed Bid");
+
+        baseRadioButton.setName("UseHighestSealedBidAuctionType");
+        baseRadioButton.setToolTipText("<html>Winner is simply the highest offering person who can<br>" +
+                                             "afford to pay. This, codewise, is a truncated Victory<br>" +
+                                             "Auction. Same mechanism to find highest bidder, but no<br>" +
+                                             "downward adjustment.<br>" +
+                                             "NOTE: You must restart the server for this to take effect!</html>");
+
+        auctionTypes.add(baseRadioButton);
+        bmButtonSpring.add(baseRadioButton);
+        return bmButtonSpring;
     }
 }

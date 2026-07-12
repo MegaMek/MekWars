@@ -66,7 +66,7 @@ public class AutoProdPanel extends JPanel {
         selectionPanel.add(apTypeClassic);
         selectionPanel.add(apTypeNew);
 
-        if (Boolean.parseBoolean(client.getserverConfigs("UseAutoProdNew"))) {
+        if (Boolean.parseBoolean(client.getServerConfigs("UseAutoProdNew"))) {
             apTypeClassic.setSelected(false);
             apTypeNew.setSelected(true);
         } else {
@@ -155,26 +155,24 @@ public class AutoProdPanel extends JPanel {
         apNewBoxPanel.add(new JLabel("Units"));
         apNewBoxPanel.add(new JLabel("Failure"));
 
-        for (int i = 0; i < Unit.MAXBUILD; i++) {
+        for (int i = 0; i < Unit.MAX_BUILD; i++) {
             for (int j = 0; j <= Unit.ASSAULT; j++) {
                 if (j == 0) {
                     apNewBoxPanel.add(new JLabel(Unit.getTypeClassDesc(i)));
                 }
 
                 baseTextField = new JTextField();
-                baseTextField.setName("APAtMax" + Unit.getWeightClassDesc(j) + Unit.getTypeClassDesc(i));
-                baseTextField.setToolTipText("Number of units worth of stored components to trigger an AP attempt for " +
-                                                   Unit.getWeightClassDesc(j) +
-                                                   " " +
-                                                   Unit.getTypeClassDesc(i));
+                baseTextField.setName("APAtMax%s%s".formatted(Unit.getWeightClassDesc(j), Unit.getTypeClassDesc(i)));
+                baseTextField.setToolTipText(
+                      "Number of units worth of stored components to trigger an AP attempt for %s %s".formatted(Unit.getWeightClassDesc(
+                            j), Unit.getTypeClassDesc(i)));
                 apNewBoxPanel.add(baseTextField);
 
                 baseTextField = new JTextField();
-                baseTextField.setName("APFailureRate" + Unit.getWeightClassDesc(j) + Unit.getTypeClassDesc(i));
-                baseTextField.setToolTipText("Percent failure rate for " +
-                                                   Unit.getWeightClassDesc(j) +
-                                                   " " +
-                                                   Unit.getTypeClassDesc(i));
+                baseTextField.setName("APFailureRate%s%s".formatted(Unit.getWeightClassDesc(j),
+                      Unit.getTypeClassDesc(i)));
+                baseTextField.setToolTipText("Percent failure rate for %s %s".formatted(Unit.getWeightClassDesc(j),
+                      Unit.getTypeClassDesc(i)));
                 apNewBoxPanel.add(baseTextField);
             }
         }

@@ -25,20 +25,19 @@ import java.io.IOException;
 import java.io.PrintStream;
 import java.util.Properties;
 
+import javax.swing.ImageIcon;
 import javax.swing.JOptionPane;
 
-import common.campaign.clientutils.IClientConfig;
 import megamek.logging.MMLogger;
+import mekwars.common.campaign.clientutils.IClientConfig;
 
 /**
  * Class for client's configuration.
  */
 public class DedConfig implements IClientConfig {
-    private static final MMLogger LOGGER = MMLogger.create(DedConfig.class);
-
     public static final String CONFIG_FILE = "./data/mwconfig.txt";
     public static final String CONFIG_BACKUP_FILE = "./data/mwconfig.txt.bak";
-
+    private static final MMLogger LOGGER = MMLogger.create(DedConfig.class);
     private Properties config;                //config. player values.
 
     //CONSTRUCTOR
@@ -132,105 +131,60 @@ public class DedConfig implements IClientConfig {
             FileOutputStream fos = new FileOutputStream(CONFIG_FILE);
             PrintStream ps = new PrintStream(fos);
 
-            /*
-             * Options below are supported in code, but not yet in config dialog.
-             */
-            //ps.println("#If you want a Password for your game, enter it here");
-            //ps.println("#GAMEPASSWORD: ");
-            //ps.println("#Size of chat font (as in html font tag)");
-            //ps.println("#CHATFONTSIZE: +0");
-            //ps.println("#Color of chat font (as in html font tag)");
-            //ps.println("#CHATFONTCOLOR: black");
-            //ps.println("#If you don't want the Player Panel to be visible, set it to NO");
-            //ps.println("PLAYERPANEL: YES");
-            //ps.println("#Put player panel height in pixels (excluding logo height) here (default is 130)");
-            //ps.println("#PLAYERPANELHEIGHT: 130");
-            //ps.println("#If you don't want the Logo to be visible, set it to NO");
-            //ps.println("LOGO: NO");
-            //ps.println("#A picture (from /data/images) to be shown as your logo in client. If you comment it out, it will download your unit logo!");
-            //ps.println("LOGOIMAGE: logo.jpg");
-            //ps.println("#The thickness of splitters dividing client windows");
-            //ps.println("#SPLITTERSIZE: 7");
-            //ps.println("#set to NO if you do not want server messages to appear as popup.");
-            //ps.println("#if turned off, messages will appear in main chat.");
-            //ps.println("POPUPONMESSAGE: NO");
-
-            /*
-             * Options below are supported in config dialog.
-             */
-            //ps.println("#Your Color used for your name in the chat ");
-            //ps.println("#Color of your name in chat.");
-            //ps.println("#Choices: standard HTML colours, any hex colour with a Red Value under AA)");
-            //ps.println("COLOR: black");
-            //ps.println("#IP of MekWars Server you are connecting to");
-            //ps.println("#Servers listed on forums @ http://www.sourceforge.net/projects/mekwars");
-            //ps.println("SERVERIP: SEE THE MEKWARS PROJECT PAGE FOR A LIST OF KNOWN SERVERS");
-            //ps.println("#MegaMek host settings");
-            //ps.println("#IF and only IF your ip isn't detected correctly, you may edit this setting (very unlikely that this happens)");
-            //ps.println("#This is your current IP, needed to host games. You can use a Dynamically assigned DNS entry or just your plain IP here.");
-            //ps.println("#If you don't know your IP-Address try this website: http://www.whatismyip.com");
-            //ps.println("#You only need to enable that line if your IP isn't shown correctly when you create a game.");
-            //ps.println("#IP: 127.0.0.1");
-            //ps.println("#The maximum number of players you want to join your host. (If you host a game) Default: 12");
-            //ps.println("MAXPLAYERS: 12");
-            //ps.println("#A comment for your game (If you host a game)");
-            //ps.println("COMMENT: ");
-            //ps.println("#SOUND SETTINGS");
-            //ps.println("#Play this file if anyone calls my name");
-            //ps.println("SOUNDONCALL: ./data/sounds/call.wav");
-            //ps.println("#Play this file when a Player joins the room");
-            //ps.println("#SOUNDONJOIN: ./data/sounds/join.wav");
-            //ps.println("#Play this file when a Player exits the room");
-            //ps.println("#SOUNDONEXIT: ./data/sounds/exit.wav");
-            //ps.println("#Play this file when someone sends you a message");
-            //ps.println("SOUNDONMESSAGE: ./data/sounds/mail.wav");
-            //ps.println("#Play this file when someone attacks you");
-            //ps.println("SOUNDONATTACK: ./data/sounds/attack.wav");
-            //ps.println("#Dedicated server settings");
-            //ps.println("#Should this be a Dedicated Server ONLY?");
-            //ps.println("DEDICATED: NO");
-            //ps.println("#(Only if Dedicated Only) Put names of people allowed to reset him here, separated with commas");
-            //ps.println("DEDICATEDOWNERNAME: ");
-            //ps.println("#If you don't want to see news and statuses in Main Channel, set it to NO");
-            //ps.println("MAINCHANNELNEWS: YES");
-            //ps.println("#If you don't want to see faction mails in Main Channel, set it to NO");
-            //ps.println("MAINCHANNELHM: NO");
-            //ps.println("#If you don't want to see private mails in Main Channel, set it to NO");
-            //ps.println("MAINCHANNELPM: NO");
-            //ps.println("#If you don't want to see system messages in Main Channel, set it to NO");
-            //ps.println("MAINCHANNELSM: NO");
-            //ps.println("#If you don't want to see misc messages in Main Channel, set it to NO");
-            //ps.println("MAINCHANNELMISC: NO");
-            //ps.println("#If you want to hear a sound when specific word is received, put them in here, separated with commas");
-            //ps.println("#REPLYTOSENDER: YES");
-            //ps.println("#If you don't want PM tab reply to last mail receiver, set it to NO");
-            //ps.println("#REPLYTORECEIVER: NO");
-            //ps.println("#If you don't want dialog to popup on when you are attacked, set it to NO");
-            //ps.println("#POPUPONATTACK: YES");
-            //ps.println("#PanelDivider set between 1-100");
-            //ps.println("PANELDIVIDER: 40");
-            //ps.println("#bind commands to Function keys. /c is automatically added.");
-            //ps.println("#Example binding for F1 to mysatus and transfermomey follow.");
-            //ps.println("#F1BIND: transfermoney#urgru#30");
-            //ps.println("F1BIND: mystatus");
-            //ps.println("F2BIND:");
-            //ps.println("F3BIND:");
-            //ps.println("F4BIND:");
-            //ps.println("F5BIND:");
-            //ps.println("#number of games a ded will play before it restarts");
-            //ps.println("DEDAUTORESTART: 20");
-
-            //these should be pre-empted by the serverdata.dat values set by server op
-            //ps.println("CAMPAIGNSERVERNAME: MekWars Server");
-            //ps.println("TRAYIMAGE: reserve_colored.gif");
-            //ps.println("UPDATEKEY: -1");
-
             ps.close();
             fos.close();
         } catch (Exception ex) {
             JOptionPane.showMessageDialog(null, "Failed to create config file. Check folder write access privledges?");
             System.exit(0);
         }
+    }
+
+    /**
+     * Get a config value.
+     */
+    public String getParam(String param) {
+        String tparam = null;
+
+        if (param.endsWith(":")) {
+            param = param.substring(0, param.lastIndexOf(":"));
+        }
+        tparam = config.getProperty(param);
+        if (tparam == null) {
+            tparam = "";
+        }
+        return tparam;
+    }
+
+    /**
+     * Set a config value.
+     */
+    public void setParam(String param, String value) {
+        config.setProperty(param, value);
+    }
+
+    /**
+     * See if a paramater is enabled (YES, TRUE or ON).
+     */
+    public boolean isParam(String param) {
+        String tparam = getParam(param);
+        if (tparam.equalsIgnoreCase("YES") || tparam.equalsIgnoreCase("TRUE") || tparam.equalsIgnoreCase("ON")) {
+            return true;
+        }
+        return false;
+    }
+
+    /**
+     * Return the int value of a given config property. Return a 0 if the property is a non-number. Used mostly by the
+     * misc. mail tab checks.
+     */
+    public int getIntParam(String param) {
+        int toReturn;
+        try {
+            toReturn = Integer.parseInt(getParam(param));
+        } catch (Exception ex) {
+            return 0;
+        }
+        return toReturn;
     }
 
     /**
@@ -263,51 +217,37 @@ public class DedConfig implements IClientConfig {
     }
 
     /**
-     * Set a config value.
+     * Load and return a cached image (e.g. a repair/status icon) by logical name.
+     *
+     * @param repair the logical image name/key to resolve
+     *
+     * @return the loaded icon, or null/placeholder if it could not be found (implementation-dependent)
      */
-    public void setParam(String param, String value) {
-        config.setProperty(param, value);
+    @Override
+    public ImageIcon getImage(String repair) {
+        return null;
     }
 
     /**
-     * See if a paramater is enabled (YES, TRUE or ON).
+     * @return true if the client is configured to show small status icons (e.g. next to unit/user entries) rather than
+     *       plain text.
      */
-    public boolean isParam(String param) {
-        String tparam = getParam(param);
-        if (tparam.equalsIgnoreCase("YES") || tparam.equalsIgnoreCase("TRUE") || tparam.equalsIgnoreCase("ON")) {
-            return true;
-        }
+    @Override
+    public boolean isUsingStatusIcons() {
         return false;
     }
 
     /**
-     * Get a config value.
+     * Load and cache an image, optionally applying a camo pattern, for later retrieval via {@link #getImage(String)}.
+     *
+     * @param s    the base image name/path to load
+     * @param camo the camo pattern identifier to apply, or null/empty for none
+     * @param i    implementation-specific sizing/index parameter (e.g. target width)
+     * @param i1   implementation-specific sizing/index parameter (e.g. target height)
      */
-    public String getParam(String param) {
-        String tparam = null;
+    @Override
+    public void loadImage(String s, String camo, int i, int i1) {
 
-        if (param.endsWith(":")) {
-            param = param.substring(0, param.lastIndexOf(":"));
-        }
-        tparam = config.getProperty(param);
-        if (tparam == null) {
-            tparam = "";
-        }
-        return tparam;
-    }
-
-    /**
-     * Return the int value of a given config property. Return a 0 if the property is a non-number. Used mostly by the
-     * misc. mail tab checks.
-     */
-    public int getIntParam(String param) {
-        int toReturn;
-        try {
-            toReturn = Integer.parseInt(getParam(param));
-        } catch (Exception ex) {
-            return 0;
-        }
-        return toReturn;
     }
 
 }

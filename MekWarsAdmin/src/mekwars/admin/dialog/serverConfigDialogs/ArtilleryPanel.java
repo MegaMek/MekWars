@@ -58,25 +58,25 @@ public class ArtilleryPanel extends JPanel {
         // set up the spring
         JTextField baseTextField = new JTextField(5);
         artySpring.add(new JLabel("Assault File:", SwingConstants.TRAILING));
-        baseTextField.setToolTipText("Filename of the units to load as assault artillery seperated by $");
+        baseTextField.setToolTipText("Filename of the units to load as assault artillery separated by $");
         baseTextField.setName("AssaultArtilleryFile");
         artySpring.add(baseTextField);
 
         baseTextField = new JTextField(5);
         artySpring.add(new JLabel("Heavy File:", SwingConstants.TRAILING));
-        baseTextField.setToolTipText("Filename of the units to load as heavy artillery seperated by $");
+        baseTextField.setToolTipText("Filename of the units to load as heavy artillery separated by $");
         baseTextField.setName("HeavyArtilleryFile");
         artySpring.add(baseTextField);
 
         baseTextField = new JTextField(5);
         artySpring.add(new JLabel("Medium File:", SwingConstants.TRAILING));
-        baseTextField.setToolTipText("Filename of the units to load as medium artillery seperated by $");
+        baseTextField.setToolTipText("Filename of the units to load as medium artillery separated by $");
         baseTextField.setName("MediumArtilleryFile");
         artySpring.add(baseTextField);
 
         baseTextField = new JTextField(5);
         artySpring.add(new JLabel("Light File:", SwingConstants.TRAILING));
-        baseTextField.setToolTipText("Filename of the units to load as light artillery seperated by $");
+        baseTextField.setToolTipText("Filename of the units to load as light artillery separated by $");
         baseTextField.setName("LightArtilleryFile");
         artySpring.add(baseTextField);
 
@@ -159,25 +159,25 @@ public class ArtilleryPanel extends JPanel {
         // set up the spring
         baseTextField = new JTextField(5);
         gunEmplacementSpring.add(new JLabel("Assault File:", SwingConstants.TRAILING));
-        baseTextField.setToolTipText("Filename of the units to load as assault Guns seperated by $");
+        baseTextField.setToolTipText("Filename of the units to load as assault Guns separated by $");
         baseTextField.setName("AssaultGunEmplacementFile");
         gunEmplacementSpring.add(baseTextField);
 
         baseTextField = new JTextField(5);
         gunEmplacementSpring.add(new JLabel("Heavy File:", SwingConstants.TRAILING));
-        baseTextField.setToolTipText("Filename of the units to load as heavy Guns seperated by $");
+        baseTextField.setToolTipText("Filename of the units to load as heavy Guns separated by $");
         baseTextField.setName("HeavyGunEmplacementFile");
         gunEmplacementSpring.add(baseTextField);
 
         baseTextField = new JTextField(5);
         gunEmplacementSpring.add(new JLabel("Medium File:", SwingConstants.TRAILING));
-        baseTextField.setToolTipText("Filename of the units to load as medium Guns seperated by $");
+        baseTextField.setToolTipText("Filename of the units to load as medium Guns separated by $");
         baseTextField.setName("MediumGunEmplacementFile");
         gunEmplacementSpring.add(baseTextField);
 
         baseTextField = new JTextField(5);
         gunEmplacementSpring.add(new JLabel("Light File:", SwingConstants.TRAILING));
-        baseTextField.setToolTipText("Filename of the units to load as light Guns seperated by $");
+        baseTextField.setToolTipText("Filename of the units to load as light Guns separated by $");
         baseTextField.setName("LightGunEmplacementFile");
         gunEmplacementSpring.add(baseTextField);
 

@@ -53,13 +53,16 @@ import java.util.ArrayList;
 import java.util.Hashtable;
 import java.util.List;
 
+import megamek.logging.MMLogger;
 import mekwars.updaters.utils.IOUtil;
 import mekwars.updaters.utils.Terminator;
 import mekwars.updaters.utils.VoidFunction;
 
 public class AutoUpdater {
+
     // Temporary directory to store the files that will be updated.
     public static final String UPDATE_TMP_DIR = "update-tmp";
+    private static final MMLogger LOGGER = MMLogger.create(AutoUpdater.class);
     protected SplashWindow splash;
     protected File localDir_;
     protected Hashtable<String, File> copyMap_ = new Hashtable<String, File>();
@@ -110,10 +113,13 @@ public class AutoUpdater {
         updater.updateToLatestVersion(repository);
     }
 
-    public void updateToLatestVersion(Repository repository)
-          throws IOException {
-        Version latest = repository.getLatestVersion();
-        updateToSpecificVersion(repository, latest);
+    public void updateToLatestVersion(Repository repository) throws IOException {
+        try {
+            Version latest = repository.getLatestVersion();
+            updateToSpecificVersion(repository, latest);
+        } catch (URISyntaxException e) {
+            LOGGER.error(e, "Unable to update. Version not properly formatted.");
+        }
     }
 
     public void updateToSpecificVersion(Repository repository, Version version)
@@ -122,27 +128,31 @@ public class AutoUpdater {
         int stepsCompleted = 1;
 
 
-        setProgressNote("Updating to version " + version.getName());
+        setProgressNote("Updating to version %s".formatted(version.getName()));
 
         setProgressNote("Retrieving remote manifest");
-        VersionManifest manifest = version.getManifest();
 
-        List<FileInfo> fileDiffInfos = manifest.getDiffInfos(this);
+        try {
+            VersionManifest manifest = version.getManifest();
+            List<FileInfo> fileDiffInfos = manifest.getDiffInfos(this);
 
-        //set up progress monitor for getting the rest of the files
-        setMaximumSteps(fileDiffInfos.size());
-        setProgress(stepsCompleted);
+            //set up progress monitor for getting the rest of the files
+            setMaximumSteps(fileDiffInfos.size());
+            setProgress(stepsCompleted);
 
-        //for each file that differs, update it
-        for (FileInfo nextFileInfo : fileDiffInfos) {
-            FileDiff diff = repository.getDiff(nextFileInfo, version);
-            diff.setTempFileUpToDate(nextFileInfo.getTempFileUpToDate());
-            diff.apply(this, repository);
-            setProgress(++stepsCompleted);
+            //for each file that differs, update it
+            for (FileInfo nextFileInfo : fileDiffInfos) {
+                FileDiff diff = repository.getDiff(nextFileInfo, version);
+                diff.setTempFileUpToDate(nextFileInfo.getTempFileUpToDate());
+                diff.apply(this, repository);
+                setProgress(++stepsCompleted);
+            }
+
+
+            cleanUpLocalFiles(manifest);
+        } catch (URISyntaxException e) {
+            LOGGER.error(e, "Unable to update. Specific Version not properly formatted.");
         }
-
-
-        cleanUpLocalFiles(manifest);
     }
 
     public void setProgressNote(String note) {

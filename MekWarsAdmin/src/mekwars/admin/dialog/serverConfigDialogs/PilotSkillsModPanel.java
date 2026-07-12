@@ -135,7 +135,7 @@ public class PilotSkillsModPanel extends JPanel {
 
         baseTextField = new PilotSkillTextField(5);
         SkillModSpring.add(new JLabel("Gifted % Mod", SwingConstants.TRAILING));
-        if (Boolean.parseBoolean(client.getserverConfigs("PlayersCanBuyPilotUpgrades"))) {
+        if (Boolean.parseBoolean(client.getServerConfigs("PlayersCanBuyPilotUpgrades"))) {
             baseTextField.setToolTipText(
                   "<html><body>Note Double Field<br>The amount off the cost of other upgrades a Gifted Pilot gets.<br>Example .05 for 5% off</body></html>");
         } else {

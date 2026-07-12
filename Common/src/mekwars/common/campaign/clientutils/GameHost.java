@@ -64,25 +64,25 @@ import mekwars.common.campaign.clientutils.protocol.IClient;
 import mekwars.common.commands.IProtCommand;
 
 /**
- * Base class for anything in MekWars that hosts a MegaMek {@link Server} instance and needs to talk back to the
- * MekWars campaign server about the game in progress (e.g. reporting unit destruction/salvage, auto-saving,
- * relaying chat). It implements MegaMek's {@link GameListener} so it can be registered as a listener on the embedded
- * {@link Server}'s {@link megamek.common.game.Game}, and implements {@link IGameHost} so other MekWars code can
- * query host status/permissions without depending on a concrete subclass.
+ * Base class for anything in MekWars that hosts a MegaMek {@link Server} instance and needs to talk back to the MekWars
+ * campaign server about the game in progress (e.g. reporting unit destruction/salvage, auto-saving, relaying chat). It
+ * implements MegaMek's {@link GameListener} so it can be registered as a listener on the embedded {@link Server}'s
+ * {@link megamek.common.game.Game}, and implements {@link IGameHost} so other MekWars code can query host
+ * status/permissions without depending on a concrete subclass.
  * <p>
  * Concrete subclasses (e.g. the full GUI client and the headless dedicated host) must supply the abstract hooks
  * ({@link #isUsingAdvanceRepairs()}, {@link #sendServerGameUpdate()}, {@link #sendGameReport()},
  * {@link #getUser(String)}) and are responsible for actually starting/stopping the embedded {@link #myServer}.
  * <p>
- * Most of the {@link GameListener} callbacks here are unimplemented stubs (see individual methods) — only the
- * handlers that MekWars actually cares about (turn/phase change, entity removal, victory) do real work.
+ * Most of the {@link GameListener} callbacks here are unimplemented stubs (see individual methods) — only the handlers
+ * that MekWars actually cares about (turn/phase change, entity removal, victory) do real work.
  */
 public abstract class GameHost implements GameListener, IGameHost {
     private static final MMLogger LOGGER = MMLogger.create(GameHost.class);
 
     /**
-     * The username of the account running this host. Public (rather than private/protected) because the RGTS
-     * command reaches in directly to set server status — a known hack, not idiomatic encapsulation.
+     * The username of the account running this host. Public (rather than private/protected) because the RGTS command
+     * reaches in directly to set server status — a known hack, not idiomatic encapsulation.
      */
     public String myUsername = "";// public b/c used in RGTS command to set server status. HACK!
 
@@ -145,8 +145,8 @@ public abstract class GameHost implements GameListener, IGameHost {
     }
 
     /**
-     * {@link GameListener} callback for in-game chat sent through the MegaMek server. Currently unimplemented
-     * (no-op stub); MekWars chat is instead routed through {@link #sendChat(String)}/{@link #serverSend(String)}.
+     * {@link GameListener} callback for in-game chat sent through the MegaMek server. Currently unimplemented (no-op
+     * stub); MekWars chat is instead routed through {@link #sendChat(String)}/{@link #serverSend(String)}.
      */
     @Override
     public void gamePlayerChat(GamePlayerChatEvent arg0) {
@@ -155,11 +155,11 @@ public abstract class GameHost implements GameListener, IGameHost {
     }
 
     /**
-     * {@link GameListener} callback fired when the game advances to a new turn. On the very first turn (turn 0)
-     * this reports the host as "Running" to the campaign server. On subsequent turns, if the "paranoid_autosave"
-     * game option is enabled and the game phase has changed since the last check, it triggers a full server game
-     * update via {@link #sendServerGameUpdate()}. {@link #turn} is incremented unconditionally on every call
-     * (including the very first) as long as {@link #myServer} is non-null.
+     * {@link GameListener} callback fired when the game advances to a new turn. On the very first turn (turn 0) this
+     * reports the host as "Running" to the campaign server. On subsequent turns, if the "paranoid_autosave" game option
+     * is enabled and the game phase has changed since the last check, it triggers a full server game update via
+     * {@link #sendServerGameUpdate()}. {@link #turn} is incremented unconditionally on every call (including the very
+     * first) as long as {@link #myServer} is non-null.
      */
     @Override
     public void gameTurnChange(GameTurnChangeEvent e) {
@@ -179,11 +179,11 @@ public abstract class GameHost implements GameListener, IGameHost {
     }
 
     /**
-     * Callback fired when the game phase changes (note: unlike the other listener callbacks in this class, this one
-     * is not marked {@code @Override} in the source, though it is still invoked by the same event-dispatch
-     * mechanism). Always sends a full server game update via {@link #sendServerGameUpdate()} — this is the main
-     * auto-reporting hook, since reporting phases are when unit deaths/destruction become visible. Any exception
-     * raised while reporting is caught and logged rather than propagated.
+     * Callback fired when the game phase changes (note: unlike the other listener callbacks in this class, this one is
+     * not marked {@code @Override} in the source, though it is still invoked by the same event-dispatch mechanism).
+     * Always sends a full server game update via {@link #sendServerGameUpdate()} — this is the main auto-reporting
+     * hook, since reporting phases are when unit deaths/destruction become visible. Any exception raised while
+     * reporting is caught and logged rather than propagated.
      */
     public void gamePhaseChange(GamePhaseChangeEvent e) {
         try {
@@ -203,8 +203,8 @@ public abstract class GameHost implements GameListener, IGameHost {
     }
 
     /**
-     * {@link GameListener} callback for a textual game report becoming available. Currently unimplemented (no-op
-     * stub); MekWars instead builds its own report via {@link #sendGameReport()}.
+     * {@link GameListener} callback for a textual game report becoming available. Currently unimplemented (no-op stub);
+     * MekWars instead builds its own report via {@link #sendGameReport()}.
      */
     @Override
     public void gameReport(GameReportEvent arg0) {
@@ -213,9 +213,9 @@ public abstract class GameHost implements GameListener, IGameHost {
     }
 
     /**
-     * {@link GameListener} callback fired when the MegaMek game ends. Currently unimplemented (no-op stub); note
-     * this is distinct from {@link #gameVictory(GameVictoryEvent)}, which is where MekWars actually reacts to the
-     * game concluding.
+     * {@link GameListener} callback fired when the MegaMek game ends. Currently unimplemented (no-op stub); note this
+     * is distinct from {@link #gameVictory(GameVictoryEvent)}, which is where MekWars actually reacts to the game
+     * concluding.
      */
     @Override
     public void gameEnd(GameEndEvent arg0) {
@@ -243,8 +243,8 @@ public abstract class GameHost implements GameListener, IGameHost {
     }
 
     /**
-     * {@link GameListener} callback fired when the game's rule options/settings change. Currently unimplemented
-     * (no-op stub).
+     * {@link GameListener} callback fired when the game's rule options/settings change. Currently unimplemented (no-op
+     * stub).
      */
     @Override
     public void gameSettingsChange(GameSettingsChangeEvent arg0) {
@@ -263,8 +263,8 @@ public abstract class GameHost implements GameListener, IGameHost {
     }
 
     /**
-     * {@link GameListener} callback fired when a new entity (unit) is added to the game. Currently unimplemented
-     * (no-op stub).
+     * {@link GameListener} callback fired when a new entity (unit) is added to the game. Currently unimplemented (no-op
+     * stub).
      */
     @Override
     public void gameEntityNew(GameEntityNewEvent arg0) {
@@ -273,8 +273,8 @@ public abstract class GameHost implements GameListener, IGameHost {
     }
 
     /**
-     * {@link GameListener} callback fired when a new off-board entity (e.g. off-board artillery) is added to the
-     * game. Currently unimplemented (no-op stub).
+     * {@link GameListener} callback fired when a new off-board entity (e.g. off-board artillery) is added to the game.
+     * Currently unimplemented (no-op stub).
      */
     @Override
     public void gameEntityNewOffboard(GameEntityNewOffboardEvent arg0) {
@@ -289,13 +289,14 @@ public abstract class GameHost implements GameListener, IGameHost {
      * removal condition, which means that a unit which is simultaneously head killed and then CT cored will show as
      * salvageable.
      */
+
     /**
-     * {@link GameListener} callback fired whenever an entity leaves play (destroyed, ejected, captured, fled,
-     * etc.). Skips reporting for units owned by any "War Bot" (bot-controlled) player. For every other removal, it
-     * serializes the entity's in-progress status (see {@link SerializeEntity#serializeEntity}) and sends it to the
-     * campaign server as an "IPU" (in-progress update) command via {@link #serverSend(String)}. See the caveat
-     * above: because only the first removal condition is reported, a unit that is both head-killed and later
-     * CT-cored in the same resolution can be reported as merely "salvageable".
+     * {@link GameListener} callback fired whenever an entity leaves play (destroyed, ejected, captured, fled, etc.).
+     * Skips reporting for units owned by any "War Bot" (bot-controlled) player. For every other removal, it serializes
+     * the entity's in-progress status (see {@link SerializeEntity#serializeEntity}) and sends it to the campaign server
+     * as an "IPU" (in-progress update) command via {@link #serverSend(String)}. See the caveat above: because only the
+     * first removal condition is reported, a unit that is both head-killed and later CT-cored in the same resolution
+     * can be reported as merely "salvageable".
      *
      * @param e the removal event, including the removed entity and its removal condition
      */
@@ -333,9 +334,9 @@ public abstract class GameHost implements GameListener, IGameHost {
     }
 
     /**
-     * {@link IGameHost}/{@link GameListener} callback fired when the server requests feedback from a client
-     * (Client Feedback Request). Currently unimplemented (no-op stub) at this level; subclasses that need to
-     * respond to CFRs must override this.
+     * {@link IGameHost}/{@link GameListener} callback fired when the server requests feedback from a client (Client
+     * Feedback Request). Currently unimplemented (no-op stub) at this level; subclasses that need to respond to CFRs
+     * must override this.
      */
     @Override
     public void gameClientFeedbackRequest(GameCFREvent arg0) {
@@ -344,16 +345,16 @@ public abstract class GameHost implements GameListener, IGameHost {
     }
 
     /**
-     * @return whether this host's campaign is using the "advance repairs" ruleset, which affects how much repair
-     *         detail is included when serializing entity status. Must be supplied by subclasses.
+     * @return whether this host's campaign is using the "advance repairs" ruleset, which affects how much repair detail
+     *       is included when serializing entity status. Must be supplied by subclasses.
      */
     protected abstract boolean isUsingAdvanceRepairs();
 
     /**
      * Encodes and sends a raw command string to the campaign server over {@link #Connector}. The message is
      * Base64-encoded (see {@link CConnector#encode(String)}) and wrapped in the protocol's "comm" envelope. Any
-     * exception during sending is caught and logged rather than propagated (a send failure is silently swallowed
-     * from the caller's perspective).
+     * exception during sending is caught and logged rather than propagated (a send failure is silently swallowed from
+     * the caller's perspective).
      *
      * @param s the raw command payload to send
      */
@@ -387,16 +388,16 @@ public abstract class GameHost implements GameListener, IGameHost {
     protected abstract void sendGameReport();
 
     /**
-     * @return true if the current user ({@link #getUsername()}) has a user level of 200 or higher, the convention
-     *         this codebase uses for "administrator".
+     * @return true if the current user ({@link #getUsername()}) has a user level of 200 or higher, the convention this
+     *       codebase uses for "administrator".
      */
     public boolean isAdmin() {
         return getUser(getUsername()).getUserLevel() >= 200;
     }
 
     /**
-     * @return true if the current user ({@link #getUsername()}) has a user level of 100 or higher, the convention
-     *         this codebase uses for "moderator or above" (admins also satisfy this check).
+     * @return true if the current user ({@link #getUsername()}) has a user level of 100 or higher, the convention this
+     *       codebase uses for "moderator or above" (admins also satisfy this check).
      */
     public boolean isMod() {
         return getUser(getUsername()).getUserLevel() >= 100;
@@ -413,13 +414,14 @@ public abstract class GameHost implements GameListener, IGameHost {
      * Looks up a user by name. Must be supplied by subclasses, which typically hold the authoritative user list.
      *
      * @param name the username to look up
+     *
      * @return the matching user, or an implementation-defined result (e.g. null) if not found
      */
     protected abstract IClientUser getUser(String name);
 
     /**
      * @return the number of buildings still standing on the current game board, counted by exhausting the board's
-     *         building enumeration.
+     *       building enumeration.
      */
     public int getBuildingsLeft() {
         Enumeration<IBuilding> buildings = myServer.getGame().getBoard().getBuildings();
@@ -432,11 +434,11 @@ public abstract class GameHost implements GameListener, IGameHost {
     }
 
     /**
-     * Deletes saved-game backup files under {@code ./logs/backup} that are older than
-     * {@link #savedGamesMaxDays}. Does nothing if the backup directory does not exist. Note: despite the variable
-     * name {@code daysInSeconds}, the value computed is actually in milliseconds (days * 24 * 60 * 60 * 1000), which
-     * matches {@link File#lastModified()}'s millisecond epoch time — the name is simply misleading, not a bug.
-     * Deletion failures for individual files are caught and logged, not propagated.
+     * Deletes saved-game backup files under {@code ./logs/backup} that are older than {@link #savedGamesMaxDays}. Does
+     * nothing if the backup directory does not exist. Note: despite the variable name {@code daysInSeconds}, the value
+     * computed is actually in milliseconds (days * 24 * 60 * 60 * 1000), which matches {@link File#lastModified()}'s
+     * millisecond epoch time — the name is simply misleading, not a bug. Deletion failures for individual files are
+     * caught and logged, not propagated.
      */
     public void purgeOldLogs() {
 
@@ -454,8 +456,11 @@ public abstract class GameHost implements GameListener, IGameHost {
                           && savedFile.isFile()
                           && (lastTime < (System.currentTimeMillis() - daysInSeconds))) {
                     try {
-                        LOGGER.info(String.format("Purging File: %s Time: %s purge Time: %s", savedFile.getName(), lastTime, System.currentTimeMillis() -
-                                                    daysInSeconds));
+                        LOGGER.info(String.format("Purging File: %s Time: %s purge Time: %s",
+                              savedFile.getName(),
+                              lastTime,
+                              System.currentTimeMillis() -
+                                    daysInSeconds));
                         savedFile.delete();
                     } catch (Exception ex) {
                         LOGGER.error(ex, "Error trying to delete these files! {}", savedFile.getName());
@@ -492,9 +497,8 @@ public abstract class GameHost implements GameListener, IGameHost {
 
     /**
      * Sends a (possibly multi-line) chat/command string to the server, one line at a time, via
-     * {@link #serverSend(String)} wrapped in a "CH|" (chat) command. Splits on newlines using a
-     * {@link StringTokenizer} to support multi-line input; blank/whitespace-only lines are silently dropped and not
-     * sent.
+     * {@link #serverSend(String)} wrapped in a "CH|" (chat) command. Splits on newlines using a {@link StringTokenizer}
+     * to support multi-line input; blank/whitespace-only lines are silently dropped and not sent.
      *
      * @param s the chat text or command string to send, possibly containing embedded newlines
      */
@@ -526,6 +530,7 @@ public abstract class GameHost implements GameListener, IGameHost {
      * working. Otherwise escapes {@code &}, {@code <}, and {@code >} via {@link #doEscapeString}.
      *
      * @param str the raw string to escape
+     *
      * @return the escaped string, or the original string unchanged if it contains a MEKINFO link
      */
     public String doEscape(String str) {
@@ -544,12 +549,13 @@ public abstract class GameHost implements GameListener, IGameHost {
 
     /**
      * Recursively replaces every occurrence of a single character in a string with a replacement string. Implemented
-     * via recursion on the substring following each match rather than iteration, so very long strings with many
-     * matches could in principle risk deep recursion/stack growth.
+     * via recursion on the substring following each match rather than iteration, so very long strings with many matches
+     * could in principle risk deep recursion/stack growth.
      *
      * @param t         the string to search
      * @param character the character (as an int code point) to replace
      * @param replace   the replacement string to substitute for each occurrence
+     *
      * @return a new string with all occurrences replaced
      */
     public String doEscapeString(String t, int character, String replace) {

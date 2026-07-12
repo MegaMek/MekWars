@@ -44,20 +44,22 @@ public class FactoryPurchasePanel extends JPanel {
         masterPanel.setLayout(new BoxLayout(masterPanel, BoxLayout.Y_AXIS));
 
         JTextField baseTextField = new JTextField(5);
-        mainPurchasePanel.add(new JLabel("New Factory " + client.moneyOrFluMessage(true, false, -1, false) + ":",
+        mainPurchasePanel.add(new JLabel("New Factory %s:".formatted(client.moneyOrFluMessage(true, false, -1, false)),
               SwingConstants.TRAILING));
-        baseTextField.setToolTipText("<HTML>" +
-                                           client.moneyOrFluMessage(true, false, -1, false) +
-                                           " to buy 1 factory</html>");
+        baseTextField.setToolTipText("<HTML>%s to buy 1 factory</html>".formatted(client.moneyOrFluMessage(true,
+              false,
+              -1,
+              false)));
         baseTextField.setName("NewFactoryBaseCost");
         mainPurchasePanel.add(baseTextField);
 
         baseTextField = new JTextField(5);
-        mainPurchasePanel.add(new JLabel("New Factory " + client.moneyOrFluMessage(false, false, -1, false) + ":",
+        mainPurchasePanel.add(new JLabel("New Factory %s:".formatted(client.moneyOrFluMessage(false, false, -1, false)),
               SwingConstants.TRAILING));
-        baseTextField.setToolTipText("<HTML>" +
-                                           client.moneyOrFluMessage(true, false, -1, false) +
-                                           " to buy 1 factory</html>");
+        baseTextField.setToolTipText("<HTML>%s to buy 1 factory</html>".formatted(client.moneyOrFluMessage(true,
+              false,
+              -1,
+              false)));
         baseTextField.setName("NewFactoryBaseFlu");
         mainPurchasePanel.add(baseTextField);
 
@@ -65,62 +67,54 @@ public class FactoryPurchasePanel extends JPanel {
 
         for (int type = 0; type < Unit.MAX_BUILD; type++) {
             baseTextField = new JTextField(5);
-            purchasePanel1.add(new JLabel(Unit.getTypeClassDesc(type) +
-                                                " unit " +
-                                                client.moneyOrFluMessage(true, false, -1, false) +
-                                                ":", SwingConstants.TRAILING));
-            baseTextField.setToolTipText("<HTML>" +
-                                               client.moneyOrFluMessage(true, false, -1, false) +
-                                               " modifier for " +
-                                               Unit.getTypeClassDesc(type) +
-                                               " unit factory</html>");
-            baseTextField.setName("NewFactoryCostModifier" + Unit.getTypeClassDesc(type));
+            purchasePanel1.add(new JLabel("%s unit %s:".formatted(Unit.getTypeClassDesc(type),
+                  client.moneyOrFluMessage(true, false, -1, false)), SwingConstants.TRAILING));
+            baseTextField.setToolTipText("<HTML>%s modifier for %s unit factory</html>".formatted(client.moneyOrFluMessage(
+                  true,
+                  false,
+                  -1,
+                  false), Unit.getTypeClassDesc(type)));
+            baseTextField.setName("NewFactoryCostModifier%s".formatted(Unit.getTypeClassDesc(type)));
             purchasePanel1.add(baseTextField);
         }
 
         for (int size = 0; size <= Unit.ASSAULT; size++) {
             baseTextField = new JTextField(5);
-            purchasePanel1.add(new JLabel(Unit.getWeightClassDesc(size) +
-                                                " unit " +
-                                                client.moneyOrFluMessage(true, false, -1, false) +
-                                                ":", SwingConstants.TRAILING));
-            baseTextField.setToolTipText("<HTML>" +
-                                               client.moneyOrFluMessage(true, false, -1, false) +
-                                               " modifier for " +
-                                               Unit.getWeightClassDesc(size) +
-                                               " unit factory</html>");
-            baseTextField.setName("NewFactoryCostModifier" + Unit.getWeightClassDesc(size));
+            purchasePanel1.add(new JLabel("%s unit %s:".formatted(Unit.getWeightClassDesc(size),
+                  client.moneyOrFluMessage(true, false, -1, false)), SwingConstants.TRAILING));
+            baseTextField.setToolTipText("<HTML>%s modifier for %s unit factory</html>".formatted(client.moneyOrFluMessage(
+                  true,
+                  false,
+                  -1,
+                  false), Unit.getWeightClassDesc(size)));
+            baseTextField.setName("NewFactoryCostModifier%s".formatted(Unit.getWeightClassDesc(size)));
             purchasePanel1.add(baseTextField);
         }
         SpringLayoutHelper.setupSpringGrid(purchasePanel1, 6);
 
         for (int type = 0; type < Unit.MAX_BUILD; type++) {
             baseTextField = new JTextField(5);
-            purchasePanel2.add(new JLabel(Unit.getTypeClassDesc(type) +
-                                                " unit " +
-                                                client.moneyOrFluMessage(false, false, -1, false) +
-                                                ":", SwingConstants.TRAILING));
-            baseTextField.setToolTipText("<HTML>" +
-                                               client.moneyOrFluMessage(true, false, -1, false) +
-                                               " modifier for " +
-                                               Unit.getTypeClassDesc(type) +
-                                               " unit factory</html>");
-            baseTextField.setName("NewFactoryFluModifier" + Unit.getTypeClassDesc(type));
+            purchasePanel2.add(new JLabel("%s unit %s:".formatted(Unit.getTypeClassDesc(type),
+                  client.moneyOrFluMessage(false, false, -1, false)), SwingConstants.TRAILING));
+            baseTextField.setToolTipText("<HTML>%s modifier for %s unit factory</html>".formatted(client.moneyOrFluMessage(
+                  true,
+                  false,
+                  -1,
+                  false), Unit.getTypeClassDesc(type)));
+            baseTextField.setName("NewFactoryFluModifier%s".formatted(Unit.getTypeClassDesc(type)));
             purchasePanel2.add(baseTextField);
         }
 
         for (int size = 0; size <= Unit.ASSAULT; size++) {
             baseTextField = new JTextField(5);
-            purchasePanel2.add(new JLabel(Unit.getWeightClassDesc(size) +
-                                                " unit " +
-                                                client.moneyOrFluMessage(false, false, -1, false) +
-                                                ":", SwingConstants.TRAILING));
-            baseTextField.setToolTipText("<HTML>" +
-                                               client.moneyOrFluMessage(false, false, -1, false) +
-                                               " modifier for " +
-                                               Unit.getWeightClassDesc(size) +
-                                               " unit factory</html>");
-            baseTextField.setName("NewFactoryFluModifier" + Unit.getWeightClassDesc(size));
+            purchasePanel2.add(new JLabel("%s unit %s:".formatted(Unit.getWeightClassDesc(size),
+                  client.moneyOrFluMessage(false, false, -1, false)), SwingConstants.TRAILING));
+            baseTextField.setToolTipText("<HTML>%s modifier for %s unit factory</html>".formatted(client.moneyOrFluMessage(
+                  false,
+                  false,
+                  -1,
+                  false), Unit.getWeightClassDesc(size)));
+            baseTextField.setName("NewFactoryFluModifier%s".formatted(Unit.getWeightClassDesc(size)));
             purchasePanel2.add(baseTextField);
         }
 

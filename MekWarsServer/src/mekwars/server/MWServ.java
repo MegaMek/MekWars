@@ -38,6 +38,7 @@ import megamek.codeUtilities.MathUtility;
 import megamek.logging.MMLogger;
 import mekwars.common.MMGame;
 import mekwars.common.commands.Command;
+import mekwars.common.commands.ServerCommand;
 import mekwars.server.MWChatServer.MWChatClient;
 import mekwars.server.MWChatServer.MWChatServer;
 import mekwars.server.MWChatServer.auth.AccessRole;
@@ -119,7 +120,7 @@ public class MWServ {
         mails = checkAndCreateConfig("./data/mails.txt");
         LOGGER.info("Mail file loaded.");
         LOGGER.info("Creating new campaign environment...");
-        campaign = new server.campaign.CampaignMain(this);
+        campaign = new CampaignMain(this);
         LOGGER.info("Environment created.");
 
         // Touch log files
@@ -407,14 +408,20 @@ public class MWServ {
                     SPlayer playerWithLogName = getCampaign().getPlayer(logname);
 
                     if (playerWithLogName != null) {
-                        logname += String.format(" %s", getCampaign().getPlayer(logname).getMyHouse().getAbbreviation());
+                        logname += String.format(" %s",
+                              getCampaign().getPlayer(logname).getMyHouse().getAbbreviation());
                     }
 
                     if ((player != null) && (playerWithLogName != null)) {
                         if (player.getGroupAllowance() != 0 &&
                                   player.getGroupAllowance() != playerWithLogName.getGroupAllowance()) {
                             getCampaign().doSendModMail("NOTE:",
-                                  String.format("Double Accounting: %s Group: %s and %s Group: %s IP: %s", nametmp, player.getGroupAllowance(), logname, playerWithLogName.getGroupAllowance(), userIP));
+                                  String.format("Double Accounting: %s Group: %s and %s Group: %s IP: %s",
+                                        nametmp,
+                                        player.getGroupAllowance(),
+                                        logname,
+                                        playerWithLogName.getGroupAllowance(),
+                                        userIP));
                         }
                     } else {
                         getCampaign().doSendModMail("NOTE:",
@@ -430,7 +437,8 @@ public class MWServ {
             Long until = bannedIPs.get(userIP);
             if (until > System.currentTimeMillis() || until == 0) {
                 if (until != 0) {
-                    clientSend(String.format("CH|You are banned. You may not join this server until %s", new Date(until).toString()),
+                    clientSend(String.format("CH|You are banned. You may not join this server until %s",
+                                new Date(until).toString()),
                           name);
                     getCampaign().doSendModMail("NOTE:",
                           String.format("%s (IP: %s) tried to gain access to the server", name, userIP));
@@ -450,7 +458,8 @@ public class MWServ {
 
             if (until > System.currentTimeMillis() || until == 0) {
                 if (until != 0) {
-                    clientSend(String.format("CH|You are banned. You may not join this server until %s", new Date(until.longValue()).toString()),
+                    clientSend(String.format("CH|You are banned. You may not join this server until %s",
+                                new Date(until)),
                           name);
                     getCampaign().doSendModMail("NOTE:",
                           String.format("%s (IP: %s) tried to gain access to the server", name, userIP));
@@ -469,7 +478,8 @@ public class MWServ {
             Long until = ISPLog.get(client.getClientVersion());
             if (until > System.currentTimeMillis() || until == 0) {
                 if (until != 0) {
-                    clientSend(String.format("CH|You have been banned. You may not join this server until %s", new Date(until).toString()),
+                    clientSend(String.format("CH|You have been banned. You may not join this server until %s",
+                                new Date(until).toString()),
                           name);
                     getCampaign().doSendModMail("NOTE:",
                           String.format("%s (IP: %s) tried to gain access to the server", name, userIP));
@@ -774,7 +784,7 @@ public class MWServ {
         java.util.StringTokenizer st = new java.util.StringTokenizer(lineIn, "|");
         try {
             String task = (String) st.nextElement();
-            ServerCommand c = null;
+            ServerCommand c;
             if ((c = (ServerCommand) myCommands.get(task.toUpperCase())) != null) {
                 c.reset();
                 c.setUsername(name);
@@ -911,30 +921,25 @@ public class MWServ {
     }
 
     public boolean isAdmin(String username) {
-        server.MWChatServer.MWChatClient c = myCommunicator.getClient(server.MWChatServer.MWChatServer.clientKey(
+        MWChatClient myCommunicatorClient = myCommunicator.getClient(MWChatServer.clientKey(
               username));
         if (username.startsWith("[Dedicated] ")) {
             return true;
         }
-        if (c != null) {
-            if (c.getAccessLevel() >= server.MWChatServer.auth.IAuthenticator.ADMIN) {
-                return true;
-            }
+        if (myCommunicatorClient != null) {
+            return myCommunicatorClient.getAccessLevel().isGreaterOrEqual((AccessRole.ADMIN));
         }
         return false;
 
     }
 
     public boolean isModerator(String username) {
-        server.MWChatServer.MWChatClient c = myCommunicator.getClient(server.MWChatServer.MWChatServer.clientKey(
-              username));
+        MWChatClient myCommunicatorClient = myCommunicator.getClient(MWChatServer.clientKey(username));
         if (username.startsWith("[Dedicated] ")) {
             return true;
         }
-        if (c != null) {
-            if (c.getAccessLevel() >= server.MWChatServer.auth.IAuthenticator.MODERATOR) {
-                return true;
-            }
+        if (myCommunicatorClient != null) {
+            return myCommunicatorClient.getAccessLevel().isGreaterOrEqual(AccessRole.MODERATOR);
         }
         return false;
     }
@@ -949,7 +954,7 @@ public class MWServ {
         LOGGER.info("Open Games: " + games.size());
     }
 
-    public void retreiveISPS(Long time, String name) {
+    public void retrieveISPS(Long time, String name) {
 
         java.io.File tempFile = new java.io.File("./data/Providers/");
 
@@ -1038,7 +1043,7 @@ public class MWServ {
                 }
                 text = text + mailtext;
                 if (getUser(target).getName().equalsIgnoreCase(target)) {
-                    if (getUser(target).isInvis() && getUser(target).getLevel() > getUser(name).getLevel()) {
+                    if (getUser(target).isInvis() && getUser(target).getLevel().isGreater(getUser(name).getLevel())) {
                         clientSend("CH|AM:Saved mail to " + target + ".", name);
                     }
                     clientSend("PM|" + name + "|" + mailtext, target);
@@ -1163,11 +1168,11 @@ public class MWServ {
 
     public void killClient(String toKick, String kicker) {
         myCommunicator.kill(toKick,
-              myCommunicator.getClient(server.MWChatServer.MWChatServer.clientKey(myCommunicator.getClient(kicker))),
+              myCommunicator.getClient(MWChatServer.clientKey(myCommunicator.getClient(kicker))),
               "");
     }
 
-    public server.MWChatServer.MWChatClient getClient(String name) {
+    public MWChatClient getClient(String name) {
         return myCommunicator.getClient(name);
     }
 

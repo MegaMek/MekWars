@@ -10,13 +10,12 @@ import java.util.HashMap;
 import java.util.Map;
 import javax.swing.JOptionPane;
 
-import com.Ostermiller.util.MD5;
-import common.CampaignData;
-import common.Influences;
-import common.util.BinReader;
-import common.util.BinWriter;
 import megamek.logging.MMLogger;
+import mekwars.common.CampaignData;
+import mekwars.common.Influences;
 import mekwars.common.gui.CMainFrame;
+import mekwars.common.persistence.BinReader;
+import mekwars.common.persistence.BinWriter;
 import mekwars.dedicatedhost.MWDedHost;
 
 

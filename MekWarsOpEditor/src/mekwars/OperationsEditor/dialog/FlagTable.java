@@ -29,7 +29,7 @@ public class FlagTable extends JTable implements ActionListener {
      */
     private static final long serialVersionUID = 1674365115046546502L;
     private PlayerFlagsCommand flags;
-    private PlayerFlagsCommand availableFlags = new PlayerFlags();
+    private PlayerFlags availableFlags = new PlayerFlags();
 
     private JPopupMenu popup;
 

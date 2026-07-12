@@ -30,6 +30,7 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
+import java.io.Serial;
 
 import javax.swing.JButton;
 import javax.swing.JDialog;
@@ -38,7 +39,7 @@ import javax.swing.JTextArea;
 import javax.swing.JTextField;
 import javax.swing.SpringLayout;
 
-import common.util.SpringLayoutHelper;
+import mekwars.common.util.SpringLayoutHelper;
 
 
 /*
@@ -50,6 +51,7 @@ public class TextEditorDialog extends JDialog implements ActionListener, KeyList
     /**
      *
      */
+    @Serial
     private static final long serialVersionUID = -3851019509649287454L;
 
 

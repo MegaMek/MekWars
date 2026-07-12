@@ -12,19 +12,14 @@
 package mekwars.admin.dialog.serverConfigDialogs;
 
 import java.io.Serial;
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
-import java.util.Calendar;
 import java.util.Properties;
 import javax.swing.JCheckBox;
-import javax.swing.JFormattedTextField.AbstractFormatter;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.SpringLayout;
 
 import mekwars.common.VerticalLayout;
 import mekwars.common.util.SpringLayoutHelper;
-import org.jdatepicker.JDatePanel;
 import org.jdatepicker.JDatePicker;
 
 /**
@@ -83,11 +78,9 @@ public class ChristmasPanel extends JPanel {
         props.put("text.today", "Today");
         props.put("text.month", "Month");
         props.put("text.year", "Year");
-        JDatePanel startDatePanel = new JDatePanel();
         JDatePicker startDatePicker = new JDatePicker();
         startDatePicker.setName("Christmas_StartDate");
 
-        JDatePanel endDatePanel = new JDatePanel();
         JDatePicker endDatePicker = new JDatePicker();
         endDatePicker.setName("Christmas_EndDate");
 
@@ -105,32 +98,4 @@ public class ChristmasPanel extends JPanel {
         this.add(panel);
     }
 
-    /**
-     * Format the panel JLabels
-     *
-     * @author Spork
-     */
-    private static class DateLabelFormatter extends AbstractFormatter {
-
-        @Serial
-        private static final long serialVersionUID = -8200575816557834887L;
-
-        private final String datePattern = "yyyy-MM-dd";
-        private final SimpleDateFormat dateFormatter = new SimpleDateFormat(datePattern);
-
-        @Override
-        public Object stringToValue(String text) throws ParseException {
-            return dateFormatter.parseObject(text);
-        }
-
-        @Override
-        public String valueToString(Object value) throws ParseException {
-            if (value != null) {
-                Calendar cal = (Calendar) value;
-                return dateFormatter.format(cal.getTime());
-            }
-            return "";
-        }
-
-    }
 }

@@ -9,11 +9,6 @@
  * A PARTICULAR PURPOSE. See the GNU General Public License for more details.
  */
 
-/**
- * @author Spork
- * @author jtighe
- */
-
 package mekwars.admin.dialog.serverConfigDialogs;
 
 import java.io.Serial;
@@ -49,31 +44,29 @@ public class FactionPanel extends JPanel {
 
         // faction spring #1 -- mostly SOL things
         JTextField baseTextField = new JTextField(5);
-        factionSpring1.add(new JLabel("Starting " + client.moneyOrFluMessage(true, true, -1) + ":",
+        factionSpring1.add(new JLabel("Starting %s:".formatted(client.moneyOrFluMessage(true, true, -1)),
               SwingConstants.TRAILING));
-        baseTextField.setToolTipText("Number of " +
-                                           client.moneyOrFluMessage(true, true, -1) +
-                                           " given to a new SOL player");
+        baseTextField.setToolTipText("Number of %s given to a new SOL player".formatted(client.moneyOrFluMessage(true,
+              true,
+              -1)));
         baseTextField.setName("PlayerBaseMoney");
         factionSpring1.add(baseTextField);
 
         //@Salient adding option to give new player starting RP
         baseTextField = new JTextField(5);
-        factionSpring1.add(new JLabel("Starting " + client.getServerConfigs("RPShortName") + ":",
+        factionSpring1.add(new JLabel("Starting %s:".formatted(client.getServerConfigs("RPShortName")),
               SwingConstants.TRAILING));
-        baseTextField.setToolTipText("Number of " +
-                                           client.getServerConfigs("RPLongName") +
-                                           " given to a new SOL player.");
+        baseTextField.setToolTipText("Number of %s given to a new SOL player.".formatted(client.getServerConfigs(
+              "RPLongName")));
         baseTextField.setName("PlayerBaseRP");
         factionSpring1.add(baseTextField);
 
         //@Salient adding option to give new player starting Flu
         baseTextField = new JTextField(5);
-        factionSpring1.add(new JLabel("Starting " + client.getServerConfigs("FluShortName") + ":",
+        factionSpring1.add(new JLabel("Starting %s:".formatted(client.getServerConfigs("FluShortName")),
               SwingConstants.TRAILING));
-        baseTextField.setToolTipText("Number of " +
-                                           client.getServerConfigs("FluLongName") +
-                                           " given to a new SOL player.");
+        baseTextField.setToolTipText("Number of %s given to a new SOL player.".formatted(client.getServerConfigs(
+              "FluLongName")));
         baseTextField.setName("PlayerBaseFlu");
         factionSpring1.add(baseTextField);
 
@@ -230,7 +223,8 @@ public class FactionPanel extends JPanel {
         baseTextField = new JTextField(5);
         factionSpring2.add(new JLabel("Critical Scrap Cost:", SwingConstants.TRAILING));
         baseTextField.setToolTipText(
-              "<html>Float field, AR Only<br>Percent of a unit's buy price to charge someone for scrapping a unit with damaged criticals<br>Negative number will give money to the player<br>.1 = 10%</html>");
+              "<html>Float field, AR Only<br>Percent of a unit's buy price to charge someone for scrapping a unit " +
+                    "with damaged critical slots<br>Negative number will give money to the player<br>.1 = 10%</html>");
         baseTextField.setName("CostToScrapCriticallyDamaged");
         factionSpring2.add(baseTextField);
 
@@ -323,7 +317,7 @@ public class FactionPanel extends JPanel {
 
         baseCheckBox = new JCheckBox("Disable Subfaction Std Promotion");
         baseCheckBox.setToolTipText(
-              "Meant to be enabled with self promote. Disables the normal methods of player subfaction promtion. Likely used with disable demotion to lock player into subfaction.");
+              "Meant to be enabled with self promote. Disables the normal methods of player subfaction promotion. Likely used with disable demotion to lock player into subfaction.");
         baseCheckBox.setName("Disable_Promote_Subfaction");
         subFactionSpring.add(baseCheckBox);
 

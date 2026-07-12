@@ -83,7 +83,7 @@ public class CombatPanel extends JPanel {
 
         baseCheckBox = new JCheckBox("Use Force Salvage");
 
-        baseCheckBox.setToolTipText("Count Mechs without a leg or 2 gyro hits as salvage?");
+        baseCheckBox.setToolTipText("Count Meks without a leg or 2 gyro hits as salvage?");
         baseCheckBox.setName("ForceSalvage");
         combatCBoxGrid.add(baseCheckBox);
 
@@ -178,7 +178,8 @@ public class CombatPanel extends JPanel {
         baseTextField = new JTextField(5);
         combatSpring1.add(new JLabel("Chance For Op Report:", SwingConstants.TRAILING));
         baseTextField.setToolTipText(
-              "<html>The min chance a player will receive info on the planet<br>base chance is based on players factions<br>owner ship of the planet<br>if that is lower then this number this number<br>will be used</htlm>");
+              "<html>The min chance a player will receive info on the planet<br>base chance is based on players " +
+                    "factions<br>owner ship of the planet<br>if that is lower then this number this number<br>will be used</html>");
         baseTextField.setName("MinChanceForAccurateOperationsReports");
         combatSpring1.add(baseTextField);
 
