@@ -38,12 +38,21 @@ import java.util.TreeMap;
 
 import megamek.logging.MMLogger;
 
+/**
+ * A {@link FlagSet} for battle-results-related flags (e.g. house rules that apply when scoring a fight), where
+ * each flag additionally records whether it applies to the attacker, the defender, or both.
+ */
 public class ResultsFlags extends PlayerFlags {
+    /** Bit added to a flag's "applies to" value in {@link #flagsApplyTo} when it affects the attacking side. */
     public static final int APPLIES_TO_ATTACKER = 1;
+    /** Bit added to a flag's "applies to" value in {@link #flagsApplyTo} when it affects the defending side. */
     public static final int APPLIES_TO_DEFENDER = 2;
     private static final MMLogger LOGGER = MMLogger.create(ResultsFlags.class);
+
+    /** For each flag's integer key, which side(s) it applies to: sum of {@link #APPLIES_TO_ATTACKER}/{@code _DEFENDER}. */
     private final Map<Integer, Integer> flagsApplyTo;
 
+    /** Creates an empty results flag set. */
     public ResultsFlags() {
         super();
         flagsApplyTo = new TreeMap<>();
@@ -51,8 +60,13 @@ public class ResultsFlags extends PlayerFlags {
     }
 
     /**
-     * Adds a flag to the list
+     * Adds a flag to the list, additionally recording which side(s) of a battle it applies to.
      *
+     * @param name              the flag's display name
+     * @param id                the flag's integer key
+     * @param value             the flag's initial value
+     * @param appliesToAttacker whether this flag affects the attacking side
+     * @param appliesToDefender whether this flag affects the defending side
      */
     public void addFlag(String name, int id, boolean value, boolean appliesToAttacker, boolean appliesToDefender) {
         setFlagName(id, name);
@@ -71,6 +85,12 @@ public class ResultsFlags extends PlayerFlags {
         LOGGER.debug("Setting flag {}(id: {}) to value {}", name, id, value);
     }
 
+    /**
+     * @param name the flag's display name
+     *
+     * @return {@code true} if the {@link #APPLIES_TO_DEFENDER} bit is set for this flag, {@code false} if the flag
+     *         doesn't exist or doesn't apply to the defender
+     */
     public boolean flagAppliesToDefender(String name) {
         int id = getFlagKey(name);
 
@@ -84,6 +104,12 @@ public class ResultsFlags extends PlayerFlags {
         return appliesTo > 1;
     }
 
+    /**
+     * @param name the flag's display name
+     *
+     * @return {@code true} if the {@link #APPLIES_TO_ATTACKER} bit is set for this flag, {@code false} if the flag
+     *         doesn't exist or doesn't apply to the attacker
+     */
     public boolean flagAppliesToAttacker(String name) {
         int id = getFlagKey(name);
 

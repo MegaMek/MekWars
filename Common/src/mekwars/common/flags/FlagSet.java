@@ -50,17 +50,33 @@ import megamek.codeUtilities.MathUtility;
 import megamek.logging.MMLogger;
 
 /**
- *
+ * Base class for a named set of boolean "flags" (feature toggles / house rules) backed by a {@link BitSet}, with
+ * support for exporting to and re-importing from a compact delimited string so flag sets can be persisted to disk
+ * or sent over the network.
+ * <p>
+ * Each flag has both a stable integer key (its position in the {@link BitSet}) and a display name; the two are
+ * kept in sync via {@link #flagNames}. Subclasses ({@link PlayerFlags}, {@link ResultsFlags}) specialize this for
+ * particular flag categories (see {@link #FLAG_TYPE_PLAYER}, {@link #FLAG_TYPE_RESULTS}) and typically add their
+ * own default file location for {@link #save(File)}/{@link #loadFromDisk(File)}.
  */
 public class FlagSet {
     // Flag Types - since they load differently and all
+    /** Identifies a {@link PlayerFlags} instance. */
     public static final int FLAG_TYPE_PLAYER = 0;
+    /** Identifies a {@link ResultsFlags} instance. */
     public static final int FLAG_TYPE_RESULTS = 1;
     private static final MMLogger LOGGER = MMLogger.create(FlagSet.class);
+
+    /** The actual true/false state of each flag, indexed by the integer key from {@link #flagNames}. */
     protected BitSet flags = new BitSet();
+
+    /** Maps each flag's integer key to its display name. */
     protected Map<Integer, String> flagNames;
+
+    /** Which {@code FLAG_TYPE_*} this instance represents; set by subclass constructors. */
     protected int flagType;
 
+    /** Creates an empty flag set with no flags defined yet. */
     public FlagSet() {
         flagNames = new TreeMap<>();
     }
@@ -83,6 +99,9 @@ public class FlagSet {
     /**
      * Gets the boolean status of a named flag
      *
+     * @param name the flag's display name (case-insensitive)
+     *
+     * @return the flag's current value, or {@code false} (logged as an error) if no such flag exists
      */
     public boolean getFlagStatus(String name) {
         int flag = getFlagKey(name);
@@ -288,6 +307,15 @@ public class FlagSet {
         flagNames.put(key, name);
     }
 
+    /**
+     * Finds an unused integer key that a new flag can be assigned to.
+     * <p>
+     * Note this scans the full {@code [0, size]} range and keeps the <em>last</em> gap found rather than returning
+     * the first one, so the result is not necessarily the lowest available ID.
+     *
+     * @return an integer key not currently present in {@link #flagNames}, or {@code -1} if none was found (which
+     *         should not normally happen given the range scanned)
+     */
     public int getAvailableID() {
         int toReturn = -1;
 
@@ -300,6 +328,7 @@ public class FlagSet {
         return toReturn;
     }
 
+    /** @return the set of all integer keys currently in use by this flag set. */
     public Set<Integer> getKeySet() {
         return flagNames.keySet();
     }

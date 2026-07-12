@@ -32,6 +32,14 @@
  */
 package mekwars.common.campaign.targetsystems;
 
+/**
+ * Thrown by {@link TargetSystem} when a requested {@code TS_TYPE_*} value is negative or exceeds
+ * {@link TargetSystem#TS_TYPE_MAX}.
+ * <p>
+ * Note: the offending {@code type} value is accepted here but not stored or passed to {@link Exception}, so
+ * {@link #getMessage()} on instances of this exception returns {@code null} rather than describing which value
+ * was out of bounds.
+ */
 public class TargetTypeOutOfBoundsException extends Exception {
     public TargetTypeOutOfBoundsException(int type) {
     }

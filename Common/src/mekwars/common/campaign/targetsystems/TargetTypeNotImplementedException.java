@@ -32,6 +32,11 @@
  */
 package mekwars.common.campaign.targetsystems;
 
+/**
+ * Thrown to indicate a {@link TargetSystem} type is within the valid numeric range but has no handling logic
+ * implemented for it yet. Currently declared by {@link TargetSystem} for forward-compatibility but not actually
+ * thrown by its present implementation.
+ */
 public class TargetTypeNotImplementedException extends Exception {
     public TargetTypeNotImplementedException(String message) {
         super(message);

@@ -35,8 +35,15 @@
 
 package mekwars.common.campaign.pilot.skills;
 
+/**
+ * Minimal read-only view of a pilot skill, exposing just enough to display it (see
+ * {@code Pilot#getSkillString(boolean, String)}) without depending on the full {@link PilotSkill} implementation.
+ */
 public interface IPilotSkill {
+
+    /** @return the display name of this skill, e.g. "Weapon Specialist". */
     String getName();
 
+    /** @return the skill's numeric level, or {@code -1} if this skill has no levels. */
     int getLevel();
 }

@@ -35,23 +35,31 @@ package mekwars.common.flags;
 
 import java.io.File;
 
+/**
+ * A {@link FlagSet} for per-player feature toggles/preferences, always persisted to the same fixed file
+ * ({@code ./data/pFlags.dat}) rather than a caller-supplied {@link File}.
+ */
 public class PlayerFlags extends FlagSet {
 
+    /** Creates an empty player flag set. */
     public PlayerFlags() {
         super();
         flagType = FLAG_TYPE_PLAYER;
     }
 
+    /** Saves this flag set to the fixed {@code ./data/pFlags.dat} location. */
     public void save() {
         File file = new File("./data/pFlags.dat");
         super.save(file);
     }
 
+    /** Loads this flag set from the fixed {@code ./data/pFlags.dat} location. */
     public void loadFromDisk() {
         File file = new File("./data/pFlags.dat");
         super.loadFromDisk(file);
     }
 
+    /** @return {@code true} if no flags have been set. */
     public boolean isEmpty() {
         return (flags.isEmpty());
     }

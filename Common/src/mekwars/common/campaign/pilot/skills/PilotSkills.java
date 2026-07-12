@@ -51,6 +51,11 @@ public class PilotSkills {
      */
     private final LinkedList<PilotSkill> skills = new LinkedList<>();
 
+    /**
+     * @param id one of {@link PilotSkill}'s {@code *SkillID} constants
+     *
+     * @return {@code true} if a skill with this ID is present in the set
+     */
     public boolean has(int id) {
         Iterator<PilotSkill> it = getSkillIterator();
         while (it.hasNext()) {
@@ -72,7 +77,8 @@ public class PilotSkills {
     }
 
     /**
-     * Add a skill to the pilot's skill list.
+     * Add a skill to the pilot's skill list. No-op if {@code pilotSkill} is {@code null} or an equal skill is
+     * already present (duplicates are silently ignored rather than added twice).
      */
     public void add(PilotSkill pilotSkill) {
         if (pilotSkill != null && !has(pilotSkill)) {
@@ -110,10 +116,16 @@ public class PilotSkills {
         return skills.size();
     }
 
+    /** @return the backing list of skills directly; callers may mutate it in place. */
     public LinkedList<PilotSkill> getPilotSkills() {
         return skills;
     }
 
+    /**
+     * @param skillID one of {@link PilotSkill}'s {@code *SkillID} constants
+     *
+     * @return the matching skill, or {@code null} if the pilot does not have it
+     */
     public PilotSkill getPilotSkill(int skillID) {
 
         PilotSkill pSkill;

@@ -43,6 +43,7 @@ package mekwars.common.campaign.pilot.skills;
  */
 public class PilotSkill implements IPilotSkill {
 
+    /** Stable numeric IDs for each known skill, used to identify a skill independent of its display name. */
     public final static int DodgeManeuverSkillID = 1;
     public final static int AsTechSkillID = 2;
     public final static int MeleeSpecialistSkillID = 3;
@@ -91,14 +92,16 @@ public class PilotSkill implements IPilotSkill {
     private int level = -1;
 
     /**
-     * Creates a skill with a given name and id.
+     * Creates a skill with a given name and id, and no abbreviation.
      */
 
     public PilotSkill(int id, String name, int level) {
         this(id, name, level, "");
     }
 
-
+    /**
+     * Creates a skill with a given name, id, level, and display abbreviation.
+     */
     public PilotSkill(int id, String name, int level, String abbreviation) {
         this.name = name;
         this.id = id;
@@ -113,6 +116,14 @@ public class PilotSkill implements IPilotSkill {
     public PilotSkill() {
     }
 
+    /**
+     * Maps a MegaMek pilot option/quirk name (as used in MegaMek's option keys, e.g. {@code "dodge_maneuver"}) to
+     * the corresponding MekWars {@code *SkillID} constant, for skills that have a MegaMek-side equivalent.
+     *
+     * @param skill the MegaMek option name to translate
+     *
+     * @return the matching {@code *SkillID} constant, or {@code -1} if {@code skill} has no MekWars equivalent
+     */
     public static int getMMSkillID(String skill) {
         int skillID = -1;
 
@@ -183,10 +194,12 @@ public class PilotSkill implements IPilotSkill {
         return id;
     }
 
+    /** @return the human-readable description of what this skill does. */
     public String getDescription() {
         return description;
     }
 
+    /** @param description the human-readable description of what this skill does. */
     public void setDescription(String description) {
         this.description = description;
     }
