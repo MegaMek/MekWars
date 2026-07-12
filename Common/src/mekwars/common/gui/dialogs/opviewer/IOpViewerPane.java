@@ -17,6 +17,16 @@
 
 package mekwars.common.gui.dialogs.opviewer;
 
+/**
+ * Contract for a Swing component within the {@link OperationViewerDialog} that can display a block of
+ * rendered HTML. Implemented by {@link OpViewerOpPane}, which shows the fully-substituted template
+ * content for a single Operation.
+ */
 public interface IOpViewerPane {
+    /**
+     * Replaces the pane's displayed content with the given HTML markup.
+     *
+     * @param s a complete HTML document/fragment to render
+     */
     void setHTMLContents(String s);
 }

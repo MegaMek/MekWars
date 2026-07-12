@@ -19,15 +19,29 @@ import mekwars.common.campaign.CUser;
 import mekwars.common.campaign.clientutils.protocol.IClient;
 import mekwars.common.gui.panels.CUserListPanel;
 
+/**
+ * Mouse and action listener attached to the online user/player list ({@link CUserListPanel}). Handles:
+ * double-click to start composing a mail to the double-clicked player; right-click (or platform popup
+ * trigger) to build and show a context menu offering mail/money/reward-point/unit/pilot transfers, mute
+ * controls, no-play list management, list sort mode/order, and list display settings; and the resulting
+ * {@link ActionEvent}s from that menu's items, whose action commands are short pipe-delimited codes
+ * (e.g. {@code "MA|<user>"} for mail, {@code "SM|N"} for sort-by-name) that this class parses and acts on.
+ */
 public class UserListPopupListener extends MouseAdapter implements ActionListener {
     private final static MMLogger LOGGER = MMLogger.create(UserListPopupListener.class);
 
+    /** The user-list panel this listener is attached to; supplies the client, model, and JList it acts on. */
     private final CUserListPanel cUserListPanel;
 
     public UserListPopupListener(CUserListPanel cUserListPanel) {
         this.cUserListPanel = cUserListPanel;
     }
 
+    /**
+     * On a double-click over a valid row, pre-fills the chat input box with {@code "/mail <name>, "} for
+     * the clicked player (preserving whatever the player had already typed in the input field) and moves
+     * focus there, but does not send anything — the player still has to finish the message and submit.
+     */
     @Override
     public void mouseClicked(MouseEvent event) {
         if (event.getClickCount() == 2) {
@@ -55,6 +69,26 @@ public class UserListPopupListener extends MouseAdapter implements ActionListene
         maybeShowPopup(mouseEvent);
     }
 
+    /**
+     * Builds and shows the right-click context menu for the user list, if this event is the platform's
+     * popup trigger (typically the mouse-released event on Windows/Linux, mouse-pressed on macOS — hence
+     * this is called from both {@link #mousePressed} and {@link #mouseReleased}) and it lands on a valid
+     * row. The menu contents vary based on: whether the clicked user is the local player (self gets no
+     * mail/send/block section); whether the local player is logged in; server config flags (personal
+     * pilot queues, direct sell, ELO/rating visibility, no-play list size); the target user's online
+     * status; and whether the local player is a moderator (which attempts to dynamically load an
+     * optional {@code admin.StaffUserlistPopupMenu} class from an external {@code MekWarsAdmin.jar} via
+     * reflection, so moderator-only tooling can ship separately from the base client).
+     *
+     * <p><b>Bug:</b> the {@code URLClassLoader loader} used to load {@code MekWarsAdmin.jar} is declared
+     * {@code null} and only assigned inside the {@code else} branch that runs when the jar file exists.
+     * The {@code finally} block unconditionally calls {@code loader.close()} with no null check, so on
+     * any server/install where {@code ./MekWarsAdmin.jar} is simply absent (the normal case for most
+     * deployments), a moderator right-clicking a user throws an uncaught {@link NullPointerException}
+     * from that {@code finally} block — which aborts the rest of this method, meaning the entire context
+     * menu (including the separator and everything added after this block: mail, send, block, sort,
+     * settings, etc.) fails to display for moderators whenever the admin jar isn't present.
+     */
     private void maybeShowPopup(MouseEvent mouseEvent) {
         JMenuItem item;
         JPopupMenu popup;
@@ -79,6 +113,8 @@ public class UserListPopupListener extends MouseAdapter implements ActionListene
                  * a handful has access to.
                  */
                 if (cUserListPanel.getClient().isMod()) {
+                    // BUG: loader stays null when the jar is absent (see below), but the finally block
+                    // below unconditionally calls loader.close() with no null check -> NullPointerException.
                     URLClassLoader loader = null;
                     try {
                         File loadJar = new File("./MekWarsAdmin.jar");
@@ -95,6 +131,9 @@ public class UserListPopupListener extends MouseAdapter implements ActionListene
                     } catch (Exception ex) {
                         LOGGER.error(ex, "StaffUserlistPopupMenu creation FAILED!");
                     } finally {
+                        // BUG: loader is null here whenever loadJar didn't exist above; this throws NPE
+                        // (uncaught by the surrounding catch, which only handles IOException), which
+                        // propagates out of maybeShowPopup and skips building the rest of the popup menu.
                         try {
                             loader.close();
                         } catch (java.io.IOException e1) {
@@ -161,7 +200,9 @@ public class UserListPopupListener extends MouseAdapter implements ActionListene
                      * Mute/Unmute the player. Detect the name string in the ignore
                      * list and then display it as appropriate. for Main.
                      */
-
+                    // Mute state is not stored as a boolean per-user; it's inferred by linear-scanning the
+                    // relevant comma-separated "IGNORE_*" config list for this user's name. This same
+                    // scan-and-toggle pattern repeats below for PRIVATE and (conditionally) HOUSE scope.
                     boolean matched = false;
 
                     String ignoreList = panelClient.getConfig().getParam("IGNORE_PUBLIC");
@@ -278,6 +319,9 @@ public class UserListPopupListener extends MouseAdapter implements ActionListene
 
                 }//end if (clicked player isn't THE player)
                 //Toggle ascending/decending order
+                // This single menu item always labels/commands itself with the OPPOSITE of the current
+                // sort order, so clicking it flips the order (e.g. while currently descending, it reads
+                // "Ascending Order" and switching to that is exactly what it does).
                 if (cUserListPanel.getcUserListModel().getSortOrder() == CUserListPanel.SORT_ORDER_DESCENDING) {
                     item = new JMenuItem("Ascending Order");
                     item.setActionCommand("SO|A");
@@ -335,6 +379,9 @@ public class UserListPopupListener extends MouseAdapter implements ActionListene
                 JMenu settingSub = new JMenu("List Settings");
                 popup.add(settingSub);
 
+                // Each of these check-box settings items bakes the NEW (toggled) value into its action
+                // command up front (note the "!item.isSelected()"), so actionPerformed just needs to
+                // apply whatever value is in the command rather than re-deriving the flip itself.
                 //activity button
                 item = new JCheckBoxMenuItem("Activity Button");
 
@@ -359,6 +406,9 @@ public class UserListPopupListener extends MouseAdapter implements ActionListene
                 settingSub.add(item);
 
                 //deds
+                // Unlike the other settings checkboxes above/below, "TD"'s action command does not encode
+                // the new state inline; actionPerformed's "TD" handler instead flips cUserListPanel's
+                // dedicated flag itself.
                 item = new JCheckBoxMenuItem("Dedicated Hosts");
                 item.setSelected(cUserListPanel.isDedicated());
                 item.setActionCommand("TD");
@@ -384,6 +434,25 @@ public class UserListPopupListener extends MouseAdapter implements ActionListene
         }
     }
 
+    /**
+     * Handles every action command produced by the context menu built in {@link #maybeShowPopup}. The
+     * command string is split on {@code "|"}; the first token selects the operation and any remaining
+     * tokens are its arguments (typically a target user name, and for mute commands a scope of
+     * {@code PUBLIC}/{@code PRIVATE}/{@code HOUSE}). Most branches {@code return} immediately after
+     * handling their command, so despite being written as a sequence of independent {@code if}s (rather
+     * than {@code else if}) only one branch's action actually runs per call — the same effect as a proper
+     * if/else-if chain, just written more defensively/verbosely.
+     *
+     * <p>Recognized commands (grouped by purpose): {@code MA}/{@code MO}/{@code MR}/{@code MI} open the
+     * mail/send-money/send-reward-points/send-influence dialogs for a target user; {@code TU}/{@code TP}
+     * transfer a unit or pilot; {@code DSU} opens the direct-sell dialog; {@code MU}/{@code UMU} mute or
+     * unmute a user in a given scope by rewriting that scope's comma-separated ignore list in the client
+     * config (rebuilding the whole list rather than doing an in-place edit) and refreshing the client's
+     * ignore state; {@code RNP}/{@code ANP} add/remove a user from the server-side no-play list; {@code
+     * SM} changes the list's sort mode and persists the choice; {@code SO} changes sort order and
+     * persists it; {@code TD}/{@code ULC}/{@code ULI}/{@code ULB}/{@code ULN}/{@code ULA} toggle list
+     * display settings, persist them, and force the relevant UI element to repaint/re-render.
+     */
     public void actionPerformed(ActionEvent actionEvent) {
         String actionCommand = actionEvent.getActionCommand();
         StringTokenizer stringTokenizer = new StringTokenizer(actionCommand, "|");
@@ -434,6 +503,16 @@ public class UserListPopupListener extends MouseAdapter implements ActionListene
             return;
         }
 
+        // Mutes a user in the given scope ("PUBLIC"/"PRIVATE"/"HOUSE") by rewriting the whole
+        // comma-separated "IGNORE<mode>" config list, appending searchString if it isn't already present.
+        //
+        // Quirk/bug: the copy loop's condition is "hasMoreTokens() && !matched" — as soon as an entry
+        // equal to searchString is found, the loop stops copying, so any further names later in the
+        // original ignore list are silently dropped from the rebuilt list. In the normal flow this
+        // shouldn't trigger (the "Mute" menu item is only offered when the case-insensitive scan in
+        // maybeShowPopup determined the user was NOT already present), but note that scan uses
+        // equalsIgnoreCase while this comparison uses case-sensitive equals(), so the two checks can
+        // disagree for names differing only in case.
         if (command.equals("MU") && stringTokenizer.hasMoreElements()) {
             userName = stringTokenizer.nextToken();
             String mode = stringTokenizer.nextToken();
@@ -458,6 +537,8 @@ public class UserListPopupListener extends MouseAdapter implements ActionListene
             }
 
             cUserListPanel.getClient().getConfig().setParam(String.format("IGNORE%s", mode), newList.toString());
+            // All three ignore caches (public/house/private) are refreshed here regardless of which
+            // single "mode" scope was actually changed above.
             cUserListPanel.getClient().setIgnorePublic();
             cUserListPanel.getClient().setIgnoreHouse();
             cUserListPanel.getClient().setIgnorePrivate();
@@ -467,6 +548,9 @@ public class UserListPopupListener extends MouseAdapter implements ActionListene
             cUserListPanel.getcUserListModelJList().repaint();
         }//end mute
 
+        // Unmutes a user in the given scope by rebuilding the "IGNORE<mode>" list with every entry
+        // matching searchString (case-sensitive equals(), same case-sensitivity note as the MU branch
+        // above) filtered out.
         if (command.equals("UMU") && stringTokenizer.hasMoreElements()) {
             userName = stringTokenizer.nextToken();
             String mode = stringTokenizer.nextToken();
