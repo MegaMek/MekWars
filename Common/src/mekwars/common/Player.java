@@ -24,16 +24,37 @@ package mekwars.common;
 import mekwars.common.campaign.clientutils.IPlayer;
 import mekwars.common.flags.PlayerFlags;
 
+/**
+ * Base class holding the campaign-player state and behavior shared between MekWars' client and server tiers:
+ * per-player flags, free-build "mek tokens", technician count/pay tracking, invisibility, team assignment and
+ * auto-reorder preference.
+ * <p>
+ * This class is never used directly at runtime — {@code mekwars.common.campaign.CPlayer} extends it as the
+ * client-side player representation, and {@code mekwars.server.campaign.SPlayer} extends it as the (much larger)
+ * server-side player representation that additionally implements buying/selling and comparison behavior. Common
+ * bookkeeping that both sides need identically lives here to avoid duplication.
+ *
+ * @author Helge Richter
+ */
 public class Player implements IPlayer {
 
+    /** Per-player feature/preference flags (server-settable), keyed by flag name. */
     protected PlayerFlags flags = new PlayerFlags();
+    /** Default flag values applied to staff; only populated/used for staff accounts. */
     protected PlayerFlags defaultPlayerFlags = new PlayerFlags(); // This is only going to be set for staff
+    /** A counter for how many meks a player is allowed to create in free build. */
     protected int mekToken = 0; // A counter for how many meks a player is allowed to create in free build
+    /** Used to track hangar BV in mini campaigns. */
     protected int bvTracker = 0; // used to track hangar BV in mini campaigns
+    /** Number of technicians the player currently employs. */
     private int technicians = 0;//@urgru 7/17/04
+    /** Cached C-bill amount owed to technicians after the last game/task; -1 means "not yet computed". */
     private int currentTechPayment = -1;//num Cbills owed to techs after games
+    /** Evil command for Big brother err admins: hides the player from other players below the required access level. */
     private boolean isInvisible = false;//Evil command for Big brother err admins.
+    /** The player's team number for the current operation; -1 means unassigned. */
     private int teamNumber = -1;
+    /** Whether the player wants hangar parts automatically reordered when depleted. */
     private boolean autoReorderParts = false;
 
     /**
@@ -122,6 +143,7 @@ public class Player implements IPlayer {
      * Sets that a player now has the invisible flag. Of course, players with access levels >= this player will still
      * beable to see them.
      *
+     * @param invisible the invisible flag to set.
      */
     public void setInvisible(boolean invisible) {
         isInvisible = invisible;
@@ -130,6 +152,7 @@ public class Player implements IPlayer {
     /**
      * Returns players team number
      *
+     * @return the team number for the current operation, or -1 if unassigned.
      */
     public int getTeamNumber() {
         return teamNumber;
@@ -138,6 +161,7 @@ public class Player implements IPlayer {
     /**
      * Set Players team number for the current op.
      *
+     * @param team the team number to assign.
      */
     public void setTeamNumber(int team) {
         this.teamNumber = team;
@@ -146,6 +170,7 @@ public class Player implements IPlayer {
     /**
      * Returns if the player has auto reorder parts turned on.
      *
+     * @return {@code true} if hangar parts should be automatically reordered when depleted.
      */
     public boolean getAutoReorder() {
         return this.autoReorderParts;
@@ -154,6 +179,7 @@ public class Player implements IPlayer {
     /**
      * Sets if the player wants to reorder parts.
      *
+     * @param reorder the auto-reorder preference to set.
      */
     public void setAutoReorder(boolean reorder) {
         this.autoReorderParts = reorder;
@@ -222,6 +248,11 @@ public class Player implements IPlayer {
         return flags;
     }
 
+    /**
+     * Base implementation always returns an empty string; subclasses ({@code CPlayer}, {@code SPlayer}) override
+     * this to return the actual player name/login. Not intended to be relied upon directly on a bare
+     * {@code Player} instance.
+     */
     @Override
     public String getName() {
         return "";

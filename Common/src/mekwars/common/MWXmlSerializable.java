@@ -16,8 +16,29 @@
  */
 package mekwars.common;
 
+/**
+ * Marker/contract interface for objects that can serialize their entire state to XML (via XStream, see
+ * {@link MWXMLWriter}), as opposed to {@link MutableSerializable} which only persists the frequently-changing
+ * subset of fields through the binary stream format.
+ * <p>
+ * Implemented by e.g. {@code mekwars.common.campaign.operations.Operation} to save/export operation definitions as
+ * standalone XML files.
+ *
+ * @author Helge Richter
+ */
 public interface MWXmlSerializable {
+
+    /**
+     * Serializes this object to XML and writes it to a file named {@code fileName} inside directory
+     * {@code folderName}, creating the directory if necessary.
+     *
+     * @param folderName the destination directory (created if it does not exist).
+     * @param fileName   the name of the file to write within {@code folderName}.
+     */
     void writeToXmlFile(String folderName, String fileName);
 
+    /**
+     * @return the XML representation of this object as a string, without writing anything to disk.
+     */
     String getXmlString();
 }

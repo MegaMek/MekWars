@@ -34,11 +34,22 @@ import mekwars.common.persistence.BinWriter;
 public interface MutableSerializable {
     /**
      * Encode all mutable fields into the stream. Use as few bits as possible.
+     *
+     * @param out          the binary writer to append the encoded fields to.
+     * @param dataProvider the owning campaign data set, used to resolve/write cross-references (e.g. ids of other
+     *                     campaign objects) that this object's mutable fields point to.
+     * @throws IOException if the underlying stream fails while writing.
      */
     void encodeMutableFields(BinWriter out, CampaignData dataProvider) throws IOException;
 
     /**
-     * Decode all mutable fields from the stream.
+     * Decode all mutable fields from the stream, in the same order they were written by
+     * {@link #encodeMutableFields}.
+     *
+     * @param in           the binary reader to read the encoded fields from.
+     * @param dataProvider the owning campaign data set, used to resolve cross-references (e.g. look up other
+     *                     campaign objects by id) encoded alongside the mutable fields.
+     * @throws IOException if the underlying stream fails while reading, or the data is malformed.
      */
     void decodeMutableFields(BinReader in, CampaignData dataProvider) throws IOException;
 }

@@ -43,8 +43,14 @@ import mekwars.common.persistence.BinReader;
 import mekwars.common.persistence.BinWriter;
 
 /**
- * Represents the influences of different Houses of a planet. This may be used as total influences as well as influence
- * differences between two total influences.
+ * Represents the political influence each {@link House} faction holds over a single {@link Planet}. This
+ * is the core data structure behind the campaign's ownership model: as factions perform actions that shift
+ * control of a planet, their share of "influence points" here rises or falls, and whichever faction holds a
+ * clear plurality (see {@link #getOwner()}) is considered the planet's current owner.
+ * <p>
+ * An {@code Influences} instance is also reused to represent the *difference* between two influence
+ * snapshots (see {@link #difference(Influences)}), e.g. for reporting how much influence changed after a
+ * battle or time-tick, rather than always representing an absolute total.
  *
  * @author Imi (immanuel.scholz@gmx.de)
  */
@@ -52,43 +58,56 @@ import mekwars.common.persistence.BinWriter;
 public class Influences implements MutableSerializable {
     private final static MMLogger LOGGER = MMLogger.create(Influences.class);
     /**
-     * A hash table with key=House and value=Integer of the influences of the different factions. Only factions greater
-     * than 0% are listed.
+     * Maps {@link House} id (key) to that faction's current influence points (value) on the associated
+     * planet. Factions with zero influence are not listed (only entries greater than 0 are kept).
      */
     private HashMap<Integer, Integer> influences = new HashMap<>();
 
     /**
-     * Creates a new Influence with a preset table.
+     * Creates a new Influence table with a preset key/value map (house id -&gt; influence points).
      *
+     * @param influences the initial influence map to use.
      */
     public Influences(HashMap<Integer, Integer> influences) {
         setInfluence(influences);
     }
 
     /**
-     * Sets the whole influences.
+     * Replaces the whole influence table.
      *
-     * @param influences The new influences. Key=TimeUpdateHouse, Value=Integer.
+     * @param influences The new influences. Key=House id, Value=influence points.
      */
     public void setInfluence(HashMap<Integer, Integer> influences) {
         this.influences = influences;
     }
 
     /**
-     * Create an empty Influence.
+     * Create an empty Influence table (no faction has any influence yet).
      */
     public Influences() {
     }
 
     /**
-     * Copies the Influence
+     * Copy constructor: creates an independent snapshot of another Influences' table (defensive copy of
+     * the underlying map).
+     *
+     * @param influences the Influences instance to copy.
      */
     public Influences(Influences influences) {
         setInfluence(new HashMap<>(influences.influences));
     }
 
     /**
-     * Return the faction with the most influence.
+     * Determines which faction currently owns the planet by finding the house with the strictly highest
+     * influence value. Ties are treated as "no clear owner" (contested/neutral), returning {@code null}.
+     * <p>
+     * Implementation note: this builds a sorted {@link TreeSet} of houses (by id, to get a stable order
+     * for equal-influence tie-breaking during the subsequent array sort), converts to an array, then sorts
+     * descending by influence amount so the top contender is at index 0. If there's more than one house
+     * and the second-highest has the same influence as the highest, ownership is considered tied/undecided.
+     *
+     * @return the id of the faction with a clear plurality of influence, or {@code null} if there are no
+     *         factions, the top faction reference is null, or the top two are tied.
      */
     public Integer getOwner() {
         try {
@@ -162,7 +181,10 @@ public class Influences implements MutableSerializable {
     }
 
     /**
-     * Returns the present factions.
+     * Resolves every {@link House} id currently tracked in this influence table into full {@link House}
+     * objects, via the global {@link CampaignData#cd} registry.
+     *
+     * @return the set of houses that have a recorded (non-zero) influence entry on this planet.
      */
     public Set<House> getHouses() {
         Set<House> result = new HashSet<>();
@@ -174,7 +196,10 @@ public class Influences implements MutableSerializable {
     }
 
     /**
-     * Return the influence of a specific faction.
+     * Returns the influence points held by a specific faction on this planet.
+     *
+     * @param factionID the {@link House} id to look up.
+     * @return the faction's influence points, or 0 if the faction has no recorded influence here.
      */
     public int getInfluence(int factionID) {
         if (!influences.containsKey(factionID)) {
@@ -185,10 +210,13 @@ public class Influences implements MutableSerializable {
     }
 
     /**
-     * Fairly distribute the influence under the factions in the list.
+     * Resets this planet's influence table and fairly (evenly) distributes {@code maxInfluence} points
+     * across all the given factions, wiping out any previous influence data. If the total does not divide
+     * evenly, the remainder ("bonus") is given entirely to {@code gainer} on top of its even share.
      *
-     * @param factions All of these factions gain as much as possible influence divided equal
-     * @param gainer   If there is a portion left, one faction get it all. This faction.
+     * @param factions     All of these factions gain as much as possible influence divided equal.
+     * @param gainer       If there is a portion left, one faction get it all. This faction.
+     * @param maxInfluence the total influence pool to distribute across {@code factions}.
      */
     public void setNeutral(List<House> factions, House gainer, int maxInfluence) {
         influences = new HashMap<>();
@@ -208,15 +236,36 @@ public class Influences implements MutableSerializable {
     }
 
     /**
-     * Returns the number of factions with ownership on world.
+     * @return the number of distinct factions with recorded (non-zero) influence on this planet.
      */
     public int houseCount() {
         return influences.size();
     }
 
     /**
-     * Move influence from one faction to a new faction. Note, that this make sure, that nobody can have more influence
-     * than 100% and nobody may drop below 0. If you not want to respect to this, use add() instead.
+     * Transfers influence points into a winning faction on this planet, respecting the campaign's
+     * influence caps: the winner's influence is never allowed to exceed {@code maxInfluence}, and the
+     * source of the influence never drops below 0.
+     * <p>
+     * <b>Quirk:</b> the {@code loser} parameter is not always where the influence actually comes from.
+     * The method first tries to draw the requested {@code amount} from the neutral/unclaimed influence
+     * bucket (house id -1) rather than from {@code loser} directly. Only if the neutral bucket doesn't
+     * hold enough does it fall back to {@code loser}: in that case, it removes the neutral entry, merges
+     * whatever influence the neutral bucket had into {@code loser}'s existing total, and then draws the
+     * (possibly further clamped) amount out of {@code loser}'s now-combined total. So when the neutral
+     * pool is insufficient, {@code loser} can transiently gain influence (the leftover neutral pool) before
+     * losing {@code amount} from it. If the requested {@code amount} would push the winner above
+     * {@code maxInfluence}, it is first clamped down to whatever headroom remains. Any faction whose
+     * resulting influence hits exactly 0 has its entry removed from the map (only non-zero entries are
+     * kept). If {@code amount} is 0, this is a no-op that returns 0 immediately.
+     * <p>
+     * Use {@link #add(Influences)} instead if you don't want this clamping/neutral-pool-first behavior.
+     *
+     * @param winner       the faction gaining influence.
+     * @param loser        the faction to draw from if the neutral (unclaimed) pool is insufficient.
+     * @param amount       the requested amount of influence to move.
+     * @param maxInfluence the influence cap that {@code winner} may not exceed.
+     * @return the actual amount of influence moved (may be less than requested due to clamping).
      */
     public int moveInfluence(House winner, House loser, int amount, int maxInfluence) {
         if (amount == 0) {
@@ -267,7 +316,8 @@ public class Influences implements MutableSerializable {
 
     /**
      * Returns whether the Influence zone belongs to a so-called "hot zone", which means, that it is in a critical
-     * sector where ownership is not fully clear.
+     * sector where ownership is not fully clear. Computed as the gap between the highest and second-highest
+     * influence values among all tracked factions; a gap smaller than 20 points is considered contested.
      *
      * @return True, if it is a hotZone Planet.
      */
@@ -286,6 +336,9 @@ public class Influences implements MutableSerializable {
     }
 
     /**
+     * Writes every faction id / influence-amount pair to the binary stream. This is the mutable-state
+     * counterpart used for incremental campaign-state transfer (see {@link MutableSerializable}).
+     *
      * @see MutableSerializable#encodeMutableFields(BinWriter, CampaignData)
      */
     public void encodeMutableFields(BinWriter out, CampaignData dataProvider) {
@@ -296,6 +349,14 @@ public class Influences implements MutableSerializable {
         }
     }
 
+    /**
+     * Replaces this influence table by reading faction id / influence-amount pairs from the binary
+     * stream, as written by {@link #encodeMutableFields}.
+     *
+     * @param in           the binary stream reader.
+     * @param dataProvider unused directly; part of the {@link MutableSerializable} contract.
+     * @throws IOException if the underlying stream read fails.
+     */
     public void decodeMutableFields(BinReader in, CampaignData dataProvider) throws IOException {
         int s = in.readInt("influences.size");
         influences.clear();
@@ -307,7 +368,10 @@ public class Influences implements MutableSerializable {
     }
 
     /**
-     * Outputs itself into an xml-Stream.
+     * Outputs itself into an xml-Stream: one {@code <inf>} element per faction with its name and current
+     * influence amount, wrapped in an {@code <influence>} element.
+     *
+     * @param out the print writer to write XML to.
      */
     public void xmlOut(PrintWriter out) {
         Iterator<House> inf = getHouses().iterator();
@@ -323,9 +387,13 @@ public class Influences implements MutableSerializable {
     }
 
     /**
-     * Calculates the difference between this and the parameter.
+     * Calculates the per-faction difference between this influence table and {@code infNew}: for every
+     * faction present in either table, computes {@code this.influence - infNew.influence}. Factions whose
+     * difference is 0 are omitted; factions present only in {@code infNew} get a negative entry (their
+     * full influence there, negated, since this table has none of them).
      *
-     * @return The influence difference.
+     * @param infNew the influence table to compare against (typically a "new" snapshot vs. this "old" one).
+     * @return a new {@link Influences} instance holding the (possibly negative) per-faction differences.
      */
     public Influences difference(Influences infNew) {
         HashMap<Integer, Integer> diff = new HashMap<>();
@@ -346,7 +414,17 @@ public class Influences implements MutableSerializable {
     }
 
     /**
-     * Adds the parameter's influence to the own.
+     * Merges another influence table into this one.
+     * <p>
+     * <b>Quirk:</b> despite the name/original intent ("adds the parameter's influence to the own"), this
+     * does not sum influence amounts. For every faction already present in this table, its value is
+     * overwritten (not added to) with {@code infNew}'s value for that faction. Factions present only in
+     * {@code infNew} are copied in as new entries. Finally, any faction (including ones untouched by
+     * {@code infNew}) whose resulting influence is 0 is removed from the map. In effect, this behaves like
+     * applying {@code infNew} as a set of overrides/updates on top of this table (commonly used with
+     * {@code infNew} being a {@link #difference(Influences)} result), not an arithmetic addition.
+     *
+     * @param infNew the influence table whose per-faction values should be applied onto this one.
      */
     public void add(Influences infNew) {
         for (House house : getHouses()) {
@@ -365,7 +443,10 @@ public class Influences implements MutableSerializable {
     }
 
     /**
-     * Write itself into the stream.
+     * Writes this influence table to a binary stream: the entry count followed by each faction id and its
+     * influence amount, in ascending id order (sorted for deterministic output).
+     *
+     * @param out the binary stream writer.
      */
     public void binOut(BinWriter out) {
         ArrayList<Integer> influencesIntegers = new ArrayList<>(influences.keySet());
@@ -379,12 +460,22 @@ public class Influences implements MutableSerializable {
     }
 
     /**
-     * Read from a binary stream
+     * Reads this influence table from a binary stream written by {@link #binOut}.
+     *
+     * @param in       the binary stream reader.
+     * @param factions unused directly; kept for API-signature compatibility (resolution is by id only).
+     * @throws IOException if the underlying stream read fails.
      */
     public void binIn(BinReader in, Map<Integer, House> factions) throws IOException {
         readInfluences(in);
     }
 
+    /**
+     * Shared helper that replaces this table's contents by reading faction id / amount pairs from the
+     * stream, used by both {@link #binIn(BinReader, Map)} and {@link #binIn(BinReader)}.
+     *
+     * @param in the binary stream reader.
+     */
     private void readInfluences(BinReader in) {
         influences = new HashMap<>();
         int size = in.readInt("influence.size");
@@ -395,14 +486,35 @@ public class Influences implements MutableSerializable {
         }
     }
 
+    /**
+     * Reads this influence table from a binary stream written by {@link #binOut} (overload without a
+     * faction map, for callers that don't need to pass one).
+     *
+     * @param in the binary stream reader.
+     * @throws IOException if the underlying stream read fails.
+     */
     public void binIn(BinReader in) throws IOException {
         readInfluences(in);
     }
 
+    /**
+     * Removes a faction's influence entry entirely (e.g. when a house is deleted/merged from the
+     * campaign).
+     *
+     * @param house the faction whose influence entry should be removed.
+     */
     public void removeHouse(House house) {
         influences.remove(house.getId());
     }
 
+    /**
+     * Sets (overwrites) a faction's influence amount directly, bypassing the clamping/transfer rules of
+     * {@link #moveInfluence}. Used e.g. by {@code Planet#updateInfluences()} to assign leftover conquest
+     * points to the neutral bucket (house id -1).
+     *
+     * @param id     the faction id to update.
+     * @param amount the influence amount to set.
+     */
     public void updateHouse(int id, int amount) {
         influences.put(id, amount);
     }

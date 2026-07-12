@@ -31,25 +31,58 @@ import mekwars.common.persistence.BinReader;
 import mekwars.common.persistence.BinWriter;
 
 /**
+ * Represents a major faction ("House") in the campaign galaxy — e.g. a BattleTech Great House, Clan, or
+ * mercenary/independent power. A House owns the top-level campaign-wide settings for its members: base
+ * pilot/gunner skill levels, per unit-type/weight price and component-cost modifiers, banned munitions,
+ * tech-level restrictions, defection policy, and its display color/logo/abbreviation.
+ * <p>
+ * A House is further subdivided into named {@link SubFaction}s (regiments, commands, etc. — see
+ * {@link #getSubFactionList()}), each of which can layer its own access-level and unit-purchase
+ * restrictions on top of the House's settings. Political control of a {@link Planet} is tracked separately
+ * via {@link Influences}, which records how much influence each House (by id) has accumulated on that
+ * planet; the House with a clear plurality is considered the planet's owner.
+ *
  * @author Helge Richter
  *
  */
 public class House {
 
+    /** Index of the red channel within a packed RGB color representation. */
     public static final int RED_VALUE = 0;
+    /** Index of the green channel within a packed RGB color representation. */
     public static final int GREEN_VALUE = 1;
+    /** Index of the blue channel within a packed RGB color representation. */
     public static final int BLUE_VALUE = 2;
+
+    /** Base gunnery skill per unit build-type index (lower is better, MegaMek convention). */
     private final Vector<Integer> baseGunner = new Vector<>(Unit.MAX_BUILD, 1);
+
+    /** Base piloting skill per unit build-type index (lower is better, MegaMek convention). */
     private final Vector<Integer> basePilot = new Vector<>(Unit.MAX_BUILD, 1);
+
+    /** Base piloting special-skill string (e.g. Clan pilot abilities) per unit build-type index. */
     private final Vector<String> basePilotSkills = new Vector<>(Unit.MAX_BUILD, 1);
+
+    /** Per [unit type][weight class] price modifier this faction applies when buying units. */
     private final int[][] factionUnitPriceMod = new int[Unit.MAX_BUILD][4]; // [Type][Weight]
+
+    /** Per [unit type][weight class] influence/"flu" cost modifier this faction applies when buying units. */
     private final int[][] factionUnitFluMod = new int[Unit.MAX_BUILD][4]; // [Type][Weight]
+
+    /** Per [unit type][weight class] component-cost modifier this faction applies when buying units. */
     private final int[][] factionUnitComponentMod = new int[Unit.MAX_BUILD][4]; // [Type][Weight]
+
+    /** Ammunition/munition types this faction is forbidden from using. */
     private final EnumSet<AmmoType.Munitions> bannedAmmo = EnumSet.noneOf(AmmoType.Munitions.class);
+
+    /** This faction's sub-factions (see {@link SubFaction}), keyed by sub-faction name. */
     private final ConcurrentHashMap<String, SubFaction> subFactionList = new ConcurrentHashMap<>();
 
     // private int factionPlayerColors[] = new int[3]; // [red,green,blue]
+    /** Multiplier applied to the bay cost of used (as opposed to new) Mek purchases for this faction. */
     public float usedMekBayMultiplier;
+
+    /** Tracks which unit file names this faction "supports" and a reference count of how many times added. */
     public ConcurrentHashMap<String, Integer> supportedUnits = new ConcurrentHashMap<>();
     private String name = "none";
     private String logo = "";
@@ -66,7 +99,10 @@ public class House {
     private boolean nonFactionUnitsCostMore = false;
 
     /**
+     * Creates a new faction with the given id, initializing default per-build-type base gunnery (4),
+     * piloting (5), and pilot-skill (blank) values for every {@code Unit.MAX_BUILD} unit build type.
      *
+     * @param id the unique faction id.
      */
     public House(int id) {
         this.id = id;
@@ -78,7 +114,9 @@ public class House {
     }
 
     /**
-     * Constructor used for serialization
+     * Constructor used for serialization. Initializes the same per-build-type defaults as
+     * {@link #House(int)}, but leaves the id unset (fields are populated afterwards by the
+     * serialization framework).
      */
     public House() {
         for (int pos = 0; pos < Unit.MAX_BUILD; pos++) {
@@ -89,7 +127,12 @@ public class House {
     }
 
     /**
-     * Read itself from a stream.
+     * Reads a full House definition back from a binary stream: identity, base skills, colors,
+     * abbreviation, per unit-type/weight cost modifiers, banned ammo, tech level, defection policy, the
+     * used-Mek-bay multiplier, and all of its {@link SubFaction}s.
+     *
+     * @param in the binary stream reader.
+     * @throws IOException if the underlying stream read fails.
      */
     public House(BinReader in) throws IOException {
 
@@ -165,56 +208,74 @@ public class House {
     }
 
     /**
-     * sets the unit component mod for a faction.
+     * Sets the component-cost modifier this faction applies to a given unit type/weight combination.
+     *
+     * @param type   the unit build type index.
+     * @param weight the unit weight-class index.
+     * @param mod    the component-cost modifier to apply.
      */
     public void setHouseUnitComponentMod(int type, int weight, int mod) {
         this.factionUnitComponentMod[type][weight] = mod;
     }
 
     /**
-     * sets the unit price mod for a faction
+     * Sets the price modifier this faction applies to a given unit type/weight combination.
+     *
+     * @param type   the unit build type index.
+     * @param weight the unit weight-class index.
+     * @param mod    the price modifier to apply.
      */
     public void setHouseUnitPriceMod(int type, int weight, int mod) {
         this.factionUnitPriceMod[type][weight] = mod;
     }
 
     /**
-     * sets the unit price mod for a faction
+     * Sets the influence/"flu" cost modifier this faction applies to a given unit type/weight combination.
+     *
+     * @param type   the unit build type index.
+     * @param weight the unit weight-class index.
+     * @param mod    the influence-cost modifier to apply.
      */
     public void setHouseUnitFluMod(int type, int weight, int mod) {
         this.factionUnitFluMod[type][weight] = mod;
     }
 
     /**
-     * @return baseGunner vector
+     * @return the full per-build-type base gunnery skill vector (mutable — modifying it affects this House).
      */
     public Vector<Integer> getBaseGunnerVector() {
         return baseGunner;
     }
 
     /**
-     * @return Returns the baseGunner.
+     * @param type the unit build type index.
+     * @return the base gunnery skill for the given unit build type.
      */
     public int getBaseGunner(int type) {
         return baseGunner.elementAt(type);
     }
 
     /**
-     * @return basePilotSkills vector
+     * @return the full per-build-type base pilot-skill string vector (mutable — modifying it affects this
+     *         House).
      */
     public Vector<String> getBasePilotSkillVector() {
         return basePilotSkills;
     }
 
     /**
-     * @return Returns the basePilotSkill String.
+     * @param type the unit build type index.
+     * @return the base pilot-skill string for the given unit build type.
      */
     public String getBasePilotSkill(int type) {
         return basePilotSkills.elementAt(type);
     }
 
     /**
+     * Sets the base pilot-skill string for a given unit build type.
+     *
      * @param basePilotSkill The base piloting skill for unit <code>type</code> to set.
+     * @param type           the unit build type index to update.
      */
     public void setBasePilotSkill(String basePilotSkill, int type) {
         synchronized (this.basePilotSkills) {
@@ -223,7 +284,10 @@ public class House {
     }
 
     /**
-     * @param baseGunner The baseGunner to set.
+     * Sets the base gunnery skill for a given unit build type.
+     *
+     * @param baseGunner The baseGunner value to set.
+     * @param type       the unit build type index to update.
      */
     public void setBaseGunner(int baseGunner, int type) {
         synchronized (this.baseGunner) {
@@ -232,21 +296,26 @@ public class House {
     }
 
     /**
-     * @return Returns the basePilot.
+     * @param type the unit build type index.
+     * @return the base piloting skill for the given unit build type.
      */
     public int getBasePilot(int type) {
         return basePilot.elementAt(type);
     }
 
     /**
-     * @return basePilot vector
+     * @return the full per-build-type base piloting skill vector (mutable — modifying it affects this
+     *         House).
      */
     public Vector<Integer> getBasePilotVector() {
         return basePilot;
     }
 
     /**
-     * @param basePilot The basePilot to set.
+     * Sets the base piloting skill for a given unit build type.
+     *
+     * @param basePilot The basePilot value to set.
+     * @param type      the unit build type index to update.
      */
     public void setBasePilot(int basePilot, int type) {
         synchronized (this.basePilot) {
@@ -255,95 +324,98 @@ public class House {
     }
 
     /**
-     * @return Returns the myAbbreviation.
+     * @return Returns the faction's abbreviation (short display code).
      */
     public String getAbbreviation() {
         return abbreviation;
     }
 
     /**
-     * @param myAbbreviation The myAbbreviation to set.
+     * @param myAbbreviation The abbreviation to set.
      */
     public void setAbbreviation(String myAbbreviation) {
         abbreviation = myAbbreviation;
     }
 
     /**
-     * @return Returns the conquerable.
+     * @return Returns whether planets owned by this faction can be conquered by others.
      */
     public boolean isConquerable() {
         return conquerable;
     }
 
     /**
-     * @param conquerable The conquerable to set.
+     * @param conquerable whether planets owned by this faction can be conquered by others.
      */
     public void setConquerable(boolean conquerable) {
         this.conquerable = conquerable;
     }
 
     /**
-     * @return Returns the factionColor.
+     * @return Returns the faction's display color as an HTML hex string (e.g. "#000000").
      */
     public String getHouseColor() {
         return factionColor;
     }
 
     /**
-     * @param factionColor The factionColor to set.
+     * @param factionColor The display color (HTML hex string) to set.
      */
     public void setHouseColor(String factionColor) {
         this.factionColor = factionColor;
     }
 
     /**
-     * @return Returns the logo.
+     * @return Returns the faction's logo (image file reference).
      */
     public String getLogo() {
         return logo;
     }
 
     /**
-     * @param logo The logo to set.
+     * @param logo The logo (image file reference) to set.
      */
     public void setLogo(String logo) {
         this.logo = logo;
     }
 
     /**
-     * @return Returns the logo.
+     * @return Returns the name of the "flu"/flavor-text file used for this faction (defaults to "Common").
      */
     public String getHouseFluFile() {
         return factionFluFile;
     }
 
     /**
-     * @param factionFlu The logo to set.
+     * @param factionFlu The flavor-text file name to set.
      */
     public void setHouseFluFile(String factionFlu) {
         this.factionFluFile = factionFlu;
     }
 
     /**
-     * @return Returns the name.
+     * @return Returns the faction's display name.
      */
     public String getName() {
         return name;
     }
 
     /**
-     * @param name The name to set.
+     * @param name The display name to set.
      */
     public void setName(String name) {
         this.name = name;
     }
 
+    /**
+     * @return an HTML anchor linking to a client-side command that displays this faction's info.
+     */
     public String getNameAsLink() {
         return String.format("<a href=\"MEKWARS/c faction#%s\">%s</a>", name, name);
     }
 
     /**
-     * @return Returns the id.
+     * @return Returns the faction id, or -1 if the id has not been set (id is null).
      */
     public int getId() {
         if (id == null) {
@@ -354,6 +426,8 @@ public class House {
     }
 
     /**
+     * Sets the faction id.
+     *
      * @param id The id to set.
      *           <p>
      *                                                                                                                                                                                                                                                                                                   TODO This is only a hack and should ONLY be used by experienced personnel!
@@ -362,16 +436,26 @@ public class House {
         this.id = id;
     }
 
+    /**
+     * @return the database row id for this faction.
+     */
     public int getDBId() {
         return dbId;
     }
 
+    /**
+     * @param id the database row id to set.
+     */
     public void setDBId(int id) {
         dbId = id;
     }
 
     /**
-     * Write itself to a binary stream.
+     * Writes this faction's full state (identity, base skills, colors, abbreviation, per unit-type/weight
+     * cost modifiers, banned ammo, tech level, defection policy, used-Mek-bay multiplier, and all of its
+     * {@link SubFaction}s) to a binary stream, in the same order expected by {@link #House(BinReader)}.
+     *
+     * @param out the binary stream writer.
      */
     public void binOut(BinWriter out) {
 
@@ -436,14 +520,16 @@ public class House {
     }
 
     /**
-     * @return Returns the baseGunner.
+     * @return Returns the base gunnery skill for build-type index 0 (the "default"/first unit type).
      */
     public int getBaseGunner() {
         return baseGunner.elementAt(0);
     }
 
     /**
-     * @param baseGunner The baseGunner to set.
+     * Sets the base gunnery skill for build-type index 0 (the "default"/first unit type).
+     *
+     * @param baseGunner The baseGunner value to set.
      */
     public void setBaseGunner(int baseGunner) {
         synchronized (this.baseGunner) {
@@ -452,14 +538,16 @@ public class House {
     }
 
     /**
-     * @return Returns the basePilot.
+     * @return Returns the base piloting skill for build-type index 0 (the "default"/first unit type).
      */
     public int getBasePilot() {
         return basePilot.elementAt(0);
     }
 
     /**
-     * @param basePilot The basePilot to set.
+     * Sets the base piloting skill for build-type index 0 (the "default"/first unit type).
+     *
+     * @param basePilot The basePilot value to set.
      */
     public void setBasePilot(int basePilot) {
         synchronized (this.basePilot) {
@@ -468,68 +556,115 @@ public class House {
     }
 
     /**
-     * gets the unit component mod for a faction
+     * @param type   the unit build type index.
+     * @param weight the unit weight-class index.
+     * @return the component-cost modifier this faction applies for the given unit type/weight.
      */
     public int getHouseUnitComponentMod(int type, int weight) {
         return factionUnitComponentMod[type][weight];
     }
 
     /**
-     * @get the unit price mod for a faction
+     * @param type   the unit build type index.
+     * @param weight the unit weight-class index.
+     * @return the price modifier this faction applies for the given unit type/weight.
      */
     public int getHouseUnitPriceMod(int type, int weight) {
         return this.factionUnitPriceMod[type][weight];
     }
 
     /**
-     * @get the unit price mod for a faction
+     * @param type   the unit build type index.
+     * @param weight the unit weight-class index.
+     * @return the influence/"flu" cost modifier this faction applies for the given unit type/weight.
      */
     public int getHouseUnitFluMod(int type, int weight) {
         return this.factionUnitFluMod[type][weight];
     }
 
+    /**
+     * @return the set of ammunition/munition types this faction is forbidden from using.
+     */
     public EnumSet<AmmoType.Munitions> getBannedAmmo() {
         return bannedAmmo;
     }
 
+    /**
+     * @return the maximum tech level ({@link TechConstants}) allowed for this faction's units.
+     */
     public int getTechLevel() {
         return this.techLevel;
     }
 
+    /**
+     * Sets the maximum tech level allowed for this faction. Any level below
+     * {@link TechConstants#T_INTRO_BOX_SET} is treated as invalid/too-restrictive and is coerced up to
+     * {@link TechConstants#T_ALL} (i.e. no restriction) instead of being honored literally.
+     *
+     * @param level the desired tech level.
+     */
     public void setTechLevel(int level) {
         if (level < TechConstants.T_INTRO_BOX_SET) {this.techLevel = TechConstants.T_ALL;} else {
             this.techLevel = level;
         }
     }
 
+    /**
+     * @return whether players may defect away from this faction.
+     */
     public boolean getHouseDefectionFrom() {
         return allowDefectionsFrom;
     }
 
+    /**
+     * @param defection whether players may defect away from this faction.
+     */
     public void setHouseDefectionFrom(boolean defection) {
         allowDefectionsFrom = defection;
     }
 
+    /**
+     * @return whether players may defect into this faction.
+     */
     public boolean getHouseDefectionTo() {
         return allowDefectionsTo;
     }
 
+    /**
+     * @param defection whether players may defect into this faction.
+     */
     public void setHouseDefectionTo(boolean defection) {
         allowDefectionsTo = defection;
     }
 
+    /**
+     * @return the multiplier applied to used-Mek bay costs for this faction.
+     */
     public float getUsedMekBayMultiplier() {
         return this.usedMekBayMultiplier;
     }
 
+    /**
+     * @param mult the used-Mek bay cost multiplier to set.
+     */
     public void setUsedMekBayMultiplier(float mult) {
         this.usedMekBayMultiplier = mult;
     }
 
+    /**
+     * @return this faction's {@link SubFaction}s, keyed by sub-faction name (mutable map — modifying it
+     *         affects this House).
+     */
     public ConcurrentHashMap<String, SubFaction> getSubFactionList() {
         return subFactionList;
     }
 
+    /**
+     * Sets this faction's player display color, normalizing the value to always start with "#" (an HTML
+     * hex color). If the given string doesn't already start with "#", one is prepended.
+     *
+     * @param factionPlayerColor the color string to set (with or without a leading "#").
+     */
     public void setHousePlayerColors(String factionPlayerColor) {
         if (factionPlayerColor.startsWith("#")) {
             this.factionPlayerColors = factionPlayerColor;
@@ -538,10 +673,19 @@ public class House {
         }
     }
 
+    /**
+     * @return this faction's player display color as an HTML hex string.
+     */
     public String getHousePlayerColor() {
         return this.factionPlayerColors;
     }
 
+    /**
+     * Marks a unit (by file name) as supported by this faction, incrementing a reference count if it was
+     * already supported, or adding it with count 1 otherwise. Blank/whitespace-only names are ignored.
+     *
+     * @param fileName the unit file name to add/increment.
+     */
     public void addUnitSupported(String fileName) {
         if (fileName.trim().isEmpty()) {
             return;
@@ -557,6 +701,18 @@ public class House {
         }
     }
 
+    /**
+     * Checks whether this faction supports the given unit file name.
+     * <p>
+     * <b>Quirk/bug:</b> the intended truncation logic ({@code fileName.indexOf("") > 0}) never triggers,
+     * because {@link String#indexOf(String)} with an empty search string always returns 0 (never a
+     * positive index) unless called on... actually it always returns 0 for an empty needle, so this
+     * condition is always false and the substring/truncation branch is unreachable dead code. The method
+     * therefore always checks the full, untruncated {@code fileName} against {@link #supportedUnits}.
+     *
+     * @param fileName the unit file name to check.
+     * @return true if this faction supports the given unit file name.
+     */
     public boolean houseSupportsUnit(String fileName) {
         if (fileName.indexOf("") > 0) {
             fileName = fileName.substring(0, fileName.indexOf(""));
@@ -565,10 +721,19 @@ public class House {
         return supportedUnits.containsKey(fileName);
     }
 
+    /**
+     * @return the map of unit file names supported by this faction to their reference counts.
+     */
     public ConcurrentHashMap<String, Integer> getSupportedUnits() {
         return supportedUnits;
     }
 
+    /**
+     * Decrements a unit's support reference count, removing it entirely once the count reaches 1 (i.e.
+     * the last reference). Blank/whitespace-only names and unsupported units are ignored.
+     *
+     * @param fileName the unit file name to decrement/remove.
+     */
     public void removeUnitSupported(String fileName) {
         if (fileName.trim().isEmpty()) {
             return;
@@ -587,14 +752,27 @@ public class House {
         }
     }
 
+    /**
+     * @return whether units not native to this faction cost more to purchase.
+     */
     public boolean getNonFactionUnitsCostMore() {
         return nonFactionUnitsCostMore;
     }
 
+    /**
+     * @param answer whether units not native to this faction should cost more to purchase.
+     */
     public void setNonFactionUnitsCostMore(boolean answer) {
         nonFactionUnitsCostMore = answer;
     }
 
+    /**
+     * Builds a "|"-delimited summary string of this faction's core identity/settings (id, name, logo, base
+     * gunnery/piloting skills, colors, abbreviation, conquerable flag, tech level, defection policy, and
+     * used-Mek-bay multiplier). Used for legacy client/server messaging when announcing a new faction.
+     *
+     * @return the pipe-delimited summary string.
+     */
     public String addNewHouse() {
         StringBuilder result = new StringBuilder();
 

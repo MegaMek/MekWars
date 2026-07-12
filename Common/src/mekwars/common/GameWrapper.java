@@ -42,14 +42,33 @@ import megamek.common.game.Game;
 import megamek.common.units.Entity;
 import megamek.logging.MMLogger;
 
+/**
+ * Adapts a MegaMek {@link Game} instance to the narrower {@link GameInterface} contract used by MekWars.
+ * <p>
+ * This class holds a reference to the live/finished MegaMek game and translates queries about winners and unit
+ * fate (devastated, graveyarded, retreated) into terms MekWars campaign code can consume, without leaking the full
+ * MegaMek {@code Game} API surface to callers on the MekWars side.
+ *
+ * @author Helge Richter
+ */
 public class GameWrapper implements GameInterface {
     private static final MMLogger LOGGER = MMLogger.create(GameWrapper.class);
+    /** The underlying MegaMek game this wrapper delegates to. */
     private final Game game;
 
+    /**
+     * @param game the MegaMek game to wrap.
+     */
     public GameWrapper(Game game) {
         this.game = game;
     }
 
+    /**
+     * Determines the winning side's player names by comparing each player's team to
+     * {@link Game#getVictoryTeam()}.
+     *
+     * @return trimmed names of all players on the victorious team, or an empty list if there is no winning team.
+     */
     public List<String> getWinners() {
         ArrayList<String> result = new ArrayList<>();
         //TODO: Winners sometimes coming up empty. Let's see why
@@ -66,26 +85,41 @@ public class GameWrapper implements GameInterface {
                 result.add(player.getName().trim());
             }
         }
-        
+
         return result;
     }
 
+    /**
+     * @return {@code true} if the game's victory team is not {@link Player#TEAM_NONE}.
+     */
     public boolean hasWinner() {
         return game.getVictoryTeam() != Player.TEAM_NONE;
     }
 
+    /**
+     * @return the entities MegaMek marked as devastated (destroyed beyond salvage) during the game.
+     */
     public Enumeration<Entity> getDevastatedEntities() {
         return game.getDevastatedEntities();
     }
 
+    /**
+     * @return the entities MegaMek moved to the graveyard (destroyed/removed from play).
+     */
     public Enumeration<Entity> getGraveyardEntities() {
         return game.getGraveyardEntities();
     }
 
+    /**
+     * @return an iterator over every entity that participated in the game.
+     */
     public Iterator<Entity> getEntities() {
         return game.getEntitiesVector().iterator();
     }
 
+    /**
+     * @return the entities whose side retreated/withdrew from the game.
+     */
     public Enumeration<Entity> getRetreatedEntities() {
         return game.getRetreatedEntities();
     }

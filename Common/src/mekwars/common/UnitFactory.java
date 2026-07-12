@@ -31,12 +31,36 @@ import mekwars.common.persistence.BinReader;
 import mekwars.common.persistence.BinWriter;
 
 /**
- * @author Helge Richter
+ * Represents a unit-production factory (typically owned/located by a faction on a planet) within a MekWars
+ * campaign. A factory has a faction owner ("founder"), a size/weight class, a build-type bitmask describing which
+ * categories of units it is capable of producing, a countdown of ticks until its next unit is ready, and
+ * lock/access-level controls used by admins and raid mechanics (see {@link #canBeRaided}).
+ * <p>
+ * Instances are persisted using MekWars' custom binary format via {@link #binOut(BinWriter)} and
+ * {@link #binIn(BinReader)}.
  *
+ * @author Helge Richter
  */
 
 public class UnitFactory implements Serializable {
 
+    /**
+     * The {@code BUILD_*} constants below encode which unit categories a factory can produce as a bitmask, where
+     * each named "base" category contributes one bit: Mek = 1, Vehicle = 2, Infantry = 4, ProtoMek = 8,
+     * BattleArmor = 16. The combination constants (e.g. {@link #BUILD_MEK_AND_VEHICLES} = 3) are simply the OR of
+     * their component bits, and {@link #getType()}/{@link #setType(int)} store one such combined value directly
+     * (not a raw bitmask assembled by callers) — {@link #canProduce(int)} decodes it back into individual
+     * categories by successive subtraction.
+     * <p>
+     * {@link #BUILD_VTOL} (32) and {@link #BUILD_AERO} (33) break this pattern: they are not additional bits that
+     * combine with the others (the combination range only goes up to 31 = all five base bits set), and
+     * {@code BUILD_AERO} (33) is not a power of two. As a result, a factory whose type is {@code BUILD_VTOL} (32)
+     * is decoded by {@link #canProduce(int)} as equivalent to {@code BUILD_BATTLEARMOR} (16) plus leftover 16,
+     * since {@code 32 - BUILD_AERO(33)} is negative but {@code 32 - BUILD_BATTLEARMOR(16) = 16 >= 0} — i.e. a VTOL
+     * factory is (incorrectly) treated as able to produce BattleArmor, and {@code canProduce(Unit.VTOL)} is never
+     * actually true for any factory (VTOL is not checked anywhere in {@link #canProduce}). This looks like a
+     * pre-existing bug in the type-encoding scheme, left as-is here (see {@link #canProduce(int)} for details).
+     */
     static public final int BUILD_ALL = 0;
     static public final int BUILD_MEK = 1;
     static public final int BUILD_VEHICLES = 2;
@@ -69,16 +93,22 @@ public class UnitFactory implements Serializable {
     static public final int BUILD_MEK_AND_INFANTRY_AND_PROTOMEK_AND_BATTLEARMOR = 29;
     static public final int BUILD_VEHICLES_AND_INFANTRY_AND_PROTOMEK_AND_BATTLEARMOR = 30;
     static public final int BUILD_MEK_AND_VEHICLES_AND_INFANTRY_AND_PROTOMEK_AND_BATTLEARMOR = 31;
+    /** Factory type dedicated to VTOLs. See the class-level note above on {@code canProduce}'s handling of this. */
     static public final int BUILD_VTOL = 32;
+    /** Factory type dedicated to aerospace units. Not part of the additive bitmask range (see note above). */
     static public final int BUILD_AERO = 33;
     /**
-     *
+     * Serialization identifier for this {@link Serializable} class.
      */
     @Serial
     private static final long serialVersionUID = -5221016867627976085L;
+    /** Display name of this factory. */
     private String name;
+    /** Weight/size class label of this factory (e.g. "Light", "Medium", "Heavy", "Assault"); see {@link #getWeightclass()}. */
     private String size;
+    /** Name of the faction that founded/owns this factory. */
     private String founder;
+    /** Countdown of ticks remaining before this factory can produce its next unit. */
     private int ticksUntilRefresh;
     private int refreshSpeed = 100;//The Speed this factory refreshes
     /**
@@ -92,10 +122,13 @@ public class UnitFactory implements Serializable {
      */
     private boolean factoryLocked = false;
 
+    /** Unique identifier string for this factory. */
     private String factoryID = "";
     //private int factoryID = 0;
 
+    /** Minimum player access level required to interact with/use this factory. */
     private int factoryAccessLevel = 0;
+    /** Sub-folder (under "standard") holding the build table used by this factory; empty means the standard table. */
     private String buildTableFolder = "";
 
     /**
@@ -130,6 +163,13 @@ public class UnitFactory implements Serializable {
      * See if this factory can be raided by the particular operation
      * <p>
      * 13 Sept 2011 - Cord Awtry
+     *
+     * @param type_id the {@code Unit} type constant to check (e.g. {@link Unit#MEK}).
+     * @param o       the operation whose "ForceProduceAndCapture*" flags gate which unit types may be captured.
+     *
+     * @return {@code true} if the operation allows capturing units of {@code type_id} and this factory is able to
+     *       produce that type (or the factory is {@link #BUILD_ALL}, which always returns {@code true} as long as
+     *       the operation permits capturing at least one category).
      */
     public boolean canBeRaided(int type_id, Operation o) {
         boolean capMeks = o.getBooleanValue("ForceProduceAndCaptureMeks");
@@ -169,7 +209,8 @@ public class UnitFactory implements Serializable {
     }
 
     /**
-     * @param type The type to set.
+     * @param type The type to set. Values outside the valid {@code [BUILD_ALL, BUILD_AERO]} range silently fall
+     *             back to {@link #BUILD_MEK} rather than being rejected.
      */
     public void setType(int type) {
 
@@ -178,8 +219,18 @@ public class UnitFactory implements Serializable {
 
     /**
      * Test whether the factory can produce an unit.
+     * <p>
+     * Decodes the combined {@link #getType()} value back into individual unit categories by successively
+     * subtracting {@link #BUILD_AERO}, {@link #BUILD_BATTLEARMOR}, {@link #BUILD_PROTOMEKS},
+     * {@link #BUILD_INFANTRY}, {@link #BUILD_VEHICLES} and finally {@link #BUILD_MEK} (in that order) whenever the
+     * remainder is still non-negative. See the class-level note on the {@code BUILD_*} constants for why this
+     * produces an incorrect result for {@link #BUILD_VTOL} (32): it is treated as
+     * {@code BUILD_BATTLEARMOR}-capable, and {@code Unit.VTOL} can never match here.
      *
      * @param type_id The type of the unit to test.
+     *
+     * @return {@code true} if this factory's type includes {@code type_id}, or unconditionally {@code true} if
+     *       this factory's type is {@link #BUILD_ALL}.
      */
     public boolean canProduce(int type_id) {
         int test = getType();
@@ -225,6 +276,9 @@ public class UnitFactory implements Serializable {
 
     /**
      * Writes as a binary stream
+     *
+     * @param out the writer to serialize this factory's fields to, in a fixed field order matched by
+     *            {@link #binIn(BinReader)}.
      */
     public void binOut(BinWriter out) {
         out.println(name, "name");
@@ -241,6 +295,11 @@ public class UnitFactory implements Serializable {
 
     /**
      * Read from a binary stream
+     *
+     * @param in the reader to populate this factory's fields from; must have been written by
+     *           {@link #binOut(BinWriter)} in the same field order.
+     *
+     * @throws IOException if the underlying stream fails or the data is malformed.
      */
     public void binIn(BinReader in) throws IOException {
         name = in.read("name");
@@ -255,6 +314,10 @@ public class UnitFactory implements Serializable {
         factoryID = in.read("factoryID");
     }
 
+    /**
+     * @return a short abbreviation string built from single letters (M/V/I/P/B/A) for each unit category this
+     *       factory can produce, in Mek/Vehicle/Infantry/ProtoMek/BattleArmor/Aero order.
+     */
     public String getTypeString() {
         String result = "";
         if (this.canProduce(Unit.MEK)) {result += "M";}
@@ -268,6 +331,10 @@ public class UnitFactory implements Serializable {
     }
 
     //TODO: Fix the unit type system and all that stuff.. this is a big bunch of garbage..
+    /**
+     * @return a human-readable, space-separated list of full unit-category names (e.g. "Mek Vehicle ") this
+     *       factory can produce. Functionally identical to {@link #typeString()}.
+     */
     public String getFullTypeString() {
         String result = "";
         if (this.canProduce(Unit.MEK)) {result = "Mek ";}
@@ -280,7 +347,8 @@ public class UnitFactory implements Serializable {
     }
 
     /**
-     * @return the Status that is shown on a detailed planet view
+     * @return an HTML-formatted status blurb (name, size, founder, and either "ready to produce" or the remaining
+     *       ticks) shown on a detailed planet view.
      */
     public String getStatus() {
         String result = getName() + "(" + getSize();
@@ -349,7 +417,8 @@ public class UnitFactory implements Serializable {
     }
 
     /**
-     * @return Returns the ticksUntilRefresh, but hides any negative values.
+     * @return {@link Integer#MAX_VALUE} if this factory is {@link #isLocked() locked} (so it never appears ready);
+     *       otherwise the raw {@code ticksUntilRefresh} value, clamped to never report a negative countdown.
      */
     public int getTicksUntilRefresh() {
         if (isLocked()) {
@@ -377,6 +446,10 @@ public class UnitFactory implements Serializable {
 		out.write(isLocked(), "factorylock");
 	}*/
 
+    /**
+     * @return {@code true} if an admin has locked this factory, preventing it from producing units (see
+     *       {@link #getTicksUntilRefresh()}).
+     */
     public boolean isLocked() {
         return factoryLocked;
     }
@@ -386,6 +459,11 @@ public class UnitFactory implements Serializable {
         //empty. todo.
     }
     */
+    /**
+     * @return the {@code Unit} weight-class constant ({@link Unit#LIGHT}, {@link Unit#MEDIUM}, {@link Unit#HEAVY},
+     *       {@link Unit#ASSAULT}) corresponding to this factory's {@link #getSize()} label, or {@code 0} if the
+     *       size string doesn't match any known weight class.
+     */
     public int getWeightclass() {
         if (getSize().equalsIgnoreCase("Light")) {return Unit.LIGHT;} else if (getSize().equalsIgnoreCase("Medium")) {
             return Unit.MEDIUM;
@@ -395,6 +473,13 @@ public class UnitFactory implements Serializable {
         return 0;
     }
 
+    /**
+     * @return the first unit-category constant this factory can produce, checked in this fixed preference order:
+     *       {@link Unit#MEK}, {@link Unit#VEHICLE}, {@link Unit#AERO}, {@link Unit#BATTLEARMOR},
+     *       {@link Unit#PROTOMEK}, {@link Unit#INFANTRY}; defaults to {@link Unit#MEK} if none match (which also
+     *       covers the {@link #BUILD_VTOL} case, since {@code canProduce(Unit.VTOL)} is never checked here and
+     *       never true regardless — see the class-level note on the {@code BUILD_*} constants).
+     */
     public int getBestTypeProducable() {
         if (this.canProduce(Unit.MEK)) {return Unit.MEK;}
         if (this.canProduce(Unit.VEHICLE)) {return Unit.VEHICLE;}
@@ -405,18 +490,27 @@ public class UnitFactory implements Serializable {
         return Unit.MEK;
     }
 
+    /**
+     * @param lock the locked state to set for this factory (admin control).
+     */
     public void setLock(boolean lock) {
         factoryLocked = lock;
     }
 
+    /** @return the minimum player access level required to use this factory. */
     public int getAccessLevel() {
         return factoryAccessLevel;
     }
 
+    /** @param access the minimum player access level to require. */
     public void setAccessLevel(int access) {
         this.factoryAccessLevel = access;
     }
 
+    /**
+     * @return the resolved path to this factory's build table folder: {@code "standard"} if no custom sub-folder
+     *       is configured, otherwise {@code "standard" + File.separatorChar + buildTableFolder}.
+     */
     public String getBuildTableFolder() {
 
         if (buildTableFolder.trim().isEmpty()) {return "standard";}
@@ -424,6 +518,17 @@ public class UnitFactory implements Serializable {
         return "standard" + File.separatorChar + buildTableFolder.trim();
     }
 
+    /**
+     * Sets the custom build-table sub-folder for this factory.
+     * <p>
+     * No-ops (leaves {@link #buildTableFolder} unchanged) if {@code folder} is exactly {@code "0"} or
+     * {@code "standard"}. Otherwise strips a literal {@code "standard/" + File.separatorChar} prefix (note: this
+     * uses {@link String#replaceAll(String, String)}, so the {@code "/"} and {@link File#separatorChar} are
+     * treated as a regex, which can behave unexpectedly on platforms where the separator is a regex metacharacter
+     * such as {@code \}), then clears the value entirely if what remains is exactly {@code "standard"}.
+     *
+     * @param folder the sub-folder name (or path fragment) to set.
+     */
     public void setBuildTableFolder(String folder) {
 
         if (folder.equals("0") || folder.equals("standard")) {return;}

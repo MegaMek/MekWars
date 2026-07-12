@@ -67,12 +67,31 @@ import mekwars.common.persistence.BinWriter;
  * resources.
  * <p>
  * Notice: Please read the doc to binOut before adding new data types.
+ * <p>
+ * Unlike {@link Unit}/{@link Army} (which are base classes subclassed by client-side {@code CUnit}/{@code CArmy}
+ * and server-side {@code SUnit}/{@code SArmy}), {@code CampaignData} is <em>not</em> subclassed. It is used
+ * as-is, directly, by both the client and the server: each side constructs its own {@code CampaignData} instance
+ * (the server builds one from XML resource files or a {@link BinReader} snapshot; the client rebuilds one from
+ * the same binary encoding sent over the wire) and publishes it to the static {@link #cd} field so that any code
+ * in the shared {@code mekwars.common} package can reach "the current campaign's houses/planets/terrains" without
+ * needing a reference threaded through every call. It is also unrelated to
+ * {@code mekwars.common.campaign.CCampaign}, which is a separate, client-only, per-connection object holding
+ * session state (Black Market listings, chat, etc.) for a single logged-in player; {@code CCampaign} and other
+ * client code simply read from {@link #cd} when they need static campaign-wide data such as a {@link House} or
+ * {@link Planet} by id.
  *
  * @author Imi (immanuel.scholz@gmx.de)
  */
 public class CampaignData implements TerrainProvider {
     private final static MMLogger LOGGER = MMLogger.create(CampaignData.class);
 
+    /**
+     * Global singleton pointing at the currently active campaign data set. Set by every constructor (so
+     * constructing a new {@code CampaignData} always makes it "the" current one), and read from all over the
+     * client and server code as the entry point for looking up houses, planets, terrains, etc. Being a mutable
+     * public static field, this is effectively a global variable: only one campaign data set can be "active" per
+     * JVM at a time.
+     */
     public static CampaignData cd;
 
     /**
@@ -100,15 +119,29 @@ public class CampaignData implements TerrainProvider {
      * List of all terrains that can occur on surfaces of planets.
      */
     private final ArrayList<Terrain> terrains = new ArrayList<>();
+
+    /** List of all "advanced" terrains (a richer/extended terrain variant) usable on planet surfaces. */
     private final ArrayList<AdvancedTerrain> advTerrains = new ArrayList<>();
+
+    /** Free-form per-planet operational flags. key=flag name, value=flag value (both arbitrary strings). */
     private final TreeMap<String, String> planetOpFlags = new TreeMap<>();
+
+    /** Munition types the server administrator has banned from use campaign-wide; empty means nothing is banned. */
     private EnumSet<AmmoType.Munitions> serverBannedAmmo = EnumSet.noneOf(AmmoType.Munitions.class);
+
+    /** IDs (see {@code TargetSystem} type constants) of targeting systems banned campaign-wide by the server. */
     private Vector<Integer> bannedTargetingSystems = new Vector<>();
+
+    /** Command-name to minimum-access-level map, used to gate chat/admin commands. key=command name (uppercase), value=required access level. */
     private Hashtable<String, Integer> commands = new Hashtable<>();
+
+    /** Miscellaneous server-side configuration key/value pairs, forwarded to and cached by the client. */
     private Properties serverConfigs = new Properties();
 
     /**
-     * Create empty campaign data.
+     * Creates an empty campaign data set (no terrains, houses, or planets yet) and immediately publishes it as
+     * the active campaign via {@link #cd}. Used when a fresh server is being initialized from XML resource
+     * files, which are then loaded in with the various {@code add*} methods below.
      */
     public CampaignData() {
         cd = this;
@@ -116,7 +149,13 @@ public class CampaignData implements TerrainProvider {
     }
 
     /**
-     * Generate the campaign data from an binary stream.
+     * Reconstructs a full campaign data set (terrains, advanced terrains, houses, and planets, in that order)
+     * by reading the binary encoding previously written by {@link #binOut(BinWriter)}. Used by the client to
+     * decode the campaign snapshot sent by the server on login, and by the server to reload a saved campaign.
+     * Publishes itself as the active campaign via {@link #cd} as a side effect.
+     *
+     * @param in the binary stream to decode; must have been produced by a matching {@link #binOut(BinWriter)} call.
+     * @throws IOException if the underlying stream fails or the data is malformed.
      */
     public CampaignData(@Nonnull BinReader in) throws IOException {
         cd = this;
@@ -151,7 +190,12 @@ public class CampaignData implements TerrainProvider {
     }
 
     /**
-     * @see TerrainProvider#addAdvancedTerrain(AdvancedTerrain)
+     * Registers a basic {@link Terrain} with this campaign's terrain catalog. Note: this method is not part of
+     * the {@link TerrainProvider} interface (which only declares {@code addAdvancedTerrain}); it is a plain
+     * helper specific to {@code CampaignData}. The original Javadoc here incorrectly referenced
+     * {@code TerrainProvider#addAdvancedTerrain} via {@code @see} - that has been corrected.
+     *
+     * @param terrain the terrain to add; appended to the internal list as-is (no id/duplicate checking here).
      */
     public void addTerrain(@Nonnull Terrain terrain) {
         terrains.add(terrain);
@@ -160,6 +204,8 @@ public class CampaignData implements TerrainProvider {
 
     /**
      * Adds a faction to the campaign storage. If it was already within the storage, it replaces the old object.
+     * If the faction has no id yet (id == -1) and isn't the special "None" faction, an unused id is assigned via
+     * {@link #getUnusedHouseID()} before storing.
      *
      * @param faction The faction to hold.
      *                <p>
@@ -176,6 +222,8 @@ public class CampaignData implements TerrainProvider {
 
     /**
      * Adds a planet to the campaign storage. If it was already within the storage, it replaces the old object.
+     * If the planet has no id yet (id == -1), an unused id is assigned via {@link #getUnusedPlanetID()} before
+     * storing.
      *
      * @param planet The planet to hold.
      *               <p>
@@ -270,7 +318,14 @@ public class CampaignData implements TerrainProvider {
     }
 
     /**
-     * @param factory Updates the client side factories Useful for the factory Refresh with RP
+     * Looks up a planet and one of its {@link UnitFactory} instances by name, and overwrites its
+     * "ticks until refresh" countdown. Used to sync the client's view of factory production timers (e.g. when a
+     * player spends Resource Points to rush a factory refresh) with the server's authoritative value. Silently
+     * does nothing if the planet or factory name cannot be resolved.
+     *
+     * @param planetString the planet's name.
+     * @param factory      the factory's name (looked up via {@link #getFactoryByName(Planet, String)}).
+     * @param tick         the new number of ticks until the factory's next refresh.
      *
      * @author Torren (Jason Tighe)
      */
@@ -288,7 +343,9 @@ public class CampaignData implements TerrainProvider {
 
     /**
      * Retrieve a planet by its name. Please try to use planet Id's when lookup for a planet instead (if you have the
-     * choice).
+     * choice). Name lookup is case-insensitive (matched via {@link #planetID}, keyed by lower-cased name). If the
+     * name is unknown, {@code planetID.get(...)} yields {@code null}, which auto-unboxes to throw a
+     * {@link NullPointerException} that is caught here and turned into a logged {@code null} return.
      */
     public @Nullable Planet getPlanetByName(String name) {
         try {
@@ -301,8 +358,13 @@ public class CampaignData implements TerrainProvider {
     }
 
     /**
-     * @author jtighe Retrieve a factory by its name.
+     * Finds a {@link UnitFactory} on the given planet by matching its name (case-insensitive).
      *
+     * @param planet the planet whose factories are searched.
+     * @param name   the factory name to match.
+     * @return the matching factory, or {@code null} if none of the planet's factories has that name.
+     *
+     * @author jtighe
      */
     public @Nullable UnitFactory getFactoryByName(Planet planet, String name) {
         for (UnitFactory unitFactory : planet.getUnitFactories()) {
@@ -326,7 +388,11 @@ public class CampaignData implements TerrainProvider {
     }
 
     /**
-     * Check if the planet name was only partial and complete it..
+     * Check if the planet name was only partial and complete it. Iterates all planets (in id order, since
+     * {@link #planets} is a {@link TreeMap}) and returns the first whose name equals or contains {@code name}
+     * (case-sensitive, unlike {@link #getPlanetByName(String)}). Note there is no early-exit priority for an
+     * exact match over a substring match beyond iteration order, so with an ambiguous partial name the result
+     * depends on planet id ordering.
      */
     public @Nullable Planet getPlanetByPartialName(String name) {
         for (Planet planet : getAllPlanets()) {
@@ -344,15 +410,21 @@ public class CampaignData implements TerrainProvider {
 
     /**
      * Retrieves all planets.
+     *
+     * @return a live view of all known planets, keyed internally by id (unmodifiable via this accessor,
+     *         but backed by the same map used to add/remove planets).
      */
     public Collection<Planet> getAllPlanets() {
         return planets.values();
     }
 
     /**
-     * BUMM - Blow up a planet.
+     * BUMM - Blow up a planet. Removes it from both the id and name lookup tables. Note this does not remove any
+     * references to the planet held elsewhere (e.g. neighbor lists on other planets); the id/name simply becomes
+     * unresolvable in this campaign's storage.
      *
-     * @param id The id of the blown-up planet.
+     * @param id The id of the blown-up planet. Must currently exist (NPE if not, since {@code getPlanet(id)} is
+     *           dereferenced before the null check would apply).
      */
     public void removePlanet(int id) {
         planetID.remove(getPlanet(id).getName().toLowerCase());
@@ -360,7 +432,8 @@ public class CampaignData implements TerrainProvider {
     }
 
     /**
-     * Remove all planets.
+     * Remove all planets. Only clears the id-keyed {@link #planets} map; note this does NOT clear
+     * {@link #planetID} (the name-to-id lookup table), which will keep stale entries after this call.
      */
     public void clearPlanets() {
         planets.clear();
@@ -368,14 +441,19 @@ public class CampaignData implements TerrainProvider {
 
     /**
      * Retrieves all factions.
+     *
+     * @return a live view of all known Houses/factions.
      */
     public Collection<House> getAllHouses() {
         return factions.values();
     }
 
     /**
-     * Remove a house from the server this is normally only for single faction servers
+     * Remove a house from the server this is normally only for single faction servers. In addition to removing
+     * the faction from in-memory storage (id and name lookup tables), this deletes the faction's persisted
+     * {@code ./campaign/factions/<name>.dat} and {@code .bak} files from disk, if present.
      *
+     * @param id the id of the House/faction to remove; must currently exist.
      */
     public void removeHouse(int id) {
         String factionName = getHouse(id).getName().toLowerCase();
@@ -398,14 +476,16 @@ public class CampaignData implements TerrainProvider {
      *
      * @param id The id of the House.
      *
-     * @return The requested faction.
+     * @return The requested faction, or {@code null} if no faction with that id exists.
      */
     public House getHouse(int id) {
         return factions.get(id);
     }
 
     /**
-     * Retrieve a faction by its name.
+     * Retrieve a faction by its name (case-insensitive, via {@link #factionID}). Returns {@code null} both when
+     * the name is unknown (auto-unboxing {@code null} throws NPE, caught below) and, technically, if the id
+     * resolves to a faction id that no longer exists in {@link #factions}.
      * <p>
      * TODO This seems to be only needed, because some serialization work with transmitting the factions name
      *       instead of its id.
@@ -419,7 +499,8 @@ public class CampaignData implements TerrainProvider {
     }
 
     /**
-     * Remove all factions.
+     * Remove all factions. Note: like {@link #clearPlanets()}, this only clears the id-keyed {@link #factions}
+     * map and leaves {@link #factionID} (the name lookup table) with stale entries.
      */
     public void clearHouses() {
         factions.clear();
@@ -437,6 +518,10 @@ public class CampaignData implements TerrainProvider {
      * <p>
      * TODO: check http://jira.codehaus.org/secure/ViewIssue.jspa?key=XSTR-27 to
      * see whether a better way of serialization is available ;-)
+     *
+     * @param out the sink to write the encoded campaign snapshot to. Writes, in order: all terrains and advanced
+     *            terrains, all houses, then all planets. Must be decoded back with the matching
+     *            {@link #CampaignData(BinReader)} constructor.
      */
     public void binOut(BinWriter out) throws IOException {
         binTerrainsOut(out);
@@ -445,7 +530,7 @@ public class CampaignData implements TerrainProvider {
     }
 
     /**
-     * Outputs all terrains
+     * Outputs all basic and advanced terrains (in that order) to the given writer.
      *
      * @see CampaignData#binOut(BinWriter)
      */
@@ -464,7 +549,7 @@ public class CampaignData implements TerrainProvider {
     }
 
     /**
-     * Outputs all factions
+     * Outputs all factions currently held by this campaign (the full set, not a differential).
      *
      * @see CampaignData#binOut(BinWriter)
      */
@@ -477,7 +562,7 @@ public class CampaignData implements TerrainProvider {
     }
 
     /**
-     * Outputs all planets
+     * Outputs all planets currently held by this campaign (the full set, not a differential).
      *
      * @see CampaignData#binOut(BinWriter)
      */
@@ -489,8 +574,11 @@ public class CampaignData implements TerrainProvider {
     }
 
     /**
-     * Outputs updated houses
+     * Overload of {@link #binHousesOut(BinWriter)} that writes an arbitrary/explicit subset of houses instead of
+     * every house held by this campaign (e.g. only those that changed).
      *
+     * @param houses the houses to write.
+     * @param out    the sink to write to.
      * @see CampaignData#binOut(BinWriter)
      */
     public void binHousesOut(ArrayList<House> houses, BinWriter out) {
@@ -501,8 +589,11 @@ public class CampaignData implements TerrainProvider {
     }
 
     /**
-     * Outputs all planets
+     * Overload of {@link #binPlanetsOut(BinWriter)} that writes an arbitrary/explicit subset of planets instead
+     * of every planet held by this campaign (e.g. only those that changed).
      *
+     * @param planets the planets to write.
+     * @param out     the sink to write to.
      * @see CampaignData#binOut(BinWriter)
      */
     public void binPlanetsOut(ArrayList<Planet> planets, BinWriter out) {
@@ -513,10 +604,17 @@ public class CampaignData implements TerrainProvider {
     }
 
     /**
-     * Updates sent Planets due a differential update.
+     * Updates sent Planets due a differential update. Reads a count-prefixed list of (planetId, mutable-field-set)
+     * pairs from {@code in} and applies each to the already-known planet with that id (looked up via
+     * {@link #getPlanet(int)}); the planet must already exist in this campaign, since only its mutable fields are
+     * being refreshed, not the whole object. For each updated planet, records the {@link Influences} delta
+     * (before vs. after decoding) into {@code changesSinceLastRefresh} so callers can react to influence swings
+     * (e.g. faction-control changes) without re-diffing everything themselves.
      *
+     * @param in                      the stream to decode the differential update from.
      * @param changesSinceLastRefresh A map to hold the change in planet ids that got updated this refresh. Structure is
-     *                                as follows: key=planetID(Integer), value=Influences(differential)
+     *                                as follows: key=planetID(Integer), value=Influences(differential). Cleared at
+     *                                the start of this call and populated as planets are processed.
      */
     public void decodeMutablePlanets(BinReader in, Map<Integer, Influences> changesSinceLastRefresh)
           throws IOException {
@@ -534,8 +632,10 @@ public class CampaignData implements TerrainProvider {
     }
 
     /**
-     * Writes some planets due a differential update
+     * Writes some planets due a differential update. Counterpart to {@link #decodeMutablePlanets}: for each id in
+     * {@code ids}, writes the id followed by that planet's mutable fields only (not the full planet object).
      *
+     * @param out the sink to write to.
      * @param ids A collection of java.lang.Integer with the ids to send.
      */
     public void encodeMutablePlanets(BinWriter out, Collection<Integer> ids) {
@@ -547,6 +647,9 @@ public class CampaignData implements TerrainProvider {
     }
 
     /**
+     * Linear search of {@link #terrains} by id.
+     *
+     * @return the matching {@link Terrain}, or {@code null} if no terrain with that id is registered.
      * @see TerrainProvider#getTerrain(int)
      */
     public @Nullable Terrain getTerrain(int id) {
@@ -569,6 +672,9 @@ public class CampaignData implements TerrainProvider {
     }
 
     /**
+     * Assigns the given advanced terrain an unused id (via {@link #getUnusedAdvTerrainID()}) and registers it.
+     * Note this always overwrites any id the terrain may already have.
+     *
      * @see TerrainProvider#addAdvancedTerrain(AdvancedTerrain)
      */
     public void addAdvancedTerrain(AdvancedTerrain newAdvTerrain) {
@@ -580,6 +686,12 @@ public class CampaignData implements TerrainProvider {
     /*adding the advanced terrain to the campaign data*/
 
     /**
+     * Linear search of {@link #advTerrains} by id.
+     * <p>
+     * Quirk: unlike {@link #getTerrain(int)}/{@link #getHouse(int)}/{@link #getPlanet(int)}, an unknown id here
+     * does not return {@code null} but a brand new, empty {@link AdvancedTerrain} instance (id -1, no data). Callers
+     * cannot distinguish "not found" from "found an empty advanced terrain" other than by inspecting the result.
+     *
      * @see TerrainProvider#getAdvancedTerrain(int)
      */
     public AdvancedTerrain getAdvancedTerrain(int id) {
@@ -600,6 +712,11 @@ public class CampaignData implements TerrainProvider {
         return advTerrains;
     }
 
+    /**
+     * Linear search of {@link #terrains} by name (case-insensitive).
+     *
+     * @return the matching {@link Terrain}, or {@code null} if none matches.
+     */
     public @Nullable Terrain getTerrainByName(String TerrainName) {
         for (Terrain env : terrains) {
             if (env.getName().equalsIgnoreCase(TerrainName)) {
@@ -609,6 +726,12 @@ public class CampaignData implements TerrainProvider {
         return null;
     }
 
+    /**
+     * Linear search of {@link #advTerrains} by name (case-insensitive).
+     * <p>
+     * Quirk: same as {@link #getAdvancedTerrain(int)} - returns a fresh empty {@link AdvancedTerrain} rather than
+     * {@code null} when nothing matches.
+     */
     public AdvancedTerrain getAdvancedTerrainByName(String AdvTerrainName) {
         for (AdvancedTerrain env : advTerrains) {
             if (env.getName().equalsIgnoreCase(AdvTerrainName)) {
@@ -619,7 +742,14 @@ public class CampaignData implements TerrainProvider {
     }
 
     /**
-     * @return Hashtable
+     * Builds a fresh lookup table (not cached - a new {@link Hashtable} is allocated on every call) mapping the
+     * human-readable display name of each MegaMek {@link AmmoType.Munitions} value MekWars cares about (special
+     * munition types such as LBX Cluster, Artemis, Inferno, Narc, Arrow IV variants, etc.) to its enum constant.
+     * Used wherever a player-facing munition name needs to be resolved back to the MegaMek enum, e.g. when parsing
+     * a loadout choice. Unrelated to {@link #getServerBannedAmmo()}/{@link #setServerBannedAmmo}, which track which
+     * of these munitions are disallowed server-wide.
+     *
+     * @return Hashtable keyed by display name (e.g. "LBX Cluster"), valued by {@link AmmoType.Munitions}.
      *
      * @author Torren (Jason Tighe)
      *       <p>
@@ -694,7 +824,11 @@ public class CampaignData implements TerrainProvider {
     }
 
     /**
-     * @return Hashtable
+     * The inverse of {@link #getMunitionsByName()}: builds a fresh (uncached) lookup table mapping each
+     * {@link AmmoType.Munitions} enum constant back to its human-readable display name, for the same fixed set of
+     * munition types.
+     *
+     * @return Hashtable keyed by {@link AmmoType.Munitions}, valued by display name.
      *
      * @author Torren (Jason Tighe)
      *       <p>
@@ -768,25 +902,32 @@ public class CampaignData implements TerrainProvider {
         return munitions;
     }
 
+    /** @return the set of munition types banned campaign-wide by the server. */
     public EnumSet<AmmoType.Munitions> getServerBannedAmmo() {
         return serverBannedAmmo;
     }
 
+    /** @param ban the new set of campaign-wide banned munition types (wholesale replaces the current set). */
     public void setServerBannedAmmo(EnumSet<AmmoType.Munitions> ban) {
         serverBannedAmmo = ban;
     }
 
+    /** @return the ids of targeting systems banned campaign-wide by the server. */
     public Vector<Integer> getBannedTargetingSystems() {
         return bannedTargetingSystems;
     }
 
+    /** @param ban the new list of campaign-wide banned targeting system ids (wholesale replaces the current list). */
     public void setBannedTargetingSystems(Vector<Integer> ban) {
         bannedTargetingSystems = ban;
     }
 
     /**
-     * extracts data from the BinReader and places it into the client side hash table.
+     * Extracts command access-level data from the BinReader and places it into the client side hash table
+     * ({@link #commands}). Reads a count-prefixed list of (command name, access level) pairs and merges them
+     * into the existing table (does not clear it first), then re-sets it via {@link #setCommandTable}.
      *
+     * @param in the stream to decode the access level table from.
      */
     public void importAccessLevels(@Nonnull BinReader in) {
         Hashtable<String, Integer> commandTemp = getCommandTable();
@@ -801,14 +942,23 @@ public class CampaignData implements TerrainProvider {
         setCommandTable(commandTemp);
     }
 
+    /** @return the command-name (uppercase) to required-access-level table. */
     public Hashtable<String, Integer> getCommandTable() {
         return commands;
     }
 
+    /** @param commands the new command-name to required-access-level table (wholesale replaces the current one). */
     public void setCommandTable(Hashtable<String, Integer> commands) {
         this.commands = commands;
     }
 
+    /**
+     * Looks up the minimum access level required to run a chat/admin command.
+     *
+     * @param command the command name (matched case-insensitively, uppercased before lookup).
+     * @return the required access level, or {@code 200} (an intentionally high/restrictive default) if the
+     *         command is not present in {@link #commands}.
+     */
     public int getAccessLevel(@Nonnull String command) {
         int level = 200;
 
@@ -819,19 +969,26 @@ public class CampaignData implements TerrainProvider {
         return level;
     }
 
+    /** @return the free-form per-planet operational flags table (name to value). */
     public TreeMap<String, String> getPlanetOpFlags() {
         return planetOpFlags;
     }
 
+    /** @return the miscellaneous server configuration properties (key/value pairs). */
     public Properties getServerConfigs() {
         return serverConfigs;
 
     }
 
+    /** @param configs the new server configuration properties (wholesale replaces the current set). */
     public void setServerConfigs(Properties configs) {
         serverConfigs = configs;
     }
 
+    /**
+     * @param id a targeting system id (see {@code TargetSystem} type constants).
+     * @return {@code true} if this targeting system id is on the campaign-wide ban list.
+     */
     public boolean targetSystemIsBanned(int id) {
         return bannedTargetingSystems.contains(id);
     }

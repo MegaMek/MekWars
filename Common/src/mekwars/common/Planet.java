@@ -34,6 +34,17 @@ import mekwars.common.util.Position;
 
 
 /**
+ * Represents a single planet in the campaign galaxy: its identity, galactic position, terrain makeup,
+ * industrial output, and — most importantly for the political simulation — which {@link House} faction(s)
+ * hold {@link Influences} (and therefore ownership) over it.
+ * <p>
+ * A Planet's surface terrain is described by a {@link PlanetEnvironments} collection of {@link Continent}s.
+ * Its political state is tracked by an {@link Influences} instance, which records how much "influence" each
+ * {@link House} has accumulated here; the house with a clear plurality is considered the owner (see
+ * {@link #getPlanetOwner()}). {@link SubFaction}s are a further subdivision within a House and are not
+ * directly referenced from Planet, but factories/production on a planet ultimately benefit whichever House
+ * controls it.
+ *
  * @author Helge Richter
  *
  */
@@ -62,7 +73,8 @@ public class Planet implements Comparable<Object>, MutableSerializable {
     private Vector<UnitFactory> unitFactories = new Vector<>(1, 1);
 
     /**
-     * The environment modifiers for the planet.
+     * The environment modifiers for the planet: the set of {@link Continent}s (terrain + climate + relative
+     * weight) making up this planet's surface. See {@link PlanetEnvironments}.
      */
     private PlanetEnvironments environments = new PlanetEnvironments();
 
@@ -87,7 +99,8 @@ public class Planet implements Comparable<Object>, MutableSerializable {
     private int compProduction = 0;
 
     /**
-     * The influence each faction has on this planet. Mutable field (has to be transfered)
+     * The influence each faction ({@link House}) has on this planet, which determines political
+     * ownership. Mutable field (has to be transfered). See {@link Influences}.
      */
     private Influences influence;
 
@@ -112,7 +125,7 @@ public class Planet implements Comparable<Object>, MutableSerializable {
 
     private boolean homeWorld = false;
 
-    /* Original Owner of the planet */
+    /** Name of the faction that originally/historically owned this planet (e.g. for lore/flavor purposes). */
     private String originalOwner = "";
 
     /*
@@ -127,6 +140,16 @@ public class Planet implements Comparable<Object>, MutableSerializable {
     private int maxConquestPoints = 100;
 
     // CONSTRUCTORS
+    /**
+     * Creates a new planet with the given identity, galactic position, and starting influence/ownership
+     * state. Other fields (terrain, factories, description, etc.) are left at their defaults and must be
+     * set separately.
+     *
+     * @param id       unique identifier for this planet.
+     * @param name     the planet's display name.
+     * @param position galactic (x, y) coordinates.
+     * @param influence the initial faction {@link Influences} for this planet.
+     */
     public Planet(int id, String name, Position position, Influences influence) {
         setId(id);
         setName(name);
@@ -142,7 +165,13 @@ public class Planet implements Comparable<Object>, MutableSerializable {
     }
 
     /**
-     * Read the stream back to a Planet object.
+     * Reconstructs a Planet by reading it back from a binary stream (delegates to {@link #binIn}).
+     *
+     * @param in       the binary stream reader.
+     * @param factions unused directly here but part of the historical constructor signature (kept for
+     *                 API compatibility); faction lookups during read are done via {@code data} instead.
+     * @param data     campaign data used to resolve referenced objects (terrains, etc.) while reading.
+     * @throws IOException if the underlying stream read fails.
      */
     public Planet(BinReader in, Map<Integer, House> factions, CampaignData data) throws IOException {
         this.binIn(in, data);
@@ -150,6 +179,14 @@ public class Planet implements Comparable<Object>, MutableSerializable {
 
     // METHODS
 
+    /**
+     * Populates this planet's full state (identity, position, factories, terrain, influence, flags, etc.)
+     * by reading it from a binary stream previously written by {@link #binOut}.
+     *
+     * @param in   the binary stream reader.
+     * @param data campaign data used to resolve referenced terrain/advanced-terrain objects.
+     * @throws IOException if the underlying stream read fails.
+     */
     public void binIn(BinReader in, CampaignData data) throws IOException {
         setId(in.readInt("id"));
         setName(in.read("name"));
@@ -201,35 +238,40 @@ public class Planet implements Comparable<Object>, MutableSerializable {
     }
 
     /**
-     * @return Returns the environments.
+     * @return Returns the environments (terrain makeup) of this planet.
      */
     public PlanetEnvironments getEnvironments() {
         return environments;
     }
 
     /**
-     * @param environments The environments to set.
+     * @param environments The environments (terrain makeup) to set.
      */
     public void setEnvironments(PlanetEnvironments environments) {
         this.environments = environments;
     }
 
     /**
-     * @return Returns the influence.
+     * @return Returns the faction influence/ownership tracker for this planet.
      */
     public Influences getInfluence() {
         return influence;
     }
 
     /**
-     * @param influence The influence to set.
+     * @param influence The faction influence/ownership tracker to set.
      */
     public void setInfluence(Influences influence) {
         this.influence = influence;
     }
 
     /**
-     * @return returns if the faction is the planet owner
+     * Checks whether the given faction currently holds political ownership of this planet, i.e. has a
+     * clear plurality of {@link Influences} here (see {@link Influences#getOwner()}).
+     *
+     * @param factionId the {@link House} id to test.
+     * @return true if this planet is currently owned (uncontested) by the given faction; false if it is
+     *         owned by someone else or the planet has no clear owner (contested/tied influence).
      *
      * @author Torren (Jason Tighe)
      */
@@ -242,7 +284,8 @@ public class Planet implements Comparable<Object>, MutableSerializable {
     }
 
     /**
-     * @return the id of the current owner of the planet
+     * @return the id of the current owner of the planet, or {@code null} if there is no clear owner (e.g.
+     *         two or more factions are tied on influence — a "hot zone").
      *
      * @author Torren (Jason Tighe)
      */
@@ -252,14 +295,18 @@ public class Planet implements Comparable<Object>, MutableSerializable {
 
     /**
      *
-     * @return sting w/ link and name
+     * @return a string w/ link and name (an HTML anchor that client UIs use to jump to this planet).
      */
     public String getNameAsLink() {
         return "<a href=\"JUMPTOPLANET" + name + "#\">" + name + "</a>";
     }
 
     /**
-     * checks for any unused CP and assignes them to House None id -1
+     * Checks for any conquest points (CP) not currently claimed by a house's influence and assigns the
+     * remainder to the special "House None" (faction id -1), representing unclaimed/neutral influence.
+     * Houses with id -1 are skipped when summing existing claimed influence (since -1 IS the neutral
+     * bucket being computed). If the sum of all named houses' influence leaves a positive remainder of
+     * {@link #getConquestPoints()}, that remainder is written into the influence table under id -1.
      */
     public void updateInfluences() {
         int totalCP = getConquestPoints();
@@ -277,10 +324,20 @@ public class Planet implements Comparable<Object>, MutableSerializable {
 
     }
 
+    /**
+     * @return the maximum conquest/influence points obtainable on this planet (a difficulty knob: higher
+     *         values mean more total influence must be accumulated to flip ownership).
+     */
     public int getConquestPoints() {
         return maxConquestPoints;
     }
 
+    /**
+     * Sets the maximum conquest/influence points for this planet, clamped to a minimum of 1 so the value
+     * is never zero or negative (which would break influence-percentage math elsewhere).
+     *
+     * @param points the desired maximum conquest points.
+     */
     public void setConquestPoints(int points) {
         maxConquestPoints = Math.max(1, points);
     }
@@ -309,6 +366,13 @@ public class Planet implements Comparable<Object>, MutableSerializable {
 
     /**
      * Encode all mutable fields into the stream. Use as few bits as possible.
+     * <p>
+     * Note: despite the "few bits" intent in the comment, this delegates to the full {@link #binOut}
+     * (after writing id and delegating influence encoding), so it currently writes the entire planet
+     * state rather than a delta/compact form.
+     *
+     * @param out          the binary stream writer.
+     * @param dataProvider campaign data used by nested encode calls.
      */
     public void encodeMutableFields(BinWriter out, CampaignData dataProvider) {
         out.println(getId(), "id");
@@ -317,7 +381,11 @@ public class Planet implements Comparable<Object>, MutableSerializable {
     }
 
     /**
-     * Decode all mutable fields from the stream.
+     * Decode all mutable fields from the stream, mirroring {@link #encodeMutableFields}.
+     *
+     * @param in           the binary stream reader.
+     * @param dataProvider campaign data used by nested decode calls.
+     * @throws IOException if the underlying stream read fails.
      */
     public void decodeMutableFields(BinReader in, CampaignData dataProvider) throws IOException {
         setId(in.readInt("id"));
@@ -326,7 +394,10 @@ public class Planet implements Comparable<Object>, MutableSerializable {
     }
 
     /**
-     * Write itself into the stream.
+     * Writes this planet's full state (identity, position, factories, terrain, influence, flags, etc.)
+     * to a binary stream, in the same field order expected by {@link #binIn}.
+     *
+     * @param out the binary stream writer.
      */
     public void binOut(BinWriter out) {
         out.println(getId(), "id");
@@ -373,21 +444,21 @@ public class Planet implements Comparable<Object>, MutableSerializable {
     }
 
     /**
-     * @return Returns the position.
+     * @return Returns the position (galactic x/y coordinates, roughly -700 to 700).
      */
     public Position getPosition() {
         return position;
     }
 
     /**
-     * @return Returns the description.
+     * @return Returns the human-readable description.
      */
     public String getDescription() {
         return description;
     }
 
     /**
-     * @return Returns the baysProvided.
+     * @return Returns the number of extra unit bays this planet grants to its owning faction.
      */
     public int getBaysProvided() {
         return baysProvided;
@@ -401,81 +472,116 @@ public class Planet implements Comparable<Object>, MutableSerializable {
     }
 
     /**
-     * @return Returns the conquerable.
+     * @return Returns whether this planet can be conquered via the Conquer task.
      */
     public boolean isConquerable() {
         return conquerable;
     }
 
     /**
-     * @return Returns the compProduction.
+     * @return Returns the amount of components produced/exported by this planet's industry.
      */
     public int getCompProduction() {
         return compProduction;
     }
 
     /**
-     * @param compProduction The compProduction to set.
+     * @param compProduction The component production amount to set.
      */
     public void setCompProduction(int compProduction) {
         this.compProduction = compProduction;
     }
 
+    /**
+     * @return the minimum planet-ownership setting for this planet, or -1 to defer to the server-wide
+     *         default (this planet does not override it).
+     */
     public int getMinPlanetOwnerShip() {
         return minPlanetOwnerShip;
     }
 
+    /**
+     * @param ownership the minimum planet-ownership requirement to set (-1 to defer to the server-wide
+     *                   default).
+     */
     public void setMinPlanetOwnerShip(int ownership) {
         minPlanetOwnerShip = ownership;
     }
 
+    /**
+     * @return true if this planet is flagged as a faction homeworld.
+     */
     public boolean isHomeWorld() {
         return homeWorld;
     }
 
+    /**
+     * @param homeworld whether this planet should be flagged as a faction homeworld.
+     */
     public void setHomeWorld(boolean homeworld) {
         homeWorld = homeworld;
     }
 
+    /**
+     * @return the name of the faction that historically/originally owned this planet.
+     */
     public String getOriginalOwner() {
         return originalOwner;
     }
 
+    /**
+     * @param owner the original-owner faction name to set.
+     */
     public void setOriginalOwner(String owner) {
         originalOwner = owner;
     }
 
+    /**
+     * @return the scenario-operator-defined flags/points-of-interest for this planet (key/value pairs
+     *         used for custom campaign notes, e.g. in {@link #getLongDescription}).
+     */
     public TreeMap<String, String> getPlanetFlags() {
         return planetFlags;
     }
 
+    /**
+     * @param flags the planet flags/points-of-interest map to set.
+     */
     public void setPlanetFlags(TreeMap<String, String> flags) {
         planetFlags = flags;
     }
 
     /**
-     * @param conquerable The conquerable to set.
+     * @param conquerable whether this planet can be conquered via the Conquer task.
      */
     public void setConquerable(boolean conquerable) {
         this.conquerable = conquerable;
     }
 
     /**
-     * @param description The description to set.
+     * @param description The human-readable description to set.
      */
     public void setDescription(String description) {
         this.description = description;
     }
 
     /**
-     * @param position The position to set.
+     * @param position The galactic (x, y) position to set.
      */
     public void setPosition(Position position) {
         this.position = position;
     }
 
     /**
-     * Returns a long description of this planet as html-code.
+     * Builds a long, HTML-formatted description of this planet for display to players/clients: name,
+     * galactic location and distance from the galaxy center, industry (component production, extra bays,
+     * factories), terrain breakdown (with weighted percentages, atmosphere, gravity, temperature, and
+     * weather forecast per continent), current faction influence levels, and any planet flags/points of
+     * interest.
+     *
+     * @param client if true, terrain images are rendered using absolute filesystem paths (for a local
+     *               client); if false, a server-relative image description is used instead.
+     * @return the assembled HTML description.
      */
     public StringBuilder getLongDescription(boolean client) {
 
@@ -608,6 +714,15 @@ public class Planet implements Comparable<Object>, MutableSerializable {
         return result;
     }
 
+    /**
+     * Builds an alternate, HTML-formatted "advanced" description of this planet, similar to
+     * {@link #getLongDescription(boolean)} but always using absolute-path terrain images, including
+     * additional terrain details (night temperature modifier), and optionally showing the planet's raw id.
+     *
+     * @param level an access/privilege level; if 100 or greater, the planet's numeric id is included in
+     *              the output alongside its name.
+     * @return the assembled HTML description.
+     */
     public StringBuilder getAdvanceDescription(int level) {
 
         StringBuilder result = new StringBuilder();
@@ -727,6 +842,9 @@ public class Planet implements Comparable<Object>, MutableSerializable {
         return result;
     }
 
+    /**
+     * @return the number of unit factories present on this planet.
+     */
     public int getFactoryCount() {
 
         // int count = 0;
@@ -737,18 +855,31 @@ public class Planet implements Comparable<Object>, MutableSerializable {
          */
     }
 
+    /**
+     * @return the static-map size (in MegaMek map-sheet units) used when generating scenarios on this
+     *         planet.
+     */
     public Dimension getMapSize() {
         return MapSize;
     }
 
+    /**
+     * @param map the static-map size to set.
+     */
     public void setMapSize(Dimension map) {
         MapSize = map;
     }
 
+    /**
+     * @return the board size (in hexes) used when generating scenarios on this planet.
+     */
     public Dimension getBoardSize() {
         return BoardSize;
     }
 
+    /**
+     * @param board the board size (in hexes) to set.
+     */
     public void setBoardSize(Dimension board) {
         BoardSize = board;
     }

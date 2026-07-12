@@ -24,17 +24,42 @@ import java.io.IOException;
 import mekwars.common.util.MMNetXStream;
 
 
+/**
+ * Small helper that serializes an arbitrary object to an XML file using {@link MMNetXStream} (an XStream wrapper).
+ * Used by {@link MWXmlSerializable} implementers (e.g. {@code Operation}) to persist their full state to disk as a
+ * standalone XML file.
+ * <p>
+ * This is a one-shot, non-reusable helper: construct it with the target object and destination, then call
+ * {@link #writeToFile()}.
+ *
+ * @author Helge Richter
+ */
 public class MWXMLWriter {
+    /** Destination directory for the XML file; created (including parents) if it does not already exist. */
     String _folderName;
+    /** Name of the XML file to write inside {@link #_folderName}. */
     String _fileName;
+    /** The object to serialize to XML. */
     Object _o;
 
+    /**
+     * @param folderName the directory the XML file will be written into.
+     * @param fileName   the file name to write within {@code folderName}.
+     * @param o          the object to serialize.
+     */
     public MWXMLWriter(String folderName, String fileName, Object o) {
         _folderName = folderName;
         _fileName = fileName;
         _o = o;
     }
 
+    /**
+     * Creates the destination folder if needed and serializes {@link #_o} to {@code _folderName/_fileName} as XML.
+     * <p>
+     * Note: any {@link IOException} while writing is caught and only printed to stderr via
+     * {@link Exception#printStackTrace()} — it is not propagated or logged through the application's logging
+     * framework, so callers cannot detect failure other than by inspecting the console.
+     */
     public void writeToFile() {
         File folder = new File(_folderName);
         if (!folder.exists()) {

@@ -117,13 +117,40 @@ public class VerticalLayout implements LayoutManager {
     public void removeLayoutComponent(Component comp) {}
 
     //-----------------------------------------------------------------------------
+    /**
+     * @param parent the container being laid out.
+     *
+     * @return the preferred size to lay out {@code parent}'s components, computed by summing preferred component
+     *       heights (plus gaps) and taking the widest preferred component width.
+     */
     public Dimension preferredLayoutSize(Container parent) {return layoutSize(parent, false);}
 
     //-----------------------------------------------------------------------------
+    /**
+     * @param parent the container being laid out.
+     *
+     * @return the minimum size to lay out {@code parent}'s components.
+     * <p>
+     * Note: this passes {@code minimum = false} to {@link #layoutSize}, so despite its name it actually returns
+     * the same value as {@link #preferredLayoutSize(Container)} (each component's <em>preferred</em> size is used,
+     * not its minimum size) — the {@code minimum} flag on {@link #layoutSize} is effectively dead here.
+     */
     public Dimension minimumLayoutSize(Container parent) {return layoutSize(parent, false);}
     //----------------------------------------------------------------------------
 
     //----------------------------------------------------------------------------
+    /**
+     * Computes the total size needed to stack all visible child components of {@code parent} vertically with
+     * {@link #verticalGap} between them, using either each component's minimum or preferred size.
+     *
+     * @param parent  the container whose components are measured.
+     * @param minimum if {@code true}, use each component's minimum size; if {@code false}, use its preferred
+     *                size. (See note on {@link #minimumLayoutSize(Container)} — in practice this is always called
+     *                with {@code false}.)
+     *
+     * @return the computed size, including the parent's insets and an extra full {@link #verticalGap} of top/
+     *       bottom padding.
+     */
     private Dimension layoutSize(Container parent, boolean minimum) {
         Dimension dim = new Dimension(0, 0);
         Dimension d;
@@ -147,7 +174,11 @@ public class VerticalLayout implements LayoutManager {
     //-----------------------------------------------------------------------------
 
     /**
-     * Lays out the container.
+     * Lays out the container: positions each visible child in a single vertical column, separated by
+     * {@link #verticalGap}, horizontally aligned/stretched per {@link #alignment}, and anchored to the top,
+     * bottom, or vertical center of {@code parent} per {@link #anchor}.
+     *
+     * @param parent the container to lay out.
      */
     public void layoutContainer(Container parent) {
         Insets insets = parent.getInsets();
@@ -184,6 +215,9 @@ public class VerticalLayout implements LayoutManager {
     }
 
     //-----------------------------------------------------------------------------
+    /**
+     * @return a debug string identifying this layout's class name and configured gap/alignment/anchor values.
+     */
     public String toString() {
         return getClass().getName() +
                      "[verticalGap=" +

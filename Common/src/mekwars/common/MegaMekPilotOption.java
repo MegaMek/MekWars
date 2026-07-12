@@ -21,19 +21,33 @@
 package mekwars.common;
 
 /**
- * This can be used as a container for LVL3 Megamek Pilot options in MMNet
+ * Immutable-in-practice wrapper pairing the internal MegaMek name of a "Level 3" pilot option (a Special Pilot
+ * Ability / quirk toggle from MegaMek's pilot options list) with a boolean on/off value.
+ * <p>
+ * Used as a simple carrier when MekWars needs to communicate/store a single pilot option's name and state (e.g.
+ * when transmitting a pilot's selected SPAs between server and client), rather than depending directly on
+ * MegaMek's own pilot-option data structures.
  *
  * @author Helge Richter
- *
  */
 public class MegaMekPilotOption {
+    /** The internal (MegaMek) name of the pilot option/SPA, as used by MegaMek's option lookup. */
     private String megaMekName;
+    /** Whether the option is enabled ({@code true}) or disabled ({@code false}) for the pilot. */
     private boolean value;
 
+    /**
+     * No-arg constructor leaving {@link #megaMekName} {@code null} and {@link #value} {@code false}. Fields must be
+     * populated by other means (e.g. reflection/deserialization) since there are no setters.
+     */
     public MegaMekPilotOption() {
 
     }
 
+    /**
+     * @param name  the internal MegaMek name of the pilot option.
+     * @param value whether the option is currently enabled for the pilot.
+     */
     public MegaMekPilotOption(String name, boolean value) {
         megaMekName = name;
         this.value = value;
