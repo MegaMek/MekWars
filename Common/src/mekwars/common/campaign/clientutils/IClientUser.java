@@ -32,8 +32,22 @@
  */
 package mekwars.common.campaign.clientutils;
 
+/**
+ * Minimal, client-side view of a logged-in user/account, decoupled from the full server-side {@code CUser}
+ * implementation. Implemented by {@code mekwars.common.campaign.CUser}. Used wherever client utility code (e.g.
+ * {@link GameHost}) needs to check a user's permission level or house affiliation without depending on the whole
+ * campaign package.
+ */
 public interface IClientUser {
+
+    /**
+     * @return the user's access/permission level. By convention in this codebase, 200+ indicates an admin and 100+
+     *         indicates a moderator (see {@link GameHost#isAdmin()} and {@link GameHost#isMod()}).
+     */
     int getUserLevel();
 
+    /**
+     * @return the name of the in-game faction ("house") this user is affiliated with.
+     */
     String getHouse();
 }

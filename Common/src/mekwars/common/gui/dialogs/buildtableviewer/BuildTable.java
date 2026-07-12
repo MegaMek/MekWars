@@ -36,12 +36,19 @@ import javax.swing.table.TableColumn;
  * @author Spork
  */
 public class BuildTable {
+    /** Scroll pane wrapper that the rendered {@link #table} is added into (see {@link #buildPanel()}). */
     private final JScrollPane pane = new JScrollPane();
+    /** Placeholder shown by {@link #getTable()} in place of the real table when this build table isn't in use. */
     private final JLabel unusedLabel = new JLabel("This table is not used on this server");
+    /** Relative weighting of this table's contents when combined with other tables (not yet used — see {@link #setWeight}). */
     private double weight = 0.0;
+    /** The table's contents, keyed by entry text (unit/table name); see {@link BuildTableEntry}. */
     private HashMap<String, BuildTableEntry> entries = new HashMap<>();
+    /** The build table's file name (e.g. "House_Assault.txt"), also used as its on-disk lookup key. */
     private String name = "";
+    /** The rendered Swing table, built lazily by {@link #buildPanel()} once {@link #loadTable()} succeeds. */
     private JTable table = new JTable();
+    /** Whether {@link #loadTable()} successfully found and loaded a build table file for {@link #name}. */
     private boolean isUsed;
 
     /**

@@ -34,14 +34,43 @@ package mekwars.common.campaign.clientutils;
 
 import megamek.common.event.GameCFREvent;
 
+/**
+ * Narrow interface exposing the parts of a game-hosting client (one that is running a MegaMek {@code Server}
+ * embedded in the MekWars client/dedicated-host process) that other components need: status changes, permission
+ * checks, and the current username. Implemented by the main client classes (e.g. {@code MWClient},
+ * {@code MWDedHost}), both of which also extend {@link GameHost}, which supplies default implementations of most of
+ * these methods.
+ */
 public interface IGameHost {
+
+    /**
+     * Changes the host's published status (see the {@code STATUS_*} constants on
+     * {@link mekwars.common.campaign.clientutils.protocol.IClient}) and propagates the change, e.g. to the server.
+     *
+     * @param newStatus the new status code
+     */
     void changeStatus(int newStatus);
 
+    /**
+     * @return true if the current user's level qualifies them as a server administrator.
+     */
     boolean isAdmin();
 
+    /**
+     * @return true if the current user's level qualifies them as at least a moderator (admins also satisfy this).
+     */
     boolean isMod();
 
+    /**
+     * @return the username of the account currently running this host.
+     */
     String getUsername();
 
+    /**
+     * Called by the MegaMek game engine ({@link megamek.common.event.GameListener}) when the server needs feedback
+     * from a client during play (a Client Feedback Request), e.g. to pick a target or confirm an action.
+     *
+     * @param arg0 the feedback-request event describing what input is needed
+     */
     void gameClientFeedbackRequest(GameCFREvent arg0);
 }

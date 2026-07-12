@@ -40,16 +40,24 @@
 package mekwars.common.campaign.clientutils.protocol;
 
 /**
- * Interface the implement when you want to get raw messages from the socket connection
+ * Interface to implement when you want to get raw messages from the socket connection.
+ * <p>
+ * Registered with an {@link IConnectionHandler} via {@link IConnectionHandler#setListener(IConnectionListener)}; the
+ * handler calls back into this interface as data arrives from (or the connection to) the remote peer changes state.
+ * {@link CConnector} is the client-side implementation, translating these low-level notifications into calls on the
+ * {@link IClient} it wraps.
  */
 public interface IConnectionListener {
     /**
-     * Notification that a new line was read from the socket
+     * Notification that a new line was read from the socket.
+     *
+     * @param message the raw line of text received, not yet interpreted as a protocol command
      */
     void incomingMessage(String message);
 
     /**
-     * Notification that the socket got closed.
+     * Notification that the socket got closed (either by the remote peer, a network error, or a local shutdown
+     * request).
      */
     void socketClosed();
 }

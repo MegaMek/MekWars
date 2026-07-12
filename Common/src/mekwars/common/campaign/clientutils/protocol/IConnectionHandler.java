@@ -41,16 +41,24 @@
 package mekwars.common.campaign.clientutils.protocol;
 
 /**
- * Interface that ConnectionHandlers must implement
+ * Interface that ConnectionHandlers must implement.
+ * <p>
+ * A connection handler owns the low-level socket I/O for one client-to-server connection: it accepts outgoing
+ * messages (queued or immediate) and reports incoming/closed-connection notifications to a registered
+ * {@link IConnectionListener}. {@link CConnector} depends on this interface (rather than directly on a socket) so
+ * the transport can be swapped/mocked; {@link ConnectionHandlerLocal} is the concrete implementation used for real
+ * TCP socket connections.
  */
 public interface IConnectionHandler {
     /**
-     * Queue a message headed outbound.
+     * Queue a message headed outbound. The message is handed to a writer thread/queue rather than written to the
+     * socket synchronously, so this call returns without waiting for the data to actually be sent.
      */
     void queueMessage(String message);
 
     /**
-     * Send a message immediately.
+     * Send a message immediately, bypassing any outbound queue, and flush the underlying stream so the bytes are
+     * written to the socket right away.
      */
     void sendImmediately(String message);
 

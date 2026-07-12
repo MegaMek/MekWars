@@ -33,7 +33,9 @@ public class BuildTableViewer extends JDialog implements Runnable {
 
     @Serial
     private static final long serialVersionUID = 4541668930226551934L;
+    /** The client's main window, used only to center this dialog over it (see {@link #initComponents()}). */
     javax.swing.JFrame mainframe;
+    /** The MekWars client, used to query permissions/data and to request build table listings from the server. */
     IClient client;
 
     /**
@@ -50,7 +52,14 @@ public class BuildTableViewer extends JDialog implements Runnable {
     }
 
     /**
-     * Creates the viewer in a new Thread
+     * Creates the viewer in a new Thread. Sends a request to the server for the build table listing — using the
+     * admin variant of the command if the user's level meets the "AdminRequestBuildTable" access requirement,
+     * otherwise the regular "RequestBuildTable" command if the user at least meets that lower requirement (if
+     * neither threshold is met, no request is sent at all, and the loop below will spin until some other code
+     * clears the waiting flag). Then marks the client as waiting and busy-waits, polling {@link IClient#isWaiting()}
+     * every 100ms on this thread, until the server's response (elsewhere in the codebase) clears the flag via
+     * {@link IClient#setWaiting(boolean)}. Once unblocked, builds the dialog's contents via
+     * {@link #initComponents()}.
      */
     @Override
     public void run() {

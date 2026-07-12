@@ -52,7 +52,44 @@ import megamek.common.units.Tank;
 import mekwars.common.Unit;
 import mekwars.common.util.UnitUtils;
 
+/**
+ * Utility for flattening a MegaMek {@link Entity} into a compact, delimited string suitable for transmission over
+ * the MekWars client/server protocol (e.g. inside "IPU" in-progress-update commands and end-of-game reports). The
+ * format is a "*"-delimited (and, for kill lists, "~"-delimited) positional encoding whose exact fields depend on
+ * the entity's type and on whether a "full status" or abbreviated report is requested — there is no shared schema
+ * object, so the server-side parser must decode these fields in the same order they are appended here.
+ */
 public class SerializeEntity {
+
+    /**
+     * Serializes an {@link Entity}'s status into the MekWars wire format described in the class Javadoc.
+     * <p>
+     * When {@code fullStatus} is true, the output includes (for non-{@link EjectedCrew} entities) the external ID,
+     * owner name, crew hit count, removal condition, a MekWars unit-type code, and a "~"-delimited list of external
+     * IDs of entities this one destroyed (kills) — followed by type-specific fields (internal structure per
+     * location, cockpit type, battle-damage cost if {@code useRepairs}, and the unit's file name for
+     * {@link Mek}/{@link Tank}/{@link Aero}; ride/pickup/destroyed info for a {@link MekWarrior} — i.e. an ejected
+     * pilot); and, if the entity is off-board, its off-board distance.
+     * <p>
+     * When {@code fullStatus} is false, a shorter "in-progress update" form is produced instead: for a
+     * {@link MekWarrior} just the ride/pickup/destroyed fields, otherwise the owner name, external ID, removal
+     * condition, center-torso/head internal structure (or literal {@code "1*1*"} placeholders for non-{@link Mek}
+     * entities), and whether the unit is repairable.
+     * <p>
+     * Note: if {@link Entity#getExternalId()} cannot be parsed as an integer (MegaMek may assign a UUID string
+     * instead), the external ID is silently replaced with {@code -1} rather than propagating the parse failure —
+     * this applies both to the entity itself and to each entity in its kill list.
+     *
+     * @param entity         the entity whose status should be serialized
+     * @param fullStatus     true to produce the verbose end-of-game/auto-save report; false to produce the shorter
+     *                       in-progress-update form
+     * @param forceDevastate true to force the reported removal condition to
+     *                       {@link IEntityRemovalConditions#REMOVE_DEVASTATED} regardless of the entity's actual
+     *                       removal condition (used when the caller already knows the unit was devastated)
+     * @param useRepairs     true to include computed battle-damage/repair-cost information (only consulted for
+     *                       {@link Mek} and {@link Tank} entities in the full-status branch)
+     * @return the serialized, "*"-delimited status string
+     */
     public static String serializeEntity(Entity entity, boolean fullStatus, boolean forceDevastate,
           boolean useRepairs) {
 

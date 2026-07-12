@@ -45,13 +45,21 @@ public class SelectorPanel extends JPanel implements ActionListener {
     @Serial
     private static final long serialVersionUID = -7776384437283951081L;
 
+    /** The MekWars client, used to query available houses/factions and server-enabled unit types. */
     private final IClient client;
+    /** Additional listeners to notify (besides this panel's own reaction) whenever a combo box selection changes. */
     private final Vector<ActionListener> listeners = new Vector<>();
+    /** Display names of selectable factions, populated by {@link #prepComponents()}; backs {@link #factionCombo}. */
     private String[] factionArray = {};
+    /** Display names of selectable unit types enabled on the server, populated by {@link #prepComponents()}; backs {@link #typeCombo}. */
     private String[] typeArray = {};
+    /** Display names of selectable weight classes, populated by {@link #prepComponents()}; backs {@link #weightCombo}. */
     private String[] weightArray = {};
+    /** Combo box for choosing a unit weight class (Light, Medium, Heavy, Assault). */
     private JComboBox<String> weightCombo;
+    /** Combo box for choosing a unit type (Mek, Vehicle, Infantry, etc., depending on what the server allows). */
     private JComboBox<String> typeCombo;
+    /** Combo box for choosing a faction/house (or "Common" for faction-neutral tables). */
     private JComboBox<String> factionCombo;
 
     /**
@@ -131,9 +139,12 @@ public class SelectorPanel extends JPanel implements ActionListener {
     }
 
     /**
-     * Combines the JComboBoxes into a String that can be used to pick a build table
+     * Combines the JComboBoxes into a String that can be used to pick a build table. The resulting file name is
+     * {@code <Faction>_<Weight><Type>.txt}, except that the unit type segment is omitted entirely when "Mek" is
+     * selected — i.e. Mek build tables are named just {@code <Faction>_<Weight>.txt}, since Mek is treated as the
+     * default/implicit type.
      *
-     * @return the build table to display
+     * @return the build table file name to display
      */
     public String getSelectionString() {
         StringBuilder sb = new StringBuilder();

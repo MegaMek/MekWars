@@ -32,6 +32,16 @@
  */
 package mekwars.common.campaign.clientutils;
 
+/**
+ * Minimal contract for a campaign player, exposing just the identifying name. This is intentionally tiny so that
+ * client-utility code which only needs to know "who is this" can depend on a narrow interface instead of the full
+ * {@code Player}/{@code CPlayer} campaign classes. Implemented by {@code mekwars.common.Player} (and, by extension,
+ * its subclass {@code mekwars.common.campaign.CPlayer}).
+ */
 public interface IPlayer {
+
+    /**
+     * @return the player's name, as displayed in the client UI and used to key player-related lookups.
+     */
     String getName();
 }

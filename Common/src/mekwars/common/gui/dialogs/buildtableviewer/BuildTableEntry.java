@@ -24,11 +24,16 @@ package mekwars.common.gui.dialogs.buildtableviewer;
  */
 public class BuildTableEntry implements Comparable<BuildTableEntry> {
 
+    /** Entry type indicating this line is a link/reference to another {@link BuildTable}, not a unit. */
     public final static int ENTRY_TYPE_TABLE = 0;
+    /** Entry type indicating this line refers directly to a specific unit. */
     public final static int ENTRY_TYPE_UNIT = 1;
 
+    /** Relative frequency/weight of this entry within its build table; higher values are more likely to be picked. */
     private int chance = 0;
+    /** The entry's text: either a unit file reference or the name of a linked build table, depending on {@link #type}. */
     private String entry = "";
+    /** The kind of entry this is: {@link #ENTRY_TYPE_TABLE} or {@link #ENTRY_TYPE_UNIT} (defaults to -1/unset). */
     private int type = -1;
 
     /**

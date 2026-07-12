@@ -55,20 +55,35 @@ import mekwars.common.threads.WriterThread;
  * <p>
  * This method spawns two threads: One for reading and one for writing.  When new messages are read, they are passed to
  * the ChatServerLocal via its incomingMessage () method
+ * <p>
+ * This is the concrete, real-socket {@link IConnectionHandler} implementation used by {@link CConnector} on the
+ * client side of the MekWars protocol; it owns the {@link Socket} plus a background {@link ReaderThread} (which
+ * blocks reading lines and forwards them to the registered {@link IConnectionListener}) and a background
+ * {@link WriterThread} (which drains a queue of outgoing messages onto the socket's output stream).
  *
  */
 
 public class ConnectionHandlerLocal implements IConnectionHandler {
     private final static MMLogger LOGGER = MMLogger.create(ConnectionHandlerLocal.class);
 
+    /** The underlying TCP socket connecting this client to the campaign server. */
     private final Socket _socket;
+    /** Output stream wrapper used to write outgoing data to the socket. */
     protected PrintStream _out;
+    /** The listener notified of incoming messages and connection loss; set via {@link #setListener}. */
     protected IConnectionListener _listener;
+    /** Background thread that blocks reading lines from the socket and forwards them to {@link #_listener}. */
     protected ReaderThread _reader;
+    /** Background thread that drains queued outgoing messages and writes them to {@link #_out}. */
     protected WriterThread _writer;
 
     /**
-     * Construct the ConnectionHandler and spawn the reader and writer threads.
+     * Construct the ConnectionHandler and spawn the reader and writer threads. Note: the writer thread is started
+     * immediately here, but the reader thread is not started until {@link #setListener(IConnectionListener)} is
+     * called (it needs a listener to forward incoming messages to before it can usefully run).
+     *
+     * @param socket the already-connected socket to the campaign server
+     * @throws IOException if the socket's output stream cannot be obtained
      */
     public ConnectionHandlerLocal(Socket socket) throws IOException {
         _socket = socket;
@@ -79,12 +94,17 @@ public class ConnectionHandlerLocal implements IConnectionHandler {
     }
 
     /**
-     * Queue an outgoing message
+     * Queue an outgoing message. Handed off to {@link #_writer}'s internal queue; actual transmission happens
+     * asynchronously on the writer thread.
      */
     public void queueMessage(String message) {
         _writer.queueMessage(message);
     }
 
+    /**
+     * Writes a message directly to the socket's output stream and flushes immediately, bypassing the writer
+     * thread's queue entirely.
+     */
     public void sendImmediately(String message) {
         _out.println(message);
         _out.flush();
@@ -93,6 +113,10 @@ public class ConnectionHandlerLocal implements IConnectionHandler {
     /**
      * Try to stop the threads gracefully, close the socket, then call connectionLost() on the ChatServerLocal. This
      * method is typically called by the ReaderThread when it has detected the connection died.
+     *
+     * @param notify whether to notify {@link #_listener} (via {@link IConnectionListener#socketClosed()}) that the
+     *               connection was closed; pass false when the listener itself already knows (e.g. it initiated the
+     *               shutdown) to avoid a redundant/re-entrant notification
      */
     public void shutdown(boolean notify) {
         _reader.pleaseStop();
@@ -108,6 +132,10 @@ public class ConnectionHandlerLocal implements IConnectionHandler {
         }
     }
 
+    /**
+     * Registers the listener to receive incoming-message/socket-closed notifications, wires it into the reader
+     * thread, and starts the reader thread running.
+     */
     public void setListener(IConnectionListener listener) {
         _listener = listener;
         _reader.setListener(listener);
