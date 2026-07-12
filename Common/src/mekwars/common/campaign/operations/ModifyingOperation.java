@@ -57,12 +57,24 @@ import java.util.Properties;
  * ModOp params SUPERSEDE those set in an Operation. Some things are 0-checked; however, many parameters will accept
  * potentially damaging negative settings or params which strongly conflict with the underlying Operation. This is an
  * Operator request (maximum flexibility) but will require strenuous testing of ModOp settings.
+ * <p>
+ * Unlike {@link Operation}, ModifyingOperation has no fallback to {@link DefaultOperation} - it is a much thinner
+ * wrapper around a raw parameter set with no defaulting logic, no type/long-vs-short indicators, and no notion of
+ * further modifiers stacking on top of it. A {@link Operation} keeps track of the ModifyingOperations legal for it
+ * via {@link Operation#addModifyingOperation(ModifyingOperation)}; this class itself does not know which Operations
+ * it targets (that is presumably read from its own params, e.g. a "LinkedOperations"-style key, and applied by the
+ * loader/resolver rather than by this class).
+ *
+ * @see Operation
+ * @see DefaultOperation
  */
 
 public class ModifyingOperation {
 
     //IVARS
+    /** Name of this ModifyingOperation (e.g. "Fast Mover"), derived from its config filename at load time. */
     private final String opName;
+    /** This ModifyingOperation's configured parameter values, keyed by parameter name. These values supersede the corresponding parameters of any Operation this modifier is applied to; there is no fallback/default lookup as there is for {@link Operation}. */
     private final Properties modValues;
 
     /**
@@ -70,6 +82,10 @@ public class ModifyingOperation {
      * param values.
      * <p>
      * ModifyingOperations are constructed in OperationLoader.java
+     *
+     * @param opName    name of this ModifyingOperation, used both as display name and to assemble filenames for
+     *                  param loading
+     * @param modValues this ModifyingOperation's configured parameter values, already parsed from its config file
      */
     public ModifyingOperation(String opName, Properties modValues) {
         this.opName = opName;
@@ -80,6 +96,11 @@ public class ModifyingOperation {
 
     /**
      * Method that returns values, pre-cast to string.
+     *
+     * @param valToGet name of the parameter to look up
+     * @return the value cast to {@link String}, or {@code null} if not set; throws {@link ClassCastException} if
+     *         the stored value is somehow not a String (not expected in normal use, since {@link Properties} only
+     *         stores String values via its typical API)
      */
     public String getValueAsString(String valToGet) {
         return (String) getModValue(valToGet);
@@ -88,6 +109,12 @@ public class ModifyingOperation {
     /**
      * Method that attempts to look up the value of a given Parameter in a ModOperation's local Tree. If the value is
      * unavailable, a null is returned.
+     * <p>
+     * Note there is no fallback to {@link DefaultOperation} here (contrast with
+     * {@link Operation#getValue(String, boolean)}); an unset parameter simply yields {@code null}.
+     *
+     * @param valToGet name of the parameter to look up
+     * @return the raw stored value, or {@code null} if not set
      */
     public Object getModValue(String valToGet) {
         return modValues.get(valToGet);
@@ -95,6 +122,8 @@ public class ModifyingOperation {
 
     /**
      * Method that returns the name of ModOp, as derived from the filename @ load time.
+     *
+     * @return this ModifyingOperation's name
      */
     public String getName() {
         return this.opName;

@@ -52,15 +52,52 @@ import java.util.TreeMap;
  * datasets.
  * <p>
  * NOTE: Defaults stored in a TreeMap, -not- a hash.
+ * <p>
+ * Role in the Operations system: {@link Operation#getValue(String, boolean)} consults an Operation's own
+ * server-configured parameters first and, only if a parameter is entirely unset there, falls back to the single
+ * shared instance of this class. In practice this means every one of the hundreds of parameters documented inline
+ * below (construction limits, costs, payouts, salvage rules, victory conditions, deployment odds, map settings,
+ * etc.) is optional on any individual Operation - server operators only need to specify the values that differ from
+ * these defaults. There is normally exactly one {@code DefaultOperation} instance shared by every {@link Operation}
+ * and {@link ModifyingOperation} on a server (constructed once and passed in, e.g. by {@code OperationLoader.java}).
+ * <p>
+ * This class carries no behavior beyond exposing the map: the constructor is a long, flat sequence of
+ * {@code operationsDefaults.put(key, value)} calls (all values stored as Strings, parsed on demand by callers such
+ * as {@link Operation#getIntValue(String)}), organized into the sections documented in the large comment blocks
+ * below. Those comment blocks are the authoritative reference for what each parameter key means, its expected
+ * value format, and (where noted) the numeric "fail code" used elsewhere (e.g. in {@code ShortValidator}) when a
+ * launch/join fails that particular check; they are intentionally left as-is here rather than duplicated into
+ * per-line Javadoc, since annotating each of the ~1200 {@code put} calls individually would add noise without
+ * adding information beyond what those blocks already state.
+ *
+ * @see Operation
+ * @see ModifyingOperation
  */
 public class DefaultOperation {
 
     // IVARS
 
     // the property tree
+    /**
+     * Default value for every recognized Operation parameter, keyed by parameter name (matching the keys used in
+     * an {@link Operation}'s own {@code Properties}). Populated once, in the constructor, and never mutated
+     * afterward. Looked up (read-only) via {@link #getDefault(String)}.
+     */
     TreeMap<String, String> operationsDefaults;
 
     // CONSTRUCTORS
+    /**
+     * Builds the complete table of built-in default parameter values.
+     * <p>
+     * This constructor performs no computation beyond populating {@link #operationsDefaults}: it simply calls
+     * {@code operationsDefaults.put(name, defaultValueAsString)} once per recognized parameter, grouped into the
+     * sections described by the large comment blocks interspersed through this method (army construction limits,
+     * player rating/XP/games-played gates, artillery/gun-emplacement/mine assignment, MUL army composition, pay and
+     * salvage outcomes, newbie/SOL handling, meta campaign outcomes (conquest/delay/production/unit capture),
+     * "chicken"/non-defense penalties, pilot XP, buildings, faction exclusivity, city generation, multiplayer/team
+     * setup, victory conditions, deployment odds, map settings, and the "long operation" (multi-game) equivalents
+     * of many of the above). See those inline comments for the meaning of each individual key.
+     */
     public DefaultOperation() {
 
         // create the treemap
@@ -1644,6 +1681,14 @@ public class DefaultOperation {
 
     /**
      * Method which returns the default value of a given operation paramater. @urgru 5/30/05
+     * <p>
+     * This is the single read accessor for {@link #operationsDefaults} and is normally only called from
+     * {@link Operation#getValue(String, boolean)} when an Operation has no explicit value of its own for
+     * {@code valToGet}.
+     *
+     * @param valToGet name of the parameter whose default value is wanted
+     * @return the default value as a String, or {@code null} if {@code valToGet} is not a recognized parameter
+     *         name (e.g. a typo) - callers should be prepared to handle a null result
      */
     public String getDefault(String valToGet) {
         return operationsDefaults.get(valToGet);

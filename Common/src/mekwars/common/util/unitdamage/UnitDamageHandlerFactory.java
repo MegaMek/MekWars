@@ -41,9 +41,36 @@ import megamek.common.units.ProtoMek;
 import megamek.common.units.Tank;
 import megamek.logging.MMLogger;
 
+/**
+ * Factory that selects the correct {@link AbstractUnitDamageHandler} strategy implementation
+ * for a given {@link Entity} based on its runtime type.
+ * <p>
+ * This is the single entry point callers should use to obtain a damage handler; callers should
+ * not instantiate handler subclasses directly. The type checks are ordered so that more
+ * specific/derived MegaMek entity types are checked before broader ones (e.g. {@link ProtoMek}
+ * before {@link Tank}), since some MegaMek unit classes participate in overlapping inheritance
+ * hierarchies.
+ *
+ * @see AbstractUnitDamageHandler
+ */
 public final class UnitDamageHandlerFactory {
     private static final MMLogger LOGGER = MMLogger.create(UnitDamageHandlerFactory.class);
 
+    /**
+     * Returns a new damage handler appropriate for the runtime type of {@code entity}.
+     * <p>
+     * Note: only {@link Mek} and {@link Tank} entities are backed by a fully implemented
+     * handler ({@link MekDamageHandler} and {@link VehicleDamageHandler} respectively); the
+     * {@link Aero}, {@link BattleArmor}, {@link ProtoMek}, and {@link Infantry} handlers are
+     * currently stubs that report/apply no damage (see their class Javadoc). If {@code entity}
+     * does not match any known type, this logs an error and falls back to
+     * {@link GenericDamageHandler}, which is also a no-op.
+     *
+     * @param entity the entity to inspect; its concrete type determines which handler is
+     *               returned
+     * @return a new {@link AbstractUnitDamageHandler} instance matching {@code entity}'s type,
+     *         or a {@link GenericDamageHandler} if the type is unrecognized
+     */
     public static AbstractUnitDamageHandler getHandler(Entity entity) {
         if (entity instanceof Mek) {
             return new MekDamageHandler();
